@@ -1,7 +1,0 @@
-{
-  "framework": "vite",
-  "buildCommand": "pnpm --filter lumora-frontend build",
-  "installCommand": "pnpm install",
-  "outputDirectory": "apps/lumora-frontend/dist",
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
-}
