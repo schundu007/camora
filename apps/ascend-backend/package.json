@@ -9,6 +9,8 @@
     "test": "vitest"
   },
   "dependencies": {
+    "@camora/shared-auth": "workspace:*",
+    "@camora/shared-db": "workspace:*",
     "express": "^5.1.0",
     "@anthropic-ai/sdk": "^0.82.0",
     "openai": "^6.33.0",
@@ -18,6 +20,7 @@
     "jsonwebtoken": "^9.0.0",
     "helmet": "^8.1.0",
     "cors": "^2.8.0",
+    "cookie-parser": "^1.4.7",
     "express-rate-limit": "^8.3.0",
     "multer": "^2.1.0",
     "joi": "^18.1.0",
@@ -28,7 +31,8 @@
     "cheerio": "^1.0.0",
     "pdf-parse": "^2.4.0",
     "mammoth": "^1.11.0",
-    "bcryptjs": "^3.0.0"
+    "bcryptjs": "^3.0.0",
+    "node-fetch": "^3.3.0"
   },
   "devDependencies": {
     "vitest": "^4.0.0"
