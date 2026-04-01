@@ -1,0 +1,36 @@
+{
+  "name": "ascend-backend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch src/index.js",
+    "start": "node src/index.js",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "@anthropic-ai/sdk": "^0.82.0",
+    "openai": "^6.33.0",
+    "stripe": "^21.0.0",
+    "ioredis": "^5.10.0",
+    "pg": "^8.11.0",
+    "jsonwebtoken": "^9.0.0",
+    "helmet": "^8.1.0",
+    "cors": "^2.8.0",
+    "express-rate-limit": "^8.3.0",
+    "multer": "^2.1.0",
+    "joi": "^18.1.0",
+    "uuid": "^13.0.0",
+    "dotenv": "^17.3.0",
+    "pino": "^10.3.0",
+    "pino-pretty": "^13.1.0",
+    "cheerio": "^1.0.0",
+    "pdf-parse": "^2.4.0",
+    "mammoth": "^1.11.0",
+    "bcryptjs": "^3.0.0"
+  },
+  "devDependencies": {
+    "vitest": "^4.0.0"
+  }
+}

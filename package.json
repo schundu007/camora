@@ -1,0 +1,21 @@
+{
+  "name": "camora",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Cariara Platform — Lumora + Ascend unified monorepo",
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "test": "turbo test",
+    "clean": "turbo clean",
+    "dev:lumora-frontend": "turbo dev --filter=lumora-frontend",
+    "dev:ascend-frontend": "turbo dev --filter=ascend-frontend",
+    "dev:lumora-backend": "turbo dev --filter=lumora-backend",
+    "dev:ascend-backend": "turbo dev --filter=ascend-backend"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.0"
+  },
+  "packageManager": "pnpm@9.15.0"
+}

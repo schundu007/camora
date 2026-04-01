@@ -1,0 +1,14 @@
+{
+  "name": "@camora/shared-auth",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "build": "echo 'No build step needed'",
+    "lint": "eslint src/"
+  },
+  "dependencies": {
+    "jsonwebtoken": "^9.0.0"
+  }
+}
