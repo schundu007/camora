@@ -1,29 +1,47 @@
-import { Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './contexts/AuthContext';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { lazy, Suspense } from 'react';
 
-// Placeholder pages — will be migrated from existing Lumora
-function LandingPage() {
-  return <div className="min-h-screen flex items-center justify-center bg-gray-50">
-    <h1 className="text-4xl font-display font-bold text-gray-900">Lumora</h1>
-  </div>;
+// Lazy load pages
+const LandingPage = lazy(() => import('./pages/LandingPage'));
+const PricingPage = lazy(() => import('./pages/PricingPage'));
+const InterviewPage = lazy(() => import('./pages/InterviewPage'));
+const CodingPage = lazy(() => import('./pages/CodingPage'));
+const DesignPage = lazy(() => import('./pages/DesignPage'));
+
+function Loading() {
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-white">
+      <div className="w-12 h-12 border-4 border-emerald-200 border-t-emerald-500 rounded-full animate-spin" />
+    </div>
+  );
 }
 
-function InterviewApp() {
-  return <div className="min-h-screen flex items-center justify-center bg-white">
-    <h1 className="text-2xl font-display font-bold text-emerald-600">Interview App — Coming Soon</h1>
-  </div>;
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, isLoading } = useAuth();
+  const ASCEND_URL = import.meta.env.VITE_ASCEND_URL || 'https://capra.cariara.com';
+
+  if (isLoading) return <Loading />;
+  if (!isAuthenticated) {
+    window.location.href = ASCEND_URL;
+    return <Loading />;
+  }
+  return <>{children}</>;
 }
 
 export function App() {
   return (
     <AuthProvider>
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/app" element={<InterviewApp />} />
-        <Route path="/app/coding" element={<InterviewApp />} />
-        <Route path="/app/design" element={<InterviewApp />} />
-        <Route path="/pricing" element={<LandingPage />} />
-      </Routes>
+      <Suspense fallback={<Loading />}>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/pricing" element={<PricingPage />} />
+          <Route path="/app" element={<ProtectedRoute><InterviewPage /></ProtectedRoute>} />
+          <Route path="/app/coding" element={<ProtectedRoute><CodingPage /></ProtectedRoute>} />
+          <Route path="/app/design" element={<ProtectedRoute><DesignPage /></ProtectedRoute>} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
     </AuthProvider>
   );
 }
