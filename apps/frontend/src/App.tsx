@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { lazy, Suspense } from 'react';
 
@@ -16,6 +16,8 @@ const CapraDashboard = lazy(() => import('./pages/capra/DashboardPage'));
 const CapraPractice = lazy(() => import('./pages/capra/PracticePage'));
 const CapraPrepare = lazy(() => import('./pages/capra/PreparePage'));
 const CapraOnboarding = lazy(() => import('./pages/capra/OnboardingPage'));
+const CapraLanding = lazy(() => import('./pages/capra/CapraLandingPage'));
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 
 function Loading() {
   return (
@@ -26,13 +28,18 @@ function Loading() {
 }
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, onboardingCompleted } = useAuth();
+  const location = useLocation();
 
   if (isLoading) return <Loading />;
   if (!isAuthenticated) {
     // Redirect to Capra login (or Google OAuth)
     window.location.href = import.meta.env.VITE_OAUTH_URL || '/capra/login';
     return <Loading />;
+  }
+  // Only enforce onboarding for Capra routes
+  if (location.pathname.startsWith('/capra') && onboardingCompleted === false && location.pathname !== '/capra/onboarding') {
+    return <Navigate to="/capra/onboarding" replace />;
   }
   return <>{children}</>;
 }
@@ -53,12 +60,16 @@ export function App() {
 
           {/* ── Capra: Preparation ─────────────────────── */}
           <Route path="/capra" element={<ProtectedRoute><CapraDashboard /></ProtectedRoute>} />
+          <Route path="/capra/coding" element={<ProtectedRoute><CapraDashboard /></ProtectedRoute>} />
+          <Route path="/capra/design" element={<ProtectedRoute><CapraDashboard /></ProtectedRoute>} />
+          <Route path="/capra/prep" element={<ProtectedRoute><CapraDashboard /></ProtectedRoute>} />
           <Route path="/capra/practice" element={<ProtectedRoute><CapraPractice /></ProtectedRoute>} />
           <Route path="/capra/prepare/*" element={<ProtectedRoute><CapraPrepare /></ProtectedRoute>} />
           <Route path="/capra/onboarding" element={<ProtectedRoute><CapraOnboarding /></ProtectedRoute>} />
+          <Route path="/capra/landing" element={<CapraLanding />} />
 
           {/* ── Catch-all ──────────────────────────────── */}
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Suspense>
     </AuthProvider>

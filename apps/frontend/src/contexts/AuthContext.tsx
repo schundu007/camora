@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const LUMORA_API_URL = import.meta.env.VITE_LUMORA_API_URL || 'http://localhost:8000';
+const CAPRA_API_URL = import.meta.env.VITE_CAPRA_API_URL || 'http://localhost:3009';
 const ASCEND_URL = import.meta.env.VITE_ASCEND_URL || 'https://capra.cariara.com';
 
 interface AuthUser {
@@ -8,6 +9,8 @@ interface AuthUser {
   email: string;
   name?: string;
   image?: string;
+  onboarding_completed?: boolean;
+  job_roles?: string[];
 }
 
 interface AuthContextType {
@@ -15,6 +18,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   user: AuthUser | null;
+  onboardingCompleted: boolean | null;
   logout: () => void;
 }
 
@@ -23,6 +27,7 @@ const AuthContext = createContext<AuthContextType>({
   isAuthenticated: false,
   isLoading: true,
   user: null,
+  onboardingCompleted: null,
   logout: () => {},
 });
 
@@ -38,6 +43,7 @@ function clearCookie(name: string) {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [onboardingCompleted, setOnboardingCompleted] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -45,7 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const ssoToken = getCookie('cariara_sso');
       if (ssoToken) {
         try {
-          const res = await fetch(`${API_URL}/api/v1/auth/me`, {
+          const res = await fetch(`${LUMORA_API_URL}/api/v1/auth/me`, {
             headers: { Authorization: `Bearer ${ssoToken}` },
           });
           if (res.ok) {
@@ -53,6 +59,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setUser(await res.json());
           }
         } catch { /* network error */ }
+
+        // Fetch onboarding status from Capra backend
+        try {
+          const onboardingRes = await fetch(`${CAPRA_API_URL}/api/onboarding/status`, {
+            headers: { Authorization: `Bearer ${ssoToken}` },
+          });
+          if (onboardingRes.ok) {
+            const data = await onboardingRes.json();
+            setOnboardingCompleted(data.onboarding_completed);
+          }
+        } catch { /* capra backend may not be available */ }
       }
       setIsLoading(false);
     }
@@ -62,12 +79,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(() => {
     setToken(null);
     setUser(null);
+    setOnboardingCompleted(null);
     clearCookie('cariara_sso');
     window.location.href = ASCEND_URL;
   }, []);
 
   return (
-    <AuthContext.Provider value={{ token, isAuthenticated: !!token, isLoading, user, logout }}>
+    <AuthContext.Provider value={{ token, isAuthenticated: !!token, isLoading, user, onboardingCompleted, logout }}>
       {children}
     </AuthContext.Provider>
   );
