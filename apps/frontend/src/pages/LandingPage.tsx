@@ -485,7 +485,7 @@ export default function LandingPage() {
   useEffect(() => { setMounted(true); window.scrollTo(0, 0); }, []);
 
   return (
-    <div className="landing-page min-h-screen text-white overflow-hidden" style={{ background: '#0a0b14' }}>
+    <div className="landing-page min-h-screen text-white overflow-hidden" style={{ background: '#080a12' }}>
       {/* ── Styles ──────────────────────────────────────── */}
       <style>{`
         .landing-page {
@@ -566,10 +566,75 @@ export default function LandingPage() {
           opacity: 0;
           transform: translateY(24px);
         }
+        /* Stripe-inspired mesh gradient background */
+        @keyframes mesh-shift {
+          0%, 100% { transform: translate(0, 0) rotate(0deg); }
+          25% { transform: translate(2%, -1%) rotate(0.5deg); }
+          50% { transform: translate(-1%, 2%) rotate(-0.5deg); }
+          75% { transform: translate(1%, 1%) rotate(0.3deg); }
+        }
+        .mesh-bg {
+          position: fixed;
+          inset: 0;
+          pointer-events: none;
+          z-index: 0;
+          overflow: hidden;
+        }
+        .mesh-orb {
+          position: absolute;
+          border-radius: 50%;
+          animation: mesh-shift 20s ease-in-out infinite;
+        }
       `}</style>
 
-      {/* ── Subtle top gradient accent — Stripe uses a focused top glow ── */}
-      <div className="fixed top-0 left-0 right-0 h-[500px] pointer-events-none" style={{ zIndex: 1, background: 'radial-gradient(ellipse 70% 50% at 50% 0%, rgba(16,185,129,0.08) 0%, transparent 70%)' }} />
+      {/* ── STRIPE-INSPIRED MESH GRADIENT BACKGROUND ───── */}
+      <div className="mesh-bg">
+        {/* Large emerald glow — top left */}
+        <div className="mesh-orb" style={{
+          width: '50vw', height: '50vw', maxWidth: '800px', maxHeight: '800px',
+          top: '-15%', left: '-5%',
+          background: 'radial-gradient(circle, rgba(16,185,129,0.15) 0%, rgba(16,185,129,0.05) 40%, transparent 70%)',
+          filter: 'blur(60px)',
+        }} />
+        {/* Cyan sweep — top right */}
+        <div className="mesh-orb" style={{
+          width: '45vw', height: '45vw', maxWidth: '700px', maxHeight: '700px',
+          top: '-5%', right: '-5%',
+          background: 'radial-gradient(circle, rgba(6,182,212,0.12) 0%, rgba(6,182,212,0.04) 40%, transparent 70%)',
+          filter: 'blur(80px)',
+          animationDelay: '-5s',
+        }} />
+        {/* Indigo pool — center left */}
+        <div className="mesh-orb" style={{
+          width: '40vw', height: '40vw', maxWidth: '600px', maxHeight: '600px',
+          top: '30%', left: '5%',
+          background: 'radial-gradient(circle, rgba(99,102,241,0.10) 0%, rgba(99,102,241,0.03) 40%, transparent 70%)',
+          filter: 'blur(80px)',
+          animationDelay: '-10s',
+        }} />
+        {/* Amber warmth — bottom right */}
+        <div className="mesh-orb" style={{
+          width: '35vw', height: '35vw', maxWidth: '500px', maxHeight: '500px',
+          bottom: '10%', right: '10%',
+          background: 'radial-gradient(circle, rgba(251,191,36,0.08) 0%, rgba(251,191,36,0.02) 40%, transparent 70%)',
+          filter: 'blur(70px)',
+          animationDelay: '-15s',
+        }} />
+        {/* Deep emerald — bottom center */}
+        <div className="mesh-orb" style={{
+          width: '50vw', height: '30vw', maxWidth: '700px', maxHeight: '400px',
+          bottom: '-5%', left: '20%',
+          background: 'radial-gradient(ellipse, rgba(16,185,129,0.08) 0%, transparent 60%)',
+          filter: 'blur(60px)',
+          animationDelay: '-7s',
+        }} />
+        {/* Subtle noise texture for grain */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E")`,
+          backgroundRepeat: 'repeat', backgroundSize: '256px 256px', opacity: 0.5,
+        }} />
+      </div>
 
       {/* ── APPA TIMELINE (left side, desktop only) ─────── */}
       <div className="hidden lg:block fixed left-[10%] top-0 bottom-0 pointer-events-none" style={{ zIndex: 2 }}>
