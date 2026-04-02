@@ -280,10 +280,10 @@ function LumoraDemo() {
 
 /* ── Prep Showcase (animated stats + mock cards) ──────────── */
 const PREP_STATS = [
-  { target: 300, suffix: '+', label: 'Study Topics', color: '#34d399' },
-  { target: 50, suffix: '+', label: 'System Design Problems', color: '#818cf8' },
-  { target: 200, suffix: '+', label: 'DSA Problems', color: '#06b6d4' },
-  { target: 100, suffix: '+', label: 'Behavioral Questions', color: '#fbbf24' },
+  { target: 415, suffix: '+', label: 'Total Topics', color: '#34d399' },
+  { target: 7, suffix: '', label: 'Categories', color: '#818cf8' },
+  { target: 163, suffix: '', label: 'System Design Topics', color: '#06b6d4' },
+  { target: 57, suffix: '', label: 'DSA Problems', color: '#fbbf24' },
 ];
 
 function AnimatedCounter({ target, suffix, inView }: { target: number; suffix: string; inView: boolean }) {
@@ -349,25 +349,24 @@ function PrepShowcase({ inView }: { inView: boolean }) {
           <div className="font-code text-xs text-gray-500 font-semibold tracking-wider uppercase mb-4">Prepare</div>
           <div className="space-y-1">
             {[
-              { name: 'Dashboard', icon: '◫', active: false },
-              { name: 'DSA and Algorithms', icon: '⟨/⟩', active: false },
-              { name: 'System Design', icon: '⬡', active: true },
-              { name: 'Microservices', icon: '⊞', active: false },
-              { name: 'Database Internals', icon: '⊟', active: false },
-              { name: 'SQL for Interviews', icon: '⊡', active: false },
-              { name: 'Low-Level Design', icon: '⊠', active: false },
-              { name: 'Behavioral', icon: '◉', active: false },
+              { name: 'DSA and Algorithms', count: '57 topics', active: false },
+              { name: 'System Design', count: '163 topics', active: true },
+              { name: 'Microservices', count: '12 topics', active: false },
+              { name: 'Database Internals', count: '12 topics', active: false },
+              { name: 'SQL for Interviews', count: '8 topics', active: false },
+              { name: 'Low-Level Design', count: '106 topics', active: false },
+              { name: 'Behavioral', count: '57 topics', active: false },
             ].map((item) => (
               <div
                 key={item.name}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors ${
                   item.active
-                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                    : 'text-gray-400 hover:text-gray-200'
+                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold'
+                    : 'text-gray-400 hover:text-gray-200 font-medium'
                 }`}
               >
-                <span className="text-base w-5 text-center opacity-60">{item.icon}</span>
-                {item.name}
+                <span>{item.name}</span>
+                <span className="text-xs text-gray-600 font-code">{item.count}</span>
               </div>
             ))}
           </div>
@@ -380,8 +379,10 @@ function PrepShowcase({ inView }: { inView: boolean }) {
             { name: 'Rate Limiter', category: 'System Design', difficulty: 'Medium', topics: 6, color: '#06b6d4' },
             { name: 'Two Sum', category: 'DSA', difficulty: 'Easy', topics: 3, color: '#818cf8' },
             { name: 'LRU Cache', category: 'DSA', difficulty: 'Hard', topics: 5, color: '#818cf8' },
-            { name: 'API Gateway Pattern', category: 'Microservices', difficulty: 'Medium', topics: 7, color: '#34d399' },
+            { name: 'API Gateway', category: 'Microservices', difficulty: 'Medium', topics: 7, color: '#34d399' },
+            { name: 'SOLID Principles', category: 'Low-Level Design', difficulty: 'Medium', topics: 12, color: '#a78bfa' },
             { name: 'ACID vs BASE', category: 'Database', difficulty: 'Medium', topics: 4, color: '#fbbf24' },
+            { name: 'STAR Method', category: 'Behavioral', difficulty: 'Easy', topics: 8, color: '#fb923c' },
           ].map((item, i) => (
             <div
               key={item.name}
