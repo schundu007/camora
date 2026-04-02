@@ -279,58 +279,100 @@ function LumoraDemo() {
 }
 
 /* ── Prep Showcase (animated stats + mock cards) ──────────── */
-const PREP_STATS = [
-  { target: 415, suffix: '+', label: 'Total Topics', color: '#34d399' },
-  { target: 7, suffix: '', label: 'Categories', color: '#818cf8' },
-  { target: 163, suffix: '', label: 'System Design Topics', color: '#06b6d4' },
-  { target: 57, suffix: '', label: 'DSA Problems', color: '#fbbf24' },
-];
 
-function AnimatedCounter({ target, suffix, inView }: { target: number; suffix: string; inView: boolean }) {
-  const [count, setCount] = useState(0);
-  useEffect(() => {
-    if (!inView) return;
-    setCount(0);
-    const duration = 1500;
-    const steps = 40;
-    const increment = target / steps;
-    let current = 0;
-    const timer = setInterval(() => {
-      current += increment;
-      if (current >= target) {
-        setCount(target);
-        clearInterval(timer);
-      } else {
-        setCount(Math.floor(current));
-      }
-    }, duration / steps);
-    return () => clearInterval(timer);
-  }, [inView, target]);
-  return <span>{count}{suffix}</span>;
-}
 
 function PrepShowcase({ inView }: { inView: boolean }) {
+  /* ── Donut chart data ── */
+  const TOPIC_CATEGORIES = [
+    { name: 'DSA & Algorithms', count: 57, color: '#34d399' },
+    { name: 'System Design', count: 163, color: '#06b6d4' },
+    { name: 'Microservices', count: 12, color: '#818cf8' },
+    { name: 'Database Internals', count: 12, color: '#f97316' },
+    { name: 'SQL for Interviews', count: 8, color: '#fbbf24' },
+    { name: 'Low-Level Design', count: 106, color: '#a78bfa' },
+    { name: 'Behavioral', count: 57, color: '#f472b6' },
+  ];
+  const TOTAL = 415;
+  const RADIUS = 72;
+  const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
+
+  /* Build stroke-dasharray segments */
+  const donutSegments = (() => {
+    let accumulated = 0;
+    return TOPIC_CATEGORIES.map((cat) => {
+      const fraction = cat.count / TOTAL;
+      const dash = fraction * CIRCUMFERENCE;
+      const gap = CIRCUMFERENCE - dash;
+      const offset = -(accumulated * CIRCUMFERENCE) + CIRCUMFERENCE * 0.25; // start from top
+      accumulated += fraction;
+      return { ...cat, dash, gap, offset };
+    });
+  })();
+
   return (
     <>
-      {/* Stats row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16">
-        {PREP_STATS.map((stat, i) => (
-          <div
-            key={stat.label}
-            className="text-center"
-            style={{
-              opacity: inView ? 1 : 0,
-              transform: inView ? 'translateY(0)' : 'translateY(20px)',
-              transition: 'opacity 0.6s ease, transform 0.6s ease',
-              transitionDelay: `${i * 100 + 200}ms`,
-            }}
-          >
-            <div className="text-4xl md:text-5xl font-bold font-display" style={{ color: stat.color }}>
-              <AnimatedCounter target={stat.target} suffix={stat.suffix} inView={inView} />
+      {/* Donut chart + Legend */}
+      <div
+        className="flex flex-col md:flex-row items-center justify-center gap-10 md:gap-16 mb-16"
+        style={{
+          opacity: inView ? 1 : 0,
+          transform: inView ? 'translateY(0)' : 'translateY(20px)',
+          transition: 'opacity 0.7s ease, transform 0.7s ease',
+          transitionDelay: '200ms',
+        }}
+      >
+        {/* Donut SVG */}
+        <div className="relative flex-shrink-0" style={{ width: 160, height: 160 }}>
+          <svg viewBox="0 0 200 200" width="160" height="160" className="w-[140px] h-[140px] md:w-[160px] md:h-[160px]">
+            {/* Background ring */}
+            <circle cx="100" cy="100" r={RADIUS} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="18" />
+            {/* Segments */}
+            {donutSegments.map((seg, i) => (
+              <circle
+                key={seg.name}
+                cx="100"
+                cy="100"
+                r={RADIUS}
+                fill="none"
+                stroke={seg.color}
+                strokeWidth="18"
+                strokeDasharray={`${inView ? seg.dash : 0} ${inView ? seg.gap : CIRCUMFERENCE}`}
+                strokeDashoffset={seg.offset}
+                strokeLinecap="butt"
+                style={{
+                  transition: `stroke-dasharray 1.2s ease ${i * 100 + 300}ms`,
+                }}
+              />
+            ))}
+            {/* Center text */}
+            <text x="100" y="93" textAnchor="middle" fill="white" fontSize="28" fontWeight="bold" fontFamily="inherit">
+              415+
+            </text>
+            <text x="100" y="116" textAnchor="middle" fill="#9ca3af" fontSize="12" fontWeight="500" fontFamily="inherit">
+              Total Topics
+            </text>
+          </svg>
+        </div>
+
+        {/* Legend */}
+        <div className="grid grid-cols-2 sm:grid-cols-2 gap-x-8 gap-y-3">
+          {TOPIC_CATEGORIES.map((cat, i) => (
+            <div
+              key={cat.name}
+              className="flex items-center gap-2.5"
+              style={{
+                opacity: inView ? 1 : 0,
+                transform: inView ? 'translateX(0)' : 'translateX(12px)',
+                transition: 'opacity 0.5s ease, transform 0.5s ease',
+                transitionDelay: `${i * 80 + 500}ms`,
+              }}
+            >
+              <span className="flex-shrink-0 w-3 h-3 rounded-full" style={{ background: cat.color }} />
+              <span className="text-sm text-gray-300 font-medium whitespace-nowrap">{cat.name}</span>
+              <span className="text-sm text-gray-500 font-code font-semibold">{cat.count}</span>
             </div>
-            <div className="mt-2 text-sm md:text-base text-gray-400 font-medium">{stat.label}</div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
 
       {/* Capra Sidebar Mockup + Topic Cards */}
@@ -1417,16 +1459,60 @@ export default function LandingPage() {
             );
           })()}
 
-          {/* ── Bottom stat line ── */}
-          <div className={`mt-20 text-center transition-all duration-700 ${diffRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '800ms' }}>
-            <p className="text-xl md:text-2xl lg:text-3xl font-bold text-white font-display leading-relaxed">
-              <span className="text-emerald-400">40+</span> features.{' '}
-              <span className="text-indigo-400">415+</span> topics.{' '}
-              <span className="text-cyan-400">50+</span> languages.{' '}
-              <span className="text-amber-400">Zero</span> competitors match this.
-            </p>
-            <p className="mt-3 text-sm md:text-base text-gray-500">
-              This is why candidates switch to Camora and never look back.
+          {/* ── Bottom stat rings ── */}
+          <div className={`mt-20 transition-all duration-700 ${diffRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '800ms' }}>
+            <div className="flex flex-wrap items-center justify-center gap-8 md:gap-14">
+              {[
+                { value: 40, max: 45, label: 'Features', display: '40+', color: '#34d399' },
+                { value: 415, max: 415, label: 'Topics', display: '415+', color: '#818cf8' },
+                { value: 50, max: 50, label: 'Languages', display: '50+', color: '#06b6d4' },
+                { value: 7, max: 10, label: 'Categories', display: '7', color: '#fbbf24' },
+              ].map((ring, i) => {
+                const r = 30;
+                const circ = 2 * Math.PI * r;
+                const filled = (ring.value / ring.max) * circ;
+                const gap = circ - filled;
+                return (
+                  <div
+                    key={ring.label}
+                    className="flex flex-col items-center"
+                    style={{
+                      opacity: diffRef.inView ? 1 : 0,
+                      transform: diffRef.inView ? 'scale(1)' : 'scale(0.8)',
+                      transition: 'opacity 0.6s ease, transform 0.6s ease',
+                      transitionDelay: `${i * 120 + 900}ms`,
+                    }}
+                  >
+                    <svg width="80" height="80" viewBox="0 0 80 80" className="w-[64px] h-[64px] md:w-[80px] md:h-[80px]">
+                      {/* Background ring */}
+                      <circle cx="40" cy="40" r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="5" />
+                      {/* Progress ring */}
+                      <circle
+                        cx="40"
+                        cy="40"
+                        r={r}
+                        fill="none"
+                        stroke={ring.color}
+                        strokeWidth="5"
+                        strokeLinecap="round"
+                        strokeDasharray={`${diffRef.inView ? filled : 0} ${diffRef.inView ? gap : circ}`}
+                        strokeDashoffset={circ * 0.25}
+                        style={{
+                          transition: `stroke-dasharray 1.2s ease ${i * 120 + 1000}ms`,
+                        }}
+                      />
+                      {/* Center number */}
+                      <text x="40" y="43" textAnchor="middle" fill="white" fontSize="16" fontWeight="bold" fontFamily="inherit">
+                        {ring.display}
+                      </text>
+                    </svg>
+                    <span className="mt-2 text-xs md:text-sm text-gray-400 font-medium">{ring.label}</span>
+                  </div>
+                );
+              })}
+            </div>
+            <p className="mt-6 text-center text-sm md:text-base text-gray-500">
+              <span className="text-amber-400 font-semibold">Zero</span> competitors match this. This is why candidates switch to Camora and never look back.
             </p>
           </div>
         </div>
@@ -1445,6 +1531,49 @@ export default function LandingPage() {
             <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-white mt-4">
               See why engineers switch to Camora.
             </h2>
+          </div>
+
+          {/* ── Feature Count Bar Chart ── */}
+          <div
+            className={`mb-14 max-w-2xl mx-auto transition-all duration-700 ${compRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
+            style={{ transitionDelay: '200ms' }}
+          >
+            {[
+              { name: 'Camora', count: 40, color: '#34d399', suffix: '+' },
+              { name: 'LockedIn', count: 22, color: '#6b7280', suffix: '' },
+              { name: 'Final Round', count: 18, color: '#6b7280', suffix: '' },
+              { name: 'Sensei', count: 15, color: '#6b7280', suffix: '' },
+              { name: 'Solver', count: 12, color: '#6b7280', suffix: '' },
+            ].map((bar, i) => (
+              <div
+                key={bar.name}
+                className="flex items-center gap-3 mb-3"
+                style={{
+                  opacity: compRef.inView ? 1 : 0,
+                  transition: 'opacity 0.5s ease',
+                  transitionDelay: `${i * 100 + 300}ms`,
+                }}
+              >
+                <span className={`text-sm font-semibold w-24 text-right flex-shrink-0 ${i === 0 ? 'text-emerald-400' : 'text-gray-500'}`}>
+                  {bar.name}
+                </span>
+                <div className="flex-1 h-7 rounded bg-white/[0.04] overflow-hidden">
+                  <div
+                    className="h-full rounded flex items-center justify-end pr-2.5"
+                    style={{
+                      width: compRef.inView ? `${(bar.count / 45) * 100}%` : '0%',
+                      background: bar.color,
+                      transition: `width 1s ease ${i * 100 + 400}ms`,
+                    }}
+                  >
+                    <span className="text-xs font-bold font-code text-white whitespace-nowrap">
+                      {bar.count}{bar.suffix}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+            <p className="text-center text-xs text-gray-600 mt-4 font-code tracking-wide">FEATURES COMPARISON</p>
           </div>
 
           <div className="grid md:grid-cols-2 gap-6">
