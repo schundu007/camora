@@ -13,6 +13,7 @@ import { Router } from 'express';
 import Stripe from 'stripe';
 import { query } from '../lib/shared-db.js';
 import { authenticate } from '../middleware/authenticate.js';
+import { addTopup } from '../services/usage.js';
 
 const router = Router();
 
@@ -254,9 +255,35 @@ router.post(
 
     try {
       switch (event.type) {
-        // ---- Checkout completed (activate plan) --------------------------
+        // ---- Checkout completed (activate plan or apply topup) -----------
         case 'checkout.session.completed': {
           const userId = data.metadata?.user_id;
+
+          // --- Topup payment -------------------------------------------------
+          if (data.metadata?.topup_type && userId) {
+            const topupType = data.metadata.topup_type;
+            const topupAmount = parseInt(data.metadata.topup_amount, 10);
+            if (topupType && topupAmount > 0) {
+              await addTopup(parseInt(userId, 10), topupType, topupAmount);
+              console.log(`Added topup: ${topupAmount} ${topupType} for user ${userId}`);
+
+              // Apply extras (e.g. bonus diagrams bundled with question packs)
+              if (data.metadata.topup_extras) {
+                try {
+                  const extras = JSON.parse(data.metadata.topup_extras);
+                  for (const [extraType, extraAmount] of Object.entries(extras)) {
+                    await addTopup(parseInt(userId, 10), extraType, extraAmount);
+                    console.log(`Added topup extra: ${extraAmount} ${extraType} for user ${userId}`);
+                  }
+                } catch (parseErr) {
+                  console.error('Failed to parse topup_extras:', parseErr);
+                }
+              }
+            }
+            break;
+          }
+
+          // --- Plan activation -----------------------------------------------
           const plan = data.metadata?.plan || 'pro';
           if (userId) {
             await query(

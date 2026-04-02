@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import dotenv from 'dotenv';
 import { config } from './config/index.js';
 import { query } from './config/database.js';
+import { ensureUsageTable } from './services/usage.js';
 
 dotenv.config();
 
@@ -106,6 +107,10 @@ async function runMigrations() {
     for (const sql of migrations) {
       try { await query(sql); } catch (e) { /* table/index may already exist */ }
     }
+
+    // Usage tracking tables (plan limits, topups, active sessions)
+    await ensureUsageTable();
+
     console.log('Database migrations complete');
   } catch (err) {
     console.error('Migration error:', err.message);
@@ -124,6 +129,7 @@ import speakerRouter from './routes/speaker.js';
 import diagramRouter from './routes/diagram.js';
 import reactionsRouter from './routes/reactions.js';
 import analyticsRouter from './routes/analytics.js';
+import usageRouter from './routes/usage.js';
 
 // Register routes
 app.use('/api/v1/auth', authRouter);
@@ -138,6 +144,7 @@ app.use('/api/v1/speaker', speakerRouter);
 app.use('/api/v1/diagram', diagramRouter);
 app.use('/api/v1/reactions', reactionsRouter);
 app.use('/api/v1/analytics', analyticsRouter);
+app.use('/api/v1/usage', usageRouter);
 
 // Global error handler
 app.use((err, req, res, next) => {

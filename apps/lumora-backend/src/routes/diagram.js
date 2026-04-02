@@ -24,12 +24,22 @@ router.use(authenticate);
  *   cloud_provider – "aws" | "gcp" | "azure" (default: "aws")
  *   detail_level   – "high" | "medium" | "low" (optional)
  */
+// Map frontend detail levels to ai-services values
+const DETAIL_LEVEL_MAP = {
+  overview: 'low',
+  detailed: 'high',
+  // Also accept ai-services values directly
+  high: 'high',
+  medium: 'medium',
+  low: 'low',
+};
+
 router.post('/generate', async (req, res) => {
   try {
     const { question, cloud_provider = 'aws', detail_level } = req.body;
 
     if (!question) {
-      return res.status(400).json({ error: '"question" is required' });
+      return res.status(400).json({ success: false, error: '"question" is required' });
     }
 
     const payload = {
@@ -38,7 +48,7 @@ router.post('/generate', async (req, res) => {
       user_id: req.user.id,
     };
     if (detail_level) {
-      payload.detail_level = detail_level;
+      payload.detail_level = DETAIL_LEVEL_MAP[detail_level] || detail_level;
     }
 
     const upstream = await proxyToAIService('/diagram/generate', {
@@ -47,13 +57,23 @@ router.post('/generate', async (req, res) => {
       body: JSON.stringify(payload),
     });
 
-    // The upstream may return JSON (with a base64 image) or a binary image.
-    // Mirror the content-type so the frontend can handle either format.
+    if (!upstream.ok) {
+      const errData = await upstream.json().catch(() => ({}));
+      return res.status(upstream.status).json({
+        success: false,
+        error: errData.detail || errData.error || 'Diagram generation failed',
+      });
+    }
+
     const contentType = upstream.headers.get('content-type') || 'application/json';
 
     if (contentType.includes('application/json')) {
       const data = await upstream.json();
-      return res.status(upstream.status).json(data);
+      return res.status(200).json({
+        success: true,
+        image_url: data.image ? `data:image/png;base64,${data.image}` : null,
+        code: data.code || null,
+      });
     }
 
     // Binary image — stream it through
@@ -62,7 +82,7 @@ router.post('/generate', async (req, res) => {
     return res.send(buffer);
   } catch (err) {
     console.error('diagram generate proxy error:', err);
-    return res.status(502).json({ error: 'Failed to reach ai-services' });
+    return res.status(502).json({ success: false, error: 'Failed to reach ai-services' });
   }
 });
 

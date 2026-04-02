@@ -74,7 +74,6 @@ export function ArchitectureDiagram({ question, className = '' }: ArchitectureDi
             question,
             cloud_provider: cloudProvider,
             detail_level: detailLevel,
-            direction: direction,
           }),
         });
 
@@ -82,7 +81,7 @@ export function ArchitectureDiagram({ question, className = '' }: ArchitectureDi
 
         if (!cancelled) {
           if (data.success && data.image_url) {
-            setImageUrl(`${API_URL}${data.image_url}`);
+            setImageUrl(data.image_url);
             resetView();
           } else {
             setError(data.error || 'Failed to generate diagram');
@@ -98,7 +97,7 @@ export function ArchitectureDiagram({ question, className = '' }: ArchitectureDi
     })();
 
     return () => { cancelled = true; };
-  }, [question, token, detailLevel, cloudProvider, direction, resetView]);
+  }, [question, token, detailLevel, cloudProvider, resetView]);
 
   return (
     <div className={`${className}`}>
