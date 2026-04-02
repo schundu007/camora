@@ -299,6 +299,12 @@ async function recordCodingUsage(userId, language, inputTokens, outputTokens, la
 // POST /solve — SSE streaming endpoint
 // ---------------------------------------------------------------------------
 
+// /stream alias for backwards compatibility with frontend
+router.post('/stream', authenticate, async (req, res, next) => {
+  req.url = '/solve';
+  next();
+});
+
 router.post('/solve', authenticate, async (req, res) => {
   const { problem, language, conversationHistory } = req.body;
 

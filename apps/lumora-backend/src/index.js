@@ -128,6 +128,7 @@ import analyticsRouter from './routes/analytics.js';
 // Register routes
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/inference', inferenceRouter);
+app.use('/api/v1', inferenceRouter); // Also mount at /api/v1/stream for backwards compat
 app.use('/api/v1/coding', codingRouter);
 app.use('/api/v1/billing', billingRouter);
 app.use('/api/v1/conversations', conversationsRouter);
