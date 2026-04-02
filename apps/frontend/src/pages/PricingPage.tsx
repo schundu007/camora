@@ -39,7 +39,7 @@ const PLANS = [
     cta: 'Get Starter',
     ctaHref: '/lumora',
     popular: false,
-    priceId: 'price_1THJvrITUCNxtMxlz5AMBj28',
+    priceId: 'price_1THhzGITUCNxtMxll78umJSX',
   },
   {
     name: 'Pro',
@@ -59,7 +59,7 @@ const PLANS = [
     cta: 'Get Pro',
     ctaHref: '/lumora',
     popular: true,
-    priceId: 'price_1THJuMITUCNxtMxl8rXjHdCx',
+    priceId: 'price_1THhzhITUCNxtMxl1QSxi4Kj',
   },
   {
     name: 'Annual',
@@ -75,7 +75,7 @@ const PLANS = [
     cta: 'Get Annual',
     ctaHref: '/lumora',
     popular: false,
-    priceId: 'price_1THJuMITUCNxtMxl8rXjHdCx',
+    priceId: 'price_1THi1NITUCNxtMxlWmchtR1i',
   },
 ];
 

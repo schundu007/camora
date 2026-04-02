@@ -97,8 +97,8 @@ router.post('/checkout', authenticate, async (req, res) => {
     return res.status(400).json({ error: 'price_id, success_url, and cancel_url are required' });
   }
 
-  const validPrices = [PRICE_MONTHLY(), PRICE_LIFETIME()];
-  if (!validPrices.includes(price_id)) {
+  const validPrices = [PRICE_MONTHLY(), PRICE_LIFETIME(), process.env.STRIPE_PRICE_STARTER, process.env.STRIPE_PRICE_YEARLY].filter(Boolean);
+  if (validPrices.length > 0 && !validPrices.includes(price_id)) {
     return res.status(400).json({ error: 'Invalid price ID' });
   }
 
@@ -135,8 +135,8 @@ router.post('/checkout', authenticate, async (req, res) => {
       }
     }
 
-    // Determine payment mode
-    const isSubscription = price_id === PRICE_MONTHLY();
+    // Determine payment mode — all plans are subscriptions except lifetime/8-pack
+    const isSubscription = price_id !== PRICE_LIFETIME();
 
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
