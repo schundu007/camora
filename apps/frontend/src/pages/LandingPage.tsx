@@ -51,7 +51,7 @@ export default function LandingPage() {
   useEffect(() => { setMounted(true); window.scrollTo(0, 0); }, []);
 
   return (
-    <div className="landing-page min-h-screen text-white overflow-hidden" style={{ background: '#06070a' }}>
+    <div className="landing-page ai-bg min-h-screen text-white overflow-hidden">
       {/* Fonts */}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
@@ -81,6 +81,30 @@ export default function LandingPage() {
           box-shadow: 0 0 30px rgba(16, 185, 129, 0.5), 0 0 80px rgba(16, 185, 129, 0.2);
           transform: translateY(-2px);
         }
+
+        /* AI-inspired mesh gradient background */
+        .ai-bg {
+          background:
+            radial-gradient(ellipse 80% 50% at 50% -20%, rgba(16,185,129,0.15) 0%, transparent 50%),
+            radial-gradient(ellipse 60% 40% at 80% 50%, rgba(6,182,212,0.08) 0%, transparent 50%),
+            radial-gradient(ellipse 50% 50% at 20% 80%, rgba(129,140,248,0.06) 0%, transparent 50%),
+            #06070a;
+        }
+
+        /* Subtle grid overlay */
+        .grid-overlay {
+          background-image:
+            linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+          background-size: 80px 80px;
+        }
+
+        /* Animated gradient border for cards */
+        @keyframes border-glow {
+          0%, 100% { border-color: rgba(16,185,129,0.15); }
+          50% { border-color: rgba(6,182,212,0.25); }
+        }
+        .animate-border { animation: border-glow 4s ease-in-out infinite; }
       `}</style>
 
       {/* ── NAV ──────────────────────────────────────────── */}
@@ -147,9 +171,11 @@ export default function LandingPage() {
 
       {/* ── HERO ─────────────────────────────────────────── */}
       <section className="relative pt-36 pb-24 md:pt-48 md:pb-32 px-6 lg:px-8">
-        {/* Background glow */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] rounded-full animate-glow pointer-events-none"
-             style={{ background: 'radial-gradient(ellipse, rgba(16,185,129,0.12) 0%, rgba(6,182,212,0.06) 40%, transparent 70%)' }} />
+        {/* Grid overlay */}
+        <div className="absolute inset-0 grid-overlay pointer-events-none" />
+        {/* Focused glow behind hero text */}
+        <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[900px] h-[700px] rounded-full animate-glow pointer-events-none"
+             style={{ background: 'radial-gradient(ellipse, rgba(16,185,129,0.15) 0%, rgba(6,182,212,0.08) 30%, transparent 60%)' }} />
 
         <div className="relative max-w-5xl mx-auto text-center">
           {/* APPA Badge */}
@@ -205,8 +231,8 @@ export default function LandingPage() {
       {/* ── PRODUCT DEMO ─────────────────────────────────── */}
       <section className="px-6 lg:px-8 pb-28">
         <div className="max-w-6xl mx-auto">
-          <div className={`rounded-2xl border border-white/[0.08] overflow-hidden transition-all duration-1000 delay-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}
-               style={{ background: 'linear-gradient(180deg, rgba(16,185,129,0.03) 0%, rgba(6,7,10,1) 100%)' }}>
+          <div className={`rounded-2xl border animate-border overflow-hidden transition-all duration-1000 delay-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}
+               style={{ background: 'linear-gradient(180deg, rgba(16,185,129,0.04) 0%, rgba(6,7,10,0.95) 100%)', boxShadow: '0 0 80px rgba(16,185,129,0.06), 0 0 160px rgba(6,182,212,0.03)' }}>
             {/* Browser chrome */}
             <div className="flex items-center gap-3 px-5 py-3 border-b border-white/[0.06]" style={{ background: 'rgba(255,255,255,0.02)' }}>
               <div className="flex gap-2">
