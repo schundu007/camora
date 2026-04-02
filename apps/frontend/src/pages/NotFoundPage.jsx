@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 export default function NotFoundPage() {
   return (
     <div className="min-h-screen landing-root flex flex-col items-center justify-center px-6" style={{ background: 'linear-gradient(180deg, #ecfdf5 0%, #f0fdf4 50%, #f8fafc 100%)' }}>
@@ -18,7 +20,7 @@ export default function NotFoundPage() {
 
       <div className="relative z-10 text-center max-w-md">
         {/* Logo */}
-        <a href="/" className="inline-flex items-center gap-3 mb-10">
+        <Link to="/" className="inline-flex items-center gap-3 mb-10">
           <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center">
             <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
@@ -28,7 +30,7 @@ export default function NotFoundPage() {
             <span className="landing-display font-bold text-xl tracking-tight text-gray-900">Camora</span>
             <span className="block text-[10px] landing-mono uppercase tracking-[0.2em] text-emerald-600 -mt-0.5">Interview Suite</span>
           </div>
-        </a>
+        </Link>
 
         {/* 404 */}
         <div className="landing-mono text-7xl font-extrabold text-emerald-200 mb-4">404</div>
@@ -37,13 +39,27 @@ export default function NotFoundPage() {
           The page you are looking for does not exist or has been moved. Head back home to continue.
         </p>
 
-        {/* CTA */}
-        <a
-          href="/"
-          className="inline-flex items-center gap-2 px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold text-sm rounded-lg transition-colors landing-body"
-        >
-          Go Home
-        </a>
+        {/* Navigation links */}
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <Link
+            to="/"
+            className="inline-flex items-center gap-2 px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold text-sm rounded-lg transition-colors landing-body"
+          >
+            Go Home
+          </Link>
+          <Link
+            to="/capra"
+            className="inline-flex items-center gap-2 px-6 py-2.5 bg-white border border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 text-gray-800 font-semibold text-sm rounded-lg transition-colors landing-body"
+          >
+            Capra &mdash; Prepare
+          </Link>
+          <Link
+            to="/lumora"
+            className="inline-flex items-center gap-2 px-6 py-2.5 bg-white border border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 text-gray-800 font-semibold text-sm rounded-lg transition-colors landing-body"
+          >
+            Lumora &mdash; Interview AI
+          </Link>
+        </div>
       </div>
 
       <style>{`

@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
 export default function CapraLandingPage() {
@@ -26,12 +27,12 @@ export default function CapraLandingPage() {
         </div>
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Capra</h1>
         <p className="text-gray-500 mb-6">Interview preparation powered by AI</p>
-        <a
-          href="/capra/prepare"
+        <Link
+          to="/capra/prepare"
           className="inline-flex items-center gap-2 px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold text-sm rounded-lg transition-colors"
         >
           Get Started
-        </a>
+        </Link>
       </div>
     </div>
   );

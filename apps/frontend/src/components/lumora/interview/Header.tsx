@@ -155,6 +155,7 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
         <div className={`w-2 h-2 rounded-full shrink-0 transition-all duration-300 ${
           status.state === 'ready' ? 'bg-emerald-500' :
           status.state === 'error' ? 'bg-red-500' :
+          status.state === 'warn' ? 'bg-amber-500' :
           status.state === 'listen' || status.state === 'write' ? 'bg-emerald-500 animate-pulse' :
           'bg-gray-500'
         }`} style={status.state === 'ready' ? { boxShadow: '0 0 6px rgba(16, 185, 129, 0.5)' } : {}} />

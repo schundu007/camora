@@ -3,9 +3,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import CompetitorComparison from '../components/shared/pricing/CompetitorComparison';
 
-const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'http://localhost:8000';
+const API_URL = import.meta.env.VITE_CAMORA_API_URL || import.meta.env.VITE_LUMORA_API_URL || 'http://localhost:8000';
 
-const LUMORA_PLANS = [
+const CAMORA_PLANS = [
   {
     name: 'Free Trial',
     price: '$0',
@@ -71,7 +71,7 @@ export default function PricingPage() {
 
   const [loading, setLoading] = useState('');
 
-  const handleCheckout = async (plan: typeof LUMORA_PLANS[number]) => {
+  const handleCheckout = async (plan: typeof CAMORA_PLANS[number]) => {
     if (plan.name === 'Free Trial') { navigate('/lumora'); return; }
     const priceId = PRICE_MAP[plan.name];
     if (!priceId) { navigate('/lumora'); return; }
@@ -99,10 +99,10 @@ export default function PricingPage() {
       <nav className="flex items-center justify-between px-6 md:px-12 py-4 bg-gray-950 border-b border-gray-800">
         <Link to="/" className="flex items-center gap-3">
           <div className="w-9 h-9 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center">
-            <span className="font-display font-extrabold text-sm text-white">L</span>
+            <span className="font-display font-extrabold text-sm text-white">C</span>
           </div>
           <div>
-            <span className="font-display font-bold text-lg tracking-tight text-white">Lumora</span>
+            <span className="font-display font-bold text-lg tracking-tight text-white">Camora</span>
             <span className="block text-[10px] font-mono uppercase tracking-[0.2em] text-emerald-400 -mt-0.5">Interview AI</span>
           </div>
         </Link>
@@ -128,7 +128,7 @@ export default function PricingPage() {
       <div className="flex justify-center mb-10">
         <div className="inline-flex p-1 bg-gray-100 rounded-xl">
           <button onClick={() => setTab('lumora')} className={`px-6 py-2.5 text-sm font-bold rounded-lg transition-all ${tab === 'lumora' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500'}`}>
-            Lumora — During Interview
+            Camora — During Interview
           </button>
           <button onClick={() => setTab('ascend')} className={`px-6 py-2.5 text-sm font-bold rounded-lg transition-all ${tab === 'ascend' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500'}`}>
             Ascend — Preparation
@@ -136,11 +136,11 @@ export default function PricingPage() {
         </div>
       </div>
 
-      {/* Lumora Plans */}
+      {/* Camora Plans */}
       {tab === 'lumora' && (
         <div className="max-w-5xl mx-auto px-6 pb-10">
           <div className="grid md:grid-cols-3 gap-6">
-            {LUMORA_PLANS.map((plan) => (
+            {CAMORA_PLANS.map((plan) => (
               <div key={plan.name} className={`relative rounded-2xl border bg-white/80 backdrop-blur-sm p-8 flex flex-col ${plan.popular ? `${plan.border} shadow-xl shadow-emerald-500/10 scale-105 z-10` : 'border-gray-200 shadow-sm'}`}>
                 {plan.popular && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-bold rounded-full shadow-lg">
@@ -178,8 +178,8 @@ export default function PricingPage() {
           <div className="grid md:grid-cols-3 gap-6">
             {[
               { name: 'Interview Ready', price: '$29', period: '/mo', desc: 'Solid foundation', features: ['All 300+ DSA topics', '15 system design problems', '100 AI questions/day', '5 mock interviews/mo', '3 company preps'], popular: false },
-              { name: 'FAANG Track', price: '$59', period: '/mo', desc: 'Everything unlimited + 3 Lumora sessions', features: ['Unlimited system design', 'Unlimited AI questions', 'Unlimited mock interviews', 'All company preps', '3 Lumora live sessions included', 'Priority AI speed'], popular: true },
-              { name: 'Elite', price: '$99', period: '/mo', desc: 'Premium + 5 Lumora sessions', features: ['Everything in FAANG Track', '5 Lumora live sessions', 'Custom weekly study plan', 'AI resume review', 'Priority support'], popular: false },
+              { name: 'FAANG Track', price: '$59', period: '/mo', desc: 'Everything unlimited + 3 Camora sessions', features: ['Unlimited system design', 'Unlimited AI questions', 'Unlimited mock interviews', 'All company preps', '3 Camora live sessions included', 'Priority AI speed'], popular: true },
+              { name: 'Elite', price: '$99', period: '/mo', desc: 'Premium + 5 Camora sessions', features: ['Everything in FAANG Track', '5 Camora live sessions', 'Custom weekly study plan', 'AI resume review', 'Priority support'], popular: false },
             ].map((plan) => (
               <div key={plan.name} className={`relative rounded-2xl border bg-white/80 backdrop-blur-sm p-8 flex flex-col ${plan.popular ? 'border-emerald-300 shadow-xl shadow-emerald-500/10 scale-105 z-10' : 'border-gray-200 shadow-sm'}`}>
                 {plan.popular && (
@@ -199,9 +199,9 @@ export default function PricingPage() {
                     </li>
                   ))}
                 </ul>
-                <a href="/pricing" className={`mt-8 block text-center py-3 rounded-xl font-bold text-sm transition-all ${plan.popular ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
+                <Link to="/pricing" className={`mt-8 block text-center py-3 rounded-xl font-bold text-sm transition-all ${plan.popular ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
                   Start {plan.name} on Ascend
-                </a>
+                </Link>
               </div>
             ))}
           </div>
@@ -228,7 +228,7 @@ export default function PricingPage() {
                 <tr className="border-b border-gray-800 bg-gray-900/50">
                   <th className="text-left py-4 px-4 text-gray-500 font-mono text-[10px] uppercase tracking-widest min-w-[200px] sticky left-0 bg-gray-900/95 z-10">Feature</th>
                   <th className="py-4 px-3 text-center min-w-[90px] bg-emerald-500/10">
-                    <div className="text-emerald-400 font-bold text-sm">Lumora</div>
+                    <div className="text-emerald-400 font-bold text-sm">Camora</div>
                     <div className="text-emerald-300/70 text-[10px] font-mono">$79/mo</div>
                     <span className="inline-block mt-1 px-1.5 py-0.5 bg-emerald-500 text-white text-[8px] font-bold rounded uppercase">Ours</span>
                   </th>
@@ -335,9 +335,9 @@ export default function PricingPage() {
                 Start Free — No Credit Card
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
               </Link>
-              <a href="https://camora.cariara.com" className="inline-flex items-center gap-2 px-6 py-3.5 border border-gray-600 text-gray-300 font-semibold rounded-xl hover:border-gray-400 hover:text-white transition-all text-sm">
+              <Link to="/capra" className="inline-flex items-center gap-2 px-6 py-3.5 border border-gray-600 text-gray-300 font-semibold rounded-xl hover:border-gray-400 hover:text-white transition-all text-sm">
                 Ascend — Prep Tool
-              </a>
+              </Link>
             </div>
           </div>
         </div>
@@ -356,7 +356,7 @@ export default function PricingPage() {
           <h2 className="font-display font-bold text-2xl text-gray-900 text-center mb-8">Frequently Asked</h2>
           <div className="grid md:grid-cols-2 gap-4">
             {[
-              { q: 'Is it detectable during screen share?', a: 'Lumora runs in a separate browser tab or our invisible desktop app. Use ⌘B to instantly blank the screen.' },
+              { q: 'Is it detectable during screen share?', a: 'Camora runs in a separate browser tab or our invisible desktop app. Use Cmd+B to instantly blank the screen.' },
               { q: 'What platforms are supported?', a: 'Zoom, Google Meet, MS Teams, HackerRank, CoderPad, Codility — any browser-based interview platform.' },
               { q: 'Can it hear my interviewer?', a: 'Yes. Click "Interviewer" to capture system audio from Zoom/Meet. It transcribes their questions in real-time.' },
               { q: 'How is this different from InterviewCoder?', a: 'We do everything they do at $79/mo (vs their $299/mo). Plus: preparation content, system design diagrams, behavioral coaching, 51 languages. They only do coding.' },
@@ -375,7 +375,7 @@ export default function PricingPage() {
       {/* Footer */}
       <footer className="border-t border-gray-800 bg-gray-950 px-6 md:px-12 py-6">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
-          <span className="font-display font-bold text-sm text-white">Lumora</span>
+          <span className="font-display font-bold text-sm text-white">Camora</span>
           <div className="flex gap-5 text-xs text-gray-500">
             <Link to="/lumora" className="hover:text-white transition-colors">App</Link>
             <Link to="/" className="hover:text-white transition-colors">Home</Link>

@@ -17,12 +17,12 @@ const SECTIONS = [
     iconText: 'text-emerald-600',
     cols: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3',
     items: [
-      { label: 'URL Shortener', desc: 'Design a scalable URL shortening service', icon: 'link' },
-      { label: 'Rate Limiter', desc: 'Build a distributed rate limiting system', icon: 'shield' },
-      { label: 'Notification System', desc: 'Design a multi-channel notification service', icon: 'bell' },
-      { label: 'Chat Application', desc: 'Real-time messaging with WebSocket architecture', icon: 'messageSquare' },
-      { label: 'Distributed Cache', desc: 'Design a high-throughput caching layer', icon: 'layers' },
-      { label: 'Payment Gateway', desc: 'Build a reliable payment processing system', icon: 'creditCard' },
+      { label: 'URL Shortener', desc: 'Design a scalable URL shortening service', icon: 'link', slug: 'url-shortener' },
+      { label: 'Rate Limiter', desc: 'Build a distributed rate limiting system', icon: 'shield', slug: 'rate-limiter' },
+      { label: 'Notification System', desc: 'Design a multi-channel notification service', icon: 'bell', slug: 'notification-system' },
+      { label: 'Chat Application', desc: 'Real-time messaging with WebSocket architecture', icon: 'messageSquare', slug: 'chat-application' },
+      { label: 'Distributed Cache', desc: 'Design a high-throughput caching layer', icon: 'layers', slug: 'distributed-cache' },
+      { label: 'Payment Gateway', desc: 'Build a reliable payment processing system', icon: 'creditCard', slug: 'payment-gateway' },
     ],
   },
   {
@@ -36,10 +36,10 @@ const SECTIONS = [
     iconText: 'text-cyan-600',
     cols: 'grid-cols-1 sm:grid-cols-2',
     items: [
-      { label: 'K8s Networking', desc: 'Container networking, services, and ingress', icon: 'cloud' },
-      { label: 'CI/CD Pipeline', desc: 'Build and deploy automation strategies', icon: 'rocket' },
-      { label: 'Microservices', desc: 'Service decomposition and communication patterns', icon: 'package' },
-      { label: 'Database Sharding', desc: 'Horizontal partitioning and data distribution', icon: 'database' },
+      { label: 'K8s Networking', desc: 'Container networking, services, and ingress', icon: 'cloud', slug: 'k8s-networking' },
+      { label: 'CI/CD Pipeline', desc: 'Build and deploy automation strategies', icon: 'rocket', slug: 'cicd-pipeline' },
+      { label: 'Microservices', desc: 'Service decomposition and communication patterns', icon: 'package', slug: 'microservices' },
+      { label: 'Database Sharding', desc: 'Horizontal partitioning and data distribution', icon: 'database', slug: 'database-sharding' },
     ],
   },
   {
@@ -53,10 +53,10 @@ const SECTIONS = [
     iconText: 'text-amber-600',
     cols: 'grid-cols-1 sm:grid-cols-2',
     items: [
-      { label: 'About Yourself', desc: 'Craft a compelling personal narrative', icon: 'user' },
-      { label: 'Technical Challenge', desc: 'Walk through a difficult engineering problem', icon: 'target' },
-      { label: 'Production Incidents', desc: 'Handling outages and post-mortems', icon: 'alertTriangle' },
-      { label: 'Leadership Style', desc: 'Influence, mentorship, and team dynamics', icon: 'users' },
+      { label: 'About Yourself', desc: 'Craft a compelling personal narrative', icon: 'user', slug: 'about-yourself' },
+      { label: 'Technical Challenge', desc: 'Walk through a difficult engineering problem', icon: 'target', slug: 'technical-challenge' },
+      { label: 'Production Incidents', desc: 'Handling outages and post-mortems', icon: 'alertTriangle', slug: 'production-incidents' },
+      { label: 'Leadership Style', desc: 'Influence, mentorship, and team dynamics', icon: 'users', slug: 'leadership-style' },
     ],
   },
   {
@@ -70,9 +70,9 @@ const SECTIONS = [
     iconText: 'text-rose-600',
     cols: 'grid-cols-1 sm:grid-cols-3',
     items: [
-      { label: 'Transformer Architecture', desc: 'Attention mechanisms and modern LLM design', icon: 'brain' },
-      { label: 'Model Training Pipeline', desc: 'Data prep, training loops, and evaluation', icon: 'activity' },
-      { label: 'Feature Engineering', desc: 'Feature selection, encoding, and scaling', icon: 'filter' },
+      { label: 'Transformer Architecture', desc: 'Attention mechanisms and modern LLM design', icon: 'brain', slug: 'transformer-architecture' },
+      { label: 'Model Training Pipeline', desc: 'Data prep, training loops, and evaluation', icon: 'activity', slug: 'model-training-pipeline' },
+      { label: 'Feature Engineering', desc: 'Feature selection, encoding, and scaling', icon: 'filter', slug: 'feature-engineering' },
     ],
   },
   {
@@ -86,9 +86,9 @@ const SECTIONS = [
     iconText: 'text-blue-600',
     cols: 'grid-cols-1 sm:grid-cols-3',
     items: [
-      { label: 'REST vs GraphQL', desc: 'API design trade-offs and best practices', icon: 'code' },
-      { label: 'Auth & JWT', desc: 'Authentication flows, tokens, and session management', icon: 'lock' },
-      { label: 'Cloud & DevOps', desc: 'Infrastructure, containers, and deployment', icon: 'cloudArchitect' },
+      { label: 'REST vs GraphQL', desc: 'API design trade-offs and best practices', icon: 'code', slug: 'rest-vs-graphql' },
+      { label: 'Auth & JWT', desc: 'Authentication flows, tokens, and session management', icon: 'lock', slug: 'auth-jwt' },
+      { label: 'Cloud & DevOps', desc: 'Infrastructure, containers, and deployment', icon: 'cloudArchitect', slug: 'cloud-devops' },
     ],
   },
   {
@@ -102,9 +102,9 @@ const SECTIONS = [
     iconText: 'text-teal-600',
     cols: 'grid-cols-1 sm:grid-cols-3',
     items: [
-      { label: 'SQL & Data Modeling', desc: 'Schema design, normalization, and queries', icon: 'database' },
-      { label: 'ETL & Pipelines', desc: 'Data ingestion, transformation, and orchestration', icon: 'signal' },
-      { label: 'A/B Testing & Stats', desc: 'Experiment design, significance, and analysis', icon: 'chartBar' },
+      { label: 'SQL & Data Modeling', desc: 'Schema design, normalization, and queries', icon: 'database', slug: 'sql-data-modeling' },
+      { label: 'ETL & Pipelines', desc: 'Data ingestion, transformation, and orchestration', icon: 'signal', slug: 'etl-pipelines' },
+      { label: 'A/B Testing & Stats', desc: 'Experiment design, significance, and analysis', icon: 'chartBar', slug: 'ab-testing-stats' },
     ],
   },
   {
@@ -118,14 +118,14 @@ const SECTIONS = [
     iconText: 'text-violet-600',
     cols: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4',
     items: [
-      { label: 'Two Sum', desc: 'Hash map lookup pattern', icon: 'algorithm' },
-      { label: 'LRU Cache', desc: 'Linked list + hash map design', icon: 'layers' },
-      { label: 'Merge Intervals', desc: 'Sorting and interval merging', icon: 'activity' },
-      { label: 'Binary Tree BFS', desc: 'Level-order traversal technique', icon: 'systemDesign' },
-      { label: 'Linked List', desc: 'Pointer manipulation essentials', icon: 'link' },
-      { label: 'Valid Parens', desc: 'Stack-based matching', icon: 'code' },
-      { label: 'Max Subarray', desc: "Kadane's algorithm", icon: 'chartLine' },
-      { label: 'Group Anagrams', desc: 'Hash-based grouping', icon: 'filter' },
+      { label: 'Two Sum', desc: 'Hash map lookup pattern', icon: 'algorithm', slug: 'two-sum' },
+      { label: 'LRU Cache', desc: 'Linked list + hash map design', icon: 'layers', slug: 'lru-cache' },
+      { label: 'Merge Intervals', desc: 'Sorting and interval merging', icon: 'activity', slug: 'merge-intervals' },
+      { label: 'Binary Tree BFS', desc: 'Level-order traversal technique', icon: 'systemDesign', slug: 'binary-tree-bfs' },
+      { label: 'Linked List', desc: 'Pointer manipulation essentials', icon: 'link', slug: 'linked-list' },
+      { label: 'Valid Parens', desc: 'Stack-based matching', icon: 'code', slug: 'valid-parens' },
+      { label: 'Max Subarray', desc: "Kadane's algorithm", icon: 'chartLine', slug: 'max-subarray' },
+      { label: 'Group Anagrams', desc: 'Hash-based grouping', icon: 'filter', slug: 'group-anagrams' },
     ],
   },
 ];
@@ -175,6 +175,15 @@ export default function PracticePage() {
     }
   }, [navigate]);
 
+  /* ── Nav click handler: external links open in new tab, internal use navigate ── */
+  const handleNavClick = useCallback((href) => {
+    if (href.startsWith('http') || href.startsWith('mailto:')) {
+      window.open(href, '_blank');
+    } else {
+      navigate(href);
+    }
+  }, [navigate]);
+
   /* ── Mock interview helpers ── */
   const getRandomQuestion = useCallback((cat) => {
     const section = SECTIONS.find((s) => s.key === cat);
@@ -218,7 +227,7 @@ export default function PracticePage() {
 
       {/* Nav */}
       <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-12 py-4" style={{ background: '#111827' }}>
-        <a href="/capra" className="flex items-center gap-3">
+        <a href="/capra" onClick={(e) => { e.preventDefault(); navigate('/capra'); }} className="flex items-center gap-3">
           <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
             <Icon name="ascend" size={16} className="text-white" />
           </div>
@@ -231,19 +240,23 @@ export default function PracticePage() {
         <div className="hidden md:flex items-center gap-6">
           {navLinks.map((link) => {
             const isHighlighted = ['Apply', 'Prepare', 'Practice'].includes(link.label);
-            return (
-              <a key={link.label} href={link.href} className={`text-sm font-semibold transition-colors landing-body ${isHighlighted ? '' : 'text-gray-400 hover:text-white'}`} style={isHighlighted ? { background: 'linear-gradient(90deg, #34d399, #22d3ee)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' } : undefined}>
+            return link.href.startsWith('http') ? (
+              <a key={link.label} href={link.href} target="_blank" rel="noopener noreferrer" className={`text-sm font-semibold transition-colors landing-body ${isHighlighted ? '' : 'text-gray-400 hover:text-white'}`} style={isHighlighted ? { background: 'linear-gradient(90deg, #34d399, #22d3ee)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' } : undefined}>
                 {link.label}
               </a>
+            ) : (
+              <button key={link.label} onClick={() => navigate(link.href)} className={`text-sm font-semibold transition-colors landing-body ${isHighlighted ? '' : 'text-gray-400 hover:text-white'}`} style={isHighlighted ? { background: 'linear-gradient(90deg, #34d399, #22d3ee)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' } : undefined}>
+                {link.label}
+              </button>
             );
           })}
         </div>
 
         <div className="flex items-center gap-4">
           {user ? (
-            <a href="/capra/prepare" className="text-sm text-gray-300 hover:text-white transition-colors landing-body font-medium">Dashboard</a>
+            <button onClick={() => navigate('/capra/prepare')} className="text-sm text-gray-300 hover:text-white transition-colors landing-body font-medium">Dashboard</button>
           ) : !loading ? (
-            <a href="/capra/login" className="text-sm text-gray-300 hover:text-white transition-colors landing-body font-medium">Sign in</a>
+            <button onClick={() => navigate('/capra/login')} className="text-sm text-gray-300 hover:text-white transition-colors landing-body font-medium">Sign in</button>
           ) : null}
           <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden p-2 text-gray-400 hover:text-white transition-colors">
             <Icon name={mobileMenuOpen ? 'close' : 'menu'} size={22} />
@@ -255,12 +268,16 @@ export default function PracticePage() {
       {mobileMenuOpen && (
         <div className="fixed top-16 left-0 right-0 z-40 md:hidden border-b border-gray-100 bg-white px-6 py-4 space-y-1">
           {navLinks.map((link) => (
-            <a key={link.label} href={link.href} className="block px-4 py-2.5 text-sm font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-50 rounded transition-colors landing-body">{link.label}</a>
+            link.href.startsWith('http') ? (
+              <a key={link.label} href={link.href} target="_blank" rel="noopener noreferrer" className="block px-4 py-2.5 text-sm font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-50 rounded transition-colors landing-body">{link.label}</a>
+            ) : (
+              <button key={link.label} onClick={() => { navigate(link.href); setMobileMenuOpen(false); }} className="block w-full text-left px-4 py-2.5 text-sm font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-50 rounded transition-colors landing-body">{link.label}</button>
+            )
           ))}
           {user ? (
-            <a href="/capra/prepare" className="block px-4 py-2.5 text-sm font-medium text-emerald-600 hover:bg-emerald-50 rounded transition-colors landing-body">Dashboard</a>
+            <button onClick={() => { navigate('/capra/prepare'); setMobileMenuOpen(false); }} className="block w-full text-left px-4 py-2.5 text-sm font-medium text-emerald-600 hover:bg-emerald-50 rounded transition-colors landing-body">Dashboard</button>
           ) : !loading ? (
-            <a href="/capra/login" className="block w-full mt-2 px-4 py-2.5 text-sm font-medium text-emerald-600 hover:bg-emerald-50 rounded transition-colors landing-body text-left">Sign in</a>
+            <button onClick={() => { navigate('/capra/login'); setMobileMenuOpen(false); }} className="block w-full mt-2 px-4 py-2.5 text-sm font-medium text-emerald-600 hover:bg-emerald-50 rounded transition-colors landing-body text-left">Sign in</button>
           ) : null}
         </div>
       )}
@@ -433,7 +450,7 @@ export default function PracticePage() {
       {/* Footer */}
       <footer className="fixed bottom-0 left-0 right-0 z-50 px-6 md:px-12 py-3" style={{ background: '#111827' }}>
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
-          <a href="/capra" className="flex items-center gap-2">
+          <a href="/capra" onClick={(e) => { e.preventDefault(); navigate('/capra'); }} className="flex items-center gap-2">
             <div className="w-6 h-6 bg-emerald-500 rounded flex items-center justify-center">
               <Icon name="ascend" size={12} className="text-white" />
             </div>
@@ -448,7 +465,11 @@ export default function PracticePage() {
               { label: 'Pricing', href: '/pricing' },
               { label: 'Support', href: 'mailto:support@cariara.com' },
             ].map((link) => (
-              <a key={link.label} href={link.href} className="text-xs text-gray-400 hover:text-emerald-400 transition-colors landing-body font-medium">{link.label}</a>
+              link.href.startsWith('http') || link.href.startsWith('mailto:') ? (
+                <a key={link.label} href={link.href} target="_blank" rel="noopener noreferrer" className="text-xs text-gray-400 hover:text-emerald-400 transition-colors landing-body font-medium">{link.label}</a>
+              ) : (
+                <button key={link.label} onClick={() => navigate(link.href)} className="text-xs text-gray-400 hover:text-emerald-400 transition-colors landing-body font-medium">{link.label}</button>
+              )
             ))}
           </div>
           <p className="text-xs text-gray-500 landing-mono">

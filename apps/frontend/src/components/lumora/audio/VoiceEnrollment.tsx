@@ -32,13 +32,15 @@ export function VoiceEnrollment({ disabled }: VoiceEnrollmentProps) {
 
   const RECORDING_DURATION = 5000; // 5 seconds
 
-  // Check enrollment status on mount
+  // Check enrollment status on mount - gracefully handles ai-services being unavailable
   useEffect(() => {
     if (token) {
       speakerAPI.getStatus(token).then((result) => {
         setVoiceEnrolled(result.enrolled);
       }).catch(() => {
-        // Ignore errors - assume not enrolled
+        // Speaker service unavailable (404/502/etc) - silently assume not enrolled.
+        // This is expected when ai-services is not running.
+        setVoiceEnrolled(false);
       });
     }
   }, [token, setVoiceEnrolled]);
@@ -136,10 +138,21 @@ export function VoiceEnrollment({ disabled }: VoiceEnrollmentProps) {
             setStatus('error', 'Enrollment failed');
           }
         } catch (err: any) {
-          const msg = err.message || 'Enrollment failed';
-          console.error('Voice enrollment error:', msg);
-          setError(msg);
-          setStatus('error', msg);
+          const status = err?.status;
+          let userMsg: string;
+          if (status === 404 || status === 502 || status === 503) {
+            userMsg = 'Voice service unavailable. The AI service may not be running.';
+          } else if (err?.name === 'AbortError' || status === 408) {
+            userMsg = err.message || 'Voice enrollment timed out. Please try again.';
+          } else {
+            userMsg = err.message || 'Enrollment failed';
+          }
+          // Only log unexpected errors to console (not expected service-down scenarios)
+          if (status !== 404 && status !== 502 && status !== 503) {
+            console.error('Voice enrollment error:', err.message || err);
+          }
+          setError(userMsg);
+          setStatus('error', userMsg);
         }
 
         setIsEnrolling(false);

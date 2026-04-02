@@ -138,7 +138,19 @@ export const speakerAPI = {
   },
 
   getStatus: async (token: string): Promise<{ enrolled: boolean }> => {
-    return fetchAPI<{ enrolled: boolean }>('/api/v1/speaker/status', {}, token);
+    // Use a short timeout - this is a non-critical check on mount.
+    // If ai-services is down, we want to fail fast rather than hang.
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+    try {
+      return await fetchAPI<{ enrolled: boolean }>(
+        '/api/v1/speaker/status',
+        { signal: controller.signal },
+        token
+      );
+    } finally {
+      clearTimeout(timeout);
+    }
   },
 
   unenroll: async (token: string): Promise<{ success: boolean; message: string }> => {

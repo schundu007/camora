@@ -112,7 +112,10 @@ export function LandingPage() {
           </div>
         </div>
         <div className="hidden md:flex items-center gap-6">
-          <a href="#features" className="text-sm text-gray-400 hover:text-white transition-colors font-medium">Features</a>
+          <a href="https://jobs.cariara.com" className="text-sm text-gray-400 hover:text-white transition-colors font-medium">Apply</a>
+          <Link to="/capra/prepare" className="text-sm text-gray-400 hover:text-white transition-colors font-medium">Prepare</Link>
+          <Link to="/capra/practice" className="text-sm text-gray-400 hover:text-white transition-colors font-medium">Practice</Link>
+          <Link to="/lumora" className="text-sm text-gray-400 hover:text-white transition-colors font-medium">Attend</Link>
           <Link to="/pricing" className="text-sm text-gray-400 hover:text-white transition-colors font-medium">Pricing</Link>
           <Link to="/capra/login" className="text-sm text-gray-400 hover:text-white transition-colors font-medium">Sign In</Link>
           <Link
@@ -203,42 +206,50 @@ export function LandingPage() {
               { num: 2, label: 'Prepare', desc: 'Study & review', href: '/capra/prepare', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', borderColor: '#a5b4fc', bgFrom: '#eef2ff', bgTo: '#e0e7ff', numBg: 'linear-gradient(135deg, #4f46e5, #6366f1)', iconBg: '#e0e7ff', iconColor: '#4f46e5', glowColor: 'rgba(79, 70, 229, 0.15)', shimmer: 'from-indigo-200/0 via-indigo-200/40 to-indigo-200/0' },
               { num: 3, label: 'Practice', desc: 'Solve problems', href: '/capra/practice', icon: 'M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4', borderColor: '#c4b5fd', bgFrom: '#f5f3ff', bgTo: '#ede9fe', numBg: 'linear-gradient(135deg, #7c3aed, #8b5cf6)', iconBg: '#ede9fe', iconColor: '#7c3aed', glowColor: 'rgba(124, 58, 237, 0.15)', shimmer: 'from-violet-200/0 via-violet-200/40 to-violet-200/0' },
               { num: 4, label: 'Attend', desc: 'Ace the interview', href: '/lumora', icon: 'M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z', borderColor: '#fcd34d', bgFrom: '#fffbeb', bgTo: '#fef3c7', numBg: 'linear-gradient(135deg, #d97706, #f59e0b)', iconBg: '#fef3c7', iconColor: '#d97706', glowColor: 'rgba(217, 119, 6, 0.15)', shimmer: 'from-amber-200/0 via-amber-200/40 to-amber-200/0' },
-            ].map((item) => (
-              <Link
-                key={item.label}
-                to={item.href}
-                className={`group relative flex flex-col items-center gap-3 p-6 md:p-8 rounded-2xl border-2 overflow-hidden transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
-                style={{
-                  borderColor: item.borderColor,
-                  background: `linear-gradient(135deg, ${item.bgFrom} 0%, ${item.bgTo} 100%)`,
-                  transitionDelay: `${(item.num - 1) * 150 + 400}ms`,
-                  boxShadow: `0 4px 20px ${item.glowColor}`,
-                }}
-              >
-                {/* Shimmer sweep effect */}
-                <div className={`absolute inset-0 bg-gradient-to-r ${item.shimmer} -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out`} />
+            ].map((item) => {
+              const isExternal = item.href.startsWith('http');
+              const sharedClassName = `group relative flex flex-col items-center gap-3 p-6 md:p-8 rounded-2xl border-2 overflow-hidden transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`;
+              const sharedStyle = {
+                borderColor: item.borderColor,
+                background: `linear-gradient(135deg, ${item.bgFrom} 0%, ${item.bgTo} 100%)`,
+                transitionDelay: `${(item.num - 1) * 150 + 400}ms`,
+                boxShadow: `0 4px 20px ${item.glowColor}`,
+              };
+              const cardContent = (
+                <>
+                  {/* Shimmer sweep effect */}
+                  <div className={`absolute inset-0 bg-gradient-to-r ${item.shimmer} -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out`} />
 
-                {/* Corner glow */}
-                <div className="absolute -top-8 -right-8 w-24 h-24 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-2xl" style={{ background: item.glowColor }} />
+                  {/* Corner glow */}
+                  <div className="absolute -top-8 -right-8 w-24 h-24 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-2xl" style={{ background: item.glowColor }} />
 
+                  {/* Icon with float animation */}
+                  <div
+                    className="relative w-14 h-14 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-all duration-500 shadow-sm group-hover:shadow-md animate-icon-float"
+                    style={{ background: item.iconBg, animationDelay: `${item.num * 0.5}s` }}
+                  >
+                    <svg className="w-7 h-7 transition-transform duration-500 group-hover:rotate-6" fill="none" stroke={item.iconColor} viewBox="0 0 24 24" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d={item.icon} />
+                    </svg>
+                  </div>
 
-                {/* Icon with float animation */}
-                <div
-                  className="relative w-14 h-14 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-all duration-500 shadow-sm group-hover:shadow-md animate-icon-float"
-                  style={{ background: item.iconBg, animationDelay: `${item.num * 0.5}s` }}
-                >
-                  <svg className="w-7 h-7 transition-transform duration-500 group-hover:rotate-6" fill="none" stroke={item.iconColor} viewBox="0 0 24 24" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d={item.icon} />
-                  </svg>
-                </div>
+                  <span className="relative font-display font-bold text-base text-gray-900">{item.label}</span>
+                  <span className="relative text-xs text-gray-500">{item.desc}</span>
 
-                <span className="relative font-display font-bold text-base text-gray-900">{item.label}</span>
-                <span className="relative text-xs text-gray-500">{item.desc}</span>
-
-                {/* Bottom gradient line */}
-                <div className="absolute bottom-0 left-4 right-4 h-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-500 scale-x-0 group-hover:scale-x-100" style={{ background: item.numBg }} />
-              </Link>
-            ))}
+                  {/* Bottom gradient line */}
+                  <div className="absolute bottom-0 left-4 right-4 h-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-500 scale-x-0 group-hover:scale-x-100" style={{ background: item.numBg }} />
+                </>
+              );
+              return isExternal ? (
+                <a key={item.label} href={item.href} className={sharedClassName} style={sharedStyle}>
+                  {cardContent}
+                </a>
+              ) : (
+                <Link key={item.label} to={item.href} className={sharedClassName} style={sharedStyle}>
+                  {cardContent}
+                </Link>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -419,9 +430,13 @@ export function LandingPage() {
             </div>
             <span className="font-display font-bold text-sm text-white">Lumora</span>
           </div>
-          <div className="flex items-center gap-5 text-xs text-gray-500">
-            <Link to="/lumora" className="hover:text-white transition-colors">App</Link>
+          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-gray-500">
+            <a href="https://jobs.cariara.com" className="hover:text-white transition-colors">Apply</a>
+            <Link to="/capra/prepare" className="hover:text-white transition-colors">Prepare</Link>
+            <Link to="/capra/practice" className="hover:text-white transition-colors">Practice</Link>
+            <Link to="/lumora" className="hover:text-white transition-colors">Attend</Link>
             <Link to="/pricing" className="hover:text-white transition-colors">Pricing</Link>
+            <a href="mailto:support@cariara.com" className="hover:text-white transition-colors">Support</a>
           </div>
           <p className="text-xs text-gray-500 font-mono">
             &copy; {new Date().getFullYear()} Lumora

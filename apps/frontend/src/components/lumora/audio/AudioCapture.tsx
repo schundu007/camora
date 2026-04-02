@@ -83,8 +83,38 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
         setShouldRestart(true);
       }
     } catch (error: any) {
-      setError(error.message || 'Transcription failed');
-      setStatus('error', 'Transcription failed');
+      // Provide user-friendly messages based on error type
+      const status = error?.status;
+      let userMessage: string;
+      let statusMessage: string;
+
+      if (status === 500 || status === 506) {
+        // Backend transcription service error
+        userMessage = 'Transcription service temporarily unavailable. Recording will auto-retry.';
+        statusMessage = 'Service unavailable - retrying';
+      } else if (status === 404) {
+        userMessage = 'Transcription endpoint not found. Check that the AI service is running.';
+        statusMessage = 'Service not found';
+      } else if (status === 401 || status === 403) {
+        userMessage = 'Authentication expired. Please refresh the page.';
+        statusMessage = 'Auth error';
+      } else if (error?.name === 'TypeError' || error?.message?.includes('fetch')) {
+        // Network error - backend is completely unreachable
+        userMessage = 'Cannot reach transcription service. Check your connection.';
+        statusMessage = 'Network error';
+      } else {
+        userMessage = error.message || 'Transcription failed. Will retry on next recording.';
+        statusMessage = 'Transcription error';
+      }
+
+      // For transient service errors (500/506), use status bar only - don't show
+      // a persistent error banner that clutters the UI during auto-retry
+      if (status === 500 || status === 506) {
+        setStatus('warn', statusMessage);
+      } else {
+        setError(userMessage);
+        setStatus('error', statusMessage);
+      }
       // Auto-restart in live mode even after errors
       setShouldRestart(true);
     }
