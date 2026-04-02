@@ -82,6 +82,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
+      // Check URL hash for OAuth callback tokens (after Google login redirect)
+      const hash = window.location.hash;
+      if (hash && hash.includes('access_token=')) {
+        const params: Record<string, string> = {};
+        for (const part of hash.substring(1).split('&')) {
+          const eqIdx = part.indexOf('=');
+          if (eqIdx === -1) continue;
+          params[part.substring(0, eqIdx)] = decodeURIComponent(part.substring(eqIdx + 1));
+        }
+        const hashToken = params['access_token'];
+        if (hashToken) {
+          // Clear hash from URL
+          window.history.replaceState(null, '', window.location.pathname);
+          // Set cookie for future visits
+          document.cookie = `cariara_sso=${hashToken}; domain=.cariara.com; path=/; max-age=${30*24*60*60}; secure; samesite=lax`;
+          // Validate with backend
+          try {
+            const res = await fetch(`${LUMORA_API_URL}/api/v1/auth/me`, {
+              headers: { Authorization: `Bearer ${hashToken}` },
+            });
+            if (res.ok) {
+              setToken(hashToken);
+              setUser(await res.json());
+            }
+          } catch { /* network error */ }
+          // Check onboarding
+          try {
+            const onbRes = await fetch(`${CAPRA_API_URL}/api/onboarding/status`, {
+              headers: { Authorization: `Bearer ${hashToken}` },
+            });
+            if (onbRes.ok) {
+              const data = await onbRes.json();
+              setOnboardingCompleted(data.onboarding_completed);
+            }
+          } catch { /* capra backend may not be available */ }
+          setIsLoading(false);
+          return;
+        }
+      }
+
       // Production: read SSO cookie from Ascend
       const ssoToken = getCookie('cariara_sso');
       if (ssoToken) {
