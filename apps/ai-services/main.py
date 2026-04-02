@@ -8,6 +8,9 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from speaker import router as speaker_router
+from diagram import router as diagram_router
+
 app = FastAPI(title="Camora AI Services", version="1.0.0")
 
 app.add_middleware(
@@ -21,5 +24,8 @@ app.add_middleware(
 async def health():
     return {"status": "healthy", "service": "ai-services"}
 
-# Speaker verification endpoints will be migrated here
-# Diagram generation endpoints will be migrated here
+# Speaker verification endpoints
+app.include_router(speaker_router)
+
+# Diagram generation endpoints
+app.include_router(diagram_router)

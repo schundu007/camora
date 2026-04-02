@@ -4,3 +4,4 @@ resemblyzer>=0.1.4
 numpy>=2.4.0
 diagrams>=0.25.0
 python-multipart>=0.0.22
+anthropic>=0.42.0
