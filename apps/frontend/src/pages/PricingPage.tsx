@@ -103,9 +103,10 @@ const NAV_LINKS = [
 ];
 
 export default function PricingPage() {
-  const { token } = useAuth();
+  const { token, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState('');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleCheckout = async (plan: typeof PLANS[number]) => {
     // Free plan — go straight to the app
@@ -167,10 +168,51 @@ export default function PricingPage() {
               )
             )}
           </div>
-          <Link to="/lumora" className="px-4 py-1.5 text-[13px] font-medium text-black bg-emerald-400 hover:bg-emerald-300 transition-colors">
-            Launch App
-          </Link>
+          <div className="hidden md:flex items-center gap-3">
+            {isAuthenticated ? (
+              <>
+                <Link to="/capra" className="text-[13px] text-gray-400 hover:text-white transition-colors font-medium">Dashboard</Link>
+                <button onClick={logout} className="text-[13px] text-red-400 hover:text-red-300 transition-colors font-medium">Sign out</button>
+              </>
+            ) : (
+              <Link to="/capra/login" className="text-[13px] text-gray-400 hover:text-white transition-colors font-medium">Sign in</Link>
+            )}
+            <Link to="/lumora" className="px-4 py-1.5 text-[13px] font-medium text-black bg-emerald-400 hover:bg-emerald-300 transition-colors">
+              Launch App
+            </Link>
+          </div>
+          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden p-2 text-gray-400 hover:text-white">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+              {mobileMenuOpen
+                ? <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                : <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 9h16.5m-16.5 6.75h16.5" />}
+            </svg>
+          </button>
         </div>
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t border-white/[0.06] bg-[#09090b] px-6 py-4 space-y-2">
+            {NAV_LINKS.map((link) =>
+              link.external ? (
+                <a key={link.label} href={link.href} className="block py-2 text-sm text-gray-300 font-medium">{link.label}</a>
+              ) : (
+                <Link key={link.label} to={link.href} className="block py-2 text-sm text-gray-300 font-medium"
+                      onClick={() => setMobileMenuOpen(false)}>{link.label}</Link>
+              )
+            )}
+            {isAuthenticated ? (
+              <>
+                <Link to="/capra" className="block py-2 text-sm text-gray-300 font-medium"
+                      onClick={() => setMobileMenuOpen(false)}>Dashboard</Link>
+                <button onClick={() => { logout(); setMobileMenuOpen(false); }} className="block py-2 text-sm text-red-400 font-medium">Sign out</button>
+              </>
+            ) : (
+              <Link to="/capra/login" className="block py-2 text-sm text-gray-300 font-medium"
+                    onClick={() => setMobileMenuOpen(false)}>Sign in</Link>
+            )}
+            <Link to="/lumora" className="block py-2 text-sm text-emerald-400 font-semibold"
+                  onClick={() => setMobileMenuOpen(false)}>Launch App</Link>
+          </div>
+        )}
       </nav>
 
       {/* Header */}

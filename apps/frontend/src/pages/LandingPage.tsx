@@ -469,7 +469,7 @@ function PrepShowcase({ inView }: { inView: boolean }) {
    LANDING PAGE — The APPA Journey
    ════════════════════════════════════════════════════════════ */
 export default function LandingPage() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, logout } = useAuth();
   const [mounted, setMounted] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const demoRef = useInView(0.08);
@@ -615,7 +615,10 @@ export default function LandingPage() {
 
           <div className="hidden lg:flex items-center gap-4">
             {isAuthenticated ? (
-              <Link to="/capra" className="text-[15px] text-gray-400 hover:text-white transition-colors font-medium">Dashboard</Link>
+              <>
+                <Link to="/capra" className="text-[15px] text-gray-400 hover:text-white transition-colors font-medium">Dashboard</Link>
+                <button onClick={logout} className="text-[15px] text-red-400 hover:text-red-300 transition-colors font-medium">Sign out</button>
+              </>
             ) : (
               <Link to="/capra/login" className="text-[15px] text-gray-400 hover:text-white transition-colors font-medium">Sign in</Link>
             )}
@@ -646,8 +649,12 @@ export default function LandingPage() {
               )
             )}
             {isAuthenticated ? (
-              <Link to="/capra" className="block py-2.5 text-base text-gray-300 font-medium"
-                    onClick={() => setMobileMenuOpen(false)}>Dashboard</Link>
+              <>
+                <Link to="/capra" className="block py-2.5 text-base text-gray-300 font-medium"
+                      onClick={() => setMobileMenuOpen(false)}>Dashboard</Link>
+                <button onClick={() => { setMobileMenuOpen(false); logout(); }}
+                        className="block py-2.5 text-base text-red-400 hover:text-red-300 font-medium">Sign out</button>
+              </>
             ) : (
               <Link to="/capra/login" className="block py-2.5 text-base text-gray-300 font-medium"
                     onClick={() => setMobileMenuOpen(false)}>Sign in</Link>
