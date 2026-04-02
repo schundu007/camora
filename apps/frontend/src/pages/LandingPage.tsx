@@ -660,7 +660,7 @@ export default function LandingPage() {
 
       {/* ── NAV ──────────────────────────────────────────── */}
       <nav className="fixed top-0 left-0 right-0 z-50 h-16 border-b border-white/[0.06]" style={{ background: 'rgba(10,11,20,0.8)', backdropFilter: 'blur(20px)' }}>
-        <div className="max-w-7xl mx-auto flex items-center justify-between px-6 lg:px-8 h-16">
+        <div className="max-w-[85%] xl:max-w-7xl mx-auto flex items-center justify-between px-6 lg:px-8 h-16">
           <Link to="/" className="flex items-center gap-2">
             <CamoraLogo size={34} />
             <span className="font-display text-lg font-bold tracking-tight">Camora</span>
@@ -792,7 +792,7 @@ export default function LandingPage() {
           SECTION 2A — LUMORA LIVE DEMO
          ═══════════════════════════════════════════════════ */}
       <section ref={demoRef.ref} className="px-6 lg:px-8 pb-16" style={{ zIndex: 2 }}>
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-[85%] xl:max-w-7xl mx-auto">
           <div className={`text-center mb-16 transition-all duration-700 ${demoRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             <span className="font-code text-sm text-emerald-400 tracking-wider font-semibold">SEE IT IN ACTION</span>
             <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-white mt-4">
@@ -834,7 +834,7 @@ export default function LandingPage() {
           SECTION 2B — CAPRA PREPARATION DEMO
          ═══════════════════════════════════════════════════ */}
       <section className="px-6 lg:px-8 pb-16" style={{ zIndex: 2 }}>
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-[85%] xl:max-w-7xl mx-auto">
           <div className={`text-center mb-10 transition-all duration-700 ${demoRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '300ms' }}>
             <span className="font-code text-sm text-indigo-400 tracking-wider font-semibold">PREPARE, PRACTICE, AND DESIGN</span>
             <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-white mt-4">
@@ -936,7 +936,7 @@ export default function LandingPage() {
           background: 'transparent',
         }} />
 
-        <div className="relative max-w-7xl mx-auto">
+        <div className="relative max-w-[85%] xl:max-w-7xl mx-auto">
           <div className={`text-center mb-16 transition-all duration-700 ${journeyRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             <span className="font-code text-sm text-indigo-400 tracking-wider font-semibold">THE APPA FRAMEWORK</span>
             <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mt-4">
@@ -1004,7 +1004,7 @@ export default function LandingPage() {
           background: 'transparent',
         }} />
 
-        <div className="relative max-w-7xl mx-auto">
+        <div className="relative max-w-[85%] xl:max-w-7xl mx-auto">
           <div className={`text-center mb-16 transition-all duration-700 ${productsRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             <span className="font-code text-sm text-cyan-400 tracking-wider font-semibold">TWO PRODUCTS, ONE PLATFORM</span>
             <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-white mt-4">
@@ -1097,7 +1097,7 @@ export default function LandingPage() {
           background: 'transparent',
         }} />
 
-        <div className="relative max-w-7xl mx-auto">
+        <div className="relative max-w-[85%] xl:max-w-7xl mx-auto">
           <div className={`text-center mb-16 transition-all duration-700 ${prepRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             <span className="font-code text-sm text-emerald-400 tracking-wider font-semibold">PREPARATION AT SCALE</span>
             <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-white mt-4">
@@ -1116,7 +1116,7 @@ export default function LandingPage() {
           SECTION 5 — FEATURES (Three Interview Modes)
          ═══════════════════════════════════════════════════ */}
       <section ref={featuresRef.ref} className="relative px-6 lg:px-8 py-16 md:py-24" style={{ zIndex: 2 }}>
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-[85%] xl:max-w-7xl mx-auto">
           <div className={`text-center mb-16 transition-all duration-700 ${featuresRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             <span className="font-code text-sm text-cyan-400 tracking-wider font-semibold">THREE INTERVIEW MODES</span>
             <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-white mt-4">
@@ -1205,7 +1205,7 @@ export default function LandingPage() {
           `,
         }} />
 
-        <div className="relative max-w-7xl mx-auto">
+        <div className="relative max-w-[85%] xl:max-w-7xl mx-auto">
           {/* ── Section Header ── */}
           <div className={`text-center mb-20 transition-all duration-700 ${diffRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             <span className="inline-block font-code text-sm text-emerald-400 tracking-[0.2em] font-semibold uppercase px-4 py-1.5 rounded-full border border-emerald-400/20 bg-emerald-400/5">
@@ -1558,7 +1558,7 @@ export default function LandingPage() {
         <div className="absolute inset-0 pointer-events-none" style={{
           background: 'transparent',
         }} />
-        <div className="relative max-w-7xl mx-auto">
+        <div className="relative max-w-[85%] xl:max-w-7xl mx-auto">
           <div className={`text-center mb-16 transition-all duration-700 ${compRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             <span className="font-code text-sm text-cyan-400 tracking-wider font-semibold">HEAD-TO-HEAD</span>
             <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-white mt-4">
@@ -1678,7 +1678,7 @@ export default function LandingPage() {
           SECTION 6 — HOW IT WORKS
          ═══════════════════════════════════════════════════ */}
       <section ref={howRef.ref} className="relative px-6 lg:px-8 py-16 md:py-24" style={{ zIndex: 2 }}>
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-[85%] xl:max-w-7xl mx-auto">
           <div className={`text-center mb-16 transition-all duration-700 ${howRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             <span className="font-code text-sm text-gray-400 tracking-wider font-semibold">HOW IT WORKS</span>
             <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-white mt-4">
@@ -1742,7 +1742,7 @@ export default function LandingPage() {
           SECTION 8 — FOOTER
          ═══════════════════════════════════════════════════ */}
       <footer className="relative border-t border-white/[0.06] px-6 lg:px-8 py-16" style={{ zIndex: 2 }}>
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-[85%] xl:max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
             <div className="flex items-center gap-3">
               <CamoraLogo size={30} />
