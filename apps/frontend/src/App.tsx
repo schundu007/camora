@@ -18,6 +18,7 @@ const CapraPrepare = lazy(() => import('./pages/capra/PreparePage'));
 const CapraOnboarding = lazy(() => import('./pages/capra/OnboardingPage'));
 const CapraLanding = lazy(() => import('./pages/capra/CapraLandingPage'));
 const CompanyPrepPage = lazy(() => import('./pages/capra/CompanyPrepPage'));
+const JobsPage = lazy(() => import('./pages/JobsPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 const BrandPage = lazy(() => import('./pages/BrandPage'));
 
@@ -325,6 +326,9 @@ export function App() {
           <Route path="/capra/login" element={<LoginPage />} />
           <Route path="/premium" element={<PricingPage />} />
           <Route path="/download" element={<ProtectedRoute><CapraDashboard /></ProtectedRoute>} />
+
+          {/* ── Jobs: Apply ──────────────────────────────── */}
+          <Route path="/jobs" element={<ProtectedRoute><JobsPage /></ProtectedRoute>} />
 
           {/* ── Lumora: Live Interview ─────────────────── */}
           <Route path="/lumora" element={<ProtectedRoute><LumoraInterviewPage /></ProtectedRoute>} />
