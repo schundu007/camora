@@ -79,12 +79,20 @@ export function App() {
           {/* ── Public ─────────────────────────────────── */}
           <Route path="/" element={<LandingPage />} />
           <Route path="/pricing" element={<PricingPage />} />
+          <Route path="/login" element={<LoginPage />} />
           <Route path="/capra/login" element={<LoginPage />} />
+          <Route path="/premium" element={<Navigate to="/pricing" replace />} />
+          <Route path="/download" element={<ProtectedRoute><CapraDashboard /></ProtectedRoute>} />
 
           {/* ── Lumora: Live Interview ─────────────────── */}
           <Route path="/lumora" element={<ProtectedRoute><LumoraInterviewPage /></ProtectedRoute>} />
           <Route path="/lumora/coding" element={<ProtectedRoute><LumoraCodingPage /></ProtectedRoute>} />
           <Route path="/lumora/design" element={<ProtectedRoute><LumoraDesignPage /></ProtectedRoute>} />
+
+          {/* ── Old Lumora routes (redirect) ──────────── */}
+          <Route path="/app" element={<Navigate to="/lumora" replace />} />
+          <Route path="/app/coding" element={<Navigate to="/lumora/coding" replace />} />
+          <Route path="/app/design" element={<Navigate to="/lumora/design" replace />} />
 
           {/* ── Capra: Preparation ─────────────────────── */}
           <Route path="/capra" element={<ProtectedRoute><CapraDashboard /></ProtectedRoute>} />
@@ -95,6 +103,12 @@ export function App() {
           <Route path="/capra/prepare/*" element={<ProtectedRoute><CapraPrepare /></ProtectedRoute>} />
           <Route path="/capra/onboarding" element={<ProtectedRoute><CapraOnboarding /></ProtectedRoute>} />
           <Route path="/capra/landing" element={<CapraLanding />} />
+
+          {/* ── Old Capra routes (redirect) ───────────── */}
+          <Route path="/prepare/*" element={<Navigate to={`/capra/prepare`} replace />} />
+          <Route path="/practice" element={<Navigate to="/capra/practice" replace />} />
+          <Route path="/problems/*" element={<Navigate to="/capra" replace />} />
+          <Route path="/onboarding" element={<Navigate to="/capra/onboarding" replace />} />
 
           {/* ── Catch-all ──────────────────────────────── */}
           <Route path="*" element={<NotFoundPage />} />
