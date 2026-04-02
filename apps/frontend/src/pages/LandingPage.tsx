@@ -619,6 +619,12 @@ export default function LandingPage() {
                 tags: ['Voice Capture', 'Context Memory', 'STAR Format', 'Streaming'],
                 color: '#34d399',
                 borderClass: 'border-emerald-500/15',
+                icon: (c: string) => (
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                    <path d="M8 10h.01M12 10h.01M16 10h.01" />
+                  </svg>
+                ),
               },
               {
                 mode: 'System Design',
@@ -626,6 +632,13 @@ export default function LandingPage() {
                 tags: ['Architecture', 'Diagrams', 'Scale Math', 'Tradeoffs'],
                 color: '#38bdf8',
                 borderClass: 'border-cyan-500/15',
+                icon: (c: string) => (
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="2" y="3" width="20" height="14" rx="2" />
+                    <path d="M8 21h8M12 17v4" />
+                    <path d="M7 8h2v5H7zM11 7h2v6h-2zM15 9h2v4h-2z" />
+                  </svg>
+                ),
               },
               {
                 mode: 'Coding',
@@ -633,6 +646,13 @@ export default function LandingPage() {
                 tags: ['Multi-Solution', 'Complexity', 'Edge Cases', 'All Languages'],
                 color: '#818cf8',
                 borderClass: 'border-indigo-500/15',
+                icon: (c: string) => (
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="16 18 22 12 16 6" />
+                    <polyline points="8 6 2 12 8 18" />
+                    <line x1="14" y1="4" x2="10" y2="20" />
+                  </svg>
+                ),
               },
             ].map((f, i) => (
               <div
@@ -640,8 +660,8 @@ export default function LandingPage() {
                 className={`card-base rounded-2xl ${f.borderClass} p-8 md:p-10 transition-all duration-700 ${featuresRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
                 style={{ transitionDelay: `${i * 120 + 200}ms` }}
               >
-                <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-5" style={{ background: `${f.color}15` }}>
-                  <div className="w-3 h-3 rounded-full" style={{ background: f.color }} />
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-5 border border-white/[0.08]" style={{ background: `${f.color}15` }}>
+                  {f.icon(f.color)}
                 </div>
                 <h3 className="text-xl md:text-2xl font-bold text-white mb-3 font-display">{f.mode}</h3>
                 <p className="text-base md:text-lg text-gray-300 leading-relaxed mb-6">{f.desc}</p>
