@@ -1,0 +1,8 @@
+[phases.install]
+cmds = ["npm install"]
+
+[phases.build]
+cmds = ["echo 'build complete'"]
+
+[start]
+cmd = "node src/index.js"
