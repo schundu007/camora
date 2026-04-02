@@ -435,6 +435,7 @@ export default function LandingPage() {
   const productsRef = useInView(0.08);
   const prepRef = useInView(0.08);
   const featuresRef = useInView(0.08);
+  const diffRef = useInView(0.08);
   const howRef = useInView(0.08);
   const ctaRef = useInView(0.08);
 
@@ -1074,6 +1075,143 @@ export default function LandingPage() {
                     </span>
                   ))}
                 </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════
+          SECTION 5B — WHAT SETS CAMORA APART
+         ═══════════════════════════════════════════════════ */}
+      <section ref={diffRef.ref} className="relative px-6 lg:px-8 py-24 md:py-32" style={{ zIndex: 2 }}>
+        <div className="absolute inset-0 pointer-events-none" style={{
+          background: 'radial-gradient(ellipse 60% 50% at 50% 40%, rgba(16,185,129,0.06) 0%, transparent 70%)',
+        }} />
+        <div className="relative max-w-6xl mx-auto">
+          <div className={`text-center mb-16 transition-all duration-700 ${diffRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+            <span className="font-code text-sm text-emerald-400 tracking-wider font-semibold">WHY CAMORA</span>
+            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-white mt-4">
+              Features no other tool has.
+            </h2>
+            <p className="mt-4 text-base md:text-lg text-gray-300 max-w-2xl mx-auto">
+              Built by engineers who've been through hundreds of interviews. Every feature solves a real problem.
+            </p>
+          </div>
+
+          {/* Feature grid — 3 columns */}
+          <div className="grid md:grid-cols-3 gap-5">
+            {[
+              {
+                title: 'Multi-Cloud Diagrams',
+                desc: 'Auto-generates architecture diagrams for AWS, Azure, and GCP. Not just boxes and arrows — real cloud service icons with proper architecture patterns.',
+                color: '#34d399',
+                icon: (
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" />
+                  </svg>
+                ),
+              },
+              {
+                title: 'Platform-Compatible Code',
+                desc: 'Generates scripts that run directly on LeetCode, HackerRank, CoderPad, CodeSignal, and Glider. Copy, paste, submit — it works.',
+                color: '#818cf8',
+                icon: (
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="16 18 22 12 16 6" />
+                    <polyline points="8 6 2 12 8 18" />
+                  </svg>
+                ),
+              },
+              {
+                title: 'Auto-Fix and Debug',
+                desc: 'Submit broken code and Camora fixes it automatically. Identifies logic errors, edge cases, and off-by-one bugs before you submit.',
+                color: '#38bdf8',
+                icon: (
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
+                    <path d="m9 12 2 2 4-4" />
+                  </svg>
+                ),
+              },
+              {
+                title: 'Exact I/O Solutions',
+                desc: 'Every coding solution includes exact input/output expectations, multiple approaches with complexity analysis, and edge case handling.',
+                color: '#fbbf24',
+                icon: (
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4 6h16M4 12h16M4 18h10" />
+                  </svg>
+                ),
+              },
+              {
+                title: 'STAR Format Answers',
+                desc: 'Behavioral questions answered in structured STAR format. System design includes follow-up questions the interviewer is likely to ask.',
+                color: '#f472b6',
+                icon: (
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                  </svg>
+                ),
+              },
+              {
+                title: 'Real Interview Database',
+                desc: 'Preparation covers 80-90% of real interview questions — HR, Hiring Manager, Coding, Design, and Behavioral — sourced from actual company interviews.',
+                color: '#a78bfa',
+                icon: (
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                    <ellipse cx="12" cy="5" rx="9" ry="3" />
+                    <path d="M21 12c0 1.66-4.03 3-9 3s-9-1.34-9-3" />
+                    <path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5" />
+                  </svg>
+                ),
+              },
+              {
+                title: 'Coding Playground',
+                desc: 'Practice coding with a built-in editor. Run code, see output, get AI feedback — all without leaving Camora. Supports 50+ languages.',
+                color: '#06b6d4',
+                icon: (
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2" />
+                    <path d="M7 8l4 4-4 4" />
+                    <line x1="13" y1="16" x2="17" y2="16" />
+                  </svg>
+                ),
+              },
+              {
+                title: 'Design Playground',
+                desc: 'Interactive system design workspace. Draw architectures, add components, discuss trade-offs — with AI guidance at every step.',
+                color: '#f97316',
+                icon: (
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="3" width="7" height="7" />
+                    <rect x="14" y="3" width="7" height="7" />
+                    <rect x="3" y="14" width="7" height="7" />
+                    <rect x="14" y="14" width="7" height="7" />
+                  </svg>
+                ),
+              },
+              {
+                title: 'Follow-Up Questions',
+                desc: 'Every system design answer includes predicted follow-up questions with prepared responses. Walk into follow-ups with confidence.',
+                color: '#34d399',
+                icon: (
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+                  </svg>
+                ),
+              },
+            ].map((f, i) => (
+              <div
+                key={f.title}
+                className={`card-base rounded-2xl p-6 md:p-7 transition-all duration-700 group hover:scale-[1.02] ${diffRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
+                style={{ transitionDelay: `${i * 80 + 200}ms`, borderColor: `${f.color}15` }}
+              >
+                <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-4 border border-white/[0.08]" style={{ background: `${f.color}15`, color: f.color }}>
+                  {f.icon}
+                </div>
+                <h3 className="text-lg font-bold text-white mb-2 font-display">{f.title}</h3>
+                <p className="text-sm md:text-base text-gray-400 leading-relaxed">{f.desc}</p>
               </div>
             ))}
           </div>
