@@ -19,7 +19,7 @@ function useInView(threshold = 0.15) {
 }
 
 const NAV_LINKS = [
-  { label: 'Apply', href: 'https://jobs.cariara.com', external: true },
+  { label: 'Apply', href: '/jobs', external: false },
   { label: 'Prepare', href: '/capra/prepare', external: false },
   { label: 'Practice', href: '/capra/practice', external: false },
   { label: 'Attend', href: '/lumora', external: false },
@@ -180,7 +180,7 @@ export function LandingPage() {
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-px bg-white/[0.04]">
             {[
-              { num: '01', label: 'Apply', desc: 'Find engineering roles that match your experience and goals.', href: 'https://jobs.cariara.com', external: true },
+              { num: '01', label: 'Apply', desc: 'Find engineering roles that match your experience and goals.', href: '/jobs', external: false },
               { num: '02', label: 'Prepare', desc: 'Study 300+ topics across system design, DSA, behavioral, and more.', href: '/capra/prepare', external: false },
               { num: '03', label: 'Practice', desc: 'Solve problems with AI-powered explanations and mock interviews.', href: '/capra/practice', external: false },
               { num: '04', label: 'Attend', desc: 'Get real-time AI answers during your live technical interview.', href: '/lumora', external: false },

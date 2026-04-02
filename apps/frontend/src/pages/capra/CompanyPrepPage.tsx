@@ -271,7 +271,7 @@ const COMPANIES: Record<string, CompanyData> = {
 /* ──────────────────────────────── Nav / Footer data ──────────────────── */
 
 const navLinks = [
-  { label: 'Apply', href: 'https://jobs.cariara.com' },
+  { label: 'Apply', href: '/jobs' },
   { label: 'Prepare', href: '/capra/prepare' },
   { label: 'Practice', href: '/capra/practice' },
   { label: 'Attend', href: '/lumora' },

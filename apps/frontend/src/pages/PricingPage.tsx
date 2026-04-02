@@ -95,7 +95,7 @@ const COMPARISON = [
 ];
 
 const NAV_LINKS = [
-  { label: 'Apply', href: 'https://jobs.cariara.com', external: true },
+  { label: 'Apply', href: '/jobs', external: false },
   { label: 'Prepare', href: '/capra/prepare', external: false },
   { label: 'Practice', href: '/capra/practice', external: false },
   { label: 'Attend', href: '/lumora', external: false },

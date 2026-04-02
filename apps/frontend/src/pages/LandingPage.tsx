@@ -21,7 +21,7 @@ function useInView(threshold = 0.12) {
 
 /* ── Nav data ───────────────────────────────────────────── */
 const NAV_LINKS = [
-  { label: 'Apply', href: 'https://jobs.cariara.com', external: true },
+  { label: 'Apply', href: '/jobs', external: false },
   { label: 'Prepare', href: '/capra/prepare', external: false },
   { label: 'Practice', href: '/capra/practice', external: false },
   { label: 'Attend', href: '/lumora', external: false },
@@ -99,7 +99,7 @@ function CamoraLogo({ size = 36 }: { size?: number }) {
 
 /* ── APPA steps ─────────────────────────────────────────── */
 const APPA = [
-  { num: '01', icon: 'apply' as const, label: 'Apply', desc: 'Discover engineering roles matched to your skills, experience, and salary goals across 1 000+ companies.', href: 'https://jobs.cariara.com', external: true, color: '#34d399' },
+  { num: '01', icon: 'apply' as const, label: 'Apply', desc: 'Discover engineering roles matched to your skills, experience, and salary goals across 1 000+ companies.', href: '/jobs', external: false, color: '#34d399' },
   { num: '02', icon: 'prepare' as const, label: 'Prepare', desc: 'Study 300+ curated topics spanning system design, DSA, behavioral, databases, and cloud architecture.', href: '/capra/prepare', external: false, color: '#818cf8' },
   { num: '03', icon: 'practice' as const, label: 'Practice', desc: 'Solve problems with AI explanations, run mock interviews, and build confidence before the real thing.', href: '/capra/practice', external: false, color: '#38bdf8' },
   { num: '04', icon: 'attend' as const, label: 'Attend', desc: 'Get real-time AI answers during your live technical interview — system design, coding, and behavioral.', href: '/lumora', external: false, color: '#fbbf24' },

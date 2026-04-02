@@ -103,7 +103,7 @@ const MOCK_CATEGORIES = [
 ];
 
 const navLinks = [
-  { label: 'Apply', href: 'https://jobs.cariara.com' },
+  { label: 'Apply', href: '/jobs' },
   { label: 'Prepare', href: '/capra/prepare' },
   { label: 'Practice', href: '/capra/practice' },
   { label: 'Attend', href: '/lumora' },
@@ -835,7 +835,7 @@ export default function PracticePage() {
             {/* Nav links */}
             <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: '20px' }}>
               {[
-                { label: 'Apply', href: 'https://jobs.cariara.com' },
+                { label: 'Apply', href: '/jobs' },
                 { label: 'Prepare', href: '/capra/prepare' },
                 { label: 'Practice', href: '/capra/practice' },
                 { label: 'Attend', href: '/lumora' },
