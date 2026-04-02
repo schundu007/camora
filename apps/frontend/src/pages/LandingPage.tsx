@@ -322,8 +322,8 @@ function PrepShowcase({ inView }: { inView: boolean }) {
         }}
       >
         {/* Donut SVG */}
-        <div className="relative flex-shrink-0" style={{ width: 160, height: 160 }}>
-          <svg viewBox="0 0 200 200" width="160" height="160" className="w-[140px] h-[140px] md:w-[160px] md:h-[160px]">
+        <div className="relative flex-shrink-0" style={{ width: 220, height: 220 }}>
+          <svg viewBox="0 0 200 200" width="220" height="220" className="w-[180px] h-[180px] md:w-[220px] md:h-[220px]">
             {/* Background ring */}
             <circle cx="100" cy="100" r={RADIUS} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="18" />
             {/* Segments */}
@@ -355,7 +355,7 @@ function PrepShowcase({ inView }: { inView: boolean }) {
         </div>
 
         {/* Legend */}
-        <div className="grid grid-cols-2 sm:grid-cols-2 gap-x-8 gap-y-3">
+        <div className="flex flex-wrap gap-x-6 gap-y-3">
           {TOPIC_CATEGORIES.map((cat, i) => (
             <div
               key={cat.name}
@@ -577,11 +577,20 @@ export default function LandingPage() {
           background: 'linear-gradient(to bottom, #34d399 0%, #818cf8 33%, #38bdf8 66%, #fbbf24 100%)',
           opacity: 0.25,
         }} />
-        {/* Timeline dots for each section */}
-        <div className="absolute w-2 h-2 rounded-full -left-[3px]" style={{ top: '15%', background: '#34d399', opacity: 0.8 }} />
-        <div className="absolute w-2 h-2 rounded-full -left-[3px]" style={{ top: '38%', background: '#818cf8', opacity: 0.8 }} />
-        <div className="absolute w-2 h-2 rounded-full -left-[3px]" style={{ top: '62%', background: '#38bdf8', opacity: 0.8 }} />
-        <div className="absolute w-2 h-2 rounded-full -left-[3px]" style={{ top: '85%', background: '#fbbf24', opacity: 0.8 }} />
+        {/* Timeline dots with APPA labels */}
+        {[
+          { top: '15%', color: '#34d399', label: 'Apply' },
+          { top: '38%', color: '#818cf8', label: 'Prepare' },
+          { top: '62%', color: '#38bdf8', label: 'Practice' },
+          { top: '85%', color: '#fbbf24', label: 'Attend' },
+        ].map((dot) => (
+          <div key={dot.label} className="absolute -left-[3px] flex items-center gap-3" style={{ top: dot.top }}>
+            <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: dot.color }} />
+            <span className="text-xs font-semibold tracking-wide whitespace-nowrap" style={{ color: dot.color, fontFamily: "'IBM Plex Mono', monospace" }}>
+              {dot.label}
+            </span>
+          </div>
+        ))}
       </div>
 
       {/* ── NAV ──────────────────────────────────────────── */}
@@ -1420,7 +1429,7 @@ export default function LandingPage() {
                 { value: 50, max: 50, label: 'Languages', display: '50+', color: '#06b6d4' },
                 { value: 7, max: 10, label: 'Categories', display: '7', color: '#fbbf24' },
               ].map((ring, i) => {
-                const r = 30;
+                const r = 46;
                 const circ = 2 * Math.PI * r;
                 const filled = (ring.value / ring.max) * circ;
                 const gap = circ - filled;
@@ -1435,9 +1444,9 @@ export default function LandingPage() {
                       transitionDelay: `${i * 120 + 900}ms`,
                     }}
                   >
-                    <svg width="80" height="80" viewBox="0 0 80 80" className="w-[64px] h-[64px] md:w-[80px] md:h-[80px]">
+                    <svg width="120" height="120" viewBox="0 0 120 120" className="w-[100px] h-[100px] md:w-[120px] md:h-[120px]">
                       {/* Background ring */}
-                      <circle cx="40" cy="40" r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="5" />
+                      <circle cx="60" cy="60" r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="5" />
                       {/* Progress ring */}
                       <circle
                         cx="40"
@@ -1454,7 +1463,7 @@ export default function LandingPage() {
                         }}
                       />
                       {/* Center number */}
-                      <text x="40" y="43" textAnchor="middle" fill="white" fontSize="16" fontWeight="bold" fontFamily="inherit">
+                      <text x="60" y="65" textAnchor="middle" fill="white" fontSize="22" fontWeight="bold" fontFamily="inherit">
                         {ring.display}
                       </text>
                     </svg>
