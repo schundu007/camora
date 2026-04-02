@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 
 function useInView(threshold = 0.15) {
   const ref = useRef<HTMLDivElement>(null);
@@ -26,6 +27,7 @@ const NAV_LINKS = [
 ];
 
 export function LandingPage() {
+  const { isAuthenticated, logout } = useAuth();
   const [mounted, setMounted] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const featuresRef = useInView(0.1);
@@ -67,9 +69,16 @@ export function LandingPage() {
           </div>
 
           <div className="hidden md:flex items-center gap-3">
-            <Link to="/capra/login" className="text-[13px] text-gray-400 hover:text-white transition-colors">
-              Sign in
-            </Link>
+            {isAuthenticated ? (
+              <>
+                <Link to="/capra" className="text-[13px] text-gray-400 hover:text-white transition-colors">Dashboard</Link>
+                <button onClick={logout} className="text-[13px] text-red-400 hover:text-red-300 transition-colors font-medium">Sign out</button>
+              </>
+            ) : (
+              <Link to="/capra/login" className="text-[13px] text-gray-400 hover:text-white transition-colors">
+                Sign in
+              </Link>
+            )}
             <Link to="/lumora"
                   className="px-4 py-1.5 text-[13px] font-medium text-black bg-emerald-400 hover:bg-emerald-300 transition-colors">
               Launch App
@@ -99,8 +108,17 @@ export function LandingPage() {
                       onClick={() => setMobileMenuOpen(false)}>{link.label}</Link>
               )
             )}
-            <Link to="/capra/login" className="block py-2 text-sm text-gray-400"
-                  onClick={() => setMobileMenuOpen(false)}>Sign in</Link>
+            {isAuthenticated ? (
+              <>
+                <Link to="/capra" className="block py-2 text-sm text-gray-400"
+                      onClick={() => setMobileMenuOpen(false)}>Dashboard</Link>
+                <button onClick={() => { setMobileMenuOpen(false); logout(); }}
+                        className="block py-2 text-sm text-red-400 font-medium">Sign out</button>
+              </>
+            ) : (
+              <Link to="/capra/login" className="block py-2 text-sm text-gray-400"
+                    onClick={() => setMobileMenuOpen(false)}>Sign in</Link>
+            )}
           </div>
         )}
       </nav>

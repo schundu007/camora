@@ -116,7 +116,7 @@ const TOTAL_TOPICS = SECTIONS.reduce((sum, s) => sum + s.items.length, 0);
 
 export default function PracticePage() {
   const navigate = useNavigate();
-  const { user, loading } = useAuth();
+  const { user, loading, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Mock interview state
@@ -252,19 +252,36 @@ export default function PracticePage() {
           {/* Right: User / Sign in + mobile toggle */}
           <div className="flex items-center gap-3">
             {user ? (
-              <Link
-                to="/capra/prepare"
-                className="practice-body"
-                style={{
-                  fontSize: '14px',
-                  fontWeight: 500,
-                  color: '#10b981',
-                  textDecoration: 'none',
-                  transition: 'opacity 0.15s',
-                }}
-              >
-                Dashboard
-              </Link>
+              <>
+                <Link
+                  to="/capra/prepare"
+                  className="practice-body"
+                  style={{
+                    fontSize: '14px',
+                    fontWeight: 500,
+                    color: '#10b981',
+                    textDecoration: 'none',
+                    transition: 'opacity 0.15s',
+                  }}
+                >
+                  Dashboard
+                </Link>
+                <button
+                  onClick={logout}
+                  className="practice-body"
+                  style={{
+                    fontSize: '14px',
+                    fontWeight: 500,
+                    color: '#dc2626',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    transition: 'opacity 0.15s',
+                  }}
+                >
+                  Sign out
+                </button>
+              </>
             ) : !loading ? (
               <Link
                 to="/capra/login"
@@ -345,23 +362,44 @@ export default function PracticePage() {
             );
           })}
           {user ? (
-            <Link
-              to="/capra/prepare"
-              onClick={() => setMobileMenuOpen(false)}
-              className="practice-body"
-              style={{
-                display: 'block',
-                padding: '10px 12px',
-                fontSize: '14px',
-                fontWeight: 500,
-                color: '#10b981',
-                textDecoration: 'none',
-                borderRadius: '6px',
-                marginTop: '4px',
-              }}
-            >
-              Dashboard
-            </Link>
+            <>
+              <Link
+                to="/capra/prepare"
+                onClick={() => setMobileMenuOpen(false)}
+                className="practice-body"
+                style={{
+                  display: 'block',
+                  padding: '10px 12px',
+                  fontSize: '14px',
+                  fontWeight: 500,
+                  color: '#10b981',
+                  textDecoration: 'none',
+                  borderRadius: '6px',
+                  marginTop: '4px',
+                }}
+              >
+                Dashboard
+              </Link>
+              <button
+                onClick={() => { setMobileMenuOpen(false); logout(); }}
+                className="practice-body"
+                style={{
+                  display: 'block',
+                  width: '100%',
+                  textAlign: 'left',
+                  padding: '10px 12px',
+                  fontSize: '14px',
+                  fontWeight: 500,
+                  color: '#dc2626',
+                  background: 'none',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                }}
+              >
+                Sign out
+              </button>
+            </>
           ) : !loading ? (
             <Link
               to="/capra/login"

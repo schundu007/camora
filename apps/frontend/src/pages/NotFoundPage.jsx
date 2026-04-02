@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 const NAV_LINKS = [
@@ -9,6 +10,8 @@ const NAV_LINKS = [
 ];
 
 export default function NotFoundPage() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   return (
     <div className="min-h-screen bg-[#09090b] text-gray-100">
 
@@ -30,10 +33,37 @@ export default function NotFoundPage() {
               )
             )}
           </div>
-          <Link to="/lumora" className="px-4 py-1.5 text-[13px] font-medium text-black bg-emerald-400 hover:bg-emerald-300 transition-colors">
+          <Link to="/lumora" className="hidden md:inline-block px-4 py-1.5 text-[13px] font-medium text-black bg-emerald-400 hover:bg-emerald-300 transition-colors">
             Launch App
           </Link>
+
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="md:hidden p-2 text-gray-400 hover:text-white"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+              {mobileMenuOpen
+                ? <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                : <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 9h16.5m-16.5 6.75h16.5" />
+              }
+            </svg>
+          </button>
         </div>
+
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t border-white/[0.06] bg-[#09090b] px-6 py-4 space-y-1">
+            {NAV_LINKS.map((link) =>
+              link.external ? (
+                <a key={link.label} href={link.href} className="block py-2 text-sm text-gray-400">{link.label}</a>
+              ) : (
+                <Link key={link.label} to={link.href} className="block py-2 text-sm text-gray-400"
+                      onClick={() => setMobileMenuOpen(false)}>{link.label}</Link>
+              )
+            )}
+            <Link to="/lumora" className="block py-2 text-sm text-emerald-400 font-medium"
+                  onClick={() => setMobileMenuOpen(false)}>Launch App</Link>
+          </div>
+        )}
       </nav>
 
       {/* Content */}
