@@ -52,12 +52,11 @@ export default function LandingPage() {
 
   return (
     <div className="landing-page ai-bg min-h-screen text-white overflow-hidden">
-      {/* Fonts */}
+      {/* Styles */}
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
-        .landing-page { font-family: 'DM Sans', system-ui, sans-serif; }
-        .font-display { font-family: 'Instrument Sans', 'DM Sans', system-ui, sans-serif; }
-        .font-code { font-family: 'JetBrains Mono', monospace; }
+        .landing-page { font-family: 'Work Sans', 'Plus Jakarta Sans', system-ui, sans-serif; }
+        .font-display { font-family: 'Plus Jakarta Sans', 'Work Sans', system-ui, sans-serif; }
+        .font-code { font-family: 'IBM Plex Mono', monospace; }
 
         @keyframes glow-pulse {
           0%, 100% { opacity: 0.4; }
