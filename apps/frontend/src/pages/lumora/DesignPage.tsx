@@ -12,7 +12,7 @@ function DesignPageContent() {
 
   return (
     <DesignLayout
-      onBack={() => navigate('/app')}
+      onBack={() => navigate('/lumora')}
       initialProblem={initialProblem}
     />
   );

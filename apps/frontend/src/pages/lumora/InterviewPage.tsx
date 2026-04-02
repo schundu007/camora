@@ -184,10 +184,10 @@ export function InterviewPage() {
         <InterviewPanel
           onAskQuestion={handleSubmit}
           onSwitchToCoding={(problem) => {
-            navigate(problem ? `/app/coding?problem=${encodeURIComponent(problem)}` : '/app/coding');
+            navigate(problem ? `/lumora/coding?problem=${encodeURIComponent(problem)}` : '/lumora/coding');
           }}
           onSwitchToDesign={(problem) => {
-            navigate(problem ? `/app/design?problem=${encodeURIComponent(problem)}` : '/app/design');
+            navigate(problem ? `/lumora/design?problem=${encodeURIComponent(problem)}` : '/lumora/design');
           }}
         />
       </ErrorBoundary>

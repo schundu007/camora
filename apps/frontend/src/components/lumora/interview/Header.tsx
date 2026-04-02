@@ -18,9 +18,9 @@ interface HeaderProps {
 }
 
 const TAB_ROUTES: Record<TabType, string> = {
-  interview: '/app',
-  coding: '/app/coding',
-  design: '/app/design',
+  interview: '/lumora',
+  coding: '/lumora/coding',
+  design: '/lumora/design',
 };
 
 const TABS: { id: TabType; label: string }[] = [

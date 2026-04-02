@@ -16,7 +16,7 @@ function CodingPageContent() {
     <CodingLayout
       onSubmit={handleCodingSubmit}
       isLoading={isStreaming}
-      onBack={() => navigate('/app')}
+      onBack={() => navigate('/lumora')}
       initialProblem={initialProblem}
     />
   );

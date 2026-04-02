@@ -50,7 +50,7 @@ export function useActivityTracking() {
 }
 
 function derivePageName(pathname: string): string {
-  if (pathname === '/app') return 'interview';
+  if (pathname === '/lumora') return 'interview';
   if (pathname.includes('/coding')) return 'coding';
   if (pathname.includes('/design')) return 'design';
   return pathname.split('/').pop() || 'unknown';

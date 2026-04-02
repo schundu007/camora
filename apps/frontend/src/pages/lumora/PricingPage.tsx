@@ -14,7 +14,7 @@ const LUMORA_PLANS = [
     description: '1 live interview session',
     features: ['1 session (60 min)', 'All AI features', 'All platforms (Zoom, Meet, Teams)', 'Emergency blank (Cmd+B)', 'System audio capture'],
     cta: 'Try Free',
-    ctaHref: '/app',
+    ctaHref: '/lumora',
     popular: false,
     gradient: 'from-gray-500 to-gray-600',
     border: 'border-gray-200',
@@ -26,7 +26,7 @@ const LUMORA_PLANS = [
     description: '8 interview sessions — never expire',
     features: ['8 sessions (90 min each)', '3-approach coding solutions', 'System design diagrams', 'All 51 languages', 'Interviewer voice capture', 'Desktop app access', '$12.38/session'],
     cta: 'Get 8-Pack',
-    ctaHref: '/app',
+    ctaHref: '/lumora',
     popular: true,
     gradient: 'from-emerald-500 to-teal-500',
     border: 'border-emerald-300',
@@ -38,7 +38,7 @@ const LUMORA_PLANS = [
     description: 'Unlimited interviews, cancel anytime',
     features: ['Unlimited sessions', 'Everything in 8-Pack', 'Priority AI (faster responses)', 'Best for heavy interview pipelines', 'Cancel anytime'],
     cta: 'Go Unlimited',
-    ctaHref: '/app',
+    ctaHref: '/lumora',
     popular: false,
     gradient: 'from-violet-500 to-purple-500',
     border: 'border-violet-200',
@@ -72,9 +72,9 @@ export function PricingPage() {
   const [loading, setLoading] = useState('');
 
   const handleCheckout = async (plan: typeof LUMORA_PLANS[number]) => {
-    if (plan.name === 'Free Trial') { window.location.href = '/app'; return; }
+    if (plan.name === 'Free Trial') { window.location.href = '/lumora'; return; }
     const priceId = PRICE_MAP[plan.name];
-    if (!priceId) { window.location.href = '/app'; return; }
+    if (!priceId) { window.location.href = '/lumora'; return; }
     if (!token) { window.location.href = '/login'; return; }
     setLoading(plan.name);
     try {
@@ -106,7 +106,7 @@ export function PricingPage() {
             <span className="block text-[10px] font-mono uppercase tracking-[0.2em] text-emerald-400 -mt-0.5">Interview AI</span>
           </div>
         </Link>
-        <Link to="/app" className="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-semibold text-sm rounded-lg">
+        <Link to="/lumora" className="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-semibold text-sm rounded-lg">
           Launch App
         </Link>
       </nav>
@@ -331,7 +331,7 @@ export function PricingPage() {
             </p>
             <p className="text-gray-400 mb-6 max-w-lg mx-auto">The only tool that does preparation AND live interview coaching. Everyone else makes you choose. We give you both.</p>
             <div className="flex items-center justify-center gap-4 flex-wrap">
-              <Link to="/app" className="inline-flex items-center gap-2 px-8 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold rounded-xl shadow-xl shadow-emerald-500/25 hover:-translate-y-0.5 transition-all">
+              <Link to="/lumora" className="inline-flex items-center gap-2 px-8 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold rounded-xl shadow-xl shadow-emerald-500/25 hover:-translate-y-0.5 transition-all">
                 Start Free — No Credit Card
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
               </Link>
@@ -377,7 +377,7 @@ export function PricingPage() {
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <span className="font-display font-bold text-sm text-white">Lumora</span>
           <div className="flex gap-5 text-xs text-gray-500">
-            <Link to="/app" className="hover:text-white transition-colors">App</Link>
+            <Link to="/lumora" className="hover:text-white transition-colors">App</Link>
             <Link to="/" className="hover:text-white transition-colors">Home</Link>
           </div>
           <p className="text-xs text-gray-500 font-mono">&copy; {new Date().getFullYear()} Cariara</p>
