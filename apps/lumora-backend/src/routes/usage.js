@@ -13,9 +13,9 @@ const router = Router();
 // ---------------------------------------------------------------------------
 
 const TOPUP_PACKS = [
-  { id: 'questions_20', name: '20 AI Questions', price: 500, type: 'questions', amount: 20, extras: { diagrams: 3 } },
-  { id: 'questions_50', name: '50 AI Questions', price: 1000, type: 'questions', amount: 50, extras: { diagrams: 8 } },
-  { id: 'sessions_5', name: '5 Live Sessions', price: 1500, type: 'sessions', amount: 5 },
+  { id: 'questions_20', name: '20 AI Questions', price: 500, stripePrice: 'price_1THiZuITUCNxtMxlS1Py7hSO', type: 'questions', amount: 20, extras: { diagrams: 3 } },
+  { id: 'questions_50', name: '50 AI Questions', price: 1000, stripePrice: 'price_1THiaHITUCNxtMxlQ31IpECl', type: 'questions', amount: 50, extras: { diagrams: 8 } },
+  { id: 'sessions_5', name: '5 Live Sessions', price: 1500, stripePrice: 'price_1THiagITUCNxtMxlG8idH0Cz', type: 'sessions', amount: 5 },
 ];
 
 // ---------------------------------------------------------------------------
@@ -74,16 +74,7 @@ router.post('/topup', authenticate, async (req, res) => {
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
-      line_items: [
-        {
-          price_data: {
-            currency: 'usd',
-            product_data: { name: pack.name },
-            unit_amount: pack.price,
-          },
-          quantity: 1,
-        },
-      ],
+      line_items: [{ price: pack.stripePrice, quantity: 1 }],
       mode: 'payment',
       success_url,
       cancel_url,
