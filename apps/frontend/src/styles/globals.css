@@ -6,6 +6,22 @@ body {
   font-family: 'Inter', system-ui, sans-serif;
 }
 
+/* APPA gradient strip — top and bottom of every page */
+body::before,
+body::after {
+  content: '';
+  display: block;
+  position: fixed;
+  left: 0;
+  right: 0;
+  height: 3px;
+  z-index: 9999;
+  background: linear-gradient(90deg, #34d399, #818cf8, #38bdf8, #fbbf24);
+  pointer-events: none;
+}
+body::before { top: 0; }
+body::after { bottom: 0; }
+
 /* Hide scrollbar but keep scrolling */
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
