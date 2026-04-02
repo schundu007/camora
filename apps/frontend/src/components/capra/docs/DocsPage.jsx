@@ -33,6 +33,7 @@ const lldProblemCategoryMap = { ..._lldProblemCategoryMap, ...extraLldProblemCat
 const lldProblems = [..._lldProblems, ...extraLldProblems];
 
 import TopicDetail from './TopicDetail.jsx';
+import ProgressTracker from './ProgressTracker.jsx';
 
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'http://localhost:3009';
 
@@ -561,6 +562,11 @@ export default function DocsPage({ onBack }) {
                           <div className="text-2xl font-bold text-purple-600 landing-display">{overviewTotalTopics > 0 ? Math.round((overviewTotalCompleted / overviewTotalTopics) * 100) : 0}%</div>
                           <div className="text-xs text-gray-500 landing-body">Complete</div>
                         </div>
+                      </div>
+
+                      {/* Progress Tracker */}
+                      <div className="mb-6">
+                        <ProgressTracker />
                       </div>
 
                       {/* Category Cards Grid */}

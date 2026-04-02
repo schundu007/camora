@@ -119,6 +119,20 @@ export default function PracticePage() {
   const { user, loading, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Progress tracking
+  const [progressPercentage, setProgressPercentage] = useState(0);
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('ascend_completed_topics');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        const completed = Object.keys(parsed).filter(k => parsed[k]).length;
+        const total = 415; // Total topics across all categories
+        setProgressPercentage(total > 0 ? Math.round((completed / total) * 100) : 0);
+      }
+    } catch {}
+  }, []);
+
   // Mock interview state
   const [mockCategory, setMockCategory] = useState('system-design');
   const [mockActive, setMockActive] = useState(false);
@@ -456,6 +470,24 @@ export default function PracticePage() {
               <span>{TOTAL_TOPICS}+ topics</span>
               <span style={{ color: '#d1d5db' }}>&middot;</span>
               <span>Updated weekly</span>
+            </div>
+
+            {/* Progress bar */}
+            <div style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ flex: 1, height: '8px', borderRadius: '9999px', background: '#e5e7eb', overflow: 'hidden' }}>
+                <div
+                  style={{
+                    height: '100%',
+                    borderRadius: '9999px',
+                    background: '#10b981',
+                    width: `${progressPercentage}%`,
+                    transition: 'width 0.4s ease',
+                  }}
+                />
+              </div>
+              <span className="practice-body" style={{ fontSize: '13px', color: '#6b7280', fontWeight: 500, whiteSpace: 'nowrap' }}>
+                {progressPercentage}% complete
+              </span>
             </div>
           </div>
         </div>
