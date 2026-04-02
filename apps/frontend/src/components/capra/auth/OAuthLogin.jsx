@@ -16,7 +16,7 @@ function useInView(threshold = 0.2) {
 }
 
 export default function OAuthLogin() {
-  const { signIn, user, loading, authError } = useAuth();
+  const { user, isLoading: loading } = useAuth();
   const [mounted, setMounted] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -60,7 +60,7 @@ export default function OAuthLogin() {
           {user ? (
             <a href="/capra/prepare" className="text-sm text-gray-300 hover:text-white transition-colors landing-body font-medium">Dashboard</a>
           ) : !loading ? (
-            <a href="/login" className="text-sm text-gray-300 hover:text-white transition-colors landing-body font-medium">Sign in</a>
+            <a href="/capra/login" className="text-sm text-gray-300 hover:text-white transition-colors landing-body font-medium">Sign in</a>
           ) : null}
           <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden p-2 text-gray-400 hover:text-white transition-colors">
             <Icon name={mobileMenuOpen ? 'close' : 'menu'} size={22} />
@@ -77,7 +77,7 @@ export default function OAuthLogin() {
           {user ? (
             <a href="/capra/prepare" className="block px-4 py-2.5 text-sm font-medium text-emerald-600 hover:bg-emerald-50 rounded transition-colors landing-body">Dashboard</a>
           ) : !loading ? (
-            <a href="/login" className="block w-full mt-2 px-4 py-2.5 text-sm font-medium text-emerald-600 hover:bg-emerald-50 rounded transition-colors landing-body text-left">Sign in</a>
+            <a href="/capra/login" className="block w-full mt-2 px-4 py-2.5 text-sm font-medium text-emerald-600 hover:bg-emerald-50 rounded transition-colors landing-body text-left">Sign in</a>
           ) : null}
         </div>
       )}
@@ -111,7 +111,7 @@ export default function OAuthLogin() {
             </>
           ) : (
             <>
-              <a href="/login" className="px-8 py-3 bg-emerald-500 text-white font-semibold text-sm rounded-lg hover:bg-emerald-600 transition-colors shadow-sm landing-body flex items-center gap-2">
+              <a href="/capra/login" className="px-8 py-3 bg-emerald-500 text-white font-semibold text-sm rounded-lg hover:bg-emerald-600 transition-colors shadow-sm landing-body flex items-center gap-2">
                 Start Free
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
               </a>
@@ -121,11 +121,7 @@ export default function OAuthLogin() {
             </>
           )}
         </div>
-        {authError && (
-          <div className={`mt-4 max-w-md mx-auto px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 landing-body transition-all duration-500 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-            <span className="font-semibold">Sign in failed:</span> {authError}. Please try again.
-          </div>
-        )}
+        {/* Auth errors are handled via SSO redirect */}
       </section>
 
       {/* Divider */}

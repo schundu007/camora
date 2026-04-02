@@ -6,7 +6,7 @@ import CompetitorComparison from './CompetitorComparison.jsx';
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'http://localhost:3009';
 
 export default function PremiumPage() {
-  const { signIn, getAccessToken, isAuthenticated, subscription } = useAuth();
+  const { token: authToken, isAuthenticated } = useAuth();
   const [loading, setLoading] = useState(null);
   const [error, setError] = useState('');
   const [expandedFaq, setExpandedFaq] = useState(null);
@@ -21,10 +21,10 @@ export default function PremiumPage() {
     try {
       if (!isAuthenticated) {
         localStorage.setItem('capra_pending_plan', planId);
-        window.location.href = '/login';
+        window.location.href = '/capra/login';
         return;
       }
-      const token = await getAccessToken();
+      const token = authToken;
       if (!token) throw new Error('Please sign in first');
       const pricesRes = await fetch(`${API_URL}/api/billing/prices`);
       const prices = await pricesRes.json();
@@ -67,7 +67,7 @@ export default function PremiumPage() {
     { q: 'What AI models power Ascend?', a: 'Claude (Opus & Sonnet) and GPT-4o for coding and reasoning, plus specialized models for diagram generation. Desktop users can choose their preferred AI provider.' },
   ];
 
-  const hasActiveSubscription = subscription?.status === 'active';
+  const hasActiveSubscription = false; // TODO: wire up subscription status from backend
 
   return (
     <div className="min-h-screen text-gray-900 overflow-hidden landing-root" style={{ background: 'linear-gradient(180deg, #fdf2f8 0%, #ede9fe 50%, #e0e7ff 100%)', paddingTop: '64px', paddingBottom: '52px' }}>
@@ -84,7 +84,7 @@ export default function PremiumPage() {
           {isAuthenticated ? (
             <a href="/capra/practice" className="px-5 py-2 bg-emerald-500 text-white font-semibold text-sm rounded-lg hover:bg-emerald-400 transition-colors landing-body">Go to App</a>
           ) : (
-            <button onClick={() => window.location.href = '/login'} className="px-5 py-2 bg-emerald-500 text-white font-semibold text-sm rounded-lg hover:bg-emerald-400 transition-colors landing-body">Sign In</button>
+            <button onClick={() => window.location.href = '/capra/login'} className="px-5 py-2 bg-emerald-500 text-white font-semibold text-sm rounded-lg hover:bg-emerald-400 transition-colors landing-body">Sign In</button>
           )}
         </div>
         <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden p-2 text-gray-400 hover:text-white transition-colors"><Icon name={mobileMenuOpen ? 'close' : 'menu'} size={22} /></button>
@@ -98,7 +98,7 @@ export default function PremiumPage() {
           {isAuthenticated ? (
             <a href="/capra/practice" className="block w-full mt-2 px-4 py-2.5 bg-emerald-500 text-white font-semibold text-sm text-center rounded-lg hover:bg-emerald-600 transition-colors landing-body">Go to App</a>
           ) : (
-            <button onClick={() => window.location.href = '/login'} className="block w-full mt-2 px-4 py-2.5 bg-emerald-500 text-white font-semibold text-sm text-center rounded-lg hover:bg-emerald-600 transition-colors landing-body">Sign In with Google</button>
+            <button onClick={() => window.location.href = '/capra/login'} className="block w-full mt-2 px-4 py-2.5 bg-emerald-500 text-white font-semibold text-sm text-center rounded-lg hover:bg-emerald-600 transition-colors landing-body">Sign In with Google</button>
           )}
         </div>
       )}
@@ -115,7 +115,7 @@ export default function PremiumPage() {
       <section id="plans" className="px-6 md:px-12 py-8 md:py-10 bg-gray-50/50">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-5"><span className="landing-mono text-xs text-emerald-600 tracking-widest uppercase">Pricing</span><h2 className="landing-display font-bold text-2xl md:text-3xl mt-1 tracking-tight text-gray-900">Simple Plans. <span className="text-gray-400">No Surprises.</span></h2></div>
-          {hasActiveSubscription && (<div className="mb-6 p-4 border border-emerald-200 bg-emerald-50 rounded-lg text-center"><div className="flex items-center justify-center gap-2 text-emerald-700 font-semibold mb-1"><Icon name="checkCircle" size={18} />Active {subscription?.planType?.replace('_', ' ')} subscription</div><p className="text-sm text-gray-500">Manage your subscription in app settings.</p></div>)}
+          {hasActiveSubscription && (<div className="mb-6 p-4 border border-emerald-200 bg-emerald-50 rounded-lg text-center"><div className="flex items-center justify-center gap-2 text-emerald-700 font-semibold mb-1"><Icon name="checkCircle" size={18} />Active subscription</div><p className="text-sm text-gray-500">Manage your subscription in app settings.</p></div>)}
           {error && (<div className="mb-6 p-4 border border-red-200 bg-red-50 rounded-lg text-center"><p className="text-red-600 text-sm">{error}</p></div>)}
           <div className="grid md:grid-cols-3 gap-2.5">
             {plans.map((plan) => {

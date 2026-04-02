@@ -4,7 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 // TODO: Migrate CompetitorComparison component
 // import CompetitorComparison from '../components/pricing/CompetitorComparison';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'http://localhost:8000';
 
 const LUMORA_PLANS = [
   {
@@ -75,7 +75,7 @@ export function PricingPage() {
     if (plan.name === 'Free Trial') { window.location.href = '/lumora'; return; }
     const priceId = PRICE_MAP[plan.name];
     if (!priceId) { window.location.href = '/lumora'; return; }
-    if (!token) { window.location.href = '/login'; return; }
+    if (!token) { window.location.href = '/capra/login'; return; }
     setLoading(plan.name);
     try {
       const resp = await fetch(`${API_URL}/api/v1/billing/checkout`, {
@@ -199,7 +199,7 @@ export function PricingPage() {
                     </li>
                   ))}
                 </ul>
-                <a href="https://capra.cariara.com/premium" className={`mt-8 block text-center py-3 rounded-xl font-bold text-sm transition-all ${plan.popular ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
+                <a href="/pricing" className={`mt-8 block text-center py-3 rounded-xl font-bold text-sm transition-all ${plan.popular ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
                   Start {plan.name} on Ascend
                 </a>
               </div>
@@ -335,7 +335,7 @@ export function PricingPage() {
                 Start Free — No Credit Card
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
               </Link>
-              <a href="https://capra.cariara.com" className="inline-flex items-center gap-2 px-6 py-3.5 border border-gray-600 text-gray-300 font-semibold rounded-xl hover:border-gray-400 hover:text-white transition-all text-sm">
+              <a href="https://camora.cariara.com" className="inline-flex items-center gap-2 px-6 py-3.5 border border-gray-600 text-gray-300 font-semibold rounded-xl hover:border-gray-400 hover:text-white transition-all text-sm">
                 Ascend — Prep Tool
               </a>
             </div>

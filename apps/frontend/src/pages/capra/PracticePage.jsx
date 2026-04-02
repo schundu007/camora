@@ -141,7 +141,7 @@ const navLinks = [
   { label: 'Apply', href: 'https://jobs.cariara.com' },
   { label: 'Prepare', href: '/capra/prepare' },
   { label: 'Practice', href: '/capra/practice' },
-  { label: 'Attend', href: 'https://lumora.cariara.com/app' },
+  { label: 'Attend', href: '/lumora' },
   { label: 'Pricing', href: '/pricing' },
 ];
 
@@ -243,7 +243,7 @@ export default function PracticePage() {
           {user ? (
             <a href="/capra/prepare" className="text-sm text-gray-300 hover:text-white transition-colors landing-body font-medium">Dashboard</a>
           ) : !loading ? (
-            <a href="/login" className="text-sm text-gray-300 hover:text-white transition-colors landing-body font-medium">Sign in</a>
+            <a href="/capra/login" className="text-sm text-gray-300 hover:text-white transition-colors landing-body font-medium">Sign in</a>
           ) : null}
           <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden p-2 text-gray-400 hover:text-white transition-colors">
             <Icon name={mobileMenuOpen ? 'close' : 'menu'} size={22} />
@@ -260,7 +260,7 @@ export default function PracticePage() {
           {user ? (
             <a href="/capra/prepare" className="block px-4 py-2.5 text-sm font-medium text-emerald-600 hover:bg-emerald-50 rounded transition-colors landing-body">Dashboard</a>
           ) : !loading ? (
-            <a href="/login" className="block w-full mt-2 px-4 py-2.5 text-sm font-medium text-emerald-600 hover:bg-emerald-50 rounded transition-colors landing-body text-left">Sign in</a>
+            <a href="/capra/login" className="block w-full mt-2 px-4 py-2.5 text-sm font-medium text-emerald-600 hover:bg-emerald-50 rounded transition-colors landing-body text-left">Sign in</a>
           ) : null}
         </div>
       )}
@@ -444,7 +444,7 @@ export default function PracticePage() {
               { label: 'Apply', href: 'https://jobs.cariara.com' },
               { label: 'Prepare', href: '/capra/prepare' },
               { label: 'Practice', href: '/capra/practice' },
-              { label: 'Attend', href: 'https://lumora.cariara.com/app' },
+              { label: 'Attend', href: '/lumora' },
               { label: 'Pricing', href: '/pricing' },
               { label: 'Support', href: 'mailto:support@cariara.com' },
             ].map((link) => (

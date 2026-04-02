@@ -425,14 +425,14 @@ export default function CompetitorComparison({ isOpen, onClose }) {
                 </p>
                 <div className="flex items-center justify-center gap-3 flex-wrap">
                   <a
-                    href="https://lumora.cariara.com"
+                    href="https://camora.cariara.com"
                     className="px-6 py-3 rounded-xl font-bold text-sm text-white transition-all"
                     style={{ background: 'linear-gradient(to right, #10b981, #14b8a6)', boxShadow: '0 4px 14px rgba(16, 185, 129, 0.3)' }}
                   >
                     Try Lumora Free — Live AI
                   </a>
                   <a
-                    href="https://capra.cariara.com"
+                    href="https://camora.cariara.com"
                     className="px-6 py-3 rounded-xl font-bold text-sm transition-all"
                     style={{ background: 'linear-gradient(to right, #3b82f6, #6366f1)', color: '#fff', boxShadow: '0 4px 14px rgba(59, 130, 246, 0.3)' }}
                   >

@@ -28,7 +28,7 @@ export default function ShellSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { activeSection, setActiveSection, closeSidebar, collapsed, toggleCollapsed } = useAppShell();
-  const { user, signOut } = useAuth();
+  const { user, logout: signOut } = useAuth();
 
   const isOnPrepare = location.pathname.startsWith('/capra/prepare');
   // Mobile drawer is always expanded

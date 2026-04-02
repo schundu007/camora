@@ -29,8 +29,8 @@ export default function DownloadPage() {
 
   const checkDownloadAccess = async () => {
     try {
-      const token = accessToken || localStorage.getItem('capra_auth') && JSON.parse(localStorage.getItem('capra_auth'))?.accessToken;
-      if (!token) { window.location.href = '/login'; return; }
+      const token = accessToken;
+      if (!token) { window.location.href = '/capra/login'; return; }
       const response = await fetch(`${API_URL}/api/billing/download-access`, { headers: { Authorization: `Bearer ${token}` } });
       if (!response.ok) throw new Error('Failed to check download access');
       const data = await response.json();

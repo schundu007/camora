@@ -215,9 +215,10 @@ function saveCompanyData(companyData) {
   localStorage.setItem('interviewPrepCompanies', JSON.stringify(companyData));
 }
 
-// Get auth token for cloud sync
+// Get auth token for cloud sync (reads SSO cookie)
 async function getAuthToken() {
-  return localStorage.getItem('chundu_token');
+  const match = document.cookie.match(/(^| )cariara_sso=([^;]+)/);
+  return match ? decodeURIComponent(match[2]) : null;
 }
 
 // Check if user is authenticated for cloud sync (async version)

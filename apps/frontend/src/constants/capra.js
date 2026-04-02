@@ -55,8 +55,7 @@ export const MAX_AUTO_FIX_ATTEMPTS = 1;
 
 // Storage keys
 export const STORAGE_KEYS = {
-  token: 'chundu_token',
-  auth: 'ascend_auth',
+  ssoToken: 'cariara_sso', // SSO cookie name (read via document.cookie, not localStorage)
   codingHistory: 'chundu_coding_history',
   systemDesignSessions: 'chundu_system_design_sessions',
   autoSwitch: 'chundu_auto_switch',

@@ -6,7 +6,7 @@
  * Uses navigator.sendBeacon for session end on page unload.
  */
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'http://localhost:8000';
 
 class ActivityTracker {
   private sessionId: string | null = null;

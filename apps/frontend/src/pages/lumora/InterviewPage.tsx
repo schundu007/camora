@@ -17,7 +17,7 @@ function MicCheck({ onReady }: { onReady: () => void }) {
   useEffect(() => {
     let active = true;
     // Test backend connectivity
-    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/health`)
+    fetch(`${import.meta.env.VITE_LUMORA_API_URL || 'http://localhost:8000'}/health`)
       .then(r => { if (r.ok && active) setBackendOk(true); })
       .catch(() => {});
     (async () => {

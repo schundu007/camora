@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useState, useEffect } from 'react';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'http://localhost:8000';
 
 interface PaywallGateProps {
   children: React.ReactNode;
@@ -72,7 +72,7 @@ export function PaywallGate({ children, requiredPlan = 'any_paid', feature = 'th
             View Plans
           </Link>
           <a
-            href="https://capra.cariara.com/practice"
+            href="/capra/practice"
             className="px-6 py-3 bg-gray-100 text-gray-700 font-semibold text-sm rounded-xl hover:bg-gray-200 transition-all"
           >
             Continue Free

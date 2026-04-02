@@ -22,8 +22,8 @@ interface CompetitorInfo {
 }
 
 const COMPETITORS: Record<Competitor, CompetitorInfo> = {
-  lumora:          { name: 'Lumora',           price: '$79',   priceNote: '/mo',          url: 'lumora.cariara.com',    category: 'ours' },
-  ascend:          { name: 'Ascend',           price: '$29-99',priceNote: '/mo',          url: 'capra.cariara.com',     category: 'ours' },
+  lumora:          { name: 'Lumora',           price: '$79',   priceNote: '/mo',          url: 'camora.cariara.com',    category: 'ours' },
+  ascend:          { name: 'Ascend',           price: '$29-99',priceNote: '/mo',          url: 'camora.cariara.com',    category: 'ours' },
   interviewCoder:  { name: 'InterviewCoder',   price: '$299',  priceNote: '/mo',          url: 'interviewcoder.com',    category: 'live-ai' },
   interviewBee:    { name: 'InterviewBee',     price: '???',   priceNote: 'hidden',       url: 'interviewbee.com',      category: 'live-ai' },
   educative:       { name: 'Educative',        price: '$59-99',priceNote: '/mo',          url: 'educative.io',          category: 'prep' },
@@ -583,13 +583,13 @@ export default function CompetitorComparison() {
             </p>
             <div className="flex items-center justify-center gap-4 flex-wrap">
               <a
-                href="https://capra.cariara.com"
+                href="https://camora.cariara.com"
                 className="px-8 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-bold text-sm rounded-xl shadow-lg hover:shadow-blue-500/25 hover:-translate-y-0.5 transition-all"
               >
                 Try Ascend Free — Prep Tool
               </a>
               <a
-                href="https://lumora.cariara.com"
+                href="https://camora.cariara.com"
                 className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold text-sm rounded-xl shadow-lg hover:shadow-emerald-500/25 hover:-translate-y-0.5 transition-all"
               >
                 Try Lumora Free — Live AI

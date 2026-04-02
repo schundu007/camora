@@ -114,7 +114,7 @@ export function LandingPage() {
         <div className="hidden md:flex items-center gap-6">
           <a href="#features" className="text-sm text-gray-400 hover:text-white transition-colors font-medium">Features</a>
           <Link to="/pricing" className="text-sm text-gray-400 hover:text-white transition-colors font-medium">Pricing</Link>
-          <Link to="/login" className="text-sm text-gray-400 hover:text-white transition-colors font-medium">Sign In</Link>
+          <Link to="/capra/login" className="text-sm text-gray-400 hover:text-white transition-colors font-medium">Sign In</Link>
           <Link
             to="/lumora"
             className="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-semibold text-sm rounded-lg hover:from-emerald-600 hover:to-teal-600 transition-all shadow-lg shadow-emerald-500/25"
@@ -200,8 +200,8 @@ export function LandingPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 relative z-10">
             {[
               { num: 1, label: 'Apply', desc: 'Find your role', href: 'https://jobs.cariara.com', icon: 'M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z', borderColor: '#6ee7b7', bgFrom: '#ecfdf5', bgTo: '#d1fae5', numBg: 'linear-gradient(135deg, #059669, #10b981)', iconBg: '#d1fae5', iconColor: '#059669', glowColor: 'rgba(16, 185, 129, 0.15)', shimmer: 'from-emerald-200/0 via-emerald-200/40 to-emerald-200/0' },
-              { num: 2, label: 'Prepare', desc: 'Study & review', href: 'https://capra.cariara.com/prepare', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', borderColor: '#a5b4fc', bgFrom: '#eef2ff', bgTo: '#e0e7ff', numBg: 'linear-gradient(135deg, #4f46e5, #6366f1)', iconBg: '#e0e7ff', iconColor: '#4f46e5', glowColor: 'rgba(79, 70, 229, 0.15)', shimmer: 'from-indigo-200/0 via-indigo-200/40 to-indigo-200/0' },
-              { num: 3, label: 'Practice', desc: 'Solve problems', href: 'https://capra.cariara.com/practice', icon: 'M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4', borderColor: '#c4b5fd', bgFrom: '#f5f3ff', bgTo: '#ede9fe', numBg: 'linear-gradient(135deg, #7c3aed, #8b5cf6)', iconBg: '#ede9fe', iconColor: '#7c3aed', glowColor: 'rgba(124, 58, 237, 0.15)', shimmer: 'from-violet-200/0 via-violet-200/40 to-violet-200/0' },
+              { num: 2, label: 'Prepare', desc: 'Study & review', href: '/capra/prepare', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', borderColor: '#a5b4fc', bgFrom: '#eef2ff', bgTo: '#e0e7ff', numBg: 'linear-gradient(135deg, #4f46e5, #6366f1)', iconBg: '#e0e7ff', iconColor: '#4f46e5', glowColor: 'rgba(79, 70, 229, 0.15)', shimmer: 'from-indigo-200/0 via-indigo-200/40 to-indigo-200/0' },
+              { num: 3, label: 'Practice', desc: 'Solve problems', href: '/capra/practice', icon: 'M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4', borderColor: '#c4b5fd', bgFrom: '#f5f3ff', bgTo: '#ede9fe', numBg: 'linear-gradient(135deg, #7c3aed, #8b5cf6)', iconBg: '#ede9fe', iconColor: '#7c3aed', glowColor: 'rgba(124, 58, 237, 0.15)', shimmer: 'from-violet-200/0 via-violet-200/40 to-violet-200/0' },
               { num: 4, label: 'Attend', desc: 'Ace the interview', href: '/lumora', icon: 'M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z', borderColor: '#fcd34d', bgFrom: '#fffbeb', bgTo: '#fef3c7', numBg: 'linear-gradient(135deg, #d97706, #f59e0b)', iconBg: '#fef3c7', iconColor: '#d97706', glowColor: 'rgba(217, 119, 6, 0.15)', shimmer: 'from-amber-200/0 via-amber-200/40 to-amber-200/0' },
             ].map((item) => (
               <Link

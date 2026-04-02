@@ -204,7 +204,7 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
                 <p className="text-sm font-semibold text-amber-800">Want deeper preparation?</p>
                 <p className="text-xs text-amber-600">Ascend has 300+ DSA topics, system design problems, and mock interviews.</p>
               </div>
-              <a href="https://capra.cariara.com/prepare" target="_blank" rel="noopener noreferrer" className="shrink-0 px-3 py-1.5 bg-amber-500 text-white text-xs font-bold rounded-lg hover:bg-amber-600 transition-colors">
+              <a href="/capra/prepare" className="shrink-0 px-3 py-1.5 bg-amber-500 text-white text-xs font-bold rounded-lg hover:bg-amber-600 transition-colors">
                 Prepare →
               </a>
             </div>

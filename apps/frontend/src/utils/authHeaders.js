@@ -2,39 +2,25 @@
  * Auth Headers Utility
  *
  * Centralized function for generating authentication headers
- * Web-only version (no Electron dependencies)
+ * Web-only version — reads the SSO cookie set by Ascend (cariara_sso)
  */
 
 /**
- * Get auth token from storage
- * Supports both old format (chundu_token) and new OAuth format (ascend_auth)
+ * Get auth token from the SSO cookie (cariara_sso).
+ * This is the same source AuthContext uses, keeping them in sync.
  */
 export function getToken() {
-  // Try new OAuth format first (ascend_auth)
-  try {
-    const authData = localStorage.getItem('ascend_auth');
-    if (authData) {
-      const parsed = JSON.parse(authData);
-      if (parsed.accessToken) {
-        return parsed.accessToken;
-      }
-    }
-  } catch (e) {
-    // Ignore parse errors
-  }
-
-  // Fall back to old format
-  return localStorage.getItem('chundu_token');
+  const match = document.cookie.match(/(^| )cariara_sso=([^;]+)/);
+  return match ? decodeURIComponent(match[2]) : null;
 }
 
 /**
  * Get authentication headers for API requests
- * Includes authorization token
+ * Includes authorization token from the SSO cookie
  */
 export function getAuthHeaders() {
   const headers = {};
 
-  // Add auth token if available
   const token = getToken();
   if (token) {
     headers.Authorization = `Bearer ${token}`;

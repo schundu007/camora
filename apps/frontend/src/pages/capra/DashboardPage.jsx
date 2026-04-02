@@ -40,8 +40,7 @@ const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'http://localhost:3009';
 
 // Storage keys
 const STORAGE_KEYS = {
-  token: 'chundu_token',
-  auth: 'ascend_auth',
+  ssoToken: 'cariara_sso', // SSO cookie name (read via document.cookie, not localStorage)
   codingHistory: 'chundu_coding_history',
   systemDesignSessions: 'chundu_system_design_sessions',
   autoSwitch: 'chundu_auto_switch',
@@ -87,14 +86,9 @@ function useLocalStorage(key, initialValue) {
 // ============================================================================
 
 function getToken() {
-  try {
-    const authData = localStorage.getItem('ascend_auth');
-    if (authData) {
-      const parsed = JSON.parse(authData);
-      if (parsed.accessToken) return parsed.accessToken;
-    }
-  } catch {}
-  return localStorage.getItem('ascend_token');
+  // Read from SSO cookie (same source as AuthContext)
+  const match = document.cookie.match(/(^| )cariara_sso=([^;]+)/);
+  return match ? decodeURIComponent(match[2]) : null;
 }
 
 function buildEraserDescription(sd) {

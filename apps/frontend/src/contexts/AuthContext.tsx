@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState, useCallback, ReactNode 
 
 const LUMORA_API_URL = import.meta.env.VITE_LUMORA_API_URL || 'http://localhost:8000';
 const CAPRA_API_URL = import.meta.env.VITE_CAPRA_API_URL || 'http://localhost:3009';
-const ASCEND_URL = import.meta.env.VITE_ASCEND_URL || 'https://capra.cariara.com';
+const ASCEND_URL = import.meta.env.VITE_ASCEND_URL || 'https://camora.cariara.com';
 const DEV_MODE = import.meta.env.DEV && !import.meta.env.VITE_REQUIRE_AUTH;
 
 interface AuthUser {

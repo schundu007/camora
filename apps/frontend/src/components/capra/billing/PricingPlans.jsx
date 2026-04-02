@@ -4,7 +4,7 @@ import { useAuth } from '../../../contexts/AuthContext';
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'http://localhost:3009';
 
 export default function PricingPlans({ isOpen, onClose }) {
-  const { getAccessToken, subscription, user } = useAuth();
+  const { token: authToken, user } = useAuth();
   const [loading, setLoading] = useState(null);
   const [error, setError] = useState('');
   const dialogRef = useRef(null);
@@ -47,11 +47,11 @@ export default function PricingPlans({ isOpen, onClose }) {
   ];
 
   const handleSubscribe = async (planId) => {
-    if (!user) { window.location.href = '/login'; return; }
+    if (!user) { window.location.href = '/capra/login'; return; }
     setLoading(planId);
     setError('');
     try {
-      const token = await getAccessToken();
+      const token = authToken;
       if (!token) throw new Error('Please sign in first');
       const pricesRes = await fetch(`${API_URL}/api/billing/prices`);
       const prices = await pricesRes.json();
@@ -72,7 +72,7 @@ export default function PricingPlans({ isOpen, onClose }) {
     setLoading('portal');
     setError('');
     try {
-      const token = await getAccessToken();
+      const token = authToken;
       if (!token) throw new Error('Please sign in first');
       const res = await fetch(`${API_URL}/api/billing/portal`, {
         method: 'POST',
@@ -85,7 +85,7 @@ export default function PricingPlans({ isOpen, onClose }) {
     } catch (err) { setError(err.message); setLoading(null); }
   };
 
-  const hasActiveSubscription = subscription?.plan_type !== 'free' && subscription?.status === 'active';
+  const hasActiveSubscription = false; // TODO: wire up subscription status from backend
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0, 0, 0, 0.5)', backdropFilter: 'blur(4px)' }} onClick={onClose} aria-hidden="true">

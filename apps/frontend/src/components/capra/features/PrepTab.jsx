@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { getToken } from '../../../utils/authHeaders.js';
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'http://localhost:3009';
 const isElectron = false; // Electron removed in unified frontend
 
@@ -50,7 +51,7 @@ export default function PrepTab({ isOpen, onClose }) {
       } else {
         // Webapp: get status from backend (synced via extension)
         try {
-          const token = localStorage.getItem('chundu_token');
+          const token = getToken();
           const headers = {};
           if (token) headers.Authorization = `Bearer ${token}`;
           const res = await fetch(API_URL + '/api/auth/status', { headers });
@@ -102,7 +103,7 @@ export default function PrepTab({ isOpen, onClose }) {
     if (isElectron) return;
 
     try {
-      const token = localStorage.getItem('chundu_token');
+      const token = getToken();
       const headers = {};
       if (token) headers.Authorization = `Bearer ${token}`;
       const res = await fetch(API_URL + '/api/auth/status', { headers });
@@ -122,7 +123,7 @@ export default function PrepTab({ isOpen, onClose }) {
     setFetchedContent(null);
 
     try {
-      const token = localStorage.getItem('chundu_token');
+      const token = getToken();
       const headers = { 'Content-Type': 'application/json' };
       if (token) headers.Authorization = `Bearer ${token}`;
 

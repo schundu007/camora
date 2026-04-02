@@ -4,12 +4,16 @@ import { useAuth } from '../../../contexts/AuthContext';
  * Credit Balance - Slack style
  */
 export default function CreditBalance({ onUpgrade, compact = false }) {
-  const { credits, subscription, usage, isAuthenticated, isWebApp } = useAuth();
+  const { isAuthenticated } = useAuth();
 
-  // Don't show if not authenticated
-  if (!isWebApp || !isAuthenticated) {
+  // Credits/subscription not yet wired to AuthContext — hide for now
+  if (!isAuthenticated) {
     return null;
   }
+
+  const credits = null;
+  const subscription = null;
+  const usage = null;
 
   const balance = credits?.balance ?? 0;
   const planType = subscription?.plan_type ?? 'free';
