@@ -13,9 +13,9 @@ const router = Router();
 // ---------------------------------------------------------------------------
 
 const TOPUP_PACKS = [
-  { id: 'questions_20', name: '20 AI Questions', price: 500, stripePrice: 'price_1THiZuITUCNxtMxlS1Py7hSO', type: 'questions', amount: 20, extras: { diagrams: 3 } },
-  { id: 'questions_50', name: '50 AI Questions', price: 1000, stripePrice: 'price_1THiaHITUCNxtMxlQ31IpECl', type: 'questions', amount: 50, extras: { diagrams: 8 } },
-  { id: 'sessions_5', name: '5 Live Sessions', price: 1500, stripePrice: 'price_1THiagITUCNxtMxlG8idH0Cz', type: 'sessions', amount: 5 },
+  { id: 'questions_20', name: '20 AI Questions', price: 500, stripePrice: process.env.STRIPE_TOPUP_20Q, type: 'questions', amount: 20, extras: { diagrams: 3 } },
+  { id: 'questions_50', name: '50 AI Questions', price: 1000, stripePrice: process.env.STRIPE_TOPUP_50Q, type: 'questions', amount: 50, extras: { diagrams: 8 } },
+  { id: 'sessions_5', name: '5 Live Sessions', price: 1500, stripePrice: process.env.STRIPE_TOPUP_5S, type: 'sessions', amount: 5 },
 ];
 
 // ---------------------------------------------------------------------------
