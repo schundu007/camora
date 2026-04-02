@@ -116,7 +116,7 @@ export default function LandingPage() {
           <div className={`transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
             <div className="inline-flex items-center gap-2 px-3 py-1 border border-emerald-500/20 bg-emerald-500/[0.06] mb-8">
               <span className="w-1.5 h-1.5 bg-emerald-400" />
-              <span className="text-[11px] font-mono text-emerald-400 tracking-wider uppercase">AI Interview Platform</span>
+              <span className="text-[11px] font-mono text-emerald-400 tracking-wider uppercase">APPA — Apply. Prepare. Practice. Attend.</span>
             </div>
           </div>
 
@@ -237,10 +237,11 @@ export default function LandingPage() {
       <section ref={journeyRef.ref} className="px-6 py-20 md:py-28">
         <div className="max-w-5xl mx-auto">
           <div className={`mb-12 transition-all duration-700 ${journeyRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
-            <span className="text-[11px] font-mono text-gray-500 uppercase tracking-wider">The Interview Lifecycle</span>
+            <span className="text-[11px] font-mono text-emerald-400/60 uppercase tracking-wider">The APPA Framework</span>
             <h2 className="mt-3 text-2xl md:text-3xl font-semibold tracking-tight text-white">
-              One platform, every stage.
+              Apply. Prepare. Practice. Attend.
             </h2>
+            <p className="mt-2 text-sm text-gray-500">The complete interview lifecycle — in one platform.</p>
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-px bg-white/[0.04]">
@@ -450,14 +451,13 @@ export default function LandingPage() {
       {/* ── Built for Engineers ───────────────────────────────── */}
       <section className="px-6 py-20 md:py-28">
         <div className="max-w-3xl mx-auto text-center">
-          <span className="text-[11px] font-mono text-gray-500 uppercase tracking-wider">Built for engineers</span>
+          <span className="text-[11px] font-mono text-emerald-400/60 uppercase tracking-wider">The APPA Advantage</span>
           <h2 className="mt-3 text-2xl md:text-3xl font-semibold tracking-tight text-white">
-            Interview preparation is broken.
+            No other tool covers the full pipeline.
           </h2>
           <p className="mt-4 text-sm md:text-base text-gray-500 leading-relaxed max-w-xl mx-auto">
-            You spend weeks studying, then freeze when the interviewer asks something unexpected.
-            Camora gives you a safety net — real-time AI that has your back during the actual interview,
-            plus the preparation tools to build genuine understanding.
+            Competitors give you a copilot OR prep material. Camora gives you the complete APPA pipeline —
+            from discovering the right job to walking out with an offer. Apply, Prepare, Practice, Attend.
           </p>
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link to="/lumora"

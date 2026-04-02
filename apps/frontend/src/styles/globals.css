@@ -27,6 +27,19 @@ body {
     --card-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
   }
 
+  /* Dark theme override — apply .dark-page to a page wrapper */
+  .dark-page {
+    --bg: #09090b;
+    --bg2: #0a0a0a;
+    --text: #f3f4f6;
+    --text-subtle: #d1d5db;
+    --text-dim: #9ca3af;
+    --text-muted: #6b7280;
+    --border: rgba(255,255,255,0.06);
+    --border2: rgba(255,255,255,0.1);
+    --surface: #111111;
+    --surface2: #1a1a1a;
+  }
 
   html {
     @apply antialiased scroll-smooth;
@@ -500,29 +513,3 @@ main, [role="main"] {
   animation: timerPulse 1s ease-in-out infinite;
 }
 
-/* Landing page animations */
-@keyframes float {
-  0%, 100% { transform: translateY(0px) translateX(0px); }
-  25% { transform: translateY(-20px) translateX(10px); }
-  50% { transform: translateY(-10px) translateX(-10px); }
-  75% { transform: translateY(-30px) translateX(5px); }
-}
-.animate-float { animation: float linear infinite; }
-
-@keyframes pulse-slow {
-  0%, 100% { opacity: 0.08; transform: scale(1); }
-  50% { opacity: 0.12; transform: scale(1.1); }
-}
-.animate-pulse-slow { animation: pulse-slow 6s ease-in-out infinite; }
-
-@keyframes journey-slide {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(400%); }
-}
-.animate-journey-slide { animation: journey-slide 3s ease-in-out infinite; }
-
-@keyframes icon-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-4px); }
-}
-.animate-icon-float { animation: icon-float 3s ease-in-out infinite; }

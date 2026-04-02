@@ -1,73 +1,85 @@
 import { Link } from 'react-router-dom';
 
+const NAV_LINKS = [
+  { label: 'Apply', href: 'https://jobs.cariara.com', external: true },
+  { label: 'Prepare', href: '/capra/prepare', external: false },
+  { label: 'Practice', href: '/capra/practice', external: false },
+  { label: 'Attend', href: '/lumora', external: false },
+  { label: 'Pricing', href: '/pricing', external: false },
+];
+
 export default function NotFoundPage() {
   return (
-    <div className="min-h-screen landing-root flex flex-col items-center justify-center px-6" style={{ background: 'linear-gradient(180deg, #ecfdf5 0%, #f0fdf4 50%, #f8fafc 100%)' }}>
-      {/* Background blur accents */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute w-[500px] h-[500px] rounded-full opacity-10 blur-3xl -top-[150px] -right-[100px] bg-emerald-400" />
-        <div className="absolute w-[400px] h-[400px] rounded-full opacity-10 blur-3xl -bottom-[100px] -left-[100px] bg-emerald-300" />
-      </div>
+    <div className="min-h-screen bg-[#09090b] text-gray-100">
 
-      {/* Subtle dot pattern background */}
-      <div
-        className="fixed inset-0 pointer-events-none opacity-20"
-        style={{
-          backgroundImage: 'radial-gradient(circle, #d1d5db 0.5px, transparent 0.5px)',
-          backgroundSize: '24px 24px'
-        }}
-      />
-
-      <div className="relative z-10 text-center max-w-md">
-        {/* Logo */}
-        <Link to="/" className="inline-flex items-center gap-3 mb-10">
-          <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center">
-            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-            </svg>
-          </div>
-          <div className="text-left">
-            <span className="landing-display font-bold text-xl tracking-tight text-gray-900">Camora</span>
-            <span className="block text-[10px] landing-mono uppercase tracking-[0.2em] text-emerald-600 -mt-0.5">Interview Suite</span>
-          </div>
-        </Link>
-
-        {/* 404 */}
-        <div className="landing-mono text-7xl font-extrabold text-emerald-200 mb-4">404</div>
-        <h1 className="landing-display text-2xl font-bold text-gray-900 mb-3">Page not found</h1>
-        <p className="landing-body text-gray-500 text-sm leading-relaxed mb-8">
-          The page you are looking for does not exist or has been moved. Head back home to continue.
-        </p>
-
-        {/* Navigation links */}
-        <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <Link
-            to="/"
-            className="inline-flex items-center gap-2 px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold text-sm rounded-lg transition-colors landing-body"
-          >
-            Go Home
+      {/* Nav */}
+      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/[0.06] bg-[#09090b]/80 backdrop-blur-xl">
+        <div className="max-w-6xl mx-auto flex items-center justify-between px-6 h-14">
+          <Link to="/" className="flex items-center gap-2.5">
+            <div className="w-7 h-7 bg-emerald-500 flex items-center justify-center" style={{ clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)' }}>
+              <span className="text-[10px] font-black text-white tracking-tight">C</span>
+            </div>
+            <span className="text-sm font-semibold tracking-tight text-white">Camora</span>
           </Link>
-          <Link
-            to="/capra"
-            className="inline-flex items-center gap-2 px-6 py-2.5 bg-white border border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 text-gray-800 font-semibold text-sm rounded-lg transition-colors landing-body"
-          >
-            Capra &mdash; Prepare
-          </Link>
-          <Link
-            to="/lumora"
-            className="inline-flex items-center gap-2 px-6 py-2.5 bg-white border border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 text-gray-800 font-semibold text-sm rounded-lg transition-colors landing-body"
-          >
-            Lumora &mdash; Interview AI
+          <div className="hidden md:flex items-center gap-1">
+            {NAV_LINKS.map((link) =>
+              link.external ? (
+                <a key={link.label} href={link.href} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 text-[13px] text-gray-400 hover:text-white transition-colors">{link.label}</a>
+              ) : (
+                <Link key={link.label} to={link.href} className="px-3 py-1.5 text-[13px] text-gray-400 hover:text-white transition-colors">{link.label}</Link>
+              )
+            )}
+          </div>
+          <Link to="/lumora" className="px-4 py-1.5 text-[13px] font-medium text-black bg-emerald-400 hover:bg-emerald-300 transition-colors">
+            Launch App
           </Link>
         </div>
-      </div>
+      </nav>
 
-      <style>{`
-        .landing-root { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; font-family: 'Work Sans', 'Plus Jakarta Sans', system-ui, sans-serif; }
-        .landing-display { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
-        .landing-body { font-family: 'Work Sans', 'Plus Jakarta Sans', system-ui, sans-serif; }
-        .landing-mono { font-family: 'IBM Plex Mono', monospace; }
-      `}</style>
+      {/* Content */}
+      <div className="flex flex-col items-center justify-center min-h-screen px-6 pt-14">
+        {/* Subtle grid background */}
+        <div className="fixed inset-0 opacity-[0.03]"
+             style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)', backgroundSize: '64px 64px' }} />
+
+        <div className="relative z-10 text-center max-w-md">
+          {/* Hexagonal logo */}
+          <div className="flex justify-center mb-10">
+            <div className="w-14 h-14 bg-emerald-500 flex items-center justify-center" style={{ clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)' }}>
+              <span className="text-lg font-black text-white tracking-tight">C</span>
+            </div>
+          </div>
+
+          {/* 404 */}
+          <div className="font-mono text-8xl font-extrabold text-gray-800 mb-4 tracking-tight">404</div>
+          <h1 className="text-2xl font-semibold tracking-tight text-white mb-3">Page not found</h1>
+          <p className="text-sm text-gray-500 leading-relaxed mb-10">
+            The page you are looking for does not exist or has been moved.
+          </p>
+
+          {/* Navigation links */}
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Link
+              to="/"
+              className="inline-flex items-center justify-center gap-2 px-6 py-2.5 text-[13px] font-medium text-black bg-emerald-400 hover:bg-emerald-300 transition-colors"
+            >
+              Go Home
+            </Link>
+            <Link
+              to="/capra/prepare"
+              className="inline-flex items-center justify-center gap-2 px-6 py-2.5 text-[13px] font-medium text-gray-400 border border-white/[0.08] hover:text-white hover:border-white/[0.15] transition-colors"
+            >
+              Prepare
+            </Link>
+            <Link
+              to="/lumora"
+              className="inline-flex items-center justify-center gap-2 px-6 py-2.5 text-[13px] font-medium text-gray-400 border border-white/[0.08] hover:text-white hover:border-white/[0.15] transition-colors"
+            >
+              Live Interview
+            </Link>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

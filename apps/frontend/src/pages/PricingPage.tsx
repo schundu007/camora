@@ -158,11 +158,11 @@ export default function PricingPage() {
       <section className="pt-28 pb-6 px-6 text-center">
         <span className="text-[11px] font-mono text-gray-500 uppercase tracking-wider">Pricing</span>
         <h1 className="mt-3 text-3xl md:text-4xl font-semibold tracking-tight text-white">
-          The only all-in-one interview platform.
+          The APPA platform. All-in-one.
         </h1>
         <p className="mt-3 text-base text-gray-500 max-w-xl mx-auto">
-          Others charge $25-150/mo for just the copilot. Camora gives you job discovery,
-          preparation, practice, and live AI — starting free.
+          Apply. Prepare. Practice. Attend. Others charge $25-150/mo for just the copilot.
+          Camora gives you the complete interview pipeline — starting free.
         </p>
       </section>
 
