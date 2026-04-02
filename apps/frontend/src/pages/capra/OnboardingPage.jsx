@@ -150,7 +150,7 @@ const ACCEPTED_TYPES = {
 const ACCEPTED_EXTENSIONS = ['.pdf', '.docx', '.txt'];
 
 export default function OnboardingPage() {
-  const { accessToken } = useAuth();
+  const { token: accessToken } = useAuth();
   const navigate = useNavigate();
 
   const [step, setStep] = useState(1);

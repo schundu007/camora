@@ -8,7 +8,7 @@ const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'http://localhost:3009';
  * DownloadPage - Desktop app download page after purchase
  */
 export default function DownloadPage() {
-  const { user, accessToken } = useAuth();
+  const { user, token: accessToken } = useAuth();
   const [downloadInfo, setDownloadInfo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
