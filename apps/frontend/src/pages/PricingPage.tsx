@@ -234,6 +234,22 @@ export default function PricingPage() {
               </div>
             ))}
           </div>
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+            {[
+              { label: 'Auto Cloud Diagrams', color: '#34d399' },
+              { label: '50+ Languages', color: '#06b6d4' },
+              { label: 'Real Interview DB', color: '#818cf8' },
+              { label: 'Auto-Fix Code', color: '#f59e0b' },
+            ].map((badge) => (
+              <span
+                key={badge.label}
+                className="px-3 py-1.5 rounded-lg border border-white/[0.08] text-sm text-gray-300 font-medium inline-flex items-center gap-2"
+              >
+                <span className="w-2 h-2 rounded-full shrink-0" style={{ background: badge.color }} />
+                {badge.label}
+              </span>
+            ))}
+          </div>
         </div>
       </section>
 

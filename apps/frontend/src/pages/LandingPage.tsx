@@ -436,6 +436,7 @@ export default function LandingPage() {
   const prepRef = useInView(0.08);
   const featuresRef = useInView(0.08);
   const diffRef = useInView(0.08);
+  const compRef = useInView(0.08);
   const howRef = useInView(0.08);
   const ctaRef = useInView(0.08);
 
@@ -1084,134 +1085,437 @@ export default function LandingPage() {
       {/* ═══════════════════════════════════════════════════
           SECTION 5B — WHAT SETS CAMORA APART
          ═══════════════════════════════════════════════════ */}
-      <section ref={diffRef.ref} className="relative px-6 lg:px-8 py-24 md:py-32" style={{ zIndex: 2 }}>
+      <section ref={diffRef.ref} className="relative px-6 lg:px-8 py-28 md:py-36" style={{ zIndex: 2 }}>
+        {/* Unique background — multi-point radial gradient to visually distinguish this section */}
         <div className="absolute inset-0 pointer-events-none" style={{
-          background: 'radial-gradient(ellipse 60% 50% at 50% 40%, rgba(16,185,129,0.06) 0%, transparent 70%)',
+          background: `
+            radial-gradient(ellipse 80% 50% at 50% 20%, rgba(16,185,129,0.08) 0%, transparent 60%),
+            radial-gradient(ellipse 60% 40% at 20% 80%, rgba(99,102,241,0.05) 0%, transparent 50%),
+            radial-gradient(ellipse 60% 40% at 80% 70%, rgba(6,182,212,0.05) 0%, transparent 50%)
+          `,
         }} />
+
         <div className="relative max-w-6xl mx-auto">
-          <div className={`text-center mb-16 transition-all duration-700 ${diffRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-            <span className="font-code text-sm text-emerald-400 tracking-wider font-semibold">WHY CAMORA</span>
-            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-white mt-4">
-              Features no other tool has.
+          {/* ── Section Header ── */}
+          <div className={`text-center mb-20 transition-all duration-700 ${diffRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+            <span className="inline-block font-code text-sm text-emerald-400 tracking-[0.2em] font-semibold uppercase px-4 py-1.5 rounded-full border border-emerald-400/20 bg-emerald-400/5">
+              ONLY ON CAMORA
+            </span>
+            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight text-white mt-6">
+              What no other interview tool can do.
             </h2>
-            <p className="mt-4 text-base md:text-lg text-gray-300 max-w-2xl mx-auto">
-              Built by engineers who've been through hundreds of interviews. Every feature solves a real problem.
+            <p className="mt-5 text-base md:text-lg text-gray-300 max-w-3xl mx-auto leading-relaxed">
+              Every feature below is unique to Camora. We built what interview candidates actually need — not what looks good in a demo. This is the platform competitors wish they had.
             </p>
           </div>
 
-          {/* Feature grid — 3 columns */}
-          <div className="grid md:grid-cols-3 gap-5">
+          {/* ── Feature Groups ── */}
+          {(() => {
+            const groups = [
+              {
+                groupTitle: 'Live Interview AI',
+                accent: '#34d399',
+                features: [
+                  {
+                    title: 'Real-Time Voice Transcription',
+                    desc: "Whisper-powered engine supports 7+ audio formats. Captures your interviewer's voice in real time — you see their questions as text instantly.",
+                    icon: (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                        <line x1="12" y1="19" x2="12" y2="22" />
+                      </svg>
+                    ),
+                  },
+                  {
+                    title: '3-Approach Coding Solutions',
+                    desc: 'Every problem solved three ways: brute force, optimized, and most optimal. Each includes time/space complexity analysis and trade-off explanations.',
+                    icon: (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="16 18 22 12 16 6" />
+                        <polyline points="8 6 2 12 8 18" />
+                        <line x1="14.5" y1="4" x2="9.5" y2="20" />
+                      </svg>
+                    ),
+                  },
+                  {
+                    title: 'Auto-Generated Architecture Diagrams',
+                    desc: 'AWS, Azure, GCP cloud diagrams with real service icons. Not boxes and arrows — actual architecture patterns generated on demand.',
+                    icon: (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" />
+                      </svg>
+                    ),
+                  },
+                  {
+                    title: 'STAR Format Behavioral Coaching',
+                    desc: 'Structured Situation-Task-Action-Result answers generated instantly. Includes predicted follow-up questions so you are never caught off guard.',
+                    icon: (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                      </svg>
+                    ),
+                  },
+                  {
+                    title: 'Emergency Blank Screen (Cmd+B)',
+                    desc: 'One keystroke hides everything. Your interviewer sees nothing. Instantly toggleable so you stay in control at all times.',
+                    icon: (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="2" y="3" width="20" height="14" rx="2" />
+                        <line x1="8" y1="21" x2="16" y2="21" />
+                        <line x1="12" y1="17" x2="12" y2="21" />
+                        <line x1="2" y1="3" x2="22" y2="17" />
+                      </svg>
+                    ),
+                  },
+                  {
+                    title: 'Speaker Voice Filtering',
+                    desc: "AI filters YOUR voice out of the audio stream — only your interviewer's speech gets transcribed. No echo, no self-capture, just their questions.",
+                    icon: (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                        <line x1="1" y1="1" x2="23" y2="23" />
+                      </svg>
+                    ),
+                  },
+                ],
+              },
+              {
+                groupTitle: 'Platform Compatibility',
+                accent: '#06b6d4',
+                features: [
+                  {
+                    title: 'LeetCode, HackerRank, CoderPad, CodeSignal, Glider',
+                    desc: 'Generated code runs directly on all major coding platforms. Copy, paste, submit. No reformatting, no adjustments needed.',
+                    icon: (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="16 18 22 12 16 6" />
+                        <polyline points="8 6 2 12 8 18" />
+                      </svg>
+                    ),
+                  },
+                  {
+                    title: 'Zoom, Google Meet, MS Teams',
+                    desc: "Works seamlessly on all major video conferencing platforms. Audio capture and transcription tuned for each platform's audio pipeline.",
+                    icon: (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M15.6 11.6L22 7v10l-6.4-4.5v-1z" />
+                        <rect x="2" y="7" width="14" height="10" rx="2" />
+                      </svg>
+                    ),
+                  },
+                  {
+                    title: '50+ Programming Languages',
+                    desc: 'Python, Java, Go, Rust, C++, JavaScript, TypeScript, SQL, Terraform, Kubernetes manifests, and dozens more. Whatever the interview requires.',
+                    icon: (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M4 6h16M4 12h16M4 18h10" />
+                      </svg>
+                    ),
+                  },
+                  {
+                    title: 'Auto-Fix and Debug',
+                    desc: 'Submit broken code and Camora fixes it automatically. Identifies logic errors, edge cases, and off-by-one bugs — then corrects them.',
+                    icon: (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
+                        <path d="m9 12 2 2 4-4" />
+                      </svg>
+                    ),
+                  },
+                ],
+              },
+              {
+                groupTitle: 'Interview Preparation',
+                accent: '#818cf8',
+                features: [
+                  {
+                    title: '415+ Study Topics',
+                    desc: 'DSA, System Design, Microservices, Database Design, SQL, Low-Level Design, Behavioral — every category covered in exhaustive depth.',
+                    icon: (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+                      </svg>
+                    ),
+                  },
+                  {
+                    title: 'Real Interview Database',
+                    desc: '80-90% coverage of actual FAANG interview questions. Not theoretical — sourced from real candidate experiences at top companies.',
+                    icon: (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                        <ellipse cx="12" cy="5" rx="9" ry="3" />
+                        <path d="M21 12c0 1.66-4.03 3-9 3s-9-1.34-9-3" />
+                        <path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5" />
+                      </svg>
+                    ),
+                  },
+                  {
+                    title: 'Company-Specific Prep',
+                    desc: 'Questions sourced from real Google, Amazon, Meta, Apple, Netflix, and Microsoft interviews. Know exactly what to expect.',
+                    icon: (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="2" y="7" width="20" height="14" rx="2" />
+                        <path d="M16 7V5a4 4 0 0 0-8 0v2" />
+                      </svg>
+                    ),
+                  },
+                  {
+                    title: 'Mock Interview Simulator',
+                    desc: 'Timed practice sessions with AI-powered feedback and scoring. Simulates real interview pressure so the real thing feels familiar.',
+                    icon: (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10" />
+                        <polyline points="12 6 12 12 16 14" />
+                      </svg>
+                    ),
+                  },
+                  {
+                    title: 'AI-Powered Explanations',
+                    desc: 'Every topic has deep, contextual explanations — not just answers. Understand the "why" behind every solution and pattern.',
+                    icon: (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                        <line x1="12" y1="17" x2="12.01" y2="17" />
+                      </svg>
+                    ),
+                  },
+                ],
+              },
+              {
+                groupTitle: 'Tools & Playground',
+                accent: '#f59e0b',
+                features: [
+                  {
+                    title: 'Coding Playground',
+                    desc: 'Built-in code editor with execution. Write code, run it, see output, get instant AI feedback — supports 50+ languages without leaving Camora.',
+                    icon: (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" />
+                        <path d="M7 8l4 4-4 4" />
+                        <line x1="13" y1="16" x2="17" y2="16" />
+                      </svg>
+                    ),
+                  },
+                  {
+                    title: 'Design Playground',
+                    desc: 'Interactive system design workspace. Draw architectures, add components, discuss trade-offs — with AI guidance at every step of the process.',
+                    icon: (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="3" y="3" width="7" height="7" />
+                        <rect x="14" y="3" width="7" height="7" />
+                        <rect x="3" y="14" width="7" height="7" />
+                        <rect x="14" y="14" width="7" height="7" />
+                      </svg>
+                    ),
+                  },
+                  {
+                    title: 'Resume-Personalized Answers',
+                    desc: 'Upload your resume and every answer references YOUR experience. Behavioral stories, project examples, and metrics pulled from your background.',
+                    icon: (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                        <line x1="16" y1="13" x2="8" y2="13" />
+                        <line x1="16" y1="17" x2="8" y2="17" />
+                      </svg>
+                    ),
+                  },
+                  {
+                    title: 'Screenshot Problem Extraction',
+                    desc: 'Take a photo of a whiteboard or screenshot a problem — AI extracts the question, understands it, and generates a complete solution.',
+                    icon: (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" />
+                        <circle cx="8.5" cy="8.5" r="1.5" />
+                        <polyline points="21 15 16 10 5 21" />
+                      </svg>
+                    ),
+                  },
+                ],
+              },
+            ];
+
+            let globalIndex = 0;
+
+            return (
+              <div className="space-y-14">
+                {groups.map((group, gi) => {
+                  const startIndex = globalIndex;
+                  globalIndex += group.features.length;
+
+                  return (
+                    <div
+                      key={group.groupTitle}
+                      className={`transition-all duration-700 ${diffRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}
+                      style={{ transitionDelay: `${gi * 150 + 100}ms` }}
+                    >
+                      {/* Group header bar */}
+                      <div className="mb-5">
+                        <div className="h-1 rounded-full mb-4" style={{ background: `linear-gradient(90deg, ${group.accent}, ${group.accent}44)` }} />
+                        <h3 className="text-xl font-bold text-white font-display flex items-center gap-3">
+                          <span className="w-2.5 h-2.5 rounded-full" style={{ background: group.accent }} />
+                          {group.groupTitle}
+                        </h3>
+                      </div>
+
+                      {/* Feature rows */}
+                      <div className="space-y-3">
+                        {group.features.map((f, fi) => (
+                          <div
+                            key={f.title}
+                            className={`card-base rounded-xl transition-all duration-500 group cursor-default ${diffRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}
+                            style={{
+                              transitionDelay: `${(startIndex + fi) * 50 + 200}ms`,
+                              borderLeft: `4px solid ${group.accent}33`,
+                            }}
+                            onMouseEnter={(e) => {
+                              const el = e.currentTarget;
+                              el.style.borderLeftColor = group.accent;
+                              el.style.boxShadow = `0 0 24px ${group.accent}15, 0 4px 16px rgba(0,0,0,0.3)`;
+                              el.style.transform = 'scale(1.01)';
+                            }}
+                            onMouseLeave={(e) => {
+                              const el = e.currentTarget;
+                              el.style.borderLeftColor = `${group.accent}33`;
+                              el.style.boxShadow = 'none';
+                              el.style.transform = 'scale(1)';
+                            }}
+                          >
+                            <div className="flex items-center gap-4 md:gap-5 px-5 py-4 md:px-6 md:py-5">
+                              {/* Icon circle */}
+                              <div
+                                className="w-10 h-10 md:w-11 md:h-11 rounded-full flex items-center justify-center flex-shrink-0 border border-white/[0.06]"
+                                style={{ background: `${group.accent}15`, color: group.accent }}
+                              >
+                                {f.icon}
+                              </div>
+
+                              {/* Text */}
+                              <div className="flex-1 min-w-0">
+                                <h4 className="text-sm md:text-base font-bold text-white font-display leading-snug">{f.title}</h4>
+                                <p className="text-xs md:text-sm text-gray-400 leading-relaxed mt-0.5">{f.desc}</p>
+                              </div>
+
+                              {/* "Only Camora" badge */}
+                              <div className="hidden sm:flex items-center gap-1.5 flex-shrink-0 px-2.5 py-1 rounded-full border border-white/[0.06] bg-white/[0.03]">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={group.accent} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+                                  <polyline points="20 6 9 17 4 12" />
+                                </svg>
+                                <span className="text-[10px] md:text-xs font-semibold tracking-wide text-gray-400 whitespace-nowrap">Only Camora</span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
+
+          {/* ── Bottom stat line ── */}
+          <div className={`mt-20 text-center transition-all duration-700 ${diffRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '800ms' }}>
+            <p className="text-xl md:text-2xl lg:text-3xl font-bold text-white font-display leading-relaxed">
+              <span className="text-emerald-400">40+</span> features.{' '}
+              <span className="text-indigo-400">415+</span> topics.{' '}
+              <span className="text-cyan-400">50+</span> languages.{' '}
+              <span className="text-amber-400">Zero</span> competitors match this.
+            </p>
+            <p className="mt-3 text-sm md:text-base text-gray-500">
+              This is why candidates switch to Camora and never look back.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════
+          SECTION 5C — CAMORA VS COMPETITORS
+         ═══════════════════════════════════════════════════ */}
+      <section ref={compRef.ref} className="relative px-6 lg:px-8 py-24 md:py-32" style={{ zIndex: 2 }}>
+        <div className="absolute inset-0 pointer-events-none" style={{
+          background: 'radial-gradient(ellipse 60% 50% at 50% 40%, rgba(6,182,212,0.05) 0%, transparent 70%)',
+        }} />
+        <div className="relative max-w-6xl mx-auto">
+          <div className={`text-center mb-16 transition-all duration-700 ${compRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+            <span className="font-code text-sm text-cyan-400 tracking-wider font-semibold">HEAD-TO-HEAD</span>
+            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-white mt-4">
+              See why engineers switch to Camora.
+            </h2>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-5">
             {[
               {
-                title: 'Multi-Cloud Diagrams',
-                desc: 'Auto-generates architecture diagrams for AWS, Azure, and GCP. Not just boxes and arrows — real cloud service icons with proper architecture patterns.',
-                color: '#34d399',
-                icon: (
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" />
-                  </svg>
-                ),
+                feature: 'Full APPA Pipeline (Apply \u2192 Prepare \u2192 Practice \u2192 Attend)',
+                camora: 'All 4 stages',
+                others: '1\u20132 stages only',
+                othersPartial: false,
               },
               {
-                title: 'Platform-Compatible Code',
-                desc: 'Generates scripts that run directly on LeetCode, HackerRank, CoderPad, CodeSignal, and Glider. Copy, paste, submit — it works.',
-                color: '#818cf8',
-                icon: (
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="16 18 22 12 16 6" />
-                    <polyline points="8 6 2 12 8 18" />
-                  </svg>
-                ),
+                feature: 'Auto-Generated Cloud Diagrams (AWS/Azure/GCP)',
+                camora: 'Real architecture',
+                others: 'None',
+                othersPartial: false,
               },
               {
-                title: 'Auto-Fix and Debug',
-                desc: 'Submit broken code and Camora fixes it automatically. Identifies logic errors, edge cases, and off-by-one bugs before you submit.',
-                color: '#38bdf8',
-                icon: (
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
-                    <path d="m9 12 2 2 4-4" />
-                  </svg>
-                ),
+                feature: '415+ Preparation Topics with AI Explanations',
+                camora: '7 categories',
+                others: 'No prep content',
+                othersPartial: false,
               },
               {
-                title: 'Exact I/O Solutions',
-                desc: 'Every coding solution includes exact input/output expectations, multiple approaches with complexity analysis, and edge case handling.',
-                color: '#fbbf24',
-                icon: (
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M4 6h16M4 12h16M4 18h10" />
-                  </svg>
-                ),
+                feature: 'Platform-Compatible Code (LeetCode/HackerRank)',
+                camora: 'Copy-paste-submit',
+                others: 'Partial',
+                othersPartial: true,
               },
               {
-                title: 'STAR Format Answers',
-                desc: 'Behavioral questions answered in structured STAR format. System design includes follow-up questions the interviewer is likely to ask.',
-                color: '#f472b6',
-                icon: (
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                  </svg>
-                ),
+                feature: 'Real Company Interview Database',
+                camora: '80\u201390% coverage',
+                others: 'Generic questions',
+                othersPartial: false,
               },
               {
-                title: 'Real Interview Database',
-                desc: 'Preparation covers 80-90% of real interview questions — HR, Hiring Manager, Coding, Design, and Behavioral — sourced from actual company interviews.',
-                color: '#a78bfa',
-                icon: (
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-                    <ellipse cx="12" cy="5" rx="9" ry="3" />
-                    <path d="M21 12c0 1.66-4.03 3-9 3s-9-1.34-9-3" />
-                    <path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5" />
-                  </svg>
-                ),
+                feature: 'Free Tier with 3 Live Sessions',
+                camora: 'No credit card',
+                others: 'Limited or paid only',
+                othersPartial: false,
               },
-              {
-                title: 'Coding Playground',
-                desc: 'Practice coding with a built-in editor. Run code, see output, get AI feedback — all without leaving Camora. Supports 50+ languages.',
-                color: '#06b6d4',
-                icon: (
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="3" y="3" width="18" height="18" rx="2" />
-                    <path d="M7 8l4 4-4 4" />
-                    <line x1="13" y1="16" x2="17" y2="16" />
-                  </svg>
-                ),
-              },
-              {
-                title: 'Design Playground',
-                desc: 'Interactive system design workspace. Draw architectures, add components, discuss trade-offs — with AI guidance at every step.',
-                color: '#f97316',
-                icon: (
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="3" y="3" width="7" height="7" />
-                    <rect x="14" y="3" width="7" height="7" />
-                    <rect x="3" y="14" width="7" height="7" />
-                    <rect x="14" y="14" width="7" height="7" />
-                  </svg>
-                ),
-              },
-              {
-                title: 'Follow-Up Questions',
-                desc: 'Every system design answer includes predicted follow-up questions with prepared responses. Walk into follow-ups with confidence.',
-                color: '#34d399',
-                icon: (
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
-                  </svg>
-                ),
-              },
-            ].map((f, i) => (
+            ].map((row, i) => (
               <div
-                key={f.title}
-                className={`card-base rounded-2xl p-6 md:p-7 transition-all duration-700 group hover:scale-[1.02] ${diffRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
-                style={{ transitionDelay: `${i * 80 + 200}ms`, borderColor: `${f.color}15` }}
+                key={row.feature}
+                className={`card-base rounded-2xl overflow-hidden transition-all duration-700 ${compRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
+                style={{ transitionDelay: `${i * 80 + 200}ms` }}
               >
-                <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-4 border border-white/[0.08]" style={{ background: `${f.color}15`, color: f.color }}>
-                  {f.icon}
+                <div className="px-6 py-4 border-b border-white/[0.06]">
+                  <h3 className="text-sm md:text-base font-bold text-white">{row.feature}</h3>
                 </div>
-                <h3 className="text-lg font-bold text-white mb-2 font-display">{f.title}</h3>
-                <p className="text-sm md:text-base text-gray-400 leading-relaxed">{f.desc}</p>
+                <div className="grid grid-cols-2">
+                  {/* Camora column */}
+                  <div className="px-5 py-4" style={{ background: 'rgba(16,185,129,0.06)' }}>
+                    <div className="flex items-center gap-2">
+                      <span className="text-emerald-400 text-lg font-bold">&#10003;</span>
+                      <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">Camora</span>
+                    </div>
+                    <p className="mt-1.5 text-sm text-gray-300">{row.camora}</p>
+                  </div>
+                  {/* Others column */}
+                  <div className="px-5 py-4" style={{ background: 'rgba(239,68,68,0.04)' }}>
+                    <div className="flex items-center gap-2">
+                      {row.othersPartial ? (
+                        <span className="text-gray-500 text-xs font-bold">~</span>
+                      ) : (
+                        <span className="text-red-400/70 text-lg font-bold">&#10005;</span>
+                      )}
+                      <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Others</span>
+                    </div>
+                    <p className={`mt-1.5 text-sm ${row.othersPartial ? 'text-gray-500' : 'text-gray-500'}`}>{row.others}</p>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
