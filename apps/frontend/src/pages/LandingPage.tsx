@@ -724,16 +724,16 @@ export default function LandingPage() {
       <section className="px-6 lg:px-8 pb-28" style={{ zIndex: 2 }}>
         <div className="max-w-6xl mx-auto">
           <div className={`text-center mb-10 transition-all duration-700 ${demoRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '300ms' }}>
-            <span className="font-code text-sm text-indigo-400 tracking-wider font-semibold">PREPARE WITH CONFIDENCE</span>
+            <span className="font-code text-sm text-indigo-400 tracking-wider font-semibold">PREPARE, PRACTICE, AND DESIGN</span>
             <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-white mt-4">
-              415+ topics across 7 categories
+              415+ topics. Auto-generated diagrams.
             </h2>
             <p className="mt-4 text-base md:text-lg text-gray-300 max-w-2xl mx-auto">
-              DSA, System Design, Microservices, Databases, SQL, Low-Level Design, and Behavioral — with AI-powered explanations.
+              Study DSA, System Design, Microservices, Databases, SQL, LLD, and Behavioral. Generate architecture diagrams automatically.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid md:grid-cols-3 gap-6">
             {/* Capra Dashboard demo */}
             <div className={`rounded-2xl border border-indigo-500/20 overflow-hidden transition-all duration-1000 ${demoRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}
                  style={{
@@ -783,6 +783,32 @@ export default function LandingPage() {
 
               <div className="relative aspect-video bg-[#0a0b14]">
                 <video src="/demo-capra-topic.mp4" autoPlay loop muted playsInline className="w-full h-full object-cover" />
+              </div>
+            </div>
+
+            {/* System Design Diagram Generation demo */}
+            <div className={`rounded-2xl border border-emerald-500/20 overflow-hidden transition-all duration-1000 ${demoRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}
+                 style={{
+                   transitionDelay: '800ms',
+                   background: 'linear-gradient(180deg, rgba(16,185,129,0.04) 0%, rgba(10,11,20,0.95) 100%)',
+                   boxShadow: '0 0 80px rgba(16,185,129,0.06)',
+                 }}>
+              {/* Browser chrome */}
+              <div className="flex items-center gap-3 px-5 py-3 border-b border-white/[0.06]" style={{ background: 'rgba(255,255,255,0.02)' }}>
+                <div className="flex gap-2">
+                  <div className="w-3 h-3 rounded-full bg-red-500/60" />
+                  <div className="w-3 h-3 rounded-full bg-yellow-500/60" />
+                  <div className="w-3 h-3 rounded-full bg-green-500/60" />
+                </div>
+                <div className="flex-1 flex justify-center">
+                  <div className="px-4 py-1 rounded-md bg-white/[0.04] font-code text-sm text-gray-500">
+                    camora.cariara.com/lumora/design
+                  </div>
+                </div>
+              </div>
+
+              <div className="relative aspect-video bg-[#0a0b14]">
+                <video src="/demo-design.mp4" autoPlay loop muted playsInline className="w-full h-full object-cover" />
               </div>
             </div>
           </div>
