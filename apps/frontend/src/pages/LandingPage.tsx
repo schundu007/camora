@@ -503,10 +503,7 @@ export default function LandingPage() {
           50% { background-position: 100% 50%; }
           100% { background-position: 0% 50%; }
         }
-        @keyframes border-glow {
-          0%, 100% { border-color: rgba(52,211,153,0.2); }
-          50% { border-color: rgba(56,189,248,0.35); }
-        }
+        /* border-glow removed — Stripe influence: clean, static borders */
         @keyframes ping-dot {
           0% { transform: scale(1); opacity: 0.75; }
           75%, 100% { transform: scale(2); opacity: 0; }
@@ -535,36 +532,26 @@ export default function LandingPage() {
           background-size: 200% 200%;
           animation: hero-gradient 6s ease-in-out infinite;
         }
-        .animate-border-glow {
-          animation: border-glow 4s ease-in-out infinite;
-        }
+        /* animate-border-glow removed */
 
+        /* Clean button — Stripe style: solid, no glow */
         .glow-btn {
-          box-shadow: 0 0 30px rgba(16, 185, 129, 0.4), 0 0 80px rgba(16, 185, 129, 0.15);
-          transition: all 0.3s ease;
+          transition: background-color 0.15s ease, transform 0.15s ease;
         }
         .glow-btn:hover {
-          box-shadow: 0 0 40px rgba(16, 185, 129, 0.55), 0 0 100px rgba(16, 185, 129, 0.25);
-          transform: translateY(-2px);
+          transform: translateY(-1px);
         }
 
-        /* Noise texture overlay */
-        .noise-overlay {
-          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-          background-repeat: repeat;
-          background-size: 256px 256px;
-        }
-
-        /* Card hover effects */
+        /* Card — Stripe style: subtle border, no blur, no scale */
         .card-base {
           background: rgba(255,255,255,0.03);
           border: 1px solid rgba(255,255,255,0.08);
-          backdrop-filter: blur(4px);
-          transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+          border-radius: 12px;
+          transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
         .card-base:hover {
-          border-color: rgba(255,255,255,0.15);
-          transform: scale(1.01);
+          border-color: rgba(255,255,255,0.14);
+          box-shadow: 0 2px 8px rgba(0,0,0,0.2);
         }
 
         /* Fade-up animation utility */
@@ -581,8 +568,8 @@ export default function LandingPage() {
         }
       `}</style>
 
-      {/* ── NOISE TEXTURE OVERLAY (entire page) ────────── */}
-      <div className="fixed inset-0 pointer-events-none noise-overlay" style={{ zIndex: 1, opacity: 0.5 }} />
+      {/* ── Subtle top gradient accent — Stripe uses a focused top glow ── */}
+      <div className="fixed top-0 left-0 right-0 h-[500px] pointer-events-none" style={{ zIndex: 1, background: 'radial-gradient(ellipse 70% 50% at 50% 0%, rgba(16,185,129,0.08) 0%, transparent 70%)' }} />
 
       {/* ── APPA TIMELINE (left side, desktop only) ─────── */}
       <div className="hidden lg:block fixed left-[10%] top-0 bottom-0 pointer-events-none" style={{ zIndex: 2 }}>
@@ -591,10 +578,10 @@ export default function LandingPage() {
           opacity: 0.25,
         }} />
         {/* Timeline dots for each section */}
-        <div className="absolute w-2 h-2 rounded-full -left-[3px]" style={{ top: '15%', background: '#34d399', boxShadow: '0 0 8px rgba(52,211,153,0.5)' }} />
-        <div className="absolute w-2 h-2 rounded-full -left-[3px]" style={{ top: '38%', background: '#818cf8', boxShadow: '0 0 8px rgba(129,140,248,0.5)' }} />
-        <div className="absolute w-2 h-2 rounded-full -left-[3px]" style={{ top: '62%', background: '#38bdf8', boxShadow: '0 0 8px rgba(56,189,248,0.5)' }} />
-        <div className="absolute w-2 h-2 rounded-full -left-[3px]" style={{ top: '85%', background: '#fbbf24', boxShadow: '0 0 8px rgba(251,191,36,0.5)' }} />
+        <div className="absolute w-2 h-2 rounded-full -left-[3px]" style={{ top: '15%', background: '#34d399', opacity: 0.8 }} />
+        <div className="absolute w-2 h-2 rounded-full -left-[3px]" style={{ top: '38%', background: '#818cf8', opacity: 0.8 }} />
+        <div className="absolute w-2 h-2 rounded-full -left-[3px]" style={{ top: '62%', background: '#38bdf8', opacity: 0.8 }} />
+        <div className="absolute w-2 h-2 rounded-full -left-[3px]" style={{ top: '85%', background: '#fbbf24', opacity: 0.8 }} />
       </div>
 
       {/* ── NAV ──────────────────────────────────────────── */}
@@ -666,7 +653,7 @@ export default function LandingPage() {
       <section className="relative pt-36 pb-24 md:pt-48 md:pb-32 px-6 lg:px-8" style={{ zIndex: 2 }}>
         {/* Faint emerald radial gradient */}
         <div className="absolute inset-0 pointer-events-none" style={{
-          background: 'radial-gradient(ellipse 60% 50% at 50% 30%, rgba(52,211,153,0.08) 0%, transparent 70%)',
+          background: 'transparent',
         }} />
 
         <div className="relative max-w-4xl mx-auto text-center">
@@ -735,7 +722,7 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className={`rounded-2xl animate-border-glow border overflow-hidden transition-all duration-1000 ${demoRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}
+          <div className={`rounded-2xl border border-white/[0.08] overflow-hidden transition-all duration-1000 ${demoRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}
                style={{
                  background: 'linear-gradient(180deg, rgba(52,211,153,0.04) 0%, rgba(10,11,20,0.95) 100%)',
                  boxShadow: '0 0 100px rgba(16,185,129,0.08)',
@@ -765,9 +752,9 @@ export default function LandingPage() {
       {/* ═══════════════════════════════════════════════════
           SECTION 2B — CAPRA PREPARATION DEMO
          ═══════════════════════════════════════════════════ */}
-      <section className="px-6 lg:px-8 pb-28" style={{ zIndex: 2 }}>
+      <section className="px-6 lg:px-8 pb-16" style={{ zIndex: 2 }}>
         <div className="max-w-7xl mx-auto">
-          <div className={`text-center mb-16 transition-all duration-700 ${demoRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '300ms' }}>
+          <div className={`text-center mb-10 transition-all duration-700 ${demoRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '300ms' }}>
             <span className="font-code text-sm text-indigo-400 tracking-wider font-semibold">PREPARE, PRACTICE, AND DESIGN</span>
             <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-white mt-4">
               415+ topics. Auto-generated diagrams.
@@ -777,7 +764,7 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-3 gap-4">
             {/* Capra Dashboard demo */}
             <div className={`rounded-2xl border border-indigo-500/20 overflow-hidden transition-all duration-1000 ${demoRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}
                  style={{
@@ -799,7 +786,7 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              <div className="relative aspect-video bg-[#0a0b14]">
+              <div className="relative aspect-[4/3] bg-[#0a0b14]">
                 <video src="/demo-capra.mp4" autoPlay loop muted playsInline className="w-full h-full object-cover" />
               </div>
             </div>
@@ -825,7 +812,7 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              <div className="relative aspect-video bg-[#0a0b14]">
+              <div className="relative aspect-[4/3] bg-[#0a0b14]">
                 <video src="/demo-capra-topic.mp4" autoPlay loop muted playsInline className="w-full h-full object-cover" />
               </div>
             </div>
@@ -851,7 +838,7 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              <div className="relative aspect-video bg-[#0a0b14]">
+              <div className="relative aspect-[4/3] bg-[#0a0b14]">
                 <video src="/demo-design.mp4" autoPlay loop muted playsInline className="w-full h-full object-cover" />
               </div>
             </div>
@@ -862,10 +849,10 @@ export default function LandingPage() {
       {/* ═══════════════════════════════════════════════════
           SECTION 3 — APPA JOURNEY
          ═══════════════════════════════════════════════════ */}
-      <section id="appa" ref={journeyRef.ref} className="relative px-6 lg:px-8 py-28 md:py-36" style={{ zIndex: 2 }}>
+      <section id="appa" ref={journeyRef.ref} className="relative px-6 lg:px-8 py-16 md:py-24" style={{ zIndex: 2 }}>
         {/* Faint indigo radial gradient */}
         <div className="absolute inset-0 pointer-events-none" style={{
-          background: 'radial-gradient(ellipse 60% 50% at 50% 40%, rgba(129,140,248,0.07) 0%, transparent 70%)',
+          background: 'transparent',
         }} />
 
         <div className="relative max-w-7xl mx-auto">
@@ -930,10 +917,10 @@ export default function LandingPage() {
       {/* ═══════════════════════════════════════════════════
           SECTION 4 — TWO PRODUCTS (Lumora + Capra)
          ═══════════════════════════════════════════════════ */}
-      <section ref={productsRef.ref} className="relative px-6 lg:px-8 py-28 md:py-36" style={{ zIndex: 2 }}>
+      <section ref={productsRef.ref} className="relative px-6 lg:px-8 py-16 md:py-24" style={{ zIndex: 2 }}>
         {/* Faint cyan radial gradient */}
         <div className="absolute inset-0 pointer-events-none" style={{
-          background: 'radial-gradient(ellipse 60% 50% at 50% 40%, rgba(56,189,248,0.06) 0%, transparent 70%)',
+          background: 'transparent',
         }} />
 
         <div className="relative max-w-7xl mx-auto">
@@ -1023,10 +1010,10 @@ export default function LandingPage() {
       {/* ═══════════════════════════════════════════════════
           SECTION 4B — PREPARATION AT SCALE
          ═══════════════════════════════════════════════════ */}
-      <section ref={prepRef.ref} className="relative px-6 lg:px-8 py-28 md:py-36" style={{ zIndex: 2 }}>
+      <section ref={prepRef.ref} className="relative px-6 lg:px-8 py-16 md:py-24" style={{ zIndex: 2 }}>
         {/* Faint emerald radial gradient */}
         <div className="absolute inset-0 pointer-events-none" style={{
-          background: 'radial-gradient(ellipse 60% 50% at 50% 40%, rgba(52,211,153,0.06) 0%, transparent 70%)',
+          background: 'transparent',
         }} />
 
         <div className="relative max-w-7xl mx-auto">
@@ -1047,7 +1034,7 @@ export default function LandingPage() {
       {/* ═══════════════════════════════════════════════════
           SECTION 5 — FEATURES (Three Interview Modes)
          ═══════════════════════════════════════════════════ */}
-      <section ref={featuresRef.ref} className="relative px-6 lg:px-8 py-28 md:py-36" style={{ zIndex: 2 }}>
+      <section ref={featuresRef.ref} className="relative px-6 lg:px-8 py-16 md:py-24" style={{ zIndex: 2 }}>
         <div className="max-w-7xl mx-auto">
           <div className={`text-center mb-16 transition-all duration-700 ${featuresRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             <span className="font-code text-sm text-cyan-400 tracking-wider font-semibold">THREE INTERVIEW MODES</span>
@@ -1127,7 +1114,7 @@ export default function LandingPage() {
       {/* ═══════════════════════════════════════════════════
           SECTION 5B — WHAT SETS CAMORA APART
          ═══════════════════════════════════════════════════ */}
-      <section ref={diffRef.ref} className="relative px-6 lg:px-8 py-28 md:py-36" style={{ zIndex: 2 }}>
+      <section ref={diffRef.ref} className="relative px-6 lg:px-8 py-16 md:py-24" style={{ zIndex: 2 }}>
         {/* Unique background — multi-point radial gradient to visually distinguish this section */}
         <div className="absolute inset-0 pointer-events-none" style={{
           background: `
@@ -1521,9 +1508,9 @@ export default function LandingPage() {
       {/* ═══════════════════════════════════════════════════
           SECTION 5C — CAMORA VS COMPETITORS
          ═══════════════════════════════════════════════════ */}
-      <section ref={compRef.ref} className="relative px-6 lg:px-8 py-28 md:py-36" style={{ zIndex: 2 }}>
+      <section ref={compRef.ref} className="relative px-6 lg:px-8 py-16 md:py-24" style={{ zIndex: 2 }}>
         <div className="absolute inset-0 pointer-events-none" style={{
-          background: 'radial-gradient(ellipse 60% 50% at 50% 40%, rgba(6,182,212,0.05) 0%, transparent 70%)',
+          background: 'transparent',
         }} />
         <div className="relative max-w-7xl mx-auto">
           <div className={`text-center mb-16 transition-all duration-700 ${compRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
@@ -1644,7 +1631,7 @@ export default function LandingPage() {
       {/* ═══════════════════════════════════════════════════
           SECTION 6 — HOW IT WORKS
          ═══════════════════════════════════════════════════ */}
-      <section ref={howRef.ref} className="relative px-6 lg:px-8 py-28 md:py-36" style={{ zIndex: 2 }}>
+      <section ref={howRef.ref} className="relative px-6 lg:px-8 py-16 md:py-24" style={{ zIndex: 2 }}>
         <div className="max-w-7xl mx-auto">
           <div className={`text-center mb-16 transition-all duration-700 ${howRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             <span className="font-code text-sm text-gray-400 tracking-wider font-semibold">HOW IT WORKS</span>
@@ -1676,10 +1663,10 @@ export default function LandingPage() {
       {/* ═══════════════════════════════════════════════════
           SECTION 7 — FINAL CTA
          ═══════════════════════════════════════════════════ */}
-      <section ref={ctaRef.ref} className="relative px-6 lg:px-8 py-28 md:py-36" style={{ zIndex: 2 }}>
+      <section ref={ctaRef.ref} className="relative px-6 lg:px-8 py-16 md:py-24" style={{ zIndex: 2 }}>
         {/* Faint amber radial gradient */}
         <div className="absolute inset-0 pointer-events-none" style={{
-          background: 'radial-gradient(ellipse 60% 50% at 50% 50%, rgba(251,191,36,0.08) 0%, transparent 70%)',
+          background: 'transparent',
         }} />
 
         <div className={`relative max-w-3xl mx-auto text-center transition-all duration-700 ${ctaRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
