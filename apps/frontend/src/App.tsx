@@ -27,15 +27,42 @@ function Loading() {
   );
 }
 
+function LoginPage() {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  // If already authenticated, go to capra dashboard
+  if (isLoading) return <Loading />;
+  if (isAuthenticated) return <Navigate to="/capra" replace />;
+
+  // In production, redirect to Google OAuth
+  const oauthUrl = import.meta.env.VITE_OAUTH_URL;
+  if (oauthUrl) {
+    window.location.href = oauthUrl;
+    return <Loading />;
+  }
+
+  // Fallback: show simple login prompt
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="text-center p-8">
+        <h1 className="text-2xl font-bold text-gray-900 mb-4">Sign in to Camora</h1>
+        <p className="text-gray-500 mb-6">Please sign in with Google to continue</p>
+        <a href={`${import.meta.env.VITE_CAPRA_API_URL || 'http://localhost:3009'}/api/auth/google/login`}
+           className="px-6 py-3 bg-emerald-500 text-white font-bold rounded-xl hover:bg-emerald-600 transition-colors">
+          Sign in with Google
+        </a>
+      </div>
+    </div>
+  );
+}
+
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading, onboardingCompleted } = useAuth();
   const location = useLocation();
 
   if (isLoading) return <Loading />;
   if (!isAuthenticated) {
-    // Redirect to Capra login (or Google OAuth)
-    window.location.href = import.meta.env.VITE_OAUTH_URL || '/capra/login';
-    return <Loading />;
+    return <Navigate to="/capra/login" replace />;
   }
   // Only enforce onboarding for Capra routes
   if (location.pathname.startsWith('/capra') && onboardingCompleted === false && location.pathname !== '/capra/onboarding') {
@@ -52,6 +79,7 @@ export function App() {
           {/* ── Public ─────────────────────────────────── */}
           <Route path="/" element={<LandingPage />} />
           <Route path="/pricing" element={<PricingPage />} />
+          <Route path="/capra/login" element={<LoginPage />} />
 
           {/* ── Lumora: Live Interview ─────────────────── */}
           <Route path="/lumora" element={<ProtectedRoute><LumoraInterviewPage /></ProtectedRoute>} />

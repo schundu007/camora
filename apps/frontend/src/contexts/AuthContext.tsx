@@ -51,6 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async function init() {
       // Dev mode: auto-authenticate as dev user
       if (DEV_MODE) {
+        let authed = false;
         try {
           const res = await fetch(`${LUMORA_API_URL}/api/v1/auth/sync`, {
             method: 'POST',
@@ -67,9 +68,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setToken(data.access_token);
             setUser(data.user);
             setOnboardingCompleted(true);
+            authed = true;
           }
-        } catch {
-          // Backend not available — still allow browsing
+        } catch { /* backend not available */ }
+
+        // Fallback: mock user if backend sync failed
+        if (!authed) {
           setToken('dev-mode');
           setUser({ id: 'dev', email: 'dev@camora.ai', name: 'Dev User' });
           setOnboardingCompleted(true);
