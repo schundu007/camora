@@ -3,6 +3,7 @@ import { createContext, useContext, useEffect, useState, useCallback, ReactNode 
 const LUMORA_API_URL = import.meta.env.VITE_LUMORA_API_URL || 'http://localhost:8000';
 const CAPRA_API_URL = import.meta.env.VITE_CAPRA_API_URL || 'http://localhost:3009';
 const ASCEND_URL = import.meta.env.VITE_ASCEND_URL || 'https://capra.cariara.com';
+const DEV_MODE = import.meta.env.DEV && !import.meta.env.VITE_REQUIRE_AUTH;
 
 interface AuthUser {
   id: string;
@@ -48,6 +49,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     async function init() {
+      // Dev mode: auto-authenticate as dev user
+      if (DEV_MODE) {
+        try {
+          const res = await fetch(`${LUMORA_API_URL}/api/v1/auth/sync`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: 'dev@camora.ai',
+              name: 'Dev User',
+              provider: 'dev',
+              provider_id: 'dev-local-user',
+            }),
+          });
+          if (res.ok) {
+            const data = await res.json();
+            setToken(data.access_token);
+            setUser(data.user);
+            setOnboardingCompleted(true);
+          }
+        } catch {
+          // Backend not available — still allow browsing
+          setToken('dev-mode');
+          setUser({ id: 'dev', email: 'dev@camora.ai', name: 'Dev User' });
+          setOnboardingCompleted(true);
+        }
+        setIsLoading(false);
+        return;
+      }
+
+      // Production: read SSO cookie from Ascend
       const ssoToken = getCookie('cariara_sso');
       if (ssoToken) {
         try {
