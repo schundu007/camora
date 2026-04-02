@@ -1,8 +1,8 @@
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { Icon } from '../../shared/Icons.jsx';
 import { useAppShell } from './AppShellContext.jsx';
-import { useIsMobile } from '../../../hooks/useIsMobile.js';
-import { useAuth } from '../../../contexts/AuthContext.jsx';
+import { useIsMobile } from '../../../hooks/capra/useIsMobile.js';
+import { useAuth } from '../../../contexts/AuthContext';
 
 const PREPARE_ITEMS = [
   { id: 'overview', label: 'Dashboard', icon: 'home', href: '/capra/prepare' },

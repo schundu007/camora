@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'http://localhost:3009';
-import { getAuthHeaders as getBaseAuthHeaders, getDeviceId } from '../utils/authHeaders.js';
+import { getAuthHeaders as getBaseAuthHeaders } from '../../utils/authHeaders.js';
 
 
 const ROLES = ['user', 'developer', 'manager', 'admin'];

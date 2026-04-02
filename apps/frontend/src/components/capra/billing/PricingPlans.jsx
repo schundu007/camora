@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useAuth } from '../../../contexts/AuthContext.jsx';
+import { useAuth } from '../../../contexts/AuthContext';
 
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'http://localhost:3009';
 

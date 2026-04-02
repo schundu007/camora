@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Icon } from '../Icons.jsx';
+import { Icon } from '../../shared/Icons.jsx';
 
 export default function CloudArchitectureDiagram({ imageUrl, loading = false, error = null, cloudProvider = 'auto', onRetry }) {
   const [imageError, setImageError] = useState(false);

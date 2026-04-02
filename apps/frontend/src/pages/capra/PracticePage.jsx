@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { Icon } from '../../components/Icons.jsx';
+import { Icon } from '../../components/shared/Icons.jsx';
 
 /* ──────────────────────────────── Data ──────────────────────────────── */
 

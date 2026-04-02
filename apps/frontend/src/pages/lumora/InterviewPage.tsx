@@ -1,10 +1,10 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Header } from '../components/interview/Header';
-import { InterviewPanel } from '../components/interview/InterviewPanel';
-import { ErrorBoundary } from '../components/ui/ErrorBoundary';
-import { useStreamingInterview } from '../hooks/useStreamingInterview';
-import { useInterviewStore } from '../stores/interview-store';
+import { Header } from '../../components/lumora/interview/Header';
+import { InterviewPanel } from '../../components/lumora/interview/InterviewPanel';
+import { ErrorBoundary } from '../../components/shared/ui/ErrorBoundary';
+import { useStreamingInterview } from '../../hooks/useStreamingInterview';
+import { useInterviewStore } from '../../stores/interview-store';
 
 function MicCheck({ onReady }: { onReady: () => void }) {
   const [micLevel, setMicLevel] = useState(0);

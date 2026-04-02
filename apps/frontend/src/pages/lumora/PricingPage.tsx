@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 // TODO: Migrate CompetitorComparison component
 // import CompetitorComparison from '../components/pricing/CompetitorComparison';
 

@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'http://localhost:3009';
-import { getAuthHeaders } from '../../utils/authHeaders.js';
+import { getAuthHeaders } from '../../../utils/authHeaders.js';
 
 
 const INPUT_FIELDS = [

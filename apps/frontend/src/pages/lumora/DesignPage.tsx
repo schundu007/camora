@@ -1,8 +1,8 @@
 import { Suspense } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { DesignLayout } from '../components/design/DesignLayout';
-import { ErrorBoundary } from '../components/ui/ErrorBoundary';
-import { PaywallGate } from '../components/ui/PaywallGate';
+import { DesignLayout } from '../../components/lumora/design/DesignLayout';
+import { ErrorBoundary } from '../../components/shared/ui/ErrorBoundary';
+import { PaywallGate } from '../../components/shared/ui/PaywallGate';
 
 function DesignPageContent() {
   const navigate = useNavigate();

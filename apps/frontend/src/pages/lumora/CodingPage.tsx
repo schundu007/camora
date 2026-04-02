@@ -1,9 +1,9 @@
 import { Suspense } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { CodingLayout } from '../components/coding/CodingLayout';
-import { ErrorBoundary } from '../components/ui/ErrorBoundary';
-import { PaywallGate } from '../components/ui/PaywallGate';
-import { useStreamingInterview } from '../hooks/useStreamingInterview';
+import { CodingLayout } from '../../components/lumora/coding/CodingLayout';
+import { ErrorBoundary } from '../../components/shared/ui/ErrorBoundary';
+import { PaywallGate } from '../../components/shared/ui/PaywallGate';
+import { useStreamingInterview } from '../../hooks/useStreamingInterview';
 
 function CodingPageContent() {
   const navigate = useNavigate();

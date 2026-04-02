@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useInterviewStore } from '@/stores/interview-store';
 import { useAuth } from '@/contexts/AuthContext';
-import { AudioCapture } from '@/components/audio/AudioCapture';
-import { DocumentUpload } from '@/components/documents/DocumentUpload';
+import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
+import { DocumentUpload } from '@/components/lumora/documents/DocumentUpload';
 
 export type TabType = 'interview' | 'coding' | 'design';
 

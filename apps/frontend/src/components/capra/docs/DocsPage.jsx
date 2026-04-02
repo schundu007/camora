@@ -1,27 +1,27 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { useIsMobile } from '../hooks/useIsMobile';
-import { useAppShell } from './layout/AppShellContext';
-import { useAuth } from '../contexts/AuthContext';
-import { Icon } from './Icons.jsx';
-import { getAuthHeaders } from '../utils/authHeaders.js';
-import { codingCategories, codingCategoryMap as _codingCategoryMap, codingTopics as _codingTopics } from '../data/topics/codingTopics.js';
-import { extraCodingCategoryMap, extraCodingTopics } from '../data/topics/codingTopicsExtra.js';
-import { systemDesignCategories, systemDesignCategoryMap, systemDesignTopics } from '../data/topics/systemDesignTopics.js';
-import { systemDesignProblemCategories as _sdProblemCategories, systemDesignProblemCategoryMap as _sdProblemCategoryMap, systemDesigns as _systemDesigns, lldProblemCategories, lldProblemCategoryMap as _lldProblemCategoryMap } from '../data/topics/systemDesignProblems.js';
-import { extraSystemDesignProblemCategories, extraSystemDesignProblemCategoryMap, extraSystemDesigns } from '../data/topics/systemDesignProblemsExtra.js';
-import { lldProblems as _lldProblems } from '../data/topics/lldProblems.js';
-import { extraLldProblems, extraLldProblemCategoryMap } from '../data/topics/lldProblemsExtra.js';
-import { lldCategories, lldCategoryMap, lldTopics } from '../data/topics/lldTopics.js';
-import { concurrencyTopics } from '../data/topics/concurrencyTopics.js';
-import { systemDesignPatternCategories, systemDesignPatternCategoryMap, systemDesignPatterns } from '../data/topics/systemDesignPatterns.js';
-import { microservicesCategories, microservicesCategoryMap, microservicesPatterns } from '../data/topics/microservicesPatterns.js';
-import { tradeoffCategories, tradeoffCategoryMap, systemDesignTradeoffs } from '../data/topics/systemDesignTradeoffs.js';
-import { scalableSystemsCategories, scalableSystemsCategoryMap, scalableSystemsTopics } from '../data/topics/scalableSystemsTopics.js';
-import { databaseCategories, databaseCategoryMap, databaseTopics } from '../data/topics/databaseTopics.js';
-import { sqlCategories, sqlCategoryMap, sqlTopics } from '../data/topics/sqlTopics.js';
-import { behavioralCategories, topicCategoryMap, behavioralTopics } from '../data/topics/behavioralTopics.js';
-import { companyPrep } from '../data/topics/companyPrep.js';
+import { useIsMobile } from '../../../hooks/capra/useIsMobile';
+import { useAppShell } from '../layout/AppShellContext';
+import { useAuth } from '../../../contexts/AuthContext';
+import { Icon } from '../../shared/Icons.jsx';
+import { getAuthHeaders } from '../../../utils/authHeaders.js';
+import { codingCategories, codingCategoryMap as _codingCategoryMap, codingTopics as _codingTopics } from '../../../data/capra/topics/codingTopics.js';
+import { extraCodingCategoryMap, extraCodingTopics } from '../../../data/capra/topics/codingTopicsExtra.js';
+import { systemDesignCategories, systemDesignCategoryMap, systemDesignTopics } from '../../../data/capra/topics/systemDesignTopics.js';
+import { systemDesignProblemCategories as _sdProblemCategories, systemDesignProblemCategoryMap as _sdProblemCategoryMap, systemDesigns as _systemDesigns, lldProblemCategories, lldProblemCategoryMap as _lldProblemCategoryMap } from '../../../data/capra/topics/systemDesignProblems.js';
+import { extraSystemDesignProblemCategories, extraSystemDesignProblemCategoryMap, extraSystemDesigns } from '../../../data/capra/topics/systemDesignProblemsExtra.js';
+import { lldProblems as _lldProblems } from '../../../data/capra/topics/lldProblems.js';
+import { extraLldProblems, extraLldProblemCategoryMap } from '../../../data/capra/topics/lldProblemsExtra.js';
+import { lldCategories, lldCategoryMap, lldTopics } from '../../../data/capra/topics/lldTopics.js';
+import { concurrencyTopics } from '../../../data/capra/topics/concurrencyTopics.js';
+import { systemDesignPatternCategories, systemDesignPatternCategoryMap, systemDesignPatterns } from '../../../data/capra/topics/systemDesignPatterns.js';
+import { microservicesCategories, microservicesCategoryMap, microservicesPatterns } from '../../../data/capra/topics/microservicesPatterns.js';
+import { tradeoffCategories, tradeoffCategoryMap, systemDesignTradeoffs } from '../../../data/capra/topics/systemDesignTradeoffs.js';
+import { scalableSystemsCategories, scalableSystemsCategoryMap, scalableSystemsTopics } from '../../../data/capra/topics/scalableSystemsTopics.js';
+import { databaseCategories, databaseCategoryMap, databaseTopics } from '../../../data/capra/topics/databaseTopics.js';
+import { sqlCategories, sqlCategoryMap, sqlTopics } from '../../../data/capra/topics/sqlTopics.js';
+import { behavioralCategories, topicCategoryMap, behavioralTopics } from '../../../data/capra/topics/behavioralTopics.js';
+import { companyPrep } from '../../../data/capra/topics/companyPrep.js';
 
 // Merge extra topics into base arrays
 const codingCategoryMap = { ..._codingCategoryMap, ...extraCodingCategoryMap };
@@ -32,7 +32,7 @@ const systemDesigns = [..._systemDesigns, ...extraSystemDesigns];
 const lldProblemCategoryMap = { ..._lldProblemCategoryMap, ...extraLldProblemCategoryMap };
 const lldProblems = [..._lldProblems, ...extraLldProblems];
 
-import TopicDetail from './docs/TopicDetail.jsx';
+import TopicDetail from './TopicDetail.jsx';
 
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'http://localhost:3009';
 

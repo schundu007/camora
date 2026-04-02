@@ -2,8 +2,8 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useInterviewStore } from '@/stores/interview-store';
 import { streamResponse } from '@/lib/sse-client';
-import { ArchitectureDiagram } from '@/components/interview/ArchitectureDiagram';
-import { AudioCapture } from '@/components/audio/AudioCapture';
+import { ArchitectureDiagram } from '@/components/lumora/interview/ArchitectureDiagram';
+import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
 import { transcriptionAPI } from '@/lib/api-client';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';

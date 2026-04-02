@@ -2,8 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import InputPanel from '../prep/InputPanel';
 import OutputPanel from '../prep/OutputPanel';
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'http://localhost:3009';
-import { useIsMobile } from '../hooks/useIsMobile';
-import { getAuthHeaders } from '../utils/authHeaders.js';
+import { useIsMobile } from '../../../hooks/capra/useIsMobile';
+import { getAuthHeaders } from '../../../utils/authHeaders.js';
 
 
 // Helper to cache diagram images as base64 to avoid expiration issues

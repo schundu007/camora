@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect, useMemo, lazy, Suspense } from 'react';
 import { useInterviewStore } from '@/stores/interview-store';
 import { useAuth } from '@/contexts/AuthContext';
-import { AudioCapture } from '@/components/audio/AudioCapture';
+import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
 
 // Lazy-load Monaco
 const MonacoEditor = lazy(() => import('@monaco-editor/react'));

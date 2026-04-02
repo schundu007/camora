@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { AppShellContext } from './AppShellContext.jsx';
 import ShellSidebar from './ShellSidebar.jsx';
-import { useIsMobile } from '../../../hooks/useIsMobile.js';
+import { useIsMobile } from '../../../hooks/capra/useIsMobile.js';
 
 /**
  * Unified layout shell for all Capra app routes.

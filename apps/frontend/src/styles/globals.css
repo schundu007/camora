@@ -76,30 +76,32 @@ body {
   }
 
   .status-dot-idle {
-    @apply bg-text-dim;
+    background-color: var(--text-dim);
   }
 
   .status-dot-ready {
-    @apply bg-emerald;
+    background-color: #10b981;
     box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
   }
 
   .status-dot-listen {
-    @apply bg-primary animate-pulse-dot;
+    background-color: var(--primary);
+    animation: pulse-dot 1.5s ease-in-out infinite;
     box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
   }
 
   .status-dot-transcribe {
-    @apply bg-cyan;
+    background-color: #06b6d4;
   }
 
   .status-dot-write,
   .status-dot-search {
-    @apply bg-primary animate-pulse-dot;
+    background-color: var(--primary);
+    animation: pulse-dot 1.5s ease-in-out infinite;
   }
 
   .status-dot-error {
-    @apply bg-rose;
+    background-color: #f43f5e;
   }
 
   .status-dot-warn {
@@ -108,7 +110,8 @@ body {
 
   /* Block styles - Clean, minimal */
   .block-base {
-    @apply border border-border overflow-hidden relative;
+    @apply border overflow-hidden relative;
+    border-color: var(--border);
     background-color: var(--bg2);
     border-radius: 6px;
     box-shadow: var(--card-shadow);
@@ -126,9 +129,13 @@ body {
 
   /* Headline block */
   .block-headline {
-    @apply block-base p-3;
-    background: linear-gradient(135deg, rgba(16, 185, 129, 0.06) 0%, rgba(168, 85, 247, 0.03) 100%);
+    @apply border overflow-hidden relative p-3;
     border-color: rgba(16, 185, 129, 0.2);
+    background-color: var(--bg2);
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.06) 0%, rgba(168, 85, 247, 0.03) 100%);
+    border-radius: 6px;
+    box-shadow: var(--card-shadow);
+    transition: border-color 0.15s ease-out, box-shadow 0.15s ease-out;
   }
 
   .block-headline-text {
@@ -141,7 +148,12 @@ body {
 
   /* Answer block */
   .block-answer {
-    @apply block-base p-3;
+    @apply border overflow-hidden relative p-3;
+    border-color: var(--border);
+    background-color: var(--bg2);
+    border-radius: 6px;
+    box-shadow: var(--card-shadow);
+    transition: border-color 0.15s ease-out, box-shadow 0.15s ease-out;
   }
 
   .answer-bullet {
@@ -150,30 +162,42 @@ body {
   }
 
   .answer-bullet:hover {
-    @apply bg-surface2 border-border;
+    background-color: var(--surface2);
+    border-color: var(--border);
   }
 
   /* Diagram block */
   .block-diagram {
-    @apply block-base p-3;
-    background: rgba(6, 182, 212, 0.02);
+    @apply border overflow-hidden relative p-3;
     border-color: rgba(6, 182, 212, 0.15);
+    background-color: var(--bg2);
+    background: rgba(6, 182, 212, 0.02);
+    border-radius: 6px;
+    box-shadow: var(--card-shadow);
+    transition: border-color 0.15s ease-out, box-shadow 0.15s ease-out;
   }
 
   .diagram-art {
-    @apply text-sm leading-snug text-cyan-light whitespace-pre overflow-x-auto;
+    @apply text-sm leading-snug whitespace-pre overflow-x-auto;
+    color: #22d3ee;
     font-family: var(--font-mono);
     letter-spacing: 0;
   }
 
   /* Code block */
   .block-code {
-    @apply block-base overflow-hidden;
+    @apply border overflow-hidden relative;
     border-color: rgba(168, 85, 247, 0.12);
+    background-color: var(--bg2);
+    border-radius: 6px;
+    box-shadow: var(--card-shadow);
+    transition: border-color 0.15s ease-out, box-shadow 0.15s ease-out;
   }
 
   .code-header {
-    @apply flex items-center justify-between px-3 py-1.5 border-b border-border bg-surface;
+    @apply flex items-center justify-between px-3 py-1.5 border-b;
+    border-color: var(--border);
+    background-color: var(--surface);
   }
 
   .code-content {
@@ -182,7 +206,9 @@ body {
 
   /* Follow-up card */
   .followup-card {
-    @apply border border-primary/20 p-4 min-h-[60px] overflow-hidden bg-primary/[0.03];
+    @apply border p-4 min-h-[60px] overflow-hidden;
+    border-color: rgba(5, 150, 105, 0.2);
+    background-color: rgba(5, 150, 105, 0.03);
     border-radius: 6px;
     box-shadow: var(--card-shadow);
   }
@@ -205,44 +231,55 @@ body {
   }
 
   .btn-primary {
-    @apply text-primary bg-transparent border-primary;
+    @apply bg-transparent;
+    color: var(--primary);
+    border-color: var(--primary);
   }
 
   .btn-primary:hover {
-    @apply bg-primary text-white;
+    @apply text-white;
+    background-color: var(--primary);
     box-shadow: 0 0 12px rgba(16, 185, 129, 0.2);
   }
 
   .btn-danger {
-    @apply bg-transparent text-rose border-rose;
+    @apply bg-transparent;
+    color: #f43f5e;
+    border-color: #f43f5e;
   }
 
   .btn-danger:hover {
-    @apply bg-rose text-white;
+    @apply text-white;
+    background-color: #f43f5e;
     box-shadow: 0 0 12px rgba(239, 68, 68, 0.2);
   }
 
   .btn-ghost {
-    @apply bg-transparent text-text-subtle border-border;
+    @apply bg-transparent;
+    color: var(--text-subtle);
+    border-color: var(--border);
   }
 
   .btn-ghost:hover {
-    @apply text-text border-text-subtle;
+    color: var(--text);
+    border-color: var(--text-subtle);
   }
 
   /* Input styles */
   .input {
-    @apply w-full bg-transparent border-2 border-border px-4 py-2.5 text-sm text-text outline-none;
+    @apply w-full bg-transparent border-2 px-4 py-2.5 text-sm outline-none;
+    border-color: var(--border);
+    color: var(--text);
     border-radius: 2px;
     transition: border-color 0.15s ease-out, box-shadow 0.15s ease-out;
   }
 
   .input::placeholder {
-    @apply text-text-dim;
+    color: var(--text-dim);
   }
 
   .input:focus {
-    @apply border-primary;
+    border-color: var(--primary);
     box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
   }
 
@@ -255,7 +292,8 @@ body {
 
   /* Grid card style */
   .grid-card {
-    @apply border border-border p-4;
+    @apply border p-4;
+    border-color: var(--border);
     background-color: var(--bg2);
     border-radius: 6px;
     box-shadow: var(--card-shadow);
@@ -268,7 +306,8 @@ body {
   }
 
   .grid-card-title {
-    @apply font-mono text-sm font-bold tracking-widest uppercase mb-3 pb-2 border-b border-border;
+    @apply font-mono text-sm font-bold tracking-widest uppercase mb-3 pb-2 border-b;
+    border-color: var(--border);
   }
 }
 
@@ -379,6 +418,12 @@ main, [role="main"] {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* Pulse dot animation */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.3); }
 }
 
 /* Lumora app background -- cyan-to-purple gradient */

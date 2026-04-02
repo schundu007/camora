@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Icon } from '../Icons.jsx';
+import { Icon } from '../../shared/Icons.jsx';
 // DocsSidebar removed — navigation handled by AppShell
 
 function useInView(threshold = 0.15) {

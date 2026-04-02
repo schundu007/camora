@@ -1,9 +1,9 @@
-import { Icon } from '../Icons.jsx';
+import { Icon } from '../../shared/Icons.jsx';
 import FormattedContent from './FormattedContent.jsx';
 import CloudArchitectureDiagram from './CloudArchitectureDiagram.jsx';
-import DiagramSVG from '../DiagramSVG.jsx';
-import { generateSlug, getProblemBySlug } from '../../data/problems.js';
-import problemsFull from '../../data/problems-full.json';
+import DiagramSVG from '../features/DiagramSVG.jsx';
+import { generateSlug, getProblemBySlug } from '../../../data/capra/problems.js';
+import problemsFull from '../../../data/capra/problems-full.json';
 
 export default function TopicDetail({
   activePage, selectedTopic, topicDetails, pageConfig,

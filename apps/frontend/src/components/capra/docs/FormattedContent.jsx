@@ -1,4 +1,4 @@
-import { Icon } from '../Icons.jsx';
+import { Icon } from '../../shared/Icons.jsx';
 
 export default function FormattedContent({ content, color = 'emerald' }) {
   if (!content) return null;

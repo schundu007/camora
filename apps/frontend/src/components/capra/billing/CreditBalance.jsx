@@ -1,4 +1,4 @@
-import { useAuth } from '../../../contexts/AuthContext.jsx';
+import { useAuth } from '../../../contexts/AuthContext';
 
 /**
  * Credit Balance - Slack style

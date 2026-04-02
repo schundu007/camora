@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { Allotment } from 'allotment';
 import 'allotment/dist/style.css';
-import { Icon } from './Icons.jsx';
-import { getProblemBySlug, DIFFICULTY_COLORS, generateSlug } from '../data/problems.js';
+import { Icon } from '../../shared/Icons.jsx';
+import { getProblemBySlug, DIFFICULTY_COLORS, generateSlug } from '../../../data/capra/problems.js';
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'http://localhost:3009';
-import { getAuthHeaders } from '../utils/authHeaders.js';
+import { getAuthHeaders } from '../../../utils/authHeaders.js';
 
 
 // Language configurations for code execution
