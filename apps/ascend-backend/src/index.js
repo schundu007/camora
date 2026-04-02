@@ -341,7 +341,7 @@ app.get('/api/health', (req, res) => {
 app.use(errorHandler);
 
 // Start server
-const server = app.listen(PORT, () => {
+const server = app.listen(PORT, '0.0.0.0', () => {
   logger.info({ port: PORT, env: config.NODE_ENV }, 'Ascend API server started (camora)');
 });
 

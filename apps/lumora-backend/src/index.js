@@ -147,7 +147,7 @@ app.use((err, req, res, next) => {
 // Start
 const PORT = config.port;
 runMigrations().then(() => {
-  app.listen(PORT, () => {
+  app.listen(PORT, '0.0.0.0', () => {
     console.log(`Lumora backend running on port ${PORT}`);
   });
 });
