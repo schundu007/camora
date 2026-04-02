@@ -17,6 +17,7 @@ const CapraPractice = lazy(() => import('./pages/capra/PracticePage'));
 const CapraPrepare = lazy(() => import('./pages/capra/PreparePage'));
 const CapraOnboarding = lazy(() => import('./pages/capra/OnboardingPage'));
 const CapraLanding = lazy(() => import('./pages/capra/CapraLandingPage'));
+const CompanyPrepPage = lazy(() => import('./pages/capra/CompanyPrepPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 const BrandPage = lazy(() => import('./pages/BrandPage'));
 
@@ -353,6 +354,9 @@ export function App() {
 
           {/* ── Brand ────────────────────────────────── */}
           <Route path="/brand" element={<BrandPage />} />
+
+          {/* ── Company Interview Questions ─────────────── */}
+          <Route path="/interview-questions/:company" element={<CompanyPrepPage />} />
 
           {/* ── Catch-all ──────────────────────────────── */}
           <Route path="*" element={<NotFoundPage />} />

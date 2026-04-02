@@ -1,0 +1,915 @@
+import { useState } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
+import { Icon } from '../../components/shared/Icons.jsx';
+
+/* ──────────────────────────────── Types ──────────────────────────────── */
+
+interface Question {
+  q: string;
+  difficulty: 'Easy' | 'Medium' | 'Hard';
+  topic: string;
+}
+
+interface Section {
+  title: string;
+  icon: 'code' | 'architecture' | 'behavioral';
+  questions: Question[];
+}
+
+interface CompanyData {
+  name: string;
+  logo: string;
+  color: string;
+  description: string;
+  stats: {
+    avgSalary: string;
+    rounds: string;
+    difficulty: string;
+    duration: string;
+  };
+  sections: Section[];
+}
+
+/* ──────────────────────────────── Data ──────────────────────────────── */
+
+const COMPANIES: Record<string, CompanyData> = {
+  google: {
+    name: 'Google',
+    logo: 'G',
+    color: '#4285F4',
+    description:
+      'Google interviews focus on algorithmic problem-solving, system design at scale, and behavioral leadership principles (Googleyness).',
+    stats: { avgSalary: '$189K - $350K', rounds: '5-7', difficulty: 'Hard', duration: '6-8 weeks' },
+    sections: [
+      {
+        title: 'Coding Interview Questions',
+        icon: 'code',
+        questions: [
+          { q: 'Design an algorithm to find the shortest path in a weighted graph', difficulty: 'Hard', topic: 'Graphs' },
+          { q: 'Implement an LRU Cache with O(1) operations', difficulty: 'Medium', topic: 'Data Structures' },
+          { q: 'Find the median of two sorted arrays', difficulty: 'Hard', topic: 'Binary Search' },
+          { q: 'Design a function to serialize and deserialize a binary tree', difficulty: 'Hard', topic: 'Trees' },
+          { q: 'Implement a rate limiter using sliding window', difficulty: 'Medium', topic: 'Design' },
+        ],
+      },
+      {
+        title: 'System Design Questions',
+        icon: 'architecture',
+        questions: [
+          { q: 'Design Google Search', difficulty: 'Hard', topic: 'Search' },
+          { q: 'Design YouTube', difficulty: 'Hard', topic: 'Video Streaming' },
+          { q: 'Design Google Maps', difficulty: 'Hard', topic: 'Geospatial' },
+          { q: 'Design Gmail', difficulty: 'Medium', topic: 'Email' },
+          { q: 'Design Google Drive', difficulty: 'Hard', topic: 'Storage' },
+        ],
+      },
+      {
+        title: 'Behavioral Questions (Googleyness)',
+        icon: 'behavioral',
+        questions: [
+          { q: 'Tell me about a time you had to work with ambiguity', difficulty: 'Medium', topic: 'Leadership' },
+          { q: 'Describe a situation where you had to push back on a decision', difficulty: 'Medium', topic: 'Communication' },
+          { q: 'How do you handle disagreements with team members?', difficulty: 'Easy', topic: 'Teamwork' },
+          { q: 'Tell me about a project that failed and what you learned', difficulty: 'Medium', topic: 'Growth' },
+        ],
+      },
+    ],
+  },
+  amazon: {
+    name: 'Amazon',
+    logo: 'A',
+    color: '#FF9900',
+    description:
+      'Amazon interviews are structured around 16 Leadership Principles. Every answer should reference a specific LP. System design focuses on AWS services.',
+    stats: { avgSalary: '$165K - $320K', rounds: '4-6', difficulty: 'Hard', duration: '4-6 weeks' },
+    sections: [
+      {
+        title: 'Coding Questions',
+        icon: 'code',
+        questions: [
+          { q: 'Design an algorithm for optimal delivery routing', difficulty: 'Hard', topic: 'Graphs' },
+          { q: 'Implement a priority queue for order processing', difficulty: 'Medium', topic: 'Heap' },
+          { q: 'Find the most frequently purchased items together', difficulty: 'Medium', topic: 'Hash Map' },
+          { q: 'Design a system to detect duplicate product listings', difficulty: 'Hard', topic: 'String Matching' },
+        ],
+      },
+      {
+        title: 'System Design Questions',
+        icon: 'architecture',
+        questions: [
+          { q: 'Design Amazon Product Search', difficulty: 'Hard', topic: 'Search' },
+          { q: 'Design the Amazon Recommendation Engine', difficulty: 'Hard', topic: 'ML System' },
+          { q: 'Design AWS S3', difficulty: 'Hard', topic: 'Storage' },
+          { q: 'Design the Amazon Order Processing Pipeline', difficulty: 'Hard', topic: 'Queue' },
+        ],
+      },
+      {
+        title: 'Leadership Principles Questions',
+        icon: 'behavioral',
+        questions: [
+          { q: 'Customer Obsession: Tell me about a time you went above and beyond for a customer', difficulty: 'Medium', topic: 'LP' },
+          { q: 'Ownership: Describe a time you took on something outside your area of responsibility', difficulty: 'Medium', topic: 'LP' },
+          { q: 'Dive Deep: Tell me about a time you had to get to the root cause of a problem', difficulty: 'Medium', topic: 'LP' },
+          { q: 'Bias for Action: Describe a situation where you had to make a decision without complete data', difficulty: 'Medium', topic: 'LP' },
+        ],
+      },
+    ],
+  },
+  meta: {
+    name: 'Meta',
+    logo: 'M',
+    color: '#0668E1',
+    description:
+      'Meta interviews emphasize coding speed, system design for billion-user scale, and behavioral questions about impact and collaboration.',
+    stats: { avgSalary: '$185K - $380K', rounds: '4-5', difficulty: 'Hard', duration: '4-6 weeks' },
+    sections: [
+      {
+        title: 'Coding Questions',
+        icon: 'code',
+        questions: [
+          { q: 'Implement a News Feed ranking algorithm', difficulty: 'Hard', topic: 'Sorting' },
+          { q: 'Design a data structure for autocomplete search', difficulty: 'Medium', topic: 'Trie' },
+          { q: 'Find all valid combinations of parentheses', difficulty: 'Medium', topic: 'Backtracking' },
+          { q: 'Implement a thread-safe bounded queue', difficulty: 'Hard', topic: 'Concurrency' },
+        ],
+      },
+      {
+        title: 'System Design Questions',
+        icon: 'architecture',
+        questions: [
+          { q: 'Design Facebook News Feed', difficulty: 'Hard', topic: 'Feed' },
+          { q: 'Design Instagram Stories', difficulty: 'Hard', topic: 'Media' },
+          { q: 'Design Facebook Messenger', difficulty: 'Hard', topic: 'Chat' },
+          { q: 'Design the Facebook Live Video System', difficulty: 'Hard', topic: 'Streaming' },
+        ],
+      },
+      {
+        title: 'Behavioral Questions',
+        icon: 'behavioral',
+        questions: [
+          { q: 'Tell me about a time you had the biggest impact', difficulty: 'Medium', topic: 'Impact' },
+          { q: 'Describe how you handle working on a fast-moving team', difficulty: 'Easy', topic: 'Pace' },
+          { q: 'How do you prioritize competing projects?', difficulty: 'Medium', topic: 'Prioritization' },
+        ],
+      },
+    ],
+  },
+  apple: {
+    name: 'Apple',
+    logo: 'A',
+    color: '#555555',
+    description:
+      'Apple interviews focus on deep technical knowledge, attention to detail, and passion for the product. Questions often involve real-world Apple product scenarios.',
+    stats: { avgSalary: '$175K - $340K', rounds: '4-6', difficulty: 'Hard', duration: '4-8 weeks' },
+    sections: [
+      {
+        title: 'Coding Questions',
+        icon: 'code',
+        questions: [
+          { q: 'Implement a memory-efficient image cache', difficulty: 'Hard', topic: 'Cache' },
+          { q: 'Design an algorithm for gesture recognition', difficulty: 'Hard', topic: 'ML' },
+          { q: 'Optimize battery usage for background processes', difficulty: 'Hard', topic: 'System' },
+        ],
+      },
+      {
+        title: 'System Design Questions',
+        icon: 'architecture',
+        questions: [
+          { q: 'Design iCloud Sync', difficulty: 'Hard', topic: 'Sync' },
+          { q: 'Design the App Store Review System', difficulty: 'Medium', topic: 'Pipeline' },
+          { q: 'Design Apple Pay', difficulty: 'Hard', topic: 'Payments' },
+        ],
+      },
+      {
+        title: 'Behavioral Questions',
+        icon: 'behavioral',
+        questions: [
+          { q: 'Why Apple? What Apple product do you admire most and why?', difficulty: 'Easy', topic: 'Passion' },
+          { q: 'Tell me about a time you sweated the details', difficulty: 'Medium', topic: 'Quality' },
+          { q: 'How do you balance perfection with shipping on time?', difficulty: 'Medium', topic: 'Tradeoffs' },
+        ],
+      },
+    ],
+  },
+  microsoft: {
+    name: 'Microsoft',
+    logo: 'M',
+    color: '#00A4EF',
+    description:
+      'Microsoft interviews assess problem-solving, system design with Azure services, and growth mindset culture fit.',
+    stats: { avgSalary: '$160K - $310K', rounds: '4-5', difficulty: 'Medium-Hard', duration: '3-5 weeks' },
+    sections: [
+      {
+        title: 'Coding Questions',
+        icon: 'code',
+        questions: [
+          { q: 'Design a thread-safe singleton pattern', difficulty: 'Medium', topic: 'OOP' },
+          { q: 'Implement a distributed lock mechanism', difficulty: 'Hard', topic: 'Distributed' },
+          { q: 'Find the longest increasing subsequence', difficulty: 'Medium', topic: 'DP' },
+        ],
+      },
+      {
+        title: 'System Design Questions',
+        icon: 'architecture',
+        questions: [
+          { q: 'Design Microsoft Teams', difficulty: 'Hard', topic: 'Real-time' },
+          { q: 'Design Azure Blob Storage', difficulty: 'Hard', topic: 'Storage' },
+          { q: 'Design the Windows Update System', difficulty: 'Hard', topic: 'Distribution' },
+        ],
+      },
+      {
+        title: 'Behavioral Questions',
+        icon: 'behavioral',
+        questions: [
+          { q: 'Tell me about a time you demonstrated a growth mindset', difficulty: 'Easy', topic: 'Growth' },
+          { q: 'How do you learn from failure?', difficulty: 'Medium', topic: 'Resilience' },
+          { q: 'Describe a time you helped a teammate grow', difficulty: 'Medium', topic: 'Mentoring' },
+        ],
+      },
+    ],
+  },
+  netflix: {
+    name: 'Netflix',
+    logo: 'N',
+    color: '#E50914',
+    description:
+      'Netflix values freedom and responsibility. Interviews focus on senior-level system design, cultural fit, and independent decision-making.',
+    stats: { avgSalary: '$200K - $450K', rounds: '4-6', difficulty: 'Hard', duration: '4-6 weeks' },
+    sections: [
+      {
+        title: 'Coding Questions',
+        icon: 'code',
+        questions: [
+          { q: 'Design a video recommendation algorithm', difficulty: 'Hard', topic: 'ML' },
+          { q: 'Implement adaptive bitrate streaming logic', difficulty: 'Hard', topic: 'Streaming' },
+          { q: 'Build a content delivery optimization system', difficulty: 'Hard', topic: 'CDN' },
+        ],
+      },
+      {
+        title: 'System Design Questions',
+        icon: 'architecture',
+        questions: [
+          { q: 'Design Netflix Video Streaming', difficulty: 'Hard', topic: 'Streaming' },
+          { q: 'Design the Netflix Recommendation Engine', difficulty: 'Hard', topic: 'ML System' },
+          { q: 'Design Netflix Content Delivery Network', difficulty: 'Hard', topic: 'CDN' },
+        ],
+      },
+      {
+        title: 'Culture Fit Questions',
+        icon: 'behavioral',
+        questions: [
+          { q: 'How do you make decisions without consensus?', difficulty: 'Medium', topic: 'Independence' },
+          { q: 'Tell me about a time you challenged the status quo', difficulty: 'Medium', topic: 'Innovation' },
+          { q: 'How do you handle radical candor/feedback?', difficulty: 'Medium', topic: 'Communication' },
+        ],
+      },
+    ],
+  },
+};
+
+/* ──────────────────────────────── Nav / Footer data ──────────────────── */
+
+const navLinks = [
+  { label: 'Apply', href: 'https://jobs.cariara.com' },
+  { label: 'Prepare', href: '/capra/prepare' },
+  { label: 'Practice', href: '/capra/practice' },
+  { label: 'Attend', href: '/lumora' },
+  { label: 'Pricing', href: '/pricing' },
+];
+
+const footerLinks = [
+  ...navLinks,
+  { label: 'Support', href: 'mailto:support@cariara.com' },
+];
+
+/* ──────────────────────────────── Helpers ────────────────────────────── */
+
+const DIFFICULTY_COLORS: Record<string, { bg: string; text: string; border: string }> = {
+  Easy: { bg: '#ecfdf5', text: '#059669', border: '#a7f3d0' },
+  Medium: { bg: '#fffbeb', text: '#d97706', border: '#fde68a' },
+  Hard: { bg: '#fef2f2', text: '#dc2626', border: '#fecaca' },
+  'Medium-Hard': { bg: '#fff7ed', text: '#ea580c', border: '#fed7aa' },
+};
+
+function getDifficultyStyle(difficulty: string) {
+  return DIFFICULTY_COLORS[difficulty] || DIFFICULTY_COLORS['Medium'];
+}
+
+function getSectionIcon(icon: string) {
+  switch (icon) {
+    case 'code':
+      return (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="16 18 22 12 16 6" />
+          <polyline points="8 6 2 12 8 18" />
+        </svg>
+      );
+    case 'architecture':
+      return (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="2" y="2" width="6" height="6" rx="1" />
+          <rect x="16" y="2" width="6" height="6" rx="1" />
+          <rect x="9" y="16" width="6" height="6" rx="1" />
+          <path d="M5 8v3a1 1 0 001 1h12a1 1 0 001-1V8" />
+          <path d="M12 12v4" />
+        </svg>
+      );
+    case 'behavioral':
+      return (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+          <circle cx="9" cy="7" r="4" />
+          <path d="M23 21v-2a4 4 0 00-3-3.87" />
+          <path d="M16 3.13a4 4 0 010 7.75" />
+        </svg>
+      );
+    default:
+      return null;
+  }
+}
+
+/* ──────────────────────────────── Stat icons ─────────────────────────── */
+
+function StatIcon({ type }: { type: string }) {
+  const style = { width: 20, height: 20, strokeWidth: 1.5, fill: 'none', stroke: 'currentColor' };
+  switch (type) {
+    case 'salary':
+      return (
+        <svg {...style} viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="12" y1="1" x2="12" y2="23" />
+          <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
+        </svg>
+      );
+    case 'rounds':
+      return (
+        <svg {...style} viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+        </svg>
+      );
+    case 'difficulty':
+      return (
+        <svg {...style} viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+        </svg>
+      );
+    case 'duration':
+      return (
+        <svg {...style} viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="10" />
+          <polyline points="12 6 12 12 16 14" />
+        </svg>
+      );
+    default:
+      return null;
+  }
+}
+
+/* ──────────────────────────────── Component ──────────────────────────── */
+
+export default function CompanyPrepPage() {
+  const { company } = useParams<{ company: string }>();
+  const { user, isLoading: loading, logout } = useAuth();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const companyData = company ? COMPANIES[company.toLowerCase()] : undefined;
+
+  /* ── 404: company not found ── */
+  if (!companyData) {
+    return (
+      <div style={{ background: '#f7f8f9', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+        <div style={{ textAlign: 'center', maxWidth: 420 }}>
+          <div style={{ fontSize: 64, marginBottom: 16, opacity: 0.3 }}>?</div>
+          <h1 className="practice-display" style={{ fontSize: 28, fontWeight: 700, color: '#111827', margin: '0 0 12px' }}>
+            Company not found
+          </h1>
+          <p className="practice-body" style={{ fontSize: 15, color: '#6b7280', lineHeight: 1.6, margin: '0 0 24px' }}>
+            We don't have interview questions for "<strong>{company}</strong>" yet. Browse our practice library to find topics that match your target company.
+          </p>
+          <Link
+            to="/capra/practice"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              padding: '10px 20px',
+              background: '#10b981',
+              color: '#fff',
+              fontSize: 14,
+              fontWeight: 600,
+              borderRadius: 8,
+              textDecoration: 'none',
+              transition: 'filter 0.15s',
+            }}
+          >
+            Browse Practice Topics
+          </Link>
+        </div>
+        <style>{`
+          @import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+          body { margin: 0; }
+          .practice-display { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+          .practice-body { font-family: 'Work Sans', 'Plus Jakarta Sans', system-ui, sans-serif; }
+        `}</style>
+      </div>
+    );
+  }
+
+  const totalQuestions = companyData.sections.reduce((sum, s) => sum + s.questions.length, 0);
+  const diffStyle = getDifficultyStyle(companyData.stats.difficulty);
+
+  return (
+    <div className="company-prep-root" style={{ background: '#f7f8f9', minHeight: '100vh' }}>
+
+      {/* ═══════════════════════ Top Navigation ═══════════════════════ */}
+      <nav
+        className="fixed top-0 left-0 right-0 z-50"
+        style={{ background: '#ffffff', borderBottom: '1px solid #e3e8ee', height: 56 }}
+      >
+        <div className="max-w-6xl mx-auto h-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+          {/* Logo */}
+          <Link to="/" className="flex items-center gap-2.5 no-underline">
+            <div
+              className="flex items-center justify-center"
+              style={{ width: 28, height: 28, background: '#10b981', borderRadius: 8 }}
+            >
+              <Icon name="ascend" size={14} style={{ color: '#fff' }} />
+            </div>
+            <span className="practice-display" style={{ fontWeight: 700, fontSize: 16, color: '#111827', letterSpacing: '-0.01em' }}>
+              Camora
+            </span>
+          </Link>
+
+          {/* Center nav */}
+          <div className="hidden md:flex items-center gap-1">
+            {navLinks.map((link) => {
+              const linkStyle: React.CSSProperties = {
+                fontSize: 14,
+                fontWeight: 500,
+                padding: '6px 12px',
+                borderRadius: 6,
+                transition: 'color 0.15s, background 0.15s',
+                textDecoration: 'none',
+                color: '#4b5563',
+                borderBottom: '2px solid transparent',
+                marginBottom: -1,
+              };
+              return link.href.startsWith('http') ? (
+                <a key={link.label} href={link.href} target="_blank" rel="noopener noreferrer" className="practice-body nav-link" style={linkStyle}>
+                  {link.label}
+                </a>
+              ) : (
+                <Link key={link.label} to={link.href} className="practice-body nav-link" style={linkStyle}>
+                  {link.label}
+                </Link>
+              );
+            })}
+          </div>
+
+          {/* Right: user / sign in + mobile toggle */}
+          <div className="flex items-center gap-3">
+            {user ? (
+              <>
+                <Link to="/capra/prepare" className="practice-body" style={{ fontSize: 14, fontWeight: 500, color: '#10b981', textDecoration: 'none' }}>
+                  Dashboard
+                </Link>
+                <button onClick={logout} className="practice-body" style={{ fontSize: 14, fontWeight: 500, color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer' }}>
+                  Sign out
+                </button>
+              </>
+            ) : !loading ? (
+              <Link to="/capra/login" className="practice-body" style={{ fontSize: 14, fontWeight: 500, color: '#4b5563', textDecoration: 'none' }}>
+                Sign in
+              </Link>
+            ) : null}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-1.5"
+              style={{ color: '#6b7280', background: 'none', border: 'none', cursor: 'pointer' }}
+            >
+              <Icon name={mobileMenuOpen ? 'close' : 'menu'} size={20} />
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      {/* ═══════════════════════ Mobile Menu ═══════════════════════ */}
+      {mobileMenuOpen && (
+        <div className="fixed top-14 left-0 right-0 z-40 md:hidden" style={{ background: '#ffffff', borderBottom: '1px solid #e3e8ee', padding: '8px 16px' }}>
+          {navLinks.map((link) =>
+            link.href.startsWith('http') ? (
+              <a key={link.label} href={link.href} target="_blank" rel="noopener noreferrer" className="practice-body"
+                style={{ display: 'block', padding: '10px 12px', fontSize: 14, fontWeight: 500, color: '#4b5563', textDecoration: 'none', borderRadius: 6 }}>
+                {link.label}
+              </a>
+            ) : (
+              <Link key={link.label} to={link.href} onClick={() => setMobileMenuOpen(false)} className="practice-body"
+                style={{ display: 'block', padding: '10px 12px', fontSize: 14, fontWeight: 500, color: '#4b5563', textDecoration: 'none', borderRadius: 6 }}>
+                {link.label}
+              </Link>
+            )
+          )}
+        </div>
+      )}
+
+      {/* ═══════════════════════ Main Content ═══════════════════════ */}
+      <main style={{ paddingTop: 56 }}>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+
+          {/* ── Breadcrumb ── */}
+          <div style={{ padding: '16px 0 0' }}>
+            <nav className="practice-body" style={{ fontSize: 13, color: '#9ca3af', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+              <Link to="/" className="breadcrumb-link" style={{ color: '#9ca3af', textDecoration: 'none', transition: 'color 0.15s' }}>Home</Link>
+              <span style={{ color: '#d1d5db' }}>/</span>
+              <Link to="/capra/practice" className="breadcrumb-link" style={{ color: '#9ca3af', textDecoration: 'none', transition: 'color 0.15s' }}>Interview Questions</Link>
+              <span style={{ color: '#d1d5db' }}>/</span>
+              <span style={{ color: '#6b7280', fontWeight: 500 }}>{companyData.name}</span>
+            </nav>
+          </div>
+
+          {/* ── Company Header ── */}
+          <div style={{ padding: '32px 0 24px' }}>
+            {/* Accent bar */}
+            <div style={{ width: 48, height: 4, borderRadius: 2, background: companyData.color, marginBottom: 20 }} />
+
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 20, flexWrap: 'wrap' }}>
+              {/* Logo circle */}
+              <div
+                style={{
+                  width: 56,
+                  height: 56,
+                  borderRadius: 14,
+                  background: companyData.color,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}
+              >
+                <span style={{ fontSize: 24, fontWeight: 800, color: '#fff', fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
+                  {companyData.logo}
+                </span>
+              </div>
+
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <h1
+                  className="practice-display"
+                  style={{
+                    fontSize: 32,
+                    fontWeight: 800,
+                    color: '#111827',
+                    margin: '0 0 8px',
+                    letterSpacing: '-0.02em',
+                    lineHeight: 1.2,
+                  }}
+                >
+                  {companyData.name} Interview Questions
+                </h1>
+                <p className="practice-body" style={{ fontSize: 15, color: '#6b7280', margin: 0, lineHeight: 1.6, maxWidth: 640 }}>
+                  {companyData.description}
+                </p>
+                <p className="practice-body" style={{ fontSize: 13, color: '#9ca3af', margin: '10px 0 0' }}>
+                  {totalQuestions} curated questions across {companyData.sections.length} categories
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* ── Stats Grid ── */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+              gap: 12,
+              marginBottom: 32,
+            }}
+          >
+            {[
+              { label: 'Avg. Salary', value: companyData.stats.avgSalary, icon: 'salary' },
+              { label: 'Interview Rounds', value: companyData.stats.rounds, icon: 'rounds' },
+              { label: 'Difficulty', value: companyData.stats.difficulty, icon: 'difficulty' },
+              { label: 'Timeline', value: companyData.stats.duration, icon: 'duration' },
+            ].map((stat) => (
+              <div
+                key={stat.label}
+                style={{
+                  background: '#ffffff',
+                  border: '1px solid #e3e8ee',
+                  borderRadius: 10,
+                  padding: '16px 18px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 8,
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#9ca3af' }}>
+                  <StatIcon type={stat.icon} />
+                  <span className="practice-body" style={{ fontSize: 12, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#9ca3af' }}>
+                    {stat.label}
+                  </span>
+                </div>
+                <span
+                  className="practice-display"
+                  style={{
+                    fontSize: 16,
+                    fontWeight: 700,
+                    color: '#111827',
+                  }}
+                >
+                  {stat.value}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {/* ── Question Sections ── */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 20, paddingBottom: 48 }}>
+            {companyData.sections.map((section, sIdx) => (
+              <div
+                key={sIdx}
+                style={{
+                  background: '#ffffff',
+                  border: '1px solid #e3e8ee',
+                  borderRadius: 12,
+                  overflow: 'hidden',
+                }}
+              >
+                {/* Section header */}
+                <div
+                  style={{
+                    padding: '18px 22px',
+                    borderBottom: '1px solid #e3e8ee',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 12,
+                  }}
+                >
+                  <div style={{ color: companyData.color, display: 'flex', alignItems: 'center' }}>
+                    {getSectionIcon(section.icon)}
+                  </div>
+                  <h2 className="practice-display" style={{ fontSize: 17, fontWeight: 700, color: '#111827', margin: 0 }}>
+                    {section.title}
+                  </h2>
+                  <span className="practice-body" style={{ fontSize: 12, color: '#9ca3af', fontWeight: 500, marginLeft: 'auto' }}>
+                    {section.questions.length} question{section.questions.length !== 1 ? 's' : ''}
+                  </span>
+                </div>
+
+                {/* Questions list */}
+                <div>
+                  {section.questions.map((question, qIdx) => {
+                    const dStyle = getDifficultyStyle(question.difficulty);
+                    return (
+                      <div
+                        key={qIdx}
+                        className="question-row"
+                        style={{
+                          padding: '14px 22px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 12,
+                          borderBottom: qIdx < section.questions.length - 1 ? '1px solid #f3f4f6' : 'none',
+                          transition: 'background 0.15s',
+                        }}
+                      >
+                        {/* Question number */}
+                        <span
+                          className="practice-mono"
+                          style={{
+                            fontSize: 11,
+                            fontWeight: 500,
+                            color: '#d1d5db',
+                            minWidth: 24,
+                            textAlign: 'right',
+                            flexShrink: 0,
+                          }}
+                        >
+                          {String(qIdx + 1).padStart(2, '0')}
+                        </span>
+
+                        {/* Question text */}
+                        <span className="practice-body" style={{ fontSize: 14, color: '#374151', flex: 1, lineHeight: 1.5 }}>
+                          {question.q}
+                        </span>
+
+                        {/* Topic tag */}
+                        <span
+                          className="practice-body hidden sm:inline-block"
+                          style={{
+                            fontSize: 11,
+                            fontWeight: 500,
+                            color: '#6b7280',
+                            background: '#f3f4f6',
+                            padding: '3px 8px',
+                            borderRadius: 4,
+                            whiteSpace: 'nowrap',
+                            flexShrink: 0,
+                          }}
+                        >
+                          {question.topic}
+                        </span>
+
+                        {/* Difficulty badge */}
+                        <span
+                          className="practice-body"
+                          style={{
+                            fontSize: 11,
+                            fontWeight: 600,
+                            color: dStyle.text,
+                            background: dStyle.bg,
+                            border: `1px solid ${dStyle.border}`,
+                            padding: '2px 8px',
+                            borderRadius: 4,
+                            whiteSpace: 'nowrap',
+                            flexShrink: 0,
+                          }}
+                        >
+                          {question.difficulty}
+                        </span>
+
+                        {/* Practice link */}
+                        <Link
+                          to="/lumora"
+                          className="practice-link practice-body"
+                          style={{
+                            fontSize: 12,
+                            fontWeight: 600,
+                            color: '#10b981',
+                            textDecoration: 'none',
+                            whiteSpace: 'nowrap',
+                            flexShrink: 0,
+                            transition: 'opacity 0.15s',
+                          }}
+                        >
+                          Practice
+                          <span style={{ marginLeft: 4, fontSize: 10 }}>&rarr;</span>
+                        </Link>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* ── Bottom CTA ── */}
+          <div
+            style={{
+              background: '#ffffff',
+              border: '1px solid #e3e8ee',
+              borderRadius: 12,
+              padding: '40px 32px',
+              textAlign: 'center',
+              marginBottom: 48,
+            }}
+          >
+            <h2 className="practice-display" style={{ fontSize: 24, fontWeight: 800, color: '#111827', margin: '0 0 10px', letterSpacing: '-0.02em' }}>
+              Start preparing for {companyData.name} interviews
+            </h2>
+            <p className="practice-body" style={{ fontSize: 15, color: '#6b7280', margin: '0 0 24px', lineHeight: 1.6 }}>
+              Practice with AI-powered mock interviews, get real-time feedback, and track your progress.
+            </p>
+            <Link
+              to="/lumora"
+              className="cta-button"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '12px 28px',
+                background: '#10b981',
+                color: '#ffffff',
+                fontSize: 15,
+                fontWeight: 700,
+                borderRadius: 10,
+                textDecoration: 'none',
+                transition: 'filter 0.15s, transform 0.15s',
+                boxShadow: '0 4px 14px rgba(16,185,129,0.25)',
+              }}
+            >
+              Start Practicing
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 12h14" />
+                <path d="M12 5l7 7-7 7" />
+              </svg>
+            </Link>
+          </div>
+        </div>
+      </main>
+
+      {/* ═══════════════════════ Footer ═══════════════════════ */}
+      <footer style={{ background: '#ffffff', borderTop: '1px solid #e3e8ee', padding: '24px 0' }}>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16, alignItems: 'center' }}>
+            {/* Logo */}
+            <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
+              <div style={{ width: 22, height: 22, background: '#10b981', borderRadius: 5, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Icon name="ascend" size={11} style={{ color: '#fff' }} />
+              </div>
+              <span className="practice-display" style={{ fontWeight: 700, fontSize: 14, color: '#111827' }}>
+                Camora
+              </span>
+            </Link>
+
+            {/* Nav links */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 20 }}>
+              {footerLinks.map((link) =>
+                link.href.startsWith('http') || link.href.startsWith('mailto:') ? (
+                  <a key={link.label} href={link.href} target="_blank" rel="noopener noreferrer" className="practice-body footer-link"
+                    style={{ fontSize: 13, color: '#6b7280', textDecoration: 'none', fontWeight: 500, transition: 'color 0.15s' }}>
+                    {link.label}
+                  </a>
+                ) : (
+                  <Link key={link.label} to={link.href} className="practice-body footer-link"
+                    style={{ fontSize: 13, color: '#6b7280', textDecoration: 'none', fontWeight: 500, transition: 'color 0.15s' }}>
+                    {link.label}
+                  </Link>
+                )
+              )}
+            </div>
+
+            {/* Copyright */}
+            <p className="practice-body" style={{ fontSize: 12, color: '#9ca3af', margin: 0 }}>
+              &copy; {new Date().getFullYear()} Camora by Cariara
+            </p>
+          </div>
+        </div>
+      </footer>
+
+      {/* ═══════════════════════ Scoped Styles ═══════════════════════ */}
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap');
+
+        body {
+          margin: 0;
+          -webkit-font-smoothing: antialiased;
+          -moz-osx-font-smoothing: grayscale;
+          font-family: 'Work Sans', 'Plus Jakarta Sans', system-ui, sans-serif;
+        }
+
+        .practice-display {
+          font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+        }
+
+        .practice-body {
+          font-family: 'Work Sans', 'Plus Jakarta Sans', system-ui, sans-serif;
+        }
+
+        .practice-mono {
+          font-family: 'IBM Plex Mono', 'Menlo', monospace;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        /* Nav link hover */
+        .nav-link:hover {
+          color: #111827 !important;
+          background: #f3f4f6;
+        }
+
+        /* Breadcrumb link hover */
+        .breadcrumb-link:hover {
+          color: #6b7280 !important;
+        }
+
+        /* Footer link hover */
+        .footer-link:hover {
+          color: #10b981 !important;
+        }
+
+        /* Question row hover */
+        .question-row:hover {
+          background: #fafbfc;
+        }
+
+        /* Practice link hover */
+        .practice-link:hover {
+          opacity: 0.8;
+        }
+
+        /* CTA button hover */
+        .cta-button:hover {
+          filter: brightness(0.93);
+          transform: translateY(-1px);
+        }
+
+        /* Remove button outlines on click */
+        button:focus {
+          outline: none;
+        }
+        button:focus-visible {
+          outline: 2px solid #10b981;
+          outline-offset: 2px;
+        }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+          .question-row {
+            flex-wrap: wrap;
+            gap: 8px !important;
+          }
+        }
+      `}</style>
+    </div>
+  );
+}
