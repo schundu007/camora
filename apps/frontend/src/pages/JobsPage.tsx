@@ -707,7 +707,7 @@ export default function JobsPage() {
                         View Job
                       </a>
                       <Link
-                        to={`/lumora?company=${encodeURIComponent(job.company_name)}&role=${encodeURIComponent(job.title)}`}
+                        to={`/jobs/${job.id}/prepare`}
                         style={{
                           flex: 1,
                           display: 'inline-flex',
