@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -105,6 +105,323 @@ const APPA = [
   { num: '04', icon: 'attend' as const, label: 'Attend', desc: 'Get real-time AI answers during your live technical interview — system design, coding, and behavioral.', href: '/lumora', external: false, color: '#fbbf24' },
 ];
 
+/* ── Animated Lumora Demo ──────────────────────────────────── */
+const DEMO_PAIRS = [
+  {
+    label: 'System Design',
+    question: 'Design a distributed cache that supports TTL expiration and handles cache invalidation across multiple regions.',
+    bullets: [
+      'Write-through cache with async invalidation',
+      'Consistent hashing for partition assignment',
+      'Pub/Sub for cross-region invalidation',
+      'Lazy TTL eviction with background cleanup',
+    ],
+    scale: [
+      { val: '100K', unit: 'QPS' },
+      { val: '<5ms', unit: 'P99' },
+      { val: '99.99%', unit: 'Uptime' },
+    ],
+  },
+  {
+    label: 'Coding',
+    question: 'Find the longest substring without repeating characters. What is the optimal time complexity?',
+    bullets: [
+      'Sliding window with two pointers',
+      'HashSet to track characters in window',
+      'Expand right, shrink left on duplicate',
+      'Time: O(n), Space: O(min(n, alphabet))',
+    ],
+    scale: [
+      { val: '3', unit: 'Approaches' },
+      { val: 'O(n)', unit: 'Optimal' },
+      { val: 'All', unit: 'Edge Cases' },
+    ],
+  },
+];
+
+function LumoraDemo() {
+  const [pairIdx, setPairIdx] = useState(0);
+  const [typedLen, setTypedLen] = useState(0);
+  const [visibleBullets, setVisibleBullets] = useState(0);
+  const [showScale, setShowScale] = useState(false);
+  const [isTyping, setIsTyping] = useState(true);
+  const cycleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const pair = DEMO_PAIRS[pairIdx];
+
+  // Reset when pairIdx changes
+  const resetAndType = useCallback(() => {
+    setTypedLen(0);
+    setVisibleBullets(0);
+    setShowScale(false);
+    setIsTyping(true);
+  }, []);
+
+  useEffect(() => {
+    resetAndType();
+  }, [pairIdx, resetAndType]);
+
+  // Typewriter effect
+  useEffect(() => {
+    if (!isTyping) return;
+    if (typedLen >= pair.question.length) {
+      setIsTyping(false);
+      return;
+    }
+    const timer = setTimeout(() => {
+      setTypedLen((prev) => prev + 1);
+    }, 30);
+    return () => clearTimeout(timer);
+  }, [typedLen, isTyping, pair.question.length]);
+
+  // Bullet fade-in after typing finishes
+  useEffect(() => {
+    if (isTyping) return;
+    if (visibleBullets >= pair.bullets.length) return;
+    const timer = setTimeout(() => {
+      setVisibleBullets((prev) => prev + 1);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [isTyping, visibleBullets, pair.bullets.length]);
+
+  // Scale fade-in after all bullets
+  useEffect(() => {
+    if (visibleBullets < pair.bullets.length) return;
+    const timer = setTimeout(() => {
+      setShowScale(true);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [visibleBullets, pair.bullets.length]);
+
+  // Cycle to next pair after scale is shown
+  useEffect(() => {
+    if (!showScale) return;
+    cycleTimer.current = setTimeout(() => {
+      setPairIdx((prev) => (prev + 1) % DEMO_PAIRS.length);
+    }, 3000);
+    return () => {
+      if (cycleTimer.current) clearTimeout(cycleTimer.current);
+    };
+  }, [showScale]);
+
+  return (
+    <div className="p-8 md:p-12" style={{ willChange: 'transform' }}>
+      <div className="grid md:grid-cols-2 gap-8">
+        {/* Left: Live Transcription */}
+        <div>
+          <div className="flex items-center gap-2.5 mb-5">
+            <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="font-code text-sm text-emerald-400 font-semibold tracking-wide">LIVE TRANSCRIPTION</span>
+          </div>
+          <div className="rounded-xl border border-white/[0.08] p-5" style={{ background: 'rgba(255,255,255,0.02)', minHeight: '140px' }}>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="font-code text-sm text-emerald-400 font-semibold">Q{pairIdx + 1}</span>
+              <span className="text-sm text-gray-500">{pair.label}</span>
+            </div>
+            <p className="text-base text-gray-200 leading-relaxed">
+              <span>{pair.question.slice(0, typedLen)}</span>
+              {isTyping && <span className="caret-blink" />}
+            </p>
+          </div>
+        </div>
+
+        {/* Right: AI Response */}
+        <div>
+          <div className="flex items-center gap-2.5 mb-5">
+            <div className="w-2.5 h-2.5 rounded-full bg-cyan-400" />
+            <span className="font-code text-sm text-cyan-400 font-semibold tracking-wide">AI RESPONSE</span>
+          </div>
+          <div className="space-y-4">
+            <div className="rounded-xl border border-white/[0.08] p-5" style={{ background: 'rgba(255,255,255,0.02)', minHeight: '160px' }}>
+              <div className="font-code text-sm text-gray-500 mb-3 font-semibold tracking-wider">ARCHITECTURE</div>
+              <div className="space-y-2.5">
+                {pair.bullets.map((b, i) => (
+                  <p
+                    key={`${pairIdx}-${i}`}
+                    className="flex items-start gap-3 text-base text-gray-300"
+                    style={{
+                      opacity: i < visibleBullets ? 1 : 0,
+                      transform: i < visibleBullets ? 'translateY(0)' : 'translateY(12px)',
+                      transition: 'opacity 0.4s ease, transform 0.4s ease',
+                      willChange: 'opacity, transform',
+                    }}
+                  >
+                    <span className="text-emerald-400 mt-0.5 text-lg leading-none">&#8250;</span> {b}
+                  </p>
+                ))}
+              </div>
+            </div>
+            <div
+              className="rounded-xl border border-white/[0.08] p-5"
+              style={{
+                background: 'rgba(255,255,255,0.02)',
+                opacity: showScale ? 1 : 0,
+                transform: showScale ? 'scale(1)' : 'scale(0.92)',
+                transition: 'opacity 0.5s ease, transform 0.5s ease',
+                willChange: 'opacity, transform',
+              }}
+            >
+              <div className="font-code text-sm text-gray-500 mb-4 font-semibold tracking-wider">SCALE ESTIMATES</div>
+              <div className="grid grid-cols-3 gap-4 text-center">
+                {pair.scale.map((s) => (
+                  <div key={s.unit}>
+                    <div className="text-2xl font-bold text-white">{s.val}</div>
+                    <div className="font-code text-sm text-gray-500 mt-1">{s.unit}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Prep Showcase (animated stats + mock cards) ──────────── */
+const PREP_STATS = [
+  { target: 300, suffix: '+', label: 'Study Topics', color: '#34d399' },
+  { target: 50, suffix: '+', label: 'System Design Problems', color: '#818cf8' },
+  { target: 200, suffix: '+', label: 'DSA Problems', color: '#06b6d4' },
+  { target: 100, suffix: '+', label: 'Behavioral Questions', color: '#fbbf24' },
+];
+
+function AnimatedCounter({ target, suffix, inView }: { target: number; suffix: string; inView: boolean }) {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    if (!inView) return;
+    setCount(0);
+    const duration = 1500;
+    const steps = 40;
+    const increment = target / steps;
+    let current = 0;
+    const timer = setInterval(() => {
+      current += increment;
+      if (current >= target) {
+        setCount(target);
+        clearInterval(timer);
+      } else {
+        setCount(Math.floor(current));
+      }
+    }, duration / steps);
+    return () => clearInterval(timer);
+  }, [inView, target]);
+  return <span>{count}{suffix}</span>;
+}
+
+function PrepShowcase({ inView }: { inView: boolean }) {
+  return (
+    <>
+      {/* Stats row */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16">
+        {PREP_STATS.map((stat, i) => (
+          <div
+            key={stat.label}
+            className="text-center"
+            style={{
+              opacity: inView ? 1 : 0,
+              transform: inView ? 'translateY(0)' : 'translateY(20px)',
+              transition: 'opacity 0.6s ease, transform 0.6s ease',
+              transitionDelay: `${i * 100 + 200}ms`,
+            }}
+          >
+            <div className="text-4xl md:text-5xl font-bold font-display" style={{ color: stat.color }}>
+              <AnimatedCounter target={stat.target} suffix={stat.suffix} inView={inView} />
+            </div>
+            <div className="mt-2 text-sm md:text-base text-gray-400 font-medium">{stat.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Capra Sidebar Mockup + Topic Cards */}
+      <div className="grid md:grid-cols-[240px_1fr] gap-6">
+        {/* Left: Sidebar mockup (like the real Capra sidebar) */}
+        <div
+          className="card-base rounded-2xl p-5"
+          style={{
+            borderColor: 'rgba(16,185,129,0.15)',
+            opacity: inView ? 1 : 0,
+            transform: inView ? 'translateY(0)' : 'translateY(20px)',
+            transition: 'opacity 0.7s ease, transform 0.7s ease',
+            transitionDelay: '400ms',
+          }}
+        >
+          <div className="font-code text-xs text-gray-500 font-semibold tracking-wider uppercase mb-4">Prepare</div>
+          <div className="space-y-1">
+            {[
+              { name: 'Dashboard', icon: '◫', active: false },
+              { name: 'DSA and Algorithms', icon: '⟨/⟩', active: false },
+              { name: 'System Design', icon: '⬡', active: true },
+              { name: 'Microservices', icon: '⊞', active: false },
+              { name: 'Database Internals', icon: '⊟', active: false },
+              { name: 'SQL for Interviews', icon: '⊡', active: false },
+              { name: 'Low-Level Design', icon: '⊠', active: false },
+              { name: 'Behavioral', icon: '◉', active: false },
+            ].map((item) => (
+              <div
+                key={item.name}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                  item.active
+                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                    : 'text-gray-400 hover:text-gray-200'
+                }`}
+              >
+                <span className="text-base w-5 text-center opacity-60">{item.icon}</span>
+                {item.name}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Right: Topic cards grid */}
+        <div className="grid sm:grid-cols-2 gap-4">
+          {[
+            { name: 'URL Shortener', category: 'System Design', difficulty: 'Medium', topics: 8, color: '#06b6d4' },
+            { name: 'Rate Limiter', category: 'System Design', difficulty: 'Medium', topics: 6, color: '#06b6d4' },
+            { name: 'Two Sum', category: 'DSA', difficulty: 'Easy', topics: 3, color: '#818cf8' },
+            { name: 'LRU Cache', category: 'DSA', difficulty: 'Hard', topics: 5, color: '#818cf8' },
+            { name: 'API Gateway Pattern', category: 'Microservices', difficulty: 'Medium', topics: 7, color: '#34d399' },
+            { name: 'ACID vs BASE', category: 'Database', difficulty: 'Medium', topics: 4, color: '#fbbf24' },
+          ].map((item, i) => (
+            <div
+              key={item.name}
+              className="card-base rounded-xl p-5 group hover:scale-[1.02] transition-all"
+              style={{
+                borderColor: `${item.color}20`,
+                opacity: inView ? 1 : 0,
+                transform: inView ? 'translateY(0)' : 'translateY(16px)',
+                transition: 'opacity 0.6s ease, transform 0.6s ease, border-color 0.3s ease',
+                transitionDelay: `${i * 80 + 500}ms`,
+              }}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <span className="px-2 py-0.5 rounded text-xs font-code font-semibold" style={{ color: item.color, background: `${item.color}15` }}>
+                  {item.category}
+                </span>
+                <span className={`px-2 py-0.5 rounded text-xs font-code font-semibold ${
+                  item.difficulty === 'Easy' ? 'text-emerald-400 bg-emerald-400/10' :
+                  item.difficulty === 'Hard' ? 'text-red-400 bg-red-400/10' :
+                  'text-amber-400 bg-amber-400/10'
+                }`}>
+                  {item.difficulty}
+                </span>
+              </div>
+              <h4 className="text-base font-bold text-white mb-2">{item.name}</h4>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-500">{item.topics} subtopics</span>
+                <div className="w-20 h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+                  <div className="h-full rounded-full transition-all duration-1000" style={{ width: inView ? `${30 + i * 12}%` : '0%', background: item.color }} />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+    </>
+  );
+}
+
 /* ════════════════════════════════════════════════════════════
    LANDING PAGE — The APPA Journey
    ════════════════════════════════════════════════════════════ */
@@ -115,6 +432,7 @@ export default function LandingPage() {
   const demoRef = useInView(0.08);
   const journeyRef = useInView(0.08);
   const productsRef = useInView(0.08);
+  const prepRef = useInView(0.08);
   const featuresRef = useInView(0.08);
   const howRef = useInView(0.08);
   const ctaRef = useInView(0.08);
@@ -147,6 +465,25 @@ export default function LandingPage() {
         @keyframes ping-dot {
           0% { transform: scale(1); opacity: 0.75; }
           75%, 100% { transform: scale(2); opacity: 0; }
+        }
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(12px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes scaleIn {
+          from { opacity: 0; transform: scale(0.92); }
+          to { opacity: 1; transform: scale(1); }
+        }
+        @keyframes blinkCaret {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0; }
+        }
+        .caret-blink::after {
+          content: '|';
+          animation: blinkCaret 0.7s step-end infinite;
+          color: #34d399;
+          font-weight: 300;
+          margin-left: 1px;
         }
 
         .animate-hero-gradient {
@@ -362,78 +699,8 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* Product mockup content */}
-            <div className="p-8 md:p-12">
-              <div className="grid md:grid-cols-2 gap-8">
-                {/* Left: Transcription */}
-                <div>
-                  <div className="flex items-center gap-2.5 mb-5">
-                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-                    <span className="font-code text-sm text-emerald-400 font-semibold tracking-wide">LIVE TRANSCRIPTION</span>
-                  </div>
-                  <div className="space-y-4">
-                    <div className="rounded-xl border border-white/[0.08] p-5" style={{ background: 'rgba(255,255,255,0.02)' }}>
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="font-code text-sm text-emerald-400 font-semibold">Q1</span>
-                        <span className="text-sm text-gray-500">System Design</span>
-                      </div>
-                      <p className="text-base text-gray-200 leading-relaxed">
-                        Design a distributed cache system that supports TTL expiration and handles cache invalidation across multiple regions.
-                      </p>
-                    </div>
-                    <div className="rounded-xl border border-white/[0.08] p-5" style={{ background: 'rgba(255,255,255,0.02)' }}>
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="font-code text-sm text-cyan-400 font-semibold">Q2</span>
-                        <span className="text-sm text-gray-500">Follow-up</span>
-                      </div>
-                      <p className="text-base text-gray-200 leading-relaxed">
-                        How would you handle consistency between the cache and the database?
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Right: AI Response */}
-                <div>
-                  <div className="flex items-center gap-2.5 mb-5">
-                    <div className="w-2.5 h-2.5 rounded-full bg-cyan-400" />
-                    <span className="font-code text-sm text-cyan-400 font-semibold tracking-wide">AI RESPONSE</span>
-                  </div>
-                  <div className="space-y-4">
-                    <div className="rounded-xl border border-white/[0.08] p-5" style={{ background: 'rgba(255,255,255,0.02)' }}>
-                      <div className="font-code text-sm text-gray-500 mb-3 font-semibold tracking-wider">ARCHITECTURE</div>
-                      <div className="space-y-2.5">
-                        {[
-                          'Write-through cache with async invalidation',
-                          'Consistent hashing for partition assignment',
-                          'Pub/Sub for cross-region invalidation events',
-                          'Lazy TTL eviction with background cleanup',
-                        ].map((p) => (
-                          <p key={p} className="flex items-start gap-3 text-base text-gray-300">
-                            <span className="text-emerald-400 mt-0.5 text-lg leading-none">&#8250;</span> {p}
-                          </p>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="rounded-xl border border-white/[0.08] p-5" style={{ background: 'rgba(255,255,255,0.02)' }}>
-                      <div className="font-code text-sm text-gray-500 mb-4 font-semibold tracking-wider">SCALE ESTIMATES</div>
-                      <div className="grid grid-cols-3 gap-4 text-center">
-                        {[
-                          { val: '100K', unit: 'QPS' },
-                          { val: '<5ms', unit: 'P99 Latency' },
-                          { val: '99.99%', unit: 'Uptime SLA' },
-                        ].map((s) => (
-                          <div key={s.unit}>
-                            <div className="text-2xl font-bold text-white">{s.val}</div>
-                            <div className="font-code text-sm text-gray-500 mt-1">{s.unit}</div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            {/* Animated product demo */}
+            <LumoraDemo />
           </div>
         </div>
       </section>
@@ -596,6 +863,30 @@ export default function LandingPage() {
               </div>
             </Link>
           </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════
+          SECTION 4B — PREPARATION AT SCALE
+         ═══════════════════════════════════════════════════ */}
+      <section ref={prepRef.ref} className="relative px-6 lg:px-8 py-24 md:py-32" style={{ zIndex: 2 }}>
+        {/* Faint emerald radial gradient */}
+        <div className="absolute inset-0 pointer-events-none" style={{
+          background: 'radial-gradient(ellipse 60% 50% at 50% 40%, rgba(52,211,153,0.06) 0%, transparent 70%)',
+        }} />
+
+        <div className="relative max-w-6xl mx-auto">
+          <div className={`text-center mb-16 transition-all duration-700 ${prepRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+            <span className="font-code text-sm text-emerald-400 tracking-wider font-semibold">PREPARATION AT SCALE</span>
+            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-white mt-4">
+              Everything you need to prepare.
+            </h2>
+            <p className="mt-5 text-base md:text-lg text-gray-300 max-w-2xl mx-auto">
+              Comprehensive study material and practice problems covering every angle of the technical interview.
+            </p>
+          </div>
+
+          <PrepShowcase inView={prepRef.inView} />
         </div>
       </section>
 
