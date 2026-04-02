@@ -1367,81 +1367,46 @@ export default function LandingPage() {
               },
             ];
 
-            let globalIndex = 0;
-
             return (
-              <div className="space-y-16">
-                {groups.map((group, gi) => {
-                  const startIndex = globalIndex;
-                  globalIndex += group.features.length;
-
-                  return (
-                    <div
-                      key={group.groupTitle}
-                      className={`transition-all duration-700 ${diffRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}
-                      style={{ transitionDelay: `${gi * 150 + 100}ms` }}
-                    >
-                      {/* Group header bar */}
-                      <div className="mb-5">
-                        <div className="h-1 rounded-full mb-4" style={{ background: `linear-gradient(90deg, ${group.accent}, ${group.accent}44)` }} />
-                        <h3 className="text-xl font-bold text-white font-display flex items-center gap-3">
-                          <span className="w-2.5 h-2.5 rounded-full" style={{ background: group.accent }} />
-                          {group.groupTitle}
-                        </h3>
+              <div className="grid md:grid-cols-2 gap-6">
+                {groups.map((group, gi) => (
+                  <div
+                    key={group.groupTitle}
+                    className={`card-base rounded-2xl overflow-hidden transition-all duration-700 ${diffRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}
+                    style={{ transitionDelay: `${gi * 120 + 100}ms` }}
+                  >
+                    {/* Group header */}
+                    <div className="px-6 py-4 border-b border-white/[0.06] flex items-center justify-between" style={{ background: `${group.accent}08` }}>
+                      <div className="flex items-center gap-3">
+                        <span className="w-2.5 h-2.5 rounded-full" style={{ background: group.accent }} />
+                        <h3 className="text-base font-bold text-white font-display">{group.groupTitle}</h3>
                       </div>
+                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ color: group.accent, background: `${group.accent}15` }}>
+                        {group.features.length} features
+                      </span>
+                    </div>
 
-                      {/* Feature rows */}
-                      <div className="space-y-4">
-                        {group.features.map((f, fi) => (
+                    {/* Compact feature grid — icon + title only, no descriptions */}
+                    <div className="p-4">
+                      <div className="grid grid-cols-2 gap-2">
+                        {group.features.map((f) => (
                           <div
                             key={f.title}
-                            className={`card-base rounded-xl transition-all duration-500 group cursor-default ${diffRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}
-                            style={{
-                              transitionDelay: `${(startIndex + fi) * 50 + 200}ms`,
-                              borderLeft: `4px solid ${group.accent}33`,
-                            }}
-                            onMouseEnter={(e) => {
-                              const el = e.currentTarget;
-                              el.style.borderLeftColor = group.accent;
-                              el.style.boxShadow = `0 0 24px ${group.accent}15, 0 4px 16px rgba(0,0,0,0.3)`;
-                              el.style.transform = 'scale(1.01)';
-                            }}
-                            onMouseLeave={(e) => {
-                              const el = e.currentTarget;
-                              el.style.borderLeftColor = `${group.accent}33`;
-                              el.style.boxShadow = 'none';
-                              el.style.transform = 'scale(1)';
-                            }}
+                            className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/[0.03] transition-colors"
                           >
-                            <div className="flex items-center gap-4 md:gap-5 px-5 py-4 md:px-6 md:py-5">
-                              {/* Icon circle */}
-                              <div
-                                className="w-10 h-10 md:w-11 md:h-11 rounded-full flex items-center justify-center flex-shrink-0 border border-white/[0.06]"
-                                style={{ background: `${group.accent}15`, color: group.accent }}
-                              >
-                                {f.icon}
-                              </div>
-
-                              {/* Text */}
-                              <div className="flex-1 min-w-0">
-                                <h4 className="text-sm md:text-base font-bold text-white font-display leading-snug">{f.title}</h4>
-                                <p className="text-xs md:text-sm text-gray-400 leading-relaxed mt-0.5">{f.desc}</p>
-                              </div>
-
-                              {/* "Only Camora" badge */}
-                              <div className="hidden sm:flex items-center gap-1.5 flex-shrink-0 px-2.5 py-1 rounded-full border border-white/[0.06] bg-white/[0.03]">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={group.accent} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
-                                  <polyline points="20 6 9 17 4 12" />
-                                </svg>
-                                <span className="text-[10px] md:text-xs font-semibold tracking-wide text-gray-400 whitespace-nowrap">Only Camora</span>
-                              </div>
+                            <div
+                              className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                              style={{ background: `${group.accent}12`, color: group.accent }}
+                            >
+                              {f.icon}
                             </div>
+                            <span className="text-sm font-medium text-gray-300 leading-tight">{f.title}</span>
                           </div>
                         ))}
                       </div>
                     </div>
-                  );
-                })}
+                  </div>
+                ))}
               </div>
             );
           })()}
