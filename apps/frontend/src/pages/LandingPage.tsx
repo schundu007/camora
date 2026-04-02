@@ -205,7 +205,7 @@ function LumoraDemo() {
   }, [showScale]);
 
   return (
-    <div className="p-8 md:p-12" style={{ willChange: 'transform' }}>
+    <div className="p-10 md:p-14" style={{ willChange: 'transform' }}>
       <div className="grid md:grid-cols-2 gap-8">
         {/* Left: Live Transcription */}
         <div>
@@ -627,7 +627,7 @@ export default function LandingPage() {
           background: 'radial-gradient(ellipse 60% 50% at 50% 30%, rgba(52,211,153,0.08) 0%, transparent 70%)',
         }} />
 
-        <div className="relative max-w-5xl mx-auto text-center">
+        <div className="relative max-w-4xl mx-auto text-center">
           {/* APPA Badge */}
           <div className={`transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
             <div className="inline-flex items-center gap-3 px-5 py-2.5 rounded-full border border-emerald-400/20 bg-emerald-400/[0.06] mb-10">
@@ -656,7 +656,7 @@ export default function LandingPage() {
           </h1>
 
           {/* Subtext */}
-          <p className={`mt-8 text-lg md:text-xl text-gray-300 leading-relaxed max-w-2xl mx-auto transition-all duration-700 delay-200 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+          <p className={`mt-8 text-lg md:text-xl text-gray-300 leading-relaxed max-w-3xl mx-auto transition-all duration-700 delay-200 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             Real-time AI that listens to your interview, transcribes questions, and generates
             expert-level answers for system design, coding, and behavioral rounds.
           </p>
@@ -672,7 +672,7 @@ export default function LandingPage() {
           </div>
 
           {/* Trust line */}
-          <p className={`mt-10 text-sm text-gray-500 transition-all duration-700 delay-[400ms] ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+          <p className={`mt-12 text-sm text-gray-500 transition-all duration-700 delay-[400ms] ${mounted ? 'opacity-100' : 'opacity-0'}`}>
             Trusted by engineers interviewing at Google, Amazon, Meta, Apple, and Microsoft
           </p>
         </div>
@@ -682,8 +682,8 @@ export default function LandingPage() {
           SECTION 2A — LUMORA LIVE DEMO
          ═══════════════════════════════════════════════════ */}
       <section ref={demoRef.ref} className="px-6 lg:px-8 pb-16" style={{ zIndex: 2 }}>
-        <div className="max-w-6xl mx-auto">
-          <div className={`text-center mb-10 transition-all duration-700 ${demoRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+        <div className="max-w-7xl mx-auto">
+          <div className={`text-center mb-16 transition-all duration-700 ${demoRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             <span className="font-code text-sm text-emerald-400 tracking-wider font-semibold">SEE IT IN ACTION</span>
             <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-white mt-4">
               Lumora during a live interview
@@ -724,8 +724,8 @@ export default function LandingPage() {
           SECTION 2B — CAPRA PREPARATION DEMO
          ═══════════════════════════════════════════════════ */}
       <section className="px-6 lg:px-8 pb-28" style={{ zIndex: 2 }}>
-        <div className="max-w-6xl mx-auto">
-          <div className={`text-center mb-10 transition-all duration-700 ${demoRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '300ms' }}>
+        <div className="max-w-7xl mx-auto">
+          <div className={`text-center mb-16 transition-all duration-700 ${demoRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '300ms' }}>
             <span className="font-code text-sm text-indigo-400 tracking-wider font-semibold">PREPARE, PRACTICE, AND DESIGN</span>
             <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-white mt-4">
               415+ topics. Auto-generated diagrams.
@@ -735,7 +735,7 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-3 gap-8">
             {/* Capra Dashboard demo */}
             <div className={`rounded-2xl border border-indigo-500/20 overflow-hidden transition-all duration-1000 ${demoRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}
                  style={{
@@ -820,13 +820,13 @@ export default function LandingPage() {
       {/* ═══════════════════════════════════════════════════
           SECTION 3 — APPA JOURNEY
          ═══════════════════════════════════════════════════ */}
-      <section id="appa" ref={journeyRef.ref} className="relative px-6 lg:px-8 py-24 md:py-32" style={{ zIndex: 2 }}>
+      <section id="appa" ref={journeyRef.ref} className="relative px-6 lg:px-8 py-28 md:py-36" style={{ zIndex: 2 }}>
         {/* Faint indigo radial gradient */}
         <div className="absolute inset-0 pointer-events-none" style={{
           background: 'radial-gradient(ellipse 60% 50% at 50% 40%, rgba(129,140,248,0.07) 0%, transparent 70%)',
         }} />
 
-        <div className="relative max-w-6xl mx-auto">
+        <div className="relative max-w-7xl mx-auto">
           <div className={`text-center mb-16 transition-all duration-700 ${journeyRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             <span className="font-code text-sm text-indigo-400 tracking-wider font-semibold">THE APPA FRAMEWORK</span>
             <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mt-4">
@@ -847,7 +847,7 @@ export default function LandingPage() {
           </div>
 
           {/* APPA cards */}
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {APPA.map((step, i) => {
               const card = (
                 <div
@@ -888,13 +888,13 @@ export default function LandingPage() {
       {/* ═══════════════════════════════════════════════════
           SECTION 4 — TWO PRODUCTS (Lumora + Capra)
          ═══════════════════════════════════════════════════ */}
-      <section ref={productsRef.ref} className="relative px-6 lg:px-8 py-24 md:py-32" style={{ zIndex: 2 }}>
+      <section ref={productsRef.ref} className="relative px-6 lg:px-8 py-28 md:py-36" style={{ zIndex: 2 }}>
         {/* Faint cyan radial gradient */}
         <div className="absolute inset-0 pointer-events-none" style={{
           background: 'radial-gradient(ellipse 60% 50% at 50% 40%, rgba(56,189,248,0.06) 0%, transparent 70%)',
         }} />
 
-        <div className="relative max-w-6xl mx-auto">
+        <div className="relative max-w-7xl mx-auto">
           <div className={`text-center mb-16 transition-all duration-700 ${productsRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             <span className="font-code text-sm text-cyan-400 tracking-wider font-semibold">TWO PRODUCTS, ONE PLATFORM</span>
             <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-white mt-4">
@@ -902,7 +902,7 @@ export default function LandingPage() {
             </h2>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid md:grid-cols-2 gap-8">
             {/* Lumora */}
             <Link to="/lumora"
                   className={`group relative rounded-2xl border border-emerald-500/20 p-8 md:p-10 transition-all duration-700 hover:border-emerald-500/40 hover:scale-[1.01] ${productsRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
@@ -981,13 +981,13 @@ export default function LandingPage() {
       {/* ═══════════════════════════════════════════════════
           SECTION 4B — PREPARATION AT SCALE
          ═══════════════════════════════════════════════════ */}
-      <section ref={prepRef.ref} className="relative px-6 lg:px-8 py-24 md:py-32" style={{ zIndex: 2 }}>
+      <section ref={prepRef.ref} className="relative px-6 lg:px-8 py-28 md:py-36" style={{ zIndex: 2 }}>
         {/* Faint emerald radial gradient */}
         <div className="absolute inset-0 pointer-events-none" style={{
           background: 'radial-gradient(ellipse 60% 50% at 50% 40%, rgba(52,211,153,0.06) 0%, transparent 70%)',
         }} />
 
-        <div className="relative max-w-6xl mx-auto">
+        <div className="relative max-w-7xl mx-auto">
           <div className={`text-center mb-16 transition-all duration-700 ${prepRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             <span className="font-code text-sm text-emerald-400 tracking-wider font-semibold">PREPARATION AT SCALE</span>
             <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-white mt-4">
@@ -1005,8 +1005,8 @@ export default function LandingPage() {
       {/* ═══════════════════════════════════════════════════
           SECTION 5 — FEATURES (Three Interview Modes)
          ═══════════════════════════════════════════════════ */}
-      <section ref={featuresRef.ref} className="relative px-6 lg:px-8 py-24 md:py-32" style={{ zIndex: 2 }}>
-        <div className="max-w-6xl mx-auto">
+      <section ref={featuresRef.ref} className="relative px-6 lg:px-8 py-28 md:py-36" style={{ zIndex: 2 }}>
+        <div className="max-w-7xl mx-auto">
           <div className={`text-center mb-16 transition-all duration-700 ${featuresRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             <span className="font-code text-sm text-cyan-400 tracking-wider font-semibold">THREE INTERVIEW MODES</span>
             <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-white mt-4">
@@ -1014,7 +1014,7 @@ export default function LandingPage() {
             </h2>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-3 gap-8">
             {[
               {
                 mode: 'General',
@@ -1095,7 +1095,7 @@ export default function LandingPage() {
           `,
         }} />
 
-        <div className="relative max-w-6xl mx-auto">
+        <div className="relative max-w-7xl mx-auto">
           {/* ── Section Header ── */}
           <div className={`text-center mb-20 transition-all duration-700 ${diffRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             <span className="inline-block font-code text-sm text-emerald-400 tracking-[0.2em] font-semibold uppercase px-4 py-1.5 rounded-full border border-emerald-400/20 bg-emerald-400/5">
@@ -1341,7 +1341,7 @@ export default function LandingPage() {
             let globalIndex = 0;
 
             return (
-              <div className="space-y-14">
+              <div className="space-y-16">
                 {groups.map((group, gi) => {
                   const startIndex = globalIndex;
                   globalIndex += group.features.length;
@@ -1362,7 +1362,7 @@ export default function LandingPage() {
                       </div>
 
                       {/* Feature rows */}
-                      <div className="space-y-3">
+                      <div className="space-y-4">
                         {group.features.map((f, fi) => (
                           <div
                             key={f.title}
@@ -1435,11 +1435,11 @@ export default function LandingPage() {
       {/* ═══════════════════════════════════════════════════
           SECTION 5C — CAMORA VS COMPETITORS
          ═══════════════════════════════════════════════════ */}
-      <section ref={compRef.ref} className="relative px-6 lg:px-8 py-24 md:py-32" style={{ zIndex: 2 }}>
+      <section ref={compRef.ref} className="relative px-6 lg:px-8 py-28 md:py-36" style={{ zIndex: 2 }}>
         <div className="absolute inset-0 pointer-events-none" style={{
           background: 'radial-gradient(ellipse 60% 50% at 50% 40%, rgba(6,182,212,0.05) 0%, transparent 70%)',
         }} />
-        <div className="relative max-w-6xl mx-auto">
+        <div className="relative max-w-7xl mx-auto">
           <div className={`text-center mb-16 transition-all duration-700 ${compRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             <span className="font-code text-sm text-cyan-400 tracking-wider font-semibold">HEAD-TO-HEAD</span>
             <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-white mt-4">
@@ -1447,7 +1447,7 @@ export default function LandingPage() {
             </h2>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-5">
+          <div className="grid md:grid-cols-2 gap-6">
             {[
               {
                 feature: 'Full APPA Pipeline (Apply \u2192 Prepare \u2192 Practice \u2192 Attend)',
@@ -1525,8 +1525,8 @@ export default function LandingPage() {
       {/* ═══════════════════════════════════════════════════
           SECTION 6 — HOW IT WORKS
          ═══════════════════════════════════════════════════ */}
-      <section ref={howRef.ref} className="relative px-6 lg:px-8 py-24 md:py-32" style={{ zIndex: 2 }}>
-        <div className="max-w-6xl mx-auto">
+      <section ref={howRef.ref} className="relative px-6 lg:px-8 py-28 md:py-36" style={{ zIndex: 2 }}>
+        <div className="max-w-7xl mx-auto">
           <div className={`text-center mb-16 transition-all duration-700 ${howRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             <span className="font-code text-sm text-gray-400 tracking-wider font-semibold">HOW IT WORKS</span>
             <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-white mt-4">
@@ -1534,7 +1534,7 @@ export default function LandingPage() {
             </h2>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-3 gap-8">
             {[
               { num: '01', title: 'Speak or Type', desc: 'Start your mic or paste the interview question. AI-powered transcription captures everything in real time.', color: '#34d399' },
               { num: '02', title: 'AI Generates', desc: 'Claude analyzes instantly, streaming structured answers with architecture diagrams, code solutions, and key talking points.', color: '#38bdf8' },
@@ -1589,8 +1589,8 @@ export default function LandingPage() {
       {/* ═══════════════════════════════════════════════════
           SECTION 8 — FOOTER
          ═══════════════════════════════════════════════════ */}
-      <footer className="relative border-t border-white/[0.06] px-6 lg:px-8 py-12" style={{ zIndex: 2 }}>
-        <div className="max-w-6xl mx-auto">
+      <footer className="relative border-t border-white/[0.06] px-6 lg:px-8 py-16" style={{ zIndex: 2 }}>
+        <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
             <div className="flex items-center gap-3">
               <CamoraLogo size={30} />

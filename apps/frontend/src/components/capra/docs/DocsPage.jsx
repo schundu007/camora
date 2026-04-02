@@ -430,7 +430,7 @@ export default function DocsPage({ onBack }) {
   const tableOfContents = getTableOfContents();
 
   return (
-    <div className="min-h-screen landing-root text-gray-900" style={{ background: 'linear-gradient(180deg, #fdf2f8 0%, #ede9fe 50%, #e0e7ff 100%)' }}>
+    <div className="min-h-screen landing-root text-gray-900" style={{ background: '#f7f8f9' }}>
       {/* Electron drag region */}
       {isElectron && (
         <div
@@ -439,20 +439,11 @@ export default function DocsPage({ onBack }) {
         />
       )}
 
-      {/* Subtle dot pattern background */}
-      <div
-        className="fixed inset-0 pointer-events-none opacity-20"
-        style={{
-          backgroundImage: 'radial-gradient(circle, #d1d5db 0.5px, transparent 0.5px)',
-          backgroundSize: '24px 24px'
-        }}
-      />
-
       <div className="relative min-h-screen flex">
           {/* Center Content */}
           <div className={`flex-1 min-w-0 mx-auto max-w-full ${isMobile ? 'px-3' : 'px-10'}`}>
             {/* Top Bar */}
-            <div className="sticky top-0 z-20 px-3 sm:px-4 py-3 sm:py-4 flex items-center justify-between gap-2 safe-top bg-white/90 backdrop-blur-md border-b border-gray-100">
+            <div className="sticky top-0 z-20 px-3 sm:px-4 py-3 sm:py-4 flex items-center justify-between gap-2 safe-top bg-white border-b border-[#e3e8ee]">
               {/* Mobile: back button when topic selected, hamburger otherwise */}
               {isMobile && (
                 selectedTopic ? (
@@ -554,19 +545,19 @@ export default function DocsPage({ onBack }) {
 
                       {/* Progress Stats Row */}
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-                        <div className="rounded-xl border border-gray-200 bg-white p-4">
+                        <div className="rounded-xl border border-[#e3e8ee] bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:border-[#d0d5dd] transition-colors">
                           <div className="text-2xl font-bold text-emerald-600 landing-display">{overviewTotalCompleted}</div>
                           <div className="text-xs text-gray-500 landing-body">Topics Completed</div>
                         </div>
-                        <div className="rounded-xl border border-gray-200 bg-white p-4">
+                        <div className="rounded-xl border border-[#e3e8ee] bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:border-[#d0d5dd] transition-colors">
                           <div className="text-2xl font-bold text-gray-900 landing-display">{overviewTotalTopics}</div>
                           <div className="text-xs text-gray-500 landing-body">Total Topics</div>
                         </div>
-                        <div className="rounded-xl border border-gray-200 bg-white p-4">
+                        <div className="rounded-xl border border-[#e3e8ee] bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:border-[#d0d5dd] transition-colors">
                           <div className="text-2xl font-bold text-blue-600 landing-display">{overviewCategories.length}</div>
                           <div className="text-xs text-gray-500 landing-body">Categories</div>
                         </div>
-                        <div className="rounded-xl border border-gray-200 bg-white p-4">
+                        <div className="rounded-xl border border-[#e3e8ee] bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:border-[#d0d5dd] transition-colors">
                           <div className="text-2xl font-bold text-purple-600 landing-display">{overviewTotalTopics > 0 ? Math.round((overviewTotalCompleted / overviewTotalTopics) * 100) : 0}%</div>
                           <div className="text-xs text-gray-500 landing-body">Complete</div>
                         </div>
@@ -577,9 +568,9 @@ export default function DocsPage({ onBack }) {
                         <h2 className="landing-display font-bold text-lg tracking-tight text-gray-900 mb-3">Categories</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                           {overviewCategories.map(cat => (
-                            <a key={cat.id} href={`/capra/prepare/${cat.href}`} className="group rounded-xl border border-gray-200 bg-white p-5 hover:border-emerald-300 hover:shadow-md transition-all">
+                            <a key={cat.id} href={`/capra/prepare/${cat.href}`} className="group rounded-xl border border-[#e3e8ee] bg-white p-5 hover:border-[#d0d5dd] shadow-[0_1px_3px_rgba(0,0,0,0.04)] transition-all" style={{ borderLeft: `4px solid ${cat.color}` }}>
                               <div className="flex items-center gap-3 mb-3">
-                                <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: `${cat.color}15` }}>
+                                <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-white">
                                   <Icon name={cat.icon} size={20} style={{ color: cat.color }} />
                                 </div>
                                 <div>
@@ -603,7 +594,7 @@ export default function DocsPage({ onBack }) {
                       {/* Recommended Learning Path */}
                       <div className="mb-6">
                         <h2 className="landing-display font-bold text-lg tracking-tight text-gray-900 mb-3">Recommended Path</h2>
-                        <div className="rounded-xl border border-emerald-200 bg-gradient-to-br from-emerald-50/80 to-cyan-50/40 p-5">
+                        <div className="rounded-xl border border-[#e3e8ee] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
                           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                             {[
                               { step: '01', title: 'DSA Fundamentals', desc: 'Arrays, strings, trees, graphs', href: '/capra/prepare/coding', accent: 'emerald' },
@@ -633,7 +624,7 @@ export default function DocsPage({ onBack }) {
                         return (
                           <div className="mb-6">
                             <h2 className="landing-display font-bold text-lg tracking-tight text-gray-900 mb-3">Continue Where You Left Off</h2>
-                            <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+                            <div className="rounded-xl border border-[#e3e8ee] bg-white overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
                               {recentItems.map((topic) => (
                                 <a
                                   key={topic.id}
@@ -690,7 +681,7 @@ export default function DocsPage({ onBack }) {
                   </div>
                   )}
                   {/* Gradient Divider */}
-                  {activePage !== 'overview' && <div className="h-px bg-gradient-to-r from-transparent via-emerald-300 to-transparent mb-6" />}
+                  {activePage !== 'overview' && <div className="h-px bg-[#e3e8ee] mb-6" />}
 
                   {/* Search and Filters */}
                   {activePage !== 'overview' && (
@@ -702,14 +693,14 @@ export default function DocsPage({ onBack }) {
                         placeholder="Search topics..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-9 pr-4 py-2 rounded-lg text-sm text-gray-900 placeholder-gray-400 border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-300 transition-all landing-body"
+                        className="w-full pl-9 pr-4 py-2 rounded-lg text-sm text-gray-900 placeholder-gray-400 border border-[#e3e8ee] bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all landing-body"
                       />
                     </div>
                     <div className="flex items-center gap-3">
                       <select
                         value={sortOrder}
                         onChange={(e) => setSortOrder(e.target.value)}
-                        className="px-4 py-2 rounded-lg text-sm text-gray-500 border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-300 cursor-pointer landing-body"
+                        className="px-4 py-2 rounded-lg text-sm text-gray-500 border border-[#e3e8ee] bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 cursor-pointer landing-body"
                       >
                         <option value="a-z">A - Z</option>
                         <option value="z-a">Z - A</option>
@@ -727,7 +718,7 @@ export default function DocsPage({ onBack }) {
               {activePage === 'coding' && (
                 <>
                   {/* All topics in a flat 2-column grid */}
-                  <div className="rounded-lg overflow-hidden mb-6 border border-gray-200">
+                  <div className="rounded-lg overflow-hidden mb-6 border border-[#e3e8ee] shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
                     <div className="grid grid-cols-1 md:grid-cols-2 bg-white">
                     {filteredTopics.map((topic, idx) => {
                       const catId = codingCategoryMap[topic.id];
@@ -736,14 +727,14 @@ export default function DocsPage({ onBack }) {
                       return (
                         <div key={topic.id}>
                           {isFirstInCategory && category && (
-                            <div className={`col-span-full px-4 py-2 flex items-center gap-2 landing-mono text-[10px] text-gray-400 uppercase tracking-widest bg-gray-50/80 ${idx > 0 ? 'border-t border-gray-200' : ''} border-b border-gray-100`}>
+                            <div className={`col-span-full px-4 py-2 flex items-center gap-2 landing-mono text-[10px] text-gray-400 uppercase tracking-widest bg-gray-50/80 ${idx > 0 ? 'border-t border-[#e3e8ee]' : ''} border-b border-gray-100`}>
                               <Icon name={category.icon} size={11} style={{ color: category.color }} />
                               {category.name} · {filteredTopics.filter(t => codingCategoryMap[t.id] === catId).length}
                             </div>
                           )}
                           <div
                             onClick={() => setSelectedTopic(topic.id)}
-                            className="px-4 py-2.5 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-all group border-b border-r border-gray-100"
+                            className="px-4 py-2.5 flex items-center justify-between cursor-pointer hover:border-[#d0d5dd] transition-all group border-b border-r border-gray-100"
                           >
                             <div className="flex items-center gap-2.5">
                               <div className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0" style={{ background: completedTopics[topic.id] ? '#d1fae5' : `${topic.color}12` }}>
@@ -752,7 +743,7 @@ export default function DocsPage({ onBack }) {
                               <span className={`text-sm landing-body font-medium group-hover:text-emerald-600 transition-colors ${completedTopics[topic.id] ? 'text-gray-400 line-through' : 'text-gray-900'}`}>{topic.title}</span>
                             </div>
                             <div className="flex items-center gap-2">
-                              <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-gray-200 text-gray-400">
+                              <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[#e3e8ee] text-gray-400">
                                 {topic.commonProblems?.length || topic.keyQuestions?.length || 0}Q
                               </span>
                               <Icon name="chevronRight" size={12} className="text-gray-300 group-hover:text-emerald-500 group-hover:translate-x-0.5 transition-all" />
@@ -765,7 +756,7 @@ export default function DocsPage({ onBack }) {
                   </div>
 
                   {/* Gradient Divider */}
-                  <div className="h-px bg-gradient-to-r from-transparent via-emerald-300 to-transparent mb-6" />
+                  <div className="h-px bg-[#e3e8ee] mb-6" />
 
                   {/* Quick Reference */}
                   <div className="mb-6">
@@ -775,7 +766,7 @@ export default function DocsPage({ onBack }) {
                     </div>
                     <div className="grid md:grid-cols-2 gap-4">
                       {/* Time Complexity Card */}
-                      <div className="rounded-lg overflow-hidden border border-gray-200 bg-white">
+                      <div className="rounded-lg overflow-hidden border border-[#e3e8ee] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:border-[#d0d5dd] transition-colors">
                         <div className="px-4 py-3 border-b border-gray-100 bg-emerald-50/50">
                           <h3 className="text-sm text-gray-900 font-semibold landing-display flex items-center gap-2">
                             <div className="w-6 h-6 rounded flex items-center justify-center bg-emerald-100">
@@ -788,12 +779,12 @@ export default function DocsPage({ onBack }) {
                           <table className="w-full text-sm">
                             <tbody>
                               {[
-                                { complexity: 'O(1)', desc: 'Constant', rating: 'Best', cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
-                                { complexity: 'O(log n)', desc: 'Logarithmic', rating: 'Great', cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
-                                { complexity: 'O(n)', desc: 'Linear', rating: 'Good', cls: 'bg-amber-50 text-amber-700 border-amber-200' },
-                                { complexity: 'O(n log n)', desc: 'Linearithmic', rating: 'Fair', cls: 'bg-amber-50 text-amber-700 border-amber-200' },
+                                { complexity: 'O(1)', desc: 'Constant', rating: 'Best', cls: 'text-emerald-600 bg-emerald-50 border border-emerald-200' },
+                                { complexity: 'O(log n)', desc: 'Logarithmic', rating: 'Great', cls: 'text-emerald-600 bg-emerald-50 border border-emerald-200' },
+                                { complexity: 'O(n)', desc: 'Linear', rating: 'Good', cls: 'text-amber-600 bg-amber-50 border border-amber-200' },
+                                { complexity: 'O(n log n)', desc: 'Linearithmic', rating: 'Fair', cls: 'text-amber-600 bg-amber-50 border border-amber-200' },
                                 { complexity: 'O(n²)', desc: 'Quadratic', rating: 'Slow', cls: 'bg-orange-50 text-orange-700 border-orange-200' },
-                                { complexity: 'O(2ⁿ)', desc: 'Exponential', rating: 'Avoid', cls: 'bg-red-50 text-red-700 border-red-200' },
+                                { complexity: 'O(2ⁿ)', desc: 'Exponential', rating: 'Avoid', cls: 'text-red-600 bg-red-50 border border-red-200' },
                               ].map((item, i) => (
                                 <tr key={i} className="border-b border-gray-100 last:border-0">
                                   <td className="py-2 landing-mono text-xs text-emerald-700">{item.complexity}</td>
@@ -810,7 +801,7 @@ export default function DocsPage({ onBack }) {
                         </div>
                       </div>
                       {/* Data Structure Selection Card */}
-                      <div className="rounded-lg overflow-hidden border border-gray-200 bg-white">
+                      <div className="rounded-lg overflow-hidden border border-[#e3e8ee] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:border-[#d0d5dd] transition-colors">
                         <div className="px-4 py-3 border-b border-gray-100 bg-emerald-50/50">
                           <h3 className="text-sm text-gray-900 font-semibold landing-display flex items-center gap-2">
                             <div className="w-6 h-6 rounded flex items-center justify-center bg-emerald-100">
@@ -862,7 +853,7 @@ export default function DocsPage({ onBack }) {
                       const categoryTopics = filteredTopics.filter(t => systemDesignCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
                       return (
-                        <div key={category.id} className="rounded-lg overflow-hidden border border-gray-200">
+                        <div key={category.id} className="rounded-lg overflow-hidden border border-[#e3e8ee] shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
                           {/* Category Header */}
                           <div className="px-4 py-2.5 flex items-center gap-2.5 bg-gray-50/80 border-b border-gray-100">
                             <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: `${category.color}12` }}>
@@ -889,7 +880,7 @@ export default function DocsPage({ onBack }) {
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                  <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-gray-200 text-gray-400">
+                                  <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[#e3e8ee] text-gray-400">
                                     {topic.keyQuestions?.length || topic.questions || 0}Q
                                   </span>
                                   <Icon name="chevronRight" size={12} className="text-gray-300 group-hover:text-emerald-500 group-hover:translate-x-0.5 transition-all" />
@@ -904,7 +895,7 @@ export default function DocsPage({ onBack }) {
                   </div>
 
                   {/* Gradient Divider */}
-                  <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent mb-6" />
+                  <div className="h-px bg-[#e3e8ee] mb-6" />
 
                   {/* System Design Problems Section - Grouped by Category */}
                   <div className="mb-6">
@@ -917,12 +908,12 @@ export default function DocsPage({ onBack }) {
                       const categoryDesigns = systemDesigns.filter(d => systemDesignProblemCategoryMap[d.id] === category.id);
                       if (categoryDesigns.length === 0) return null;
                       const difficultyStyles = {
-                        'Easy': 'bg-emerald-50 text-emerald-700 border-emerald-200',
-                        'Medium': 'bg-amber-50 text-amber-700 border-amber-200',
-                        'Hard': 'bg-red-50 text-red-700 border-red-200',
+                        'Easy': 'text-emerald-600 bg-emerald-50 border border-emerald-200',
+                        'Medium': 'text-amber-600 bg-amber-50 border border-amber-200',
+                        'Hard': 'text-red-600 bg-red-50 border border-red-200',
                       };
                       return (
-                        <div key={category.id} className="rounded-lg overflow-hidden border border-gray-200">
+                        <div key={category.id} className="rounded-lg overflow-hidden border border-[#e3e8ee] shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
                           {/* Category Header */}
                           <div className="px-4 py-2.5 flex items-center gap-2.5 bg-gray-50/80 border-b border-gray-100">
                             <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: `${category.color}12` }}>
@@ -978,7 +969,7 @@ export default function DocsPage({ onBack }) {
                   </div>
 
                   {/* Gradient Divider */}
-                  <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent mb-6" />
+                  <div className="h-px bg-[#e3e8ee] mb-6" />
 
                   {/* Low-Level Design Problems Section */}
                   <div className="mb-6">
@@ -993,7 +984,7 @@ export default function DocsPage({ onBack }) {
                       if (categoryProblems.length === 0) return null;
                       // diffStyle is computed inline per-problem below
                       return (
-                        <div key={category.id} className="rounded-lg overflow-hidden border border-gray-200">
+                        <div key={category.id} className="rounded-lg overflow-hidden border border-[#e3e8ee] shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
                           <div className="px-4 py-2.5 flex items-center gap-2.5 bg-gray-50/80 border-b border-gray-100">
                             <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: `${category.color}12` }}>
                               <Icon name={category.icon} size={14} style={{ color: category.color }} />
@@ -1003,7 +994,7 @@ export default function DocsPage({ onBack }) {
                           </div>
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-white">
                             {categoryProblems.map((problem) => {
-                              const diffStyle = { Easy: 'bg-emerald-50 text-emerald-700 border-emerald-200', Medium: 'bg-amber-50 text-amber-700 border-amber-200', Hard: 'bg-red-50 text-red-700 border-red-200' }[problem.difficulty] || 'bg-amber-50 text-amber-700 border-amber-200';
+                              const diffStyle = { Easy: 'text-emerald-600 bg-emerald-50 border border-emerald-200', Medium: 'text-amber-600 bg-amber-50 border border-amber-200', Hard: 'text-red-600 bg-red-50 border border-red-200' }[problem.difficulty] || 'text-amber-600 bg-amber-50 border border-amber-200';
                               return (
                                 <div
                                   key={problem.id}
@@ -1037,7 +1028,7 @@ export default function DocsPage({ onBack }) {
                   </div>
 
                   {/* Gradient Divider */}
-                  <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent mb-6" />
+                  <div className="h-px bg-[#e3e8ee] mb-6" />
 
                   {/* Distributed System Patterns Section */}
                   <div className="mb-6">
@@ -1051,7 +1042,7 @@ export default function DocsPage({ onBack }) {
                       const categoryTopics = systemDesignPatterns.filter(t => systemDesignPatternCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
                       return (
-                        <div key={category.id} className="rounded-lg overflow-hidden border border-gray-200">
+                        <div key={category.id} className="rounded-lg overflow-hidden border border-[#e3e8ee] shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
                           <div className="px-4 py-2.5 flex items-center gap-2.5 bg-gray-50/80 border-b border-gray-100">
                             <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: `${category.color}12` }}>
                               <Icon name={category.icon} size={14} style={{ color: category.color }} />
@@ -1073,7 +1064,7 @@ export default function DocsPage({ onBack }) {
                                   <span className="text-gray-900 text-sm landing-body font-medium group-hover:text-emerald-600 transition-colors">{topic.title}</span>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                  <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-gray-200 text-gray-400">
+                                  <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[#e3e8ee] text-gray-400">
                                     {topic.keyQuestions?.length || 0}Q
                                   </span>
                                   <Icon name="chevronRight" size={12} className="text-gray-300 group-hover:text-emerald-500 group-hover:translate-x-0.5 transition-all" />
@@ -1088,7 +1079,7 @@ export default function DocsPage({ onBack }) {
                   </div>
 
                   {/* Gradient Divider */}
-                  <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent mb-6" />
+                  <div className="h-px bg-[#e3e8ee] mb-6" />
 
                   {/* Microservices Patterns Section */}
                   <div className="mb-6">
@@ -1102,7 +1093,7 @@ export default function DocsPage({ onBack }) {
                       const categoryTopics = microservicesPatterns.filter(t => microservicesCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
                       return (
-                        <div key={category.id} className="rounded-lg overflow-hidden border border-gray-200">
+                        <div key={category.id} className="rounded-lg overflow-hidden border border-[#e3e8ee] shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
                           <div className="px-4 py-2.5 flex items-center gap-2.5 bg-gray-50/80 border-b border-gray-100">
                             <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: `${category.color}12` }}>
                               <Icon name={category.icon} size={14} style={{ color: category.color }} />
@@ -1124,7 +1115,7 @@ export default function DocsPage({ onBack }) {
                                   <span className="text-gray-900 text-sm landing-body font-medium group-hover:text-emerald-600 transition-colors">{topic.title}</span>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                  <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-gray-200 text-gray-400">
+                                  <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[#e3e8ee] text-gray-400">
                                     {topic.keyQuestions?.length || 0}Q
                                   </span>
                                   <Icon name="chevronRight" size={12} className="text-gray-300 group-hover:text-emerald-500 group-hover:translate-x-0.5 transition-all" />
@@ -1139,7 +1130,7 @@ export default function DocsPage({ onBack }) {
                   </div>
 
                   {/* Gradient Divider */}
-                  <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent mb-6" />
+                  <div className="h-px bg-[#e3e8ee] mb-6" />
 
                   {/* System Design Trade-offs Section */}
                   <div className="mb-6">
@@ -1153,7 +1144,7 @@ export default function DocsPage({ onBack }) {
                       const categoryTopics = systemDesignTradeoffs.filter(t => tradeoffCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
                       return (
-                        <div key={category.id} className="rounded-lg overflow-hidden border border-gray-200">
+                        <div key={category.id} className="rounded-lg overflow-hidden border border-[#e3e8ee] shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
                           <div className="px-4 py-2.5 flex items-center gap-2.5 bg-gray-50/80 border-b border-gray-100">
                             <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: `${category.color}12` }}>
                               <Icon name={category.icon} size={14} style={{ color: category.color }} />
@@ -1175,7 +1166,7 @@ export default function DocsPage({ onBack }) {
                                   <span className="text-gray-900 text-sm landing-body font-medium group-hover:text-emerald-600 transition-colors">{topic.title}</span>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                  <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-gray-200 text-gray-400">
+                                  <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[#e3e8ee] text-gray-400">
                                     {topic.keyQuestions?.length || 0}Q
                                   </span>
                                   <Icon name="chevronRight" size={12} className="text-gray-300 group-hover:text-emerald-500 group-hover:translate-x-0.5 transition-all" />
@@ -1190,7 +1181,7 @@ export default function DocsPage({ onBack }) {
                   </div>
 
                   {/* Gradient Divider */}
-                  <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent mb-6" />
+                  <div className="h-px bg-[#e3e8ee] mb-6" />
 
                   {/* Scalable Systems Section */}
                   <div className="mb-6">
@@ -1204,7 +1195,7 @@ export default function DocsPage({ onBack }) {
                       const categoryTopics = scalableSystemsTopics.filter(t => scalableSystemsCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
                       return (
-                        <div key={category.id} className="rounded-lg overflow-hidden border border-gray-200">
+                        <div key={category.id} className="rounded-lg overflow-hidden border border-[#e3e8ee] shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
                           <div className="px-4 py-2.5 flex items-center gap-2.5 bg-gray-50/80 border-b border-gray-100">
                             <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: `${category.color}12` }}>
                               <Icon name={category.icon} size={14} style={{ color: category.color }} />
@@ -1226,7 +1217,7 @@ export default function DocsPage({ onBack }) {
                                   <span className="text-gray-900 text-sm landing-body font-medium group-hover:text-emerald-600 transition-colors">{topic.title}</span>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                  <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-gray-200 text-gray-400">
+                                  <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[#e3e8ee] text-gray-400">
                                     {topic.keyQuestions?.length || 0}Q
                                   </span>
                                   <Icon name="chevronRight" size={12} className="text-gray-300 group-hover:text-emerald-500 group-hover:translate-x-0.5 transition-all" />
@@ -1241,7 +1232,7 @@ export default function DocsPage({ onBack }) {
                   </div>
 
                   {/* Gradient Divider */}
-                  <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent mb-6" />
+                  <div className="h-px bg-[#e3e8ee] mb-6" />
 
                   {/* Concurrency Section */}
                   <div className="mb-6">
@@ -1250,7 +1241,7 @@ export default function DocsPage({ onBack }) {
                       <h2 className="landing-display font-bold text-xl mt-1 tracking-tight text-gray-900">Concurrency & Multithreading</h2>
                       <p className="text-sm text-gray-500 landing-body mt-1">Thread-safe programming, synchronization, and classic problems</p>
                     </div>
-                    <div className="rounded-lg overflow-hidden border border-gray-200">
+                    <div className="rounded-lg overflow-hidden border border-[#e3e8ee] shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-white">
                         {concurrencyTopics.map((topic) => (
                           <div
@@ -1265,7 +1256,7 @@ export default function DocsPage({ onBack }) {
                               <span className="text-gray-900 text-sm landing-body font-medium group-hover:text-emerald-600 transition-colors">{topic.title}</span>
                             </div>
                             <div className="flex items-center gap-2">
-                              <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-gray-200 text-gray-400">
+                              <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[#e3e8ee] text-gray-400">
                                 {topic.concepts?.length || topic.primitives?.length || topic.problems?.length || 0} items
                               </span>
                               <Icon name="chevronRight" size={12} className="text-gray-300 group-hover:text-emerald-500 group-hover:translate-x-0.5 transition-all" />
@@ -1277,10 +1268,10 @@ export default function DocsPage({ onBack }) {
                   </div>
 
                   {/* Gradient Divider */}
-                  <div className="h-px bg-gradient-to-r from-transparent via-emerald-300 to-transparent mb-6" />
+                  <div className="h-px bg-[#e3e8ee] mb-6" />
 
                   {/* Interview Framework */}
-                  <div className="rounded-lg border border-emerald-200 bg-gradient-to-br from-emerald-50/80 to-cyan-50/40 p-5">
+                  <div className="rounded-lg border border-[#e3e8ee] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
                     <div className="mb-4">
                       <span className="landing-mono text-xs text-emerald-600 tracking-widest uppercase">Framework</span>
                       <h3 className="landing-display font-bold text-lg mt-1 tracking-tight text-gray-900 flex items-center gap-2">
@@ -1323,7 +1314,7 @@ export default function DocsPage({ onBack }) {
                       const categoryTopics = filteredTopics.filter(t => lldCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
                       return (
-                        <div key={category.id} className="rounded-lg overflow-hidden border border-gray-200">
+                        <div key={category.id} className="rounded-lg overflow-hidden border border-[#e3e8ee] shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
                           <div className="px-4 py-2.5 flex items-center gap-2.5 bg-gray-50/80 border-b border-gray-100">
                             <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: `${category.color}12` }}>
                               <Icon name={category.icon} size={14} style={{ color: category.color }} />
@@ -1348,7 +1339,7 @@ export default function DocsPage({ onBack }) {
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                  <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-gray-200 text-gray-400">
+                                  <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[#e3e8ee] text-gray-400">
                                     {topic.keyQuestions?.length || topic.questions || 0}Q
                                   </span>
                                   <Icon name="chevronRight" size={12} className="text-gray-300 group-hover:text-emerald-500 group-hover:translate-x-0.5 transition-all" />
@@ -1363,7 +1354,7 @@ export default function DocsPage({ onBack }) {
                   </div>
 
                   {/* Gradient Divider */}
-                  <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent mb-6" />
+                  <div className="h-px bg-[#e3e8ee] mb-6" />
 
                   {/* LLD Practice Problems Section */}
                   <div className="mb-6">
@@ -1377,7 +1368,7 @@ export default function DocsPage({ onBack }) {
                       const categoryProblems = lldProblems.filter(p => lldProblemCategoryMap[p.id] === category.id);
                       if (categoryProblems.length === 0) return null;
                       return (
-                        <div key={category.id} className="rounded-lg overflow-hidden border border-gray-200">
+                        <div key={category.id} className="rounded-lg overflow-hidden border border-[#e3e8ee] shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
                           <div className="px-4 py-2.5 flex items-center gap-2.5 bg-gray-50/80 border-b border-gray-100">
                             <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: `${category.color}12` }}>
                               <Icon name={category.icon} size={14} style={{ color: category.color }} />
@@ -1387,7 +1378,7 @@ export default function DocsPage({ onBack }) {
                           </div>
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-white">
                             {categoryProblems.map((problem) => {
-                              const diffStyle = { Easy: 'bg-emerald-50 text-emerald-700 border-emerald-200', Medium: 'bg-amber-50 text-amber-700 border-amber-200', Hard: 'bg-red-50 text-red-700 border-red-200' }[problem.difficulty] || 'bg-amber-50 text-amber-700 border-amber-200';
+                              const diffStyle = { Easy: 'text-emerald-600 bg-emerald-50 border border-emerald-200', Medium: 'text-amber-600 bg-amber-50 border border-amber-200', Hard: 'text-red-600 bg-red-50 border border-red-200' }[problem.difficulty] || 'text-amber-600 bg-amber-50 border border-amber-200';
                               return (
                                 <div
                                   key={problem.id}
@@ -1432,7 +1423,7 @@ export default function DocsPage({ onBack }) {
                     const readinessPercent = totalTopics > 0 ? Math.round((completedCount / totalTopics) * 100) : 0;
                     const readinessLabel = readinessPercent === 0 ? 'Not Started' : readinessPercent < 25 ? 'Getting Started' : readinessPercent < 50 ? 'Building Momentum' : readinessPercent < 75 ? 'Strong Progress' : readinessPercent < 100 ? 'Almost Ready' : 'Fully Prepared';
                     return (
-                      <div className="rounded-lg overflow-hidden mb-6 border border-gray-200 bg-white">
+                      <div className="rounded-lg overflow-hidden mb-6 border border-[#e3e8ee] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
                         <div className="px-5 py-4">
                           <div className="flex items-center justify-between mb-4">
                             <div>
@@ -1476,7 +1467,7 @@ export default function DocsPage({ onBack }) {
                   })()}
 
                   {/* STAR Method — Interactive Timeline Design */}
-                  <div className="rounded-lg overflow-hidden mb-6 border border-emerald-200 bg-gradient-to-br from-emerald-50/80 to-cyan-50/40">
+                  <div className="rounded-lg overflow-hidden mb-6 border border-[#e3e8ee] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
                     <div className="px-5 py-4">
                       <div className="flex items-center gap-2 mb-1">
                         <Icon name="star" size={16} className="text-emerald-600" />
@@ -1516,7 +1507,7 @@ export default function DocsPage({ onBack }) {
                   </div>
 
                   {/* Gradient Divider */}
-                  <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent mb-6" />
+                  <div className="h-px bg-[#e3e8ee] mb-6" />
 
                   {/* Question Categories Section - Grouped by Category with Progress */}
                   <div className="mb-6">
@@ -1531,7 +1522,7 @@ export default function DocsPage({ onBack }) {
                       const catCompleted = categoryTopics.filter(t => completedTopics[t.id]).length;
                       const catPercent = Math.round((catCompleted / categoryTopics.length) * 100);
                       return (
-                        <div key={category.id} className="rounded-lg overflow-hidden border border-gray-200">
+                        <div key={category.id} className="rounded-lg overflow-hidden border border-[#e3e8ee] shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
                           {/* Category Header with Progress */}
                           <div className="px-4 py-2.5 flex items-center gap-2.5 bg-gray-50/80 border-b border-gray-100">
                             <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: `${category.color}12` }}>
@@ -1568,7 +1559,7 @@ export default function DocsPage({ onBack }) {
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                  <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-gray-200 text-gray-400">
+                                  <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[#e3e8ee] text-gray-400">
                                     {topic.keyQuestions?.length || topic.sampleQuestions?.length || 0}Q
                                   </span>
                                   <Icon name="chevronRight" size={12} className="text-gray-300 group-hover:text-emerald-500 group-hover:translate-x-0.5 transition-all" />
@@ -1583,7 +1574,7 @@ export default function DocsPage({ onBack }) {
                   </div>
 
                   {/* Gradient Divider */}
-                  <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent mb-6" />
+                  <div className="h-px bg-[#e3e8ee] mb-6" />
 
                   {/* Company-Specific Section — Upgraded with progress */}
                   <div className="mb-6">
@@ -1597,7 +1588,7 @@ export default function DocsPage({ onBack }) {
                         <div
                           key={company.id}
                           onClick={() => setSelectedTopic(company.id)}
-                          className={`group rounded-lg bg-white hover:shadow-sm transition-all cursor-pointer p-4 ${completedTopics[company.id] ? 'border-2 border-emerald-300' : 'border border-gray-200 hover:border-gray-300'}`}
+                          className={`group rounded-lg bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)] transition-all cursor-pointer p-4 ${completedTopics[company.id] ? 'border-2 border-emerald-300' : 'border border-[#e3e8ee] hover:border-[#d0d5dd]'}`}
                         >
                           <div className="flex items-start justify-between mb-3">
                             <div className="flex items-center gap-3">
@@ -1626,7 +1617,7 @@ export default function DocsPage({ onBack }) {
                                 </span>
                               ))}
                               {company.principles.length > 5 && (
-                                <span className="landing-mono text-[10px] px-2 py-0.5 rounded-full border border-gray-200 text-gray-400">
+                                <span className="landing-mono text-[10px] px-2 py-0.5 rounded-full border border-[#e3e8ee] text-gray-400">
                                   +{company.principles.length - 5}
                                 </span>
                               )}
@@ -1638,7 +1629,7 @@ export default function DocsPage({ onBack }) {
                   </div>
 
                   {/* Gradient Divider */}
-                  <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent mb-6" />
+                  <div className="h-px bg-[#e3e8ee] mb-6" />
 
                   {/* Interview Day Playbook — Modern data-point presentation */}
                   <div className="mb-6">
@@ -1653,7 +1644,7 @@ export default function DocsPage({ onBack }) {
                         { icon: 'layers', title: '8-10 Stories Ready', desc: 'Diverse stories that flex across question types and company values.', metric: 'Story Bank', metricColor: '#8b5cf6' },
                         { icon: 'target', title: 'Quantify Everything', desc: 'Revenue, percentages, users impacted, time saved — numbers stick.', metric: 'Data > Words', metricColor: '#10b981' },
                       ].map((tip, i) => (
-                        <div key={i} className="border border-gray-200 rounded-lg bg-white hover:border-gray-300 hover:shadow-sm transition-all p-4 group">
+                        <div key={i} className="border border-[#e3e8ee] rounded-lg bg-white hover:border-[#d0d5dd] shadow-[0_1px_3px_rgba(0,0,0,0.04)] transition-all p-4 group">
                           <div className="flex items-center justify-between mb-3">
                             <div className="w-8 h-8 rounded-lg bg-gray-50 group-hover:bg-emerald-50 flex items-center justify-center transition-colors">
                               <Icon name={tip.icon} size={14} className="text-gray-400 group-hover:text-emerald-600 transition-colors" />
@@ -1682,7 +1673,7 @@ export default function DocsPage({ onBack }) {
                       const categoryTopics = filteredTopics.filter(t => microservicesCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
                       return (
-                        <div key={category.id} className="rounded-lg overflow-hidden border border-gray-200">
+                        <div key={category.id} className="rounded-lg overflow-hidden border border-[#e3e8ee] shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
                           <div className="px-4 py-2.5 flex items-center gap-2.5 bg-gray-50/80 border-b border-gray-100">
                             <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: `${category.color}12` }}>
                               <Icon name={category.icon} size={14} style={{ color: category.color }} />
@@ -1707,7 +1698,7 @@ export default function DocsPage({ onBack }) {
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                  <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-gray-200 text-gray-400">
+                                  <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[#e3e8ee] text-gray-400">
                                     {topic.keyQuestions?.length || 0}Q
                                   </span>
                                   <Icon name="chevronRight" size={12} className="text-gray-300 group-hover:text-emerald-500 group-hover:translate-x-0.5 transition-all" />
@@ -1736,7 +1727,7 @@ export default function DocsPage({ onBack }) {
                       const categoryTopics = filteredTopics.filter(t => databaseCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
                       return (
-                        <div key={category.id} className="rounded-lg overflow-hidden border border-gray-200">
+                        <div key={category.id} className="rounded-lg overflow-hidden border border-[#e3e8ee] shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
                           <div className="px-4 py-2.5 flex items-center gap-2.5 bg-gray-50/80 border-b border-gray-100">
                             <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: `${category.color}12` }}>
                               <Icon name={category.icon} size={14} style={{ color: category.color }} />
@@ -1761,7 +1752,7 @@ export default function DocsPage({ onBack }) {
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                  <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-gray-200 text-gray-400">
+                                  <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[#e3e8ee] text-gray-400">
                                     {topic.keyQuestions?.length || topic.questions || 0}Q
                                   </span>
                                   <Icon name="chevronRight" size={12} className="text-gray-300 group-hover:text-emerald-500 group-hover:translate-x-0.5 transition-all" />
@@ -1790,7 +1781,7 @@ export default function DocsPage({ onBack }) {
                       const categoryTopics = filteredTopics.filter(t => sqlCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
                       return (
-                        <div key={category.id} className="rounded-lg overflow-hidden border border-gray-200">
+                        <div key={category.id} className="rounded-lg overflow-hidden border border-[#e3e8ee] shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
                           <div className="px-4 py-2.5 flex items-center gap-2.5 bg-gray-50/80 border-b border-gray-100">
                             <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: `${category.color}12` }}>
                               <Icon name={category.icon} size={14} style={{ color: category.color }} />
@@ -1815,7 +1806,7 @@ export default function DocsPage({ onBack }) {
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                  <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-gray-200 text-gray-400">
+                                  <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[#e3e8ee] text-gray-400">
                                     {topic.keyQuestions?.length || topic.questions || 0}Q
                                   </span>
                                   <Icon name="chevronRight" size={12} className="text-gray-300 group-hover:text-emerald-500 group-hover:translate-x-0.5 transition-all" />
@@ -1837,7 +1828,7 @@ export default function DocsPage({ onBack }) {
 
         {/* ── Right Sidebar — Progress & TOC (visible when topic selected) ── */}
         {selectedTopic && topicDetails && (
-          <div className="w-64 flex-shrink-0 h-screen sticky top-0 hidden xl:flex flex-col py-6 px-4 overflow-y-auto bg-white border-l border-gray-100">
+          <div className="w-64 flex-shrink-0 h-screen sticky top-0 hidden xl:flex flex-col py-6 px-4 overflow-y-auto bg-white border-l border-[#e3e8ee]">
             {/* Progress Ring */}
             <div className="text-center mb-6">
               <div className="relative w-20 h-20 mx-auto mb-3">
@@ -1891,7 +1882,7 @@ export default function DocsPage({ onBack }) {
                     <a
                       key={i}
                       href={`#${item.id}`}
-                      className="block px-3 py-1.5 rounded text-xs text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition-all truncate landing-body"
+                      className="block px-3 py-1.5 rounded text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all truncate landing-body"
                     >
                       {item.label}
                     </a>
