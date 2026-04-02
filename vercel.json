@@ -1,4 +1,8 @@
 {
   "framework": "vite",
+  "buildCommand": "cd apps/frontend && npx vite build",
+  "outputDirectory": "apps/frontend/dist",
+  "installCommand": "pnpm install",
+  "ignoreCommand": "exit 0",
   "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
 }
