@@ -712,12 +712,7 @@ export default function LandingPage() {
 
             {/* Video/GIF container — replace src when recording is ready */}
             <div className="relative aspect-video bg-[#0a0b14]">
-              {/* When you have the recording, uncomment one of these: */}
-              {/* <video src="/demo-lumora.mp4" autoPlay loop muted playsInline className="w-full h-full object-cover" /> */}
-              {/* <img src="/demo-lumora.gif" alt="Lumora live interview demo" className="w-full h-full object-cover" /> */}
-
-              {/* Fallback: animated code demo until video is added */}
-              <LumoraDemo />
+              <video src="/demo-lumora.mp4" autoPlay loop muted playsInline className="w-full h-full object-cover" />
             </div>
           </div>
         </div>
@@ -761,29 +756,7 @@ export default function LandingPage() {
               </div>
 
               <div className="relative aspect-video bg-[#0a0b14]">
-                {/* When you have the recording, uncomment: */}
-                {/* <video src="/demo-capra-dashboard.mp4" autoPlay loop muted playsInline className="w-full h-full object-cover" /> */}
-                {/* <img src="/demo-capra-dashboard.gif" alt="Capra dashboard demo" className="w-full h-full object-cover" /> */}
-
-                {/* Fallback: static category grid */}
-                <div className="p-6 h-full flex flex-col justify-center">
-                  <div className="text-xs font-code text-indigo-400 font-semibold tracking-wider mb-4">CATEGORIES</div>
-                  <div className="grid grid-cols-2 gap-3">
-                    {[
-                      { name: 'DSA and Algorithms', count: '57', color: '#34d399' },
-                      { name: 'System Design', count: '163', color: '#06b6d4' },
-                      { name: 'Microservices', count: '12', color: '#818cf8' },
-                      { name: 'Database Internals', count: '12', color: '#f97316' },
-                      { name: 'SQL for Interviews', count: '8', color: '#fbbf24' },
-                      { name: 'Low-Level Design', count: '106', color: '#a78bfa' },
-                    ].map((cat) => (
-                      <div key={cat.name} className="flex items-center justify-between rounded-lg border border-white/[0.06] px-3 py-2.5" style={{ background: 'rgba(255,255,255,0.02)' }}>
-                        <span className="text-sm text-gray-300 font-medium">{cat.name}</span>
-                        <span className="font-code text-xs font-bold" style={{ color: cat.color }}>{cat.count}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                <video src="/demo-capra.mp4" autoPlay loop muted playsInline className="w-full h-full object-cover" />
               </div>
             </div>
 
@@ -809,41 +782,7 @@ export default function LandingPage() {
               </div>
 
               <div className="relative aspect-video bg-[#0a0b14]">
-                {/* When you have the recording, uncomment: */}
-                {/* <video src="/demo-capra-topic.mp4" autoPlay loop muted playsInline className="w-full h-full object-cover" /> */}
-                {/* <img src="/demo-capra-topic.gif" alt="Capra topic detail demo" className="w-full h-full object-cover" /> */}
-
-                {/* Fallback: mock topic detail */}
-                <div className="p-6 h-full flex flex-col justify-center">
-                  <div className="flex items-center gap-3 mb-4">
-                    <span className="px-2.5 py-1 rounded-md text-xs font-code font-bold text-cyan-400 bg-cyan-400/10">System Design</span>
-                    <span className="px-2.5 py-1 rounded-md text-xs font-code font-bold text-amber-400 bg-amber-400/10">Medium</span>
-                  </div>
-                  <h4 className="text-xl font-bold text-white font-display mb-3">URL Shortener</h4>
-                  <div className="space-y-2.5">
-                    {[
-                      'Requirements and scale estimation',
-                      'High-level architecture',
-                      'Database schema design',
-                      'URL encoding strategies',
-                      'Caching layer with Redis',
-                      'Rate limiting and analytics',
-                    ].map((topic, i) => (
-                      <div key={topic} className="flex items-center gap-3">
-                        <div className={`w-5 h-5 rounded flex items-center justify-center text-xs font-bold ${i < 3 ? 'bg-emerald-500/20 text-emerald-400' : 'border border-white/10 text-gray-600'}`}>
-                          {i < 3 ? '✓' : (i + 1)}
-                        </div>
-                        <span className={`text-sm ${i < 3 ? 'text-gray-300' : 'text-gray-500'}`}>{topic}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="mt-4 flex items-center gap-3">
-                    <div className="flex-1 h-2 rounded-full bg-white/[0.06] overflow-hidden">
-                      <div className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-cyan-500" style={{ width: '50%' }} />
-                    </div>
-                    <span className="font-code text-xs text-gray-500">3/6 done</span>
-                  </div>
-                </div>
+                <video src="/demo-capra-topic.mp4" autoPlay loop muted playsInline className="w-full h-full object-cover" />
               </div>
             </div>
           </div>
