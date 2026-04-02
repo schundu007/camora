@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 /* ── Scroll-reveal hook ─────────────────────────────────── */
 function useInView(threshold = 0.12) {
@@ -39,6 +40,7 @@ const APPA = [
    LANDING PAGE
    ════════════════════════════════════════════════════════════ */
 export default function LandingPage() {
+  const { isAuthenticated } = useAuth();
   const [mounted, setMounted] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const journeyRef = useInView(0.08);
@@ -104,7 +106,11 @@ export default function LandingPage() {
           </div>
 
           <div className="hidden lg:flex items-center gap-4">
-            <Link to="/capra/login" className="text-[15px] text-gray-400 hover:text-white transition-colors font-medium">Sign in</Link>
+            {isAuthenticated ? (
+              <Link to="/capra" className="text-[15px] text-gray-400 hover:text-white transition-colors font-medium">Dashboard</Link>
+            ) : (
+              <Link to="/capra/login" className="text-[15px] text-gray-400 hover:text-white transition-colors font-medium">Sign in</Link>
+            )}
             <Link to="/lumora" className="glow-btn px-5 py-2.5 text-[15px] font-semibold text-white bg-emerald-500 rounded-lg">
               Launch App
             </Link>
@@ -128,8 +134,13 @@ export default function LandingPage() {
                       onClick={() => setMobileMenuOpen(false)}>{link.label}</Link>
               )
             )}
-            <Link to="/capra/login" className="block py-2.5 text-base text-gray-400 font-medium"
-                  onClick={() => setMobileMenuOpen(false)}>Sign in</Link>
+            {isAuthenticated ? (
+              <Link to="/capra" className="block py-2.5 text-base text-gray-300 font-medium"
+                    onClick={() => setMobileMenuOpen(false)}>Dashboard</Link>
+            ) : (
+              <Link to="/capra/login" className="block py-2.5 text-base text-gray-400 font-medium"
+                    onClick={() => setMobileMenuOpen(false)}>Sign in</Link>
+            )}
           </div>
         )}
       </nav>
