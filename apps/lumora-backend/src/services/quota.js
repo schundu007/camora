@@ -3,7 +3,7 @@
  *
  * Ported from Python: lumora/backend/app/services/quota.py
  */
-import { query } from '@camora/shared-db';
+import { query } from '../lib/shared-db.js';
 
 const FREE_DAILY_LIMIT = 10;
 

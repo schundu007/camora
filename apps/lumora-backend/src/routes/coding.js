@@ -9,7 +9,7 @@
  */
 import { Router } from 'express';
 import Anthropic from '@anthropic-ai/sdk';
-import { query } from '@camora/shared-db';
+import { query } from '../lib/shared-db.js';
 import { authenticate } from '../middleware/authenticate.js';
 
 const router = Router();

@@ -10,8 +10,6 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.82.0",
-    "@camora/shared-auth": "workspace:*",
-    "@camora/shared-db": "workspace:*",
     "bcryptjs": "^3.0.0",
     "cheerio": "^1.0.0",
     "cookie-parser": "^1.4.7",

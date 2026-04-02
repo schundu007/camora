@@ -1,4 +1,4 @@
-import { query } from '@camora/shared-db';
+import { query } from '../lib/shared-db.js';
 import { logger } from '../middleware/requestLogger.js';
 
 /**

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import multer from 'multer';
-import { query } from '@camora/shared-db';
+import { query } from '../lib/shared-db.js';
 import { authenticate } from '../middleware/authenticate.js';
 
 const router = Router();

@@ -3,7 +3,7 @@
  */
 
 import { logger } from '../middleware/requestLogger.js';
-import { closePool } from '@camora/shared-db';
+import { closePool } from '../lib/shared-db.js';
 import { closeRedis } from '../services/redis.js';
 
 const FORCE_SHUTDOWN_TIMEOUT = 10000; // 10 seconds

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { stripe, STRIPE_PRICES, CREDITS_PER_PLAN, isStripeConfigured } from '../config/stripe.js';
-import { query } from '@camora/shared-db';
+import { query } from '../lib/shared-db.js';
 import { jwtAuth } from '../middleware/jwtAuth.js';
 import { addCredits } from '../services/creditService.js';
 import { logger } from '../middleware/requestLogger.js';

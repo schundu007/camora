@@ -9,7 +9,7 @@
  */
 import { Router } from 'express';
 import { v4 as uuidv4 } from 'uuid';
-import { query } from '@camora/shared-db';
+import { query } from '../lib/shared-db.js';
 import { authenticate } from '../middleware/authenticate.js';
 import { checkDailyFreeLimit } from '../services/quota.js';
 import { streamResponse, MODEL } from '../services/claude.js';

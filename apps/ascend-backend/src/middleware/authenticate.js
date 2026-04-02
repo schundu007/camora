@@ -1,5 +1,5 @@
-import { verifyToken } from '@camora/shared-auth';
-import { query } from '@camora/shared-db';
+import { verifyToken } from '../lib/shared-auth.js';
+import { query } from '../lib/shared-db.js';
 import { logger } from './requestLogger.js';
 
 /**

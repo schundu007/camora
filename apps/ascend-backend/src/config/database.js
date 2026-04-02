@@ -1,4 +1,4 @@
-import { getPool, query, closePool } from '@camora/shared-db';
+import { getPool, query, closePool } from '../lib/shared-db.js';
 export { getPool, query, closePool };
 
 /**

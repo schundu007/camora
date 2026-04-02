@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import jwt from 'jsonwebtoken';
-import { query } from '@camora/shared-db';
-import { createToken, setSSOCookie, clearSSOCookie } from '@camora/shared-auth';
+import { query } from '../lib/shared-db.js';
+import { createToken, setSSOCookie, clearSSOCookie } from '../lib/shared-auth.js';
 import { logger } from '../middleware/requestLogger.js';
 import { authLimiter } from '../middleware/rateLimiter.js';
 import { authenticate, requireAdmin } from '../middleware/authenticate.js';

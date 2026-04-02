@@ -5,7 +5,7 @@ import { validate } from '../middleware/validators.js';
 import { AppError, ErrorCode } from '../middleware/errorHandler.js';
 import * as usageService from '../services/usageService.js';
 import { verifyJWT } from '../middleware/jwtAuth.js';
-import { query } from '@camora/shared-db';
+import { query } from '../lib/shared-db.js';
 import * as freeUsageService from '../services/freeUsageService.js';
 import { logger } from '../middleware/requestLogger.js';
 

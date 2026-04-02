@@ -3,7 +3,7 @@ import * as ascendPrepService from '../services/ascendPrep.js';
 import { generatePDF, generateDOCX } from '../services/exportPrep.js';
 import * as pythonDiagrams from '../services/pythonDiagrams.js';
 import { verifyJWT } from '../middleware/jwtAuth.js';
-import { query } from '@camora/shared-db';
+import { query } from '../lib/shared-db.js';
 import * as freeUsageService from '../services/freeUsageService.js';
 
 const router = Router();

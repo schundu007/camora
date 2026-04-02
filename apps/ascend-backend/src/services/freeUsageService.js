@@ -1,4 +1,4 @@
-import { query } from '@camora/shared-db';
+import { query } from '../lib/shared-db.js';
 
 /**
  * Check if user can use a feature (has subscription OR free allowance)

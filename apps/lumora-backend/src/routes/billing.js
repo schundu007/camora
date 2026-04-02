@@ -11,7 +11,7 @@
  */
 import { Router } from 'express';
 import Stripe from 'stripe';
-import { query } from '@camora/shared-db';
+import { query } from '../lib/shared-db.js';
 import { authenticate } from '../middleware/authenticate.js';
 
 const router = Router();

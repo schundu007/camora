@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { query } from '@camora/shared-db';
+import { query } from '../lib/shared-db.js';
 import { jwtAuth } from '../middleware/jwtAuth.js';
 import { canCreateCompany, useCredit } from '../services/creditService.js';
 import { logger } from '../middleware/requestLogger.js';

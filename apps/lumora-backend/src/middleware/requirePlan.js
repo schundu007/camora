@@ -5,7 +5,7 @@
  * Looks up the user's plan_type in the database and returns 403
  * if the plan is "free" (or missing).
  */
-import { query } from '@camora/shared-db';
+import { query } from '../lib/shared-db.js';
 
 /**
  * Express middleware — rejects free-tier users with a 403.

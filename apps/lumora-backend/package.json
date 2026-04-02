@@ -9,8 +9,6 @@
     "test": "vitest"
   },
   "dependencies": {
-    "@camora/shared-auth": "workspace:*",
-    "@camora/shared-db": "workspace:*",
     "@anthropic-ai/sdk": "^0.82.0",
     "openai": "^6.33.0",
     "stripe": "^21.0.0",

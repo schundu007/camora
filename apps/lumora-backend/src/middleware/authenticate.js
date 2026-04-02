@@ -4,8 +4,8 @@
  * Wraps the shared-auth authenticate middleware with email-based user lookup
  * and auto-provisioning so that Ascend SSO tokens work seamlessly.
  */
-import { verifyToken } from '@camora/shared-auth';
-import { query } from '@camora/shared-db';
+import { verifyToken } from '../lib/shared-auth.js';
+import { query } from '../lib/shared-db.js';
 
 /**
  * Authenticate request via Bearer token (or cariara_sso cookie).

@@ -12,8 +12,8 @@
  *   PUT    /profile        — update bio / social links
  */
 import { Router } from 'express';
-import { createToken } from '@camora/shared-auth';
-import { query } from '@camora/shared-db';
+import { createToken } from '../lib/shared-auth.js';
+import { query } from '../lib/shared-db.js';
 import { authenticate } from '../middleware/authenticate.js';
 
 const router = Router();
