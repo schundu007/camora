@@ -37,153 +37,117 @@ const APPA = [
 ];
 
 /* ════════════════════════════════════════════════════════════
-   LANDING PAGE
+   LANDING PAGE — The APPA Journey
    ════════════════════════════════════════════════════════════ */
 export default function LandingPage() {
   const { isAuthenticated } = useAuth();
   const [mounted, setMounted] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const demoRef = useInView(0.08);
   const journeyRef = useInView(0.08);
   const productsRef = useInView(0.08);
   const featuresRef = useInView(0.08);
   const howRef = useInView(0.08);
+  const ctaRef = useInView(0.08);
 
   useEffect(() => { setMounted(true); window.scrollTo(0, 0); }, []);
 
   return (
-    <div className="landing-page min-h-screen text-white overflow-hidden" style={{ background: '#06070a' }}>
-      {/* Styles */}
+    <div className="landing-page min-h-screen text-white overflow-hidden" style={{ background: '#0a0b14' }}>
+      {/* ── Styles ──────────────────────────────────────── */}
       <style>{`
-        .landing-page { font-family: 'Work Sans', 'Plus Jakarta Sans', system-ui, sans-serif; }
-        .font-display { font-family: 'Plus Jakarta Sans', 'Work Sans', system-ui, sans-serif; }
-        .font-code { font-family: 'IBM Plex Mono', monospace; }
+        .landing-page {
+          font-family: 'Work Sans', 'Plus Jakarta Sans', system-ui, sans-serif;
+        }
+        .font-display {
+          font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+        }
+        .font-code {
+          font-family: 'IBM Plex Mono', monospace;
+        }
 
-        @keyframes glow-pulse {
-          0%, 100% { opacity: 0.6; transform: scale(1); }
-          50% { opacity: 1; transform: scale(1.05); }
-        }
-        @keyframes glow-drift {
-          0%, 100% { transform: translate(0, 0); }
-          25% { transform: translate(30px, -20px); }
-          50% { transform: translate(-20px, 30px); }
-          75% { transform: translate(20px, 20px); }
-        }
         @keyframes hero-gradient {
           0% { background-position: 0% 50%; }
           50% { background-position: 100% 50%; }
           100% { background-position: 0% 50%; }
         }
-        @keyframes particle-fall {
-          0% { transform: translateY(-10px) rotate(0deg); opacity: 0; }
-          10% { opacity: 1; }
-          90% { opacity: 1; }
-          100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
-        }
         @keyframes border-glow {
-          0%, 100% { border-color: rgba(16,185,129,0.2); }
-          50% { border-color: rgba(6,182,212,0.35); }
+          0%, 100% { border-color: rgba(52,211,153,0.2); }
+          50% { border-color: rgba(56,189,248,0.35); }
         }
-        @keyframes dot-pulse {
-          0%, 100% { opacity: 0.15; }
-          50% { opacity: 0.4; }
+        @keyframes ping-dot {
+          0% { transform: scale(1); opacity: 0.75; }
+          75%, 100% { transform: scale(2); opacity: 0; }
         }
 
-        .animate-glow { animation: glow-pulse 4s ease-in-out infinite; }
-        .animate-drift { animation: glow-drift 20s ease-in-out infinite; }
         .animate-hero-gradient {
           background-size: 200% 200%;
           animation: hero-gradient 6s ease-in-out infinite;
         }
-        .animate-border { animation: border-glow 4s ease-in-out infinite; }
+        .animate-border-glow {
+          animation: border-glow 4s ease-in-out infinite;
+        }
 
         .glow-btn {
-          box-shadow: 0 0 24px rgba(16, 185, 129, 0.35), 0 0 80px rgba(16, 185, 129, 0.12);
+          box-shadow: 0 0 30px rgba(16, 185, 129, 0.4), 0 0 80px rgba(16, 185, 129, 0.15);
           transition: all 0.3s ease;
         }
         .glow-btn:hover {
-          box-shadow: 0 0 40px rgba(16, 185, 129, 0.55), 0 0 100px rgba(16, 185, 129, 0.2);
+          box-shadow: 0 0 40px rgba(16, 185, 129, 0.55), 0 0 100px rgba(16, 185, 129, 0.25);
           transform: translateY(-2px);
-        }
-
-        /* Dot grid pattern */
-        .dot-grid {
-          background-image: radial-gradient(rgba(255,255,255,0.08) 1px, transparent 1px);
-          background-size: 32px 32px;
         }
 
         /* Noise texture overlay */
         .noise-overlay {
-          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
           background-repeat: repeat;
           background-size: 256px 256px;
         }
+
+        /* Card hover effects */
+        .card-base {
+          background: rgba(255,255,255,0.03);
+          border: 1px solid rgba(255,255,255,0.08);
+          backdrop-filter: blur(4px);
+          transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card-base:hover {
+          border-color: rgba(255,255,255,0.15);
+          transform: scale(1.01);
+        }
+
+        /* Fade-up animation utility */
+        .fade-up {
+          transition: opacity 0.7s ease, transform 0.7s ease;
+        }
+        .fade-up.visible {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        .fade-up.hidden {
+          opacity: 0;
+          transform: translateY(24px);
+        }
       `}</style>
 
-      {/* ── ATMOSPHERIC BACKGROUND ──────────────────────── */}
-      {/* Large blur orbs — like LockedIn AI */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
-        {/* Primary emerald orb — top center */}
-        <div className="absolute animate-drift" style={{
-          top: '-15%', left: '30%',
-          width: '60%', height: '50%',
-          borderRadius: '50%',
-          background: 'rgba(16, 185, 129, 0.12)',
-          filter: 'blur(120px)',
-        }} />
-        {/* Cyan orb — right side */}
-        <div className="absolute animate-drift" style={{
-          top: '20%', right: '10%',
-          width: '40%', height: '40%',
-          borderRadius: '50%',
-          background: 'rgba(6, 182, 212, 0.08)',
-          filter: 'blur(100px)',
-          animationDelay: '5s',
-        }} />
-        {/* Indigo orb — bottom left */}
-        <div className="absolute animate-drift" style={{
-          bottom: '10%', left: '10%',
-          width: '45%', height: '35%',
-          borderRadius: '50%',
-          background: 'rgba(129, 140, 248, 0.07)',
-          filter: 'blur(120px)',
-          animationDelay: '10s',
-        }} />
-        {/* Warm amber orb — mid right */}
-        <div className="absolute animate-drift" style={{
-          top: '50%', right: '20%',
-          width: '30%', height: '30%',
-          borderRadius: '50%',
-          background: 'rgba(251, 191, 36, 0.04)',
-          filter: 'blur(100px)',
-          animationDelay: '15s',
-        }} />
+      {/* ── NOISE TEXTURE OVERLAY (entire page) ────────── */}
+      <div className="fixed inset-0 pointer-events-none noise-overlay" style={{ zIndex: 1, opacity: 0.5 }} />
 
-        {/* Noise texture */}
-        <div className="absolute inset-0 noise-overlay opacity-50" />
-      </div>
-
-      {/* Floating particles */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
-        {Array.from({ length: 30 }, (_, i) => (
-          <div
-            key={i}
-            className="absolute rounded-full"
-            style={{
-              width: `${((i * 3 + 2) % 4) + 1}px`,
-              height: `${((i * 3 + 2) % 4) + 1}px`,
-              left: `${(i * 37 + 13) % 100}%`,
-              top: `${(i * 53 + 7) % 100}%`,
-              background: ['#34d399', '#06b6d4', '#818cf8', '#fbbf24'][i % 4],
-              opacity: 0.3,
-              animation: `particle-fall ${((i * 7 + 15) % 20) + 15}s linear infinite`,
-              animationDelay: `${(i * 3) % 20}s`,
-            }}
-          />
-        ))}
+      {/* ── APPA TIMELINE (left side, desktop only) ─────── */}
+      <div className="hidden lg:block fixed left-[10%] top-0 bottom-0 pointer-events-none" style={{ zIndex: 2 }}>
+        <div className="absolute inset-0 w-[2px]" style={{
+          background: 'linear-gradient(to bottom, #34d399 0%, #818cf8 33%, #38bdf8 66%, #fbbf24 100%)',
+          opacity: 0.25,
+        }} />
+        {/* Timeline dots for each section */}
+        <div className="absolute w-2 h-2 rounded-full -left-[3px]" style={{ top: '15%', background: '#34d399', boxShadow: '0 0 8px rgba(52,211,153,0.5)' }} />
+        <div className="absolute w-2 h-2 rounded-full -left-[3px]" style={{ top: '38%', background: '#818cf8', boxShadow: '0 0 8px rgba(129,140,248,0.5)' }} />
+        <div className="absolute w-2 h-2 rounded-full -left-[3px]" style={{ top: '62%', background: '#38bdf8', boxShadow: '0 0 8px rgba(56,189,248,0.5)' }} />
+        <div className="absolute w-2 h-2 rounded-full -left-[3px]" style={{ top: '85%', background: '#fbbf24', boxShadow: '0 0 8px rgba(251,191,36,0.5)' }} />
       </div>
 
       {/* ── NAV ──────────────────────────────────────────── */}
-      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/[0.06]" style={{ background: 'rgba(6,7,10,0.85)', backdropFilter: 'blur(20px)' }}>
+      <nav className="fixed top-0 left-0 right-0 z-50 h-16 border-b border-white/[0.06]" style={{ background: 'rgba(10,11,20,0.8)', backdropFilter: 'blur(20px)' }}>
         <div className="max-w-7xl mx-auto flex items-center justify-between px-6 lg:px-8 h-16">
           <Link to="/" className="flex items-center gap-3">
             <div className="w-9 h-9 bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/20" style={{ clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)' }}>
@@ -210,7 +174,7 @@ export default function LandingPage() {
             ) : (
               <Link to="/capra/login" className="text-[15px] text-gray-400 hover:text-white transition-colors font-medium">Sign in</Link>
             )}
-            <Link to="/lumora" className="glow-btn px-5 py-2.5 text-[15px] font-semibold text-white bg-emerald-500 rounded-lg">
+            <Link to="/lumora" className="glow-btn px-5 py-2.5 text-[15px] font-semibold text-white bg-emerald-500 rounded-xl">
               Launch App
             </Link>
           </div>
@@ -223,11 +187,14 @@ export default function LandingPage() {
             </svg>
           </button>
         </div>
+
+        {/* Mobile menu */}
         {mobileMenuOpen && (
-          <div className="lg:hidden border-t border-white/[0.06] px-6 py-5 space-y-2" style={{ background: 'rgba(6,7,10,0.95)' }}>
+          <div className="lg:hidden border-t border-white/[0.06] px-6 py-5 space-y-2" style={{ background: 'rgba(10,11,20,0.95)' }}>
             {NAV_LINKS.map((link) =>
               link.external ? (
-                <a key={link.label} href={link.href} className="block py-2.5 text-base text-gray-300 font-medium">{link.label}</a>
+                <a key={link.label} href={link.href} target="_blank" rel="noopener noreferrer"
+                   className="block py-2.5 text-base text-gray-300 font-medium">{link.label}</a>
               ) : (
                 <Link key={link.label} to={link.href} className="block py-2.5 text-base text-gray-300 font-medium"
                       onClick={() => setMobileMenuOpen(false)}>{link.label}</Link>
@@ -237,74 +204,83 @@ export default function LandingPage() {
               <Link to="/capra" className="block py-2.5 text-base text-gray-300 font-medium"
                     onClick={() => setMobileMenuOpen(false)}>Dashboard</Link>
             ) : (
-              <Link to="/capra/login" className="block py-2.5 text-base text-gray-400 font-medium"
+              <Link to="/capra/login" className="block py-2.5 text-base text-gray-300 font-medium"
                     onClick={() => setMobileMenuOpen(false)}>Sign in</Link>
             )}
           </div>
         )}
       </nav>
 
-      {/* ── HERO ─────────────────────────────────────────── */}
-      <section className="relative pt-36 pb-24 md:pt-48 md:pb-32 px-6 lg:px-8">
-        {/* Dot grid pattern */}
-        <div className="absolute inset-0 dot-grid pointer-events-none" />
+      {/* ═══════════════════════════════════════════════════
+          SECTION 1 — HERO
+         ═══════════════════════════════════════════════════ */}
+      <section className="relative pt-36 pb-24 md:pt-48 md:pb-32 px-6 lg:px-8" style={{ zIndex: 2 }}>
+        {/* Faint emerald radial gradient */}
+        <div className="absolute inset-0 pointer-events-none" style={{
+          background: 'radial-gradient(ellipse 60% 50% at 50% 30%, rgba(52,211,153,0.08) 0%, transparent 70%)',
+        }} />
 
         <div className="relative max-w-5xl mx-auto text-center">
           {/* APPA Badge */}
           <div className={`transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
             <div className="inline-flex items-center gap-3 px-5 py-2.5 rounded-full border border-emerald-400/20 bg-emerald-400/[0.06] mb-10">
               <span className="relative flex h-2.5 w-2.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400" style={{ animation: 'ping-dot 1.5s cubic-bezier(0, 0, 0.2, 1) infinite' }} />
                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-400" />
               </span>
-              <span className="font-code text-sm text-emerald-300 tracking-wide font-medium">
+              <span className="font-code text-sm text-emerald-400 tracking-wide font-semibold">
                 APPA — Apply. Prepare. Practice. Attend.
               </span>
             </div>
           </div>
 
           {/* Headline */}
-          <h1 className={`font-display font-bold tracking-[-0.03em] transition-all duration-700 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-            <span className="block text-5xl md:text-7xl lg:text-[82px] leading-[1.05] text-white">
-              Ace every{' '}
+          <h1 className={`font-display font-extrabold tracking-[-0.04em] transition-all duration-700 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+            <span className="block text-6xl md:text-7xl lg:text-[84px] leading-[1.05] text-white">
+              Ace every
+            </span>
+            <span className="block text-6xl md:text-7xl lg:text-[84px] leading-[1.05] mt-1">
               <span className="animate-hero-gradient bg-clip-text text-transparent"
-                    style={{ backgroundImage: 'linear-gradient(135deg, #34d399, #06b6d4, #818cf8, #34d399)' }}>
+                    style={{ backgroundImage: 'linear-gradient(135deg, #34d399, #38bdf8, #818cf8, #34d399)' }}>
                 technical
               </span>
-            </span>
-            <span className="block text-5xl md:text-7xl lg:text-[82px] leading-[1.05] text-white mt-1">
-              interview.
+              <span className="text-white"> interview.</span>
             </span>
           </h1>
 
-          {/* Subheading */}
-          <p className={`mt-8 text-lg md:text-xl text-gray-400 leading-relaxed max-w-2xl mx-auto transition-all duration-700 delay-200 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+          {/* Subtext */}
+          <p className={`mt-8 text-lg md:text-xl text-gray-300 leading-relaxed max-w-2xl mx-auto transition-all duration-700 delay-200 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             Real-time AI that listens to your interview, transcribes questions, and generates
             expert-level answers for system design, coding, and behavioral rounds.
           </p>
 
           {/* CTAs */}
           <div className={`mt-12 flex flex-col sm:flex-row items-center justify-center gap-5 transition-all duration-700 delay-300 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-            <Link to="/lumora" className="glow-btn px-8 py-4 text-base font-semibold text-white bg-emerald-500 rounded-lg">
+            <Link to="/lumora" className="glow-btn px-8 py-4 text-lg font-semibold text-white bg-emerald-500 rounded-xl">
               Start Free — No Credit Card
             </Link>
-            <a href="#appa" className="px-8 py-4 text-base font-semibold text-gray-300 border border-white/15 rounded-lg hover:border-white/30 hover:text-white transition-all">
+            <a href="#appa" className="px-8 py-4 text-lg font-semibold text-white border border-white/20 rounded-xl hover:border-white/40 transition-all">
               See How It Works
             </a>
           </div>
 
           {/* Trust line */}
-          <p className={`mt-10 text-sm text-gray-600 transition-all duration-700 delay-400 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+          <p className={`mt-10 text-sm text-gray-500 transition-all duration-700 delay-[400ms] ${mounted ? 'opacity-100' : 'opacity-0'}`}>
             Trusted by engineers interviewing at Google, Amazon, Meta, Apple, and Microsoft
           </p>
         </div>
       </section>
 
-      {/* ── PRODUCT DEMO ─────────────────────────────────── */}
-      <section className="px-6 lg:px-8 pb-28">
+      {/* ═══════════════════════════════════════════════════
+          SECTION 2 — PRODUCT DEMO (Browser Mockup)
+         ═══════════════════════════════════════════════════ */}
+      <section ref={demoRef.ref} className="px-6 lg:px-8 pb-28" style={{ zIndex: 2 }}>
         <div className="max-w-6xl mx-auto">
-          <div className={`rounded-2xl border animate-border overflow-hidden transition-all duration-1000 delay-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}
-               style={{ background: 'linear-gradient(180deg, rgba(16,185,129,0.04) 0%, rgba(6,7,10,0.95) 100%)', boxShadow: '0 0 80px rgba(16,185,129,0.06), 0 0 160px rgba(6,182,212,0.03)' }}>
+          <div className={`rounded-2xl animate-border-glow border overflow-hidden transition-all duration-1000 ${demoRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}
+               style={{
+                 background: 'linear-gradient(180deg, rgba(52,211,153,0.04) 0%, rgba(10,11,20,0.95) 100%)',
+                 boxShadow: '0 0 100px rgba(16,185,129,0.08)',
+               }}>
             {/* Browser chrome */}
             <div className="flex items-center gap-3 px-5 py-3 border-b border-white/[0.06]" style={{ background: 'rgba(255,255,255,0.02)' }}>
               <div className="flex gap-2">
@@ -319,20 +295,20 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* Product mockup */}
+            {/* Product mockup content */}
             <div className="p-8 md:p-12">
               <div className="grid md:grid-cols-2 gap-8">
                 {/* Left: Transcription */}
                 <div>
                   <div className="flex items-center gap-2.5 mb-5">
                     <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-                    <span className="font-code text-sm text-emerald-400 font-medium tracking-wide">LIVE TRANSCRIPTION</span>
+                    <span className="font-code text-sm text-emerald-400 font-semibold tracking-wide">LIVE TRANSCRIPTION</span>
                   </div>
                   <div className="space-y-4">
                     <div className="rounded-xl border border-white/[0.08] p-5" style={{ background: 'rgba(255,255,255,0.02)' }}>
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="font-code text-xs text-emerald-400 font-semibold">Q1</span>
-                        <span className="text-xs text-gray-600">System Design</span>
+                        <span className="font-code text-sm text-emerald-400 font-semibold">Q1</span>
+                        <span className="text-sm text-gray-500">System Design</span>
                       </div>
                       <p className="text-base text-gray-200 leading-relaxed">
                         Design a distributed cache system that supports TTL expiration and handles cache invalidation across multiple regions.
@@ -340,8 +316,8 @@ export default function LandingPage() {
                     </div>
                     <div className="rounded-xl border border-white/[0.08] p-5" style={{ background: 'rgba(255,255,255,0.02)' }}>
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="font-code text-xs text-cyan-400 font-semibold">Q2</span>
-                        <span className="text-xs text-gray-600">Follow-up</span>
+                        <span className="font-code text-sm text-cyan-400 font-semibold">Q2</span>
+                        <span className="text-sm text-gray-500">Follow-up</span>
                       </div>
                       <p className="text-base text-gray-200 leading-relaxed">
                         How would you handle consistency between the cache and the database?
@@ -354,11 +330,11 @@ export default function LandingPage() {
                 <div>
                   <div className="flex items-center gap-2.5 mb-5">
                     <div className="w-2.5 h-2.5 rounded-full bg-cyan-400" />
-                    <span className="font-code text-sm text-cyan-400 font-medium tracking-wide">AI RESPONSE</span>
+                    <span className="font-code text-sm text-cyan-400 font-semibold tracking-wide">AI RESPONSE</span>
                   </div>
                   <div className="space-y-4">
                     <div className="rounded-xl border border-white/[0.08] p-5" style={{ background: 'rgba(255,255,255,0.02)' }}>
-                      <div className="font-code text-xs text-gray-500 mb-3 font-semibold tracking-wider">ARCHITECTURE</div>
+                      <div className="font-code text-sm text-gray-500 mb-3 font-semibold tracking-wider">ARCHITECTURE</div>
                       <div className="space-y-2.5">
                         {[
                           'Write-through cache with async invalidation',
@@ -367,13 +343,13 @@ export default function LandingPage() {
                           'Lazy TTL eviction with background cleanup',
                         ].map((p) => (
                           <p key={p} className="flex items-start gap-3 text-base text-gray-300">
-                            <span className="text-emerald-400 mt-1 text-lg leading-none">&#8250;</span> {p}
+                            <span className="text-emerald-400 mt-0.5 text-lg leading-none">&#8250;</span> {p}
                           </p>
                         ))}
                       </div>
                     </div>
                     <div className="rounded-xl border border-white/[0.08] p-5" style={{ background: 'rgba(255,255,255,0.02)' }}>
-                      <div className="font-code text-xs text-gray-500 mb-4 font-semibold tracking-wider">SCALE ESTIMATES</div>
+                      <div className="font-code text-sm text-gray-500 mb-4 font-semibold tracking-wider">SCALE ESTIMATES</div>
                       <div className="grid grid-cols-3 gap-4 text-center">
                         {[
                           { val: '100K', unit: 'QPS' },
@@ -382,7 +358,7 @@ export default function LandingPage() {
                         ].map((s) => (
                           <div key={s.unit}>
                             <div className="text-2xl font-bold text-white">{s.val}</div>
-                            <div className="font-code text-xs text-gray-500 mt-1">{s.unit}</div>
+                            <div className="font-code text-sm text-gray-500 mt-1">{s.unit}</div>
                           </div>
                         ))}
                       </div>
@@ -395,48 +371,57 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── APPA JOURNEY ────────────────────────────────── */}
-      <section id="appa" ref={journeyRef.ref} className="px-6 lg:px-8 py-24 md:py-32">
-        <div className="max-w-6xl mx-auto">
+      {/* ═══════════════════════════════════════════════════
+          SECTION 3 — APPA JOURNEY
+         ═══════════════════════════════════════════════════ */}
+      <section id="appa" ref={journeyRef.ref} className="relative px-6 lg:px-8 py-24 md:py-32" style={{ zIndex: 2 }}>
+        {/* Faint indigo radial gradient */}
+        <div className="absolute inset-0 pointer-events-none" style={{
+          background: 'radial-gradient(ellipse 60% 50% at 50% 40%, rgba(129,140,248,0.07) 0%, transparent 70%)',
+        }} />
+
+        <div className="relative max-w-6xl mx-auto">
           <div className={`text-center mb-16 transition-all duration-700 ${journeyRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-            <span className="font-code text-sm text-emerald-400 tracking-wider font-semibold">THE APPA FRAMEWORK</span>
-            <h2 className="font-display text-4xl md:text-5xl font-bold tracking-tight mt-4">
-              <span className="bg-clip-text text-transparent" style={{ backgroundImage: 'linear-gradient(135deg, #34d399, #06b6d4)' }}>Apply. Prepare. Practice. Attend.</span>
+            <span className="font-code text-sm text-indigo-400 tracking-wider font-semibold">THE APPA FRAMEWORK</span>
+            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mt-4">
+              <span style={{ color: '#34d399' }}>Apply.</span>{' '}
+              <span style={{ color: '#818cf8' }}>Prepare.</span>{' '}
+              <span style={{ color: '#38bdf8' }}>Practice.</span>{' '}
+              <span style={{ color: '#fbbf24' }}>Attend.</span>
             </h2>
-            <p className="mt-5 text-lg text-gray-400 max-w-2xl mx-auto">
+            <p className="mt-5 text-base md:text-lg text-gray-300 max-w-2xl mx-auto">
               The complete interview lifecycle in one platform. No other tool covers all four stages.
             </p>
           </div>
 
-          {/* Connecting line */}
+          {/* Horizontal connecting line (desktop) */}
           <div className="hidden lg:block relative mb-8">
             <div className="absolute top-1/2 left-[8%] right-[8%] h-[2px] -translate-y-1/2"
                  style={{ background: 'linear-gradient(90deg, #34d399, #818cf8, #38bdf8, #fbbf24)' }} />
           </div>
 
+          {/* APPA cards */}
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {APPA.map((step, i) => {
-              const inner = (
+              const card = (
                 <div
-                  key={step.label}
-                  className={`group relative rounded-2xl border border-white/[0.08] p-7 transition-all duration-700 hover:border-white/20 ${journeyRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
+                  className={`group relative card-base rounded-2xl p-8 md:p-10 transition-all duration-700 ${journeyRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
                   style={{
                     transitionDelay: `${i * 120 + 200}ms`,
-                    background: 'rgba(255,255,255,0.02)',
                   }}
                 >
                   {/* Hover glow */}
                   <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
-                       style={{ background: `radial-gradient(ellipse at center, ${step.color}08 0%, transparent 70%)` }} />
+                       style={{ boxShadow: `0 4px 30px rgba(0,0,0,0.3), 0 0 40px ${step.color}10` }} />
 
                   <div className="relative">
                     <div className="w-14 h-14 rounded-xl flex items-center justify-center mb-5 border border-white/[0.08]"
-                         style={{ background: `${step.color}10` }}>
+                         style={{ background: `${step.color}1a` }}>
                       <span className="font-display text-2xl font-bold" style={{ color: step.color }}>{step.letter}</span>
                     </div>
-                    <div className="font-code text-xs text-gray-500 mb-1 font-medium">{step.num}</div>
-                    <h3 className="text-xl font-bold text-white mb-3 font-display">{step.label}</h3>
-                    <p className="text-base text-gray-400 leading-relaxed">{step.desc}</p>
+                    <div className="font-code text-sm text-gray-500 mb-1 font-semibold">{step.num}</div>
+                    <h3 className="text-xl md:text-2xl font-bold text-white mb-3 font-display">{step.label}</h3>
+                    <p className="text-base md:text-lg text-gray-300 leading-relaxed">{step.desc}</p>
                     <div className="mt-5 text-sm font-semibold opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: step.color }}>
                       Explore &rarr;
                     </div>
@@ -445,21 +430,28 @@ export default function LandingPage() {
               );
 
               return step.external ? (
-                <a key={step.label} href={step.href} target="_blank" rel="noopener noreferrer">{inner}</a>
+                <a key={step.label} href={step.href} target="_blank" rel="noopener noreferrer">{card}</a>
               ) : (
-                <Link key={step.label} to={step.href}>{inner}</Link>
+                <Link key={step.label} to={step.href}>{card}</Link>
               );
             })}
           </div>
         </div>
       </section>
 
-      {/* ── TWO PRODUCTS ─────────────────────────────────── */}
-      <section ref={productsRef.ref} className="px-6 lg:px-8 py-24 md:py-32">
-        <div className="max-w-6xl mx-auto">
+      {/* ═══════════════════════════════════════════════════
+          SECTION 4 — TWO PRODUCTS (Lumora + Capra)
+         ═══════════════════════════════════════════════════ */}
+      <section ref={productsRef.ref} className="relative px-6 lg:px-8 py-24 md:py-32" style={{ zIndex: 2 }}>
+        {/* Faint cyan radial gradient */}
+        <div className="absolute inset-0 pointer-events-none" style={{
+          background: 'radial-gradient(ellipse 60% 50% at 50% 40%, rgba(56,189,248,0.06) 0%, transparent 70%)',
+        }} />
+
+        <div className="relative max-w-6xl mx-auto">
           <div className={`text-center mb-16 transition-all duration-700 ${productsRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-            <span className="font-code text-sm text-gray-500 tracking-wider font-semibold">TWO PRODUCTS, ONE PLATFORM</span>
-            <h2 className="font-display text-4xl md:text-5xl font-bold tracking-tight text-white mt-4">
+            <span className="font-code text-sm text-cyan-400 tracking-wider font-semibold">TWO PRODUCTS, ONE PLATFORM</span>
+            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-white mt-4">
               Prepare before. Perform during.
             </h2>
           </div>
@@ -467,24 +459,28 @@ export default function LandingPage() {
           <div className="grid md:grid-cols-2 gap-6">
             {/* Lumora */}
             <Link to="/lumora"
-                  className={`group relative rounded-2xl border border-emerald-500/20 p-8 md:p-10 transition-all duration-700 hover:border-emerald-500/40 ${productsRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
-                  style={{ transitionDelay: '200ms', background: 'linear-gradient(135deg, rgba(16,185,129,0.06) 0%, rgba(6,7,10,1) 100%)' }}>
+                  className={`group relative rounded-2xl border border-emerald-500/20 p-8 md:p-10 transition-all duration-700 hover:border-emerald-500/40 hover:scale-[1.01] ${productsRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
+                  style={{
+                    transitionDelay: '200ms',
+                    background: 'linear-gradient(135deg, rgba(52,211,153,0.06) 0%, rgba(10,11,20,1) 100%)',
+                    backdropFilter: 'blur(4px)',
+                  }}>
               <div className="flex items-center gap-4 mb-8">
                 <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
                   <span className="text-lg font-bold text-emerald-400">L</span>
                 </div>
                 <div>
-                  <span className="text-xl font-bold text-white font-display">Lumora</span>
-                  <span className="block font-code text-xs text-emerald-400 font-medium">LIVE INTERVIEW AI</span>
+                  <span className="text-xl md:text-2xl font-bold text-white font-display">Lumora</span>
+                  <span className="block font-code text-sm text-emerald-400 font-semibold">LIVE INTERVIEW AI</span>
                 </div>
               </div>
-              <p className="text-base text-gray-400 leading-relaxed mb-8">
+              <p className="text-base md:text-lg text-gray-300 leading-relaxed mb-8">
                 Real-time AI that listens to your interview, transcribes questions,
                 and streams expert answers for system design, coding, and behavioral rounds.
               </p>
               <div className="space-y-3">
                 {['Voice transcription with speaker filtering', 'Auto-generated system design diagrams', 'Multi-approach coding solutions', 'Behavioral STAR-format responses'].map((f) => (
-                  <div key={f} className="flex items-center gap-3 text-[15px] text-gray-300">
+                  <div key={f} className="flex items-center gap-3 text-base text-gray-300">
                     <svg className="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                     </svg>
@@ -499,24 +495,28 @@ export default function LandingPage() {
 
             {/* Capra */}
             <Link to="/capra/prepare"
-                  className={`group relative rounded-2xl border border-indigo-500/20 p-8 md:p-10 transition-all duration-700 hover:border-indigo-500/40 ${productsRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
-                  style={{ transitionDelay: '350ms', background: 'linear-gradient(135deg, rgba(99,102,241,0.06) 0%, rgba(6,7,10,1) 100%)' }}>
+                  className={`group relative rounded-2xl border border-indigo-500/20 p-8 md:p-10 transition-all duration-700 hover:border-indigo-500/40 hover:scale-[1.01] ${productsRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
+                  style={{
+                    transitionDelay: '350ms',
+                    background: 'linear-gradient(135deg, rgba(129,140,248,0.06) 0%, rgba(10,11,20,1) 100%)',
+                    backdropFilter: 'blur(4px)',
+                  }}>
               <div className="flex items-center gap-4 mb-8">
                 <div className="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
                   <span className="text-lg font-bold text-indigo-400">C</span>
                 </div>
                 <div>
-                  <span className="text-xl font-bold text-white font-display">Capra</span>
-                  <span className="block font-code text-xs text-indigo-400 font-medium">INTERVIEW PREPARATION</span>
+                  <span className="text-xl md:text-2xl font-bold text-white font-display">Capra</span>
+                  <span className="block font-code text-sm text-indigo-400 font-semibold">INTERVIEW PREPARATION</span>
                 </div>
               </div>
-              <p className="text-base text-gray-400 leading-relaxed mb-8">
+              <p className="text-base md:text-lg text-gray-300 leading-relaxed mb-8">
                 Study and practice before your interview. 300+ curated topics with
                 AI-powered explanations, mock interviews, and coding practice.
               </p>
               <div className="space-y-3">
                 {['System design deep dives with diagrams', 'DSA problems with multiple solutions', 'Behavioral question frameworks', 'Timed mock interview simulator'].map((f) => (
-                  <div key={f} className="flex items-center gap-3 text-[15px] text-gray-300">
+                  <div key={f} className="flex items-center gap-3 text-base text-gray-300">
                     <svg className="w-4 h-4 text-indigo-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                     </svg>
@@ -532,12 +532,14 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── FEATURES (3 modes) ───────────────────────────── */}
-      <section ref={featuresRef.ref} className="px-6 lg:px-8 py-24 md:py-32">
+      {/* ═══════════════════════════════════════════════════
+          SECTION 5 — FEATURES (Three Interview Modes)
+         ═══════════════════════════════════════════════════ */}
+      <section ref={featuresRef.ref} className="relative px-6 lg:px-8 py-24 md:py-32" style={{ zIndex: 2 }}>
         <div className="max-w-6xl mx-auto">
           <div className={`text-center mb-16 transition-all duration-700 ${featuresRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-            <span className="font-code text-sm text-emerald-400 tracking-wider font-semibold">THREE INTERVIEW MODES</span>
-            <h2 className="font-display text-4xl md:text-5xl font-bold tracking-tight text-white mt-4">
+            <span className="font-code text-sm text-cyan-400 tracking-wider font-semibold">THREE INTERVIEW MODES</span>
+            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-white mt-4">
               System Design. Coding. Behavioral.
             </h2>
           </div>
@@ -549,37 +551,37 @@ export default function LandingPage() {
                 desc: 'Behavioral, situational, and technical Q&A with real-time voice transcription. Generates structured STAR-format responses.',
                 tags: ['Voice Capture', 'Context Memory', 'STAR Format', 'Streaming'],
                 color: '#34d399',
-                border: 'border-emerald-500/15',
+                borderClass: 'border-emerald-500/15',
               },
               {
                 mode: 'System Design',
                 desc: 'Auto-generated architecture diagrams, scale estimates, and deep-dive analysis with trade-off comparisons.',
                 tags: ['Architecture', 'Diagrams', 'Scale Math', 'Tradeoffs'],
-                color: '#06b6d4',
-                border: 'border-cyan-500/15',
+                color: '#38bdf8',
+                borderClass: 'border-cyan-500/15',
               },
               {
                 mode: 'Coding',
                 desc: 'Paste or speak a problem. Get multiple optimal solutions with time and space complexity analysis and edge cases.',
                 tags: ['Multi-Solution', 'Complexity', 'Edge Cases', 'All Languages'],
                 color: '#818cf8',
-                border: 'border-indigo-500/15',
+                borderClass: 'border-indigo-500/15',
               },
             ].map((f, i) => (
               <div
                 key={f.mode}
-                className={`rounded-2xl border ${f.border} p-8 transition-all duration-700 ${featuresRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
-                style={{ transitionDelay: `${i * 120 + 200}ms`, background: 'rgba(255,255,255,0.02)' }}
+                className={`card-base rounded-2xl ${f.borderClass} p-8 md:p-10 transition-all duration-700 ${featuresRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
+                style={{ transitionDelay: `${i * 120 + 200}ms` }}
               >
                 <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-5" style={{ background: `${f.color}15` }}>
                   <div className="w-3 h-3 rounded-full" style={{ background: f.color }} />
                 </div>
-                <h3 className="text-xl font-bold text-white mb-3 font-display">{f.mode}</h3>
-                <p className="text-base text-gray-400 leading-relaxed mb-6">{f.desc}</p>
+                <h3 className="text-xl md:text-2xl font-bold text-white mb-3 font-display">{f.mode}</h3>
+                <p className="text-base md:text-lg text-gray-300 leading-relaxed mb-6">{f.desc}</p>
                 <div className="flex flex-wrap gap-2">
                   {f.tags.map((t) => (
-                    <span key={t} className="px-3 py-1.5 rounded-md font-code text-xs font-medium border border-white/[0.08]"
-                          style={{ color: f.color, background: `${f.color}08` }}>
+                    <span key={t} className="px-3 py-1.5 rounded-md font-code text-sm font-medium border border-white/[0.08]"
+                          style={{ color: f.color, background: `${f.color}14` }}>
                       {t}
                     </span>
                   ))}
@@ -590,12 +592,14 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── HOW IT WORKS ─────────────────────────────────── */}
-      <section ref={howRef.ref} className="px-6 lg:px-8 py-24 md:py-32">
+      {/* ═══════════════════════════════════════════════════
+          SECTION 6 — HOW IT WORKS
+         ═══════════════════════════════════════════════════ */}
+      <section ref={howRef.ref} className="relative px-6 lg:px-8 py-24 md:py-32" style={{ zIndex: 2 }}>
         <div className="max-w-6xl mx-auto">
           <div className={`text-center mb-16 transition-all duration-700 ${howRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-            <span className="font-code text-sm text-gray-500 tracking-wider font-semibold">HOW IT WORKS</span>
-            <h2 className="font-display text-4xl md:text-5xl font-bold tracking-tight text-white mt-4">
+            <span className="font-code text-sm text-gray-400 tracking-wider font-semibold">HOW IT WORKS</span>
+            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-white mt-4">
               Three steps. Zero friction.
             </h2>
           </div>
@@ -603,60 +607,68 @@ export default function LandingPage() {
           <div className="grid md:grid-cols-3 gap-6">
             {[
               { num: '01', title: 'Speak or Type', desc: 'Start your mic or paste the interview question. AI-powered transcription captures everything in real time.', color: '#34d399' },
-              { num: '02', title: 'AI Generates', desc: 'Claude analyzes instantly, streaming structured answers with architecture diagrams, code solutions, and key talking points.', color: '#06b6d4' },
+              { num: '02', title: 'AI Generates', desc: 'Claude analyzes instantly, streaming structured answers with architecture diagrams, code solutions, and key talking points.', color: '#38bdf8' },
               { num: '03', title: 'Deliver Confidently', desc: 'Review organized responses with clear sections. Key points, architecture, code, complexity analysis, and follow-up prep.', color: '#818cf8' },
             ].map((s, i) => (
               <div
                 key={s.num}
-                className={`rounded-2xl border border-white/[0.08] p-8 transition-all duration-700 ${howRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
-                style={{ transitionDelay: `${i * 120 + 200}ms`, background: 'rgba(255,255,255,0.02)' }}
+                className={`card-base rounded-2xl p-8 md:p-10 transition-all duration-700 ${howRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
+                style={{ transitionDelay: `${i * 120 + 200}ms` }}
               >
-                <div className="font-display text-5xl font-black mb-5" style={{ color: `${s.color}25` }}>{s.num}</div>
-                <h3 className="text-xl font-bold text-white mb-3 font-display">{s.title}</h3>
-                <p className="text-base text-gray-400 leading-relaxed">{s.desc}</p>
+                <div className="font-display text-6xl font-black mb-5" style={{ color: `${s.color}20` }}>{s.num}</div>
+                <h3 className="text-xl md:text-2xl font-bold text-white mb-3 font-display">{s.title}</h3>
+                <p className="text-base md:text-lg text-gray-300 leading-relaxed">{s.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── FINAL CTA ────────────────────────────────────── */}
-      <section className="px-6 lg:px-8 py-28 md:py-36 relative">
-        {/* Background glow */}
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full pointer-events-none"
-             style={{ background: 'radial-gradient(ellipse, rgba(16,185,129,0.08) 0%, transparent 70%)' }} />
+      {/* ═══════════════════════════════════════════════════
+          SECTION 7 — FINAL CTA
+         ═══════════════════════════════════════════════════ */}
+      <section ref={ctaRef.ref} className="relative px-6 lg:px-8 py-28 md:py-36" style={{ zIndex: 2 }}>
+        {/* Faint amber radial gradient */}
+        <div className="absolute inset-0 pointer-events-none" style={{
+          background: 'radial-gradient(ellipse 60% 50% at 50% 50%, rgba(251,191,36,0.08) 0%, transparent 70%)',
+        }} />
 
-        <div className="relative max-w-3xl mx-auto text-center">
-          <span className="font-code text-sm text-emerald-400 tracking-wider font-semibold">START YOUR APPA JOURNEY</span>
-          <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-white mt-5">
+        <div className={`relative max-w-3xl mx-auto text-center transition-all duration-700 ${ctaRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+          <span className="font-code text-sm text-amber-400 tracking-wider font-semibold">START YOUR APPA JOURNEY</span>
+          <h2 className="font-display text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight text-white mt-5">
             Your next interview<br />
-            <span className="bg-clip-text text-transparent" style={{ backgroundImage: 'linear-gradient(135deg, #34d399, #06b6d4)' }}>starts here.</span>
+            <span className="animate-hero-gradient bg-clip-text text-transparent"
+                  style={{ backgroundImage: 'linear-gradient(135deg, #34d399, #38bdf8, #818cf8, #fbbf24, #34d399)' }}>
+              starts here.
+            </span>
           </h2>
-          <p className="mt-6 text-lg text-gray-400 max-w-xl mx-auto">
+          <p className="mt-6 text-base md:text-lg text-gray-300 max-w-xl mx-auto">
             Apply, Prepare, Practice, Attend — the complete interview pipeline, powered by AI.
           </p>
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-5">
-            <Link to="/lumora" className="glow-btn px-8 py-4 text-base font-semibold text-white bg-emerald-500 rounded-lg">
+            <Link to="/lumora" className="glow-btn px-8 py-4 text-lg font-semibold text-white bg-emerald-500 rounded-xl">
               Start Free — No Credit Card
             </Link>
-            <Link to="/pricing" className="px-8 py-4 text-base font-semibold text-gray-300 border border-white/15 rounded-lg hover:border-white/30 hover:text-white transition-all">
+            <Link to="/pricing" className="px-8 py-4 text-lg font-semibold text-white border border-white/20 rounded-xl hover:border-white/40 transition-all">
               View Pricing
             </Link>
           </div>
         </div>
       </section>
 
-      {/* ── FOOTER ───────────────────────────────────────── */}
-      <footer className="border-t border-white/[0.06] px-6 lg:px-8 py-12">
+      {/* ═══════════════════════════════════════════════════
+          SECTION 8 — FOOTER
+         ═══════════════════════════════════════════════════ */}
+      <footer className="relative border-t border-white/[0.06] px-6 lg:px-8 py-12" style={{ zIndex: 2 }}>
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/20" style={{ clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)' }}>
-                <span className="text-[10px] font-black text-white">C</span>
+                <span className="text-[11px] font-black text-white">C</span>
               </div>
               <div>
                 <span className="text-base font-bold text-white font-display">Camora</span>
-                <span className="block font-code text-xs text-gray-500">Apply. Prepare. Practice. Attend.</span>
+                <span className="block font-code text-sm text-gray-500">Apply. Prepare. Practice. Attend.</span>
               </div>
             </div>
 
@@ -677,10 +689,10 @@ export default function LandingPage() {
           </div>
 
           <div className="mt-10 pt-8 border-t border-white/[0.04] flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="font-code text-sm text-gray-600">
+            <p className="font-code text-sm text-gray-500">
               &copy; {new Date().getFullYear()} Camora by Cariara
             </p>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-500">
               Built for engineers, by engineers.
             </p>
           </div>
