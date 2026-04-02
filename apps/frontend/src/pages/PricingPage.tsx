@@ -108,7 +108,9 @@ export default function PricingPage() {
   const [loading, setLoading] = useState('');
 
   const handleCheckout = async (plan: typeof PLANS[number]) => {
+    // Free plan — go straight to the app
     if (!plan.priceId) { navigate('/lumora'); return; }
+    // Not logged in — send to login first
     if (!token) { navigate('/capra/login'); return; }
     setLoading(plan.name);
     try {
@@ -121,10 +123,27 @@ export default function PricingPage() {
           cancel_url: `${window.location.origin}/pricing`,
         }),
       });
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('Checkout error:', err);
+        // If billing not configured, redirect to app for now
+        if (resp.status === 503 || resp.status === 400) {
+          navigate('/lumora');
+          return;
+        }
+        alert(err.error || 'Checkout unavailable. Please try again.');
+        setLoading('');
+        return;
+      }
       const data = await resp.json();
       if (data.url) window.location.href = data.url;
-      else { alert('Checkout unavailable. Please try again.'); setLoading(''); }
-    } catch { alert('Checkout failed. Please try again.'); setLoading(''); }
+      else { navigate('/lumora'); }
+    } catch {
+      // Fallback: if checkout fails, still let user access the app
+      navigate('/lumora');
+    } finally {
+      setLoading('');
+    }
   };
 
   return (
