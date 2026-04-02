@@ -75,8 +75,11 @@ function LoginPage() {
   const { isAuthenticated, isLoading } = useAuth();
   const [role, setRole] = useState('');
   const [resumeFile, setResumeFile] = useState<File | null>(null);
+  const [skipResume, setSkipResume] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const canLogin = role !== '' && (resumeFile !== null || skipResume);
 
   if (isLoading) return <Loading />;
   if (isAuthenticated) return <Navigate to="/capra" replace />;
@@ -156,9 +159,61 @@ function LoginPage() {
             </select>
           </div>
 
+          {/* Resume upload — required (with skip option for free tier) */}
+          <div className="mt-5">
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              Upload your resume <span className="text-red-500">*</span>
+            </label>
+            <div
+              onClick={() => !skipResume && fileRef.current?.click()}
+              onDragOver={(e) => { e.preventDefault(); if (!skipResume) setDragOver(true); }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={handleDrop}
+              className={`relative flex flex-col items-center justify-center py-5 px-4 border-2 border-dashed rounded-xl transition-all ${
+                skipResume ? 'opacity-50 cursor-not-allowed border-gray-200 bg-gray-50' :
+                dragOver ? 'border-emerald-400 bg-emerald-50/50 cursor-pointer' :
+                resumeFile ? 'border-emerald-300 bg-emerald-50/30 cursor-pointer' :
+                'border-red-200 hover:border-gray-300 bg-gray-50/50 cursor-pointer'
+              }`}
+            >
+              <input ref={fileRef} type="file" accept=".pdf,.doc,.docx,.txt" className="hidden" onChange={handleFileChange} />
+              {resumeFile ? (
+                <div className="flex items-center gap-3">
+                  <svg className="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span className="text-sm font-medium text-gray-700">{resumeFile.name}</span>
+                  <button onClick={(e) => { e.stopPropagation(); setResumeFile(null); }} className="text-gray-400 hover:text-red-500 transition-colors">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <svg className="w-7 h-7 text-gray-300 mb-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
+                  </svg>
+                  <span className="text-sm text-gray-500">{skipResume ? 'Skipped for free tier' : 'Drop resume or click to browse'}</span>
+                  <span className="text-xs text-gray-400 mt-0.5">PDF, DOCX, or TXT (max 10MB)</span>
+                </>
+              )}
+            </div>
+            {/* Skip checkbox for free tier */}
+            <label className="flex items-center gap-2 mt-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={skipResume}
+                onChange={(e) => { setSkipResume(e.target.checked); if (e.target.checked) setResumeFile(null); }}
+                className="w-4 h-4 rounded border-gray-300 text-emerald-500 focus:ring-emerald-500"
+              />
+              <span className="text-xs text-gray-500">Skip resume upload (free tier only — required for paid plans)</span>
+            </label>
+          </div>
+
           {/* Social login buttons — 3 across */}
           <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {role ? (
+            {canLogin ? (
               <a href={googleAuthUrl}
                  className="flex items-center justify-center gap-2 px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all">
                 <svg className="w-4 h-4" viewBox="0 0 24 24">
@@ -177,7 +232,7 @@ function LoginPage() {
                   <path fill="#9ca3af" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
                   <path fill="#9ca3af" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                 </svg>
-                Select a role first
+                {!role ? 'Select a role first' : 'Upload resume or skip'}
               </span>
             )}
             <button className="flex items-center justify-center gap-2 px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all">
@@ -193,8 +248,10 @@ function LoginPage() {
               LinkedIn
             </button>
           </div>
-          {!role && (
-            <p className="mt-2 text-xs text-red-400">Please select a target role above to enable sign-in.</p>
+          {!canLogin && (
+            <p className="mt-2 text-xs text-red-400">
+              {!role ? 'Please select a target role above.' : 'Please upload your resume or check "Skip" for free tier.'}
+            </p>
           )}
 
           {/* Divider */}
@@ -225,44 +282,7 @@ function LoginPage() {
             </button>
           </div>
 
-          {/* Resume upload */}
-          <div className="mt-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Upload your resume <span className="text-gray-400 font-normal">(optional)</span></label>
-            <div
-              onClick={() => fileRef.current?.click()}
-              onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-              onDragLeave={() => setDragOver(false)}
-              onDrop={handleDrop}
-              className={`relative flex flex-col items-center justify-center py-6 px-4 border-2 border-dashed rounded-xl cursor-pointer transition-all ${
-                dragOver ? 'border-emerald-400 bg-emerald-50/50' :
-                resumeFile ? 'border-emerald-300 bg-emerald-50/30' :
-                'border-gray-200 hover:border-gray-300 bg-gray-50/50'
-              }`}
-            >
-              <input ref={fileRef} type="file" accept=".pdf,.doc,.docx,.txt" className="hidden" onChange={handleFileChange} />
-              {resumeFile ? (
-                <div className="flex items-center gap-3">
-                  <svg className="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <span className="text-sm font-medium text-gray-700">{resumeFile.name}</span>
-                  <button onClick={(e) => { e.stopPropagation(); setResumeFile(null); }} className="text-gray-400 hover:text-red-500 transition-colors">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <svg className="w-8 h-8 text-gray-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
-                  </svg>
-                  <span className="text-sm text-gray-500">Drop your resume here or <span className="text-emerald-600 font-medium">click to browse</span></span>
-                  <span className="text-xs text-gray-400 mt-1">PDF, DOCX, or TXT (max 10MB)</span>
-                </>
-              )}
-            </div>
-          </div>
+          {/* Resume section moved above sign-in buttons */}
 
           {/* Footer */}
           <div className="mt-7 pt-5 border-t border-gray-100 text-center">
