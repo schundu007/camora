@@ -28,12 +28,81 @@ const NAV_LINKS = [
   { label: 'Pricing', href: '/pricing', external: false },
 ];
 
+/* ── APPA Icons (custom SVGs) ──────────────────────────── */
+const AppaIcons = {
+  apply: (color: string) => (
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+      <rect x="4" y="4" width="16" height="16" rx="2" />
+      <path d="M9 12h6M9 8h6M9 16h3" />
+      <path d="M16 2v4M8 2v4" />
+    </svg>
+  ),
+  prepare: (color: string) => (
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+      <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+    </svg>
+  ),
+  practice: (color: string) => (
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="16 18 22 12 16 6" />
+      <polyline points="8 6 2 12 8 18" />
+      <line x1="14.5" y1="4" x2="9.5" y2="20" />
+    </svg>
+  ),
+  attend: (color: string) => (
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+      <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+      <line x1="12" y1="19" x2="12" y2="22" />
+      <path d="M8 22h8" />
+    </svg>
+  ),
+  lumora: (color: string) => (
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="3" />
+      <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+      <path d="M16 12a4 4 0 0 1-4 4" opacity={0.5} />
+    </svg>
+  ),
+  capra: (color: string) => (
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
+      <path d="M8 7h6M8 11h8M8 15h4" />
+    </svg>
+  ),
+};
+
+/* ── Camora Logo Mark (custom SVG) ────────────────────── */
+function CamoraLogo({ size = 36 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#34d399" />
+          <stop offset="50%" stopColor="#06b6d4" />
+          <stop offset="100%" stopColor="#818cf8" />
+        </linearGradient>
+      </defs>
+      {/* Outer hexagonal shape */}
+      <path d="M20 2 L36 11 L36 29 L20 38 L4 29 L4 11 Z" fill="url(#logo-grad)" opacity={0.15} />
+      <path d="M20 2 L36 11 L36 29 L20 38 L4 29 L4 11 Z" stroke="url(#logo-grad)" strokeWidth={1.5} fill="none" />
+      {/* Inner flowing path — APPA journey */}
+      <circle cx="12" cy="14" r="2.5" fill="#34d399" />
+      <circle cx="18" cy="10" r="2.5" fill="#818cf8" />
+      <circle cx="24" cy="14" r="2.5" fill="#38bdf8" />
+      <circle cx="20" cy="22" r="2.5" fill="#fbbf24" />
+      <path d="M12 14 Q15 8 18 10 Q21 12 24 14 Q26 18 20 22" stroke="url(#logo-grad)" strokeWidth={1.2} fill="none" opacity={0.6} />
+    </svg>
+  );
+}
+
 /* ── APPA steps ─────────────────────────────────────────── */
 const APPA = [
-  { num: '01', letter: 'A', label: 'Apply', desc: 'Discover engineering roles matched to your skills, experience, and salary goals across 1 000+ companies.', href: 'https://jobs.cariara.com', external: true, color: '#34d399' },
-  { num: '02', letter: 'P', label: 'Prepare', desc: 'Study 300+ curated topics spanning system design, DSA, behavioral, databases, and cloud architecture.', href: '/capra/prepare', external: false, color: '#818cf8' },
-  { num: '03', letter: 'P', label: 'Practice', desc: 'Solve problems with AI explanations, run mock interviews, and build confidence before the real thing.', href: '/capra/practice', external: false, color: '#38bdf8' },
-  { num: '04', letter: 'A', label: 'Attend', desc: 'Get real-time AI answers during your live technical interview — system design, coding, and behavioral.', href: '/lumora', external: false, color: '#fbbf24' },
+  { num: '01', icon: 'apply' as const, label: 'Apply', desc: 'Discover engineering roles matched to your skills, experience, and salary goals across 1 000+ companies.', href: 'https://jobs.cariara.com', external: true, color: '#34d399' },
+  { num: '02', icon: 'prepare' as const, label: 'Prepare', desc: 'Study 300+ curated topics spanning system design, DSA, behavioral, databases, and cloud architecture.', href: '/capra/prepare', external: false, color: '#818cf8' },
+  { num: '03', icon: 'practice' as const, label: 'Practice', desc: 'Solve problems with AI explanations, run mock interviews, and build confidence before the real thing.', href: '/capra/practice', external: false, color: '#38bdf8' },
+  { num: '04', icon: 'attend' as const, label: 'Attend', desc: 'Get real-time AI answers during your live technical interview — system design, coding, and behavioral.', href: '/lumora', external: false, color: '#fbbf24' },
 ];
 
 /* ════════════════════════════════════════════════════════════
@@ -149,10 +218,8 @@ export default function LandingPage() {
       {/* ── NAV ──────────────────────────────────────────── */}
       <nav className="fixed top-0 left-0 right-0 z-50 h-16 border-b border-white/[0.06]" style={{ background: 'rgba(10,11,20,0.8)', backdropFilter: 'blur(20px)' }}>
         <div className="max-w-7xl mx-auto flex items-center justify-between px-6 lg:px-8 h-16">
-          <Link to="/" className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/20" style={{ clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)' }}>
-              <span className="text-xs font-black text-white">C</span>
-            </div>
+          <Link to="/" className="flex items-center gap-2">
+            <CamoraLogo size={34} />
             <span className="font-display text-lg font-bold tracking-tight">Camora</span>
           </Link>
 
@@ -417,7 +484,7 @@ export default function LandingPage() {
                   <div className="relative">
                     <div className="w-14 h-14 rounded-xl flex items-center justify-center mb-5 border border-white/[0.08]"
                          style={{ background: `${step.color}1a` }}>
-                      <span className="font-display text-2xl font-bold" style={{ color: step.color }}>{step.letter}</span>
+                      {AppaIcons[step.icon](step.color)}
                     </div>
                     <div className="font-code text-sm text-gray-500 mb-1 font-semibold">{step.num}</div>
                     <h3 className="text-xl md:text-2xl font-bold text-white mb-3 font-display">{step.label}</h3>
@@ -467,7 +534,7 @@ export default function LandingPage() {
                   }}>
               <div className="flex items-center gap-4 mb-8">
                 <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-                  <span className="text-lg font-bold text-emerald-400">L</span>
+                  {AppaIcons.lumora('#34d399')}
                 </div>
                 <div>
                   <span className="text-xl md:text-2xl font-bold text-white font-display">Lumora</span>
@@ -503,7 +570,7 @@ export default function LandingPage() {
                   }}>
               <div className="flex items-center gap-4 mb-8">
                 <div className="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
-                  <span className="text-lg font-bold text-indigo-400">C</span>
+                  {AppaIcons.capra('#818cf8')}
                 </div>
                 <div>
                   <span className="text-xl md:text-2xl font-bold text-white font-display">Capra</span>
@@ -663,9 +730,7 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/20" style={{ clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)' }}>
-                <span className="text-[11px] font-black text-white">C</span>
-              </div>
+              <CamoraLogo size={30} />
               <div>
                 <span className="text-base font-bold text-white font-display">Camora</span>
                 <span className="block font-code text-sm text-gray-500">Apply. Prepare. Practice. Attend.</span>

@@ -18,6 +18,7 @@ const CapraPrepare = lazy(() => import('./pages/capra/PreparePage'));
 const CapraOnboarding = lazy(() => import('./pages/capra/OnboardingPage'));
 const CapraLanding = lazy(() => import('./pages/capra/CapraLandingPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
+const BrandPage = lazy(() => import('./pages/BrandPage'));
 
 function Loading() {
   return (
@@ -292,6 +293,9 @@ export function App() {
           <Route path="/practice" element={<ProtectedRoute><CapraPractice /></ProtectedRoute>} />
           <Route path="/problems/:slug" element={<ProtectedRoute><CapraDashboard /></ProtectedRoute>} />
           <Route path="/onboarding" element={<ProtectedRoute><CapraOnboarding /></ProtectedRoute>} />
+
+          {/* ── Brand ────────────────────────────────── */}
+          <Route path="/brand" element={<BrandPage />} />
 
           {/* ── Catch-all ──────────────────────────────── */}
           <Route path="*" element={<NotFoundPage />} />
