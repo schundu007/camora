@@ -1577,76 +1577,66 @@ export default function LandingPage() {
           </div>
 
           <div className="grid md:grid-cols-2 gap-6">
-            {[
-              {
-                feature: 'Full APPA Pipeline (Apply \u2192 Prepare \u2192 Practice \u2192 Attend)',
-                camora: 'All 4 stages',
-                others: '1\u20132 stages only',
-                othersPartial: false,
-              },
-              {
-                feature: 'Auto-Generated Cloud Diagrams (AWS/Azure/GCP)',
-                camora: 'Real architecture',
-                others: 'None',
-                othersPartial: false,
-              },
-              {
-                feature: '415+ Preparation Topics with AI Explanations',
-                camora: '7 categories',
-                others: 'No prep content',
-                othersPartial: false,
-              },
-              {
-                feature: 'Platform-Compatible Code (LeetCode/HackerRank)',
-                camora: 'Copy-paste-submit',
-                others: 'Partial',
-                othersPartial: true,
-              },
-              {
-                feature: 'Real Company Interview Database',
-                camora: '80\u201390% coverage',
-                others: 'Generic questions',
-                othersPartial: false,
-              },
-              {
-                feature: 'Free Tier with 3 Live Sessions',
-                camora: 'No credit card',
-                others: 'Limited or paid only',
-                othersPartial: false,
-              },
-            ].map((row, i) => (
-              <div
-                key={row.feature}
-                className={`card-base rounded-2xl overflow-hidden transition-all duration-700 ${compRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
-                style={{ transitionDelay: `${i * 80 + 200}ms` }}
-              >
-                <div className="px-6 py-4 border-b border-white/[0.06]">
-                  <h3 className="text-sm md:text-base font-bold text-white">{row.feature}</h3>
-                </div>
-                <div className="grid grid-cols-2">
-                  {/* Camora column */}
-                  <div className="px-5 py-4" style={{ background: 'rgba(16,185,129,0.06)' }}>
-                    <div className="flex items-center gap-2">
-                      <span className="text-emerald-400 text-lg font-bold">&#10003;</span>
-                      <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">Camora</span>
-                    </div>
-                    <p className="mt-1.5 text-sm text-gray-300">{row.camora}</p>
-                  </div>
-                  {/* Others column */}
-                  <div className="px-5 py-4" style={{ background: 'rgba(239,68,68,0.04)' }}>
-                    <div className="flex items-center gap-2">
-                      {row.othersPartial ? (
-                        <span className="text-gray-500 text-xs font-bold">~</span>
-                      ) : (
-                        <span className="text-red-400/70 text-lg font-bold">&#10005;</span>
-                      )}
-                      <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Others</span>
-                    </div>
-                    <p className={`mt-1.5 text-sm ${row.othersPartial ? 'text-gray-500' : 'text-gray-500'}`}>{row.others}</p>
-                  </div>
-                </div>
+            {/* Clean comparison table */}
+            <div className={`card-base rounded-2xl overflow-hidden transition-all duration-700 ${compRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+              {/* Table header */}
+              <div className="grid grid-cols-[1fr_100px_100px] md:grid-cols-[1fr_120px_120px] px-6 py-3 border-b border-white/[0.06]" style={{ background: 'rgba(255,255,255,0.02)' }}>
+                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Feature</span>
+                <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider text-center">Camora</span>
+                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Others</span>
               </div>
-            ))}
+              {/* Table rows */}
+              {[
+                { feature: 'Full APPA Pipeline', detail: 'Apply, Prepare, Practice, Attend', camora: true, others: false },
+                { feature: 'Cloud Architecture Diagrams', detail: 'AWS, Azure, GCP', camora: true, others: false },
+                { feature: '415+ Preparation Topics', detail: '7 categories with AI explanations', camora: true, others: false },
+                { feature: 'Platform-Compatible Code', detail: 'LeetCode, HackerRank, CoderPad', camora: true, others: 'partial' },
+                { feature: 'Real Interview Database', detail: '80-90% of actual questions', camora: true, others: false },
+                { feature: 'Auto-Fix and Debug', detail: 'AI fixes broken code automatically', camora: true, others: false },
+                { feature: 'Speaker Voice Filtering', detail: 'Only transcribes interviewer', camora: true, others: false },
+                { feature: 'Resume-Personalized Answers', detail: 'References your experience', camora: true, others: 'partial' },
+                { feature: 'Coding Playground', detail: 'Built-in editor, 50+ languages', camora: true, others: 'partial' },
+                { feature: 'Free Tier', detail: '3 sessions, no credit card', camora: true, others: 'partial' },
+                { feature: 'Mock Interview Simulator', detail: 'Timed practice with feedback', camora: true, others: 'partial' },
+                { feature: 'STAR Format Coaching', detail: 'Structured behavioral answers', camora: true, others: 'partial' },
+              ].map((row, i) => (
+                <div
+                  key={row.feature}
+                  className={`grid grid-cols-[1fr_100px_100px] md:grid-cols-[1fr_120px_120px] px-6 py-3 border-b border-white/[0.03] hover:bg-white/[0.02] transition-colors ${i % 2 === 0 ? '' : 'bg-white/[0.01]'}`}
+                  style={{
+                    opacity: compRef.inView ? 1 : 0,
+                    transform: compRef.inView ? 'translateY(0)' : 'translateY(8px)',
+                    transition: 'opacity 0.4s ease, transform 0.4s ease',
+                    transitionDelay: `${i * 40 + 300}ms`,
+                  }}
+                >
+                  <div>
+                    <span className="text-sm font-medium text-white">{row.feature}</span>
+                    <span className="hidden md:inline text-sm text-gray-500 ml-2">— {row.detail}</span>
+                  </div>
+                  <div className="flex items-center justify-center">
+                    <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <div className="flex items-center justify-center">
+                    {row.others === 'partial' ? (
+                      <span className="text-xs text-gray-500 font-medium">Partial</span>
+                    ) : (
+                      <svg className="w-4 h-4 text-red-400/50" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    )}
+                  </div>
+                </div>
+              ))}
+              {/* Summary row */}
+              <div className="grid grid-cols-[1fr_100px_100px] md:grid-cols-[1fr_120px_120px] px-6 py-4" style={{ background: 'rgba(16,185,129,0.06)' }}>
+                <span className="text-sm font-bold text-white">Total with full support</span>
+                <span className="text-center text-sm font-bold text-emerald-400">12/12</span>
+                <span className="text-center text-sm font-bold text-gray-500">3/12</span>
+              </div>
+            </div>
           </div>
         </div>
       </section>
