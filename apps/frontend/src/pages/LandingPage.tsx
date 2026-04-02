@@ -51,7 +51,7 @@ export default function LandingPage() {
   useEffect(() => { setMounted(true); window.scrollTo(0, 0); }, []);
 
   return (
-    <div className="landing-page ai-bg min-h-screen text-white overflow-hidden">
+    <div className="landing-page min-h-screen text-white overflow-hidden" style={{ background: '#06070a' }}>
       {/* Styles */}
       <style>{`
         .landing-page { font-family: 'Work Sans', 'Plus Jakarta Sans', system-ui, sans-serif; }
@@ -59,52 +59,128 @@ export default function LandingPage() {
         .font-code { font-family: 'IBM Plex Mono', monospace; }
 
         @keyframes glow-pulse {
-          0%, 100% { opacity: 0.4; }
-          50% { opacity: 0.7; }
+          0%, 100% { opacity: 0.6; transform: scale(1); }
+          50% { opacity: 1; transform: scale(1.05); }
+        }
+        @keyframes glow-drift {
+          0%, 100% { transform: translate(0, 0); }
+          25% { transform: translate(30px, -20px); }
+          50% { transform: translate(-20px, 30px); }
+          75% { transform: translate(20px, 20px); }
         }
         @keyframes hero-gradient {
           0% { background-position: 0% 50%; }
           50% { background-position: 100% 50%; }
           100% { background-position: 0% 50%; }
         }
+        @keyframes particle-fall {
+          0% { transform: translateY(-10px) rotate(0deg); opacity: 0; }
+          10% { opacity: 1; }
+          90% { opacity: 1; }
+          100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+        }
+        @keyframes border-glow {
+          0%, 100% { border-color: rgba(16,185,129,0.2); }
+          50% { border-color: rgba(6,182,212,0.35); }
+        }
+        @keyframes dot-pulse {
+          0%, 100% { opacity: 0.15; }
+          50% { opacity: 0.4; }
+        }
+
         .animate-glow { animation: glow-pulse 4s ease-in-out infinite; }
+        .animate-drift { animation: glow-drift 20s ease-in-out infinite; }
         .animate-hero-gradient {
           background-size: 200% 200%;
           animation: hero-gradient 6s ease-in-out infinite;
         }
+        .animate-border { animation: border-glow 4s ease-in-out infinite; }
+
         .glow-btn {
-          box-shadow: 0 0 20px rgba(16, 185, 129, 0.3), 0 0 60px rgba(16, 185, 129, 0.1);
+          box-shadow: 0 0 24px rgba(16, 185, 129, 0.35), 0 0 80px rgba(16, 185, 129, 0.12);
           transition: all 0.3s ease;
         }
         .glow-btn:hover {
-          box-shadow: 0 0 30px rgba(16, 185, 129, 0.5), 0 0 80px rgba(16, 185, 129, 0.2);
+          box-shadow: 0 0 40px rgba(16, 185, 129, 0.55), 0 0 100px rgba(16, 185, 129, 0.2);
           transform: translateY(-2px);
         }
 
-        /* AI-inspired mesh gradient background */
-        .ai-bg {
-          background:
-            radial-gradient(ellipse 80% 50% at 50% -20%, rgba(16,185,129,0.15) 0%, transparent 50%),
-            radial-gradient(ellipse 60% 40% at 80% 50%, rgba(6,182,212,0.08) 0%, transparent 50%),
-            radial-gradient(ellipse 50% 50% at 20% 80%, rgba(129,140,248,0.06) 0%, transparent 50%),
-            #06070a;
+        /* Dot grid pattern */
+        .dot-grid {
+          background-image: radial-gradient(rgba(255,255,255,0.08) 1px, transparent 1px);
+          background-size: 32px 32px;
         }
 
-        /* Subtle grid overlay */
-        .grid-overlay {
-          background-image:
-            linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
-          background-size: 80px 80px;
+        /* Noise texture overlay */
+        .noise-overlay {
+          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+          background-repeat: repeat;
+          background-size: 256px 256px;
         }
-
-        /* Animated gradient border for cards */
-        @keyframes border-glow {
-          0%, 100% { border-color: rgba(16,185,129,0.15); }
-          50% { border-color: rgba(6,182,212,0.25); }
-        }
-        .animate-border { animation: border-glow 4s ease-in-out infinite; }
       `}</style>
+
+      {/* ── ATMOSPHERIC BACKGROUND ──────────────────────── */}
+      {/* Large blur orbs — like LockedIn AI */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
+        {/* Primary emerald orb — top center */}
+        <div className="absolute animate-drift" style={{
+          top: '-15%', left: '30%',
+          width: '60%', height: '50%',
+          borderRadius: '50%',
+          background: 'rgba(16, 185, 129, 0.12)',
+          filter: 'blur(120px)',
+        }} />
+        {/* Cyan orb — right side */}
+        <div className="absolute animate-drift" style={{
+          top: '20%', right: '10%',
+          width: '40%', height: '40%',
+          borderRadius: '50%',
+          background: 'rgba(6, 182, 212, 0.08)',
+          filter: 'blur(100px)',
+          animationDelay: '5s',
+        }} />
+        {/* Indigo orb — bottom left */}
+        <div className="absolute animate-drift" style={{
+          bottom: '10%', left: '10%',
+          width: '45%', height: '35%',
+          borderRadius: '50%',
+          background: 'rgba(129, 140, 248, 0.07)',
+          filter: 'blur(120px)',
+          animationDelay: '10s',
+        }} />
+        {/* Warm amber orb — mid right */}
+        <div className="absolute animate-drift" style={{
+          top: '50%', right: '20%',
+          width: '30%', height: '30%',
+          borderRadius: '50%',
+          background: 'rgba(251, 191, 36, 0.04)',
+          filter: 'blur(100px)',
+          animationDelay: '15s',
+        }} />
+
+        {/* Noise texture */}
+        <div className="absolute inset-0 noise-overlay opacity-50" />
+      </div>
+
+      {/* Floating particles */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
+        {Array.from({ length: 30 }, (_, i) => (
+          <div
+            key={i}
+            className="absolute rounded-full"
+            style={{
+              width: `${((i * 3 + 2) % 4) + 1}px`,
+              height: `${((i * 3 + 2) % 4) + 1}px`,
+              left: `${(i * 37 + 13) % 100}%`,
+              top: `${(i * 53 + 7) % 100}%`,
+              background: ['#34d399', '#06b6d4', '#818cf8', '#fbbf24'][i % 4],
+              opacity: 0.3,
+              animation: `particle-fall ${((i * 7 + 15) % 20) + 15}s linear infinite`,
+              animationDelay: `${(i * 3) % 20}s`,
+            }}
+          />
+        ))}
+      </div>
 
       {/* ── NAV ──────────────────────────────────────────── */}
       <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/[0.06]" style={{ background: 'rgba(6,7,10,0.85)', backdropFilter: 'blur(20px)' }}>
@@ -170,11 +246,8 @@ export default function LandingPage() {
 
       {/* ── HERO ─────────────────────────────────────────── */}
       <section className="relative pt-36 pb-24 md:pt-48 md:pb-32 px-6 lg:px-8">
-        {/* Grid overlay */}
-        <div className="absolute inset-0 grid-overlay pointer-events-none" />
-        {/* Focused glow behind hero text */}
-        <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[900px] h-[700px] rounded-full animate-glow pointer-events-none"
-             style={{ background: 'radial-gradient(ellipse, rgba(16,185,129,0.15) 0%, rgba(6,182,212,0.08) 30%, transparent 60%)' }} />
+        {/* Dot grid pattern */}
+        <div className="absolute inset-0 dot-grid pointer-events-none" />
 
         <div className="relative max-w-5xl mx-auto text-center">
           {/* APPA Badge */}
