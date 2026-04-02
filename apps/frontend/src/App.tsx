@@ -144,7 +144,7 @@ function LoginPage() {
           </p>
 
           {/* Social login buttons — 3 across */}
-          <div className="mt-7 grid grid-cols-3 gap-3">
+          <div className="mt-7 grid grid-cols-1 sm:grid-cols-3 gap-3">
             <a href={googleAuthUrl}
                className="flex items-center justify-center gap-2 px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all">
               <svg className="w-4 h-4" viewBox="0 0 24 24">

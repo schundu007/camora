@@ -1539,9 +1539,9 @@ export default function LandingPage() {
 
           <div className="grid md:grid-cols-2 gap-6">
             {/* Clean comparison table */}
-            <div className={`card-base rounded-2xl overflow-hidden transition-all duration-700 ${compRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+            <div className={`card-base rounded-2xl overflow-x-auto transition-all duration-700 ${compRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
               {/* Table header */}
-              <div className="grid grid-cols-[1fr_100px_100px] md:grid-cols-[1fr_120px_120px] px-6 py-3 border-b border-white/[0.06]" style={{ background: 'rgba(255,255,255,0.02)' }}>
+              <div className="grid grid-cols-[1fr_60px_60px] md:grid-cols-[1fr_120px_120px] px-6 py-3 border-b border-white/[0.06]" style={{ background: 'rgba(255,255,255,0.02)' }}>
                 <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Feature</span>
                 <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider text-center">Camora</span>
                 <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Others</span>
@@ -1563,7 +1563,7 @@ export default function LandingPage() {
               ].map((row, i) => (
                 <div
                   key={row.feature}
-                  className={`grid grid-cols-[1fr_100px_100px] md:grid-cols-[1fr_120px_120px] px-6 py-3 border-b border-white/[0.03] hover:bg-white/[0.02] transition-colors ${i % 2 === 0 ? '' : 'bg-white/[0.01]'}`}
+                  className={`grid grid-cols-[1fr_60px_60px] md:grid-cols-[1fr_120px_120px] px-6 py-3 border-b border-white/[0.03] hover:bg-white/[0.02] transition-colors ${i % 2 === 0 ? '' : 'bg-white/[0.01]'}`}
                   style={{
                     opacity: compRef.inView ? 1 : 0,
                     transform: compRef.inView ? 'translateY(0)' : 'translateY(8px)',
@@ -1592,7 +1592,7 @@ export default function LandingPage() {
                 </div>
               ))}
               {/* Summary row */}
-              <div className="grid grid-cols-[1fr_100px_100px] md:grid-cols-[1fr_120px_120px] px-6 py-4" style={{ background: 'rgba(16,185,129,0.06)' }}>
+              <div className="grid grid-cols-[1fr_60px_60px] md:grid-cols-[1fr_120px_120px] px-6 py-4" style={{ background: 'rgba(16,185,129,0.06)' }}>
                 <span className="text-sm font-bold text-white">Total with full support</span>
                 <span className="text-center text-sm font-bold text-emerald-400">12/12</span>
                 <span className="text-center text-sm font-bold text-gray-500">3/12</span>
