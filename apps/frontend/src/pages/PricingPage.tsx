@@ -75,7 +75,7 @@ const PLANS = [
     cta: 'Get Annual',
     ctaHref: '/lumora',
     popular: false,
-    priceId: 'price_1THi1NITUCNxtMxlWmchtR1i',
+    priceId: 'price_1THiBUITUCNxtMxlAHUvPut7',
   },
 ];
 
