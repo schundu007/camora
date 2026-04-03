@@ -24,12 +24,13 @@ const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.
 const CAPRA_API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
 const PREP_SECTIONS = [
-  { key: 'techstack', label: 'Tech Stack Analysis', description: 'Technology-specific questions and deep dives', icon: '🔧' },
+  { key: 'pitch', label: 'Elevator Pitch', description: 'A personalized 2-3 minute interview pitch', icon: '🎯' },
   { key: 'hr', label: 'HR Questions', description: 'Salary negotiation, availability, culture fit', icon: '🤝' },
   { key: 'hiring-manager', label: 'Hiring Manager Questions', description: 'Role-specific technical and behavioral questions', icon: '👔' },
   { key: 'coding', label: 'Coding Questions', description: 'Likely coding problems based on the tech stack', icon: '💻' },
   { key: 'system-design', label: 'System Design Questions', description: 'System design scenarios based on job requirements', icon: '🏗' },
   { key: 'behavioral', label: 'Behavioral Questions', description: 'STAR-format questions tailored to the role', icon: '⭐' },
+  { key: 'techstack', label: 'Tech Stack Analysis', description: 'Technology-specific deep dives', icon: '🔧' },
 ] as const;
 
 const TECH_TO_TOPICS: Record<string, { category: string; topic: string; href: string }> = {
@@ -67,44 +68,146 @@ const TECH_TO_TOPICS: Record<string, { category: string; topic: string; href: st
   'spark': { category: 'Data', topic: 'Apache Spark', href: '/capra/prepare?page=system-design' },
 };
 
-const CODING_TOPICS = [
-  { label: 'Arrays & Hashing', href: '/capra/prepare/coding?topic=arrays-hashing' },
-  { label: 'Trees & Graphs', href: '/capra/prepare/coding?topic=trees-graphs' },
-  { label: 'Dynamic Programming', href: '/capra/prepare/coding?topic=dp' },
-];
+interface StudyPathItem {
+  label: string;
+  href: string;
+  reason: string;
+}
 
-const SYSTEM_DESIGN_TOPICS = [
-  { label: 'Scalability Fundamentals', href: '/capra/prepare/system-design' },
-  { label: 'Database Design', href: '/capra/prepare/databases' },
-];
+interface StudyRound {
+  title: string;
+  icon: string;
+  color: string;
+  estimate: string;
+  items: StudyPathItem[];
+}
 
-const BEHAVIORAL_TOPICS = [
-  { label: 'STAR Method', href: '/capra/prepare/behavioral' },
-  { label: 'Company Culture Fit', href: '/capra/prepare/behavioral' },
-];
+function buildStudyPath(job: any): StudyRound[] {
+  const techStack: string[] = job.ai_tech_stack || [];
+  const title = (job.title || '').toLowerCase();
+  const description = (job.job_description || job.ai_summary || job.description || '').toLowerCase();
+  const company: string = job.company_name || '';
 
-/* ──────────────────────────────── Helpers ──────────────────────────────── */
+  const rounds: StudyRound[] = [];
 
-function matchTechStack(techStack: string[]): { category: string; topic: string; href: string; tech: string }[] {
-  const matched: { category: string; topic: string; href: string; tech: string }[] = [];
-  const seen = new Set<string>();
+  // === CODING ROUND ===
+  const codingItems: StudyPathItem[] = [];
 
-  for (const tech of techStack) {
-    const key = tech.toLowerCase().trim();
-    const match = TECH_TO_TOPICS[key];
-    if (match && !seen.has(match.topic)) {
-      seen.add(match.topic);
-      matched.push({ ...match, tech });
+  if (title.includes('devops') || title.includes('sre') || title.includes('platform')) {
+    codingItems.push({ label: 'Scripting & Automation', href: '/capra/prepare?page=coding', reason: 'DevOps roles require scripting skills' });
+    if (techStack.some(t => ['python','go','golang','bash'].includes(t.toLowerCase()))) {
+      codingItems.push({ label: `${techStack.find(t => ['Python','Go','Golang'].includes(t)) || 'Python'} Problem Solving`, href: '/capra/prepare?page=coding', reason: 'Required in job description' });
+    }
+  } else if (title.includes('backend') || title.includes('full stack') || title.includes('fullstack')) {
+    codingItems.push({ label: 'Data Structures & Algorithms', href: '/capra/prepare?page=coding', reason: 'Core backend interview topic' });
+    codingItems.push({ label: 'API Design Patterns', href: '/capra/prepare?page=coding', reason: 'Backend role requires API expertise' });
+  } else if (title.includes('frontend') || title.includes('front end') || title.includes('front-end')) {
+    codingItems.push({ label: 'JavaScript & DOM', href: '/capra/prepare?page=coding', reason: 'Frontend core skill' });
+    codingItems.push({ label: 'React/Component Patterns', href: '/capra/prepare?page=coding', reason: 'Modern frontend patterns' });
+  } else if (title.includes('data') || title.includes('ml') || title.includes('machine learning')) {
+    codingItems.push({ label: 'Data Processing Algorithms', href: '/capra/prepare?page=coding', reason: 'Data role core skill' });
+    codingItems.push({ label: 'SQL & Query Optimization', href: '/capra/prepare?page=sql', reason: 'Data manipulation skills' });
+  } else {
+    codingItems.push({ label: 'Core Data Structures', href: '/capra/prepare?page=coding', reason: 'Standard coding round preparation' });
+  }
+
+  // Add tech-specific coding items from JD
+  for (const tech of techStack.slice(0, 3)) {
+    const t = tech.toLowerCase();
+    if (TECH_TO_TOPICS[t] && TECH_TO_TOPICS[t].category === 'Coding') {
+      codingItems.push({ label: `${tech} Coding Problems`, href: TECH_TO_TOPICS[t].href, reason: 'Listed in job requirements' });
     }
   }
 
-  return matched;
+  if (codingItems.length > 0) {
+    rounds.push({
+      title: 'Coding Round',
+      icon: '\u{1F4BB}',
+      color: '#10b981',
+      estimate: `estimated ${Math.min(codingItems.length, 3)} problems`,
+      items: codingItems.slice(0, 5),
+    });
+  }
+
+  // === SYSTEM DESIGN ROUND ===
+  const designItems: StudyPathItem[] = [];
+
+  if (title.includes('devops') || title.includes('sre') || title.includes('platform')) {
+    designItems.push({ label: 'CI/CD Pipeline Architecture', href: '/capra/prepare?page=system-design', reason: 'Core DevOps design topic' });
+    designItems.push({ label: 'Monitoring & Observability', href: '/capra/prepare?page=system-design', reason: 'SRE/DevOps essential' });
+    if (description.includes('kubernetes') || techStack.some(t => t.toLowerCase() === 'kubernetes')) {
+      designItems.push({ label: 'Container Orchestration at Scale', href: '/capra/prepare?page=microservices', reason: 'Kubernetes mentioned in JD' });
+    }
+  } else if (title.includes('backend') || title.includes('full stack') || title.includes('fullstack')) {
+    designItems.push({ label: 'Distributed Systems', href: '/capra/prepare?page=system-design', reason: 'Backend design fundamentals' });
+    designItems.push({ label: 'Database Scaling & Sharding', href: '/capra/prepare?page=databases', reason: 'Data layer design' });
+  } else if (title.includes('frontend') || title.includes('front end') || title.includes('front-end')) {
+    designItems.push({ label: 'Frontend Architecture Patterns', href: '/capra/prepare?page=system-design', reason: 'Frontend system design' });
+    designItems.push({ label: 'Performance & Rendering', href: '/capra/prepare?page=system-design', reason: 'Frontend performance at scale' });
+  } else if (title.includes('data') || title.includes('ml') || title.includes('machine learning')) {
+    designItems.push({ label: 'Data Pipeline Architecture', href: '/capra/prepare?page=system-design', reason: 'Data infrastructure design' });
+    designItems.push({ label: 'Batch vs Stream Processing', href: '/capra/prepare?page=system-design', reason: 'Core data engineering topic' });
+  } else {
+    designItems.push({ label: 'Scalability Fundamentals', href: '/capra/prepare?page=system-design', reason: 'Standard system design preparation' });
+    designItems.push({ label: 'Database Design', href: '/capra/prepare?page=databases', reason: 'Common interview topic' });
+  }
+
+  // Add tech-specific design topics
+  for (const tech of techStack) {
+    const t = tech.toLowerCase();
+    if (TECH_TO_TOPICS[t] && ['System Design', 'Architecture', 'DevOps'].includes(TECH_TO_TOPICS[t].category)) {
+      designItems.push({ label: TECH_TO_TOPICS[t].topic, href: TECH_TO_TOPICS[t].href, reason: `${tech} in tech stack` });
+    }
+  }
+
+  // Company-specific
+  const companySlug = slugifyCompany(company);
+  designItems.push({ label: `${company} Architecture Questions`, href: `/interview-questions/${companySlug}`, reason: 'Company-specific preparation' });
+
+  if (designItems.length > 0) {
+    rounds.push({
+      title: 'System Design Round',
+      icon: '\u{1F3D7}',
+      color: '#3b82f6',
+      estimate: `${Math.min(designItems.length, 3)} scenarios`,
+      items: [...new Map(designItems.map(i => [i.label, i])).values()].slice(0, 5),
+    });
+  }
+
+  // === BEHAVIORAL ROUND ===
+  const behavioralItems: StudyPathItem[] = [];
+  behavioralItems.push({ label: 'STAR Method Framework', href: '/capra/prepare?page=behavioral', reason: 'Standard behavioral format' });
+
+  if (title.includes('lead') || title.includes('senior') || title.includes('staff') || title.includes('principal') || title.includes('manager')) {
+    behavioralItems.push({ label: 'Leadership & Mentoring Stories', href: '/capra/prepare?page=behavioral', reason: 'Senior role requires leadership examples' });
+    behavioralItems.push({ label: 'Technical Decision Making', href: '/capra/prepare?page=behavioral', reason: 'Senior roles need decision-making stories' });
+  } else {
+    behavioralItems.push({ label: 'Teamwork & Collaboration', href: '/capra/prepare?page=behavioral', reason: 'Common behavioral topic' });
+  }
+
+  // Company-specific behavioral
+  if (company.toLowerCase().includes('amazon') || company.toLowerCase() === 'aws') {
+    behavioralItems.push({ label: 'Amazon Leadership Principles', href: '/interview-questions/amazon', reason: 'Amazon interviews are LP-focused' });
+  } else if (company.toLowerCase().includes('google')) {
+    behavioralItems.push({ label: 'Googleyness & Culture Fit', href: '/interview-questions/google', reason: 'Google values Googleyness' });
+  } else if (company.toLowerCase().includes('meta') || company.toLowerCase().includes('facebook')) {
+    behavioralItems.push({ label: 'Meta Core Values', href: '/interview-questions/meta', reason: 'Meta interviews focus on core values' });
+  } else {
+    behavioralItems.push({ label: `${company} Culture & Values`, href: `/interview-questions/${companySlug}`, reason: 'Research company culture' });
+  }
+
+  rounds.push({
+    title: 'Behavioral Round',
+    icon: '\u2B50',
+    color: '#f59e0b',
+    estimate: '4-6 questions',
+    items: behavioralItems.slice(0, 5),
+  });
+
+  return rounds;
 }
 
-function isAmazon(companyName: string): boolean {
-  const lower = companyName.toLowerCase();
-  return lower.includes('amazon') || lower === 'aws';
-}
+/* ──────────────────────────────── Helpers ──────────────────────────────── */
 
 function slugifyCompany(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
@@ -158,7 +261,7 @@ export default function JobPrepPage() {
         body: JSON.stringify({
           jobDescription: job.job_description || job.ai_summary || job.description || '',
           resume: 'User resume placeholder', // TODO: get from user profile
-          sections: ['hr', 'hiring-manager', 'coding', 'system-design', 'behavioral', 'techstack'],
+          sections: ['pitch', 'hr', 'hiring-manager', 'coding', 'system-design', 'behavioral', 'techstack'],
           provider: 'claude',
         }),
       });
@@ -340,21 +443,7 @@ export default function JobPrepPage() {
 
   /* ── Main render ── */
   const techStack = job.ai_tech_stack || [];
-  const matchedTopics = matchTechStack(techStack);
-  const companySlug = slugifyCompany(job.company_name);
-  const showAmazonLP = isAmazon(job.company_name);
-
-  // Group matched topics by category
-  const topicsByCategory: Record<string, { topic: string; href: string; tech: string }[]> = {};
-  for (const m of matchedTopics) {
-    if (!topicsByCategory[m.category]) topicsByCategory[m.category] = [];
-    topicsByCategory[m.category].push(m);
-  }
-
-  // Determine cloud-specific topics from matches
-  const cloudTopics = matchedTopics.filter(m =>
-    m.topic.includes('Cloud') || m.topic.includes('Container') || m.topic.includes('Infrastructure')
-  );
+  const studyRounds = buildStudyPath(job);
 
   return (
     <div style={{ background: '#f7f8f9', minHeight: '100vh' }}>
@@ -503,101 +592,36 @@ export default function JobPrepPage() {
               Recommended Study Path
             </h2>
             <p style={{ fontSize: '13px', color: '#9ca3af', margin: '0 0 24px' }}>
-              A personalized checklist based on typical interview rounds
+              Personalized for <strong style={{ color: '#374151' }}>{job.title}</strong> at <strong style={{ color: '#374151' }}>{job.company_name}</strong>
             </p>
 
-            {/* ── Coding Round ── */}
-            <div style={{ marginBottom: '28px' }}>
-              <div className="flex items-center gap-2 mb-3">
-                <div style={{ width: '28px', height: '28px', background: '#eff6ff', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <svg width="14" height="14" fill="none" stroke="#1d4ed8" viewBox="0 0 24 24" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" />
-                  </svg>
+            {studyRounds.map((round, roundIdx) => (
+              <div key={round.title} style={{ marginBottom: roundIdx < studyRounds.length - 1 ? '28px' : 0 }}>
+                <div className="flex items-center gap-2 mb-3">
+                  <div style={{
+                    width: '28px',
+                    height: '28px',
+                    background: `${round.color}18`,
+                    borderRadius: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '14px',
+                  }}>
+                    {round.icon}
+                  </div>
+                  <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#111827', margin: 0, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
+                    {round.title}
+                  </h3>
+                  <span style={{ fontSize: '12px', color: '#9ca3af', fontWeight: 500 }}>({round.estimate})</span>
                 </div>
-                <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#111827', margin: 0, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
-                  Coding Round
-                </h3>
-                <span style={{ fontSize: '12px', color: '#9ca3af', fontWeight: 500 }}>(estimated 2-3 problems)</span>
-              </div>
-              <div style={{ marginLeft: '14px', borderLeft: '2px solid #e5e7eb', paddingLeft: '20px' }}>
-                {CODING_TOPICS.map((t) => (
-                  <StudyItem key={t.label} label={t.label} href={t.href} />
-                ))}
-                {topicsByCategory['Coding']?.map((t) => (
-                  <StudyItem key={t.topic} label={t.topic} href={t.href} badge={t.tech} badgeColor="#1d4ed8" />
-                ))}
-              </div>
-            </div>
-
-            {/* ── System Design Round ── */}
-            <div style={{ marginBottom: '28px' }}>
-              <div className="flex items-center gap-2 mb-3">
-                <div style={{ width: '28px', height: '28px', background: '#fef3c7', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <svg width="14" height="14" fill="none" stroke="#92400e" viewBox="0 0 24 24" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 7.125C2.25 6.504 2.754 6 3.375 6h6c.621 0 1.125.504 1.125 1.125v3.75c0 .621-.504 1.125-1.125 1.125h-6a1.125 1.125 0 01-1.125-1.125v-3.75zM14.25 8.625c0-.621.504-1.125 1.125-1.125h5.25c.621 0 1.125.504 1.125 1.125v8.25c0 .621-.504 1.125-1.125 1.125h-5.25a1.125 1.125 0 01-1.125-1.125v-8.25zM3.75 16.125c0-.621.504-1.125 1.125-1.125h5.25c.621 0 1.125.504 1.125 1.125v2.25c0 .621-.504 1.125-1.125 1.125h-5.25a1.125 1.125 0 01-1.125-1.125v-2.25z" />
-                  </svg>
+                <div style={{ marginLeft: '14px', borderLeft: `2px solid ${round.color}40`, paddingLeft: '20px' }}>
+                  {round.items.map((item) => (
+                    <StudyItem key={item.label} label={item.label} href={item.href} reason={item.reason} />
+                  ))}
                 </div>
-                <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#111827', margin: 0, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
-                  System Design Round
-                </h3>
               </div>
-              <div style={{ marginLeft: '14px', borderLeft: '2px solid #e5e7eb', paddingLeft: '20px' }}>
-                {SYSTEM_DESIGN_TOPICS.map((t) => (
-                  <StudyItem key={t.label} label={t.label} href={t.href} />
-                ))}
-                {cloudTopics.map((t) => (
-                  <StudyItem key={t.topic} label={t.topic} href={t.href} badge={t.tech} badgeColor="#92400e" />
-                ))}
-                {topicsByCategory['System Design']?.filter(t =>
-                  !cloudTopics.some(c => c.topic === t.topic) && !SYSTEM_DESIGN_TOPICS.some(s => s.label === t.topic)
-                ).map((t) => (
-                  <StudyItem key={t.topic} label={t.topic} href={t.href} badge={t.tech} badgeColor="#92400e" />
-                ))}
-                {topicsByCategory['Database']?.map((t) => (
-                  <StudyItem key={t.topic} label={t.topic} href={t.href} badge={t.tech} badgeColor="#065f46" />
-                ))}
-                {topicsByCategory['Architecture']?.map((t) => (
-                  <StudyItem key={t.topic} label={t.topic} href={t.href} badge={t.tech} badgeColor="#9d174d" />
-                ))}
-                {topicsByCategory['DevOps']?.map((t) => (
-                  <StudyItem key={t.topic} label={t.topic} href={t.href} badge={t.tech} badgeColor="#6b21a8" />
-                ))}
-                {topicsByCategory['API']?.map((t) => (
-                  <StudyItem key={t.topic} label={t.topic} href={t.href} badge={t.tech} badgeColor="#9a3412" />
-                ))}
-                <StudyItem
-                  label={`Company-specific: ${job.company_name} interview questions`}
-                  href={`/interview-questions/${companySlug}`}
-                />
-              </div>
-            </div>
-
-            {/* ── Behavioral Round ── */}
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <div style={{ width: '28px', height: '28px', background: '#fce7f3', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <svg width="14" height="14" fill="none" stroke="#9d174d" viewBox="0 0 24 24" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-                  </svg>
-                </div>
-                <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#111827', margin: 0, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
-                  Behavioral Round
-                </h3>
-              </div>
-              <div style={{ marginLeft: '14px', borderLeft: '2px solid #e5e7eb', paddingLeft: '20px' }}>
-                {BEHAVIORAL_TOPICS.map((t) => (
-                  <StudyItem key={t.label} label={t.label} href={t.href} />
-                ))}
-                {showAmazonLP && (
-                  <StudyItem
-                    label="Amazon Leadership Principles"
-                    href={`/interview-questions/${companySlug}`}
-                    badge="Amazon"
-                    badgeColor="#9d174d"
-                  />
-                )}
-              </div>
-            </div>
+            ))}
           </section>
 
           {/* ── AI-Generated Interview Preparation ── */}
@@ -977,15 +1001,15 @@ export default function JobPrepPage() {
 
 /* ──────────────────────────────── StudyItem sub-component ──────────────────────────────── */
 
-function StudyItem({ label, href, badge, badgeColor }: { label: string; href: string; badge?: string; badgeColor?: string }) {
+function StudyItem({ label, href, reason }: { label: string; href: string; reason?: string }) {
   return (
-    <div style={{ marginBottom: '8px' }}>
+    <div style={{ marginBottom: '6px' }}>
       <Link
         to={href}
         className="group"
         style={{
-          display: 'inline-flex',
-          alignItems: 'center',
+          display: 'flex',
+          alignItems: 'flex-start',
           gap: '8px',
           fontSize: '14px',
           fontWeight: 500,
@@ -998,26 +1022,19 @@ function StudyItem({ label, href, badge, badgeColor }: { label: string; href: st
         onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = '#374151'; }}
       >
         {/* Checkbox icon */}
-        <svg width="16" height="16" fill="none" stroke="#d1d5db" viewBox="0 0 24 24" strokeWidth={2} style={{ flexShrink: 0 }}>
+        <svg width="16" height="16" fill="none" stroke="#d1d5db" viewBox="0 0 24 24" strokeWidth={2} style={{ flexShrink: 0, marginTop: '2px' }}>
           <rect x="3" y="3" width="18" height="18" rx="4" />
         </svg>
-        <span>{label}</span>
-        {badge && (
-          <span style={{
-            fontSize: '10px',
-            fontWeight: 700,
-            color: badgeColor || '#6b7280',
-            background: `${badgeColor || '#6b7280'}14`,
-            padding: '2px 6px',
-            borderRadius: '4px',
-            textTransform: 'uppercase',
-            letterSpacing: '0.05em',
-          }}>
-            {badge}
-          </span>
-        )}
-        {/* Arrow */}
-        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} style={{ opacity: 0.3, flexShrink: 0 }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <span>{label}</span>
+          {reason && (
+            <div style={{ fontSize: '12px', color: '#9ca3af', fontWeight: 400, marginTop: '1px' }}>
+              {reason}
+            </div>
+          )}
+        </div>
+        {/* Chevron */}
+        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} style={{ opacity: 0.3, flexShrink: 0, marginTop: '4px' }}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
         </svg>
       </Link>
@@ -1040,7 +1057,7 @@ function PrepSectionContent({ sectionKey, data }: { sectionKey: string; data: an
   }
 
   // Elevator Pitch — formatted text block
-  if (sectionKey === 'techstack') {
+  if (sectionKey === 'pitch') {
     const pitch = data.pitch || data.content || data.text || (typeof data === 'string' ? data : JSON.stringify(data));
     return (
       <div>
