@@ -469,6 +469,7 @@ export default function DocsPage({ onBack }) {
                 </div>
                 <div className="flex items-center gap-2">
                   <a href="/capra/prepare" className="hidden sm:inline text-sm text-gray-400 hover:text-gray-700 font-medium">Dashboard</a>
+                  <button onClick={() => { document.cookie = 'cariara_sso=; domain=.cariara.com; path=/; max-age=0'; window.location.href = '/'; }} className="hidden sm:inline text-sm text-red-400 hover:text-red-600 font-medium">Sign out</button>
                 </div>
               </div>
             </div>
@@ -593,11 +594,6 @@ export default function DocsPage({ onBack }) {
                         </div>
                       </div>
 
-                      {/* Progress Tracker */}
-                      <div className="mb-6">
-                        <ProgressTracker />
-                      </div>
-
                       {/* Category Cards Grid */}
                       <div className="mb-6">
                         <h2 className="landing-display font-bold text-lg tracking-tight text-gray-900 mb-3">Categories</h2>
@@ -624,6 +620,11 @@ export default function DocsPage({ onBack }) {
                             </a>
                           ))}
                         </div>
+                      </div>
+
+                      {/* Progress Tracker */}
+                      <div className="mb-6">
+                        <ProgressTracker />
                       </div>
 
                       {/* Recommended Learning Path */}
