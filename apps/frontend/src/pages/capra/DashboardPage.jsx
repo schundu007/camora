@@ -466,9 +466,8 @@ export default function DashboardPage() {
     } catch (err) {
       if (err.name === 'AbortError') return;
       if (err.needCredits || err.freeTrialExhausted || err.subscriptionRequired) {
-        setShowPricingPlans(true);
-        setError(err.freeTrialExhausted ? 'Free trial exhausted. Upgrade to continue.' : 'You need a subscription to continue.');
-        setErrorType('credits');
+        window.location.href = '/pricing';
+        return;
       } else {
         setError(err.message);
         setErrorType('solve');
