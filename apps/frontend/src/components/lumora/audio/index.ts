@@ -1,5 +1,4 @@
 export { AudioCapture } from './AudioCapture';
-export { VoiceActivityDetector } from './VoiceActivityDetector';
 export { MicrophoneSelector } from './MicrophoneSelector';
 export { CalibrationButton } from './CalibrationButton';
 export { useAudioCapture } from './hooks/useAudioCapture';
