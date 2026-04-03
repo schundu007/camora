@@ -215,7 +215,17 @@ export default function JobsPage() {
 
   // Filters
   const [search, setSearch] = useState('');
-  const [role, setRole] = useState(() => getUserCategory());
+  const [role, setRole] = useState('all');
+  const [roleInitialized, setRoleInitialized] = useState(false);
+
+  // Set role from user profile once auth loads
+  useEffect(() => {
+    if (!authLoading && user && !roleInitialized) {
+      const cat = getUserCategory();
+      if (cat !== 'all') setRole(cat);
+      setRoleInitialized(true);
+    }
+  }, [authLoading, user, roleInitialized]);
 
   // Data
   const [jobs, setJobs] = useState<Job[]>([]);
