@@ -234,6 +234,109 @@ export default function PricingPage() {
         </p>
       </section>
 
+      {/* Competitor comparison */}
+      <section className="px-6 py-16">
+        <div className="max-w-5xl mx-auto">
+          <div className="mb-10 text-center">
+            <span className="text-[11px] font-mono text-gray-500 uppercase tracking-wider">Comparison</span>
+            <h2 className="mt-3 text-2xl md:text-3xl font-semibold tracking-tight text-gray-900">
+              How Camora compares.
+            </h2>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-[13px]">
+              <thead>
+                <tr className="border-b border-[#e3e8ee]">
+                  <th className="text-left py-3 px-4 text-gray-500 font-mono text-[10px] uppercase tracking-wider min-w-[220px]">Feature</th>
+                  <th className="py-3 px-3 text-center min-w-[80px]">
+                    <div className="text-emerald-600 font-semibold text-sm">Camora</div>
+                    <div className="text-[10px] text-gray-500 font-mono">from $0</div>
+                  </th>
+                  <th className="py-3 px-3 text-center min-w-[80px]">
+                    <div className="text-gray-400 text-xs">Final Round</div>
+                    <div className="text-[10px] text-gray-600 font-mono">$100/mo</div>
+                  </th>
+                  <th className="py-3 px-3 text-center min-w-[80px]">
+                    <div className="text-gray-400 text-xs">LockedIn</div>
+                    <div className="text-[10px] text-gray-600 font-mono">$55-120/mo</div>
+                  </th>
+                  <th className="py-3 px-3 text-center min-w-[80px] hidden md:table-cell">
+                    <div className="text-gray-400 text-xs">Solver</div>
+                    <div className="text-[10px] text-gray-600 font-mono">$39/mo</div>
+                  </th>
+                  <th className="py-3 px-3 text-center min-w-[80px] hidden md:table-cell">
+                    <div className="text-gray-400 text-xs">Sensei</div>
+                    <div className="text-[10px] text-gray-600 font-mono">$24-89/mo</div>
+                  </th>
+                  <th className="py-3 px-3 text-center min-w-[80px] hidden lg:table-cell">
+                    <div className="text-gray-400 text-xs">TechPrep</div>
+                    <div className="text-[10px] text-gray-600 font-mono">$39/mo</div>
+                  </th>
+                  <th className="py-3 px-3 text-center min-w-[80px] hidden lg:table-cell">
+                    <div className="text-gray-400 text-xs">AlgoMaster</div>
+                    <div className="text-[10px] text-gray-600 font-mono">$29/mo</div>
+                  </th>
+                  <th className="py-3 px-3 text-center min-w-[80px] hidden lg:table-cell">
+                    <div className="text-gray-400 text-xs">DesignGurus</div>
+                    <div className="text-[10px] text-gray-600 font-mono">$98-197/course</div>
+                  </th>
+                  <th className="py-3 px-3 text-center min-w-[80px] hidden xl:table-cell">
+                    <div className="text-gray-400 text-xs">AIApply</div>
+                    <div className="text-[10px] text-gray-600 font-mono">$29-200/mo</div>
+                  </th>
+                  <th className="py-3 px-3 text-center min-w-[80px] hidden xl:table-cell">
+                    <div className="text-gray-400 text-xs">OfferGoose</div>
+                    <div className="text-[10px] text-gray-600 font-mono">$89-200/mo</div>
+                  </th>
+                  <th className="py-3 px-3 text-center min-w-[80px] hidden xl:table-cell">
+                    <div className="text-gray-400 text-xs">Parakeet</div>
+                    <div className="text-[10px] text-gray-600 font-mono">$100-200/mo</div>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {COMPARISON.map((row, i) => {
+                  const Cell = ({ val }: { val: boolean | string }) => {
+                    if (val === true) return <span className="text-gray-400">&#10003;</span>;
+                    if (val === false) return <span className="text-gray-700">-</span>;
+                    return <span className="text-[10px] text-amber-400 font-mono">{val}</span>;
+                  };
+                  return (
+                    <tr key={i} className="border-b border-[#f0f0f5]">
+                      <td className={`py-2.5 px-4 ${row.unique ? 'text-emerald-400 font-medium' : 'text-gray-400'}`}>
+                        {row.feature}
+                      </td>
+                      <td className="py-2.5 px-3 text-center">
+                        {row.camora === true
+                          ? <span className="text-emerald-400 font-bold">&#10003;</span>
+                          : <Cell val={row.camora} />
+                        }
+                      </td>
+                      <td className="py-2.5 px-3 text-center"><Cell val={row.finalround} /></td>
+                      <td className="py-2.5 px-3 text-center"><Cell val={row.lockedin} /></td>
+                      <td className="py-2.5 px-3 text-center hidden md:table-cell"><Cell val={row.solver} /></td>
+                      <td className="py-2.5 px-3 text-center hidden md:table-cell"><Cell val={row.sensei} /></td>
+                      <td className="py-2.5 px-3 text-center hidden lg:table-cell"><Cell val={row.techprep} /></td>
+                      <td className="py-2.5 px-3 text-center hidden lg:table-cell"><Cell val={row.algomaster} /></td>
+                      <td className="py-2.5 px-3 text-center hidden lg:table-cell"><Cell val={row.designgurus} /></td>
+                      <td className="py-2.5 px-3 text-center hidden xl:table-cell"><Cell val={row.aiapply} /></td>
+                      <td className="py-2.5 px-3 text-center hidden xl:table-cell"><Cell val={row.offergoose} /></td>
+                      <td className="py-2.5 px-3 text-center hidden xl:table-cell"><Cell val={row.parakeet} /></td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      {/* Divider */}
+      <div className="max-w-6xl mx-auto px-6">
+        <div className="h-px bg-[#e3e8ee]" />
+      </div>
+
       {/* Plans */}
       <section className="max-w-[85%] xl:max-w-7xl mx-auto px-6 py-10">
         <div className="grid md:grid-cols-4 gap-px bg-white/[0.04]">
@@ -375,114 +478,6 @@ export default function PricingPage() {
           </div>
         </div>
       </section>
-
-      {/* Divider */}
-      <div className="max-w-6xl mx-auto px-6">
-        <div className="h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
-      </div>
-
-      {/* Competitor comparison */}
-      <section className="px-6 py-16">
-        <div className="max-w-5xl mx-auto">
-          <div className="mb-10 text-center">
-            <span className="text-[11px] font-mono text-gray-500 uppercase tracking-wider">Comparison</span>
-            <h2 className="mt-3 text-2xl md:text-3xl font-semibold tracking-tight text-gray-900">
-              How Camora compares.
-            </h2>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-[13px]">
-              <thead>
-                <tr className="border-b border-[#e3e8ee]">
-                  <th className="text-left py-3 px-4 text-gray-500 font-mono text-[10px] uppercase tracking-wider min-w-[220px]">Feature</th>
-                  <th className="py-3 px-3 text-center min-w-[80px]">
-                    <div className="text-emerald-600 font-semibold text-sm">Camora</div>
-                    <div className="text-[10px] text-gray-500 font-mono">from $0</div>
-                  </th>
-                  <th className="py-3 px-3 text-center min-w-[80px]">
-                    <div className="text-gray-400 text-xs">Final Round</div>
-                    <div className="text-[10px] text-gray-600 font-mono">$100/mo</div>
-                  </th>
-                  <th className="py-3 px-3 text-center min-w-[80px]">
-                    <div className="text-gray-400 text-xs">LockedIn</div>
-                    <div className="text-[10px] text-gray-600 font-mono">$55-120/mo</div>
-                  </th>
-                  <th className="py-3 px-3 text-center min-w-[80px] hidden md:table-cell">
-                    <div className="text-gray-400 text-xs">Solver</div>
-                    <div className="text-[10px] text-gray-600 font-mono">$39/mo</div>
-                  </th>
-                  <th className="py-3 px-3 text-center min-w-[80px] hidden md:table-cell">
-                    <div className="text-gray-400 text-xs">Sensei</div>
-                    <div className="text-[10px] text-gray-600 font-mono">$24-89/mo</div>
-                  </th>
-                  <th className="py-3 px-3 text-center min-w-[80px] hidden lg:table-cell">
-                    <div className="text-gray-400 text-xs">TechPrep</div>
-                    <div className="text-[10px] text-gray-600 font-mono">$39/mo</div>
-                  </th>
-                  <th className="py-3 px-3 text-center min-w-[80px] hidden lg:table-cell">
-                    <div className="text-gray-400 text-xs">AlgoMaster</div>
-                    <div className="text-[10px] text-gray-600 font-mono">$29/mo</div>
-                  </th>
-                  <th className="py-3 px-3 text-center min-w-[80px] hidden lg:table-cell">
-                    <div className="text-gray-400 text-xs">DesignGurus</div>
-                    <div className="text-[10px] text-gray-600 font-mono">$98-197/course</div>
-                  </th>
-                  <th className="py-3 px-3 text-center min-w-[80px] hidden xl:table-cell">
-                    <div className="text-gray-400 text-xs">AIApply</div>
-                    <div className="text-[10px] text-gray-600 font-mono">$29-200/mo</div>
-                  </th>
-                  <th className="py-3 px-3 text-center min-w-[80px] hidden xl:table-cell">
-                    <div className="text-gray-400 text-xs">OfferGoose</div>
-                    <div className="text-[10px] text-gray-600 font-mono">$89-200/mo</div>
-                  </th>
-                  <th className="py-3 px-3 text-center min-w-[80px] hidden xl:table-cell">
-                    <div className="text-gray-400 text-xs">Parakeet</div>
-                    <div className="text-[10px] text-gray-600 font-mono">$100-200/mo</div>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {COMPARISON.map((row, i) => {
-                  const Cell = ({ val }: { val: boolean | string }) => {
-                    if (val === true) return <span className="text-gray-400">&#10003;</span>;
-                    if (val === false) return <span className="text-gray-700">-</span>;
-                    return <span className="text-[10px] text-amber-400 font-mono">{val}</span>;
-                  };
-                  return (
-                    <tr key={i} className="border-b border-[#f0f0f5]">
-                      <td className={`py-2.5 px-4 ${row.unique ? 'text-emerald-400 font-medium' : 'text-gray-400'}`}>
-                        {row.feature}
-                      </td>
-                      <td className="py-2.5 px-3 text-center">
-                        {row.camora === true
-                          ? <span className="text-emerald-400 font-bold">&#10003;</span>
-                          : <Cell val={row.camora} />
-                        }
-                      </td>
-                      <td className="py-2.5 px-3 text-center"><Cell val={row.finalround} /></td>
-                      <td className="py-2.5 px-3 text-center"><Cell val={row.lockedin} /></td>
-                      <td className="py-2.5 px-3 text-center hidden md:table-cell"><Cell val={row.solver} /></td>
-                      <td className="py-2.5 px-3 text-center hidden md:table-cell"><Cell val={row.sensei} /></td>
-                      <td className="py-2.5 px-3 text-center hidden lg:table-cell"><Cell val={row.techprep} /></td>
-                      <td className="py-2.5 px-3 text-center hidden lg:table-cell"><Cell val={row.algomaster} /></td>
-                      <td className="py-2.5 px-3 text-center hidden lg:table-cell"><Cell val={row.designgurus} /></td>
-                      <td className="py-2.5 px-3 text-center hidden xl:table-cell"><Cell val={row.aiapply} /></td>
-                      <td className="py-2.5 px-3 text-center hidden xl:table-cell"><Cell val={row.offergoose} /></td>
-                      <td className="py-2.5 px-3 text-center hidden xl:table-cell"><Cell val={row.parakeet} /></td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      {/* Divider */}
-      <div className="max-w-6xl mx-auto px-6">
-        <div className="h-px bg-[#e3e8ee]" />
-      </div>
 
       {/* FAQ */}
       <section className="px-6 py-16">
