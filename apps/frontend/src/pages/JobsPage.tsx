@@ -196,9 +196,26 @@ function CategoryIcon({ category, size = 28 }: { category: string; size?: number
 export default function JobsPage() {
   const { token, user, isLoading: authLoading, logout } = useAuth();
 
+  // Map user's onboarding role to job filter category
+  const getUserCategory = (): string => {
+    const roles = user?.job_roles;
+    if (!roles || roles.length === 0) return 'all';
+    const r = (Array.isArray(roles) ? roles[0] : roles).toLowerCase();
+    if (r.includes('devops') || r.includes('dev ops')) return 'devops';
+    if (r.includes('sre') || r.includes('site reliability')) return 'sre';
+    if (r.includes('ml') || r.includes('ai')) return 'ml';
+    if (r.includes('data')) return 'data';
+    if (r.includes('full stack') || r.includes('fullstack')) return 'fullstack';
+    if (r.includes('frontend') || r.includes('front')) return 'frontend';
+    if (r.includes('backend') || r.includes('back')) return 'backend';
+    if (r.includes('platform')) return 'platform';
+    if (r.includes('cloud') || r.includes('infrastructure')) return 'cloud';
+    return 'all';
+  };
+
   // Filters
   const [search, setSearch] = useState('');
-  const [role, setRole] = useState('all');
+  const [role, setRole] = useState(() => getUserCategory());
 
   // Data
   const [jobs, setJobs] = useState<Job[]>([]);
