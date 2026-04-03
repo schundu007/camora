@@ -426,7 +426,7 @@ export default function PricingPage() {
                   </th>
                   <th className="py-3 px-3 text-center min-w-[80px] hidden lg:table-cell">
                     <div className="text-gray-400 text-xs">DesignGurus</div>
-                    <div className="text-[10px] text-gray-600 font-mono">$79 one-time</div>
+                    <div className="text-[10px] text-gray-600 font-mono">$98-197/course</div>
                   </th>
                 </tr>
               </thead>
