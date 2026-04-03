@@ -402,7 +402,7 @@ export default function PricingPage() {
                   </th>
                   <th className="py-3 px-3 text-center min-w-[80px]">
                     <div className="text-gray-400 text-xs">Final Round</div>
-                    <div className="text-[10px] text-gray-600 font-mono">$25/mo</div>
+                    <div className="text-[10px] text-gray-600 font-mono">$100/mo</div>
                   </th>
                   <th className="py-3 px-3 text-center min-w-[80px]">
                     <div className="text-gray-400 text-xs">LockedIn</div>
