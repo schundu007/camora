@@ -21,6 +21,16 @@ interface Job {
 /* ──────────────────────────────── Constants ──────────────────────────────── */
 
 const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'http://localhost:8000';
+const CAPRA_API_URL = import.meta.env.VITE_CAPRA_API_URL || 'http://localhost:3009';
+
+const PREP_SECTIONS = [
+  { key: 'elevator-pitch', label: 'Elevator Pitch', description: 'A personalized 2-3 minute pitch for this role', icon: '🎯' },
+  { key: 'hr', label: 'HR Questions', description: 'Salary negotiation, availability, culture fit', icon: '🤝' },
+  { key: 'hiring-manager', label: 'Hiring Manager Questions', description: 'Role-specific technical and behavioral questions', icon: '👔' },
+  { key: 'coding', label: 'Coding Questions', description: 'Likely coding problems based on the tech stack', icon: '💻' },
+  { key: 'system-design', label: 'System Design Questions', description: 'System design scenarios based on job requirements', icon: '🏗' },
+  { key: 'behavioral', label: 'Behavioral Questions', description: 'STAR-format questions tailored to the role', icon: '⭐' },
+] as const;
 
 const TECH_TO_TOPICS: Record<string, { category: string; topic: string; href: string }> = {
   'kubernetes': { category: 'System Design', topic: 'Container Orchestration', href: '/capra/prepare?page=microservices' },
@@ -125,6 +135,76 @@ export default function JobPrepPage() {
   const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // AI Interview Prep state
+  const [generating, setGenerating] = useState(false);
+  const [generatedSections, setGeneratedSections] = useState<Record<string, any>>({});
+  const [expandedSection, setExpandedSection] = useState<string | null>(null);
+  const [prepError, setPrepError] = useState<string | null>(null);
+
+  const generatePrep = async () => {
+    if (!job) return;
+    setGenerating(true);
+    setPrepError(null);
+    setGeneratedSections({});
+
+    try {
+      const response = await fetch(`${CAPRA_API_URL}/api/v1/ascend-prep/stream`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          jobDescription: job.description || '',
+          resume: 'User resume placeholder', // TODO: get from user profile
+          sections: ['elevator-pitch', 'hr', 'hiring-manager', 'coding', 'system-design', 'behavioral'],
+          provider: 'claude',
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Server returned ${response.status}`);
+      }
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+
+      if (!reader) {
+        throw new Error('No response stream available');
+      }
+
+      let buffer = '';
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const event = JSON.parse(line.slice(6));
+              if (event.section && event.status === 'completed' && event.result) {
+                setGeneratedSections(prev => ({
+                  ...prev,
+                  [event.section]: event.result,
+                }));
+              }
+            } catch {
+              // Ignore malformed SSE lines
+            }
+          }
+        }
+      }
+    } catch (err: any) {
+      setPrepError(err.message || 'Failed to generate interview prep material. Please try again.');
+    } finally {
+      setGenerating(false);
+    }
+  };
 
   useEffect(() => {
     if (!id) return;
@@ -506,6 +586,292 @@ export default function JobPrepPage() {
             </div>
           </section>
 
+          {/* ── AI-Generated Interview Preparation ── */}
+          <section style={{ background: '#ffffff', border: '1px solid #e3e8ee', borderRadius: '12px', padding: '24px', marginBottom: '24px' }}>
+            <div className="flex items-start justify-between mb-1">
+              <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#111827', margin: 0, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
+                AI-Generated Interview Preparation
+              </h2>
+              {Object.keys(generatedSections).length > 0 && !generating && (
+                <span style={{ fontSize: '12px', color: '#10b981', fontWeight: 600 }}>
+                  {Object.keys(generatedSections).length} / {PREP_SECTIONS.length} sections
+                </span>
+              )}
+            </div>
+            <p style={{ fontSize: '13px', color: '#9ca3af', margin: '0 0 20px' }}>
+              Generate personalized prep material using AI based on this job's description and requirements
+            </p>
+
+            {/* Generate button */}
+            {Object.keys(generatedSections).length === 0 && !generating && (
+              <button
+                onClick={generatePrep}
+                style={{
+                  width: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '10px',
+                  fontSize: '15px',
+                  fontWeight: 700,
+                  color: '#ffffff',
+                  background: '#10b981',
+                  border: 'none',
+                  borderRadius: '10px',
+                  padding: '14px 24px',
+                  cursor: 'pointer',
+                  transition: 'background 0.15s',
+                  fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+                }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#059669'; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '#10b981'; }}
+              >
+                <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
+                </svg>
+                Generate Prep Material
+              </button>
+            )}
+
+            {/* Generating state — button disabled with spinner */}
+            {generating && Object.keys(generatedSections).length === 0 && (
+              <button
+                disabled
+                style={{
+                  width: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '10px',
+                  fontSize: '15px',
+                  fontWeight: 700,
+                  color: '#ffffff',
+                  background: '#6ee7b7',
+                  border: 'none',
+                  borderRadius: '10px',
+                  padding: '14px 24px',
+                  cursor: 'not-allowed',
+                  fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+                }}
+              >
+                <div
+                  style={{
+                    width: '18px',
+                    height: '18px',
+                    border: '2.5px solid rgba(255,255,255,0.4)',
+                    borderTopColor: '#ffffff',
+                    borderRadius: '50%',
+                  }}
+                  className="animate-spin"
+                />
+                Generating...
+              </button>
+            )}
+
+            {/* Error state */}
+            {prepError && (
+              <div style={{
+                background: '#fef2f2',
+                border: '1px solid #fecaca',
+                borderRadius: '10px',
+                padding: '16px',
+                marginTop: '12px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '12px',
+              }}>
+                <div className="flex items-center gap-3">
+                  <svg width="18" height="18" fill="none" stroke="#dc2626" viewBox="0 0 24 24" strokeWidth={2} style={{ flexShrink: 0 }}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                  </svg>
+                  <span style={{ fontSize: '13px', color: '#991b1b' }}>
+                    {prepError}
+                  </span>
+                </div>
+                <button
+                  onClick={() => { setPrepError(null); generatePrep(); }}
+                  style={{
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    color: '#dc2626',
+                    background: 'transparent',
+                    border: '1px solid #fca5a5',
+                    borderRadius: '6px',
+                    padding: '6px 14px',
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap',
+                    transition: 'background 0.15s',
+                  }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#fee2e2'; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+                >
+                  Retry
+                </button>
+              </div>
+            )}
+
+            {/* Section progress + expandable cards */}
+            {(generating || Object.keys(generatedSections).length > 0) && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: generating && Object.keys(generatedSections).length === 0 ? '0' : '4px' }}>
+                {PREP_SECTIONS.map((sec) => {
+                  const isDone = !!generatedSections[sec.key];
+                  const isGenerating = generating && !isDone;
+                  const isExpanded = expandedSection === sec.key;
+                  const isPending = !generating && !isDone;
+
+                  // Determine status indicator
+                  const currentlyGenerating = generating && !isDone && !Object.keys(generatedSections).includes(sec.key);
+                  // Find the first non-completed section to mark as "active"
+                  const firstPendingKey = PREP_SECTIONS.find(s => !generatedSections[s.key])?.key;
+                  const isActive = generating && sec.key === firstPendingKey;
+
+                  return (
+                    <div key={sec.key}>
+                      <button
+                        onClick={() => {
+                          if (isDone) setExpandedSection(isExpanded ? null : sec.key);
+                        }}
+                        style={{
+                          width: '100%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '12px',
+                          padding: '14px 16px',
+                          background: isDone ? '#ffffff' : '#f9fafb',
+                          border: `1px solid ${isDone ? '#e3e8ee' : '#f3f4f6'}`,
+                          borderRadius: isExpanded ? '10px 10px 0 0' : '10px',
+                          cursor: isDone ? 'pointer' : 'default',
+                          textAlign: 'left',
+                          transition: 'border-color 0.15s, background 0.15s',
+                          ...(isDone ? {} : { opacity: isPending ? 0.5 : 1 }),
+                        }}
+                        onMouseEnter={(e) => { if (isDone) { (e.currentTarget as HTMLElement).style.borderColor = '#d1d5db'; } }}
+                        onMouseLeave={(e) => { if (isDone) { (e.currentTarget as HTMLElement).style.borderColor = '#e3e8ee'; } }}
+                      >
+                        {/* Status indicator */}
+                        {isDone ? (
+                          <div style={{
+                            width: '24px',
+                            height: '24px',
+                            background: '#d1fae5',
+                            borderRadius: '50%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flexShrink: 0,
+                          }}>
+                            <svg width="14" height="14" fill="none" stroke="#059669" viewBox="0 0 24 24" strokeWidth={2.5}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                            </svg>
+                          </div>
+                        ) : isActive ? (
+                          <div
+                            style={{
+                              width: '24px',
+                              height: '24px',
+                              border: '2.5px solid #d1fae5',
+                              borderTopColor: '#10b981',
+                              borderRadius: '50%',
+                              flexShrink: 0,
+                            }}
+                            className="animate-spin"
+                          />
+                        ) : (
+                          <div style={{
+                            width: '24px',
+                            height: '24px',
+                            background: '#f3f4f6',
+                            borderRadius: '50%',
+                            border: '2px solid #e5e7eb',
+                            flexShrink: 0,
+                          }} />
+                        )}
+
+                        {/* Label + description */}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{
+                            fontSize: '14px',
+                            fontWeight: 600,
+                            color: isDone ? '#111827' : '#6b7280',
+                            fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+                          }}>
+                            {sec.label}
+                          </div>
+                          <div style={{ fontSize: '12px', color: '#9ca3af', marginTop: '2px' }}>
+                            {sec.description}
+                          </div>
+                        </div>
+
+                        {/* Chevron for completed sections */}
+                        {isDone && (
+                          <svg
+                            width="16"
+                            height="16"
+                            fill="none"
+                            stroke="#9ca3af"
+                            viewBox="0 0 24 24"
+                            strokeWidth={2}
+                            style={{
+                              flexShrink: 0,
+                              transition: 'transform 0.2s',
+                              transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                            }}
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                          </svg>
+                        )}
+                      </button>
+
+                      {/* Expanded content */}
+                      {isDone && isExpanded && (
+                        <div style={{
+                          padding: '20px',
+                          background: '#ffffff',
+                          border: '1px solid #e3e8ee',
+                          borderTop: 'none',
+                          borderRadius: '0 0 10px 10px',
+                        }}>
+                          <PrepSectionContent sectionKey={sec.key} data={generatedSections[sec.key]} />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+
+                {/* Regenerate button after generation is complete */}
+                {!generating && Object.keys(generatedSections).length > 0 && (
+                  <button
+                    onClick={generatePrep}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      fontSize: '13px',
+                      fontWeight: 600,
+                      color: '#6b7280',
+                      background: 'transparent',
+                      border: '1px solid #e3e8ee',
+                      borderRadius: '8px',
+                      padding: '10px 20px',
+                      cursor: 'pointer',
+                      marginTop: '4px',
+                      transition: 'background 0.15s, border-color 0.15s, color 0.15s',
+                    }}
+                    onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = '#f9fafb'; el.style.borderColor = '#d1d5db'; el.style.color = '#374151'; }}
+                    onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'transparent'; el.style.borderColor = '#e3e8ee'; el.style.color = '#6b7280'; }}
+                  >
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182M20.99 14.359v4.992" />
+                    </svg>
+                    Regenerate All Sections
+                  </button>
+                )}
+              </div>
+            )}
+          </section>
+
           {/* ── Bottom CTAs ── */}
           <section style={{ background: '#ffffff', border: '1px solid #e3e8ee', borderRadius: '12px', padding: '24px' }}>
             <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#111827', margin: '0 0 16px', fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
@@ -641,6 +1007,267 @@ function StudyItem({ label, href, badge, badgeColor }: { label: string; href: st
           <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
         </svg>
       </Link>
+    </div>
+  );
+}
+
+/* ──────────────────────────────── PrepSectionContent sub-component ──────────────────────────────── */
+
+function PrepSectionContent({ sectionKey, data }: { sectionKey: string; data: any }) {
+  if (!data) return null;
+
+  // If data is a plain string, render it directly
+  if (typeof data === 'string') {
+    return (
+      <div style={{ fontSize: '14px', color: '#374151', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>
+        {data}
+      </div>
+    );
+  }
+
+  // Elevator Pitch — formatted text block
+  if (sectionKey === 'elevator-pitch') {
+    const pitch = data.pitch || data.content || data.text || (typeof data === 'string' ? data : JSON.stringify(data));
+    return (
+      <div>
+        {data.title && (
+          <h4 style={{ fontSize: '14px', fontWeight: 700, color: '#111827', margin: '0 0 12px', fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
+            {data.title}
+          </h4>
+        )}
+        <div style={{
+          fontSize: '14px',
+          color: '#374151',
+          lineHeight: 1.8,
+          whiteSpace: 'pre-wrap',
+          background: '#f9fafb',
+          borderRadius: '8px',
+          padding: '16px 20px',
+          borderLeft: '3px solid #10b981',
+        }}>
+          {pitch}
+        </div>
+        {data.tips && Array.isArray(data.tips) && (
+          <div style={{ marginTop: '16px' }}>
+            <h5 style={{ fontSize: '13px', fontWeight: 600, color: '#6b7280', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Tips</h5>
+            <ul style={{ margin: 0, paddingLeft: '20px' }}>
+              {data.tips.map((tip: string, i: number) => (
+                <li key={i} style={{ fontSize: '13px', color: '#6b7280', lineHeight: 1.6, marginBottom: '4px' }}>{tip}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Q&A-based sections (HR, Hiring Manager, Behavioral)
+  if (['hr', 'hiring-manager', 'behavioral'].includes(sectionKey)) {
+    const questions = data.questions || data.items || (Array.isArray(data) ? data : []);
+    if (!Array.isArray(questions) || questions.length === 0) {
+      return <div style={{ fontSize: '14px', color: '#6b7280' }}>No questions generated.</div>;
+    }
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        {questions.map((q: any, i: number) => (
+          <div key={i} style={{ borderBottom: i < questions.length - 1 ? '1px solid #f3f4f6' : 'none', paddingBottom: i < questions.length - 1 ? '16px' : '0' }}>
+            <div style={{ fontSize: '14px', fontWeight: 600, color: '#111827', marginBottom: '8px', display: 'flex', gap: '8px' }}>
+              <span style={{ color: '#10b981', fontWeight: 700, flexShrink: 0 }}>Q{i + 1}.</span>
+              <span>{q.question || q.q || (typeof q === 'string' ? q : '')}</span>
+            </div>
+            {(q.answer || q.a || q.suggested_answer || q.sampleAnswer) && (
+              <div style={{
+                fontSize: '13px',
+                color: '#4b5563',
+                lineHeight: 1.7,
+                marginLeft: '32px',
+                background: '#f9fafb',
+                borderRadius: '6px',
+                padding: '12px 16px',
+                whiteSpace: 'pre-wrap',
+              }}>
+                {q.answer || q.a || q.suggested_answer || q.sampleAnswer}
+              </div>
+            )}
+            {sectionKey === 'behavioral' && (q.situation || q.task || q.action || q.result) && (
+              <div style={{ marginLeft: '32px', marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {q.situation && (
+                  <div style={{ fontSize: '13px', color: '#4b5563', lineHeight: 1.6 }}>
+                    <span style={{ fontWeight: 700, color: '#10b981' }}>S</span>
+                    <span style={{ fontWeight: 600, color: '#374151' }}>ituation: </span>
+                    {q.situation}
+                  </div>
+                )}
+                {q.task && (
+                  <div style={{ fontSize: '13px', color: '#4b5563', lineHeight: 1.6 }}>
+                    <span style={{ fontWeight: 700, color: '#10b981' }}>T</span>
+                    <span style={{ fontWeight: 600, color: '#374151' }}>ask: </span>
+                    {q.task}
+                  </div>
+                )}
+                {q.action && (
+                  <div style={{ fontSize: '13px', color: '#4b5563', lineHeight: 1.6 }}>
+                    <span style={{ fontWeight: 700, color: '#10b981' }}>A</span>
+                    <span style={{ fontWeight: 600, color: '#374151' }}>ction: </span>
+                    {q.action}
+                  </div>
+                )}
+                {q.result && (
+                  <div style={{ fontSize: '13px', color: '#4b5563', lineHeight: 1.6 }}>
+                    <span style={{ fontWeight: 700, color: '#10b981' }}>R</span>
+                    <span style={{ fontWeight: 600, color: '#374151' }}>esult: </span>
+                    {q.result}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  // Coding Questions — list of problems with hints
+  if (sectionKey === 'coding') {
+    const problems = data.problems || data.questions || data.items || (Array.isArray(data) ? data : []);
+    if (!Array.isArray(problems) || problems.length === 0) {
+      return <div style={{ fontSize: '14px', color: '#6b7280' }}>No coding questions generated.</div>;
+    }
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        {problems.map((p: any, i: number) => (
+          <div key={i} style={{
+            background: '#f9fafb',
+            borderRadius: '8px',
+            padding: '16px',
+            border: '1px solid #f3f4f6',
+          }}>
+            <div style={{ fontSize: '14px', fontWeight: 600, color: '#111827', marginBottom: '6px', display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <span style={{
+                fontSize: '11px',
+                fontWeight: 700,
+                color: (p.difficulty || '').toLowerCase() === 'hard' ? '#dc2626' : (p.difficulty || '').toLowerCase() === 'medium' ? '#d97706' : '#059669',
+                background: (p.difficulty || '').toLowerCase() === 'hard' ? '#fef2f2' : (p.difficulty || '').toLowerCase() === 'medium' ? '#fffbeb' : '#ecfdf5',
+                padding: '2px 8px',
+                borderRadius: '4px',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+              }}>
+                {p.difficulty || 'Medium'}
+              </span>
+              <span>{p.title || p.name || p.question || `Problem ${i + 1}`}</span>
+            </div>
+            {(p.description || p.problem) && (
+              <div style={{ fontSize: '13px', color: '#4b5563', lineHeight: 1.7, marginBottom: '8px', whiteSpace: 'pre-wrap' }}>
+                {p.description || p.problem}
+              </div>
+            )}
+            {(p.hint || p.hints) && (
+              <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '8px' }}>
+                <span style={{ fontWeight: 600, color: '#9ca3af' }}>Hint: </span>
+                {typeof p.hints === 'string' ? p.hints : Array.isArray(p.hints) ? p.hints.join(' | ') : p.hint}
+              </div>
+            )}
+            {p.topics && Array.isArray(p.topics) && (
+              <div className="flex flex-wrap gap-1" style={{ marginTop: '8px' }}>
+                {p.topics.map((t: string, ti: number) => (
+                  <span key={ti} style={{
+                    fontSize: '11px',
+                    fontWeight: 500,
+                    color: '#1d4ed8',
+                    background: '#eff6ff',
+                    padding: '2px 8px',
+                    borderRadius: '4px',
+                  }}>{t}</span>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  // System Design Questions — list of design scenarios
+  if (sectionKey === 'system-design') {
+    const scenarios = data.scenarios || data.questions || data.items || (Array.isArray(data) ? data : []);
+    if (!Array.isArray(scenarios) || scenarios.length === 0) {
+      return <div style={{ fontSize: '14px', color: '#6b7280' }}>No system design questions generated.</div>;
+    }
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        {scenarios.map((s: any, i: number) => (
+          <div key={i} style={{
+            background: '#f9fafb',
+            borderRadius: '8px',
+            padding: '16px',
+            border: '1px solid #f3f4f6',
+          }}>
+            <div style={{ fontSize: '14px', fontWeight: 600, color: '#111827', marginBottom: '8px' }}>
+              {s.title || s.name || s.question || `Scenario ${i + 1}`}
+            </div>
+            {(s.description || s.prompt || s.scenario) && (
+              <div style={{ fontSize: '13px', color: '#4b5563', lineHeight: 1.7, marginBottom: '10px', whiteSpace: 'pre-wrap' }}>
+                {s.description || s.prompt || s.scenario}
+              </div>
+            )}
+            {(s.requirements || s.considerations) && (
+              <div style={{ marginTop: '8px' }}>
+                <h5 style={{ fontSize: '12px', fontWeight: 600, color: '#6b7280', margin: '0 0 6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Key Considerations
+                </h5>
+                <ul style={{ margin: 0, paddingLeft: '20px' }}>
+                  {(s.requirements || s.considerations || []).map((r: string, ri: number) => (
+                    <li key={ri} style={{ fontSize: '13px', color: '#4b5563', lineHeight: 1.6, marginBottom: '4px' }}>{r}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {s.approach && (
+              <div style={{
+                fontSize: '13px',
+                color: '#4b5563',
+                lineHeight: 1.7,
+                marginTop: '10px',
+                background: '#ffffff',
+                borderRadius: '6px',
+                padding: '12px 16px',
+                border: '1px solid #e5e7eb',
+                whiteSpace: 'pre-wrap',
+              }}>
+                <span style={{ fontWeight: 600, color: '#374151' }}>Approach: </span>
+                {s.approach}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  // Fallback — render as formatted JSON or text
+  if (typeof data === 'object') {
+    return (
+      <pre style={{
+        fontSize: '13px',
+        color: '#374151',
+        lineHeight: 1.6,
+        whiteSpace: 'pre-wrap',
+        wordBreak: 'break-word',
+        background: '#f9fafb',
+        borderRadius: '8px',
+        padding: '16px',
+        margin: 0,
+        overflow: 'auto',
+      }}>
+        {JSON.stringify(data, null, 2)}
+      </pre>
+    );
+  }
+
+  return (
+    <div style={{ fontSize: '14px', color: '#374151', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>
+      {String(data)}
     </div>
   );
 }
