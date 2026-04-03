@@ -708,7 +708,7 @@ export default function DashboardPage() {
   // ---------------------------------------------------------------------------
   if (!authChecked) {
     return (
-      <div className="h-screen-safe flex items-center justify-center bg-white landing-root">
+      <div className="h-screen flex items-center justify-center bg-white landing-root">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ background: '#10b981' }}>
             <svg className="w-6 h-6 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -728,7 +728,7 @@ export default function DashboardPage() {
   // Main App Render
   // ---------------------------------------------------------------------------
   return (
-    <div className={`h-screen-safe flex overflow-hidden landing-root text-gray-900`} style={{ background: '#f7f8f9', ...(isMobile ? { paddingBottom: 'calc(52px + env(safe-area-inset-bottom, 0px))' } : {}) }}>
+    <div className={`h-screen flex overflow-hidden landing-root text-gray-900`} style={{ background: '#f7f8f9', ...(isMobile ? { paddingBottom: 'calc(52px + env(safe-area-inset-bottom, 0px))' } : {}) }}>
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
