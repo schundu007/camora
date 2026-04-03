@@ -371,12 +371,23 @@ const FEATURE_GROUPS = [
   },
 ];
 
+/* ── Competitor bar chart data ──────────────────────────── */
+const COMP_BARS = [
+  { name: 'Camora', count: 40, color: '#34d399', suffix: '+' },
+  { name: 'LockedIn', count: 22, color: '#6b7280', suffix: '' },
+  { name: 'Final Round', count: 18, color: '#6b7280', suffix: '' },
+  { name: 'Sensei', count: 15, color: '#6b7280', suffix: '' },
+  { name: 'Solver', count: 12, color: '#6b7280', suffix: '' },
+];
+
 /* ════════════════════════════════════════════════════════════
    LANDING PAGE
    ════════════════════════════════════════════════════════════ */
 export default function LandingPage() {
   const { isAuthenticated, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const compRef = useRef<HTMLDivElement>(null);
+  const compInView = useInView(compRef, { once: true, margin: '-80px' });
 
   useEffect(() => { window.scrollTo(0, 0); }, []);
 
@@ -661,6 +672,31 @@ export default function LandingPage() {
               </FadeIn>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ── CAMORA VS COMPETITORS — Bar Chart ── */}
+      <section ref={compRef} className="px-6 py-20 md:py-28" style={{ zIndex: 1 }}>
+        <div className="max-w-6xl mx-auto">
+          <FadeIn className="text-center mb-16">
+            <span className="gradient-text text-sm font-bold tracking-[0.2em] uppercase">Head-to-Head</span>
+            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mt-4">See why engineers switch to Camora.</h2>
+          </FadeIn>
+          <FadeIn className="max-w-2xl mx-auto">
+            {COMP_BARS.map((bar, i) => (
+              <div key={bar.name} className="flex items-center gap-3 mb-3"
+                style={{ opacity: compInView ? 1 : 0, transition: 'opacity 0.5s ease', transitionDelay: `${i * 100 + 300}ms` }}>
+                <span className={`text-sm font-semibold w-24 text-right flex-shrink-0 ${i === 0 ? 'text-emerald-500' : 'text-gray-400'}`}>{bar.name}</span>
+                <div className="flex-1 h-7 rounded-lg bg-gray-100 overflow-hidden">
+                  <div className="h-full rounded-lg flex items-center justify-end pr-2.5"
+                    style={{ width: compInView ? `${(bar.count / 45) * 100}%` : '0%', background: bar.color, transition: `width 1s ease ${i * 100 + 400}ms` }}>
+                    <span className="text-xs font-bold font-code text-white whitespace-nowrap">{bar.count}{bar.suffix}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+            <p className="text-center text-xs text-gray-400 mt-4 font-code tracking-wide">FEATURES COMPARISON</p>
+          </FadeIn>
         </div>
       </section>
 
