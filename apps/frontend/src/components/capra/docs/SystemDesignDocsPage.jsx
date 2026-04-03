@@ -174,7 +174,7 @@ export default function SystemDesignDocsPage() {
               </h2>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 xl:grid-cols-1 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
               {filteredTopics.map((topic, i) => (
                 <a
                   key={topic.id}
@@ -214,7 +214,7 @@ export default function SystemDesignDocsPage() {
               </h2>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-1 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {systemDesigns.map((design) => (
                 <a
                   key={design.id}
@@ -254,7 +254,7 @@ export default function SystemDesignDocsPage() {
                   <span className="text-gray-400 font-normal text-base landing-body">(45 min)</span>
                 </h3>
               </div>
-              <div className="grid md:grid-cols-1 gap-3">
+              <div className="grid md:grid-cols-4 gap-3">
                 {[
                   { time: '5 min', step: 'Requirements', desc: 'Clarify functional & non-functional requirements, scale', num: '01', accent: 'emerald' },
                   { time: '5 min', step: 'Estimations', desc: 'Back-of-envelope: QPS, storage, bandwidth', num: '02', accent: 'cyan' },
@@ -283,7 +283,7 @@ export default function SystemDesignDocsPage() {
               </h2>
             </div>
 
-            <div className="grid md:grid-cols-1 gap-4">
+            <div className="grid md:grid-cols-2 gap-4">
               {/* Building Blocks */}
               <div className="p-5 rounded-lg border border-gray-200 bg-white">
                 <h3 className="text-gray-900 font-semibold text-sm landing-display mb-4 flex items-center gap-2">

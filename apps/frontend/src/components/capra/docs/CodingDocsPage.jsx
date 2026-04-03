@@ -114,7 +114,7 @@ export default function CodingDocsPage() {
           </a>
 
           {/* Topic Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 xl:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
             {filteredTopics.map((topic) => (
               <a
                 key={topic.id}
@@ -140,7 +140,7 @@ export default function CodingDocsPage() {
           {/* Quick Reference Section */}
           <div className="mt-12">
             <h2 className="text-xl font-bold text-gray-900 mb-6">Quick Reference</h2>
-            <div className="grid md:grid-cols-1 gap-6">
+            <div className="grid md:grid-cols-2 gap-6">
               {/* Time Complexity */}
               <div className="p-6 rounded-lg" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
                 <h3 className="text-gray-900 font-semibold mb-4 flex items-center gap-2">

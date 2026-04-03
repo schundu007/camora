@@ -582,7 +582,7 @@ export default function DocsPage({ onBack }) {
                       </div>
 
                       {/* Progress Stats Row */}
-                      <div className="grid grid-cols-1 gap-3 mb-6">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
                         <div className="rounded-xl border border-[#e3e8ee] bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:border-[#d0d5dd] transition-colors">
                           <div className="text-2xl font-bold text-emerald-600 landing-display">{overviewTotalCompleted}</div>
                           <div className="text-xs text-gray-500 landing-body">Topics Completed</div>
@@ -604,7 +604,7 @@ export default function DocsPage({ onBack }) {
                       {/* Category Cards Grid */}
                       <div className="mb-6">
                         <h2 className="landing-display font-bold text-lg tracking-tight text-gray-900 mb-3">Categories</h2>
-                        <div className="grid grid-cols-1 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                           {overviewCategories.map(cat => (
                             <a key={cat.id} href={`/capra/prepare/${cat.href}`} className="group rounded-xl border border-[#e3e8ee] bg-white p-5 hover:border-[#d0d5dd] shadow-[0_1px_3px_rgba(0,0,0,0.04)] transition-all" style={{ borderLeft: `4px solid ${cat.color}` }}>
                               <div className="flex items-center gap-3 mb-3">
@@ -638,7 +638,7 @@ export default function DocsPage({ onBack }) {
                       <div className="mb-6">
                         <h2 className="landing-display font-bold text-lg tracking-tight text-gray-900 mb-3">Recommended Path</h2>
                         <div className="rounded-xl border border-[#e3e8ee] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-                          <div className="grid grid-cols-1 gap-3">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                             {[
                               { step: '01', title: 'DSA Fundamentals', desc: 'Arrays, strings, trees, graphs', href: '/capra/prepare/coding', accent: 'emerald' },
                               { step: '02', title: 'System Design', desc: 'Scalability, databases, caching', href: '/capra/prepare/system-design', accent: 'blue' },
@@ -762,7 +762,7 @@ export default function DocsPage({ onBack }) {
                 <>
                   {/* All topics in a flat 2-column grid */}
                   <div className="rounded-lg overflow-hidden mb-6 border border-[#e3e8ee] shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-                    <div className="grid grid-cols-1 bg-white">
+                    <div className="grid grid-cols-1 md:grid-cols-2 bg-white">
                     {filteredTopics.map((topic, idx) => {
                       const catId = codingCategoryMap[topic.id];
                       const category = codingCategories.find(c => c.id === catId);
@@ -807,7 +807,7 @@ export default function DocsPage({ onBack }) {
                       <span className="landing-mono text-xs text-emerald-600 tracking-widest uppercase">Cheat Sheet</span>
                       <h2 className="landing-display font-bold text-xl mt-1 tracking-tight text-gray-900">Quick Reference</h2>
                     </div>
-                    <div className="grid grid-cols-1 gap-3">
+                    <div className="grid md:grid-cols-2 gap-4">
                       {/* Time Complexity Card */}
                       <div className="rounded-lg overflow-hidden border border-[#e3e8ee] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:border-[#d0d5dd] transition-colors">
                         <div className="px-4 py-3 border-b border-gray-100 bg-emerald-50/50">
@@ -906,7 +906,7 @@ export default function DocsPage({ onBack }) {
                             <span className="text-[10px] landing-mono text-gray-400">{categoryTopics.length} topics</span>
                           </div>
                           {/* Topics in Category */}
-                          <div className="grid grid-cols-1 bg-white">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-white">
                             {categoryTopics.map((topic) => (
                               <div
                                 key={topic.id}
@@ -966,7 +966,7 @@ export default function DocsPage({ onBack }) {
                             <span className="text-[10px] landing-mono text-gray-400">{categoryDesigns.length} systems</span>
                           </div>
                           {/* Designs in Category */}
-                          <div className="grid grid-cols-1 bg-white">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-white">
                             {categoryDesigns.map((design) => {
                               const diffStyle = difficultyStyles[design.difficulty] || difficultyStyles['Medium'];
                               const designProblem = `Design ${design.title}. ${design.description || design.subtitle || ''}`;
@@ -1035,7 +1035,7 @@ export default function DocsPage({ onBack }) {
                             <h3 className="text-sm font-semibold text-gray-900 landing-display">{category.name}</h3>
                             <span className="text-[10px] landing-mono text-gray-400">{categoryProblems.length} problems</span>
                           </div>
-                          <div className="grid grid-cols-1 bg-white">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-white">
                             {categoryProblems.map((problem) => {
                               const diffStyle = { Easy: 'text-emerald-600 bg-emerald-50 border border-emerald-200', Medium: 'text-amber-600 bg-amber-50 border border-amber-200', Hard: 'text-red-600 bg-red-50 border border-red-200' }[problem.difficulty] || 'text-amber-600 bg-amber-50 border border-amber-200';
                               return (
@@ -1093,7 +1093,7 @@ export default function DocsPage({ onBack }) {
                             <h3 className="text-sm font-semibold text-gray-900 landing-display">{category.name}</h3>
                             <span className="text-[10px] landing-mono text-gray-400">{categoryTopics.length} patterns</span>
                           </div>
-                          <div className="grid grid-cols-1 bg-white">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-white">
                             {categoryTopics.map((topic) => (
                               <div
                                 key={topic.id}
@@ -1144,7 +1144,7 @@ export default function DocsPage({ onBack }) {
                             <h3 className="text-sm font-semibold text-gray-900 landing-display">{category.name}</h3>
                             <span className="text-[10px] landing-mono text-gray-400">{categoryTopics.length} patterns</span>
                           </div>
-                          <div className="grid grid-cols-1 bg-white">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-white">
                             {categoryTopics.map((topic) => (
                               <div
                                 key={topic.id}
@@ -1195,7 +1195,7 @@ export default function DocsPage({ onBack }) {
                             <h3 className="text-sm font-semibold text-gray-900 landing-display">{category.name}</h3>
                             <span className="text-[10px] landing-mono text-gray-400">{categoryTopics.length} topics</span>
                           </div>
-                          <div className="grid grid-cols-1 bg-white">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-white">
                             {categoryTopics.map((topic) => (
                               <div
                                 key={topic.id}
@@ -1246,7 +1246,7 @@ export default function DocsPage({ onBack }) {
                             <h3 className="text-sm font-semibold text-gray-900 landing-display">{category.name}</h3>
                             <span className="text-[10px] landing-mono text-gray-400">{categoryTopics.length} topics</span>
                           </div>
-                          <div className="grid grid-cols-1 bg-white">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-white">
                             {categoryTopics.map((topic) => (
                               <div
                                 key={topic.id}
@@ -1285,7 +1285,7 @@ export default function DocsPage({ onBack }) {
                       <p className="text-sm text-gray-500 landing-body mt-1">Thread-safe programming, synchronization, and classic problems</p>
                     </div>
                     <div className="rounded-lg overflow-hidden border border-[#e3e8ee] shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-                      <div className="grid grid-cols-1 bg-white">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-white">
                         {concurrencyTopics.map((topic) => (
                           <div
                             key={topic.id}
@@ -1322,7 +1322,7 @@ export default function DocsPage({ onBack }) {
                         <span className="text-gray-400 font-normal text-sm landing-body">(45 min)</span>
                       </h3>
                     </div>
-                    <div className="grid grid-cols-1 gap-2.5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5">
                       {[
                         { time: '5 min', step: 'Requirements', desc: 'Functional & non-functional requirements', num: '01', accent: 'emerald', color: '#a7f3d0', hoverColor: '#6ee7b7' },
                         { time: '5 min', step: 'Estimations', desc: 'QPS, storage, bandwidth calculations', num: '02', accent: 'cyan', color: '#a5f3fc', hoverColor: '#67e8f9' },
@@ -1365,7 +1365,7 @@ export default function DocsPage({ onBack }) {
                             <h3 className="text-sm font-semibold text-gray-900 landing-display">{category.name}</h3>
                             <span className="text-[10px] landing-mono text-gray-400">{categoryTopics.length} topics</span>
                           </div>
-                          <div className="grid grid-cols-1 bg-white">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-white">
                             {categoryTopics.map((topic) => (
                               <div
                                 key={topic.id}
@@ -1419,7 +1419,7 @@ export default function DocsPage({ onBack }) {
                             <h3 className="text-sm font-semibold text-gray-900 landing-display">{category.name}</h3>
                             <span className="text-[10px] landing-mono text-gray-400">{categoryProblems.length} problems</span>
                           </div>
-                          <div className="grid grid-cols-1 bg-white">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-white">
                             {categoryProblems.map((problem) => {
                               const diffStyle = { Easy: 'text-emerald-600 bg-emerald-50 border border-emerald-200', Medium: 'text-amber-600 bg-amber-50 border border-amber-200', Hard: 'text-red-600 bg-red-50 border border-red-200' }[problem.difficulty] || 'text-amber-600 bg-amber-50 border border-amber-200';
                               return (
@@ -1489,7 +1489,7 @@ export default function DocsPage({ onBack }) {
                             />
                           </div>
                           {/* Stats row */}
-                          <div className="grid grid-cols-1 gap-3">
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                             {[
                               { value: completedCount, label: 'Topics Done', total: totalTopics, color: '#10b981' },
                               { value: starredCount, label: 'Starred', total: null, color: '#f59e0b' },
@@ -1523,7 +1523,7 @@ export default function DocsPage({ onBack }) {
                       <div className="relative">
                         {/* Connection line */}
                         <div className="hidden md:block absolute top-1/2 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-300 via-amber-300 via-emerald-300 to-red-300 -translate-y-1/2 z-0 mx-12" />
-                        <div className="grid grid-cols-1 gap-3 relative z-10">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 relative z-10">
                           {[
                             { letter: 'S', title: 'Situation', desc: 'Set the scene — when, where, what was at stake.', color: '#3b82f6', timing: '15%' },
                             { letter: 'T', title: 'Task', desc: 'Your responsibility. What was expected of you?', color: '#f59e0b', timing: '10%' },
@@ -1585,7 +1585,7 @@ export default function DocsPage({ onBack }) {
                             </div>
                           </div>
                           {/* Topics in Category */}
-                          <div className="grid grid-cols-1 bg-white">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-white">
                             {categoryTopics.map((topic) => (
                               <div
                                 key={topic.id}
@@ -1626,7 +1626,7 @@ export default function DocsPage({ onBack }) {
                       <h2 className="landing-display font-bold text-xl mt-1 tracking-tight text-gray-900">Company-Specific Prep</h2>
                       <p className="text-sm text-gray-500 landing-body mt-1">Tailored guidance for top tech companies</p>
                     </div>
-                    <div className="grid grid-cols-1 gap-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {companyPrep.map((company) => (
                         <div
                           key={company.id}
@@ -1680,7 +1680,7 @@ export default function DocsPage({ onBack }) {
                       <span className="landing-mono text-xs text-emerald-600 tracking-widest uppercase">Game Day</span>
                       <h2 className="landing-display font-bold text-xl mt-1 tracking-tight text-gray-900">Interview Day Playbook</h2>
                     </div>
-                    <div className="grid grid-cols-1 gap-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
                       {[
                         { icon: 'user', title: 'Use "I" not "We"', desc: 'Own your contribution. Interviewers evaluate you, not your team.', metric: '#1 Rule', metricColor: '#ef4444' },
                         { icon: 'clock', title: '2 Min Per Answer', desc: 'Concise and structured. Practice timing for the ideal window.', metric: '90-120s', metricColor: '#3b82f6' },
@@ -1724,7 +1724,7 @@ export default function DocsPage({ onBack }) {
                             <h3 className="text-sm font-semibold text-gray-900 landing-display">{category.name}</h3>
                             <span className="text-[10px] landing-mono text-gray-400">{categoryTopics.length} patterns</span>
                           </div>
-                          <div className="grid grid-cols-1 bg-white">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-white">
                             {categoryTopics.map((topic) => (
                               <div
                                 key={topic.id}
@@ -1778,7 +1778,7 @@ export default function DocsPage({ onBack }) {
                             <h3 className="text-sm font-semibold text-gray-900 landing-display">{category.name}</h3>
                             <span className="text-[10px] landing-mono text-gray-400">{categoryTopics.length} topics</span>
                           </div>
-                          <div className="grid grid-cols-1 bg-white">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-white">
                             {categoryTopics.map((topic) => (
                               <div
                                 key={topic.id}
@@ -1832,7 +1832,7 @@ export default function DocsPage({ onBack }) {
                             <h3 className="text-sm font-semibold text-gray-900 landing-display">{category.name}</h3>
                             <span className="text-[10px] landing-mono text-gray-400">{categoryTopics.length} topics</span>
                           </div>
-                          <div className="grid grid-cols-1 bg-white">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-white">
                             {categoryTopics.map((topic) => (
                               <div
                                 key={topic.id}

@@ -117,7 +117,7 @@ export default function BehavioralDocsPage() {
               <Icon name="star" size={20} className="text-purple-400" />
               The STAR Method
             </h3>
-            <div className="grid grid-cols-1 gap-4">
+            <div className="grid md:grid-cols-4 gap-4">
               {[
                 { letter: 'S', title: 'Situation', desc: 'Set the scene and give context for your story', color: '#ef4444' },
                 { letter: 'T', title: 'Task', desc: 'Describe your responsibility in that situation', color: '#f59e0b' },
@@ -137,7 +137,7 @@ export default function BehavioralDocsPage() {
 
           {/* Question Categories */}
           <h2 className="text-xl font-bold text-gray-900 mb-4">Question Categories</h2>
-          <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 xl:grid-cols-1 gap-4 mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-12">
             {filteredTopics.map((topic) => (
               <a
                 key={topic.id}
@@ -162,7 +162,7 @@ export default function BehavioralDocsPage() {
 
           {/* Company-Specific */}
           <h2 className="text-xl font-bold text-gray-900 mb-4">Company-Specific Prep</h2>
-          <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-12">
             {starStories.map((story) => (
               <a
                 key={story.id}
@@ -191,7 +191,7 @@ export default function BehavioralDocsPage() {
 
           {/* Quick Reference Section */}
           <h2 className="text-xl font-bold text-gray-900 mb-6">Quick Reference</h2>
-          <div className="grid md:grid-cols-1 gap-6">
+          <div className="grid md:grid-cols-2 gap-6">
             {/* Do's */}
             <div className="p-6 rounded-lg" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
               <h3 className="text-gray-900 font-semibold mb-4 flex items-center gap-2">
@@ -231,7 +231,7 @@ export default function BehavioralDocsPage() {
               <Icon name="lightbulb" size={20} className="text-green-400" />
               Pro Tips for Behavioral Interviews
             </h3>
-            <div className="grid md:grid-cols-1 gap-4">
+            <div className="grid md:grid-cols-3 gap-4">
               {[
                 { title: 'Prepare a Story Bank', desc: 'Create 8-10 detailed stories covering leadership, conflict, failure, and achievement themes' },
                 { title: 'Research the Company', desc: 'Align your stories with company values and the specific role requirements' },
