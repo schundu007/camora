@@ -575,39 +575,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── APPA JOURNEY — Cards ── */}
-      <section id="appa" className="px-6 py-20 md:py-28" style={{ zIndex: 1, background: 'linear-gradient(180deg, #fafafa 0%, #ffffff 100%)' }}>
-        <div className="max-w-6xl mx-auto">
-          <FadeIn className="text-center mb-16">
-            <span className="gradient-text text-sm font-bold tracking-[0.2em] uppercase">The APPA Framework</span>
-            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mt-4">
-              <span style={{ color: '#34d399' }}>Apply.</span>{' '}
-              <span style={{ color: '#818cf8' }}>Prepare.</span>{' '}
-              <span style={{ color: '#38bdf8' }}>Practice.</span>{' '}
-              <span style={{ color: '#fbbf24' }}>Attend.</span>
-            </h2>
-            <p className="mt-5 text-base md:text-lg text-gray-500 max-w-2xl mx-auto">
-              The complete interview lifecycle in one platform. No other tool covers all four stages.
-            </p>
-          </FadeIn>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {APPA.map((step, i) => (
-              <FadeIn key={step.label} delay={i * 0.1}>
-                <Link to={step.href} className="group block h-full rounded-2xl border border-gray-200 p-8 hover:border-gray-300 hover:shadow-lg hover:shadow-gray-100/50 transition-all duration-300">
-                  <div className="w-14 h-14 rounded-xl flex items-center justify-center mb-5 border border-gray-200" style={{ background: `${step.color}10` }}>
-                    {AppaIcons[step.label.toLowerCase() as keyof typeof AppaIcons](step.color)}
-                  </div>
-                  <div className="font-code text-sm text-gray-400 mb-1 font-semibold">{step.num}</div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3 font-display">{step.label}</h3>
-                  <p className="text-base text-gray-500 leading-relaxed">{step.desc}</p>
-                  <div className="mt-5 text-sm font-semibold opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: step.color }}>Explore →</div>
-                </Link>
-              </FadeIn>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* ── PROCESS — Accordion (MetAntz-style) ── */}
       <section id="process" className="px-6 py-20 md:py-28" style={{ zIndex: 1 }}>
         <div className="max-w-6xl mx-auto">
@@ -646,58 +613,6 @@ export default function LandingPage() {
                   </div>
                 </div>
               </div>
-            </FadeIn>
-          </div>
-        </div>
-      </section>
-
-      {/* ── TWO PRODUCTS — Lumora + Capra ── */}
-      <section className="px-6 py-20 md:py-28" style={{ zIndex: 1 }}>
-        <div className="max-w-6xl mx-auto">
-          <FadeIn className="text-center mb-16">
-            <span className="gradient-text text-sm font-bold tracking-[0.2em] uppercase">Two Products</span>
-            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mt-4">Prepare before. Perform during.</h2>
-          </FadeIn>
-          <div className="grid md:grid-cols-2 gap-6">
-            <FadeIn>
-              <Link to="/lumora" className="group block h-full rounded-3xl border border-gray-200 p-8 md:p-10 hover:border-emerald-300 hover:shadow-xl hover:shadow-emerald-50/50 transition-all duration-300">
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center">{AppaIcons.lumora('#34d399')}</div>
-                  <div>
-                    <h3 className="text-2xl font-bold font-display">Lumora</h3>
-                    <span className="text-sm font-semibold text-emerald-600">Live Interview AI</span>
-                  </div>
-                </div>
-                <p className="text-gray-400 text-lg leading-relaxed mb-8">Real-time AI that listens, transcribes, and generates expert answers during your live interview.</p>
-                <div className="space-y-3">
-                  {['Voice transcription with speaker filtering', 'Auto-generated architecture diagrams', 'Multi-approach coding solutions', 'STAR-format behavioral responses'].map(f => (
-                    <div key={f} className="flex items-center gap-3 text-[15px] text-gray-500">
-                      <svg className="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>{f}
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-8 text-emerald-500 font-semibold group-hover:translate-x-1 transition-transform duration-200">Launch Lumora →</div>
-              </Link>
-            </FadeIn>
-            <FadeIn delay={0.12}>
-              <Link to="/capra/prepare" className="group block h-full rounded-3xl border border-gray-200 p-8 md:p-10 hover:border-indigo-300 hover:shadow-xl hover:shadow-indigo-50/50 transition-all duration-300">
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center">{AppaIcons.capra('#818cf8')}</div>
-                  <div>
-                    <h3 className="text-2xl font-bold font-display">Capra</h3>
-                    <span className="text-sm font-semibold text-indigo-600">Interview Preparation</span>
-                  </div>
-                </div>
-                <p className="text-gray-400 text-lg leading-relaxed mb-8">Study and practice with 415+ curated topics, AI explanations, and timed mock interviews.</p>
-                <div className="space-y-3">
-                  {['System design deep dives with diagrams', 'DSA problems with multiple solutions', 'Behavioral question frameworks', 'Timed mock interview simulator'].map(f => (
-                    <div key={f} className="flex items-center gap-3 text-[15px] text-gray-500">
-                      <svg className="w-4 h-4 text-indigo-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>{f}
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-8 text-indigo-500 font-semibold group-hover:translate-x-1 transition-transform duration-200">Start Preparing →</div>
-              </Link>
             </FadeIn>
           </div>
         </div>
