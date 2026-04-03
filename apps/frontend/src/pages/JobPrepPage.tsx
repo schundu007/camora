@@ -20,8 +20,8 @@ interface Job {
 
 /* ──────────────────────────────── Constants ──────────────────────────────── */
 
-const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'http://localhost:8000';
-const CAPRA_API_URL = import.meta.env.VITE_CAPRA_API_URL || 'http://localhost:3009';
+const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
+const CAPRA_API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
 const PREP_SECTIONS = [
   { key: 'elevator-pitch', label: 'Elevator Pitch', description: 'A personalized 2-3 minute pitch for this role', icon: '🎯' },

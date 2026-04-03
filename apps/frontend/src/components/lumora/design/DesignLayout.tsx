@@ -6,7 +6,7 @@ import { ArchitectureDiagram } from '@/components/lumora/interview/ArchitectureD
 import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
 import { transcriptionAPI } from '@/lib/api-client';
 
-const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'http://localhost:8000';
+const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
 
 interface DesignLayoutProps {
   onBack: () => void;

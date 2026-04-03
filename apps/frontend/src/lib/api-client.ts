@@ -2,7 +2,7 @@
  * API client for communicating with the backend.
  */
 
-const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'http://localhost:8000';
+const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
 
 class APIError extends Error {
   constructor(

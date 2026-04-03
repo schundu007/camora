@@ -6,7 +6,7 @@ import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
 // Lazy-load Monaco
 const MonacoEditor = lazy(() => import('@monaco-editor/react'));
 
-const API_BASE_URL = import.meta.env.VITE_LUMORA_API_URL || 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
 
 const LANGUAGES = [
   // ── Languages ──

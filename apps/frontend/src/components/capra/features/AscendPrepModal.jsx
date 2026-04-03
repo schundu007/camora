@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import InputPanel from '../prep/InputPanel';
 import OutputPanel from '../prep/OutputPanel';
-const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'http://localhost:3009';
+const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 import { useIsMobile } from '../../../hooks/capra/useIsMobile';
 import { getAuthHeaders } from '../../../utils/authHeaders.js';
 

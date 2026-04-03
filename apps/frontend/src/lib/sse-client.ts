@@ -4,7 +4,7 @@
 
 import type { SSEEvent, StreamStartEvent, TokenEvent, AnswerEvent, StatusEvent, ErrorEvent } from '@/types';
 
-const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'http://localhost:8000';
+const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
 
 export interface StreamOptions {
   conversationId?: string;

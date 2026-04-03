@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getToken } from '../../../utils/authHeaders.js';
-const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'http://localhost:3009';
+const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 const isElectron = false; // Electron removed in unified frontend
 
 // Platform categories - using initials instead of generic icons

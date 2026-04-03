@@ -3,7 +3,7 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { Icon } from '../../shared/Icons.jsx';
 import CompetitorComparison from './CompetitorComparison.jsx';
 
-const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'http://localhost:3009';
+const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
 export default function PremiumPage() {
   const { token: authToken, isAuthenticated } = useAuth();

@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 
 export default function SignupPage() {
-  const googleAuthUrl = `${import.meta.env.VITE_CAPRA_API_URL || 'http://localhost:3009'}/api/auth/google/login`;
+  const googleAuthUrl = `${import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com'}/api/auth/google/login`;
 
   const navLinks = [
     { label: 'Apply', href: '/jobs' },

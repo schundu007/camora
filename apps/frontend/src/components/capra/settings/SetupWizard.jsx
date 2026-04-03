@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import ApiKeyInput from './ApiKeyInput';
 
-const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'http://localhost:3009';
+const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
 export default function SetupWizard({ onComplete }) {
   const [step, setStep] = useState(1);

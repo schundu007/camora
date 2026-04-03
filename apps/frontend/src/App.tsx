@@ -45,7 +45,7 @@ function LoginPage() {
     return <Loading />;
   }
 
-  const googleAuthUrl = `${import.meta.env.VITE_CAPRA_API_URL || 'http://localhost:3009'}/api/auth/google/login`;
+  const googleAuthUrl = `${import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com'}/api/auth/google/login`;
 
   return (
     <div className="min-h-screen" style={{ background: '#f7f8f9' }}>

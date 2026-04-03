@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 /* ──────────────────────────────── Constants ──────────────────────────────── */
 
-const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'http://localhost:8000';
+const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
 
 const navLinks = [
   { label: 'Apply', href: '/jobs' },

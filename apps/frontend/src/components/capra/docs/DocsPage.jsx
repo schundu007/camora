@@ -35,7 +35,7 @@ const lldProblems = [..._lldProblems, ...extraLldProblems];
 import TopicDetail from './TopicDetail.jsx';
 import ProgressTracker from './ProgressTracker.jsx';
 
-const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'http://localhost:3009';
+const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
 /**
  * Cloud Architecture Diagram Component

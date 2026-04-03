@@ -3,7 +3,7 @@ import { Allotment } from 'allotment';
 import 'allotment/dist/style.css';
 import { Icon } from '../../shared/Icons.jsx';
 import { getProblemBySlug, DIFFICULTY_COLORS, generateSlug } from '../../../data/capra/problems.js';
-const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'http://localhost:3009';
+const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 import { getAuthHeaders } from '../../../utils/authHeaders.js';
 
 
