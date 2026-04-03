@@ -615,17 +615,49 @@ export default function LandingPage() {
           </FadeIn>
           <div className="grid md:grid-cols-3 gap-6">
             {[
-              { mode: 'General', color: '#34d399', desc: 'Behavioral, situational, and technical Q&A with real-time voice transcription. Generates structured STAR-format responses.', tags: ['Voice Capture', 'Context Memory', 'STAR Format', 'Streaming'] },
-              { mode: 'System Design', color: '#38bdf8', desc: 'Auto-generated architecture diagrams, scale estimates, and deep-dive analysis with trade-off comparisons.', tags: ['Architecture', 'Diagrams', 'Scale Math', 'Tradeoffs'] },
-              { mode: 'Coding', color: '#818cf8', desc: 'Paste or speak a problem. Get multiple optimal solutions with time and space complexity analysis and edge cases.', tags: ['Multi-Solution', 'Complexity', 'Edge Cases', 'All Languages'] },
+              {
+                mode: 'General', color: '#34d399',
+                desc: 'Voice-powered Q&A with STAR-format behavioral answers.',
+                tags: ['Voice Capture', 'STAR Format', 'Streaming'],
+                icon: (
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                    <path d="M8 10h.01M12 10h.01M16 10h.01" />
+                  </svg>
+                ),
+              },
+              {
+                mode: 'System Design', color: '#38bdf8',
+                desc: 'Architecture diagrams with scale estimates and tradeoffs.',
+                tags: ['Architecture', 'Diagrams', 'Tradeoffs'],
+                icon: (
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="2" y="3" width="20" height="14" rx="2" />
+                    <path d="M8 21h8M12 17v4" />
+                    <path d="M7 8h2v5H7zM11 7h2v6h-2zM15 9h2v4h-2z" />
+                  </svg>
+                ),
+              },
+              {
+                mode: 'Coding', color: '#818cf8',
+                desc: 'Multi-approach solutions with complexity analysis.',
+                tags: ['Multi-Solution', 'Complexity', 'All Languages'],
+                icon: (
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="16 18 22 12 16 6" />
+                    <polyline points="8 6 2 12 8 18" />
+                    <line x1="14" y1="4" x2="10" y2="20" />
+                  </svg>
+                ),
+              },
             ].map((f, i) => (
               <FadeIn key={f.mode} delay={i * 0.1}>
                 <div className="h-full rounded-2xl border border-gray-200 p-8 hover:border-gray-300 hover:shadow-lg hover:shadow-gray-100/50 transition-all duration-300">
                   <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-5 border border-gray-200" style={{ background: `${f.color}10` }}>
-                    <div className="w-3.5 h-3.5 rounded-full" style={{ background: f.color }} />
+                    {f.icon}
                   </div>
                   <h3 className="text-xl font-bold text-gray-900 mb-3 font-display">{f.mode}</h3>
-                  <p className="text-base text-gray-500 leading-relaxed mb-6">{f.desc}</p>
+                  <p className="text-[15px] text-gray-500 leading-relaxed mb-6">{f.desc}</p>
                   <div className="flex flex-wrap gap-2">
                     {f.tags.map(t => (
                       <span key={t} className="px-3 py-1.5 rounded-lg font-code text-xs font-medium border border-gray-200" style={{ color: f.color, background: `${f.color}08` }}>{t}</span>
