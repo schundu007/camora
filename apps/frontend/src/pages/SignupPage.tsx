@@ -37,7 +37,7 @@ export default function SignupPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // No backend signup yet — navigate to login
-    navigate('/capra/login');
+    navigate('/login');
   };
 
   return (
@@ -230,7 +230,7 @@ export default function SignupPage() {
         <div className="mt-7 pt-5 border-t border-gray-100 text-center">
           <p className="text-sm text-gray-500">
             Already have an account?{' '}
-            <Link to="/capra/login" className="text-emerald-600 hover:text-emerald-700 font-semibold">Sign in</Link>
+            <Link to="/login" className="text-emerald-600 hover:text-emerald-700 font-semibold">Sign in</Link>
           </p>
         </div>
       </div>

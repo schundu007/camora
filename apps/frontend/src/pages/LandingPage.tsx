@@ -467,7 +467,7 @@ export default function LandingPage() {
                 <button onClick={logout} className="text-[15px] text-red-500 hover:text-red-600 transition-colors font-medium">Sign out</button>
               </>
             ) : (
-              <Link to="/capra/login" className="text-[15px] text-gray-500 hover:text-gray-900 transition-colors font-medium">Sign in</Link>
+              <Link to="/login" className="text-[15px] text-gray-500 hover:text-gray-900 transition-colors font-medium">Sign in</Link>
             )}
             <Link to="/lumora" className="shimmer-btn px-5 py-2.5 text-[15px] font-semibold text-white bg-gray-900 rounded-xl hover:bg-gray-800 transition-colors">
               Launch App
@@ -496,7 +496,7 @@ export default function LandingPage() {
                     <button onClick={() => { setMobileMenuOpen(false); logout(); }} className="block py-2.5 text-base text-red-500 font-medium w-full text-left">Sign out</button>
                   </>
                 ) : (
-                  <Link to="/capra/login" className="block py-2.5 text-base text-gray-600 font-medium" onClick={() => setMobileMenuOpen(false)}>Sign in</Link>
+                  <Link to="/login" className="block py-2.5 text-base text-gray-600 font-medium" onClick={() => setMobileMenuOpen(false)}>Sign in</Link>
                 )}
               </div>
             </motion.div>

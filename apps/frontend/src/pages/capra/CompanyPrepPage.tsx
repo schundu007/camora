@@ -478,7 +478,7 @@ export default function CompanyPrepPage() {
                 </button>
               </>
             ) : !loading ? (
-              <Link to="/capra/login" className="practice-body" style={{ fontSize: 14, fontWeight: 500, color: '#4b5563', textDecoration: 'none' }}>
+              <Link to="/login" className="practice-body" style={{ fontSize: 14, fontWeight: 500, color: '#4b5563', textDecoration: 'none' }}>
                 Sign in
               </Link>
             ) : null}

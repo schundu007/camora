@@ -298,7 +298,7 @@ export default function PracticePage() {
               </>
             ) : !loading ? (
               <Link
-                to="/capra/login"
+                to="/login"
                 className="practice-body"
                 style={{
                   fontSize: '14px',
@@ -416,7 +416,7 @@ export default function PracticePage() {
             </>
           ) : !loading ? (
             <Link
-              to="/capra/login"
+              to="/login"
               onClick={() => setMobileMenuOpen(false)}
               className="practice-body"
               style={{

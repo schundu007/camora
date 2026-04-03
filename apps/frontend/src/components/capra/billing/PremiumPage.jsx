@@ -21,7 +21,7 @@ export default function PremiumPage() {
     try {
       if (!isAuthenticated) {
         localStorage.setItem('capra_pending_plan', planId);
-        window.location.href = '/capra/login';
+        window.location.href = '/login';
         return;
       }
       const token = authToken;
@@ -84,7 +84,7 @@ export default function PremiumPage() {
           {isAuthenticated ? (
             <a href="/capra/practice" className="px-5 py-2 bg-emerald-500 text-white font-semibold text-sm rounded-lg hover:bg-emerald-400 transition-colors landing-body">Go to App</a>
           ) : (
-            <button onClick={() => window.location.href = '/capra/login'} className="px-5 py-2 bg-emerald-500 text-white font-semibold text-sm rounded-lg hover:bg-emerald-400 transition-colors landing-body">Sign In</button>
+            <button onClick={() => window.location.href = '/login'} className="px-5 py-2 bg-emerald-500 text-white font-semibold text-sm rounded-lg hover:bg-emerald-400 transition-colors landing-body">Sign In</button>
           )}
         </div>
         <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden p-2 text-gray-400 hover:text-white transition-colors"><Icon name={mobileMenuOpen ? 'close' : 'menu'} size={22} /></button>
@@ -98,7 +98,7 @@ export default function PremiumPage() {
           {isAuthenticated ? (
             <a href="/capra/practice" className="block w-full mt-2 px-4 py-2.5 bg-emerald-500 text-white font-semibold text-sm text-center rounded-lg hover:bg-emerald-600 transition-colors landing-body">Go to App</a>
           ) : (
-            <button onClick={() => window.location.href = '/capra/login'} className="block w-full mt-2 px-4 py-2.5 bg-emerald-500 text-white font-semibold text-sm text-center rounded-lg hover:bg-emerald-600 transition-colors landing-body">Sign In with Google</button>
+            <button onClick={() => window.location.href = '/login'} className="block w-full mt-2 px-4 py-2.5 bg-emerald-500 text-white font-semibold text-sm text-center rounded-lg hover:bg-emerald-600 transition-colors landing-body">Sign In with Google</button>
           )}
         </div>
       )}

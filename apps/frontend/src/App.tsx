@@ -278,7 +278,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   if (isLoading) return <Loading />;
   if (!isAuthenticated) {
-    return <Navigate to={`/capra/login?redirect=${encodeURIComponent(location.pathname)}`} replace />;
+    return <Navigate to={`/login?redirect=${encodeURIComponent(location.pathname)}`} replace />;
   }
   // Only enforce onboarding for Capra routes
   if (location.pathname.startsWith('/capra') && onboardingCompleted === false && location.pathname !== '/capra/onboarding') {
@@ -296,7 +296,6 @@ export function App() {
           <Route path="/" element={<LandingPage />} />
           <Route path="/pricing" element={<PricingPage />} />
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/capra/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/premium" element={<PricingPage />} />
           <Route path="/download" element={<ProtectedRoute><CapraDashboard /></ProtectedRoute>} />

@@ -75,7 +75,7 @@ export function PricingPage() {
     if (plan.name === 'Free Trial') { window.location.href = '/lumora'; return; }
     const priceId = PRICE_MAP[plan.name];
     if (!priceId) { window.location.href = '/lumora'; return; }
-    if (!token) { window.location.href = '/capra/login'; return; }
+    if (!token) { window.location.href = '/login'; return; }
     setLoading(plan.name);
     try {
       const resp = await fetch(`${API_URL}/api/v1/billing/checkout`, {

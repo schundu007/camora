@@ -75,7 +75,7 @@ export function LandingPage() {
                 <button onClick={logout} className="text-[13px] text-red-400 hover:text-red-300 transition-colors font-medium">Sign out</button>
               </>
             ) : (
-              <Link to="/capra/login" className="text-[13px] text-gray-400 hover:text-white transition-colors">
+              <Link to="/login" className="text-[13px] text-gray-400 hover:text-white transition-colors">
                 Sign in
               </Link>
             )}
@@ -116,7 +116,7 @@ export function LandingPage() {
                         className="block py-2 text-sm text-red-400 font-medium">Sign out</button>
               </>
             ) : (
-              <Link to="/capra/login" className="block py-2 text-sm text-gray-400"
+              <Link to="/login" className="block py-2 text-sm text-gray-400"
                     onClick={() => setMobileMenuOpen(false)}>Sign in</Link>
             )}
           </div>

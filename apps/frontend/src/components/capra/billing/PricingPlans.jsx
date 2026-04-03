@@ -47,7 +47,7 @@ export default function PricingPlans({ isOpen, onClose }) {
   ];
 
   const handleSubscribe = async (planId) => {
-    if (!user) { window.location.href = '/capra/login'; return; }
+    if (!user) { window.location.href = '/login'; return; }
     setLoading(planId);
     setError('');
     try {

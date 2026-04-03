@@ -342,7 +342,7 @@ export default function JobsPage() {
               </>
             ) : !authLoading ? (
               <Link
-                to="/capra/login"
+                to="/login"
                 style={{
                   fontSize: '14px',
                   fontWeight: 500,

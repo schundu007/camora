@@ -112,7 +112,7 @@ export default function PricingPage() {
     // Free plan — go straight to the app
     if (!plan.priceId) { navigate('/lumora'); return; }
     // Not logged in — send to login first
-    if (!token) { navigate('/capra/login'); return; }
+    if (!token) { navigate('/login'); return; }
     setLoading(plan.name);
     try {
       const resp = await fetch(`${API_URL}/api/v1/billing/checkout`, {
@@ -175,7 +175,7 @@ export default function PricingPage() {
                 <button onClick={logout} className="text-[13px] text-red-500 hover:text-red-600 transition-colors font-medium">Sign out</button>
               </>
             ) : (
-              <Link to="/capra/login" className="text-[13px] text-gray-500 hover:text-gray-900 transition-colors font-medium">Sign in</Link>
+              <Link to="/login" className="text-[13px] text-gray-500 hover:text-gray-900 transition-colors font-medium">Sign in</Link>
             )}
             <Link to="/lumora" className="px-4 py-1.5 text-[13px] font-medium text-black bg-emerald-400 hover:bg-emerald-300 transition-colors">
               Launch App
@@ -206,7 +206,7 @@ export default function PricingPage() {
                 <button onClick={() => { logout(); setMobileMenuOpen(false); }} className="block py-2 text-sm text-red-500 font-medium">Sign out</button>
               </>
             ) : (
-              <Link to="/capra/login" className="block py-2 text-sm text-gray-300 font-medium"
+              <Link to="/login" className="block py-2 text-sm text-gray-300 font-medium"
                     onClick={() => setMobileMenuOpen(false)}>Sign in</Link>
             )}
             <Link to="/lumora" className="block py-2 text-sm text-emerald-600 font-semibold"
