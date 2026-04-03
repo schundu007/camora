@@ -183,7 +183,7 @@ export default function TopicDetail({
             <Icon name="compass" size={16} className="text-gray-900" />
             <span className="text-gray-900 font-semibold text-sm landing-display">Course Roadmap — {pageConfig.title}</span>
           </div>
-          <div className="grid md:grid-cols-2 gap-1">
+          <div className="grid  gap-1">
             {(isCodingStyle ? (filteredTopics || codingTopics) : isSDStyle ? (filteredTopics || []) : activePage === 'low-level' ? (filteredTopics || []) : behavioralTopics).map((t, i) => (
               <button
                 key={t.id}
@@ -205,7 +205,7 @@ export default function TopicDetail({
       {isCodingStyle && topicDetails.keyPatterns && (
         <div className="space-y-3">
           {/* Overview + Complexity in one row */}
-          <div className="grid lg:grid-cols-3 gap-2">
+          <div className="grid  gap-2">
             {/* Introduction - Comprehensive Overview */}
             {topicDetails.introduction && (
               <div id="overview" className="rounded-lg overflow-hidden scroll-mt-24 lg:col-span-2 border border-[#e3e8ee] bg-white">
@@ -232,7 +232,7 @@ export default function TopicDetail({
           </div>
 
           {/* When to Use + Key Patterns - Side by Side Row */}
-          <div id="when-to-use" className={`grid gap-2 scroll-mt-24 ${topicDetails.whenToUse && topicDetails.keyPatterns ? 'lg:grid-cols-2' : 'grid-cols-1'}`}>
+          <div id="when-to-use" className={`grid gap-2 scroll-mt-24 ${topicDetails.whenToUse && topicDetails.keyPatterns ? '' : 'grid-cols-1'}`}>
             {/* When to Use */}
             {topicDetails.whenToUse && (
               <div className="rounded-lg overflow-hidden border border-[#e3e8ee] bg-white">
@@ -241,7 +241,7 @@ export default function TopicDetail({
                   <h3 className="text-sm font-bold text-emerald-800 landing-display">When to Use</h3>
                 </div>
                 <div className="p-3">
-                  <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1">
+                  <ul className="grid grid-cols-1   gap-1">
                     {topicDetails.whenToUse.map((item, i) => (
                       <li key={i} className="flex items-start gap-2 text-sm landing-body">
                         <span className="text-emerald-600 mt-0.5">→</span>
@@ -274,7 +274,7 @@ export default function TopicDetail({
           </div>
 
           {/* Approach + Common Mistakes - Side by Side Row */}
-          <div id="approach" className={`grid gap-2 scroll-mt-24 ${topicDetails.approach && topicDetails.commonMistakes ? 'lg:grid-cols-2' : 'grid-cols-1'}`}>
+          <div id="approach" className={`grid gap-2 scroll-mt-24 ${topicDetails.approach && topicDetails.commonMistakes ? '' : 'grid-cols-1'}`}>
             {/* Approach - Step by Step */}
             {topicDetails.approach && (
               <div className="rounded-lg overflow-hidden border border-[#e3e8ee] bg-white">
@@ -283,7 +283,7 @@ export default function TopicDetail({
                   <h3 className="text-sm font-bold text-emerald-800 landing-display">Step-by-Step Approach</h3>
                 </div>
                 <div className="p-2">
-                  <ol className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1">
+                  <ol className="grid grid-cols-1   gap-1">
                     {topicDetails.approach.map((step, i) => (
                       <li key={i} className="flex items-start gap-2 text-sm landing-body">
                         <span className="w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 bg-emerald-500 text-white">{i + 1}</span>
@@ -303,7 +303,7 @@ export default function TopicDetail({
                   <h3 className="text-sm font-bold text-rose-800 landing-display">Common Mistakes</h3>
                 </div>
                 <div className="p-2">
-                  <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1">
+                  <ul className="grid grid-cols-1   gap-1">
                     {topicDetails.commonMistakes.map((mistake, i) => (
                       <li key={i} className="flex items-start gap-2 text-sm landing-body">
                         <span className="text-red-500 mt-0.5">✗</span>
@@ -318,7 +318,7 @@ export default function TopicDetail({
 
           {/* Practice Problems + Theory Questions — side by side */}
           {(topicDetails.commonProblems || topicDetails.theoryQuestions?.length > 0) && (
-          <div className={`grid gap-2 ${topicDetails.commonProblems && topicDetails.theoryQuestions?.length > 0 ? 'lg:grid-cols-2' : 'grid-cols-1'}`}>
+          <div className={`grid gap-2 ${topicDetails.commonProblems && topicDetails.theoryQuestions?.length > 0 ? '' : 'grid-cols-1'}`}>
           {/* Common Problems - Clickable to solve */}
           {topicDetails.commonProblems && (
             <div id="practice" className="rounded-lg overflow-hidden scroll-mt-24 border border-[#e3e8ee] bg-white">
@@ -328,7 +328,7 @@ export default function TopicDetail({
                 <span className="text-[10px] landing-mono text-gray-400 ml-auto">{topicDetails.commonProblems.length}</span>
               </div>
               <div className="p-2">
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1">
+                <div className="grid grid-cols-1    gap-1">
                   {topicDetails.commonProblems.map((problem, i) => {
                     const problemName = typeof problem === 'string' ? problem : problem.name;
                     const slug = generateSlug(problemName);
@@ -372,7 +372,7 @@ export default function TopicDetail({
                 <span className="text-[10px] landing-mono text-gray-400 ml-auto">{topicDetails.theoryQuestions.length}</span>
               </div>
               <div className="p-3">
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2">
+                <div className="grid grid-cols-1   gap-2">
                   {topicDetails.theoryQuestions.map((q, i) => {
                     const questionKey = `${selectedTopic}-${i}`;
                     const isExpanded = expandedTheoryQuestions[questionKey];
@@ -413,7 +413,7 @@ export default function TopicDetail({
           )}
 
           {/* Tips + Interview Tips - Side by Side */}
-          <div id="tips" className={`grid gap-2 scroll-mt-24 ${topicDetails.tips && topicDetails.interviewTips ? 'lg:grid-cols-2' : 'grid-cols-1'}`}>
+          <div id="tips" className={`grid gap-2 scroll-mt-24 ${topicDetails.tips && topicDetails.interviewTips ? '' : 'grid-cols-1'}`}>
             {/* Tips */}
             {topicDetails.tips && (
               <div className="rounded-lg overflow-hidden border border-[#e3e8ee] bg-white">
@@ -421,7 +421,7 @@ export default function TopicDetail({
                   <Icon name="lightbulb" size={14} className="text-emerald-700" />
                   <h3 className="text-sm font-bold text-emerald-800 landing-display">Tips & Tricks</h3>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1 p-2">
+                <div className="grid grid-cols-1   gap-1 p-2">
                   {topicDetails.tips.map((tip, i) => (
                     <div key={i} className="px-2 py-1 flex items-start gap-1.5 rounded">
                       <span className="text-emerald-600 text-xs mt-0.5 flex-shrink-0">✓</span>
@@ -439,7 +439,7 @@ export default function TopicDetail({
                   <Icon name="briefcase" size={14} className="text-gray-900" />
                   <h3 className="text-sm font-bold text-indigo-800 landing-display">Interview Tips</h3>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1 p-2">
+                <div className="grid grid-cols-1   gap-1 p-2">
                   {topicDetails.interviewTips.map((tip, i) => (
                     <div key={i} className="px-2 py-1 flex items-start gap-1.5 rounded">
                       <span className="text-gray-400 text-xs mt-0.5 flex-shrink-0">★</span>
@@ -493,7 +493,7 @@ export default function TopicDetail({
             <>
               {/* Introduction + Key Concepts — side by side */}
               {(topicDetails.introduction || (topicDetails.concepts && !topicDetails.introduction)) && (
-                <div className={`grid gap-2 ${topicDetails.introduction && topicDetails.concepts ? 'lg:grid-cols-3' : 'grid-cols-1'}`}>
+                <div className={`grid gap-2 ${topicDetails.introduction && topicDetails.concepts ? '' : 'grid-cols-1'}`}>
                   {topicDetails.introduction && (
                     <div id="overview" className={`rounded-lg overflow-hidden scroll-mt-24 border border-[#e3e8ee] bg-white ${topicDetails.concepts ? 'lg:col-span-2' : ''}`}>
                       <div className="px-3 py-1.5 border-b border-[#e3e8ee] bg-[#f7f8f9] flex items-center gap-2">
@@ -525,7 +525,7 @@ export default function TopicDetail({
 
               {/* Requirements - Functional & Non-Functional */}
               {(topicDetails.functionalRequirements || topicDetails.requirements || topicDetails.nonFunctionalRequirements) && (
-              <div id="requirements" className="grid md:grid-cols-2 gap-2 scroll-mt-24">
+              <div id="requirements" className="grid  gap-2 scroll-mt-24">
                 {/* Functional Requirements */}
                 {(topicDetails.functionalRequirements || topicDetails.requirements) && (
                 <div className="rounded-lg overflow-hidden border border-[#e3e8ee] bg-white">
@@ -534,7 +534,7 @@ export default function TopicDetail({
                     <h3 className="text-sm font-bold text-emerald-800 landing-display">Functional Requirements</h3>
                   </div>
                   <div className="p-3">
-                    <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1">
+                    <ul className="grid grid-cols-1   gap-1">
                       {(topicDetails.functionalRequirements || topicDetails.requirements).map((req, i) => (
                         <li key={i} className="flex items-start gap-2 rounded hover:bg-[#f7f8f9] transition-colors">
                           <span className="w-4 h-4 rounded-full flex items-center justify-center text-xs flex-shrink-0 bg-emerald-50 text-emerald-700 mt-0.5">✓</span>
@@ -554,7 +554,7 @@ export default function TopicDetail({
                       <h3 className="text-sm font-bold text-emerald-800 landing-display">Non-Functional Requirements</h3>
                     </div>
                     <div className="p-3">
-                      <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1">
+                      <ul className="grid grid-cols-1   gap-1">
                         {topicDetails.nonFunctionalRequirements.map((req, i) => (
                           <li key={i} className="flex items-start gap-2 rounded hover:bg-[#f7f8f9] transition-colors">
                             <span className="w-4 h-4 rounded-full flex items-center justify-center text-xs flex-shrink-0 bg-emerald-50 text-emerald-700 mt-0.5">•</span>
@@ -570,7 +570,7 @@ export default function TopicDetail({
 
               {/* API Design + Data Model — side by side */}
               {(topicDetails.apiDesign?.endpoints || topicDetails.dataModel) && (
-                <div className={`grid gap-2 scroll-mt-24 ${topicDetails.apiDesign?.endpoints && topicDetails.dataModel ? 'lg:grid-cols-2' : 'grid-cols-1'}`}>
+                <div className={`grid gap-2 scroll-mt-24 ${topicDetails.apiDesign?.endpoints && topicDetails.dataModel ? '' : 'grid-cols-1'}`}>
                   {/* API Design — dense multi-column endpoint grid */}
                   {topicDetails.apiDesign && topicDetails.apiDesign.endpoints && (
                     <div id="api-design" className="rounded-lg overflow-hidden scroll-mt-24 border border-[#e3e8ee] bg-white">
@@ -579,7 +579,7 @@ export default function TopicDetail({
                         <h3 className="text-sm font-bold text-blue-800 landing-display">API Design</h3>
                       </div>
                       <div className="p-2">
-                        <div className={`grid gap-1.5 ${topicDetails.apiDesign.endpoints.length > 4 ? 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3' : 'grid-cols-1 sm:grid-cols-2'}`}>
+                        <div className={`grid gap-1.5 ${topicDetails.apiDesign.endpoints.length > 4 ? 'grid-cols-1  ' : 'grid-cols-1 '}`}>
                           {topicDetails.apiDesign.endpoints.map((endpoint, i) => (
                             <div key={i} className="rounded-md px-2.5 py-2 bg-[#f7f8f9] border border-[#e3e8ee]">
                               <div className="flex items-center gap-1.5 mb-1">
@@ -624,7 +624,7 @@ export default function TopicDetail({
                     <h3 className="text-sm font-bold text-emerald-800 landing-display">Key Questions</h3>
                     <span className="text-[10px] landing-mono text-gray-400 ml-auto">{topicDetails.keyQuestions.length} topics</span>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 p-2">
+                  <div className="grid grid-cols-1  gap-2 p-2">
                     {topicDetails.keyQuestions.map((q, i) => (
                       <div key={i} className={`p-3 rounded-lg hover:bg-[#f7f8f9] hover:border-[#d0d5dd] transition-colors bg-white border border-[#e3e8ee] ${i === topicDetails.keyQuestions.length - 1 && topicDetails.keyQuestions.length % 2 !== 0 ? 'md:col-span-2' : ''}`}>
                         <div className="flex items-start gap-2">
@@ -644,7 +644,7 @@ export default function TopicDetail({
 
               {/* Basic + Advanced Implementation */}
               {(topicDetails.basicImplementation || topicDetails.advancedImplementation) && (
-                <div id="architecture" className={`grid gap-2 scroll-mt-24 ${topicDetails.basicImplementation && topicDetails.advancedImplementation ? 'lg:grid-cols-2' : 'grid-cols-1'}`}>
+                <div id="architecture" className={`grid gap-2 scroll-mt-24 ${topicDetails.basicImplementation && topicDetails.advancedImplementation ? '' : 'grid-cols-1'}`}>
                   {/* Basic Implementation */}
                   {topicDetails.basicImplementation && (
                     <div className="rounded-xl overflow-hidden border border-[#e3e8ee] bg-white">
@@ -680,7 +680,7 @@ export default function TopicDetail({
                               <Icon name="alertTriangle" size={14} />
                               Issues:
                             </h4>
-                            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-1">
+                            <ul className="grid grid-cols-1  gap-1">
                               {topicDetails.basicImplementation.problems.map((problem, i) => (
                                 <li key={i} className="flex items-start gap-2 text-gray-500 text-sm landing-body">
                                   <span className="text-red-500 mt-0.5">✗</span>
@@ -728,7 +728,7 @@ export default function TopicDetail({
                         {topicDetails.advancedImplementation.keyPoints && (
                           <div className="mb-2">
                             <h4 className="text-gray-900 text-sm font-semibold mb-2 landing-display">Key Points:</h4>
-                            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-1">
+                            <ul className="grid grid-cols-1  gap-1">
                               {topicDetails.advancedImplementation.keyPoints.map((point, i) => (
                                 <li key={i} className="flex items-start gap-2 text-gray-500 text-sm landing-body">
                                   <span className="text-emerald-600 mt-0.5">✓</span>
@@ -759,7 +759,7 @@ export default function TopicDetail({
               )}
 
               {/* Cloud Architecture Diagram + Tips */}
-              <div className={`grid gap-2 ${isSDStyle ? 'lg:grid-cols-2' : 'grid-cols-1'}`}>
+              <div className={`grid gap-2 ${isSDStyle ? '' : 'grid-cols-1'}`}>
                 {/* Cloud Architecture Diagram */}
                 {isSDStyle && topicDetails && (
                   <div className="rounded-xl overflow-hidden border border-[#e3e8ee] bg-white">
@@ -844,7 +844,7 @@ export default function TopicDetail({
                       <Icon name="star" size={16} className="text-emerald-700" />
                       <h3 className="text-sm font-bold text-indigo-800 landing-display">Interview Tips</h3>
                     </div>
-                    <div className="grid md:grid-cols-2 gap-1 p-3">
+                    <div className="grid  gap-1 p-3">
                       {topicDetails.tips.map((tip, i) => (
                         <div key={i} className="px-3 py-2 flex items-center gap-2 hover:bg-[#f7f8f9] transition-colors rounded">
                           <span className="w-6 h-6 rounded-full flex items-center justify-center text-sm flex-shrink-0 bg-emerald-50 text-emerald-700">★</span>
@@ -858,7 +858,7 @@ export default function TopicDetail({
 
               {/* Flow Cards - Row Mode */}
               {(topicDetails.createFlow || topicDetails.redirectFlow) && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <div className="grid grid-cols-1  gap-2">
                   {/* Create Flow */}
                   {topicDetails.createFlow && (
                     <div className="rounded-lg overflow-hidden border border-[#e3e8ee] bg-white">
@@ -867,7 +867,7 @@ export default function TopicDetail({
                         <h3 className="text-sm font-bold text-emerald-800 landing-display">{topicDetails.createFlow.title}</h3>
                       </div>
                       <div className="p-3">
-                        <ol className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1">
+                        <ol className="grid grid-cols-1   gap-1">
                           {topicDetails.createFlow.steps.map((step, i) => (
                             <li key={i} className="flex items-start gap-2 rounded hover:bg-[#f7f8f9] transition-colors">
                               <span className="w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 bg-emerald-50 text-emerald-700 border border-[#e3e8ee] landing-mono">
@@ -889,7 +889,7 @@ export default function TopicDetail({
                         <h3 className="text-sm font-bold text-emerald-800 landing-display">{topicDetails.redirectFlow.title}</h3>
                       </div>
                       <div className="p-3">
-                        <ol className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1">
+                        <ol className="grid grid-cols-1   gap-1">
                           {topicDetails.redirectFlow.steps.map((step, i) => (
                             <li key={i} className="flex items-start gap-2 rounded hover:bg-[#f7f8f9] transition-colors">
                               <span className="w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 bg-emerald-50 text-emerald-700 border border-[#e3e8ee] landing-mono">
@@ -913,7 +913,7 @@ export default function TopicDetail({
                     <h3 className="text-sm font-bold text-indigo-800 landing-display">Discussion Points</h3>
                   </div>
                   <div className="p-3">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                    <div className="grid grid-cols-1    gap-2">
                       {topicDetails.discussionPoints.map((point, i) => (
                         <div key={i} className="p-3 rounded-lg bg-white border border-[#e3e8ee] hover:border-[#d0d5dd] transition-colors">
                           <h4 className="text-gray-900 font-semibold mb-1.5 text-sm landing-display">{point.topic}</h4>
@@ -942,7 +942,7 @@ export default function TopicDetail({
                     <Icon name="hash" size={16} className="text-violet-700" />
                     <h3 className="text-sm font-bold text-violet-900 landing-display">{topicDetails.estimation.title || 'Capacity Planning'}</h3>
                   </div>
-                  <div className="p-3 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
+                  <div className="p-3 grid   gap-2">
                     {topicDetails.estimation.calculations.map((calc, i) => (
                       <div key={i} className="text-center p-2 rounded-lg bg-violet-50/50 border border-violet-100">
                         <div className="font-bold text-violet-700 landing-mono text-base">{calc.value}</div>
@@ -961,7 +961,7 @@ export default function TopicDetail({
                     <Icon name="zap" size={16} className="text-amber-700" />
                     <h3 className="text-sm font-bold text-amber-900 landing-display">Algorithm Approaches</h3>
                   </div>
-                  <div className="p-3 grid grid-cols-1 md:grid-cols-3 gap-2">
+                  <div className="p-3 grid grid-cols-1  gap-2">
                     {topicDetails.algorithmApproaches.map((app, i) => (
                       <div key={i} className="p-3 rounded-lg border border-[#e3e8ee] bg-[#f7f8f9]">
                         <h4 className="text-sm font-bold text-amber-800 mb-1 landing-display">{i + 1}. {app.name}</h4>
@@ -1001,7 +1001,7 @@ export default function TopicDetail({
                     <Icon name="search" size={16} className="text-sky-700" />
                     <h3 className="text-sm font-bold text-sky-900 landing-display">Deep Dive Topics</h3>
                   </div>
-                  <div className="p-3 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2">
+                  <div className="p-3 grid grid-cols-1   gap-2">
                     {topicDetails.deepDiveTopics.map((item, i) => (
                       <div key={i} className="p-3 rounded-lg bg-sky-50/30 border border-sky-100">
                         <h4 className="text-sm font-bold text-sky-800 mb-1 landing-display">{item.topic}</h4>
@@ -1019,7 +1019,7 @@ export default function TopicDetail({
                     <Icon name="gitBranch" size={16} className="text-rose-700" />
                     <h3 className="text-sm font-bold text-rose-900 landing-display">Trade-off Decisions</h3>
                   </div>
-                  <div className="p-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
+                  <div className="p-3 grid grid-cols-1   gap-2">
                     {topicDetails.tradeoffDecisions.map((d, i) => (
                       <div key={i} className="p-3 rounded-lg bg-[#f7f8f9] border border-[#e3e8ee]">
                         <div className="flex items-center gap-1.5 mb-1 flex-wrap">
@@ -1041,7 +1041,7 @@ export default function TopicDetail({
                     <Icon name="helpCircle" size={16} className="text-orange-700" />
                     <h3 className="text-sm font-bold text-orange-900 landing-display">Common Follow-up Questions</h3>
                   </div>
-                  <div className="p-3 grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <div className="p-3 grid grid-cols-1  gap-2">
                     {topicDetails.interviewFollowups.map((item, i) => (
                       <div key={i} className="rounded-lg border border-[#e3e8ee] overflow-hidden">
                         <div className="flex items-start gap-2 px-3 py-2 bg-orange-50/30 border-b border-orange-100">
@@ -1062,7 +1062,7 @@ export default function TopicDetail({
                     <Icon name="code" size={16} className="text-emerald-700" />
                     <h3 className="text-sm font-bold text-emerald-900 landing-display">Implementation Code</h3>
                   </div>
-                  <div className="p-3 grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <div className="p-3 grid grid-cols-1  gap-2">
                     {Object.entries(topicDetails.codeExamples).map(([lang, code], i) => (
                       <div key={i} className="rounded-lg border border-[#e3e8ee] overflow-hidden">
                         <div className="flex items-center justify-between px-3 py-1.5 bg-gray-900">
@@ -1081,7 +1081,7 @@ export default function TopicDetail({
 
               {/* Components & Decisions - Side by Side */}
               {(!topicDetails.introduction && topicDetails.components) || topicDetails.keyDecisions ? (
-                <div className={`grid gap-2 ${(!topicDetails.introduction && topicDetails.components) && topicDetails.keyDecisions ? 'lg:grid-cols-2' : 'grid-cols-1'}`}>
+                <div className={`grid gap-2 ${(!topicDetails.introduction && topicDetails.components) && topicDetails.keyDecisions ? '' : 'grid-cols-1'}`}>
                   {/* System Components */}
                   {!topicDetails.introduction && topicDetails.components && (
                     <div className="rounded-lg overflow-hidden border border-[#e3e8ee] bg-white">
@@ -1109,7 +1109,7 @@ export default function TopicDetail({
                         <h3 className="text-sm font-bold text-violet-800 landing-display">Key Design Decisions</h3>
                       </div>
                       <div className="p-3">
-                        <ol className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1">
+                        <ol className="grid grid-cols-1   gap-1">
                           {topicDetails.keyDecisions.map((decision, i) => (
                             <li key={i} className="flex items-start gap-2 rounded hover:bg-[#f7f8f9] transition-colors">
                               <span className="w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 bg-[#f7f8f9] text-gray-900 border border-amber-500/30 landing-mono">
@@ -1133,7 +1133,7 @@ export default function TopicDetail({
                     <h3 className="text-sm font-bold text-blue-800 landing-display">Core Entities</h3>
                   </div>
                   <div className="p-3">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1  gap-2">
                     {topicDetails.coreEntities.map((entity, i) => (
                       <div key={i} className="flex items-start gap-2 p-3 rounded-lg bg-[#f7f8f9] border border-[#e3e8ee]">
                         <code className="text-gray-900 landing-mono text-sm font-semibold whitespace-nowrap">{entity.name}</code>
@@ -1153,7 +1153,7 @@ export default function TopicDetail({
                     <h3 className="text-sm font-bold text-violet-800 landing-display">Design Patterns</h3>
                   </div>
                   <div className="p-4">
-                    <ul className="grid grid-cols-1 sm:grid-cols-2 gap-1">
+                    <ul className="grid grid-cols-1  gap-1">
                       {topicDetails.designPatterns.map((pattern, i) => (
                         <li key={i} className="flex items-start gap-2 rounded hover:bg-[#f7f8f9] transition-colors">
                           <span className="w-5 h-5 rounded-full flex items-center justify-center text-sm flex-shrink-0 bg-[#f7f8f9] text-gray-900 mt-0.5">✦</span>
@@ -1194,7 +1194,7 @@ export default function TopicDetail({
                     <Icon name="cpu" size={16} className="text-gray-900" />
                     <h3 className="text-sm font-bold text-blue-800 landing-display">Core Concepts</h3>
                   </div>
-                  <div className="p-4 grid md:grid-cols-2 gap-2">
+                  <div className="p-4 grid  gap-2">
                     {topicDetails.concepts.map((concept, i) => (
                       <div key={i} className="flex items-start gap-2 p-3 rounded-lg bg-[#f7f8f9] border border-[#e3e8ee]">
                         <code className="text-gray-900 landing-mono text-sm font-semibold whitespace-nowrap">{concept.name}</code>
@@ -1212,7 +1212,7 @@ export default function TopicDetail({
                     <Icon name="lock" size={16} className="text-emerald-700" />
                     <h3 className="text-sm font-bold text-violet-800 landing-display">Synchronization Primitives</h3>
                   </div>
-                  <div className="p-4 grid md:grid-cols-2 gap-2">
+                  <div className="p-4 grid  gap-2">
                     {topicDetails.primitives.map((prim, i) => (
                       <div key={i} className="p-3 rounded-lg bg-[#f7f8f9] border border-[#e3e8ee]">
                         <div className="flex items-center gap-2 mb-1">
@@ -1233,7 +1233,7 @@ export default function TopicDetail({
                     <Icon name="alertTriangle" size={16} className="text-gray-900" />
                     <h3 className="text-sm font-bold text-amber-800 landing-display">Classic Problems</h3>
                   </div>
-                  <div className="grid md:grid-cols-2 gap-2 p-3">
+                  <div className="grid  gap-2 p-3">
                     {topicDetails.problems.map((problem, i) => (
                       <div key={i} className="p-4 rounded-lg bg-[#f7f8f9] border border-[#e3e8ee]">
                         <h4 className="text-gray-900 font-semibold text-sm mb-2 landing-display">{problem.name}</h4>
@@ -1255,7 +1255,7 @@ export default function TopicDetail({
                     <Icon name="database" size={16} className="text-gray-900" />
                     <h3 className="text-sm font-bold text-blue-800 landing-display">Concurrent Data Structures</h3>
                   </div>
-                  <div className="p-4 grid md:grid-cols-2 gap-2">
+                  <div className="p-4 grid  gap-2">
                     {topicDetails.structures.map((struct, i) => (
                       <div key={i} className="flex items-start gap-2 p-3 rounded-lg bg-white border border-[#e3e8ee]">
                         <code className="text-gray-900 landing-mono text-sm font-semibold whitespace-nowrap">{struct.name}</code>
@@ -1276,7 +1276,7 @@ export default function TopicDetail({
         <div className="space-y-3">
           {/* Introduction + Key Principles — side by side */}
           {(topicDetails.introduction || topicDetails.principles?.length > 0) && (
-            <div className={`grid gap-2 ${topicDetails.introduction && topicDetails.principles?.length > 0 ? 'lg:grid-cols-3' : 'grid-cols-1'}`}>
+            <div className={`grid gap-2 ${topicDetails.introduction && topicDetails.principles?.length > 0 ? '' : 'grid-cols-1'}`}>
               {/* Introduction */}
               {topicDetails.introduction && (() => {
                 const quoteMatch = topicDetails.introduction.match(/^"([^"]+)"\s*(.*)/s);
@@ -1457,7 +1457,7 @@ export default function TopicDetail({
 
           {/* STAR + Example Response — side by side on large screens */}
           {(topicDetails.starExample || topicDetails.exampleResponse) && (
-            <div className={`grid gap-2 ${topicDetails.starExample && topicDetails.exampleResponse ? 'lg:grid-cols-2' : 'grid-cols-1'}`}>
+            <div className={`grid gap-2 ${topicDetails.starExample && topicDetails.exampleResponse ? '' : 'grid-cols-1'}`}>
 
           {/* STAR Framework Example */}
           {topicDetails.starExample && (
@@ -1538,7 +1538,7 @@ export default function TopicDetail({
 
           {/* Practice Questions + Tips — side by side on large screens */}
           {(topicDetails.sampleQuestions?.length > 0 || topicDetails.tips) && (
-            <div className={`grid gap-2 ${topicDetails.sampleQuestions?.length > 0 && topicDetails.tips ? 'lg:grid-cols-2' : 'grid-cols-1'}`}>
+            <div className={`grid gap-2 ${topicDetails.sampleQuestions?.length > 0 && topicDetails.tips ? '' : 'grid-cols-1'}`}>
 
           {/* Practice Questions */}
           {topicDetails.sampleQuestions && topicDetails.sampleQuestions.length > 0 && (
@@ -1550,7 +1550,7 @@ export default function TopicDetail({
                 <h3 className="text-sm font-bold text-violet-800 landing-display">Practice Questions</h3>
                 <span className="text-[10px] landing-mono text-gray-400 ml-auto">{topicDetails.sampleQuestions.length}</span>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-1 p-2">
+              <div className="grid grid-cols-1   gap-1 p-2">
                 {topicDetails.sampleQuestions.map((q, i) => (
                   <div key={i} className="flex items-start gap-2.5 px-3 py-2 rounded-lg hover:bg-[#f7f8f9] transition-colors group">
                     <span className="w-5 h-5 rounded flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5 landing-mono" style={{ background: `${topicDetails.color}12`, color: topicDetails.color }}>{i + 1}</span>
@@ -1573,7 +1573,7 @@ export default function TopicDetail({
                 <h3 className="text-sm font-bold text-emerald-800 landing-display">Tips for Success</h3>
                 <span className="text-[10px] landing-mono text-emerald-600 ml-auto">{topicDetails.tips.length} tips</span>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 p-3">
+              <div className="grid grid-cols-1   gap-2 p-3">
                 {topicDetails.tips.map((tip, i) => (
                   <div key={i} className="flex items-start gap-2.5 px-3 py-2.5 rounded-lg bg-white border border-[#e3e8ee] hover:border-[#d0d5dd] transition-colors group">
                     <span className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0 bg-emerald-500 text-white text-[10px] font-bold landing-mono mt-0.5">
