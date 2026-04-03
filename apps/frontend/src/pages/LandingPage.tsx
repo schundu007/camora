@@ -503,10 +503,7 @@ export default function LandingPage() {
           </motion.div>
           <motion.h1 className="font-display font-extrabold tracking-[-0.04em]"
             initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.1 }}>
-            <span className="block text-5xl sm:text-6xl md:text-7xl lg:text-[84px] leading-[1.05]">From application</span>
-            <span className="block text-5xl sm:text-6xl md:text-7xl lg:text-[84px] leading-[1.05] mt-1">
-              to <span className="gradient-text">offer letter.</span>
-            </span>
+            <span className="block text-5xl sm:text-6xl md:text-7xl lg:text-[84px] leading-[1.05]">Application to <span className="gradient-text">Offer.</span></span>
           </motion.h1>
           <motion.div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4"
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.3 }}>
