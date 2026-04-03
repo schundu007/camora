@@ -325,7 +325,7 @@ function PrepShowcase({ inView }: { inView: boolean }) {
         <div className="relative flex-shrink-0" style={{ width: 220, height: 220 }}>
           <svg viewBox="0 0 200 200" width="220" height="220" className="w-[180px] h-[180px] md:w-[220px] md:h-[220px]">
             {/* Background ring */}
-            <circle cx="100" cy="100" r={RADIUS} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="18" />
+            <circle cx="100" cy="100" r={RADIUS} fill="none" stroke="#e5e7eb" strokeWidth="18" />
             {/* Segments */}
             {donutSegments.map((seg, i) => (
               <circle
@@ -345,7 +345,7 @@ function PrepShowcase({ inView }: { inView: boolean }) {
               />
             ))}
             {/* Center text */}
-            <text x="100" y="93" textAnchor="middle" fill="white" fontSize="28" fontWeight="bold" fontFamily="inherit">
+            <text x="100" y="93" textAnchor="middle" fill="#111827" fontSize="28" fontWeight="bold" fontFamily="inherit">
               415+
             </text>
             <text x="100" y="116" textAnchor="middle" fill="#9ca3af" fontSize="12" fontWeight="500" fontFamily="inherit">
@@ -1518,7 +1518,7 @@ export default function LandingPage() {
                   >
                     <svg width="120" height="120" viewBox="0 0 120 120" className="w-[100px] h-[100px] md:w-[120px] md:h-[120px]">
                       {/* Background ring */}
-                      <circle cx="60" cy="60" r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="5" />
+                      <circle cx="60" cy="60" r={r} fill="none" stroke="#e5e7eb" strokeWidth="5" />
                       {/* Progress ring */}
                       <circle
                         cx="40"
@@ -1535,7 +1535,7 @@ export default function LandingPage() {
                         }}
                       />
                       {/* Center number */}
-                      <text x="60" y="65" textAnchor="middle" fill="white" fontSize="22" fontWeight="bold" fontFamily="inherit">
+                      <text x="60" y="65" textAnchor="middle" fill="#111827" fontSize="22" fontWeight="bold" fontFamily="inherit">
                         {ring.display}
                       </text>
                     </svg>
