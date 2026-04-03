@@ -601,7 +601,6 @@ export default function LandingPage() {
           <FadeIn className="text-center mb-16">
             <span className="gradient-text text-sm font-bold tracking-[0.2em] uppercase">Preparation at Scale</span>
             <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mt-4">Everything you need to prepare.</h2>
-            <p className="mt-5 text-base md:text-lg text-gray-500 max-w-2xl mx-auto">Comprehensive study material and practice problems covering every angle of the technical interview.</p>
           </FadeIn>
           <PrepShowcase />
         </div>
