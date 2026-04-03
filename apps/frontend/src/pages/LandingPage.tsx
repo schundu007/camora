@@ -520,38 +520,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── DEMO — Videos ── */}
-      <section className="px-6 pb-20 md:pb-32" style={{ zIndex: 1 }}>
-        <FadeIn className="max-w-5xl mx-auto">
-          <BrowserChrome url="camora.cariara.com/lumora">
-            <div className="aspect-video bg-gray-100">
-              <video src="/demo-lumora.mp4" autoPlay loop muted playsInline className="w-full h-full object-cover" />
-            </div>
-          </BrowserChrome>
-        </FadeIn>
-        <div className="max-w-5xl mx-auto mt-6 grid md:grid-cols-3 gap-4">
-          {[
-            { url: 'camora.cariara.com/capra', src: '/demo-capra.mp4' },
-            { url: 'camora.cariara.com/capra/prepare', src: '/demo-capra-topic.mp4' },
-            { url: 'camora.cariara.com/lumora/design', src: '/demo-design.mp4' },
-          ].map((demo, i) => (
-            <FadeIn key={demo.url} delay={0.1 * (i + 1)}>
-              <div className="rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg hover:shadow-gray-100 transition-shadow">
-                <div className="flex items-center gap-2 px-3 py-2 bg-gray-50/80 border-b border-gray-200">
-                  <div className="flex gap-1">
-                    <div className="w-2 h-2 rounded-full bg-[#ff5f57]" /><div className="w-2 h-2 rounded-full bg-[#febc2e]" /><div className="w-2 h-2 rounded-full bg-[#28c840]" />
-                  </div>
-                  <span className="text-[10px] text-gray-400 truncate font-code">{demo.url}</span>
-                </div>
-                <div className="aspect-[4/3] bg-gray-100">
-                  <video src={demo.src} autoPlay loop muted playsInline className="w-full h-full object-cover" />
-                </div>
-              </div>
-            </FadeIn>
-          ))}
-        </div>
-      </section>
-
       {/* ── PROCESS — Accordion (MetAntz-style) ── */}
       <section id="process" className="px-6 py-20 md:py-28" style={{ zIndex: 1 }}>
         <div className="max-w-6xl mx-auto">
@@ -592,6 +560,38 @@ export default function LandingPage() {
               </div>
             </FadeIn>
           </div>
+        </div>
+      </section>
+
+      {/* ── DEMO — Videos ── */}
+      <section className="px-6 pb-20 md:pb-32" style={{ zIndex: 1 }}>
+        <FadeIn className="max-w-5xl mx-auto">
+          <BrowserChrome url="camora.cariara.com/lumora">
+            <div className="aspect-video bg-gray-100">
+              <video src="/demo-lumora.mp4" autoPlay loop muted playsInline className="w-full h-full object-cover" />
+            </div>
+          </BrowserChrome>
+        </FadeIn>
+        <div className="max-w-5xl mx-auto mt-6 grid md:grid-cols-3 gap-4">
+          {[
+            { url: 'camora.cariara.com/capra', src: '/demo-capra.mp4' },
+            { url: 'camora.cariara.com/capra/prepare', src: '/demo-capra-topic.mp4' },
+            { url: 'camora.cariara.com/lumora/design', src: '/demo-design.mp4' },
+          ].map((demo, i) => (
+            <FadeIn key={demo.url} delay={0.1 * (i + 1)}>
+              <div className="rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg hover:shadow-gray-100 transition-shadow">
+                <div className="flex items-center gap-2 px-3 py-2 bg-gray-50/80 border-b border-gray-200">
+                  <div className="flex gap-1">
+                    <div className="w-2 h-2 rounded-full bg-[#ff5f57]" /><div className="w-2 h-2 rounded-full bg-[#febc2e]" /><div className="w-2 h-2 rounded-full bg-[#28c840]" />
+                  </div>
+                  <span className="text-[10px] text-gray-400 truncate font-code">{demo.url}</span>
+                </div>
+                <div className="aspect-[4/3] bg-gray-100">
+                  <video src={demo.src} autoPlay loop muted playsInline className="w-full h-full object-cover" />
+                </div>
+              </div>
+            </FadeIn>
+          ))}
         </div>
       </section>
 
