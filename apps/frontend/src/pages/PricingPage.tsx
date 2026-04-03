@@ -171,7 +171,7 @@ export default function PricingPage() {
           <div className="hidden md:flex items-center gap-3">
             {isAuthenticated ? (
               <>
-                <Link to="/capra" className="text-[13px] text-gray-500 hover:text-gray-900 transition-colors font-medium">Dashboard</Link>
+                <Link to="/capra/prepare" className="text-[13px] text-gray-500 hover:text-gray-900 transition-colors font-medium">Dashboard</Link>
                 <button onClick={logout} className="text-[13px] text-red-500 hover:text-red-600 transition-colors font-medium">Sign out</button>
               </>
             ) : (
@@ -201,7 +201,7 @@ export default function PricingPage() {
             )}
             {isAuthenticated ? (
               <>
-                <Link to="/capra" className="block py-2 text-sm text-gray-300 font-medium"
+                <Link to="/capra/prepare" className="block py-2 text-sm text-gray-300 font-medium"
                       onClick={() => setMobileMenuOpen(false)}>Dashboard</Link>
                 <button onClick={() => { logout(); setMobileMenuOpen(false); }} className="block py-2 text-sm text-red-500 font-medium">Sign out</button>
               </>

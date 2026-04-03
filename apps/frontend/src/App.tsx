@@ -86,7 +86,8 @@ function LoginPage() {
   const canLogin = role !== '' && (resumeFile !== null || skipResume);
 
   if (isLoading) return <Loading />;
-  if (isAuthenticated) return <Navigate to="/capra" replace />;
+  const redirectTo = new URLSearchParams(window.location.search).get('redirect') || '/';
+  if (isAuthenticated) return <Navigate to={redirectTo} replace />;
 
   const oauthUrl = import.meta.env.VITE_OAUTH_URL;
   if (oauthUrl) {
@@ -277,7 +278,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   if (isLoading) return <Loading />;
   if (!isAuthenticated) {
-    return <Navigate to="/capra/login" replace />;
+    return <Navigate to={`/capra/login?redirect=${encodeURIComponent(location.pathname)}`} replace />;
   }
   // Only enforce onboarding for Capra routes
   if (location.pathname.startsWith('/capra') && onboardingCompleted === false && location.pathname !== '/capra/onboarding') {

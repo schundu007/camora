@@ -71,7 +71,7 @@ export function LandingPage() {
           <div className="hidden md:flex items-center gap-3">
             {isAuthenticated ? (
               <>
-                <Link to="/capra" className="text-[13px] text-gray-400 hover:text-white transition-colors">Dashboard</Link>
+                <Link to="/capra/prepare" className="text-[13px] text-gray-400 hover:text-white transition-colors">Dashboard</Link>
                 <button onClick={logout} className="text-[13px] text-red-400 hover:text-red-300 transition-colors font-medium">Sign out</button>
               </>
             ) : (
@@ -110,7 +110,7 @@ export function LandingPage() {
             )}
             {isAuthenticated ? (
               <>
-                <Link to="/capra" className="block py-2 text-sm text-gray-400"
+                <Link to="/capra/prepare" className="block py-2 text-sm text-gray-400"
                       onClick={() => setMobileMenuOpen(false)}>Dashboard</Link>
                 <button onClick={() => { setMobileMenuOpen(false); logout(); }}
                         className="block py-2 text-sm text-red-400 font-medium">Sign out</button>
