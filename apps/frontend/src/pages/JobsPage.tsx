@@ -469,17 +469,6 @@ export default function JobsPage() {
               Find the right job — without searching
             </h1>
 
-            {/* Subtitle */}
-            <p style={{
-              fontSize: 'clamp(15px, 2vw, 18px)',
-              color: '#6b7280',
-              lineHeight: 1.7,
-              margin: '0 auto 36px auto',
-              maxWidth: '600px',
-            }}>
-              AI-matched engineering roles from 1,000+ companies. Prepare, practice, and attend with Camora.
-            </p>
-
             {/* Search bar */}
             <div style={{
               maxWidth: '640px',
