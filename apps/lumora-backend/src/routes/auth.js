@@ -26,7 +26,7 @@ function formatUserResponse(user) {
     id: user.id,
     email: user.email,
     name: user.name || null,
-    image: user.image || null,
+    image: user.image || user.picture || null,
     provider: user.provider,
     is_active: user.is_active ?? true,
     is_admin: user.is_admin ?? false,
