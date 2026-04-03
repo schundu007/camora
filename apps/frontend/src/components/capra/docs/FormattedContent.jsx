@@ -186,7 +186,7 @@ export default function FormattedContent({ content, color = 'emerald' }) {
       const flushList = () => {
         if (currentList.length > 0) {
           elements.push(
-            <ul key={`list-${elements.length}`} className="grid grid-cols-1 md:grid-cols-2 gap-1 my-1 ml-2">
+            <ul key={`list-${elements.length}`} className="grid grid-cols-1 gap-1 my-1 ml-2">
               {currentList.map((item, i) => (
                 <li key={i} className="flex items-start gap-3">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-2 flex-shrink-0" />
