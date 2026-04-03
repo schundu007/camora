@@ -523,10 +523,6 @@ export default function LandingPage() {
               <span className="gradient-text">technical</span> interview.
             </span>
           </motion.h1>
-          <motion.p className="mt-8 text-lg md:text-xl text-gray-400 leading-relaxed max-w-2xl mx-auto"
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }}>
-            Real-time AI that listens to your interview, transcribes questions, and generates expert-level answers for system design, coding, and behavioral rounds.
-          </motion.p>
           <motion.div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4"
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.3 }}>
             <Link to="/lumora" className="shimmer-btn px-8 py-4 text-lg font-semibold text-white bg-gray-900 rounded-2xl hover:bg-gray-800 transition-colors">
