@@ -659,21 +659,21 @@ export default function LandingPage() {
       </div>
 
       {/* ── NAV ──────────────────────────────────────────── */}
-      <nav className="fixed top-0 left-0 right-0 z-50 h-16 border-b border-[#e3e8ee]" style={{ background: 'rgba(10,11,20,0.8)', backdropFilter: 'blur(20px)' }}>
+      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-[#e3e8ee]" style={{ background: 'rgba(10,11,20,0.8)', backdropFilter: 'blur(20px)' }}>
         <div className="max-w-[85%] xl:max-w-7xl mx-auto flex items-center justify-between px-6 lg:px-8 h-16">
           <Link to="/" className="flex items-center gap-2">
             <CamoraLogo size={34} />
-            <span className="font-display text-lg font-bold tracking-tight text-black">Camora</span>
+            <span className="font-display text-lg font-bold tracking-tight text-white">Camora</span>
           </Link>
 
           <div className="hidden lg:flex items-center gap-1">
             {NAV_LINKS.map((link) =>
               link.external ? (
                 <a key={link.label} href={link.href} target="_blank" rel="noopener noreferrer"
-                   className="px-4 py-2 text-[15px] text-gray-600 hover:text-black transition-colors font-medium">{link.label}</a>
+                   className="px-4 py-2 text-[15px] text-gray-300 hover:text-white transition-colors font-medium">{link.label}</a>
               ) : (
                 <Link key={link.label} to={link.href}
-                      className="px-4 py-2 text-[15px] text-gray-600 hover:text-black transition-colors font-medium">{link.label}</Link>
+                      className="px-4 py-2 text-[15px] text-gray-300 hover:text-white transition-colors font-medium">{link.label}</Link>
               )
             )}
           </div>
@@ -681,18 +681,18 @@ export default function LandingPage() {
           <div className="hidden lg:flex items-center gap-4">
             {isAuthenticated ? (
               <>
-                <Link to="/capra" className="text-[15px] text-gray-600 hover:text-black transition-colors font-medium">Dashboard</Link>
+                <Link to="/capra" className="text-[15px] text-gray-300 hover:text-white transition-colors font-medium">Dashboard</Link>
                 <button onClick={logout} className="text-[15px] text-red-400 hover:text-red-300 transition-colors font-medium">Sign out</button>
               </>
             ) : (
-              <Link to="/capra/login" className="text-[15px] text-gray-600 hover:text-black transition-colors font-medium">Sign in</Link>
+              <Link to="/capra/login" className="text-[15px] text-gray-300 hover:text-white transition-colors font-medium">Sign in</Link>
             )}
             <Link to="/lumora" className="glow-btn px-5 py-2.5 text-[15px] font-semibold text-white bg-emerald-500 rounded-xl">
               Launch App
             </Link>
           </div>
 
-          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="lg:hidden p-2 text-gray-600 hover:text-black">
+          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="lg:hidden p-2 text-gray-300 hover:text-white">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
               {mobileMenuOpen
                 ? <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -707,21 +707,21 @@ export default function LandingPage() {
             {NAV_LINKS.map((link) =>
               link.external ? (
                 <a key={link.label} href={link.href} target="_blank" rel="noopener noreferrer"
-                   className="block py-2.5 text-base text-gray-700 font-medium">{link.label}</a>
+                   className="block py-2.5 text-base text-gray-300 font-medium">{link.label}</a>
               ) : (
-                <Link key={link.label} to={link.href} className="block py-2.5 text-base text-gray-700 font-medium"
+                <Link key={link.label} to={link.href} className="block py-2.5 text-base text-gray-300 font-medium"
                       onClick={() => setMobileMenuOpen(false)}>{link.label}</Link>
               )
             )}
             {isAuthenticated ? (
               <>
-                <Link to="/capra" className="block py-2.5 text-base text-gray-700 font-medium"
+                <Link to="/capra" className="block py-2.5 text-base text-gray-300 font-medium"
                       onClick={() => setMobileMenuOpen(false)}>Dashboard</Link>
                 <button onClick={() => { setMobileMenuOpen(false); logout(); }}
                         className="block py-2.5 text-base text-red-400 hover:text-red-300 font-medium">Sign out</button>
               </>
             ) : (
-              <Link to="/capra/login" className="block py-2.5 text-base text-gray-700 font-medium"
+              <Link to="/capra/login" className="block py-2.5 text-base text-gray-300 font-medium"
                     onClick={() => setMobileMenuOpen(false)}>Sign in</Link>
             )}
           </div>
