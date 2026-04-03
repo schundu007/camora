@@ -762,7 +762,7 @@ export default function DocsPage({ onBack }) {
                 <>
                   {/* All topics in a flat 2-column grid */}
                   <div className="rounded-lg overflow-hidden mb-6 border border-[#e3e8ee] shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-                    <div className="grid grid-cols-1 md:grid-cols-2 bg-white">
+                    <div className="grid grid-cols-1 bg-white">
                     {filteredTopics.map((topic, idx) => {
                       const catId = codingCategoryMap[topic.id];
                       const category = codingCategories.find(c => c.id === catId);
@@ -906,7 +906,7 @@ export default function DocsPage({ onBack }) {
                             <span className="text-[10px] landing-mono text-gray-400">{categoryTopics.length} topics</span>
                           </div>
                           {/* Topics in Category */}
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-white">
+                          <div className="grid grid-cols-1 bg-white">
                             {categoryTopics.map((topic) => (
                               <div
                                 key={topic.id}
@@ -966,7 +966,7 @@ export default function DocsPage({ onBack }) {
                             <span className="text-[10px] landing-mono text-gray-400">{categoryDesigns.length} systems</span>
                           </div>
                           {/* Designs in Category */}
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-white">
+                          <div className="grid grid-cols-1 bg-white">
                             {categoryDesigns.map((design) => {
                               const diffStyle = difficultyStyles[design.difficulty] || difficultyStyles['Medium'];
                               const designProblem = `Design ${design.title}. ${design.description || design.subtitle || ''}`;
@@ -1035,7 +1035,7 @@ export default function DocsPage({ onBack }) {
                             <h3 className="text-sm font-semibold text-gray-900 landing-display">{category.name}</h3>
                             <span className="text-[10px] landing-mono text-gray-400">{categoryProblems.length} problems</span>
                           </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-white">
+                          <div className="grid grid-cols-1 bg-white">
                             {categoryProblems.map((problem) => {
                               const diffStyle = { Easy: 'text-emerald-600 bg-emerald-50 border border-emerald-200', Medium: 'text-amber-600 bg-amber-50 border border-amber-200', Hard: 'text-red-600 bg-red-50 border border-red-200' }[problem.difficulty] || 'text-amber-600 bg-amber-50 border border-amber-200';
                               return (
@@ -1093,7 +1093,7 @@ export default function DocsPage({ onBack }) {
                             <h3 className="text-sm font-semibold text-gray-900 landing-display">{category.name}</h3>
                             <span className="text-[10px] landing-mono text-gray-400">{categoryTopics.length} patterns</span>
                           </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-white">
+                          <div className="grid grid-cols-1 bg-white">
                             {categoryTopics.map((topic) => (
                               <div
                                 key={topic.id}
@@ -1144,7 +1144,7 @@ export default function DocsPage({ onBack }) {
                             <h3 className="text-sm font-semibold text-gray-900 landing-display">{category.name}</h3>
                             <span className="text-[10px] landing-mono text-gray-400">{categoryTopics.length} patterns</span>
                           </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-white">
+                          <div className="grid grid-cols-1 bg-white">
                             {categoryTopics.map((topic) => (
                               <div
                                 key={topic.id}
@@ -1195,7 +1195,7 @@ export default function DocsPage({ onBack }) {
                             <h3 className="text-sm font-semibold text-gray-900 landing-display">{category.name}</h3>
                             <span className="text-[10px] landing-mono text-gray-400">{categoryTopics.length} topics</span>
                           </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-white">
+                          <div className="grid grid-cols-1 bg-white">
                             {categoryTopics.map((topic) => (
                               <div
                                 key={topic.id}
@@ -1246,7 +1246,7 @@ export default function DocsPage({ onBack }) {
                             <h3 className="text-sm font-semibold text-gray-900 landing-display">{category.name}</h3>
                             <span className="text-[10px] landing-mono text-gray-400">{categoryTopics.length} topics</span>
                           </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-white">
+                          <div className="grid grid-cols-1 bg-white">
                             {categoryTopics.map((topic) => (
                               <div
                                 key={topic.id}
@@ -1285,7 +1285,7 @@ export default function DocsPage({ onBack }) {
                       <p className="text-sm text-gray-500 landing-body mt-1">Thread-safe programming, synchronization, and classic problems</p>
                     </div>
                     <div className="rounded-lg overflow-hidden border border-[#e3e8ee] shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-white">
+                      <div className="grid grid-cols-1 bg-white">
                         {concurrencyTopics.map((topic) => (
                           <div
                             key={topic.id}
@@ -1365,7 +1365,7 @@ export default function DocsPage({ onBack }) {
                             <h3 className="text-sm font-semibold text-gray-900 landing-display">{category.name}</h3>
                             <span className="text-[10px] landing-mono text-gray-400">{categoryTopics.length} topics</span>
                           </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-white">
+                          <div className="grid grid-cols-1 bg-white">
                             {categoryTopics.map((topic) => (
                               <div
                                 key={topic.id}
@@ -1419,7 +1419,7 @@ export default function DocsPage({ onBack }) {
                             <h3 className="text-sm font-semibold text-gray-900 landing-display">{category.name}</h3>
                             <span className="text-[10px] landing-mono text-gray-400">{categoryProblems.length} problems</span>
                           </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-white">
+                          <div className="grid grid-cols-1 bg-white">
                             {categoryProblems.map((problem) => {
                               const diffStyle = { Easy: 'text-emerald-600 bg-emerald-50 border border-emerald-200', Medium: 'text-amber-600 bg-amber-50 border border-amber-200', Hard: 'text-red-600 bg-red-50 border border-red-200' }[problem.difficulty] || 'text-amber-600 bg-amber-50 border border-amber-200';
                               return (
@@ -1585,7 +1585,7 @@ export default function DocsPage({ onBack }) {
                             </div>
                           </div>
                           {/* Topics in Category */}
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-white">
+                          <div className="grid grid-cols-1 bg-white">
                             {categoryTopics.map((topic) => (
                               <div
                                 key={topic.id}
@@ -1724,7 +1724,7 @@ export default function DocsPage({ onBack }) {
                             <h3 className="text-sm font-semibold text-gray-900 landing-display">{category.name}</h3>
                             <span className="text-[10px] landing-mono text-gray-400">{categoryTopics.length} patterns</span>
                           </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-white">
+                          <div className="grid grid-cols-1 bg-white">
                             {categoryTopics.map((topic) => (
                               <div
                                 key={topic.id}
@@ -1778,7 +1778,7 @@ export default function DocsPage({ onBack }) {
                             <h3 className="text-sm font-semibold text-gray-900 landing-display">{category.name}</h3>
                             <span className="text-[10px] landing-mono text-gray-400">{categoryTopics.length} topics</span>
                           </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-white">
+                          <div className="grid grid-cols-1 bg-white">
                             {categoryTopics.map((topic) => (
                               <div
                                 key={topic.id}
@@ -1832,7 +1832,7 @@ export default function DocsPage({ onBack }) {
                             <h3 className="text-sm font-semibold text-gray-900 landing-display">{category.name}</h3>
                             <span className="text-[10px] landing-mono text-gray-400">{categoryTopics.length} topics</span>
                           </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-white">
+                          <div className="grid grid-cols-1 bg-white">
                             {categoryTopics.map((topic) => (
                               <div
                                 key={topic.id}
