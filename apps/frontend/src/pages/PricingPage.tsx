@@ -399,6 +399,61 @@ export default function PricingPage() {
         <div className="h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
       </div>
 
+      {/* Top-Up Packs */}
+      <section className="px-6 py-16">
+        <div className="max-w-[85%] xl:max-w-5xl mx-auto">
+          <div className="mb-10 text-center">
+            <span className="text-[11px] font-mono text-emerald-600 uppercase tracking-wider">Need More Credits?</span>
+            <h2 className="mt-3 text-2xl font-semibold tracking-tight text-gray-900">Top-Up Packs</h2>
+            <p className="mt-2 text-base text-gray-500">Hit your limit? Add more credits instantly. No subscription required.</p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-4">
+            {[
+              { name: '20 AI Questions', price: '$5', desc: 'Includes 3 bonus diagrams', packId: 'questions_20', icon: '💬' },
+              { name: '50 AI Questions', price: '$10', desc: 'Includes 8 bonus diagrams', packId: 'questions_50', icon: '🚀' },
+              { name: '5 Live Sessions', price: '$15', desc: '90 minutes per session', packId: 'sessions_5', icon: '🎯' },
+            ].map((pack) => (
+              <div key={pack.packId} className="bg-white rounded-2xl border border-[#e3e8ee] p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:border-emerald-300 transition-all">
+                <div className="text-3xl mb-3">{pack.icon}</div>
+                <h3 className="text-lg font-bold text-gray-900">{pack.name}</h3>
+                <div className="mt-1 flex items-baseline gap-1">
+                  <span className="text-2xl font-bold text-emerald-600">{pack.price}</span>
+                  <span className="text-sm text-gray-400">one-time</span>
+                </div>
+                <p className="mt-2 text-sm text-gray-500">{pack.desc}</p>
+                <button
+                  onClick={async () => {
+                    if (!token) { navigate('/login'); return; }
+                    try {
+                      const resp = await fetch(`${API_URL}/api/v1/usage/topup`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({
+                          pack_id: pack.packId,
+                          success_url: `${window.location.origin}/pricing?topup=success`,
+                          cancel_url: `${window.location.origin}/pricing`,
+                        }),
+                      });
+                      const data = await resp.json();
+                      if (data.url) window.location.href = data.url;
+                    } catch { /* ignore */ }
+                  }}
+                  className="mt-4 w-full py-2.5 bg-gray-900 hover:bg-gray-800 text-white text-sm font-semibold rounded-xl transition-colors"
+                >
+                  Buy {pack.name}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Divider */}
+      <div className="max-w-6xl mx-auto px-6">
+        <div className="h-px bg-[#e3e8ee]" />
+      </div>
+
       {/* FAQ */}
       <section className="px-6 py-16">
         <div className="max-w-[85%] xl:max-w-5xl mx-auto">
