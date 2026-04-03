@@ -371,38 +371,12 @@ const FEATURE_GROUPS = [
   },
 ];
 
-/* ── Competitor comparison data ─────────────────────────── */
-const COMP_BARS = [
-  { name: 'Camora', count: 40, color: '#34d399', suffix: '+' },
-  { name: 'LockedIn', count: 22, color: '#6b7280', suffix: '' },
-  { name: 'Final Round', count: 18, color: '#6b7280', suffix: '' },
-  { name: 'Sensei', count: 15, color: '#6b7280', suffix: '' },
-  { name: 'Solver', count: 12, color: '#6b7280', suffix: '' },
-];
-
-const COMP_TABLE = [
-  { feature: 'Full APPA Pipeline', detail: 'Apply, Prepare, Practice, Attend', camora: true, others: false },
-  { feature: 'Cloud Architecture Diagrams', detail: 'AWS, Azure, GCP', camora: true, others: false },
-  { feature: '415+ Preparation Topics', detail: '7 categories with AI explanations', camora: true, others: false },
-  { feature: 'Platform-Compatible Code', detail: 'LeetCode, HackerRank, CoderPad', camora: true, others: 'partial' as const },
-  { feature: 'Real Interview Database', detail: '80-90% of actual questions', camora: true, others: false },
-  { feature: 'Auto-Fix and Debug', detail: 'AI fixes broken code automatically', camora: true, others: false },
-  { feature: 'Speaker Voice Filtering', detail: 'Only transcribes interviewer', camora: true, others: false },
-  { feature: 'Resume-Personalized Answers', detail: 'References your experience', camora: true, others: 'partial' as const },
-  { feature: 'Coding Playground', detail: 'Built-in editor, 50+ languages', camora: true, others: 'partial' as const },
-  { feature: 'Free Tier', detail: '3 sessions, no credit card', camora: true, others: 'partial' as const },
-  { feature: 'Mock Interview Simulator', detail: 'Timed practice with feedback', camora: true, others: 'partial' as const },
-  { feature: 'STAR Format Coaching', detail: 'Structured behavioral answers', camora: true, others: 'partial' as const },
-];
-
 /* ════════════════════════════════════════════════════════════
    LANDING PAGE
    ════════════════════════════════════════════════════════════ */
 export default function LandingPage() {
   const { isAuthenticated, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const compRef = useRef<HTMLDivElement>(null);
-  const compInView = useInView(compRef, { once: true, margin: '-80px' });
 
   useEffect(() => { window.scrollTo(0, 0); }, []);
 
@@ -688,85 +662,6 @@ export default function LandingPage() {
             ))}
           </div>
         </div>
-      </section>
-
-      {/* ── CAMORA VS COMPETITORS ── */}
-      <section ref={compRef} className="px-6 py-20 md:py-28" style={{ zIndex: 1 }}>
-        <div className="max-w-6xl mx-auto">
-          <FadeIn className="text-center mb-16">
-            <span className="gradient-text text-sm font-bold tracking-[0.2em] uppercase">Head-to-Head</span>
-            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mt-4">See why engineers switch to Camora.</h2>
-          </FadeIn>
-          <FadeIn className="mb-14 max-w-2xl mx-auto">
-            {COMP_BARS.map((bar, i) => (
-              <div key={bar.name} className="flex items-center gap-3 mb-3"
-                style={{ opacity: compInView ? 1 : 0, transition: 'opacity 0.5s ease', transitionDelay: `${i * 100 + 300}ms` }}>
-                <span className={`text-sm font-semibold w-24 text-right flex-shrink-0 ${i === 0 ? 'text-emerald-500' : 'text-gray-400'}`}>{bar.name}</span>
-                <div className="flex-1 h-7 rounded-lg bg-gray-100 overflow-hidden">
-                  <div className="h-full rounded-lg flex items-center justify-end pr-2.5"
-                    style={{ width: compInView ? `${(bar.count / 45) * 100}%` : '0%', background: bar.color, transition: `width 1s ease ${i * 100 + 400}ms` }}>
-                    <span className="text-xs font-bold font-code text-white whitespace-nowrap">{bar.count}{bar.suffix}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-            <p className="text-center text-xs text-gray-400 mt-4 font-code tracking-wide">FEATURES COMPARISON</p>
-          </FadeIn>
-          <FadeIn>
-            <div className="rounded-2xl border border-gray-200 overflow-hidden">
-              <div className="grid grid-cols-[1fr_60px_60px] md:grid-cols-[1fr_120px_120px] px-6 py-3 border-b border-gray-200 bg-gray-50">
-                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Feature</span>
-                <span className="text-xs font-semibold text-emerald-500 uppercase tracking-wider text-center">Camora</span>
-                <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider text-center">Others</span>
-              </div>
-              {COMP_TABLE.map((row, i) => (
-                <div key={row.feature}
-                  className={`grid grid-cols-[1fr_60px_60px] md:grid-cols-[1fr_120px_120px] px-6 py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors ${i % 2 === 1 ? 'bg-gray-50/50' : ''}`}
-                  style={{ opacity: compInView ? 1 : 0, transform: compInView ? 'translateY(0)' : 'translateY(8px)',
-                    transition: 'opacity 0.4s ease, transform 0.4s ease', transitionDelay: `${i * 40 + 300}ms` }}>
-                  <div>
-                    <span className="text-sm font-medium text-gray-900">{row.feature}</span>
-                    <span className="hidden md:inline text-sm text-gray-400 ml-2">— {row.detail}</span>
-                  </div>
-                  <div className="flex items-center justify-center">
-                    <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-                  </div>
-                  <div className="flex items-center justify-center">
-                    {row.others === 'partial' ? (
-                      <span className="text-xs text-gray-400 font-medium">Partial</span>
-                    ) : (
-                      <svg className="w-4 h-4 text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                    )}
-                  </div>
-                </div>
-              ))}
-              <div className="grid grid-cols-[1fr_60px_60px] md:grid-cols-[1fr_120px_120px] px-6 py-4 bg-emerald-50/50">
-                <span className="text-sm font-bold text-gray-900">Total with full support</span>
-                <span className="text-center text-sm font-bold text-emerald-500">12/12</span>
-                <span className="text-center text-sm font-bold text-gray-400">3/12</span>
-              </div>
-            </div>
-          </FadeIn>
-        </div>
-      </section>
-
-      {/* ── STATS ── */}
-      <section className="px-6 py-20 border-y border-gray-100" style={{ zIndex: 1 }}>
-        <FadeIn className="max-w-4xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            {[
-              { value: '40+', label: 'Features', color: '#34d399' },
-              { value: '415+', label: 'Study Topics', color: '#818cf8' },
-              { value: '50+', label: 'Languages', color: '#06b6d4' },
-              { value: '7', label: 'Categories', color: '#fbbf24' },
-            ].map(stat => (
-              <div key={stat.label}>
-                <div className="text-4xl md:text-5xl font-extrabold font-display" style={{ color: stat.color }}>{stat.value}</div>
-                <div className="mt-2 text-sm text-gray-400 font-medium">{stat.label}</div>
-              </div>
-            ))}
-          </div>
-        </FadeIn>
       </section>
 
       {/* ── CTA ── */}
