@@ -80,8 +80,8 @@ function LoginPage() {
         <div className="w-full max-w-sm bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.04)] border border-[#e3e8ee] p-8">
 
           {/* Header */}
-          <h1 className="text-xl font-bold text-black tracking-tight">Welcome back</h1>
-          <p className="mt-1 text-sm text-gray-500">Sign in to continue your APPA journey</p>
+          <h1 className="text-xl font-bold text-black tracking-tight">Sign in to Camora</h1>
+          <p className="mt-1 text-sm text-gray-500">Apply. Prepare. Practice. Attend.</p>
 
           {/* Social login buttons */}
           <div className="mt-6 space-y-3">

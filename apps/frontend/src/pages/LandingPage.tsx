@@ -507,8 +507,8 @@ export default function LandingPage() {
           </motion.h1>
           <motion.div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4"
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.3 }}>
-            <Link to="/lumora" className="shimmer-btn px-8 py-4 text-lg font-semibold text-white bg-gray-900 rounded-2xl hover:bg-gray-800 transition-colors">
-              Start Free — No Credit Card
+            <Link to="/signup" className="shimmer-btn px-8 py-4 text-lg font-semibold text-white bg-gray-900 rounded-2xl hover:bg-gray-800 transition-colors">
+              Get Started Free
             </Link>
             <a href="#process" className="px-8 py-4 text-lg font-semibold text-gray-600 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors border border-gray-200">
               See How It Works
@@ -571,9 +571,9 @@ export default function LandingPage() {
         </FadeIn>
         <div className="max-w-5xl mx-auto mt-6 grid md:grid-cols-3 gap-4">
           {[
-            { url: 'camora.cariara.com/capra', src: '/demo-capra.mp4', title: 'Capra preparation dashboard demo' },
-            { url: 'camora.cariara.com/capra/prepare', src: '/demo-capra-topic.mp4', title: 'Capra topic detail demo' },
-            { url: 'camora.cariara.com/lumora/design', src: '/demo-design.mp4', title: 'System design diagram generation demo' },
+            { url: 'camora.cariara.com/capra', src: '/demo-capra.mp4', label: 'Dashboard' },
+            { url: 'camora.cariara.com/capra/prepare', src: '/demo-capra-topic.mp4', label: 'Study Topics' },
+            { url: 'camora.cariara.com/lumora/design', src: '/demo-design.mp4', label: 'Design Mode' },
           ].map((demo, i) => (
             <FadeIn key={demo.url} delay={0.1 * (i + 1)}>
               <div className="rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg hover:shadow-gray-100 transition-shadow">
@@ -583,8 +583,11 @@ export default function LandingPage() {
                   </div>
                   <span className="text-[10px] text-gray-400 truncate font-code">{demo.url}</span>
                 </div>
-                <div className="aspect-[4/3] bg-gray-100">
-                  <video src={demo.src} autoPlay loop muted playsInline title={demo.title} className="w-full h-full object-cover" />
+                <div className="aspect-[4/3] bg-gray-100 relative">
+                  <video src={demo.src} autoPlay loop muted playsInline className="w-full h-full object-cover" />
+                  <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent px-3 py-2">
+                    <span className="text-xs font-semibold text-white">{demo.label}</span>
+                  </div>
                 </div>
               </div>
             </FadeIn>
