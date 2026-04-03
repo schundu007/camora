@@ -149,7 +149,7 @@ export default function JobPrepPage() {
     setGeneratedSections({});
 
     try {
-      const response = await fetch(`${CAPRA_API_URL}/api/v1/ascend-prep/stream`, {
+      const response = await fetch(`${CAPRA_API_URL}/api/ascend/prep/stream`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
