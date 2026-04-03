@@ -428,6 +428,18 @@ export default function PricingPage() {
                     <div className="text-gray-400 text-xs">DesignGurus</div>
                     <div className="text-[10px] text-gray-600 font-mono">$98-197/course</div>
                   </th>
+                  <th className="py-3 px-3 text-center min-w-[80px] hidden xl:table-cell">
+                    <div className="text-gray-400 text-xs">AIApply</div>
+                    <div className="text-[10px] text-gray-600 font-mono">$29/mo</div>
+                  </th>
+                  <th className="py-3 px-3 text-center min-w-[80px] hidden xl:table-cell">
+                    <div className="text-gray-400 text-xs">OfferGoose</div>
+                    <div className="text-[10px] text-gray-600 font-mono">$24-89/mo</div>
+                  </th>
+                  <th className="py-3 px-3 text-center min-w-[80px] hidden xl:table-cell">
+                    <div className="text-gray-400 text-xs">Parakeet</div>
+                    <div className="text-[10px] text-gray-600 font-mono">$100/mo</div>
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -455,6 +467,9 @@ export default function PricingPage() {
                       <td className="py-2.5 px-3 text-center hidden lg:table-cell"><Cell val={row.techprep} /></td>
                       <td className="py-2.5 px-3 text-center hidden lg:table-cell"><Cell val={row.algomaster} /></td>
                       <td className="py-2.5 px-3 text-center hidden lg:table-cell"><Cell val={row.designgurus} /></td>
+                      <td className="py-2.5 px-3 text-center hidden xl:table-cell"><Cell val={row.aiapply} /></td>
+                      <td className="py-2.5 px-3 text-center hidden xl:table-cell"><Cell val={row.offergoose} /></td>
+                      <td className="py-2.5 px-3 text-center hidden xl:table-cell"><Cell val={row.parakeet} /></td>
                     </tr>
                   );
                 })}
