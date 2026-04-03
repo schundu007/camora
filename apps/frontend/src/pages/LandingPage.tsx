@@ -292,33 +292,38 @@ function PrepShowcase() {
       {/* Topic Cards */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { name: 'URL Shortener', category: 'System Design', difficulty: 'Medium', topics: 8, color: '#06b6d4' },
-          { name: 'Rate Limiter', category: 'System Design', difficulty: 'Medium', topics: 6, color: '#06b6d4' },
-          { name: 'Two Sum', category: 'DSA', difficulty: 'Easy', topics: 3, color: '#818cf8' },
-          { name: 'LRU Cache', category: 'DSA', difficulty: 'Hard', topics: 5, color: '#818cf8' },
-          { name: 'API Gateway', category: 'Microservices', difficulty: 'Medium', topics: 7, color: '#34d399' },
-          { name: 'SOLID Principles', category: 'Low-Level Design', difficulty: 'Medium', topics: 12, color: '#a78bfa' },
-          { name: 'ACID vs BASE', category: 'Database', difficulty: 'Medium', topics: 4, color: '#fbbf24' },
-          { name: 'STAR Method', category: 'Behavioral', difficulty: 'Easy', topics: 8, color: '#fb923c' },
+          { name: 'URL Shortener', category: 'System Design', difficulty: 'Medium', topics: 8, color: '#06b6d4', img: '/images/categories/system-design.svg' },
+          { name: 'Rate Limiter', category: 'System Design', difficulty: 'Medium', topics: 6, color: '#06b6d4', img: '/images/categories/system-design.svg' },
+          { name: 'Two Sum', category: 'DSA', difficulty: 'Easy', topics: 3, color: '#818cf8', img: '/images/categories/dsa.svg' },
+          { name: 'LRU Cache', category: 'DSA', difficulty: 'Hard', topics: 5, color: '#818cf8', img: '/images/categories/dsa.svg' },
+          { name: 'API Gateway', category: 'Microservices', difficulty: 'Medium', topics: 7, color: '#34d399', img: '/images/categories/microservices.svg' },
+          { name: 'SOLID Principles', category: 'Low-Level Design', difficulty: 'Medium', topics: 12, color: '#a78bfa', img: '/images/categories/lld.svg' },
+          { name: 'ACID vs BASE', category: 'Database', difficulty: 'Medium', topics: 4, color: '#fbbf24', img: '/images/categories/database.svg' },
+          { name: 'STAR Method', category: 'Behavioral', difficulty: 'Easy', topics: 8, color: '#fb923c', img: '/images/categories/behavioral.svg' },
         ].map((item, i) => (
           <div key={item.name}
-            className="rounded-xl border border-gray-200 p-5 hover:shadow-lg hover:shadow-gray-100/50 hover:border-gray-300 transition-all duration-300"
+            className="rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg hover:shadow-gray-100/50 hover:border-gray-300 transition-all duration-300"
             style={{ opacity: inView ? 1 : 0, transform: inView ? 'translateY(0)' : 'translateY(16px)',
               transition: 'opacity 0.6s ease, transform 0.6s ease, border-color 0.3s ease, box-shadow 0.3s ease',
               transitionDelay: `${i * 80 + 500}ms` }}>
-            <div className="flex items-center justify-between mb-3">
-              <span className="px-2 py-0.5 rounded text-xs font-code font-semibold" style={{ color: item.color, background: `${item.color}15` }}>{item.category}</span>
-              <span className={`px-2 py-0.5 rounded text-xs font-code font-semibold ${
-                item.difficulty === 'Easy' ? 'text-emerald-500 bg-emerald-50' :
-                item.difficulty === 'Hard' ? 'text-red-500 bg-red-50' : 'text-amber-500 bg-amber-50'}`}>
-                {item.difficulty}
-              </span>
+            <div className="h-28 flex items-center justify-center" style={{ background: `${item.color}08` }}>
+              <img src={item.img} alt={item.category} className="h-20 w-auto" />
             </div>
-            <h4 className="text-base font-bold text-gray-900 mb-2">{item.name}</h4>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-400">{item.topics} subtopics</span>
-              <div className="w-20 h-1.5 rounded-full bg-gray-100 overflow-hidden">
-                <div className="h-full rounded-full transition-all duration-1000" style={{ width: inView ? `${30 + i * 12}%` : '0%', background: item.color }} />
+            <div className="p-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="px-2 py-0.5 rounded text-xs font-code font-semibold" style={{ color: item.color, background: `${item.color}15` }}>{item.category}</span>
+                <span className={`px-2 py-0.5 rounded text-xs font-code font-semibold ${
+                  item.difficulty === 'Easy' ? 'text-emerald-500 bg-emerald-50' :
+                  item.difficulty === 'Hard' ? 'text-red-500 bg-red-50' : 'text-amber-500 bg-amber-50'}`}>
+                  {item.difficulty}
+                </span>
+              </div>
+              <h4 className="text-base font-bold text-gray-900 mb-2">{item.name}</h4>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-400">{item.topics} subtopics</span>
+                <div className="w-20 h-1.5 rounded-full bg-gray-100 overflow-hidden">
+                  <div className="h-full rounded-full transition-all duration-1000" style={{ width: inView ? `${30 + i * 12}%` : '0%', background: item.color }} />
+                </div>
               </div>
             </div>
           </div>
