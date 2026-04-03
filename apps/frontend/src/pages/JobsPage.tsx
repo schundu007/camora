@@ -187,7 +187,7 @@ export default function JobsPage() {
           height: '56px',
         }}
       >
-        <div className="max-w-6xl mx-auto h-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+        <div className="max-w-[85%] xl:max-w-7xl mx-auto h-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
           {/* Left: Logo */}
           <Link to="/" className="flex items-center gap-2.5 no-underline">
             <div
@@ -334,7 +334,7 @@ export default function JobsPage() {
 
         {/* ── Page Header ── */}
         <div style={{ background: '#ffffff', borderBottom: '1px solid #e3e8ee' }}>
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+          <div className="max-w-[85%] xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
             {/* Breadcrumb */}
             <div className="flex items-center gap-2 mb-4" style={{ fontSize: '13px', color: '#9ca3af' }}>
               <Link to="/" style={{ color: '#9ca3af', textDecoration: 'none' }}>Home</Link>
@@ -394,7 +394,7 @@ export default function JobsPage() {
             boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
           }}
         >
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+          <div className="max-w-[85%] xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
             <div className="flex flex-wrap items-center gap-3">
               {/* Search */}
               <div style={{ position: 'relative', flex: '1 1 240px', minWidth: '200px' }}>
@@ -462,7 +462,7 @@ export default function JobsPage() {
         </div>
 
         {/* ── Job Cards Grid ── */}
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        <div className="max-w-[85%] xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
           {loading ? (
             /* Loading skeleton */
             <div

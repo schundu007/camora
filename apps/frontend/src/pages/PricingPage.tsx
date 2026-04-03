@@ -228,7 +228,7 @@ export default function PricingPage() {
       </section>
 
       {/* Plans */}
-      <section className="max-w-5xl mx-auto px-6 py-10">
+      <section className="max-w-[85%] xl:max-w-7xl mx-auto px-6 py-10">
         <div className="grid md:grid-cols-4 gap-px bg-white/[0.04]">
           {PLANS.map((plan) => (
             <div
@@ -394,7 +394,7 @@ export default function PricingPage() {
 
       {/* FAQ */}
       <section className="px-6 py-16">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-[85%] xl:max-w-5xl mx-auto">
           <div className="mb-10 text-center">
             <span className="text-[11px] font-mono text-gray-500 uppercase tracking-wider">FAQ</span>
             <h2 className="mt-3 text-2xl font-semibold tracking-tight text-white">Common questions</h2>

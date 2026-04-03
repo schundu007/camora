@@ -204,7 +204,7 @@ export default function PracticePage() {
           height: '56px',
         }}
       >
-        <div className="max-w-6xl mx-auto h-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+        <div className="max-w-[85%] xl:max-w-7xl mx-auto h-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
           {/* Left: Logo */}
           <Link to="/" className="flex items-center gap-2.5 no-underline">
             <div
@@ -445,7 +445,7 @@ export default function PracticePage() {
             padding: '32px 0 28px',
           }}
         >
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-[85%] xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             {/* Breadcrumb */}
             <nav className="practice-body" style={{ fontSize: '13px', color: '#9ca3af', marginBottom: '12px' }}>
               <Link to="/" style={{ color: '#9ca3af', textDecoration: 'none', transition: 'color 0.15s' }} className="breadcrumb-link">Home</Link>
@@ -493,7 +493,7 @@ export default function PracticePage() {
         </div>
 
         {/* ═══════════════════════ Main Content ═══════════════════════ */}
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: '32px', paddingBottom: '80px' }}>
+        <div className="max-w-[85%] xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: '32px', paddingBottom: '80px' }}>
 
           {/* ── Topic Sections ── */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
@@ -810,7 +810,7 @@ export default function PracticePage() {
           padding: '24px 0',
         }}
       >
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[85%] xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center' }}>
             {/* Logo */}
             <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>

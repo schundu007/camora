@@ -426,7 +426,7 @@ export default function CompanyPrepPage() {
         className="fixed top-0 left-0 right-0 z-50"
         style={{ background: '#ffffff', borderBottom: '1px solid #e3e8ee', height: 56 }}
       >
-        <div className="max-w-6xl mx-auto h-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+        <div className="max-w-[85%] xl:max-w-7xl mx-auto h-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2.5 no-underline">
             <div
@@ -514,7 +514,7 @@ export default function CompanyPrepPage() {
 
       {/* ═══════════════════════ Main Content ═══════════════════════ */}
       <main style={{ paddingTop: 56 }}>
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[85%] xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
           {/* ── Breadcrumb ── */}
           <div style={{ padding: '16px 0 0' }}>
@@ -799,7 +799,7 @@ export default function CompanyPrepPage() {
 
       {/* ═══════════════════════ Footer ═══════════════════════ */}
       <footer style={{ background: '#ffffff', borderTop: '1px solid #e3e8ee', padding: '24px 0' }}>
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[85%] xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16, alignItems: 'center' }}>
             {/* Logo */}
             <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
