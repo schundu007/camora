@@ -24,7 +24,7 @@ const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.
 const CAPRA_API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
 const PREP_SECTIONS = [
-  { key: 'elevator-pitch', label: 'Elevator Pitch', description: 'A personalized 2-3 minute pitch for this role', icon: '🎯' },
+  { key: 'techstack', label: 'Tech Stack Analysis', description: 'Technology-specific questions and deep dives', icon: '🔧' },
   { key: 'hr', label: 'HR Questions', description: 'Salary negotiation, availability, culture fit', icon: '🤝' },
   { key: 'hiring-manager', label: 'Hiring Manager Questions', description: 'Role-specific technical and behavioral questions', icon: '👔' },
   { key: 'coding', label: 'Coding Questions', description: 'Likely coding problems based on the tech stack', icon: '💻' },
@@ -158,7 +158,7 @@ export default function JobPrepPage() {
         body: JSON.stringify({
           jobDescription: job.job_description || job.ai_summary || job.description || '',
           resume: 'User resume placeholder', // TODO: get from user profile
-          sections: ['elevator-pitch', 'hr', 'hiring-manager', 'coding', 'system-design', 'behavioral'],
+          sections: ['hr', 'hiring-manager', 'coding', 'system-design', 'behavioral', 'techstack'],
           provider: 'claude',
         }),
       });
@@ -1040,7 +1040,7 @@ function PrepSectionContent({ sectionKey, data }: { sectionKey: string; data: an
   }
 
   // Elevator Pitch — formatted text block
-  if (sectionKey === 'elevator-pitch') {
+  if (sectionKey === 'techstack') {
     const pitch = data.pitch || data.content || data.text || (typeof data === 'string' ? data : JSON.stringify(data));
     return (
       <div>

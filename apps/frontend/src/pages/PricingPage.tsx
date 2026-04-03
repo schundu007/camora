@@ -80,18 +80,18 @@ const PLANS = [
 ];
 
 const COMPARISON = [
-  { feature: 'Real-time AI during live interview', camora: true, finalround: true, lockedin: true, solver: true, sensei: true },
-  { feature: 'Job discovery and matching', camora: true, finalround: false, lockedin: false, solver: false, sensei: false, unique: true },
-  { feature: 'Auto resume and cover letter', camora: true, finalround: false, lockedin: true, solver: false, sensei: false },
-  { feature: 'Auto job apply', camora: true, finalround: false, lockedin: true, solver: false, sensei: false },
-  { feature: '300+ interview prep topics', camora: true, finalround: false, lockedin: false, solver: false, sensei: false, unique: true },
-  { feature: 'System design with diagrams', camora: true, finalround: false, lockedin: false, solver: false, sensei: false, unique: true },
-  { feature: 'Mock interview simulator', camora: true, finalround: true, lockedin: true, solver: false, sensei: true },
-  { feature: 'Coding solutions with complexity', camora: true, finalround: true, lockedin: true, solver: true, sensei: true },
-  { feature: 'Speaker voice filtering', camora: true, finalround: false, lockedin: false, solver: false, sensei: false, unique: true },
-  { feature: 'Combined prep plus live tool', camora: true, finalround: false, lockedin: false, solver: false, sensei: false, unique: true },
-  { feature: 'Voice transcription', camora: true, finalround: true, lockedin: true, solver: true, sensei: true },
-  { feature: 'Desktop app', camora: 'Soon', finalround: true, lockedin: true, solver: true, sensei: false },
+  { feature: 'Real-time AI during live interview', camora: true, finalround: true, lockedin: true, solver: true, sensei: true, techprep: false, algomaster: false },
+  { feature: 'Job discovery and matching', camora: true, finalround: false, lockedin: false, solver: false, sensei: false, techprep: false, algomaster: false, unique: true },
+  { feature: 'Auto resume and cover letter', camora: true, finalround: false, lockedin: true, solver: false, sensei: false, techprep: false, algomaster: false },
+  { feature: 'Auto job apply', camora: true, finalround: false, lockedin: true, solver: false, sensei: false, techprep: false, algomaster: false },
+  { feature: '300+ interview prep topics', camora: true, finalround: false, lockedin: false, solver: false, sensei: false, techprep: true, algomaster: true },
+  { feature: 'System design with diagrams', camora: true, finalround: false, lockedin: false, solver: false, sensei: false, techprep: 'Partial', algomaster: true },
+  { feature: 'Mock interview simulator', camora: true, finalround: true, lockedin: true, solver: false, sensei: true, techprep: false, algomaster: false },
+  { feature: 'Coding solutions with complexity', camora: true, finalround: true, lockedin: true, solver: true, sensei: true, techprep: true, algomaster: true },
+  { feature: 'Speaker voice filtering', camora: true, finalround: false, lockedin: false, solver: false, sensei: false, techprep: false, algomaster: false, unique: true },
+  { feature: 'Combined prep plus live tool', camora: true, finalround: false, lockedin: false, solver: false, sensei: false, techprep: false, algomaster: false, unique: true },
+  { feature: 'Voice transcription', camora: true, finalround: true, lockedin: true, solver: true, sensei: true, techprep: false, algomaster: false },
+  { feature: 'Desktop app', camora: 'Soon', finalround: true, lockedin: true, solver: true, sensei: false, techprep: false, algomaster: false },
 ];
 
 const NAV_LINKS = [
