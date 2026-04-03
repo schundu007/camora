@@ -213,10 +213,10 @@ function LumoraDemo() {
             <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
             <span className="font-code text-sm text-emerald-400 font-semibold tracking-wide">LIVE TRANSCRIPTION</span>
           </div>
-          <div className="rounded-xl border border-white/[0.08] p-5" style={{ background: 'rgba(255,255,255,0.02)', minHeight: '140px' }}>
+          <div className="rounded-xl border border-[#e3e8ee] p-5" style={{ background: 'rgba(255,255,255,0.02)', minHeight: '140px' }}>
             <div className="flex items-center gap-2 mb-2">
               <span className="font-code text-sm text-emerald-400 font-semibold">Q{pairIdx + 1}</span>
-              <span className="text-sm text-gray-500">{pair.label}</span>
+              <span className="text-sm text-gray-400">{pair.label}</span>
             </div>
             <p className="text-base text-gray-200 leading-relaxed">
               <span>{pair.question.slice(0, typedLen)}</span>
@@ -232,13 +232,13 @@ function LumoraDemo() {
             <span className="font-code text-sm text-cyan-400 font-semibold tracking-wide">AI RESPONSE</span>
           </div>
           <div className="space-y-4">
-            <div className="rounded-xl border border-white/[0.08] p-5" style={{ background: 'rgba(255,255,255,0.02)', minHeight: '160px' }}>
+            <div className="rounded-xl border border-[#e3e8ee] p-5" style={{ background: 'rgba(255,255,255,0.02)', minHeight: '160px' }}>
               <div className="font-code text-sm text-gray-500 mb-3 font-semibold tracking-wider">ARCHITECTURE</div>
               <div className="space-y-2.5">
                 {pair.bullets.map((b, i) => (
                   <p
                     key={`${pairIdx}-${i}`}
-                    className="flex items-start gap-3 text-base text-gray-300"
+                    className="flex items-start gap-3 text-base text-gray-600"
                     style={{
                       opacity: i < visibleBullets ? 1 : 0,
                       transform: i < visibleBullets ? 'translateY(0)' : 'translateY(12px)',
@@ -252,7 +252,7 @@ function LumoraDemo() {
               </div>
             </div>
             <div
-              className="rounded-xl border border-white/[0.08] p-5"
+              className="rounded-xl border border-[#e3e8ee] p-5"
               style={{
                 background: 'rgba(255,255,255,0.02)',
                 opacity: showScale ? 1 : 0,
@@ -368,7 +368,7 @@ function PrepShowcase({ inView }: { inView: boolean }) {
               }}
             >
               <span className="flex-shrink-0 w-3 h-3 rounded-full" style={{ background: cat.color }} />
-              <span className="text-sm text-gray-300 font-medium whitespace-nowrap">{cat.name}</span>
+              <span className="text-sm text-gray-600 font-medium whitespace-nowrap">{cat.name}</span>
               <span className="text-sm text-gray-500 font-code font-semibold">{cat.count}</span>
             </div>
           ))}
@@ -381,7 +381,7 @@ function PrepShowcase({ inView }: { inView: boolean }) {
         <div
           className="card-base rounded-2xl p-5"
           style={{
-            borderColor: 'rgba(16,185,129,0.15)',
+            borderColor: 'rgba(16,185,129,0.08)',
             opacity: inView ? 1 : 0,
             transform: inView ? 'translateY(0)' : 'translateY(20px)',
             transition: 'opacity 0.7s ease, transform 0.7s ease',
@@ -449,9 +449,9 @@ function PrepShowcase({ inView }: { inView: boolean }) {
                   {item.difficulty}
                 </span>
               </div>
-              <h4 className="text-base font-bold text-white mb-2">{item.name}</h4>
+              <h4 className="text-base font-bold text-gray-900 mb-2">{item.name}</h4>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-500">{item.topics} subtopics</span>
+                <span className="text-sm text-gray-400">{item.topics} subtopics</span>
                 <div className="w-20 h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
                   <div className="h-full rounded-full transition-all duration-1000" style={{ width: inView ? `${30 + i * 12}%` : '0%', background: item.color }} />
                 </div>
@@ -485,7 +485,7 @@ export default function LandingPage() {
   useEffect(() => { setMounted(true); window.scrollTo(0, 0); }, []);
 
   return (
-    <div className="landing-page min-h-screen text-white overflow-hidden" style={{ background: '#080a12' }}>
+    <div className="landing-page min-h-screen text-gray-900 overflow-hidden" style={{ background: '#f7f8f9' }}>
       {/* ── Styles ──────────────────────────────────────── */}
       <style>{`
         .landing-page {
@@ -544,14 +544,14 @@ export default function LandingPage() {
 
         /* Card — Stripe style: subtle border, no blur, no scale */
         .card-base {
-          background: rgba(255,255,255,0.03);
-          border: 1px solid rgba(255,255,255,0.08);
+          background: #ffffff;
+          border: 1px solid #e3e8ee;
           border-radius: 12px;
           transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
         .card-base:hover {
-          border-color: rgba(255,255,255,0.14);
-          box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+          border-color: #d0d5dd;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.06);
         }
 
         /* Fade-up animation utility */
@@ -593,14 +593,14 @@ export default function LandingPage() {
         <div className="mesh-orb" style={{
           width: '50vw', height: '50vw', maxWidth: '800px', maxHeight: '800px',
           top: '-15%', left: '-5%',
-          background: 'radial-gradient(circle, rgba(16,185,129,0.15) 0%, rgba(16,185,129,0.05) 40%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(16,185,129,0.08) 0%, rgba(16,185,129,0.05) 40%, transparent 70%)',
           filter: 'blur(60px)',
         }} />
         {/* Cyan sweep — top right */}
         <div className="mesh-orb" style={{
           width: '45vw', height: '45vw', maxWidth: '700px', maxHeight: '700px',
           top: '-5%', right: '-5%',
-          background: 'radial-gradient(circle, rgba(6,182,212,0.12) 0%, rgba(6,182,212,0.04) 40%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(6,182,212,0.06) 0%, rgba(6,182,212,0.04) 40%, transparent 70%)',
           filter: 'blur(80px)',
           animationDelay: '-5s',
         }} />
@@ -608,7 +608,7 @@ export default function LandingPage() {
         <div className="mesh-orb" style={{
           width: '40vw', height: '40vw', maxWidth: '600px', maxHeight: '600px',
           top: '30%', left: '5%',
-          background: 'radial-gradient(circle, rgba(99,102,241,0.10) 0%, rgba(99,102,241,0.03) 40%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(99,102,241,0.05) 0%, rgba(99,102,241,0.03) 40%, transparent 70%)',
           filter: 'blur(80px)',
           animationDelay: '-10s',
         }} />
@@ -616,7 +616,7 @@ export default function LandingPage() {
         <div className="mesh-orb" style={{
           width: '35vw', height: '35vw', maxWidth: '500px', maxHeight: '500px',
           bottom: '10%', right: '10%',
-          background: 'radial-gradient(circle, rgba(251,191,36,0.08) 0%, rgba(251,191,36,0.02) 40%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(251,191,36,0.04) 0%, rgba(251,191,36,0.02) 40%, transparent 70%)',
           filter: 'blur(70px)',
           animationDelay: '-15s',
         }} />
@@ -659,21 +659,21 @@ export default function LandingPage() {
       </div>
 
       {/* ── NAV ──────────────────────────────────────────── */}
-      <nav className="fixed top-0 left-0 right-0 z-50 h-16 border-b border-white/[0.06]" style={{ background: 'rgba(10,11,20,0.8)', backdropFilter: 'blur(20px)' }}>
+      <nav className="fixed top-0 left-0 right-0 z-50 h-16 border-b border-[#e3e8ee]" style={{ background: 'rgba(10,11,20,0.8)', backdropFilter: 'blur(20px)' }}>
         <div className="max-w-[85%] xl:max-w-7xl mx-auto flex items-center justify-between px-6 lg:px-8 h-16">
           <Link to="/" className="flex items-center gap-2">
             <CamoraLogo size={34} />
-            <span className="font-display text-lg font-bold tracking-tight">Camora</span>
+            <span className="font-display text-lg font-bold tracking-tight text-gray-900">Camora</span>
           </Link>
 
           <div className="hidden lg:flex items-center gap-1">
             {NAV_LINKS.map((link) =>
               link.external ? (
                 <a key={link.label} href={link.href} target="_blank" rel="noopener noreferrer"
-                   className="px-4 py-2 text-[15px] text-gray-400 hover:text-white transition-colors font-medium">{link.label}</a>
+                   className="px-4 py-2 text-[15px] text-gray-500 hover:text-gray-900 transition-colors font-medium">{link.label}</a>
               ) : (
                 <Link key={link.label} to={link.href}
-                      className="px-4 py-2 text-[15px] text-gray-400 hover:text-white transition-colors font-medium">{link.label}</Link>
+                      className="px-4 py-2 text-[15px] text-gray-500 hover:text-gray-900 transition-colors font-medium">{link.label}</Link>
               )
             )}
           </div>
@@ -681,18 +681,18 @@ export default function LandingPage() {
           <div className="hidden lg:flex items-center gap-4">
             {isAuthenticated ? (
               <>
-                <Link to="/capra" className="text-[15px] text-gray-400 hover:text-white transition-colors font-medium">Dashboard</Link>
+                <Link to="/capra" className="text-[15px] text-gray-500 hover:text-gray-900 transition-colors font-medium">Dashboard</Link>
                 <button onClick={logout} className="text-[15px] text-red-400 hover:text-red-300 transition-colors font-medium">Sign out</button>
               </>
             ) : (
-              <Link to="/capra/login" className="text-[15px] text-gray-400 hover:text-white transition-colors font-medium">Sign in</Link>
+              <Link to="/capra/login" className="text-[15px] text-gray-500 hover:text-gray-900 transition-colors font-medium">Sign in</Link>
             )}
             <Link to="/lumora" className="glow-btn px-5 py-2.5 text-[15px] font-semibold text-white bg-emerald-500 rounded-xl">
               Launch App
             </Link>
           </div>
 
-          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="lg:hidden p-2 text-gray-400 hover:text-white">
+          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="lg:hidden p-2 text-gray-500 hover:text-gray-900">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
               {mobileMenuOpen
                 ? <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -703,25 +703,25 @@ export default function LandingPage() {
 
         {/* Mobile menu */}
         {mobileMenuOpen && (
-          <div className="lg:hidden border-t border-white/[0.06] px-6 py-5 space-y-2" style={{ background: 'rgba(10,11,20,0.95)' }}>
+          <div className="lg:hidden border-t border-[#e3e8ee] px-6 py-5 space-y-2" style={{ background: 'rgba(10,11,20,0.95)' }}>
             {NAV_LINKS.map((link) =>
               link.external ? (
                 <a key={link.label} href={link.href} target="_blank" rel="noopener noreferrer"
-                   className="block py-2.5 text-base text-gray-300 font-medium">{link.label}</a>
+                   className="block py-2.5 text-base text-gray-600 font-medium">{link.label}</a>
               ) : (
-                <Link key={link.label} to={link.href} className="block py-2.5 text-base text-gray-300 font-medium"
+                <Link key={link.label} to={link.href} className="block py-2.5 text-base text-gray-600 font-medium"
                       onClick={() => setMobileMenuOpen(false)}>{link.label}</Link>
               )
             )}
             {isAuthenticated ? (
               <>
-                <Link to="/capra" className="block py-2.5 text-base text-gray-300 font-medium"
+                <Link to="/capra" className="block py-2.5 text-base text-gray-600 font-medium"
                       onClick={() => setMobileMenuOpen(false)}>Dashboard</Link>
                 <button onClick={() => { setMobileMenuOpen(false); logout(); }}
                         className="block py-2.5 text-base text-red-400 hover:text-red-300 font-medium">Sign out</button>
               </>
             ) : (
-              <Link to="/capra/login" className="block py-2.5 text-base text-gray-300 font-medium"
+              <Link to="/capra/login" className="block py-2.5 text-base text-gray-600 font-medium"
                     onClick={() => setMobileMenuOpen(false)}>Sign in</Link>
             )}
           </div>
@@ -740,7 +740,7 @@ export default function LandingPage() {
         <div className="relative max-w-4xl mx-auto text-center">
           {/* APPA Badge */}
           <div className={`transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-            <div className="inline-flex items-center gap-3 px-5 py-2.5 rounded-full border border-emerald-400/20 bg-emerald-400/[0.06] mb-10">
+            <div className="inline-flex items-center gap-3 px-5 py-2.5 rounded-full border border-emerald-500/30 bg-emerald-50 mb-10">
               <span className="relative flex h-2.5 w-2.5">
                 <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400" style={{ animation: 'ping-dot 1.5s cubic-bezier(0, 0, 0.2, 1) infinite' }} />
                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-400" />
@@ -753,7 +753,7 @@ export default function LandingPage() {
 
           {/* Headline */}
           <h1 className={`font-display font-extrabold tracking-[-0.04em] transition-all duration-700 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-            <span className="block text-6xl md:text-7xl lg:text-[84px] leading-[1.05] text-white">
+            <span className="block text-6xl md:text-7xl lg:text-[84px] leading-[1.05] text-gray-900">
               Ace every
             </span>
             <span className="block text-6xl md:text-7xl lg:text-[84px] leading-[1.05] mt-1">
@@ -776,13 +776,13 @@ export default function LandingPage() {
             <Link to="/lumora" className="glow-btn px-8 py-4 text-lg font-semibold text-white bg-emerald-500 rounded-xl">
               Start Free — No Credit Card
             </Link>
-            <a href="#appa" className="px-8 py-4 text-lg font-semibold text-white border border-white/20 rounded-xl hover:border-white/40 transition-all">
+            <a href="#appa" className="px-8 py-4 text-lg font-semibold text-white border border-[#d0d5dd] rounded-xl hover:border-white/40 transition-all">
               See How It Works
             </a>
           </div>
 
           {/* Trust line */}
-          <p className={`mt-12 text-sm text-gray-500 transition-all duration-700 delay-[400ms] ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+          <p className={`mt-12 text-sm text-gray-400 transition-all duration-700 delay-[400ms] ${mounted ? 'opacity-100' : 'opacity-0'}`}>
             Trusted by engineers interviewing at Google, Amazon, Meta, Apple, and Microsoft
           </p>
         </div>
@@ -795,35 +795,35 @@ export default function LandingPage() {
         <div className="max-w-[85%] xl:max-w-7xl mx-auto">
           <div className={`text-center mb-16 transition-all duration-700 ${demoRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             <span className="font-code text-sm text-emerald-400 tracking-wider font-semibold">SEE IT IN ACTION</span>
-            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-white mt-4">
+            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-gray-900 mt-4">
               Lumora during a live interview
             </h2>
-            <p className="mt-4 text-base md:text-lg text-gray-300 max-w-2xl mx-auto">
+            <p className="mt-4 text-base md:text-lg text-gray-600 max-w-2xl mx-auto">
               Watch how Lumora transcribes the interviewer's question and generates a complete system design answer in real time.
             </p>
           </div>
 
-          <div className={`rounded-2xl border border-white/[0.08] overflow-hidden transition-all duration-1000 ${demoRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}
+          <div className={`rounded-2xl border border-[#e3e8ee] overflow-hidden transition-all duration-1000 ${demoRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}
                style={{
                  background: 'linear-gradient(180deg, rgba(52,211,153,0.04) 0%, rgba(10,11,20,0.95) 100%)',
                  boxShadow: '0 0 100px rgba(16,185,129,0.08)',
                }}>
             {/* Browser chrome */}
-            <div className="flex items-center gap-3 px-5 py-3 border-b border-white/[0.06]" style={{ background: 'rgba(255,255,255,0.02)' }}>
+            <div className="flex items-center gap-3 px-5 py-3 border-b border-[#e3e8ee]" style={{ background: 'rgba(255,255,255,0.02)' }}>
               <div className="flex gap-2">
                 <div className="w-3 h-3 rounded-full bg-red-500/60" />
                 <div className="w-3 h-3 rounded-full bg-yellow-500/60" />
                 <div className="w-3 h-3 rounded-full bg-green-500/60" />
               </div>
               <div className="flex-1 flex justify-center">
-                <div className="px-4 py-1 rounded-md bg-white/[0.04] font-code text-sm text-gray-500">
+                <div className="px-4 py-1 rounded-md bg-white/[0.04] font-code text-sm text-gray-400">
                   camora.cariara.com/lumora
                 </div>
               </div>
             </div>
 
             {/* Video/GIF container — replace src when recording is ready */}
-            <div className="relative aspect-video bg-[#0a0b14]">
+            <div className="relative aspect-video bg-gray-900">
               <video src="/demo-lumora.mp4" autoPlay loop muted playsInline className="w-full h-full object-cover" />
             </div>
           </div>
@@ -837,10 +837,10 @@ export default function LandingPage() {
         <div className="max-w-[85%] xl:max-w-7xl mx-auto">
           <div className={`text-center mb-10 transition-all duration-700 ${demoRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '300ms' }}>
             <span className="font-code text-sm text-indigo-400 tracking-wider font-semibold">PREPARE, PRACTICE, AND DESIGN</span>
-            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-white mt-4">
+            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-gray-900 mt-4">
               415+ topics. Auto-generated diagrams.
             </h2>
-            <p className="mt-4 text-base md:text-lg text-gray-300 max-w-2xl mx-auto">
+            <p className="mt-4 text-base md:text-lg text-gray-600 max-w-2xl mx-auto">
               Study DSA, System Design, Microservices, Databases, SQL, LLD, and Behavioral. Generate architecture diagrams automatically.
             </p>
           </div>
@@ -854,20 +854,20 @@ export default function LandingPage() {
                    boxShadow: '0 0 80px rgba(129,140,248,0.06)',
                  }}>
               {/* Browser chrome */}
-              <div className="flex items-center gap-3 px-5 py-3 border-b border-white/[0.06]" style={{ background: 'rgba(255,255,255,0.02)' }}>
+              <div className="flex items-center gap-3 px-5 py-3 border-b border-[#e3e8ee]" style={{ background: 'rgba(255,255,255,0.02)' }}>
                 <div className="flex gap-2">
                   <div className="w-3 h-3 rounded-full bg-red-500/60" />
                   <div className="w-3 h-3 rounded-full bg-yellow-500/60" />
                   <div className="w-3 h-3 rounded-full bg-green-500/60" />
                 </div>
                 <div className="flex-1 flex justify-center">
-                  <div className="px-4 py-1 rounded-md bg-white/[0.04] font-code text-sm text-gray-500">
+                  <div className="px-4 py-1 rounded-md bg-white/[0.04] font-code text-sm text-gray-400">
                     camora.cariara.com/capra
                   </div>
                 </div>
               </div>
 
-              <div className="relative aspect-[4/3] bg-[#0a0b14]">
+              <div className="relative aspect-[4/3] bg-gray-900">
                 <video src="/demo-capra.mp4" autoPlay loop muted playsInline className="w-full h-full object-cover" />
               </div>
             </div>
@@ -880,20 +880,20 @@ export default function LandingPage() {
                    boxShadow: '0 0 80px rgba(6,182,212,0.06)',
                  }}>
               {/* Browser chrome */}
-              <div className="flex items-center gap-3 px-5 py-3 border-b border-white/[0.06]" style={{ background: 'rgba(255,255,255,0.02)' }}>
+              <div className="flex items-center gap-3 px-5 py-3 border-b border-[#e3e8ee]" style={{ background: 'rgba(255,255,255,0.02)' }}>
                 <div className="flex gap-2">
                   <div className="w-3 h-3 rounded-full bg-red-500/60" />
                   <div className="w-3 h-3 rounded-full bg-yellow-500/60" />
                   <div className="w-3 h-3 rounded-full bg-green-500/60" />
                 </div>
                 <div className="flex-1 flex justify-center">
-                  <div className="px-4 py-1 rounded-md bg-white/[0.04] font-code text-sm text-gray-500">
+                  <div className="px-4 py-1 rounded-md bg-white/[0.04] font-code text-sm text-gray-400">
                     camora.cariara.com/capra/prepare
                   </div>
                 </div>
               </div>
 
-              <div className="relative aspect-[4/3] bg-[#0a0b14]">
+              <div className="relative aspect-[4/3] bg-gray-900">
                 <video src="/demo-capra-topic.mp4" autoPlay loop muted playsInline className="w-full h-full object-cover" />
               </div>
             </div>
@@ -903,23 +903,23 @@ export default function LandingPage() {
                  style={{
                    transitionDelay: '800ms',
                    background: 'linear-gradient(180deg, rgba(16,185,129,0.04) 0%, rgba(10,11,20,0.95) 100%)',
-                   boxShadow: '0 0 80px rgba(16,185,129,0.06)',
+                   boxShadow: '0 0 80px rgba(16,185,129,0.04)',
                  }}>
               {/* Browser chrome */}
-              <div className="flex items-center gap-3 px-5 py-3 border-b border-white/[0.06]" style={{ background: 'rgba(255,255,255,0.02)' }}>
+              <div className="flex items-center gap-3 px-5 py-3 border-b border-[#e3e8ee]" style={{ background: 'rgba(255,255,255,0.02)' }}>
                 <div className="flex gap-2">
                   <div className="w-3 h-3 rounded-full bg-red-500/60" />
                   <div className="w-3 h-3 rounded-full bg-yellow-500/60" />
                   <div className="w-3 h-3 rounded-full bg-green-500/60" />
                 </div>
                 <div className="flex-1 flex justify-center">
-                  <div className="px-4 py-1 rounded-md bg-white/[0.04] font-code text-sm text-gray-500">
+                  <div className="px-4 py-1 rounded-md bg-white/[0.04] font-code text-sm text-gray-400">
                     camora.cariara.com/lumora/design
                   </div>
                 </div>
               </div>
 
-              <div className="relative aspect-[4/3] bg-[#0a0b14]">
+              <div className="relative aspect-[4/3] bg-gray-900">
                 <video src="/demo-design.mp4" autoPlay loop muted playsInline className="w-full h-full object-cover" />
               </div>
             </div>
@@ -939,13 +939,13 @@ export default function LandingPage() {
         <div className="relative max-w-[85%] xl:max-w-7xl mx-auto">
           <div className={`text-center mb-16 transition-all duration-700 ${journeyRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             <span className="font-code text-sm text-indigo-400 tracking-wider font-semibold">THE APPA FRAMEWORK</span>
-            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mt-4">
+            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-gray-900 mt-4">
               <span style={{ color: '#34d399' }}>Apply.</span>{' '}
               <span style={{ color: '#818cf8' }}>Prepare.</span>{' '}
               <span style={{ color: '#38bdf8' }}>Practice.</span>{' '}
               <span style={{ color: '#fbbf24' }}>Attend.</span>
             </h2>
-            <p className="mt-5 text-base md:text-lg text-gray-300 max-w-2xl mx-auto">
+            <p className="mt-5 text-base md:text-lg text-gray-600 max-w-2xl mx-auto">
               The complete interview lifecycle in one platform. No other tool covers all four stages.
             </p>
           </div>
@@ -971,13 +971,13 @@ export default function LandingPage() {
                        style={{ boxShadow: `0 4px 30px rgba(0,0,0,0.3), 0 0 40px ${step.color}10` }} />
 
                   <div className="relative">
-                    <div className="w-14 h-14 rounded-xl flex items-center justify-center mb-5 border border-white/[0.08]"
+                    <div className="w-14 h-14 rounded-xl flex items-center justify-center mb-5 border border-[#e3e8ee]"
                          style={{ background: `${step.color}1a` }}>
                       {AppaIcons[step.icon](step.color)}
                     </div>
                     <div className="font-code text-sm text-gray-500 mb-1 font-semibold">{step.num}</div>
-                    <h3 className="text-xl md:text-2xl font-bold text-white mb-3 font-display">{step.label}</h3>
-                    <p className="text-base md:text-lg text-gray-300 leading-relaxed">{step.desc}</p>
+                    <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-3 font-display">{step.label}</h3>
+                    <p className="text-base md:text-lg text-gray-600 leading-relaxed">{step.desc}</p>
                     <div className="mt-5 text-sm font-semibold opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: step.color }}>
                       Explore &rarr;
                     </div>
@@ -1007,7 +1007,7 @@ export default function LandingPage() {
         <div className="relative max-w-[85%] xl:max-w-7xl mx-auto">
           <div className={`text-center mb-16 transition-all duration-700 ${productsRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             <span className="font-code text-sm text-cyan-400 tracking-wider font-semibold">TWO PRODUCTS, ONE PLATFORM</span>
-            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-white mt-4">
+            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-gray-900 mt-4">
               Prepare before. Perform during.
             </h2>
           </div>
@@ -1026,17 +1026,17 @@ export default function LandingPage() {
                   {AppaIcons.lumora('#34d399')}
                 </div>
                 <div>
-                  <span className="text-xl md:text-2xl font-bold text-white font-display">Lumora</span>
+                  <span className="text-xl md:text-2xl font-bold text-gray-900 font-display">Lumora</span>
                   <span className="block font-code text-sm text-emerald-400 font-semibold">LIVE INTERVIEW AI</span>
                 </div>
               </div>
-              <p className="text-base md:text-lg text-gray-300 leading-relaxed mb-8">
+              <p className="text-base md:text-lg text-gray-600 leading-relaxed mb-8">
                 Real-time AI that listens to your interview, transcribes questions,
                 and streams expert answers for system design, coding, and behavioral rounds.
               </p>
               <div className="space-y-3">
                 {['Voice transcription with speaker filtering', 'Auto-generated system design diagrams', 'Multi-approach coding solutions', 'Behavioral STAR-format responses'].map((f) => (
-                  <div key={f} className="flex items-center gap-3 text-base text-gray-300">
+                  <div key={f} className="flex items-center gap-3 text-base text-gray-600">
                     <svg className="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                     </svg>
@@ -1062,17 +1062,17 @@ export default function LandingPage() {
                   {AppaIcons.capra('#818cf8')}
                 </div>
                 <div>
-                  <span className="text-xl md:text-2xl font-bold text-white font-display">Capra</span>
+                  <span className="text-xl md:text-2xl font-bold text-gray-900 font-display">Capra</span>
                   <span className="block font-code text-sm text-indigo-400 font-semibold">INTERVIEW PREPARATION</span>
                 </div>
               </div>
-              <p className="text-base md:text-lg text-gray-300 leading-relaxed mb-8">
+              <p className="text-base md:text-lg text-gray-600 leading-relaxed mb-8">
                 Study and practice before your interview. 300+ curated topics with
                 AI-powered explanations, mock interviews, and coding practice.
               </p>
               <div className="space-y-3">
                 {['System design deep dives with diagrams', 'DSA problems with multiple solutions', 'Behavioral question frameworks', 'Timed mock interview simulator'].map((f) => (
-                  <div key={f} className="flex items-center gap-3 text-base text-gray-300">
+                  <div key={f} className="flex items-center gap-3 text-base text-gray-600">
                     <svg className="w-4 h-4 text-indigo-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                     </svg>
@@ -1100,10 +1100,10 @@ export default function LandingPage() {
         <div className="relative max-w-[85%] xl:max-w-7xl mx-auto">
           <div className={`text-center mb-16 transition-all duration-700 ${prepRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             <span className="font-code text-sm text-emerald-400 tracking-wider font-semibold">PREPARATION AT SCALE</span>
-            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-white mt-4">
+            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-gray-900 mt-4">
               Everything you need to prepare.
             </h2>
-            <p className="mt-5 text-base md:text-lg text-gray-300 max-w-2xl mx-auto">
+            <p className="mt-5 text-base md:text-lg text-gray-600 max-w-2xl mx-auto">
               Comprehensive study material and practice problems covering every angle of the technical interview.
             </p>
           </div>
@@ -1119,7 +1119,7 @@ export default function LandingPage() {
         <div className="max-w-[85%] xl:max-w-7xl mx-auto">
           <div className={`text-center mb-16 transition-all duration-700 ${featuresRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             <span className="font-code text-sm text-cyan-400 tracking-wider font-semibold">THREE INTERVIEW MODES</span>
-            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-white mt-4">
+            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-gray-900 mt-4">
               System Design. Coding. Behavioral.
             </h2>
           </div>
@@ -1173,14 +1173,14 @@ export default function LandingPage() {
                 className={`card-base rounded-2xl ${f.borderClass} p-8 md:p-10 transition-all duration-700 ${featuresRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
                 style={{ transitionDelay: `${i * 120 + 200}ms` }}
               >
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-5 border border-white/[0.08]" style={{ background: `${f.color}15` }}>
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-5 border border-[#e3e8ee]" style={{ background: `${f.color}15` }}>
                   {f.icon(f.color)}
                 </div>
-                <h3 className="text-xl md:text-2xl font-bold text-white mb-3 font-display">{f.mode}</h3>
-                <p className="text-base md:text-lg text-gray-300 leading-relaxed mb-6">{f.desc}</p>
+                <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-3 font-display">{f.mode}</h3>
+                <p className="text-base md:text-lg text-gray-600 leading-relaxed mb-6">{f.desc}</p>
                 <div className="flex flex-wrap gap-2">
                   {f.tags.map((t) => (
-                    <span key={t} className="px-3 py-1.5 rounded-md font-code text-sm font-medium border border-white/[0.08]"
+                    <span key={t} className="px-3 py-1.5 rounded-md font-code text-sm font-medium border border-[#e3e8ee]"
                           style={{ color: f.color, background: `${f.color}14` }}>
                       {t}
                     </span>
@@ -1211,10 +1211,10 @@ export default function LandingPage() {
             <span className="inline-block font-code text-sm text-emerald-400 tracking-[0.2em] font-semibold uppercase px-4 py-1.5 rounded-full border border-emerald-400/20 bg-emerald-400/5">
               ONLY ON CAMORA
             </span>
-            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight text-white mt-6">
+            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight text-gray-900 mt-6">
               What no other interview tool can do.
             </h2>
-            <p className="mt-5 text-base md:text-lg text-gray-300 max-w-3xl mx-auto leading-relaxed">
+            <p className="mt-5 text-base md:text-lg text-gray-600 max-w-3xl mx-auto leading-relaxed">
               Every feature below is unique to Camora. We built what interview candidates actually need — not what looks good in a demo. This is the platform competitors wish they had.
             </p>
           </div>
@@ -1457,10 +1457,10 @@ export default function LandingPage() {
                     style={{ transitionDelay: `${gi * 120 + 100}ms` }}
                   >
                     {/* Group header */}
-                    <div className="px-6 py-4 border-b border-white/[0.06] flex items-center justify-between" style={{ background: `${group.accent}08` }}>
+                    <div className="px-6 py-4 border-b border-[#e3e8ee] flex items-center justify-between" style={{ background: `${group.accent}08` }}>
                       <div className="flex items-center gap-3">
                         <span className="w-2.5 h-2.5 rounded-full" style={{ background: group.accent }} />
-                        <h3 className="text-base font-bold text-white font-display">{group.groupTitle}</h3>
+                        <h3 className="text-base font-bold text-gray-900 font-display">{group.groupTitle}</h3>
                       </div>
                       <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ color: group.accent, background: `${group.accent}15` }}>
                         {group.features.length} features
@@ -1481,7 +1481,7 @@ export default function LandingPage() {
                             >
                               {f.icon}
                             </div>
-                            <span className="text-sm font-medium text-gray-300 leading-tight">{f.title}</span>
+                            <span className="text-sm font-medium text-gray-700 leading-tight">{f.title}</span>
                           </div>
                         ))}
                       </div>
@@ -1539,7 +1539,7 @@ export default function LandingPage() {
                         {ring.display}
                       </text>
                     </svg>
-                    <span className="mt-2 text-xs md:text-sm text-gray-400 font-medium">{ring.label}</span>
+                    <span className="mt-2 text-xs md:text-sm text-gray-500 font-medium">{ring.label}</span>
                   </div>
                 );
               })}
@@ -1561,7 +1561,7 @@ export default function LandingPage() {
         <div className="relative max-w-[85%] xl:max-w-7xl mx-auto">
           <div className={`text-center mb-16 transition-all duration-700 ${compRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             <span className="font-code text-sm text-cyan-400 tracking-wider font-semibold">HEAD-TO-HEAD</span>
-            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-white mt-4">
+            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-gray-900 mt-4">
               See why engineers switch to Camora.
             </h2>
           </div>
@@ -1613,7 +1613,7 @@ export default function LandingPage() {
             {/* Clean comparison table */}
             <div className={`card-base rounded-2xl overflow-x-auto transition-all duration-700 ${compRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
               {/* Table header */}
-              <div className="grid grid-cols-[1fr_60px_60px] md:grid-cols-[1fr_120px_120px] px-6 py-3 border-b border-white/[0.06]" style={{ background: 'rgba(255,255,255,0.02)' }}>
+              <div className="grid grid-cols-[1fr_60px_60px] md:grid-cols-[1fr_120px_120px] px-6 py-3 border-b border-[#e3e8ee]" style={{ background: 'rgba(255,255,255,0.02)' }}>
                 <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Feature</span>
                 <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider text-center">Camora</span>
                 <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Others</span>
@@ -1635,7 +1635,7 @@ export default function LandingPage() {
               ].map((row, i) => (
                 <div
                   key={row.feature}
-                  className={`grid grid-cols-[1fr_60px_60px] md:grid-cols-[1fr_120px_120px] px-6 py-3 border-b border-white/[0.03] hover:bg-white/[0.02] transition-colors ${i % 2 === 0 ? '' : 'bg-white/[0.01]'}`}
+                  className={`grid grid-cols-[1fr_60px_60px] md:grid-cols-[1fr_120px_120px] px-6 py-3 border-b border-white/[0.03] hover:bg-gray-50 transition-colors ${i % 2 === 0 ? '' : 'bg-gray-50/50'}`}
                   style={{
                     opacity: compRef.inView ? 1 : 0,
                     transform: compRef.inView ? 'translateY(0)' : 'translateY(8px)',
@@ -1664,7 +1664,7 @@ export default function LandingPage() {
                 </div>
               ))}
               {/* Summary row */}
-              <div className="grid grid-cols-[1fr_60px_60px] md:grid-cols-[1fr_120px_120px] px-6 py-4" style={{ background: 'rgba(16,185,129,0.06)' }}>
+              <div className="grid grid-cols-[1fr_60px_60px] md:grid-cols-[1fr_120px_120px] px-6 py-4" style={{ background: 'rgba(16,185,129,0.04)' }}>
                 <span className="text-sm font-bold text-white">Total with full support</span>
                 <span className="text-center text-sm font-bold text-emerald-400">12/12</span>
                 <span className="text-center text-sm font-bold text-gray-500">3/12</span>
@@ -1681,7 +1681,7 @@ export default function LandingPage() {
         <div className="max-w-[85%] xl:max-w-7xl mx-auto">
           <div className={`text-center mb-16 transition-all duration-700 ${howRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             <span className="font-code text-sm text-gray-400 tracking-wider font-semibold">HOW IT WORKS</span>
-            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-white mt-4">
+            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-gray-900 mt-4">
               Three steps. Zero friction.
             </h2>
           </div>
@@ -1698,8 +1698,8 @@ export default function LandingPage() {
                 style={{ transitionDelay: `${i * 120 + 200}ms` }}
               >
                 <div className="font-display text-6xl font-black mb-5" style={{ color: `${s.color}20` }}>{s.num}</div>
-                <h3 className="text-xl md:text-2xl font-bold text-white mb-3 font-display">{s.title}</h3>
-                <p className="text-base md:text-lg text-gray-300 leading-relaxed">{s.desc}</p>
+                <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-3 font-display">{s.title}</h3>
+                <p className="text-base md:text-lg text-gray-600 leading-relaxed">{s.desc}</p>
               </div>
             ))}
           </div>
@@ -1717,21 +1717,21 @@ export default function LandingPage() {
 
         <div className={`relative max-w-3xl mx-auto text-center transition-all duration-700 ${ctaRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
           <span className="font-code text-sm text-amber-400 tracking-wider font-semibold">START YOUR APPA JOURNEY</span>
-          <h2 className="font-display text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight text-white mt-5">
+          <h2 className="font-display text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight text-gray-900 mt-5">
             Your next interview<br />
             <span className="animate-hero-gradient bg-clip-text text-transparent"
                   style={{ backgroundImage: 'linear-gradient(135deg, #34d399, #38bdf8, #818cf8, #fbbf24, #34d399)' }}>
               starts here.
             </span>
           </h2>
-          <p className="mt-6 text-base md:text-lg text-gray-300 max-w-xl mx-auto">
+          <p className="mt-6 text-base md:text-lg text-gray-600 max-w-xl mx-auto">
             Apply, Prepare, Practice, Attend — the complete interview pipeline, powered by AI.
           </p>
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-5">
             <Link to="/lumora" className="glow-btn px-8 py-4 text-lg font-semibold text-white bg-emerald-500 rounded-xl">
               Start Free — No Credit Card
             </Link>
-            <Link to="/pricing" className="px-8 py-4 text-lg font-semibold text-white border border-white/20 rounded-xl hover:border-white/40 transition-all">
+            <Link to="/pricing" className="px-8 py-4 text-lg font-semibold text-white border border-[#d0d5dd] rounded-xl hover:border-white/40 transition-all">
               View Pricing
             </Link>
           </div>
@@ -1741,14 +1741,14 @@ export default function LandingPage() {
       {/* ═══════════════════════════════════════════════════
           SECTION 8 — FOOTER
          ═══════════════════════════════════════════════════ */}
-      <footer className="relative border-t border-white/[0.06] px-6 lg:px-8 py-16" style={{ zIndex: 2 }}>
+      <footer className="relative border-t border-[#e3e8ee] px-6 lg:px-8 py-16" style={{ zIndex: 2 }}>
         <div className="max-w-[85%] xl:max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
             <div className="flex items-center gap-3">
               <CamoraLogo size={30} />
               <div>
-                <span className="text-base font-bold text-white font-display">Camora</span>
-                <span className="block font-code text-sm text-gray-500">Apply. Prepare. Practice. Attend.</span>
+                <span className="text-base font-bold text-gray-900 font-display">Camora</span>
+                <span className="block font-code text-sm text-gray-400">Apply. Prepare. Practice. Attend.</span>
               </div>
             </div>
 
@@ -1769,10 +1769,10 @@ export default function LandingPage() {
           </div>
 
           <div className="mt-10 pt-8 border-t border-white/[0.04] flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="font-code text-sm text-gray-500">
+            <p className="font-code text-sm text-gray-400">
               &copy; {new Date().getFullYear()} Camora by Cariara
             </p>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-400">
               Built for engineers, by engineers.
             </p>
           </div>
