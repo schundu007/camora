@@ -743,6 +743,7 @@ export default function DashboardPage() {
           onPricingClick={() => setShowPricingPlans(true)}
           onAssistantClick={() => setShowAscendAssistant(!showAscendAssistant)}
           showAscendAssistant={showAscendAssistant}
+          user={user}
         />
 
         {/* Error Banner */}
@@ -873,7 +874,7 @@ export default function DashboardPage() {
 // Sub-Components (kept co-located for now)
 // ============================================================================
 
-function Header({ ascendMode, onModeChange, showSidebar, onToggleSidebar, isLoading, isMobile, onSettingsClick, onPricingClick, onAssistantClick, showAscendAssistant }) {
+function Header({ ascendMode, onModeChange, showSidebar, onToggleSidebar, isLoading, isMobile, onSettingsClick, onPricingClick, onAssistantClick, showAscendAssistant, user }) {
   // ---- Mobile Header ----
   if (isMobile) {
     return (
@@ -967,7 +968,14 @@ function Header({ ascendMode, onModeChange, showSidebar, onToggleSidebar, isLoad
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
           <span className="hidden sm:inline">Assistant</span>
         </button>
-        <a href="/capra/prepare" className="hidden sm:inline text-sm text-gray-400 hover:text-gray-700 font-medium px-2">Dashboard</a>
+        <a href="/capra/prepare" className="hidden sm:flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-gray-50 transition-colors">
+          {user?.image ? (
+            <img src={user.image} alt="" className="w-6 h-6 rounded-full" referrerPolicy="no-referrer" />
+          ) : (
+            <div className="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center text-[10px] font-bold text-emerald-700">{user?.name?.[0] || '?'}</div>
+          )}
+          <span className="text-sm text-gray-700 font-medium">{user?.name?.split(' ')[0] || 'Dashboard'}</span>
+        </a>
       </div>
     </header>
   );

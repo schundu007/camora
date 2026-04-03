@@ -342,27 +342,19 @@ export default function JobsPage() {
           <div className="flex items-center gap-3">
             {user ? (
               <>
-                <Link
-                  to="/capra/prepare"
-                  style={{
-                    fontSize: '14px',
-                    fontWeight: 500,
-                    color: '#10b981',
-                    textDecoration: 'none',
-                  }}
-                >
-                  Dashboard
+                <Link to="/capra/prepare" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none', padding: '4px 8px', borderRadius: '8px' }}>
+                  {user.image ? (
+                    <img src={user.image} alt="" style={{ width: 28, height: 28, borderRadius: '50%' }} referrerPolicy="no-referrer" />
+                  ) : (
+                    <div style={{ width: 28, height: 28, borderRadius: '50%', background: '#d1fae5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#047857' }}>
+                      {user.name?.[0] || '?'}
+                    </div>
+                  )}
+                  <span style={{ fontSize: 14, fontWeight: 500, color: '#374151' }}>{user.name?.split(' ')[0] || 'Dashboard'}</span>
                 </Link>
                 <button
                   onClick={logout}
-                  style={{
-                    fontSize: '14px',
-                    fontWeight: 500,
-                    color: '#dc2626',
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                  }}
+                  style={{ fontSize: 13, fontWeight: 500, color: '#9ca3af', background: 'none', border: 'none', cursor: 'pointer' }}
                 >
                   Sign out
                 </button>

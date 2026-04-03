@@ -384,7 +384,7 @@ const COMP_BARS = [
    LANDING PAGE
    ════════════════════════════════════════════════════════════ */
 export default function LandingPage() {
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, logout, user } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const compRef = useRef<HTMLDivElement>(null);
   const compInView = useInView(compRef, { once: true, margin: '-80px' });
@@ -448,8 +448,17 @@ export default function LandingPage() {
           <div className="hidden lg:flex items-center gap-3">
             {isAuthenticated ? (
               <>
-                <Link to="/capra/prepare" className="text-[15px] text-gray-500 hover:text-gray-900 transition-colors font-medium">Dashboard</Link>
-                <button onClick={logout} className="text-[15px] text-red-500 hover:text-red-600 transition-colors font-medium">Sign out</button>
+                <Link to="/capra/prepare" className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors">
+                  {user?.image ? (
+                    <img src={user.image} alt="" className="w-7 h-7 rounded-full" referrerPolicy="no-referrer" />
+                  ) : (
+                    <div className="w-7 h-7 rounded-full bg-emerald-100 flex items-center justify-center text-xs font-bold text-emerald-700">
+                      {user?.name?.[0] || '?'}
+                    </div>
+                  )}
+                  <span className="text-sm text-gray-700 font-medium">{user?.name?.split(' ')[0] || 'Dashboard'}</span>
+                </Link>
+                <button onClick={logout} className="text-sm text-gray-400 hover:text-red-500 transition-colors">Sign out</button>
               </>
             ) : (
               <Link to="/login" className="text-[15px] text-gray-500 hover:text-gray-900 transition-colors font-medium">Sign in</Link>

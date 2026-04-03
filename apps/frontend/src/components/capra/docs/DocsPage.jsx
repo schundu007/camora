@@ -467,9 +467,16 @@ export default function DocsPage({ onBack }) {
                     </a>
                   ))}
                 </div>
-                <div className="flex items-center gap-2">
-                  <a href="/capra/prepare" className="hidden sm:inline text-sm text-gray-400 hover:text-gray-700 font-medium">Dashboard</a>
-                  <button onClick={() => { document.cookie = 'cariara_sso=; domain=.cariara.com; path=/; max-age=0'; window.location.href = '/'; }} className="hidden sm:inline text-sm text-red-400 hover:text-red-600 font-medium">Sign out</button>
+                <div className="hidden sm:flex items-center gap-2">
+                  <a href="/capra/prepare" className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-gray-50 transition-colors">
+                    {user?.image ? (
+                      <img src={user.image} alt="" className="w-6 h-6 rounded-full" referrerPolicy="no-referrer" />
+                    ) : (
+                      <div className="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center text-[10px] font-bold text-emerald-700">{user?.name?.[0] || '?'}</div>
+                    )}
+                    <span className="text-sm text-gray-700 font-medium">{user?.name?.split(' ')[0] || 'Dashboard'}</span>
+                  </a>
+                  <button onClick={() => { document.cookie = 'cariara_sso=; domain=.cariara.com; path=/; max-age=0'; window.location.href = '/'; }} className="text-sm text-gray-400 hover:text-red-500 font-medium">Sign out</button>
                 </div>
               </div>
             </div>

@@ -103,7 +103,7 @@ const NAV_LINKS = [
 ];
 
 export default function PricingPage() {
-  const { token, isAuthenticated, logout } = useAuth();
+  const { token, isAuthenticated, logout, user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -171,8 +171,15 @@ export default function PricingPage() {
           <div className="hidden md:flex items-center gap-3">
             {isAuthenticated ? (
               <>
-                <Link to="/capra/prepare" className="text-[13px] text-gray-500 hover:text-gray-900 transition-colors font-medium">Dashboard</Link>
-                <button onClick={logout} className="text-[13px] text-red-500 hover:text-red-600 transition-colors font-medium">Sign out</button>
+                <Link to="/capra/prepare" className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-gray-50 transition-colors">
+                  {user?.image ? (
+                    <img src={user.image} alt="" className="w-6 h-6 rounded-full" referrerPolicy="no-referrer" />
+                  ) : (
+                    <div className="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center text-[10px] font-bold text-emerald-700">{user?.name?.[0] || '?'}</div>
+                  )}
+                  <span className="text-[13px] text-gray-700 font-medium">{user?.name?.split(' ')[0] || 'Dashboard'}</span>
+                </Link>
+                <button onClick={logout} className="text-[13px] text-gray-400 hover:text-red-500 transition-colors font-medium">Sign out</button>
               </>
             ) : (
               <Link to="/login" className="text-[13px] text-gray-500 hover:text-gray-900 transition-colors font-medium">Sign in</Link>
