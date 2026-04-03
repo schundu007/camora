@@ -773,7 +773,7 @@ export default function LandingPage() {
       <section className="px-6 py-28 md:py-36" style={{ zIndex: 1 }}>
         <FadeIn className="max-w-3xl mx-auto text-center">
           <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight">
-            Your next interview<br /><span className="gradient-text">starts here.</span>
+            Your next interview <span className="gradient-text">starts here.</span>
           </h2>
           <p className="mt-6 text-lg text-gray-400 max-w-xl mx-auto">Apply, Prepare, Practice, Attend — the complete interview pipeline, powered by AI.</p>
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
