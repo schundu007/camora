@@ -900,13 +900,24 @@ function Header({ ascendMode, onModeChange, showSidebar, onToggleSidebar, isLoad
     );
   }
 
-  // ---- Desktop Header — landing page design system ----
+  // ---- Desktop Header — with APPA nav tabs ----
   const modeConfig = {
-    coding: { label: 'Coding', color: '#10b981', gradient: 'linear-gradient(90deg, #10b981, #06b6d4)' },
-    'system-design': { label: 'System Design', color: '#3b82f6', gradient: 'linear-gradient(90deg, #3b82f6, #8b5cf6)' },
-    behavioral: { label: 'Interview Prep', color: '#f59e0b', gradient: 'linear-gradient(90deg, #f59e0b, #ef4444)' },
+    coding: { label: 'Coding', color: '#10b981' },
+    'system-design': { label: 'System Design', color: '#3b82f6' },
+    behavioral: { label: 'Interview Prep', color: '#f59e0b' },
   };
   const currentMode = modeConfig[ascendMode] || modeConfig.coding;
+
+  const APPA_TABS = [
+    { label: 'Apply', href: '/jobs' },
+    { label: 'Prepare', href: '/capra/prepare' },
+    { label: 'Practice', href: '/capra/practice' },
+    { label: 'Attend', href: '/lumora' },
+    { label: 'Pricing', href: '/pricing' },
+  ];
+
+  // Determine which APPA tab is active based on mode
+  const activeAppaTab = ascendMode === 'behavioral' ? 'Prepare' : 'Practice';
 
   return (
     <header
@@ -917,27 +928,47 @@ function Header({ ascendMode, onModeChange, showSidebar, onToggleSidebar, isLoad
         borderBottom: '1px solid #e3e8ee',
       }}
     >
-      {/* Accent line at top */}
-      <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: currentMode.color }} />
-
-      {/* Left: mode label */}
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2.5">
+      {/* Left: Camora logo + brand */}
+      <div className="flex items-center gap-3">
+        <a href="/" className="flex items-center gap-2">
+          <div className="w-7 h-7 bg-emerald-500 flex items-center justify-center rounded-lg">
+            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+            </svg>
+          </div>
+          <span className="text-sm font-bold text-gray-900 hidden sm:inline">Camora</span>
+        </a>
+        <div className="w-px h-5 bg-gray-200 hidden sm:block" />
+        <div className="flex items-center gap-1.5">
           <div className="w-2 h-2 rounded-full" style={{ background: currentMode.color }} />
-          <span className="landing-display text-sm font-bold text-gray-900 tracking-tight">{currentMode.label}</span>
+          <span className="text-sm font-semibold text-gray-700">{currentMode.label}</span>
         </div>
       </div>
 
-      {/* Center spacer */}
-      <div />
+      {/* Center: APPA tabs */}
+      <div className="hidden md:flex items-center gap-1">
+        {APPA_TABS.map((tab) => (
+          <a
+            key={tab.label}
+            href={tab.href}
+            className={`px-3 py-1.5 text-sm font-medium transition-colors ${
+              tab.label === activeAppaTab
+                ? 'text-emerald-600 border-b-2 border-emerald-500'
+                : 'text-gray-400 hover:text-gray-700'
+            }`}
+          >
+            {tab.label}
+          </a>
+        ))}
+      </div>
 
       {/* Right: action buttons */}
       <div className="flex items-center gap-1 sm:gap-2">
-        <button onClick={onAssistantClick} aria-label="Toggle interview assistant" className={`landing-body flex items-center gap-2 p-2 sm:px-3 sm:py-1.5 rounded-lg text-sm font-medium transition-all duration-200 min-w-[36px] min-h-[36px] justify-center ${showAscendAssistant ? 'text-emerald-600 bg-emerald-50' : 'text-gray-400 hover:text-gray-700 hover:bg-[#f7f8f9]'}`}>
+        <button onClick={onAssistantClick} aria-label="Toggle interview assistant" className={`flex items-center gap-2 p-2 sm:px-3 sm:py-1.5 rounded-lg text-sm font-medium transition-all duration-200 min-w-[36px] min-h-[36px] justify-center ${showAscendAssistant ? 'text-emerald-600 bg-emerald-50' : 'text-gray-400 hover:text-gray-700 hover:bg-gray-50'}`}>
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
           <span className="hidden sm:inline">Assistant</span>
         </button>
-        {/* Credits placeholder */}
+        <a href="/capra" className="hidden sm:inline text-sm text-gray-400 hover:text-gray-700 font-medium px-2">Dashboard</a>
       </div>
     </header>
   );
