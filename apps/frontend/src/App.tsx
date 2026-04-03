@@ -115,43 +115,43 @@ function LoginPage() {
   ];
 
   return (
-    <div className="min-h-screen relative overflow-hidden" style={{ background: '#f8f9fb' }}>
-      {/* ── Aurora gradient background ──────────────────── */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute" style={{ top: '-20%', left: '-10%', width: '70%', height: '60%', borderRadius: '50%', background: 'rgba(52,211,153,0.25)', filter: 'blur(100px)' }} />
-        <div className="absolute" style={{ top: '-10%', right: '0%', width: '60%', height: '50%', borderRadius: '50%', background: 'rgba(6,182,212,0.2)', filter: 'blur(120px)' }} />
-        <div className="absolute" style={{ bottom: '-10%', right: '-5%', width: '55%', height: '55%', borderRadius: '50%', background: 'rgba(129,140,248,0.2)', filter: 'blur(110px)' }} />
-        <div className="absolute" style={{ bottom: '20%', right: '15%', width: '30%', height: '30%', borderRadius: '50%', background: 'rgba(251,191,36,0.12)', filter: 'blur(80px)' }} />
-        <div className="absolute" style={{ top: '40%', left: '10%', width: '25%', height: '25%', borderRadius: '50%', background: 'rgba(129,140,248,0.1)', filter: 'blur(90px)' }} />
-        {/* Noise texture */}
-        <div className="absolute inset-0 opacity-30" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E")`, backgroundRepeat: 'repeat', backgroundSize: '256px 256px' }} />
-      </div>
-
-      {/* ── Logo (top-left) ────────────────────────────── */}
-      <div className="relative z-10 px-6 md:px-10 pt-6">
-        <Link to="/" className="inline-flex items-center gap-2.5">
-          <div className="w-8 h-8 bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/20"
-               style={{ clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)' }}>
-            <span className="text-[10px] font-black text-white">C</span>
+    <div className="min-h-screen" style={{ background: '#f7f8f9' }}>
+      {/* ── Nav (matches Jobs/Practice pages) ──────────── */}
+      <nav className="sticky top-0 z-50 bg-white border-b border-[#e3e8ee]">
+        <div className="max-w-[85%] xl:max-w-7xl mx-auto h-14 flex items-center justify-between px-4">
+          <Link to="/" className="flex items-center gap-2.5">
+            <div className="w-7 h-7 bg-emerald-500 flex items-center justify-center rounded-lg">
+              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+              </svg>
+            </div>
+            <span className="text-sm font-bold text-gray-900">Camora</span>
+          </Link>
+          <div className="hidden md:flex items-center gap-1">
+            {[
+              { label: 'Apply', href: '/jobs' },
+              { label: 'Prepare', href: '/capra/prepare' },
+              { label: 'Practice', href: '/capra/practice' },
+              { label: 'Attend', href: '/lumora' },
+              { label: 'Pricing', href: '/pricing' },
+            ].map((tab) => (
+              <Link key={tab.label} to={tab.href} className="px-3 py-1.5 text-sm text-gray-500 hover:text-gray-900 font-medium transition-colors">{tab.label}</Link>
+            ))}
           </div>
-          <span className="text-base font-bold tracking-tight text-gray-900" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Camora</span>
-        </Link>
-      </div>
+          <Link to="/signup" className="text-sm text-emerald-600 hover:text-emerald-700 font-semibold">Create account</Link>
+        </div>
+      </nav>
 
       {/* ── Centered card ─────────────────────────────── */}
-      <div className="relative z-10 flex items-center justify-center min-h-[calc(100vh-80px)] px-4 py-8">
-        <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl shadow-black/8 border border-gray-200/60 p-8 md:p-10">
+      <div className="flex items-center justify-center py-12 px-4" style={{ minHeight: 'calc(100vh - 56px)' }}>
+        <div className="w-full max-w-md bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.04)] border border-[#e3e8ee] p-8">
 
           {/* Header */}
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-            Welcome back
-          </h1>
-          <p className="mt-2 text-base text-gray-500">
-            Sign in to continue your APPA journey
-          </p>
+          <h1 className="text-xl font-bold text-black tracking-tight">Welcome back</h1>
+          <p className="mt-1 text-sm text-gray-500">Sign in to continue your APPA journey</p>
 
           {/* Role selection — required before sign-in */}
-          <div className="mt-7">
+          <div className="mt-5">
             <label className="block text-sm font-medium text-gray-700 mb-1.5">
               Select your target role <span className="text-red-500">*</span> <span className="text-xs text-red-400 font-normal">Required</span>
             </label>
@@ -216,7 +216,7 @@ function LoginPage() {
           </div>
 
           {/* Social login buttons — 3 across */}
-          <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="mt-4 grid grid-cols-3 gap-2">
             {canLogin ? (
               <a href={googleAuthUrl}
                  className="flex items-center justify-center gap-2 px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all">
@@ -259,7 +259,7 @@ function LoginPage() {
           )}
 
           {/* Footer */}
-          <div className="mt-7 pt-5 border-t border-gray-100 text-center">
+          <div className="mt-5 pt-4 border-t border-gray-100 text-center">
             <p className="text-sm text-gray-500">
               Don't have an account?{' '}
               <Link to="/signup" className="text-emerald-600 hover:text-emerald-700 font-semibold">Create one</Link>
