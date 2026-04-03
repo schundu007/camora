@@ -430,15 +430,15 @@ export default function PricingPage() {
                   </th>
                   <th className="py-3 px-3 text-center min-w-[80px] hidden xl:table-cell">
                     <div className="text-gray-400 text-xs">AIApply</div>
-                    <div className="text-[10px] text-gray-600 font-mono">$29/mo</div>
+                    <div className="text-[10px] text-gray-600 font-mono">$29-200/mo</div>
                   </th>
                   <th className="py-3 px-3 text-center min-w-[80px] hidden xl:table-cell">
                     <div className="text-gray-400 text-xs">OfferGoose</div>
-                    <div className="text-[10px] text-gray-600 font-mono">$24-89/mo</div>
+                    <div className="text-[10px] text-gray-600 font-mono">$89-200/mo</div>
                   </th>
                   <th className="py-3 px-3 text-center min-w-[80px] hidden xl:table-cell">
                     <div className="text-gray-400 text-xs">Parakeet</div>
-                    <div className="text-[10px] text-gray-600 font-mono">$100/mo</div>
+                    <div className="text-[10px] text-gray-600 font-mono">$100-200/mo</div>
                   </th>
                 </tr>
               </thead>
