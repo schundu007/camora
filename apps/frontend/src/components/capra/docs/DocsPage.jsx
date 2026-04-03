@@ -442,9 +442,38 @@ export default function DocsPage({ onBack }) {
 
       <div className="relative min-h-screen flex">
           {/* Center Content */}
-          <div className={`flex-1 min-w-0 mx-auto max-w-full ${isMobile ? 'px-3' : 'px-10'}`}>
-            {/* Top Bar */}
-            <div className="sticky top-0 z-20 px-3 sm:px-4 py-3 sm:py-4 flex items-center justify-between gap-2 safe-top bg-white border-b border-[#e3e8ee]">
+          <div className={`flex-1 min-w-0 mx-auto max-w-[90%] xl:max-w-full ${isMobile ? 'px-3' : 'px-10'}`}>
+            {/* APPA Nav Bar */}
+            <div className="sticky top-0 z-30 bg-white border-b border-[#e3e8ee]">
+              <div className="flex items-center justify-between px-3 sm:px-4 h-12">
+                <a href="/" className="flex items-center gap-2">
+                  <div className="w-7 h-7 bg-emerald-500 flex items-center justify-center rounded-lg">
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                    </svg>
+                  </div>
+                  <span className="text-sm font-bold text-gray-900 hidden sm:inline">Camora</span>
+                </a>
+                <div className="hidden md:flex items-center gap-1">
+                  {[
+                    { label: 'Apply', href: '/jobs' },
+                    { label: 'Prepare', href: '/capra/prepare', active: true },
+                    { label: 'Practice', href: '/capra/practice' },
+                    { label: 'Attend', href: '/lumora' },
+                    { label: 'Pricing', href: '/pricing' },
+                  ].map((tab) => (
+                    <a key={tab.label} href={tab.href} className={`px-3 py-1.5 text-sm font-medium transition-colors ${tab.active ? 'text-emerald-600 border-b-2 border-emerald-500' : 'text-gray-400 hover:text-gray-700'}`}>
+                      {tab.label}
+                    </a>
+                  ))}
+                </div>
+                <div className="flex items-center gap-2">
+                  <a href="/capra" className="hidden sm:inline text-sm text-gray-400 hover:text-gray-700 font-medium">Dashboard</a>
+                </div>
+              </div>
+            </div>
+            {/* Breadcrumb Bar */}
+            <div className="sticky top-12 z-20 px-3 sm:px-4 py-3 sm:py-4 flex items-center justify-between gap-2 safe-top bg-white border-b border-[#e3e8ee]">
               {/* Mobile: back button when topic selected, hamburger otherwise */}
               {isMobile && (
                 selectedTopic ? (
