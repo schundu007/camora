@@ -416,6 +416,14 @@ export default function PricingPage() {
                     <div className="text-gray-400 text-xs">Sensei</div>
                     <div className="text-[10px] text-gray-600 font-mono">$24/mo</div>
                   </th>
+                  <th className="py-3 px-3 text-center min-w-[80px] hidden lg:table-cell">
+                    <div className="text-gray-400 text-xs">TechPrep</div>
+                    <div className="text-[10px] text-gray-600 font-mono">$19/mo</div>
+                  </th>
+                  <th className="py-3 px-3 text-center min-w-[80px] hidden lg:table-cell">
+                    <div className="text-gray-400 text-xs">AlgoMaster</div>
+                    <div className="text-[10px] text-gray-600 font-mono">$15/mo</div>
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -440,6 +448,8 @@ export default function PricingPage() {
                       <td className="py-2.5 px-3 text-center"><Cell val={row.lockedin} /></td>
                       <td className="py-2.5 px-3 text-center hidden md:table-cell"><Cell val={row.solver} /></td>
                       <td className="py-2.5 px-3 text-center hidden md:table-cell"><Cell val={row.sensei} /></td>
+                      <td className="py-2.5 px-3 text-center hidden lg:table-cell"><Cell val={row.techprep} /></td>
+                      <td className="py-2.5 px-3 text-center hidden lg:table-cell"><Cell val={row.algomaster} /></td>
                     </tr>
                   );
                 })}
