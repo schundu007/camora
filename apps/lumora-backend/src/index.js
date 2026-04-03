@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import { config } from './config/index.js';
 import { query } from './config/database.js';
@@ -20,6 +21,7 @@ app.use(cors({
 // Body parsing — raw for Stripe webhooks, JSON for everything else
 app.use('/api/v1/billing/webhook', express.raw({ type: 'application/json' }));
 app.use(express.json({ limit: '10mb' }));
+app.use(cookieParser());
 
 // Health check
 app.get('/health', (req, res) => {

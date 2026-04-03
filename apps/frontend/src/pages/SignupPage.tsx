@@ -40,8 +40,38 @@ export default function SignupPage() {
     navigate('/login');
   };
 
+  const navLinks = [
+    { label: 'Apply', href: '/jobs' },
+    { label: 'Prepare', href: '/capra/prepare' },
+    { label: 'Practice', href: '/capra/practice' },
+    { label: 'Attend', href: '/lumora' },
+    { label: 'Pricing', href: '/pricing' },
+  ];
+
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-10" style={{ background: '#f7f8f9' }}>
+    <div className="min-h-screen" style={{ background: '#f7f8f9' }}>
+
+      {/* Nav */}
+      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-[#e3e8ee] bg-white/90 backdrop-blur-xl">
+        <div className="max-w-6xl mx-auto flex items-center justify-between px-6 h-14">
+          <Link to="/" className="flex items-center gap-2.5">
+            <div className="w-7 h-7 bg-emerald-500 flex items-center justify-center" style={{ clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)' }}>
+              <span className="text-[10px] font-black text-white tracking-tight">C</span>
+            </div>
+            <span className="text-sm font-semibold tracking-tight text-gray-900">Camora</span>
+          </Link>
+          <div className="hidden md:flex items-center gap-1">
+            {navLinks.map((link) => (
+              <Link key={link.label} to={link.href} className="px-3 py-1.5 text-[13px] text-gray-500 hover:text-gray-900 transition-colors">{link.label}</Link>
+            ))}
+          </div>
+          <div className="flex items-center gap-3">
+            <Link to="/login" className="text-[13px] text-gray-500 hover:text-gray-900 transition-colors font-medium">Sign in</Link>
+          </div>
+        </div>
+      </nav>
+
+      <div className="flex items-center justify-center px-4 py-10 pt-24">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8 md:p-10" style={{ border: '1px solid #e3e8ee' }}>
 
         {/* Camora logo */}
@@ -233,6 +263,7 @@ export default function SignupPage() {
             <Link to="/login" className="text-emerald-600 hover:text-emerald-700 font-semibold">Sign in</Link>
           </p>
         </div>
+      </div>
       </div>
     </div>
   );

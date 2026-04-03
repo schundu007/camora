@@ -565,15 +565,15 @@ export default function LandingPage() {
         <FadeIn className="max-w-5xl mx-auto">
           <BrowserChrome url="camora.cariara.com/lumora">
             <div className="aspect-video bg-gray-100">
-              <video src="/demo-lumora.mp4" autoPlay loop muted playsInline className="w-full h-full object-cover" />
+              <video src="/demo-lumora.mp4" autoPlay loop muted playsInline title="Lumora live interview demo" className="w-full h-full object-cover" />
             </div>
           </BrowserChrome>
         </FadeIn>
         <div className="max-w-5xl mx-auto mt-6 grid md:grid-cols-3 gap-4">
           {[
-            { url: 'camora.cariara.com/capra', src: '/demo-capra.mp4' },
-            { url: 'camora.cariara.com/capra/prepare', src: '/demo-capra-topic.mp4' },
-            { url: 'camora.cariara.com/lumora/design', src: '/demo-design.mp4' },
+            { url: 'camora.cariara.com/capra', src: '/demo-capra.mp4', title: 'Capra preparation dashboard demo' },
+            { url: 'camora.cariara.com/capra/prepare', src: '/demo-capra-topic.mp4', title: 'Capra topic detail demo' },
+            { url: 'camora.cariara.com/lumora/design', src: '/demo-design.mp4', title: 'System design diagram generation demo' },
           ].map((demo, i) => (
             <FadeIn key={demo.url} delay={0.1 * (i + 1)}>
               <div className="rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg hover:shadow-gray-100 transition-shadow">
@@ -584,7 +584,7 @@ export default function LandingPage() {
                   <span className="text-[10px] text-gray-400 truncate font-code">{demo.url}</span>
                 </div>
                 <div className="aspect-[4/3] bg-gray-100">
-                  <video src={demo.src} autoPlay loop muted playsInline className="w-full h-full object-cover" />
+                  <video src={demo.src} autoPlay loop muted playsInline title={demo.title} className="w-full h-full object-cover" />
                 </div>
               </div>
             </FadeIn>

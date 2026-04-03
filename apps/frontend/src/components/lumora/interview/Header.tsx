@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useInterviewStore } from '@/stores/interview-store';
 import { useAuth } from '@/contexts/AuthContext';
 import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
@@ -106,14 +106,14 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
   return (
     <header className="flex items-center h-11 bg-gray-950 border-b border-gray-800 z-50 shrink-0 max-w-full">
       {/* Logo */}
-      <div className="flex items-center gap-1.5 px-3 border-r border-gray-800 h-full shrink-0">
+      <Link to="/" className="flex items-center gap-1.5 px-3 border-r border-gray-800 h-full shrink-0">
         <div className="w-5 h-5 md:w-6 md:h-6 rounded bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center">
           <span className="font-display text-[10px] md:text-xs font-extrabold text-white">L</span>
         </div>
         <div className="hidden sm:block">
           <span className="font-display font-bold text-xs md:text-sm tracking-tight text-white">Lumora</span>
         </div>
-      </div>
+      </Link>
 
       {/* Tabs */}
       <div className="flex items-center gap-0.5 px-1.5 md:px-2 h-full shrink-0 border-r border-gray-800 overflow-x-auto no-scrollbar">

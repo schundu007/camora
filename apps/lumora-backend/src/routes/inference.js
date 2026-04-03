@@ -11,6 +11,7 @@ import { Router } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { query } from '../lib/shared-db.js';
 import { authenticate } from '../middleware/authenticate.js';
+import { checkUsage, recordUsageCount } from '../middleware/usageLimits.js';
 import { checkDailyFreeLimit } from '../services/quota.js';
 import { streamResponse, MODEL } from '../services/claude.js';
 
@@ -50,7 +51,7 @@ function getQuestionType(answer) {
 // ---------------------------------------------------------------------------
 // POST /conversations/:conversationId/stream
 // ---------------------------------------------------------------------------
-router.post('/conversations/:conversationId/stream', authenticate, async (req, res) => {
+router.post('/conversations/:conversationId/stream', authenticate, checkUsage('questions'), async (req, res) => {
   const { conversationId } = req.params;
   const { question, use_search: useSearch = false } = req.body;
   const user = req.user;
@@ -170,6 +171,9 @@ router.post('/conversations/:conversationId/stream', authenticate, async (req, r
         latencyMs: finalAnswer.latency_ms || 0,
       });
 
+      // Increment plan usage counter
+      await recordUsageCount(user.id, 'questions');
+
       // Send message_saved event so frontend can attach engagement
       sendSSE(res, 'message_saved', {
         message_id: assistantMsgId,
@@ -196,7 +200,7 @@ router.post('/conversations/:conversationId/stream', authenticate, async (req, r
 // ---------------------------------------------------------------------------
 // POST /stream — stream (auto-creates conversation)
 // ---------------------------------------------------------------------------
-router.post('/stream', authenticate, async (req, res) => {
+router.post('/stream', authenticate, checkUsage('questions'), async (req, res) => {
   const { question, use_search: useSearch = false } = req.body;
   const user = req.user;
 
@@ -288,7 +292,7 @@ router.post('/stream', authenticate, async (req, res) => {
         ],
       );
 
-      // Record usage
+      // Record usage (logs)
       await recordUsage({
         userId: user.id,
         endpoint: 'stream',
@@ -296,6 +300,8 @@ router.post('/stream', authenticate, async (req, res) => {
         tokensUsed: (finalAnswer.input_tokens || 0) + (finalAnswer.output_tokens || 0),
         latencyMs: finalAnswer.latency_ms || 0,
       });
+      // Increment plan usage counter
+      await recordUsageCount(user.id, 'questions');
 
       // Send message_saved event
       sendSSE(res, 'message_saved', {

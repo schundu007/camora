@@ -181,7 +181,7 @@ export default function PremiumPage() {
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
           <a href="/" className="flex items-center gap-2"><div className="w-6 h-6 bg-emerald-500 rounded flex items-center justify-center"><Icon name="ascend" size={12} className="text-white" /></div><span className="landing-display font-bold text-sm text-white">Ascend</span></a>
           <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
-            {[{ label: 'Apply', href: 'https://jobs.cariara.com' }, { label: 'Prepare', href: '/capra/prepare' }, { label: 'Practice', href: '/capra/practice' }, { label: 'Attend', href: '/lumora' }, { label: 'Pricing', href: '/pricing' }, { label: 'Support', href: 'mailto:support@cariara.com' }].map((link) => (
+            {[{ label: 'Apply', href: '/jobs' }, { label: 'Prepare', href: '/capra/prepare' }, { label: 'Practice', href: '/capra/practice' }, { label: 'Attend', href: '/lumora' }, { label: 'Pricing', href: '/pricing' }, { label: 'Support', href: 'mailto:support@cariara.com' }].map((link) => (
               <a key={link.label} href={link.href} className="text-xs text-gray-400 hover:text-emerald-400 transition-colors landing-body font-medium">{link.label}</a>
             ))}
           </div>

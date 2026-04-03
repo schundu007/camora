@@ -9,6 +9,7 @@
  */
 import { Router } from 'express';
 import { authenticate } from '../middleware/authenticate.js';
+import { checkUsage, recordUsageCount } from '../middleware/usageLimits.js';
 import { proxyToAIService } from '../services/aiServiceProxy.js';
 
 const router = Router();
@@ -34,7 +35,7 @@ const DETAIL_LEVEL_MAP = {
   low: 'low',
 };
 
-router.post('/generate', async (req, res) => {
+router.post('/generate', checkUsage('diagrams'), async (req, res) => {
   try {
     const { question, cloud_provider = 'aws', detail_level } = req.body;
 
@@ -66,6 +67,9 @@ router.post('/generate', async (req, res) => {
     }
 
     const contentType = upstream.headers.get('content-type') || 'application/json';
+
+    // Increment diagram usage counter on success
+    if (req.user?.id) await recordUsageCount(req.user.id, 'diagrams');
 
     if (contentType.includes('application/json')) {
       const data = await upstream.json();

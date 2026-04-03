@@ -195,18 +195,18 @@ export default function PricingPage() {
               link.external ? (
                 <a key={link.label} href={link.href} className="block py-2 text-sm text-gray-600 font-medium">{link.label}</a>
               ) : (
-                <Link key={link.label} to={link.href} className="block py-2 text-sm text-gray-300 font-medium"
+                <Link key={link.label} to={link.href} className="block py-2 text-sm text-gray-600 font-medium"
                       onClick={() => setMobileMenuOpen(false)}>{link.label}</Link>
               )
             )}
             {isAuthenticated ? (
               <>
-                <Link to="/capra/prepare" className="block py-2 text-sm text-gray-300 font-medium"
+                <Link to="/capra/prepare" className="block py-2 text-sm text-gray-600 font-medium"
                       onClick={() => setMobileMenuOpen(false)}>Dashboard</Link>
                 <button onClick={() => { logout(); setMobileMenuOpen(false); }} className="block py-2 text-sm text-red-500 font-medium">Sign out</button>
               </>
             ) : (
-              <Link to="/login" className="block py-2 text-sm text-gray-300 font-medium"
+              <Link to="/login" className="block py-2 text-sm text-gray-600 font-medium"
                     onClick={() => setMobileMenuOpen(false)}>Sign in</Link>
             )}
             <Link to="/lumora" className="block py-2 text-sm text-emerald-600 font-semibold"

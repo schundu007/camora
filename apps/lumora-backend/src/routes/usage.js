@@ -61,6 +61,10 @@ router.post('/topup', authenticate, async (req, res) => {
     return res.status(400).json({ error: 'Invalid topup pack', available: TOPUP_PACKS.map((p) => p.id) });
   }
 
+  if (!pack.stripePrice) {
+    return res.status(503).json({ error: 'Topup pricing not configured. Contact support.' });
+  }
+
   try {
     // Build metadata with primary topup + extras
     const metadata = {

@@ -188,6 +188,14 @@ export async function checkLimit(userId, type) {
  * @returns {Promise<{allowed: boolean, usage: object}>}
  */
 export async function incrementUsage(userId, type) {
+  const VALID_COLUMNS = {
+    questions: 'questions_used',
+    sessions: 'sessions_used',
+    diagrams: 'diagrams_used',
+  };
+  const col = VALID_COLUMNS[type];
+  if (!col) throw new Error(`Invalid usage type: ${type}`);
+
   const check = await checkLimit(userId, type);
   if (!check.allowed) {
     return { allowed: false, usage: await getUsage(userId) };
@@ -195,7 +203,6 @@ export async function incrementUsage(userId, type) {
 
   const planName = await getUserPlan(userId);
   const period = periodForPlan(planName);
-  const col = `${type}_used`;
 
   await query(
     `INSERT INTO usage_tracking (user_id, period, ${col})
