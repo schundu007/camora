@@ -211,11 +211,11 @@ function LumoraDemo() {
         <div>
           <div className="flex items-center gap-2.5 mb-5">
             <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="font-code text-sm text-emerald-400 font-semibold tracking-wide">LIVE TRANSCRIPTION</span>
+            <span className="font-code text-sm text-emerald-600 font-semibold tracking-wide">LIVE TRANSCRIPTION</span>
           </div>
           <div className="rounded-xl border border-[#e3e8ee] p-5" style={{ background: 'rgba(255,255,255,0.02)', minHeight: '140px' }}>
             <div className="flex items-center gap-2 mb-2">
-              <span className="font-code text-sm text-emerald-400 font-semibold">Q{pairIdx + 1}</span>
+              <span className="font-code text-sm text-emerald-600 font-semibold">Q{pairIdx + 1}</span>
               <span className="text-sm text-gray-400">{pair.label}</span>
             </div>
             <p className="text-base text-gray-200 leading-relaxed">
@@ -229,7 +229,7 @@ function LumoraDemo() {
         <div>
           <div className="flex items-center gap-2.5 mb-5">
             <div className="w-2.5 h-2.5 rounded-full bg-cyan-400" />
-            <span className="font-code text-sm text-cyan-400 font-semibold tracking-wide">AI RESPONSE</span>
+            <span className="font-code text-sm text-cyan-600 font-semibold tracking-wide">AI RESPONSE</span>
           </div>
           <div className="space-y-4">
             <div className="rounded-xl border border-[#e3e8ee] p-5" style={{ background: 'rgba(255,255,255,0.02)', minHeight: '160px' }}>
@@ -238,7 +238,7 @@ function LumoraDemo() {
                 {pair.bullets.map((b, i) => (
                   <p
                     key={`${pairIdx}-${i}`}
-                    className="flex items-start gap-3 text-base text-gray-600"
+                    className="flex items-start gap-3 text-base text-gray-700"
                     style={{
                       opacity: i < visibleBullets ? 1 : 0,
                       transform: i < visibleBullets ? 'translateY(0)' : 'translateY(12px)',
@@ -368,7 +368,7 @@ function PrepShowcase({ inView }: { inView: boolean }) {
               }}
             >
               <span className="flex-shrink-0 w-3 h-3 rounded-full" style={{ background: cat.color }} />
-              <span className="text-sm text-gray-600 font-medium whitespace-nowrap">{cat.name}</span>
+              <span className="text-sm text-gray-700 font-medium whitespace-nowrap">{cat.name}</span>
               <span className="text-sm text-gray-500 font-code font-semibold">{cat.count}</span>
             </div>
           ))}
@@ -408,7 +408,7 @@ function PrepShowcase({ inView }: { inView: boolean }) {
                 }`}
               >
                 <span>{item.name}</span>
-                <span className="text-xs text-gray-600 font-code">{item.count}</span>
+                <span className="text-xs text-gray-700 font-code">{item.count}</span>
               </div>
             ))}
           </div>
@@ -449,7 +449,7 @@ function PrepShowcase({ inView }: { inView: boolean }) {
                   {item.difficulty}
                 </span>
               </div>
-              <h4 className="text-base font-bold text-gray-900 mb-2">{item.name}</h4>
+              <h4 className="text-base font-bold text-black mb-2">{item.name}</h4>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-400">{item.topics} subtopics</span>
                 <div className="w-20 h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
@@ -485,7 +485,7 @@ export default function LandingPage() {
   useEffect(() => { setMounted(true); window.scrollTo(0, 0); }, []);
 
   return (
-    <div className="landing-page min-h-screen text-gray-900 overflow-hidden" style={{ background: '#f7f8f9' }}>
+    <div className="landing-page min-h-screen text-black overflow-hidden" style={{ background: '#f7f8f9' }}>
       {/* ── Styles ──────────────────────────────────────── */}
       <style>{`
         .landing-page {
@@ -632,7 +632,7 @@ export default function LandingPage() {
         <div style={{
           position: 'absolute', inset: 0,
           backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E")`,
-          backgroundRepeat: 'repeat', backgroundSize: '256px 256px', opacity: 0.5,
+          backgroundRepeat: 'repeat', backgroundSize: '256px 256px', opacity: 0.2,
         }} />
       </div>
 
@@ -663,17 +663,17 @@ export default function LandingPage() {
         <div className="max-w-[85%] xl:max-w-7xl mx-auto flex items-center justify-between px-6 lg:px-8 h-16">
           <Link to="/" className="flex items-center gap-2">
             <CamoraLogo size={34} />
-            <span className="font-display text-lg font-bold tracking-tight text-gray-900">Camora</span>
+            <span className="font-display text-lg font-bold tracking-tight text-black">Camora</span>
           </Link>
 
           <div className="hidden lg:flex items-center gap-1">
             {NAV_LINKS.map((link) =>
               link.external ? (
                 <a key={link.label} href={link.href} target="_blank" rel="noopener noreferrer"
-                   className="px-4 py-2 text-[15px] text-gray-500 hover:text-gray-900 transition-colors font-medium">{link.label}</a>
+                   className="px-4 py-2 text-[15px] text-gray-600 hover:text-black transition-colors font-medium">{link.label}</a>
               ) : (
                 <Link key={link.label} to={link.href}
-                      className="px-4 py-2 text-[15px] text-gray-500 hover:text-gray-900 transition-colors font-medium">{link.label}</Link>
+                      className="px-4 py-2 text-[15px] text-gray-600 hover:text-black transition-colors font-medium">{link.label}</Link>
               )
             )}
           </div>
@@ -681,18 +681,18 @@ export default function LandingPage() {
           <div className="hidden lg:flex items-center gap-4">
             {isAuthenticated ? (
               <>
-                <Link to="/capra" className="text-[15px] text-gray-500 hover:text-gray-900 transition-colors font-medium">Dashboard</Link>
+                <Link to="/capra" className="text-[15px] text-gray-600 hover:text-black transition-colors font-medium">Dashboard</Link>
                 <button onClick={logout} className="text-[15px] text-red-400 hover:text-red-300 transition-colors font-medium">Sign out</button>
               </>
             ) : (
-              <Link to="/capra/login" className="text-[15px] text-gray-500 hover:text-gray-900 transition-colors font-medium">Sign in</Link>
+              <Link to="/capra/login" className="text-[15px] text-gray-600 hover:text-black transition-colors font-medium">Sign in</Link>
             )}
             <Link to="/lumora" className="glow-btn px-5 py-2.5 text-[15px] font-semibold text-white bg-emerald-500 rounded-xl">
               Launch App
             </Link>
           </div>
 
-          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="lg:hidden p-2 text-gray-500 hover:text-gray-900">
+          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="lg:hidden p-2 text-gray-600 hover:text-black">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
               {mobileMenuOpen
                 ? <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -707,21 +707,21 @@ export default function LandingPage() {
             {NAV_LINKS.map((link) =>
               link.external ? (
                 <a key={link.label} href={link.href} target="_blank" rel="noopener noreferrer"
-                   className="block py-2.5 text-base text-gray-600 font-medium">{link.label}</a>
+                   className="block py-2.5 text-base text-gray-700 font-medium">{link.label}</a>
               ) : (
-                <Link key={link.label} to={link.href} className="block py-2.5 text-base text-gray-600 font-medium"
+                <Link key={link.label} to={link.href} className="block py-2.5 text-base text-gray-700 font-medium"
                       onClick={() => setMobileMenuOpen(false)}>{link.label}</Link>
               )
             )}
             {isAuthenticated ? (
               <>
-                <Link to="/capra" className="block py-2.5 text-base text-gray-600 font-medium"
+                <Link to="/capra" className="block py-2.5 text-base text-gray-700 font-medium"
                       onClick={() => setMobileMenuOpen(false)}>Dashboard</Link>
                 <button onClick={() => { setMobileMenuOpen(false); logout(); }}
                         className="block py-2.5 text-base text-red-400 hover:text-red-300 font-medium">Sign out</button>
               </>
             ) : (
-              <Link to="/capra/login" className="block py-2.5 text-base text-gray-600 font-medium"
+              <Link to="/capra/login" className="block py-2.5 text-base text-gray-700 font-medium"
                     onClick={() => setMobileMenuOpen(false)}>Sign in</Link>
             )}
           </div>
@@ -745,7 +745,7 @@ export default function LandingPage() {
                 <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400" style={{ animation: 'ping-dot 1.5s cubic-bezier(0, 0, 0.2, 1) infinite' }} />
                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-400" />
               </span>
-              <span className="font-code text-sm text-emerald-400 tracking-wide font-semibold">
+              <span className="font-code text-sm text-emerald-600 tracking-wide font-semibold">
                 APPA — Apply. Prepare. Practice. Attend.
               </span>
             </div>
@@ -753,15 +753,15 @@ export default function LandingPage() {
 
           {/* Headline */}
           <h1 className={`font-display font-extrabold tracking-[-0.04em] transition-all duration-700 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-            <span className="block text-6xl md:text-7xl lg:text-[84px] leading-[1.05] text-gray-900">
+            <span className="block text-6xl md:text-7xl lg:text-[84px] leading-[1.05] text-black">
               Ace every
             </span>
             <span className="block text-6xl md:text-7xl lg:text-[84px] leading-[1.05] mt-1">
               <span className="animate-hero-gradient bg-clip-text text-transparent"
-                    style={{ backgroundImage: 'linear-gradient(135deg, #34d399, #38bdf8, #818cf8, #34d399)' }}>
+                    style={{ backgroundImage: 'linear-gradient(135deg, #059669, #0891b2, #6366f1, #059669)' }}>
                 technical
               </span>
-              <span className="text-white"> interview.</span>
+              <span className="text-black"> interview.</span>
             </span>
           </h1>
 
@@ -776,7 +776,7 @@ export default function LandingPage() {
             <Link to="/lumora" className="glow-btn px-8 py-4 text-lg font-semibold text-white bg-emerald-500 rounded-xl">
               Start Free — No Credit Card
             </Link>
-            <a href="#appa" className="px-8 py-4 text-lg font-semibold text-white border border-[#d0d5dd] rounded-xl hover:border-white/40 transition-all">
+            <a href="#appa" className="px-8 py-4 text-lg font-semibold text-gray-700 border border-[#d0d5dd] rounded-xl hover:border-gray-400 transition-all">
               See How It Works
             </a>
           </div>
@@ -794,11 +794,11 @@ export default function LandingPage() {
       <section ref={demoRef.ref} className="px-6 lg:px-8 pb-16" style={{ zIndex: 2 }}>
         <div className="max-w-[85%] xl:max-w-7xl mx-auto">
           <div className={`text-center mb-16 transition-all duration-700 ${demoRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-            <span className="font-code text-sm text-emerald-400 tracking-wider font-semibold">SEE IT IN ACTION</span>
-            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-gray-900 mt-4">
+            <span className="font-code text-sm text-emerald-600 tracking-wider font-semibold">SEE IT IN ACTION</span>
+            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-black mt-4">
               Lumora during a live interview
             </h2>
-            <p className="mt-4 text-base md:text-lg text-gray-600 max-w-2xl mx-auto">
+            <p className="mt-4 text-base md:text-lg text-gray-700 max-w-2xl mx-auto">
               Watch how Lumora transcribes the interviewer's question and generates a complete system design answer in real time.
             </p>
           </div>
@@ -836,11 +836,11 @@ export default function LandingPage() {
       <section className="px-6 lg:px-8 pb-16" style={{ zIndex: 2 }}>
         <div className="max-w-[85%] xl:max-w-7xl mx-auto">
           <div className={`text-center mb-10 transition-all duration-700 ${demoRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '300ms' }}>
-            <span className="font-code text-sm text-indigo-400 tracking-wider font-semibold">PREPARE, PRACTICE, AND DESIGN</span>
-            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-gray-900 mt-4">
+            <span className="font-code text-sm text-indigo-600 tracking-wider font-semibold">PREPARE, PRACTICE, AND DESIGN</span>
+            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-black mt-4">
               415+ topics. Auto-generated diagrams.
             </h2>
-            <p className="mt-4 text-base md:text-lg text-gray-600 max-w-2xl mx-auto">
+            <p className="mt-4 text-base md:text-lg text-gray-700 max-w-2xl mx-auto">
               Study DSA, System Design, Microservices, Databases, SQL, LLD, and Behavioral. Generate architecture diagrams automatically.
             </p>
           </div>
@@ -938,14 +938,14 @@ export default function LandingPage() {
 
         <div className="relative max-w-[85%] xl:max-w-7xl mx-auto">
           <div className={`text-center mb-16 transition-all duration-700 ${journeyRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-            <span className="font-code text-sm text-indigo-400 tracking-wider font-semibold">THE APPA FRAMEWORK</span>
-            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-gray-900 mt-4">
+            <span className="font-code text-sm text-indigo-600 tracking-wider font-semibold">THE APPA FRAMEWORK</span>
+            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-black mt-4">
               <span style={{ color: '#34d399' }}>Apply.</span>{' '}
               <span style={{ color: '#818cf8' }}>Prepare.</span>{' '}
               <span style={{ color: '#38bdf8' }}>Practice.</span>{' '}
               <span style={{ color: '#fbbf24' }}>Attend.</span>
             </h2>
-            <p className="mt-5 text-base md:text-lg text-gray-600 max-w-2xl mx-auto">
+            <p className="mt-5 text-base md:text-lg text-gray-700 max-w-2xl mx-auto">
               The complete interview lifecycle in one platform. No other tool covers all four stages.
             </p>
           </div>
@@ -976,8 +976,8 @@ export default function LandingPage() {
                       {AppaIcons[step.icon](step.color)}
                     </div>
                     <div className="font-code text-sm text-gray-500 mb-1 font-semibold">{step.num}</div>
-                    <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-3 font-display">{step.label}</h3>
-                    <p className="text-base md:text-lg text-gray-600 leading-relaxed">{step.desc}</p>
+                    <h3 className="text-xl md:text-2xl font-bold text-black mb-3 font-display">{step.label}</h3>
+                    <p className="text-base md:text-lg text-gray-700 leading-relaxed">{step.desc}</p>
                     <div className="mt-5 text-sm font-semibold opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: step.color }}>
                       Explore &rarr;
                     </div>
@@ -1006,8 +1006,8 @@ export default function LandingPage() {
 
         <div className="relative max-w-[85%] xl:max-w-7xl mx-auto">
           <div className={`text-center mb-16 transition-all duration-700 ${productsRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-            <span className="font-code text-sm text-cyan-400 tracking-wider font-semibold">TWO PRODUCTS, ONE PLATFORM</span>
-            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-gray-900 mt-4">
+            <span className="font-code text-sm text-cyan-600 tracking-wider font-semibold">TWO PRODUCTS, ONE PLATFORM</span>
+            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-black mt-4">
               Prepare before. Perform during.
             </h2>
           </div>
@@ -1026,17 +1026,17 @@ export default function LandingPage() {
                   {AppaIcons.lumora('#34d399')}
                 </div>
                 <div>
-                  <span className="text-xl md:text-2xl font-bold text-gray-900 font-display">Lumora</span>
-                  <span className="block font-code text-sm text-emerald-400 font-semibold">LIVE INTERVIEW AI</span>
+                  <span className="text-xl md:text-2xl font-bold text-black font-display">Lumora</span>
+                  <span className="block font-code text-sm text-emerald-600 font-semibold">LIVE INTERVIEW AI</span>
                 </div>
               </div>
-              <p className="text-base md:text-lg text-gray-600 leading-relaxed mb-8">
+              <p className="text-base md:text-lg text-gray-700 leading-relaxed mb-8">
                 Real-time AI that listens to your interview, transcribes questions,
                 and streams expert answers for system design, coding, and behavioral rounds.
               </p>
               <div className="space-y-3">
                 {['Voice transcription with speaker filtering', 'Auto-generated system design diagrams', 'Multi-approach coding solutions', 'Behavioral STAR-format responses'].map((f) => (
-                  <div key={f} className="flex items-center gap-3 text-base text-gray-600">
+                  <div key={f} className="flex items-center gap-3 text-base text-gray-700">
                     <svg className="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                     </svg>
@@ -1062,17 +1062,17 @@ export default function LandingPage() {
                   {AppaIcons.capra('#818cf8')}
                 </div>
                 <div>
-                  <span className="text-xl md:text-2xl font-bold text-gray-900 font-display">Capra</span>
-                  <span className="block font-code text-sm text-indigo-400 font-semibold">INTERVIEW PREPARATION</span>
+                  <span className="text-xl md:text-2xl font-bold text-black font-display">Capra</span>
+                  <span className="block font-code text-sm text-indigo-600 font-semibold">INTERVIEW PREPARATION</span>
                 </div>
               </div>
-              <p className="text-base md:text-lg text-gray-600 leading-relaxed mb-8">
+              <p className="text-base md:text-lg text-gray-700 leading-relaxed mb-8">
                 Study and practice before your interview. 300+ curated topics with
                 AI-powered explanations, mock interviews, and coding practice.
               </p>
               <div className="space-y-3">
                 {['System design deep dives with diagrams', 'DSA problems with multiple solutions', 'Behavioral question frameworks', 'Timed mock interview simulator'].map((f) => (
-                  <div key={f} className="flex items-center gap-3 text-base text-gray-600">
+                  <div key={f} className="flex items-center gap-3 text-base text-gray-700">
                     <svg className="w-4 h-4 text-indigo-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                     </svg>
@@ -1099,11 +1099,11 @@ export default function LandingPage() {
 
         <div className="relative max-w-[85%] xl:max-w-7xl mx-auto">
           <div className={`text-center mb-16 transition-all duration-700 ${prepRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-            <span className="font-code text-sm text-emerald-400 tracking-wider font-semibold">PREPARATION AT SCALE</span>
-            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-gray-900 mt-4">
+            <span className="font-code text-sm text-emerald-600 tracking-wider font-semibold">PREPARATION AT SCALE</span>
+            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-black mt-4">
               Everything you need to prepare.
             </h2>
-            <p className="mt-5 text-base md:text-lg text-gray-600 max-w-2xl mx-auto">
+            <p className="mt-5 text-base md:text-lg text-gray-700 max-w-2xl mx-auto">
               Comprehensive study material and practice problems covering every angle of the technical interview.
             </p>
           </div>
@@ -1118,8 +1118,8 @@ export default function LandingPage() {
       <section ref={featuresRef.ref} className="relative px-6 lg:px-8 py-16 md:py-24" style={{ zIndex: 2 }}>
         <div className="max-w-[85%] xl:max-w-7xl mx-auto">
           <div className={`text-center mb-16 transition-all duration-700 ${featuresRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-            <span className="font-code text-sm text-cyan-400 tracking-wider font-semibold">THREE INTERVIEW MODES</span>
-            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-gray-900 mt-4">
+            <span className="font-code text-sm text-cyan-600 tracking-wider font-semibold">THREE INTERVIEW MODES</span>
+            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-black mt-4">
               System Design. Coding. Behavioral.
             </h2>
           </div>
@@ -1176,8 +1176,8 @@ export default function LandingPage() {
                 <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-5 border border-[#e3e8ee]" style={{ background: `${f.color}15` }}>
                   {f.icon(f.color)}
                 </div>
-                <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-3 font-display">{f.mode}</h3>
-                <p className="text-base md:text-lg text-gray-600 leading-relaxed mb-6">{f.desc}</p>
+                <h3 className="text-xl md:text-2xl font-bold text-black mb-3 font-display">{f.mode}</h3>
+                <p className="text-base md:text-lg text-gray-700 leading-relaxed mb-6">{f.desc}</p>
                 <div className="flex flex-wrap gap-2">
                   {f.tags.map((t) => (
                     <span key={t} className="px-3 py-1.5 rounded-md font-code text-sm font-medium border border-[#e3e8ee]"
@@ -1208,13 +1208,13 @@ export default function LandingPage() {
         <div className="relative max-w-[85%] xl:max-w-7xl mx-auto">
           {/* ── Section Header ── */}
           <div className={`text-center mb-20 transition-all duration-700 ${diffRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-            <span className="inline-block font-code text-sm text-emerald-400 tracking-[0.2em] font-semibold uppercase px-4 py-1.5 rounded-full border border-emerald-400/20 bg-emerald-400/5">
+            <span className="inline-block font-code text-sm text-emerald-600 tracking-[0.2em] font-semibold uppercase px-4 py-1.5 rounded-full border border-emerald-400/20 bg-emerald-400/5">
               ONLY ON CAMORA
             </span>
-            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight text-gray-900 mt-6">
+            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight text-black mt-6">
               What no other interview tool can do.
             </h2>
-            <p className="mt-5 text-base md:text-lg text-gray-600 max-w-3xl mx-auto leading-relaxed">
+            <p className="mt-5 text-base md:text-lg text-gray-700 max-w-3xl mx-auto leading-relaxed">
               Every feature below is unique to Camora. We built what interview candidates actually need — not what looks good in a demo. This is the platform competitors wish they had.
             </p>
           </div>
@@ -1460,7 +1460,7 @@ export default function LandingPage() {
                     <div className="px-6 py-4 border-b border-[#e3e8ee] flex items-center justify-between" style={{ background: `${group.accent}08` }}>
                       <div className="flex items-center gap-3">
                         <span className="w-2.5 h-2.5 rounded-full" style={{ background: group.accent }} />
-                        <h3 className="text-base font-bold text-gray-900 font-display">{group.groupTitle}</h3>
+                        <h3 className="text-base font-bold text-black font-display">{group.groupTitle}</h3>
                       </div>
                       <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ color: group.accent, background: `${group.accent}15` }}>
                         {group.features.length} features
@@ -1539,7 +1539,7 @@ export default function LandingPage() {
                         {ring.display}
                       </text>
                     </svg>
-                    <span className="mt-2 text-xs md:text-sm text-gray-500 font-medium">{ring.label}</span>
+                    <span className="mt-2 text-xs md:text-sm text-gray-600 font-medium">{ring.label}</span>
                   </div>
                 );
               })}
@@ -1560,8 +1560,8 @@ export default function LandingPage() {
         }} />
         <div className="relative max-w-[85%] xl:max-w-7xl mx-auto">
           <div className={`text-center mb-16 transition-all duration-700 ${compRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-            <span className="font-code text-sm text-cyan-400 tracking-wider font-semibold">HEAD-TO-HEAD</span>
-            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-gray-900 mt-4">
+            <span className="font-code text-sm text-cyan-600 tracking-wider font-semibold">HEAD-TO-HEAD</span>
+            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-black mt-4">
               See why engineers switch to Camora.
             </h2>
           </div>
@@ -1599,14 +1599,14 @@ export default function LandingPage() {
                       transition: `width 1s ease ${i * 100 + 400}ms`,
                     }}
                   >
-                    <span className="text-xs font-bold font-code text-white whitespace-nowrap">
+                    <span className="text-xs font-bold font-code text-gray-700 whitespace-nowrap">
                       {bar.count}{bar.suffix}
                     </span>
                   </div>
                 </div>
               </div>
             ))}
-            <p className="text-center text-xs text-gray-600 mt-4 font-code tracking-wide">FEATURES COMPARISON</p>
+            <p className="text-center text-xs text-gray-700 mt-4 font-code tracking-wide">FEATURES COMPARISON</p>
           </div>
 
           <div className="grid md:grid-cols-2 gap-6">
@@ -1644,7 +1644,7 @@ export default function LandingPage() {
                   }}
                 >
                   <div>
-                    <span className="text-sm font-medium text-white">{row.feature}</span>
+                    <span className="text-sm font-medium text-black">{row.feature}</span>
                     <span className="hidden md:inline text-sm text-gray-500 ml-2">— {row.detail}</span>
                   </div>
                   <div className="flex items-center justify-center">
@@ -1654,7 +1654,7 @@ export default function LandingPage() {
                   </div>
                   <div className="flex items-center justify-center">
                     {row.others === 'partial' ? (
-                      <span className="text-xs text-gray-500 font-medium">Partial</span>
+                      <span className="text-xs text-gray-600 font-medium">Partial</span>
                     ) : (
                       <svg className="w-4 h-4 text-red-400/50" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -1665,7 +1665,7 @@ export default function LandingPage() {
               ))}
               {/* Summary row */}
               <div className="grid grid-cols-[1fr_60px_60px] md:grid-cols-[1fr_120px_120px] px-6 py-4" style={{ background: 'rgba(16,185,129,0.04)' }}>
-                <span className="text-sm font-bold text-white">Total with full support</span>
+                <span className="text-sm font-bold text-black">Total with full support</span>
                 <span className="text-center text-sm font-bold text-emerald-400">12/12</span>
                 <span className="text-center text-sm font-bold text-gray-500">3/12</span>
               </div>
@@ -1680,8 +1680,8 @@ export default function LandingPage() {
       <section ref={howRef.ref} className="relative px-6 lg:px-8 py-16 md:py-24" style={{ zIndex: 2 }}>
         <div className="max-w-[85%] xl:max-w-7xl mx-auto">
           <div className={`text-center mb-16 transition-all duration-700 ${howRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-            <span className="font-code text-sm text-gray-400 tracking-wider font-semibold">HOW IT WORKS</span>
-            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-gray-900 mt-4">
+            <span className="font-code text-sm text-gray-600 tracking-wider font-semibold">HOW IT WORKS</span>
+            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-black mt-4">
               Three steps. Zero friction.
             </h2>
           </div>
@@ -1698,8 +1698,8 @@ export default function LandingPage() {
                 style={{ transitionDelay: `${i * 120 + 200}ms` }}
               >
                 <div className="font-display text-6xl font-black mb-5" style={{ color: `${s.color}20` }}>{s.num}</div>
-                <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-3 font-display">{s.title}</h3>
-                <p className="text-base md:text-lg text-gray-600 leading-relaxed">{s.desc}</p>
+                <h3 className="text-xl md:text-2xl font-bold text-black mb-3 font-display">{s.title}</h3>
+                <p className="text-base md:text-lg text-gray-700 leading-relaxed">{s.desc}</p>
               </div>
             ))}
           </div>
@@ -1717,21 +1717,21 @@ export default function LandingPage() {
 
         <div className={`relative max-w-3xl mx-auto text-center transition-all duration-700 ${ctaRef.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
           <span className="font-code text-sm text-amber-400 tracking-wider font-semibold">START YOUR APPA JOURNEY</span>
-          <h2 className="font-display text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight text-gray-900 mt-5">
+          <h2 className="font-display text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight text-black mt-5">
             Your next interview<br />
             <span className="animate-hero-gradient bg-clip-text text-transparent"
-                  style={{ backgroundImage: 'linear-gradient(135deg, #34d399, #38bdf8, #818cf8, #fbbf24, #34d399)' }}>
+                  style={{ backgroundImage: 'linear-gradient(135deg, #059669, #0891b2, #6366f1, #d97706, #059669)' }}>
               starts here.
             </span>
           </h2>
-          <p className="mt-6 text-base md:text-lg text-gray-600 max-w-xl mx-auto">
+          <p className="mt-6 text-base md:text-lg text-gray-700 max-w-xl mx-auto">
             Apply, Prepare, Practice, Attend — the complete interview pipeline, powered by AI.
           </p>
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-5">
             <Link to="/lumora" className="glow-btn px-8 py-4 text-lg font-semibold text-white bg-emerald-500 rounded-xl">
               Start Free — No Credit Card
             </Link>
-            <Link to="/pricing" className="px-8 py-4 text-lg font-semibold text-white border border-[#d0d5dd] rounded-xl hover:border-white/40 transition-all">
+            <Link to="/pricing" className="px-8 py-4 text-lg font-semibold text-gray-700 border border-[#d0d5dd] rounded-xl hover:border-gray-400 transition-all">
               View Pricing
             </Link>
           </div>
@@ -1747,7 +1747,7 @@ export default function LandingPage() {
             <div className="flex items-center gap-3">
               <CamoraLogo size={30} />
               <div>
-                <span className="text-base font-bold text-gray-900 font-display">Camora</span>
+                <span className="text-base font-bold text-black font-display">Camora</span>
                 <span className="block font-code text-sm text-gray-400">Apply. Prepare. Practice. Attend.</span>
               </div>
             </div>
@@ -1756,13 +1756,13 @@ export default function LandingPage() {
               {NAV_LINKS.map((link) =>
                 link.external ? (
                   <a key={link.label} href={link.href} target="_blank" rel="noopener noreferrer"
-                     className="text-[15px] text-gray-500 hover:text-white transition-colors font-medium">{link.label}</a>
+                     className="text-[15px] text-gray-600 hover:text-black transition-colors font-medium">{link.label}</a>
                 ) : (
                   <Link key={link.label} to={link.href}
-                        className="text-[15px] text-gray-500 hover:text-white transition-colors font-medium">{link.label}</Link>
+                        className="text-[15px] text-gray-600 hover:text-black transition-colors font-medium">{link.label}</Link>
                 )
               )}
-              <a href="mailto:support@cariara.com" className="text-[15px] text-gray-500 hover:text-white transition-colors font-medium">
+              <a href="mailto:support@cariara.com" className="text-[15px] text-gray-600 hover:text-black transition-colors font-medium">
                 Support
               </a>
             </div>
