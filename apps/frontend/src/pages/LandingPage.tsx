@@ -644,7 +644,6 @@ export default function LandingPage() {
           <FadeIn className="text-center mb-20">
             <span className="inline-block text-sm font-bold tracking-[0.2em] uppercase px-4 py-1.5 rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700">ONLY ON CAMORA</span>
             <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mt-6">What no other interview tool can do.</h2>
-            <p className="mt-5 text-base md:text-lg text-gray-500 max-w-3xl mx-auto leading-relaxed">Every feature below is unique to Camora. We built what interview candidates actually need.</p>
           </FadeIn>
           <div className="grid md:grid-cols-2 gap-6">
             {FEATURE_GROUPS.map((group, gi) => (
