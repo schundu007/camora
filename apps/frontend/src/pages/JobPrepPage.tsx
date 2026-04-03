@@ -156,7 +156,7 @@ export default function JobPrepPage() {
           ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
-          jobDescription: job.description || '',
+          jobDescription: job.job_description || job.ai_summary || job.description || '',
           resume: 'User resume placeholder', // TODO: get from user profile
           sections: ['elevator-pitch', 'hr', 'hiring-manager', 'coding', 'system-design', 'behavioral'],
           provider: 'claude',
@@ -187,14 +187,28 @@ export default function JobPrepPage() {
           if (line.startsWith('data: ')) {
             try {
               const event = JSON.parse(line.slice(6));
+              // Check for auth/subscription errors in stream
+              if (event.error) {
+                if (event.subscriptionRequired || event.freeTrialExhausted) {
+                  window.location.href = '/pricing';
+                  return;
+                }
+                if (event.authRequired) {
+                  window.location.href = '/login';
+                  return;
+                }
+                throw new Error(event.error);
+              }
               if (event.section && event.status === 'completed' && event.result) {
                 setGeneratedSections(prev => ({
                   ...prev,
                   [event.section]: event.result,
                 }));
               }
-            } catch {
-              // Ignore malformed SSE lines
+            } catch (parseErr: any) {
+              if (parseErr.message && parseErr.message !== 'Failed to generate interview prep material. Please try again.') {
+                throw parseErr; // Re-throw real errors, not JSON parse errors
+              }
             }
           }
         }
