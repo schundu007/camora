@@ -418,7 +418,7 @@ export default function PricingPage() {
                   </th>
                   <th className="py-3 px-3 text-center min-w-[80px] hidden lg:table-cell">
                     <div className="text-gray-400 text-xs">TechPrep</div>
-                    <div className="text-[10px] text-gray-600 font-mono">$19/mo</div>
+                    <div className="text-[10px] text-gray-600 font-mono">$10/mo</div>
                   </th>
                   <th className="py-3 px-3 text-center min-w-[80px] hidden lg:table-cell">
                     <div className="text-gray-400 text-xs">AlgoMaster</div>
