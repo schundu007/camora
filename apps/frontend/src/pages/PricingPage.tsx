@@ -148,40 +148,40 @@ export default function PricingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#09090b] text-gray-100">
+    <div className="min-h-screen bg-[#f7f8f9] text-gray-900">
 
       {/* Nav */}
-      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/[0.06] bg-[#09090b]/80 backdrop-blur-xl">
+      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-[#e3e8ee] bg-white/90 backdrop-blur-xl">
         <div className="max-w-6xl mx-auto flex items-center justify-between px-6 h-14">
           <Link to="/" className="flex items-center gap-2.5">
             <div className="w-7 h-7 bg-emerald-500 flex items-center justify-center" style={{ clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)' }}>
               <span className="text-[10px] font-black text-white tracking-tight">C</span>
             </div>
-            <span className="text-sm font-semibold tracking-tight text-white">Camora</span>
+            <span className="text-sm font-semibold tracking-tight text-gray-900">Camora</span>
           </Link>
           <div className="hidden md:flex items-center gap-1">
             {NAV_LINKS.map((link) =>
               link.external ? (
-                <a key={link.label} href={link.href} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 text-[13px] text-gray-400 hover:text-white transition-colors">{link.label}</a>
+                <a key={link.label} href={link.href} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 text-[13px] text-gray-500 hover:text-gray-900 transition-colors">{link.label}</a>
               ) : (
-                <Link key={link.label} to={link.href} className="px-3 py-1.5 text-[13px] text-gray-400 hover:text-white transition-colors">{link.label}</Link>
+                <Link key={link.label} to={link.href} className="px-3 py-1.5 text-[13px] text-gray-500 hover:text-gray-900 transition-colors">{link.label}</Link>
               )
             )}
           </div>
           <div className="hidden md:flex items-center gap-3">
             {isAuthenticated ? (
               <>
-                <Link to="/capra" className="text-[13px] text-gray-400 hover:text-white transition-colors font-medium">Dashboard</Link>
-                <button onClick={logout} className="text-[13px] text-red-400 hover:text-red-300 transition-colors font-medium">Sign out</button>
+                <Link to="/capra" className="text-[13px] text-gray-500 hover:text-gray-900 transition-colors font-medium">Dashboard</Link>
+                <button onClick={logout} className="text-[13px] text-red-500 hover:text-red-600 transition-colors font-medium">Sign out</button>
               </>
             ) : (
-              <Link to="/capra/login" className="text-[13px] text-gray-400 hover:text-white transition-colors font-medium">Sign in</Link>
+              <Link to="/capra/login" className="text-[13px] text-gray-500 hover:text-gray-900 transition-colors font-medium">Sign in</Link>
             )}
             <Link to="/lumora" className="px-4 py-1.5 text-[13px] font-medium text-black bg-emerald-400 hover:bg-emerald-300 transition-colors">
               Launch App
             </Link>
           </div>
-          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden p-2 text-gray-400 hover:text-white">
+          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden p-2 text-gray-500 hover:text-gray-900">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
               {mobileMenuOpen
                 ? <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -190,10 +190,10 @@ export default function PricingPage() {
           </button>
         </div>
         {mobileMenuOpen && (
-          <div className="md:hidden border-t border-white/[0.06] bg-[#09090b] px-6 py-4 space-y-2">
+          <div className="md:hidden border-t border-[#e3e8ee] bg-white px-6 py-4 border-b border-[#e3e8ee] space-y-2">
             {NAV_LINKS.map((link) =>
               link.external ? (
-                <a key={link.label} href={link.href} className="block py-2 text-sm text-gray-300 font-medium">{link.label}</a>
+                <a key={link.label} href={link.href} className="block py-2 text-sm text-gray-600 font-medium">{link.label}</a>
               ) : (
                 <Link key={link.label} to={link.href} className="block py-2 text-sm text-gray-300 font-medium"
                       onClick={() => setMobileMenuOpen(false)}>{link.label}</Link>
@@ -203,13 +203,13 @@ export default function PricingPage() {
               <>
                 <Link to="/capra" className="block py-2 text-sm text-gray-300 font-medium"
                       onClick={() => setMobileMenuOpen(false)}>Dashboard</Link>
-                <button onClick={() => { logout(); setMobileMenuOpen(false); }} className="block py-2 text-sm text-red-400 font-medium">Sign out</button>
+                <button onClick={() => { logout(); setMobileMenuOpen(false); }} className="block py-2 text-sm text-red-500 font-medium">Sign out</button>
               </>
             ) : (
               <Link to="/capra/login" className="block py-2 text-sm text-gray-300 font-medium"
                     onClick={() => setMobileMenuOpen(false)}>Sign in</Link>
             )}
-            <Link to="/lumora" className="block py-2 text-sm text-emerald-400 font-semibold"
+            <Link to="/lumora" className="block py-2 text-sm text-emerald-600 font-semibold"
                   onClick={() => setMobileMenuOpen(false)}>Launch App</Link>
           </div>
         )}
@@ -218,10 +218,10 @@ export default function PricingPage() {
       {/* Header */}
       <section className="pt-28 pb-6 px-6 text-center">
         <span className="text-[11px] font-mono text-gray-500 uppercase tracking-wider">Pricing</span>
-        <h1 className="mt-3 text-3xl md:text-4xl font-semibold tracking-tight text-white">
+        <h1 className="mt-3 text-3xl md:text-4xl font-semibold tracking-tight text-gray-900">
           The APPA platform. All-in-one.
         </h1>
-        <p className="mt-3 text-base text-gray-500 max-w-xl mx-auto">
+        <p className="mt-3 text-base text-gray-600 max-w-xl mx-auto">
           Apply. Prepare. Practice. Attend. Others charge $25-150/mo for just the copilot.
           Camora gives you the complete interview pipeline — starting free.
         </p>
@@ -233,7 +233,7 @@ export default function PricingPage() {
           {PLANS.map((plan) => (
             <div
               key={plan.name}
-              className={`relative bg-[#09090b] p-6 flex flex-col ${plan.popular ? 'ring-1 ring-emerald-500/40 bg-emerald-500/[0.03]' : ''}`}
+              className={`relative bg-white p-6 border border-[#e3e8ee] shadow-[0_1px_3px_rgba(0,0,0,0.04)] flex flex-col ${plan.popular ? 'ring-2 ring-emerald-500/30 bg-emerald-50/50' : ''}`}
             >
               {plan.popular && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 bg-emerald-500 text-[10px] font-bold text-black uppercase tracking-wider">
@@ -242,9 +242,9 @@ export default function PricingPage() {
               )}
 
               <div className="mb-4">
-                <h3 className="text-sm font-semibold text-white">{plan.name}</h3>
+                <h3 className="text-sm font-semibold text-gray-900">{plan.name}</h3>
                 <div className="mt-2 flex items-baseline gap-0.5">
-                  <span className="text-3xl font-semibold text-white">{plan.price}</span>
+                  <span className="text-3xl font-semibold text-gray-900">{plan.price}</span>
                   <span className="text-sm text-gray-500">{plan.period}</span>
                 </div>
                 <p className="mt-1 text-[13px] text-gray-500">{plan.description}</p>
@@ -265,7 +265,7 @@ export default function PricingPage() {
                 className={`w-full py-2.5 text-[13px] font-medium transition-colors ${
                   plan.popular
                     ? 'bg-emerald-400 text-black hover:bg-emerald-300'
-                    : 'border border-white/10 text-gray-300 hover:border-white/20 hover:text-white'
+                    : 'border border-[#e3e8ee] text-gray-700 hover:border-[#d0d5dd] hover:text-gray-900'
                 } disabled:opacity-50`}
               >
                 {loading === plan.name ? 'Loading...' : plan.cta}
@@ -278,7 +278,7 @@ export default function PricingPage() {
       {/* Value prop */}
       <section className="px-6 py-12">
         <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-xl md:text-2xl font-semibold tracking-tight text-white">
+          <h2 className="text-xl md:text-2xl font-semibold tracking-tight text-gray-900">
             No other tool gives you the full pipeline.
           </h2>
           <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-px bg-white/[0.04]">
@@ -288,9 +288,9 @@ export default function PricingPage() {
               { step: '03', label: 'Practice', desc: 'Mock interviews with feedback' },
               { step: '04', label: 'Attend', desc: 'Real-time AI during your interview' },
             ].map((s) => (
-              <div key={s.step} className="bg-[#09090b] p-5 text-center">
+              <div key={s.step} className="bg-white p-5 text-center border border-[#e3e8ee]">
                 <span className="text-[11px] font-mono text-emerald-400/60">{s.step}</span>
-                <div className="mt-1 text-sm font-semibold text-white">{s.label}</div>
+                <div className="mt-1 text-sm font-semibold text-gray-900">{s.label}</div>
                 <div className="mt-1 text-[12px] text-gray-500">{s.desc}</div>
               </div>
             ))}
@@ -324,7 +324,7 @@ export default function PricingPage() {
         <div className="max-w-5xl mx-auto">
           <div className="mb-10 text-center">
             <span className="text-[11px] font-mono text-gray-500 uppercase tracking-wider">Comparison</span>
-            <h2 className="mt-3 text-2xl md:text-3xl font-semibold tracking-tight text-white">
+            <h2 className="mt-3 text-2xl md:text-3xl font-semibold tracking-tight text-gray-900">
               How Camora compares.
             </h2>
           </div>
@@ -332,10 +332,10 @@ export default function PricingPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-[13px]">
               <thead>
-                <tr className="border-b border-white/[0.06]">
+                <tr className="border-b border-[#e3e8ee]">
                   <th className="text-left py-3 px-4 text-gray-500 font-mono text-[10px] uppercase tracking-wider min-w-[220px]">Feature</th>
                   <th className="py-3 px-3 text-center min-w-[80px]">
-                    <div className="text-emerald-400 font-semibold text-sm">Camora</div>
+                    <div className="text-emerald-600 font-semibold text-sm">Camora</div>
                     <div className="text-[10px] text-gray-500 font-mono">from $0</div>
                   </th>
                   <th className="py-3 px-3 text-center min-w-[80px]">
@@ -364,7 +364,7 @@ export default function PricingPage() {
                     return <span className="text-[10px] text-amber-400 font-mono">{val}</span>;
                   };
                   return (
-                    <tr key={i} className="border-b border-white/[0.03]">
+                    <tr key={i} className="border-b border-[#f0f0f5]">
                       <td className={`py-2.5 px-4 ${row.unique ? 'text-emerald-400 font-medium' : 'text-gray-400'}`}>
                         {row.feature}
                       </td>
@@ -397,7 +397,7 @@ export default function PricingPage() {
         <div className="max-w-[85%] xl:max-w-5xl mx-auto">
           <div className="mb-10 text-center">
             <span className="text-[11px] font-mono text-gray-500 uppercase tracking-wider">FAQ</span>
-            <h2 className="mt-3 text-2xl font-semibold tracking-tight text-white">Common questions</h2>
+            <h2 className="mt-3 text-2xl font-semibold tracking-tight text-gray-900">Common questions</h2>
           </div>
 
           <div className="grid md:grid-cols-2 gap-px bg-white/[0.04]">
@@ -409,8 +409,8 @@ export default function PricingPage() {
               { q: 'What makes Camora different?', a: 'We are the only platform that combines job discovery, preparation, practice, and live interview AI in one tool. Competitors offer only 1-2 of these.' },
               { q: 'Can I cancel anytime?', a: 'Yes. No contracts, no cancellation fees. Your access continues through the end of the billing period.' },
             ].map((faq, i) => (
-              <div key={i} className="bg-[#09090b] p-6">
-                <h4 className="text-sm font-semibold text-white mb-2">{faq.q}</h4>
+              <div key={i} className="bg-white p-6 border border-[#e3e8ee] shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+                <h4 className="text-sm font-semibold text-gray-900 mb-2">{faq.q}</h4>
                 <p className="text-[13px] text-gray-500 leading-relaxed">{faq.a}</p>
               </div>
             ))}
@@ -420,7 +420,7 @@ export default function PricingPage() {
 
       {/* CTA */}
       <section className="px-6 py-16 text-center">
-        <h2 className="text-2xl font-semibold tracking-tight text-white">
+        <h2 className="text-2xl font-semibold tracking-tight text-gray-900">
           Start free. Upgrade when you are ready.
         </h2>
         <p className="mt-3 text-sm text-gray-500 max-w-md mx-auto">
@@ -437,25 +437,25 @@ export default function PricingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-white/[0.06] px-6 py-10">
+      <footer className="border-t border-[#e3e8ee] px-6 py-10">
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="flex items-center gap-2.5">
             <div className="w-6 h-6 bg-emerald-500 flex items-center justify-center" style={{ clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)' }}>
               <span className="text-[8px] font-black text-white">C</span>
             </div>
-            <span className="text-sm font-semibold text-white">Camora</span>
+            <span className="text-sm font-semibold text-gray-900">Camora</span>
           </div>
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
             {NAV_LINKS.map((link) =>
               link.external ? (
-                <a key={link.label} href={link.href} target="_blank" rel="noopener noreferrer" className="text-[13px] text-gray-500 hover:text-gray-300 transition-colors">{link.label}</a>
+                <a key={link.label} href={link.href} target="_blank" rel="noopener noreferrer" className="text-[13px] text-gray-500 hover:text-gray-900 transition-colors">{link.label}</a>
               ) : (
-                <Link key={link.label} to={link.href} className="text-[13px] text-gray-500 hover:text-gray-300 transition-colors">{link.label}</Link>
+                <Link key={link.label} to={link.href} className="text-[13px] text-gray-500 hover:text-gray-900 transition-colors">{link.label}</Link>
               )
             )}
-            <a href="mailto:support@cariara.com" className="text-[13px] text-gray-500 hover:text-gray-300 transition-colors">Support</a>
+            <a href="mailto:support@cariara.com" className="text-[13px] text-gray-500 hover:text-gray-900 transition-colors">Support</a>
           </div>
-          <p className="text-[12px] font-mono text-gray-600">&copy; {new Date().getFullYear()} Camora by Cariara</p>
+          <p className="text-[12px] font-mono text-gray-400">&copy; {new Date().getFullYear()} Camora by Cariara</p>
         </div>
       </footer>
     </div>
