@@ -20,6 +20,7 @@ const CapraLanding = lazy(() => import('./pages/capra/CapraLandingPage'));
 const CompanyPrepPage = lazy(() => import('./pages/capra/CompanyPrepPage'));
 const JobsPage = lazy(() => import('./pages/JobsPage'));
 const JobPrepPage = lazy(() => import('./pages/JobPrepPage'));
+const SignupPage = lazy(() => import('./pages/SignupPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 const BrandPage = lazy(() => import('./pages/BrandPage'));
 
@@ -143,10 +144,10 @@ function LoginPage() {
 
           {/* Header */}
           <h1 className="text-2xl font-bold text-gray-900 tracking-tight" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-            Sign in to Camora
+            Welcome back
           </h1>
           <p className="mt-2 text-base text-gray-500">
-            Start your APPA journey — Apply, Prepare, Practice, Attend.
+            Sign in to continue your APPA journey
           </p>
 
           {/* Role selection — required before sign-in */}
@@ -257,41 +258,11 @@ function LoginPage() {
             </p>
           )}
 
-          {/* Divider */}
-          <div className="relative mt-7 mb-6">
-            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200" /></div>
-            <div className="relative flex justify-center"><span className="bg-white px-4 text-sm text-gray-400">or continue with email</span></div>
-          </div>
-
-          {/* Email / Password form */}
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
-              <input type="email" placeholder="you@company.com"
-                     className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-900 bg-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all" />
-            </div>
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="text-sm font-medium text-gray-700">Password</label>
-                <button className="text-sm text-emerald-600 hover:text-emerald-700 font-medium">Forgot password?</button>
-              </div>
-              <input type="password" placeholder="Enter your password"
-                     className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-900 bg-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all" />
-            </div>
-
-            <button className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white text-base font-semibold rounded-xl transition-all shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:-translate-y-0.5"
-                    style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-              Sign in
-            </button>
-          </div>
-
-          {/* Resume section moved above sign-in buttons */}
-
           {/* Footer */}
           <div className="mt-7 pt-5 border-t border-gray-100 text-center">
             <p className="text-sm text-gray-500">
-              New to Camora?{' '}
-              <Link to="/lumora" className="text-emerald-600 hover:text-emerald-700 font-semibold">Start free</Link>
+              Don't have an account?{' '}
+              <Link to="/signup" className="text-emerald-600 hover:text-emerald-700 font-semibold">Create one</Link>
             </p>
           </div>
         </div>
@@ -325,6 +296,7 @@ export function App() {
           <Route path="/pricing" element={<PricingPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/capra/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
           <Route path="/premium" element={<PricingPage />} />
           <Route path="/download" element={<ProtectedRoute><CapraDashboard /></ProtectedRoute>} />
 
