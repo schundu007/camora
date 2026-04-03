@@ -463,7 +463,7 @@ export default function LandingPage() {
           <div className="hidden lg:flex items-center gap-3">
             {isAuthenticated ? (
               <>
-                <Link to="/capra" className="text-[15px] text-gray-500 hover:text-gray-900 transition-colors font-medium">Dashboard</Link>
+                <Link to="/capra/prepare" className="text-[15px] text-gray-500 hover:text-gray-900 transition-colors font-medium">Dashboard</Link>
                 <button onClick={logout} className="text-[15px] text-red-500 hover:text-red-600 transition-colors font-medium">Sign out</button>
               </>
             ) : (
@@ -492,7 +492,7 @@ export default function LandingPage() {
                 ))}
                 {isAuthenticated ? (
                   <>
-                    <Link to="/capra" className="block py-2.5 text-base text-gray-600 font-medium" onClick={() => setMobileMenuOpen(false)}>Dashboard</Link>
+                    <Link to="/capra/prepare" className="block py-2.5 text-base text-gray-600 font-medium" onClick={() => setMobileMenuOpen(false)}>Dashboard</Link>
                     <button onClick={() => { setMobileMenuOpen(false); logout(); }} className="block py-2.5 text-base text-red-500 font-medium w-full text-left">Sign out</button>
                   </>
                 ) : (

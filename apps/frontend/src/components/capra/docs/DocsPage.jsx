@@ -468,7 +468,7 @@ export default function DocsPage({ onBack }) {
                   ))}
                 </div>
                 <div className="flex items-center gap-2">
-                  <a href="/capra" className="hidden sm:inline text-sm text-gray-400 hover:text-gray-700 font-medium">Dashboard</a>
+                  <a href="/capra/prepare" className="hidden sm:inline text-sm text-gray-400 hover:text-gray-700 font-medium">Dashboard</a>
                 </div>
               </div>
             </div>
