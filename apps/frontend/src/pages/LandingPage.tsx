@@ -532,10 +532,6 @@ export default function LandingPage() {
               See How It Works
             </a>
           </motion.div>
-          <motion.p className="mt-16 text-sm text-gray-300"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6, delay: 0.5 }}>
-            Trusted by engineers interviewing at Google, Amazon, Meta, Apple, and Microsoft
-          </motion.p>
         </div>
       </section>
 
