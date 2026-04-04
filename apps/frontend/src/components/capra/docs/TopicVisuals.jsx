@@ -250,20 +250,67 @@ export function PatternCardGrid({ patterns, title = 'Design Patterns' }) {
   );
 }
 
+// ── Cloud Provider Tabs ─────────────────────────────────────────────────────
+const CLOUD_PROVIDERS = [
+  { id: 'aws', label: 'AWS', color: '#ff9900' },
+  { id: 'azure', label: 'Azure', color: '#0078d4' },
+  { id: 'gcp', label: 'GCP', color: '#4285f4' },
+];
+
 // ── StaticDiagram ───────────────────────────────────────────────────────────
 // Renders a pre-generated static diagram image from public/diagrams/
+// Supports cloud provider tabs for Eraser-generated diagrams
 export function StaticDiagram({ diagram }) {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
+  const [provider, setProvider] = useState('aws');
 
-  if (error) return null; // Silently hide if image not found
+  // Check if this is a cloud-architecture diagram with multi-provider support
+  // Convention: eraser-*.png (AWS), eraser-azure.png, eraser-gcp.png
+  const isCloudDiagram = diagram.type === 'cloud-architecture';
+  const basePath = diagram.src?.replace(/\/[^/]+$/, ''); // directory path
+
+  const getProviderSrc = (p) => {
+    if (p === 'aws') return diagram.src; // Original eraser-*.png is AWS
+    return `${basePath}/eraser-${p}.png`;
+  };
+
+  const currentSrc = isCloudDiagram ? getProviderSrc(provider) : diagram.src;
+
+  // Reset load state when provider changes
+  const handleProviderChange = (p) => {
+    setProvider(p);
+    setLoaded(false);
+    setError(false);
+  };
+
+  if (error && !isCloudDiagram) return null;
 
   return (
     <div className="rounded-xl overflow-hidden border border-[#e3e8ee] bg-white">
       <div className="px-3 py-2 border-b border-[#e3e8ee] bg-[#f7f8f9] flex items-center gap-2">
         <Icon name="layers" size={14} className="text-emerald-700" />
         <h3 className="text-sm font-bold text-gray-900 landing-display">{diagram.title}</h3>
-        {diagram.type && (
+        {/* Cloud Provider Tabs */}
+        {isCloudDiagram && (
+          <div className="flex items-center gap-1 ml-auto px-1 py-0.5 rounded-lg bg-gray-100">
+            {CLOUD_PROVIDERS.map(p => (
+              <button
+                key={p.id}
+                onClick={() => handleProviderChange(p.id)}
+                className="px-2 py-0.5 text-[10px] font-bold rounded transition-all landing-mono"
+                style={{
+                  background: provider === p.id ? `${p.color}20` : 'transparent',
+                  color: provider === p.id ? p.color : '#9ca3af',
+                  border: provider === p.id ? `1px solid ${p.color}40` : '1px solid transparent',
+                }}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+        )}
+        {!isCloudDiagram && diagram.type && (
           <span className="text-[9px] landing-mono px-1.5 py-0.5 rounded border border-[#e3e8ee] bg-white text-gray-500 ml-auto uppercase">{diagram.type}</span>
         )}
       </div>
@@ -276,9 +323,15 @@ export function StaticDiagram({ diagram }) {
             <Icon name="loader" size={20} className="text-gray-300 animate-spin" />
           </div>
         )}
+        {error && isCloudDiagram && (
+          <div className="w-full h-32 bg-[#f7f8f9] rounded-lg flex items-center justify-center text-gray-400 text-xs landing-mono">
+            {CLOUD_PROVIDERS.find(p => p.id === provider)?.label} diagram not available
+          </div>
+        )}
         <img
-          src={diagram.src}
-          alt={diagram.title}
+          key={currentSrc}
+          src={currentSrc}
+          alt={`${diagram.title} — ${provider.toUpperCase()}`}
           className={`w-full rounded-lg transition-opacity duration-300 ${loaded ? 'opacity-100' : 'opacity-0 h-0'}`}
           onLoad={() => setLoaded(true)}
           onError={() => setError(true)}
