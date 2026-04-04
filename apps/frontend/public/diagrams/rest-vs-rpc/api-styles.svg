@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 350" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <filter id="shadow" x="-2%" y="-2%" width="104%" height="104%">
+      <feDropShadow dx="0" dy="1" stdDeviation="2" flood-opacity="0.1"/>
+    </filter>
+  </defs>
+  <rect width="600" height="350" fill="#f7f8f9" rx="4"/>
+  <text x="300" y="28" text-anchor="middle" font-size="15" font-weight="700" fill="#1e293b">API Styles Comparison</text>
+
+  <!-- Column 1: REST -->
+  <rect x="10" y="45" width="185" height="295" rx="10" fill="white" stroke="#e2e8f0" stroke-width="1" filter="url(#shadow)"/>
+  <rect x="10" y="45" width="185" height="35" rx="10" fill="#10b981"/>
+  <rect x="10" y="65" width="185" height="15" fill="#10b981"/>
+  <text x="102" y="68" text-anchor="middle" font-size="13" font-weight="700" fill="white">REST</text>
+
+  <text x="25" y="100" font-size="9" font-weight="600" fill="#1e293b">Resource-oriented</text>
+  <text x="25" y="118" font-size="8" fill="#64748b">URLs represent resources:</text>
+
+  <rect x="22" y="126" width="160" height="20" rx="4" fill="#f1f5f9"/>
+  <text x="30" y="140" font-size="8" fill="#10b981" font-family="monospace">GET /users/123</text>
+  <rect x="22" y="150" width="160" height="20" rx="4" fill="#f1f5f9"/>
+  <text x="30" y="164" font-size="8" fill="#10b981" font-family="monospace">POST /users</text>
+  <rect x="22" y="174" width="160" height="20" rx="4" fill="#f1f5f9"/>
+  <text x="30" y="188" font-size="8" fill="#10b981" font-family="monospace">PUT /users/123</text>
+  <rect x="22" y="198" width="160" height="20" rx="4" fill="#f1f5f9"/>
+  <text x="30" y="212" font-size="8" fill="#10b981" font-family="monospace">DELETE /users/123</text>
+
+  <text x="25" y="238" font-size="9" font-weight="600" fill="#1e293b">Characteristics</text>
+  <text x="25" y="254" font-size="8" fill="#64748b">&#8226; HTTP verbs (GET, POST...)</text>
+  <text x="25" y="268" font-size="8" fill="#64748b">&#8226; Stateless</text>
+  <text x="25" y="282" font-size="8" fill="#64748b">&#8226; Cacheable responses</text>
+  <text x="25" y="296" font-size="8" fill="#64748b">&#8226; JSON / XML payload</text>
+  <rect x="22" y="308" width="160" height="22" rx="4" fill="#ecfdf5"/>
+  <text x="102" y="323" text-anchor="middle" font-size="8" fill="#10b981" font-weight="600">Best for: CRUD APIs</text>
+
+  <!-- Column 2: GraphQL -->
+  <rect x="207" y="45" width="185" height="295" rx="10" fill="white" stroke="#e2e8f0" stroke-width="1" filter="url(#shadow)"/>
+  <rect x="207" y="45" width="185" height="35" rx="10" fill="#8b5cf6"/>
+  <rect x="207" y="65" width="185" height="15" fill="#8b5cf6"/>
+  <text x="300" y="68" text-anchor="middle" font-size="13" font-weight="700" fill="white">GraphQL</text>
+
+  <text x="222" y="100" font-size="9" font-weight="600" fill="#1e293b">Query language</text>
+  <text x="222" y="118" font-size="8" fill="#64748b">Single endpoint, flexible query:</text>
+
+  <rect x="218" y="126" width="162" height="90" rx="4" fill="#f1f5f9"/>
+  <text x="226" y="140" font-size="8" fill="#8b5cf6" font-family="monospace">POST /graphql</text>
+  <text x="226" y="156" font-size="7.5" fill="#1e293b" font-family="monospace">query {</text>
+  <text x="226" y="168" font-size="7.5" fill="#1e293b" font-family="monospace">  user(id: 123) {</text>
+  <text x="226" y="180" font-size="7.5" fill="#1e293b" font-family="monospace">    name</text>
+  <text x="226" y="192" font-size="7.5" fill="#1e293b" font-family="monospace">    posts { title }</text>
+  <text x="226" y="204" font-size="7.5" fill="#1e293b" font-family="monospace">  }</text>
+  <text x="226" y="212" font-size="7.5" fill="#1e293b" font-family="monospace">}</text>
+
+  <text x="222" y="238" font-size="9" font-weight="600" fill="#1e293b">Characteristics</text>
+  <text x="222" y="254" font-size="8" fill="#64748b">&#8226; Client picks exact fields</text>
+  <text x="222" y="268" font-size="8" fill="#64748b">&#8226; No over-/under-fetching</text>
+  <text x="222" y="282" font-size="8" fill="#64748b">&#8226; Strongly typed schema</text>
+  <text x="222" y="296" font-size="8" fill="#64748b">&#8226; Single endpoint</text>
+  <rect x="218" y="308" width="162" height="22" rx="4" fill="#f5f3ff"/>
+  <text x="300" y="323" text-anchor="middle" font-size="8" fill="#8b5cf6" font-weight="600">Best for: complex UIs</text>
+
+  <!-- Column 3: gRPC -->
+  <rect x="405" y="45" width="185" height="295" rx="10" fill="white" stroke="#e2e8f0" stroke-width="1" filter="url(#shadow)"/>
+  <rect x="405" y="45" width="185" height="35" rx="10" fill="#3b82f6"/>
+  <rect x="405" y="65" width="185" height="15" fill="#3b82f6"/>
+  <text x="498" y="68" text-anchor="middle" font-size="13" font-weight="700" fill="white">gRPC</text>
+
+  <text x="420" y="100" font-size="9" font-weight="600" fill="#1e293b">Remote procedure calls</text>
+  <text x="420" y="118" font-size="8" fill="#64748b">Proto definitions + streaming:</text>
+
+  <rect x="416" y="126" width="162" height="90" rx="4" fill="#f1f5f9"/>
+  <text x="424" y="140" font-size="7.5" fill="#3b82f6" font-family="monospace">service UserSvc {</text>
+  <text x="424" y="154" font-size="7.5" fill="#1e293b" font-family="monospace">  rpc GetUser</text>
+  <text x="424" y="166" font-size="7.5" fill="#1e293b" font-family="monospace">    (UserReq)</text>
+  <text x="424" y="178" font-size="7.5" fill="#1e293b" font-family="monospace">    returns (User)</text>
+  <text x="424" y="192" font-size="7.5" fill="#1e293b" font-family="monospace">  rpc StreamLogs</text>
+  <text x="424" y="204" font-size="7.5" fill="#1e293b" font-family="monospace">    returns</text>
+  <text x="424" y="212" font-size="7.5" fill="#1e293b" font-family="monospace">    (stream Log)</text>
+
+  <text x="420" y="238" font-size="9" font-weight="600" fill="#1e293b">Characteristics</text>
+  <text x="420" y="254" font-size="8" fill="#64748b">&#8226; Binary (Protocol Buffers)</text>
+  <text x="420" y="268" font-size="8" fill="#64748b">&#8226; HTTP/2 multiplexing</text>
+  <text x="420" y="282" font-size="8" fill="#64748b">&#8226; Bi-directional streaming</text>
+  <text x="420" y="296" font-size="8" fill="#64748b">&#8226; Code generation</text>
+  <rect x="416" y="308" width="162" height="22" rx="4" fill="#eff6ff"/>
+  <text x="498" y="323" text-anchor="middle" font-size="8" fill="#3b82f6" font-weight="600">Best for: microservices</text>
+</svg>

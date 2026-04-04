@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 350" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <filter id="shadow" x="-4%" y="-4%" width="108%" height="108%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.1"/>
+    </filter>
+  </defs>
+  <rect width="600" height="350" fill="#f7f8f9" rx="12"/>
+  <text x="300" y="28" text-anchor="middle" font-size="16" font-weight="700" fill="#1e293b">Consistent Hashing - Hash Ring</text>
+
+  <!-- Hash Ring -->
+  <circle cx="220" cy="190" r="120" fill="none" stroke="#e2e8f0" stroke-width="3"/>
+  <!-- Ring direction arrow -->
+  <text x="220" y="315" text-anchor="middle" font-size="9" fill="#64748b">Clockwise key assignment</text>
+
+  <!-- Hash space markers (0, 2^32) -->
+  <text x="220" y="60" text-anchor="middle" font-size="8" fill="#94a3b8">0 / 2^32</text>
+
+  <!-- Node A at ~30 degrees -->
+  <circle cx="280" cy="87" r="14" fill="#3b82f6" filter="url(#shadow)"/>
+  <text x="280" y="92" text-anchor="middle" font-size="9" font-weight="700" fill="white">A</text>
+  <text x="305" y="80" font-size="8" fill="#3b82f6" font-weight="600">Node A</text>
+
+  <!-- Node A virtual at ~80 degrees -->
+  <circle cx="337" cy="150" r="9" fill="#3b82f6" opacity="0.5"/>
+  <text x="337" y="153" text-anchor="middle" font-size="7" font-weight="600" fill="white">A'</text>
+
+  <!-- Node B at ~150 degrees -->
+  <circle cx="324" cy="260" r="14" fill="#10b981" filter="url(#shadow)"/>
+  <text x="324" y="265" text-anchor="middle" font-size="9" font-weight="700" fill="white">B</text>
+  <text x="350" y="270" font-size="8" fill="#10b981" font-weight="600">Node B</text>
+
+  <!-- Node B virtual at ~200 degrees -->
+  <circle cx="190" cy="305" r="9" fill="#10b981" opacity="0.5"/>
+  <text x="190" y="308" text-anchor="middle" font-size="7" font-weight="600" fill="white">B'</text>
+
+  <!-- Node C at ~270 degrees -->
+  <circle cx="100" cy="190" r="14" fill="#8b5cf6" filter="url(#shadow)"/>
+  <text x="100" y="195" text-anchor="middle" font-size="9" font-weight="700" fill="white">C</text>
+  <text x="75" y="185" font-size="8" fill="#8b5cf6" font-weight="600" text-anchor="end">Node C</text>
+
+  <!-- Node C virtual at ~320 degrees -->
+  <circle cx="137" cy="95" r="9" fill="#8b5cf6" opacity="0.5"/>
+  <text x="137" y="98" text-anchor="middle" font-size="7" font-weight="600" fill="white">C'</text>
+
+  <!-- Keys on the ring -->
+  <circle cx="250" cy="72" r="7" fill="#f59e0b"/>
+  <text x="250" y="75" text-anchor="middle" font-size="6" font-weight="700" fill="white">k1</text>
+  <line x1="256" y1="76" x2="275" y2="84" stroke="#f59e0b" stroke-width="1" stroke-dasharray="3,2"/>
+
+  <circle cx="340" cy="210" r="7" fill="#f59e0b"/>
+  <text x="340" y="213" text-anchor="middle" font-size="6" font-weight="700" fill="white">k2</text>
+  <line x1="338" y1="218" x2="180" y2="300" stroke="#f59e0b" stroke-width="1" stroke-dasharray="3,2"/>
+
+  <circle cx="160" cy="290" r="7" fill="#f59e0b"/>
+  <text x="160" y="293" text-anchor="middle" font-size="6" font-weight="700" fill="white">k3</text>
+  <line x1="152" y1="285" x2="108" y2="200" stroke="#f59e0b" stroke-width="1" stroke-dasharray="3,2"/>
+
+  <circle cx="115" cy="120" r="7" fill="#f59e0b"/>
+  <text x="115" y="123" text-anchor="middle" font-size="6" font-weight="700" fill="white">k4</text>
+  <line x1="122" y1="114" x2="133" y2="100" stroke="#f59e0b" stroke-width="1" stroke-dasharray="3,2"/>
+
+  <!-- Info panel -->
+  <rect x="380" y="55" width="200" height="120" rx="8" fill="white" stroke="#e2e8f0" stroke-width="1" filter="url(#shadow)"/>
+  <text x="400" y="78" font-size="11" font-weight="600" fill="#1e293b">How It Works</text>
+  <text x="400" y="98" font-size="9" fill="#64748b">1. Hash nodes onto a ring</text>
+  <text x="400" y="114" font-size="9" fill="#64748b">2. Hash each key</text>
+  <text x="400" y="130" font-size="9" fill="#64748b">3. Walk clockwise to find</text>
+  <text x="413" y="144" font-size="9" fill="#64748b">the responsible node</text>
+  <text x="400" y="164" font-size="9" fill="#64748b">4. Only K/N keys move on</text>
+  <text x="413" y="178" font-size="9" fill="#64748b">node add/remove</text>
+
+  <!-- Virtual nodes panel -->
+  <rect x="380" y="195" width="200" height="80" rx="8" fill="white" stroke="#e2e8f0" stroke-width="1" filter="url(#shadow)"/>
+  <text x="400" y="218" font-size="11" font-weight="600" fill="#1e293b">Virtual Nodes</text>
+  <circle cx="400" cy="238" r="4" fill="#3b82f6" opacity="0.5"/>
+  <text x="413" y="242" font-size="9" fill="#64748b">A' = virtual replica of A</text>
+  <circle cx="400" cy="258" r="4" fill="#10b981"/>
+  <text x="413" y="262" font-size="9" fill="#64748b">Better load distribution</text>
+
+  <!-- Legend -->
+  <rect x="380" y="290" width="200" height="45" rx="8" fill="white" stroke="#e2e8f0" stroke-width="1" filter="url(#shadow)"/>
+  <circle cx="400" cy="306" r="6" fill="#3b82f6"/>
+  <text x="413" y="310" font-size="9" fill="#64748b">Physical node</text>
+  <circle cx="490" cy="306" r="4" fill="#3b82f6" opacity="0.5"/>
+  <text x="500" y="310" font-size="9" fill="#64748b">Virtual</text>
+  <circle cx="400" cy="325" r="5" fill="#f59e0b"/>
+  <text x="413" y="329" font-size="9" fill="#64748b">Key (maps to nearest CW node)</text>
+</svg>

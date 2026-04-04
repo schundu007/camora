@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 350" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <filter id="shadow" x="-2%" y="-2%" width="104%" height="104%">
+      <feDropShadow dx="0" dy="1" stdDeviation="2" flood-opacity="0.1"/>
+    </filter>
+  </defs>
+  <rect width="400" height="350" fill="#f7f8f9" rx="4"/>
+  <text x="200" y="24" text-anchor="middle" font-size="14" font-weight="700" fill="#1e293b">OSI Model &#8212; 7 Layers</text>
+
+  <!-- Layer 7 -->
+  <rect x="40" y="38" width="200" height="36" rx="6" fill="white" stroke="#ef4444" stroke-width="2" filter="url(#shadow)"/>
+  <text x="52" y="56" font-size="9" font-weight="700" fill="#ef4444">7</text>
+  <text x="70" y="56" font-size="10" font-weight="600" fill="#1e293b">Application</text>
+  <text x="70" y="68" font-size="8" fill="#64748b">User-facing services</text>
+  <text x="260" y="56" font-size="9" fill="#ef4444" font-weight="600">HTTP, FTP, SMTP, DNS</text>
+
+  <!-- Layer 6 -->
+  <rect x="40" y="80" width="200" height="36" rx="6" fill="white" stroke="#f59e0b" stroke-width="2" filter="url(#shadow)"/>
+  <text x="52" y="98" font-size="9" font-weight="700" fill="#f59e0b">6</text>
+  <text x="70" y="98" font-size="10" font-weight="600" fill="#1e293b">Presentation</text>
+  <text x="70" y="110" font-size="8" fill="#64748b">Data format / encryption</text>
+  <text x="260" y="98" font-size="9" fill="#f59e0b" font-weight="600">SSL/TLS, JPEG, ASCII</text>
+
+  <!-- Layer 5 -->
+  <rect x="40" y="122" width="200" height="36" rx="6" fill="white" stroke="#f59e0b" stroke-width="2" filter="url(#shadow)"/>
+  <text x="52" y="140" font-size="9" font-weight="700" fill="#f59e0b">5</text>
+  <text x="70" y="140" font-size="10" font-weight="600" fill="#1e293b">Session</text>
+  <text x="70" y="152" font-size="8" fill="#64748b">Connection management</text>
+  <text x="260" y="140" font-size="9" fill="#f59e0b" font-weight="600">NetBIOS, RPC</text>
+
+  <!-- Layer 4 -->
+  <rect x="40" y="164" width="200" height="36" rx="6" fill="white" stroke="#10b981" stroke-width="2" filter="url(#shadow)"/>
+  <text x="52" y="182" font-size="9" font-weight="700" fill="#10b981">4</text>
+  <text x="70" y="182" font-size="10" font-weight="600" fill="#1e293b">Transport</text>
+  <text x="70" y="194" font-size="8" fill="#64748b">End-to-end delivery</text>
+  <text x="260" y="182" font-size="9" fill="#10b981" font-weight="600">TCP, UDP</text>
+
+  <!-- Layer 3 -->
+  <rect x="40" y="206" width="200" height="36" rx="6" fill="white" stroke="#3b82f6" stroke-width="2" filter="url(#shadow)"/>
+  <text x="52" y="224" font-size="9" font-weight="700" fill="#3b82f6">3</text>
+  <text x="70" y="224" font-size="10" font-weight="600" fill="#1e293b">Network</text>
+  <text x="70" y="236" font-size="8" fill="#64748b">Routing / addressing</text>
+  <text x="260" y="224" font-size="9" fill="#3b82f6" font-weight="600">IP, ICMP, OSPF</text>
+
+  <!-- Layer 2 -->
+  <rect x="40" y="248" width="200" height="36" rx="6" fill="white" stroke="#8b5cf6" stroke-width="2" filter="url(#shadow)"/>
+  <text x="52" y="266" font-size="9" font-weight="700" fill="#8b5cf6">2</text>
+  <text x="70" y="266" font-size="10" font-weight="600" fill="#1e293b">Data Link</text>
+  <text x="70" y="278" font-size="8" fill="#64748b">Frames / MAC addressing</text>
+  <text x="260" y="266" font-size="9" fill="#8b5cf6" font-weight="600">Ethernet, Wi-Fi, ARP</text>
+
+  <!-- Layer 1 -->
+  <rect x="40" y="290" width="200" height="36" rx="6" fill="white" stroke="#64748b" stroke-width="2" filter="url(#shadow)"/>
+  <text x="52" y="308" font-size="9" font-weight="700" fill="#64748b">1</text>
+  <text x="70" y="308" font-size="10" font-weight="600" fill="#1e293b">Physical</text>
+  <text x="70" y="320" font-size="8" fill="#64748b">Bits on the wire</text>
+  <text x="260" y="308" font-size="9" fill="#64748b" font-weight="600">Cables, Hubs, Signals</text>
+
+  <!-- Bracket labels -->
+  <text x="360" y="62" font-size="8" fill="#ef4444">Host</text>
+  <text x="360" y="104" font-size="8" fill="#f59e0b">layers</text>
+  <line x1="355" y1="44" x2="355" y2="155" stroke="#f59e0b" stroke-width="1"/>
+  <text x="360" y="190" font-size="8" fill="#10b981">Transport</text>
+  <line x1="355" y1="170" x2="355" y2="197" stroke="#10b981" stroke-width="1"/>
+  <text x="360" y="262" font-size="8" fill="#3b82f6">Media</text>
+  <text x="360" y="274" font-size="8" fill="#3b82f6">layers</text>
+  <line x1="355" y1="212" x2="355" y2="323" stroke="#3b82f6" stroke-width="1"/>
+
+  <text x="200" y="344" text-anchor="middle" font-size="8" fill="#94a3b8">Data flows down at sender, up at receiver</text>
+</svg>

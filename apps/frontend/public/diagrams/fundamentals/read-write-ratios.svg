@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 650 280" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <filter id="barShadow" x="-1%" y="-5%" width="102%" height="115%">
+      <feDropShadow dx="0" dy="1" stdDeviation="1" flood-opacity="0.06"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="650" height="280" rx="12" fill="#f7f8f9"/>
+
+  <!-- Title -->
+  <text x="325" y="28" text-anchor="middle" font-size="15" font-weight="700" fill="#1e293b">Read:Write Ratios by Application Type</text>
+
+  <!-- Legend -->
+  <rect x="210" y="40" width="12" height="12" rx="2" fill="#3b82f6"/>
+  <text x="226" y="50" font-size="10" fill="#1e293b" font-weight="500">Read</text>
+  <rect x="268" y="40" width="12" height="12" rx="2" fill="#cbd5e1"/>
+  <text x="284" y="50" font-size="10" fill="#1e293b" font-weight="500">Write</text>
+
+  <!-- Chart area: x=140 to x=540 (width=400), bars start at y=65 -->
+  <!-- Each row: height=34 (bar=24, gap=10) -->
+  <!-- Full bar width = 400px -->
+  <!-- Read portion = (read / (read + write)) * 400 -->
+  <!-- Write portion = (write / (read + write)) * 400 -->
+
+  <!-- 1. Social Feed: 100:1 → read=100/101*400=396, write=1/101*400=4 -->
+  <text x="135" y="82" text-anchor="end" font-size="11" fill="#1e293b" font-weight="500">Social Feed</text>
+  <rect x="140" y="68" width="396" height="24" rx="4" fill="#3b82f6" filter="url(#barShadow)"/>
+  <rect x="536" y="68" width="4" height="24" rx="0" fill="#cbd5e1"/>
+  <!-- Round the right end -->
+  <rect x="536" y="68" width="8" height="24" rx="4" fill="#cbd5e1"/>
+  <rect x="536" y="68" width="4" height="24" fill="#cbd5e1"/>
+  <!-- Overlay to round full bar right edge -->
+  <text x="555" y="84" font-size="10" fill="#64748b" font-weight="600">100:1</text>
+  <!-- Percentage inside bar -->
+  <text x="340" y="84" text-anchor="middle" font-size="10" fill="white" font-weight="600">99%</text>
+
+  <!-- 2. E-Commerce: 50:1 → read=50/51*400=392, write=1/51*400=8 -->
+  <text x="135" y="126" text-anchor="end" font-size="11" fill="#1e293b" font-weight="500">E-Commerce</text>
+  <rect x="140" y="112" width="392" height="24" rx="4" fill="#10b981" filter="url(#barShadow)"/>
+  <rect x="532" y="112" width="12" height="24" rx="4" fill="#cbd5e1"/>
+  <rect x="532" y="112" width="6" height="24" fill="#cbd5e1"/>
+  <text x="555" y="128" font-size="10" fill="#64748b" font-weight="600">50:1</text>
+  <text x="336" y="128" text-anchor="middle" font-size="10" fill="white" font-weight="600">98%</text>
+
+  <!-- 3. URL Shortener: 100:1 → same as Social Feed -->
+  <text x="135" y="170" text-anchor="end" font-size="11" fill="#1e293b" font-weight="500">URL Shortener</text>
+  <rect x="140" y="156" width="396" height="24" rx="4" fill="#8b5cf6" filter="url(#barShadow)"/>
+  <rect x="536" y="156" width="8" height="24" rx="4" fill="#cbd5e1"/>
+  <rect x="536" y="156" width="4" height="24" fill="#cbd5e1"/>
+  <text x="555" y="172" font-size="10" fill="#64748b" font-weight="600">100:1</text>
+  <text x="340" y="172" text-anchor="middle" font-size="10" fill="white" font-weight="600">99%</text>
+
+  <!-- 4. Chat App: 5:1 → read=5/6*400=333, write=1/6*400=67 -->
+  <text x="135" y="214" text-anchor="end" font-size="11" fill="#1e293b" font-weight="500">Chat App</text>
+  <rect x="140" y="200" width="333" height="24" rx="4" fill="#f59e0b" filter="url(#barShadow)"/>
+  <rect x="473" y="200" width="67" height="24" rx="4" fill="#cbd5e1"/>
+  <rect x="473" y="200" width="4" height="24" fill="#cbd5e1"/>
+  <text x="555" y="216" font-size="10" fill="#64748b" font-weight="600">5:1</text>
+  <text x="306" y="216" text-anchor="middle" font-size="10" fill="white" font-weight="600">83%</text>
+  <text x="510" y="216" text-anchor="middle" font-size="9" fill="#64748b" font-weight="500">17%</text>
+
+  <!-- 5. Analytics Pipeline: 1:1 → read=1/2*400=200, write=1/2*400=200 -->
+  <text x="135" y="258" text-anchor="end" font-size="11" fill="#1e293b" font-weight="500">Analytics Pipeline</text>
+  <rect x="140" y="244" width="200" height="24" rx="4" fill="#ef4444" filter="url(#barShadow)"/>
+  <rect x="340" y="244" width="200" height="24" rx="4" fill="#cbd5e1"/>
+  <rect x="340" y="244" width="4" height="24" fill="#cbd5e1"/>
+  <text x="555" y="260" font-size="10" fill="#64748b" font-weight="600">1:1</text>
+  <text x="240" y="260" text-anchor="middle" font-size="10" fill="white" font-weight="600">50%</text>
+  <text x="440" y="260" text-anchor="middle" font-size="10" fill="#64748b" font-weight="600">50%</text>
+</svg>

@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 350" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <filter id="shadow" x="-2%" y="-2%" width="104%" height="104%">
+      <feDropShadow dx="0" dy="1" stdDeviation="2" flood-opacity="0.1"/>
+    </filter>
+    <marker id="arrG" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#10b981"/>
+    </marker>
+    <marker id="arrB" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#3b82f6"/>
+    </marker>
+    <marker id="arrV" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#8b5cf6"/>
+    </marker>
+  </defs>
+  <rect width="600" height="350" fill="#f7f8f9" rx="4"/>
+  <text x="300" y="28" text-anchor="middle" font-size="15" font-weight="700" fill="#1e293b">Kafka Architecture</text>
+
+  <!-- Producers -->
+  <rect x="15" y="65" width="90" height="40" rx="8" fill="white" stroke="#10b981" stroke-width="2" filter="url(#shadow)"/>
+  <text x="60" y="83" text-anchor="middle" font-size="10" font-weight="600" fill="#1e293b">Producer A</text>
+  <text x="60" y="97" text-anchor="middle" font-size="8" fill="#64748b">Orders svc</text>
+
+  <rect x="15" y="120" width="90" height="40" rx="8" fill="white" stroke="#10b981" stroke-width="2" filter="url(#shadow)"/>
+  <text x="60" y="138" text-anchor="middle" font-size="10" font-weight="600" fill="#1e293b">Producer B</text>
+  <text x="60" y="152" text-anchor="middle" font-size="8" fill="#64748b">Users svc</text>
+
+  <rect x="15" y="175" width="90" height="40" rx="8" fill="white" stroke="#10b981" stroke-width="2" filter="url(#shadow)"/>
+  <text x="60" y="193" text-anchor="middle" font-size="10" font-weight="600" fill="#1e293b">Producer C</text>
+  <text x="60" y="207" text-anchor="middle" font-size="8" fill="#64748b">Logs svc</text>
+
+  <!-- Arrows: Producers to Kafka -->
+  <line x1="105" y1="85" x2="160" y2="105" stroke="#10b981" stroke-width="1.5" marker-end="url(#arrG)"/>
+  <line x1="105" y1="140" x2="160" y2="140" stroke="#10b981" stroke-width="1.5" marker-end="url(#arrG)"/>
+  <line x1="105" y1="195" x2="160" y2="175" stroke="#10b981" stroke-width="1.5" marker-end="url(#arrG)"/>
+
+  <!-- Kafka Cluster -->
+  <rect x="155" y="50" width="290" height="200" rx="12" fill="white" stroke="#3b82f6" stroke-width="2.5" filter="url(#shadow)"/>
+  <text x="300" y="72" text-anchor="middle" font-size="12" font-weight="700" fill="#3b82f6">Kafka Cluster (3 Brokers)</text>
+
+  <!-- Topic: Orders -->
+  <rect x="170" y="85" width="260" height="45" rx="6" fill="#eff6ff" stroke="#3b82f6" stroke-width="1"/>
+  <text x="185" y="100" font-size="9" font-weight="600" fill="#3b82f6">Topic: orders</text>
+  <rect x="180" y="105" width="55" height="18" rx="3" fill="white" stroke="#3b82f6" stroke-width="1"/>
+  <text x="208" y="117" text-anchor="middle" font-size="7" fill="#1e293b">P0</text>
+  <rect x="245" y="105" width="55" height="18" rx="3" fill="white" stroke="#3b82f6" stroke-width="1"/>
+  <text x="273" y="117" text-anchor="middle" font-size="7" fill="#1e293b">P1</text>
+  <rect x="310" y="105" width="55" height="18" rx="3" fill="white" stroke="#3b82f6" stroke-width="1"/>
+  <text x="338" y="117" text-anchor="middle" font-size="7" fill="#1e293b">P2</text>
+  <rect x="375" y="105" width="45" height="18" rx="3" fill="white" stroke="#3b82f6" stroke-width="1"/>
+  <text x="398" y="117" text-anchor="middle" font-size="7" fill="#1e293b">P3</text>
+
+  <!-- Topic: Users -->
+  <rect x="170" y="140" width="260" height="45" rx="6" fill="#f5f3ff" stroke="#8b5cf6" stroke-width="1"/>
+  <text x="185" y="155" font-size="9" font-weight="600" fill="#8b5cf6">Topic: user-events</text>
+  <rect x="180" y="160" width="80" height="18" rx="3" fill="white" stroke="#8b5cf6" stroke-width="1"/>
+  <text x="220" y="172" text-anchor="middle" font-size="7" fill="#1e293b">P0</text>
+  <rect x="270" y="160" width="80" height="18" rx="3" fill="white" stroke="#8b5cf6" stroke-width="1"/>
+  <text x="310" y="172" text-anchor="middle" font-size="7" fill="#1e293b">P1</text>
+  <rect x="360" y="160" width="60" height="18" rx="3" fill="white" stroke="#8b5cf6" stroke-width="1"/>
+  <text x="390" y="172" text-anchor="middle" font-size="7" fill="#1e293b">P2</text>
+
+  <!-- Topic: Logs -->
+  <rect x="170" y="195" width="260" height="45" rx="6" fill="#ecfdf5" stroke="#10b981" stroke-width="1"/>
+  <text x="185" y="210" font-size="9" font-weight="600" fill="#10b981">Topic: logs</text>
+  <rect x="180" y="215" width="120" height="18" rx="3" fill="white" stroke="#10b981" stroke-width="1"/>
+  <text x="240" y="227" text-anchor="middle" font-size="7" fill="#1e293b">P0 (single partition)</text>
+
+  <!-- Arrows: Kafka to Consumers -->
+  <line x1="445" y1="105" x2="500" y2="85" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#arrB)"/>
+  <line x1="445" y1="140" x2="500" y2="140" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#arrB)"/>
+  <line x1="445" y1="195" x2="500" y2="195" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#arrB)"/>
+
+  <!-- Consumer Group A -->
+  <rect x="495" y="55" width="95" height="65" rx="8" fill="white" stroke="#8b5cf6" stroke-width="2" filter="url(#shadow)"/>
+  <text x="543" y="72" text-anchor="middle" font-size="9" font-weight="600" fill="#8b5cf6">Consumer Grp A</text>
+  <text x="543" y="86" text-anchor="middle" font-size="8" fill="#64748b">C1 &#8592; P0,P1</text>
+  <text x="543" y="98" text-anchor="middle" font-size="8" fill="#64748b">C2 &#8592; P2,P3</text>
+  <text x="543" y="112" text-anchor="middle" font-size="8" fill="#1e293b">Analytics</text>
+
+  <!-- Consumer Group B -->
+  <rect x="495" y="128" width="95" height="35" rx="8" fill="white" stroke="#8b5cf6" stroke-width="2" filter="url(#shadow)"/>
+  <text x="543" y="143" text-anchor="middle" font-size="9" font-weight="600" fill="#8b5cf6">Consumer Grp B</text>
+  <text x="543" y="157" text-anchor="middle" font-size="8" fill="#1e293b">Search indexer</text>
+
+  <!-- Consumer C -->
+  <rect x="495" y="180" width="95" height="35" rx="8" fill="white" stroke="#8b5cf6" stroke-width="2" filter="url(#shadow)"/>
+  <text x="543" y="195" text-anchor="middle" font-size="9" font-weight="600" fill="#8b5cf6">Consumer Grp C</text>
+  <text x="543" y="209" text-anchor="middle" font-size="8" fill="#1e293b">Monitoring</text>
+
+  <!-- Key concepts -->
+  <rect x="30" y="270" width="540" height="70" rx="8" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="300" y="290" text-anchor="middle" font-size="10" font-weight="600" fill="#1e293b">Key Concepts</text>
+  <text x="55" y="308" font-size="8" fill="#64748b">&#8226; Topics split into partitions for parallelism</text>
+  <text x="55" y="322" font-size="8" fill="#64748b">&#8226; Each partition is an ordered, immutable log</text>
+  <text x="320" y="308" font-size="8" fill="#64748b">&#8226; Consumer groups enable parallel consumption</text>
+  <text x="320" y="322" font-size="8" fill="#64748b">&#8226; Partitions replicated across brokers for HA</text>
+</svg>

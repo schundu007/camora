@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 350" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <filter id="shadow" x="-4%" y="-4%" width="108%" height="108%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.1"/>
+    </filter>
+    <marker id="arrowBlue" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#3b82f6"/>
+    </marker>
+    <marker id="arrowGreen" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#10b981"/>
+    </marker>
+  </defs>
+  <rect width="600" height="350" fill="#f7f8f9" rx="12"/>
+  <text x="300" y="28" text-anchor="middle" font-size="16" font-weight="700" fill="#1e293b">Forward Proxy vs Reverse Proxy</text>
+
+  <!-- Divider -->
+  <line x1="300" y1="40" x2="300" y2="280" stroke="#e2e8f0" stroke-width="2" stroke-dasharray="6,4"/>
+
+  <!-- === FORWARD PROXY (Left) === -->
+  <rect x="70" y="40" width="160" height="22" rx="6" fill="#3b82f6" opacity="0.1"/>
+  <text x="150" y="56" text-anchor="middle" font-size="13" font-weight="700" fill="#3b82f6">Forward Proxy</text>
+
+  <!-- Client group -->
+  <rect x="15" y="85" width="70" height="35" rx="6" fill="white" stroke="#64748b" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="50" y="106" text-anchor="middle" font-size="9" font-weight="600" fill="#1e293b">Client A</text>
+
+  <rect x="15" y="130" width="70" height="35" rx="6" fill="white" stroke="#64748b" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="50" y="151" text-anchor="middle" font-size="9" font-weight="600" fill="#1e293b">Client B</text>
+
+  <rect x="15" y="175" width="70" height="35" rx="6" fill="white" stroke="#64748b" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="50" y="196" text-anchor="middle" font-size="9" font-weight="600" fill="#1e293b">Client C</text>
+
+  <!-- Forward Proxy box -->
+  <rect x="115" y="100" width="80" height="95" rx="8" fill="white" stroke="#3b82f6" stroke-width="2" filter="url(#shadow)"/>
+  <text x="155" y="130" text-anchor="middle" font-size="10" font-weight="600" fill="#3b82f6">Forward</text>
+  <text x="155" y="145" text-anchor="middle" font-size="10" font-weight="600" fill="#3b82f6">Proxy</text>
+  <text x="155" y="165" text-anchor="middle" font-size="7" fill="#64748b">Squid, HAProxy</text>
+  <text x="155" y="178" text-anchor="middle" font-size="7" fill="#64748b">Corp Firewall</text>
+
+  <!-- Internet cloud -->
+  <rect x="220" y="120" width="65" height="50" rx="25" fill="white" stroke="#f59e0b" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="252" y="143" text-anchor="middle" font-size="8" font-weight="600" fill="#f59e0b">Internet</text>
+  <text x="252" y="158" text-anchor="middle" font-size="7" fill="#64748b">Servers</text>
+
+  <!-- Forward proxy arrows -->
+  <line x1="85" y1="102" x2="112" y2="125" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#arrowBlue)"/>
+  <line x1="85" y1="147" x2="112" y2="147" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#arrowBlue)"/>
+  <line x1="85" y1="192" x2="112" y2="170" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#arrowBlue)"/>
+  <line x1="195" y1="147" x2="218" y2="147" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#arrowBlue)"/>
+
+  <!-- Forward proxy features -->
+  <rect x="15" y="225" width="270" height="55" rx="6" fill="white" stroke="#3b82f6" stroke-width="1" filter="url(#shadow)"/>
+  <text x="30" y="242" font-size="9" font-weight="600" fill="#3b82f6">Forward Proxy Benefits:</text>
+  <text x="30" y="257" font-size="8" fill="#64748b">&#8226; Hides client identity from servers</text>
+  <text x="30" y="270" font-size="8" fill="#64748b">&#8226; Content filtering, caching, access control</text>
+
+  <!-- === REVERSE PROXY (Right) === -->
+  <rect x="370" y="40" width="160" height="22" rx="6" fill="#10b981" opacity="0.1"/>
+  <text x="450" y="56" text-anchor="middle" font-size="13" font-weight="700" fill="#10b981">Reverse Proxy</text>
+
+  <!-- Internet/clients -->
+  <rect x="315" y="120" width="65" height="50" rx="25" fill="white" stroke="#f59e0b" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="347" y="143" text-anchor="middle" font-size="8" font-weight="600" fill="#f59e0b">Internet</text>
+  <text x="347" y="158" text-anchor="middle" font-size="7" fill="#64748b">Clients</text>
+
+  <!-- Reverse Proxy box -->
+  <rect x="405" y="100" width="80" height="95" rx="8" fill="white" stroke="#10b981" stroke-width="2" filter="url(#shadow)"/>
+  <text x="445" y="130" text-anchor="middle" font-size="10" font-weight="600" fill="#10b981">Reverse</text>
+  <text x="445" y="145" text-anchor="middle" font-size="10" font-weight="600" fill="#10b981">Proxy</text>
+  <text x="445" y="165" text-anchor="middle" font-size="7" fill="#64748b">Nginx, Caddy</text>
+  <text x="445" y="178" text-anchor="middle" font-size="7" fill="#64748b">Cloudflare</text>
+
+  <!-- Backend servers -->
+  <rect x="515" y="85" width="70" height="35" rx="6" fill="white" stroke="#8b5cf6" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="550" y="106" text-anchor="middle" font-size="9" font-weight="600" fill="#8b5cf6">Server 1</text>
+
+  <rect x="515" y="130" width="70" height="35" rx="6" fill="white" stroke="#8b5cf6" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="550" y="151" text-anchor="middle" font-size="9" font-weight="600" fill="#8b5cf6">Server 2</text>
+
+  <rect x="515" y="175" width="70" height="35" rx="6" fill="white" stroke="#8b5cf6" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="550" y="196" text-anchor="middle" font-size="9" font-weight="600" fill="#8b5cf6">Server 3</text>
+
+  <!-- Reverse proxy arrows -->
+  <line x1="380" y1="147" x2="402" y2="147" stroke="#10b981" stroke-width="1.5" marker-end="url(#arrowGreen)"/>
+  <line x1="485" y1="125" x2="512" y2="102" stroke="#10b981" stroke-width="1.5" marker-end="url(#arrowGreen)"/>
+  <line x1="485" y1="147" x2="512" y2="147" stroke="#10b981" stroke-width="1.5" marker-end="url(#arrowGreen)"/>
+  <line x1="485" y1="170" x2="512" y2="192" stroke="#10b981" stroke-width="1.5" marker-end="url(#arrowGreen)"/>
+
+  <!-- Reverse proxy features -->
+  <rect x="315" y="225" width="270" height="55" rx="6" fill="white" stroke="#10b981" stroke-width="1" filter="url(#shadow)"/>
+  <text x="330" y="242" font-size="9" font-weight="600" fill="#10b981">Reverse Proxy Benefits:</text>
+  <text x="330" y="257" font-size="8" fill="#64748b">&#8226; Hides server identity, SSL termination</text>
+  <text x="330" y="270" font-size="8" fill="#64748b">&#8226; Load balancing, caching, DDoS protection</text>
+
+  <!-- Key difference -->
+  <rect x="60" y="295" width="480" height="40" rx="8" fill="white" stroke="#e2e8f0" stroke-width="1" filter="url(#shadow)"/>
+  <text x="300" y="313" text-anchor="middle" font-size="10" font-weight="600" fill="#1e293b">Key Difference: Forward proxy acts on behalf of clients | Reverse proxy acts on behalf of servers</text>
+  <text x="300" y="328" text-anchor="middle" font-size="9" fill="#64748b">Both improve security, performance, and provide a single point of control</text>
+</svg>

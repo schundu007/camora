@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 350" width="600" height="350">
+  <defs>
+    <style>
+      text { font-family: system-ui, -apple-system, sans-serif; }
+      .title { font-size: 18px; font-weight: 700; fill: #1e293b; }
+      .label { font-size: 12px; font-weight: 600; fill: #fff; }
+      .box-label { font-size: 11px; font-weight: 600; fill: #1e293b; }
+      .desc { font-size: 10px; fill: #64748b; }
+      .arrow-label { font-size: 9px; font-weight: 600; }
+    </style>
+    <filter id="shadow" x="-4%" y="-4%" width="108%" height="108%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.1"/>
+    </filter>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f7f8f9"/>
+      <stop offset="100%" stop-color="#eef0f2"/>
+    </linearGradient>
+    <linearGradient id="green" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+    <linearGradient id="blue" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#2563eb"/>
+    </linearGradient>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#10b981"/>
+    </marker>
+  </defs>
+
+  <rect width="600" height="350" rx="12" fill="url(#bg)"/>
+  <rect x="0.5" y="0.5" width="599" height="349" rx="12" fill="none" stroke="#e2e8f0"/>
+
+  <text x="300" y="36" text-anchor="middle" class="title">Primary-Replica Replication</text>
+
+  <!-- Primary DB -->
+  <g transform="translate(300, 100)">
+    <rect x="-80" y="-30" width="160" height="60" rx="10" fill="url(#green)" filter="url(#shadow)"/>
+    <text x="0" y="-4" text-anchor="middle" class="label">Primary</text>
+    <text x="0" y="12" text-anchor="middle" font-size="10" fill="#d1fae5">Reads + Writes</text>
+  </g>
+
+  <!-- Replication arrows -->
+  <line x1="220" y1="130" x2="120" y2="195" stroke="#10b981" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="300" y1="130" x2="300" y2="195" stroke="#10b981" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="380" y1="130" x2="480" y2="195" stroke="#10b981" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- Replication labels -->
+  <text x="155" y="165" text-anchor="middle" class="arrow-label" fill="#10b981">async</text>
+  <text x="315" y="165" text-anchor="middle" class="arrow-label" fill="#10b981">async</text>
+  <text x="445" y="165" text-anchor="middle" class="arrow-label" fill="#10b981">async</text>
+
+  <!-- Replica 1 -->
+  <g transform="translate(105, 230)">
+    <rect x="-70" y="-28" width="140" height="56" rx="10" fill="url(#blue)" filter="url(#shadow)"/>
+    <text x="0" y="-4" text-anchor="middle" class="label">Replica 1</text>
+    <text x="0" y="12" text-anchor="middle" font-size="10" fill="#bfdbfe">Reads Only</text>
+  </g>
+
+  <!-- Replica 2 -->
+  <g transform="translate(300, 230)">
+    <rect x="-70" y="-28" width="140" height="56" rx="10" fill="url(#blue)" filter="url(#shadow)"/>
+    <text x="0" y="-4" text-anchor="middle" class="label">Replica 2</text>
+    <text x="0" y="12" text-anchor="middle" font-size="10" fill="#bfdbfe">Reads Only</text>
+  </g>
+
+  <!-- Replica 3 -->
+  <g transform="translate(495, 230)">
+    <rect x="-70" y="-28" width="140" height="56" rx="10" fill="url(#blue)" filter="url(#shadow)"/>
+    <text x="0" y="-4" text-anchor="middle" class="label">Replica 3</text>
+    <text x="0" y="12" text-anchor="middle" font-size="10" fill="#bfdbfe">Reads Only</text>
+  </g>
+
+  <!-- Bottom note -->
+  <g transform="translate(300, 320)">
+    <rect x="-240" y="-14" width="480" height="28" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="0.5"/>
+    <text x="0" y="4" text-anchor="middle" class="box-label" fill="#1e40af">Replicas scale reads. Primary handles all writes. Async = eventual consistency.</text>
+  </g>
+</svg>

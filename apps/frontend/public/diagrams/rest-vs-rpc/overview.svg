@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 300">
+  <rect width="500" height="300" fill="#f7f8f9" rx="4"/>
+  <text x="250" y="28" font-family="system-ui" font-size="16" font-weight="bold" fill="#1e293b" text-anchor="middle">REST vs GraphQL vs gRPC</text>
+
+  <!-- REST Column -->
+  <rect x="15" y="45" width="150" height="245" rx="8" fill="white" stroke="#3b82f6" stroke-width="2"/>
+  <text x="90" y="68" font-family="system-ui" font-size="13" font-weight="bold" fill="#3b82f6" text-anchor="middle">REST</text>
+
+  <text x="90" y="88" font-family="system-ui" font-size="9" font-weight="bold" fill="#1e293b" text-anchor="middle">Protocol</text>
+  <text x="90" y="100" font-family="system-ui" font-size="8" fill="#64748b" text-anchor="middle">HTTP/1.1 + JSON</text>
+
+  <line x1="30" y1="110" x2="150" y2="110" stroke="#e2e8f0" stroke-width="1"/>
+
+  <text x="90" y="125" font-family="system-ui" font-size="9" font-weight="bold" fill="#1e293b" text-anchor="middle">Style</text>
+  <text x="90" y="137" font-family="system-ui" font-size="8" fill="#64748b" text-anchor="middle">Resource-oriented</text>
+  <text x="90" y="149" font-family="system-ui" font-size="8" fill="#64748b" text-anchor="middle">GET /users/123</text>
+
+  <line x1="30" y1="158" x2="150" y2="158" stroke="#e2e8f0" stroke-width="1"/>
+
+  <text x="90" y="173" font-family="system-ui" font-size="9" font-weight="bold" fill="#1e293b" text-anchor="middle">Data Fetching</text>
+  <text x="90" y="185" font-family="system-ui" font-size="8" fill="#64748b" text-anchor="middle">Fixed structure</text>
+  <text x="90" y="197" font-family="system-ui" font-size="8" fill="#64748b" text-anchor="middle">(over/under-fetching)</text>
+
+  <line x1="30" y1="206" x2="150" y2="206" stroke="#e2e8f0" stroke-width="1"/>
+
+  <text x="90" y="221" font-family="system-ui" font-size="9" font-weight="bold" fill="#1e293b" text-anchor="middle">Best For</text>
+  <text x="90" y="233" font-family="system-ui" font-size="8" fill="#64748b" text-anchor="middle">Public APIs, CRUD,</text>
+  <text x="90" y="245" font-family="system-ui" font-size="8" fill="#64748b" text-anchor="middle">caching, simplicity</text>
+
+  <line x1="30" y1="254" x2="150" y2="254" stroke="#e2e8f0" stroke-width="1"/>
+
+  <text x="90" y="269" font-family="system-ui" font-size="9" font-weight="bold" fill="#1e293b" text-anchor="middle">Caching</text>
+  <text x="90" y="281" font-family="system-ui" font-size="8" fill="#64748b" text-anchor="middle">Native HTTP caching</text>
+
+  <!-- GraphQL Column -->
+  <rect x="175" y="45" width="150" height="245" rx="8" fill="white" stroke="#e535ab" stroke-width="2"/>
+  <text x="250" y="68" font-family="system-ui" font-size="13" font-weight="bold" fill="#e535ab" text-anchor="middle">GraphQL</text>
+
+  <text x="250" y="88" font-family="system-ui" font-size="9" font-weight="bold" fill="#1e293b" text-anchor="middle">Protocol</text>
+  <text x="250" y="100" font-family="system-ui" font-size="8" fill="#64748b" text-anchor="middle">HTTP + JSON (POST)</text>
+
+  <line x1="190" y1="110" x2="310" y2="110" stroke="#e2e8f0" stroke-width="1"/>
+
+  <text x="250" y="125" font-family="system-ui" font-size="9" font-weight="bold" fill="#1e293b" text-anchor="middle">Style</text>
+  <text x="250" y="137" font-family="system-ui" font-size="8" fill="#64748b" text-anchor="middle">Query language</text>
+  <text x="250" y="149" font-family="system-ui" font-size="8" fill="#64748b" text-anchor="middle">{ user(id:123) { name } }</text>
+
+  <line x1="190" y1="158" x2="310" y2="158" stroke="#e2e8f0" stroke-width="1"/>
+
+  <text x="250" y="173" font-family="system-ui" font-size="9" font-weight="bold" fill="#1e293b" text-anchor="middle">Data Fetching</text>
+  <text x="250" y="185" font-family="system-ui" font-size="8" fill="#64748b" text-anchor="middle">Client specifies</text>
+  <text x="250" y="197" font-family="system-ui" font-size="8" fill="#64748b" text-anchor="middle">exact fields needed</text>
+
+  <line x1="190" y1="206" x2="310" y2="206" stroke="#e2e8f0" stroke-width="1"/>
+
+  <text x="250" y="221" font-family="system-ui" font-size="9" font-weight="bold" fill="#1e293b" text-anchor="middle">Best For</text>
+  <text x="250" y="233" font-family="system-ui" font-size="8" fill="#64748b" text-anchor="middle">Complex UIs, mobile,</text>
+  <text x="250" y="245" font-family="system-ui" font-size="8" fill="#64748b" text-anchor="middle">multiple data sources</text>
+
+  <line x1="190" y1="254" x2="310" y2="254" stroke="#e2e8f0" stroke-width="1"/>
+
+  <text x="250" y="269" font-family="system-ui" font-size="9" font-weight="bold" fill="#1e293b" text-anchor="middle">Caching</text>
+  <text x="250" y="281" font-family="system-ui" font-size="8" fill="#64748b" text-anchor="middle">Needs client-side lib</text>
+
+  <!-- gRPC Column -->
+  <rect x="335" y="45" width="150" height="245" rx="8" fill="white" stroke="#10b981" stroke-width="2"/>
+  <text x="410" y="68" font-family="system-ui" font-size="13" font-weight="bold" fill="#10b981" text-anchor="middle">gRPC</text>
+
+  <text x="410" y="88" font-family="system-ui" font-size="9" font-weight="bold" fill="#1e293b" text-anchor="middle">Protocol</text>
+  <text x="410" y="100" font-family="system-ui" font-size="8" fill="#64748b" text-anchor="middle">HTTP/2 + Protobuf</text>
+
+  <line x1="350" y1="110" x2="470" y2="110" stroke="#e2e8f0" stroke-width="1"/>
+
+  <text x="410" y="125" font-family="system-ui" font-size="9" font-weight="bold" fill="#1e293b" text-anchor="middle">Style</text>
+  <text x="410" y="137" font-family="system-ui" font-size="8" fill="#64748b" text-anchor="middle">Function-oriented</text>
+  <text x="410" y="149" font-family="system-ui" font-size="8" fill="#64748b" text-anchor="middle">GetUser(UserReq)</text>
+
+  <line x1="350" y1="158" x2="470" y2="158" stroke="#e2e8f0" stroke-width="1"/>
+
+  <text x="410" y="173" font-family="system-ui" font-size="9" font-weight="bold" fill="#1e293b" text-anchor="middle">Data Fetching</text>
+  <text x="410" y="185" font-family="system-ui" font-size="8" fill="#64748b" text-anchor="middle">Schema-defined,</text>
+  <text x="410" y="197" font-family="system-ui" font-size="8" fill="#64748b" text-anchor="middle">binary serialization</text>
+
+  <line x1="350" y1="206" x2="470" y2="206" stroke="#e2e8f0" stroke-width="1"/>
+
+  <text x="410" y="221" font-family="system-ui" font-size="9" font-weight="bold" fill="#1e293b" text-anchor="middle">Best For</text>
+  <text x="410" y="233" font-family="system-ui" font-size="8" fill="#64748b" text-anchor="middle">Microservices,</text>
+  <text x="410" y="245" font-family="system-ui" font-size="8" fill="#64748b" text-anchor="middle">streaming, low latency</text>
+
+  <line x1="350" y1="254" x2="470" y2="254" stroke="#e2e8f0" stroke-width="1"/>
+
+  <text x="410" y="269" font-family="system-ui" font-size="9" font-weight="bold" fill="#1e293b" text-anchor="middle">Caching</text>
+  <text x="410" y="281" font-family="system-ui" font-size="8" fill="#64748b" text-anchor="middle">No native caching</text>
+</svg>

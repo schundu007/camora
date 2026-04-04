@@ -1,0 +1,144 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 350" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <filter id="shadow" x="-4%" y="-4%" width="108%" height="108%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.1"/>
+    </filter>
+  </defs>
+  <rect width="600" height="350" fill="#f7f8f9" rx="12"/>
+  <text x="300" y="28" text-anchor="middle" font-size="16" font-weight="700" fill="#1e293b">Data Partitioning Strategies</text>
+
+  <!-- === Horizontal Partitioning === -->
+  <text x="100" y="55" text-anchor="middle" font-size="12" font-weight="600" fill="#3b82f6">Horizontal (Sharding)</text>
+
+  <!-- Original table -->
+  <rect x="30" y="65" width="140" height="80" rx="6" fill="white" stroke="#3b82f6" stroke-width="2" filter="url(#shadow)"/>
+  <!-- Header row -->
+  <rect x="30" y="65" width="140" height="20" rx="6" fill="#3b82f6"/>
+  <rect x="30" y="78" width="140" height="7" fill="#3b82f6"/>
+  <text x="50" y="80" font-size="8" font-weight="600" fill="white">ID</text>
+  <text x="90" y="80" font-size="8" font-weight="600" fill="white">Name</text>
+  <text x="140" y="80" font-size="8" font-weight="600" fill="white">City</text>
+  <!-- Rows -->
+  <line x1="30" y1="98" x2="170" y2="98" stroke="#e2e8f0" stroke-width="0.5"/>
+  <text x="50" y="95" font-size="8" fill="#64748b">1</text>
+  <text x="90" y="95" font-size="8" fill="#64748b">Alice</text>
+  <text x="140" y="95" font-size="8" fill="#64748b">NYC</text>
+  <line x1="30" y1="110" x2="170" y2="110" stroke="#e2e8f0" stroke-width="0.5"/>
+  <text x="50" y="108" font-size="8" fill="#64748b">2</text>
+  <text x="90" y="108" font-size="8" fill="#64748b">Bob</text>
+  <text x="140" y="108" font-size="8" fill="#64748b">LA</text>
+  <text x="50" y="121" font-size="8" fill="#64748b">3</text>
+  <text x="90" y="121" font-size="8" fill="#64748b">Carol</text>
+  <text x="140" y="121" font-size="8" fill="#64748b">NYC</text>
+  <line x1="30" y1="125" x2="170" y2="125" stroke="#e2e8f0" stroke-width="0.5"/>
+  <text x="50" y="138" font-size="8" fill="#64748b">4</text>
+  <text x="90" y="138" font-size="8" fill="#64748b">Dave</text>
+  <text x="140" y="138" font-size="8" fill="#64748b">LA</text>
+
+  <!-- Shard arrows -->
+  <text x="100" y="160" text-anchor="middle" font-size="8" fill="#3b82f6">Split by rows</text>
+
+  <!-- Shard 1 -->
+  <rect x="20" y="170" width="75" height="55" rx="6" fill="white" stroke="#3b82f6" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="20" y="170" width="75" height="16" rx="6" fill="#3b82f6" opacity="0.8"/>
+  <rect x="20" y="180" width="75" height="6" fill="#3b82f6" opacity="0.8"/>
+  <text x="57" y="183" text-anchor="middle" font-size="7" font-weight="600" fill="white">Shard 1</text>
+  <text x="30" y="200" font-size="7" fill="#64748b">1 Alice NYC</text>
+  <text x="30" y="213" font-size="7" fill="#64748b">2 Bob   LA</text>
+
+  <!-- Shard 2 -->
+  <rect x="105" y="170" width="75" height="55" rx="6" fill="white" stroke="#3b82f6" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="105" y="170" width="75" height="16" rx="6" fill="#3b82f6" opacity="0.8"/>
+  <rect x="105" y="180" width="75" height="6" fill="#3b82f6" opacity="0.8"/>
+  <text x="142" y="183" text-anchor="middle" font-size="7" font-weight="600" fill="white">Shard 2</text>
+  <text x="115" y="200" font-size="7" fill="#64748b">3 Carol NYC</text>
+  <text x="115" y="213" font-size="7" fill="#64748b">4 Dave  LA</text>
+
+  <!-- === Vertical Partitioning === -->
+  <text x="310" y="55" text-anchor="middle" font-size="12" font-weight="600" fill="#10b981">Vertical (Columns)</text>
+
+  <!-- Original table -->
+  <rect x="235" y="65" width="150" height="80" rx="6" fill="white" stroke="#10b981" stroke-width="2" filter="url(#shadow)"/>
+  <rect x="235" y="65" width="150" height="20" rx="6" fill="#10b981"/>
+  <rect x="235" y="78" width="150" height="7" fill="#10b981"/>
+  <text x="253" y="80" font-size="8" font-weight="600" fill="white">ID</text>
+  <text x="283" y="80" font-size="8" font-weight="600" fill="white">Name</text>
+  <text x="323" y="80" font-size="8" font-weight="600" fill="white">Bio</text>
+  <text x="363" y="80" font-size="8" font-weight="600" fill="white">Pic</text>
+  <line x1="235" y1="98" x2="385" y2="98" stroke="#e2e8f0" stroke-width="0.5"/>
+  <text x="253" y="95" font-size="8" fill="#64748b">1</text>
+  <text x="283" y="95" font-size="8" fill="#64748b">Alice</text>
+  <text x="323" y="95" font-size="8" fill="#64748b">Long...</text>
+  <text x="363" y="95" font-size="8" fill="#64748b">5MB</text>
+  <line x1="235" y1="110" x2="385" y2="110" stroke="#e2e8f0" stroke-width="0.5"/>
+  <text x="253" y="108" font-size="8" fill="#64748b">2</text>
+  <text x="283" y="108" font-size="8" fill="#64748b">Bob</text>
+  <text x="323" y="108" font-size="8" fill="#64748b">Long...</text>
+  <text x="363" y="108" font-size="8" fill="#64748b">3MB</text>
+
+  <text x="310" y="160" text-anchor="middle" font-size="8" fill="#10b981">Split by columns</text>
+
+  <!-- Part 1: hot data -->
+  <rect x="230" y="170" width="70" height="55" rx="6" fill="white" stroke="#10b981" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="230" y="170" width="70" height="16" rx="6" fill="#10b981" opacity="0.8"/>
+  <rect x="230" y="180" width="70" height="6" fill="#10b981" opacity="0.8"/>
+  <text x="265" y="183" text-anchor="middle" font-size="7" font-weight="600" fill="white">Hot Data</text>
+  <text x="240" y="200" font-size="7" fill="#64748b">ID | Name</text>
+  <text x="240" y="213" font-size="7" fill="#64748b">(fast reads)</text>
+
+  <!-- Part 2: cold data -->
+  <rect x="310" y="170" width="75" height="55" rx="6" fill="white" stroke="#10b981" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="310" y="170" width="75" height="16" rx="6" fill="#10b981" opacity="0.8"/>
+  <rect x="310" y="180" width="75" height="6" fill="#10b981" opacity="0.8"/>
+  <text x="347" y="183" text-anchor="middle" font-size="7" font-weight="600" fill="white">Cold / Blob</text>
+  <text x="320" y="200" font-size="7" fill="#64748b">Bio | Picture</text>
+  <text x="320" y="213" font-size="7" fill="#64748b">(object store)</text>
+
+  <!-- === Hash-Based Partitioning === -->
+  <text x="510" y="55" text-anchor="middle" font-size="12" font-weight="600" fill="#8b5cf6">Hash-Based</text>
+
+  <!-- Key input -->
+  <rect x="460" y="65" width="100" height="35" rx="6" fill="white" stroke="#8b5cf6" stroke-width="2" filter="url(#shadow)"/>
+  <text x="510" y="82" text-anchor="middle" font-size="9" font-weight="600" fill="#8b5cf6">Key: user_id</text>
+  <text x="510" y="95" text-anchor="middle" font-size="8" fill="#64748b">hash(key) % N</text>
+
+  <!-- Hash function -->
+  <rect x="470" y="110" width="80" height="28" rx="6" fill="#8b5cf6" filter="url(#shadow)"/>
+  <text x="510" y="129" text-anchor="middle" font-size="9" font-weight="600" fill="white">Hash fn</text>
+
+  <!-- Partitions -->
+  <rect x="430" y="155" width="50" height="40" rx="6" fill="white" stroke="#8b5cf6" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="455" y="175" text-anchor="middle" font-size="8" font-weight="600" fill="#8b5cf6">P0</text>
+  <text x="455" y="188" text-anchor="middle" font-size="7" fill="#64748b">0,3,6</text>
+
+  <rect x="485" y="155" width="50" height="40" rx="6" fill="white" stroke="#8b5cf6" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="510" y="175" text-anchor="middle" font-size="8" font-weight="600" fill="#8b5cf6">P1</text>
+  <text x="510" y="188" text-anchor="middle" font-size="7" fill="#64748b">1,4,7</text>
+
+  <rect x="540" y="155" width="50" height="40" rx="6" fill="white" stroke="#8b5cf6" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="565" y="175" text-anchor="middle" font-size="8" font-weight="600" fill="#8b5cf6">P2</text>
+  <text x="565" y="188" text-anchor="middle" font-size="7" fill="#64748b">2,5,8</text>
+
+  <text x="510" y="215" text-anchor="middle" font-size="8" fill="#8b5cf6">Even distribution</text>
+
+  <!-- Comparison table -->
+  <rect x="20" y="245" width="560" height="90" rx="8" fill="white" stroke="#e2e8f0" stroke-width="1" filter="url(#shadow)"/>
+  <text x="300" y="267" text-anchor="middle" font-size="11" font-weight="600" fill="#1e293b">Comparison</text>
+
+  <!-- Table headers -->
+  <text x="80" y="285" text-anchor="middle" font-size="9" font-weight="600" fill="#64748b">Strategy</text>
+  <text x="220" y="285" text-anchor="middle" font-size="9" font-weight="600" fill="#64748b">Best For</text>
+  <text x="420" y="285" text-anchor="middle" font-size="9" font-weight="600" fill="#64748b">Tradeoff</text>
+
+  <line x1="30" y1="290" x2="570" y2="290" stroke="#e2e8f0" stroke-width="0.5"/>
+
+  <circle cx="40" cy="303" r="4" fill="#3b82f6"/>
+  <text x="80" y="307" text-anchor="middle" font-size="8" fill="#3b82f6">Horizontal</text>
+  <text x="220" y="307" text-anchor="middle" font-size="8" fill="#64748b">Large datasets, scaling writes</text>
+  <text x="420" y="307" text-anchor="middle" font-size="8" fill="#64748b">Cross-shard queries are expensive</text>
+
+  <circle cx="40" cy="319" r="4" fill="#10b981"/>
+  <text x="80" y="323" text-anchor="middle" font-size="8" fill="#10b981">Vertical</text>
+  <text x="220" y="323" text-anchor="middle" font-size="8" fill="#64748b">Hot/cold data separation, BLOBs</text>
+  <text x="420" y="323" text-anchor="middle" font-size="8" fill="#64748b">JOINs across partitions needed</text>
+</svg>

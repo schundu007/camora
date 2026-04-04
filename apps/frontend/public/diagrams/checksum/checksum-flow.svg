@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 350" font-family="system-ui, -apple-system, sans-serif">
+  <rect width="600" height="350" fill="#f7f8f9" rx="12"/>
+
+  <!-- Title -->
+  <text x="300" y="30" text-anchor="middle" font-size="16" font-weight="700" fill="#1e293b">Checksum Verification Flow</text>
+
+  <!-- Section 1: Generate -->
+  <text x="30" y="60" font-size="13" font-weight="700" fill="#10b981">1. Generate Checksum</text>
+
+  <!-- Data box -->
+  <rect x="30" y="72" width="110" height="44" rx="8" fill="white" stroke="#3b82f6" stroke-width="2"/>
+  <text x="85" y="90" text-anchor="middle" font-size="11" font-weight="600" fill="#1e293b">Original Data</text>
+  <text x="85" y="104" text-anchor="middle" font-size="9" fill="#64748b">"Hello World"</text>
+
+  <!-- Arrow -->
+  <line x1="140" y1="94" x2="175" y2="94" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrowGray)"/>
+
+  <!-- Hash function -->
+  <rect x="175" y="72" width="120" height="44" rx="8" fill="white" stroke="#8b5cf6" stroke-width="2"/>
+  <text x="235" y="90" text-anchor="middle" font-size="11" font-weight="600" fill="#8b5cf6">Hash Function</text>
+  <text x="235" y="104" text-anchor="middle" font-size="9" fill="#64748b">SHA-256</text>
+
+  <!-- Arrow -->
+  <line x1="295" y1="94" x2="330" y2="94" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrowGray)"/>
+
+  <!-- Checksum output -->
+  <rect x="330" y="72" width="130" height="44" rx="8" fill="white" stroke="#10b981" stroke-width="2"/>
+  <text x="395" y="90" text-anchor="middle" font-size="11" font-weight="600" fill="#10b981">Checksum</text>
+  <text x="395" y="104" text-anchor="middle" font-size="9" fill="#64748b">a591a6d4...</text>
+
+  <!-- Send indicator -->
+  <path d="M 395 116 L 395 140 L 520 140" fill="none" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#arrowAmber)"/>
+  <text x="460" y="136" font-size="9" fill="#f59e0b" font-weight="600">Send both</text>
+
+  <!-- Divider -->
+  <line x1="30" y1="155" x2="570" y2="155" stroke="#e2e8f0" stroke-width="1.5"/>
+
+  <!-- Section 2: Verify -->
+  <text x="30" y="180" font-size="13" font-weight="700" fill="#3b82f6">2. Verify Integrity</text>
+
+  <!-- Received Data -->
+  <rect x="30" y="192" width="110" height="44" rx="8" fill="white" stroke="#3b82f6" stroke-width="2"/>
+  <text x="85" y="210" text-anchor="middle" font-size="11" font-weight="600" fill="#1e293b">Received Data</text>
+  <text x="85" y="224" text-anchor="middle" font-size="9" fill="#64748b">"Hello World"</text>
+
+  <!-- Arrow -->
+  <line x1="140" y1="214" x2="175" y2="214" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrowGray)"/>
+
+  <!-- Hash function -->
+  <rect x="175" y="192" width="120" height="44" rx="8" fill="white" stroke="#8b5cf6" stroke-width="2"/>
+  <text x="235" y="210" text-anchor="middle" font-size="11" font-weight="600" fill="#8b5cf6">Hash Function</text>
+  <text x="235" y="224" text-anchor="middle" font-size="9" fill="#64748b">SHA-256</text>
+
+  <!-- Arrow -->
+  <line x1="295" y1="214" x2="330" y2="214" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrowGray)"/>
+
+  <!-- New checksum -->
+  <rect x="330" y="192" width="130" height="44" rx="8" fill="white" stroke="#10b981" stroke-width="2"/>
+  <text x="395" y="210" text-anchor="middle" font-size="11" font-weight="600" fill="#1e293b">New Checksum</text>
+  <text x="395" y="224" text-anchor="middle" font-size="9" fill="#64748b">a591a6d4...</text>
+
+  <!-- Arrow to compare -->
+  <line x1="460" y1="214" x2="495" y2="214" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrowGray)"/>
+
+  <!-- Compare box -->
+  <rect x="495" y="192" width="80" height="44" rx="8" fill="white" stroke="#f59e0b" stroke-width="2"/>
+  <text x="535" y="210" text-anchor="middle" font-size="11" font-weight="600" fill="#f59e0b">Compare</text>
+  <text x="535" y="224" text-anchor="middle" font-size="9" fill="#64748b">A == B?</text>
+
+  <!-- Results -->
+  <!-- Match -->
+  <line x1="535" y1="236" x2="485" y2="280" stroke="#10b981" stroke-width="1.5" marker-end="url(#arrowGreen)"/>
+  <rect x="415" y="270" width="130" height="40" rx="8" fill="white" stroke="#10b981" stroke-width="2"/>
+  <text x="480" y="286" text-anchor="middle" font-size="12" font-weight="700" fill="#10b981">&#10003; Match</text>
+  <text x="480" y="300" text-anchor="middle" font-size="9" fill="#64748b">Data is intact</text>
+
+  <!-- Mismatch -->
+  <line x1="535" y1="236" x2="535" y2="270" stroke="#ef4444" stroke-width="1.5" marker-end="url(#arrowRed)"/>
+  <rect x="485" y="282" width="100" height="40" rx="8" fill="white" stroke="#ef4444" stroke-width="2"/>
+  <text x="535" y="298" text-anchor="middle" font-size="12" font-weight="700" fill="#ef4444">&#10007; Mismatch</text>
+  <text x="535" y="312" text-anchor="middle" font-size="9" fill="#64748b">Corrupted!</text>
+
+  <!-- Side labels for compare inputs -->
+  <rect x="490" y="144" width="80" height="30" rx="6" fill="white" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="530" y="164" text-anchor="middle" font-size="9" fill="#f59e0b" font-weight="600">Original cksum</text>
+  <line x1="530" y1="174" x2="535" y2="192" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#arrowAmber)"/>
+
+  <!-- Arrow markers -->
+  <defs>
+    <marker id="arrowGray" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto">
+      <path d="M 0 0 L 7 2.5 L 0 5 Z" fill="#64748b"/>
+    </marker>
+    <marker id="arrowGreen" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto">
+      <path d="M 0 0 L 7 2.5 L 0 5 Z" fill="#10b981"/>
+    </marker>
+    <marker id="arrowRed" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto">
+      <path d="M 0 0 L 7 2.5 L 0 5 Z" fill="#ef4444"/>
+    </marker>
+    <marker id="arrowAmber" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto">
+      <path d="M 0 0 L 7 2.5 L 0 5 Z" fill="#f59e0b"/>
+    </marker>
+  </defs>
+</svg>

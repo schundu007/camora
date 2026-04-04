@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 300">
+  <rect width="500" height="300" fill="#f7f8f9" rx="4"/>
+  <text x="250" y="30" font-family="system-ui" font-size="16" font-weight="bold" fill="#1e293b" text-anchor="middle">Data Partitioning Strategies</text>
+
+  <!-- Range Partitioning -->
+  <rect x="20" y="55" width="140" height="30" rx="8" fill="white" stroke="#3b82f6" stroke-width="2"/>
+  <text x="90" y="75" font-family="system-ui" font-size="12" font-weight="bold" fill="#3b82f6" text-anchor="middle">Range</text>
+  <rect x="25" y="95" width="130" height="24" rx="6" fill="white" stroke="#93c5fd" stroke-width="1.5"/>
+  <text x="90" y="111" font-family="system-ui" font-size="10" fill="#64748b" text-anchor="middle">A - H</text>
+  <rect x="25" y="125" width="130" height="24" rx="6" fill="white" stroke="#93c5fd" stroke-width="1.5"/>
+  <text x="90" y="141" font-family="system-ui" font-size="10" fill="#64748b" text-anchor="middle">I - P</text>
+  <rect x="25" y="155" width="130" height="24" rx="6" fill="white" stroke="#93c5fd" stroke-width="1.5"/>
+  <text x="90" y="171" font-family="system-ui" font-size="10" fill="#64748b" text-anchor="middle">Q - Z</text>
+  <text x="90" y="200" font-family="system-ui" font-size="9" fill="#64748b" text-anchor="middle">Ordered keys split</text>
+  <text x="90" y="212" font-family="system-ui" font-size="9" fill="#64748b" text-anchor="middle">into contiguous ranges</text>
+
+  <!-- Hash Partitioning -->
+  <rect x="180" y="55" width="140" height="30" rx="8" fill="white" stroke="#10b981" stroke-width="2"/>
+  <text x="250" y="75" font-family="system-ui" font-size="12" font-weight="bold" fill="#10b981" text-anchor="middle">Hash</text>
+  <rect x="185" y="95" width="130" height="24" rx="6" fill="white" stroke="#6ee7b7" stroke-width="1.5"/>
+  <text x="250" y="111" font-family="system-ui" font-size="10" fill="#64748b" text-anchor="middle">hash(key) % 3 = 0</text>
+  <rect x="185" y="125" width="130" height="24" rx="6" fill="white" stroke="#6ee7b7" stroke-width="1.5"/>
+  <text x="250" y="141" font-family="system-ui" font-size="10" fill="#64748b" text-anchor="middle">hash(key) % 3 = 1</text>
+  <rect x="185" y="155" width="130" height="24" rx="6" fill="white" stroke="#6ee7b7" stroke-width="1.5"/>
+  <text x="250" y="171" font-family="system-ui" font-size="10" fill="#64748b" text-anchor="middle">hash(key) % 3 = 2</text>
+  <text x="250" y="200" font-family="system-ui" font-size="9" fill="#64748b" text-anchor="middle">Uniform distribution</text>
+  <text x="250" y="212" font-family="system-ui" font-size="9" fill="#64748b" text-anchor="middle">via hash function</text>
+
+  <!-- Directory Partitioning -->
+  <rect x="340" y="55" width="140" height="30" rx="8" fill="white" stroke="#f59e0b" stroke-width="2"/>
+  <text x="410" y="75" font-family="system-ui" font-size="12" font-weight="bold" fill="#f59e0b" text-anchor="middle">Directory</text>
+  <rect x="365" y="95" width="90" height="50" rx="6" fill="white" stroke="#fbbf24" stroke-width="1.5"/>
+  <text x="410" y="116" font-family="system-ui" font-size="9" font-weight="bold" fill="#1e293b" text-anchor="middle">Lookup Table</text>
+  <text x="410" y="132" font-family="system-ui" font-size="8" fill="#64748b" text-anchor="middle">key -> partition</text>
+  <line x1="410" y1="145" x2="365" y2="175" stroke="#fbbf24" stroke-width="1.5" marker-end="url(#arrowY)"/>
+  <line x1="410" y1="145" x2="410" y2="175" stroke="#fbbf24" stroke-width="1.5" marker-end="url(#arrowY)"/>
+  <line x1="410" y1="145" x2="455" y2="175" stroke="#fbbf24" stroke-width="1.5" marker-end="url(#arrowY)"/>
+  <rect x="350" y="175" width="30" height="20" rx="4" fill="white" stroke="#fbbf24" stroke-width="1"/>
+  <text x="365" y="189" font-family="system-ui" font-size="8" fill="#64748b" text-anchor="middle">P1</text>
+  <rect x="395" y="175" width="30" height="20" rx="4" fill="white" stroke="#fbbf24" stroke-width="1"/>
+  <text x="410" y="189" font-family="system-ui" font-size="8" fill="#64748b" text-anchor="middle">P2</text>
+  <rect x="440" y="175" width="30" height="20" rx="4" fill="white" stroke="#fbbf24" stroke-width="1"/>
+  <text x="455" y="189" font-family="system-ui" font-size="8" fill="#64748b" text-anchor="middle">P3</text>
+  <text x="410" y="215" font-family="system-ui" font-size="9" fill="#64748b" text-anchor="middle">Flexible mapping via</text>
+  <text x="410" y="227" font-family="system-ui" font-size="9" fill="#64748b" text-anchor="middle">external directory</text>
+
+  <!-- Tradeoffs -->
+  <rect x="20" y="240" width="460" height="45" rx="8" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="250" y="258" font-family="system-ui" font-size="10" font-weight="bold" fill="#1e293b" text-anchor="middle">Tradeoffs</text>
+  <text x="90" y="274" font-family="system-ui" font-size="9" fill="#64748b" text-anchor="middle">Range: range queries</text>
+  <text x="250" y="274" font-family="system-ui" font-size="9" fill="#64748b" text-anchor="middle">Hash: even load</text>
+  <text x="410" y="274" font-family="system-ui" font-size="9" fill="#64748b" text-anchor="middle">Dir: most flexible</text>
+
+  <defs>
+    <marker id="arrowY" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="#fbbf24"/>
+    </marker>
+  </defs>
+</svg>

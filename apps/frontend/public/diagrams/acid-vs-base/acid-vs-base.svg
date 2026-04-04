@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 350" font-family="system-ui, -apple-system, sans-serif">
+  <rect width="600" height="350" fill="#f7f8f9" rx="12"/>
+
+  <!-- Title -->
+  <text x="300" y="30" text-anchor="middle" font-size="16" font-weight="700" fill="#1e293b">ACID vs BASE Transaction Models</text>
+
+  <!-- Divider -->
+  <line x1="300" y1="45" x2="300" y2="340" stroke="#e2e8f0" stroke-width="1.5"/>
+
+  <!-- ACID Column -->
+  <rect x="90" y="45" width="100" height="28" rx="14" fill="#10b981"/>
+  <text x="140" y="64" text-anchor="middle" font-size="14" font-weight="700" fill="white">ACID</text>
+
+  <!-- Atomicity -->
+  <rect x="25" y="85" width="250" height="52" rx="8" fill="white" stroke="#10b981" stroke-width="1.5"/>
+  <circle cx="50" cy="105" r="14" fill="#10b981" opacity="0.15"/>
+  <text x="50" y="110" text-anchor="middle" font-size="14" fill="#10b981">A</text>
+  <text x="75" y="102" font-size="12" font-weight="700" fill="#1e293b">Atomicity</text>
+  <text x="75" y="118" font-size="9" fill="#64748b">All operations succeed or all fail.</text>
+  <text x="75" y="130" font-size="9" fill="#64748b">No partial transactions.</text>
+
+  <!-- Consistency -->
+  <rect x="25" y="145" width="250" height="52" rx="8" fill="white" stroke="#10b981" stroke-width="1.5"/>
+  <circle cx="50" cy="165" r="14" fill="#10b981" opacity="0.15"/>
+  <text x="50" y="170" text-anchor="middle" font-size="14" fill="#10b981">C</text>
+  <text x="75" y="162" font-size="12" font-weight="700" fill="#1e293b">Consistency</text>
+  <text x="75" y="178" font-size="9" fill="#64748b">DB moves from one valid state to another.</text>
+  <text x="75" y="190" font-size="9" fill="#64748b">All constraints enforced.</text>
+
+  <!-- Isolation -->
+  <rect x="25" y="205" width="250" height="52" rx="8" fill="white" stroke="#10b981" stroke-width="1.5"/>
+  <circle cx="50" cy="225" r="14" fill="#10b981" opacity="0.15"/>
+  <text x="50" y="230" text-anchor="middle" font-size="14" fill="#10b981">I</text>
+  <text x="75" y="222" font-size="12" font-weight="700" fill="#1e293b">Isolation</text>
+  <text x="75" y="238" font-size="9" fill="#64748b">Concurrent transactions don&#39;t interfere.</text>
+  <text x="75" y="250" font-size="9" fill="#64748b">Each sees a consistent snapshot.</text>
+
+  <!-- Durability -->
+  <rect x="25" y="265" width="250" height="52" rx="8" fill="white" stroke="#10b981" stroke-width="1.5"/>
+  <circle cx="50" cy="285" r="14" fill="#10b981" opacity="0.15"/>
+  <text x="50" y="290" text-anchor="middle" font-size="14" fill="#10b981">D</text>
+  <text x="75" y="282" font-size="12" font-weight="700" fill="#1e293b">Durability</text>
+  <text x="75" y="298" font-size="9" fill="#64748b">Committed data survives crashes.</text>
+  <text x="75" y="310" font-size="9" fill="#64748b">Written to persistent storage.</text>
+
+  <!-- BASE Column -->
+  <rect x="400" y="45" width="100" height="28" rx="14" fill="#8b5cf6"/>
+  <text x="450" y="64" text-anchor="middle" font-size="14" font-weight="700" fill="white">BASE</text>
+
+  <!-- Basically Available -->
+  <rect x="325" y="85" width="250" height="52" rx="8" fill="white" stroke="#8b5cf6" stroke-width="1.5"/>
+  <circle cx="350" cy="105" r="14" fill="#8b5cf6" opacity="0.15"/>
+  <text x="350" y="111" text-anchor="middle" font-size="13" fill="#8b5cf6">B</text>
+  <text x="375" y="102" font-size="12" font-weight="700" fill="#1e293b">Basically Available</text>
+  <text x="375" y="118" font-size="9" fill="#64748b">System guarantees availability.</text>
+  <text x="375" y="130" font-size="9" fill="#64748b">May serve stale data under failures.</text>
+
+  <!-- Soft State -->
+  <rect x="325" y="145" width="250" height="52" rx="8" fill="white" stroke="#8b5cf6" stroke-width="1.5"/>
+  <circle cx="350" cy="165" r="14" fill="#8b5cf6" opacity="0.15"/>
+  <text x="350" y="170" text-anchor="middle" font-size="14" fill="#8b5cf6">S</text>
+  <text x="375" y="162" font-size="12" font-weight="700" fill="#1e293b">Soft State</text>
+  <text x="375" y="178" font-size="9" fill="#64748b">State may change over time without input.</text>
+  <text x="375" y="190" font-size="9" fill="#64748b">Due to eventual consistency propagation.</text>
+
+  <!-- Eventual Consistency -->
+  <rect x="325" y="205" width="250" height="52" rx="8" fill="white" stroke="#8b5cf6" stroke-width="1.5"/>
+  <circle cx="350" cy="225" r="14" fill="#8b5cf6" opacity="0.15"/>
+  <text x="350" y="230" text-anchor="middle" font-size="14" fill="#8b5cf6">E</text>
+  <text x="375" y="222" font-size="12" font-weight="700" fill="#1e293b">Eventual Consistency</text>
+  <text x="375" y="238" font-size="9" fill="#64748b">All replicas converge given enough time.</text>
+  <text x="375" y="250" font-size="9" fill="#64748b">No guarantee of immediate consistency.</text>
+
+  <!-- Use cases boxes -->
+  <rect x="325" y="270" width="250" height="52" rx="8" fill="white" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="450" y="288" text-anchor="middle" font-size="11" font-weight="700" fill="#f59e0b">Best for</text>
+  <text x="450" y="303" text-anchor="middle" font-size="9" fill="#64748b">Social media feeds, DNS, caching,</text>
+  <text x="450" y="315" text-anchor="middle" font-size="9" fill="#64748b">shopping carts, search indexes</text>
+
+  <!-- ACID use case -->
+  <rect x="25" y="325" width="250" height="20" rx="6" fill="#10b981" opacity="0.08"/>
+  <text x="150" y="339" text-anchor="middle" font-size="9" font-weight="600" fill="#10b981">SQL: PostgreSQL, MySQL, Oracle</text>
+
+  <!-- BASE use case -->
+  <rect x="325" y="325" width="250" height="20" rx="6" fill="#8b5cf6" opacity="0.08"/>
+  <text x="450" y="339" text-anchor="middle" font-size="9" font-weight="600" fill="#8b5cf6">NoSQL: Cassandra, DynamoDB, MongoDB</text>
+</svg>

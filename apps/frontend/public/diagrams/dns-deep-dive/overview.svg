@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 300">
+  <rect width="500" height="300" fill="#f7f8f9" rx="4"/>
+  <text x="250" y="28" font-family="system-ui" font-size="16" font-weight="bold" fill="#1e293b" text-anchor="middle">DNS Resolution Chain</text>
+
+  <!-- Step numbers and flow -->
+  <!-- Browser -->
+  <rect x="20" y="60" width="80" height="44" rx="8" fill="white" stroke="#3b82f6" stroke-width="2"/>
+  <text x="60" y="80" font-family="system-ui" font-size="10" font-weight="bold" fill="#3b82f6" text-anchor="middle">Browser</text>
+  <text x="60" y="94" font-family="system-ui" font-size="8" fill="#64748b" text-anchor="middle">example.com?</text>
+
+  <!-- Recursive Resolver -->
+  <rect x="140" y="50" width="100" height="64" rx="8" fill="white" stroke="#8b5cf6" stroke-width="2"/>
+  <text x="190" y="70" font-family="system-ui" font-size="10" font-weight="bold" fill="#8b5cf6" text-anchor="middle">Recursive</text>
+  <text x="190" y="83" font-family="system-ui" font-size="10" font-weight="bold" fill="#8b5cf6" text-anchor="middle">Resolver</text>
+  <text x="190" y="100" font-family="system-ui" font-size="8" fill="#64748b" text-anchor="middle">(ISP / 8.8.8.8)</text>
+
+  <!-- Root Server -->
+  <rect x="280" y="50" width="85" height="44" rx="8" fill="white" stroke="#ef4444" stroke-width="2"/>
+  <text x="322" y="70" font-family="system-ui" font-size="10" font-weight="bold" fill="#ef4444" text-anchor="middle">Root DNS</text>
+  <text x="322" y="84" font-family="system-ui" font-size="8" fill="#64748b" text-anchor="middle">13 servers (.)</text>
+
+  <!-- TLD Server -->
+  <rect x="400" y="50" width="85" height="44" rx="8" fill="white" stroke="#f59e0b" stroke-width="2"/>
+  <text x="442" y="70" font-family="system-ui" font-size="10" font-weight="bold" fill="#f59e0b" text-anchor="middle">TLD DNS</text>
+  <text x="442" y="84" font-family="system-ui" font-size="8" fill="#64748b" text-anchor="middle">.com / .org</text>
+
+  <!-- Authoritative Server -->
+  <rect x="340" y="130" width="110" height="44" rx="8" fill="white" stroke="#10b981" stroke-width="2"/>
+  <text x="395" y="148" font-family="system-ui" font-size="10" font-weight="bold" fill="#10b981" text-anchor="middle">Authoritative</text>
+  <text x="395" y="163" font-family="system-ui" font-size="8" fill="#64748b" text-anchor="middle">ns1.example.com</text>
+
+  <!-- Arrows with step numbers -->
+  <!-- 1: Browser -> Resolver -->
+  <line x1="100" y1="75" x2="136" y2="75" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#aB)"/>
+  <circle cx="118" cy="68" r="8" fill="#3b82f6"/>
+  <text x="118" y="72" font-family="system-ui" font-size="8" font-weight="bold" fill="white" text-anchor="middle">1</text>
+
+  <!-- 2: Resolver -> Root -->
+  <line x1="240" y1="70" x2="276" y2="70" stroke="#8b5cf6" stroke-width="1.5" marker-end="url(#aP)"/>
+  <circle cx="258" cy="63" r="8" fill="#8b5cf6"/>
+  <text x="258" y="67" font-family="system-ui" font-size="8" font-weight="bold" fill="white" text-anchor="middle">2</text>
+
+  <!-- 3: Root -> TLD referral (dashed return) -->
+  <line x1="365" y1="72" x2="396" y2="72" stroke="#ef4444" stroke-width="1.5" marker-end="url(#aR)"/>
+  <circle cx="380" cy="63" r="8" fill="#ef4444"/>
+  <text x="380" y="67" font-family="system-ui" font-size="8" font-weight="bold" fill="white" text-anchor="middle">3</text>
+
+  <!-- 4: Resolver -> TLD (shown as return from TLD) -->
+  <line x1="442" y1="94" x2="442" y2="126" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#aO)"/>
+  <circle cx="455" cy="110" r="8" fill="#f59e0b"/>
+  <text x="455" y="114" font-family="system-ui" font-size="8" font-weight="bold" fill="white" text-anchor="middle">4</text>
+
+  <!-- 5: Authoritative returns IP -->
+  <line x1="340" y1="152" x2="245" y2="108" stroke="#10b981" stroke-width="1.5" marker-end="url(#aG)"/>
+  <circle cx="290" cy="122" r="8" fill="#10b981"/>
+  <text x="290" y="126" font-family="system-ui" font-size="8" font-weight="bold" fill="white" text-anchor="middle">5</text>
+
+  <!-- 6: Resolver returns to Browser -->
+  <line x1="150" y1="114" x2="90" y2="104" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#aB)"/>
+  <circle cx="118" cy="116" r="8" fill="#3b82f6"/>
+  <text x="118" y="120" font-family="system-ui" font-size="8" font-weight="bold" fill="white" text-anchor="middle">6</text>
+
+  <!-- IP Result -->
+  <rect x="20" y="120" width="80" height="24" rx="6" fill="white" stroke="#10b981" stroke-width="1.5"/>
+  <text x="60" y="136" font-family="system-ui" font-size="9" font-weight="bold" fill="#10b981" text-anchor="middle">93.184.216.34</text>
+
+  <!-- Record Types -->
+  <text x="250" y="200" font-family="system-ui" font-size="11" font-weight="bold" fill="#1e293b" text-anchor="middle">DNS Record Types</text>
+
+  <rect x="20" y="212" width="90" height="36" rx="6" fill="white" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="65" y="228" font-family="system-ui" font-size="10" font-weight="bold" fill="#3b82f6" text-anchor="middle">A</text>
+  <text x="65" y="241" font-family="system-ui" font-size="8" fill="#64748b" text-anchor="middle">IPv4 address</text>
+
+  <rect x="120" y="212" width="90" height="36" rx="6" fill="white" stroke="#8b5cf6" stroke-width="1.5"/>
+  <text x="165" y="228" font-family="system-ui" font-size="10" font-weight="bold" fill="#8b5cf6" text-anchor="middle">AAAA</text>
+  <text x="165" y="241" font-family="system-ui" font-size="8" fill="#64748b" text-anchor="middle">IPv6 address</text>
+
+  <rect x="220" y="212" width="90" height="36" rx="6" fill="white" stroke="#10b981" stroke-width="1.5"/>
+  <text x="265" y="228" font-family="system-ui" font-size="10" font-weight="bold" fill="#10b981" text-anchor="middle">CNAME</text>
+  <text x="265" y="241" font-family="system-ui" font-size="8" fill="#64748b" text-anchor="middle">Alias to name</text>
+
+  <rect x="320" y="212" width="75" height="36" rx="6" fill="white" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="357" y="228" font-family="system-ui" font-size="10" font-weight="bold" fill="#f59e0b" text-anchor="middle">MX</text>
+  <text x="357" y="241" font-family="system-ui" font-size="8" fill="#64748b" text-anchor="middle">Mail server</text>
+
+  <rect x="405" y="212" width="75" height="36" rx="6" fill="white" stroke="#ef4444" stroke-width="1.5"/>
+  <text x="442" y="228" font-family="system-ui" font-size="10" font-weight="bold" fill="#ef4444" text-anchor="middle">NS</text>
+  <text x="442" y="241" font-family="system-ui" font-size="8" fill="#64748b" text-anchor="middle">Name server</text>
+
+  <!-- Caching note -->
+  <rect x="60" y="262" width="380" height="28" rx="8" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="250" y="280" font-family="system-ui" font-size="9" fill="#64748b" text-anchor="middle">Each level caches results based on TTL (Time To Live) to reduce lookup latency</text>
+
+  <defs>
+    <marker id="aB" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#3b82f6"/></marker>
+    <marker id="aP" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#8b5cf6"/></marker>
+    <marker id="aR" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#ef4444"/></marker>
+    <marker id="aO" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#f59e0b"/></marker>
+    <marker id="aG" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#10b981"/></marker>
+  </defs>
+</svg>

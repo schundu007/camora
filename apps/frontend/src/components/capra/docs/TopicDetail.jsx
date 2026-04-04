@@ -4,6 +4,10 @@ import CloudArchitectureDiagram from './CloudArchitectureDiagram.jsx';
 import DiagramSVG from '../features/DiagramSVG.jsx';
 import { generateSlug, getProblemBySlug } from '../../../data/capra/problems.js';
 import problemsFull from '../../../data/capra/problems-full.json';
+import {
+  ComparisonCard, CheatSheetCard, EvolutionTimeline,
+  PatternCardGrid, StaticDiagramGrid, FlowchartCard, ChartCard
+} from './TopicVisuals.jsx';
 
 export default function TopicDetail({
   activePage, selectedTopic, topicDetails, pageConfig,
@@ -756,6 +760,59 @@ export default function TopicDetail({
                     </div>
                   )}
                 </div>
+              )}
+
+              {/* ── Visual Enhancements ── */}
+
+              {/* Static Architecture Diagrams (pre-generated SVGs) */}
+              {topicDetails.staticDiagrams && topicDetails.staticDiagrams.length > 0 && (
+                <StaticDiagramGrid diagrams={topicDetails.staticDiagrams} title="Architecture Diagrams" />
+              )}
+
+              {/* Comparison Cards (side-by-side) */}
+              {topicDetails.comparisonTables && topicDetails.comparisonTables.length > 0 && (
+                <div className="space-y-2">
+                  {topicDetails.comparisonTables.map((comp) => (
+                    <ComparisonCard key={comp.id} comparison={comp} />
+                  ))}
+                </div>
+              )}
+
+              {/* Cheat Sheet / Quick Reference Cards */}
+              {topicDetails.visualCards && topicDetails.visualCards.length > 0 && (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+                  {topicDetails.visualCards.map((card) => (
+                    <CheatSheetCard key={card.id} card={card} />
+                  ))}
+                </div>
+              )}
+
+              {/* Flowcharts / Process Diagrams */}
+              {topicDetails.flowcharts && topicDetails.flowcharts.length > 0 && (
+                <div className="grid grid-cols-1 gap-2">
+                  {topicDetails.flowcharts.map((fc) => (
+                    <FlowchartCard key={fc.id} flowchart={fc} />
+                  ))}
+                </div>
+              )}
+
+              {/* Bar/Pie Charts */}
+              {topicDetails.charts && topicDetails.charts.length > 0 && (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+                  {topicDetails.charts.map((chart) => (
+                    <ChartCard key={chart.id} chart={chart} />
+                  ))}
+                </div>
+              )}
+
+              {/* Architecture Evolution Timeline */}
+              {topicDetails.evolutionSteps && topicDetails.evolutionSteps.length > 0 && (
+                <EvolutionTimeline steps={topicDetails.evolutionSteps} />
+              )}
+
+              {/* Design Pattern Cards */}
+              {topicDetails.patternCards && topicDetails.patternCards.length > 0 && (
+                <PatternCardGrid patterns={topicDetails.patternCards} title="Key Design Patterns" />
               )}
 
               {/* Cloud Architecture Diagram + Tips */}

@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 350" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <filter id="shadow" x="-4%" y="-4%" width="108%" height="108%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.1"/>
+    </filter>
+    <marker id="arrowBlue" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#3b82f6"/>
+    </marker>
+    <marker id="arrowEmerald" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#10b981"/>
+    </marker>
+    <marker id="arrowViolet" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#8b5cf6"/>
+    </marker>
+    <marker id="arrowAmber" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#f59e0b"/>
+    </marker>
+  </defs>
+  <rect width="600" height="350" fill="#f7f8f9" rx="12"/>
+  <text x="300" y="28" text-anchor="middle" font-size="16" font-weight="700" fill="#1e293b">OAuth 2.0 Authorization Code Flow</text>
+
+  <!-- Resource Owner (User) -->
+  <rect x="30" y="55" width="110" height="55" rx="8" fill="white" stroke="#64748b" stroke-width="2" filter="url(#shadow)"/>
+  <text x="85" y="77" text-anchor="middle" font-size="11" font-weight="600" fill="#1e293b">Resource Owner</text>
+  <text x="85" y="95" text-anchor="middle" font-size="9" fill="#64748b">(End User)</text>
+
+  <!-- Client App -->
+  <rect x="30" y="160" width="110" height="55" rx="8" fill="white" stroke="#3b82f6" stroke-width="2" filter="url(#shadow)"/>
+  <text x="85" y="182" text-anchor="middle" font-size="11" font-weight="600" fill="#3b82f6">Client App</text>
+  <text x="85" y="200" text-anchor="middle" font-size="9" fill="#64748b">(Your App)</text>
+
+  <!-- Auth Server -->
+  <rect x="245" y="55" width="130" height="160" rx="8" fill="white" stroke="#8b5cf6" stroke-width="2" filter="url(#shadow)"/>
+  <text x="310" y="80" text-anchor="middle" font-size="12" font-weight="600" fill="#8b5cf6">Authorization</text>
+  <text x="310" y="97" text-anchor="middle" font-size="12" font-weight="600" fill="#8b5cf6">Server</text>
+  <line x1="260" y1="108" x2="360" y2="108" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="310" y="126" text-anchor="middle" font-size="9" fill="#64748b">Authorization</text>
+  <text x="310" y="140" text-anchor="middle" font-size="9" fill="#64748b">Endpoint</text>
+  <line x1="260" y1="150" x2="360" y2="150" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="310" y="168" text-anchor="middle" font-size="9" fill="#64748b">Token</text>
+  <text x="310" y="182" text-anchor="middle" font-size="9" fill="#64748b">Endpoint</text>
+  <line x1="260" y1="192" x2="360" y2="192" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="310" y="207" text-anchor="middle" font-size="9" fill="#64748b">JWKS / Introspect</text>
+
+  <!-- Resource Server -->
+  <rect x="460" y="120" width="120" height="55" rx="8" fill="white" stroke="#10b981" stroke-width="2" filter="url(#shadow)"/>
+  <text x="520" y="143" text-anchor="middle" font-size="11" font-weight="600" fill="#10b981">Resource</text>
+  <text x="520" y="161" text-anchor="middle" font-size="11" font-weight="600" fill="#10b981">Server (API)</text>
+
+  <!-- Step 1: User clicks login -->
+  <rect x="15" y="125" width="16" height="16" rx="8" fill="#3b82f6"/>
+  <text x="23" y="137" text-anchor="middle" font-size="9" font-weight="700" fill="white">1</text>
+  <line x1="85" y1="110" x2="85" y2="155" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#arrowBlue)"/>
+  <text x="95" y="138" font-size="8" fill="#3b82f6">Login click</text>
+
+  <!-- Step 2: Redirect to auth server -->
+  <rect x="155" y="55" width="16" height="16" rx="8" fill="#8b5cf6"/>
+  <text x="163" y="67" text-anchor="middle" font-size="9" font-weight="700" fill="white">2</text>
+  <line x1="140" y1="170" x2="240" y2="80" stroke="#8b5cf6" stroke-width="1.5" marker-end="url(#arrowViolet)"/>
+  <text x="175" y="110" font-size="8" fill="#8b5cf6">Redirect + scope</text>
+
+  <!-- Step 3: User authorizes -->
+  <rect x="155" y="78" width="16" height="16" rx="8" fill="#8b5cf6"/>
+  <text x="163" y="90" text-anchor="middle" font-size="9" font-weight="700" fill="white">3</text>
+  <path d="M 245 90 Q 200 60 145 82" fill="none" stroke="#8b5cf6" stroke-width="1.5" marker-end="url(#arrowViolet)"/>
+  <text x="180" y="62" font-size="8" fill="#8b5cf6">Consent screen</text>
+
+  <!-- Step 4: Auth code returned -->
+  <rect x="155" y="155" width="16" height="16" rx="8" fill="#f59e0b"/>
+  <text x="163" y="167" text-anchor="middle" font-size="9" font-weight="700" fill="white">4</text>
+  <line x1="245" y1="140" x2="145" y2="185" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#arrowAmber)"/>
+  <text x="178" y="170" font-size="8" fill="#f59e0b">Auth code</text>
+
+  <!-- Step 5: Exchange code for token -->
+  <rect x="155" y="195" width="16" height="16" rx="8" fill="#f59e0b"/>
+  <text x="163" y="207" text-anchor="middle" font-size="9" font-weight="700" fill="white">5</text>
+  <line x1="140" y1="195" x2="240" y2="175" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#arrowAmber)"/>
+  <text x="170" y="200" font-size="8" fill="#f59e0b">Code + secret</text>
+
+  <!-- Step 6: Access token returned -->
+  <rect x="155" y="215" width="16" height="16" rx="8" fill="#10b981"/>
+  <text x="163" y="227" text-anchor="middle" font-size="9" font-weight="700" fill="white">6</text>
+  <path d="M 245 190 Q 200 220 145 200" fill="none" stroke="#10b981" stroke-width="1.5" marker-end="url(#arrowEmerald)"/>
+  <text x="180" y="225" font-size="8" fill="#10b981">Access + Refresh tokens</text>
+
+  <!-- Step 7: Use access token -->
+  <rect x="280" y="235" width="16" height="16" rx="8" fill="#10b981"/>
+  <text x="288" y="247" text-anchor="middle" font-size="9" font-weight="700" fill="white">7</text>
+  <path d="M 140 190 Q 300 260 455 150" fill="none" stroke="#10b981" stroke-width="1.5" marker-end="url(#arrowEmerald)"/>
+  <text x="330" y="250" font-size="8" fill="#10b981">API call + Bearer token</text>
+
+  <!-- Token details box -->
+  <rect x="30" y="265" width="540" height="70" rx="8" fill="white" stroke="#e2e8f0" stroke-width="1" filter="url(#shadow)"/>
+  <text x="50" y="287" font-size="11" font-weight="600" fill="#1e293b">Token Types</text>
+  <circle cx="50" cy="305" r="4" fill="#10b981"/>
+  <text x="62" y="309" font-size="9" fill="#64748b">Access Token: Short-lived (15min), used for API requests</text>
+  <circle cx="50" cy="323" r="4" fill="#f59e0b"/>
+  <text x="62" y="327" font-size="9" fill="#64748b">Refresh Token: Long-lived (30 days), used to get new access tokens without re-auth</text>
+  <circle cx="340" cy="305" r="4" fill="#8b5cf6"/>
+  <text x="352" y="309" font-size="9" fill="#64748b">PKCE: Adds code_verifier for public clients (SPAs, mobile)</text>
+</svg>

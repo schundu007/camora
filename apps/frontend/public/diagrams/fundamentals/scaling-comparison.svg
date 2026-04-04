@@ -1,0 +1,180 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 350" width="700" height="350">
+  <defs>
+    <style>
+      text { font-family: system-ui, -apple-system, sans-serif; }
+      .title { font-size: 18px; font-weight: 700; fill: #1e293b; }
+      .section-title { font-size: 15px; font-weight: 700; }
+      .label { font-size: 10px; font-weight: 500; fill: #64748b; }
+      .server-label { font-size: 9px; font-weight: 600; fill: #fff; }
+      .spec-text { font-size: 9.5px; fill: #1e293b; font-weight: 500; }
+      .footer-text { font-size: 10.5px; fill: #64748b; }
+      .footer-bold { font-size: 10.5px; font-weight: 600; }
+      .vs-text { font-size: 13px; font-weight: 800; fill: #64748b; }
+    </style>
+    <filter id="shadow" x="-4%" y="-4%" width="108%" height="108%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.1"/>
+    </filter>
+    <linearGradient id="bg-grad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f7f8f9"/>
+      <stop offset="100%" stop-color="#eef0f2"/>
+    </linearGradient>
+    <linearGradient id="blue-grad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#2563eb"/>
+    </linearGradient>
+    <linearGradient id="emerald-grad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+    <linearGradient id="violet-grad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#8b5cf6"/>
+      <stop offset="100%" stop-color="#7c3aed"/>
+    </linearGradient>
+    <linearGradient id="amber-grad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="700" height="350" rx="12" fill="url(#bg-grad)"/>
+  <rect x="0.5" y="0.5" width="699" height="349" rx="12" fill="none" stroke="#e2e8f0" stroke-width="1"/>
+
+  <!-- Title -->
+  <text x="350" y="32" text-anchor="middle" class="title">Scaling Strategies Comparison</text>
+
+  <!-- Divider -->
+  <line x1="350" y1="52" x2="350" y2="300" stroke="#e2e8f0" stroke-width="1.5" stroke-dasharray="6,4"/>
+
+  <!-- VS badge -->
+  <g transform="translate(350, 160)">
+    <circle r="18" fill="#fff" stroke="#e2e8f0" stroke-width="1.5"/>
+    <text x="0" y="5" text-anchor="middle" class="vs-text">VS</text>
+  </g>
+
+  <!-- ===== LEFT: Vertical Scaling ===== -->
+  <text x="175" y="62" text-anchor="middle" class="section-title" fill="#3b82f6">Vertical Scaling</text>
+  <text x="175" y="76" text-anchor="middle" class="label">(Scale Up)</text>
+
+  <!-- Small server (before) -->
+  <g transform="translate(100, 130)" filter="url(#shadow)">
+    <rect width="50" height="50" rx="6" fill="#bfdbfe" stroke="#93c5fd" stroke-width="1"/>
+    <text x="25" y="20" text-anchor="middle" class="server-label" fill="#3b82f6">Small</text>
+    <text x="25" y="32" text-anchor="middle" font-size="8" fill="#64748b">Server</text>
+    <!-- CPU icon -->
+    <rect x="16" y="36" width="18" height="8" rx="2" fill="#93c5fd"/>
+  </g>
+
+  <!-- Arrow pointing up/right -->
+  <g transform="translate(160, 148)">
+    <path d="M0,8 L20,0 L20,4 L38,4 L38,12 L20,12 L20,16 Z" fill="#3b82f6" opacity="0.6"/>
+  </g>
+
+  <!-- Large server (after) -->
+  <g transform="translate(200, 95)" filter="url(#shadow)">
+    <rect width="80" height="120" rx="8" fill="url(#blue-grad)"/>
+    <text x="40" y="24" text-anchor="middle" class="server-label" font-size="11">LARGE</text>
+    <text x="40" y="38" text-anchor="middle" class="server-label" font-size="9" opacity="0.85">Server</text>
+    <!-- Spec lines -->
+    <line x1="12" y1="48" x2="68" y2="48" stroke="#fff" stroke-width="0.5" opacity="0.3"/>
+    <rect x="12" y="56" width="56" height="7" rx="2" fill="#fff" opacity="0.2"/>
+    <text x="40" y="63" text-anchor="middle" font-size="7" fill="#fff" font-weight="500">More CPU</text>
+    <rect x="12" y="68" width="56" height="7" rx="2" fill="#fff" opacity="0.2"/>
+    <text x="40" y="75" text-anchor="middle" font-size="7" fill="#fff" font-weight="500">More RAM</text>
+    <rect x="12" y="80" width="56" height="7" rx="2" fill="#fff" opacity="0.2"/>
+    <text x="40" y="87" text-anchor="middle" font-size="7" fill="#fff" font-weight="500">More Storage</text>
+    <!-- Upward arrow -->
+    <path d="M40,98 L40,108 M35,103 L40,96 L45,103" stroke="#fff" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  </g>
+
+  <!-- Upward arrow indicator -->
+  <g transform="translate(240, 80)">
+    <path d="M0,12 L6,-2 L12,12" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/>
+    <text x="6" y="22" text-anchor="middle" font-size="8" fill="#3b82f6" font-weight="600">UP</text>
+  </g>
+
+  <!-- ===== RIGHT: Horizontal Scaling ===== -->
+  <text x="525" y="62" text-anchor="middle" class="section-title" fill="#10b981">Horizontal Scaling</text>
+  <text x="525" y="76" text-anchor="middle" class="label">(Scale Out)</text>
+
+  <!-- Load Balancer -->
+  <g transform="translate(485, 86)" filter="url(#shadow)">
+    <rect width="80" height="30" rx="6" fill="url(#violet-grad)"/>
+    <text x="40" y="14" text-anchor="middle" class="server-label" font-size="8.5">LOAD</text>
+    <text x="40" y="24" text-anchor="middle" class="server-label" font-size="8.5">BALANCER</text>
+  </g>
+
+  <!-- Distribution arrows -->
+  <line x1="500" y1="116" x2="435" y2="140" stroke="#8b5cf6" stroke-width="1.5" marker-end="url(#arrow-violet)"/>
+  <line x1="515" y1="116" x2="495" y2="140" stroke="#8b5cf6" stroke-width="1.5"/>
+  <line x1="535" y1="116" x2="555" y2="140" stroke="#8b5cf6" stroke-width="1.5"/>
+  <line x1="550" y1="116" x2="615" y2="140" stroke="#8b5cf6" stroke-width="1.5"/>
+
+  <!-- Server 1 -->
+  <g transform="translate(410, 142)" filter="url(#shadow)">
+    <rect width="50" height="50" rx="6" fill="url(#emerald-grad)"/>
+    <text x="25" y="22" text-anchor="middle" class="server-label" font-size="15">S1</text>
+    <rect x="8" y="36" width="34" height="6" rx="2" fill="#fff" opacity="0.25"/>
+  </g>
+
+  <!-- Server 2 -->
+  <g transform="translate(470, 142)" filter="url(#shadow)">
+    <rect width="50" height="50" rx="6" fill="url(#emerald-grad)"/>
+    <text x="25" y="22" text-anchor="middle" class="server-label" font-size="15">S2</text>
+    <rect x="8" y="36" width="34" height="6" rx="2" fill="#fff" opacity="0.25"/>
+  </g>
+
+  <!-- Server 3 -->
+  <g transform="translate(530, 142)" filter="url(#shadow)">
+    <rect width="50" height="50" rx="6" fill="url(#emerald-grad)"/>
+    <text x="25" y="22" text-anchor="middle" class="server-label" font-size="15">S3</text>
+    <rect x="8" y="36" width="34" height="6" rx="2" fill="#fff" opacity="0.25"/>
+  </g>
+
+  <!-- Server 4 -->
+  <g transform="translate(590, 142)" filter="url(#shadow)">
+    <rect width="50" height="50" rx="6" fill="url(#emerald-grad)"/>
+    <text x="25" y="22" text-anchor="middle" class="server-label" font-size="15">S4</text>
+    <rect x="8" y="36" width="34" height="6" rx="2" fill="#fff" opacity="0.25"/>
+  </g>
+
+  <!-- Horizontal arrow indicator -->
+  <g transform="translate(630, 200)">
+    <text x="0" y="0" text-anchor="middle" font-size="8" fill="#10b981" font-weight="600">OUT</text>
+    <path d="M-6,6 L8,6" stroke="#10b981" stroke-width="2" stroke-linecap="round"/>
+    <path d="M4,2 L10,6 L4,10" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round"/>
+  </g>
+
+  <!-- Plus sign to indicate adding more -->
+  <g transform="translate(525, 210)">
+    <text x="0" y="0" text-anchor="middle" font-size="9" fill="#64748b">+ Add more as needed</text>
+  </g>
+
+  <!-- ===== Footer comparison ===== -->
+  <g transform="translate(0, 280)">
+    <rect x="20" y="0" width="660" height="52" rx="8" fill="#fff" stroke="#e2e8f0" stroke-width="1" filter="url(#shadow)"/>
+
+    <!-- Left footer -->
+    <g transform="translate(175, 18)">
+      <circle r="5" fill="#ef4444" opacity="0.8"/>
+      <text x="12" y="4" class="footer-bold" fill="#ef4444">Limited</text>
+      <text x="62" y="4" class="footer-text">by hardware ceiling</text>
+    </g>
+    <g transform="translate(175, 36)">
+      <text x="-42" y="0" font-size="9" fill="#64748b">Single point of failure</text>
+    </g>
+
+    <!-- Divider -->
+    <line x1="350" y1="8" x2="350" y2="44" stroke="#e2e8f0" stroke-width="1"/>
+
+    <!-- Right footer -->
+    <g transform="translate(525, 18)">
+      <circle r="5" fill="#10b981" opacity="0.8"/>
+      <text x="12" y="4" class="footer-bold" fill="#10b981">Virtually unlimited</text>
+      <text x="112" y="4" class="footer-text">scalability</text>
+    </g>
+    <g transform="translate(525, 36)">
+      <text x="-42" y="0" font-size="9" fill="#64748b">Built-in redundancy</text>
+    </g>
+  </g>
+</svg>

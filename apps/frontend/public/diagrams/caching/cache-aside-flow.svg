@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 380" width="600" height="380">
+  <defs>
+    <style>
+      text { font-family: system-ui, -apple-system, sans-serif; }
+      .title { font-size: 18px; font-weight: 700; fill: #1e293b; }
+      .label { font-size: 12px; font-weight: 600; fill: #fff; }
+      .box-label { font-size: 11px; font-weight: 600; fill: #1e293b; }
+      .step { font-size: 10px; font-weight: 700; fill: #fff; }
+      .desc { font-size: 10px; fill: #64748b; }
+    </style>
+    <filter id="shadow" x="-4%" y="-4%" width="108%" height="108%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.1"/>
+    </filter>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f7f8f9"/>
+      <stop offset="100%" stop-color="#eef0f2"/>
+    </linearGradient>
+    <linearGradient id="amber" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+    <linearGradient id="red" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ef4444"/>
+      <stop offset="100%" stop-color="#dc2626"/>
+    </linearGradient>
+    <linearGradient id="violet" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#8b5cf6"/>
+      <stop offset="100%" stop-color="#7c3aed"/>
+    </linearGradient>
+    <marker id="arr-amber" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#f59e0b"/>
+    </marker>
+    <marker id="arr-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#ef4444"/>
+    </marker>
+    <marker id="arr-violet" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#8b5cf6"/>
+    </marker>
+  </defs>
+
+  <rect width="600" height="380" rx="12" fill="url(#bg)"/>
+  <rect x="0.5" y="0.5" width="599" height="379" rx="12" fill="none" stroke="#e2e8f0"/>
+
+  <text x="300" y="36" text-anchor="middle" class="title">Cache-Aside Pattern (Lazy Loading)</text>
+
+  <!-- App -->
+  <g transform="translate(300, 100)">
+    <rect x="-70" y="-25" width="140" height="50" rx="10" fill="url(#violet)" filter="url(#shadow)"/>
+    <text x="0" y="5" text-anchor="middle" class="label">Application</text>
+  </g>
+
+  <!-- Cache -->
+  <g transform="translate(120, 240)">
+    <rect x="-80" y="-30" width="160" height="60" rx="10" fill="url(#amber)" filter="url(#shadow)"/>
+    <text x="0" y="-4" text-anchor="middle" class="label">Cache (Redis)</text>
+    <text x="0" y="14" text-anchor="middle" font-size="10" fill="#fef3c7">In-Memory, &lt; 1ms</text>
+  </g>
+
+  <!-- Database -->
+  <g transform="translate(480, 240)">
+    <rect x="-80" y="-30" width="160" height="60" rx="10" fill="url(#red)" filter="url(#shadow)"/>
+    <text x="0" y="-4" text-anchor="middle" class="label">Database</text>
+    <text x="0" y="14" text-anchor="middle" font-size="10" fill="#fecaca">Disk, 10-100ms</text>
+  </g>
+
+  <!-- Step 1: Check cache -->
+  <line x1="240" y1="120" x2="160" y2="210" stroke="#f59e0b" stroke-width="2" marker-end="url(#arr-amber)"/>
+  <g transform="translate(185, 155)">
+    <circle r="10" fill="#f59e0b"/>
+    <text x="0" y="4" text-anchor="middle" class="step">1</text>
+  </g>
+  <text x="185" y="178" text-anchor="middle" class="desc">Check cache</text>
+
+  <!-- Step 2: Cache miss, read DB -->
+  <line x1="360" y1="120" x2="440" y2="210" stroke="#ef4444" stroke-width="2" marker-end="url(#arr-red)"/>
+  <g transform="translate(415, 155)">
+    <circle r="10" fill="#ef4444"/>
+    <text x="0" y="4" text-anchor="middle" class="step">2</text>
+  </g>
+  <text x="415" y="178" text-anchor="middle" class="desc">On miss: read DB</text>
+
+  <!-- Step 3: Write to cache -->
+  <line x1="400" y1="240" x2="200" y2="240" stroke="#8b5cf6" stroke-width="2" stroke-dasharray="6,3" marker-end="url(#arr-violet)"/>
+  <g transform="translate(300, 240)">
+    <circle r="10" fill="#8b5cf6"/>
+    <text x="0" y="4" text-anchor="middle" class="step">3</text>
+  </g>
+  <text x="300" y="265" text-anchor="middle" class="desc">Populate cache</text>
+
+  <!-- Bottom note -->
+  <g transform="translate(300, 335)">
+    <rect x="-250" y="-22" width="500" height="44" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="0.5"/>
+    <text x="0" y="-4" text-anchor="middle" class="box-label" fill="#92400e">Cache Hit: 1 trip (fast) | Cache Miss: 3 trips (check + read DB + write cache)</text>
+    <text x="0" y="14" text-anchor="middle" class="desc" fill="#92400e">Set TTL to auto-expire stale data. Typical hit rate: 80-95%</text>
+  </g>
+</svg>

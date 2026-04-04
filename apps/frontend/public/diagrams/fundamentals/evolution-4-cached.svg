@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 250">
+  <defs>
+    <marker id="arrow4" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#8b5cf6"/>
+    </marker>
+  </defs>
+
+  <rect width="400" height="250" rx="8" fill="#f7f8f9"/>
+
+  <!-- Title -->
+  <text x="200" y="24" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600" fill="#1e293b">Stage 4: Cached + Replicated</text>
+  <text x="200" y="39" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="10" fill="#64748b">Cache hot data, replicate for reads</text>
+
+  <!-- Users -->
+  <rect x="6" y="88" width="50" height="42" rx="6" fill="white" stroke="#8b5cf6" stroke-width="2"/>
+  <text x="31" y="108" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="9" font-weight="600" fill="#1e293b">Users</text>
+  <text x="31" y="120" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="7" fill="#64748b">Clients</text>
+
+  <!-- Arrow to LB -->
+  <line x1="56" y1="109" x2="72" y2="109" stroke="#8b5cf6" stroke-width="1.5" marker-end="url(#arrow4)"/>
+
+  <!-- Load Balancer -->
+  <rect x="74" y="88" width="44" height="42" rx="6" fill="white" stroke="#8b5cf6" stroke-width="2"/>
+  <text x="96" y="108" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="9" font-weight="600" fill="#1e293b">LB</text>
+  <text x="96" y="120" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="7" fill="#64748b">Nginx</text>
+
+  <!-- Fan-out to servers -->
+  <line x1="118" y1="102" x2="138" y2="82" stroke="#8b5cf6" stroke-width="1.5" marker-end="url(#arrow4)"/>
+  <line x1="118" y1="116" x2="138" y2="136" stroke="#8b5cf6" stroke-width="1.5" marker-end="url(#arrow4)"/>
+
+  <!-- Server 1 -->
+  <rect x="140" y="62" width="58" height="38" rx="6" fill="white" stroke="#8b5cf6" stroke-width="1.5"/>
+  <text x="169" y="81" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="9" font-weight="500" fill="#1e293b">Server 1</text>
+  <text x="169" y="93" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="7" fill="#64748b">Stateless</text>
+
+  <!-- Server 2 -->
+  <rect x="140" y="118" width="58" height="38" rx="6" fill="white" stroke="#8b5cf6" stroke-width="1.5"/>
+  <text x="169" y="137" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="9" font-weight="500" fill="#1e293b">Server 2</text>
+  <text x="169" y="149" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="7" fill="#64748b">Stateless</text>
+
+  <!-- Arrows from servers to cache -->
+  <line x1="198" y1="81" x2="224" y2="102" stroke="#8b5cf6" stroke-width="1.5" marker-end="url(#arrow4)"/>
+  <line x1="198" y1="137" x2="224" y2="116" stroke="#8b5cf6" stroke-width="1.5" marker-end="url(#arrow4)"/>
+
+  <!-- Cache -->
+  <rect x="226" y="88" width="56" height="42" rx="6" fill="white" stroke="#8b5cf6" stroke-width="2"/>
+  <text x="254" y="107" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="9" font-weight="600" fill="#8b5cf6">Cache</text>
+  <text x="254" y="120" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="7" fill="#64748b">Redis</text>
+
+  <!-- Arrow from cache to DBs -->
+  <line x1="282" y1="102" x2="308" y2="82" stroke="#8b5cf6" stroke-width="1.5" marker-end="url(#arrow4)"/>
+  <line x1="282" y1="116" x2="308" y2="136" stroke="#8b5cf6" stroke-width="1.5" marker-end="url(#arrow4)"/>
+
+  <!-- Primary DB -->
+  <rect x="310" y="60" width="78" height="42" rx="6" fill="white" stroke="#8b5cf6" stroke-width="2"/>
+  <text x="349" y="77" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="9" font-weight="600" fill="#1e293b">Primary DB</text>
+  <text x="349" y="91" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="7" fill="#64748b">Writes</text>
+
+  <!-- Replica DB -->
+  <rect x="310" y="116" width="78" height="42" rx="6" fill="white" stroke="#8b5cf6" stroke-width="2"/>
+  <text x="349" y="133" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="9" font-weight="600" fill="#1e293b">Replica DB</text>
+  <text x="349" y="147" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="7" fill="#64748b">Reads</text>
+
+  <!-- Replication arrow -->
+  <line x1="349" y1="102" x2="349" y2="114" stroke="#8b5cf6" stroke-width="1" stroke-dasharray="3,2" marker-end="url(#arrow4)"/>
+
+  <!-- Footer -->
+  <text x="200" y="192" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="10" fill="#64748b">90% of reads served from cache</text>
+  <rect x="160" y="200" width="80" height="16" rx="8" fill="#f5f3ff" stroke="#8b5cf6" stroke-width="1"/>
+  <text x="200" y="211" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="8" font-weight="600" fill="#8b5cf6">~100K users</text>
+</svg>

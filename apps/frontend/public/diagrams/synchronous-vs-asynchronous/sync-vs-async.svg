@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 350" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <filter id="shadow" x="-2%" y="-2%" width="104%" height="104%">
+      <feDropShadow dx="0" dy="1" stdDeviation="2" flood-opacity="0.1"/>
+    </filter>
+    <marker id="arrR" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#ef4444"/>
+    </marker>
+    <marker id="arrG" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#10b981"/>
+    </marker>
+    <marker id="arrB" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#3b82f6"/>
+    </marker>
+    <marker id="arrA" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#f59e0b"/>
+    </marker>
+    <marker id="arrV" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#8b5cf6"/>
+    </marker>
+  </defs>
+  <rect width="600" height="350" fill="#f7f8f9" rx="4"/>
+  <text x="300" y="28" text-anchor="middle" font-size="15" font-weight="700" fill="#1e293b">Synchronous vs Asynchronous Communication</text>
+
+  <!-- Left: Synchronous -->
+  <rect x="10" y="45" width="280" height="295" rx="10" fill="white" stroke="#e2e8f0" stroke-width="1" filter="url(#shadow)"/>
+  <text x="150" y="68" text-anchor="middle" font-size="13" font-weight="700" fill="#ef4444">Synchronous</text>
+  <text x="150" y="82" text-anchor="middle" font-size="9" fill="#64748b">Caller blocks until response</text>
+
+  <text x="55" y="102" font-size="9" font-weight="600" fill="#64748b">Service A</text>
+  <text x="205" y="102" font-size="9" font-weight="600" fill="#64748b">Service B</text>
+  <line x1="70" y1="110" x2="70" y2="310" stroke="#cbd5e1" stroke-width="1.5"/>
+  <line x1="220" y1="110" x2="220" y2="310" stroke="#cbd5e1" stroke-width="1.5"/>
+
+  <!-- Request -->
+  <line x1="73" y1="120" x2="215" y2="130" stroke="#ef4444" stroke-width="1.5" marker-end="url(#arrR)"/>
+  <text x="145" y="118" text-anchor="middle" font-size="8" fill="#ef4444">HTTP request</text>
+
+  <!-- Blocked waiting -->
+  <rect x="58" y="132" width="24" height="80" rx="3" fill="#fef2f2" stroke="#ef4444" stroke-width="1"/>
+  <text x="70" y="175" text-anchor="middle" font-size="7" fill="#ef4444" transform="rotate(-90,70,175)">BLOCKED</text>
+
+  <!-- Processing -->
+  <rect x="210" y="132" width="20" height="50" rx="3" fill="#eff6ff" stroke="#3b82f6" stroke-width="1"/>
+  <text x="220" y="160" text-anchor="middle" font-size="7" fill="#3b82f6" transform="rotate(-90,220,160)">process</text>
+
+  <!-- Response -->
+  <line x1="217" y1="185" x2="73" y2="210" stroke="#10b981" stroke-width="1.5" marker-end="url(#arrG)"/>
+  <text x="145" y="205" text-anchor="middle" font-size="8" fill="#10b981">HTTP response</text>
+
+  <!-- Continue -->
+  <text x="70" y="230" text-anchor="middle" font-size="8" fill="#1e293b">continues...</text>
+
+  <!-- Pros/Cons -->
+  <rect x="25" y="248" width="250" height="22" rx="4" fill="#ecfdf5"/>
+  <text x="150" y="263" text-anchor="middle" font-size="8" fill="#10b981">+ Simple, easy to reason about</text>
+  <rect x="25" y="274" width="250" height="22" rx="4" fill="#fef2f2"/>
+  <text x="150" y="289" text-anchor="middle" font-size="8" fill="#ef4444">- Tight coupling, cascading failures</text>
+  <rect x="25" y="300" width="250" height="22" rx="4" fill="#fef2f2"/>
+  <text x="150" y="315" text-anchor="middle" font-size="8" fill="#ef4444">- Wasted resources while waiting</text>
+
+  <!-- Right: Asynchronous -->
+  <rect x="310" y="45" width="280" height="295" rx="10" fill="white" stroke="#e2e8f0" stroke-width="1" filter="url(#shadow)"/>
+  <text x="450" y="68" text-anchor="middle" font-size="13" font-weight="700" fill="#3b82f6">Asynchronous</text>
+  <text x="450" y="82" text-anchor="middle" font-size="9" fill="#64748b">Fire and forget via message queue</text>
+
+  <text x="345" y="102" font-size="9" font-weight="600" fill="#64748b">Service A</text>
+  <text x="432" y="102" font-size="9" font-weight="600" fill="#64748b">Queue</text>
+  <text x="520" y="102" font-size="9" font-weight="600" fill="#64748b">Service B</text>
+  <line x1="360" y1="110" x2="360" y2="310" stroke="#cbd5e1" stroke-width="1.5"/>
+  <line x1="450" y1="110" x2="450" y2="310" stroke="#f59e0b" stroke-width="1.5"/>
+  <line x1="535" y1="110" x2="535" y2="310" stroke="#cbd5e1" stroke-width="1.5"/>
+
+  <!-- Publish message -->
+  <line x1="363" y1="120" x2="445" y2="125" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#arrA)"/>
+  <text x="400" y="118" text-anchor="middle" font-size="8" fill="#f59e0b">publish msg</text>
+
+  <!-- ACK -->
+  <line x1="447" y1="135" x2="363" y2="138" stroke="#10b981" stroke-width="1" marker-end="url(#arrG)"/>
+  <text x="405" y="147" text-anchor="middle" font-size="7" fill="#10b981">ack</text>
+
+  <!-- Service A continues immediately -->
+  <rect x="348" y="150" width="24" height="40" rx="3" fill="#ecfdf5" stroke="#10b981" stroke-width="1"/>
+  <text x="360" y="173" text-anchor="middle" font-size="7" fill="#10b981" transform="rotate(-90,360,173)">working</text>
+
+  <!-- Queue delivers to B later -->
+  <line x1="453" y1="155" x2="530" y2="165" stroke="#8b5cf6" stroke-width="1.5" marker-end="url(#arrV)"/>
+  <text x="490" y="153" text-anchor="middle" font-size="8" fill="#8b5cf6">deliver</text>
+
+  <!-- B processes -->
+  <rect x="525" y="168" width="20" height="40" rx="3" fill="#eff6ff" stroke="#3b82f6" stroke-width="1"/>
+  <text x="535" y="192" text-anchor="middle" font-size="7" fill="#3b82f6" transform="rotate(-90,535,192)">process</text>
+
+  <!-- Callback / event -->
+  <line x1="532" y1="212" x2="448" y2="218" stroke="#8b5cf6" stroke-width="1" marker-end="url(#arrV)"/>
+  <text x="490" y="228" text-anchor="middle" font-size="7" fill="#8b5cf6">result event</text>
+
+  <!-- Pros/Cons -->
+  <rect x="325" y="248" width="250" height="22" rx="4" fill="#ecfdf5"/>
+  <text x="450" y="263" text-anchor="middle" font-size="8" fill="#10b981">+ Loose coupling, resilient</text>
+  <rect x="325" y="274" width="250" height="22" rx="4" fill="#ecfdf5"/>
+  <text x="450" y="289" text-anchor="middle" font-size="8" fill="#10b981">+ Better scalability, no blocking</text>
+  <rect x="325" y="300" width="250" height="22" rx="4" fill="#fef2f2"/>
+  <text x="450" y="315" text-anchor="middle" font-size="8" fill="#ef4444">- Complex debugging, eventual consistency</text>
+</svg>

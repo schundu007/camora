@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 350" font-family="system-ui, -apple-system, sans-serif">
+  <rect width="600" height="350" fill="#f7f8f9" rx="12"/>
+
+  <!-- Title -->
+  <text x="300" y="32" text-anchor="middle" font-size="16" font-weight="700" fill="#1e293b">Leader-Follower Replication</text>
+
+  <!-- Client -->
+  <rect x="240" y="52" width="120" height="44" rx="8" fill="white" stroke="#8b5cf6" stroke-width="2"/>
+  <text x="300" y="78" text-anchor="middle" font-size="13" font-weight="600" fill="#1e293b">Client</text>
+
+  <!-- Arrow: Client -> Leader (Writes) -->
+  <line x1="300" y1="96" x2="300" y2="140" stroke="#8b5cf6" stroke-width="2" marker-end="url(#arrowViolet)"/>
+  <text x="325" y="124" font-size="10" fill="#8b5cf6" font-weight="600">Writes</text>
+
+  <!-- Leader Node -->
+  <rect x="215" y="140" width="170" height="50" rx="8" fill="white" stroke="#10b981" stroke-width="2.5"/>
+  <circle cx="240" cy="165" r="8" fill="#10b981"/>
+  <text x="255" y="170" font-size="14" font-weight="700" fill="#10b981">Leader Node</text>
+
+  <!-- Replication arrows -->
+  <path d="M 260 190 Q 200 230 160 250" fill="none" stroke="#3b82f6" stroke-width="2" stroke-dasharray="6 3" marker-end="url(#arrowBlue)"/>
+  <text x="170" y="228" font-size="10" fill="#3b82f6" font-weight="600">Replicate</text>
+
+  <path d="M 340 190 Q 400 230 440 250" fill="none" stroke="#3b82f6" stroke-width="2" stroke-dasharray="6 3" marker-end="url(#arrowBlue)"/>
+  <text x="390" y="228" font-size="10" fill="#3b82f6" font-weight="600">Replicate</text>
+
+  <!-- Follower 1 -->
+  <rect x="60" y="250" width="170" height="50" rx="8" fill="white" stroke="#3b82f6" stroke-width="2"/>
+  <circle cx="85" cy="275" r="8" fill="#3b82f6"/>
+  <text x="100" y="280" font-size="13" font-weight="600" fill="#3b82f6">Follower 1</text>
+
+  <!-- Follower 2 -->
+  <rect x="370" y="250" width="170" height="50" rx="8" fill="white" stroke="#3b82f6" stroke-width="2"/>
+  <circle cx="395" cy="275" r="8" fill="#3b82f6"/>
+  <text x="410" y="280" font-size="13" font-weight="600" fill="#3b82f6">Follower 2</text>
+
+  <!-- Read clients -->
+  <rect x="42" y="310" width="80" height="30" rx="6" fill="white" stroke="#64748b" stroke-width="1.5"/>
+  <text x="82" y="330" text-anchor="middle" font-size="10" fill="#64748b">Read Client</text>
+  <line x1="82" y1="300" x2="100" y2="310" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrowGray)"/>
+
+  <rect x="168" y="310" width="80" height="30" rx="6" fill="white" stroke="#64748b" stroke-width="1.5"/>
+  <text x="208" y="330" text-anchor="middle" font-size="10" fill="#64748b">Read Client</text>
+  <line x1="180" y1="300" x2="190" y2="310" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrowGray)"/>
+
+  <rect x="352" y="310" width="80" height="30" rx="6" fill="white" stroke="#64748b" stroke-width="1.5"/>
+  <text x="392" y="330" text-anchor="middle" font-size="10" fill="#64748b">Read Client</text>
+  <line x1="420" y1="300" x2="410" y2="310" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrowGray)"/>
+
+  <rect x="478" y="310" width="80" height="30" rx="6" fill="white" stroke="#64748b" stroke-width="1.5"/>
+  <text x="518" y="330" text-anchor="middle" font-size="10" fill="#64748b">Read Client</text>
+  <line x1="500" y1="300" x2="510" y2="310" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrowGray)"/>
+
+  <!-- Legend -->
+  <rect x="10" y="52" width="12" height="12" rx="3" fill="#10b981"/>
+  <text x="28" y="63" font-size="10" fill="#64748b">All writes</text>
+  <rect x="10" y="70" width="12" height="12" rx="3" fill="#3b82f6"/>
+  <text x="28" y="81" font-size="10" fill="#64748b">Serves reads</text>
+
+  <!-- Arrow markers -->
+  <defs>
+    <marker id="arrowViolet" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M 0 0 L 8 3 L 0 6 Z" fill="#8b5cf6"/>
+    </marker>
+    <marker id="arrowBlue" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M 0 0 L 8 3 L 0 6 Z" fill="#3b82f6"/>
+    </marker>
+    <marker id="arrowGray" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto">
+      <path d="M 0 0 L 6 2.5 L 0 5 Z" fill="#64748b"/>
+    </marker>
+  </defs>
+</svg>

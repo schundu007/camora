@@ -259,6 +259,338 @@ Traffic Estimates:
             'Not discussing failure scenarios'
           ]
         }
+      ],
+
+      // ── Visual Enhancements ──────────────────────────────────────
+
+      // Static architecture/concept diagrams (pre-generated, stored in public/diagrams/)
+      staticDiagrams: [
+        {
+          id: 'cap-theorem',
+          title: 'CAP Theorem',
+          description: 'Choose two of three: Consistency, Availability, Partition Tolerance',
+          src: '/diagrams/fundamentals/cap-theorem.svg',
+          type: 'architecture'
+        },
+        {
+          id: 'scaling-types',
+          title: 'Vertical vs Horizontal Scaling',
+          description: 'Two fundamental approaches to handling increased load',
+          src: '/diagrams/fundamentals/scaling-comparison.svg',
+          type: 'architecture'
+        },
+        {
+          id: 'distributed-architecture',
+          title: 'Distributed System Architecture',
+          description: 'CDN → Load Balancer → App Servers → Cache → Database cluster',
+          src: '/diagrams/fundamentals/distributed-architecture.svg',
+          type: 'architecture'
+        }
+      ],
+
+      // Side-by-side comparison cards
+      comparisonTables: [
+        {
+          id: 'vertical-vs-horizontal',
+          title: 'Vertical vs Horizontal Scaling',
+          left: {
+            title: 'Vertical Scaling (Scale Up)',
+            icon: 'arrowUp',
+            color: '#3b82f6',
+            items: [
+              { label: 'Approach', value: 'Add more CPU/RAM/Storage to one machine' },
+              { label: 'Complexity', value: 'Low — no code changes needed' },
+              { label: 'Limit', value: 'Hardware ceiling (single machine)' },
+              { label: 'Fault Tolerance', value: 'Single point of failure' },
+              { label: 'Cost', value: 'Expensive at high end' },
+              { label: 'Best For', value: 'Starting out, simple apps, databases' }
+            ]
+          },
+          right: {
+            title: 'Horizontal Scaling (Scale Out)',
+            icon: 'arrowRight',
+            color: '#10b981',
+            items: [
+              { label: 'Approach', value: 'Add more machines to the pool' },
+              { label: 'Complexity', value: 'High — requires distributed design' },
+              { label: 'Limit', value: 'Virtually unlimited' },
+              { label: 'Fault Tolerance', value: 'Built-in redundancy' },
+              { label: 'Cost', value: 'Cost-effective at scale' },
+              { label: 'Best For', value: 'High traffic, fault tolerance, geo-distribution' }
+            ]
+          }
+        },
+        {
+          id: 'cp-vs-ap',
+          title: 'CP vs AP Systems (CAP Theorem)',
+          left: {
+            title: 'CP — Consistency + Partition',
+            icon: 'lock',
+            color: '#ef4444',
+            items: [
+              { label: 'Behavior', value: 'Refuses requests during partition' },
+              { label: 'Guarantee', value: 'Every read gets latest write' },
+              { label: 'Trade-off', value: 'May be unavailable during failures' },
+              { label: 'Examples', value: 'HBase, MongoDB, Redis Cluster' },
+              { label: 'Use When', value: 'Financial transactions, inventory' },
+              { label: 'Downside', value: 'Latency spikes, reduced availability' }
+            ]
+          },
+          right: {
+            title: 'AP — Availability + Partition',
+            icon: 'globe',
+            color: '#10b981',
+            items: [
+              { label: 'Behavior', value: 'Always responds, may serve stale data' },
+              { label: 'Guarantee', value: 'Every request gets a response' },
+              { label: 'Trade-off', value: 'May return outdated information' },
+              { label: 'Examples', value: 'Cassandra, DynamoDB, CouchDB' },
+              { label: 'Use When', value: 'Social feeds, caching, analytics' },
+              { label: 'Downside', value: 'Eventual consistency, conflict resolution' }
+            ]
+          }
+        }
+      ],
+
+      // Quick-reference cheat sheet cards
+      visualCards: [
+        {
+          id: 'latency-numbers',
+          title: 'Latency Numbers Every Programmer Should Know',
+          color: '#8b5cf6',
+          icon: 'clock',
+          items: [
+            { label: 'L1 cache reference', value: '0.5 ns', bar: 1 },
+            { label: 'Branch mispredict', value: '5 ns', bar: 2 },
+            { label: 'L2 cache reference', value: '7 ns', bar: 2 },
+            { label: 'Mutex lock/unlock', value: '25 ns', bar: 3 },
+            { label: 'Main memory reference', value: '100 ns', bar: 5 },
+            { label: 'Compress 1KB (Snappy)', value: '3,000 ns (3 μs)', bar: 15 },
+            { label: 'Send 1KB over 1 Gbps', value: '10,000 ns (10 μs)', bar: 20 },
+            { label: 'Read 4KB from SSD', value: '150,000 ns (150 μs)', bar: 35 },
+            { label: 'Read 1MB from memory', value: '250,000 ns (250 μs)', bar: 40 },
+            { label: 'Round trip in datacenter', value: '500,000 ns (0.5 ms)', bar: 50 },
+            { label: 'Read 1MB from SSD', value: '1,000,000 ns (1 ms)', bar: 60 },
+            { label: 'HDD seek', value: '10,000,000 ns (10 ms)', bar: 75 },
+            { label: 'Read 1MB from HDD', value: '20,000,000 ns (20 ms)', bar: 80 },
+            { label: 'Send packet CA→NL→CA', value: '150,000,000 ns (150 ms)', bar: 100 }
+          ]
+        },
+        {
+          id: 'availability-numbers',
+          title: 'Availability Cheat Sheet',
+          color: '#10b981',
+          icon: 'shield',
+          items: [
+            { label: '99% (two 9s)', value: '3.65 days/year', bar: 10 },
+            { label: '99.9% (three 9s)', value: '8.76 hours/year', bar: 30 },
+            { label: '99.99% (four 9s)', value: '52.6 min/year', bar: 55 },
+            { label: '99.999% (five 9s)', value: '5.26 min/year', bar: 80 },
+            { label: '99.9999% (six 9s)', value: '31.5 sec/year', bar: 95 }
+          ]
+        },
+        {
+          id: 'storage-numbers',
+          title: 'Storage & Traffic Quick Reference',
+          color: '#f59e0b',
+          icon: 'database',
+          items: [
+            { label: 'Char / small int', value: '1-4 bytes', bar: 2 },
+            { label: 'Tweet / short text', value: '~300 bytes', bar: 5 },
+            { label: 'Typical JSON API response', value: '1-10 KB', bar: 10 },
+            { label: 'Average web image', value: '200 KB', bar: 25 },
+            { label: '1 min compressed audio', value: '1 MB', bar: 35 },
+            { label: 'HD photo', value: '5 MB', bar: 45 },
+            { label: '1 min SD video', value: '25 MB', bar: 60 },
+            { label: '1 min HD video', value: '150 MB', bar: 80 },
+            { label: '1 hour 4K video', value: '20 GB', bar: 100 }
+          ]
+        }
+      ],
+
+      // Workflow / process flowcharts (pre-generated SVGs)
+      flowcharts: [
+        {
+          id: 'estimation-process',
+          title: 'Back-of-Envelope Estimation Process',
+          description: 'Step-by-step framework for estimating system scale in interviews',
+          src: '/diagrams/fundamentals/estimation-flowchart.svg',
+          steps: [
+            { step: 1, label: 'Clarify Requirements', detail: 'Functional + Non-functional' },
+            { step: 2, label: 'Estimate DAU', detail: 'Daily Active Users' },
+            { step: 3, label: 'Calculate QPS', detail: 'DAU × actions ÷ 86,400' },
+            { step: 4, label: 'Peak QPS', detail: '2-5× average QPS' },
+            { step: 5, label: 'Estimate Storage', detail: 'Data/action × actions × retention' },
+            { step: 6, label: 'Estimate Bandwidth', detail: 'QPS × response size' }
+          ]
+        },
+        {
+          id: 'interview-framework',
+          title: 'System Design Interview Framework',
+          description: 'The proven 6-step approach used at FAANG interviews',
+          src: '/diagrams/fundamentals/interview-framework.svg',
+          steps: [
+            { step: 1, label: 'Requirements', detail: 'Clarify scope, users, constraints (5 min)' },
+            { step: 2, label: 'Estimation', detail: 'Back-of-envelope: QPS, storage, bandwidth (5 min)' },
+            { step: 3, label: 'High-Level Design', detail: 'Draw boxes: client, API, services, DB (10 min)' },
+            { step: 4, label: 'Deep Dive', detail: 'Detail 2-3 critical components (15 min)' },
+            { step: 5, label: 'Trade-offs', detail: 'Discuss alternatives and justify choices (5 min)' },
+            { step: 6, label: 'Wrap Up', detail: 'Bottlenecks, monitoring, future scaling (5 min)' }
+          ]
+        }
+      ],
+
+      // Bar/pie chart data for visual understanding
+      charts: [
+        {
+          id: 'latency-comparison',
+          title: 'Latency Scale: From Nanoseconds to Milliseconds',
+          src: '/diagrams/fundamentals/latency-chart.svg',
+          type: 'bar',
+          data: [
+            { label: 'L1 Cache', value: 0.5, unit: 'ns', color: '#10b981' },
+            { label: 'RAM', value: 100, unit: 'ns', color: '#3b82f6' },
+            { label: 'SSD Read', value: 150000, unit: 'ns', color: '#f59e0b' },
+            { label: 'Network (DC)', value: 500000, unit: 'ns', color: '#8b5cf6' },
+            { label: 'HDD Seek', value: 10000000, unit: 'ns', color: '#ef4444' },
+            { label: 'Internet RTT', value: 150000000, unit: 'ns', color: '#dc2626' }
+          ]
+        },
+        {
+          id: 'read-write-ratios',
+          title: 'Typical Read:Write Ratios by Application Type',
+          src: '/diagrams/fundamentals/read-write-ratios.svg',
+          type: 'bar',
+          data: [
+            { label: 'Social Feed', read: 100, write: 1, color: '#3b82f6' },
+            { label: 'E-Commerce', read: 50, write: 1, color: '#10b981' },
+            { label: 'URL Shortener', read: 100, write: 1, color: '#8b5cf6' },
+            { label: 'Chat App', read: 5, write: 1, color: '#f59e0b' },
+            { label: 'Analytics', read: 10, write: 10, color: '#ef4444' }
+          ]
+        }
+      ],
+
+      // Architecture evolution timeline
+      evolutionSteps: [
+        {
+          step: 1,
+          title: 'Single Server',
+          description: 'Web server + DB on one machine. Simple but fragile.',
+          icon: 'server',
+          color: '#ef4444',
+          capacity: '~1K users',
+          rps: '100-1K',
+          pros: ['Simple setup', 'Low cost', 'Easy debugging'],
+          cons: ['Single point of failure', 'No scalability', 'Downtime for maintenance'],
+          diagram: '/diagrams/fundamentals/evolution-1-single.svg'
+        },
+        {
+          step: 2,
+          title: 'Separate Database',
+          description: 'Dedicated DB server. Web and data can scale independently.',
+          icon: 'database',
+          color: '#f59e0b',
+          capacity: '~10K users',
+          rps: '1K-5K',
+          pros: ['Independent scaling', 'Better resource allocation', 'DB can be optimized separately'],
+          cons: ['Network latency to DB', 'Still limited horizontally', 'More operational overhead'],
+          diagram: '/diagrams/fundamentals/evolution-2-separate-db.svg'
+        },
+        {
+          step: 3,
+          title: 'Load Balanced',
+          description: 'Multiple web servers behind a load balancer. Add cache layer.',
+          icon: 'layers',
+          color: '#3b82f6',
+          capacity: '~100K users',
+          rps: '5K-50K',
+          pros: ['Horizontal scaling', 'No single point of failure', 'Rolling deployments'],
+          cons: ['Session management complexity', 'Cache invalidation', 'More infrastructure'],
+          diagram: '/diagrams/fundamentals/evolution-3-load-balanced.svg'
+        },
+        {
+          step: 4,
+          title: 'Cached + Replicated',
+          description: 'Redis/Memcached cache + Primary-Replica DB + Message queues.',
+          icon: 'zap',
+          color: '#8b5cf6',
+          capacity: '~1M users',
+          rps: '50K-500K',
+          pros: ['90% cache hit rate', 'Read replicas scale reads', 'Async processing via queues'],
+          cons: ['Cache invalidation complexity', 'Replication lag', 'Operational complexity'],
+          diagram: '/diagrams/fundamentals/evolution-4-cached.svg'
+        },
+        {
+          step: 5,
+          title: 'Globally Distributed',
+          description: 'CDN + Multi-region + DB sharding + Microservices + Monitoring.',
+          icon: 'globe',
+          color: '#10b981',
+          capacity: '100M+ users',
+          rps: '500K-Millions',
+          pros: ['Low latency worldwide', 'Extreme fault tolerance', 'Independent team scaling'],
+          cons: ['Distributed systems complexity', 'Data consistency challenges', 'High operational cost'],
+          diagram: '/diagrams/fundamentals/evolution-5-global.svg'
+        }
+      ],
+
+      // Design pattern cards (for the discussion points section)
+      patternCards: [
+        {
+          id: 'stateless',
+          name: 'Stateless Services',
+          icon: 'layers',
+          color: '#10b981',
+          description: 'No server-side session state. Any server can handle any request.',
+          useWhen: 'Horizontal scaling, load balancing, rolling deployments',
+          example: 'JWT tokens, externalized session in Redis'
+        },
+        {
+          id: 'sharding',
+          name: 'Database Sharding',
+          icon: 'database',
+          color: '#3b82f6',
+          description: 'Split data across multiple DB instances by a shard key.',
+          useWhen: 'Single DB can\'t handle write volume or data size',
+          example: 'Shard by user_id, geographic region, or tenant'
+        },
+        {
+          id: 'caching',
+          name: 'Caching Layers',
+          icon: 'zap',
+          color: '#f59e0b',
+          description: 'Store frequently accessed data in fast storage (RAM).',
+          useWhen: 'Read-heavy workloads, expensive computations, hot data',
+          example: 'Redis/Memcached, CDN, browser cache, application cache'
+        },
+        {
+          id: 'async',
+          name: 'Async Processing',
+          icon: 'clock',
+          color: '#8b5cf6',
+          description: 'Decouple work from request path using message queues.',
+          useWhen: 'Spiky traffic, long-running tasks, decoupled services',
+          example: 'Kafka, RabbitMQ, SQS for email, image processing'
+        },
+        {
+          id: 'circuit-breaker',
+          name: 'Circuit Breaker',
+          icon: 'shield',
+          color: '#ef4444',
+          description: 'Stop calling a failing service to prevent cascade failures.',
+          useWhen: 'Microservices, external API dependencies',
+          example: 'Hystrix, Resilience4j — open/half-open/closed states'
+        },
+        {
+          id: 'graceful-degradation',
+          name: 'Graceful Degradation',
+          icon: 'alertTriangle',
+          color: '#f97316',
+          description: 'Provide partial functionality when components fail.',
+          useWhen: 'Non-critical features, third-party dependencies',
+          example: 'Show cached data, disable recommendations, static fallback'
+        }
       ]
     },
     {
@@ -548,6 +880,81 @@ NoSQL Graph:
             'Cassandra: High write throughput, time-series data',
             'DynamoDB: Managed NoSQL, serverless friendly'
           ]
+        }
+      ],
+      comparisonTables: [
+        {
+          id: 'sql-vs-nosql',
+          title: 'SQL vs NoSQL',
+          left: {
+            title: 'SQL (Relational)',
+            icon: 'database',
+            color: '#3b82f6',
+            items: [
+              { label: 'Schema', value: 'Fixed schema, tables with rows/columns' },
+              { label: 'Scaling', value: 'Primarily vertical scaling' },
+              { label: 'Queries', value: 'Complex JOINs, aggregations' },
+              { label: 'ACID', value: 'Full ACID compliance' },
+              { label: 'Examples', value: 'PostgreSQL, MySQL, Oracle' },
+              { label: 'Best For', value: 'Transactions, complex relationships' }
+            ]
+          },
+          right: {
+            title: 'NoSQL (Non-relational)',
+            icon: 'layers',
+            color: '#10b981',
+            items: [
+              { label: 'Schema', value: 'Flexible/schema-less, documents/KV' },
+              { label: 'Scaling', value: 'Horizontal scaling built-in' },
+              { label: 'Queries', value: 'Simple lookups, key-based access' },
+              { label: 'ACID', value: 'Eventual consistency (BASE)' },
+              { label: 'Examples', value: 'MongoDB, Cassandra, DynamoDB, Redis' },
+              { label: 'Best For', value: 'High volume, flexible data, fast iteration' }
+            ]
+          }
+        }
+      ],
+      visualCards: [
+        {
+          id: 'db-decision-guide',
+          title: 'Database Selection Quick Guide',
+          color: '#3b82f6',
+          icon: 'database',
+          items: [
+            { label: 'Need JOINs & transactions?', value: 'SQL (PostgreSQL)', bar: 90 },
+            { label: 'Flexible schema, fast writes?', value: 'Document DB (MongoDB)', bar: 75 },
+            { label: 'Simple key-value lookups?', value: 'KV Store (Redis, DynamoDB)', bar: 60 },
+            { label: 'Graph relationships?', value: 'Graph DB (Neo4j)', bar: 45 },
+            { label: 'Time-series data?', value: 'TimescaleDB, InfluxDB', bar: 35 },
+            { label: 'Full-text search?', value: 'Elasticsearch', bar: 50 },
+            { label: 'Wide-column analytics?', value: 'Cassandra, HBase', bar: 40 }
+          ]
+        }
+      ],
+      patternCards: [
+        {
+          id: 'sharding', name: 'Sharding', icon: 'layers', color: '#3b82f6',
+          description: 'Split data across multiple DB instances by a shard key.',
+          useWhen: 'Single DB can\'t handle write volume or data size',
+          example: 'Shard by user_id, geographic region, or tenant_id'
+        },
+        {
+          id: 'replication', name: 'Replication', icon: 'copy', color: '#10b981',
+          description: 'Copy data to multiple nodes for read scaling and fault tolerance.',
+          useWhen: 'Read-heavy workloads, need high availability',
+          example: 'Primary-replica, multi-master, synchronous vs async'
+        },
+        {
+          id: 'indexing', name: 'Indexing', icon: 'search', color: '#8b5cf6',
+          description: 'Create data structures for faster lookups (B-Tree, Hash, GIN).',
+          useWhen: 'Slow queries, frequent WHERE/ORDER BY on specific columns',
+          example: 'CREATE INDEX idx_users_email ON users(email)'
+        },
+        {
+          id: 'denormalization', name: 'Denormalization', icon: 'zap', color: '#f59e0b',
+          description: 'Duplicate data to avoid expensive JOINs at read time.',
+          useWhen: 'Read-heavy, performance-critical queries',
+          example: 'Store user_name in orders table instead of JOINing users'
         }
       ]
     },
@@ -876,6 +1283,80 @@ Request 100 ─┘
             'Consider read-your-writes consistency'
           ]
         }
+      ],
+      comparisonTables: [
+        {
+          id: 'cache-strategies',
+          title: 'Caching Strategies',
+          left: {
+            title: 'Cache-Aside (Lazy Loading)',
+            icon: 'search',
+            color: '#3b82f6',
+            items: [
+              { label: 'Flow', value: 'App checks cache → miss → read DB → write cache' },
+              { label: 'Pros', value: 'Only caches what is needed, resilient to cache failure' },
+              { label: 'Cons', value: 'Cache miss = 3 trips, data can be stale' },
+              { label: 'Use When', value: 'Read-heavy, can tolerate stale data' },
+              { label: 'Examples', value: 'User profiles, product catalog' },
+              { label: 'Staleness', value: 'TTL-based expiration' }
+            ]
+          },
+          right: {
+            title: 'Write-Through',
+            icon: 'edit',
+            color: '#10b981',
+            items: [
+              { label: 'Flow', value: 'App writes cache + DB simultaneously' },
+              { label: 'Pros', value: 'Cache always consistent, no stale reads' },
+              { label: 'Cons', value: 'Higher write latency, caches unused data' },
+              { label: 'Use When', value: 'Need strong consistency' },
+              { label: 'Examples', value: 'Session storage, real-time dashboards' },
+              { label: 'Staleness', value: 'None — always fresh' }
+            ]
+          }
+        }
+      ],
+      visualCards: [
+        {
+          id: 'cache-hit-rates',
+          title: 'Typical Cache Hit Rates by Use Case',
+          color: '#10b981',
+          icon: 'zap',
+          items: [
+            { label: 'Static assets (CDN)', value: '95-99%', bar: 97 },
+            { label: 'User sessions', value: '90-95%', bar: 92 },
+            { label: 'Database query results', value: '80-95%', bar: 87 },
+            { label: 'API responses', value: '70-90%', bar: 80 },
+            { label: 'Search results', value: '60-80%', bar: 70 },
+            { label: 'Personalized content', value: '40-60%', bar: 50 }
+          ]
+        }
+      ],
+      patternCards: [
+        {
+          id: 'cache-aside', name: 'Cache-Aside', icon: 'search', color: '#3b82f6',
+          description: 'Application manages cache reads/writes. Most common pattern.',
+          useWhen: 'Read-heavy workloads with tolerance for stale data',
+          example: 'Redis as cache-aside for PostgreSQL queries'
+        },
+        {
+          id: 'write-through', name: 'Write-Through', icon: 'edit', color: '#10b981',
+          description: 'Every write goes to cache AND database simultaneously.',
+          useWhen: 'Strong consistency required between cache and DB',
+          example: 'DynamoDB Accelerator (DAX)'
+        },
+        {
+          id: 'write-behind', name: 'Write-Behind (Write-Back)', icon: 'clock', color: '#f59e0b',
+          description: 'Write to cache immediately, async flush to DB later.',
+          useWhen: 'High write throughput, can tolerate data loss risk',
+          example: 'Gaming leaderboards, analytics counters'
+        },
+        {
+          id: 'cache-eviction', name: 'Cache Eviction', icon: 'trash', color: '#ef4444',
+          description: 'Remove items when cache is full: LRU, LFU, FIFO, TTL.',
+          useWhen: 'Memory management — always needed',
+          example: 'LRU eviction in Redis with maxmemory-policy allkeys-lru'
+        }
       ]
     },
     {
@@ -1187,6 +1668,80 @@ Messages that fail repeatedly go to separate queue for investigation.
             'Handle schema evolution (Avro, Protobuf)',
             'Test failure scenarios (broker down, network partition)'
           ]
+        }
+      ],
+      comparisonTables: [
+        {
+          id: 'pubsub-vs-p2p',
+          title: 'Pub/Sub vs Point-to-Point',
+          left: {
+            title: 'Publish/Subscribe',
+            icon: 'globe',
+            color: '#8b5cf6',
+            items: [
+              { label: 'Model', value: 'One message → multiple consumers' },
+              { label: 'Coupling', value: 'Loose — publishers don\'t know subscribers' },
+              { label: 'Scaling', value: 'Add subscribers without changing publisher' },
+              { label: 'Use Case', value: 'Events, notifications, fan-out' },
+              { label: 'Examples', value: 'Kafka topics, SNS, Redis Pub/Sub' },
+              { label: 'Delivery', value: 'All subscribers get every message' }
+            ]
+          },
+          right: {
+            title: 'Point-to-Point (Queue)',
+            icon: 'arrowRight',
+            color: '#f59e0b',
+            items: [
+              { label: 'Model', value: 'One message → one consumer' },
+              { label: 'Coupling', value: 'Moderate — consumers compete for messages' },
+              { label: 'Scaling', value: 'Add consumers to increase throughput' },
+              { label: 'Use Case', value: 'Task distribution, work queues' },
+              { label: 'Examples', value: 'SQS, RabbitMQ queues, Celery' },
+              { label: 'Delivery', value: 'Exactly one consumer processes each message' }
+            ]
+          }
+        }
+      ],
+      visualCards: [
+        {
+          id: 'queue-comparison',
+          title: 'Message Queue Technologies',
+          color: '#8b5cf6',
+          icon: 'layers',
+          items: [
+            { label: 'Apache Kafka', value: 'High throughput, log-based', bar: 95 },
+            { label: 'RabbitMQ', value: 'Flexible routing, AMQP', bar: 75 },
+            { label: 'Amazon SQS', value: 'Managed, serverless', bar: 70 },
+            { label: 'Redis Streams', value: 'Lightweight, fast', bar: 60 },
+            { label: 'Apache Pulsar', value: 'Multi-tenant, tiered storage', bar: 55 },
+            { label: 'NATS', value: 'Ultra-lightweight, cloud-native', bar: 45 }
+          ]
+        }
+      ],
+      patternCards: [
+        {
+          id: 'dlq', name: 'Dead Letter Queue', icon: 'alertTriangle', color: '#ef4444',
+          description: 'Route failed messages to a separate queue for investigation.',
+          useWhen: 'Message processing can fail, need retry/debug mechanism',
+          example: 'SQS DLQ after 3 retries, RabbitMQ dead letter exchange'
+        },
+        {
+          id: 'exactly-once', name: 'Exactly-Once Delivery', icon: 'check', color: '#10b981',
+          description: 'Guarantee each message is processed exactly once using idempotency.',
+          useWhen: 'Financial transactions, order processing',
+          example: 'Kafka transactional API + idempotent consumers'
+        },
+        {
+          id: 'backpressure', name: 'Backpressure', icon: 'shield', color: '#3b82f6',
+          description: 'Slow down producers when consumers can\'t keep up.',
+          useWhen: 'Prevent queue overflow, protect downstream services',
+          example: 'Kafka consumer lag monitoring, RabbitMQ flow control'
+        },
+        {
+          id: 'event-sourcing', name: 'Event Sourcing', icon: 'clock', color: '#8b5cf6',
+          description: 'Store events as the source of truth, rebuild state from event log.',
+          useWhen: 'Audit trail, temporal queries, CQRS',
+          example: 'Bank transactions, shopping cart events'
         }
       ]
     },
@@ -1523,6 +2078,85 @@ JWT Payload:
             'Document error responses',
             'Provide SDKs for popular languages'
           ]
+        }
+      ],
+      comparisonTables: [
+        {
+          id: 'rest-vs-graphql-vs-grpc',
+          title: 'REST vs GraphQL vs gRPC',
+          left: {
+            title: 'REST',
+            icon: 'globe',
+            color: '#3b82f6',
+            items: [
+              { label: 'Format', value: 'JSON over HTTP' },
+              { label: 'Schema', value: 'OpenAPI/Swagger (optional)' },
+              { label: 'Strengths', value: 'Simple, cacheable, widely adopted' },
+              { label: 'Weaknesses', value: 'Over/under-fetching, multiple round trips' },
+              { label: 'Use When', value: 'Public APIs, CRUD operations, web apps' },
+              { label: 'Examples', value: 'Stripe API, GitHub API, Twitter API' }
+            ]
+          },
+          right: {
+            title: 'gRPC',
+            icon: 'zap',
+            color: '#10b981',
+            items: [
+              { label: 'Format', value: 'Protocol Buffers over HTTP/2' },
+              { label: 'Schema', value: 'Strict .proto files (required)' },
+              { label: 'Strengths', value: '10x faster, streaming, type-safe' },
+              { label: 'Weaknesses', value: 'Not browser-friendly, harder debugging' },
+              { label: 'Use When', value: 'Microservices, internal APIs, real-time' },
+              { label: 'Examples', value: 'Google Cloud APIs, Netflix internal' }
+            ]
+          }
+        }
+      ],
+      visualCards: [
+        {
+          id: 'http-status-codes',
+          title: 'HTTP Status Code Cheat Sheet',
+          color: '#3b82f6',
+          icon: 'code',
+          items: [
+            { label: '200 OK', value: 'Successful request', bar: 95 },
+            { label: '201 Created', value: 'Resource created (POST)', bar: 80 },
+            { label: '204 No Content', value: 'Success, no body (DELETE)', bar: 60 },
+            { label: '301 Moved Permanently', value: 'URL changed forever', bar: 40 },
+            { label: '400 Bad Request', value: 'Invalid input', bar: 75 },
+            { label: '401 Unauthorized', value: 'Not authenticated', bar: 70 },
+            { label: '403 Forbidden', value: 'Authenticated but not allowed', bar: 65 },
+            { label: '404 Not Found', value: 'Resource doesn\'t exist', bar: 85 },
+            { label: '429 Too Many Requests', value: 'Rate limited', bar: 55 },
+            { label: '500 Internal Server Error', value: 'Server bug', bar: 90 },
+            { label: '503 Service Unavailable', value: 'Server overloaded/down', bar: 50 }
+          ]
+        }
+      ],
+      patternCards: [
+        {
+          id: 'pagination', name: 'Pagination', icon: 'list', color: '#3b82f6',
+          description: 'Return data in pages: offset-based or cursor-based.',
+          useWhen: 'Any list endpoint returning more than ~50 items',
+          example: '?cursor=abc123&limit=20 (cursor) or ?page=2&size=20 (offset)'
+        },
+        {
+          id: 'rate-limit', name: 'Rate Limiting', icon: 'shield', color: '#ef4444',
+          description: 'Restrict number of requests per time window.',
+          useWhen: 'Public APIs, protect against abuse and DDoS',
+          example: 'Token bucket: 100 req/min, return 429 + Retry-After header'
+        },
+        {
+          id: 'versioning', name: 'API Versioning', icon: 'gitBranch', color: '#8b5cf6',
+          description: 'Support multiple API versions simultaneously.',
+          useWhen: 'Breaking changes needed without breaking existing clients',
+          example: '/api/v2/users or Accept: application/vnd.api+json;v=2'
+        },
+        {
+          id: 'idempotency', name: 'Idempotency', icon: 'check', color: '#10b981',
+          description: 'Same request repeated = same result. Safe to retry.',
+          useWhen: 'Payment processing, any non-GET mutation',
+          example: 'Idempotency-Key header, store request hash + response'
         }
       ]
     },
@@ -1906,6 +2540,81 @@ No server-side storage
             'Rate limiting at the load balancer'
           ]
         }
+      ],
+      comparisonTables: [
+        {
+          id: 'l4-vs-l7',
+          title: 'L4 vs L7 Load Balancing',
+          left: {
+            title: 'Layer 4 (Transport)',
+            icon: 'layers',
+            color: '#f59e0b',
+            items: [
+              { label: 'Level', value: 'TCP/UDP — routes by IP and port' },
+              { label: 'Speed', value: 'Very fast — no payload inspection' },
+              { label: 'Intelligence', value: 'Low — can\'t read HTTP headers/URL' },
+              { label: 'SSL', value: 'Passes through (or TCP termination)' },
+              { label: 'Use When', value: 'Raw speed, non-HTTP protocols, gaming' },
+              { label: 'Examples', value: 'AWS NLB, HAProxy TCP mode' }
+            ]
+          },
+          right: {
+            title: 'Layer 7 (Application)',
+            icon: 'globe',
+            color: '#3b82f6',
+            items: [
+              { label: 'Level', value: 'HTTP — routes by URL, headers, cookies' },
+              { label: 'Speed', value: 'Slower — inspects request content' },
+              { label: 'Intelligence', value: 'High — content-based routing' },
+              { label: 'SSL', value: 'Terminates SSL, can modify headers' },
+              { label: 'Use When', value: 'Web apps, A/B testing, canary deploys' },
+              { label: 'Examples', value: 'AWS ALB, Nginx, Envoy' }
+            ]
+          }
+        }
+      ],
+      visualCards: [
+        {
+          id: 'lb-algorithms',
+          title: 'Load Balancing Algorithms',
+          color: '#f59e0b',
+          icon: 'layers',
+          items: [
+            { label: 'Round Robin', value: 'Sequential rotation — simplest', bar: 30 },
+            { label: 'Weighted Round Robin', value: 'Proportional to server capacity', bar: 45 },
+            { label: 'Least Connections', value: 'Route to least busy server', bar: 65 },
+            { label: 'Least Response Time', value: 'Route to fastest server', bar: 75 },
+            { label: 'IP Hash', value: 'Sticky sessions by client IP', bar: 50 },
+            { label: 'Consistent Hashing', value: 'Minimal redistribution on change', bar: 85 },
+            { label: 'Random', value: 'Random selection — surprisingly effective', bar: 25 }
+          ]
+        }
+      ],
+      patternCards: [
+        {
+          id: 'health-checks', name: 'Health Checks', icon: 'heart', color: '#ef4444',
+          description: 'Periodically probe backends to remove unhealthy servers.',
+          useWhen: 'Always — essential for any load balancer',
+          example: 'HTTP GET /health every 10s, remove after 3 failures'
+        },
+        {
+          id: 'sticky-sessions', name: 'Sticky Sessions', icon: 'lock', color: '#f59e0b',
+          description: 'Route same client to same server (session affinity).',
+          useWhen: 'Stateful apps, WebSocket connections, file uploads',
+          example: 'Cookie-based affinity, IP hash in Nginx'
+        },
+        {
+          id: 'global-lb', name: 'Global Load Balancing', icon: 'globe', color: '#3b82f6',
+          description: 'DNS-based routing to nearest regional data center.',
+          useWhen: 'Multi-region deployments, disaster recovery',
+          example: 'AWS Route 53 latency routing, Cloudflare Load Balancing'
+        },
+        {
+          id: 'circuit-breaker-lb', name: 'Circuit Breaker', icon: 'shield', color: '#8b5cf6',
+          description: 'Stop routing to failing backends, try again after timeout.',
+          useWhen: 'Prevent cascade failures when a backend is degraded',
+          example: 'Envoy outlier detection, Istio circuit breaking'
+        }
       ]
     },
     {
@@ -2056,6 +2765,140 @@ return {0, tokens}
             'API Gateway: User-level limits (1000/min for Pro)',
             'Service-level: Endpoint-specific limits'
           ]
+        }
+      ],
+      comparisonTables: [
+        {
+          id: 'token-bucket-vs-sliding-window',
+          title: 'Token Bucket vs Sliding Window',
+          left: {
+            title: 'Token Bucket',
+            icon: 'zap',
+            color: '#f59e0b',
+            items: [
+              { label: 'Concept', value: 'Tokens added at fixed rate, consumed per request' },
+              { label: 'Burst', value: 'Allows bursts up to bucket capacity' },
+              { label: 'Memory', value: 'O(1) — just counter + timestamp' },
+              { label: 'Precision', value: 'Approximate — allows brief overages' },
+              { label: 'Use When', value: 'APIs needing burst tolerance' },
+              { label: 'Examples', value: 'AWS API Gateway, Stripe' }
+            ]
+          },
+          right: {
+            title: 'Sliding Window Log',
+            icon: 'clock',
+            color: '#3b82f6',
+            items: [
+              { label: 'Concept', value: 'Track timestamps of all requests in window' },
+              { label: 'Burst', value: 'Strict — no bursts allowed' },
+              { label: 'Memory', value: 'O(n) — stores each request timestamp' },
+              { label: 'Precision', value: 'Exact — precise rate enforcement' },
+              { label: 'Use When', value: 'Strict rate enforcement needed' },
+              { label: 'Examples', value: 'Financial APIs, compliance' }
+            ]
+          }
+        },
+        {
+          id: 'token-bucket-vs-sliding-window',
+          title: 'Token Bucket vs Sliding Window',
+          left: {
+            title: 'Token Bucket',
+            icon: 'database',
+            color: '#f59e0b',
+            items: [
+              { label: 'Mechanism', value: 'Bucket fills with tokens at fixed rate' },
+              { label: 'Burst', value: 'Allows bursts up to bucket capacity' },
+              { label: 'Memory', value: 'O(1) — just counter + timestamp' },
+              { label: 'Accuracy', value: 'Approximate — allows slight over-limit' },
+              { label: 'Use When', value: 'API rate limiting, network traffic shaping' },
+              { label: 'Examples', value: 'AWS API Gateway, Stripe API' }
+            ]
+          },
+          right: {
+            title: 'Sliding Window Log',
+            icon: 'clock',
+            color: '#3b82f6',
+            items: [
+              { label: 'Mechanism', value: 'Track timestamps of all requests in window' },
+              { label: 'Burst', value: 'No bursts — strict per-window limit' },
+              { label: 'Memory', value: 'O(n) — stores each request timestamp' },
+              { label: 'Accuracy', value: 'Exact — precise rate enforcement' },
+              { label: 'Use When', value: 'Strict compliance, financial APIs' },
+              { label: 'Examples', value: 'Custom implementations, Redis sorted sets' }
+            ]
+          }
+        }
+      ],
+      visualCards: [
+        {
+          id: 'rate-limit-algorithms',
+          title: 'Rate Limiting Algorithm Comparison',
+          color: '#f59e0b',
+          icon: 'shield',
+          items: [
+            { label: 'Token Bucket', value: 'Smooth + burst handling', bar: 85 },
+            { label: 'Leaky Bucket', value: 'Smooth, constant output rate', bar: 70 },
+            { label: 'Fixed Window Counter', value: 'Simple but edge-case spikes', bar: 50 },
+            { label: 'Sliding Window Log', value: 'Precise but memory-heavy', bar: 75 },
+            { label: 'Sliding Window Counter', value: 'Best balance: precise + efficient', bar: 90 }
+          ]
+        },
+        {
+          id: 'rate-limit-tiers',
+          title: 'Common Rate Limit Tiers',
+          color: '#f59e0b',
+          icon: 'shield',
+          items: [
+            { label: 'Free tier', value: '60 req/min', bar: 10 },
+            { label: 'Basic tier', value: '600 req/min', bar: 25 },
+            { label: 'Pro tier', value: '6,000 req/min', bar: 50 },
+            { label: 'Enterprise tier', value: '60,000 req/min', bar: 80 },
+            { label: 'Internal service', value: '600,000 req/min', bar: 95 }
+          ]
+        }
+      ],
+      patternCards: [
+        {
+          id: 'distributed-rl', name: 'Distributed Rate Limiting', icon: 'globe', color: '#3b82f6',
+          description: 'Coordinate rate limits across multiple servers using shared storage.',
+          useWhen: 'Load-balanced APIs, microservices at scale',
+          example: 'Redis INCR + EXPIRE for atomic counter, Lua scripts for precision'
+        },
+        {
+          id: 'tiered-limits', name: 'Tiered Rate Limits', icon: 'layers', color: '#10b981',
+          description: 'Different limits for different user tiers or API endpoints.',
+          useWhen: 'Freemium APIs, different SLA levels',
+          example: 'Free: 100/hr, Pro: 1000/hr, Enterprise: 10000/hr'
+        },
+        {
+          id: 'adaptive-rl', name: 'Adaptive Rate Limiting', icon: 'trendingUp', color: '#8b5cf6',
+          description: 'Dynamically adjust limits based on system health and load.',
+          useWhen: 'Protect system during traffic spikes or degradation',
+          example: 'Reduce limits when p99 latency exceeds threshold'
+        },
+        {
+          id: 'token-bucket', name: 'Token Bucket', icon: 'database', color: '#f59e0b',
+          description: 'Tokens added at fixed rate. Each request consumes a token.',
+          useWhen: 'Allow bursts while maintaining average rate',
+          example: 'Refill 10 tokens/sec, bucket size 100. Burst of 100, then 10/sec steady'
+        },
+        {
+          id: 'leaky-bucket', name: 'Leaky Bucket', icon: 'filter', color: '#3b82f6',
+          description: 'Requests queue up and process at fixed rate. Overflow rejected.',
+          useWhen: 'Smooth output rate, prevent spiky traffic to backends',
+          example: 'Process 100 req/sec regardless of input rate'
+        },
+        {
+          id: 'sliding-window', name: 'Sliding Window Counter', icon: 'clock', color: '#8b5cf6',
+          description: 'Hybrid of fixed window + sliding log. Weighted count across windows.',
+          useWhen: 'Good balance of accuracy and memory efficiency',
+          example: 'Redis INCR + EXPIRE per window, weighted overlap calculation'
+        },
+        {
+          id: 'distributed-rate-limit', name: 'Distributed Rate Limiting', icon: 'globe', color: '#10b981',
+          description: 'Centralized counter (Redis) shared across all app servers.',
+          useWhen: 'Multi-server deployments, consistent limits per user',
+          example: 'Redis INCR with TTL, or token bucket in Redis Lua script'
         }
       ]
     },
@@ -2476,6 +3319,148 @@ Supporting Infrastructure:
             'Database per service (no sharing!)'
           ]
         }
+      ],
+      comparisonTables: [
+        {
+          id: 'monolith-vs-microservices',
+          title: 'Monolith vs Microservices',
+          left: {
+            title: 'Monolith',
+            icon: 'server',
+            color: '#f59e0b',
+            items: [
+              { label: 'Deploy', value: 'Single deployable unit' },
+              { label: 'Complexity', value: 'Simple at start, complex at scale' },
+              { label: 'Scaling', value: 'Scale entire application' },
+              { label: 'Team Size', value: 'Works well for small teams (< 10)' },
+              { label: 'Data', value: 'Single shared database' },
+              { label: 'Best For', value: 'Startups, MVPs, small teams' }
+            ]
+          },
+          right: {
+            title: 'Microservices',
+            icon: 'layers',
+            color: '#10b981',
+            items: [
+              { label: 'Deploy', value: 'Independent services, independent deploys' },
+              { label: 'Complexity', value: 'Complex from start, manageable at scale' },
+              { label: 'Scaling', value: 'Scale individual services independently' },
+              { label: 'Team Size', value: 'Essential for large teams (50+)' },
+              { label: 'Data', value: 'Database per service' },
+              { label: 'Best For', value: 'Large orgs, complex domains, independent teams' }
+            ]
+          }
+        },
+        {
+          id: 'monolith-vs-microservices-2',
+          title: 'Monolith vs Microservices',
+          left: {
+            title: 'Monolith',
+            icon: 'server',
+            color: '#ef4444',
+            items: [
+              { label: 'Deploy', value: 'Single deployable unit' },
+              { label: 'Scaling', value: 'Scale everything together' },
+              { label: 'Team', value: 'One team, shared codebase' },
+              { label: 'Complexity', value: 'Low operational, high code complexity' },
+              { label: 'Communication', value: 'In-process function calls' },
+              { label: 'Best For', value: 'Small teams, MVPs, simple domains' }
+            ]
+          },
+          right: {
+            title: 'Microservices',
+            icon: 'layers',
+            color: '#10b981',
+            items: [
+              { label: 'Deploy', value: 'Independent service deployments' },
+              { label: 'Scaling', value: 'Scale each service independently' },
+              { label: 'Team', value: 'Multiple teams, service ownership' },
+              { label: 'Complexity', value: 'High operational, lower per-service' },
+              { label: 'Communication', value: 'Network calls (HTTP, gRPC, queues)' },
+              { label: 'Best For', value: 'Large teams, complex domains, high scale' }
+            ]
+          }
+        }
+      ],
+      visualCards: [
+        {
+          id: 'microservices-patterns',
+          title: 'Microservice Communication Patterns',
+          color: '#10b981',
+          icon: 'gitBranch',
+          items: [
+            { label: 'Synchronous REST/gRPC', value: 'Direct request-response', bar: 70 },
+            { label: 'Async Message Queue', value: 'Event-driven, decoupled', bar: 85 },
+            { label: 'API Gateway', value: 'Single entry point, routing', bar: 80 },
+            { label: 'Service Mesh', value: 'Sidecar proxy (Istio/Envoy)', bar: 65 },
+            { label: 'Event Sourcing + CQRS', value: 'Event log + read/write split', bar: 55 },
+            { label: 'Saga Pattern', value: 'Distributed transactions', bar: 60 }
+          ]
+        },
+        {
+          id: 'microservices-patterns-overview',
+          title: 'Key Microservices Patterns',
+          color: '#10b981',
+          icon: 'layers',
+          items: [
+            { label: 'API Gateway', value: 'Single entry point for all clients', bar: 90 },
+            { label: 'Service Discovery', value: 'Dynamic service location', bar: 80 },
+            { label: 'Circuit Breaker', value: 'Prevent cascade failures', bar: 85 },
+            { label: 'Saga Pattern', value: 'Distributed transactions', bar: 70 },
+            { label: 'CQRS', value: 'Separate read/write models', bar: 60 },
+            { label: 'Sidecar/Service Mesh', value: 'Infrastructure concerns', bar: 75 }
+          ]
+        }
+      ],
+      patternCards: [
+        {
+          id: 'api-gateway', name: 'API Gateway', icon: 'globe', color: '#3b82f6',
+          description: 'Single entry point that routes, authenticates, and rate-limits.',
+          useWhen: 'Multiple microservices exposed to clients',
+          example: 'Kong, AWS API Gateway, Envoy'
+        },
+        {
+          id: 'saga', name: 'Saga Pattern', icon: 'gitBranch', color: '#8b5cf6',
+          description: 'Manage distributed transactions via a sequence of local transactions.',
+          useWhen: 'Cross-service transactions (order → payment → inventory)',
+          example: 'Choreography (events) or Orchestration (coordinator)'
+        },
+        {
+          id: 'service-discovery', name: 'Service Discovery', icon: 'search', color: '#10b981',
+          description: 'Automatically find network locations of service instances.',
+          useWhen: 'Dynamic environments, auto-scaling services',
+          example: 'Consul, Eureka, Kubernetes DNS, etcd'
+        },
+        {
+          id: 'sidecar', name: 'Sidecar Pattern', icon: 'layers', color: '#f59e0b',
+          description: 'Attach a helper container alongside each service for cross-cutting concerns.',
+          useWhen: 'Logging, monitoring, TLS, retries across all services',
+          example: 'Istio/Envoy sidecar proxy, Datadog agent'
+        },
+        {
+          id: 'api-gateway-ms', name: 'API Gateway', icon: 'globe', color: '#3b82f6',
+          description: 'Single entry point that routes, authenticates, and rate-limits.',
+          useWhen: 'Multiple client types (web, mobile), cross-cutting concerns',
+          example: 'Kong, AWS API Gateway, Nginx as gateway'
+        },
+        {
+          id: 'saga-pattern', name: 'Saga Pattern', icon: 'gitBranch', color: '#8b5cf6',
+          description: 'Sequence of local transactions with compensating actions on failure.',
+          useWhen: 'Distributed transactions spanning multiple services',
+          example: 'Order → Payment → Inventory → Shipping (compensate on failure)'
+        },
+        {
+          id: 'service-mesh', name: 'Service Mesh', icon: 'layers', color: '#10b981',
+          description: 'Sidecar proxies handle networking, security, observability.',
+          useWhen: '50+ microservices, need consistent networking policies',
+          example: 'Istio, Linkerd — mTLS, retries, tracing without code changes'
+        },
+        {
+          id: 'cqrs', name: 'CQRS', icon: 'columns', color: '#f59e0b',
+          description: 'Separate models for reading and writing data.',
+          useWhen: 'Different read/write patterns, event sourcing, read replicas',
+          example: 'Write to normalized DB, read from denormalized view/cache'
+        }
       ]
     },
     {
@@ -2876,6 +3861,151 @@ def verify_token(token, secret):
             'Regular security audits/pentests',
             'Incident response plan'
           ]
+        }
+      ],
+      comparisonTables: [
+        {
+          id: 'authn-vs-authz',
+          title: 'Authentication vs Authorization',
+          left: {
+            title: 'Authentication (AuthN)',
+            icon: 'lock',
+            color: '#ef4444',
+            items: [
+              { label: 'Question', value: 'WHO are you?' },
+              { label: 'Verifies', value: 'Identity — credentials, tokens, biometrics' },
+              { label: 'When', value: 'First — before authorization' },
+              { label: 'Methods', value: 'Password, OAuth, SSO, MFA, JWT' },
+              { label: 'Failure', value: '401 Unauthorized' },
+              { label: 'Example', value: 'Login with username + password → get token' }
+            ]
+          },
+          right: {
+            title: 'Authorization (AuthZ)',
+            icon: 'shield',
+            color: '#3b82f6',
+            items: [
+              { label: 'Question', value: 'WHAT can you do?' },
+              { label: 'Verifies', value: 'Permissions — roles, policies, scopes' },
+              { label: 'When', value: 'After authentication' },
+              { label: 'Methods', value: 'RBAC, ABAC, ACL, OAuth scopes' },
+              { label: 'Failure', value: '403 Forbidden' },
+              { label: 'Example', value: 'Admin can delete posts, user can only read' }
+            ]
+          }
+        },
+        {
+          id: 'auth-methods',
+          title: 'Authentication Methods',
+          left: {
+            title: 'Session-Based Auth',
+            icon: 'lock',
+            color: '#ef4444',
+            items: [
+              { label: 'Storage', value: 'Server stores session in memory/DB' },
+              { label: 'Token', value: 'Session ID in cookie' },
+              { label: 'Stateful', value: 'Yes — server must track all sessions' },
+              { label: 'Scaling', value: 'Harder — need sticky sessions or shared store' },
+              { label: 'Revocation', value: 'Easy — delete session from server' },
+              { label: 'Best For', value: 'Traditional web apps, simple setups' }
+            ]
+          },
+          right: {
+            title: 'Token-Based Auth (JWT)',
+            icon: 'key',
+            color: '#10b981',
+            items: [
+              { label: 'Storage', value: 'Client stores token (localStorage/cookie)' },
+              { label: 'Token', value: 'Signed JWT with claims' },
+              { label: 'Stateful', value: 'No — token is self-contained' },
+              { label: 'Scaling', value: 'Easy — any server can verify' },
+              { label: 'Revocation', value: 'Hard — need blacklist or short TTL' },
+              { label: 'Best For', value: 'APIs, microservices, mobile apps' }
+            ]
+          }
+        }
+      ],
+      visualCards: [
+        {
+          id: 'security-layers',
+          title: 'Defense in Depth — Security Layers',
+          color: '#ef4444',
+          icon: 'shield',
+          items: [
+            { label: 'Network (Firewall/WAF)', value: 'Block malicious traffic', bar: 95 },
+            { label: 'Transport (TLS/HTTPS)', value: 'Encrypt data in transit', bar: 90 },
+            { label: 'Authentication (OAuth/JWT)', value: 'Verify identity', bar: 85 },
+            { label: 'Authorization (RBAC/ABAC)', value: 'Enforce permissions', bar: 80 },
+            { label: 'Input Validation', value: 'Prevent injection attacks', bar: 75 },
+            { label: 'Encryption at Rest', value: 'Protect stored data', bar: 70 },
+            { label: 'Audit Logging', value: 'Track all access', bar: 65 }
+          ]
+        },
+        {
+          id: 'security-checklist',
+          title: 'System Design Security Checklist',
+          color: '#ef4444',
+          icon: 'shield',
+          items: [
+            { label: 'HTTPS everywhere', value: 'TLS 1.3, cert management', bar: 95 },
+            { label: 'Authentication', value: 'OAuth2 / JWT / SSO', bar: 90 },
+            { label: 'Authorization', value: 'RBAC / ABAC per endpoint', bar: 85 },
+            { label: 'Input validation', value: 'Sanitize all user input', bar: 90 },
+            { label: 'Rate limiting', value: 'Prevent brute force / DDoS', bar: 80 },
+            { label: 'Encryption at rest', value: 'AES-256 for sensitive data', bar: 75 },
+            { label: 'Audit logging', value: 'Track who did what when', bar: 70 },
+            { label: 'Secret management', value: 'Vault, env vars, not in code', bar: 85 }
+          ]
+        }
+      ],
+      patternCards: [
+        {
+          id: 'oauth2', name: 'OAuth 2.0 + OIDC', icon: 'lock', color: '#3b82f6',
+          description: 'Delegate authentication to identity providers (Google, GitHub).',
+          useWhen: 'Third-party login, API access delegation',
+          example: 'Authorization Code flow with PKCE for SPAs'
+        },
+        {
+          id: 'jwt', name: 'JWT Tokens', icon: 'key', color: '#10b981',
+          description: 'Stateless auth tokens with claims signed by the server.',
+          useWhen: 'Stateless APIs, microservices auth',
+          example: 'Short-lived access token (15m) + refresh token (30d)'
+        },
+        {
+          id: 'rbac', name: 'Role-Based Access Control', icon: 'users', color: '#8b5cf6',
+          description: 'Assign permissions to roles, assign roles to users.',
+          useWhen: 'Most applications — simple, well-understood model',
+          example: 'Roles: admin, editor, viewer. Admin can delete, viewer can read'
+        },
+        {
+          id: 'zero-trust', name: 'Zero Trust', icon: 'shield', color: '#ef4444',
+          description: 'Never trust, always verify. Every request must be authenticated.',
+          useWhen: 'Cloud-native, distributed systems, remote workforce',
+          example: 'mTLS between services, BeyondCorp, no VPN reliance'
+        },
+        {
+          id: 'oauth2-flow', name: 'OAuth 2.0', icon: 'globe', color: '#3b82f6',
+          description: 'Delegated authorization — let third parties access resources.',
+          useWhen: '"Login with Google/GitHub", API access delegation',
+          example: 'Authorization Code flow with PKCE for SPAs'
+        },
+        {
+          id: 'rbac-detailed', name: 'RBAC', icon: 'users', color: '#8b5cf6',
+          description: 'Role-Based Access Control — assign permissions to roles, roles to users.',
+          useWhen: 'Multi-tenant apps, admin/user/viewer permission levels',
+          example: 'admin: *, editor: read+write, viewer: read'
+        },
+        {
+          id: 'encryption', name: 'Encryption', icon: 'lock', color: '#ef4444',
+          description: 'Protect data in transit (TLS) and at rest (AES). Hash passwords (bcrypt).',
+          useWhen: 'Always — non-negotiable for any system',
+          example: 'TLS 1.3 for transit, AES-256-GCM at rest, bcrypt for passwords'
+        },
+        {
+          id: 'zero-trust-detailed', name: 'Zero Trust', icon: 'shield', color: '#10b981',
+          description: 'Never trust, always verify. Authenticate every request.',
+          useWhen: 'Microservices, cloud-native, remote workforce',
+          example: 'mTLS between services, short-lived tokens, continuous verification'
         }
       ]
     },
@@ -3351,6 +4481,144 @@ http_requests_total{endpoint="/api/orders", status="200"}
             'Automate remediation where possible'
           ]
         }
+      ],
+      comparisonTables: [
+        {
+          id: 'metrics-vs-logs-vs-traces',
+          title: 'Metrics vs Logs vs Traces',
+          left: {
+            title: 'Metrics',
+            icon: 'barChart',
+            color: '#10b981',
+            items: [
+              { label: 'What', value: 'Numeric measurements over time' },
+              { label: 'Volume', value: 'Low — aggregated data points' },
+              { label: 'Use For', value: 'Dashboards, alerts, trends' },
+              { label: 'Tools', value: 'Prometheus, Datadog, CloudWatch' },
+              { label: 'Retention', value: 'Months to years (cheap)' },
+              { label: 'Example', value: 'CPU=75%, p99_latency=200ms, error_rate=0.5%' }
+            ]
+          },
+          right: {
+            title: 'Distributed Traces',
+            icon: 'gitBranch',
+            color: '#8b5cf6',
+            items: [
+              { label: 'What', value: 'End-to-end request journey across services' },
+              { label: 'Volume', value: 'High — sampled (1-10% of requests)' },
+              { label: 'Use For', value: 'Debugging latency, finding bottlenecks' },
+              { label: 'Tools', value: 'Jaeger, Zipkin, OpenTelemetry, Datadog APM' },
+              { label: 'Retention', value: 'Days to weeks (expensive)' },
+              { label: 'Example', value: 'Request → API (50ms) → DB (120ms) → Cache (5ms)' }
+            ]
+          }
+        },
+        {
+          id: 'metrics-vs-logs-vs-traces-2',
+          title: 'Three Pillars of Observability',
+          left: {
+            title: 'Metrics',
+            icon: 'barChart',
+            color: '#10b981',
+            items: [
+              { label: 'What', value: 'Numeric measurements over time' },
+              { label: 'Examples', value: 'CPU %, request count, latency p99' },
+              { label: 'Storage', value: 'Compact — time-series DB' },
+              { label: 'Query', value: 'Fast aggregation, dashboards' },
+              { label: 'Tools', value: 'Prometheus, Datadog, CloudWatch' },
+              { label: 'Best For', value: 'Alerting, trends, SLO tracking' }
+            ]
+          },
+          right: {
+            title: 'Distributed Traces',
+            icon: 'gitBranch',
+            color: '#8b5cf6',
+            items: [
+              { label: 'What', value: 'Request journey across services' },
+              { label: 'Examples', value: 'Span tree: API → Auth → DB → Cache' },
+              { label: 'Storage', value: 'Medium — sampled traces' },
+              { label: 'Query', value: 'Trace ID lookup, service maps' },
+              { label: 'Tools', value: 'Jaeger, Zipkin, AWS X-Ray, Honeycomb' },
+              { label: 'Best For', value: 'Latency debugging, dependency mapping' }
+            ]
+          }
+        }
+      ],
+      visualCards: [
+        {
+          id: 'golden-signals',
+          title: 'The Four Golden Signals (Google SRE)',
+          color: '#f59e0b',
+          icon: 'barChart',
+          items: [
+            { label: 'Latency', value: 'Time to serve requests (p50, p95, p99)', bar: 90 },
+            { label: 'Traffic', value: 'Requests per second (RPS)', bar: 80 },
+            { label: 'Errors', value: 'Rate of failed requests (5xx)', bar: 85 },
+            { label: 'Saturation', value: 'How full is the system (CPU, memory, disk)', bar: 75 }
+          ]
+        },
+        {
+          id: 'golden-signals-2',
+          title: 'The Four Golden Signals (Google SRE)',
+          color: '#8b5cf6',
+          icon: 'barChart',
+          items: [
+            { label: 'Latency', value: 'Time to serve a request (p50/p95/p99)', bar: 90 },
+            { label: 'Traffic', value: 'Requests per second (demand)', bar: 85 },
+            { label: 'Errors', value: 'Rate of failed requests (5xx, timeouts)', bar: 80 },
+            { label: 'Saturation', value: 'How full your service is (CPU, memory, queue)', bar: 75 }
+          ]
+        }
+      ],
+      patternCards: [
+        {
+          id: 'alerting', name: 'Smart Alerting', icon: 'bell', color: '#ef4444',
+          description: 'Alert on symptoms (user impact), not causes. Reduce noise.',
+          useWhen: 'Always — but tune thresholds to avoid alert fatigue',
+          example: 'Alert: error_rate > 1% for 5min. NOT: CPU > 80%'
+        },
+        {
+          id: 'distributed-tracing', name: 'Distributed Tracing', icon: 'gitBranch', color: '#8b5cf6',
+          description: 'Trace a request across multiple services with correlation IDs.',
+          useWhen: 'Microservices, debugging cross-service latency',
+          example: 'OpenTelemetry SDK → Jaeger/Zipkin collector → UI'
+        },
+        {
+          id: 'centralized-logging', name: 'Centralized Logging', icon: 'list', color: '#3b82f6',
+          description: 'Aggregate logs from all services into one searchable system.',
+          useWhen: 'Multiple services, need to correlate events',
+          example: 'ELK Stack (Elasticsearch + Logstash + Kibana) or Loki + Grafana'
+        },
+        {
+          id: 'slo-sla', name: 'SLOs & SLAs', icon: 'target', color: '#10b981',
+          description: 'Define measurable reliability targets and contractual guarantees.',
+          useWhen: 'Any production service — internal SLOs, external SLAs',
+          example: 'SLO: 99.9% availability. Error budget: 0.1% = 43.2 min/month'
+        },
+        {
+          id: 'structured-logging', name: 'Structured Logging', icon: 'list', color: '#3b82f6',
+          description: 'JSON logs with consistent fields for machine parsing.',
+          useWhen: 'Always — unstructured logs are useless at scale',
+          example: '{"level":"error","service":"auth","user_id":"123","msg":"token expired"}'
+        },
+        {
+          id: 'alerting-strategy', name: 'Alerting Strategy', icon: 'bell', color: '#ef4444',
+          description: 'SLO-based alerts on symptoms, not causes. Reduce alert fatigue.',
+          useWhen: 'Production systems, on-call rotation',
+          example: 'Alert when error rate > 1% for 5 min, not when CPU > 80%'
+        },
+        {
+          id: 'distributed-tracing-detailed', name: 'Distributed Tracing', icon: 'gitBranch', color: '#8b5cf6',
+          description: 'Propagate trace context across services to track request flow.',
+          useWhen: 'Microservices, debugging latency, understanding dependencies',
+          example: 'OpenTelemetry SDK → Jaeger/Zipkin collector → trace visualization'
+        },
+        {
+          id: 'health-checks-mon', name: 'Health Checks', icon: 'heart', color: '#10b981',
+          description: 'Expose /health and /ready endpoints for liveness and readiness.',
+          useWhen: 'Kubernetes, load balancers, orchestration',
+          example: '/health → 200 (alive), /ready → 503 (not ready to serve traffic)'
+        }
       ]
     },
     {
@@ -3679,6 +4947,136 @@ Step 4: Remove from ring metadata
             'Mention real systems that use it (Cassandra, DynamoDB, Akamai)'
           ]
         }
+      ],
+      comparisonTables: [
+        {
+          id: 'naive-vs-consistent',
+          title: 'Naive Hashing vs Consistent Hashing',
+          left: {
+            title: 'Naive Hash (hash % N)',
+            icon: 'hash',
+            color: '#ef4444',
+            items: [
+              { label: 'Formula', value: 'server = hash(key) % N servers' },
+              { label: 'Add/Remove', value: 'Remaps almost ALL keys' },
+              { label: 'Impact', value: '~100% cache miss on server change' },
+              { label: 'Distribution', value: 'Uniform when N is stable' },
+              { label: 'Complexity', value: 'O(1) lookup' },
+              { label: 'Use When', value: 'Never changes — fixed server count' }
+            ]
+          },
+          right: {
+            title: 'Consistent Hashing',
+            icon: 'target',
+            color: '#10b981',
+            items: [
+              { label: 'Formula', value: 'Map keys + servers onto hash ring' },
+              { label: 'Add/Remove', value: 'Remaps only K/N keys (minimal)' },
+              { label: 'Impact', value: '~1/N keys remapped on change' },
+              { label: 'Distribution', value: 'Use virtual nodes for uniformity' },
+              { label: 'Complexity', value: 'O(log N) lookup with sorted ring' },
+              { label: 'Use When', value: 'Dynamic clusters, distributed caches' }
+            ]
+          }
+        },
+        {
+          id: 'hashing-vs-consistent',
+          title: 'Standard Hashing vs Consistent Hashing',
+          left: {
+            title: 'Standard Hash (Modulo)',
+            icon: 'hash',
+            color: '#ef4444',
+            items: [
+              { label: 'Method', value: 'hash(key) % N servers' },
+              { label: 'Add server', value: 'Nearly ALL keys remapped' },
+              { label: 'Remove server', value: 'Nearly ALL keys remapped' },
+              { label: 'Distribution', value: 'Uniform with good hash function' },
+              { label: 'Complexity', value: 'O(1) lookup' },
+              { label: 'Problem', value: 'Cache stampede on server changes' }
+            ]
+          },
+          right: {
+            title: 'Consistent Hashing',
+            icon: 'circle',
+            color: '#10b981',
+            items: [
+              { label: 'Method', value: 'Hash ring — keys map to next clockwise node' },
+              { label: 'Add server', value: 'Only K/N keys remapped (minimal)' },
+              { label: 'Remove server', value: 'Only K/N keys remapped (minimal)' },
+              { label: 'Distribution', value: 'Use virtual nodes for uniformity' },
+              { label: 'Complexity', value: 'O(log N) lookup with sorted ring' },
+              { label: 'Advantage', value: 'Minimal disruption on topology changes' }
+            ]
+          }
+        }
+      ],
+      visualCards: [
+        {
+          id: 'consistent-hash-use-cases',
+          title: 'Where Consistent Hashing Is Used',
+          color: '#10b981',
+          icon: 'target',
+          items: [
+            { label: 'CDN (Akamai, Cloudflare)', value: 'Route to nearest cache server', bar: 95 },
+            { label: 'Distributed Cache (Memcached)', value: 'Partition cache across nodes', bar: 90 },
+            { label: 'Database Sharding', value: 'Assign data to shard nodes', bar: 85 },
+            { label: 'Load Balancing', value: 'Sticky routing with minimal disruption', bar: 75 },
+            { label: 'Kafka Partitioning', value: 'Assign partitions to consumers', bar: 70 },
+            { label: 'DynamoDB / Cassandra', value: 'Token ring for data placement', bar: 80 }
+          ]
+        },
+        {
+          id: 'consistent-hashing-usage',
+          title: 'Where Consistent Hashing Is Used',
+          color: '#10b981',
+          icon: 'circle',
+          items: [
+            { label: 'Amazon DynamoDB', value: 'Partition data across nodes', bar: 95 },
+            { label: 'Apache Cassandra', value: 'Data distribution ring', bar: 90 },
+            { label: 'Memcached clients', value: 'Distribute cache keys', bar: 80 },
+            { label: 'CDN edge servers', value: 'Route content to nearest cache', bar: 75 },
+            { label: 'Load balancers', value: 'Sticky routing with minimal remap', bar: 70 },
+            { label: 'Discord', value: 'Route messages to correct server', bar: 65 }
+          ]
+        }
+      ],
+      patternCards: [
+        {
+          id: 'virtual-nodes', name: 'Virtual Nodes', icon: 'layers', color: '#3b82f6',
+          description: 'Map each physical server to multiple points on the hash ring.',
+          useWhen: 'Uneven key distribution, heterogeneous server capacities',
+          example: '150-200 virtual nodes per server for even distribution'
+        },
+        {
+          id: 'bounded-loads', name: 'Bounded Loads', icon: 'shield', color: '#8b5cf6',
+          description: 'Cap the load on any single node, redistribute overflow.',
+          useWhen: 'Hot key problem, prevent single-node overload',
+          example: 'Google\'s "Consistent Hashing with Bounded Loads" paper'
+        },
+        {
+          id: 'jump-hash', name: 'Jump Consistent Hash', icon: 'zap', color: '#f59e0b',
+          description: 'O(ln n) algorithm, perfect uniformity, no memory overhead.',
+          useWhen: 'Only adding servers (not removing), simple partitioning',
+          example: 'Google\'s Jump Hash — ideal for append-only clusters'
+        },
+        {
+          id: 'virtual-nodes-detailed', name: 'Virtual Nodes', icon: 'layers', color: '#10b981',
+          description: 'Each physical node maps to multiple points on the hash ring.',
+          useWhen: 'Uneven distribution with few physical nodes',
+          example: '3 servers × 100 virtual nodes = 300 points on ring for uniform spread'
+        },
+        {
+          id: 'hash-ring', name: 'Hash Ring', icon: 'circle', color: '#3b82f6',
+          description: 'Circular space where both keys and servers are hashed to positions.',
+          useWhen: 'Distributed caching, database sharding, load balancing',
+          example: 'SHA-256 hash of key/server → position on 0 to 2^32 ring'
+        },
+        {
+          id: 'rebalancing', name: 'Rebalancing', icon: 'refreshCw', color: '#f59e0b',
+          description: 'Automatically redistribute only affected keys when nodes change.',
+          useWhen: 'Node additions/removals, capacity changes',
+          example: 'Add node → only keys between new node and predecessor move'
+        }
       ]
     },
     {
@@ -3983,6 +5381,69 @@ Optimal parameters:
             'Design a database: reduce unnecessary disk I/O',
             'Design a CDN: check if content is cached at an edge node'
           ]
+        }
+      ],
+
+      comparisonTables: [
+        {
+          id: 'bloom-vs-hash-set',
+          title: 'Bloom Filter vs Hash Set',
+          left: {
+            title: 'Bloom Filter',
+            icon: 'filter',
+            color: '#8b5cf6',
+            items: [
+              { label: 'Memory', value: '~10 bits per element (tiny)' },
+              { label: 'False Positives', value: 'Yes — "maybe exists"' },
+              { label: 'False Negatives', value: 'Never — "definitely not" is certain' },
+              { label: 'Deletion', value: 'Not supported (standard)' },
+              { label: 'Lookup', value: 'O(k) — k hash functions' },
+              { label: 'Best For', value: 'Pre-filtering, reducing expensive lookups' }
+            ]
+          },
+          right: {
+            title: 'Hash Set',
+            icon: 'database',
+            color: '#3b82f6',
+            items: [
+              { label: 'Memory', value: 'Full element size (large)' },
+              { label: 'False Positives', value: 'None — exact membership' },
+              { label: 'False Negatives', value: 'None — exact membership' },
+              { label: 'Deletion', value: 'Supported' },
+              { label: 'Lookup', value: 'O(1) average' },
+              { label: 'Best For', value: 'Exact lookups, small datasets' }
+            ]
+          }
+        }
+      ],
+      visualCards: [
+        {
+          id: 'bloom-filter-usage',
+          title: 'Where Bloom Filters Are Used',
+          color: '#8b5cf6',
+          icon: 'filter',
+          items: [
+            { label: 'Google Chrome', value: 'Check malicious URLs', bar: 90 },
+            { label: 'Apache Cassandra', value: 'Skip SSTables without key', bar: 85 },
+            { label: 'Bitcoin', value: 'SPV node transaction filtering', bar: 70 },
+            { label: 'Medium', value: 'Avoid recommending read articles', bar: 65 },
+            { label: 'Akamai CDN', value: 'Cache one-hit-wonders filter', bar: 75 },
+            { label: 'PostgreSQL', value: 'Join optimization', bar: 55 }
+          ]
+        }
+      ],
+      patternCards: [
+        {
+          id: 'counting-bloom', name: 'Counting Bloom Filter', icon: 'hash', color: '#8b5cf6',
+          description: 'Use counters instead of bits to support deletion.',
+          useWhen: 'Need to remove elements from bloom filter',
+          example: 'Increment counters on add, decrement on remove'
+        },
+        {
+          id: 'bloom-pre-filter', name: 'Pre-filter Pattern', icon: 'filter', color: '#10b981',
+          description: 'Check bloom filter before expensive DB/disk lookup.',
+          useWhen: 'Frequent lookups for non-existent keys',
+          example: 'Check if username exists → bloom says "no" → skip DB query'
         }
       ]
     },
@@ -4334,6 +5795,75 @@ Directory-Based Partitioning:
             'DynamoDB: Automatic partitioning by partition key'
           ]
         }
+      ],
+
+      comparisonTables: [
+        {
+          id: 'horizontal-vs-vertical-partition',
+          title: 'Horizontal vs Vertical Partitioning',
+          left: {
+            title: 'Horizontal (Sharding)',
+            icon: 'layers',
+            color: '#3b82f6',
+            items: [
+              { label: 'Split By', value: 'Rows — each partition has subset of rows' },
+              { label: 'Schema', value: 'Same schema in every partition' },
+              { label: 'Use When', value: 'Table has billions of rows' },
+              { label: 'Shard Key', value: 'user_id, region, timestamp' },
+              { label: 'Challenge', value: 'Cross-shard queries, hotspots' },
+              { label: 'Examples', value: 'Instagram user data, Uber rides' }
+            ]
+          },
+          right: {
+            title: 'Vertical Partitioning',
+            icon: 'columns',
+            color: '#10b981',
+            items: [
+              { label: 'Split By', value: 'Columns — each partition has subset of columns' },
+              { label: 'Schema', value: 'Different columns in each partition' },
+              { label: 'Use When', value: 'Table has many columns, different access patterns' },
+              { label: 'Split Logic', value: 'Frequently accessed vs rarely accessed' },
+              { label: 'Challenge', value: 'JOINs across partitions needed' },
+              { label: 'Examples', value: 'User profile (hot) vs user preferences (cold)' }
+            ]
+          }
+        }
+      ],
+      visualCards: [
+        {
+          id: 'shard-key-strategies',
+          title: 'Shard Key Selection Guide',
+          color: '#3b82f6',
+          icon: 'layers',
+          items: [
+            { label: 'user_id', value: 'Good for user-centric apps', bar: 90 },
+            { label: 'geographic region', value: 'Good for location-based data', bar: 80 },
+            { label: 'timestamp/date', value: 'Good for time-series, logs', bar: 70 },
+            { label: 'hash(key)', value: 'Uniform distribution, no range queries', bar: 65 },
+            { label: 'compound key', value: 'tenant_id + user_id for multi-tenant', bar: 75 },
+            { label: 'auto-increment ID', value: 'Bad — creates hotspot on one shard', bar: 15 }
+          ]
+        }
+      ],
+      patternCards: [
+        {
+          id: 'range-partition', name: 'Range Partitioning', icon: 'sliders', color: '#3b82f6',
+          description: 'Partition by ranges of the key (A-M, N-Z or Jan-Jun, Jul-Dec).',
+          useWhen: 'Range queries needed, data has natural ordering',
+          example: 'Partition orders by date ranges for time-based queries'
+        },
+        {
+          id: 'hash-partition', name: 'Hash Partitioning', icon: 'hash', color: '#10b981',
+          description: 'hash(key) % N determines partition. Uniform distribution.',
+          useWhen: 'No range queries needed, want even distribution',
+          example: 'hash(user_id) % 16 → partition 0-15'
+        },
+        {
+          id: 'directory-partition', name: 'Directory-Based', icon: 'list', color: '#8b5cf6',
+          description: 'Lookup table maps each key to its partition.',
+          useWhen: 'Need flexible mapping, willing to maintain directory',
+          example: 'Separate lookup service: "user_123 → shard_7"'
+        }
       ]
     },
     {
@@ -4678,6 +6208,75 @@ Composite Index:
             'Suggest EXPLAIN ANALYZE when asked about query optimization',
             'Mention covering indexes as an advanced optimization'
           ]
+        }
+      ],
+
+      comparisonTables: [
+        {
+          id: 'btree-vs-hash-index',
+          title: 'B-Tree vs Hash Index',
+          left: {
+            title: 'B-Tree Index',
+            icon: 'gitBranch',
+            color: '#3b82f6',
+            items: [
+              { label: 'Structure', value: 'Balanced tree, sorted keys' },
+              { label: 'Range Queries', value: 'Excellent — keys are ordered' },
+              { label: 'Equality', value: 'Good — O(log n) lookup' },
+              { label: 'Write Speed', value: 'Slower — must maintain tree balance' },
+              { label: 'Storage', value: 'Moderate overhead' },
+              { label: 'Default In', value: 'PostgreSQL, MySQL InnoDB, SQLite' }
+            ]
+          },
+          right: {
+            title: 'Hash Index',
+            icon: 'hash',
+            color: '#10b981',
+            items: [
+              { label: 'Structure', value: 'Hash table, unordered' },
+              { label: 'Range Queries', value: 'Not supported' },
+              { label: 'Equality', value: 'Excellent — O(1) lookup' },
+              { label: 'Write Speed', value: 'Fast — simple hash + insert' },
+              { label: 'Storage', value: 'Less overhead' },
+              { label: 'Default In', value: 'Memory-only engines, Redis' }
+            ]
+          }
+        }
+      ],
+      visualCards: [
+        {
+          id: 'when-to-index',
+          title: 'When to Create Indexes',
+          color: '#10b981',
+          icon: 'search',
+          items: [
+            { label: 'WHERE clause columns', value: 'Most common — filter speedup', bar: 95 },
+            { label: 'JOIN columns', value: 'FK columns used in JOINs', bar: 85 },
+            { label: 'ORDER BY columns', value: 'Avoid expensive sorts', bar: 75 },
+            { label: 'High cardinality columns', value: 'email, user_id (many unique)', bar: 80 },
+            { label: 'Covering indexes', value: 'Include all query columns', bar: 65 },
+            { label: 'Low cardinality columns', value: 'Boolean, status — usually skip', bar: 15 }
+          ]
+        }
+      ],
+      patternCards: [
+        {
+          id: 'composite-index', name: 'Composite Index', icon: 'layers', color: '#3b82f6',
+          description: 'Multi-column index. Order matters — leftmost prefix rule.',
+          useWhen: 'Queries filter on multiple columns together',
+          example: 'INDEX(user_id, created_at) speeds WHERE user_id=? AND created_at>?'
+        },
+        {
+          id: 'covering-index', name: 'Covering Index', icon: 'check', color: '#10b981',
+          description: 'Index includes all columns needed — no table lookup required.',
+          useWhen: 'Frequent queries reading specific column sets',
+          example: 'INDEX(email) INCLUDE(name, avatar) — index-only scan'
+        },
+        {
+          id: 'partial-index', name: 'Partial Index', icon: 'filter', color: '#8b5cf6',
+          description: 'Index only rows matching a condition — smaller, faster.',
+          useWhen: 'Only query subset of rows frequently',
+          example: 'INDEX ON orders(created_at) WHERE status=\'pending\''
         }
       ]
     },
@@ -5054,6 +6653,69 @@ Layer 7 (Application) Proxy:
             'Buffer settings tuning for large request/response bodies'
           ]
         }
+      ],
+
+      comparisonTables: [
+        {
+          id: 'forward-vs-reverse',
+          title: 'Forward Proxy vs Reverse Proxy',
+          left: {
+            title: 'Forward Proxy',
+            icon: 'arrowRight',
+            color: '#3b82f6',
+            items: [
+              { label: 'Sits Between', value: 'Client and internet' },
+              { label: 'Hides', value: 'Client identity from servers' },
+              { label: 'Use Cases', value: 'Privacy, content filtering, caching' },
+              { label: 'Who Uses', value: 'Clients/organizations' },
+              { label: 'Examples', value: 'Corporate proxy, VPN, Squid' },
+              { label: 'Server Sees', value: 'Proxy IP, not client IP' }
+            ]
+          },
+          right: {
+            title: 'Reverse Proxy',
+            icon: 'arrowLeft',
+            color: '#10b981',
+            items: [
+              { label: 'Sits Between', value: 'Internet and backend servers' },
+              { label: 'Hides', value: 'Backend server details from clients' },
+              { label: 'Use Cases', value: 'Load balancing, SSL termination, caching' },
+              { label: 'Who Uses', value: 'Server infrastructure teams' },
+              { label: 'Examples', value: 'Nginx, HAProxy, Cloudflare, AWS ALB' },
+              { label: 'Client Sees', value: 'Proxy domain, not backend IPs' }
+            ]
+          }
+        }
+      ],
+      visualCards: [
+        {
+          id: 'proxy-features',
+          title: 'Reverse Proxy Capabilities',
+          color: '#10b981',
+          icon: 'shield',
+          items: [
+            { label: 'Load balancing', value: 'Distribute traffic across backends', bar: 95 },
+            { label: 'SSL termination', value: 'Handle HTTPS, forward HTTP internally', bar: 90 },
+            { label: 'Caching', value: 'Cache responses for repeated requests', bar: 80 },
+            { label: 'Compression', value: 'gzip/brotli responses', bar: 70 },
+            { label: 'Rate limiting', value: 'Protect backends from abuse', bar: 75 },
+            { label: 'Request routing', value: 'Route by URL path, header, etc.', bar: 85 }
+          ]
+        }
+      ],
+      patternCards: [
+        {
+          id: 'api-gateway-proxy', name: 'API Gateway', icon: 'globe', color: '#3b82f6',
+          description: 'Reverse proxy + auth + rate limiting + request transformation.',
+          useWhen: 'Microservices need unified entry point',
+          example: 'Kong, AWS API Gateway, Nginx with plugins'
+        },
+        {
+          id: 'sidecar-proxy', name: 'Sidecar Proxy', icon: 'layers', color: '#8b5cf6',
+          description: 'Per-service proxy handling networking concerns.',
+          useWhen: 'Service mesh, consistent networking policies',
+          example: 'Envoy sidecar in Istio — mTLS, retries, tracing'
+        }
       ]
     },
     {
@@ -5427,6 +7089,69 @@ TTL Values (seconds):
             'Low TTL before migrations, high TTL after',
             'Split-horizon DNS for internal vs external resolution'
           ]
+        }
+      ],
+
+      comparisonTables: [
+        {
+          id: 'dns-record-types',
+          title: 'Key DNS Record Types',
+          left: {
+            title: 'Address Records',
+            icon: 'globe',
+            color: '#3b82f6',
+            items: [
+              { label: 'A Record', value: 'Domain → IPv4 address' },
+              { label: 'AAAA Record', value: 'Domain → IPv6 address' },
+              { label: 'CNAME', value: 'Domain → another domain (alias)' },
+              { label: 'Use', value: 'Map domain names to IP addresses' },
+              { label: 'TTL', value: 'Typically 300s to 86400s' },
+              { label: 'Example', value: 'api.example.com → 52.1.2.3' }
+            ]
+          },
+          right: {
+            title: 'Service Records',
+            icon: 'server',
+            color: '#10b981',
+            items: [
+              { label: 'MX Record', value: 'Domain → mail server' },
+              { label: 'NS Record', value: 'Domain → authoritative nameserver' },
+              { label: 'TXT Record', value: 'Domain → text data (verification)' },
+              { label: 'SRV Record', value: 'Service → host:port' },
+              { label: 'CAA Record', value: 'Domain → allowed cert authorities' },
+              { label: 'Example', value: 'MX example.com → mail.google.com' }
+            ]
+          }
+        }
+      ],
+      visualCards: [
+        {
+          id: 'dns-resolution-steps',
+          title: 'DNS Resolution Lookup Chain',
+          color: '#3b82f6',
+          icon: 'globe',
+          items: [
+            { label: '1. Browser cache', value: 'Check local cache first', bar: 15 },
+            { label: '2. OS resolver cache', value: '/etc/hosts, OS cache', bar: 25 },
+            { label: '3. Recursive resolver', value: 'ISP or public DNS (8.8.8.8)', bar: 45 },
+            { label: '4. Root nameserver', value: '13 root servers worldwide', bar: 60 },
+            { label: '5. TLD nameserver', value: '.com, .org, .io servers', bar: 75 },
+            { label: '6. Authoritative NS', value: 'Final answer with IP', bar: 95 }
+          ]
+        }
+      ],
+      patternCards: [
+        {
+          id: 'dns-load-balancing', name: 'DNS Load Balancing', icon: 'layers', color: '#3b82f6',
+          description: 'Return multiple A records or use weighted/latency routing.',
+          useWhen: 'Global load distribution, multi-region failover',
+          example: 'Route 53 latency-based routing to nearest region'
+        },
+        {
+          id: 'dns-caching', name: 'DNS Caching & TTL', icon: 'clock', color: '#10b981',
+          description: 'Cache DNS responses for TTL duration to reduce latency.',
+          useWhen: 'Always — fundamental to DNS performance',
+          example: 'TTL=300 (5 min) for dynamic, TTL=86400 (1 day) for static'
         }
       ]
     },
@@ -5834,6 +7559,69 @@ Cache Entry:
             'Mention CDN as a DDoS mitigation layer',
             'Consider edge computing for latency-sensitive operations'
           ]
+        }
+      ],
+
+      comparisonTables: [
+        {
+          id: 'push-vs-pull-cdn',
+          title: 'Push CDN vs Pull CDN',
+          left: {
+            title: 'Push CDN',
+            icon: 'upload',
+            color: '#f59e0b',
+            items: [
+              { label: 'How', value: 'You upload content to CDN proactively' },
+              { label: 'Freshness', value: 'Always up to date — you control uploads' },
+              { label: 'Storage', value: 'Higher — stores everything you push' },
+              { label: 'First Request', value: 'Fast — already cached' },
+              { label: 'Complexity', value: 'More work — manage uploads yourself' },
+              { label: 'Best For', value: 'Static sites, known content, videos' }
+            ]
+          },
+          right: {
+            title: 'Pull CDN',
+            icon: 'download',
+            color: '#3b82f6',
+            items: [
+              { label: 'How', value: 'CDN fetches from origin on first request' },
+              { label: 'Freshness', value: 'Depends on TTL, can serve stale' },
+              { label: 'Storage', value: 'Lower — only caches popular content' },
+              { label: 'First Request', value: 'Slow — cache miss, fetches from origin' },
+              { label: 'Complexity', value: 'Easier — CDN handles caching logic' },
+              { label: 'Best For', value: 'Dynamic sites, high traffic, APIs' }
+            ]
+          }
+        }
+      ],
+      visualCards: [
+        {
+          id: 'cdn-benefits',
+          title: 'CDN Performance Impact',
+          color: '#3b82f6',
+          icon: 'zap',
+          items: [
+            { label: 'Latency reduction', value: '50-70% lower (edge servers)', bar: 90 },
+            { label: 'Origin offload', value: '70-90% requests served from edge', bar: 85 },
+            { label: 'Bandwidth savings', value: '40-60% reduction', bar: 70 },
+            { label: 'DDoS protection', value: 'Absorb attack traffic at edge', bar: 75 },
+            { label: 'SSL/TLS offload', value: 'Terminate SSL at edge', bar: 60 },
+            { label: 'Global availability', value: '99.99%+ uptime', bar: 95 }
+          ]
+        }
+      ],
+      patternCards: [
+        {
+          id: 'cache-invalidation-cdn', name: 'Cache Invalidation', icon: 'refreshCw', color: '#ef4444',
+          description: 'Purge or expire cached content when origin changes.',
+          useWhen: 'Content updates, deployments, bug fixes',
+          example: 'Versioned URLs (/app.v2.js), purge API, or short TTL'
+        },
+        {
+          id: 'edge-computing', name: 'Edge Computing', icon: 'globe', color: '#10b981',
+          description: 'Run code at CDN edge — personalization without origin roundtrip.',
+          useWhen: 'A/B testing, geo-routing, auth at edge',
+          example: 'Cloudflare Workers, Vercel Edge Functions, Lambda@Edge'
         }
       ]
     },
@@ -6254,6 +8042,68 @@ Failover States:
             'CRDTs enable conflict-free replication for certain data types'
           ]
         }
+      ],
+
+      comparisonTables: [
+        {
+          id: 'sync-vs-async-replication',
+          title: 'Synchronous vs Asynchronous Replication',
+          left: {
+            title: 'Synchronous',
+            icon: 'lock',
+            color: '#ef4444',
+            items: [
+              { label: 'Write Confirm', value: 'After ALL replicas confirm' },
+              { label: 'Consistency', value: 'Strong — all replicas in sync' },
+              { label: 'Write Latency', value: 'Higher — waits for replicas' },
+              { label: 'Data Loss Risk', value: 'Zero — fully durable' },
+              { label: 'Availability', value: 'Lower — blocked if replica down' },
+              { label: 'Use When', value: 'Financial data, critical writes' }
+            ]
+          },
+          right: {
+            title: 'Asynchronous',
+            icon: 'zap',
+            color: '#10b981',
+            items: [
+              { label: 'Write Confirm', value: 'After primary confirms only' },
+              { label: 'Consistency', value: 'Eventual — replicas lag behind' },
+              { label: 'Write Latency', value: 'Low — doesn\'t wait for replicas' },
+              { label: 'Data Loss Risk', value: 'Small window if primary fails' },
+              { label: 'Availability', value: 'Higher — not blocked by replicas' },
+              { label: 'Use When', value: 'Read-heavy, geo-distributed, analytics' }
+            ]
+          }
+        }
+      ],
+      visualCards: [
+        {
+          id: 'replication-strategies',
+          title: 'Replication Strategies',
+          color: '#10b981',
+          icon: 'copy',
+          items: [
+            { label: 'Single-Leader', value: 'One writer, many readers', bar: 80 },
+            { label: 'Multi-Leader', value: 'Multiple writers, conflict resolution', bar: 60 },
+            { label: 'Leaderless', value: 'Any node reads/writes, quorum-based', bar: 50 },
+            { label: 'Active-Passive', value: 'Standby takes over on failure', bar: 85 },
+            { label: 'Active-Active', value: 'All nodes serve traffic', bar: 70 }
+          ]
+        }
+      ],
+      patternCards: [
+        {
+          id: 'failover', name: 'Automatic Failover', icon: 'refreshCw', color: '#ef4444',
+          description: 'Detect primary failure, promote replica to primary.',
+          useWhen: 'High availability required, minimize downtime',
+          example: 'PostgreSQL patroni, MySQL Group Replication, Redis Sentinel'
+        },
+        {
+          id: 'multi-region', name: 'Multi-Region Replication', icon: 'globe', color: '#3b82f6',
+          description: 'Replicate across geographic regions for disaster recovery.',
+          useWhen: 'Global users, regulatory requirements, DR',
+          example: 'AWS RDS cross-region read replicas, CockroachDB multi-region'
+        }
       ]
     },
     {
@@ -6631,6 +8481,70 @@ TCP was designed in 1974 and is baked into operating systems, routers, and middl
             '0-RTT QUIC for returning clients',
             'Keepalive settings prevent premature connection closure'
           ]
+        }
+      ],
+
+      comparisonTables: [
+        {
+          id: 'tcp-vs-udp',
+          title: 'TCP vs UDP',
+          left: {
+            title: 'TCP',
+            icon: 'lock',
+            color: '#3b82f6',
+            items: [
+              { label: 'Connection', value: 'Connection-oriented (3-way handshake)' },
+              { label: 'Reliability', value: 'Guaranteed delivery + ordering' },
+              { label: 'Speed', value: 'Slower — overhead from reliability' },
+              { label: 'Use Cases', value: 'HTTP, email, file transfer, SSH' },
+              { label: 'Congestion', value: 'Built-in congestion control' },
+              { label: 'Header', value: '20+ bytes overhead' }
+            ]
+          },
+          right: {
+            title: 'UDP',
+            icon: 'zap',
+            color: '#10b981',
+            items: [
+              { label: 'Connection', value: 'Connectionless (fire and forget)' },
+              { label: 'Reliability', value: 'No guarantees — packets may drop' },
+              { label: 'Speed', value: 'Fast — minimal overhead' },
+              { label: 'Use Cases', value: 'Video streaming, gaming, DNS, VoIP' },
+              { label: 'Congestion', value: 'No built-in control' },
+              { label: 'Header', value: '8 bytes overhead' }
+            ]
+          }
+        }
+      ],
+      visualCards: [
+        {
+          id: 'osi-layers',
+          title: 'OSI Model Quick Reference',
+          color: '#3b82f6',
+          icon: 'layers',
+          items: [
+            { label: '7. Application', value: 'HTTP, FTP, DNS, SMTP', bar: 95 },
+            { label: '6. Presentation', value: 'SSL/TLS, encoding, compression', bar: 80 },
+            { label: '5. Session', value: 'Session mgmt, authentication', bar: 65 },
+            { label: '4. Transport', value: 'TCP, UDP — port-to-port', bar: 85 },
+            { label: '3. Network', value: 'IP, routing — host-to-host', bar: 90 },
+            { label: '2. Data Link', value: 'Ethernet, MAC, switches', bar: 70 },
+            { label: '1. Physical', value: 'Cables, signals, bits', bar: 50 }
+          ]
+        }
+      ],
+      patternCards: [
+        {
+          id: 'three-way-handshake', name: '3-Way Handshake', icon: 'lock', color: '#3b82f6',
+          description: 'SYN → SYN-ACK → ACK to establish reliable TCP connection.',
+          useWhen: 'Every TCP connection (HTTP, database, etc.)',
+          example: 'Client sends SYN, server SYN-ACK, client ACK → connected'
+        },
+        {
+          id: 'keep-alive', name: 'HTTP Keep-Alive', icon: 'link', color: '#10b981',
+          description: 'Reuse TCP connection for multiple HTTP requests.',
+          useWhen: 'Multiple requests to same server (default in HTTP/1.1+)',
+          example: 'Connection: keep-alive header, avoid handshake per request'
         }
       ]
     },
@@ -7072,6 +8986,69 @@ Server-Sent Events (SSE):
             'Design collaborative editing: WebSocket + OT/CRDT',
             'Always discuss reconnection and message replay strategy'
           ]
+        }
+      ],
+
+      comparisonTables: [
+        {
+          id: 'realtime-protocols',
+          title: 'Long Polling vs WebSocket vs SSE',
+          left: {
+            title: 'WebSocket',
+            icon: 'zap',
+            color: '#10b981',
+            items: [
+              { label: 'Direction', value: 'Full duplex — bidirectional' },
+              { label: 'Connection', value: 'Persistent, upgraded from HTTP' },
+              { label: 'Overhead', value: 'Low — 2 byte frame header' },
+              { label: 'Protocol', value: 'ws:// or wss://' },
+              { label: 'Use When', value: 'Chat, gaming, collaborative editing' },
+              { label: 'Examples', value: 'Slack, Discord, Google Docs' }
+            ]
+          },
+          right: {
+            title: 'Server-Sent Events (SSE)',
+            icon: 'arrowDown',
+            color: '#3b82f6',
+            items: [
+              { label: 'Direction', value: 'Server → Client only (one-way)' },
+              { label: 'Connection', value: 'Persistent HTTP connection' },
+              { label: 'Overhead', value: 'Low — text/event-stream' },
+              { label: 'Protocol', value: 'Standard HTTP, auto-reconnect' },
+              { label: 'Use When', value: 'Live feeds, notifications, dashboards' },
+              { label: 'Examples', value: 'Twitter feed, stock tickers, CI logs' }
+            ]
+          }
+        }
+      ],
+      visualCards: [
+        {
+          id: 'realtime-selection',
+          title: 'When to Use Each Protocol',
+          color: '#10b981',
+          icon: 'zap',
+          items: [
+            { label: 'Chat / messaging', value: 'WebSocket', bar: 95 },
+            { label: 'Live notifications', value: 'SSE or WebSocket', bar: 80 },
+            { label: 'Real-time dashboard', value: 'SSE', bar: 70 },
+            { label: 'Collaborative editing', value: 'WebSocket', bar: 90 },
+            { label: 'Simple polling needs', value: 'Long Polling', bar: 40 },
+            { label: 'IoT sensor data', value: 'WebSocket or MQTT', bar: 75 }
+          ]
+        }
+      ],
+      patternCards: [
+        {
+          id: 'long-polling', name: 'Long Polling', icon: 'clock', color: '#f59e0b',
+          description: 'Client sends request, server holds until data available or timeout.',
+          useWhen: 'Simple real-time needs, no WebSocket support',
+          example: 'Hold request 30s, return data or timeout → client reconnects'
+        },
+        {
+          id: 'ws-scaling', name: 'WebSocket Scaling', icon: 'layers', color: '#10b981',
+          description: 'Use pub/sub (Redis) to broadcast across multiple WS servers.',
+          useWhen: 'WebSocket app behind load balancer',
+          example: 'Redis Pub/Sub or Kafka for cross-server message broadcasting'
         }
       ]
     },
@@ -7543,6 +9520,69 @@ Consistency Spectrum:
             'Tunable: Cassandra with adjustable consistency levels'
           ]
         }
+      ],
+
+      comparisonTables: [
+        {
+          id: 'cap-choices',
+          title: 'CP vs AP Database Systems',
+          left: {
+            title: 'CP Systems',
+            icon: 'lock',
+            color: '#ef4444',
+            items: [
+              { label: 'Priority', value: 'Consistency over availability' },
+              { label: 'During Partition', value: 'Reject requests to stay consistent' },
+              { label: 'Use When', value: 'Financial systems, inventory, voting' },
+              { label: 'Trade-off', value: 'System may become unavailable' },
+              { label: 'Examples', value: 'HBase, MongoDB, Redis Cluster, Zookeeper' },
+              { label: 'PACELC', value: 'PC/EC — consistency always' }
+            ]
+          },
+          right: {
+            title: 'AP Systems',
+            icon: 'globe',
+            color: '#10b981',
+            items: [
+              { label: 'Priority', value: 'Availability over consistency' },
+              { label: 'During Partition', value: 'Serve requests with possibly stale data' },
+              { label: 'Use When', value: 'Social feeds, caching, analytics' },
+              { label: 'Trade-off', value: 'May return outdated data' },
+              { label: 'Examples', value: 'Cassandra, DynamoDB, CouchDB, Riak' },
+              { label: 'PACELC', value: 'PA/EL — latency over consistency' }
+            ]
+          }
+        }
+      ],
+      visualCards: [
+        {
+          id: 'pacelc-systems',
+          title: 'PACELC Classification of Databases',
+          color: '#8b5cf6',
+          icon: 'database',
+          items: [
+            { label: 'DynamoDB (PA/EL)', value: 'Always available, low latency', bar: 90 },
+            { label: 'Cassandra (PA/EL)', value: 'Tunable consistency', bar: 85 },
+            { label: 'MongoDB (PC/EC)', value: 'Strong consistency default', bar: 70 },
+            { label: 'MySQL (PC/EC)', value: 'ACID compliant', bar: 65 },
+            { label: 'CockroachDB (PC/EL)', value: 'Consistent + low latency', bar: 75 },
+            { label: 'Cosmos DB (PA/EL)', value: '5 consistency levels', bar: 80 }
+          ]
+        }
+      ],
+      patternCards: [
+        {
+          id: 'tunable-consistency', name: 'Tunable Consistency', icon: 'sliders', color: '#8b5cf6',
+          description: 'Adjust consistency level per query (ONE, QUORUM, ALL).',
+          useWhen: 'Different operations need different consistency levels',
+          example: 'Cassandra: writes at QUORUM, reads at ONE for speed'
+        },
+        {
+          id: 'conflict-resolution', name: 'Conflict Resolution', icon: 'gitBranch', color: '#f59e0b',
+          description: 'Handle conflicting writes in AP systems: LWW, vector clocks, CRDTs.',
+          useWhen: 'Multi-master or leaderless replication',
+          example: 'Last-Write-Wins (LWW), or merge via vector clocks'
+        }
       ]
     },
     {
@@ -7897,6 +9937,68 @@ Step 8: Primary responds to client
             'Mention rack-aware replication unprompted to show depth',
             'Compare with object stores to show awareness of modern alternatives'
           ]
+        }
+      ],
+
+      comparisonTables: [
+        {
+          id: 'hdfs-vs-object-storage',
+          title: 'HDFS vs Object Storage',
+          left: {
+            title: 'HDFS',
+            icon: 'layers',
+            color: '#f59e0b',
+            items: [
+              { label: 'Model', value: 'Block storage with NameNode metadata' },
+              { label: 'Access', value: 'Streaming sequential reads' },
+              { label: 'Scaling', value: 'Add DataNodes to cluster' },
+              { label: 'Use Case', value: 'MapReduce, Spark, batch analytics' },
+              { label: 'Latency', value: 'Higher — optimized for throughput' },
+              { label: 'Examples', value: 'Apache HDFS, Google GFS' }
+            ]
+          },
+          right: {
+            title: 'Object Storage',
+            icon: 'globe',
+            color: '#3b82f6',
+            items: [
+              { label: 'Model', value: 'Flat namespace, key-value objects' },
+              { label: 'Access', value: 'HTTP API (GET/PUT)' },
+              { label: 'Scaling', value: 'Virtually unlimited, managed' },
+              { label: 'Use Case', value: 'Media, backups, data lakes, CDN origin' },
+              { label: 'Latency', value: 'Lower for random access' },
+              { label: 'Examples', value: 'AWS S3, GCS, Azure Blob' }
+            ]
+          }
+        }
+      ],
+      visualCards: [
+        {
+          id: 'dfs-design-choices',
+          title: 'DFS Design Considerations',
+          color: '#f59e0b',
+          icon: 'layers',
+          items: [
+            { label: 'Chunk size', value: '64-256 MB typical', bar: 60 },
+            { label: 'Replication factor', value: '3x default', bar: 75 },
+            { label: 'Consistency model', value: 'Write-once, append-only', bar: 65 },
+            { label: 'Fault tolerance', value: 'Rack-aware placement', bar: 85 },
+            { label: 'Metadata management', value: 'Centralized NameNode', bar: 70 }
+          ]
+        }
+      ],
+      patternCards: [
+        {
+          id: 'chunk-replication', name: 'Chunk Replication', icon: 'copy', color: '#10b981',
+          description: 'Split files into chunks, replicate each to multiple nodes.',
+          useWhen: 'Fault tolerance and parallel read access',
+          example: 'HDFS: 128MB chunks, 3 replicas across different racks'
+        },
+        {
+          id: 'erasure-coding', name: 'Erasure Coding', icon: 'shield', color: '#8b5cf6',
+          description: 'Store parity data instead of full replicas — 50% less storage.',
+          useWhen: 'Cold/archive storage where space efficiency matters',
+          example: 'HDFS Erasure Coding, Azure LRS, S3 Glacier'
         }
       ]
     },
@@ -8265,6 +10367,66 @@ Requires coordination between producer and consumer:
             'Compare Kafka to alternatives when the interviewer asks about messaging'
           ]
         }
+      ],
+
+      comparisonTables: [
+        {
+          id: 'kafka-vs-rabbitmq',
+          title: 'Apache Kafka vs RabbitMQ',
+          left: {
+            title: 'Apache Kafka',
+            icon: 'layers',
+            color: '#10b981',
+            items: [
+              { label: 'Model', value: 'Distributed log — append-only' },
+              { label: 'Throughput', value: 'Millions of messages/sec' },
+              { label: 'Ordering', value: 'Per-partition ordering guaranteed' },
+              { label: 'Retention', value: 'Configurable, days to forever' },
+              { label: 'Consumer', value: 'Pull-based, consumer groups' },
+              { label: 'Best For', value: 'Event streaming, analytics, logs' }
+            ]
+          },
+          right: {
+            title: 'RabbitMQ',
+            icon: 'arrowRight',
+            color: '#f59e0b',
+            items: [
+              { label: 'Model', value: 'Message broker — queues + exchanges' },
+              { label: 'Throughput', value: 'Tens of thousands/sec' },
+              { label: 'Ordering', value: 'FIFO per queue' },
+              { label: 'Retention', value: 'Until consumed (then deleted)' },
+              { label: 'Consumer', value: 'Push-based, acknowledgments' },
+              { label: 'Best For', value: 'Task queues, RPC, routing patterns' }
+            ]
+          }
+        }
+      ],
+      visualCards: [
+        {
+          id: 'messaging-guarantees',
+          title: 'Message Delivery Guarantees',
+          color: '#10b981',
+          icon: 'check',
+          items: [
+            { label: 'At-most-once', value: 'Fire and forget, may lose', bar: 30 },
+            { label: 'At-least-once', value: 'Retry until ack, may duplicate', bar: 70 },
+            { label: 'Exactly-once', value: 'Idempotent + transactions', bar: 95 }
+          ]
+        }
+      ],
+      patternCards: [
+        {
+          id: 'consumer-groups', name: 'Consumer Groups', icon: 'users', color: '#10b981',
+          description: 'Multiple consumers share partitions for parallel processing.',
+          useWhen: 'Scale consumption horizontally',
+          example: 'Kafka: 12 partitions, 4 consumers → 3 partitions each'
+        },
+        {
+          id: 'schema-registry', name: 'Schema Registry', icon: 'database', color: '#3b82f6',
+          description: 'Central schema store for message format versioning.',
+          useWhen: 'Multiple producers/consumers, schema evolution',
+          example: 'Confluent Schema Registry with Avro/Protobuf'
+        }
       ]
     },
     {
@@ -8587,6 +10749,69 @@ Solution: DataLoader (batching + caching)
             'Know when caching makes REST the better choice despite higher latency',
             'Mention HTTP/2 as a prerequisite for gRPC'
           ]
+        }
+      ],
+
+      comparisonTables: [
+        {
+          id: 'rest-vs-graphql-vs-grpc',
+          title: 'REST vs GraphQL vs gRPC',
+          left: {
+            title: 'REST',
+            icon: 'globe',
+            color: '#3b82f6',
+            items: [
+              { label: 'Format', value: 'JSON over HTTP/1.1' },
+              { label: 'Schema', value: 'OpenAPI (optional)' },
+              { label: 'Strengths', value: 'Simple, cacheable, universal' },
+              { label: 'Weaknesses', value: 'Over/under-fetching' },
+              { label: 'Use When', value: 'Public APIs, CRUD, web apps' },
+              { label: 'Perf', value: 'Good — HTTP caching helps' }
+            ]
+          },
+          right: {
+            title: 'gRPC',
+            icon: 'zap',
+            color: '#10b981',
+            items: [
+              { label: 'Format', value: 'Protobuf over HTTP/2' },
+              { label: 'Schema', value: '.proto files (required)' },
+              { label: 'Strengths', value: '10x faster, streaming, type-safe' },
+              { label: 'Weaknesses', value: 'Not browser-native, harder debug' },
+              { label: 'Use When', value: 'Microservices, internal APIs' },
+              { label: 'Perf', value: 'Excellent — binary + multiplexing' }
+            ]
+          }
+        }
+      ],
+      visualCards: [
+        {
+          id: 'api-style-selection',
+          title: 'API Style Selection Guide',
+          color: '#3b82f6',
+          icon: 'globe',
+          items: [
+            { label: 'Public API for web/mobile', value: 'REST', bar: 90 },
+            { label: 'Internal microservices', value: 'gRPC', bar: 85 },
+            { label: 'Mobile with varied data needs', value: 'GraphQL', bar: 80 },
+            { label: 'Real-time streaming', value: 'gRPC or WebSocket', bar: 75 },
+            { label: 'Simple CRUD operations', value: 'REST', bar: 85 },
+            { label: 'Complex nested queries', value: 'GraphQL', bar: 70 }
+          ]
+        }
+      ],
+      patternCards: [
+        {
+          id: 'graphql-pattern', name: 'GraphQL', icon: 'search', color: '#8b5cf6',
+          description: 'Query language — client asks for exactly what it needs.',
+          useWhen: 'Multiple clients need different data shapes',
+          example: 'query { user(id:1) { name, posts { title } } }'
+        },
+        {
+          id: 'bff', name: 'Backend for Frontend', icon: 'layers', color: '#f59e0b',
+          description: 'Dedicated API layer per client type (web, mobile, IoT).',
+          useWhen: 'Different clients need very different API shapes',
+          example: 'Mobile BFF aggregates 3 microservices into 1 call'
         }
       ]
     },
@@ -8928,6 +11153,68 @@ Common Async Patterns:
             'Draw the message broker as a central component in your architecture',
             'Compare choreography vs orchestration for complex workflows'
           ]
+        }
+      ],
+
+      comparisonTables: [
+        {
+          id: 'sync-vs-async-comm',
+          title: 'Synchronous vs Asynchronous Communication',
+          left: {
+            title: 'Synchronous',
+            icon: 'lock',
+            color: '#3b82f6',
+            items: [
+              { label: 'Model', value: 'Caller waits for response' },
+              { label: 'Coupling', value: 'Tight — both must be available' },
+              { label: 'Latency', value: 'Predictable end-to-end' },
+              { label: 'Error Handling', value: 'Immediate — caller knows result' },
+              { label: 'Examples', value: 'HTTP REST, gRPC, DB queries' },
+              { label: 'Best For', value: 'Simple flows, user-facing requests' }
+            ]
+          },
+          right: {
+            title: 'Asynchronous',
+            icon: 'zap',
+            color: '#10b981',
+            items: [
+              { label: 'Model', value: 'Fire and forget / callback later' },
+              { label: 'Coupling', value: 'Loose — producer and consumer independent' },
+              { label: 'Latency', value: 'Lower for caller, eventual processing' },
+              { label: 'Error Handling', value: 'Delayed — need DLQ / retry logic' },
+              { label: 'Examples', value: 'Message queues, events, webhooks' },
+              { label: 'Best For', value: 'Decoupling, spiky loads, long tasks' }
+            ]
+          }
+        }
+      ],
+      visualCards: [
+        {
+          id: 'async-patterns',
+          title: 'Asynchronous Communication Patterns',
+          color: '#10b981',
+          icon: 'zap',
+          items: [
+            { label: 'Request/Response (sync)', value: 'HTTP, gRPC calls', bar: 40 },
+            { label: 'Fire and Forget', value: 'Send message, don\'t wait', bar: 60 },
+            { label: 'Pub/Sub', value: 'Broadcast to all subscribers', bar: 80 },
+            { label: 'Request/Reply (async)', value: 'Correlation ID + reply queue', bar: 65 },
+            { label: 'Event Sourcing', value: 'Append events, rebuild state', bar: 75 }
+          ]
+        }
+      ],
+      patternCards: [
+        {
+          id: 'callback', name: 'Callback / Webhook', icon: 'arrowRight', color: '#3b82f6',
+          description: 'Register a URL to be called when async work completes.',
+          useWhen: 'Payment processing, external API integrations',
+          example: 'Stripe webhook POSTs to your /webhook URL on payment success'
+        },
+        {
+          id: 'polling-vs-push', name: 'Polling vs Push', icon: 'refreshCw', color: '#10b981',
+          description: 'Polling: client checks periodically. Push: server notifies client.',
+          useWhen: 'Real-time updates needed — push preferred if possible',
+          example: 'Long polling for compatibility, SSE/WebSocket for true push'
         }
       ]
     },
@@ -9320,6 +11607,68 @@ Two clients write different values to the same key concurrently:
             'Discuss read repair and anti-entropy as consistency mechanisms',
             'Connect quorum to real databases: Cassandra, DynamoDB, Riak'
           ]
+        }
+      ],
+
+      comparisonTables: [
+        {
+          id: 'quorum-configs',
+          title: 'Quorum Configurations',
+          left: {
+            title: 'Strong Consistency (W+R>N)',
+            icon: 'lock',
+            color: '#ef4444',
+            items: [
+              { label: 'Config', value: 'N=3, W=2, R=2 (2+2>3)' },
+              { label: 'Guarantee', value: 'Read always sees latest write' },
+              { label: 'Write Latency', value: 'Higher — waits for W nodes' },
+              { label: 'Read Latency', value: 'Higher — reads from R nodes' },
+              { label: 'Availability', value: 'Tolerates (N-W) write failures' },
+              { label: 'Use When', value: 'Banking, inventory, leader election' }
+            ]
+          },
+          right: {
+            title: 'Eventual Consistency (W+R<=N)',
+            icon: 'zap',
+            color: '#10b981',
+            items: [
+              { label: 'Config', value: 'N=3, W=1, R=1 (1+1<3)' },
+              { label: 'Guarantee', value: 'May read stale data' },
+              { label: 'Write Latency', value: 'Low — only 1 node needed' },
+              { label: 'Read Latency', value: 'Low — only 1 node needed' },
+              { label: 'Availability', value: 'Very high — any node works' },
+              { label: 'Use When', value: 'Social feeds, caching, analytics' }
+            ]
+          }
+        }
+      ],
+      visualCards: [
+        {
+          id: 'quorum-formula',
+          title: 'Quorum Formula Quick Reference (N=5)',
+          color: '#8b5cf6',
+          icon: 'hash',
+          items: [
+            { label: 'Strong: W=3, R=3', value: '3+3=6 > 5 ✓', bar: 90 },
+            { label: 'Read-heavy: W=5, R=1', value: '5+1=6 > 5 ✓', bar: 70 },
+            { label: 'Write-heavy: W=1, R=5', value: '1+5=6 > 5 ✓', bar: 70 },
+            { label: 'Balanced: W=3, R=2', value: '3+2=5 = 5 ✗', bar: 30 },
+            { label: 'Weak: W=1, R=1', value: '1+1=2 < 5 ✗', bar: 15 }
+          ]
+        }
+      ],
+      patternCards: [
+        {
+          id: 'sloppy-quorum', name: 'Sloppy Quorum', icon: 'layers', color: '#f59e0b',
+          description: 'During network issues, accept writes on any N reachable nodes.',
+          useWhen: 'Prioritize write availability over strict consistency',
+          example: 'DynamoDB hinted handoff — store on available node, transfer later'
+        },
+        {
+          id: 'read-repair', name: 'Read Repair', icon: 'refreshCw', color: '#10b981',
+          description: 'On read, detect stale replicas and update them.',
+          useWhen: 'Quorum reads detect inconsistency',
+          example: 'Cassandra reads from R=3, finds one stale → sends correction'
         }
       ]
     },
@@ -9719,6 +12068,68 @@ In system design interviews, leader-follower replication appears in every databa
             'Reference Raft as the consensus protocol and explain term-based voting'
           ]
         }
+      ],
+
+      comparisonTables: [
+        {
+          id: 'single-vs-multi-leader',
+          title: 'Single-Leader vs Multi-Leader',
+          left: {
+            title: 'Single-Leader',
+            icon: 'server',
+            color: '#3b82f6',
+            items: [
+              { label: 'Writers', value: 'One leader only' },
+              { label: 'Conflicts', value: 'None — serial writes' },
+              { label: 'Failover', value: 'Promote follower to leader' },
+              { label: 'Latency', value: 'Higher for remote writes' },
+              { label: 'Complexity', value: 'Simple — clear write path' },
+              { label: 'Examples', value: 'PostgreSQL, MySQL, MongoDB' }
+            ]
+          },
+          right: {
+            title: 'Multi-Leader',
+            icon: 'layers',
+            color: '#10b981',
+            items: [
+              { label: 'Writers', value: 'Multiple leaders accept writes' },
+              { label: 'Conflicts', value: 'Must resolve write conflicts' },
+              { label: 'Failover', value: 'Other leaders continue serving' },
+              { label: 'Latency', value: 'Low — local leader for each region' },
+              { label: 'Complexity', value: 'High — conflict resolution needed' },
+              { label: 'Examples', value: 'CockroachDB, Google Docs, Git' }
+            ]
+          }
+        }
+      ],
+      visualCards: [
+        {
+          id: 'replication-lag',
+          title: 'Replication Lag Scenarios',
+          color: '#3b82f6',
+          icon: 'clock',
+          items: [
+            { label: 'Same datacenter', value: '< 1ms lag', bar: 10 },
+            { label: 'Cross-AZ', value: '1-5ms lag', bar: 25 },
+            { label: 'Cross-region', value: '50-200ms lag', bar: 60 },
+            { label: 'Under heavy load', value: 'Seconds to minutes', bar: 85 },
+            { label: 'Network partition', value: 'Unbounded until resolved', bar: 100 }
+          ]
+        }
+      ],
+      patternCards: [
+        {
+          id: 'leader-election', name: 'Leader Election', icon: 'star', color: '#f59e0b',
+          description: 'Algorithms to choose a new leader when current one fails.',
+          useWhen: 'Automatic failover, distributed coordination',
+          example: 'Raft consensus, ZooKeeper leader election, etcd'
+        },
+        {
+          id: 'read-your-writes', name: 'Read-Your-Writes', icon: 'check', color: '#10b981',
+          description: 'Guarantee that a user sees their own recent writes.',
+          useWhen: 'User updates profile, then refreshes page',
+          example: 'Route user reads to leader, or track write timestamp'
+        }
       ]
     },
     {
@@ -10097,6 +12508,67 @@ Receiving node merges: keep highest heartbeat count per node
             'Connect heartbeats to Kubernetes probes for modern relevance'
           ]
         }
+      ],
+
+      comparisonTables: [
+        {
+          id: 'push-vs-pull-heartbeat',
+          title: 'Push vs Pull Heartbeat',
+          left: {
+            title: 'Push (Active)',
+            icon: 'arrowRight',
+            color: '#10b981',
+            items: [
+              { label: 'How', value: 'Node sends periodic "I\'m alive" messages' },
+              { label: 'Detection', value: 'Timeout = node is dead' },
+              { label: 'Traffic', value: 'Constant heartbeat traffic' },
+              { label: 'Complexity', value: 'Simple — just send + timeout' },
+              { label: 'Delay', value: 'Up to timeout interval' },
+              { label: 'Examples', value: 'Kubernetes liveness probes, ZooKeeper' }
+            ]
+          },
+          right: {
+            title: 'Pull (Polling)',
+            icon: 'arrowLeft',
+            color: '#3b82f6',
+            items: [
+              { label: 'How', value: 'Monitor periodically pings nodes' },
+              { label: 'Detection', value: 'No response = potentially dead' },
+              { label: 'Traffic', value: 'Centralized polling traffic' },
+              { label: 'Complexity', value: 'Need central monitor (SPOF risk)' },
+              { label: 'Delay', value: 'Up to polling interval' },
+              { label: 'Examples', value: 'Nagios, load balancer health checks' }
+            ]
+          }
+        }
+      ],
+      visualCards: [
+        {
+          id: 'heartbeat-config',
+          title: 'Heartbeat Configuration Guide',
+          color: '#10b981',
+          icon: 'heart',
+          items: [
+            { label: 'Interval: 1-5 seconds', value: 'Fast detection, more traffic', bar: 80 },
+            { label: 'Interval: 10-30 seconds', value: 'Balanced approach', bar: 55 },
+            { label: 'Timeout: 3× interval', value: 'Standard threshold', bar: 70 },
+            { label: 'Retries: 2-3 before dead', value: 'Avoid false positives', bar: 65 }
+          ]
+        }
+      ],
+      patternCards: [
+        {
+          id: 'phi-accrual', name: 'Phi Accrual Detector', icon: 'barChart', color: '#8b5cf6',
+          description: 'Adaptive failure detection — adjusts based on observed heartbeat intervals.',
+          useWhen: 'Networks with variable latency',
+          example: 'Cassandra uses phi accrual with threshold φ=8'
+        },
+        {
+          id: 'gossip-protocol', name: 'Gossip Protocol', icon: 'globe', color: '#10b981',
+          description: 'Nodes share health info with random peers — epidemic spread.',
+          useWhen: 'Large clusters where centralized monitoring doesn\'t scale',
+          example: 'Cassandra gossip: each node tells 3 random peers every second'
+        }
       ]
     },
     {
@@ -10471,6 +12943,69 @@ Merkle Tree (used for replica comparison):
             'Explain end-to-end integrity for data pipeline designs',
             'Connect content-addressable storage to Git, Docker, and CDNs'
           ]
+        }
+      ],
+
+      comparisonTables: [
+        {
+          id: 'hash-algorithms',
+          title: 'Hash Algorithm Comparison',
+          left: {
+            title: 'Fast Hashes (Non-cryptographic)',
+            icon: 'zap',
+            color: '#10b981',
+            items: [
+              { label: 'Speed', value: 'Very fast — GB/s' },
+              { label: 'Security', value: 'Not collision-resistant' },
+              { label: 'Use Case', value: 'Data integrity, hash tables, checksums' },
+              { label: 'Output', value: '32-128 bits' },
+              { label: 'Examples', value: 'CRC32, xxHash, MurmurHash' },
+              { label: 'When', value: 'Network packets, file integrity, caching' }
+            ]
+          },
+          right: {
+            title: 'Cryptographic Hashes',
+            icon: 'lock',
+            color: '#ef4444',
+            items: [
+              { label: 'Speed', value: 'Slower — designed to be expensive' },
+              { label: 'Security', value: 'Collision-resistant, one-way' },
+              { label: 'Use Case', value: 'Passwords, digital signatures, blockchain' },
+              { label: 'Output', value: '256-512 bits' },
+              { label: 'Examples', value: 'SHA-256, SHA-3, bcrypt, Argon2' },
+              { label: 'When', value: 'Security-critical data verification' }
+            ]
+          }
+        }
+      ],
+      visualCards: [
+        {
+          id: 'checksum-usage',
+          title: 'Where Checksums Are Used',
+          color: '#10b981',
+          icon: 'check',
+          items: [
+            { label: 'TCP/UDP packets', value: 'Header + data checksum', bar: 95 },
+            { label: 'File downloads', value: 'MD5/SHA-256 verification', bar: 85 },
+            { label: 'Database pages', value: 'Detect disk corruption', bar: 80 },
+            { label: 'Distributed storage', value: 'HDFS block checksums', bar: 75 },
+            { label: 'Git commits', value: 'SHA-1 content addressing', bar: 90 },
+            { label: 'Blockchain', value: 'Block hash chains', bar: 70 }
+          ]
+        }
+      ],
+      patternCards: [
+        {
+          id: 'merkle-tree', name: 'Merkle Tree', icon: 'gitBranch', color: '#8b5cf6',
+          description: 'Tree of hashes — efficiently verify large data sets by comparing roots.',
+          useWhen: 'Anti-entropy, data synchronization between replicas',
+          example: 'Cassandra, Bitcoin, IPFS use Merkle trees for verification'
+        },
+        {
+          id: 'ecc', name: 'Error Correction Codes', icon: 'shield', color: '#3b82f6',
+          description: 'Not just detect errors — actually fix them (Reed-Solomon, Hamming).',
+          useWhen: 'Unreliable storage or transmission channels',
+          example: 'QR codes, CDs, RAID-6 use Reed-Solomon ECC'
         }
       ]
     },
@@ -10901,6 +13436,69 @@ Instead of a single timestamp, TrueTime returns an interval:
             'Use concrete examples: payments need strong, feeds can be eventual'
           ]
         }
+      ],
+
+      comparisonTables: [
+        {
+          id: 'strong-vs-eventual',
+          title: 'Strong vs Eventual Consistency',
+          left: {
+            title: 'Strong Consistency',
+            icon: 'lock',
+            color: '#ef4444',
+            items: [
+              { label: 'Guarantee', value: 'Every read returns latest write' },
+              { label: 'Latency', value: 'Higher — must sync all replicas' },
+              { label: 'Availability', value: 'Lower — blocked during partitions' },
+              { label: 'Implementation', value: 'Consensus protocols (Raft, Paxos)' },
+              { label: 'Use When', value: 'Banking, inventory, leader election' },
+              { label: 'Examples', value: 'Spanner, CockroachDB, ZooKeeper' }
+            ]
+          },
+          right: {
+            title: 'Eventual Consistency',
+            icon: 'clock',
+            color: '#10b981',
+            items: [
+              { label: 'Guarantee', value: 'All replicas converge eventually' },
+              { label: 'Latency', value: 'Low — write to nearest node' },
+              { label: 'Availability', value: 'High — always accepts writes' },
+              { label: 'Implementation', value: 'Async replication, conflict resolution' },
+              { label: 'Use When', value: 'Social feeds, DNS, shopping carts' },
+              { label: 'Examples', value: 'DynamoDB, Cassandra, DNS' }
+            ]
+          }
+        }
+      ],
+      visualCards: [
+        {
+          id: 'consistency-spectrum',
+          title: 'Consistency Spectrum',
+          color: '#8b5cf6',
+          icon: 'sliders',
+          items: [
+            { label: 'Linearizability', value: 'Strongest — real-time ordering', bar: 100 },
+            { label: 'Sequential Consistency', value: 'Global order, not real-time', bar: 85 },
+            { label: 'Causal Consistency', value: 'Respects cause-effect', bar: 65 },
+            { label: 'Read-Your-Writes', value: 'See your own updates', bar: 50 },
+            { label: 'Monotonic Reads', value: 'Never see older data after newer', bar: 40 },
+            { label: 'Eventual Consistency', value: 'Converge given time', bar: 15 }
+          ]
+        }
+      ],
+      patternCards: [
+        {
+          id: 'crdt', name: 'CRDTs', icon: 'layers', color: '#8b5cf6',
+          description: 'Conflict-free Replicated Data Types — merge without coordination.',
+          useWhen: 'Collaborative editing, offline-first, multi-master',
+          example: 'G-Counter, OR-Set used in Riak, Redis CRDT'
+        },
+        {
+          id: 'vector-clock', name: 'Vector Clocks', icon: 'clock', color: '#f59e0b',
+          description: 'Track causal ordering of events across distributed nodes.',
+          useWhen: 'Detect and resolve concurrent write conflicts',
+          example: 'DynamoDB version vectors, Riak vector clocks'
+        }
       ]
     },
     {
@@ -11305,6 +13903,69 @@ But for a page that makes 50 backend calls in parallel:
             'Mention tail latency and hedged requests for read-heavy systems',
             'Know when to trade latency for throughput (batch processing) and vice versa'
           ]
+        }
+      ],
+
+      comparisonTables: [
+        {
+          id: 'latency-vs-throughput-comp',
+          title: 'Latency vs Throughput',
+          left: {
+            title: 'Optimize for Latency',
+            icon: 'clock',
+            color: '#3b82f6',
+            items: [
+              { label: 'Goal', value: 'Minimize time per request' },
+              { label: 'Strategy', value: 'Caching, CDN, edge computing' },
+              { label: 'Trade-off', value: 'May reduce throughput (no batching)' },
+              { label: 'Measure', value: 'p50, p95, p99 response time' },
+              { label: 'Use When', value: 'User-facing APIs, real-time systems' },
+              { label: 'Example', value: 'Google search < 200ms' }
+            ]
+          },
+          right: {
+            title: 'Optimize for Throughput',
+            icon: 'trendingUp',
+            color: '#10b981',
+            items: [
+              { label: 'Goal', value: 'Maximize requests per second' },
+              { label: 'Strategy', value: 'Batching, parallelism, async' },
+              { label: 'Trade-off', value: 'Individual latency may increase' },
+              { label: 'Measure', value: 'RPS, messages/sec, bytes/sec' },
+              { label: 'Use When', value: 'Batch processing, data pipelines' },
+              { label: 'Example', value: 'Kafka 1M+ messages/sec' }
+            ]
+          }
+        }
+      ],
+      visualCards: [
+        {
+          id: 'optimization-techniques',
+          title: 'Latency vs Throughput Optimization',
+          color: '#3b82f6',
+          icon: 'zap',
+          items: [
+            { label: 'Caching (Redis/CDN)', value: 'Latency ↓↓, Throughput ↑↑', bar: 95 },
+            { label: 'Connection pooling', value: 'Latency ↓, Throughput ↑↑', bar: 80 },
+            { label: 'Batching', value: 'Latency ↑, Throughput ↑↑↑', bar: 70 },
+            { label: 'Async processing', value: 'Latency ↓ (perceived), Throughput ↑', bar: 75 },
+            { label: 'Compression', value: 'Latency ↓ (network), CPU ↑', bar: 60 },
+            { label: 'Horizontal scaling', value: 'Throughput ↑↑, Latency same', bar: 85 }
+          ]
+        }
+      ],
+      patternCards: [
+        {
+          id: 'littles-law', name: 'Little\'s Law', icon: 'hash', color: '#8b5cf6',
+          description: 'L = λ × W. Items in system = arrival rate × time in system.',
+          useWhen: 'Capacity planning, queue sizing, thread pool tuning',
+          example: '100 RPS × 0.1s avg latency = 10 concurrent requests'
+        },
+        {
+          id: 'tail-latency', name: 'Tail Latency', icon: 'barChart', color: '#ef4444',
+          description: 'p99/p999 latency matters more than average for user experience.',
+          useWhen: 'SLA definitions, performance monitoring',
+          example: 'p50=5ms, p99=500ms means 1% of users wait 100x longer'
         }
       ]
     },
@@ -11766,6 +14427,68 @@ MVCC (Multi-Version Concurrency Control):
             'Use the polyglot persistence pattern: right store for each data type',
             'Discuss optimistic locking for web APIs and pessimistic for financial systems'
           ]
+        }
+      ],
+
+      comparisonTables: [
+        {
+          id: 'acid-vs-base-comp',
+          title: 'ACID vs BASE',
+          left: {
+            title: 'ACID',
+            icon: 'lock',
+            color: '#3b82f6',
+            items: [
+              { label: 'Atomicity', value: 'All or nothing — no partial commits' },
+              { label: 'Consistency', value: 'Data always valid per constraints' },
+              { label: 'Isolation', value: 'Concurrent txns don\'t interfere' },
+              { label: 'Durability', value: 'Committed data survives crashes' },
+              { label: 'Use When', value: 'Financial, orders, critical data' },
+              { label: 'Examples', value: 'PostgreSQL, MySQL, Oracle, SQL Server' }
+            ]
+          },
+          right: {
+            title: 'BASE',
+            icon: 'globe',
+            color: '#10b981',
+            items: [
+              { label: 'Basically Available', value: 'System always responds' },
+              { label: 'Soft state', value: 'State may change without input' },
+              { label: 'Eventually consistent', value: 'Will converge given time' },
+              { label: 'Trade-off', value: 'Availability over consistency' },
+              { label: 'Use When', value: 'Social, analytics, caching' },
+              { label: 'Examples', value: 'Cassandra, DynamoDB, CouchDB, Riak' }
+            ]
+          }
+        }
+      ],
+      visualCards: [
+        {
+          id: 'isolation-levels',
+          title: 'Transaction Isolation Levels',
+          color: '#3b82f6',
+          icon: 'lock',
+          items: [
+            { label: 'Read Uncommitted', value: 'Dirty reads possible', bar: 15 },
+            { label: 'Read Committed', value: 'No dirty reads', bar: 40 },
+            { label: 'Repeatable Read', value: 'No non-repeatable reads', bar: 65 },
+            { label: 'Snapshot Isolation', value: 'MVCC — consistent snapshots', bar: 80 },
+            { label: 'Serializable', value: 'Full isolation — slowest', bar: 100 }
+          ]
+        }
+      ],
+      patternCards: [
+        {
+          id: 'two-phase-commit', name: 'Two-Phase Commit (2PC)', icon: 'check', color: '#ef4444',
+          description: 'Coordinator asks all nodes to prepare, then commit. Atomic across nodes.',
+          useWhen: 'Distributed transactions needing ACID guarantees',
+          example: 'Prepare phase: all say YES → Commit phase: all commit'
+        },
+        {
+          id: 'saga-acid', name: 'Saga Pattern', icon: 'gitBranch', color: '#10b981',
+          description: 'Sequence of local ACID transactions with compensating actions.',
+          useWhen: 'Microservices where 2PC is too slow or unavailable',
+          example: 'Order→Pay→Ship — if Ship fails, compensate: Refund→Cancel'
         }
       ]
     },

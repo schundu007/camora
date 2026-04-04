@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 350" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <filter id="shadow" x="-4%" y="-4%" width="108%" height="108%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.1"/>
+    </filter>
+    <marker id="arrowGray" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#94a3b8"/>
+    </marker>
+    <marker id="arrowEmerald" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#10b981"/>
+    </marker>
+  </defs>
+  <rect width="600" height="350" fill="#f7f8f9" rx="12"/>
+  <text x="300" y="28" text-anchor="middle" font-size="16" font-weight="700" fill="#1e293b">Microservices Architecture</text>
+
+  <!-- Clients -->
+  <rect x="20" y="55" width="80" height="40" rx="8" fill="white" stroke="#64748b" stroke-width="2" filter="url(#shadow)"/>
+  <text x="60" y="72" text-anchor="middle" font-size="10" fill="#64748b">Web</text>
+  <text x="60" y="85" text-anchor="middle" font-size="10" fill="#64748b">Client</text>
+
+  <rect x="20" y="105" width="80" height="40" rx="8" fill="white" stroke="#64748b" stroke-width="2" filter="url(#shadow)"/>
+  <text x="60" y="122" text-anchor="middle" font-size="10" fill="#64748b">Mobile</text>
+  <text x="60" y="135" text-anchor="middle" font-size="10" fill="#64748b">Client</text>
+
+  <!-- API Gateway -->
+  <rect x="140" y="60" width="90" height="90" rx="8" fill="white" stroke="#10b981" stroke-width="2" filter="url(#shadow)"/>
+  <text x="185" y="95" text-anchor="middle" font-size="11" font-weight="600" fill="#10b981">API</text>
+  <text x="185" y="112" text-anchor="middle" font-size="11" font-weight="600" fill="#10b981">Gateway</text>
+  <text x="185" y="130" text-anchor="middle" font-size="8" fill="#64748b">Auth / Rate Limit</text>
+  <text x="185" y="142" text-anchor="middle" font-size="8" fill="#64748b">Load Balance</text>
+
+  <!-- Arrows clients to gateway -->
+  <line x1="100" y1="75" x2="135" y2="90" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrowGray)"/>
+  <line x1="100" y1="125" x2="135" y2="115" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrowGray)"/>
+
+  <!-- Service Mesh background -->
+  <rect x="260" y="42" width="320" height="180" rx="10" fill="#f0fdf4" stroke="#10b981" stroke-width="1" stroke-dasharray="6,3" opacity="0.6"/>
+  <text x="420" y="57" text-anchor="middle" font-size="9" fill="#10b981" font-weight="600">Service Mesh (Istio/Linkerd)</text>
+
+  <!-- User Service -->
+  <rect x="275" y="65" width="100" height="50" rx="8" fill="white" stroke="#3b82f6" stroke-width="2" filter="url(#shadow)"/>
+  <text x="325" y="86" text-anchor="middle" font-size="10" font-weight="600" fill="#3b82f6">User Service</text>
+  <text x="325" y="100" text-anchor="middle" font-size="8" fill="#64748b">Profiles, Auth</text>
+  <rect x="275" y="108" width="20" height="10" rx="3" fill="#3b82f6" opacity="0.2" stroke="#3b82f6" stroke-width="0.5"/>
+  <text x="285" y="116" text-anchor="middle" font-size="5" fill="#3b82f6">SC</text>
+
+  <!-- Order Service -->
+  <rect x="395" y="65" width="100" height="50" rx="8" fill="white" stroke="#8b5cf6" stroke-width="2" filter="url(#shadow)"/>
+  <text x="445" y="86" text-anchor="middle" font-size="10" font-weight="600" fill="#8b5cf6">Order Service</text>
+  <text x="445" y="100" text-anchor="middle" font-size="8" fill="#64748b">Cart, Orders</text>
+  <rect x="395" y="108" width="20" height="10" rx="3" fill="#8b5cf6" opacity="0.2" stroke="#8b5cf6" stroke-width="0.5"/>
+  <text x="405" y="116" text-anchor="middle" font-size="5" fill="#8b5cf6">SC</text>
+
+  <!-- Payment Service -->
+  <rect x="275" y="135" width="100" height="50" rx="8" fill="white" stroke="#f59e0b" stroke-width="2" filter="url(#shadow)"/>
+  <text x="325" y="156" text-anchor="middle" font-size="10" font-weight="600" fill="#f59e0b">Payment Svc</text>
+  <text x="325" y="170" text-anchor="middle" font-size="8" fill="#64748b">Billing, Stripe</text>
+  <rect x="275" y="178" width="20" height="10" rx="3" fill="#f59e0b" opacity="0.2" stroke="#f59e0b" stroke-width="0.5"/>
+  <text x="285" y="186" text-anchor="middle" font-size="5" fill="#f59e0b">SC</text>
+
+  <!-- Notification Service -->
+  <rect x="395" y="135" width="100" height="50" rx="8" fill="white" stroke="#ef4444" stroke-width="2" filter="url(#shadow)"/>
+  <text x="445" y="156" text-anchor="middle" font-size="10" font-weight="600" fill="#ef4444">Notification</text>
+  <text x="445" y="170" text-anchor="middle" font-size="8" fill="#64748b">Email, SMS</text>
+  <rect x="395" y="178" width="20" height="10" rx="3" fill="#ef4444" opacity="0.2" stroke="#ef4444" stroke-width="0.5"/>
+  <text x="405" y="186" text-anchor="middle" font-size="5" fill="#ef4444">SC</text>
+
+  <!-- Arrows from gateway to services -->
+  <line x1="230" y1="95" x2="270" y2="90" stroke="#10b981" stroke-width="1.5" marker-end="url(#arrowEmerald)"/>
+  <line x1="230" y1="100" x2="270" y2="155" stroke="#10b981" stroke-width="1.5" marker-end="url(#arrowEmerald)"/>
+  <line x1="230" y1="95" x2="390" y2="90" stroke="#10b981" stroke-width="1.5" marker-end="url(#arrowEmerald)"/>
+  <line x1="230" y1="100" x2="390" y2="155" stroke="#10b981" stroke-width="1.5" marker-end="url(#arrowEmerald)"/>
+
+  <!-- Sidecar label -->
+  <text x="555" y="145" text-anchor="middle" font-size="8" fill="#64748b" transform="rotate(-90, 555, 145)">SC = Sidecar Proxy</text>
+
+  <!-- Databases row -->
+  <rect x="80" y="255" width="100" height="45" rx="8" fill="white" stroke="#3b82f6" stroke-width="2" filter="url(#shadow)"/>
+  <text x="130" y="275" text-anchor="middle" font-size="10" font-weight="600" fill="#3b82f6">Users DB</text>
+  <text x="130" y="290" text-anchor="middle" font-size="8" fill="#64748b">PostgreSQL</text>
+
+  <rect x="200" y="255" width="100" height="45" rx="8" fill="white" stroke="#8b5cf6" stroke-width="2" filter="url(#shadow)"/>
+  <text x="250" y="275" text-anchor="middle" font-size="10" font-weight="600" fill="#8b5cf6">Orders DB</text>
+  <text x="250" y="290" text-anchor="middle" font-size="8" fill="#64748b">MongoDB</text>
+
+  <rect x="320" y="255" width="100" height="45" rx="8" fill="white" stroke="#f59e0b" stroke-width="2" filter="url(#shadow)"/>
+  <text x="370" y="275" text-anchor="middle" font-size="10" font-weight="600" fill="#f59e0b">Payments DB</text>
+  <text x="370" y="290" text-anchor="middle" font-size="8" fill="#64748b">PostgreSQL</text>
+
+  <rect x="440" y="255" width="110" height="45" rx="8" fill="white" stroke="#ef4444" stroke-width="2" filter="url(#shadow)"/>
+  <text x="495" y="275" text-anchor="middle" font-size="10" font-weight="600" fill="#ef4444">Message Queue</text>
+  <text x="495" y="290" text-anchor="middle" font-size="8" fill="#64748b">RabbitMQ/Kafka</text>
+
+  <!-- DB arrows -->
+  <line x1="325" y1="115" x2="130" y2="250" stroke="#3b82f6" stroke-width="1" stroke-dasharray="4,3"/>
+  <line x1="445" y1="115" x2="250" y2="250" stroke="#8b5cf6" stroke-width="1" stroke-dasharray="4,3"/>
+  <line x1="325" y1="185" x2="370" y2="250" stroke="#f59e0b" stroke-width="1" stroke-dasharray="4,3"/>
+  <line x1="445" y1="185" x2="495" y2="250" stroke="#ef4444" stroke-width="1" stroke-dasharray="4,3"/>
+
+  <!-- Legend -->
+  <text x="30" y="335" font-size="9" fill="#64748b">Each service owns its data (Database per Service pattern) | Sidecar proxies handle mTLS, retries, circuit breaking</text>
+</svg>

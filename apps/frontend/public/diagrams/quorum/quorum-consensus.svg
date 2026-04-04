@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 350" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <filter id="shadow" x="-2%" y="-2%" width="104%" height="104%">
+      <feDropShadow dx="0" dy="1" stdDeviation="2" flood-opacity="0.1"/>
+    </filter>
+  </defs>
+  <rect width="600" height="350" fill="#f7f8f9" rx="4"/>
+  <text x="300" y="28" text-anchor="middle" font-size="15" font-weight="700" fill="#1e293b">Quorum Consensus &#8212; W + R &gt; N</text>
+  <text x="300" y="46" text-anchor="middle" font-size="10" fill="#64748b">Ensuring overlap between write and read sets guarantees consistency</text>
+
+  <!-- N=5 Nodes in a circle -->
+  <!-- Node positions: center at 195,170, radius 70 -->
+  <!-- Node 1: top -->
+  <circle cx="195" cy="95" r="28" fill="white" stroke="#10b981" stroke-width="2.5" filter="url(#shadow)"/>
+  <text x="195" y="92" text-anchor="middle" font-size="10" font-weight="700" fill="#1e293b">N1</text>
+  <text x="195" y="105" text-anchor="middle" font-size="7" fill="#10b981">W + R</text>
+
+  <!-- Node 2: top-right -->
+  <circle cx="262" cy="118" r="28" fill="white" stroke="#10b981" stroke-width="2.5" filter="url(#shadow)"/>
+  <text x="262" y="115" text-anchor="middle" font-size="10" font-weight="700" fill="#1e293b">N2</text>
+  <text x="262" y="128" text-anchor="middle" font-size="7" fill="#10b981">W + R</text>
+
+  <!-- Node 3: bottom-right -->
+  <circle cx="237" cy="195" r="28" fill="white" stroke="#3b82f6" stroke-width="2.5" filter="url(#shadow)"/>
+  <text x="237" y="192" text-anchor="middle" font-size="10" font-weight="700" fill="#1e293b">N3</text>
+  <text x="237" y="205" text-anchor="middle" font-size="7" fill="#3b82f6">W only</text>
+
+  <!-- Node 4: bottom-left -->
+  <circle cx="153" cy="195" r="28" fill="white" stroke="#8b5cf6" stroke-width="2.5" filter="url(#shadow)"/>
+  <text x="153" y="192" text-anchor="middle" font-size="10" font-weight="700" fill="#1e293b">N4</text>
+  <text x="153" y="205" text-anchor="middle" font-size="7" fill="#8b5cf6">R only</text>
+
+  <!-- Node 5: top-left -->
+  <circle cx="128" cy="118" r="28" fill="white" stroke="#cbd5e1" stroke-width="2.5" filter="url(#shadow)"/>
+  <text x="128" y="118" text-anchor="middle" font-size="10" font-weight="700" fill="#1e293b">N5</text>
+  <text x="128" y="131" text-anchor="middle" font-size="7" fill="#94a3b8">none</text>
+
+  <!-- Overlap highlight -->
+  <text x="195" y="150" text-anchor="middle" font-size="8" font-weight="700" fill="#f59e0b">overlap!</text>
+
+  <!-- Right side: Explanation -->
+  <rect x="320" y="70" width="260" height="170" rx="10" fill="white" stroke="#e2e8f0" stroke-width="1" filter="url(#shadow)"/>
+  <text x="450" y="95" text-anchor="middle" font-size="12" font-weight="700" fill="#1e293b">Example: N=5</text>
+
+  <!-- Write quorum -->
+  <rect x="338" y="108" width="100" height="28" rx="6" fill="#ecfdf5" stroke="#10b981" stroke-width="1.5"/>
+  <text x="388" y="126" text-anchor="middle" font-size="10" font-weight="600" fill="#10b981">W = 3</text>
+  <text x="460" y="126" font-size="9" fill="#64748b">Write to 3 nodes</text>
+
+  <!-- Read quorum -->
+  <rect x="338" y="144" width="100" height="28" rx="6" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="388" y="162" text-anchor="middle" font-size="10" font-weight="600" fill="#3b82f6">R = 3</text>
+  <text x="460" y="162" font-size="9" fill="#64748b">Read from 3 nodes</text>
+
+  <!-- Formula -->
+  <rect x="338" y="182" width="225" height="28" rx="6" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="450" y="200" text-anchor="middle" font-size="10" font-weight="700" fill="#f59e0b">W + R = 6 &gt; N = 5 &#10003;</text>
+
+  <text x="450" y="228" text-anchor="middle" font-size="8" fill="#64748b">At least 1 node has the latest write</text>
+
+  <!-- Bottom: Different configurations -->
+  <rect x="30" y="258" width="540" height="80" rx="8" fill="white" stroke="#e2e8f0" stroke-width="1" filter="url(#shadow)"/>
+  <text x="300" y="278" text-anchor="middle" font-size="10" font-weight="600" fill="#1e293b">Common Configurations (N=3)</text>
+
+  <!-- Config 1 -->
+  <rect x="50" y="288" width="140" height="38" rx="6" fill="#ecfdf5" stroke="#10b981" stroke-width="1"/>
+  <text x="120" y="303" text-anchor="middle" font-size="9" font-weight="600" fill="#10b981">Strong Consistency</text>
+  <text x="120" y="318" text-anchor="middle" font-size="8" fill="#64748b">W=2, R=2 (2+2 &gt; 3)</text>
+
+  <!-- Config 2 -->
+  <rect x="230" y="288" width="140" height="38" rx="6" fill="#eff6ff" stroke="#3b82f6" stroke-width="1"/>
+  <text x="300" y="303" text-anchor="middle" font-size="9" font-weight="600" fill="#3b82f6">Read-heavy</text>
+  <text x="300" y="318" text-anchor="middle" font-size="8" fill="#64748b">W=3, R=1 (3+1 &gt; 3)</text>
+
+  <!-- Config 3 -->
+  <rect x="410" y="288" width="140" height="38" rx="6" fill="#f5f3ff" stroke="#8b5cf6" stroke-width="1"/>
+  <text x="480" y="303" text-anchor="middle" font-size="9" font-weight="600" fill="#8b5cf6">Write-heavy</text>
+  <text x="480" y="318" text-anchor="middle" font-size="8" fill="#64748b">W=1, R=3 (1+3 &gt; 3)</text>
+</svg>

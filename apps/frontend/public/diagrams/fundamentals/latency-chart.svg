@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 650 300" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <filter id="shadow" x="-2%" y="-2%" width="104%" height="104%">
+      <feDropShadow dx="0" dy="1" stdDeviation="1.5" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="650" height="300" rx="12" fill="#f7f8f9"/>
+
+  <!-- Title -->
+  <text x="325" y="30" text-anchor="middle" font-size="15" font-weight="700" fill="#1e293b">Latency Scale (Logarithmic)</text>
+
+  <!-- Axis label -->
+  <text x="325" y="290" text-anchor="middle" font-size="10" fill="#64748b">Time (log scale)</text>
+
+  <!-- Grid lines and tick labels (log scale: 0.5ns to 150ms) -->
+  <!-- Log range: log10(0.5) = -0.301 to log10(150000000) = 8.176 -->
+  <!-- Chart area: x=160 to x=510, width=350 -->
+  <!-- Scale: x = 160 + (log10(val_in_ns) - (-0.301)) / (8.176 - (-0.301)) * 350 -->
+  <!-- Tick at 1ns:   log10(1)=0,       x = 160 + (0.301/8.477)*350 = 160 + 12.4 = 172.4 -->
+  <!-- Tick at 1us:   log10(1000)=3,    x = 160 + (3.301/8.477)*350 = 160 + 136.2 = 296.2 -->
+  <!-- Tick at 1ms:   log10(1000000)=6, x = 160 + (6.301/8.477)*350 = 160 + 260.0 = 420.0 -->
+  <!-- Tick at 1s:    log10(1e9)=9,     x = 160 + (9.301/8.477)*350 = 160 + 383.8 = 543.8 (outside) -->
+
+  <!-- Vertical grid lines -->
+  <line x1="172" y1="44" x2="172" y2="270" stroke="#e2e8f0" stroke-width="0.5" stroke-dasharray="3,3"/>
+  <line x1="296" y1="44" x2="296" y2="270" stroke="#e2e8f0" stroke-width="0.5" stroke-dasharray="3,3"/>
+  <line x1="420" y1="44" x2="420" y2="270" stroke="#e2e8f0" stroke-width="0.5" stroke-dasharray="3,3"/>
+
+  <!-- Tick labels -->
+  <text x="172" y="280" text-anchor="middle" font-size="9" fill="#64748b">1 ns</text>
+  <text x="296" y="280" text-anchor="middle" font-size="9" fill="#64748b">1 &#181;s</text>
+  <text x="420" y="280" text-anchor="middle" font-size="9" fill="#64748b">1 ms</text>
+
+  <!-- Bars -->
+  <!-- Bar area: y starts at 50, each bar height=28, gap=8, total 6 bars -->
+  <!-- Bar width formula: barWidth = ((log10(val_ns) - log10(0.5)) / (log10(150e6) - log10(0.5))) * 350 -->
+
+  <!-- 1. L1 Cache: 0.5 ns → log10(0.5)=-0.301, width = 0 (minimum bar) → give it a small visible width -->
+  <text x="155" y="68" text-anchor="end" font-size="11" fill="#1e293b" font-weight="500">L1 Cache</text>
+  <rect x="160" y="55" width="8" height="22" rx="3" fill="#10b981" filter="url(#shadow)"/>
+  <text x="173" y="69" font-size="9" fill="#1e293b" font-weight="600">0.5 ns</text>
+
+  <!-- 2. RAM Reference: 100 ns → log10(100)=2, barW = (2.301/8.477)*350 = 94.9 -->
+  <text x="155" y="104" text-anchor="end" font-size="11" fill="#1e293b" font-weight="500">RAM Reference</text>
+  <rect x="160" y="91" width="95" height="22" rx="3" fill="#3b82f6" filter="url(#shadow)"/>
+  <text x="260" y="105" font-size="9" fill="#1e293b" font-weight="600">100 ns</text>
+
+  <!-- 3. SSD Random Read: 150 us = 150000 ns → log10(150000)=5.176, barW = (5.477/8.477)*350 = 226.1 -->
+  <text x="155" y="140" text-anchor="end" font-size="11" fill="#1e293b" font-weight="500">SSD Random Read</text>
+  <rect x="160" y="127" width="226" height="22" rx="3" fill="#f59e0b" filter="url(#shadow)"/>
+  <text x="391" y="141" font-size="9" fill="#1e293b" font-weight="600">150 &#181;s</text>
+
+  <!-- 4. Network (Datacenter): 500 us = 500000 ns → log10(500000)=5.699, barW = (6.0/8.477)*350 = 247.7 -->
+  <text x="155" y="176" text-anchor="end" font-size="11" fill="#1e293b" font-weight="500">Network (DC)</text>
+  <rect x="160" y="163" width="248" height="22" rx="3" fill="#8b5cf6" filter="url(#shadow)"/>
+  <text x="413" y="177" font-size="9" fill="#1e293b" font-weight="600">500 &#181;s</text>
+
+  <!-- 5. HDD Seek: 10 ms = 10000000 ns → log10(10000000)=7, barW = (7.301/8.477)*350 = 301.3 -->
+  <text x="155" y="212" text-anchor="end" font-size="11" fill="#1e293b" font-weight="500">HDD Seek</text>
+  <rect x="160" y="199" width="301" height="22" rx="3" fill="#ef4444" filter="url(#shadow)"/>
+  <text x="466" y="213" font-size="9" fill="#1e293b" font-weight="600">10 ms</text>
+
+  <!-- 6. Internet RTT (CA→NL): 150 ms = 150000000 ns → log10(150000000)=8.176, barW = (8.477/8.477)*350 = 350 -->
+  <text x="155" y="248" text-anchor="end" font-size="11" fill="#1e293b" font-weight="500">Internet RTT</text>
+  <rect x="160" y="235" width="350" height="22" rx="3" fill="#dc2626" filter="url(#shadow)"/>
+  <text x="515" y="249" font-size="9" fill="#1e293b" font-weight="600">150 ms</text>
+
+  <!-- Axis line -->
+  <line x1="160" y1="265" x2="510" y2="265" stroke="#94a3b8" stroke-width="1"/>
+
+  <!-- Subtitle -->
+  <text x="155" y="249" text-anchor="end" font-size="8" fill="#64748b">(CA &#8594; NL)</text>
+</svg>

@@ -1,0 +1,114 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 350" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <filter id="shadow" x="-4%" y="-4%" width="108%" height="108%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.1"/>
+    </filter>
+  </defs>
+  <rect width="600" height="350" fill="#f7f8f9" rx="12"/>
+  <text x="300" y="28" text-anchor="middle" font-size="16" font-weight="700" fill="#1e293b">B-Tree Index Structure</text>
+
+  <!-- Root Node -->
+  <rect x="225" y="45" width="150" height="40" rx="8" fill="white" stroke="#8b5cf6" stroke-width="2" filter="url(#shadow)"/>
+  <text x="265" y="68" text-anchor="middle" font-size="11" font-weight="700" fill="#8b5cf6">30</text>
+  <line x1="300" y1="50" x2="300" y2="80" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="340" y="68" text-anchor="middle" font-size="11" font-weight="700" fill="#8b5cf6">70</text>
+  <text x="300" y="57" text-anchor="middle" font-size="7" fill="#64748b">ROOT</text>
+
+  <!-- Internal Node Left -->
+  <rect x="50" y="120" width="140" height="40" rx="8" fill="white" stroke="#3b82f6" stroke-width="2" filter="url(#shadow)"/>
+  <text x="85" y="144" text-anchor="middle" font-size="10" font-weight="600" fill="#3b82f6">10</text>
+  <line x1="120" y1="125" x2="120" y2="155" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="155" y="144" text-anchor="middle" font-size="10" font-weight="600" fill="#3b82f6">20</text>
+
+  <!-- Internal Node Middle -->
+  <rect x="230" y="120" width="140" height="40" rx="8" fill="white" stroke="#3b82f6" stroke-width="2" filter="url(#shadow)"/>
+  <text x="265" y="144" text-anchor="middle" font-size="10" font-weight="600" fill="#3b82f6">40</text>
+  <line x1="300" y1="125" x2="300" y2="155" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="335" y="144" text-anchor="middle" font-size="10" font-weight="600" fill="#3b82f6">55</text>
+
+  <!-- Internal Node Right -->
+  <rect x="410" y="120" width="140" height="40" rx="8" fill="white" stroke="#3b82f6" stroke-width="2" filter="url(#shadow)"/>
+  <text x="445" y="144" text-anchor="middle" font-size="10" font-weight="600" fill="#3b82f6">80</text>
+  <line x1="480" y1="125" x2="480" y2="155" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="515" y="144" text-anchor="middle" font-size="10" font-weight="600" fill="#3b82f6">90</text>
+
+  <!-- Lines from root to internal -->
+  <line x1="260" y1="85" x2="120" y2="118" stroke="#94a3b8" stroke-width="1.5"/>
+  <line x1="300" y1="85" x2="300" y2="118" stroke="#94a3b8" stroke-width="1.5"/>
+  <line x1="345" y1="85" x2="480" y2="118" stroke="#94a3b8" stroke-width="1.5"/>
+
+  <!-- Leaf Nodes -->
+  <!-- Leaf 1 -->
+  <rect x="5" y="200" width="75" height="45" rx="6" fill="white" stroke="#10b981" stroke-width="2" filter="url(#shadow)"/>
+  <text x="42" y="218" text-anchor="middle" font-size="9" font-weight="600" fill="#10b981">1, 5, 8</text>
+  <text x="42" y="236" text-anchor="middle" font-size="7" fill="#64748b">&#8594; next</text>
+
+  <!-- Leaf 2 -->
+  <rect x="90" y="200" width="80" height="45" rx="6" fill="white" stroke="#10b981" stroke-width="2" filter="url(#shadow)"/>
+  <text x="130" y="218" text-anchor="middle" font-size="9" font-weight="600" fill="#10b981">12, 15, 18</text>
+  <text x="130" y="236" text-anchor="middle" font-size="7" fill="#64748b">&#8594; next</text>
+
+  <!-- Leaf 3 -->
+  <rect x="180" y="200" width="80" height="45" rx="6" fill="white" stroke="#10b981" stroke-width="2" filter="url(#shadow)"/>
+  <text x="220" y="218" text-anchor="middle" font-size="9" font-weight="600" fill="#10b981">22, 25, 28</text>
+  <text x="220" y="236" text-anchor="middle" font-size="7" fill="#64748b">&#8594; next</text>
+
+  <!-- Leaf 4 -->
+  <rect x="270" y="200" width="80" height="45" rx="6" fill="white" stroke="#10b981" stroke-width="2" filter="url(#shadow)"/>
+  <text x="310" y="218" text-anchor="middle" font-size="9" font-weight="600" fill="#10b981">35, 38</text>
+  <text x="310" y="236" text-anchor="middle" font-size="7" fill="#64748b">&#8594; next</text>
+
+  <!-- Leaf 5 -->
+  <rect x="360" y="200" width="70" height="45" rx="6" fill="white" stroke="#10b981" stroke-width="2" filter="url(#shadow)"/>
+  <text x="395" y="218" text-anchor="middle" font-size="9" font-weight="600" fill="#10b981">60, 65</text>
+  <text x="395" y="236" text-anchor="middle" font-size="7" fill="#64748b">&#8594; next</text>
+
+  <!-- Leaf 6 -->
+  <rect x="440" y="200" width="70" height="45" rx="6" fill="white" stroke="#10b981" stroke-width="2" filter="url(#shadow)"/>
+  <text x="475" y="218" text-anchor="middle" font-size="9" font-weight="600" fill="#10b981">75, 78</text>
+  <text x="475" y="236" text-anchor="middle" font-size="7" fill="#64748b">&#8594; next</text>
+
+  <!-- Leaf 7 -->
+  <rect x="520" y="200" width="70" height="45" rx="6" fill="white" stroke="#10b981" stroke-width="2" filter="url(#shadow)"/>
+  <text x="555" y="218" text-anchor="middle" font-size="9" font-weight="600" fill="#10b981">85, 92</text>
+
+  <!-- Lines from internal to leaves -->
+  <line x1="75" y1="160" x2="42" y2="198" stroke="#94a3b8" stroke-width="1"/>
+  <line x1="120" y1="160" x2="130" y2="198" stroke="#94a3b8" stroke-width="1"/>
+  <line x1="155" y1="160" x2="220" y2="198" stroke="#94a3b8" stroke-width="1"/>
+
+  <line x1="260" y1="160" x2="310" y2="198" stroke="#94a3b8" stroke-width="1"/>
+  <line x1="310" y1="160" x2="395" y2="198" stroke="#94a3b8" stroke-width="1"/>
+
+  <line x1="445" y1="160" x2="475" y2="198" stroke="#94a3b8" stroke-width="1"/>
+  <line x1="515" y1="160" x2="555" y2="198" stroke="#94a3b8" stroke-width="1"/>
+
+  <!-- Linked list arrows between leaves -->
+  <line x1="80" y1="230" x2="88" y2="230" stroke="#10b981" stroke-width="1" stroke-dasharray="3,2"/>
+  <line x1="170" y1="230" x2="178" y2="230" stroke="#10b981" stroke-width="1" stroke-dasharray="3,2"/>
+  <line x1="260" y1="230" x2="268" y2="230" stroke="#10b981" stroke-width="1" stroke-dasharray="3,2"/>
+  <line x1="350" y1="230" x2="358" y2="230" stroke="#10b981" stroke-width="1" stroke-dasharray="3,2"/>
+  <line x1="430" y1="230" x2="438" y2="230" stroke="#10b981" stroke-width="1" stroke-dasharray="3,2"/>
+  <line x1="510" y1="230" x2="518" y2="230" stroke="#10b981" stroke-width="1" stroke-dasharray="3,2"/>
+
+  <!-- Data pages -->
+  <rect x="80" y="260" width="440" height="25" rx="6" fill="white" stroke="#f59e0b" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="300" y="277" text-anchor="middle" font-size="9" font-weight="600" fill="#f59e0b">Data Pages (Actual Table Rows)</text>
+  <text x="300" y="277" text-anchor="middle" font-size="9" font-weight="600" fill="#f59e0b">Data Pages (Actual Table Rows)</text>
+
+  <!-- Pointer arrows from leaves to data -->
+  <line x1="130" y1="245" x2="130" y2="258" stroke="#f59e0b" stroke-width="1" stroke-dasharray="2,2"/>
+  <line x1="310" y1="245" x2="310" y2="258" stroke="#f59e0b" stroke-width="1" stroke-dasharray="2,2"/>
+  <line x1="475" y1="245" x2="475" y2="258" stroke="#f59e0b" stroke-width="1" stroke-dasharray="2,2"/>
+
+  <!-- Properties -->
+  <rect x="20" y="295" width="560" height="45" rx="8" fill="white" stroke="#e2e8f0" stroke-width="1" filter="url(#shadow)"/>
+  <circle cx="40" cy="313" r="4" fill="#8b5cf6"/>
+  <text x="52" y="317" font-size="9" fill="#64748b">Lookup: O(log n) - traverse root to leaf</text>
+  <circle cx="210" cy="313" r="4" fill="#10b981"/>
+  <text x="222" y="317" font-size="9" fill="#64748b">Leaves linked for range scans</text>
+  <circle cx="400" cy="313" r="4" fill="#f59e0b"/>
+  <text x="412" y="317" font-size="9" fill="#64748b">Leaf pointers to data pages</text>
+  <circle cx="40" cy="330" r="4" fill="#3b82f6"/>
+  <text x="52" y="334" font-size="9" fill="#64748b">Self-balancing: inserts/deletes keep tree height minimal | Used by PostgreSQL, MySQL (InnoDB)</text>
+</svg>

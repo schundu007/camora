@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 350" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <filter id="shadow" x="-2%" y="-2%" width="104%" height="104%">
+      <feDropShadow dx="0" dy="1" stdDeviation="2" flood-opacity="0.1"/>
+    </filter>
+    <marker id="arrG" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#10b981"/>
+    </marker>
+    <marker id="arrB" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#3b82f6"/>
+    </marker>
+    <marker id="arrV" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#8b5cf6"/>
+    </marker>
+    <marker id="arrA" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#f59e0b"/>
+    </marker>
+  </defs>
+  <rect width="600" height="350" fill="#f7f8f9" rx="4"/>
+  <text x="300" y="28" text-anchor="middle" font-size="15" font-weight="700" fill="#1e293b">Distributed File System Architecture</text>
+  <text x="300" y="44" text-anchor="middle" font-size="10" fill="#64748b">HDFS / GFS-style: NameNode + DataNodes</text>
+
+  <!-- Client -->
+  <rect x="20" y="100" width="100" height="55" rx="8" fill="white" stroke="#3b82f6" stroke-width="2" filter="url(#shadow)"/>
+  <text x="70" y="122" text-anchor="middle" font-size="11" font-weight="600" fill="#1e293b">Client</text>
+  <text x="70" y="138" text-anchor="middle" font-size="8" fill="#64748b">Read / Write</text>
+  <text x="70" y="150" text-anchor="middle" font-size="8" fill="#64748b">requests</text>
+
+  <!-- Step 1: Client asks NameNode -->
+  <line x1="120" y1="115" x2="215" y2="85" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#arrA)"/>
+  <text x="160" y="92" font-size="8" fill="#f59e0b" font-weight="600">1. metadata lookup</text>
+
+  <!-- NameNode -->
+  <rect x="218" y="58" width="160" height="60" rx="8" fill="white" stroke="#f59e0b" stroke-width="2.5" filter="url(#shadow)"/>
+  <text x="298" y="80" text-anchor="middle" font-size="12" font-weight="700" fill="#f59e0b">Name Node</text>
+  <text x="298" y="95" text-anchor="middle" font-size="9" fill="#64748b">Metadata: file &#8594; block map</text>
+  <text x="298" y="108" text-anchor="middle" font-size="9" fill="#64748b">block &#8594; DataNode locations</text>
+
+  <!-- Step 2: NameNode returns locations -->
+  <line x1="218" y1="100" x2="120" y2="130" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#arrA)"/>
+  <text x="155" y="125" font-size="8" fill="#f59e0b">2. block locations</text>
+
+  <!-- Step 3: Client reads/writes DataNodes -->
+  <line x1="120" y1="145" x2="195" y2="195" stroke="#10b981" stroke-width="2" marker-end="url(#arrG)"/>
+  <text x="130" y="185" font-size="8" fill="#10b981" font-weight="600">3. data transfer</text>
+
+  <!-- DataNode 1 -->
+  <rect x="175" y="175" width="120" height="80" rx="8" fill="white" stroke="#10b981" stroke-width="2" filter="url(#shadow)"/>
+  <text x="235" y="196" text-anchor="middle" font-size="10" font-weight="600" fill="#1e293b">DataNode 1</text>
+  <rect x="185" y="205" width="40" height="18" rx="3" fill="#ecfdf5" stroke="#10b981" stroke-width="1"/>
+  <text x="205" y="218" text-anchor="middle" font-size="7" fill="#10b981">Blk A</text>
+  <rect x="230" y="205" width="40" height="18" rx="3" fill="#ecfdf5" stroke="#10b981" stroke-width="1"/>
+  <text x="250" y="218" text-anchor="middle" font-size="7" fill="#10b981">Blk B</text>
+  <rect x="185" y="228" width="40" height="18" rx="3" fill="#ecfdf5" stroke="#10b981" stroke-width="1"/>
+  <text x="205" y="241" text-anchor="middle" font-size="7" fill="#10b981">Blk D</text>
+
+  <!-- DataNode 2 -->
+  <rect x="325" y="175" width="120" height="80" rx="8" fill="white" stroke="#10b981" stroke-width="2" filter="url(#shadow)"/>
+  <text x="385" y="196" text-anchor="middle" font-size="10" font-weight="600" fill="#1e293b">DataNode 2</text>
+  <rect x="335" y="205" width="40" height="18" rx="3" fill="#ecfdf5" stroke="#10b981" stroke-width="1"/>
+  <text x="355" y="218" text-anchor="middle" font-size="7" fill="#10b981">Blk A</text>
+  <rect x="380" y="205" width="40" height="18" rx="3" fill="#ecfdf5" stroke="#10b981" stroke-width="1"/>
+  <text x="400" y="218" text-anchor="middle" font-size="7" fill="#10b981">Blk C</text>
+  <rect x="335" y="228" width="40" height="18" rx="3" fill="#ecfdf5" stroke="#10b981" stroke-width="1"/>
+  <text x="355" y="241" text-anchor="middle" font-size="7" fill="#10b981">Blk D</text>
+
+  <!-- DataNode 3 -->
+  <rect x="475" y="175" width="110" height="80" rx="8" fill="white" stroke="#10b981" stroke-width="2" filter="url(#shadow)"/>
+  <text x="530" y="196" text-anchor="middle" font-size="10" font-weight="600" fill="#1e293b">DataNode 3</text>
+  <rect x="485" y="205" width="40" height="18" rx="3" fill="#ecfdf5" stroke="#10b981" stroke-width="1"/>
+  <text x="505" y="218" text-anchor="middle" font-size="7" fill="#10b981">Blk B</text>
+  <rect x="530" y="205" width="40" height="18" rx="3" fill="#ecfdf5" stroke="#10b981" stroke-width="1"/>
+  <text x="550" y="218" text-anchor="middle" font-size="7" fill="#10b981">Blk C</text>
+  <rect x="485" y="228" width="40" height="18" rx="3" fill="#ecfdf5" stroke="#10b981" stroke-width="1"/>
+  <text x="505" y="241" text-anchor="middle" font-size="7" fill="#10b981">Blk E</text>
+
+  <!-- Replication arrows -->
+  <line x1="295" y1="220" x2="325" y2="220" stroke="#8b5cf6" stroke-width="1.2" stroke-dasharray="3,2" marker-end="url(#arrV)"/>
+  <line x1="445" y1="220" x2="475" y2="220" stroke="#8b5cf6" stroke-width="1.2" stroke-dasharray="3,2" marker-end="url(#arrV)"/>
+
+  <!-- Heartbeat arrows -->
+  <line x1="235" y1="175" x2="280" y2="118" stroke="#64748b" stroke-width="0.8" stroke-dasharray="2,2"/>
+  <line x1="385" y1="175" x2="330" y2="118" stroke="#64748b" stroke-width="0.8" stroke-dasharray="2,2"/>
+  <line x1="510" y1="175" x2="378" y2="110" stroke="#64748b" stroke-width="0.8" stroke-dasharray="2,2"/>
+
+  <!-- Legend -->
+  <rect x="30" y="278" width="540" height="60" rx="8" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="300" y="296" text-anchor="middle" font-size="10" font-weight="600" fill="#1e293b">Key Concepts</text>
+  <circle cx="60" cy="316" r="4" fill="#f59e0b"/>
+  <text x="70" y="320" font-size="8" fill="#64748b">NameNode stores metadata only (small, fits in RAM)</text>
+  <circle cx="60" cy="332" r="4" fill="#10b981"/>
+  <text x="70" y="336" font-size="8" fill="#64748b">DataNodes store actual blocks (64-256MB each)</text>
+  <circle cx="340" cy="316" r="4" fill="#8b5cf6"/>
+  <text x="350" y="320" font-size="8" fill="#64748b">Replication factor = 3 (each block on 3 nodes)</text>
+  <circle cx="340" cy="332" r="4" fill="#64748b"/>
+  <text x="350" y="336" font-size="8" fill="#64748b">DataNodes send heartbeats to NameNode</text>
+</svg>
