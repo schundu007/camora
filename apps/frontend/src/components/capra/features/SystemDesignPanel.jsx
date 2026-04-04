@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 import { getAuthHeaders } from '../../../utils/authHeaders.js';
 
@@ -304,7 +304,6 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
   const [generatingDiagram, setGeneratingDiagram] = useState(false);
   const [diagramCache, setDiagramCache] = useState({});
   const [diagramError, setDiagramError] = useState(null);
-  const diagramAttemptedRef = useRef(null); // tracks question for which we already attempted
   const [diagramDetailLevel, setDiagramDetailLevel] = useState('overview');
   const [diagramDirection, setDiagramDirection] = useState('LR');
   const [showASCII, setShowASCII] = useState(true);
@@ -323,17 +322,8 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
     }
   }, [eraserDiagram?.imageUrl]);
 
-  useEffect(() => {
-    // Don't auto-generate diagrams for focused questions (SLIs, SLOs, metrics)
-    // Ref prevents retry loop: once attempted for a question, don't try again
-    if (systemDesign?.included && question && !diagramCache['overview_LR'] && !generatingDiagram && !diagramError && !systemDesign?.focusedAnswer && diagramAttemptedRef.current !== question) {
-      diagramAttemptedRef.current = question;
-      const timer = setTimeout(() => {
-        handleGenerateDiagram('overview', 'LR');
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [systemDesign?.included, question, systemDesign?.focusedAnswer]);
+  // Diagram generation is manual-only (click Overview/Detailed buttons)
+  // Auto-generation disabled — the Python diagrams backend is not deployed
 
   const handleGenerateEraser = async () => {
     if (!onGenerateEraserDiagram) return;
