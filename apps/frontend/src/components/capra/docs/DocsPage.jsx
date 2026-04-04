@@ -22,7 +22,7 @@ import { databaseCategories, databaseCategoryMap, databaseTopics } from '../../.
 import { sqlCategories, sqlCategoryMap, sqlTopics } from '../../../data/capra/topics/sqlTopics.js';
 import { behavioralCategories, topicCategoryMap, behavioralTopics } from '../../../data/capra/topics/behavioralTopics.js';
 import { companyPrep } from '../../../data/capra/topics/companyPrep.js';
-import { ROLE_TOPIC_MAP } from '../../../data/capra/jobRoleTopicMapping.ts';
+import { ROLE_TOPIC_MAP } from '../../../data/capra/jobRoleTopicMapping';
 
 // Merge extra topics into base arrays
 const codingCategoryMap = { ..._codingCategoryMap, ...extraCodingCategoryMap };
