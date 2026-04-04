@@ -151,7 +151,21 @@ export default function PracticePage() {
     if (item.href) {
       navigate(item.href);
     } else if (item.slug) {
-      navigate(`/problems/${item.slug}`);
+      // Map section to prepare page
+      const section = SECTIONS.find(s => s.items.some(i => i.slug === item.slug));
+      if (section) {
+        const pageMap = {
+          'system-design': 'system-design',
+          'technical': 'system-design',
+          'behavioral': 'behavioral',
+          'ai-ml': 'system-design',
+          'full-stack': 'coding',
+          'data': 'databases',
+          'coding': 'coding',
+        };
+        const page = pageMap[section.key] || 'coding';
+        navigate(`/capra/prepare?page=${page}`);
+      }
     }
   }, [navigate]);
 
@@ -790,6 +804,144 @@ export default function PracticePage() {
             </div>
           </div>
 
+          {/* ── Interview Handbook — Free for all users ── */}
+          <div style={{ marginTop: '40px' }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                marginBottom: '16px',
+                paddingLeft: '14px',
+                borderLeft: '4px solid #818cf8',
+              }}
+            >
+              <div
+                style={{
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '6px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: '#818cf814',
+                  color: '#818cf8',
+                }}
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                  <path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z" />
+                  <path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z" />
+                </svg>
+              </div>
+              <h2 className="practice-display" style={{ fontSize: '18px', fontWeight: 700, color: '#111827', margin: 0 }}>
+                Interview Handbook
+              </h2>
+              <span
+                className="practice-body"
+                style={{
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  color: '#059669',
+                  background: '#ecfdf5',
+                  padding: '2px 8px',
+                  borderRadius: '10px',
+                  letterSpacing: '0.02em',
+                }}
+              >
+                FREE
+              </span>
+            </div>
+
+            <p className="practice-body" style={{ fontSize: '13px', color: '#6b7280', margin: '0 0 16px', fontWeight: 500 }}>
+              Free for all users — 75 problems, algorithm guides, behavioral questions
+            </p>
+
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+                gap: '12px',
+              }}
+            >
+              <Link
+                to="/handbook"
+                className="handbook-card"
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '6px',
+                  padding: '16px',
+                  background: '#ffffff',
+                  border: '1px solid #e3e8ee',
+                  borderRadius: '12px',
+                  textDecoration: 'none',
+                  transition: 'border-color 0.15s, box-shadow 0.15s',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                }}
+              >
+                <strong className="practice-body" style={{ fontSize: '14px', fontWeight: 600, color: '#111827' }}>Blind 75</strong>
+                <span className="practice-body" style={{ fontSize: '12px', color: '#6b7280', lineHeight: 1.4 }}>75 essential coding problems with solutions</span>
+              </Link>
+              <Link
+                to="/handbook?tab=algorithms"
+                className="handbook-card"
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '6px',
+                  padding: '16px',
+                  background: '#ffffff',
+                  border: '1px solid #e3e8ee',
+                  borderRadius: '12px',
+                  textDecoration: 'none',
+                  transition: 'border-color 0.15s, box-shadow 0.15s',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                }}
+              >
+                <strong className="practice-body" style={{ fontSize: '14px', fontWeight: 600, color: '#111827' }}>Algorithm Guides</strong>
+                <span className="practice-body" style={{ fontSize: '12px', color: '#6b7280', lineHeight: 1.4 }}>17 topics: Arrays, Trees, Graphs, DP...</span>
+              </Link>
+              <Link
+                to="/handbook?tab=behavioral"
+                className="handbook-card"
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '6px',
+                  padding: '16px',
+                  background: '#ffffff',
+                  border: '1px solid #e3e8ee',
+                  borderRadius: '12px',
+                  textDecoration: 'none',
+                  transition: 'border-color 0.15s, box-shadow 0.15s',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                }}
+              >
+                <strong className="practice-body" style={{ fontSize: '14px', fontWeight: 600, color: '#111827' }}>Behavioral Questions</strong>
+                <span className="practice-body" style={{ fontSize: '12px', color: '#6b7280', lineHeight: 1.4 }}>67 questions for Google, Amazon, Meta...</span>
+              </Link>
+              <Link
+                to="/handbook?tab=cheatsheet"
+                className="handbook-card"
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '6px',
+                  padding: '16px',
+                  background: '#ffffff',
+                  border: '1px solid #e3e8ee',
+                  borderRadius: '12px',
+                  textDecoration: 'none',
+                  transition: 'border-color 0.15s, box-shadow 0.15s',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                }}
+              >
+                <strong className="practice-body" style={{ fontSize: '14px', fontWeight: 600, color: '#111827' }}>Interview Cheatsheet</strong>
+                <span className="practice-body" style={{ fontSize: '12px', color: '#6b7280', lineHeight: 1.4 }}>Before, during, and after your interview</span>
+              </Link>
+            </div>
+          </div>
+
           {/* ── Interview Cheatsheet Section ── */}
           <div style={{ marginTop: '40px' }}>
             <div
@@ -1105,6 +1257,12 @@ export default function PracticePage() {
         /* Footer link hover */
         .footer-link:hover {
           color: #10b981 !important;
+        }
+
+        /* Handbook card hover */
+        .handbook-card:hover {
+          border-color: #d0d5dd !important;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.06) !important;
         }
 
         /* Mock pill hover */
