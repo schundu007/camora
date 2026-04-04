@@ -353,21 +353,18 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
     setDiagramTranslate({ x: 0, y: 0 });
 
     try {
-      const response = await fetch(`${API_URL}/api/diagram/generate`, {
+      // Build a description from the system design content for Eraser API
+      const components = systemDesign?.architecture?.components?.join(', ') || '';
+      const flow = systemDesign?.architecture?.flow || '';
+      const description = `${question}. ${detailLevel === 'detailed' ? 'Show detailed architecture with all components.' : 'Show high-level overview.'} Components: ${components}. ${flow}`;
+
+      const response = await fetch(`${API_URL}/api/diagram/eraser`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           ...getAuthHeaders(),
         },
-        body: JSON.stringify({
-          question,
-          cloudProvider: cloudProvider || 'auto',
-          difficulty: 'medium',
-          category: 'System Design',
-          format: 'png',
-          detailLevel,
-          direction,
-        }),
+        body: JSON.stringify({ description }),
       });
 
       if (!response.ok) {
@@ -383,19 +380,18 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
 
       const result = await response.json();
 
-      if (result.success && result.image_url) {
+      if (result.imageUrl) {
         setDiagramCache(prev => ({
           ...prev,
           [cacheKey]: {
-            imageUrl: `${API_URL}${result.image_url}`,
-            cloudProvider: result.cloud_provider,
-            pythonCode: result.python_code,
+            imageUrl: result.imageUrl,
+            editUrl: result.editUrl,
             detailLevel,
             direction,
           }
         }));
       } else {
-        throw new Error(result.error || 'Diagram generation failed');
+        throw new Error('Diagram generation failed - no image returned');
       }
     } catch (error) {
       setDiagramError(error.message);
