@@ -358,8 +358,9 @@ const FEATURE_GROUPS = [
   {
     groupTitle: 'Interview Preparation', accent: '#818cf8',
     features: [
+      { title: 'Job URL AI Analysis', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m9.86-4.122a4.5 4.5 0 00-6.364-6.364L4.5 6.1" /><path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25" /></svg> },
+      { title: 'Role-Filtered Study Paths', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="6" /><circle cx="12" cy="12" r="2" /></svg> },
       { title: '415+ Study Topics', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></svg> },
-      { title: 'Real Interview Database', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3" /><path d="M21 12c0 1.66-4.03 3-9 3s-9-1.34-9-3" /><path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5" /></svg> },
       { title: 'Company-Specific Prep', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 7V5a4 4 0 0 0-8 0v2" /></svg> },
       { title: 'Mock Interview Simulator', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg> },
       { title: 'AI-Powered Explanations', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg> },
@@ -378,7 +379,7 @@ const FEATURE_GROUPS = [
 
 /* ── Competitor bar chart data ──────────────────────────── */
 const COMP_BARS = [
-  { name: 'Camora', count: 40, color: '#34d399', suffix: '+' },
+  { name: 'Camora', count: 42, color: '#34d399', suffix: '+' },
   { name: 'LockedIn', count: 22, color: '#6b7280', suffix: '' },
   { name: 'Final Round', count: 18, color: '#6b7280', suffix: '' },
   { name: 'Sensei', count: 15, color: '#6b7280', suffix: '' },
@@ -681,6 +682,71 @@ export default function LandingPage() {
               </FadeIn>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ── JOB URL ANALYSIS — Highlighted Feature ── */}
+      <section className="px-6 py-20 md:py-28" style={{ zIndex: 1, background: 'linear-gradient(135deg, #ecfdf5 0%, #eff6ff 50%, #faf5ff 100%)' }}>
+        <div className="max-w-5xl mx-auto">
+          <FadeIn className="text-center mb-10">
+            <span className="inline-flex items-center gap-2 text-sm font-bold tracking-[0.15em] uppercase px-5 py-2 rounded-full border border-emerald-300 bg-white text-emerald-700 shadow-sm">
+              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" /></svg>
+              NEW FEATURE
+            </span>
+            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mt-6">
+              Confused where to start preparing?
+            </h2>
+            <p className="mt-4 text-lg md:text-xl text-gray-500 max-w-2xl mx-auto leading-relaxed">
+              Paste any job URL. Get an AI-powered prep plan with coding, system design, and behavioral questions tailored to <em>that exact role</em>.
+            </p>
+          </FadeIn>
+
+          <FadeIn delay={0.15}>
+            <div className="max-w-3xl mx-auto rounded-2xl border border-gray-200 bg-white shadow-xl shadow-gray-100/60 overflow-hidden">
+              {/* Mock URL input */}
+              <div className="px-6 py-5 border-b border-gray-100">
+                <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-gray-50 border border-gray-200">
+                  <svg width="18" height="18" fill="none" stroke="#9ca3af" viewBox="0 0 24 24" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m9.86-4.122a4.5 4.5 0 00-6.364-6.364L4.5 6.1" /></svg>
+                  <span className="text-sm text-gray-400 font-code">https://nvidia.wd5.myworkdayjobs.com/...Senior-DevOps-Engineer</span>
+                  <span className="ml-auto px-4 py-1.5 text-xs font-bold text-white bg-emerald-500 rounded-lg">Analyze</span>
+                </div>
+              </div>
+              {/* Results preview */}
+              <div className="px-6 py-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="text-xs font-bold text-emerald-600 tracking-wide uppercase font-code">AI Analysis Complete</span>
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  {[
+                    { label: 'Coding Focus', items: ['Graph Algorithms', 'Scripting', 'Automation'], color: '#10b981', bg: '#ecfdf5' },
+                    { label: 'System Design', items: ['CI/CD Pipeline', 'Container Orchestration', 'Monitoring'], color: '#3b82f6', bg: '#eff6ff' },
+                    { label: 'Behavioral', items: ['Leadership', 'Incident Mgmt', 'Cross-Team'], color: '#f59e0b', bg: '#fffbeb' },
+                  ].map(col => (
+                    <div key={col.label} className="rounded-xl p-3" style={{ background: col.bg }}>
+                      <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: col.color }}>{col.label}</p>
+                      <div className="flex flex-col gap-1">
+                        {col.items.map(item => (
+                          <span key={item} className="text-xs font-medium text-gray-700 px-2 py-1 rounded bg-white border border-gray-100">{item}</span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </FadeIn>
+
+          <FadeIn delay={0.25} className="text-center mt-10">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Link to="/jobs" className="shimmer-btn px-8 py-3.5 text-base font-semibold text-white bg-gray-900 rounded-xl hover:bg-gray-800 transition-colors">
+                Try It Now — Paste a Job URL
+              </Link>
+            </div>
+            <p className="mt-4 text-sm text-gray-400">
+              Supports Workday, Greenhouse, Lever, Ashby, SmartRecruiters, LinkedIn &amp; more
+            </p>
+          </FadeIn>
         </div>
       </section>
 
