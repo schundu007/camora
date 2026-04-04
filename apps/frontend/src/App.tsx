@@ -180,6 +180,7 @@ export function App() {
           <Route path="/prepare/*" element={<ProtectedRoute><CapraPrepare /></ProtectedRoute>} />
           <Route path="/practice" element={<ProtectedRoute><CapraPractice /></ProtectedRoute>} />
           <Route path="/blind75" element={<Blind75Page />} />
+          <Route path="/handbook" element={<ProtectedRoute><Blind75Page /></ProtectedRoute>} />
           <Route path="/blind75/:id/practice" element={<Blind75PracticePage />} />
           <Route path="/blind75/:id/solution" element={<Blind75PracticePage />} />
           <Route path="/problems/:slug" element={<ProtectedRoute><CapraDashboard /></ProtectedRoute>} />
