@@ -909,23 +909,25 @@ export default function Blind75Page() {
 
                             {/* Action buttons */}
                             <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
-                              <button
-                                onClick={() => setOpenProblemId(isOpen ? null : problem.id)}
-                                className="b75-action-btn"
-                                style={{
-                                  fontSize: '12px',
-                                  fontWeight: 600,
-                                  padding: '5px 14px',
-                                  borderRadius: '8px',
-                                  border: 'none',
-                                  background: isOpen ? cat.color : '#f3f4f6',
-                                  color: isOpen ? '#ffffff' : '#374151',
-                                  cursor: 'pointer',
-                                  transition: 'all 0.15s',
-                                }}
-                              >
-                                {isOpen ? 'Close' : 'Solve'}
-                              </button>
+                              {isOpen && (
+                                <button
+                                  onClick={() => setOpenProblemId(null)}
+                                  className="b75-action-btn"
+                                  style={{
+                                    fontSize: '12px',
+                                    fontWeight: 600,
+                                    padding: '5px 14px',
+                                    borderRadius: '8px',
+                                    border: 'none',
+                                    background: '#ef4444',
+                                    color: '#ffffff',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.15s',
+                                  }}
+                                >
+                                  Close
+                                </button>
+                              )}
                               <button
                                 onClick={() => { setOpenProblemId(isOpen && viewMode === 'practice' ? null : problem.id); setViewMode('practice'); }}
                                 className="b75-action-btn"
