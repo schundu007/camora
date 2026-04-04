@@ -285,8 +285,10 @@ export default function DashboardPage() {
 
     if (problemParam) {
       const decodedProblem = decodeURIComponent(problemParam);
-      if (modeParam === 'system-design') {
+      if (modeParam === 'system-design' || appModeFromPath === 'system-design') {
         setAscendMode('system-design');
+      } else if (modeParam === 'behavioral' || appModeFromPath === 'behavioral') {
+        setAscendMode('behavioral');
       } else {
         setAscendMode('coding');
       }
