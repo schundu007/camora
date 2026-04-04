@@ -404,12 +404,45 @@ export default function Blind75Page() {
       const reader = res.body?.getReader();
       if (!reader) throw new Error('No response stream');
       const decoder = new TextDecoder();
-      let result = '';
+      let codeResult = '';
+      let buffer = '';
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        result += decoder.decode(value, { stream: true });
-        setOutput(result);
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const event = JSON.parse(line.slice(6));
+              if (event.code) codeResult = event.code;
+              else if (event.chunk) codeResult += event.chunk;
+              else if (event.result?.code) codeResult = event.result.code;
+            } catch {}
+          }
+        }
+      }
+      // Try to parse as JSON to extract code
+      try {
+        const parsed = JSON.parse(codeResult);
+        if (parsed.code) {
+          setCode(parsed.code);
+          setOutput('Solution loaded into editor');
+        } else if (parsed.approaches?.[0]?.code) {
+          setCode(parsed.approaches[0].code);
+          setOutput('Solution loaded into editor');
+        } else {
+          setCode(codeResult);
+          setOutput('Solution loaded into editor');
+        }
+      } catch {
+        if (codeResult.trim()) {
+          setCode(codeResult);
+          setOutput('Solution loaded into editor');
+        } else {
+          setOutput('No solution generated. Try again.');
+        }
       }
     } catch (err: any) {
       setOutput(`Error: ${err.message || 'Failed to get solution'}`);
