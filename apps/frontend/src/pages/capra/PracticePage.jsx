@@ -1107,7 +1107,7 @@ export default function PracticePage() {
                     <span style={{ fontWeight: 700, color: '#f59e0b', fontSize: '12px', flexShrink: 0, minWidth: '20px' }}>
                       {idx + 1}.
                     </span>
-                    <span>{q}</span>
+                    <span>{typeof q === 'string' ? q : q.q || ''}</span>
                   </div>
                 ))}
               </div>

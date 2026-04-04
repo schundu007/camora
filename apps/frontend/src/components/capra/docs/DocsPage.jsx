@@ -78,10 +78,16 @@ export default function DocsPage({ onBack }) {
   const [sortOrder, setSortOrder] = useState('a-z');
   const [selectedTopic, setSelectedTopicState] = useState(initialState.topic);
 
-  // Job context for role-filtered mode (passed from JobPrepPage)
+  // Job context for role-filtered mode (passed from JobPrepPage or job URL analysis)
   const [jobContext, setJobContext] = useState(() => {
     if (initialState.role) {
-      return { role: initialState.role, focus: initialState.focus, jobTitle: initialState.jobTitle, company: initialState.company };
+      const ctx = { role: initialState.role, focus: initialState.focus, jobTitle: initialState.jobTitle, company: initialState.company, analysis: null };
+      // Try to pick up full AI analysis from sessionStorage (set by job URL analyzer)
+      try {
+        const stored = sessionStorage.getItem('jobAnalysis');
+        if (stored) ctx.analysis = JSON.parse(stored);
+      } catch { /* ignore */ }
+      return ctx;
     }
     return null;
   });
@@ -847,32 +853,78 @@ export default function DocsPage({ onBack }) {
                     </p>
                   </div>
                   )}
-                  {/* Job Context Banner — shown when navigating from a job prep page */}
-                  {jobContext && activePage !== 'overview' && (
-                    <div className="mb-4 px-4 py-3 rounded-xl border border-emerald-200 bg-emerald-50/60 flex items-center justify-between gap-3 flex-wrap">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
-                          <Icon name="target" size={16} className="text-emerald-600" />
+                  {/* Job Context Banner — shown when navigating from a job prep page or URL analysis */}
+                  {jobContext && activePage !== 'overview' && (() => {
+                    const analysis = jobContext.analysis;
+                    // Pick the right focus tags from analysis based on current page
+                    const focusTags = analysis ? (
+                      activePage === 'coding' ? analysis.coding_focus :
+                      activePage === 'system-design' ? analysis.system_design_focus :
+                      activePage === 'behavioral' ? analysis.behavioral_focus :
+                      null
+                    ) : null;
+
+                    return (
+                    <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50/60 overflow-hidden">
+                      <div className="px-4 py-3 flex items-center justify-between gap-3 flex-wrap">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                            <Icon name="target" size={16} className="text-emerald-600" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold text-gray-900 landing-display truncate">
+                              Filtered for: {jobContext.jobTitle || ROLE_TOPIC_MAP[jobContext.role]?.label || 'Your Role'}
+                              {jobContext.company && <span className="font-normal text-gray-500"> at {jobContext.company}</span>}
+                            </p>
+                            <p className="text-xs text-gray-500 landing-body">
+                              Showing {filteredTopics.length} most relevant topics{jobContext.focus ? ` \u2014 ${jobContext.focus}` : ''}
+                            </p>
+                          </div>
                         </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-semibold text-gray-900 landing-display truncate">
-                            Filtered for: {jobContext.jobTitle || ROLE_TOPIC_MAP[jobContext.role]?.label || 'Your Role'}
-                            {jobContext.company && <span className="font-normal text-gray-500"> at {jobContext.company}</span>}
-                          </p>
-                          <p className="text-xs text-gray-500 landing-body">
-                            Showing {filteredTopics.length} most relevant topics{jobContext.focus ? ` \u2014 ${jobContext.focus}` : ''}
-                          </p>
-                        </div>
+                        <button
+                          onClick={clearJobFilter}
+                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors flex-shrink-0 landing-body"
+                        >
+                          <Icon name="x" size={12} />
+                          Show all topics
+                        </button>
                       </div>
-                      <button
-                        onClick={clearJobFilter}
-                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors flex-shrink-0 landing-body"
-                      >
-                        <Icon name="x" size={12} />
-                        Show all topics
-                      </button>
+                      {/* Quick section tabs — switch between coding/design/behavioral in filtered mode */}
+                      <div className="px-4 pb-2 flex gap-2 flex-wrap">
+                        {[
+                          { key: 'coding', label: 'Coding', icon: 'code' },
+                          { key: 'system-design', label: 'System Design', icon: 'systemDesign' },
+                          { key: 'behavioral', label: 'Behavioral', icon: 'users' },
+                          { key: 'databases', label: 'Databases', icon: 'database' },
+                        ].map((tab) => (
+                          <button
+                            key={tab.key}
+                            onClick={() => { setActivePageState(tab.key); setSelectedTopicState(null); setActiveSection(tab.key); }}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors landing-body ${activePage === tab.key ? 'bg-emerald-600 text-white' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`}
+                          >
+                            <Icon name={tab.icon} size={12} />
+                            {tab.label}
+                          </button>
+                        ))}
+                      </div>
+                      {/* AI-detected focus areas from job analysis */}
+                      {focusTags && focusTags.length > 0 && (
+                        <div className="px-4 pb-3 flex flex-wrap gap-1.5 items-center">
+                          <span className="text-[10px] text-emerald-700 font-semibold uppercase tracking-wider landing-mono mr-1">Focus areas:</span>
+                          {focusTags.map((tag) => (
+                            <span key={tag} className="text-xs px-2 py-0.5 rounded-md bg-white border border-emerald-200 text-emerald-800 landing-body font-medium">{tag}</span>
+                          ))}
+                        </div>
+                      )}
+                      {/* Summary from AI analysis */}
+                      {analysis?.summary && (
+                        <div className="px-4 pb-3">
+                          <p className="text-xs text-gray-600 landing-body leading-relaxed">{analysis.summary}</p>
+                        </div>
+                      )}
                     </div>
-                  )}
+                    );
+                  })()}
 
                   {/* Gradient Divider */}
                   {activePage !== 'overview' && <div className="h-px bg-[#e3e8ee] mb-6" />}

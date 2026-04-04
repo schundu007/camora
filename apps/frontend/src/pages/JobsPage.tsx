@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 /* ──────────────────────────────── Constants ──────────────────────────────── */
 
 const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
+const CAPRA_API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
 const navLinks = [
   { label: 'Apply', href: '/jobs' },
@@ -235,6 +236,86 @@ export default function JobsPage() {
 
   // Mobile
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const navigate = useNavigate();
+
+  // Job URL analysis state
+  const [jobUrl, setJobUrl] = useState('');
+  const [analyzing, setAnalyzing] = useState(false);
+  const [analyzeError, setAnalyzeError] = useState<string | null>(null);
+  const [showUrlInput, setShowUrlInput] = useState(false);
+  // Fallback: paste JD text directly
+  const [showTextFallback, setShowTextFallback] = useState(false);
+  const [jdText, setJdText] = useState('');
+
+  const analyzeJobUrl = async () => {
+    if (!jobUrl.trim()) return;
+    setAnalyzing(true);
+    setAnalyzeError(null);
+    setShowTextFallback(false);
+    try {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      const res = await fetch(`${CAPRA_API_URL}/api/job-analyze`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ url: jobUrl.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        if (data.partial) {
+          setShowTextFallback(true);
+          setAnalyzeError(data.error || 'Could not scrape this URL.');
+        } else {
+          setAnalyzeError(data.error || 'Failed to analyze job URL');
+        }
+        return;
+      }
+      navigateToPrep(data);
+    } catch (err: any) {
+      setAnalyzeError(err.message || 'Network error. Please try again.');
+    } finally {
+      setAnalyzing(false);
+    }
+  };
+
+  const analyzeJobText = async () => {
+    if (!jdText.trim() || jdText.trim().length < 50) {
+      setAnalyzeError('Please paste at least 50 characters of the job description.');
+      return;
+    }
+    setAnalyzing(true);
+    setAnalyzeError(null);
+    try {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      const res = await fetch(`${CAPRA_API_URL}/api/job-analyze/text`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ text: jdText.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setAnalyzeError(data.error || 'Failed to analyze job description');
+        return;
+      }
+      navigateToPrep(data);
+    } catch (err: any) {
+      setAnalyzeError(err.message || 'Network error. Please try again.');
+    } finally {
+      setAnalyzing(false);
+    }
+  };
+
+  const navigateToPrep = (analysis: any) => {
+    const params = new URLSearchParams();
+    params.set('page', 'coding');
+    params.set('role', analysis.role_type || 'general');
+    params.set('jobTitle', analysis.title || '');
+    params.set('company', analysis.company || '');
+    // Store full analysis in sessionStorage so the prep page can use it
+    sessionStorage.setItem('jobAnalysis', JSON.stringify(analysis));
+    navigate(`/capra/prepare?${params.toString()}`);
+  };
 
   /* ── Fetch jobs ── */
   const fetchJobs = useCallback(async () => {
@@ -537,6 +618,184 @@ export default function JobsPage() {
               <span style={{ color: '#d1d5db' }}>|</span>
               <span>Updated daily</span>
             </div>
+          </div>
+        </div>
+
+        {/* ── Job URL Analysis Section ── */}
+        <div style={{ background: '#ffffff', borderBottom: '1px solid #e3e8ee' }}>
+          <div className="max-w-[85%] xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: '16px', paddingBottom: '16px' }}>
+            {!showUrlInput ? (
+              <button
+                onClick={() => setShowUrlInput(true)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  margin: '0 auto',
+                  padding: '10px 24px',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  color: '#374151',
+                  background: '#f9fafb',
+                  border: '1px dashed #d1d5db',
+                  borderRadius: '10px',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s',
+                  fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#10b981'; e.currentTarget.style.color = '#10b981'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#d1d5db'; e.currentTarget.style.color = '#374151'; }}
+              >
+                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m9.86-4.122a4.5 4.5 0 00-6.364-6.364L4.5 6.1" />
+                </svg>
+                Have a job URL? Paste it to get a personalized prep plan
+              </button>
+            ) : (
+              <div style={{ maxWidth: '720px', margin: '0 auto' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                  <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#111827', margin: 0, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
+                    Paste a Job URL
+                  </h3>
+                  <button
+                    onClick={() => { setShowUrlInput(false); setAnalyzeError(null); setShowTextFallback(false); }}
+                    style={{ fontSize: '13px', color: '#9ca3af', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 8px' }}
+                  >
+                    Close
+                  </button>
+                </div>
+                <p style={{ fontSize: '13px', color: '#6b7280', margin: '0 0 12px', lineHeight: 1.5 }}>
+                  Paste any job listing URL (Workday, Greenhouse, Lever, LinkedIn, etc.) and we'll analyze it to create a personalized interview prep plan.
+                </p>
+
+                {/* URL input row */}
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+                  <input
+                    type="url"
+                    placeholder="https://company.jobs/senior-devops-engineer..."
+                    value={jobUrl}
+                    onChange={(e) => { setJobUrl(e.target.value); setAnalyzeError(null); }}
+                    onKeyDown={(e) => { if (e.key === 'Enter' && !analyzing) analyzeJobUrl(); }}
+                    disabled={analyzing}
+                    style={{
+                      flex: 1,
+                      fontSize: '14px',
+                      color: '#374151',
+                      padding: '10px 14px',
+                      border: '1px solid #e3e8ee',
+                      borderRadius: '8px',
+                      outline: 'none',
+                      background: analyzing ? '#f9fafb' : '#ffffff',
+                      fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+                      transition: 'border-color 0.15s',
+                    }}
+                    onFocus={(e) => { e.currentTarget.style.borderColor = '#10b981'; }}
+                    onBlur={(e) => { e.currentTarget.style.borderColor = '#e3e8ee'; }}
+                  />
+                  <button
+                    onClick={analyzeJobUrl}
+                    disabled={analyzing || !jobUrl.trim()}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      padding: '10px 20px',
+                      fontSize: '14px',
+                      fontWeight: 600,
+                      color: '#ffffff',
+                      background: analyzing ? '#6ee7b7' : (!jobUrl.trim() ? '#d1d5db' : '#10b981'),
+                      border: 'none',
+                      borderRadius: '8px',
+                      cursor: analyzing || !jobUrl.trim() ? 'not-allowed' : 'pointer',
+                      transition: 'background 0.15s',
+                      fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+                      flexShrink: 0,
+                    }}
+                    onMouseEnter={(e) => { if (!analyzing && jobUrl.trim()) e.currentTarget.style.background = '#059669'; }}
+                    onMouseLeave={(e) => { if (!analyzing && jobUrl.trim()) e.currentTarget.style.background = '#10b981'; }}
+                  >
+                    {analyzing ? (
+                      <>
+                        <div style={{ width: '16px', height: '16px', border: '2px solid rgba(255,255,255,0.4)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+                        Analyzing...
+                      </>
+                    ) : (
+                      <>
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+                        </svg>
+                        Analyze &amp; Prepare
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {/* Error message */}
+                {analyzeError && (
+                  <div style={{ fontSize: '13px', color: '#dc2626', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', padding: '10px 14px', marginBottom: '8px' }}>
+                    {analyzeError}
+                  </div>
+                )}
+
+                {/* Text fallback — when URL scraping fails */}
+                {showTextFallback && (
+                  <div style={{ marginTop: '8px' }}>
+                    <p style={{ fontSize: '13px', color: '#6b7280', margin: '0 0 8px' }}>
+                      Paste the job description text directly instead:
+                    </p>
+                    <textarea
+                      placeholder="Paste the full job description here..."
+                      value={jdText}
+                      onChange={(e) => { setJdText(e.target.value); setAnalyzeError(null); }}
+                      disabled={analyzing}
+                      rows={6}
+                      style={{
+                        width: '100%',
+                        fontSize: '13px',
+                        color: '#374151',
+                        padding: '10px 14px',
+                        border: '1px solid #e3e8ee',
+                        borderRadius: '8px',
+                        outline: 'none',
+                        resize: 'vertical',
+                        fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+                        lineHeight: 1.5,
+                        marginBottom: '8px',
+                      }}
+                    />
+                    <button
+                      onClick={analyzeJobText}
+                      disabled={analyzing || jdText.trim().length < 50}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        padding: '10px 20px',
+                        fontSize: '14px',
+                        fontWeight: 600,
+                        color: '#ffffff',
+                        background: analyzing ? '#6ee7b7' : (jdText.trim().length < 50 ? '#d1d5db' : '#10b981'),
+                        border: 'none',
+                        borderRadius: '8px',
+                        cursor: analyzing || jdText.trim().length < 50 ? 'not-allowed' : 'pointer',
+                        fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+                      }}
+                    >
+                      {analyzing ? 'Analyzing...' : 'Analyze Job Description'}
+                    </button>
+                  </div>
+                )}
+
+                {/* Supported platforms hint */}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '10px', alignItems: 'center' }}>
+                  <span style={{ fontSize: '11px', color: '#9ca3af' }}>Supports:</span>
+                  {['Workday', 'Greenhouse', 'Lever', 'Ashby', 'LinkedIn', 'Indeed'].map((p) => (
+                    <span key={p} style={{ fontSize: '11px', color: '#9ca3af', background: '#f3f4f6', padding: '2px 8px', borderRadius: '4px' }}>{p}</span>
+                  ))}
+                  <span style={{ fontSize: '11px', color: '#9ca3af' }}>& more</span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

@@ -32,6 +32,7 @@ import creditsRouter from './routes/credits.js';
 import usageRouter from './routes/usage.js';
 import companyPrepsRouter from './routes/companyPreps.js';
 import extensionRouter from './routes/extension.js';
+import jobAnalyzeRouter from './routes/jobAnalyze.js';
 
 import { authenticate } from './middleware/authenticate.js';
 
@@ -317,6 +318,9 @@ app.use('/api/billing', paymentLimiter, billingRouter);
 app.use('/api/credits', apiLimiter, creditsRouter);
 app.use('/api/company-preps', apiLimiter, companyPrepsRouter);
 app.use('/api/usage', apiLimiter, usageRouter);
+
+// Job URL analysis (scrape + AI analysis) — auth required, AI rate limit
+app.use('/api/job-analyze', authenticate, aiLimiter, jobAnalyzeRouter);
 
 // Voice assistant routes (SSE + REST)
 // No rate limiter on /events endpoint for real-time streaming
