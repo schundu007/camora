@@ -353,25 +353,26 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
     setDiagramTranslate({ x: 0, y: 0 });
 
     try {
-      // Build a description from the system design content for Eraser API
-      const components = systemDesign?.architecture?.components?.join(', ') || '';
-      const flow = systemDesign?.architecture?.flow || '';
-      const description = `${question}. ${detailLevel === 'detailed' ? 'Show detailed architecture with all components.' : 'Show high-level overview.'} Components: ${components}. ${flow}`;
-
-      const response = await fetch(`${API_URL}/api/diagram/eraser`, {
+      const response = await fetch(`${API_URL}/api/diagram/generate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           ...getAuthHeaders(),
         },
-        body: JSON.stringify({ description, detailLevel, cacheKey: question }),
+        body: JSON.stringify({
+          question,
+          cloudProvider: cloudProvider || 'auto',
+          detailLevel,
+          direction,
+          cacheKey: question,
+        }),
       });
 
       if (!response.ok) {
         let errorMessage = `Failed to generate diagram (${response.status})`;
         try {
           const errorData = await response.json();
-          errorMessage = errorData.error || errorMessage;
+          errorMessage = errorData.error || errorData.details || errorMessage;
         } catch {
           errorMessage = `Server error: ${response.status} ${response.statusText}`;
         }
@@ -380,18 +381,20 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
 
       const result = await response.json();
 
-      if (result.imageUrl) {
+      if (result.success && result.image_url) {
+        const imageUrl = result.image_url.startsWith('http') ? result.image_url : `${API_URL}${result.image_url}`;
         setDiagramCache(prev => ({
           ...prev,
           [cacheKey]: {
-            imageUrl: result.imageUrl,
-            editUrl: result.editUrl,
+            imageUrl,
+            cloudProvider: result.cloud_provider,
+            pythonCode: result.python_code,
             detailLevel,
             direction,
           }
         }));
       } else {
-        throw new Error('Diagram generation failed - no image returned');
+        throw new Error(result.error || 'Diagram generation failed');
       }
     } catch (error) {
       setDiagramError(error.message);

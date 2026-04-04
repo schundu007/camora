@@ -40,7 +40,7 @@ export function getApiKey() {
  * Check if the diagram engine is configured and available
  */
 export function isConfigured() {
-  return !!getApiKey() && fs.existsSync(DIAGRAM_ENGINE_PATH);
+  return !!getApiKey();
 }
 
 /**

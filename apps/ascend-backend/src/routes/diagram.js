@@ -99,14 +99,36 @@ router.post('/eraser', async (req, res, next) => {
 
 /**
  * POST /api/diagram/generate
- * Generate a cloud architecture diagram using Python diagrams library
+ * Generate a cloud architecture diagram using Python diagrams library (with DB caching)
  */
 router.post('/generate', async (req, res, next) => {
-  // Set timeout for long-running diagram generation
   req.setTimeout(120000);
   res.setTimeout(120000);
   try {
-    // Check free usage
+    const { question, cloudProvider, difficulty, category, format, detailLevel = 'overview', direction = 'LR', cacheKey } = req.body;
+
+    if (!question) {
+      throw new AppError('Question is required', ErrorCode.VALIDATION_ERROR);
+    }
+
+    // 1. Check DB cache first
+    const problemHash = hashProblem(cacheKey || question);
+    try {
+      const cached = await query(
+        'SELECT image_url, edit_url FROM ascend_diagram_cache WHERE problem_hash = $1 AND detail_level = $2',
+        [problemHash, detailLevel]
+      );
+      if (cached.rows.length > 0) {
+        return res.json({
+          success: true,
+          image_url: cached.rows[0].image_url,
+          cloud_provider: cloudProvider || 'auto',
+          cached: true,
+        });
+      }
+    } catch { /* table might not exist yet */ }
+
+    // 2. Check free usage
     const userId = req.user?.id;
     if (userId) {
       const canUse = await freeUsageService.canUseFeature(userId, 'design');
@@ -115,41 +137,36 @@ router.post('/generate', async (req, res, next) => {
       }
     }
 
-    const { question, cloudProvider, difficulty, category, format, detailLevel, direction } = req.body;
-
-    if (!question) {
-      throw new AppError(
-        'Question is required',
-        ErrorCode.VALIDATION_ERROR,
-        'Please provide a system design question'
-      );
-    }
-
-    // Check if Python diagrams is configured
+    // 3. Check if configured
     if (!pythonDiagrams.isConfigured()) {
-      throw new AppError(
-        'Diagram generation not configured',
-        ErrorCode.EXTERNAL_API_ERROR,
-        'ANTHROPIC_API_KEY is not set'
-      );
+      throw new AppError('Diagram generation not configured — ANTHROPIC_API_KEY is not set', ErrorCode.EXTERNAL_API_ERROR);
     }
 
+    // 4. Generate
     const result = await pythonDiagrams.generateDiagram({
       question,
       cloudProvider: cloudProvider || 'auto',
       difficulty: difficulty || 'medium',
       category: category || 'System Design',
       format: format || 'png',
-      detailLevel: detailLevel || 'overview',  // 'overview' or 'detailed'
-      direction: direction || 'LR'  // 'LR' or 'TB'
+      detailLevel,
+      direction,
     });
 
     if (!result.success) {
-      throw new AppError(
-        'Diagram generation failed',
-        ErrorCode.EXTERNAL_API_ERROR,
-        result.error
+      throw new AppError(result.error || 'Diagram generation failed', ErrorCode.EXTERNAL_API_ERROR);
+    }
+
+    // 5. Save to DB cache
+    try {
+      await query(
+        `INSERT INTO ascend_diagram_cache (problem_hash, detail_level, image_url, edit_url, description)
+         VALUES ($1, $2, $3, $4, $5)
+         ON CONFLICT (problem_hash, detail_level) DO UPDATE SET image_url = $3, edit_url = $4`,
+        [problemHash, detailLevel, result.image_url, null, (cacheKey || question).slice(0, 500)]
       );
+    } catch (err) {
+      console.warn('[DiagramCache] Failed to save:', err.message);
     }
 
     res.json(result);
@@ -157,11 +174,7 @@ router.post('/generate', async (req, res, next) => {
     if (error instanceof AppError) {
       next(error);
     } else {
-      next(new AppError(
-        'Failed to generate diagram',
-        ErrorCode.EXTERNAL_API_ERROR,
-        error.message
-      ));
+      next(new AppError(error.message || 'Failed to generate diagram', ErrorCode.EXTERNAL_API_ERROR, error.message));
     }
   }
 });

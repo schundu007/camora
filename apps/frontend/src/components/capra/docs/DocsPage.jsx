@@ -266,16 +266,16 @@ export default function DocsPage({ onBack }) {
 
     try {
       const question = `Design ${topicTitle}`;
-      const description = `${question}. Cloud provider: ${provider}. ${detailLevel === 'detailed' ? 'Show detailed architecture with all components, databases, caches, load balancers, message queues, monitoring.' : 'Show high-level overview of main components.'}`;
 
-      const response = await fetch(`${API_URL}/api/diagram/eraser`, {
+      const response = await fetch(`${API_URL}/api/diagram/generate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           ...getAuthHeaders(),
         },
         body: JSON.stringify({
-          description,
+          question,
+          cloudProvider: provider,
           detailLevel,
           cacheKey: `${topicTitle}-${provider}`,
         }),
@@ -285,7 +285,7 @@ export default function DocsPage({ onBack }) {
         let errorMessage = `Failed to generate diagram (${response.status})`;
         try {
           const errorData = await response.json();
-          errorMessage = errorData.error || errorMessage;
+          errorMessage = errorData.error || errorData.details || errorMessage;
         } catch {
           // Response wasn't JSON
         }
@@ -293,12 +293,13 @@ export default function DocsPage({ onBack }) {
       }
 
       const data = await response.json();
-      if (data.imageUrl) {
-        const result = { imageUrl: data.imageUrl, editUrl: data.editUrl, cloudProvider: provider, cached: data.cached };
+      if (data.success && data.image_url) {
+        const imageUrl = data.image_url.startsWith('http') ? data.image_url : `${API_URL}${data.image_url}`;
+        const result = { imageUrl, cloudProvider: data.cloud_provider || provider, cached: data.cached };
         setDiagramData(result);
         setDiagramCache(prev => ({ ...prev, [cacheKey]: result }));
       } else {
-        throw new Error('Diagram generation failed - no image returned');
+        throw new Error(data.error || 'Diagram generation failed');
       }
     } catch (err) {
       console.error('Diagram generation error:', err);
