@@ -325,13 +325,13 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
 
   useEffect(() => {
     // Don't auto-generate diagrams for focused questions (SLIs, SLOs, metrics)
-    // Use ref to prevent retry loop when deps change during streaming
+    // Ref prevents retry loop: once attempted for a question, don't try again
     if (systemDesign?.included && question && !diagramCache['overview_LR'] && !generatingDiagram && !diagramError && !systemDesign?.focusedAnswer && diagramAttemptedRef.current !== question) {
       diagramAttemptedRef.current = question;
       const timer = setTimeout(() => {
         handleGenerateDiagram('overview', 'LR');
       }, 500);
-      return () => { clearTimeout(timer); diagramAttemptedRef.current = null; };
+      return () => clearTimeout(timer);
     }
   }, [systemDesign?.included, question, systemDesign?.focusedAnswer]);
 
