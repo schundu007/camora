@@ -247,23 +247,31 @@ function getTipsForCategory(categoryName: string) {
 const ALL_PROBLEMS = CATEGORIES.flatMap((c) => c.problems);
 const TOTAL = ALL_PROBLEMS.length;
 
-const LANGUAGES = ['python', 'javascript', 'java', 'cpp', 'go'] as const;
+const LANGUAGES = ['python', 'javascript', 'typescript', 'java', 'cpp', 'c', 'go', 'rust', 'bash'] as const;
 type Language = typeof LANGUAGES[number];
 
 const LANGUAGE_LABELS: Record<Language, string> = {
-  python: 'Python',
+  python: 'Python 3',
   javascript: 'JavaScript',
+  typescript: 'TypeScript',
   java: 'Java',
   cpp: 'C++',
+  c: 'C',
   go: 'Go',
+  rust: 'Rust',
+  bash: 'Bash',
 };
 
 const PLACEHOLDER_CODE: Record<Language, string> = {
-  python: '# Write your solution here\n\ndef solution():\n    pass\n',
-  javascript: '// Write your solution here\n\nfunction solution() {\n  \n}\n',
-  java: '// Write your solution here\n\nclass Solution {\n    public void solve() {\n        \n    }\n}\n',
-  cpp: '// Write your solution here\n\n#include <vector>\nusing namespace std;\n\nclass Solution {\npublic:\n    void solve() {\n        \n    }\n};\n',
-  go: '// Write your solution here\n\npackage main\n\nfunc solution() {\n\t\n}\n',
+  python: '# Write your solution here\nfrom typing import List\n\nclass Solution:\n    def solve(self, nums: List[int]) -> List[int]:\n        pass\n\n# Test\nsol = Solution()\nprint(sol.solve([2, 7, 11, 15]))\n',
+  javascript: '// Write your solution here\n\nfunction solve(nums, target) {\n  // your code\n}\n\nconsole.log(solve([2, 7, 11, 15], 9));\n',
+  typescript: '// Write your solution here\n\nfunction solve(nums: number[], target: number): number[] {\n  return [];\n}\n\nconsole.log(solve([2, 7, 11, 15], 9));\n',
+  java: 'import java.util.*;\n\npublic class Main {\n    public static int[] solve(int[] nums, int target) {\n        return new int[]{};\n    }\n\n    public static void main(String[] args) {\n        System.out.println(Arrays.toString(solve(new int[]{2,7,11,15}, 9)));\n    }\n}\n',
+  cpp: '#include <iostream>\n#include <vector>\nusing namespace std;\n\nvector<int> solve(vector<int>& nums, int target) {\n    return {};\n}\n\nint main() {\n    vector<int> nums = {2,7,11,15};\n    auto res = solve(nums, 9);\n    for (int x : res) cout << x << " ";\n    return 0;\n}\n',
+  c: '#include <stdio.h>\n\nint main() {\n    int nums[] = {2,7,11,15};\n    int target = 9;\n    // your code\n    printf("Solution: \\n");\n    return 0;\n}\n',
+  go: 'package main\n\nimport "fmt"\n\nfunc solve(nums []int, target int) []int {\n\treturn nil\n}\n\nfunc main() {\n\tfmt.Println(solve([]int{2, 7, 11, 15}, 9))\n}\n',
+  rust: 'fn solve(nums: Vec<i32>, target: i32) -> Vec<i32> {\n    vec![]\n}\n\nfn main() {\n    println!("{:?}", solve(vec![2, 7, 11, 15], 9));\n}\n',
+  bash: '#!/bin/bash\nnums=(2 7 11 15)\ntarget=9\necho "Solution: "\n',
 };
 
 const DIFFICULTY_COLORS: Record<string, { bg: string; text: string; border: string }> = {
