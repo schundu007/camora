@@ -4,7 +4,7 @@ import * as eraser from '../services/eraser.js';
 import * as pythonDiagrams from '../services/pythonDiagrams.js';
 import { AppError, ErrorCode } from '../middleware/errorHandler.js';
 import * as freeUsageService from '../services/freeUsageService.js';
-import { query } from '@camora/shared-db';
+import { query } from '../lib/shared-db.js';
 
 const router = Router();
 
