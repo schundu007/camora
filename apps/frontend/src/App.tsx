@@ -178,7 +178,7 @@ export function App() {
           {/* ── Also accessible via old Capra paths ────── */}
           <Route path="/prepare/*" element={<ProtectedRoute><CapraPrepare /></ProtectedRoute>} />
           <Route path="/practice" element={<ProtectedRoute><CapraPractice /></ProtectedRoute>} />
-          <Route path="/blind75" element={<ProtectedRoute><Blind75Page /></ProtectedRoute>} />
+          <Route path="/blind75" element={<Blind75Page />} />
           <Route path="/problems/:slug" element={<ProtectedRoute><CapraDashboard /></ProtectedRoute>} />
           <Route path="/onboarding" element={<ProtectedRoute><CapraOnboarding /></ProtectedRoute>} />
 
