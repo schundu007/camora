@@ -716,6 +716,54 @@ export default function Blind75Page() {
                           >
                             {isOpen ? 'Close' : 'Solve'}
                           </button>
+                          <Link
+                            to={`/capra/practice?problem=${encodeURIComponent(problem.title)}`}
+                            className="b75-action-btn"
+                            style={{
+                              fontSize: '12px',
+                              fontWeight: 600,
+                              padding: '5px 14px',
+                              borderRadius: '8px',
+                              border: `1px solid ${cat.color}30`,
+                              background: `${cat.color}08`,
+                              color: cat.color,
+                              cursor: 'pointer',
+                              textDecoration: 'none',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              transition: 'all 0.15s',
+                            }}
+                          >
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                              <polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" />
+                            </svg>
+                            Practice
+                          </Link>
+                          <button
+                            onClick={() => getAISolution(problem.title)}
+                            disabled={isSolving}
+                            className="b75-action-btn"
+                            style={{
+                              fontSize: '12px',
+                              fontWeight: 600,
+                              padding: '5px 14px',
+                              borderRadius: '8px',
+                              border: '1px solid #818cf830',
+                              background: '#818cf808',
+                              color: '#818cf8',
+                              cursor: isSolving ? 'wait' : 'pointer',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              transition: 'all 0.15s',
+                            }}
+                          >
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                              <circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3" /><line x1="12" y1="17" x2="12.01" y2="17" />
+                            </svg>
+                            {isSolving ? 'Solving...' : 'Solution'}
+                          </button>
                           <a
                             href={problem.leetcode}
                             target="_blank"
