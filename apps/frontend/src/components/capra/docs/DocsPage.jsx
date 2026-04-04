@@ -265,19 +265,19 @@ export default function DocsPage({ onBack }) {
     setDiagramCloudProvider(provider);
 
     try {
-      const response = await fetch(`${API_URL}/api/diagram/generate`, {
+      const question = `Design ${topicTitle}`;
+      const description = `${question}. Cloud provider: ${provider}. ${detailLevel === 'detailed' ? 'Show detailed architecture with all components, databases, caches, load balancers, message queues, monitoring.' : 'Show high-level overview of main components.'}`;
+
+      const response = await fetch(`${API_URL}/api/diagram/eraser`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           ...getAuthHeaders(),
         },
         body: JSON.stringify({
-          question: `Design ${topicTitle}`,
-          cloudProvider: provider,
-          difficulty: 'medium',
-          category: 'System Design',
-          format: 'png',
-          detailLevel: detailLevel
+          description,
+          detailLevel,
+          cacheKey: `${topicTitle}-${provider}`,
         }),
       });
 
@@ -293,18 +293,12 @@ export default function DocsPage({ onBack }) {
       }
 
       const data = await response.json();
-      if (data.success && data.image_url) {
-        // Construct full URL
-        const fullImageUrl = data.image_url.startsWith('http')
-          ? data.image_url
-          : `${API_URL}${data.image_url}`;
-
-        const result = { ...data, imageUrl: fullImageUrl };
+      if (data.imageUrl) {
+        const result = { imageUrl: data.imageUrl, editUrl: data.editUrl, cloudProvider: provider, cached: data.cached };
         setDiagramData(result);
-        // Cache the result
         setDiagramCache(prev => ({ ...prev, [cacheKey]: result }));
       } else {
-        throw new Error(data.error || 'Diagram generation failed');
+        throw new Error('Diagram generation failed - no image returned');
       }
     } catch (err) {
       console.error('Diagram generation error:', err);
