@@ -318,7 +318,7 @@ export default function Blind75Page() {
   const { user, token, isLoading: authLoading, logout } = useAuth();
 
   /* ── Shared state ── */
-  const [activeTab, setActiveTab] = useState<TabKey>('blind75');
+  const [activeTab, setActiveTab] = useState<TabKey>(() => { const p = new URLSearchParams(window.location.search); const t = p.get('tab'); return (t === 'algorithms' || t === 'behavioral' || t === 'cheatsheet') ? t : 'blind75'; });
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   /* ── Blind 75 state ── */
