@@ -235,14 +235,16 @@ export default function DocsPage({ onBack }) {
     return { total, completed, percent: total > 0 ? Math.round((completed / total) * 100) : 0 };
   };
 
-  // Reset diagram when topic changes
+  // Reset diagram when topic changes — auto-load from DB cache if available
   useEffect(() => {
     setDiagramData(null);
     setDiagramError(null);
-    // Check cache for existing diagram
     const cacheKey = `${selectedTopic}-${diagramDetailLevel}-${diagramCloudProvider}`;
     if (selectedTopic && diagramCache[cacheKey]) {
       setDiagramData(diagramCache[cacheKey]);
+    } else if (selectedTopic && activePage === 'system-design' && topicDetails?.title) {
+      // Auto-load: call generate which checks DB cache first (instant if cached)
+      handleGenerateDiagram(topicDetails.title, diagramDetailLevel, diagramCloudProvider);
     }
   }, [selectedTopic]);
 

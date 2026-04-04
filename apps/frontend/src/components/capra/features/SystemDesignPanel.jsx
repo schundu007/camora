@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 import { getAuthHeaders } from '../../../utils/authHeaders.js';
 
@@ -304,6 +304,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
   const [generatingDiagram, setGeneratingDiagram] = useState(false);
   const [diagramCache, setDiagramCache] = useState({});
   const [diagramError, setDiagramError] = useState(null);
+  const autoLoadedRef = useRef(null);
   const [diagramDetailLevel, setDiagramDetailLevel] = useState('overview');
   const [diagramDirection, setDiagramDirection] = useState('LR');
   const [showASCII, setShowASCII] = useState(true);
@@ -322,8 +323,13 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
     }
   }, [eraserDiagram?.imageUrl]);
 
-  // Diagram generation is manual-only (click Overview/Detailed buttons)
-  // Auto-generation disabled — the Python diagrams backend is not deployed
+  // Auto-load cached diagram on page load (DB cache makes this instant)
+  useEffect(() => {
+    if (systemDesign?.included && question && !diagramCache['overview_LR'] && !generatingDiagram && autoLoadedRef.current !== question) {
+      autoLoadedRef.current = question;
+      handleGenerateDiagram('overview', 'LR');
+    }
+  }, [systemDesign?.included, question]);
 
   const handleGenerateEraser = async () => {
     if (!onGenerateEraserDiagram) return;
