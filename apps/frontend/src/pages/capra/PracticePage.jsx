@@ -146,25 +146,21 @@ export default function PracticePage() {
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, []);
 
-  /* ── Topic click -> navigate to the topic's prepare page ── */
+  /* ── Topic click -> open workspace with problem pre-loaded and auto-solve ── */
   const handleTopicClick = useCallback((item) => {
     if (item.href) {
       navigate(item.href);
     } else if (item.slug) {
-      // Map section to prepare page
       const section = SECTIONS.find(s => s.items.some(i => i.slug === item.slug));
-      if (section) {
-        const pageMap = {
-          'system-design': 'system-design',
-          'technical': 'system-design',
-          'behavioral': 'behavioral',
-          'ai-ml': 'system-design',
-          'full-stack': 'coding',
-          'data': 'databases',
-          'coding': 'coding',
-        };
-        const page = pageMap[section.key] || 'coding';
-        navigate(`/capra/prepare?page=${page}`);
+      const problem = encodeURIComponent(`${item.label}: ${item.desc}`);
+      const mode = section?.key;
+
+      if (mode === 'system-design' || mode === 'technical') {
+        navigate(`/capra/design?problem=${problem}&autosolve=true`);
+      } else if (mode === 'behavioral') {
+        navigate(`/capra/prep?problem=${problem}`);
+      } else {
+        navigate(`/capra?problem=${problem}&autosolve=true`);
       }
     }
   }, [navigate]);
