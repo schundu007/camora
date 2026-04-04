@@ -882,7 +882,10 @@ export default function TopicDetail({
                           ].map(p => (
                             <button
                               key={p.id}
-                              onClick={() => setDiagramCloudProvider(p.id)}
+                              onClick={() => {
+                                setDiagramCloudProvider(p.id);
+                                generateDiagram(topicDetails.title || selectedTopic, diagramDetailLevel, p.id);
+                              }}
                               className="px-2 py-0.5 text-xs font-medium rounded transition-all landing-mono"
                               style={{
                                 background: diagramCloudProvider === p.id ? `${p.color}30` : 'transparent',
