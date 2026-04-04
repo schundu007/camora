@@ -25,11 +25,14 @@ const SOLUTIONS: Record<string, SolutionData> = {
         name: 'Brute Force',
         description: 'Check every pair of numbers to see if they add up to the target.',
         code: {
-          python: `def twoSum(nums, target):
-    for i in range(len(nums)):
-        for j in range(i + 1, len(nums)):
-            if nums[i] + nums[j] == target:
-                return [i, j]`,
+          python: `from typing import List
+
+class Solution:
+    def twoSum(self, nums: List[int], target: int) -> List[int]:
+        for i in range(len(nums)):
+            for j in range(i + 1, len(nums)):
+                if nums[i] + nums[j] == target:
+                    return [i, j]`,
           javascript: `function twoSum(nums, target) {
     for (let i = 0; i < nums.length; i++) {
         for (let j = i + 1; j < nums.length; j++) {
@@ -45,13 +48,16 @@ const SOLUTIONS: Record<string, SolutionData> = {
         name: 'Hash Map (Optimal)',
         description: 'Use a hash map to store seen values and their indices. For each number, check if its complement exists in the map.',
         code: {
-          python: `def twoSum(nums, target):
-    seen = {}
-    for i, num in enumerate(nums):
-        complement = target - num
-        if complement in seen:
-            return [seen[complement], i]
-        seen[num] = i`,
+          python: `from typing import List
+
+class Solution:
+    def twoSum(self, nums: List[int], target: int) -> List[int]:
+        seen = {}
+        for i, num in enumerate(nums):
+            complement = target - num
+            if complement in seen:
+                return [seen[complement], i]
+            seen[num] = i`,
           javascript: `function twoSum(nums, target) {
     const map = new Map();
     for (let i = 0; i < nums.length; i++) {
@@ -72,12 +78,15 @@ const SOLUTIONS: Record<string, SolutionData> = {
         name: 'Brute Force (Sort)',
         description: 'Sort the array and check adjacent elements for duplicates.',
         code: {
-          python: `def containsDuplicate(nums):
-    nums.sort()
-    for i in range(1, len(nums)):
-        if nums[i] == nums[i - 1]:
-            return True
-    return False`,
+          python: `from typing import List
+
+class Solution:
+    def containsDuplicate(self, nums: List[int]) -> bool:
+        nums.sort()
+        for i in range(1, len(nums)):
+            if nums[i] == nums[i - 1]:
+                return True
+        return False`,
           javascript: `function containsDuplicate(nums) {
     nums.sort((a, b) => a - b);
     for (let i = 1; i < nums.length; i++) {
@@ -93,8 +102,11 @@ const SOLUTIONS: Record<string, SolutionData> = {
         name: 'Hash Set (Optimal)',
         description: 'Use a set to track seen numbers. If a number is already in the set, we have a duplicate.',
         code: {
-          python: `def containsDuplicate(nums):
-    return len(nums) != len(set(nums))`,
+          python: `from typing import List
+
+class Solution:
+    def containsDuplicate(self, nums: List[int]) -> bool:
+        return len(nums) != len(set(nums))`,
           javascript: `function containsDuplicate(nums) {
     return new Set(nums).size !== nums.length;
 }`,
@@ -110,8 +122,9 @@ const SOLUTIONS: Record<string, SolutionData> = {
         name: 'Sorting',
         description: 'Sort both strings and compare. Anagrams will produce the same sorted string.',
         code: {
-          python: `def isAnagram(s, t):
-    return sorted(s) == sorted(t)`,
+          python: `class Solution:
+    def isAnagram(self, s: str, t: str) -> bool:
+        return sorted(s) == sorted(t)`,
           javascript: `function isAnagram(s, t) {
     return s.split('').sort().join('') === t.split('').sort().join('');
 }`,
@@ -123,17 +136,18 @@ const SOLUTIONS: Record<string, SolutionData> = {
         name: 'Character Count (Optimal)',
         description: 'Count character frequencies in both strings. They must match for anagrams.',
         code: {
-          python: `def isAnagram(s, t):
-    if len(s) != len(t):
-        return False
-    count = {}
-    for c in s:
-        count[c] = count.get(c, 0) + 1
-    for c in t:
-        count[c] = count.get(c, 0) - 1
-        if count[c] < 0:
+          python: `class Solution:
+    def isAnagram(self, s: str, t: str) -> bool:
+        if len(s) != len(t):
             return False
-    return True`,
+        count = {}
+        for c in s:
+            count[c] = count.get(c, 0) + 1
+        for c in t:
+            count[c] = count.get(c, 0) - 1
+            if count[c] < 0:
+                return False
+        return True`,
           javascript: `function isAnagram(s, t) {
     if (s.length !== t.length) return false;
     const count = {};
@@ -944,16 +958,19 @@ def numIslands(grid):
         name: 'Brute Force (Division)',
         description: 'Compute total product and divide by each element. Handle zeros carefully.',
         code: {
-          python: `def productExceptSelf(nums):
-    n = len(nums)
-    result = [1] * n
-    for i in range(n):
-        product = 1
-        for j in range(n):
-            if i != j:
-                product *= nums[j]
-        result[i] = product
-    return result`,
+          python: `from typing import List
+
+class Solution:
+    def productExceptSelf(self, nums: List[int]) -> List[int]:
+        n = len(nums)
+        result = [1] * n
+        for i in range(n):
+            product = 1
+            for j in range(n):
+                if i != j:
+                    product *= nums[j]
+            result[i] = product
+        return result`,
           javascript: `function productExceptSelf(nums) {
     const result = [];
     for (let i = 0; i < nums.length; i++) {
@@ -973,18 +990,21 @@ def numIslands(grid):
         name: 'Prefix and Suffix Products (Optimal)',
         description: 'For each position, the answer is left product * right product. Compute in two passes.',
         code: {
-          python: `def productExceptSelf(nums):
-    n = len(nums)
-    result = [1] * n
-    prefix = 1
-    for i in range(n):
-        result[i] = prefix
-        prefix *= nums[i]
-    suffix = 1
-    for i in range(n - 1, -1, -1):
-        result[i] *= suffix
-        suffix *= nums[i]
-    return result`,
+          python: `from typing import List
+
+class Solution:
+    def productExceptSelf(self, nums: List[int]) -> List[int]:
+        n = len(nums)
+        result = [1] * n
+        prefix = 1
+        for i in range(n):
+            result[i] = prefix
+            prefix *= nums[i]
+        suffix = 1
+        for i in range(n - 1, -1, -1):
+            result[i] *= suffix
+            suffix *= nums[i]
+        return result`,
           javascript: `function productExceptSelf(nums) {
     const n = nums.length;
     const result = new Array(n).fill(1);
@@ -1012,21 +1032,24 @@ def numIslands(grid):
         name: 'Brute Force (Sort + Two Loops)',
         description: 'Sort the array. For each element, use two nested loops to find triplets that sum to zero.',
         code: {
-          python: `def threeSum(nums):
-    nums.sort()
-    result = []
-    for i in range(len(nums) - 2):
-        if i > 0 and nums[i] == nums[i - 1]:
-            continue
-        for j in range(i + 1, len(nums) - 1):
-            if j > i + 1 and nums[j] == nums[j - 1]:
+          python: `from typing import List
+
+class Solution:
+    def threeSum(self, nums: List[int]) -> List[List[int]]:
+        nums.sort()
+        result = []
+        for i in range(len(nums) - 2):
+            if i > 0 and nums[i] == nums[i - 1]:
                 continue
-            for k in range(j + 1, len(nums)):
-                if k > j + 1 and nums[k] == nums[k - 1]:
+            for j in range(i + 1, len(nums) - 1):
+                if j > i + 1 and nums[j] == nums[j - 1]:
                     continue
-                if nums[i] + nums[j] + nums[k] == 0:
-                    result.append([nums[i], nums[j], nums[k]])
-    return result`,
+                for k in range(j + 1, len(nums)):
+                    if k > j + 1 and nums[k] == nums[k - 1]:
+                        continue
+                    if nums[i] + nums[j] + nums[k] == 0:
+                        result.append([nums[i], nums[j], nums[k]])
+        return result`,
           javascript: `function threeSum(nums) {
     nums.sort((a, b) => a - b);
     const result = [];
@@ -1052,28 +1075,31 @@ def numIslands(grid):
         name: 'Sort + Two Pointers (Optimal)',
         description: 'Sort the array. Fix one element, then use two pointers on the rest to find pairs that sum to its negative.',
         code: {
-          python: `def threeSum(nums):
-    nums.sort()
-    result = []
-    for i in range(len(nums) - 2):
-        if i > 0 and nums[i] == nums[i - 1]:
-            continue
-        left, right = i + 1, len(nums) - 1
-        while left < right:
-            total = nums[i] + nums[left] + nums[right]
-            if total < 0:
-                left += 1
-            elif total > 0:
-                right -= 1
-            else:
-                result.append([nums[i], nums[left], nums[right]])
-                while left < right and nums[left] == nums[left + 1]:
+          python: `from typing import List
+
+class Solution:
+    def threeSum(self, nums: List[int]) -> List[List[int]]:
+        nums.sort()
+        result = []
+        for i in range(len(nums) - 2):
+            if i > 0 and nums[i] == nums[i - 1]:
+                continue
+            left, right = i + 1, len(nums) - 1
+            while left < right:
+                total = nums[i] + nums[left] + nums[right]
+                if total < 0:
                     left += 1
-                while left < right and nums[right] == nums[right - 1]:
+                elif total > 0:
                     right -= 1
-                left += 1
-                right -= 1
-    return result`,
+                else:
+                    result.append([nums[i], nums[left], nums[right]])
+                    while left < right and nums[left] == nums[left + 1]:
+                        left += 1
+                    while left < right and nums[right] == nums[right - 1]:
+                        right -= 1
+                    left += 1
+                    right -= 1
+        return result`,
           javascript: `function threeSum(nums) {
     nums.sort((a, b) => a - b);
     const result = [];
@@ -5782,10 +5808,10 @@ export default function Blind75PracticePage() {
                   style={{ fontSize: 12, fontWeight: 600, padding: '5px 14px', borderRadius: 7, border: 'none', background: '#10b981', color: '#fff', cursor: isRunning ? 'wait' : 'pointer' }}>
                   {isRunning ? 'Running...' : '\u25B6 Run Code'}
                 </button>
-                <button onClick={() => setActiveTab('solution')}
-                  style={{ fontSize: 12, fontWeight: 600, padding: '5px 14px', borderRadius: 7, border: 'none', background: '#818cf8', color: '#fff', cursor: 'pointer' }}>
+                <Link to={`/blind75/${id}/solution`}
+                  style={{ fontSize: 12, fontWeight: 600, padding: '5px 14px', borderRadius: 7, border: 'none', background: '#818cf8', color: '#fff', cursor: 'pointer', textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>
                   View Solution
-                </button>
+                </Link>
               </div>
             </div>
             {/* Editor */}
