@@ -364,7 +364,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
           'Content-Type': 'application/json',
           ...getAuthHeaders(),
         },
-        body: JSON.stringify({ description }),
+        body: JSON.stringify({ description, detailLevel }),
       });
 
       if (!response.ok) {

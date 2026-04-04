@@ -48,6 +48,20 @@ async function runMigrations() {
     await query('ALTER TABLE users ADD COLUMN IF NOT EXISTS resume_text TEXT DEFAULT NULL');
     await query('ALTER TABLE users ADD COLUMN IF NOT EXISTS technical_context TEXT DEFAULT NULL');
     console.log('[Migrations] Onboarding columns ensured');
+
+    // Diagram cache table — store generated diagrams to avoid re-generating
+    await query(`CREATE TABLE IF NOT EXISTS ascend_diagram_cache (
+      id SERIAL PRIMARY KEY,
+      problem_hash VARCHAR(64) NOT NULL,
+      detail_level VARCHAR(20) NOT NULL DEFAULT 'overview',
+      image_url TEXT NOT NULL,
+      edit_url TEXT,
+      description TEXT,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      UNIQUE(problem_hash, detail_level)
+    )`);
+    await query('CREATE INDEX IF NOT EXISTS idx_diagram_cache_hash ON ascend_diagram_cache(problem_hash, detail_level)');
+    console.log('[Migrations] Diagram cache table ensured');
   } catch (err) {
     console.warn('[Migrations] Failed to run onboarding migration:', err.message);
   }

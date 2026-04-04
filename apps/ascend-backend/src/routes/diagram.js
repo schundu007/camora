@@ -1,27 +1,25 @@
 import { Router } from 'express';
+import crypto from 'crypto';
 import * as eraser from '../services/eraser.js';
 import * as pythonDiagrams from '../services/pythonDiagrams.js';
 import { AppError, ErrorCode } from '../middleware/errorHandler.js';
 import * as freeUsageService from '../services/freeUsageService.js';
+import { query } from '@camora/shared-db';
 
 const router = Router();
 
+/** Hash a problem description into a stable cache key */
+function hashProblem(text) {
+  return crypto.createHash('sha256').update(text.trim().toLowerCase()).digest('hex').slice(0, 32);
+}
+
 /**
  * POST /api/diagram/eraser
- * Generate an architecture diagram using Eraser.io
+ * Generate an architecture diagram using Eraser.io (with DB caching)
  */
 router.post('/eraser', async (req, res, next) => {
   try {
-    // Check free usage for diagram generation
-    const userId = req.user?.id;
-    if (userId) {
-      const canUse = await freeUsageService.canUseFeature(userId, 'design');
-      if (!canUse.allowed) {
-        return res.status(429).json({ error: canUse.reason || 'Free trial exhausted.', subscriptionRequired: true });
-      }
-    }
-
-    const { description } = req.body;
+    const { description, detailLevel = 'overview' } = req.body;
 
     if (!description) {
       throw new AppError(
@@ -31,7 +29,35 @@ router.post('/eraser', async (req, res, next) => {
       );
     }
 
-    // Check if Eraser is configured
+    const problemHash = hashProblem(description);
+
+    // 1. Check cache first
+    try {
+      const cached = await query(
+        'SELECT image_url, edit_url FROM ascend_diagram_cache WHERE problem_hash = $1 AND detail_level = $2',
+        [problemHash, detailLevel]
+      );
+      if (cached.rows.length > 0) {
+        return res.json({
+          imageUrl: cached.rows[0].image_url,
+          editUrl: cached.rows[0].edit_url,
+          cached: true,
+        });
+      }
+    } catch {
+      // Cache lookup failed (table might not exist yet) — fall through to generate
+    }
+
+    // 2. Check free usage
+    const userId = req.user?.id;
+    if (userId) {
+      const canUse = await freeUsageService.canUseFeature(userId, 'design');
+      if (!canUse.allowed) {
+        return res.status(429).json({ error: canUse.reason || 'Free trial exhausted.', subscriptionRequired: true });
+      }
+    }
+
+    // 3. Check if Eraser is configured
     if (!eraser.isConfigured()) {
       throw new AppError(
         'Eraser API not configured',
@@ -40,7 +66,20 @@ router.post('/eraser', async (req, res, next) => {
       );
     }
 
+    // 4. Generate via Eraser API
     const result = await eraser.generateDiagram(description);
+
+    // 5. Save to cache
+    try {
+      await query(
+        `INSERT INTO ascend_diagram_cache (problem_hash, detail_level, image_url, edit_url, description)
+         VALUES ($1, $2, $3, $4, $5)
+         ON CONFLICT (problem_hash, detail_level) DO UPDATE SET image_url = $3, edit_url = $4`,
+        [problemHash, detailLevel, result.imageUrl, result.editUrl || null, description.slice(0, 500)]
+      );
+    } catch (err) {
+      console.warn('[DiagramCache] Failed to save:', err.message);
+    }
 
     res.json(result);
   } catch (error) {
