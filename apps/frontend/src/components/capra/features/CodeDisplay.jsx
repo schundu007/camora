@@ -247,7 +247,7 @@ const CodeDisplay = forwardRef(function CodeDisplay({ code: initialCode, languag
         }),
       });
       const data = await response.json();
-      if (data.code) {
+      if (response.ok && data.code) {
         setCode(data.code);
         setFixAttempts(prev => prev + 1);
         setOutput(null);
@@ -255,6 +255,8 @@ const CodeDisplay = forwardRef(function CodeDisplay({ code: initialCode, languag
         if (onExplanationsUpdate && data.explanations) {
           onExplanationsUpdate(data.explanations);
         }
+      } else {
+        setOutput({ success: false, error: data.error || data.details || 'Fix failed' });
       }
     } catch (err) {
       setOutput({ success: false, error: 'Fix failed: ' + err.message });
@@ -620,7 +622,7 @@ const CodeDisplay = forwardRef(function CodeDisplay({ code: initialCode, languag
                 </span>
               )}
               <span className="text-xs text-gray-500">
-                {(output.success ? output.output : output.error)?.split('\n').length || 0} lines
+                {(output.success ? output.output : (output.error || output.stderr || output.output))?.split('\n').length || 0} lines
               </span>
             </div>
             <div className="flex items-center gap-1.5">
@@ -636,7 +638,7 @@ const CodeDisplay = forwardRef(function CodeDisplay({ code: initialCode, languag
               </button>
               <button
                 onClick={() => {
-                  navigator.clipboard.writeText(output.success ? output.output : output.error);
+                  navigator.clipboard.writeText(output.success ? output.output : (output.error || output.stderr || output.output));
                 }}
                 className="text-xs px-1.5 py-0.5 rounded hover:bg-gray-100 transition-colors text-gray-600 hover:text-gray-900"
                 title="Copy output"
@@ -664,7 +666,7 @@ const CodeDisplay = forwardRef(function CodeDisplay({ code: initialCode, languag
             }}
             onClick={() => setOutputExpanded(true)}
           >
-            {output.success ? output.output : output.error}
+            {output.success ? output.output : (output.error || output.stderr || output.output)}
           </pre>
         </div>
       )}
@@ -688,13 +690,13 @@ const CodeDisplay = forwardRef(function CodeDisplay({ code: initialCode, languag
                   {output.success ? 'Program Output' : 'Error Output'}
                 </span>
                 <span className="text-xs px-2.5 py-1 rounded-md font-medium bg-gray-100 text-gray-600">
-                  {(output.success ? output.output : output.error)?.split('\n').length || 0} lines
+                  {(output.success ? output.output : (output.error || output.stderr || output.output))?.split('\n').length || 0} lines
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => {
-                    navigator.clipboard.writeText(output.success ? output.output : output.error);
+                    navigator.clipboard.writeText(output.success ? output.output : (output.error || output.stderr || output.output));
                   }}
                   className="text-xs px-3 py-1.5 rounded-md flex items-center gap-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
                 >
@@ -719,7 +721,7 @@ const CodeDisplay = forwardRef(function CodeDisplay({ code: initialCode, languag
               <div className="flex text-xs font-mono">
                 {/* Line Numbers */}
                 <div className="py-3 px-2 text-right select-none bg-gray-100 text-gray-400 min-w-[40px]">
-                  {(output.success ? output.output : output.error)?.split('\n').map((_, i) => (
+                  {(output.success ? output.output : (output.error || output.stderr || output.output))?.split('\n').map((_, i) => (
                     <div key={i} className="leading-5">{i + 1}</div>
                   ))}
                 </div>
@@ -728,7 +730,7 @@ const CodeDisplay = forwardRef(function CodeDisplay({ code: initialCode, languag
                   className="flex-1 py-3 px-4 select-text leading-5"
                   style={{ color: output.success ? '#10b981' : '#f87171' }}
                 >
-                  {output.success ? output.output : output.error}
+                  {output.success ? output.output : (output.error || output.stderr || output.output)}
                 </pre>
               </div>
             </div>

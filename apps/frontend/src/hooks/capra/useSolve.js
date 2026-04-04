@@ -305,7 +305,8 @@ export function useAutoTestFix({ provider, model }) {
         }
 
         // Runtime error - try one fix
-        const errorMsg = runResult.error || 'Unknown error';
+        const errorMsg = runResult.error || runResult.stderr || runResult.output || 'Unknown error';
+        finalOutput = { success: false, error: errorMsg, output: errorMsg, input: testInput };
         attempts = 1;
         setAutoFixAttempts(attempts);
         setLoadingType('fixing');
@@ -324,7 +325,7 @@ export function useAutoTestFix({ provider, model }) {
         });
         const fixResult = await fixResponse.json();
 
-        if (fixResult.code) {
+        if (fixResponse.ok && fixResult.code) {
           currentCode = fixResult.code;
 
           setLoadingType('running');
@@ -340,7 +341,8 @@ export function useAutoTestFix({ provider, model }) {
           const finalRunResult = await finalRunResponse.json();
           finalOutput = {
             success: finalRunResult.success,
-            output: finalRunResult.success ? finalRunResult.output : finalRunResult.error,
+            output: finalRunResult.success ? finalRunResult.output : (finalRunResult.error || finalRunResult.stderr || finalRunResult.output),
+            error: finalRunResult.error || finalRunResult.stderr || undefined,
             input: testInput,
           };
 

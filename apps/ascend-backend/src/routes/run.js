@@ -10,6 +10,43 @@ const MAX_CODE_SIZE = 100_000;
 const SUPPORTED_LANGUAGES = ['python', 'javascript', 'typescript', 'java', 'cpp', 'c', 'go', 'rust', 'bash'];
 
 /**
+ * Run a command with optional stdin support.
+ * Uses spawn when input is provided (execFile doesn't support async stdin).
+ */
+async function runProcess(cmd, args, input, options = {}) {
+  if (!input) {
+    const { execFile } = await import('child_process');
+    const { promisify } = await import('util');
+    return promisify(execFile)(cmd, args, options);
+  }
+
+  const { spawn } = await import('child_process');
+  return new Promise((resolve, reject) => {
+    const child = spawn(cmd, args, { stdio: ['pipe', 'pipe', 'pipe'] });
+    let stdout = '';
+    let stderr = '';
+    const timer = setTimeout(() => {
+      child.kill('SIGKILL');
+      reject(Object.assign(new Error('Execution timed out'), { stderr }));
+    }, options.timeout || 10000);
+
+    child.stdout.on('data', (d) => { stdout += d.toString(); });
+    child.stderr.on('data', (d) => { stderr += d.toString(); });
+    child.on('error', (err) => { clearTimeout(timer); reject(err); });
+    child.on('close', () => { clearTimeout(timer); resolve({ stdout, stderr }); });
+
+    child.stdin.write(input);
+    child.stdin.end();
+  });
+}
+
+/** Format run result with consistent fields (frontend expects .error) */
+function formatResult(stdout, stderr) {
+  const hasError = !!stderr && !stdout.trim();
+  return { success: !hasError, stdout, stderr, error: stderr || undefined, output: stdout || stderr };
+}
+
+/**
  * Execute code locally using installed compilers/interpreters.
  * All languages run on the server — no external API needed.
  */
@@ -28,27 +65,26 @@ async function executeCode(code, language, input = '') {
 
 // Local code execution using installed compilers/interpreters
 async function executeFallback(code, language, input) {
-  const { execFile } = await import('child_process');
-  const { promisify } = await import('util');
   const { writeFile, unlink } = await import('fs/promises');
   const { join } = await import('path');
   const { tmpdir } = await import('os');
   const { randomUUID } = await import('crypto');
-  const execFileAsync = promisify(execFile);
 
   const id = randomUUID();
   const tmpDir = tmpdir();
+  const execOpts = { timeout: 10000, maxBuffer: 1024 * 1024 };
 
   // Try multiple Python binary names
-  async function runPython(filePath) {
+  async function runPython(filePath, stdinInput) {
     for (const bin of ['python3', 'python']) {
       try {
-        return await execFileAsync(bin, [filePath], { timeout: 10000, maxBuffer: 1024 * 1024 });
+        return await runProcess(bin, [filePath], stdinInput, execOpts);
       } catch (e) {
         if (e.code === 'ENOENT') continue;
         throw e;
       }
     }
+    throw new Error('Python not found');
   }
 
   try {
@@ -56,8 +92,8 @@ async function executeFallback(code, language, input) {
       const filePath = join(tmpDir, `run-${id}.py`);
       await writeFile(filePath, code);
       try {
-        const { stdout, stderr } = await runPython(filePath);
-        return { success: !stderr, stdout, stderr, output: stdout || stderr };
+        const { stdout, stderr } = await runPython(filePath, input);
+        return formatResult(stdout, stderr);
       } finally {
         await unlink(filePath).catch(() => {});
       }
@@ -66,8 +102,8 @@ async function executeFallback(code, language, input) {
       const filePath = join(tmpDir, `run-${id}${ext}`);
       await writeFile(filePath, code);
       try {
-        const { stdout, stderr } = await execFileAsync('node', [filePath], { timeout: 10000, maxBuffer: 1024 * 1024 });
-        return { success: !stderr, stdout, stderr, output: stdout || stderr };
+        const { stdout, stderr } = await runProcess('node', [filePath], input, execOpts);
+        return formatResult(stdout, stderr);
       } finally {
         await unlink(filePath).catch(() => {});
       }
@@ -76,8 +112,8 @@ async function executeFallback(code, language, input) {
       const filePath = join(tmpDir, `run-${id}.go`);
       await writeFile(filePath, code);
       try {
-        const { stdout, stderr } = await execFileAsync('go', ['run', filePath], { timeout: 15000, maxBuffer: 1024 * 1024 });
-        return { success: !stderr, stdout, stderr, output: stdout || stderr };
+        const { stdout, stderr } = await runProcess('go', ['run', filePath], input, { ...execOpts, timeout: 15000 });
+        return formatResult(stdout, stderr);
       } finally {
         await unlink(filePath).catch(() => {});
       }
@@ -85,9 +121,9 @@ async function executeFallback(code, language, input) {
       const filePath = join(tmpDir, `Main.java`);
       await writeFile(filePath, code);
       try {
-        await execFileAsync('javac', [filePath], { timeout: 15000, cwd: tmpDir });
-        const { stdout, stderr } = await execFileAsync('java', ['-cp', tmpDir, 'Main'], { timeout: 10000, maxBuffer: 1024 * 1024 });
-        return { success: !stderr, stdout, stderr, output: stdout || stderr };
+        await runProcess('javac', [filePath], null, { timeout: 15000, cwd: tmpDir });
+        const { stdout, stderr } = await runProcess('java', ['-cp', tmpDir, 'Main'], input, execOpts);
+        return formatResult(stdout, stderr);
       } finally {
         await unlink(filePath).catch(() => {});
         await unlink(join(tmpDir, 'Main.class')).catch(() => {});
@@ -99,9 +135,9 @@ async function executeFallback(code, language, input) {
       await writeFile(srcPath, code);
       try {
         const compiler = language === 'cpp' ? 'g++' : 'gcc';
-        await execFileAsync(compiler, [srcPath, '-o', binPath], { timeout: 15000 });
-        const { stdout, stderr } = await execFileAsync(binPath, [], { timeout: 10000, maxBuffer: 1024 * 1024 });
-        return { success: !stderr, stdout, stderr, output: stdout || stderr };
+        await runProcess(compiler, [srcPath, '-o', binPath], null, { timeout: 15000 });
+        const { stdout, stderr } = await runProcess(binPath, [], input, execOpts);
+        return formatResult(stdout, stderr);
       } finally {
         await unlink(srcPath).catch(() => {});
         await unlink(binPath).catch(() => {});
@@ -111,9 +147,9 @@ async function executeFallback(code, language, input) {
       const binPath = join(tmpDir, `run-${id}-bin`);
       await writeFile(srcPath, code);
       try {
-        await execFileAsync('rustc', [srcPath, '-o', binPath], { timeout: 30000 });
-        const { stdout, stderr } = await execFileAsync(binPath, [], { timeout: 10000, maxBuffer: 1024 * 1024 });
-        return { success: !stderr, stdout, stderr, output: stdout || stderr };
+        await runProcess('rustc', [srcPath, '-o', binPath], null, { timeout: 30000 });
+        const { stdout, stderr } = await runProcess(binPath, [], input, execOpts);
+        return formatResult(stdout, stderr);
       } finally {
         await unlink(srcPath).catch(() => {});
         await unlink(binPath).catch(() => {});
@@ -122,15 +158,15 @@ async function executeFallback(code, language, input) {
       const filePath = join(tmpDir, `run-${id}.sh`);
       await writeFile(filePath, code);
       try {
-        const { stdout, stderr } = await execFileAsync('bash', [filePath], { timeout: 10000, maxBuffer: 1024 * 1024 });
-        return { success: !stderr, stdout, stderr, output: stdout || stderr };
+        const { stdout, stderr } = await runProcess('bash', [filePath], input, execOpts);
+        return formatResult(stdout, stderr);
       } finally {
         await unlink(filePath).catch(() => {});
       }
     }
-    return { success: false, stdout: '', stderr: `Unsupported language: ${language}`, output: '' };
+    return { success: false, error: `Unsupported language: ${language}`, output: '' };
   } catch (err) {
-    return { success: false, stdout: '', stderr: err.message || 'Execution failed', output: err.stderr || err.message };
+    return { success: false, error: err.stderr || err.message || 'Execution failed', output: err.stderr || err.message };
   }
 }
 
