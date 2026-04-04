@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { techInterviewTopics, interviewCheatsheet, behavioralQuestions } from '../data/capra/topics/techInterviewHandbook';
+import { SOLUTIONS } from './Blind75PracticePage';
 
 /* ──────────────────────────────── Constants ──────────────────────────────── */
 
@@ -317,6 +318,7 @@ export default function Blind75Page() {
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [difficultyFilter, setDifficultyFilter] = useState('All');
   const [openProblemId, setOpenProblemId] = useState<number | null>(null);
+  const [viewMode, setViewMode] = useState<'practice' | 'solution'>('practice');
   const [expandedTips, setExpandedTips] = useState<string | null>(null);
 
   // Code playground state
@@ -924,54 +926,40 @@ export default function Blind75Page() {
                               >
                                 {isOpen ? 'Close' : 'Solve'}
                               </button>
-                              <Link
-                                to={`/handbook/${problem.id}/practice`}
+                              <button
+                                onClick={() => { setOpenProblemId(isOpen && viewMode === 'practice' ? null : problem.id); setViewMode('practice'); }}
                                 className="b75-action-btn"
                                 style={{
                                   fontSize: '12px',
                                   fontWeight: 600,
                                   padding: '5px 14px',
                                   borderRadius: '8px',
-                                  border: `1px solid ${cat.color}30`,
-                                  background: `${cat.color}08`,
-                                  color: cat.color,
+                                  border: `1px solid ${isOpen && viewMode === 'practice' ? cat.color : cat.color + '30'}`,
+                                  background: isOpen && viewMode === 'practice' ? cat.color : `${cat.color}08`,
+                                  color: isOpen && viewMode === 'practice' ? '#ffffff' : cat.color,
                                   cursor: 'pointer',
-                                  textDecoration: 'none',
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  gap: '4px',
                                   transition: 'all 0.15s',
                                 }}
                               >
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                                  <polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" />
-                                </svg>
                                 Practice
-                              </Link>
-                              <Link
-                                to={`/handbook/${problem.id}/solution`}
+                              </button>
+                              <button
+                                onClick={() => { setOpenProblemId(isOpen && viewMode === 'solution' ? null : problem.id); setViewMode('solution'); }}
                                 className="b75-action-btn"
                                 style={{
                                   fontSize: '12px',
                                   fontWeight: 600,
                                   padding: '5px 14px',
                                   borderRadius: '8px',
-                                  border: '1px solid #818cf830',
-                                  background: '#818cf808',
-                                  color: '#818cf8',
+                                  border: `1px solid ${isOpen && viewMode === 'solution' ? '#818cf8' : '#818cf830'}`,
+                                  background: isOpen && viewMode === 'solution' ? '#818cf8' : '#818cf808',
+                                  color: isOpen && viewMode === 'solution' ? '#ffffff' : '#818cf8',
                                   cursor: 'pointer',
-                                  textDecoration: 'none',
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  gap: '4px',
                                   transition: 'all 0.15s',
                                 }}
                               >
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                                  <circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3" /><line x1="12" y1="17" x2="12.01" y2="17" />
-                                </svg>
                                 Solution
-                              </Link>
+                              </button>
                               <a
                                 href={problem.leetcode}
                                 target="_blank"
@@ -1005,13 +993,66 @@ export default function Blind75Page() {
                           {isOpen && (
                             <div
                               style={{
-                                border: `1px solid ${cat.color}`,
+                                border: `1px solid ${viewMode === 'solution' ? '#818cf8' : cat.color}`,
                                 borderTop: 'none',
                                 borderRadius: '0 0 12px 12px',
                                 background: '#ffffff',
                                 overflow: 'hidden',
                               }}
                             >
+                              {/* View mode tabs */}
+                              <div style={{ display: 'flex', borderBottom: '1px solid #e5e7eb', background: '#f9fafb' }}>
+                                <button onClick={() => setViewMode('practice')} style={{ flex: 1, padding: '8px', fontSize: '13px', fontWeight: 600, border: 'none', background: viewMode === 'practice' ? '#ffffff' : 'transparent', color: viewMode === 'practice' ? cat.color : '#6b7280', borderBottom: viewMode === 'practice' ? `2px solid ${cat.color}` : '2px solid transparent', cursor: 'pointer' }}>
+                                  Practice
+                                </button>
+                                <button onClick={() => setViewMode('solution')} style={{ flex: 1, padding: '8px', fontSize: '13px', fontWeight: 600, border: 'none', background: viewMode === 'solution' ? '#ffffff' : 'transparent', color: viewMode === 'solution' ? '#818cf8' : '#6b7280', borderBottom: viewMode === 'solution' ? '2px solid #818cf8' : '2px solid transparent', cursor: 'pointer' }}>
+                                  Solution
+                                </button>
+                              </div>
+
+                              {viewMode === 'solution' ? (
+                                /* ── SOLUTION VIEW ── */
+                                <div style={{ padding: '16px' }}>
+                                  {(() => {
+                                    // Import solutions inline from Blind75PracticePage data
+                                    const sol = SOLUTIONS[String(problem.id)];
+                                    if (!sol) return (
+                                      <div style={{ textAlign: 'center', padding: '32px', color: '#6b7280' }}>
+                                        <p style={{ fontSize: '14px', marginBottom: '12px' }}>Pre-written solution coming soon.</p>
+                                        <button onClick={() => { setViewMode('practice'); getAISolution(problem.title); }} style={{ padding: '8px 20px', background: '#818cf8', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>
+                                          Generate AI Solution
+                                        </button>
+                                      </div>
+                                    );
+                                    return (
+                                      <div>
+                                        {sol.approaches.map((approach: any, ai: number) => (
+                                          <div key={ai} style={{ marginBottom: ai < sol.approaches.length - 1 ? '20px' : 0, padding: '12px', border: '1px solid #e5e7eb', borderRadius: '10px' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                              <span style={{ fontSize: '14px', fontWeight: 700, color: '#111827' }}>{approach.name}</span>
+                                              <div style={{ display: 'flex', gap: '8px' }}>
+                                                <span style={{ fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: '4px', background: '#dbeafe', color: '#1d4ed8' }}>Time: {approach.complexity.time}</span>
+                                                <span style={{ fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: '4px', background: '#fce7f3', color: '#be185d' }}>Space: {approach.complexity.space}</span>
+                                              </div>
+                                            </div>
+                                            <p style={{ fontSize: '13px', color: '#4b5563', marginBottom: '8px' }}>{approach.description}</p>
+                                            <pre style={{ background: '#0d1117', color: '#e6edf3', padding: '12px', borderRadius: '8px', fontSize: '12px', lineHeight: 1.6, overflow: 'auto', marginBottom: '8px' }}>
+                                              <code>{approach.code?.[language] || approach.code?.python || Object.values(approach.code)[0] || ''}</code>
+                                            </pre>
+                                            <ul style={{ margin: 0, paddingLeft: '16px' }}>
+                                              {approach.keyPoints?.map((kp: string, ki: number) => (
+                                                <li key={ki} style={{ fontSize: '12px', color: '#6b7280', marginBottom: '2px' }}>{kp}</li>
+                                              ))}
+                                            </ul>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    );
+                                  })()}
+                                </div>
+                              ) : (
+                              /* ── PRACTICE VIEW (existing code playground) ── */
+                              <>
                               {/* Toolbar */}
                               <div style={{
                                 display: 'flex',
@@ -1142,6 +1183,8 @@ export default function Blind75Page() {
                                     {output}
                                   </pre>
                                 </div>
+                              )}
+                              </>
                               )}
                             </div>
                           )}

@@ -131,7 +131,7 @@ async function executeFallback(code, language, input) {
     if (language === 'python') {
       const filePath = join(tmpDir, `run-${id}.py`);
       await writeFile(filePath, code);
-      const { stdout, stderr } = await execFileAsync('python3', [filePath], { timeout: 10000, maxBuffer: 1024 * 1024 });
+      const { stdout, stderr } = await execFileAsync('python', [filePath], { timeout: 10000, maxBuffer: 1024 * 1024 });
       await unlink(filePath).catch(() => {});
       return { success: !stderr, stdout, stderr, output: stdout || stderr };
     } else if (language === 'javascript') {

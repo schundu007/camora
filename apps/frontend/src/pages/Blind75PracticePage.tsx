@@ -18,7 +18,7 @@ type SolutionApproach = {
 };
 type SolutionData = { approaches: SolutionApproach[] };
 
-const SOLUTIONS: Record<string, SolutionData> = {
+export const SOLUTIONS: Record<string, SolutionData> = {
   '1': {
     approaches: [
       {
