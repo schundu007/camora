@@ -100,7 +100,9 @@ export async function generateDiagram({
       '--direction', direction
     ];
 
-    const pythonProcess = spawn('python3', args, {
+    // Use venv Python on Railway, fall back to system python3 locally
+    const pythonBin = fs.existsSync('/app/.venv/bin/python3') ? '/app/.venv/bin/python3' : 'python3';
+    const pythonProcess = spawn(pythonBin, args, {
       cwd: OUTPUT_DIR,
       env: {
         ...process.env,

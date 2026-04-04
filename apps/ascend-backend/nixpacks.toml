@@ -1,8 +1,8 @@
 [phases.setup]
-nixPkgs = ["nodejs_20", "python3", "python3Packages.pip", "graphviz", "gcc", "go", "rustc", "openjdk17", "typescript", "bash"]
+nixPkgs = ["nodejs_20", "python3", "graphviz", "gcc", "go", "rustc", "openjdk17", "typescript", "bash"]
 
 [phases.install]
-cmds = ["npm install", "pip install diagrams anthropic"]
+cmds = ["npm install", "python3 -m venv /app/.venv && /app/.venv/bin/pip install diagrams anthropic"]
 
 [phases.build]
 cmds = ["echo 'build complete'"]
