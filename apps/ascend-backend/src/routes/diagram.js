@@ -89,7 +89,7 @@ router.post('/eraser', async (req, res, next) => {
       next(error);
     } else {
       next(new AppError(
-        'Failed to generate diagram',
+        error.message || 'Failed to generate diagram',
         ErrorCode.EXTERNAL_API_ERROR,
         error.message
       ));

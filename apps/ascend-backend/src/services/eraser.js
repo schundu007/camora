@@ -46,23 +46,25 @@ export async function generateDiagram(description) {
         diagramType: 'cloud-architecture-diagram',
         background: true,
         theme: 'light',
-        scale: '2'
+        imageQuality: 2
       })
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`Eraser API error: ${response.status} - ${errorText}`);
+      console.error('[Eraser] API error:', response.status, errorText);
+      throw new Error(`Eraser API error (${response.status}): ${errorText}`);
     }
 
     const data = await response.json();
+    console.log('[Eraser] Success, imageUrl:', data.imageUrl ? 'received' : 'missing');
 
     return {
       imageUrl: data.imageUrl,
       editUrl: data.createEraserFileUrl || data.editUrl
     };
   } catch (error) {
-    console.error('Eraser diagram generation failed:', error);
+    console.error('[Eraser] Generation failed:', error.message);
     throw error;
   }
 }
