@@ -1038,9 +1038,22 @@ export default function Blind75Page() {
                                               </div>
                                             </div>
                                             <p style={{ fontSize: '13px', color: '#4b5563', marginBottom: '8px' }}>{approach.description}</p>
-                                            <pre style={{ background: '#0d1117', color: '#e6edf3', padding: '12px', borderRadius: '8px', fontSize: '12px', lineHeight: 1.6, overflow: 'auto', marginBottom: '8px' }}>
-                                              <code>{approach.code?.[language] || approach.code?.python || Object.values(approach.code)[0] || ''}</code>
-                                            </pre>
+                                            <div style={{ position: 'relative' }}>
+                                              <button
+                                                onClick={() => {
+                                                  const codeText = approach.code?.[language] || approach.code?.python || Object.values(approach.code)[0] || '';
+                                                  navigator.clipboard.writeText(codeText);
+                                                  setOutput('Copied to clipboard!');
+                                                  setTimeout(() => setOutput(''), 1500);
+                                                }}
+                                                style={{ position: 'absolute', top: '8px', right: '8px', padding: '4px 10px', fontSize: '11px', fontWeight: 600, background: '#21262d', color: '#8b949e', border: '1px solid #30363d', borderRadius: '6px', cursor: 'pointer', zIndex: 1 }}
+                                              >
+                                                Copy
+                                              </button>
+                                              <pre style={{ background: '#0d1117', color: '#e6edf3', padding: '12px', borderRadius: '8px', fontSize: '12px', lineHeight: 1.6, overflow: 'auto', marginBottom: '8px' }}>
+                                                <code>{approach.code?.[language] || approach.code?.python || Object.values(approach.code)[0] || ''}</code>
+                                              </pre>
+                                            </div>
                                             <ul style={{ margin: 0, paddingLeft: '16px' }}>
                                               {approach.keyPoints?.map((kp: string, ki: number) => (
                                                 <li key={ki} style={{ fontSize: '12px', color: '#6b7280', marginBottom: '2px' }}>{kp}</li>
