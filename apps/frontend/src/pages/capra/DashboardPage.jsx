@@ -601,7 +601,7 @@ export default function DashboardPage() {
       const response = await fetch(API_URL + '/api/diagram/eraser', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-        body: JSON.stringify({ description }),
+        body: JSON.stringify({ description, detailLevel: 'pro', cacheKey: currentProblem || sd.overview || '' }),
       });
       if (response.ok) {
         const data = await response.json();
@@ -613,7 +613,7 @@ export default function DashboardPage() {
     } catch (err) {
       // Eraser diagram generation failed silently
     }
-  }, [systemDesignStorage]);
+  }, [systemDesignStorage, currentProblem]);
 
   // ---------------------------------------------------------------------------
   // Load Saved Session Handlers

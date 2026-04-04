@@ -19,7 +19,7 @@ function hashProblem(text) {
  */
 router.post('/eraser', async (req, res, next) => {
   try {
-    const { description, detailLevel = 'overview' } = req.body;
+    const { description, detailLevel = 'overview', cacheKey } = req.body;
 
     if (!description) {
       throw new AppError(
@@ -29,7 +29,9 @@ router.post('/eraser', async (req, res, next) => {
       );
     }
 
-    const problemHash = hashProblem(description);
+    // Hash on stable cacheKey (question text) not the full description
+    // which includes AI-generated components that vary per solve
+    const problemHash = hashProblem(cacheKey || description);
 
     // 1. Check cache first
     try {
