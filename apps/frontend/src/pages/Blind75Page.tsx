@@ -1516,58 +1516,26 @@ export default function Blind75Page() {
             overflow: 'hidden',
             boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
           }}>
-            {((behavioralQuestions as any)[behavioralSection] || []).map((question: string, i: number) => (
-              <div
-                key={i}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px',
-                  padding: '14px 20px',
-                  borderBottom: '1px solid #f3f4f6',
-                }}
-              >
-                <span style={{
-                  fontSize: '13px',
-                  fontWeight: 700,
-                  color: '#9ca3af',
-                  width: '28px',
-                  textAlign: 'center',
-                  flexShrink: 0,
-                }}>
-                  {i + 1}
-                </span>
-                <span style={{ fontSize: '14px', color: '#111827', flex: 1, lineHeight: 1.6 }}>
-                  {question}
-                </span>
-                <Link
-                  to={`/lumora?q=${encodeURIComponent(question)}`}
-                  className="b75-action-btn"
-                  style={{
-                    fontSize: '12px',
-                    fontWeight: 600,
-                    padding: '5px 14px',
-                    borderRadius: '8px',
-                    border: '1px solid #10b98130',
-                    background: '#10b98108',
-                    color: '#10b981',
-                    cursor: 'pointer',
-                    textDecoration: 'none',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                    transition: 'all 0.15s',
-                    whiteSpace: 'nowrap',
-                    flexShrink: 0,
-                  }}
-                >
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-                  </svg>
-                  Practice with AI
-                </Link>
-              </div>
-            ))}
+            {((behavioralQuestions as any)[behavioralSection] || []).map((item: any, i: number) => {
+              const question = typeof item === 'string' ? item : item.q;
+              const answer = typeof item === 'object' ? item.a : null;
+              return (
+                <div key={i} style={{ borderBottom: '1px solid #f3f4f6' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 20px' }}>
+                    <span style={{ fontSize: '13px', fontWeight: 700, color: '#9ca3af', width: '28px', textAlign: 'center', flexShrink: 0 }}>{i + 1}</span>
+                    <span style={{ fontSize: '14px', fontWeight: 600, color: '#111827', flex: 1, lineHeight: 1.6 }}>{question}</span>
+                    <Link to={`/lumora?q=${encodeURIComponent(question)}`} className="b75-action-btn" style={{ fontSize: '12px', fontWeight: 600, padding: '5px 14px', borderRadius: '8px', border: '1px solid #10b98130', background: '#10b98108', color: '#10b981', cursor: 'pointer', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                      Practice with AI
+                    </Link>
+                  </div>
+                  {answer && (
+                    <div style={{ padding: '0 20px 16px 60px', fontSize: '13px', color: '#4b5563', lineHeight: 1.7, borderLeft: '3px solid #10b981', marginLeft: '20px', marginBottom: '8px', paddingLeft: '16px' }}>
+                      {answer}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
