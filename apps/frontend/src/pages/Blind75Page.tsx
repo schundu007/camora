@@ -306,7 +306,7 @@ function saveCompleted(ids: Set<number>) {
 /* ──────────────────────────────── Component ──────────────────────────────── */
 
 export default function Blind75Page() {
-  const { user, isLoading: authLoading, logout } = useAuth();
+  const { user, token, isLoading: authLoading, logout } = useAuth();
 
   /* ── Shared state ── */
   const [activeTab, setActiveTab] = useState<TabKey>('blind75');
@@ -378,7 +378,7 @@ export default function Blind75Page() {
     try {
       const res = await fetch(`${CAPRA_API_URL}/api/run`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify({ code, language, input: '' }),
       });
       if (!res.ok) throw new Error(`Server error (${res.status})`);
@@ -397,7 +397,7 @@ export default function Blind75Page() {
     try {
       const res = await fetch(`${CAPRA_API_URL}/api/solve/stream`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify({ problem: problemTitle, language }),
       });
       if (!res.ok) throw new Error(`Server error (${res.status})`);
