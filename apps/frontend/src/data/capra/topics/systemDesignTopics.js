@@ -285,6 +285,13 @@ Traffic Estimates:
           description: 'CDN → Load Balancer → App Servers → Cache → Database cluster',
           src: '/diagrams/fundamentals/distributed-architecture.svg',
           type: 'architecture'
+        },
+        {
+          id: 'eraser-distributed',
+          title: 'Cloud Architecture (Eraser)',
+          description: 'Full distributed system with CDN, load balancer, cache, DB replicas, and message queue',
+          src: '/diagrams/fundamentals/eraser-distributed-architecture.png',
+          type: 'cloud-architecture'
         }
       ],
 
@@ -882,6 +889,9 @@ NoSQL Graph:
           ]
         }
       ],
+      staticDiagrams: [
+        { id: 'eraser-db-arch', title: 'Database Architecture (Eraser)', description: 'Connection pool, primary/replica PostgreSQL, Redis cache, MongoDB, Elasticsearch, and sharding', src: '/diagrams/databases/eraser-database-architecture.png', type: 'cloud-architecture' }
+      ],
       comparisonTables: [
         {
           id: 'sql-vs-nosql',
@@ -1284,6 +1294,9 @@ Request 100 ─┘
           ]
         }
       ],
+      staticDiagrams: [
+        { id: 'eraser-caching', title: 'Multi-Layer Caching (Eraser)', description: 'Browser cache, CDN, Redis application cache, and database query cache with cache-aside pattern', src: '/diagrams/caching/eraser-caching-layers.png', type: 'cloud-architecture' }
+      ],
       comparisonTables: [
         {
           id: 'cache-strategies',
@@ -1669,6 +1682,9 @@ Messages that fail repeatedly go to separate queue for investigation.
             'Test failure scenarios (broker down, network partition)'
           ]
         }
+      ],
+      staticDiagrams: [
+        { id: 'eraser-kafka', title: 'Kafka Architecture (Eraser)', description: 'Producers, brokers with partitioned topics, consumer groups, ZooKeeper, and schema registry', src: '/diagrams/message-queues/eraser-kafka-architecture.png', type: 'cloud-architecture' }
       ],
       comparisonTables: [
         {
@@ -2079,6 +2095,9 @@ JWT Payload:
             'Provide SDKs for popular languages'
           ]
         }
+      ],
+      staticDiagrams: [
+        { id: 'eraser-api-gateway', title: 'API Gateway Architecture (Eraser)', description: 'API Gateway with auth, rate limiting, routing to REST, GraphQL, and gRPC services', src: '/diagrams/api-design/eraser-api-gateway.png', type: 'cloud-architecture' }
       ],
       comparisonTables: [
         {
@@ -2541,6 +2560,9 @@ No server-side storage
           ]
         }
       ],
+      staticDiagrams: [
+        { id: 'eraser-lb', title: 'Load Balancing Architecture (Eraser)', description: 'DNS-based global routing, L7 ALB, auto-scaling groups, health checks, and SSL termination', src: '/diagrams/load-balancing/eraser-lb-architecture.png', type: 'cloud-architecture' }
+      ],
       comparisonTables: [
         {
           id: 'l4-vs-l7',
@@ -2766,6 +2788,9 @@ return {0, tokens}
             'Service-level: Endpoint-specific limits'
           ]
         }
+      ],
+      staticDiagrams: [
+        { id: 'eraser-rate-limiter', title: 'Rate Limiting Architecture (Eraser)', description: 'Distributed rate limiting with Redis, token bucket algorithm, per-user and per-IP counters', src: '/diagrams/rate-limiting/eraser-rate-limiter.png', type: 'cloud-architecture' }
       ],
       comparisonTables: [
         {
@@ -3320,6 +3345,9 @@ Supporting Infrastructure:
           ]
         }
       ],
+      staticDiagrams: [
+        { id: 'eraser-microservices', title: 'Microservices Architecture (Eraser)', description: 'API Gateway, service mesh with Envoy sidecars, Kafka event bus, Consul discovery, ELK logging', src: '/diagrams/microservices/eraser-microservices.png', type: 'cloud-architecture' }
+      ],
       comparisonTables: [
         {
           id: 'monolith-vs-microservices',
@@ -3862,6 +3890,9 @@ def verify_token(token, secret):
             'Incident response plan'
           ]
         }
+      ],
+      staticDiagrams: [
+        { id: 'eraser-security', title: 'Security Architecture (Eraser)', description: 'WAF, API Gateway, OAuth2, JWT, RBAC, mTLS, Vault secrets, SIEM audit, KMS encryption', src: '/diagrams/security/eraser-security-architecture.png', type: 'cloud-architecture' }
       ],
       comparisonTables: [
         {
@@ -4482,6 +4513,9 @@ http_requests_total{endpoint="/api/orders", status="200"}
           ]
         }
       ],
+      staticDiagrams: [
+        { id: 'eraser-observability', title: 'Observability Stack (Eraser)', description: 'OpenTelemetry to Prometheus metrics, ELK logs, Jaeger traces, Grafana dashboards, PagerDuty alerts', src: '/diagrams/monitoring/eraser-observability.png', type: 'cloud-architecture' }
+      ],
       comparisonTables: [
         {
           id: 'metrics-vs-logs-vs-traces',
@@ -4947,6 +4981,9 @@ Step 4: Remove from ring metadata
             'Mention real systems that use it (Cassandra, DynamoDB, Akamai)'
           ]
         }
+      ],
+      staticDiagrams: [
+        { id: 'eraser-hash-ring', title: 'Consistent Hashing Ring (Eraser)', description: 'Hash ring with nodes, virtual nodes, key mapping, and node removal handling', src: '/diagrams/consistent-hashing/eraser-hash-ring.png', type: 'cloud-architecture' }
       ],
       comparisonTables: [
         {
@@ -7561,6 +7598,9 @@ Cache Entry:
           ]
         }
       ],
+      staticDiagrams: [
+        { id: 'eraser-cdn', title: 'CDN Architecture (Eraser)', description: 'Origin server, global edge nodes, cache hit/miss flow, DNS routing, SSL termination', src: '/diagrams/cdn-deep-dive/eraser-cdn.png', type: 'cloud-architecture' }
+      ],
 
       comparisonTables: [
         {
@@ -8043,6 +8083,9 @@ Failover States:
           ]
         }
       ],
+      staticDiagrams: [
+        { id: 'eraser-replication', title: 'Replication Architecture (Eraser)', description: 'Primary with sync standby, async cross-region replicas, automatic failover', src: '/diagrams/redundancy-replication/eraser-replication.png', type: 'cloud-architecture' }
+      ],
 
       comparisonTables: [
         {
@@ -8482,6 +8525,9 @@ TCP was designed in 1974 and is baked into operating systems, routers, and middl
             'Keepalive settings prevent premature connection closure'
           ]
         }
+      ],
+      staticDiagrams: [
+        { id: 'eraser-network', title: 'Network Architecture (Eraser)', description: 'VPC with public/private subnets, firewall, L4/L7 LB, NAT gateway, DNS resolution', src: '/diagrams/network-essentials/eraser-network.png', type: 'cloud-architecture' }
       ],
 
       comparisonTables: [
@@ -9939,6 +9985,9 @@ Step 8: Primary responds to client
           ]
         }
       ],
+      staticDiagrams: [
+        { id: 'eraser-dfs', title: 'HDFS Architecture (Eraser)', description: 'NameNode metadata, DataNodes with block replication, rack-aware placement', src: '/diagrams/distributed-file-systems/eraser-dfs.png', type: 'cloud-architecture' }
+      ],
 
       comparisonTables: [
         {
@@ -10367,6 +10416,9 @@ Requires coordination between producer and consumer:
             'Compare Kafka to alternatives when the interviewer asks about messaging'
           ]
         }
+      ],
+      staticDiagrams: [
+        { id: 'eraser-messaging', title: 'Event-Driven Architecture (Eraser)', description: 'Kafka event bus, schema registry, DLQ, event store, CQRS read/write models', src: '/diagrams/distributed-messaging/eraser-messaging.png', type: 'cloud-architecture' }
       ],
 
       comparisonTables: [
