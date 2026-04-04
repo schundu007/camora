@@ -5,116 +5,28 @@ import { safeLog } from '../services/utils.js';
 
 const router = Router();
 
-const JUDGE0_API_URL = 'https://judge0-ce.p.rapidapi.com/submissions';
-const JUDGE0_API_KEY = process.env.JUDGE0_API_KEY || '';
-const MAX_CODE_SIZE = 100_000; // 100KB max code size
+const MAX_CODE_SIZE = 100_000;
 
-const LANGUAGE_IDS = {
-  python: 71,    // Python 3
-  javascript: 63, // Node.js
-  typescript: 74,
-  java: 62,
-  cpp: 54,       // C++ (GCC)
-  c: 50,         // C (GCC)
-  go: 60,
-  rust: 73,
-  bash: 46,
-  sql: 82,
-};
+const SUPPORTED_LANGUAGES = ['python', 'javascript', 'typescript', 'java', 'cpp', 'c', 'go', 'rust', 'bash'];
 
 /**
- * Execute code via Judge0 API (sandboxed remote execution).
- * Falls back to local child_process for Python/JavaScript when no API key is set.
+ * Execute code locally using installed compilers/interpreters.
+ * All languages run on the server — no external API needed.
  */
 async function executeCode(code, language, input = '') {
-  const languageId = LANGUAGE_IDS[language];
-  if (!languageId) {
-    return {
-      success: false,
-      error: `Unsupported language: ${language}. Supported: ${Object.keys(LANGUAGE_IDS).join(', ')}`,
-    };
+  if (!SUPPORTED_LANGUAGES.includes(language)) {
+    return { success: false, error: `Unsupported language: ${language}. Supported: ${SUPPORTED_LANGUAGES.join(', ')}` };
   }
-
   if (!code || typeof code !== 'string') {
     return { success: false, error: 'No code provided' };
   }
-
   if (code.length > MAX_CODE_SIZE) {
     return { success: false, error: `Code exceeds maximum size of ${MAX_CODE_SIZE} characters` };
   }
-
-  // If no Judge0 API key, use a simple eval fallback for Python/JS
-  if (!JUDGE0_API_KEY) {
-    return executeFallback(code, language, input);
-  }
-
-  try {
-    const controller = new AbortController();
-    const fetchTimeout = setTimeout(() => controller.abort(), 30000); // 30s network timeout
-
-    // Submit to Judge0 with wait=true (synchronous)
-    const submitRes = await fetch(`${JUDGE0_API_URL}?base64_encoded=true&wait=true`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-RapidAPI-Key': JUDGE0_API_KEY,
-        'X-RapidAPI-Host': 'judge0-ce.p.rapidapi.com',
-      },
-      signal: controller.signal,
-      body: JSON.stringify({
-        language_id: languageId,
-        source_code: Buffer.from(code).toString('base64'),
-        stdin: Buffer.from(input).toString('base64'),
-      }),
-    });
-
-    clearTimeout(fetchTimeout);
-
-    if (!submitRes.ok) {
-      const errorText = await submitRes.text().catch(() => 'Unknown error');
-      safeLog(`[CodeRunner] Judge0 API error: ${submitRes.status} - ${errorText}`);
-      return {
-        success: false,
-        error: `Code execution service returned an error (HTTP ${submitRes.status}). Please try again later.`,
-      };
-    }
-
-    const result = await submitRes.json();
-
-    const stdout = result.stdout ? Buffer.from(result.stdout, 'base64').toString() : '';
-    const stderr = result.stderr ? Buffer.from(result.stderr, 'base64').toString() : '';
-    const compileOutput = result.compile_output ? Buffer.from(result.compile_output, 'base64').toString() : '';
-
-    // Status ID 3 = Accepted (successful execution)
-    if (result.status && result.status.id !== 3) {
-      return {
-        success: false,
-        error: stderr || compileOutput || result.status.description || 'Execution failed',
-        output: stderr || compileOutput || result.status.description || '',
-      };
-    }
-
-    return {
-      success: true,
-      output: stdout || '(no output)',
-      stdout,
-      stderr,
-    };
-  } catch (err) {
-    if (err.name === 'AbortError') {
-      safeLog('[CodeRunner] Judge0 API request timed out');
-      return { success: false, error: 'Code execution service timed out. Please try again later.' };
-    }
-
-    safeLog(`[CodeRunner] Judge0 API request failed: ${err.message}`);
-    return {
-      success: false,
-      error: 'Code execution service is currently unavailable. Please try again later.',
-    };
-  }
+  return executeFallback(code, language, input);
 }
 
-// Fallback: use Node.js child_process for Python and JavaScript
+// Local code execution using installed compilers/interpreters
 async function executeFallback(code, language, input) {
   const { execFile } = await import('child_process');
   const { promisify } = await import('util');
@@ -137,7 +49,6 @@ async function executeFallback(code, language, input) {
         throw e;
       }
     }
-    throw new Error('Python not found. Install python3 or set JUDGE0_API_KEY.');
   }
 
   try {
