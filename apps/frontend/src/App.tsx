@@ -24,6 +24,7 @@ const SignupPage = lazy(() => import('./pages/SignupPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 const BrandPage = lazy(() => import('./pages/BrandPage'));
 const Blind75Page = lazy(() => import('./pages/Blind75Page'));
+const Blind75PracticePage = lazy(() => import('./pages/Blind75PracticePage'));
 
 function Loading() {
   return (
@@ -179,6 +180,8 @@ export function App() {
           <Route path="/prepare/*" element={<ProtectedRoute><CapraPrepare /></ProtectedRoute>} />
           <Route path="/practice" element={<ProtectedRoute><CapraPractice /></ProtectedRoute>} />
           <Route path="/blind75" element={<Blind75Page />} />
+          <Route path="/blind75/:id/practice" element={<Blind75PracticePage />} />
+          <Route path="/blind75/:id/solution" element={<Blind75PracticePage />} />
           <Route path="/problems/:slug" element={<ProtectedRoute><CapraDashboard /></ProtectedRoute>} />
           <Route path="/onboarding" element={<ProtectedRoute><CapraOnboarding /></ProtectedRoute>} />
 

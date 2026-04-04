@@ -815,7 +815,7 @@ export default function Blind75Page() {
                             {isOpen ? 'Close' : 'Solve'}
                           </button>
                           <Link
-                            to={`/capra/practice?problem=${encodeURIComponent(problem.title)}`}
+                            to={`/blind75/${problem.id}/practice`}
                             className="b75-action-btn"
                             style={{
                               fontSize: '12px',
@@ -838,9 +838,8 @@ export default function Blind75Page() {
                             </svg>
                             Practice
                           </Link>
-                          <button
-                            onClick={() => getAISolution(problem.title)}
-                            disabled={isSolving}
+                          <Link
+                            to={`/blind75/${problem.id}/solution`}
                             className="b75-action-btn"
                             style={{
                               fontSize: '12px',
@@ -850,7 +849,8 @@ export default function Blind75Page() {
                               border: '1px solid #818cf830',
                               background: '#818cf808',
                               color: '#818cf8',
-                              cursor: isSolving ? 'wait' : 'pointer',
+                              cursor: 'pointer',
+                              textDecoration: 'none',
                               display: 'inline-flex',
                               alignItems: 'center',
                               gap: '4px',
@@ -860,8 +860,8 @@ export default function Blind75Page() {
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
                               <circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3" /><line x1="12" y1="17" x2="12.01" y2="17" />
                             </svg>
-                            {isSolving ? 'Solving...' : 'Solution'}
-                          </button>
+                            Solution
+                          </Link>
                           <a
                             href={problem.leetcode}
                             target="_blank"
