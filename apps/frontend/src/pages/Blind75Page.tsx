@@ -925,7 +925,7 @@ export default function Blind75Page() {
                                 {isOpen ? 'Close' : 'Solve'}
                               </button>
                               <Link
-                                to={`/blind75/${problem.id}/practice`}
+                                to={`/handbook/${problem.id}/practice`}
                                 className="b75-action-btn"
                                 style={{
                                   fontSize: '12px',
@@ -949,7 +949,7 @@ export default function Blind75Page() {
                                 Practice
                               </Link>
                               <Link
-                                to={`/blind75/${problem.id}/solution`}
+                                to={`/handbook/${problem.id}/solution`}
                                 className="b75-action-btn"
                                 style={{
                                   fontSize: '12px',

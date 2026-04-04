@@ -5731,7 +5731,7 @@ export default function Blind75PracticePage() {
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
         <div style={{ textAlign: 'center' }}>
           <h2 style={{ fontSize: 20, fontWeight: 700, color: '#111827' }}>Problem not found</h2>
-          <Link to="/blind75" style={{ color: '#10b981', fontSize: 14, fontWeight: 600, marginTop: 8, display: 'inline-block' }}>&#8592; Back to Blind 75</Link>
+          <Link to="/handbook" style={{ color: '#10b981', fontSize: 14, fontWeight: 600, marginTop: 8, display: 'inline-block' }}>&#8592; Back to Blind 75</Link>
         </div>
       </div>
     );
@@ -5745,7 +5745,7 @@ export default function Blind75PracticePage() {
       {/* Top Bar */}
       <div style={{ background: '#fff', borderBottom: '1px solid #e5e7eb', height: 48, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 16px', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <Link to="/blind75" style={{ display: 'flex', alignItems: 'center', gap: 6, textDecoration: 'none', color: '#6b7280', fontSize: 13, fontWeight: 500 }}>
+          <Link to="/handbook" style={{ display: 'flex', alignItems: 'center', gap: 6, textDecoration: 'none', color: '#6b7280', fontSize: 13, fontWeight: 500 }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
             Blind 75
           </Link>
@@ -5808,7 +5808,7 @@ export default function Blind75PracticePage() {
                   style={{ fontSize: 12, fontWeight: 600, padding: '5px 14px', borderRadius: 7, border: 'none', background: '#10b981', color: '#fff', cursor: isRunning ? 'wait' : 'pointer' }}>
                   {isRunning ? 'Running...' : '\u25B6 Run Code'}
                 </button>
-                <Link to={`/blind75/${id}/solution`}
+                <Link to={`/handbook/${id}/solution`}
                   style={{ fontSize: 12, fontWeight: 600, padding: '5px 14px', borderRadius: 7, border: 'none', background: '#818cf8', color: '#fff', cursor: 'pointer', textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>
                   View Solution
                 </Link>

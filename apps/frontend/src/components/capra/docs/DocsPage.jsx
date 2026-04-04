@@ -675,7 +675,7 @@ export default function DocsPage({ onBack }) {
                             <Icon name="chevronRight" size={12} className="text-gray-300 group-hover:text-emerald-500 transition-all" />
                           </a>
                           <a
-                            href="/blind75"
+                            href="/handbook"
                             className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-all border-b border-gray-100 group"
                           >
                             <div className="flex items-center gap-3">
