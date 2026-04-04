@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Icon } from '../../components/shared/Icons.jsx';
+import { interviewCheatsheet, behavioralQuestions } from '../../data/capra/topics/techInterviewHandbook';
 
 /* ──────────────────────────────── Data ──────────────────────────────── */
 
@@ -788,6 +789,203 @@ export default function PracticePage() {
               )}
             </div>
           </div>
+
+          {/* ── Interview Cheatsheet Section ── */}
+          <div style={{ marginTop: '40px' }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                marginBottom: '16px',
+                paddingLeft: '14px',
+                borderLeft: '4px solid #06b6d4',
+              }}
+            >
+              <div
+                style={{
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '6px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: '#06b6d414',
+                  color: '#06b6d4',
+                }}
+              >
+                <Icon name="checklist" size={15} />
+              </div>
+              <h2 className="practice-display" style={{ fontSize: '18px', fontWeight: 700, color: '#111827', margin: 0 }}>
+                Interview Cheatsheet
+              </h2>
+            </div>
+
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+                gap: '16px',
+              }}
+            >
+              {[
+                { title: 'Before the Interview', items: interviewCheatsheet.before, icon: 'clipboard' },
+                { title: 'During the Interview', items: interviewCheatsheet.during, icon: 'play' },
+                { title: 'After the Interview', items: interviewCheatsheet.after, icon: 'check' },
+              ].map((card) => (
+                <div
+                  key={card.title}
+                  style={{
+                    background: '#ffffff',
+                    border: '1px solid #e3e8ee',
+                    borderRadius: '12px',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                    padding: '20px',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
+                    <Icon name={card.icon} size={14} style={{ color: '#06b6d4' }} />
+                    <h3 className="practice-display" style={{ fontSize: '15px', fontWeight: 700, color: '#111827', margin: 0 }}>
+                      {card.title}
+                    </h3>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {card.items.map((item, idx) => (
+                      <label
+                        key={idx}
+                        className="practice-body"
+                        style={{
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          gap: '8px',
+                          fontSize: '13px',
+                          color: '#4b5563',
+                          lineHeight: 1.5,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          style={{
+                            marginTop: '3px',
+                            flexShrink: 0,
+                            accentColor: '#06b6d4',
+                          }}
+                        />
+                        <span>{item}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* ── Behavioral Questions Section ── */}
+          <div style={{ marginTop: '40px' }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                marginBottom: '16px',
+                paddingLeft: '14px',
+                borderLeft: '4px solid #f59e0b',
+              }}
+            >
+              <div
+                style={{
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '6px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: '#f59e0b14',
+                  color: '#f59e0b',
+                }}
+              >
+                <Icon name="behavioral" size={15} />
+              </div>
+              <h2 className="practice-display" style={{ fontSize: '18px', fontWeight: 700, color: '#111827', margin: 0 }}>
+                Behavioral Questions
+              </h2>
+              <span
+                className="practice-body"
+                style={{
+                  fontSize: '12px',
+                  fontWeight: 500,
+                  color: '#9ca3af',
+                  background: '#f3f4f6',
+                  padding: '2px 8px',
+                  borderRadius: '10px',
+                }}
+              >
+                {behavioralQuestions.general.length}
+              </span>
+            </div>
+
+            <div
+              style={{
+                background: '#ffffff',
+                border: '1px solid #e3e8ee',
+                borderRadius: '12px',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                padding: '20px',
+              }}
+            >
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {behavioralQuestions.general.slice(0, 10).map((q, idx) => (
+                  <div
+                    key={idx}
+                    className="practice-body"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: '10px',
+                      fontSize: '13px',
+                      color: '#374151',
+                      lineHeight: 1.5,
+                      padding: '8px 12px',
+                      borderRadius: '8px',
+                      background: idx % 2 === 0 ? '#f9fafb' : '#ffffff',
+                    }}
+                  >
+                    <span style={{ fontWeight: 700, color: '#f59e0b', fontSize: '12px', flexShrink: 0, minWidth: '20px' }}>
+                      {idx + 1}.
+                    </span>
+                    <span>{q}</span>
+                  </div>
+                ))}
+              </div>
+              <div style={{ marginTop: '16px', textAlign: 'center' }}>
+                <Link
+                  to="/capra/prepare?page=behavioral"
+                  className="practice-body"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    color: '#f59e0b',
+                    textDecoration: 'none',
+                    padding: '8px 18px',
+                    borderRadius: '8px',
+                    border: '1px solid #fde68a',
+                    background: '#fffbeb',
+                    transition: 'background 0.15s',
+                  }}
+                >
+                  View all {behavioralQuestions.general.length} questions
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
+                </Link>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
 

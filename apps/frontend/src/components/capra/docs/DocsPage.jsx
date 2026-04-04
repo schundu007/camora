@@ -655,6 +655,58 @@ export default function DocsPage({ onBack }) {
                         </div>
                       </div>
 
+                      {/* Interview Resources */}
+                      <div className="mb-6">
+                        <h2 className="landing-display font-bold text-lg tracking-tight text-gray-900 mb-3">Interview Resources</h2>
+                        <div className="rounded-xl border border-[#e3e8ee] bg-white overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+                          <a
+                            href="/capra/prepare?page=coding"
+                            className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-all border-b border-gray-100 group"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-cyan-50">
+                                <Icon name="checklist" size={13} style={{ color: '#06b6d4' }} />
+                              </div>
+                              <div>
+                                <span className="text-sm font-medium text-gray-900 landing-body group-hover:text-emerald-600 transition-colors">Interview Cheatsheet</span>
+                                <span className="text-xs text-gray-400 landing-body ml-2">17 topics, 117 questions</span>
+                              </div>
+                            </div>
+                            <Icon name="chevronRight" size={12} className="text-gray-300 group-hover:text-emerald-500 transition-all" />
+                          </a>
+                          <a
+                            href="/blind75"
+                            className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-all border-b border-gray-100 group"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-emerald-50">
+                                <Icon name="code" size={13} style={{ color: '#10b981' }} />
+                              </div>
+                              <div>
+                                <span className="text-sm font-medium text-gray-900 landing-body group-hover:text-emerald-600 transition-colors">Blind 75</span>
+                                <span className="text-xs text-gray-400 landing-body ml-2">75 essential coding problems</span>
+                              </div>
+                            </div>
+                            <Icon name="chevronRight" size={12} className="text-gray-300 group-hover:text-emerald-500 transition-all" />
+                          </a>
+                          <a
+                            href="/capra/practice"
+                            className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-all group"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-amber-50">
+                                <Icon name="behavioral" size={13} style={{ color: '#f59e0b' }} />
+                              </div>
+                              <div>
+                                <span className="text-sm font-medium text-gray-900 landing-body group-hover:text-emerald-600 transition-colors">Behavioral Questions</span>
+                                <span className="text-xs text-gray-400 landing-body ml-2">Practice for behavioral interviews</span>
+                              </div>
+                            </div>
+                            <Icon name="chevronRight" size={12} className="text-gray-300 group-hover:text-emerald-500 transition-all" />
+                          </a>
+                        </div>
+                      </div>
+
                       {/* Recently Completed / Starred */}
                       {(() => {
                         const allTopicsList = [...codingTopics, ...systemDesignTopics, ...systemDesigns, ...concurrencyTopics, ...systemDesignPatterns, ...microservicesPatterns, ...systemDesignTradeoffs, ...scalableSystemsTopics, ...databaseTopics, ...sqlTopics, ...lldTopics, ...lldProblems, ...behavioralTopics, ...companyPrep];

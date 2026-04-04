@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { techInterviewTopics } from '../data/capra/topics/techInterviewHandbook';
 
 /* ──────────────────────────────── Constants ──────────────────────────────── */
 
@@ -213,6 +214,33 @@ const CATEGORIES: Category[] = [
   },
 ];
 
+/* ── Category → Tech Interview Handbook topic mapping ── */
+const CATEGORY_TOPIC_MAP: Record<string, string[]> = {
+  'Arrays & Hashing': ['Hash Table'],
+  'Two Pointers': ['String'],
+  'Sliding Window': ['String'],
+  'Binary Search': ['Sorting and Searching'],
+  'Linked List': ['Linked List'],
+  'Trees': ['Tree'],
+  'Tries': ['Trie'],
+  'Heap / Priority Queue': ['Heap'],
+  'Graphs': ['Graph'],
+  'Dynamic Programming': ['Dynamic Programming'],
+  'Stack': ['Stack'],
+  'Intervals': ['Interval'],
+  'Bit Manipulation': ['Binary'],
+  'Math & Geometry': ['Math'],
+  'Backtracking': ['Recursion'],
+};
+
+function getTipsForCategory(categoryName: string) {
+  const topicTitles = CATEGORY_TOPIC_MAP[categoryName];
+  if (!topicTitles) return null;
+  const topic = techInterviewTopics.find((t: any) => topicTitles.includes(t.title));
+  if (!topic) return null;
+  return { techniques: topic.techniques || [], cornerCases: topic.cornerCases || [], title: topic.title };
+}
+
 const ALL_PROBLEMS = CATEGORIES.flatMap((c) => c.problems);
 const TOTAL = ALL_PROBLEMS.length;
 
@@ -265,6 +293,7 @@ export default function Blind75Page() {
   const [difficultyFilter, setDifficultyFilter] = useState('All');
   const [openProblemId, setOpenProblemId] = useState<number | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [expandedTips, setExpandedTips] = useState<string | null>(null);
 
   // Code playground state
   const [language, setLanguage] = useState<Language>('python');
@@ -616,6 +645,75 @@ export default function Blind75Page() {
                   />
                 </div>
               </div>
+
+              {/* Study Tips (from Tech Interview Handbook) */}
+              {(() => {
+                const tips = getTipsForCategory(cat.name);
+                if (!tips) return null;
+                const isExpanded = expandedTips === cat.name;
+                return (
+                  <div style={{ marginBottom: '10px' }}>
+                    <button
+                      onClick={() => setExpandedTips(isExpanded ? null : cat.name)}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        fontSize: '12px',
+                        fontWeight: 600,
+                        color: '#6b7280',
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        padding: '4px 0',
+                        transition: 'color 0.15s',
+                      }}
+                    >
+                      <span style={{ fontSize: '13px' }}>{'\u{1F4D6}'}</span>
+                      Study Tips
+                      <svg
+                        width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}
+                        style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}
+                      >
+                        <polyline points="6 9 12 15 18 9" />
+                      </svg>
+                    </button>
+                    {isExpanded && (
+                      <div style={{
+                        background: '#f9fafb',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '8px',
+                        padding: '12px 16px',
+                        marginTop: '6px',
+                        fontSize: '12px',
+                        lineHeight: 1.6,
+                        color: '#4b5563',
+                      }}>
+                        <div style={{ fontWeight: 600, color: '#374151', marginBottom: '6px', fontSize: '12px' }}>
+                          Key Techniques ({tips.title})
+                        </div>
+                        <ol style={{ margin: '0 0 8px', paddingLeft: '18px' }}>
+                          {tips.techniques.slice(0, 6).map((t: string, i: number) => (
+                            <li key={i} style={{ marginBottom: '3px' }}>{t}</li>
+                          ))}
+                        </ol>
+                        {tips.cornerCases.length > 0 && (
+                          <>
+                            <div style={{ fontWeight: 600, color: '#374151', marginBottom: '4px', fontSize: '12px' }}>
+                              Corner Cases
+                            </div>
+                            <ul style={{ margin: 0, paddingLeft: '18px' }}>
+                              {tips.cornerCases.map((c: string, i: number) => (
+                                <li key={i} style={{ marginBottom: '2px' }}>{c}</li>
+                              ))}
+                            </ul>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
 
               {/* Problem rows */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
