@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Icon } from '../../shared/Icons.jsx';
 import FormattedContent from './FormattedContent.jsx';
 import CloudArchitectureDiagram from './CloudArchitectureDiagram.jsx';
@@ -8,6 +9,52 @@ import {
   ComparisonCard, CheatSheetCard, EvolutionTimeline,
   PatternCardGrid, StaticDiagramGrid, FlowchartCard, ChartCard
 } from './TopicVisuals.jsx';
+
+/**
+ * Shows a pre-generated static diagram if available at /diagrams/{topicId}/eraser-{provider}.png,
+ * otherwise falls back to the API-generated CloudArchitectureDiagram.
+ */
+function StaticCloudDiagram({ topicId, provider, staticSrc, diagramData, generatingDiagram, diagramError, onGenerate }) {
+  const [imgError, setImgError] = useState(false);
+
+  // Reset error state when topic or provider changes
+  useEffect(() => {
+    setImgError(false);
+  }, [topicId, provider]);
+
+  // If static image failed to load, fall back to API-generated diagram
+  if (imgError) {
+    return (
+      <CloudArchitectureDiagram
+        imageUrl={diagramData?.imageUrl}
+        loading={generatingDiagram}
+        error={diagramError}
+        cloudProvider={provider}
+        onRetry={onGenerate}
+      />
+    );
+  }
+
+  return (
+    <div>
+      <div className="rounded-lg overflow-hidden flex items-center justify-center" style={{ background: '#ffffff' }}>
+        <img
+          src={staticSrc}
+          alt={`${topicId} ${provider.toUpperCase()} architecture diagram`}
+          className="w-full h-auto object-contain"
+          style={{ maxHeight: '100%', width: '100%' }}
+          onError={() => setImgError(true)}
+        />
+      </div>
+      <div className="mt-2 flex items-center justify-between text-sm text-gray-400 landing-mono">
+        <span>{provider.toUpperCase()} Architecture</span>
+        <a href={staticSrc} target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:text-emerald-500">
+          Full Size →
+        </a>
+      </div>
+    </div>
+  );
+}
 
 export default function TopicDetail({
   activePage, selectedTopic, topicDetails, pageConfig,
@@ -817,7 +864,7 @@ export default function TopicDetail({
 
               {/* Cloud Architecture Diagram + Tips */}
               <div className={`grid gap-2 ${isSDStyle ? '' : 'grid-cols-1'}`}>
-                {/* Cloud Architecture Diagram */}
+                {/* Cloud Architecture Diagram — static pre-generated or API-generated */}
                 {isSDStyle && topicDetails && (
                   <div className="rounded-xl overflow-hidden border border-[#e3e8ee] bg-white">
                     <div className="bg-emerald-50/50 border-b border-[#e3e8ee] px-3 py-2 flex items-center justify-between">
@@ -847,49 +894,24 @@ export default function TopicDetail({
                             </button>
                           ))}
                         </div>
-                        {/* Detail Level */}
-                        <div className="flex items-center gap-1">
-                          <button
-                            onClick={() => generateDiagram(topicDetails.title || selectedTopic, 'overview', diagramCloudProvider)}
-                            disabled={generatingDiagram}
-                            className="px-2 py-1 text-sm font-medium rounded transition-all landing-body"
-                            style={{
-                              background: diagramDetailLevel === 'overview' && diagramData ? 'rgba(16, 185, 129, 0.3)' : 'rgba(16, 185, 129, 0.15)',
-                              color: '#34d399'
-                            }}
-                          >
-                            {generatingDiagram && diagramDetailLevel === 'overview' ? '...' : 'Quick'}
-                          </button>
-                          <button
-                            onClick={() => generateDiagram(topicDetails.title || selectedTopic, 'detailed', diagramCloudProvider)}
-                            disabled={generatingDiagram}
-                            className="px-2 py-1 text-sm font-medium rounded transition-all landing-body"
-                            style={{
-                              background: diagramDetailLevel === 'detailed' && diagramData ? 'rgba(59, 130, 246, 0.3)' : 'rgba(59, 130, 246, 0.15)',
-                              color: '#60a5fa'
-                            }}
-                          >
-                            {generatingDiagram && diagramDetailLevel === 'detailed' ? '...' : 'Full'}
-                          </button>
-                        </div>
                       </div>
                     </div>
                     <div className="p-3">
-                      <CloudArchitectureDiagram
-                        imageUrl={diagramData?.imageUrl}
-                        loading={generatingDiagram}
-                        error={diagramError}
-                        cloudProvider={diagramData?.cloudProvider || 'auto'}
-                        onRetry={() => generateDiagram(topicDetails.title || selectedTopic, diagramDetailLevel)}
-                      />
-                      {diagramData && (
-                        <div className="mt-2 flex items-center justify-between text-sm text-gray-400 landing-mono">
-                          <span>{(diagramData.cloudProvider || 'auto').toUpperCase()}</span>
-                          <a href={diagramData.imageUrl} target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:text-emerald-500">
-                            Full Size →
-                          </a>
-                        </div>
-                      )}
+                      {/* Show pre-generated static diagram if available, otherwise fall back to API */}
+                      {(() => {
+                        const staticSrc = `/diagrams/${selectedTopic}/eraser-${diagramCloudProvider}.png`;
+                        return (
+                          <StaticCloudDiagram
+                            topicId={selectedTopic}
+                            provider={diagramCloudProvider}
+                            staticSrc={staticSrc}
+                            diagramData={diagramData}
+                            generatingDiagram={generatingDiagram}
+                            diagramError={diagramError}
+                            onGenerate={() => generateDiagram(topicDetails.title || selectedTopic, diagramDetailLevel, diagramCloudProvider)}
+                          />
+                        );
+                      })()}
                     </div>
                   </div>
                 )}
