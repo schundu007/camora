@@ -351,8 +351,37 @@ export default function JobPrepPage() {
     }
   };
 
+  // AI analysis from URL/text (stored in sessionStorage by JobsPage)
+  const [urlAnalysis, setUrlAnalysis] = useState<any>(null);
+
   useEffect(() => {
     if (!id) return;
+
+    // Special case: job analyzed from a pasted URL/text (no database record)
+    if (id === 'url') {
+      try {
+        const stored = sessionStorage.getItem('jobAnalysis');
+        if (stored) {
+          const analysis = JSON.parse(stored);
+          setUrlAnalysis(analysis);
+          // Build a synthetic Job object from the analysis
+          setJob({
+            id: 'url',
+            company_name: analysis.company || 'Unknown Company',
+            title: analysis.title || 'Software Engineer',
+            location: analysis.location || '',
+            job_url: analysis.source_url || '',
+            ai_tech_stack: analysis.tech_stack || [],
+            description: analysis.summary || '',
+          });
+          setLoading(false);
+          return;
+        }
+      } catch { /* ignore parse errors */ }
+      setError('not-found');
+      setLoading(false);
+      return;
+    }
 
     const fetchJob = async () => {
       setLoading(true);
@@ -611,6 +640,65 @@ export default function JobPrepPage() {
                   );
                 })}
               </div>
+            </section>
+          )}
+
+          {/* ── AI Analysis Insights (shown for URL-analyzed jobs) ── */}
+          {urlAnalysis && (
+            <section style={{ background: '#ffffff', border: '1px solid #e3e8ee', borderRadius: '12px', padding: '24px', marginBottom: '24px' }}>
+              <div className="flex items-center gap-2 mb-3">
+                <div style={{ width: '28px', height: '28px', background: '#10b98118', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <svg width="14" height="14" fill="none" stroke="#10b981" viewBox="0 0 24 24" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+                  </svg>
+                </div>
+                <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#111827', margin: 0, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
+                  AI Analysis
+                </h2>
+              </div>
+              {urlAnalysis.summary && (
+                <p style={{ fontSize: '14px', color: '#374151', lineHeight: 1.6, margin: '0 0 16px' }}>{urlAnalysis.summary}</p>
+              )}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+                {urlAnalysis.coding_focus?.length > 0 && (
+                  <div style={{ background: '#f0fdf4', borderRadius: '8px', padding: '12px' }}>
+                    <p style={{ fontSize: '11px', fontWeight: 700, color: '#059669', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px' }}>Coding Focus</p>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                      {urlAnalysis.coding_focus.map((t: string) => (
+                        <span key={t} style={{ fontSize: '12px', color: '#065f46', background: '#dcfce7', padding: '2px 8px', borderRadius: '4px' }}>{t}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {urlAnalysis.system_design_focus?.length > 0 && (
+                  <div style={{ background: '#eff6ff', borderRadius: '8px', padding: '12px' }}>
+                    <p style={{ fontSize: '11px', fontWeight: 700, color: '#2563eb', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px' }}>System Design Focus</p>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                      {urlAnalysis.system_design_focus.map((t: string) => (
+                        <span key={t} style={{ fontSize: '12px', color: '#1e40af', background: '#dbeafe', padding: '2px 8px', borderRadius: '4px' }}>{t}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {urlAnalysis.behavioral_focus?.length > 0 && (
+                  <div style={{ background: '#fffbeb', borderRadius: '8px', padding: '12px' }}>
+                    <p style={{ fontSize: '11px', fontWeight: 700, color: '#d97706', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px' }}>Behavioral Focus</p>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                      {urlAnalysis.behavioral_focus.map((t: string) => (
+                        <span key={t} style={{ fontSize: '12px', color: '#92400e', background: '#fef3c7', padding: '2px 8px', borderRadius: '4px' }}>{t}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+              {urlAnalysis.key_requirements?.length > 0 && (
+                <div style={{ marginTop: '12px' }}>
+                  <p style={{ fontSize: '11px', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 6px' }}>Key Requirements</p>
+                  <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '13px', color: '#374151', lineHeight: 1.7 }}>
+                    {urlAnalysis.key_requirements.map((r: string, i: number) => <li key={i}>{r}</li>)}
+                  </ul>
+                </div>
+              )}
             </section>
           )}
 

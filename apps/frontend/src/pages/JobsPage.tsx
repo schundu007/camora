@@ -307,14 +307,10 @@ export default function JobsPage() {
   };
 
   const navigateToPrep = (analysis: any) => {
-    const params = new URLSearchParams();
-    params.set('page', 'coding');
-    params.set('role', analysis.role_type || 'general');
-    params.set('jobTitle', analysis.title || '');
-    params.set('company', analysis.company || '');
     // Store full analysis in sessionStorage so the prep page can use it
     sessionStorage.setItem('jobAnalysis', JSON.stringify(analysis));
-    navigate(`/capra/prepare?${params.toString()}`);
+    // Navigate to the job prep page with 'url' as the ID — JobPrepPage will detect this
+    navigate('/jobs/url/prepare');
   };
 
   /* ── Fetch jobs ── */
