@@ -155,11 +155,16 @@ export default function PracticePage() {
       const problem = encodeURIComponent(`${item.label}: ${item.desc}`);
       const mode = section?.key;
 
-      if (mode === 'system-design' || mode === 'technical') {
+      // Design categories → system design workspace
+      if (mode === 'system-design' || mode === 'technical' || mode === 'full-stack' || mode === 'data' || mode === 'ai-ml') {
         navigate(`/capra/design?problem=${problem}&autosolve=true`);
-      } else if (mode === 'behavioral') {
+      }
+      // Behavioral → prep workspace
+      else if (mode === 'behavioral') {
         navigate(`/capra/prep?problem=${problem}`);
-      } else {
+      }
+      // Coding → coding workspace
+      else {
         navigate(`/capra?problem=${problem}&autosolve=true`);
       }
     }
