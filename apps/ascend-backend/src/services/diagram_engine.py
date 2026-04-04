@@ -47,7 +47,7 @@ PROVIDER_IMPORTS = {
         "storage": ["GCS"],
         "analytics": ["PubSub", "Dataflow", "BigQuery"],
         "security": ["IAP"],
-        "devtools": ["Monitoring"],
+        "operations": ["Monitoring"],
     },
     "azure": {
         "compute": ["VM", "AKS", "FunctionApps", "AppServices"],
@@ -65,7 +65,6 @@ PROVIDER_IMPORTS = {
 TEMPLATE = '''import os
 from diagrams import Diagram, Cluster, Edge
 {{IMPORTS}}
-
 graph_attr = {
     "fontsize": "20",
     "fontname": "Helvetica Bold",
@@ -130,25 +129,24 @@ EDGE COLORS (you MUST use these):
 """
 
 
-def build_import_lines(provider):
-    """Build import statements for the given provider."""
+def build_import_list(provider):
+    """Build a human-readable list of available classes (for the prompt, not code)."""
     modules = PROVIDER_IMPORTS.get(provider, PROVIDER_IMPORTS["aws"])
     prefix = f"diagrams.{provider}"
     lines = []
     for module, classes in modules.items():
-        lines.append(f"from {prefix}.{module} import {', '.join(classes)}")
-    # Always include generic/onprem nodes
-    lines.append("from diagrams.onprem.client import Users")
-    lines.append("from diagrams.onprem.queue import Kafka, RabbitMQ")
-    lines.append("from diagrams.onprem.monitoring import Grafana, Prometheus")
-    lines.append("from diagrams.onprem.network import Nginx")
+        lines.append(f"  from {prefix}.{module} import {', '.join(classes)}")
+    lines.append("  from diagrams.onprem.client import Users")
+    lines.append("  from diagrams.onprem.queue import Kafka, RabbitMQ")
+    lines.append("  from diagrams.onprem.monitoring import Grafana, Prometheus")
+    lines.append("  from diagrams.onprem.network import Nginx")
     return "\n".join(lines)
 
 
 def get_prompt(question, provider, detail_level, direction):
-    """Ask Claude to generate ONLY nodes, clusters, and connections."""
+    """Ask Claude to generate imports + body (no Diagram/graph_attr — those are hardcoded)."""
 
-    import_lines = build_import_lines(provider)
+    available = build_import_list(provider)
 
     if detail_level == "overview":
         scope = """OVERVIEW MODE: Generate 8-12 nodes in 3 clusters.
@@ -159,40 +157,50 @@ Show the main request flow from clients to data and back."""
 Clusters: "Edge & Security", "Application Tier" (with nested "Auto Scaling" sub-cluster), "Data Tier", "Async Processing", "Observability"
 Show: CDN, WAF, auth, API gateway, multiple app instances, cache, primary DB + replica, message queue, workers, log storage, monitoring."""
 
-    return f"""Generate the BODY of a Python `diagrams` architecture diagram.
+    return f"""Generate Python code for a cloud architecture diagram using the `diagrams` library.
 
 SYSTEM: {question}
 {scope}
 
-I will wrap your output inside a pre-built template that already has:
-- All imports: {import_lines}
-- Diagram() with graph_attr (300 DPI, spline arrows, white bg, compressed layout)
-- node_attr and edge_attr with Helvetica fonts and 2.0 penwidth
+I will wrap your output inside a template that already has:
+- `import os`, `from diagrams import Diagram, Cluster, Edge`
+- Diagram() constructor with graph_attr (300 DPI, spline arrows, white bg)
+- node_attr and edge_attr already set
 
-You generate ONLY the indented body (4 spaces indent) that goes inside the `with Diagram(...)` block.
+YOUR OUTPUT must have TWO parts:
 
-CLUSTER graph_attr PRESETS — copy these exactly:
+PART 1 — IMPORTS: Only import the specific node classes you actually use. Pick from:
+{available}
+
+PART 2 — BODY: The indented code (4 spaces) that goes inside `with Diagram(...):`
+
+CLUSTER graph_attr PRESETS — copy exactly:
   Edge/CDN cluster:   graph_attr={CLUSTER_COLORS["edge"]}
   Application cluster: graph_attr={CLUSTER_COLORS["app"]}
   Data cluster:        graph_attr={CLUSTER_COLORS["data"]}
   Async cluster:       graph_attr={CLUSTER_COLORS["async"]}
   Monitoring cluster:  graph_attr={CLUSTER_COLORS["monitor"]}
-  Sub-cluster (e.g. Auto Scaling): graph_attr={CLUSTER_COLORS["sub"]}
+  Sub-cluster (nested): graph_attr={CLUSTER_COLORS["sub"]}
 
 {EDGE_COLORS}
 
 RULES:
-1. Start with: users = Users("Clients")
-2. Use short labels (2-3 words): "Redis Cache", "Primary DB", "API Gateway"
-3. EVERY connection MUST use Edge(label="...", color="...", penwidth="2.0") — NO bare >> without Edge
-4. NEVER chain: a >> Edge() >> b >> c. Always: a >> Edge() >> b (newline) b >> Edge() >> c
+1. Start body with: users = Users("Clients")
+2. Short labels (2-3 words): "Redis Cache", "Primary DB", "API Gateway"
+3. EVERY connection MUST use Edge(label="...", color="...", penwidth="2.0")
+4. NEVER chain: WRONG: a >> Edge() >> b >> c. RIGHT: a >> Edge() >> b (newline) b >> Edge() >> c
 5. Each variable name must be unique
-6. Only use node classes from the imports listed above
-7. No import statements — I add those
-8. No Diagram() call — I add that
-9. 4-space indent for everything (it goes inside a with block)
+6. Only import classes you actually use — don't import everything
+7. Do NOT include `import os`, `from diagrams import Diagram, Cluster, Edge`, or the Diagram() call — I add those
+8. Design REAL components for THIS system
 
-EXAMPLE BODY for a URL shortener (overview):
+EXAMPLE OUTPUT:
+from diagrams.aws.network import CloudFront, ALB, Route53
+from diagrams.aws.compute import ECS
+from diagrams.aws.database import RDS, ElastiCache
+from diagrams.aws.storage import S3
+from diagrams.onprem.client import Users
+
     users = Users("Clients")
 
     with Cluster("Edge & CDN", graph_attr={CLUSTER_COLORS["edge"]}):
@@ -216,8 +224,8 @@ EXAMPLE BODY for a URL shortener (overview):
     api >> Edge(label="write", color="#16a34a", penwidth="2.0") >> db
     api >> Edge(label="upload", color="#ea580c", penwidth="2.0") >> store
 
-NOW generate the body for: {question}
-Return ONLY the indented Python code. No explanation. No imports. No Diagram()."""
+NOW generate for: {question}
+Return ONLY the Python code (imports + indented body). No explanation. No markdown fences."""
 
 
 def extract_code(text):
@@ -233,28 +241,41 @@ def extract_code(text):
     return text
 
 
-def assemble_code(body, provider, direction):
-    """Wrap Claude's body inside the hardcoded template."""
-    import_lines = build_import_lines(provider)
+def assemble_code(raw_output, provider, direction):
+    """Split Claude's output into imports + body, wrap in template."""
+    lines = raw_output.split("\n")
+    imports = []
+    body_lines = []
+    in_body = False
 
-    # Ensure body is indented with 4 spaces
-    lines = body.split("\n")
-    indented = []
     for line in lines:
-        stripped = line.lstrip()
+        stripped = line.strip()
         if not stripped:
-            indented.append("")
+            if in_body:
+                body_lines.append("")
             continue
-        # If line doesn't start with spaces, add 4
-        if not line.startswith("    "):
-            indented.append("    " + stripped)
+        # Import lines (unindented, start with "from" or "import")
+        if not in_body and (stripped.startswith("from diagrams") or stripped.startswith("import diagrams")):
+            # Skip base imports we already have in template
+            if "from diagrams import Diagram" in stripped:
+                continue
+            if stripped == "import os":
+                continue
+            imports.append(stripped)
         else:
-            indented.append(line)
-    body_indented = "\n".join(indented)
+            in_body = True
+            # Ensure 4-space indent
+            if not line.startswith("    "):
+                body_lines.append("    " + stripped)
+            else:
+                body_lines.append(line)
 
-    code = TEMPLATE.replace("{{IMPORTS}}", import_lines)
+    import_block = "\n".join(imports)
+    body_block = "\n".join(body_lines)
+
+    code = TEMPLATE.replace("{{IMPORTS}}", import_block)
     code = code.replace("{{DIRECTION}}", direction)
-    code = code.replace("{{BODY}}", body_indented)
+    code = code.replace("{{BODY}}", body_block)
     return code
 
 
