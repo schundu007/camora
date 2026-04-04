@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 import { getAuthHeaders } from '../../../utils/authHeaders.js';
 
@@ -304,6 +304,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
   const [generatingDiagram, setGeneratingDiagram] = useState(false);
   const [diagramCache, setDiagramCache] = useState({});
   const [diagramError, setDiagramError] = useState(null);
+  const diagramAttemptedRef = useRef(null); // tracks question for which we already attempted
   const [diagramDetailLevel, setDiagramDetailLevel] = useState('overview');
   const [diagramDirection, setDiagramDirection] = useState('LR');
   const [showASCII, setShowASCII] = useState(true);
@@ -324,11 +325,13 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
 
   useEffect(() => {
     // Don't auto-generate diagrams for focused questions (SLIs, SLOs, metrics)
-    if (systemDesign?.included && question && !diagramCache['overview_LR'] && !generatingDiagram && !diagramError && !systemDesign?.focusedAnswer) {
+    // Use ref to prevent retry loop when deps change during streaming
+    if (systemDesign?.included && question && !diagramCache['overview_LR'] && !generatingDiagram && !diagramError && !systemDesign?.focusedAnswer && diagramAttemptedRef.current !== question) {
+      diagramAttemptedRef.current = question;
       const timer = setTimeout(() => {
         handleGenerateDiagram('overview', 'LR');
       }, 500);
-      return () => clearTimeout(timer);
+      return () => { clearTimeout(timer); diagramAttemptedRef.current = null; };
     }
   }, [systemDesign?.included, question, systemDesign?.focusedAnswer]);
 
