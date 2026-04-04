@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { detectRoleFromTitle } from '../data/capra/jobRoleTopicMapping';
 
 /* ──────────────────────────────── Types ──────────────────────────────── */
 
@@ -82,40 +83,61 @@ interface StudyRound {
   items: StudyPathItem[];
 }
 
+/**
+ * Build a filtered prepare-page URL that includes role context.
+ * This lets DocsPage filter topics to only those relevant for the job role.
+ */
+function buildPrepUrl(page: string, role: string, focus?: string, jobTitle?: string, company?: string): string {
+  const params = new URLSearchParams();
+  params.set('page', page);
+  params.set('role', role);
+  if (focus) params.set('focus', focus);
+  if (jobTitle) params.set('jobTitle', jobTitle);
+  if (company) params.set('company', company);
+  return `/capra/prepare?${params.toString()}`;
+}
+
 function buildStudyPath(job: any): StudyRound[] {
   const techStack: string[] = job.ai_tech_stack || [];
   const title = (job.title || '').toLowerCase();
   const description = (job.job_description || job.ai_summary || job.description || '').toLowerCase();
   const company: string = job.company_name || '';
+  const role = detectRoleFromTitle(job.title || '');
 
   const rounds: StudyRound[] = [];
+
+  // Helper to build filtered href
+  const prepUrl = (page: string, focus?: string) =>
+    buildPrepUrl(page, role, focus, job.title, company);
 
   // === CODING ROUND ===
   const codingItems: StudyPathItem[] = [];
 
   if (title.includes('devops') || title.includes('sre') || title.includes('platform')) {
-    codingItems.push({ label: 'Scripting & Automation', href: '/capra/prepare?page=coding', reason: 'DevOps roles require scripting skills' });
+    codingItems.push({ label: 'Scripting & Automation', href: prepUrl('coding', 'Scripting & Automation'), reason: 'DevOps roles require scripting skills' });
     if (techStack.some(t => ['python','go','golang','bash'].includes(t.toLowerCase()))) {
-      codingItems.push({ label: `${techStack.find(t => ['Python','Go','Golang'].includes(t)) || 'Python'} Problem Solving`, href: '/capra/prepare?page=coding', reason: 'Required in job description' });
+      const lang = techStack.find(t => ['Python','Go','Golang'].includes(t)) || 'Python';
+      codingItems.push({ label: `${lang} Problem Solving`, href: prepUrl('coding', `${lang} Problem Solving`), reason: 'Required in job description' });
     }
   } else if (title.includes('backend') || title.includes('full stack') || title.includes('fullstack')) {
-    codingItems.push({ label: 'Data Structures & Algorithms', href: '/capra/prepare?page=coding', reason: 'Core backend interview topic' });
-    codingItems.push({ label: 'API Design Patterns', href: '/capra/prepare?page=coding', reason: 'Backend role requires API expertise' });
+    codingItems.push({ label: 'Data Structures & Algorithms', href: prepUrl('coding', 'Data Structures & Algorithms'), reason: 'Core backend interview topic' });
+    codingItems.push({ label: 'API Design Patterns', href: prepUrl('system-design', 'API Design'), reason: 'Backend role requires API expertise' });
   } else if (title.includes('frontend') || title.includes('front end') || title.includes('front-end')) {
-    codingItems.push({ label: 'JavaScript & DOM', href: '/capra/prepare?page=coding', reason: 'Frontend core skill' });
-    codingItems.push({ label: 'React/Component Patterns', href: '/capra/prepare?page=coding', reason: 'Modern frontend patterns' });
+    codingItems.push({ label: 'JavaScript & DOM', href: prepUrl('coding', 'JavaScript & DOM'), reason: 'Frontend core skill' });
+    codingItems.push({ label: 'React/Component Patterns', href: prepUrl('coding', 'React Component Patterns'), reason: 'Modern frontend patterns' });
   } else if (title.includes('data') || title.includes('ml') || title.includes('machine learning')) {
-    codingItems.push({ label: 'Data Processing Algorithms', href: '/capra/prepare?page=coding', reason: 'Data role core skill' });
-    codingItems.push({ label: 'SQL & Query Optimization', href: '/capra/prepare?page=sql', reason: 'Data manipulation skills' });
+    codingItems.push({ label: 'Data Processing Algorithms', href: prepUrl('coding', 'Data Processing Algorithms'), reason: 'Data role core skill' });
+    codingItems.push({ label: 'SQL & Query Optimization', href: prepUrl('sql', 'SQL & Query Optimization'), reason: 'Data manipulation skills' });
   } else {
-    codingItems.push({ label: 'Core Data Structures', href: '/capra/prepare?page=coding', reason: 'Standard coding round preparation' });
+    codingItems.push({ label: 'Core Data Structures', href: prepUrl('coding', 'Core Data Structures'), reason: 'Standard coding round preparation' });
   }
 
   // Add tech-specific coding items from JD
   for (const tech of techStack.slice(0, 3)) {
     const t = tech.toLowerCase();
     if (TECH_TO_TOPICS[t] && TECH_TO_TOPICS[t].category === 'Coding') {
-      codingItems.push({ label: `${tech} Coding Problems`, href: TECH_TO_TOPICS[t].href, reason: 'Listed in job requirements' });
+      const page = TECH_TO_TOPICS[t].href.includes('page=sql') ? 'sql' : 'coding';
+      codingItems.push({ label: `${tech} Coding Problems`, href: prepUrl(page, `${tech} Coding`), reason: 'Listed in job requirements' });
     }
   }
 
@@ -133,36 +155,42 @@ function buildStudyPath(job: any): StudyRound[] {
   const designItems: StudyPathItem[] = [];
 
   if (title.includes('devops') || title.includes('sre') || title.includes('platform')) {
-    designItems.push({ label: 'CI/CD Pipeline Architecture', href: '/capra/prepare?page=system-design', reason: 'Core DevOps design topic' });
-    designItems.push({ label: 'Monitoring & Observability', href: '/capra/prepare?page=system-design', reason: 'SRE/DevOps essential' });
+    designItems.push({ label: 'CI/CD Pipeline Architecture', href: prepUrl('system-design', 'CI/CD Pipeline Architecture'), reason: 'Core DevOps design topic' });
+    designItems.push({ label: 'Monitoring & Observability', href: prepUrl('system-design', 'Monitoring & Observability'), reason: 'SRE/DevOps essential' });
     if (description.includes('kubernetes') || techStack.some(t => t.toLowerCase() === 'kubernetes')) {
-      designItems.push({ label: 'Container Orchestration at Scale', href: '/capra/prepare?page=microservices', reason: 'Kubernetes mentioned in JD' });
+      designItems.push({ label: 'Container Orchestration at Scale', href: prepUrl('microservices', 'Container Orchestration'), reason: 'Kubernetes mentioned in JD' });
     }
   } else if (title.includes('backend') || title.includes('full stack') || title.includes('fullstack')) {
-    designItems.push({ label: 'Distributed Systems', href: '/capra/prepare?page=system-design', reason: 'Backend design fundamentals' });
-    designItems.push({ label: 'Database Scaling & Sharding', href: '/capra/prepare?page=databases', reason: 'Data layer design' });
+    designItems.push({ label: 'Distributed Systems', href: prepUrl('system-design', 'Distributed Systems'), reason: 'Backend design fundamentals' });
+    designItems.push({ label: 'Database Scaling & Sharding', href: prepUrl('databases', 'Database Scaling'), reason: 'Data layer design' });
   } else if (title.includes('frontend') || title.includes('front end') || title.includes('front-end')) {
-    designItems.push({ label: 'Frontend Architecture Patterns', href: '/capra/prepare?page=system-design', reason: 'Frontend system design' });
-    designItems.push({ label: 'Performance & Rendering', href: '/capra/prepare?page=system-design', reason: 'Frontend performance at scale' });
+    designItems.push({ label: 'Frontend Architecture Patterns', href: prepUrl('system-design', 'Frontend Architecture'), reason: 'Frontend system design' });
+    designItems.push({ label: 'Performance & Rendering', href: prepUrl('system-design', 'Performance & Rendering'), reason: 'Frontend performance at scale' });
   } else if (title.includes('data') || title.includes('ml') || title.includes('machine learning')) {
-    designItems.push({ label: 'Data Pipeline Architecture', href: '/capra/prepare?page=system-design', reason: 'Data infrastructure design' });
-    designItems.push({ label: 'Batch vs Stream Processing', href: '/capra/prepare?page=system-design', reason: 'Core data engineering topic' });
+    designItems.push({ label: 'Data Pipeline Architecture', href: prepUrl('system-design', 'Data Pipeline Architecture'), reason: 'Data infrastructure design' });
+    designItems.push({ label: 'Batch vs Stream Processing', href: prepUrl('system-design', 'Batch vs Stream Processing'), reason: 'Core data engineering topic' });
   } else {
-    designItems.push({ label: 'Scalability Fundamentals', href: '/capra/prepare?page=system-design', reason: 'Standard system design preparation' });
-    designItems.push({ label: 'Database Design', href: '/capra/prepare?page=databases', reason: 'Common interview topic' });
+    designItems.push({ label: 'Scalability Fundamentals', href: prepUrl('system-design', 'Scalability Fundamentals'), reason: 'Standard system design preparation' });
+    designItems.push({ label: 'Database Design', href: prepUrl('databases', 'Database Design'), reason: 'Common interview topic' });
   }
 
   // Add tech-specific design topics
   for (const tech of techStack) {
     const t = tech.toLowerCase();
     if (TECH_TO_TOPICS[t] && ['System Design', 'Architecture', 'DevOps'].includes(TECH_TO_TOPICS[t].category)) {
-      designItems.push({ label: TECH_TO_TOPICS[t].topic, href: TECH_TO_TOPICS[t].href, reason: `${tech} in tech stack` });
+      const page = TECH_TO_TOPICS[t].href.includes('page=microservices') ? 'microservices'
+        : TECH_TO_TOPICS[t].href.includes('page=databases') ? 'databases'
+        : 'system-design';
+      designItems.push({ label: TECH_TO_TOPICS[t].topic, href: prepUrl(page, TECH_TO_TOPICS[t].topic), reason: `${tech} in tech stack` });
     }
   }
 
-  // Company-specific
-  const companySlug = slugifyCompany(company);
-  designItems.push({ label: `${company} Architecture Questions`, href: `/interview-questions/${companySlug}`, reason: 'Company-specific preparation' });
+  // Company-specific: link to behavioral page with company context (instead of broken /interview-questions/ route)
+  designItems.push({
+    label: `${company} Architecture Questions`,
+    href: prepUrl('system-design', `${company} Architecture`),
+    reason: 'Company-specific preparation',
+  });
 
   if (designItems.length > 0) {
     rounds.push({
@@ -176,24 +204,24 @@ function buildStudyPath(job: any): StudyRound[] {
 
   // === BEHAVIORAL ROUND ===
   const behavioralItems: StudyPathItem[] = [];
-  behavioralItems.push({ label: 'STAR Method Framework', href: '/capra/prepare?page=behavioral', reason: 'Standard behavioral format' });
+  behavioralItems.push({ label: 'STAR Method Framework', href: prepUrl('behavioral', 'STAR Method Framework'), reason: 'Standard behavioral format' });
 
   if (title.includes('lead') || title.includes('senior') || title.includes('staff') || title.includes('principal') || title.includes('manager')) {
-    behavioralItems.push({ label: 'Leadership & Mentoring Stories', href: '/capra/prepare?page=behavioral', reason: 'Senior role requires leadership examples' });
-    behavioralItems.push({ label: 'Technical Decision Making', href: '/capra/prepare?page=behavioral', reason: 'Senior roles need decision-making stories' });
+    behavioralItems.push({ label: 'Leadership & Mentoring Stories', href: prepUrl('behavioral', 'Leadership & Mentoring'), reason: 'Senior role requires leadership examples' });
+    behavioralItems.push({ label: 'Technical Decision Making', href: prepUrl('behavioral', 'Technical Decision Making'), reason: 'Senior roles need decision-making stories' });
   } else {
-    behavioralItems.push({ label: 'Teamwork & Collaboration', href: '/capra/prepare?page=behavioral', reason: 'Common behavioral topic' });
+    behavioralItems.push({ label: 'Teamwork & Collaboration', href: prepUrl('behavioral', 'Teamwork & Collaboration'), reason: 'Common behavioral topic' });
   }
 
-  // Company-specific behavioral
+  // Company-specific behavioral — all link to filtered behavioral page now
   if (company.toLowerCase().includes('amazon') || company.toLowerCase() === 'aws') {
-    behavioralItems.push({ label: 'Amazon Leadership Principles', href: '/interview-questions/amazon', reason: 'Amazon interviews are LP-focused' });
+    behavioralItems.push({ label: 'Amazon Leadership Principles', href: prepUrl('behavioral', 'Amazon Leadership Principles'), reason: 'Amazon interviews are LP-focused' });
   } else if (company.toLowerCase().includes('google')) {
-    behavioralItems.push({ label: 'Googleyness & Culture Fit', href: '/interview-questions/google', reason: 'Google values Googleyness' });
+    behavioralItems.push({ label: 'Googleyness & Culture Fit', href: prepUrl('behavioral', 'Googleyness & Culture Fit'), reason: 'Google values Googleyness' });
   } else if (company.toLowerCase().includes('meta') || company.toLowerCase().includes('facebook')) {
-    behavioralItems.push({ label: 'Meta Core Values', href: '/interview-questions/meta', reason: 'Meta interviews focus on core values' });
+    behavioralItems.push({ label: 'Meta Core Values', href: prepUrl('behavioral', 'Meta Core Values'), reason: 'Meta interviews focus on core values' });
   } else {
-    behavioralItems.push({ label: `${company} Culture & Values`, href: `/interview-questions/${companySlug}`, reason: 'Research company culture' });
+    behavioralItems.push({ label: `${company} Culture & Values`, href: prepUrl('behavioral', `${company} Culture & Values`), reason: 'Research company culture' });
   }
 
   rounds.push({

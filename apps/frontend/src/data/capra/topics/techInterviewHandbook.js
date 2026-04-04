@@ -921,21 +921,366 @@ export const interviewCheatsheet = {
 // Behavioral interview questions with detailed STAR-format answers
 export const behavioralQuestions = {
   general: [
-    { q: 'Tell me about yourself.', a: 'I\'m a software engineer with 5+ years of experience building scalable distributed systems. Most recently, I led the migration of a monolithic application to microservices at my company, reducing deployment time from 2 hours to 15 minutes and improving system reliability to 99.95% uptime. I\'m passionate about solving complex infrastructure problems, and I\'m excited about this role because it aligns with my experience in cloud-native architecture and my goal to work on systems that serve millions of users.' },
-    { q: 'Why do you want to work for this company?', a: 'I\'ve been following your engineering blog and I\'m impressed by the scale of problems you solve — particularly your recent work on real-time data processing pipelines. Your tech stack aligns with my expertise in Kubernetes and distributed systems. I also value your engineering culture of ownership and innovation. I spoke with two of your engineers at a recent conference, and their enthusiasm about the autonomy they have to make technical decisions convinced me this is where I want to build my career next.' },
-    { q: 'Tell me about a time you had a conflict with a coworker and how you resolved it.', a: 'Situation: A senior engineer and I disagreed on whether to use GraphQL or REST for a new API layer. He was pushing GraphQL, but I believed REST was more appropriate for our use case. Task: I needed to resolve this without damaging our working relationship. Action: I proposed we both write a one-page technical comparison with pros/cons specific to our requirements (latency, caching, team familiarity). We presented to the team and discovered GraphQL solved our frontend N+1 query problem but REST was better for our internal services. Result: We implemented a hybrid approach — GraphQL for client-facing APIs and REST internally. We delivered 2 weeks early because we avoided the wrong all-or-nothing decision.' },
-    { q: 'Describe a time when you went above and beyond.', a: 'Situation: On a Friday evening, our monitoring showed a slow memory leak in production that would crash the service by Monday morning. Task: This wasn\'t my on-call week, but the on-call engineer was dealing with a family emergency. Action: I volunteered to investigate, traced the leak to a connection pool that wasn\'t releasing database connections after timeouts, wrote a fix, tested it locally, and deployed a hotfix by midnight. I also added a Grafana dashboard to monitor connection pool metrics and set up PagerDuty alerts for future leaks. Result: The service ran without issues over the weekend, and the new monitoring caught two similar issues in other services within the next month — before they became critical.' },
-    { q: 'Tell me about a time you failed and what you learned from it.', a: 'Situation: I pushed a database migration to production that added a new index on a 500M-row table without testing at scale. Task: The migration locked the table for 45 minutes during peak traffic, causing 500 errors for thousands of users. Action: I immediately rolled back, wrote a postmortem, and implemented a pre-production staging environment with production-sized data. I also introduced a migration review checklist requiring load testing for any schema change on tables over 1M rows. Result: We never had another migration incident. The checklist became a team standard, and I presented the postmortem at our engineering all-hands to help others learn from my mistake.' },
-    { q: 'Describe a challenging project you worked on.', a: 'Situation: We needed to migrate 2TB of data from a legacy Oracle database to PostgreSQL with zero downtime — the system served 50K concurrent users. Task: I was the tech lead responsible for the migration strategy. Action: I designed a dual-write approach: new writes went to both databases simultaneously while a background process migrated historical data in batches. I built a validation pipeline that compared records between both databases to ensure consistency, and a feature flag system to gradually shift read traffic. Result: The migration completed over 3 weeks with zero downtime and zero data loss. We reduced database costs by 70% and improved query performance by 40%.' },
-    { q: 'How do you prioritize your work when you have multiple deadlines?', a: 'I use a combination of impact assessment and stakeholder communication. First, I categorize tasks by urgency (deadline-driven) and importance (business impact). For example, last quarter I had three concurrent projects: a security patch (urgent + important), a new feature (important, flexible deadline), and a tech debt cleanup (important, no deadline). I fixed the security patch immediately, negotiated a one-week extension on the feature with the PM by explaining the trade-off, and scheduled tech debt work into sprint buffers. I communicate proactively — I\'d rather reset expectations early than miss a deadline silently.' },
-    { q: 'Tell me about a time you had to learn something quickly.', a: 'Situation: Our team decided to adopt Kubernetes, but nobody had production experience with it. Task: I volunteered to become the team\'s K8s lead within 4 weeks. Action: I took a structured approach: spent week 1 on official docs and tutorials, week 2 building a local cluster and deploying our app, week 3 setting up monitoring (Prometheus/Grafana) and CI/CD pipelines, and week 4 migrating our staging environment. I documented everything in a team wiki and ran two lunch-and-learn sessions. Result: We had our first production workload on K8s within 6 weeks. I became the go-to person for container orchestration, and the documentation I created onboarded 3 new engineers without any hand-holding.' },
-    { q: 'Describe a situation where you had to make a decision without complete information.', a: 'Situation: During a Black Friday traffic spike, our cache layer was failing and we had to decide in 10 minutes whether to scale horizontally (add more cache nodes) or vertically (upgrade existing nodes). Task: We didn\'t have time to run load tests for both options. Action: I looked at the metrics we DID have — memory was at 95% but CPU was only at 30%, suggesting the issue was data volume, not throughput. I made the call to scale horizontally, adding 4 nodes and redistributing the hash ring. I also prepared a rollback plan in case I was wrong. Result: The horizontal scaling worked — latency dropped from 2 seconds to 50ms within 5 minutes. The site handled 3x normal traffic without any further issues.' },
-    { q: 'Tell me about a time you disagreed with your manager.', a: 'Situation: My manager wanted to rewrite our authentication service from scratch using a new framework, estimating 3 months. I believed we should incrementally refactor the existing service. Task: I needed to present my case respectfully with data. Action: I spent a weekend creating a proof-of-concept showing that 80% of the issues could be fixed by refactoring 3 key modules, taking approximately 4 weeks. I presented both approaches with a risk analysis spreadsheet showing that the rewrite had higher risk of scope creep. Result: My manager appreciated the analysis and agreed to try the incremental approach first. We completed the refactoring in 5 weeks, resolved all critical issues, and avoided the risk of a 3-month rewrite.' },
-    { q: 'How do you handle receiving critical feedback?', a: 'I treat feedback as data, not judgment. In my last performance review, my manager said my code reviews were too nitpicky and slowing down the team. Initially I felt defensive, but I asked for specific examples. He showed me 3 PRs where I left 20+ comments on style issues. Action: I realized I was conflating style preferences with code quality. I set up automated linting rules to catch style issues, and focused my reviews on logic, architecture, and edge cases only. Result: PR review turnaround dropped from 2 days to 4 hours, team velocity increased by 20%, and the quality of reviews actually improved because I was focused on what mattered.' },
-    { q: 'Describe a time when you had to persuade others to adopt your idea.', a: 'Situation: I proposed replacing our Jenkins CI/CD pipeline with GitHub Actions, but the DevOps team was resistant — they had spent 2 years customizing Jenkins. Task: I needed to convince them without dismissing their investment. Action: I built a side-by-side comparison: I migrated one small service to GitHub Actions and recorded the metrics — build time dropped from 12 minutes to 4 minutes, YAML config was 80% shorter, and maintenance overhead was near zero. I invited the DevOps lead to pair with me on a second migration so he could see it firsthand. Result: After seeing the data, the team voted unanimously to migrate. We completed the full migration in 6 weeks, and the DevOps team became the biggest advocates for the change.' },
-    { q: 'Tell me about your biggest professional achievement.', a: 'I designed and built a real-time event processing system that handles 50,000 events per second with sub-100ms latency. The system replaced a batch-processing pipeline that had a 6-hour delay. I used Kafka for event streaming, Flink for processing, and Redis for real-time aggregations. The project took 4 months with a team of 3, and it directly enabled our product team to launch real-time analytics for customers — a feature that became our top revenue driver and contributed to a 25% increase in enterprise contract value.' },
-    { q: 'How do you stay current with technology trends?', a: 'I have a structured approach: I subscribe to 5 engineering blogs (Netflix Tech Blog, Uber Engineering, AWS Architecture Blog, Martin Fowler, The Morning Paper), listen to 2 podcasts weekly (Software Engineering Daily, The Changelog), and attend 2-3 conferences per year. I also maintain side projects — currently building a distributed key-value store in Rust to learn both the language and distributed systems concepts. Most importantly, I share what I learn through internal tech talks and blog posts, which forces me to deeply understand topics rather than just skim them.' },
-    { q: 'Describe a time when you mentored or helped a colleague.', a: 'Situation: A junior engineer on my team was struggling with system design — her code was good but she couldn\'t see the big picture of how services interact. Task: I became her informal mentor. Action: Every week for 3 months, we did a 30-minute "architecture walkthrough" where I drew our system on a whiteboard and asked her questions: "What happens if this service goes down?" "Where are the bottlenecks?" I also included her in design reviews and asked her to present one section of each design doc. Result: After 3 months, she led her first system design for a new microservice independently. She was promoted to mid-level within 6 months, and she now mentors two new joiners using the same approach.' },
+    {
+      q: 'Tell me about yourself.',
+      lookFor: [
+        'Clear structure: current role -> key achievement -> why this role',
+        'Specific technical skills and domain expertise',
+        'Enthusiasm and cultural fit signals',
+      ],
+      star: {
+        situation: 'I\'m currently a senior software engineer with 5+ years of experience building scalable distributed systems at a mid-stage company.',
+        task: 'I was brought in to transform a fragile monolithic deployment into a reliable microservices architecture.',
+        action: [
+          'Led the migration of a monolithic application to microservices',
+          'Reduced deployment time from 2 hours to 15 minutes',
+          'Improved system reliability to 99.95% uptime',
+          'Built expertise in cloud-native architecture serving millions of users',
+        ],
+        result: 'I\'m passionate about solving complex infrastructure problems, and I\'m excited about this role because it aligns with my experience in cloud-native architecture and my goal to work on systems that serve millions of users.',
+      },
+      tips: [
+        'Keep it under 2 minutes',
+        'End with why you want THIS specific role',
+        'Practice until it sounds natural, not rehearsed',
+      ],
+    },
+    {
+      q: 'Why do you want to work for this company?',
+      lookFor: [
+        'Specific knowledge about the company\'s products and engineering culture',
+        'Alignment between personal expertise and company tech stack',
+        'Evidence of genuine research (blog posts, talks, conversations with employees)',
+      ],
+      star: {
+        situation: 'I\'ve been following the company\'s engineering blog and was impressed by the scale of problems being solved, particularly real-time data processing pipelines.',
+        task: 'I wanted to find a role where my Kubernetes and distributed systems expertise would have maximum impact in a culture of ownership and innovation.',
+        action: [
+          'Researched the company\'s tech stack and engineering culture deeply',
+          'Identified alignment between my expertise in Kubernetes and distributed systems',
+          'Spoke with two engineers at a recent conference about their experience',
+          'Evaluated the engineering culture of ownership and autonomy in technical decisions',
+        ],
+        result: 'The conversations with engineers and my research convinced me this is where I want to build my career next — the combination of scale, tech stack alignment, and engineering culture is exactly what I\'m looking for.',
+      },
+      tips: [
+        'Mention specific projects or blog posts from the company',
+        'Connect your skills directly to their challenges',
+        'Show you\'ve talked to people who work there if possible',
+      ],
+    },
+    {
+      q: 'Tell me about a time you had a conflict with a coworker and how you resolved it.',
+      lookFor: [
+        'Maturity and professionalism in handling disagreement',
+        'Data-driven approach to resolving technical conflicts',
+        'Collaborative outcome that preserved the relationship',
+      ],
+      star: {
+        situation: 'A senior engineer and I disagreed on whether to use GraphQL or REST for a new API layer. He was pushing GraphQL, but I believed REST was more appropriate for our use case.',
+        task: 'I needed to resolve this technical disagreement without damaging our working relationship.',
+        action: [
+          'Proposed we both write a one-page technical comparison with pros/cons specific to our requirements',
+          'Evaluated key criteria: latency, caching, and team familiarity',
+          'Presented findings to the team for collaborative decision-making',
+          'Discovered GraphQL solved the frontend N+1 query problem but REST was better for internal services',
+        ],
+        result: 'We implemented a hybrid approach — GraphQL for client-facing APIs and REST internally. We delivered 2 weeks early because we avoided the wrong all-or-nothing decision.',
+      },
+      tips: [
+        'Never badmouth the other person',
+        'Focus on the process of resolution, not winning',
+        'Show the outcome benefited the team, not just you',
+      ],
+    },
+    {
+      q: 'Describe a time when you went above and beyond.',
+      lookFor: [
+        'Initiative and ownership beyond job description',
+        'Proactive problem-solving under pressure',
+        'Long-term improvements, not just firefighting',
+      ],
+      star: {
+        situation: 'On a Friday evening, our monitoring showed a slow memory leak in production that would crash the service by Monday morning.',
+        task: 'This wasn\'t my on-call week, but the on-call engineer was dealing with a family emergency.',
+        action: [
+          'Volunteered to investigate the issue on my own time',
+          'Traced the leak to a connection pool not releasing database connections after timeouts',
+          'Wrote a fix, tested locally, and deployed a hotfix by midnight',
+          'Added a Grafana dashboard for connection pool metrics and set up PagerDuty alerts for future leaks',
+        ],
+        result: 'The service ran without issues over the weekend, and the new monitoring caught two similar issues in other services within the next month — before they became critical.',
+      },
+      tips: [
+        'Choose an example that shows initiative, not just hard work',
+        'Highlight the lasting impact beyond the immediate fix',
+        'Don\'t make it sound like you always work weekends',
+      ],
+    },
+    {
+      q: 'Tell me about a time you failed and what you learned from it.',
+      lookFor: [
+        'Genuine accountability — no blame-shifting',
+        'Concrete lessons learned and process improvements',
+        'Growth mindset and humility',
+      ],
+      star: {
+        situation: 'I pushed a database migration to production that added a new index on a 500M-row table without testing at scale.',
+        task: 'The migration locked the table for 45 minutes during peak traffic, causing 500 errors for thousands of users.',
+        action: [
+          'Immediately rolled back the migration to restore service',
+          'Wrote a detailed postmortem documenting the root cause',
+          'Implemented a pre-production staging environment with production-sized data',
+          'Introduced a migration review checklist requiring load testing for schema changes on tables over 1M rows',
+        ],
+        result: 'We never had another migration incident. The checklist became a team standard, and I presented the postmortem at our engineering all-hands to help others learn from my mistake.',
+      },
+      tips: [
+        'Pick a real failure, not a humble brag',
+        'Spend 70% of the answer on what you learned and changed',
+        'Show the systemic improvement, not just a personal lesson',
+      ],
+    },
+    {
+      q: 'Describe a challenging project you worked on.',
+      lookFor: [
+        'Technical depth and problem-solving ability',
+        'Leadership in complex, high-stakes situations',
+        'Measurable results and impact',
+      ],
+      star: {
+        situation: 'We needed to migrate 2TB of data from a legacy Oracle database to PostgreSQL with zero downtime — the system served 50K concurrent users.',
+        task: 'I was the tech lead responsible for the migration strategy.',
+        action: [
+          'Designed a dual-write approach: new writes went to both databases simultaneously',
+          'Built a background process to migrate historical data in batches',
+          'Created a validation pipeline comparing records between both databases for consistency',
+          'Implemented a feature flag system to gradually shift read traffic',
+        ],
+        result: 'The migration completed over 3 weeks with zero downtime and zero data loss. We reduced database costs by 70% and improved query performance by 40%.',
+      },
+      tips: [
+        'Choose a project with clear technical complexity',
+        'Explain your specific role and decisions',
+        'Quantify the impact wherever possible',
+      ],
+    },
+    {
+      q: 'How do you prioritize your work when you have multiple deadlines?',
+      lookFor: [
+        'Structured framework for prioritization',
+        'Proactive communication with stakeholders',
+        'Ability to make trade-offs and set expectations',
+      ],
+      star: {
+        situation: 'Last quarter I had three concurrent projects: a security patch, a new feature with a deadline, and a tech debt cleanup.',
+        task: 'I needed to deliver all three without dropping the ball on any, balancing urgency and importance.',
+        action: [
+          'Categorized tasks by urgency (deadline-driven) and importance (business impact)',
+          'Fixed the security patch immediately as it was both urgent and important',
+          'Negotiated a one-week extension on the feature with the PM by explaining the trade-off',
+          'Scheduled tech debt work into sprint buffers to make steady progress',
+        ],
+        result: 'All three projects were delivered successfully. I communicate proactively — I\'d rather reset expectations early than miss a deadline silently.',
+      },
+      tips: [
+        'Show a systematic framework, not just "I work hard"',
+        'Demonstrate stakeholder communication skills',
+        'Include an example of saying no or negotiating scope',
+      ],
+    },
+    {
+      q: 'Tell me about a time you had to learn something quickly.',
+      lookFor: [
+        'Structured learning approach under time pressure',
+        'Ability to become productive in unfamiliar territory',
+        'Knowledge sharing and team enablement',
+      ],
+      star: {
+        situation: 'Our team decided to adopt Kubernetes, but nobody had production experience with it.',
+        task: 'I volunteered to become the team\'s K8s lead within 4 weeks.',
+        action: [
+          'Week 1: studied official docs and completed tutorials',
+          'Week 2: built a local cluster and deployed our application',
+          'Week 3: set up monitoring (Prometheus/Grafana) and CI/CD pipelines',
+          'Week 4: migrated our staging environment; documented everything in a team wiki and ran two lunch-and-learn sessions',
+        ],
+        result: 'We had our first production workload on K8s within 6 weeks. I became the go-to person for container orchestration, and the documentation onboarded 3 new engineers without any hand-holding.',
+      },
+      tips: [
+        'Show a structured learning plan, not just "I Googled it"',
+        'Demonstrate how you enabled the team, not just yourself',
+        'Highlight the speed and depth of your learning',
+      ],
+    },
+    {
+      q: 'Describe a situation where you had to make a decision without complete information.',
+      lookFor: [
+        'Ability to act decisively under uncertainty',
+        'Using available data to make informed bets',
+        'Preparing fallback plans and managing risk',
+      ],
+      star: {
+        situation: 'During a Black Friday traffic spike, our cache layer was failing and we had to decide in 10 minutes whether to scale horizontally or vertically.',
+        task: 'We didn\'t have time to run load tests for both options and needed to act immediately.',
+        action: [
+          'Analyzed available metrics: memory at 95% but CPU only at 30%',
+          'Concluded the issue was data volume, not throughput — pointing to horizontal scaling',
+          'Scaled horizontally by adding 4 nodes and redistributing the hash ring',
+          'Prepared a rollback plan in case the decision was wrong',
+        ],
+        result: 'The horizontal scaling worked — latency dropped from 2 seconds to 50ms within 5 minutes. The site handled 3x normal traffic without any further issues.',
+      },
+      tips: [
+        'Emphasize using the data you DO have, not lamenting what you don\'t',
+        'Always mention your fallback plan',
+        'Show comfort with calculated risk-taking',
+      ],
+    },
+    {
+      q: 'Tell me about a time you disagreed with your manager.',
+      lookFor: [
+        'Respectful disagreement backed by data',
+        'Willingness to challenge authority constructively',
+        'Professional outcome regardless of who was right',
+      ],
+      star: {
+        situation: 'My manager wanted to rewrite our authentication service from scratch using a new framework, estimating 3 months. I believed incremental refactoring was better.',
+        task: 'I needed to present my case respectfully with data to challenge the rewrite approach.',
+        action: [
+          'Spent a weekend creating a proof-of-concept showing 80% of issues could be fixed by refactoring 3 key modules',
+          'Estimated the refactoring at approximately 4 weeks vs. 3 months for the rewrite',
+          'Presented both approaches with a risk analysis spreadsheet',
+          'Highlighted that the rewrite had higher risk of scope creep',
+        ],
+        result: 'My manager appreciated the analysis and agreed to try the incremental approach first. We completed the refactoring in 5 weeks, resolved all critical issues, and avoided the risk of a 3-month rewrite.',
+      },
+      tips: [
+        'Show respect for your manager throughout the story',
+        'Lead with data and proof-of-concepts, not opinions',
+        'Demonstrate that you can disagree AND commit',
+      ],
+    },
+    {
+      q: 'How do you handle receiving critical feedback?',
+      lookFor: [
+        'Emotional maturity and openness to criticism',
+        'Concrete behavioral changes resulting from feedback',
+        'Ability to separate ego from professional growth',
+      ],
+      star: {
+        situation: 'In my last performance review, my manager said my code reviews were too nitpicky and slowing down the team.',
+        task: 'I needed to change my code review approach without compromising quality standards.',
+        action: [
+          'Asked for specific examples — he showed me 3 PRs where I left 20+ comments on style issues',
+          'Recognized I was conflating style preferences with code quality',
+          'Set up automated linting rules to catch style issues automatically',
+          'Focused reviews exclusively on logic, architecture, and edge cases',
+        ],
+        result: 'PR review turnaround dropped from 2 days to 4 hours, team velocity increased by 20%, and the quality of reviews actually improved because I was focused on what mattered.',
+      },
+      tips: [
+        'Acknowledge the initial emotional reaction honestly',
+        'Show specific behavioral changes, not just "I took it well"',
+        'Quantify the improvement if possible',
+      ],
+    },
+    {
+      q: 'Describe a time when you had to persuade others to adopt your idea.',
+      lookFor: [
+        'Ability to influence without authority',
+        'Using evidence and demonstrations over arguments',
+        'Empathy for resistance and existing investments',
+      ],
+      star: {
+        situation: 'I proposed replacing our Jenkins CI/CD pipeline with GitHub Actions, but the DevOps team was resistant — they had spent 2 years customizing Jenkins.',
+        task: 'I needed to convince the team without dismissing their investment in the existing system.',
+        action: [
+          'Migrated one small service to GitHub Actions as a proof-of-concept',
+          'Recorded metrics: build time dropped from 12 minutes to 4 minutes, YAML config 80% shorter',
+          'Demonstrated near-zero maintenance overhead compared to Jenkins',
+          'Invited the DevOps lead to pair on a second migration so he could experience it firsthand',
+        ],
+        result: 'After seeing the data, the team voted unanimously to migrate. We completed the full migration in 6 weeks, and the DevOps team became the biggest advocates for the change.',
+      },
+      tips: [
+        'Show respect for existing systems and the people who built them',
+        'Let data and demonstrations do the convincing',
+        'Involve skeptics early to make them champions',
+      ],
+    },
+    {
+      q: 'Tell me about your biggest professional achievement.',
+      lookFor: [
+        'Scale and impact of the achievement',
+        'Technical leadership and ownership',
+        'Business value delivered, not just technical sophistication',
+      ],
+      star: {
+        situation: 'Our batch-processing pipeline had a 6-hour delay that limited product capabilities, and the business needed real-time analytics.',
+        task: 'I was responsible for designing and building a real-time event processing system to replace the batch pipeline.',
+        action: [
+          'Designed the architecture using Kafka for event streaming, Flink for processing, and Redis for real-time aggregations',
+          'Led a team of 3 engineers over 4 months to build the system',
+          'Achieved throughput of 50,000 events per second with sub-100ms latency',
+          'Enabled the product team to launch real-time analytics for customers',
+        ],
+        result: 'The feature became our top revenue driver and contributed to a 25% increase in enterprise contract value.',
+      },
+      tips: [
+        'Choose an achievement with clear, quantifiable impact',
+        'Connect the technical work to business outcomes',
+        'Explain your specific contribution, especially in team efforts',
+      ],
+    },
+    {
+      q: 'How do you stay current with technology trends?',
+      lookFor: [
+        'Structured and consistent approach to learning',
+        'Mix of passive consumption and active practice',
+        'Knowledge sharing that benefits the team',
+      ],
+      star: {
+        situation: 'Technology evolves rapidly, and staying current is essential for making good architectural decisions.',
+        task: 'I needed a sustainable system for continuous learning that wouldn\'t burn me out.',
+        action: [
+          'Subscribe to 5 engineering blogs (Netflix Tech Blog, Uber Engineering, AWS Architecture Blog, Martin Fowler, The Morning Paper)',
+          'Listen to 2 podcasts weekly (Software Engineering Daily, The Changelog) and attend 2-3 conferences per year',
+          'Maintain side projects — currently building a distributed key-value store in Rust',
+          'Share learnings through internal tech talks and blog posts to deepen understanding',
+        ],
+        result: 'This structured approach keeps me informed without being overwhelming, and sharing what I learn forces me to deeply understand topics rather than just skim them.',
+      },
+      tips: [
+        'Show a mix of reading, building, and teaching',
+        'Mention specific resources to demonstrate consistency',
+        'Emphasize how staying current benefits your team, not just you',
+      ],
+    },
+    {
+      q: 'Describe a time when you mentored or helped a colleague.',
+      lookFor: [
+        'Patience and structured approach to mentoring',
+        'Empowering others rather than just giving answers',
+        'Measurable growth in the mentee',
+      ],
+      star: {
+        situation: 'A junior engineer on my team was struggling with system design — her code was good but she couldn\'t see the big picture of how services interact.',
+        task: 'I became her informal mentor to help her develop system design thinking.',
+        action: [
+          'Held weekly 30-minute "architecture walkthrough" sessions for 3 months',
+          'Drew our system on a whiteboard and asked probing questions: "What happens if this service goes down?"',
+          'Included her in design reviews and asked her to present one section of each design doc',
+          'Gradually increased her ownership of design decisions',
+        ],
+        result: 'After 3 months, she led her first system design for a new microservice independently. She was promoted to mid-level within 6 months, and she now mentors two new joiners using the same approach.',
+      },
+      tips: [
+        'Show patience and a long-term investment in the person',
+        'Demonstrate teaching by asking questions, not lecturing',
+        'Include the mentee\'s growth as the key result',
+      ],
+    },
   ],
   amazon: [
     { q: 'Tell me about a time you dealt with an ambiguous situation. (Bias for Action)', a: 'Situation: We received a vague requirement to "improve search performance" with no specific metrics or deadline. Task: Rather than waiting for clarification, I took action. Action: I instrumented our search service with detailed latency breakpoints, identified that 70% of slow queries were due to unoptimized Elasticsearch mappings, and proposed a phased optimization plan with clear metrics (p99 latency targets). I presented the data to stakeholders within 3 days. Result: We reduced p99 search latency from 2.5s to 200ms in 2 weeks. The bias for action meant we delivered value weeks before the product team even finalized their requirements.' },

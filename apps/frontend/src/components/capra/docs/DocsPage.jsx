@@ -22,6 +22,7 @@ import { databaseCategories, databaseCategoryMap, databaseTopics } from '../../.
 import { sqlCategories, sqlCategoryMap, sqlTopics } from '../../../data/capra/topics/sqlTopics.js';
 import { behavioralCategories, topicCategoryMap, behavioralTopics } from '../../../data/capra/topics/behavioralTopics.js';
 import { companyPrep } from '../../../data/capra/topics/companyPrep.js';
+import { ROLE_TOPIC_MAP } from '../../../data/capra/jobRoleTopicMapping.ts';
 
 // Merge extra topics into base arrays
 const codingCategoryMap = { ..._codingCategoryMap, ...extraCodingCategoryMap };
@@ -64,6 +65,10 @@ export default function DocsPage({ onBack }) {
     return {
       page,
       topic: params.get('topic') || null,
+      role: params.get('role') || null,
+      focus: params.get('focus') || null,
+      jobTitle: params.get('jobTitle') || null,
+      company: params.get('company') || null,
     };
   };
 
@@ -73,6 +78,14 @@ export default function DocsPage({ onBack }) {
   const [sortOrder, setSortOrder] = useState('a-z');
   const [selectedTopic, setSelectedTopicState] = useState(initialState.topic);
 
+  // Job context for role-filtered mode (passed from JobPrepPage)
+  const [jobContext, setJobContext] = useState(() => {
+    if (initialState.role) {
+      return { role: initialState.role, focus: initialState.focus, jobTitle: initialState.jobTitle, company: initialState.company };
+    }
+    return null;
+  });
+
   // React to URL changes from AppShell sidebar navigation
   useEffect(() => {
     const pathSegment = routerLocation.pathname.replace('/capra/prepare', '').replace(/^\//, '');
@@ -81,9 +94,18 @@ export default function DocsPage({ onBack }) {
     const pageAliases = { dsa: 'coding', 'low-level-design': 'low-level' };
     const page = pageAliases[rawPage] || rawPage;
     const topic = params.get('topic') || null;
+    const role = params.get('role') || null;
+    const focus = params.get('focus') || null;
+    const jobTitle = params.get('jobTitle') || null;
+    const company = params.get('company') || null;
     setActivePageState(page);
     setSelectedTopicState(topic);
     setActiveSection(page);
+    if (role) {
+      setJobContext({ role, focus, jobTitle, company });
+    } else {
+      setJobContext(null);
+    }
   }, [routerLocation.pathname, routerLocation.search]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Sync URL with component state (for in-page topic clicks, not sidebar navigation)
@@ -91,19 +113,34 @@ export default function DocsPage({ onBack }) {
     const params = new URLSearchParams();
     if (activePage && activePage !== 'overview') params.set('page', activePage);
     if (selectedTopic) params.set('topic', selectedTopic);
+    // Preserve job context in URL
+    if (jobContext) {
+      if (jobContext.role) params.set('role', jobContext.role);
+      if (jobContext.focus) params.set('focus', jobContext.focus);
+      if (jobContext.jobTitle) params.set('jobTitle', jobContext.jobTitle);
+      if (jobContext.company) params.set('company', jobContext.company);
+    }
     const queryString = params.toString();
     const newURL = queryString ? `/capra/prepare?${queryString}` : '/capra/prepare';
     const currentURL = window.location.pathname + window.location.search;
     if (currentURL !== newURL) {
       window.history.replaceState({}, '', newURL);
     }
-  }, [activePage, selectedTopic]);
+  }, [activePage, selectedTopic, jobContext]);
 
   // Wrapped setters
   const setActivePage = (page) => {
     setActivePageState(page);
     setSelectedTopicState(null);
     setActiveSection(page);
+    // Clear job context when user manually navigates via sidebar
+    // (they can always get back to the filtered view from JobPrepPage)
+    setJobContext(null);
+  };
+
+  // Clear job-role filter
+  const clearJobFilter = () => {
+    setJobContext(null);
   };
 
   const setSelectedTopic = (topic) => {
@@ -284,6 +321,29 @@ export default function DocsPage({ onBack }) {
 
   // Coding topic categories
   // Filter and sort topics based on active page
+  // Get role-filtered topic IDs (if job context is active)
+  const getRoleFilteredIds = (page) => {
+    if (!jobContext?.role) return null;
+    const roleConfig = ROLE_TOPIC_MAP[jobContext.role];
+    if (!roleConfig) return null;
+
+    const pageToKey = {
+      'coding': 'coding',
+      'system-design': 'systemDesign',
+      'behavioral': 'behavioral',
+      'microservices': 'microservices',
+      'databases': 'databases',
+      'sql': 'sql',
+    };
+    const key = pageToKey[page];
+    if (!key) return null;
+
+    const ids = roleConfig[key];
+    // Empty array for 'general' role means show all
+    if (!ids || ids.length === 0) return null;
+    return new Set(ids);
+  };
+
   const getFilteredTopics = () => {
     let topics = [];
     if (activePage === 'coding') topics = codingTopics;
@@ -295,9 +355,21 @@ export default function DocsPage({ onBack }) {
     else if (activePage === 'sql') topics = sqlTopics;
     else return [];
 
+    // Apply role-based filtering when navigating from a job prep page
+    const roleFilteredIds = getRoleFilteredIds(activePage);
+    if (roleFilteredIds) {
+      topics = topics.filter(topic => roleFilteredIds.has(topic.id));
+    }
+
     return topics
       .filter(topic => topic.title.toLowerCase().includes(searchQuery.toLowerCase()))
       .sort((a, b) => {
+        if (roleFilteredIds) {
+          // When role-filtered, sort by relevance (mapping order) instead of alphabetical
+          const aIdx = [...roleFilteredIds].indexOf(a.id);
+          const bIdx = [...roleFilteredIds].indexOf(b.id);
+          if (sortOrder === 'a-z' && aIdx !== -1 && bIdx !== -1) return aIdx - bIdx;
+        }
         if (sortOrder === 'a-z') return a.title.localeCompare(b.title);
         if (sortOrder === 'z-a') return b.title.localeCompare(a.title);
         if (sortOrder === 'most') return b.questions - a.questions;
@@ -775,6 +847,33 @@ export default function DocsPage({ onBack }) {
                     </p>
                   </div>
                   )}
+                  {/* Job Context Banner — shown when navigating from a job prep page */}
+                  {jobContext && activePage !== 'overview' && (
+                    <div className="mb-4 px-4 py-3 rounded-xl border border-emerald-200 bg-emerald-50/60 flex items-center justify-between gap-3 flex-wrap">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                          <Icon name="target" size={16} className="text-emerald-600" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-gray-900 landing-display truncate">
+                            Filtered for: {jobContext.jobTitle || ROLE_TOPIC_MAP[jobContext.role]?.label || 'Your Role'}
+                            {jobContext.company && <span className="font-normal text-gray-500"> at {jobContext.company}</span>}
+                          </p>
+                          <p className="text-xs text-gray-500 landing-body">
+                            Showing {filteredTopics.length} most relevant topics{jobContext.focus ? ` \u2014 ${jobContext.focus}` : ''}
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={clearJobFilter}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors flex-shrink-0 landing-body"
+                      >
+                        <Icon name="x" size={12} />
+                        Show all topics
+                      </button>
+                    </div>
+                  )}
+
                   {/* Gradient Divider */}
                   {activePage !== 'overview' && <div className="h-px bg-[#e3e8ee] mb-6" />}
 
@@ -1000,7 +1099,13 @@ export default function DocsPage({ onBack }) {
                     </div>
                     <div className="space-y-3">
                     {systemDesignProblemCategories.map((category) => {
-                      const categoryDesigns = systemDesigns.filter(d => systemDesignProblemCategoryMap[d.id] === category.id);
+                      const roleSDProblemIds = jobContext?.role && ROLE_TOPIC_MAP[jobContext.role]?.systemDesignProblems?.length > 0
+                        ? new Set(ROLE_TOPIC_MAP[jobContext.role].systemDesignProblems)
+                        : null;
+                      const filteredDesigns = roleSDProblemIds
+                        ? systemDesigns.filter(d => roleSDProblemIds.has(d.id))
+                        : systemDesigns;
+                      const categoryDesigns = filteredDesigns.filter(d => systemDesignProblemCategoryMap[d.id] === category.id);
                       if (categoryDesigns.length === 0) return null;
                       const difficultyStyles = {
                         'Easy': 'text-emerald-600 bg-emerald-50 border border-emerald-200',

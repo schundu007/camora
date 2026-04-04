@@ -374,37 +374,177 @@ export default function CompanyPrepPage() {
 
   const companyData = company ? COMPANIES[company.toLowerCase()] : undefined;
 
-  /* ── 404: company not found ── */
+  /* ── Unknown company: show generic interview prep with useful links ── */
   if (!companyData) {
+    const displayName = company
+      ? company.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+      : 'this company';
+
+    const genericSections = [
+      {
+        title: 'Coding Interview Questions',
+        icon: 'code' as const,
+        color: '#10b981',
+        description: 'Practice data structures, algorithms, and problem-solving patterns commonly asked in technical interviews.',
+        link: '/capra/prepare?page=coding',
+        linkLabel: 'Study DSA Topics',
+        practiceLink: '/capra/practice',
+        practiceLabel: 'Practice Coding',
+        topics: ['Arrays & Hashing', 'Trees & Graphs', 'Dynamic Programming', 'Binary Search', 'Sliding Window'],
+      },
+      {
+        title: 'System Design Questions',
+        icon: 'architecture' as const,
+        color: '#3b82f6',
+        description: 'Learn to design scalable distributed systems, from fundamentals to real-world architectures.',
+        link: '/capra/prepare?page=system-design',
+        linkLabel: 'Study System Design',
+        practiceLink: '/capra/practice',
+        practiceLabel: 'Practice Design',
+        topics: ['Scalability Fundamentals', 'Database Design', 'Caching Strategies', 'API Design', 'Load Balancing'],
+      },
+      {
+        title: 'Behavioral Interview Questions',
+        icon: 'behavioral' as const,
+        color: '#f59e0b',
+        description: 'Prepare compelling STAR-format stories for leadership, teamwork, and problem-solving questions.',
+        link: '/capra/prepare?page=behavioral',
+        linkLabel: 'Study Behavioral',
+        practiceLink: '/capra/practice',
+        practiceLabel: 'Practice Stories',
+        topics: ['STAR Method', 'Leadership Stories', 'Conflict Resolution', 'Problem Solving', 'Cross-Team Collaboration'],
+      },
+    ];
+
     return (
-      <div style={{ background: '#f7f8f9', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
-        <div style={{ textAlign: 'center', maxWidth: 420 }}>
-          <div style={{ fontSize: 64, marginBottom: 16, opacity: 0.3 }}>?</div>
-          <h1 className="practice-display" style={{ fontSize: 28, fontWeight: 700, color: '#111827', margin: '0 0 12px' }}>
-            Company not found
-          </h1>
-          <p className="practice-body" style={{ fontSize: 15, color: '#6b7280', lineHeight: 1.6, margin: '0 0 24px' }}>
-            We don't have interview questions for "<strong>{company}</strong>" yet. Browse our practice library to find topics that match your target company.
-          </p>
-          <Link
-            to="/capra/practice"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
-              padding: '10px 20px',
-              background: '#10b981',
-              color: '#fff',
-              fontSize: 14,
-              fontWeight: 600,
-              borderRadius: 8,
-              textDecoration: 'none',
-              transition: 'filter 0.15s',
-            }}
-          >
-            Browse Practice Topics
-          </Link>
+      <div style={{ background: '#f7f8f9', minHeight: '100vh' }}>
+        {/* Nav */}
+        <nav className="fixed top-0 left-0 right-0 z-50" style={{ background: '#ffffff', borderBottom: '1px solid #e3e8ee', height: 56 }}>
+          <div className="max-w-4xl mx-auto h-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+            <Link to="/" className="flex items-center gap-2.5 no-underline">
+              <div className="flex items-center justify-center" style={{ width: 28, height: 28, background: '#10b981', borderRadius: 8 }}>
+                <Icon name="ascend" size={14} style={{ color: '#fff' }} />
+              </div>
+              <span className="practice-display" style={{ fontWeight: 700, fontSize: 16, color: '#111827' }}>Camora</span>
+            </Link>
+            <div className="hidden sm:flex items-center gap-1">
+              {navLinks.map((link) => (
+                <Link key={link.label} to={link.href} style={{ fontSize: 14, fontWeight: 500, padding: '6px 12px', borderRadius: 6, textDecoration: 'none', color: '#4b5563' }}>
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </nav>
+
+        <div style={{ paddingTop: 56 }}>
+          {/* Header */}
+          <div style={{ background: '#ffffff', borderBottom: '1px solid #e3e8ee' }}>
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+              <div className="flex items-center gap-2 mb-4" style={{ fontSize: 13, color: '#9ca3af' }}>
+                <Link to="/" style={{ color: '#9ca3af', textDecoration: 'none' }}>Home</Link>
+                <span>/</span>
+                <Link to="/jobs" style={{ color: '#9ca3af', textDecoration: 'none' }}>Jobs</Link>
+                <span>/</span>
+                <span style={{ color: '#374151' }}>{displayName}</span>
+              </div>
+              <div className="flex items-center gap-4 mb-3">
+                <div className="w-14 h-14 rounded-xl flex items-center justify-center" style={{ background: '#f3f4f6', border: '1px solid #e5e7eb' }}>
+                  <span style={{ fontSize: 22, fontWeight: 800, color: '#6b7280' }}>
+                    {displayName.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+                <div>
+                  <h1 className="practice-display" style={{ fontSize: 26, fontWeight: 700, color: '#111827', margin: 0, letterSpacing: '-0.02em' }}>
+                    {displayName} Interview Prep
+                  </h1>
+                  <p className="practice-body" style={{ fontSize: 15, color: '#6b7280', margin: '4px 0 0' }}>
+                    Prepare for your interview with curated coding, system design, and behavioral topics.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Content */}
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+              {genericSections.map((section) => (
+                <div key={section.title} style={{ background: '#ffffff', border: '1px solid #e3e8ee', borderRadius: 12, overflow: 'hidden' }}>
+                  <div style={{ padding: '20px 24px', borderBottom: '1px solid #f3f4f6' }}>
+                    <div className="flex items-center gap-3 mb-2">
+                      <div style={{ width: 36, height: 36, borderRadius: 10, background: `${section.color}12`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {getSectionIcon(section.icon)}
+                      </div>
+                      <h2 className="practice-display" style={{ fontSize: 17, fontWeight: 700, color: '#111827', margin: 0 }}>
+                        {section.title}
+                      </h2>
+                    </div>
+                    <p className="practice-body" style={{ fontSize: 14, color: '#6b7280', margin: 0, lineHeight: 1.6 }}>
+                      {section.description}
+                    </p>
+                  </div>
+                  <div style={{ padding: '16px 24px' }}>
+                    <p className="practice-body" style={{ fontSize: 12, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 10px' }}>
+                      Key Topics to Focus On
+                    </p>
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {section.topics.map((topic) => (
+                        <span key={topic} style={{ fontSize: 13, fontWeight: 500, color: '#374151', background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 6, padding: '4px 10px' }}>
+                          {topic}
+                        </span>
+                      ))}
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Link
+                        to={section.link}
+                        className="practice-body"
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 16px', background: section.color, color: '#fff', fontSize: 13, fontWeight: 600, borderRadius: 8, textDecoration: 'none' }}
+                      >
+                        {section.linkLabel}
+                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+                      </Link>
+                      <Link
+                        to={section.practiceLink}
+                        className="practice-body"
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 16px', color: '#374151', background: '#f3f4f6', fontSize: 13, fontWeight: 600, borderRadius: 8, textDecoration: 'none', border: '1px solid #e5e7eb' }}
+                      >
+                        {section.practiceLabel}
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Jobs CTA */}
+            <div style={{ marginTop: 24, background: '#ffffff', border: '1px solid #e3e8ee', borderRadius: 12, padding: 24, textAlign: 'center' }}>
+              <h3 className="practice-display" style={{ fontSize: 16, fontWeight: 700, color: '#111827', margin: '0 0 6px' }}>
+                Looking for {displayName} jobs?
+              </h3>
+              <p className="practice-body" style={{ fontSize: 14, color: '#6b7280', margin: '0 0 16px' }}>
+                Browse open positions and prepare with tailored study plans.
+              </p>
+              <div className="flex items-center justify-center gap-3">
+                <Link
+                  to="/jobs"
+                  className="practice-body"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '10px 20px', background: '#10b981', color: '#fff', fontSize: 14, fontWeight: 600, borderRadius: 8, textDecoration: 'none' }}
+                >
+                  Browse Jobs
+                </Link>
+                <Link
+                  to="/capra/prepare"
+                  className="practice-body"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '10px 20px', color: '#374151', background: '#f3f4f6', fontSize: 14, fontWeight: 600, borderRadius: 8, textDecoration: 'none', border: '1px solid #e5e7eb' }}
+                >
+                  All Prep Topics
+                </Link>
+              </div>
+            </div>
+          </div>
         </div>
+
         <style>{`
           @import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
           body { margin: 0; }

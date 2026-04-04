@@ -341,6 +341,12 @@ export default function Blind75Page() {
 
   /* ── Behavioral state ── */
   const [behavioralSection, setBehavioralSection] = useState('general');
+  const [expandedBehavioral, setExpandedBehavioral] = useState<number | null>(null);
+  const [practicedQuestions, setPracticedQuestions] = useState<Set<string>>(() => {
+    try {
+      return new Set(JSON.parse(localStorage.getItem('behavioral_practiced') || '[]'));
+    } catch { return new Set(); }
+  });
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -1479,7 +1485,22 @@ export default function Blind75Page() {
       )}
 
       {/* ───────────── TAB 3: Behavioral ───────────── */}
-      {activeTab === 'behavioral' && (
+      {activeTab === 'behavioral' && (() => {
+        const currentQuestions = ((behavioralQuestions as any)[behavioralSection] || []) as any[];
+        const totalInSection = currentQuestions.length;
+        const practicedInSection = currentQuestions.filter((_: any, i: number) => practicedQuestions.has(`${behavioralSection}-${i}`)).length;
+        const progressPct = totalInSection > 0 ? Math.round((practicedInSection / totalInSection) * 100) : 0;
+
+        const togglePracticed = (key: string) => {
+          setPracticedQuestions(prev => {
+            const next = new Set(prev);
+            if (next.has(key)) next.delete(key); else next.add(key);
+            localStorage.setItem('behavioral_practiced', JSON.stringify([...next]));
+            return next;
+          });
+        };
+
+        return (
         <div className="max-w-[85%] xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: '32px', paddingBottom: '64px' }}>
           {/* Sub-tabs */}
           <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', overflowX: 'auto', scrollbarWidth: 'none', flexWrap: 'wrap' }}>
@@ -1488,7 +1509,7 @@ export default function Blind75Page() {
               return (
                 <button
                   key={sec.key}
-                  onClick={() => setBehavioralSection(sec.key)}
+                  onClick={() => { setBehavioralSection(sec.key); setExpandedBehavioral(null); }}
                   style={{
                     fontSize: '13px',
                     fontWeight: 600,
@@ -1508,29 +1529,211 @@ export default function Blind75Page() {
             })}
           </div>
 
+          {/* Progress bar */}
+          <div style={{ marginBottom: '20px', background: '#ffffff', border: '1px solid #e3e8ee', borderRadius: '12px', padding: '16px 20px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+              <span style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>Practice Progress</span>
+              <span style={{ fontSize: '13px', fontWeight: 600, color: '#10b981' }}>{practicedInSection}/{totalInSection} practiced ({progressPct}%)</span>
+            </div>
+            <div style={{ height: '8px', borderRadius: '4px', background: '#f3f4f6', overflow: 'hidden' }}>
+              <div style={{ height: '100%', borderRadius: '4px', background: 'linear-gradient(90deg, #10b981, #059669)', width: `${progressPct}%`, transition: 'width 0.3s ease' }} />
+            </div>
+          </div>
+
           {/* Questions list */}
-          <div style={{
-            background: '#ffffff',
-            border: '1px solid #e3e8ee',
-            borderRadius: '12px',
-            overflow: 'hidden',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-          }}>
-            {((behavioralQuestions as any)[behavioralSection] || []).map((item: any, i: number) => {
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {currentQuestions.map((item: any, i: number) => {
               const question = typeof item === 'string' ? item : item.q;
-              const answer = typeof item === 'object' ? item.a : null;
+              const isExpanded = expandedBehavioral === i;
+              const hasStar = item.star && item.lookFor;
+              const answer = typeof item === 'object' && !hasStar ? item.a : null;
+              const practiceKey = `${behavioralSection}-${i}`;
+              const isPracticed = practicedQuestions.has(practiceKey);
+
               return (
-                <div key={i} style={{ borderBottom: '1px solid #f3f4f6' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 20px' }}>
-                    <span style={{ fontSize: '13px', fontWeight: 700, color: '#9ca3af', width: '28px', textAlign: 'center', flexShrink: 0 }}>{i + 1}</span>
+                <div key={i} style={{
+                  background: '#ffffff',
+                  border: '1px solid #e3e8ee',
+                  borderRadius: '12px',
+                  overflow: 'hidden',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                  transition: 'box-shadow 0.2s',
+                }}>
+                  {/* Collapsed header */}
+                  <div
+                    onClick={() => setExpandedBehavioral(isExpanded ? null : i)}
+                    style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px 20px', cursor: 'pointer', userSelect: 'none' }}
+                  >
+                    {/* Green numbered badge */}
+                    <span style={{
+                      width: '32px', height: '32px', borderRadius: '8px',
+                      background: isPracticed ? '#059669' : '#10b981', color: '#ffffff',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: '13px', fontWeight: 700, flexShrink: 0,
+                    }}>
+                      {isPracticed ? (
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                      ) : (i + 1)}
+                    </span>
+
+                    {/* Question text */}
                     <span style={{ fontSize: '14px', fontWeight: 600, color: '#111827', flex: 1, lineHeight: 1.6 }}>{question}</span>
-                    <Link to={`/lumora?q=${encodeURIComponent(question)}`} className="b75-action-btn" style={{ fontSize: '12px', fontWeight: 600, padding: '5px 14px', borderRadius: '8px', border: '1px solid #10b98130', background: '#10b98108', color: '#10b981', cursor: 'pointer', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap', flexShrink: 0 }}>
+
+                    {/* Practice with AI button */}
+                    <Link
+                      to={`/lumora?q=${encodeURIComponent(question)}`}
+                      className="b75-action-btn"
+                      onClick={(e) => e.stopPropagation()}
+                      style={{ fontSize: '12px', fontWeight: 600, padding: '5px 14px', borderRadius: '8px', border: '1px solid #10b98130', background: '#10b98108', color: '#10b981', cursor: 'pointer', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap', flexShrink: 0 }}
+                    >
                       Practice with AI
                     </Link>
+
+                    {/* Mark practiced button */}
+                    <button
+                      onClick={(e) => { e.stopPropagation(); togglePracticed(practiceKey); }}
+                      title={isPracticed ? 'Mark as not practiced' : 'Mark as practiced'}
+                      style={{
+                        width: '28px', height: '28px', borderRadius: '6px', flexShrink: 0,
+                        border: isPracticed ? '2px solid #10b981' : '2px solid #d1d5db',
+                        background: isPracticed ? '#10b981' : 'transparent',
+                        cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        transition: 'all 0.15s',
+                      }}
+                    >
+                      {isPracticed && (
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                      )}
+                    </button>
+
+                    {/* Chevron */}
+                    <svg
+                      width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth={2}
+                      style={{ flexShrink: 0, transition: 'transform 0.2s', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                    </svg>
                   </div>
-                  {answer && (
-                    <div style={{ padding: '0 20px 16px 60px', fontSize: '13px', color: '#4b5563', lineHeight: 1.7, borderLeft: '3px solid #10b981', marginLeft: '20px', marginBottom: '8px', paddingLeft: '16px' }}>
-                      {answer}
+
+                  {/* Expanded content */}
+                  {isExpanded && hasStar && (
+                    <div style={{ padding: '0 20px 24px 20px', borderTop: '1px solid #f3f4f6' }}>
+                      {/* What Interviewers Look For */}
+                      <div style={{ marginTop: '20px', marginBottom: '24px' }}>
+                        <h4 style={{ fontSize: '14px', fontWeight: 700, color: '#111827', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                          </svg>
+                          What Interviewers Look For
+                        </h4>
+                        <ul style={{ margin: 0, paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                          {item.lookFor.map((point: string, li: number) => (
+                            <li key={li} style={{ fontSize: '13px', color: '#4b5563', lineHeight: 1.6 }}>{point}</li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      {/* STAR Example */}
+                      <div style={{ marginBottom: '24px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+                          <span style={{
+                            fontSize: '11px', fontWeight: 700, color: '#ffffff', background: '#6366f1',
+                            padding: '3px 10px', borderRadius: '6px', letterSpacing: '0.5px',
+                          }}>STAR</span>
+                          <span style={{ fontSize: '14px', fontWeight: 700, color: '#111827' }}>Example Answer</span>
+                        </div>
+
+                        {/* Situation */}
+                        <div style={{ display: 'flex', gap: '12px', marginBottom: '10px' }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
+                            <span style={{
+                              width: '28px', height: '28px', borderRadius: '50%', background: '#3b82f6', color: '#fff',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 700,
+                            }}>S</span>
+                          </div>
+                          <div style={{ flex: 1, background: '#eff6ff', borderLeft: '3px solid #3b82f6', borderRadius: '0 8px 8px 0', padding: '12px 16px' }}>
+                            <div style={{ fontSize: '12px', fontWeight: 700, color: '#1e40af', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Situation</div>
+                            <div style={{ fontSize: '13px', color: '#1e3a5f', lineHeight: 1.6 }}>{item.star.situation}</div>
+                          </div>
+                        </div>
+
+                        {/* Task */}
+                        <div style={{ display: 'flex', gap: '12px', marginBottom: '10px' }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
+                            <span style={{
+                              width: '28px', height: '28px', borderRadius: '50%', background: '#f59e0b', color: '#fff',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 700,
+                            }}>T</span>
+                          </div>
+                          <div style={{ flex: 1, background: '#fffbeb', borderLeft: '3px solid #f59e0b', borderRadius: '0 8px 8px 0', padding: '12px 16px' }}>
+                            <div style={{ fontSize: '12px', fontWeight: 700, color: '#92400e', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Task</div>
+                            <div style={{ fontSize: '13px', color: '#78350f', lineHeight: 1.6 }}>{item.star.task}</div>
+                          </div>
+                        </div>
+
+                        {/* Action */}
+                        <div style={{ display: 'flex', gap: '12px', marginBottom: '10px' }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
+                            <span style={{
+                              width: '28px', height: '28px', borderRadius: '50%', background: '#10b981', color: '#fff',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 700,
+                            }}>A</span>
+                          </div>
+                          <div style={{ flex: 1, background: '#f0fdf4', borderLeft: '3px solid #10b981', borderRadius: '0 8px 8px 0', padding: '12px 16px' }}>
+                            <div style={{ fontSize: '12px', fontWeight: 700, color: '#065f46', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Action</div>
+                            <ul style={{ margin: 0, paddingLeft: '16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                              {item.star.action.map((step: string, ai: number) => (
+                                <li key={ai} style={{ fontSize: '13px', color: '#14532d', lineHeight: 1.6 }}>{step}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        </div>
+
+                        {/* Result */}
+                        <div style={{ display: 'flex', gap: '12px' }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
+                            <span style={{
+                              width: '28px', height: '28px', borderRadius: '50%', background: '#ef4444', color: '#fff',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 700,
+                            }}>R</span>
+                          </div>
+                          <div style={{ flex: 1, background: '#fef2f2', borderLeft: '3px solid #ef4444', borderRadius: '0 8px 8px 0', padding: '12px 16px' }}>
+                            <div style={{ fontSize: '12px', fontWeight: 700, color: '#991b1b', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Result</div>
+                            <div style={{ fontSize: '13px', color: '#7f1d1d', lineHeight: 1.6 }}>{item.star.result}</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Tips for Success */}
+                      <div>
+                        <h4 style={{ fontSize: '14px', fontWeight: 700, color: '#111827', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          Tips for Success
+                        </h4>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          {item.tips.map((tip: string, ti: number) => (
+                            <div key={ti} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                              <span style={{
+                                width: '22px', height: '22px', borderRadius: '6px', background: '#d1fae5', color: '#059669',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                fontSize: '11px', fontWeight: 700, flexShrink: 0, marginTop: '1px',
+                              }}>{ti + 1}</span>
+                              <span style={{ fontSize: '13px', color: '#374151', lineHeight: 1.6 }}>{tip}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Fallback: old format with just { q, a } */}
+                  {isExpanded && !hasStar && answer && (
+                    <div style={{ padding: '0 20px 16px 64px', borderTop: '1px solid #f3f4f6' }}>
+                      <div style={{ marginTop: '16px', fontSize: '13px', color: '#4b5563', lineHeight: 1.7, borderLeft: '3px solid #10b981', paddingLeft: '16px' }}>
+                        {answer}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -1538,7 +1741,8 @@ export default function Blind75Page() {
             })}
           </div>
         </div>
-      )}
+        );
+      })()}
 
       {/* ───────────── TAB 4: Cheatsheet ───────────── */}
       {activeTab === 'cheatsheet' && (
