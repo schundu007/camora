@@ -9,5 +9,8 @@
     "dev:ascend": "cd apps/ascend-backend && node src/index.js",
     "build:frontend": "cd apps/frontend && npx vite build"
   },
-  "packageManager": "pnpm@9.15.0"
+  "packageManager": "pnpm@9.15.0",
+  "devDependencies": {
+    "@mermaid-js/mermaid-cli": "^11.12.0"
+  }
 }

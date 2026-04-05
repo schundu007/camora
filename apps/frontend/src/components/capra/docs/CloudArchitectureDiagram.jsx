@@ -43,8 +43,13 @@ export default function CloudArchitectureDiagram({ imageUrl, loading = false, er
     return (
       <div className="text-center py-8 rounded-lg bg-gray-50">
         <Icon name="image" size={32} className="mx-auto mb-3 text-gray-500" />
-        <p className="text-lg text-gray-400">Click "Generate Diagram" to create a visual architecture</p>
+        <p className="text-lg text-gray-400">No pre-generated diagram available</p>
         <p className="text-sm text-gray-500 mt-1">Real AWS/GCP/Azure cloud icons</p>
+        {onRetry && (
+          <button onClick={onRetry} className="mt-3 px-4 py-2 text-sm bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors font-medium">
+            Generate Diagram
+          </button>
+        )}
       </div>
     );
   }

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Icon } from '../../shared/Icons.jsx';
 import FormattedContent from './FormattedContent.jsx';
 import CloudArchitectureDiagram from './CloudArchitectureDiagram.jsx';
@@ -9,6 +9,111 @@ import {
   ComparisonCard, CheatSheetCard, EvolutionTimeline,
   PatternCardGrid, StaticDiagramGrid, FlowchartCard, ChartCard
 } from './TopicVisuals.jsx';
+import { AgGridReact } from 'ag-grid-react';
+import { AllCommunityModule, ModuleRegistry, themeQuartz } from 'ag-grid-community';
+
+ModuleRegistry.registerModules([AllCommunityModule]);
+
+const capacityPlanningTheme = themeQuartz.withParams({
+  headerBackgroundColor: '#ede9fe',
+  headerTextColor: '#4c1d95',
+  headerFontWeight: 600,
+  headerFontSize: 12,
+  rowBorder: { color: '#e5e7eb', width: 1 },
+  borderColor: '#e3e8ee',
+  borderRadius: 8,
+  fontSize: 13,
+  rowHoverColor: '#f5f3ff',
+  cellHorizontalPadding: 12,
+});
+
+/**
+ * AG Grid table for capacity planning / back-of-envelope estimation.
+ * Handles both data formats:
+ *  - calculations array: [{ label, value, detail }]
+ *  - flat keys: { users, storage, bandwidth, qps }
+ */
+function CapacityPlanningGrid({ estimation }) {
+  const LABEL_MAP = {
+    users: 'Users / DAU',
+    storage: 'Storage',
+    bandwidth: 'Bandwidth',
+    qps: 'QPS / Throughput',
+  };
+
+  const rowData = useMemo(() => {
+    if (estimation.calculations) {
+      return estimation.calculations.map(calc => ({
+        metric: calc.label,
+        value: calc.value,
+        detail: calc.detail,
+      }));
+    }
+    // Flat format: { users, storage, bandwidth, qps, ... }
+    const skipKeys = ['title', 'assumptions'];
+    return Object.entries(estimation)
+      .filter(([key]) => !skipKeys.includes(key))
+      .map(([key, val]) => ({
+        metric: LABEL_MAP[key] || key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1'),
+        value: val.split(/[=*,]/).pop()?.trim() || val,
+        detail: val,
+      }));
+  }, [estimation]);
+
+  const columnDefs = useMemo(() => [
+    {
+      headerName: 'Metric',
+      field: 'metric',
+      flex: 1,
+      minWidth: 140,
+      cellStyle: { fontWeight: 600, color: '#374151' },
+    },
+    {
+      headerName: 'Value',
+      field: 'value',
+      flex: 1,
+      minWidth: 120,
+      cellStyle: { fontWeight: 700, color: '#7c3aed', fontFamily: 'JetBrains Mono, monospace' },
+    },
+    {
+      headerName: 'Calculation',
+      field: 'detail',
+      flex: 2,
+      minWidth: 200,
+      cellStyle: { color: '#6b7280', fontSize: '12px' },
+      autoHeight: true,
+      wrapText: true,
+    },
+  ], []);
+
+  return (
+    <div className="rounded-lg overflow-hidden border border-[#e3e8ee] bg-white">
+      <div className="px-3 py-2 border-b border-[#e3e8ee] flex items-center gap-2 bg-violet-50">
+        <Icon name="hash" size={16} className="text-violet-700" />
+        <h3 className="text-sm font-bold text-violet-900 landing-display">{estimation.title || 'Capacity Planning'}</h3>
+      </div>
+      {estimation.assumptions && (
+        <div className="px-3 py-1.5 text-xs text-gray-500 bg-violet-50/30 border-b border-[#e3e8ee]">
+          <span className="font-semibold text-violet-700">Assumptions:</span> {estimation.assumptions}
+        </div>
+      )}
+      <div className="p-3">
+        <div style={{ width: '100%' }}>
+          <AgGridReact
+            theme={capacityPlanningTheme}
+            rowData={rowData}
+            columnDefs={columnDefs}
+            domLayout="autoHeight"
+            suppressCellFocus={true}
+            suppressRowHoverHighlight={false}
+            headerHeight={36}
+            rowHeight={42}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 /**
  * Shows a pre-generated static diagram if available at /diagrams/{topicId}/eraser-{provider}.png,
@@ -1017,23 +1122,9 @@ export default function TopicDetail({
                 </div>
               )}
 
-              {/* Back-of-Envelope Estimation */}
+              {/* Back-of-Envelope Estimation — AG Grid Table */}
               {topicDetails.estimation && (
-                <div className="rounded-lg overflow-hidden border border-[#e3e8ee] bg-white">
-                  <div className="px-3 py-2 border-b border-[#e3e8ee] flex items-center gap-2 bg-violet-50">
-                    <Icon name="hash" size={16} className="text-violet-700" />
-                    <h3 className="text-sm font-bold text-violet-900 landing-display">{topicDetails.estimation.title || 'Capacity Planning'}</h3>
-                  </div>
-                  <div className="p-3 grid   gap-2">
-                    {topicDetails.estimation.calculations.map((calc, i) => (
-                      <div key={i} className="text-center p-2 rounded-lg bg-violet-50/50 border border-violet-100">
-                        <div className="font-bold text-violet-700 landing-mono text-base">{calc.value}</div>
-                        <div className="text-gray-700 text-xs font-semibold mt-0.5">{calc.label}</div>
-                        <div className="text-gray-400 text-xs hidden lg:block">{calc.detail}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                <CapacityPlanningGrid estimation={topicDetails.estimation} />
               )}
 
               {/* Algorithm Approaches */}

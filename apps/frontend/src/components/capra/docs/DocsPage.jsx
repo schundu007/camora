@@ -246,7 +246,7 @@ export default function DocsPage({ onBack }) {
       // Auto-load: call generate which checks DB cache first (instant if cached)
       handleGenerateDiagram(topicDetails.title, diagramDetailLevel, diagramCloudProvider);
     }
-  }, [selectedTopic]);
+  }, [selectedTopic, topicDetails?.title]);
 
   // Generate architecture diagram
   const handleGenerateDiagram = async (topicTitle, detailLevel = 'overview', provider = diagramCloudProvider) => {
