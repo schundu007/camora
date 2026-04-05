@@ -280,22 +280,6 @@ export default function TopicDetail({
         </div>
       </div>
 
-      {/* ── On This Page — inline TOC for SD problems ── */}
-      {isSDProblem && tableOfContents.length > 0 && (
-        <div className="flex flex-wrap items-center gap-1.5 px-3 py-2 rounded-lg mb-2 bg-white border border-[#e3e8ee]">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-600 mr-2 landing-mono">On This Page</span>
-          {tableOfContents.map((item, i) => (
-            <a
-              key={i}
-              href={`#${item.id}`}
-              onClick={e => { e.preventDefault(); document.getElementById(item.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}
-              className="text-xs text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 px-2 py-1 rounded transition-all landing-body"
-            >
-              {item.label}
-            </a>
-          ))}
-        </div>
-      )}
 
       {/* Ask AI Panel */}
       {showAskAI && (
