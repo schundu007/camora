@@ -149,9 +149,9 @@ function AppaSideIndicator() {
     { label: 'Attend', letter: 'A', href: '/lumora', color: '#fbbf24', match: '/lumora' },
   ];
   return (
-    <div className="fixed left-0 top-1/2 -translate-y-1/2 z-50 hidden lg:flex flex-col items-center gap-0" style={{ marginLeft: '10px' }}>
-      {/* Vertical line */}
-      <div className="absolute top-3 bottom-3 w-px" style={{ left: '50%', background: 'linear-gradient(180deg, #34d399, #818cf8, #38bdf8, #fbbf24)' }} />
+    <div className="fixed left-0 top-1/2 -translate-y-1/2 z-50 hidden lg:flex flex-col items-center" style={{ marginLeft: '18px' }}>
+      {/* Vertical connecting line */}
+      <div className="absolute w-0.5" style={{ left: '50%', transform: 'translateX(-50%)', top: '14px', bottom: '14px', background: 'linear-gradient(180deg, #34d399, #818cf8, #38bdf8, #fbbf24)' }} />
       {steps.map((step, i) => {
         const isActive = location.pathname.startsWith(step.match);
         return (
@@ -159,22 +159,24 @@ function AppaSideIndicator() {
             key={step.label}
             to={step.href}
             className="relative group flex items-center"
-            style={{ padding: '12px 0' }}
+            style={{ padding: '18px 0' }}
             title={step.label}
           >
-            {/* Dot */}
+            {/* Dot — larger, ring style */}
             <div
-              className="w-3 h-3 rounded-full border-2 transition-all duration-200"
+              className="rounded-full transition-all duration-200"
               style={{
-                borderColor: step.color,
+                width: '18px',
+                height: '18px',
+                border: `3px solid ${step.color}`,
                 background: isActive ? step.color : '#ffffff',
-                boxShadow: isActive ? `0 0 8px ${step.color}60` : 'none',
+                boxShadow: isActive ? `0 0 12px ${step.color}50` : `0 0 0 3px #ffffff`,
               }}
             />
             {/* Label on hover */}
             <span
-              className="absolute left-6 whitespace-nowrap text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none px-2 py-1 rounded"
-              style={{ color: step.color, background: '#ffffff', boxShadow: '0 1px 4px rgba(0,0,0,0.1)' }}
+              className="absolute left-8 whitespace-nowrap text-sm font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none px-3 py-1.5 rounded-lg"
+              style={{ color: step.color, background: '#ffffff', boxShadow: '0 2px 8px rgba(0,0,0,0.12)' }}
             >
               {step.label}
             </span>
