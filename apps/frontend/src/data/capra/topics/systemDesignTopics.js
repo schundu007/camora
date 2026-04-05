@@ -41,6 +41,7 @@ export const systemDesignCategoryMap = {
     'network-essentials': 'communication',
     'long-polling-websockets-sse': 'communication',
     'cap-pacelc-deep-dive': 'fundamentals',
+    'distributed-lock': 'reliability',
   };
 
   // System Design Topics
@@ -1948,6 +1949,17 @@ gRPC (Method-oriented):
             { name: 'Filtering & Pagination', description: 'Specify criteria to retrieve relevant subsets (?age=25&gender=male). Divide large data sets into pages (?page=2&limit=10).' },
             { name: 'HTTP Methods', description: 'GET (retrieve), POST (create), PUT (update/replace), PATCH (partial update), DELETE (remove). Use the right verb for each operation.' }
           ]
+        },
+        {
+          title: 'Idempotency Use Cases',
+          items: [
+            { name: 'RESTful API Requests', description: 'Retrying an API request must not lead to multiple executions. PUT and DELETE are naturally idempotent. POST needs idempotency keys.' },
+            { name: 'Payment Processing', description: 'Customers must not be charged multiple times due to retries. Payment gateways use idempotency keys to ensure exactly-once charges.' },
+            { name: 'Order Management', description: 'Submitting an order multiple times must result in only one order placed. Prevents duplicate inventory deductions.' },
+            { name: 'Database Operations', description: 'Reapplying a transaction must not change database state. Use SELECT before INSERT/UPDATE/DELETE with proper conditions.' },
+            { name: 'User Account Management', description: 'Retrying a registration request must not create multiple accounts. Check existence before creation.' },
+            { name: 'Distributed Messaging', description: 'Process the same message multiple times without side effects. Consumers must handle duplicate messages gracefully.' }
+          ]
         }
       ],
 
@@ -2210,7 +2222,8 @@ JWT Payload:
         }
       ],
       staticDiagrams: [
-        { id: 'eraser-api-gateway', title: 'API Gateway Architecture (Eraser)', description: 'API Gateway with auth, rate limiting, routing to REST, GraphQL, and gRPC services', src: '/diagrams/api-design/eraser-api-gateway.png', type: 'cloud-architecture' }
+        { id: 'eraser-api-gateway', title: 'API Gateway Architecture (Eraser)', description: 'API Gateway with auth, rate limiting, routing to REST, GraphQL, and gRPC services', src: '/diagrams/api-design/eraser-api-gateway.png', type: 'cloud-architecture' },
+        { id: 'idempotency', title: 'Idempotency Use Cases', description: '6 critical use cases: APIs, payments, orders, DB operations, user accounts, messaging', src: '/diagrams/api-design/idempotency.svg', type: 'architecture' }
       ],
       comparisonTables: [
         {
@@ -2930,8 +2943,21 @@ return {0, tokens}
           ]
         }
       ],
+      comparisonCards: [
+        {
+          title: 'Rate Limiting Algorithms',
+          items: [
+            { name: 'Token Bucket', description: 'Bucket holds tokens refilled at fixed rate. Each request consumes a token. Allows bursts up to bucket capacity. Used by: AWS API Gateway, Stripe.' },
+            { name: 'Leaky Bucket', description: 'Requests enter a queue (bucket) and are processed at a fixed rate. Overflow requests are dropped. Smooths out bursts into steady output.' },
+            { name: 'Fixed Window Counter', description: 'Count requests in fixed time windows (e.g., 100 req/min). Simple but allows burst at window boundaries (up to 2x limit).' },
+            { name: 'Sliding Window Log', description: 'Track timestamp of each request in a sorted log. Count requests in the sliding window. Accurate but memory-intensive for high traffic.' },
+            { name: 'Sliding Window Counter', description: 'Hybrid of fixed window and sliding log. Weighted average of current and previous window counts. Good balance of accuracy and memory.' }
+          ]
+        }
+      ],
       staticDiagrams: [
-        { id: 'eraser-rate-limiter', title: 'Rate Limiting Architecture (Eraser)', description: 'Distributed rate limiting with Redis, token bucket algorithm, per-user and per-IP counters', src: '/diagrams/rate-limiting/eraser-rate-limiter.png', type: 'cloud-architecture' }
+        { id: 'eraser-rate-limiter', title: 'Rate Limiting Architecture (Eraser)', description: 'Distributed rate limiting with Redis, token bucket algorithm, per-user and per-IP counters', src: '/diagrams/rate-limiting/eraser-rate-limiter.png', type: 'cloud-architecture' },
+        { id: 'rate-limit-algorithms', title: 'Rate Limiting Algorithms', description: 'Token Bucket, Leaky Bucket, Fixed Window, Sliding Window Log, and Sliding Window Counter', src: '/diagrams/rate-limiting/rate-limit-algorithms.svg', type: 'architecture' }
       ],
       comparisonTables: [
         {
@@ -4050,7 +4076,8 @@ def verify_token(token, secret):
       ],
       staticDiagrams: [
         { id: 'eraser-security', title: 'Security Architecture (Eraser)', description: 'WAF, API Gateway, OAuth2, JWT, RBAC, mTLS, Vault secrets, SIEM audit, KMS encryption', src: '/diagrams/security/eraser-security-architecture.png', type: 'cloud-architecture' },
-        { id: 'auth-methods', title: 'Authentication Methods', description: 'Session, Token, JWT, SSO, and OAuth 2.0 — how different auth mechanisms work', src: '/diagrams/security/auth-methods.svg', type: 'architecture' }
+        { id: 'auth-methods', title: 'Authentication Methods', description: 'Session, Token, JWT, SSO, and OAuth 2.0 — how different auth mechanisms work', src: '/diagrams/security/auth-methods.svg', type: 'architecture' },
+        { id: 'ssl-handshake', title: 'SSL/TLS Handshake', description: 'Three-step HTTPS handshake: certificate check, key exchange, and encrypted tunnel establishment', src: '/diagrams/security/ssl-handshake.svg', type: 'architecture' }
       ],
       comparisonTables: [
         {
@@ -4206,6 +4233,14 @@ def verify_token(token, secret):
             { name: 'JWT (JSON Web Token)', description: 'Standardized token with header.payload.signature structure. Self-contained — signature allows verification without server lookup. Widely used in APIs.' },
             { name: 'SSO (Single Sign-On)', description: 'Central Authentication Service (CAS) allows login once, access multiple apps (a.com, b.com). Reduces password fatigue but CAS is a single point of failure.' },
             { name: 'OAuth 2.0', description: 'Delegated authorization standard. Supports multiple grant types: authorization code (web), implicit (SPA), password grant (native), client credentials (M2M).' }
+          ]
+        },
+        {
+          title: 'HTTPS/SSL Handshake Steps',
+          items: [
+            { name: 'Step 1: Certificate Check', description: 'Client sends CLIENT HELLO → Server responds with SERVER HELLO + SSL certificate → Client verifies certificate with Certificate Authority (CA). Establishes server identity.' },
+            { name: 'Step 2: Key Exchange', description: 'Client extracts server public key from certificate → Creates a session key → Negotiates cipher suite (e.g., AES-256) → Encrypts session key with server public key → Sends to server.' },
+            { name: 'Step 3: Encrypted Tunnel', description: 'Both client and server now share the same session key. All subsequent data is encrypted/decrypted using this symmetric key. Secure tunnel established.' }
           ]
         }
       ]
@@ -5668,6 +5703,28 @@ Optimal parameters:
           useWhen: 'Frequent lookups for non-existent keys',
           example: 'Check if username exists → bloom says "no" → skip DB query'
         }
+      ],
+      comparisonCards: [
+        {
+          title: 'Bloom Filter Applications',
+          items: [
+            { name: 'Cache Penetration Prevention', description: 'Check Bloom filter before hitting DB for non-existent keys. If filter says "not in set", skip the DB query entirely. Eliminates cache penetration attacks.' },
+            { name: 'Database Read Optimization', description: 'Cassandra uses Bloom filters to check if an SSTable might contain a key before reading from disk. Avoids unnecessary I/O on SSTables that don\'t have the key.' },
+            { name: 'Web Crawlers (URL Dedup)', description: 'Track visited URLs without storing all strings. Bloom filter says "probably visited" or "definitely not visited". Saves massive memory in large crawls.' },
+            { name: 'Malicious URL Detection', description: 'Chrome\'s Safe Browsing uses Bloom filter to quickly check if a URL might be malicious before doing a full lookup. False positives trigger a server check.' },
+            { name: 'Spell Checkers', description: 'Dictionary stored as Bloom filter. O(1) check if word exists. False positives just mean a misspelled word isn\'t flagged.' },
+            { name: 'Network Routers', description: 'Check if a packet matches any rule in a large ACL set. Bloom filter provides fast preliminary check before expensive rule matching.' }
+          ]
+        }
+      ],
+      staticDiagrams: [
+        {
+          id: 'bloom-filter-how',
+          title: 'How Bloom Filters Work',
+          description: 'Hash functions, bit arrays, and false positive trade-offs in Bloom filters',
+          src: '/diagrams/bloom-filters/bloom-filter-how-it-works.svg',
+          type: 'architecture'
+        }
       ]
     },
     {
@@ -6521,6 +6578,30 @@ Composite Index:
           description: 'Index only rows matching a condition — smaller, faster.',
           useWhen: 'Only query subset of rows frequently',
           example: 'INDEX ON orders(created_at) WHERE status=\'pending\''
+        }
+      ],
+      comparisonCards: [
+        {
+          title: 'Data Structures That Power Databases',
+          items: [
+            { name: 'B-Tree / B+ Tree', description: 'Self-balancing tree with high fanout. O(log N) reads/writes. B+ Tree stores data only in leaves with linked leaf nodes for range scans. Used by: PostgreSQL, MySQL InnoDB, SQLite.' },
+            { name: 'LSM Tree (Log-Structured Merge)', description: 'Write to in-memory memtable → flush to sorted SSTable files → compact periodically. Optimized for write-heavy workloads. Used by: RocksDB, Cassandra, LevelDB.' },
+            { name: 'Hash Index', description: 'Hash function maps key to memory location. O(1) reads but no range queries. Used by: Redis, Memcached, PostgreSQL hash indexes.' },
+            { name: 'Skip List', description: 'Layered linked list with express lanes. O(log N) search/insert. Simpler than balanced trees. Used by: Redis sorted sets, MemSQL.' },
+            { name: 'Inverted Index', description: 'Maps words/tokens to document IDs. Foundation of full-text search. Used by: ElasticSearch, Lucene, Solr.' },
+            { name: 'R-Tree', description: 'Spatial index for multi-dimensional data (latitude, longitude). Efficiently answers "find all points within this rectangle". Used by: PostGIS, MongoDB geospatial.' },
+            { name: 'Bloom Filter', description: 'Probabilistic set membership test. Can say "definitely not in set" or "probably in set". Space-efficient. Used by: Cassandra (avoid unnecessary disk reads), Chrome (malicious URL check).' },
+            { name: 'SSTable (Sorted String Table)', description: 'Immutable sorted key-value file on disk. Foundation of LSM trees. Efficient sequential reads and merging. Used by: Bigtable, HBase, Cassandra.' }
+          ]
+        }
+      ],
+      staticDiagrams: [
+        {
+          id: 'index-data-structures',
+          title: 'Index Data Structures',
+          description: 'B+ Tree, LSM Tree, Hash Index, and Inverted Index — how databases store and retrieve data',
+          src: '/diagrams/database-indexes/index-data-structures.svg',
+          type: 'architecture'
         }
       ]
     },
@@ -8302,7 +8383,8 @@ Failover States:
         }
       ],
       staticDiagrams: [
-        { id: 'eraser-replication', title: 'Replication Architecture (Eraser)', description: 'Primary with sync standby, async cross-region replicas, automatic failover', src: '/diagrams/redundancy-replication/eraser-replication.png', type: 'cloud-architecture' }
+        { id: 'eraser-replication', title: 'Replication Architecture (Eraser)', description: 'Primary with sync standby, async cross-region replicas, automatic failover', src: '/diagrams/redundancy-replication/eraser-replication.png', type: 'cloud-architecture' },
+        { id: 'disaster-recovery', title: 'Disaster Recovery Strategies', description: 'Backup & Restore, Pilot Light, Warm Standby, and Multi-Site Active-Active with RPO/RTO comparison', src: '/diagrams/redundancy-replication/disaster-recovery.svg', type: 'architecture' }
       ],
 
       comparisonTables: [
@@ -8376,6 +8458,15 @@ Failover States:
             { name: 'Failover Mechanisms', description: 'Automatically switch to a standby system when the primary fails. Requires health monitoring and fast detection. Examples: DNS failover, database failover.' },
             { name: 'Graceful Degradation', description: 'System continues operating at reduced functionality rather than completely failing. Disable non-essential features during overload (e.g., disable recommendations, serve cached pages).' },
             { name: 'Monitoring & Alerting', description: 'Continuously monitor health and performance. Set up alerts for anomalies. Tools: Prometheus + Grafana for metrics, ELK for logs, PagerDuty for alerting.' }
+          ]
+        },
+        {
+          title: 'Cloud Disaster Recovery Strategies',
+          items: [
+            { name: 'Backup & Restore (RPO: hours, RTO: hours)', description: 'Regular backups from primary site to cloud DR site. On disaster, restore from snapshots and images. Cheapest but slowest recovery. Suitable for non-critical systems.' },
+            { name: 'Pilot Light (RPO: minutes, RTO: tens of minutes)', description: 'Minimal core services running in DR site with data continuously synced. On disaster, DNS switches traffic and services scale up. Like a pilot light that can ignite the full system.' },
+            { name: 'Warm Standby (RPO: seconds, RTO: minutes)', description: 'Scaled-down but fully functional copy running in DR site behind a load balancer. On disaster, auto-scaling kicks in to handle full production load. Good balance of cost and speed.' },
+            { name: 'Multi-Site Active-Active (RPO: near zero, RTO: near zero)', description: 'Both sites actively serving traffic simultaneously with data sync. On disaster, load balancer redirects all traffic to surviving site. Most expensive but fastest recovery.' }
           ]
         }
       ]
@@ -9275,6 +9366,29 @@ Server-Sent Events (SSE):
             'Always discuss reconnection and message replay strategy'
           ]
         }
+      ],
+
+      comparisonCards: [
+        {
+          title: 'Polling vs Webhooks',
+          items: [
+            { name: 'Polling (Pull Model)', description: 'Client repeatedly checks server at fixed intervals for updates. Like constantly asking "Do you have something new?" Higher resource consumption but gives developer control over when to fetch.' },
+            { name: 'Webhooks (Push Model)', description: 'Server pushes data to client when events occur. Efficient resource use with real-time updates. Risk: can miss notifications if client endpoint is down.' }
+          ]
+        },
+        {
+          title: 'Real-Time Communication Patterns',
+          items: [
+            { name: 'Short Polling', description: 'Client sends HTTP request every N seconds. Server responds immediately (with or without data). Simple but wastes bandwidth on empty responses. Latency = polling interval.' },
+            { name: 'Long Polling', description: 'Client sends request, server holds it open until data is available (or timeout). Reduces empty responses. Used by early chat apps.' },
+            { name: 'WebSockets', description: 'Full-duplex persistent connection. Client and server can send data anytime. Low latency, low overhead. Used by: Slack, Discord, trading platforms.' },
+            { name: 'Server-Sent Events (SSE)', description: 'Server pushes data to client over HTTP. Unidirectional (server → client only). Simpler than WebSockets. Auto-reconnection. Used by: news feeds, dashboards.' }
+          ]
+        }
+      ],
+
+      staticDiagrams: [
+        { id: 'polling-vs-webhooks', title: 'Polling vs Webhooks', description: 'Pull vs Push models: polling checks at intervals, webhooks push on events', src: '/diagrams/long-polling-websockets-sse/polling-vs-webhooks.svg', type: 'architecture' }
       ],
 
       comparisonTables: [
@@ -10670,7 +10784,20 @@ Requires coordination between producer and consumer:
         }
       ],
       staticDiagrams: [
-        { id: 'eraser-messaging', title: 'Event-Driven Architecture (Eraser)', description: 'Kafka event bus, schema registry, DLQ, event store, CQRS read/write models', src: '/diagrams/distributed-messaging/eraser-messaging.png', type: 'cloud-architecture' }
+        { id: 'eraser-messaging', title: 'Event-Driven Architecture (Eraser)', description: 'Kafka event bus, schema registry, DLQ, event store, CQRS read/write models', src: '/diagrams/distributed-messaging/eraser-messaging.png', type: 'cloud-architecture' },
+        { id: 'kafka-performance', title: 'Why Kafka is Fast', description: 'Sequential I/O and zero-copy principle — how Kafka achieves high throughput', src: '/diagrams/distributed-messaging/kafka-performance.svg', type: 'architecture' }
+      ],
+
+      comparisonCards: [
+        {
+          title: 'Why Kafka is Fast',
+          items: [
+            { name: 'Sequential I/O', description: 'Kafka writes data as an append-only log. Sequential disk writes are dramatically faster than random writes — approaching memory speeds on modern SSDs. No seek time overhead.' },
+            { name: 'Zero-Copy Principle', description: 'Traditional: Disk → OS Cache → App Buffer → Socket Buffer → NIC (4 copies). With zero-copy: Disk → OS Cache → NIC via sendfile() (2 copies). Eliminates unnecessary data copies between kernel and application context.' },
+            { name: 'Batch Compression', description: 'Messages are batched and compressed together before sending. Reduces network overhead and disk I/O. Consumers decompress batches efficiently.' },
+            { name: 'Partitioning', description: 'Topics are split into partitions that can be distributed across brokers. Enables parallel processing — consumers in a group each handle different partitions simultaneously.' }
+          ]
+        }
       ],
 
       comparisonTables: [
@@ -12016,6 +12143,28 @@ Two clients write different values to the same key concurrently:
           useWhen: 'Quorum reads detect inconsistency',
           example: 'Cassandra reads from R=3, finds one stale → sends correction'
         }
+      ],
+      comparisonCards: [
+        {
+          title: 'Quorum Consensus',
+          items: [
+            { name: 'Write Quorum (W)', description: 'Minimum number of nodes that must acknowledge a write for it to be considered successful. Higher W = stronger write consistency but higher write latency.' },
+            { name: 'Read Quorum (R)', description: 'Minimum number of nodes that must respond to a read. Higher R = more likely to get latest data but higher read latency.' },
+            { name: 'The Quorum Formula: W + R > N', description: 'When write quorum + read quorum exceeds total nodes, at least one node in every read has the latest write. This guarantees strong consistency.' },
+            { name: 'W=1, R=N (Fast writes)', description: 'Write to any single node. Read from all nodes. Optimized for write-heavy workloads. Reads are slow but consistent.' },
+            { name: 'W=N, R=1 (Fast reads)', description: 'Write to all nodes. Read from any single node. Optimized for read-heavy workloads. Writes are slow but reads always get latest data.' },
+            { name: 'W=N/2+1, R=N/2+1 (Balanced)', description: 'Majority quorum for both reads and writes. Good balance. Most common configuration. Used by: Cassandra, DynamoDB.' }
+          ]
+        }
+      ],
+      staticDiagrams: [
+        {
+          id: 'quorum-formula',
+          title: 'Quorum Consensus',
+          description: 'W + R > N formula with Fast Writes, Balanced, and Fast Reads configurations',
+          src: '/diagrams/quorum/quorum-formula.svg',
+          type: 'architecture'
+        }
       ]
     },
     {
@@ -12476,6 +12625,34 @@ In system design interviews, leader-follower replication appears in every databa
           useWhen: 'User updates profile, then refreshes page',
           example: 'Route user reads to leader, or track write timestamp'
         }
+      ],
+      comparisonCards: [
+        {
+          title: 'Leader Election Algorithms',
+          items: [
+            { name: 'Bully Algorithm', description: 'When leader fails, node with highest ID sends election message. Higher-ID nodes respond. Highest surviving node becomes leader. Simple but generates many messages.' },
+            { name: 'Ring Algorithm', description: 'Nodes arranged in logical ring. Election message passes around ring collecting IDs. Node with highest ID in the message becomes leader. Lower message complexity.' },
+            { name: 'Raft Consensus', description: 'Leader elected by majority vote with randomized timeouts. Leader sends heartbeats to maintain authority. On leader failure, followers start new election term. Used by etcd, CockroachDB.' },
+            { name: 'ZooKeeper (ZAB)', description: 'ZooKeeper Atomic Broadcast protocol. Ephemeral sequential znodes for election. Lowest sequence number is leader. Automatic re-election on leader disconnect.' }
+          ]
+        },
+        {
+          title: 'Replication Patterns',
+          items: [
+            { name: 'Single-Leader (Master-Slave)', description: 'One leader handles all writes, followers replicate and serve reads. Simple but leader is SPOF. Used by: MySQL, PostgreSQL, MongoDB.' },
+            { name: 'Multi-Leader', description: 'Multiple nodes accept writes. Requires conflict resolution (last-write-wins, merge). Used by: CouchDB, cross-datacenter replication.' },
+            { name: 'Leaderless', description: 'Any node accepts reads/writes. Uses quorum (W + R > N) for consistency. No SPOF. Used by: Cassandra, DynamoDB, Riak.' }
+          ]
+        }
+      ],
+      staticDiagrams: [
+        {
+          id: 'replication-patterns',
+          title: 'Replication Patterns',
+          description: 'Single-Leader, Multi-Leader, and Leaderless replication with trade-offs',
+          src: '/diagrams/leader-follower/replication-patterns.svg',
+          type: 'architecture'
+        }
       ]
     },
     {
@@ -12914,6 +13091,26 @@ Receiving node merges: keep highest heartbeat count per node
           description: 'Nodes share health info with random peers — epidemic spread.',
           useWhen: 'Large clusters where centralized monitoring doesn\'t scale',
           example: 'Cassandra gossip: each node tells 3 random peers every second'
+        }
+      ],
+      comparisonCards: [
+        {
+          title: 'Node Failure Detection Methods',
+          items: [
+            { name: 'Heartbeat (Push)', description: 'Each node periodically sends "I am alive" signal to a monitor. If no heartbeat received within timeout, node is marked dead. Simple and widely used.' },
+            { name: 'Ping/Echo (Pull)', description: 'Monitor periodically pings each node and expects a response. If no response after retries, node is marked failed. More control but adds network traffic.' },
+            { name: 'Gossip Protocol', description: 'Nodes randomly share health information with peers. Each node maintains a membership list with heartbeat counters. Decentralized \u2014 no single point of failure.' },
+            { name: 'Phi Accrual Detector', description: 'Instead of binary alive/dead, calculates a suspicion level (phi) based on heartbeat arrival times. Adapts to network conditions. Used by Cassandra and Akka.' }
+          ]
+        }
+      ],
+      staticDiagrams: [
+        {
+          id: 'failure-detection',
+          title: 'Failure Detection Methods',
+          description: 'Heartbeat, Ping/Echo, Gossip Protocol, and Phi Accrual detection strategies',
+          src: '/diagrams/heartbeat-mechanism/failure-detection.svg',
+          type: 'architecture'
         }
       ]
     },
@@ -13844,6 +14041,27 @@ Instead of a single timestamp, TrueTime returns an interval:
           description: 'Track causal ordering of events across distributed nodes.',
           useWhen: 'Detect and resolve concurrent write conflicts',
           example: 'DynamoDB version vectors, Riak vector clocks'
+        }
+      ],
+      comparisonCards: [
+        {
+          title: 'Consistency Models Spectrum',
+          items: [
+            { name: 'Strong (Linearizable)', description: 'Every read returns the most recent write. All nodes see the same data at the same time. Highest latency but simplest to reason about. Used by: Spanner, CockroachDB.' },
+            { name: 'Sequential', description: 'All operations appear in some sequential order consistent with each client\'s program order. Weaker than linearizable but still provides ordering guarantees.' },
+            { name: 'Causal', description: 'Operations that are causally related are seen in the same order by all nodes. Concurrent operations may be seen in different orders. Good balance of consistency and availability.' },
+            { name: 'Eventual', description: 'If no new updates are made, all replicas will eventually converge to the same value. Highest availability, lowest latency. Used by: DynamoDB, Cassandra, DNS.' },
+            { name: 'Read-Your-Writes', description: 'A user always sees their own writes immediately, even if other users see eventual consistency. Common in social media (you see your own post immediately).' }
+          ]
+        }
+      ],
+      staticDiagrams: [
+        {
+          id: 'consistency-spectrum',
+          title: 'Consistency Models',
+          description: 'Spectrum from Strong to Eventual consistency with database examples',
+          src: '/diagrams/strong-vs-eventual-consistency/consistency-spectrum.svg',
+          type: 'architecture'
         }
       ]
     },

@@ -1,0 +1,175 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="800" height="500" font-family="Inter, system-ui, sans-serif">
+  <defs>
+    <linearGradient id="cellGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:0.12"/>
+      <stop offset="100%" style="stop-color:#3b82f6;stop-opacity:0.04"/>
+    </linearGradient>
+    <linearGradient id="cellGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#10b981;stop-opacity:0.12"/>
+      <stop offset="100%" style="stop-color:#10b981;stop-opacity:0.04"/>
+    </linearGradient>
+    <linearGradient id="cellGrad3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f59e0b;stop-opacity:0.12"/>
+      <stop offset="100%" style="stop-color:#f59e0b;stop-opacity:0.04"/>
+    </linearGradient>
+    <linearGradient id="cellGrad4" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8b5cf6;stop-opacity:0.12"/>
+      <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:0.04"/>
+    </linearGradient>
+    <linearGradient id="cellGrad5" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ec4899;stop-opacity:0.12"/>
+      <stop offset="100%" style="stop-color:#ec4899;stop-opacity:0.04"/>
+    </linearGradient>
+    <linearGradient id="cellGrad6" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#06b6d4;stop-opacity:0.12"/>
+      <stop offset="100%" style="stop-color:#06b6d4;stop-opacity:0.04"/>
+    </linearGradient>
+    <marker id="flowArrow" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto">
+      <polygon points="0 0, 6 2.5, 0 5" fill="#94a3b8"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="500" rx="12" fill="#0f172a"/>
+
+  <!-- Title -->
+  <text x="400" y="35" text-anchor="middle" fill="#f1f5f9" font-size="18" font-weight="700">Top 6 Cases to Apply Idempotency</text>
+  <text x="400" y="55" text-anchor="middle" fill="#64748b" font-size="12">Ensure operations produce the same result regardless of how many times they are executed</text>
+
+  <!-- CELL 1: RESTful API Requests (Row 1, Col 1) -->
+  <rect x="20" y="72" width="245" height="130" rx="10" fill="url(#cellGrad1)" stroke="#3b82f6" stroke-width="1" stroke-opacity="0.4"/>
+  <!-- API icon -->
+  <rect x="35" y="84" width="28" height="28" rx="6" fill="#1e3a5f" stroke="#3b82f6" stroke-width="1"/>
+  <text x="49" y="103" text-anchor="middle" fill="#60a5fa" font-size="14" font-weight="700">{}</text>
+  <text x="72" y="100" fill="#60a5fa" font-size="13" font-weight="600">RESTful APIs</text>
+  <!-- Flow -->
+  <rect x="35" y="118" width="55" height="20" rx="4" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+  <text x="62" y="132" text-anchor="middle" fill="#94a3b8" font-size="9">POST /pay</text>
+  <line x1="95" y1="128" x2="115" y2="128" stroke="#94a3b8" stroke-width="1" marker-end="url(#flowArrow)"/>
+  <rect x="120" y="118" width="55" height="20" rx="4" fill="#1e293b" stroke="#3b82f6" stroke-width="1"/>
+  <text x="147" y="132" text-anchor="middle" fill="#60a5fa" font-size="9">Key: abc</text>
+  <line x1="180" y1="128" x2="200" y2="128" stroke="#94a3b8" stroke-width="1" marker-end="url(#flowArrow)"/>
+  <text x="220" y="132" fill="#34d399" font-size="9">1x</text>
+  <text x="35" y="160" fill="#94a3b8" font-size="10">PUT/DELETE: naturally idempotent</text>
+  <text x="35" y="175" fill="#94a3b8" font-size="10">POST: needs idempotency key</text>
+  <text x="35" y="192" fill="#f59e0b" font-size="9" font-style="italic">Retry safely with same key</text>
+
+  <!-- CELL 2: Payment Processing (Row 1, Col 2) -->
+  <rect x="278" y="72" width="245" height="130" rx="10" fill="url(#cellGrad2)" stroke="#10b981" stroke-width="1" stroke-opacity="0.4"/>
+  <!-- Payment icon -->
+  <rect x="293" y="84" width="28" height="28" rx="6" fill="#1a3a2a" stroke="#10b981" stroke-width="1"/>
+  <text x="307" y="103" text-anchor="middle" fill="#34d399" font-size="14" font-weight="700">$</text>
+  <text x="330" y="100" fill="#34d399" font-size="13" font-weight="600">Payments</text>
+  <!-- Flow -->
+  <rect x="293" y="118" width="52" height="20" rx="4" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+  <text x="319" y="132" text-anchor="middle" fill="#94a3b8" font-size="9">Charge</text>
+  <line x1="350" y1="128" x2="370" y2="128" stroke="#94a3b8" stroke-width="1" marker-end="url(#flowArrow)"/>
+  <rect x="375" y="118" width="60" height="20" rx="4" fill="#1e293b" stroke="#10b981" stroke-width="1"/>
+  <text x="405" y="132" text-anchor="middle" fill="#34d399" font-size="9">Gateway</text>
+  <line x1="440" y1="128" x2="460" y2="128" stroke="#94a3b8" stroke-width="1" marker-end="url(#flowArrow)"/>
+  <text x="478" y="132" fill="#34d399" font-size="9">1x</text>
+  <text x="293" y="160" fill="#94a3b8" font-size="10">Stripe uses idempotency keys</text>
+  <text x="293" y="175" fill="#94a3b8" font-size="10">Ensures exactly-once charge</text>
+  <text x="293" y="192" fill="#f59e0b" font-size="9" font-style="italic">Never double-charge customers</text>
+
+  <!-- CELL 3: Order Management (Row 1, Col 3) -->
+  <rect x="536" y="72" width="245" height="130" rx="10" fill="url(#cellGrad3)" stroke="#f59e0b" stroke-width="1" stroke-opacity="0.4"/>
+  <!-- Order icon -->
+  <rect x="551" y="84" width="28" height="28" rx="6" fill="#3a2a0a" stroke="#f59e0b" stroke-width="1"/>
+  <text x="565" y="104" text-anchor="middle" fill="#fbbf24" font-size="13" font-weight="700">&#x1F4E6;</text>
+  <text x="588" y="100" fill="#fbbf24" font-size="13" font-weight="600">Orders</text>
+  <!-- Flow -->
+  <rect x="551" y="118" width="60" height="20" rx="4" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+  <text x="581" y="132" text-anchor="middle" fill="#94a3b8" font-size="9">Submit</text>
+  <line x1="616" y1="128" x2="636" y2="128" stroke="#94a3b8" stroke-width="1" marker-end="url(#flowArrow)"/>
+  <rect x="641" y="118" width="55" height="20" rx="4" fill="#1e293b" stroke="#f59e0b" stroke-width="1"/>
+  <text x="668" y="132" text-anchor="middle" fill="#fbbf24" font-size="9">Dedup</text>
+  <line x1="701" y1="128" x2="721" y2="128" stroke="#94a3b8" stroke-width="1" marker-end="url(#flowArrow)"/>
+  <text x="738" y="132" fill="#34d399" font-size="9">1x</text>
+  <text x="551" y="160" fill="#94a3b8" font-size="10">Order ID prevents duplicates</text>
+  <text x="551" y="175" fill="#94a3b8" font-size="10">No duplicate inventory deduction</text>
+  <text x="551" y="192" fill="#f59e0b" font-size="9" font-style="italic">One submit = one order placed</text>
+
+  <!-- CELL 4: Database Operations (Row 2, Col 1) -->
+  <rect x="20" y="215" width="245" height="130" rx="10" fill="url(#cellGrad4)" stroke="#8b5cf6" stroke-width="1" stroke-opacity="0.4"/>
+  <!-- DB icon -->
+  <rect x="35" y="227" width="28" height="28" rx="6" fill="#2a1a4a" stroke="#8b5cf6" stroke-width="1"/>
+  <ellipse cx="49" cy="237" rx="8" ry="4" fill="none" stroke="#a78bfa" stroke-width="1.5"/>
+  <line x1="41" y1="237" x2="41" y2="245" stroke="#a78bfa" stroke-width="1.5"/>
+  <line x1="57" y1="237" x2="57" y2="245" stroke="#a78bfa" stroke-width="1.5"/>
+  <ellipse cx="49" cy="245" rx="8" ry="4" fill="none" stroke="#a78bfa" stroke-width="1.5"/>
+  <text x="72" y="243" fill="#a78bfa" font-size="13" font-weight="600">Database Ops</text>
+  <!-- Flow -->
+  <rect x="35" y="261" width="60" height="20" rx="4" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+  <text x="65" y="275" text-anchor="middle" fill="#94a3b8" font-size="9">SELECT</text>
+  <line x1="100" y1="271" x2="120" y2="271" stroke="#94a3b8" stroke-width="1" marker-end="url(#flowArrow)"/>
+  <rect x="125" y="261" width="60" height="20" rx="4" fill="#1e293b" stroke="#8b5cf6" stroke-width="1"/>
+  <text x="155" y="275" text-anchor="middle" fill="#a78bfa" font-size="9">UPSERT</text>
+  <line x1="190" y1="271" x2="210" y2="271" stroke="#94a3b8" stroke-width="1" marker-end="url(#flowArrow)"/>
+  <text x="225" y="275" fill="#34d399" font-size="9">Safe</text>
+  <text x="35" y="303" fill="#94a3b8" font-size="10">Check before write pattern</text>
+  <text x="35" y="318" fill="#94a3b8" font-size="10">Use UPSERT or conditional writes</text>
+  <text x="35" y="335" fill="#f59e0b" font-size="9" font-style="italic">Re-apply without side effects</text>
+
+  <!-- CELL 5: User Account Management (Row 2, Col 2) -->
+  <rect x="278" y="215" width="245" height="130" rx="10" fill="url(#cellGrad5)" stroke="#ec4899" stroke-width="1" stroke-opacity="0.4"/>
+  <!-- User icon -->
+  <rect x="293" y="227" width="28" height="28" rx="6" fill="#3a1a2a" stroke="#ec4899" stroke-width="1"/>
+  <circle cx="307" cy="236" r="5" fill="none" stroke="#f472b6" stroke-width="1.5"/>
+  <path d="M299,250 Q307,244 315,250" fill="none" stroke="#f472b6" stroke-width="1.5"/>
+  <text x="330" y="243" fill="#f472b6" font-size="13" font-weight="600">User Accounts</text>
+  <!-- Flow -->
+  <rect x="293" y="261" width="60" height="20" rx="4" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+  <text x="323" y="275" text-anchor="middle" fill="#94a3b8" font-size="9">Register</text>
+  <line x1="358" y1="271" x2="378" y2="271" stroke="#94a3b8" stroke-width="1" marker-end="url(#flowArrow)"/>
+  <rect x="383" y="261" width="60" height="20" rx="4" fill="#1e293b" stroke="#ec4899" stroke-width="1"/>
+  <text x="413" y="275" text-anchor="middle" fill="#f472b6" font-size="9">Exists?</text>
+  <line x1="448" y1="271" x2="468" y2="271" stroke="#94a3b8" stroke-width="1" marker-end="url(#flowArrow)"/>
+  <text x="483" y="275" fill="#34d399" font-size="9">1x</text>
+  <text x="293" y="303" fill="#94a3b8" font-size="10">Check email/username existence</text>
+  <text x="293" y="318" fill="#94a3b8" font-size="10">Unique constraints in DB</text>
+  <text x="293" y="335" fill="#f59e0b" font-size="9" font-style="italic">No duplicate accounts on retry</text>
+
+  <!-- CELL 6: Distributed Messaging (Row 2, Col 3) -->
+  <rect x="536" y="215" width="245" height="130" rx="10" fill="url(#cellGrad6)" stroke="#06b6d4" stroke-width="1" stroke-opacity="0.4"/>
+  <!-- Message icon -->
+  <rect x="551" y="227" width="28" height="28" rx="6" fill="#0a2a3a" stroke="#06b6d4" stroke-width="1"/>
+  <rect x="556" y="234" width="18" height="12" rx="2" fill="none" stroke="#22d3ee" stroke-width="1.5"/>
+  <polyline points="556,234 565,242 574,234" fill="none" stroke="#22d3ee" stroke-width="1"/>
+  <text x="588" y="243" fill="#22d3ee" font-size="13" font-weight="600">Messaging</text>
+  <!-- Flow -->
+  <rect x="551" y="261" width="55" height="20" rx="4" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+  <text x="578" y="275" text-anchor="middle" fill="#94a3b8" font-size="9">Msg ID</text>
+  <line x1="611" y1="271" x2="631" y2="271" stroke="#94a3b8" stroke-width="1" marker-end="url(#flowArrow)"/>
+  <rect x="636" y="261" width="60" height="20" rx="4" fill="#1e293b" stroke="#06b6d4" stroke-width="1"/>
+  <text x="666" y="275" text-anchor="middle" fill="#22d3ee" font-size="9">Dedup</text>
+  <line x1="701" y1="271" x2="721" y2="271" stroke="#94a3b8" stroke-width="1" marker-end="url(#flowArrow)"/>
+  <text x="738" y="275" fill="#34d399" font-size="9">1x</text>
+  <text x="551" y="303" fill="#94a3b8" font-size="10">Track processed message IDs</text>
+  <text x="551" y="318" fill="#94a3b8" font-size="10">At-least-once + deduplication</text>
+  <text x="551" y="335" fill="#f59e0b" font-size="9" font-style="italic">Handle duplicates gracefully</text>
+
+  <!-- Bottom key pattern summary -->
+  <rect x="20" y="358" width="760" height="130" rx="10" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+  <text x="400" y="380" text-anchor="middle" fill="#f1f5f9" font-size="13" font-weight="600">Common Idempotency Patterns</text>
+
+  <!-- Pattern 1 -->
+  <circle cx="60" cy="405" r="4" fill="#3b82f6"/>
+  <text x="72" y="409" fill="#cbd5e1" font-size="11" font-weight="600">Idempotency Key</text>
+  <text x="72" y="424" fill="#94a3b8" font-size="10">Client sends unique key per operation. Server deduplicates by key.</text>
+
+  <!-- Pattern 2 -->
+  <circle cx="60" cy="445" r="4" fill="#10b981"/>
+  <text x="72" y="449" fill="#cbd5e1" font-size="11" font-weight="600">Conditional Write</text>
+  <text x="72" y="464" fill="#94a3b8" font-size="10">Use IF NOT EXISTS, UPSERT, or version checks before writing.</text>
+
+  <!-- Pattern 3 -->
+  <circle cx="430" cy="405" r="4" fill="#f59e0b"/>
+  <text x="442" y="409" fill="#cbd5e1" font-size="11" font-weight="600">Message Deduplication</text>
+  <text x="442" y="424" fill="#94a3b8" font-size="10">Track processed message IDs in a set. Skip if already seen.</text>
+
+  <!-- Pattern 4 -->
+  <circle cx="430" cy="445" r="4" fill="#8b5cf6"/>
+  <text x="442" y="449" fill="#cbd5e1" font-size="11" font-weight="600">State Machine</text>
+  <text x="442" y="464" fill="#94a3b8" font-size="10">Only allow valid state transitions. Reject duplicate state changes.</text>
+</svg>

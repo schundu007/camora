@@ -1,0 +1,224 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="800" height="500" font-family="Inter, system-ui, sans-serif">
+  <defs>
+    <filter id="shadow" x="-2%" y="-2%" width="104%" height="104%">
+      <feDropShadow dx="0" dy="1" stdDeviation="2" flood-opacity="0.1"/>
+    </filter>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="800" y2="500" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="500" rx="12" fill="url(#bgGrad)"/>
+
+  <!-- Title -->
+  <text x="400" y="38" text-anchor="middle" fill="#f1f5f9" font-size="18" font-weight="700">ElasticSearch Use Cases</text>
+  <line x1="300" y1="48" x2="500" y2="48" stroke="#334155" stroke-width="1"/>
+
+  <!-- Row 1 -->
+  <!-- 1. Full-Text Search (orange) -->
+  <g transform="translate(20, 65)">
+    <rect width="240" height="190" rx="10" fill="#1e293b" stroke="#f97316" stroke-width="1.5" filter="url(#shadow)"/>
+    <rect width="240" height="32" rx="10" fill="#f97316" fill-opacity="0.15"/>
+    <rect width="240" height="10" y="0" rx="10" fill="none"/>
+    <!-- Icon: magnifying glass -->
+    <circle cx="24" cy="16" r="7" fill="none" stroke="#f97316" stroke-width="1.5"/>
+    <line x1="29" y1="21" x2="34" y2="26" stroke="#f97316" stroke-width="1.5" stroke-linecap="round"/>
+    <text x="42" y="20" fill="#f97316" font-size="12" font-weight="700">Full-Text Search</text>
+    <!-- Architecture flow -->
+    <rect x="15" y="45" width="60" height="24" rx="4" fill="#f97316" fill-opacity="0.2" stroke="#f97316" stroke-width="0.8"/>
+    <text x="45" y="61" text-anchor="middle" fill="#fdba74" font-size="9" font-weight="600">Documents</text>
+    <line x1="80" y1="57" x2="95" y2="57" stroke="#f97316" stroke-width="1" marker-end="url(#arrowOrange)"/>
+    <rect x="100" y="45" width="55" height="24" rx="4" fill="#f97316" fill-opacity="0.2" stroke="#f97316" stroke-width="0.8"/>
+    <text x="127" y="61" text-anchor="middle" fill="#fdba74" font-size="9" font-weight="600">Analyzer</text>
+    <line x1="160" y1="57" x2="170" y2="57" stroke="#f97316" stroke-width="1"/>
+    <rect x="175" y="45" width="50" height="24" rx="4" fill="#f97316" fill-opacity="0.3" stroke="#f97316" stroke-width="0.8"/>
+    <text x="200" y="61" text-anchor="middle" fill="#fdba74" font-size="9" font-weight="600">Index</text>
+    <!-- Description -->
+    <text x="15" y="90" fill="#94a3b8" font-size="9.5" font-weight="400">
+      <tspan x="15" dy="0">Inverted indexes enable near</tspan>
+      <tspan x="15" dy="13">real-time search across millions</tspan>
+      <tspan x="15" dy="13">of documents with complex</tspan>
+      <tspan x="15" dy="13">queries and relevance ranking.</tspan>
+    </text>
+    <!-- Tags -->
+    <rect x="15" y="148" width="65" height="18" rx="9" fill="#f97316" fill-opacity="0.15"/>
+    <text x="47" y="160" text-anchor="middle" fill="#fb923c" font-size="8" font-weight="600">BM25</text>
+    <rect x="85" y="148" width="75" height="18" rx="9" fill="#f97316" fill-opacity="0.15"/>
+    <text x="122" y="160" text-anchor="middle" fill="#fb923c" font-size="8" font-weight="600">Fuzzy Match</text>
+    <rect x="165" y="148" width="60" height="18" rx="9" fill="#f97316" fill-opacity="0.15"/>
+    <text x="195" y="160" text-anchor="middle" fill="#fb923c" font-size="8" font-weight="600">Sharding</text>
+  </g>
+
+  <!-- 2. Real-Time Analytics (blue) -->
+  <g transform="translate(280, 65)">
+    <rect width="240" height="190" rx="10" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5" filter="url(#shadow)"/>
+    <rect width="240" height="32" rx="10" fill="#3b82f6" fill-opacity="0.15"/>
+    <!-- Icon: chart -->
+    <rect x="18" y="10" width="3" height="14" rx="1" fill="#3b82f6"/>
+    <rect x="24" y="14" width="3" height="10" rx="1" fill="#3b82f6"/>
+    <rect x="30" y="8" width="3" height="16" rx="1" fill="#3b82f6"/>
+    <text x="42" y="20" fill="#3b82f6" font-size="12" font-weight="700">Real-Time Analytics</text>
+    <!-- Architecture flow -->
+    <rect x="10" y="45" width="50" height="24" rx="4" fill="#3b82f6" fill-opacity="0.2" stroke="#3b82f6" stroke-width="0.8"/>
+    <text x="35" y="61" text-anchor="middle" fill="#93c5fd" font-size="9" font-weight="600">Events</text>
+    <line x1="65" y1="57" x2="75" y2="57" stroke="#3b82f6" stroke-width="1"/>
+    <rect x="80" y="45" width="75" height="24" rx="4" fill="#3b82f6" fill-opacity="0.2" stroke="#3b82f6" stroke-width="0.8"/>
+    <text x="117" y="61" text-anchor="middle" fill="#93c5fd" font-size="9" font-weight="600">Elasticsearch</text>
+    <line x1="160" y1="57" x2="170" y2="57" stroke="#3b82f6" stroke-width="1"/>
+    <rect x="175" y="45" width="55" height="24" rx="4" fill="#3b82f6" fill-opacity="0.3" stroke="#3b82f6" stroke-width="0.8"/>
+    <text x="202" y="61" text-anchor="middle" fill="#93c5fd" font-size="9" font-weight="600">Kibana</text>
+    <!-- Description -->
+    <text x="15" y="90" fill="#94a3b8" font-size="9.5" font-weight="400">
+      <tspan x="15" dy="0">Track live user activity,</tspan>
+      <tspan x="15" dy="13">transactions, and sensor data.</tspan>
+      <tspan x="15" dy="13">Aggregation queries return in</tspan>
+      <tspan x="15" dy="13">milliseconds with dashboards.</tspan>
+    </text>
+    <rect x="15" y="148" width="55" height="18" rx="9" fill="#3b82f6" fill-opacity="0.15"/>
+    <text x="42" y="160" text-anchor="middle" fill="#60a5fa" font-size="8" font-weight="600">Aggs</text>
+    <rect x="75" y="148" width="75" height="18" rx="9" fill="#3b82f6" fill-opacity="0.15"/>
+    <text x="112" y="160" text-anchor="middle" fill="#60a5fa" font-size="8" font-weight="600">Dashboards</text>
+    <rect x="155" y="148" width="70" height="18" rx="9" fill="#3b82f6" fill-opacity="0.15"/>
+    <text x="190" y="160" text-anchor="middle" fill="#60a5fa" font-size="8" font-weight="600">Streaming</text>
+  </g>
+
+  <!-- 3. Log Analysis / ELK Stack (green) -->
+  <g transform="translate(540, 65)">
+    <rect width="240" height="190" rx="10" fill="#1e293b" stroke="#22c55e" stroke-width="1.5" filter="url(#shadow)"/>
+    <rect width="240" height="32" rx="10" fill="#22c55e" fill-opacity="0.15"/>
+    <!-- Icon: terminal -->
+    <text x="18" y="22" fill="#22c55e" font-size="14" font-weight="700">&gt;_</text>
+    <text x="42" y="20" fill="#22c55e" font-size="12" font-weight="700">Log Analysis (ELK)</text>
+    <!-- Architecture flow -->
+    <rect x="5" y="42" width="48" height="22" rx="4" fill="#22c55e" fill-opacity="0.2" stroke="#22c55e" stroke-width="0.8"/>
+    <text x="29" y="57" text-anchor="middle" fill="#86efac" font-size="8" font-weight="600">Filebeat</text>
+    <line x1="56" y1="53" x2="63" y2="53" stroke="#22c55e" stroke-width="1"/>
+    <rect x="66" y="42" width="40" height="22" rx="4" fill="#22c55e" fill-opacity="0.2" stroke="#22c55e" stroke-width="0.8"/>
+    <text x="86" y="57" text-anchor="middle" fill="#86efac" font-size="8" font-weight="600">Kafka</text>
+    <line x1="109" y1="53" x2="116" y2="53" stroke="#22c55e" stroke-width="1"/>
+    <rect x="119" y="42" width="52" height="22" rx="4" fill="#22c55e" fill-opacity="0.2" stroke="#22c55e" stroke-width="0.8"/>
+    <text x="145" y="57" text-anchor="middle" fill="#86efac" font-size="8" font-weight="600">Logstash</text>
+    <line x1="174" y1="53" x2="181" y2="53" stroke="#22c55e" stroke-width="1"/>
+    <rect x="184" y="42" width="48" height="22" rx="4" fill="#22c55e" fill-opacity="0.3" stroke="#22c55e" stroke-width="0.8"/>
+    <text x="208" y="57" text-anchor="middle" fill="#86efac" font-size="8" font-weight="600">ES</text>
+    <!-- Description -->
+    <text x="15" y="87" fill="#94a3b8" font-size="9.5" font-weight="400">
+      <tspan x="15" dy="0">Filebeat collects logs, Kafka</tspan>
+      <tspan x="15" dy="13">buffers, Logstash processes,</tspan>
+      <tspan x="15" dy="13">Elasticsearch stores, and</tspan>
+      <tspan x="15" dy="13">Kibana visualizes. Standard</tspan>
+      <tspan x="15" dy="13">log management pipeline.</tspan>
+    </text>
+    <rect x="15" y="152" width="55" height="18" rx="9" fill="#22c55e" fill-opacity="0.15"/>
+    <text x="42" y="164" text-anchor="middle" fill="#4ade80" font-size="8" font-weight="600">Pipeline</text>
+    <rect x="75" y="152" width="68" height="18" rx="9" fill="#22c55e" fill-opacity="0.15"/>
+    <text x="109" y="164" text-anchor="middle" fill="#4ade80" font-size="8" font-weight="600">Structured</text>
+    <rect x="148" y="152" width="75" height="18" rx="9" fill="#22c55e" fill-opacity="0.15"/>
+    <text x="185" y="164" text-anchor="middle" fill="#4ade80" font-size="8" font-weight="600">Centralized</text>
+  </g>
+
+  <!-- Row 2 -->
+  <!-- 4. Machine Learning (purple) -->
+  <g transform="translate(20, 275)">
+    <rect width="240" height="190" rx="10" fill="#1e293b" stroke="#a855f7" stroke-width="1.5" filter="url(#shadow)"/>
+    <rect width="240" height="32" rx="10" fill="#a855f7" fill-opacity="0.15"/>
+    <!-- Icon: brain/neural -->
+    <circle cx="25" cy="16" r="8" fill="none" stroke="#a855f7" stroke-width="1.2"/>
+    <circle cx="25" cy="16" r="3" fill="#a855f7" fill-opacity="0.4"/>
+    <line x1="25" y1="8" x2="25" y2="10" stroke="#a855f7" stroke-width="1"/>
+    <line x1="25" y1="22" x2="25" y2="24" stroke="#a855f7" stroke-width="1"/>
+    <line x1="17" y1="16" x2="19" y2="16" stroke="#a855f7" stroke-width="1"/>
+    <line x1="31" y1="16" x2="33" y2="16" stroke="#a855f7" stroke-width="1"/>
+    <text x="42" y="20" fill="#a855f7" font-size="12" font-weight="700">Machine Learning</text>
+    <!-- Architecture flow -->
+    <rect x="15" y="45" width="60" height="24" rx="4" fill="#a855f7" fill-opacity="0.2" stroke="#a855f7" stroke-width="0.8"/>
+    <text x="45" y="61" text-anchor="middle" fill="#d8b4fe" font-size="9" font-weight="600">Data Flow</text>
+    <line x1="80" y1="57" x2="95" y2="57" stroke="#a855f7" stroke-width="1"/>
+    <rect x="100" y="45" width="60" height="24" rx="4" fill="#a855f7" fill-opacity="0.2" stroke="#a855f7" stroke-width="0.8"/>
+    <text x="130" y="61" text-anchor="middle" fill="#d8b4fe" font-size="9" font-weight="600">X-Pack ML</text>
+    <line x1="165" y1="57" x2="175" y2="57" stroke="#a855f7" stroke-width="1"/>
+    <rect x="180" y="45" width="48" height="24" rx="4" fill="#a855f7" fill-opacity="0.3" stroke="#a855f7" stroke-width="0.8"/>
+    <text x="204" y="61" text-anchor="middle" fill="#d8b4fe" font-size="9" font-weight="600">Alerts</text>
+    <!-- Description -->
+    <text x="15" y="90" fill="#94a3b8" font-size="9.5" font-weight="400">
+      <tspan x="15" dy="0">X-Pack ML detects anomalies,</tspan>
+      <tspan x="15" dy="13">patterns, and trends in data</tspan>
+      <tspan x="15" dy="13">automatically. Proactive</tspan>
+      <tspan x="15" dy="13">observability without manual</tspan>
+      <tspan x="15" dy="13">threshold setting.</tspan>
+    </text>
+    <rect x="15" y="152" width="68" height="18" rx="9" fill="#a855f7" fill-opacity="0.15"/>
+    <text x="49" y="164" text-anchor="middle" fill="#c084fc" font-size="8" font-weight="600">Anomaly</text>
+    <rect x="88" y="152" width="72" height="18" rx="9" fill="#a855f7" fill-opacity="0.15"/>
+    <text x="124" y="164" text-anchor="middle" fill="#c084fc" font-size="8" font-weight="600">Forecasting</text>
+    <rect x="165" y="152" width="60" height="18" rx="9" fill="#a855f7" fill-opacity="0.15"/>
+    <text x="195" y="164" text-anchor="middle" fill="#c084fc" font-size="8" font-weight="600">Alerting</text>
+  </g>
+
+  <!-- 5. Geo-Data Applications (teal) -->
+  <g transform="translate(280, 275)">
+    <rect width="240" height="190" rx="10" fill="#1e293b" stroke="#14b8a6" stroke-width="1.5" filter="url(#shadow)"/>
+    <rect width="240" height="32" rx="10" fill="#14b8a6" fill-opacity="0.15"/>
+    <!-- Icon: pin/location -->
+    <path d="M25 8 C19 8 15 13 15 17.5 C15 24 25 28 25 28 C25 28 35 24 35 17.5 C35 13 31 8 25 8Z" fill="none" stroke="#14b8a6" stroke-width="1.2"/>
+    <circle cx="25" cy="17" r="3" fill="#14b8a6" fill-opacity="0.4"/>
+    <text x="42" y="20" fill="#14b8a6" font-size="12" font-weight="700">Geo-Data Applications</text>
+    <!-- Architecture flow -->
+    <rect x="15" y="45" width="60" height="24" rx="4" fill="#14b8a6" fill-opacity="0.2" stroke="#14b8a6" stroke-width="0.8"/>
+    <text x="45" y="61" text-anchor="middle" fill="#5eead4" font-size="9" font-weight="600">Geo Data</text>
+    <line x1="80" y1="57" x2="95" y2="57" stroke="#14b8a6" stroke-width="1"/>
+    <rect x="100" y="45" width="60" height="24" rx="4" fill="#14b8a6" fill-opacity="0.2" stroke="#14b8a6" stroke-width="0.8"/>
+    <text x="130" y="61" text-anchor="middle" fill="#5eead4" font-size="9" font-weight="600">k-d Tree</text>
+    <line x1="165" y1="57" x2="175" y2="57" stroke="#14b8a6" stroke-width="1"/>
+    <rect x="180" y="45" width="48" height="24" rx="4" fill="#14b8a6" fill-opacity="0.3" stroke="#14b8a6" stroke-width="0.8"/>
+    <text x="204" y="61" text-anchor="middle" fill="#5eead4" font-size="9" font-weight="600">Map</text>
+    <!-- Description -->
+    <text x="15" y="90" fill="#94a3b8" font-size="9.5" font-weight="400">
+      <tspan x="15" dy="0">Balanced k-d tree geo indexing</tspan>
+      <tspan x="15" dy="13">enables proximity searches and</tspan>
+      <tspan x="15" dy="13">geographic data visualization.</tspan>
+      <tspan x="15" dy="13">Used by mapping and location</tspan>
+      <tspan x="15" dy="13">services.</tspan>
+    </text>
+    <rect x="15" y="152" width="68" height="18" rx="9" fill="#14b8a6" fill-opacity="0.15"/>
+    <text x="49" y="164" text-anchor="middle" fill="#2dd4bf" font-size="8" font-weight="600">Proximity</text>
+    <rect x="88" y="152" width="65" height="18" rx="9" fill="#14b8a6" fill-opacity="0.15"/>
+    <text x="120" y="164" text-anchor="middle" fill="#2dd4bf" font-size="8" font-weight="600">Geo Hash</text>
+    <rect x="158" y="152" width="68" height="18" rx="9" fill="#14b8a6" fill-opacity="0.15"/>
+    <text x="192" y="164" text-anchor="middle" fill="#2dd4bf" font-size="8" font-weight="600">Bounding</text>
+  </g>
+
+  <!-- 6. SIEM (red) -->
+  <g transform="translate(540, 275)">
+    <rect width="240" height="190" rx="10" fill="#1e293b" stroke="#ef4444" stroke-width="1.5" filter="url(#shadow)"/>
+    <rect width="240" height="32" rx="10" fill="#ef4444" fill-opacity="0.15"/>
+    <!-- Icon: shield -->
+    <path d="M25 8 L15 13 L15 20 C15 25 19 28 25 30 C31 28 35 25 35 20 L35 13Z" fill="none" stroke="#ef4444" stroke-width="1.2"/>
+    <text x="42" y="20" fill="#ef4444" font-size="12" font-weight="700">SIEM</text>
+    <!-- Architecture flow -->
+    <rect x="5" y="45" width="55" height="24" rx="4" fill="#ef4444" fill-opacity="0.2" stroke="#ef4444" stroke-width="0.8"/>
+    <text x="32" y="61" text-anchor="middle" fill="#fca5a5" font-size="8.5" font-weight="600">Elastic Agent</text>
+    <line x1="65" y1="57" x2="75" y2="57" stroke="#ef4444" stroke-width="1"/>
+    <rect x="80" y="45" width="65" height="24" rx="4" fill="#ef4444" fill-opacity="0.2" stroke="#ef4444" stroke-width="0.8"/>
+    <text x="112" y="61" text-anchor="middle" fill="#fca5a5" font-size="8.5" font-weight="600">Detection</text>
+    <line x1="150" y1="57" x2="160" y2="57" stroke="#ef4444" stroke-width="1"/>
+    <rect x="165" y="45" width="65" height="24" rx="4" fill="#ef4444" fill-opacity="0.3" stroke="#ef4444" stroke-width="0.8"/>
+    <text x="197" y="61" text-anchor="middle" fill="#fca5a5" font-size="8.5" font-weight="600">Alerts/SOC</text>
+    <!-- Description -->
+    <text x="15" y="90" fill="#94a3b8" font-size="9.5" font-weight="400">
+      <tspan x="15" dy="0">Elastic Agent collects security</tspan>
+      <tspan x="15" dy="13">events, detection rules identify</tspan>
+      <tspan x="15" dy="13">anomalies, real-time alerts and</tspan>
+      <tspan x="15" dy="13">dashboards for security</tspan>
+      <tspan x="15" dy="13">operations centers.</tspan>
+    </text>
+    <rect x="15" y="152" width="58" height="18" rx="9" fill="#ef4444" fill-opacity="0.15"/>
+    <text x="44" y="164" text-anchor="middle" fill="#f87171" font-size="8" font-weight="600">Threats</text>
+    <rect x="78" y="152" width="72" height="18" rx="9" fill="#ef4444" fill-opacity="0.15"/>
+    <text x="114" y="164" text-anchor="middle" fill="#f87171" font-size="8" font-weight="600">Detection</text>
+    <rect x="155" y="152" width="70" height="18" rx="9" fill="#ef4444" fill-opacity="0.15"/>
+    <text x="190" y="164" text-anchor="middle" fill="#f87171" font-size="8" font-weight="600">Response</text>
+  </g>
+</svg>

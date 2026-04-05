@@ -1,0 +1,119 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="800" height="450" font-family="Inter, system-ui, sans-serif">
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+    <linearGradient id="greenGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#059669"/>
+      <stop offset="100%" stop-color="#10b981"/>
+    </linearGradient>
+    <linearGradient id="blueGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#2563eb"/>
+      <stop offset="100%" stop-color="#3b82f6"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="450" fill="url(#bgGrad)" rx="12"/>
+
+  <!-- Title -->
+  <text x="400" y="34" text-anchor="middle" fill="#f1f5f9" font-size="18" font-weight="700">HTTPS/SSL Handshake</text>
+  <text x="400" y="52" text-anchor="middle" fill="#64748b" font-size="11">Three steps to establish a secure encrypted connection</text>
+
+  <!-- Client column -->
+  <rect x="30" y="70" width="130" height="45" rx="8" fill="#1e3a5f" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="95" y="88" text-anchor="middle" fill="#93c5fd" font-size="12" font-weight="700">Client</text>
+  <text x="95" y="103" text-anchor="middle" fill="#60a5fa" font-size="9">(Browser)</text>
+  <!-- Client vertical line -->
+  <line x1="95" y1="115" x2="95" y2="430" stroke="#3b82f6" stroke-width="1" stroke-dasharray="4,3" opacity="0.4"/>
+
+  <!-- Server column -->
+  <rect x="540" y="70" width="130" height="45" rx="8" fill="#14532d" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="605" y="88" text-anchor="middle" fill="#86efac" font-size="12" font-weight="700">Server</text>
+  <text x="605" y="103" text-anchor="middle" fill="#4ade80" font-size="9">(Web Server)</text>
+  <!-- Server vertical line -->
+  <line x1="605" y1="115" x2="605" y2="430" stroke="#22c55e" stroke-width="1" stroke-dasharray="4,3" opacity="0.4"/>
+
+  <!-- CA column -->
+  <rect x="680" y="70" width="100" height="45" rx="8" fill="#3b1764" stroke="#a855f7" stroke-width="1.5"/>
+  <text x="730" y="88" text-anchor="middle" fill="#d8b4fe" font-size="12" font-weight="700">CA</text>
+  <text x="730" y="103" text-anchor="middle" fill="#c084fc" font-size="9">(Certificate Auth)</text>
+
+  <!-- ==================== STEP 1 ==================== -->
+  <rect x="10" y="128" width="780" height="95" rx="8" fill="#172554" stroke="#3b82f6" stroke-width="1" opacity="0.4"/>
+  <rect x="15" y="130" width="200" height="20" rx="4" fill="#2563eb" opacity="0.3"/>
+  <text x="25" y="144" fill="#93c5fd" font-size="11" font-weight="700">Step 1: Certificate Check</text>
+
+  <!-- CLIENT HELLO arrow -->
+  <line x1="95" y1="160" x2="600" y2="160" stroke="#60a5fa" stroke-width="1.5"/>
+  <polygon points="600,160 594,156 594,164" fill="#60a5fa"/>
+  <rect x="260" y="148" width="120" height="17" rx="3" fill="#1e3a5f"/>
+  <text x="320" y="160" text-anchor="middle" fill="#93c5fd" font-size="10" font-weight="600">CLIENT HELLO</text>
+
+  <!-- SERVER HELLO + Certificate arrow -->
+  <line x1="605" y1="180" x2="100" y2="180" stroke="#4ade80" stroke-width="1.5"/>
+  <polygon points="100,180 106,176 106,184" fill="#4ade80"/>
+  <rect x="220" y="168" width="200" height="17" rx="3" fill="#14532d"/>
+  <text x="320" y="180" text-anchor="middle" fill="#86efac" font-size="10" font-weight="600">SERVER HELLO + Certificate</text>
+
+  <!-- CA verification -->
+  <line x1="95" y1="200" x2="720" y2="200" stroke="#c084fc" stroke-width="1" stroke-dasharray="4,3"/>
+  <polygon points="720,200 714,196 714,204" fill="#c084fc"/>
+  <rect x="310" y="189" width="120" height="17" rx="3" fill="#3b1764"/>
+  <text x="370" y="201" text-anchor="middle" fill="#d8b4fe" font-size="9" font-weight="600">Verify with CA ✓</text>
+
+  <!-- ==================== STEP 2 ==================== -->
+  <rect x="10" y="233" width="780" height="95" rx="8" fill="#022c22" stroke="#10b981" stroke-width="1" opacity="0.4"/>
+  <rect x="15" y="235" width="170" height="20" rx="4" fill="#059669" opacity="0.3"/>
+  <text x="25" y="249" fill="#6ee7b7" font-size="11" font-weight="700">Step 2: Key Exchange</text>
+
+  <!-- Extract public key label -->
+  <rect x="110" y="260" width="170" height="16" rx="3" fill="#064e3b"/>
+  <text x="195" y="272" text-anchor="middle" fill="#6ee7b7" font-size="9">Extract server public key 🔑</text>
+
+  <!-- Negotiate cipher suite -->
+  <line x1="95" y1="285" x2="600" y2="285" stroke="#60a5fa" stroke-width="1.5"/>
+  <polygon points="600,285 594,281 594,289" fill="#60a5fa"/>
+  <line x1="605" y1="293" x2="100" y2="293" stroke="#4ade80" stroke-width="1.5"/>
+  <polygon points="100,293 106,289 106,297" fill="#4ade80"/>
+  <rect x="260" y="278" width="155" height="17" rx="3" fill="#1e3a5f"/>
+  <text x="337" y="290" text-anchor="middle" fill="#93c5fd" font-size="9" font-weight="600">Negotiate cipher (AES-256)</text>
+
+  <!-- Encrypted session key -->
+  <line x1="95" y1="310" x2="600" y2="310" stroke="#fbbf24" stroke-width="1.5"/>
+  <polygon points="600,310 594,306 594,314" fill="#fbbf24"/>
+  <rect x="230" y="299" width="200" height="17" rx="3" fill="#422006"/>
+  <text x="330" y="311" text-anchor="middle" fill="#fde68a" font-size="9" font-weight="600">🔒 Encrypted session key →</text>
+
+  <!-- ==================== STEP 3 ==================== -->
+  <rect x="10" y="338" width="780" height="85" rx="8" fill="#042f2e" stroke="#14b8a6" stroke-width="1" opacity="0.4"/>
+  <rect x="15" y="340" width="180" height="20" rx="4" fill="#0d9488" opacity="0.3"/>
+  <text x="25" y="354" fill="#5eead4" font-size="11" font-weight="700">Step 3: Encrypted Tunnel</text>
+
+  <!-- Tunnel visualization -->
+  <rect x="95" y="370" width="510" height="30" rx="15" fill="none" stroke="#14b8a6" stroke-width="2" filter="url(#glow)"/>
+  <rect x="100" y="373" width="500" height="24" rx="12" fill="#0d9488" opacity="0.15"/>
+
+  <!-- Lock icons and data flow -->
+  <text x="115" y="391" fill="#5eead4" font-size="14">🔒</text>
+  <text x="580" y="391" fill="#5eead4" font-size="14">🔒</text>
+
+  <!-- Bidirectional arrows inside tunnel -->
+  <line x1="145" y1="382" x2="560" y2="382" stroke="#2dd4bf" stroke-width="1"/>
+  <polygon points="560,382 554,379 554,385" fill="#2dd4bf"/>
+  <line x1="560" y1="390" x2="145" y2="390" stroke="#2dd4bf" stroke-width="1"/>
+  <polygon points="145,390 151,387 151,393" fill="#2dd4bf"/>
+  <text x="350" y="389" text-anchor="middle" fill="#99f6e4" font-size="9" font-weight="600">Symmetric encryption (shared session key)</text>
+
+  <!-- Status label -->
+  <rect x="270" y="405" width="160" height="18" rx="4" fill="#14b8a6" opacity="0.2"/>
+  <text x="350" y="418" text-anchor="middle" fill="#5eead4" font-size="10" font-weight="700">✓ Secure Tunnel Established</text>
+
+  <!-- Bottom note -->
+  <text x="400" y="443" text-anchor="middle" fill="#475569" font-size="9">Asymmetric encryption (slow) used only for key exchange | Symmetric encryption (fast) used for all data transfer</text>
+</svg>
