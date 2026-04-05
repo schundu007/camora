@@ -1,0 +1,265 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="800" height="500" font-family="Inter, system-ui, -apple-system, sans-serif">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+    <linearGradient id="blueGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#2563eb"/>
+    </linearGradient>
+    <linearGradient id="greenGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+    <linearGradient id="tealGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#14b8a6"/>
+      <stop offset="100%" stop-color="#0d9488"/>
+    </linearGradient>
+    <linearGradient id="cyanGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#06b6d4"/>
+      <stop offset="100%" stop-color="#0891b2"/>
+    </linearGradient>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="500" fill="url(#bgGrad)" rx="12"/>
+
+  <!-- Title -->
+  <text x="400" y="35" text-anchor="middle" fill="#f1f5f9" font-size="18" font-weight="700">Database Index Data Structures</text>
+
+  <!-- ==================== B+ Tree (Top Left) ==================== -->
+  <g transform="translate(10, 50)">
+    <rect x="0" y="0" width="380" height="195" rx="10" fill="#1e293b" stroke="#334155" stroke-width="1" filter="url(#shadow)"/>
+    <rect x="0" y="0" width="380" height="30" rx="10" fill="url(#blueGrad)"/>
+    <rect x="0" y="15" width="380" height="15" fill="url(#blueGrad)"/>
+    <text x="190" y="20" text-anchor="middle" fill="#fff" font-size="12" font-weight="600">B+ Tree</text>
+    <text x="190" y="52" text-anchor="middle" fill="#94a3b8" font-size="9">O(log N) reads/writes  |  Range scans via linked leaves</text>
+
+    <!-- Root node -->
+    <rect x="155" y="62" width="70" height="24" rx="4" fill="#3b82f6" opacity="0.9"/>
+    <text x="190" y="78" text-anchor="middle" fill="#fff" font-size="10" font-weight="600">M</text>
+
+    <!-- Internal nodes -->
+    <rect x="65" y="108" width="80" height="24" rx="4" fill="#3b82f6" opacity="0.7"/>
+    <text x="105" y="124" text-anchor="middle" fill="#fff" font-size="10">D  H</text>
+    <rect x="235" y="108" width="80" height="24" rx="4" fill="#3b82f6" opacity="0.7"/>
+    <text x="275" y="124" text-anchor="middle" fill="#fff" font-size="10">R  W</text>
+
+    <!-- Lines root to internal -->
+    <line x1="175" y1="86" x2="105" y2="108" stroke="#60a5fa" stroke-width="1.5"/>
+    <line x1="205" y1="86" x2="275" y2="108" stroke="#60a5fa" stroke-width="1.5"/>
+
+    <!-- Leaf nodes -->
+    <rect x="18" y="154" width="52" height="22" rx="3" fill="#1d4ed8" opacity="0.6"/>
+    <text x="44" y="168" text-anchor="middle" fill="#93c5fd" font-size="8">A B C</text>
+    <rect x="76" y="154" width="52" height="22" rx="3" fill="#1d4ed8" opacity="0.6"/>
+    <text x="102" y="168" text-anchor="middle" fill="#93c5fd" font-size="8">D E F</text>
+    <rect x="134" y="154" width="52" height="22" rx="3" fill="#1d4ed8" opacity="0.6"/>
+    <text x="160" y="168" text-anchor="middle" fill="#93c5fd" font-size="8">H I J</text>
+    <rect x="198" y="154" width="52" height="22" rx="3" fill="#1d4ed8" opacity="0.6"/>
+    <text x="224" y="168" text-anchor="middle" fill="#93c5fd" font-size="8">M N P</text>
+    <rect x="256" y="154" width="52" height="22" rx="3" fill="#1d4ed8" opacity="0.6"/>
+    <text x="282" y="168" text-anchor="middle" fill="#93c5fd" font-size="8">R S T</text>
+    <rect x="314" y="154" width="52" height="22" rx="3" fill="#1d4ed8" opacity="0.6"/>
+    <text x="340" y="168" text-anchor="middle" fill="#93c5fd" font-size="8">W X Z</text>
+
+    <!-- Lines internal to leaf -->
+    <line x1="85" y1="132" x2="44" y2="154" stroke="#60a5fa" stroke-width="1"/>
+    <line x1="105" y1="132" x2="102" y2="154" stroke="#60a5fa" stroke-width="1"/>
+    <line x1="125" y1="132" x2="160" y2="154" stroke="#60a5fa" stroke-width="1"/>
+    <line x1="255" y1="132" x2="224" y2="154" stroke="#60a5fa" stroke-width="1"/>
+    <line x1="275" y1="132" x2="282" y2="154" stroke="#60a5fa" stroke-width="1"/>
+    <line x1="295" y1="132" x2="340" y2="154" stroke="#60a5fa" stroke-width="1"/>
+
+    <!-- Linked list arrows between leaves -->
+    <line x1="70" y1="165" x2="76" y2="165" stroke="#facc15" stroke-width="1.2" marker-end="url(#arrowY)"/>
+    <line x1="128" y1="165" x2="134" y2="165" stroke="#facc15" stroke-width="1.2"/>
+    <line x1="186" y1="165" x2="198" y2="165" stroke="#facc15" stroke-width="1.2"/>
+    <line x1="250" y1="165" x2="256" y2="165" stroke="#facc15" stroke-width="1.2"/>
+    <line x1="308" y1="165" x2="314" y2="165" stroke="#facc15" stroke-width="1.2"/>
+    <text x="190" y="190" text-anchor="middle" fill="#facc15" font-size="8">← linked leaf nodes for range scans →</text>
+  </g>
+
+  <!-- ==================== LSM Tree (Top Right) ==================== -->
+  <g transform="translate(410, 50)">
+    <rect x="0" y="0" width="380" height="195" rx="10" fill="#1e293b" stroke="#334155" stroke-width="1" filter="url(#shadow)"/>
+    <rect x="0" y="0" width="380" height="30" rx="10" fill="url(#greenGrad)"/>
+    <rect x="0" y="15" width="380" height="15" fill="url(#greenGrad)"/>
+    <text x="190" y="20" text-anchor="middle" fill="#fff" font-size="12" font-weight="600">LSM Tree (Log-Structured Merge)</text>
+    <text x="190" y="52" text-anchor="middle" fill="#94a3b8" font-size="9">Write-optimized  |  Memtable → SSTables → Compaction</text>
+
+    <!-- Memtable -->
+    <rect x="20" y="65" width="80" height="35" rx="6" fill="#10b981" opacity="0.8"/>
+    <text x="60" y="80" text-anchor="middle" fill="#fff" font-size="9" font-weight="600">Memtable</text>
+    <text x="60" y="92" text-anchor="middle" fill="#d1fae5" font-size="7">(in-memory)</text>
+
+    <!-- Arrow memtable to L0 -->
+    <line x1="100" y1="82" x2="120" y2="82" stroke="#34d399" stroke-width="1.5"/>
+    <polygon points="120,78 128,82 120,86" fill="#34d399"/>
+    <text x="114" y="75" text-anchor="middle" fill="#6ee7b7" font-size="7">flush</text>
+
+    <!-- L0 SSTables -->
+    <rect x="130" y="65" width="70" height="14" rx="3" fill="#059669" opacity="0.6"/>
+    <text x="165" y="75" text-anchor="middle" fill="#d1fae5" font-size="8">SSTable</text>
+    <rect x="130" y="82" width="70" height="14" rx="3" fill="#059669" opacity="0.6"/>
+    <text x="165" y="92" text-anchor="middle" fill="#d1fae5" font-size="8">SSTable</text>
+    <text x="165" y="110" text-anchor="middle" fill="#6ee7b7" font-size="8" font-weight="600">L0</text>
+
+    <!-- Arrow L0 to L1 -->
+    <line x1="200" y1="82" x2="220" y2="120" stroke="#34d399" stroke-width="1.5"/>
+    <polygon points="217,117 224,123 218,124" fill="#34d399"/>
+    <text x="220" y="97" text-anchor="middle" fill="#fbbf24" font-size="7">compact</text>
+
+    <!-- L1 SSTables -->
+    <rect x="220" y="115" width="55" height="14" rx="3" fill="#047857" opacity="0.6"/>
+    <text x="247" y="125" text-anchor="middle" fill="#a7f3d0" font-size="7">SSTable</text>
+    <rect x="280" y="115" width="55" height="14" rx="3" fill="#047857" opacity="0.6"/>
+    <text x="307" y="125" text-anchor="middle" fill="#a7f3d0" font-size="7">SSTable</text>
+    <rect x="340" y="115" width="30" height="14" rx="3" fill="#047857" opacity="0.5"/>
+    <text x="355" y="125" text-anchor="middle" fill="#a7f3d0" font-size="7">...</text>
+    <text x="290" y="143" text-anchor="middle" fill="#6ee7b7" font-size="8" font-weight="600">L1 (10x larger)</text>
+
+    <!-- Arrow L1 to L2 -->
+    <line x1="290" y1="145" x2="290" y2="158" stroke="#34d399" stroke-width="1.5"/>
+    <polygon points="286,158 290,165 294,158" fill="#34d399"/>
+
+    <!-- L2 SSTables -->
+    <rect x="50" y="165" width="55" height="14" rx="3" fill="#065f46" opacity="0.5"/>
+    <rect x="110" y="165" width="55" height="14" rx="3" fill="#065f46" opacity="0.5"/>
+    <rect x="170" y="165" width="55" height="14" rx="3" fill="#065f46" opacity="0.5"/>
+    <rect x="230" y="165" width="55" height="14" rx="3" fill="#065f46" opacity="0.5"/>
+    <rect x="290" y="165" width="55" height="14" rx="3" fill="#065f46" opacity="0.5"/>
+    <rect x="350" y="165" width="20" height="14" rx="3" fill="#065f46" opacity="0.4"/>
+    <text x="200" y="192" text-anchor="middle" fill="#6ee7b7" font-size="8" font-weight="600">L2 (100x larger)</text>
+    <text x="370" y="175" text-anchor="middle" fill="#a7f3d0" font-size="7">...</text>
+  </g>
+
+  <!-- ==================== Hash Index (Bottom Left) ==================== -->
+  <g transform="translate(10, 262)">
+    <rect x="0" y="0" width="380" height="220" rx="10" fill="#1e293b" stroke="#334155" stroke-width="1" filter="url(#shadow)"/>
+    <rect x="0" y="0" width="380" height="30" rx="10" fill="url(#tealGrad)"/>
+    <rect x="0" y="15" width="380" height="15" fill="url(#tealGrad)"/>
+    <text x="190" y="20" text-anchor="middle" fill="#fff" font-size="12" font-weight="600">Hash Index</text>
+    <text x="190" y="52" text-anchor="middle" fill="#94a3b8" font-size="9">O(1) exact lookups  |  No range queries</text>
+
+    <!-- Key input -->
+    <rect x="20" y="68" width="80" height="28" rx="6" fill="#14b8a6" opacity="0.8"/>
+    <text x="60" y="86" text-anchor="middle" fill="#fff" font-size="10" font-weight="600">key</text>
+
+    <!-- Arrow to hash -->
+    <line x1="100" y1="82" x2="118" y2="82" stroke="#2dd4bf" stroke-width="1.5"/>
+    <polygon points="118,78 126,82 118,86" fill="#2dd4bf"/>
+
+    <!-- Hash function -->
+    <rect x="126" y="65" width="75" height="34" rx="6" fill="#0d9488" opacity="0.8"/>
+    <text x="163" y="80" text-anchor="middle" fill="#fff" font-size="9" font-weight="600">hash(key)</text>
+    <text x="163" y="92" text-anchor="middle" fill="#ccfbf1" font-size="7">% buckets</text>
+
+    <!-- Arrow to buckets -->
+    <line x1="201" y1="82" x2="218" y2="82" stroke="#2dd4bf" stroke-width="1.5"/>
+    <polygon points="218,78 226,82 218,86" fill="#2dd4bf"/>
+
+    <!-- Bucket array -->
+    <rect x="228" y="55" width="130" height="18" rx="3" fill="#0f766e" opacity="0.5"/>
+    <text x="293" y="67" text-anchor="middle" fill="#99f6e4" font-size="8">Bucket 0 → val_A</text>
+    <rect x="228" y="76" width="130" height="18" rx="3" fill="#0f766e" opacity="0.7"/>
+    <text x="293" y="88" text-anchor="middle" fill="#fff" font-size="8" font-weight="600">Bucket 1 → val_B</text>
+    <rect x="228" y="97" width="130" height="18" rx="3" fill="#0f766e" opacity="0.5"/>
+    <text x="293" y="109" text-anchor="middle" fill="#99f6e4" font-size="8">Bucket 2 → val_C</text>
+    <rect x="228" y="118" width="130" height="18" rx="3" fill="#0f766e" opacity="0.5"/>
+    <text x="293" y="130" text-anchor="middle" fill="#99f6e4" font-size="8">Bucket 3 → val_D</text>
+    <rect x="228" y="139" width="130" height="18" rx="3" fill="#0f766e" opacity="0.4"/>
+    <text x="293" y="151" text-anchor="middle" fill="#99f6e4" font-size="8">...</text>
+
+    <!-- Highlight the selected bucket -->
+    <rect x="226" y="74" width="134" height="22" rx="4" fill="none" stroke="#2dd4bf" stroke-width="1.5" stroke-dasharray="4,2"/>
+
+    <!-- Summary -->
+    <text x="20" y="180" fill="#94a3b8" font-size="9">Pros: O(1) lookups, simple</text>
+    <text x="20" y="195" fill="#94a3b8" font-size="9">Cons: No range queries, no ordering</text>
+    <text x="20" y="210" fill="#5eead4" font-size="9" font-weight="500">Used by: Redis, Memcached, PostgreSQL hash idx</text>
+  </g>
+
+  <!-- ==================== Inverted Index (Bottom Right) ==================== -->
+  <g transform="translate(410, 262)">
+    <rect x="0" y="0" width="380" height="220" rx="10" fill="#1e293b" stroke="#334155" stroke-width="1" filter="url(#shadow)"/>
+    <rect x="0" y="0" width="380" height="30" rx="10" fill="url(#cyanGrad)"/>
+    <rect x="0" y="15" width="380" height="15" fill="url(#cyanGrad)"/>
+    <text x="190" y="20" text-anchor="middle" fill="#fff" font-size="12" font-weight="600">Inverted Index</text>
+    <text x="190" y="52" text-anchor="middle" fill="#94a3b8" font-size="9">Full-text search  |  Word → Document mapping</text>
+
+    <!-- Term column -->
+    <rect x="20" y="65" width="90" height="22" rx="4" fill="#06b6d4" opacity="0.8"/>
+    <text x="65" y="80" text-anchor="middle" fill="#fff" font-size="10" font-weight="600">Term</text>
+    <rect x="20" y="90" width="90" height="18" rx="3" fill="#0891b2" opacity="0.6"/>
+    <text x="65" y="102" text-anchor="middle" fill="#cffafe" font-size="9">"database"</text>
+    <rect x="20" y="111" width="90" height="18" rx="3" fill="#0891b2" opacity="0.6"/>
+    <text x="65" y="123" text-anchor="middle" fill="#cffafe" font-size="9">"index"</text>
+    <rect x="20" y="132" width="90" height="18" rx="3" fill="#0891b2" opacity="0.6"/>
+    <text x="65" y="144" text-anchor="middle" fill="#cffafe" font-size="9">"query"</text>
+    <rect x="20" y="153" width="90" height="18" rx="3" fill="#0891b2" opacity="0.6"/>
+    <text x="65" y="165" text-anchor="middle" fill="#cffafe" font-size="9">"scale"</text>
+
+    <!-- Arrows -->
+    <line x1="110" y1="99" x2="140" y2="99" stroke="#22d3ee" stroke-width="1.2"/>
+    <polygon points="140,96 147,99 140,102" fill="#22d3ee"/>
+    <line x1="110" y1="120" x2="140" y2="120" stroke="#22d3ee" stroke-width="1.2"/>
+    <polygon points="140,117 147,120 140,123" fill="#22d3ee"/>
+    <line x1="110" y1="141" x2="140" y2="141" stroke="#22d3ee" stroke-width="1.2"/>
+    <polygon points="140,138 147,141 140,144" fill="#22d3ee"/>
+    <line x1="110" y1="162" x2="140" y2="162" stroke="#22d3ee" stroke-width="1.2"/>
+    <polygon points="140,159 147,162 140,165" fill="#22d3ee"/>
+
+    <!-- Posting lists -->
+    <rect x="148" y="65" width="210" height="22" rx="4" fill="#06b6d4" opacity="0.8"/>
+    <text x="253" y="80" text-anchor="middle" fill="#fff" font-size="10" font-weight="600">Posting List (Document IDs)</text>
+
+    <g transform="translate(150, 90)">
+      <rect x="0" y="0" width="32" height="18" rx="3" fill="#164e63"/>
+      <text x="16" y="13" text-anchor="middle" fill="#67e8f9" font-size="8">doc1</text>
+      <rect x="36" y="0" width="32" height="18" rx="3" fill="#164e63"/>
+      <text x="52" y="13" text-anchor="middle" fill="#67e8f9" font-size="8">doc3</text>
+      <rect x="72" y="0" width="32" height="18" rx="3" fill="#164e63"/>
+      <text x="88" y="13" text-anchor="middle" fill="#67e8f9" font-size="8">doc7</text>
+      <rect x="108" y="0" width="38" height="18" rx="3" fill="#164e63"/>
+      <text x="127" y="13" text-anchor="middle" fill="#67e8f9" font-size="8">doc12</text>
+    </g>
+
+    <g transform="translate(150, 111)">
+      <rect x="0" y="0" width="32" height="18" rx="3" fill="#164e63"/>
+      <text x="16" y="13" text-anchor="middle" fill="#67e8f9" font-size="8">doc1</text>
+      <rect x="36" y="0" width="32" height="18" rx="3" fill="#164e63"/>
+      <text x="52" y="13" text-anchor="middle" fill="#67e8f9" font-size="8">doc2</text>
+      <rect x="72" y="0" width="32" height="18" rx="3" fill="#164e63"/>
+      <text x="88" y="13" text-anchor="middle" fill="#67e8f9" font-size="8">doc3</text>
+      <rect x="108" y="0" width="32" height="18" rx="3" fill="#164e63"/>
+      <text x="124" y="13" text-anchor="middle" fill="#67e8f9" font-size="8">doc5</text>
+      <rect x="144" y="0" width="38" height="18" rx="3" fill="#164e63"/>
+      <text x="163" y="13" text-anchor="middle" fill="#67e8f9" font-size="8">doc12</text>
+    </g>
+
+    <g transform="translate(150, 132)">
+      <rect x="0" y="0" width="32" height="18" rx="3" fill="#164e63"/>
+      <text x="16" y="13" text-anchor="middle" fill="#67e8f9" font-size="8">doc2</text>
+      <rect x="36" y="0" width="32" height="18" rx="3" fill="#164e63"/>
+      <text x="52" y="13" text-anchor="middle" fill="#67e8f9" font-size="8">doc7</text>
+    </g>
+
+    <g transform="translate(150, 153)">
+      <rect x="0" y="0" width="32" height="18" rx="3" fill="#164e63"/>
+      <text x="16" y="13" text-anchor="middle" fill="#67e8f9" font-size="8">doc3</text>
+      <rect x="36" y="0" width="32" height="18" rx="3" fill="#164e63"/>
+      <text x="52" y="13" text-anchor="middle" fill="#67e8f9" font-size="8">doc5</text>
+      <rect x="72" y="0" width="38" height="18" rx="3" fill="#164e63"/>
+      <text x="91" y="13" text-anchor="middle" fill="#67e8f9" font-size="8">doc12</text>
+    </g>
+
+    <!-- Summary -->
+    <text x="20" y="195" fill="#94a3b8" font-size="9">Search "database AND index" → intersect: doc1, doc3</text>
+    <text x="20" y="210" fill="#5eead4" font-size="9" font-weight="500">Used by: ElasticSearch, Lucene, Solr</text>
+  </g>
+</svg>

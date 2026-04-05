@@ -1,0 +1,228 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" width="800" height="400">
+  <defs>
+    <style>
+      text { font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; }
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="400" rx="12" fill="#111827"/>
+
+  <!-- Title -->
+  <text x="400" y="32" text-anchor="middle" fill="#f9fafb" font-size="18" font-weight="700">Node Failure Detection Methods</text>
+
+  <!-- ===== Column 1: Heartbeat (Push) ===== -->
+  <rect x="16" y="52" width="182" height="338" rx="8" fill="#1f2937" stroke="#374151" stroke-width="1"/>
+  <text x="107" y="76" text-anchor="middle" fill="#34d399" font-size="13" font-weight="700">Heartbeat (Push)</text>
+
+  <!-- Monitor -->
+  <rect x="67" y="92" width="80" height="28" rx="6" fill="#065f46" stroke="#10b981" stroke-width="1.5"/>
+  <text x="107" y="111" text-anchor="middle" fill="#ecfdf5" font-size="11" font-weight="600">Monitor</text>
+
+  <!-- Node A alive -->
+  <rect x="32" y="144" width="60" height="24" rx="5" fill="#064e3b" stroke="#10b981" stroke-width="1"/>
+  <text x="62" y="160" text-anchor="middle" fill="#6ee7b7" font-size="10">Node A</text>
+  <!-- arrow -->
+  <line x1="92" y1="156" x2="107" y2="126" stroke="#10b981" stroke-width="1.2" marker-end="url(#arrowGreen)"/>
+  <text x="110" y="148" fill="#6ee7b7" font-size="8">beat</text>
+
+  <!-- Node B alive -->
+  <rect x="120" y="144" width="60" height="24" rx="5" fill="#064e3b" stroke="#10b981" stroke-width="1"/>
+  <text x="150" y="160" text-anchor="middle" fill="#6ee7b7" font-size="10">Node B</text>
+  <line x1="140" y1="148" x2="120" y2="126" stroke="#10b981" stroke-width="1.2"/>
+  <text x="142" y="140" fill="#6ee7b7" font-size="8">beat</text>
+
+  <!-- Node C dead -->
+  <rect x="67" y="188" width="80" height="24" rx="5" fill="#7f1d1d" stroke="#ef4444" stroke-width="1.5"/>
+  <text x="107" y="204" text-anchor="middle" fill="#fca5a5" font-size="10">Node C</text>
+  <line x1="107" y1="188" x2="107" y2="126" stroke="#ef4444" stroke-width="1.2" stroke-dasharray="4,3"/>
+  <text x="130" y="178" fill="#ef4444" font-size="8">timeout!</text>
+
+  <!-- Timeline -->
+  <text x="107" y="234" text-anchor="middle" fill="#9ca3af" font-size="9" font-weight="600">Timeline</text>
+  <line x1="30" y1="244" x2="184" y2="244" stroke="#4b5563" stroke-width="1"/>
+  <!-- ticks -->
+  <line x1="40" y1="240" x2="40" y2="248" stroke="#6b7280" stroke-width="1"/>
+  <text x="40" y="258" text-anchor="middle" fill="#6b7280" font-size="7">0s</text>
+  <line x1="78" y1="240" x2="78" y2="248" stroke="#6b7280" stroke-width="1"/>
+  <text x="78" y="258" text-anchor="middle" fill="#6b7280" font-size="7">1s</text>
+  <line x1="116" y1="240" x2="116" y2="248" stroke="#6b7280" stroke-width="1"/>
+  <text x="116" y="258" text-anchor="middle" fill="#6b7280" font-size="7">2s</text>
+  <line x1="154" y1="240" x2="154" y2="248" stroke="#6b7280" stroke-width="1"/>
+  <text x="154" y="258" text-anchor="middle" fill="#6b7280" font-size="7">3s</text>
+
+  <!-- beat indicators -->
+  <circle cx="40" cy="272" r="4" fill="#10b981"/>
+  <circle cx="78" cy="272" r="4" fill="#10b981"/>
+  <circle cx="116" cy="272" r="4" fill="#10b981"/>
+  <circle cx="154" cy="272" r="4" fill="#10b981"/>
+  <text x="24" y="275" fill="#9ca3af" font-size="7">A</text>
+
+  <circle cx="40" cy="288" r="4" fill="#10b981"/>
+  <circle cx="78" cy="288" r="4" fill="#10b981"/>
+  <circle cx="116" cy="288" r="4" fill="#ef4444"/>
+  <circle cx="154" cy="288" r="4" fill="#ef4444"/>
+  <text x="24" y="291" fill="#9ca3af" font-size="7">C</text>
+
+  <text x="140" y="302" fill="#ef4444" font-size="8" font-weight="600">DEAD</text>
+
+  <!-- Description -->
+  <text x="107" y="326" text-anchor="middle" fill="#9ca3af" font-size="8">Nodes send periodic</text>
+  <text x="107" y="338" text-anchor="middle" fill="#9ca3af" font-size="8">"I am alive" signals.</text>
+  <text x="107" y="350" text-anchor="middle" fill="#9ca3af" font-size="8">Timeout = node dead.</text>
+
+  <!-- ===== Column 2: Ping/Echo (Pull) ===== -->
+  <rect x="210" y="52" width="182" height="338" rx="8" fill="#1f2937" stroke="#374151" stroke-width="1"/>
+  <text x="301" y="76" text-anchor="middle" fill="#34d399" font-size="13" font-weight="700">Ping/Echo (Pull)</text>
+
+  <!-- Monitor -->
+  <rect x="261" y="92" width="80" height="28" rx="6" fill="#065f46" stroke="#10b981" stroke-width="1.5"/>
+  <text x="301" y="111" text-anchor="middle" fill="#ecfdf5" font-size="11" font-weight="600">Monitor</text>
+
+  <!-- Ping arrows going down -->
+  <line x1="275" y1="120" x2="248" y2="148" stroke="#10b981" stroke-width="1.2" marker-end="url(#arrowGreen)"/>
+  <text x="242" y="138" fill="#6ee7b7" font-size="8">ping</text>
+  <line x1="301" y1="120" x2="301" y2="148" stroke="#10b981" stroke-width="1.2" marker-end="url(#arrowGreen)"/>
+  <text x="308" y="138" fill="#6ee7b7" font-size="8">ping</text>
+  <line x1="327" y1="120" x2="354" y2="148" stroke="#ef4444" stroke-width="1.2" marker-end="url(#arrowRed)"/>
+  <text x="348" y="138" fill="#fca5a5" font-size="8">ping</text>
+
+  <!-- Node A -->
+  <rect x="222" y="150" width="54" height="24" rx="5" fill="#064e3b" stroke="#10b981" stroke-width="1"/>
+  <text x="249" y="166" text-anchor="middle" fill="#6ee7b7" font-size="10">A</text>
+  <!-- echo back -->
+  <line x1="252" y1="150" x2="278" y2="126" stroke="#10b981" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="256" y="180" text-anchor="middle" fill="#10b981" font-size="8">200 OK</text>
+
+  <!-- Node B -->
+  <rect x="274" y="150" width="54" height="24" rx="5" fill="#064e3b" stroke="#10b981" stroke-width="1"/>
+  <text x="301" y="166" text-anchor="middle" fill="#6ee7b7" font-size="10">B</text>
+  <line x1="301" y1="150" x2="301" y2="126" stroke="#10b981" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="301" y="180" text-anchor="middle" fill="#10b981" font-size="8">200 OK</text>
+
+  <!-- Node C failed -->
+  <rect x="326" y="150" width="54" height="24" rx="5" fill="#7f1d1d" stroke="#ef4444" stroke-width="1.5"/>
+  <text x="353" y="166" text-anchor="middle" fill="#fca5a5" font-size="10">C</text>
+  <text x="353" y="180" text-anchor="middle" fill="#ef4444" font-size="8">timeout</text>
+
+  <!-- Retry flow -->
+  <text x="301" y="206" text-anchor="middle" fill="#fbbf24" font-size="9" font-weight="600">Retry Logic</text>
+  <rect x="237" y="214" width="128" height="56" rx="6" fill="#1e293b" stroke="#374151" stroke-width="1"/>
+  <text x="301" y="230" text-anchor="middle" fill="#d1d5db" font-size="8">Attempt 1: timeout</text>
+  <text x="301" y="244" text-anchor="middle" fill="#d1d5db" font-size="8">Attempt 2: timeout</text>
+  <text x="301" y="258" text-anchor="middle" fill="#ef4444" font-size="8" font-weight="600">Attempt 3: MARK FAILED</text>
+
+  <!-- Description -->
+  <text x="301" y="294" text-anchor="middle" fill="#9ca3af" font-size="8">Monitor polls each node.</text>
+  <text x="301" y="306" text-anchor="middle" fill="#9ca3af" font-size="8">No response after retries</text>
+  <text x="301" y="318" text-anchor="middle" fill="#9ca3af" font-size="8">= node marked failed.</text>
+  <text x="301" y="338" text-anchor="middle" fill="#9ca3af" font-size="8">More control but monitor</text>
+  <text x="301" y="350" text-anchor="middle" fill="#9ca3af" font-size="8">is a single point of failure.</text>
+
+  <!-- ===== Column 3: Gossip Protocol ===== -->
+  <rect x="404" y="52" width="182" height="338" rx="8" fill="#1f2937" stroke="#374151" stroke-width="1"/>
+  <text x="495" y="76" text-anchor="middle" fill="#34d399" font-size="13" font-weight="700">Gossip Protocol</text>
+
+  <!-- Nodes in a cluster -->
+  <circle cx="455" cy="116" r="18" fill="#064e3b" stroke="#10b981" stroke-width="1.5"/>
+  <text x="455" y="120" text-anchor="middle" fill="#6ee7b7" font-size="10" font-weight="600">A</text>
+
+  <circle cx="535" cy="116" r="18" fill="#064e3b" stroke="#10b981" stroke-width="1.5"/>
+  <text x="535" y="120" text-anchor="middle" fill="#6ee7b7" font-size="10" font-weight="600">B</text>
+
+  <circle cx="455" cy="176" r="18" fill="#064e3b" stroke="#10b981" stroke-width="1.5"/>
+  <text x="455" y="180" text-anchor="middle" fill="#6ee7b7" font-size="10" font-weight="600">C</text>
+
+  <circle cx="535" cy="176" r="18" fill="#7f1d1d" stroke="#ef4444" stroke-width="1.5"/>
+  <text x="535" y="180" text-anchor="middle" fill="#fca5a5" font-size="10" font-weight="600">D</text>
+
+  <!-- Gossip arrows (random peer communication) -->
+  <line x1="473" y1="116" x2="517" y2="116" stroke="#10b981" stroke-width="1.2" marker-end="url(#arrowGreen)"/>
+  <line x1="455" y1="134" x2="455" y2="158" stroke="#10b981" stroke-width="1.2" marker-end="url(#arrowGreen)"/>
+  <line x1="473" y1="170" x2="517" y2="170" stroke="#ef4444" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#arrowRed)"/>
+  <line x1="529" y1="134" x2="461" y2="162" stroke="#10b981" stroke-width="1" stroke-dasharray="3,2"/>
+
+  <text x="495" y="132" text-anchor="middle" fill="#6ee7b7" font-size="7">gossip</text>
+  <text x="495" y="162" text-anchor="middle" fill="#fca5a5" font-size="7">suspect D</text>
+
+  <!-- Membership list -->
+  <rect x="424" y="204" width="142" height="72" rx="6" fill="#1e293b" stroke="#374151" stroke-width="1"/>
+  <text x="495" y="220" text-anchor="middle" fill="#fbbf24" font-size="9" font-weight="600">Membership List</text>
+  <text x="495" y="236" text-anchor="middle" fill="#10b981" font-size="8">A: alive (hb: 42)</text>
+  <text x="495" y="248" text-anchor="middle" fill="#10b981" font-size="8">B: alive (hb: 41)</text>
+  <text x="495" y="260" text-anchor="middle" fill="#10b981" font-size="8">C: alive (hb: 40)</text>
+  <text x="495" y="272" text-anchor="middle" fill="#ef4444" font-size="8">D: suspect (hb: 35)</text>
+
+  <!-- Convergence info -->
+  <text x="495" y="296" text-anchor="middle" fill="#9ca3af" font-size="8">Nodes share state with</text>
+  <text x="495" y="308" text-anchor="middle" fill="#9ca3af" font-size="8">random peers. Info spreads</text>
+  <text x="495" y="320" text-anchor="middle" fill="#9ca3af" font-size="8">in O(log N) rounds.</text>
+  <text x="495" y="340" text-anchor="middle" fill="#10b981" font-size="8" font-weight="600">No SPOF. Decentralized.</text>
+  <text x="495" y="356" text-anchor="middle" fill="#9ca3af" font-size="8">Used by: Cassandra, Consul</text>
+
+  <!-- ===== Column 4: Phi Accrual Detector ===== -->
+  <rect x="598" y="52" width="186" height="338" rx="8" fill="#1f2937" stroke="#374151" stroke-width="1"/>
+  <text x="691" y="76" text-anchor="middle" fill="#34d399" font-size="13" font-weight="700">Phi Accrual Detector</text>
+
+  <!-- Graph area -->
+  <rect x="618" y="92" width="146" height="120" rx="6" fill="#0f172a" stroke="#374151" stroke-width="1"/>
+
+  <!-- Y axis label -->
+  <text x="612" y="100" text-anchor="end" fill="#9ca3af" font-size="7">phi</text>
+  <text x="612" y="120" text-anchor="end" fill="#9ca3af" font-size="7">8</text>
+  <text x="612" y="150" text-anchor="end" fill="#9ca3af" font-size="7">4</text>
+  <text x="612" y="180" text-anchor="end" fill="#9ca3af" font-size="7">1</text>
+  <text x="612" y="206" text-anchor="end" fill="#9ca3af" font-size="7">0</text>
+
+  <!-- Y axis -->
+  <line x1="620" y1="96" x2="620" y2="208" stroke="#4b5563" stroke-width="1"/>
+  <!-- X axis -->
+  <line x1="620" y1="208" x2="760" y2="208" stroke="#4b5563" stroke-width="1"/>
+
+  <!-- Threshold line at phi=8 -->
+  <line x1="620" y1="116" x2="760" y2="116" stroke="#ef4444" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="762" y="120" fill="#ef4444" font-size="7">dead</text>
+
+  <!-- Suspicion curve (phi rising after node failure) -->
+  <polyline points="624,200 640,198 656,196 672,194 688,192 700,190 708,188 712,186 716,182 720,175 724,164 728,148 732,130 736,118 740,110 744,106 748,104 752,103"
+    fill="none" stroke="#fbbf24" stroke-width="2"/>
+
+  <!-- Normal region label -->
+  <text x="660" y="190" fill="#10b981" font-size="8">normal</text>
+  <!-- Suspect region -->
+  <text x="728" y="144" fill="#fbbf24" font-size="8">suspect</text>
+  <!-- Dead region -->
+  <text x="744" y="110" fill="#ef4444" font-size="8" font-weight="600">DEAD</text>
+
+  <!-- X axis labels -->
+  <text x="640" y="218" text-anchor="middle" fill="#6b7280" font-size="7">t1</text>
+  <text x="680" y="218" text-anchor="middle" fill="#6b7280" font-size="7">t2</text>
+  <text x="720" y="218" text-anchor="middle" fill="#6b7280" font-size="7">t3</text>
+  <text x="750" y="218" text-anchor="middle" fill="#6b7280" font-size="7">t4</text>
+
+  <!-- Phi formula -->
+  <rect x="618" y="226" width="146" height="38" rx="6" fill="#1e293b" stroke="#374151" stroke-width="1"/>
+  <text x="691" y="241" text-anchor="middle" fill="#fbbf24" font-size="9" font-weight="600">Suspicion Level (phi)</text>
+  <text x="691" y="257" text-anchor="middle" fill="#d1d5db" font-size="8">phi = -log10(P(delay))</text>
+
+  <!-- Thresholds -->
+  <rect x="618" y="272" width="146" height="52" rx="6" fill="#1e293b" stroke="#374151" stroke-width="1"/>
+  <text x="691" y="288" text-anchor="middle" fill="#d1d5db" font-size="8">phi &lt; 1: likely alive</text>
+  <text x="691" y="302" text-anchor="middle" fill="#fbbf24" font-size="8">phi 1-8: suspicious</text>
+  <text x="691" y="316" text-anchor="middle" fill="#ef4444" font-size="8" font-weight="600">phi &gt; 8: likely dead</text>
+
+  <!-- Description -->
+  <text x="691" y="342" text-anchor="middle" fill="#9ca3af" font-size="8">Adaptive: adjusts to</text>
+  <text x="691" y="354" text-anchor="middle" fill="#9ca3af" font-size="8">network conditions.</text>
+  <text x="691" y="370" text-anchor="middle" fill="#9ca3af" font-size="8">Used by: Cassandra, Akka</text>
+
+  <!-- Arrow markers -->
+  <defs>
+    <marker id="arrowGreen" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#10b981"/>
+    </marker>
+    <marker id="arrowRed" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#ef4444"/>
+    </marker>
+  </defs>
+</svg>

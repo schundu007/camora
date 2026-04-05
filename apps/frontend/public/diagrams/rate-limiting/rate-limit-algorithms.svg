@@ -1,0 +1,204 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="800" height="500">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a2e;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#16213e;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="amber1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f59e0b;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#d97706;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="amber2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#fb923c;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ea580c;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="amber3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#fbbf24;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f59e0b;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="500" fill="url(#bgGrad)" rx="12" />
+
+  <!-- Title -->
+  <text x="400" y="38" text-anchor="middle" fill="#f59e0b" font-family="Inter, system-ui, sans-serif" font-size="20" font-weight="700">Rate Limiting Algorithms</text>
+
+  <!-- ===== 1. Token Bucket (top-left) ===== -->
+  <g transform="translate(20, 55)">
+    <rect width="235" height="200" rx="10" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5" opacity="0.9" />
+    <text x="118" y="24" text-anchor="middle" fill="#fbbf24" font-family="Inter, system-ui, sans-serif" font-size="13" font-weight="700">Token Bucket</text>
+
+    <!-- Bucket shape -->
+    <path d="M70,60 L60,155 L176,155 L166,60 Z" fill="none" stroke="#f59e0b" stroke-width="2" />
+    <!-- Tokens (circles) inside bucket -->
+    <circle cx="95" cy="135" r="8" fill="#fbbf24" opacity="0.9" />
+    <circle cx="115" cy="140" r="8" fill="#fbbf24" opacity="0.9" />
+    <circle cx="135" cy="135" r="8" fill="#fbbf24" opacity="0.9" />
+    <circle cx="105" cy="120" r="8" fill="#fbbf24" opacity="0.7" />
+    <circle cx="125" cy="118" r="8" fill="#fbbf24" opacity="0.7" />
+    <circle cx="115" cy="100" r="8" fill="#fbbf24" opacity="0.5" />
+
+    <!-- Refill arrow -->
+    <line x1="118" y1="42" x2="118" y2="58" stroke="#f59e0b" stroke-width="2" marker-end="url(#arrowAmber)" />
+    <text x="118" y="40" text-anchor="middle" fill="#fbbf24" font-size="9" font-family="Inter, system-ui, sans-serif">refill tokens</text>
+
+    <!-- Consume arrow -->
+    <line x1="180" y1="110" x2="210" y2="110" stroke="#fb923c" stroke-width="2" marker-end="url(#arrowOrange)" />
+    <text x="195" y="103" text-anchor="middle" fill="#fb923c" font-size="8" font-family="Inter, system-ui, sans-serif">req</text>
+
+    <text x="118" y="175" text-anchor="middle" fill="#94a3b8" font-family="Inter, system-ui, sans-serif" font-size="9">Allows bursts up to capacity</text>
+    <text x="118" y="190" text-anchor="middle" fill="#64748b" font-family="Inter, system-ui, sans-serif" font-size="8">AWS API Gateway, Stripe</text>
+  </g>
+
+  <!-- ===== 2. Leaky Bucket (top-center) ===== -->
+  <g transform="translate(283, 55)">
+    <rect width="235" height="200" rx="10" fill="#1e293b" stroke="#fb923c" stroke-width="1.5" opacity="0.9" />
+    <text x="118" y="24" text-anchor="middle" fill="#fb923c" font-family="Inter, system-ui, sans-serif" font-size="13" font-weight="700">Leaky Bucket</text>
+
+    <!-- Bucket shape -->
+    <path d="M70,55 L60,130 L176,130 L166,55 Z" fill="none" stroke="#fb923c" stroke-width="2" />
+    <!-- Water level -->
+    <path d="M65,85 L163,85 L170,55 L66,55 Z" fill="#fb923c" opacity="0.2" />
+
+    <!-- Input arrows (burst) -->
+    <line x1="90" y1="38" x2="90" y2="53" stroke="#fbbf24" stroke-width="1.5" />
+    <line x1="110" y1="38" x2="110" y2="53" stroke="#fbbf24" stroke-width="1.5" />
+    <line x1="130" y1="38" x2="130" y2="53" stroke="#fbbf24" stroke-width="1.5" />
+    <line x1="150" y1="38" x2="150" y2="53" stroke="#fbbf24" stroke-width="1.5" />
+    <text x="120" y="35" text-anchor="middle" fill="#fbbf24" font-size="8" font-family="Inter, system-ui, sans-serif">burst input</text>
+
+    <!-- Steady drip output -->
+    <line x1="118" y1="132" x2="118" y2="148" stroke="#fb923c" stroke-width="2" stroke-dasharray="3,3" />
+    <circle cx="118" cy="153" r="3" fill="#fb923c" />
+    <circle cx="118" cy="162" r="2.5" fill="#fb923c" opacity="0.7" />
+    <circle cx="118" cy="169" r="2" fill="#fb923c" opacity="0.5" />
+    <text x="155" y="152" fill="#fb923c" font-size="8" font-family="Inter, system-ui, sans-serif">steady drip</text>
+
+    <text x="118" y="183" text-anchor="middle" fill="#94a3b8" font-family="Inter, system-ui, sans-serif" font-size="9">Smooths bursts to constant rate</text>
+    <text x="118" y="195" text-anchor="middle" fill="#64748b" font-family="Inter, system-ui, sans-serif" font-size="8">Overflow requests dropped</text>
+  </g>
+
+  <!-- ===== 3. Fixed Window Counter (top-right) ===== -->
+  <g transform="translate(545, 55)">
+    <rect width="235" height="200" rx="10" fill="#1e293b" stroke="#fbbf24" stroke-width="1.5" opacity="0.9" />
+    <text x="118" y="24" text-anchor="middle" fill="#fbbf24" font-family="Inter, system-ui, sans-serif" font-size="13" font-weight="700">Fixed Window Counter</text>
+
+    <!-- Time windows as blocks -->
+    <rect x="25" y="50" width="55" height="90" rx="4" fill="#fbbf24" opacity="0.15" stroke="#fbbf24" stroke-width="1" />
+    <rect x="90" y="50" width="55" height="90" rx="4" fill="#fbbf24" opacity="0.15" stroke="#fbbf24" stroke-width="1" />
+    <rect x="155" y="50" width="55" height="90" rx="4" fill="#fbbf24" opacity="0.15" stroke="#fbbf24" stroke-width="1" />
+
+    <!-- Counters inside blocks -->
+    <text x="52" y="85" text-anchor="middle" fill="#fbbf24" font-size="22" font-weight="700" font-family="JetBrains Mono, monospace">87</text>
+    <text x="118" y="85" text-anchor="middle" fill="#fbbf24" font-size="22" font-weight="700" font-family="JetBrains Mono, monospace">42</text>
+    <text x="182" y="85" text-anchor="middle" fill="#fbbf24" font-size="22" font-weight="700" font-family="JetBrains Mono, monospace">95</text>
+
+    <!-- Time labels -->
+    <text x="52" y="130" text-anchor="middle" fill="#94a3b8" font-size="8" font-family="Inter, system-ui, sans-serif">0:00-1:00</text>
+    <text x="118" y="130" text-anchor="middle" fill="#94a3b8" font-size="8" font-family="Inter, system-ui, sans-serif">1:00-2:00</text>
+    <text x="182" y="130" text-anchor="middle" fill="#94a3b8" font-size="8" font-family="Inter, system-ui, sans-serif">2:00-3:00</text>
+
+    <!-- Limit line -->
+    <line x1="20" y1="105" x2="215" y2="105" stroke="#ef4444" stroke-width="1" stroke-dasharray="4,3" />
+    <text x="218" y="108" fill="#ef4444" font-size="8" font-family="Inter, system-ui, sans-serif">limit=100</text>
+
+    <!-- Boundary burst warning -->
+    <text x="90" y="155" text-anchor="middle" fill="#ef4444" font-size="8" font-family="Inter, system-ui, sans-serif">boundary</text>
+    <text x="90" y="165" text-anchor="middle" fill="#ef4444" font-size="8" font-family="Inter, system-ui, sans-serif">burst risk!</text>
+    <line x1="80" y1="142" x2="80" y2="148" stroke="#ef4444" stroke-width="1.5" />
+
+    <text x="118" y="183" text-anchor="middle" fill="#94a3b8" font-family="Inter, system-ui, sans-serif" font-size="9">Simple. Boundary burst up to 2x.</text>
+    <text x="118" y="195" text-anchor="middle" fill="#64748b" font-family="Inter, system-ui, sans-serif" font-size="8">O(1) memory per key</text>
+  </g>
+
+  <!-- ===== 4. Sliding Window Log (bottom-left) ===== -->
+  <g transform="translate(90, 275)">
+    <rect width="290" height="200" rx="10" fill="#1e293b" stroke="#d97706" stroke-width="1.5" opacity="0.9" />
+    <text x="145" y="24" text-anchor="middle" fill="#d97706" font-family="Inter, system-ui, sans-serif" font-size="13" font-weight="700">Sliding Window Log</text>
+
+    <!-- Timeline -->
+    <line x1="25" y1="100" x2="265" y2="100" stroke="#475569" stroke-width="2" />
+
+    <!-- Time markers -->
+    <line x1="40" y1="95" x2="40" y2="105" stroke="#475569" stroke-width="1.5" />
+    <line x1="100" y1="95" x2="100" y2="105" stroke="#475569" stroke-width="1.5" />
+    <line x1="160" y1="95" x2="160" y2="105" stroke="#475569" stroke-width="1.5" />
+    <line x1="220" y1="95" x2="220" y2="105" stroke="#475569" stroke-width="1.5" />
+    <line x1="250" y1="95" x2="250" y2="105" stroke="#475569" stroke-width="1.5" />
+
+    <text x="40" y="118" text-anchor="middle" fill="#64748b" font-size="8" font-family="JetBrains Mono, monospace">T-60s</text>
+    <text x="100" y="118" text-anchor="middle" fill="#64748b" font-size="8" font-family="JetBrains Mono, monospace">T-45s</text>
+    <text x="160" y="118" text-anchor="middle" fill="#64748b" font-size="8" font-family="JetBrains Mono, monospace">T-30s</text>
+    <text x="220" y="118" text-anchor="middle" fill="#64748b" font-size="8" font-family="JetBrains Mono, monospace">T-15s</text>
+    <text x="250" y="118" text-anchor="middle" fill="#64748b" font-size="8" font-family="JetBrains Mono, monospace">now</text>
+
+    <!-- Request dots on timeline -->
+    <circle cx="50" cy="100" r="5" fill="#d97706" opacity="0.4" />
+    <circle cx="65" cy="100" r="5" fill="#d97706" opacity="0.5" />
+    <circle cx="110" cy="100" r="5" fill="#d97706" opacity="0.6" />
+    <circle cx="130" cy="100" r="5" fill="#d97706" opacity="0.7" />
+    <circle cx="145" cy="100" r="5" fill="#d97706" opacity="0.7" />
+    <circle cx="175" cy="100" r="5" fill="#d97706" opacity="0.8" />
+    <circle cx="200" cy="100" r="5" fill="#d97706" opacity="0.9" />
+    <circle cx="230" cy="100" r="5" fill="#d97706" />
+    <circle cx="245" cy="100" r="5" fill="#d97706" />
+
+    <!-- Sliding window bracket -->
+    <rect x="95" y="80" width="160" height="30" rx="4" fill="none" stroke="#f59e0b" stroke-width="2" stroke-dasharray="5,3" />
+    <text x="175" y="75" text-anchor="middle" fill="#f59e0b" font-size="9" font-family="Inter, system-ui, sans-serif">sliding window (60s)</text>
+
+    <!-- Log entries -->
+    <text x="35" y="50" fill="#94a3b8" font-size="8" font-family="JetBrains Mono, monospace">[10:00:05, 10:00:12, 10:00:22, 10:00:35,</text>
+    <text x="35" y="62" fill="#94a3b8" font-size="8" font-family="JetBrains Mono, monospace"> 10:00:41, 10:00:48, 10:00:55, ...]</text>
+
+    <text x="145" y="155" text-anchor="middle" fill="#94a3b8" font-family="Inter, system-ui, sans-serif" font-size="9">Exact count. Stores every timestamp.</text>
+    <text x="145" y="170" text-anchor="middle" fill="#64748b" font-family="Inter, system-ui, sans-serif" font-size="8">O(n) memory -- expensive at high traffic</text>
+
+    <!-- Expired dots marked -->
+    <line x1="45" y1="87" x2="57" y2="93" stroke="#ef4444" stroke-width="1.5" />
+    <line x1="57" y1="87" x2="45" y2="93" stroke="#ef4444" stroke-width="1.5" />
+    <line x1="60" y1="87" x2="72" y2="93" stroke="#ef4444" stroke-width="1.5" />
+    <line x1="72" y1="87" x2="60" y2="93" stroke="#ef4444" stroke-width="1.5" />
+    <text x="55" y="84" text-anchor="middle" fill="#ef4444" font-size="7" font-family="Inter, system-ui, sans-serif">expired</text>
+  </g>
+
+  <!-- ===== 5. Sliding Window Counter (bottom-right) ===== -->
+  <g transform="translate(420, 275)">
+    <rect width="290" height="200" rx="10" fill="#1e293b" stroke="#ea580c" stroke-width="1.5" opacity="0.9" />
+    <text x="145" y="24" text-anchor="middle" fill="#ea580c" font-family="Inter, system-ui, sans-serif" font-size="13" font-weight="700">Sliding Window Counter</text>
+
+    <!-- Two overlapping windows -->
+    <rect x="20" y="55" width="110" height="70" rx="4" fill="#ea580c" opacity="0.1" stroke="#ea580c" stroke-width="1" />
+    <rect x="80" y="55" width="110" height="70" rx="4" fill="#f59e0b" opacity="0.1" stroke="#f59e0b" stroke-width="1" />
+
+    <!-- Overlap area highlight -->
+    <rect x="80" y="55" width="50" height="70" rx="0" fill="#f59e0b" opacity="0.15" />
+
+    <!-- Window labels -->
+    <text x="55" y="50" text-anchor="middle" fill="#ea580c" font-size="9" font-family="Inter, system-ui, sans-serif">prev window</text>
+    <text x="165" y="50" text-anchor="middle" fill="#f59e0b" font-size="9" font-family="Inter, system-ui, sans-serif">curr window</text>
+
+    <!-- Counts -->
+    <text x="50" y="95" text-anchor="middle" fill="#ea580c" font-size="18" font-weight="700" font-family="JetBrains Mono, monospace">84</text>
+    <text x="160" y="95" text-anchor="middle" fill="#f59e0b" font-size="18" font-weight="700" font-family="JetBrains Mono, monospace">36</text>
+
+    <!-- Weighted formula -->
+    <rect x="25" y="135" width="240" height="35" rx="6" fill="#0f172a" stroke="#475569" stroke-width="1" />
+    <text x="145" y="148" text-anchor="middle" fill="#f59e0b" font-size="9" font-family="JetBrains Mono, monospace">count = 84 * 0.3 + 36 = 61.2</text>
+    <text x="145" y="162" text-anchor="middle" fill="#94a3b8" font-size="8" font-family="Inter, system-ui, sans-serif">weighted: prev * overlap% + current</text>
+
+    <text x="145" y="182" text-anchor="middle" fill="#94a3b8" font-family="Inter, system-ui, sans-serif" font-size="9">Best balance: accuracy + efficiency</text>
+    <text x="145" y="194" text-anchor="middle" fill="#64748b" font-family="Inter, system-ui, sans-serif" font-size="8">O(1) memory, ~smooth boundaries</text>
+  </g>
+
+  <!-- Arrow markers -->
+  <defs>
+    <marker id="arrowAmber" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="#f59e0b" />
+    </marker>
+    <marker id="arrowOrange" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="#fb923c" />
+    </marker>
+  </defs>
+</svg>

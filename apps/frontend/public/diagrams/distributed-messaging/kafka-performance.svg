@@ -1,0 +1,209 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" width="800" height="400" font-family="Inter, system-ui, sans-serif">
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="800" y2="400" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+    <marker id="arrowGray" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="#64748b"/>
+    </marker>
+    <marker id="arrowGreen" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="#22c55e"/>
+    </marker>
+    <marker id="arrowRed" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="#ef4444"/>
+    </marker>
+    <filter id="shadow" x="-2%" y="-2%" width="104%" height="104%">
+      <feDropShadow dx="0" dy="1" stdDeviation="2" flood-opacity="0.1"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="400" rx="12" fill="url(#bgGrad)"/>
+
+  <!-- Title -->
+  <text x="400" y="32" text-anchor="middle" fill="#f1f5f9" font-size="18" font-weight="700">Why Kafka is Fast</text>
+  <line x1="310" y1="42" x2="490" y2="42" stroke="#334155" stroke-width="1"/>
+
+  <!-- LEFT SECTION: Without Zero-Copy -->
+  <g transform="translate(20, 55)">
+    <rect width="370" height="210" rx="10" fill="#1e293b" stroke="#ef4444" stroke-width="1.2" filter="url(#shadow)"/>
+    <rect width="370" height="30" rx="10" fill="#ef4444" fill-opacity="0.12"/>
+    <!-- X icon -->
+    <line x1="18" y1="10" x2="28" y2="20" stroke="#ef4444" stroke-width="2" stroke-linecap="round"/>
+    <line x1="28" y1="10" x2="18" y2="20" stroke="#ef4444" stroke-width="2" stroke-linecap="round"/>
+    <text x="38" y="20" fill="#ef4444" font-size="13" font-weight="700">Without Zero-Copy (Traditional)</text>
+
+    <!-- Step labels -->
+    <text x="185" y="52" text-anchor="middle" fill="#94a3b8" font-size="9" font-weight="500">4 data copies, 2 context switches</text>
+
+    <!-- Flow boxes -->
+    <!-- Producer -->
+    <rect x="15" y="62" width="60" height="30" rx="6" fill="#3b82f6" fill-opacity="0.25" stroke="#3b82f6" stroke-width="1"/>
+    <text x="45" y="81" text-anchor="middle" fill="#93c5fd" font-size="10" font-weight="600">Producer</text>
+
+    <!-- Arrow 1 -->
+    <line x1="80" y1="77" x2="95" y2="77" stroke="#64748b" stroke-width="1.2" marker-end="url(#arrowGray)"/>
+    <text x="87" y="71" text-anchor="middle" fill="#64748b" font-size="7">1</text>
+
+    <!-- Disk -->
+    <rect x="100" y="62" width="45" height="30" rx="6" fill="#475569" fill-opacity="0.4" stroke="#64748b" stroke-width="1"/>
+    <text x="122" y="81" text-anchor="middle" fill="#cbd5e1" font-size="9" font-weight="600">Disk</text>
+
+    <!-- Arrow 2 -->
+    <line x1="150" y1="77" x2="162" y2="77" stroke="#64748b" stroke-width="1.2" marker-end="url(#arrowGray)"/>
+    <text x="156" y="71" text-anchor="middle" fill="#ef4444" font-size="7" font-weight="700">copy</text>
+
+    <!-- OS Cache -->
+    <rect x="167" y="62" width="55" height="30" rx="6" fill="#475569" fill-opacity="0.4" stroke="#64748b" stroke-width="1"/>
+    <text x="194" y="78" text-anchor="middle" fill="#cbd5e1" font-size="8.5" font-weight="600">OS Cache</text>
+
+    <!-- Arrow 3 -->
+    <line x1="227" y1="77" x2="237" y2="77" stroke="#64748b" stroke-width="1.2" marker-end="url(#arrowGray)"/>
+    <text x="232" y="71" text-anchor="middle" fill="#ef4444" font-size="7" font-weight="700">copy</text>
+
+    <!-- App Buffer -->
+    <rect x="242" y="62" width="55" height="30" rx="6" fill="#ef4444" fill-opacity="0.15" stroke="#ef4444" stroke-width="1"/>
+    <text x="269" y="74" text-anchor="middle" fill="#fca5a5" font-size="8" font-weight="600">Kafka App</text>
+    <text x="269" y="85" text-anchor="middle" fill="#fca5a5" font-size="8" font-weight="600">Buffer</text>
+
+    <!-- Arrow 4: App Buffer down to Socket Buffer -->
+    <line x1="269" y1="97" x2="269" y2="115" stroke="#64748b" stroke-width="1.2" marker-end="url(#arrowGray)"/>
+    <text x="280" y="108" fill="#ef4444" font-size="7" font-weight="700">copy</text>
+
+    <!-- Socket Buffer -->
+    <rect x="242" y="120" width="55" height="30" rx="6" fill="#ef4444" fill-opacity="0.15" stroke="#ef4444" stroke-width="1"/>
+    <text x="269" y="132" text-anchor="middle" fill="#fca5a5" font-size="8" font-weight="600">Socket</text>
+    <text x="269" y="143" text-anchor="middle" fill="#fca5a5" font-size="8" font-weight="600">Buffer</text>
+
+    <!-- Arrow 5 -->
+    <line x1="302" y1="135" x2="312" y2="135" stroke="#64748b" stroke-width="1.2" marker-end="url(#arrowGray)"/>
+    <text x="307" y="129" text-anchor="middle" fill="#ef4444" font-size="7" font-weight="700">copy</text>
+
+    <!-- NIC -->
+    <rect x="317" y="120" width="38" height="30" rx="6" fill="#475569" fill-opacity="0.4" stroke="#64748b" stroke-width="1"/>
+    <text x="336" y="139" text-anchor="middle" fill="#cbd5e1" font-size="9" font-weight="600">NIC</text>
+
+    <!-- Arrow to Consumer -->
+    <line x1="336" y1="155" x2="336" y2="170" stroke="#64748b" stroke-width="1.2" marker-end="url(#arrowGray)"/>
+
+    <!-- Consumer -->
+    <rect x="306" y="175" width="60" height="26" rx="6" fill="#3b82f6" fill-opacity="0.25" stroke="#3b82f6" stroke-width="1"/>
+    <text x="336" y="192" text-anchor="middle" fill="#93c5fd" font-size="10" font-weight="600">Consumer</text>
+
+    <!-- Annotations -->
+    <text x="15" y="120" fill="#ef4444" font-size="9" font-weight="600">User space</text>
+    <line x1="15" y1="125" x2="230" y2="125" stroke="#ef4444" stroke-width="0.5" stroke-dasharray="3,3"/>
+    <text x="15" y="140" fill="#64748b" font-size="9" font-weight="600">Kernel space</text>
+  </g>
+
+  <!-- RIGHT SECTION: With Zero-Copy -->
+  <g transform="translate(410, 55)">
+    <rect width="370" height="210" rx="10" fill="#1e293b" stroke="#22c55e" stroke-width="1.2" filter="url(#shadow)"/>
+    <rect width="370" height="30" rx="10" fill="#22c55e" fill-opacity="0.12"/>
+    <!-- Check icon -->
+    <polyline points="18,15 22,20 30,10" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="38" y="20" fill="#22c55e" font-size="13" font-weight="700">With Zero-Copy (sendfile())</text>
+
+    <!-- Step labels -->
+    <text x="185" y="52" text-anchor="middle" fill="#94a3b8" font-size="9" font-weight="500">2 copies, no user-space involvement</text>
+
+    <!-- Producer -->
+    <rect x="15" y="70" width="60" height="30" rx="6" fill="#3b82f6" fill-opacity="0.25" stroke="#3b82f6" stroke-width="1"/>
+    <text x="45" y="89" text-anchor="middle" fill="#93c5fd" font-size="10" font-weight="600">Producer</text>
+
+    <!-- Arrow 1 -->
+    <line x1="80" y1="85" x2="110" y2="85" stroke="#22c55e" stroke-width="1.5" marker-end="url(#arrowGreen)"/>
+    <text x="95" y="79" text-anchor="middle" fill="#22c55e" font-size="7" font-weight="700">1</text>
+
+    <!-- Disk -->
+    <rect x="115" y="70" width="55" height="30" rx="6" fill="#475569" fill-opacity="0.4" stroke="#64748b" stroke-width="1"/>
+    <text x="142" y="89" text-anchor="middle" fill="#cbd5e1" font-size="9" font-weight="600">Disk</text>
+
+    <!-- Arrow 2 -->
+    <line x1="175" y1="85" x2="205" y2="85" stroke="#22c55e" stroke-width="1.5" marker-end="url(#arrowGreen)"/>
+    <text x="190" y="79" text-anchor="middle" fill="#22c55e" font-size="7" font-weight="700">copy</text>
+
+    <!-- OS Cache / Page Cache -->
+    <rect x="210" y="70" width="70" height="30" rx="6" fill="#22c55e" fill-opacity="0.15" stroke="#22c55e" stroke-width="1"/>
+    <text x="245" y="85" text-anchor="middle" fill="#86efac" font-size="8.5" font-weight="600">OS Page</text>
+    <text x="245" y="95" text-anchor="middle" fill="#86efac" font-size="8.5" font-weight="600">Cache</text>
+
+    <!-- sendfile() annotation -->
+    <rect x="175" y="110" width="110" height="22" rx="6" fill="#22c55e" fill-opacity="0.1" stroke="#22c55e" stroke-width="0.8" stroke-dasharray="4,2"/>
+    <text x="230" y="124" text-anchor="middle" fill="#22c55e" font-size="9" font-weight="700">sendfile() syscall</text>
+    <text x="230" y="138" text-anchor="middle" fill="#4ade80" font-size="8">Skips application buffer entirely</text>
+
+    <!-- Arrow 3: OS Cache to NIC -->
+    <line x1="285" y1="85" x2="310" y2="85" stroke="#22c55e" stroke-width="1.5" marker-end="url(#arrowGreen)"/>
+    <text x="297" y="79" text-anchor="middle" fill="#22c55e" font-size="7" font-weight="700">copy</text>
+
+    <!-- NIC -->
+    <rect x="315" y="70" width="40" height="30" rx="6" fill="#475569" fill-opacity="0.4" stroke="#64748b" stroke-width="1"/>
+    <text x="335" y="89" text-anchor="middle" fill="#cbd5e1" font-size="9" font-weight="600">NIC</text>
+
+    <!-- Arrow to Consumer -->
+    <line x1="335" y1="105" x2="335" y2="155" stroke="#22c55e" stroke-width="1.5" marker-end="url(#arrowGreen)"/>
+
+    <!-- Consumer -->
+    <rect x="305" y="160" width="60" height="28" rx="6" fill="#3b82f6" fill-opacity="0.25" stroke="#3b82f6" stroke-width="1"/>
+    <text x="335" y="178" text-anchor="middle" fill="#93c5fd" font-size="10" font-weight="600">Consumer</text>
+
+    <!-- No user-space label -->
+    <rect x="15" y="150" width="180" height="48" rx="8" fill="#22c55e" fill-opacity="0.06" stroke="#22c55e" stroke-width="0.6"/>
+    <text x="105" y="168" text-anchor="middle" fill="#4ade80" font-size="9" font-weight="600">No application buffer needed</text>
+    <text x="105" y="182" text-anchor="middle" fill="#86efac" font-size="8">Data stays in kernel space</text>
+    <text x="105" y="194" text-anchor="middle" fill="#86efac" font-size="8">2x fewer copies = 2x faster</text>
+  </g>
+
+  <!-- Bottom Section: Sequential I/O -->
+  <g transform="translate(20, 280)">
+    <rect width="760" height="105" rx="10" fill="#1e293b" stroke="#f59e0b" stroke-width="1.2" filter="url(#shadow)"/>
+    <rect width="760" height="28" rx="10" fill="#f59e0b" fill-opacity="0.12"/>
+    <!-- Icon -->
+    <rect x="14" y="8" width="14" height="12" rx="2" fill="none" stroke="#f59e0b" stroke-width="1.2"/>
+    <line x1="17" y1="12" x2="25" y2="12" stroke="#f59e0b" stroke-width="1"/>
+    <line x1="17" y1="15" x2="23" y2="15" stroke="#f59e0b" stroke-width="1"/>
+    <text x="36" y="19" fill="#f59e0b" font-size="12" font-weight="700">Sequential I/O — Append-Only Log</text>
+
+    <!-- Append-only log visualization -->
+    <text x="20" y="48" fill="#94a3b8" font-size="9" font-weight="500">Kafka Partition (append-only log):</text>
+
+    <!-- Log segments -->
+    <rect x="20" y="55" width="55" height="26" rx="4" fill="#f59e0b" fill-opacity="0.15" stroke="#f59e0b" stroke-width="0.8"/>
+    <text x="47" y="72" text-anchor="middle" fill="#fbbf24" font-size="8" font-weight="600">offset 0</text>
+    <rect x="80" y="55" width="55" height="26" rx="4" fill="#f59e0b" fill-opacity="0.18" stroke="#f59e0b" stroke-width="0.8"/>
+    <text x="107" y="72" text-anchor="middle" fill="#fbbf24" font-size="8" font-weight="600">offset 1</text>
+    <rect x="140" y="55" width="55" height="26" rx="4" fill="#f59e0b" fill-opacity="0.21" stroke="#f59e0b" stroke-width="0.8"/>
+    <text x="167" y="72" text-anchor="middle" fill="#fbbf24" font-size="8" font-weight="600">offset 2</text>
+    <rect x="200" y="55" width="55" height="26" rx="4" fill="#f59e0b" fill-opacity="0.24" stroke="#f59e0b" stroke-width="0.8"/>
+    <text x="227" y="72" text-anchor="middle" fill="#fbbf24" font-size="8" font-weight="600">offset 3</text>
+    <rect x="260" y="55" width="55" height="26" rx="4" fill="#f59e0b" fill-opacity="0.27" stroke="#f59e0b" stroke-width="0.8"/>
+    <text x="287" y="72" text-anchor="middle" fill="#fbbf24" font-size="8" font-weight="600">offset 4</text>
+    <rect x="320" y="55" width="55" height="26" rx="4" fill="#f59e0b" fill-opacity="0.3" stroke="#f59e0b" stroke-width="0.8"/>
+    <text x="347" y="72" text-anchor="middle" fill="#fbbf24" font-size="8" font-weight="600">offset 5</text>
+
+    <!-- Arrow showing append direction -->
+    <line x1="380" y1="68" x2="405" y2="68" stroke="#f59e0b" stroke-width="2" marker-end="url(#arrowAmber)"/>
+    <text x="395" y="62" fill="#fbbf24" font-size="8" font-weight="700">append</text>
+    <defs>
+      <marker id="arrowAmber" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+        <path d="M0,0 L8,3 L0,6" fill="#f59e0b"/>
+      </marker>
+    </defs>
+
+    <!-- Stats on right -->
+    <rect x="430" y="38" width="310" height="55" rx="8" fill="#f59e0b" fill-opacity="0.06"/>
+    <text x="445" y="55" fill="#fbbf24" font-size="9.5" font-weight="600">Sequential writes:</text>
+    <text x="560" y="55" fill="#4ade80" font-size="9.5" font-weight="700">~600 MB/s</text>
+    <text x="640" y="55" fill="#94a3b8" font-size="9">on HDD</text>
+
+    <text x="445" y="72" fill="#fbbf24" font-size="9.5" font-weight="600">Random writes:</text>
+    <text x="560" y="72" fill="#ef4444" font-size="9.5" font-weight="700">~100 KB/s</text>
+    <text x="640" y="72" fill="#94a3b8" font-size="9">on HDD</text>
+
+    <text x="445" y="89" fill="#fbbf24" font-size="9.5" font-weight="600">Speedup:</text>
+    <text x="560" y="89" fill="#22c55e" font-size="9.5" font-weight="700">~6000x faster</text>
+    <text x="660" y="89" fill="#94a3b8" font-size="9">sequential vs random</text>
+  </g>
+</svg>
