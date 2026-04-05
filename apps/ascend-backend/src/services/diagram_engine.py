@@ -71,11 +71,11 @@ graph_attr = {
     "fontname": "Helvetica Bold",
     "bgcolor": "white",
     "pad": "0.3",
-    "dpi": "300",
-    "nodesep": "1.0",
-    "ranksep": "1.2",
+    "dpi": "150",
+    "nodesep": "0.8",
+    "ranksep": "1.0",
     "splines": "spline",
-    "size": "24,14!",
+    "size": "16,10!",
     "ratio": "compress",
 }
 
