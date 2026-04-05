@@ -29,8 +29,8 @@ function ArticleTOC({ sections, activeId }) {
 /* ── Section heading — numbered, with bottom divider ───── */
 function SectionHeading({ number, title }) {
   return (
-    <div className="mb-6 pb-3" style={{ borderBottom: '2px solid #d1fae5' }}>
-      <h2 className="text-[1.65rem] font-bold tracking-tight leading-tight" style={{ color: '#000000' }}>
+    <div className="mb-8 pb-4 mt-4" style={{ borderBottom: '3px solid #d1fae5' }}>
+      <h2 className="text-[1.75rem] font-extrabold tracking-tight leading-tight" style={{ color: '#000000' }}>
         <span style={{ color: '#059669' }}>{number}. </span>
         {title}
       </h2>
@@ -38,10 +38,10 @@ function SectionHeading({ number, title }) {
   );
 }
 
-/* ── Sub-heading (h3) ──────────────────────────────────── */
+/* ── Sub-heading (h3) — indented under section heading ── */
 function SubHeading({ children, icon }) {
   return (
-    <h3 className="text-[1.2rem] font-semibold mb-3 flex items-center gap-2" style={{ color: '#111827' }}>
+    <h3 className="text-[1.15rem] font-bold mb-3 pl-4 flex items-center gap-2" style={{ color: '#1f2937', borderLeft: '3px solid #a7f3d0' }}>
       {icon && <span className="text-emerald-600">{icon}</span>}
       {children}
     </h3>
@@ -51,7 +51,7 @@ function SubHeading({ children, icon }) {
 /* ── Section wrapper ───────────────────────────────────── */
 function Section({ id, number, title, children }) {
   return (
-    <section id={id} className="scroll-mt-24 mb-16">
+    <section id={id} className="scroll-mt-24 mb-20">
       <SectionHeading number={number} title={title} />
       {children}
     </section>
@@ -153,9 +153,9 @@ export default function ArticleRenderer({ topicDetails, selectedTopic }) {
   const codeLangs = topicDetails.codeExamples ? Object.keys(topicDetails.codeExamples).filter(k => topicDetails.codeExamples[k]) : [];
 
   return (
-    <div className="flex gap-12 max-w-7xl mx-auto">
+    <div className="max-w-4xl">
       {/* ── Main Article ── */}
-      <article className="flex-1 min-w-0 max-w-4xl">
+      <article className="flex-1 min-w-0">
 
         {/* ── 1. Introduction ── */}
         {topicDetails.introduction && (
@@ -282,13 +282,13 @@ export default function ArticleRenderer({ topicDetails, selectedTopic }) {
         {/* ── 6. Key Questions ── */}
         {topicDetails.keyQuestions && (
           <Section id="key-questions" number={getNum('key-questions')} title="Key Design Questions">
-            <div className="space-y-8">
+            <div className="space-y-0 ml-2">
               {topicDetails.keyQuestions.map((q, i) => (
-                <div key={i} className="pb-6" style={{ borderBottom: i < topicDetails.keyQuestions.length - 1 ? '1px solid #e5e7eb' : 'none' }}>
+                <div key={i} className="py-6" style={{ borderBottom: i < topicDetails.keyQuestions.length - 1 ? '1px solid #e5e7eb' : 'none' }}>
                   <SubHeading>
                     <span className="text-emerald-600 font-bold mr-1">{String.fromCharCode(97 + i)})</span> {q.question}
                   </SubHeading>
-                  <div className={bodyText}>
+                  <div className={`${bodyText} ml-4`}>
                     <FormattedContent content={q.answer} color="emerald" />
                   </div>
                 </div>
@@ -454,13 +454,13 @@ export default function ArticleRenderer({ topicDetails, selectedTopic }) {
         {/* ── 11. Deep Dive Topics ── */}
         {topicDetails.deepDiveTopics && (
           <Section id="deep-dive" number={getNum('deep-dive')} title="Deep Dive Topics">
-            <div className="space-y-8">
+            <div className="space-y-0 ml-2">
               {topicDetails.deepDiveTopics.map((topic, i) => (
-                <div key={i} className="pb-6" style={{ borderBottom: i < topicDetails.deepDiveTopics.length - 1 ? '1px solid #e5e7eb' : 'none' }}>
+                <div key={i} className="py-6" style={{ borderBottom: i < topicDetails.deepDiveTopics.length - 1 ? '1px solid #e5e7eb' : 'none' }}>
                   <SubHeading>
                     <span className="text-emerald-600 font-bold mr-1">{String.fromCharCode(97 + i)})</span> {topic.topic}
                   </SubHeading>
-                  <p className={bodyText}>{topic.detail}</p>
+                  <p className={`${bodyText} ml-4`}>{topic.detail}</p>
                 </div>
               ))}
             </div>
@@ -489,13 +489,13 @@ export default function ArticleRenderer({ topicDetails, selectedTopic }) {
         {/* ── 13. Interview Follow-ups ── */}
         {topicDetails.interviewFollowups && (
           <Section id="followups" number={getNum('followups')} title="Common Interview Follow-ups">
-            <div className="space-y-8">
+            <div className="space-y-0 ml-2">
               {topicDetails.interviewFollowups.map((q, i) => (
-                <div key={i} className="pb-6" style={{ borderBottom: i < topicDetails.interviewFollowups.length - 1 ? '1px solid #e5e7eb' : 'none' }}>
+                <div key={i} className="py-6" style={{ borderBottom: i < topicDetails.interviewFollowups.length - 1 ? '1px solid #e5e7eb' : 'none' }}>
                   <SubHeading>
                     <span className="text-emerald-700 font-bold mr-1">Q{i + 1}.</span> {q.question}
                   </SubHeading>
-                  <div className={bodyText}>
+                  <div className={`${bodyText} ml-4`}>
                     <FormattedContent content={q.answer} color="emerald" />
                   </div>
                 </div>
@@ -548,13 +548,6 @@ export default function ArticleRenderer({ topicDetails, selectedTopic }) {
           </Section>
         )}
       </article>
-
-      {/* ── Right Sidebar: Table of Contents ── */}
-      <aside className="hidden xl:block w-52 flex-shrink-0">
-        <div className="sticky top-24">
-          <ArticleTOC sections={sections} activeId={activeSection} />
-        </div>
-      </aside>
     </div>
   );
 }

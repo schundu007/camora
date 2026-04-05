@@ -464,13 +464,32 @@ export default function DocsPage({ onBack }) {
       if (topicDetails.commonProblems) toc.push({ id: 'practice', label: 'Practice Problems' });
       if (topicDetails.tips) toc.push({ id: 'tips', label: 'Interview Tips' });
     } else if (activePage === 'system-design') {
-      if (topicDetails.introduction) toc.push({ id: 'overview', label: 'Overview' });
-      if (topicDetails.requirements) toc.push({ id: 'requirements', label: 'Requirements' });
-      if (topicDetails.keyQuestions) toc.push({ id: 'key-questions', label: 'Key Questions' });
-      if (topicDetails.estimation) toc.push({ id: 'estimation', label: 'Estimation' });
-      if (topicDetails.apiDesign) toc.push({ id: 'api-design', label: 'API Design' });
-      if (topicDetails.dataModel) toc.push({ id: 'data-model', label: 'Data Model' });
-      if (topicDetails.basicImplementation) toc.push({ id: 'architecture', label: 'Architecture' });
+      // Article-style SD problems (URL Shortener, Twitter, etc.)
+      const isSDProblem = topicDetails.functionalRequirements || topicDetails.advancedImplementation;
+      if (isSDProblem) {
+        if (topicDetails.introduction) toc.push({ id: 'introduction', label: 'Introduction' });
+        if (topicDetails.functionalRequirements || topicDetails.nonFunctionalRequirements) toc.push({ id: 'requirements', label: 'Requirements & Goals' });
+        if (topicDetails.estimation) toc.push({ id: 'estimation', label: 'Capacity Estimation' });
+        if (topicDetails.dataModel) toc.push({ id: 'data-model', label: 'Data Model' });
+        if (topicDetails.apiDesign?.endpoints) toc.push({ id: 'api-design', label: 'API Design' });
+        if (topicDetails.keyQuestions) toc.push({ id: 'key-questions', label: 'Key Questions' });
+        if (topicDetails.algorithmApproaches) toc.push({ id: 'algorithms', label: 'Algorithms' });
+        if (topicDetails.basicImplementation || topicDetails.advancedImplementation) toc.push({ id: 'implementation', label: 'Architecture' });
+        if (topicDetails.createFlow || topicDetails.redirectFlow) toc.push({ id: 'system-flows', label: 'System Flows' });
+        if (topicDetails.architectureLayers) toc.push({ id: 'architecture', label: 'Architecture Layers' });
+        if (topicDetails.deepDiveTopics) toc.push({ id: 'deep-dive', label: 'Deep Dive' });
+        if (topicDetails.tradeoffDecisions) toc.push({ id: 'tradeoffs', label: 'Trade-offs' });
+        if (topicDetails.interviewFollowups) toc.push({ id: 'followups', label: 'Follow-ups' });
+        if (topicDetails.codeExamples) toc.push({ id: 'code', label: 'Code' });
+      } else {
+        if (topicDetails.introduction) toc.push({ id: 'overview', label: 'Overview' });
+        if (topicDetails.requirements) toc.push({ id: 'requirements', label: 'Requirements' });
+        if (topicDetails.keyQuestions) toc.push({ id: 'key-questions', label: 'Key Questions' });
+        if (topicDetails.estimation) toc.push({ id: 'estimation', label: 'Estimation' });
+        if (topicDetails.apiDesign) toc.push({ id: 'api-design', label: 'API Design' });
+        if (topicDetails.dataModel) toc.push({ id: 'data-model', label: 'Data Model' });
+        if (topicDetails.basicImplementation) toc.push({ id: 'architecture', label: 'Architecture' });
+      }
     } else if (activePage === 'low-level') {
       if (topicDetails.introduction) toc.push({ id: 'overview', label: 'Overview' });
       if (topicDetails.keyQuestions) toc.push({ id: 'key-questions', label: 'Key Questions' });
