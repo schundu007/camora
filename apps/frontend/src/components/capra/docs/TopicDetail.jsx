@@ -9,26 +9,9 @@ import {
   ComparisonCard, CheatSheetCard, EvolutionTimeline,
   PatternCardGrid, StaticDiagramGrid, FlowchartCard, ChartCard
 } from './TopicVisuals.jsx';
-import { AgGridReact } from 'ag-grid-react';
-import { AllCommunityModule, ModuleRegistry, themeQuartz } from 'ag-grid-community';
-
-ModuleRegistry.registerModules([AllCommunityModule]);
-
-const capacityPlanningTheme = themeQuartz.withParams({
-  headerBackgroundColor: '#ede9fe',
-  headerTextColor: '#4c1d95',
-  headerFontWeight: 600,
-  headerFontSize: 12,
-  rowBorder: { color: '#e5e7eb', width: 1 },
-  borderColor: '#e3e8ee',
-  borderRadius: 8,
-  fontSize: 13,
-  rowHoverColor: '#f5f3ff',
-  cellHorizontalPadding: 12,
-});
 
 /**
- * AG Grid table for capacity planning / back-of-envelope estimation.
+ * Table for capacity planning / back-of-envelope estimation.
  * Handles both data formats:
  *  - calculations array: [{ label, value, detail }]
  *  - flat keys: { users, storage, bandwidth, qps }
@@ -41,7 +24,7 @@ function CapacityPlanningGrid({ estimation }) {
     qps: 'QPS / Throughput',
   };
 
-  const rowData = useMemo(() => {
+  const rows = useMemo(() => {
     if (estimation.calculations) {
       return estimation.calculations.map(calc => ({
         metric: calc.label,
@@ -49,7 +32,6 @@ function CapacityPlanningGrid({ estimation }) {
         detail: calc.detail,
       }));
     }
-    // Flat format: { users, storage, bandwidth, qps, ... }
     const skipKeys = ['title', 'assumptions'];
     return Object.entries(estimation)
       .filter(([key]) => !skipKeys.includes(key))
@@ -59,32 +41,6 @@ function CapacityPlanningGrid({ estimation }) {
         detail: val,
       }));
   }, [estimation]);
-
-  const columnDefs = useMemo(() => [
-    {
-      headerName: 'Metric',
-      field: 'metric',
-      flex: 1,
-      minWidth: 140,
-      cellStyle: { fontWeight: 600, color: '#374151' },
-    },
-    {
-      headerName: 'Value',
-      field: 'value',
-      flex: 1,
-      minWidth: 120,
-      cellStyle: { fontWeight: 700, color: '#7c3aed', fontFamily: 'JetBrains Mono, monospace' },
-    },
-    {
-      headerName: 'Calculation',
-      field: 'detail',
-      flex: 2,
-      minWidth: 200,
-      cellStyle: { color: '#6b7280', fontSize: '12px' },
-      autoHeight: true,
-      wrapText: true,
-    },
-  ], []);
 
   return (
     <div className="rounded-lg overflow-hidden border border-[#e3e8ee] bg-white">
@@ -98,18 +54,24 @@ function CapacityPlanningGrid({ estimation }) {
         </div>
       )}
       <div className="p-3">
-        <div style={{ width: '100%' }}>
-          <AgGridReact
-            theme={capacityPlanningTheme}
-            rowData={rowData}
-            columnDefs={columnDefs}
-            domLayout="autoHeight"
-            suppressCellFocus={true}
-            suppressRowHoverHighlight={false}
-            headerHeight={36}
-            rowHeight={42}
-          />
-        </div>
+        <table className="w-full border-collapse text-sm">
+          <thead>
+            <tr className="bg-violet-50/70">
+              <th className="text-left px-3 py-2 text-xs font-semibold text-violet-900 border-b border-violet-200 landing-display">Metric</th>
+              <th className="text-left px-3 py-2 text-xs font-semibold text-violet-900 border-b border-violet-200 landing-display">Value</th>
+              <th className="text-left px-3 py-2 text-xs font-semibold text-violet-900 border-b border-violet-200 landing-display hidden lg:table-cell">Calculation</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row, i) => (
+              <tr key={i} className="hover:bg-violet-50/30 transition-colors">
+                <td className="px-3 py-2.5 font-semibold text-gray-700 border-b border-gray-100">{row.metric}</td>
+                <td className="px-3 py-2.5 font-bold text-violet-700 landing-mono border-b border-gray-100">{row.value}</td>
+                <td className="px-3 py-2.5 text-gray-500 text-xs border-b border-gray-100 hidden lg:table-cell">{row.detail}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
