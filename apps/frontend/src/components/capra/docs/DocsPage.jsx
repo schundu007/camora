@@ -235,19 +235,6 @@ export default function DocsPage({ onBack }) {
     return { total, completed, percent: total > 0 ? Math.round((completed / total) * 100) : 0 };
   };
 
-  // Reset diagram when topic changes — auto-load from DB cache if available
-  useEffect(() => {
-    setDiagramData(null);
-    setDiagramError(null);
-    const cacheKey = `${selectedTopic}-${diagramDetailLevel}-${diagramCloudProvider}`;
-    if (selectedTopic && diagramCache[cacheKey]) {
-      setDiagramData(diagramCache[cacheKey]);
-    } else if (selectedTopic && activePage === 'system-design' && topicDetails?.title) {
-      // Auto-load: call generate which checks DB cache first (instant if cached)
-      handleGenerateDiagram(topicDetails.title, diagramDetailLevel, diagramCloudProvider);
-    }
-  }, [selectedTopic, topicDetails?.title]);
-
   // Generate architecture diagram
   const handleGenerateDiagram = async (topicTitle, detailLevel = 'overview', provider = diagramCloudProvider) => {
     if (!topicTitle) return;
@@ -428,6 +415,18 @@ export default function DocsPage({ onBack }) {
   };
 
   const topicDetails = getSelectedTopicDetails();
+
+  // Reset diagram when topic changes — auto-load from DB cache if available
+  useEffect(() => {
+    setDiagramData(null);
+    setDiagramError(null);
+    const cacheKey = `${selectedTopic}-${diagramDetailLevel}-${diagramCloudProvider}`;
+    if (selectedTopic && diagramCache[cacheKey]) {
+      setDiagramData(diagramCache[cacheKey]);
+    } else if (selectedTopic && activePage === 'system-design' && topicDetails?.title) {
+      handleGenerateDiagram(topicDetails.title, diagramDetailLevel, diagramCloudProvider);
+    }
+  }, [selectedTopic, topicDetails?.title]);
 
   // ── Overview dashboard data ──
   const overviewCategories = (() => {
