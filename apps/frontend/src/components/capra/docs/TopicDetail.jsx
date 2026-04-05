@@ -1124,7 +1124,9 @@ export default function TopicDetail({
                     {topicDetails.algorithmApproaches.map((app, i) => (
                       <div key={i} className="p-3 rounded-lg border border-[#e3e8ee] bg-[#f7f8f9]">
                         <h4 className="text-sm font-bold text-amber-800 mb-1 landing-display">{i + 1}. {app.name}</h4>
-                        <p className="text-gray-500 text-xs mb-2 landing-body leading-relaxed">{app.description}</p>
+                        <div className="text-gray-700 text-xs mb-2 landing-body leading-relaxed">
+                          <FormattedContent content={app.description} color="amber" />
+                        </div>
                         <div className="space-y-0.5">
                           {app.pros.map((p, j) => <div key={`p${j}`} className="text-xs text-gray-700 landing-body"><span className="text-emerald-600 font-bold mr-1">+</span>{p}</div>)}
                           {app.cons.map((c, j) => <div key={`c${j}`} className="text-xs text-gray-700 landing-body"><span className="text-rose-600 font-bold mr-1">-</span>{c}</div>)}
@@ -1146,7 +1148,12 @@ export default function TopicDetail({
                     {topicDetails.architectureLayers.map((layer, i) => (
                       <div key={i} className="flex items-start gap-3 p-2.5 rounded-lg bg-[#f7f8f9] border border-[#e3e8ee]">
                         <span className="w-6 h-6 rounded-md bg-teal-100 text-teal-700 flex items-center justify-center text-xs font-bold flex-shrink-0">{i + 1}</span>
-                        <div><span className="text-sm font-bold text-teal-800 landing-display">{layer.name}</span><span className="text-gray-500 text-sm ml-2 landing-body">{layer.description}</span></div>
+                        <div>
+                          <span className="text-sm font-bold text-teal-800 landing-display">{layer.name}</span>
+                          <div className="text-gray-700 text-xs landing-body leading-relaxed mt-0.5">
+                            <FormattedContent content={layer.description} color="teal" />
+                          </div>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -1164,7 +1171,9 @@ export default function TopicDetail({
                     {topicDetails.deepDiveTopics.map((item, i) => (
                       <div key={i} className="p-3 rounded-lg bg-sky-50/30 border border-sky-100">
                         <h4 className="text-sm font-bold text-sky-800 mb-1 landing-display">{item.topic}</h4>
-                        <p className="text-gray-500 text-xs landing-body leading-relaxed">{item.detail}</p>
+                        <div className="text-gray-700 text-xs landing-body leading-relaxed">
+                          <FormattedContent content={item.detail} color="sky" />
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -1186,7 +1195,9 @@ export default function TopicDetail({
                           <span className="text-gray-300">→</span>
                           <span className="text-xs font-bold text-emerald-700 landing-mono">{d.picked}</span>
                         </div>
-                        <p className="text-gray-500 text-xs landing-body leading-relaxed">{d.reason}</p>
+                        <div className="text-gray-700 text-xs landing-body leading-relaxed">
+                          <FormattedContent content={d.reason} color="rose" />
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -1207,7 +1218,9 @@ export default function TopicDetail({
                           <span className="text-xs font-bold text-orange-700 landing-mono flex-shrink-0">Q{i + 1}</span>
                           <span className="text-sm font-semibold text-gray-900 landing-display">{item.question}</span>
                         </div>
-                        <div className="px-3 py-2 pl-7"><p className="text-gray-500 text-xs landing-body leading-relaxed">{item.answer}</p></div>
+                        <div className="px-3 py-2 pl-7 text-gray-700 text-xs landing-body leading-relaxed">
+                          <FormattedContent content={item.answer} color="orange" />
+                        </div>
                       </div>
                     ))}
                   </div>
