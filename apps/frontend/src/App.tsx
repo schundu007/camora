@@ -139,10 +139,57 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+/* ── APPA Side Indicator — fixed left vertical line with 4 dots ── */
+function AppaSideIndicator() {
+  const location = useLocation();
+  const steps = [
+    { label: 'Apply', letter: 'A', href: '/jobs', color: '#34d399', match: '/jobs' },
+    { label: 'Prepare', letter: 'P', href: '/capra/prepare', color: '#818cf8', match: '/capra/prepare' },
+    { label: 'Practice', letter: 'P', href: '/capra/practice', color: '#38bdf8', match: '/capra/practice' },
+    { label: 'Attend', letter: 'A', href: '/lumora', color: '#fbbf24', match: '/lumora' },
+  ];
+  return (
+    <div className="fixed left-0 top-1/2 -translate-y-1/2 z-50 hidden lg:flex flex-col items-center gap-0" style={{ marginLeft: '10px' }}>
+      {/* Vertical line */}
+      <div className="absolute top-3 bottom-3 w-px" style={{ left: '50%', background: 'linear-gradient(180deg, #34d399, #818cf8, #38bdf8, #fbbf24)' }} />
+      {steps.map((step, i) => {
+        const isActive = location.pathname.startsWith(step.match);
+        return (
+          <Link
+            key={step.label}
+            to={step.href}
+            className="relative group flex items-center"
+            style={{ padding: '12px 0' }}
+            title={step.label}
+          >
+            {/* Dot */}
+            <div
+              className="w-3 h-3 rounded-full border-2 transition-all duration-200"
+              style={{
+                borderColor: step.color,
+                background: isActive ? step.color : '#ffffff',
+                boxShadow: isActive ? `0 0 8px ${step.color}60` : 'none',
+              }}
+            />
+            {/* Label on hover */}
+            <span
+              className="absolute left-6 whitespace-nowrap text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none px-2 py-1 rounded"
+              style={{ color: step.color, background: '#ffffff', boxShadow: '0 1px 4px rgba(0,0,0,0.1)' }}
+            >
+              {step.label}
+            </span>
+          </Link>
+        );
+      })}
+    </div>
+  );
+}
+
 export function App() {
   return (
     <AuthProvider>
       <Suspense fallback={<Loading />}>
+        <AppaSideIndicator />
         <Routes>
           {/* ── Public ─────────────────────────────────── */}
           <Route path="/" element={<LandingPage />} />
