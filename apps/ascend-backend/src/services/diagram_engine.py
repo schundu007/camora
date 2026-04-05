@@ -64,6 +64,7 @@ PROVIDER_IMPORTS = {
 
 TEMPLATE = '''import os
 from diagrams import Diagram, Cluster, Edge
+from diagrams.onprem.client import Users
 {{IMPORTS}}
 graph_attr = {
     "fontsize": "20",
@@ -260,6 +261,8 @@ def assemble_code(raw_output, provider, direction):
             if "from diagrams import Diagram" in stripped:
                 continue
             if stripped == "import os":
+                continue
+            if "from diagrams.onprem.client import Users" in stripped:
                 continue
             imports.append(stripped)
         else:
