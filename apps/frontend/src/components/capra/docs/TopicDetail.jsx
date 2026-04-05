@@ -9,6 +9,7 @@ import {
   ComparisonCard, CheatSheetCard, EvolutionTimeline,
   PatternCardGrid, StaticDiagramGrid, FlowchartCard, ChartCard
 } from './TopicVisuals.jsx';
+import ArticleRenderer from './ArticleRenderer.jsx';
 
 /**
  * Table for capacity planning / back-of-envelope estimation.
@@ -104,12 +105,12 @@ function StaticCloudDiagram({ topicId, provider, staticSrc, diagramData, generat
 
   return (
     <div>
-      <div className="rounded-lg overflow-hidden flex items-center justify-center bg-white">
+      <div className="rounded-lg overflow-hidden flex items-center justify-center" style={{ background: '#ffffff' }}>
         <img
           src={staticSrc}
           alt={`${topicId} ${provider.toUpperCase()} architecture diagram`}
           className="w-full h-auto object-contain"
-          style={{ maxHeight: '100%', width: '100%', filter: 'contrast(1.6) saturate(1.4)' }}
+          style={{ maxHeight: '100%', width: '100%' }}
           onError={() => setImgError(true)}
         />
       </div>
@@ -612,8 +613,13 @@ export default function TopicDetail({
         </div>
       )}
 
-      {/* System Design / LLD Problem Detail */}
-      {(isSDStyle || activePage === 'low-level') && (topicDetails.concepts || topicDetails.requirements || topicDetails.functionalRequirements || topicDetails.primitives || topicDetails.problems || topicDetails.structures || topicDetails.coreEntities || topicDetails.implementation) && (
+      {/* Article-style renderer for system design problems (URL Shortener, Twitter, Uber, etc.) */}
+      {isSDStyle && (topicDetails.functionalRequirements || topicDetails.advancedImplementation) && (
+        <ArticleRenderer topicDetails={topicDetails} selectedTopic={selectedTopic} />
+      )}
+
+      {/* System Design / LLD Topic Detail (concepts, non-problem topics) */}
+      {(isSDStyle || activePage === 'low-level') && !(isSDStyle && (topicDetails.functionalRequirements || topicDetails.advancedImplementation)) && (topicDetails.concepts || topicDetails.requirements || topicDetails.functionalRequirements || topicDetails.primitives || topicDetails.problems || topicDetails.structures || topicDetails.coreEntities || topicDetails.implementation) && (
         <div className="space-y-3">
           {/* Comprehensive System Design / LLD Problem Content */}
           {(topicDetails.requirements || topicDetails.functionalRequirements || topicDetails.introduction || topicDetails.concepts) && (
