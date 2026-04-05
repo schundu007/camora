@@ -41,7 +41,7 @@ function SectionHeading({ number, title }) {
 /* ── Sub-heading (h3) — indented under section heading ── */
 function SubHeading({ children, icon }) {
   return (
-    <h3 className="text-[1.15rem] font-bold mb-3 pl-4 flex items-center gap-2" style={{ color: '#1f2937', borderLeft: '3px solid #a7f3d0' }}>
+    <h3 className="text-[1.15rem] font-bold mb-3 ml-5 pl-4 flex items-center gap-2" style={{ color: '#1f2937', borderLeft: '3px solid #a7f3d0' }}>
       {icon && <span className="text-emerald-600">{icon}</span>}
       {children}
     </h3>
@@ -282,13 +282,13 @@ export default function ArticleRenderer({ topicDetails, selectedTopic }) {
         {/* ── 6. Key Questions ── */}
         {topicDetails.keyQuestions && (
           <Section id="key-questions" number={getNum('key-questions')} title="Key Design Questions">
-            <div className="space-y-0 ml-2">
+            <div className="space-y-0">
               {topicDetails.keyQuestions.map((q, i) => (
                 <div key={i} className="py-6" style={{ borderBottom: i < topicDetails.keyQuestions.length - 1 ? '1px solid #e5e7eb' : 'none' }}>
                   <SubHeading>
                     <span className="text-emerald-600 font-bold mr-1">{String.fromCharCode(97 + i)})</span> {q.question}
                   </SubHeading>
-                  <div className={`${bodyText} ml-4`}>
+                  <div className={`${bodyText} ml-12`}>
                     <FormattedContent content={q.answer} color="emerald" />
                   </div>
                 </div>
@@ -454,13 +454,13 @@ export default function ArticleRenderer({ topicDetails, selectedTopic }) {
         {/* ── 11. Deep Dive Topics ── */}
         {topicDetails.deepDiveTopics && (
           <Section id="deep-dive" number={getNum('deep-dive')} title="Deep Dive Topics">
-            <div className="space-y-0 ml-2">
+            <div className="space-y-0">
               {topicDetails.deepDiveTopics.map((topic, i) => (
                 <div key={i} className="py-6" style={{ borderBottom: i < topicDetails.deepDiveTopics.length - 1 ? '1px solid #e5e7eb' : 'none' }}>
                   <SubHeading>
                     <span className="text-emerald-600 font-bold mr-1">{String.fromCharCode(97 + i)})</span> {topic.topic}
                   </SubHeading>
-                  <p className={`${bodyText} ml-4`}>{topic.detail}</p>
+                  <p className={`${bodyText} ml-12`}>{topic.detail}</p>
                 </div>
               ))}
             </div>
@@ -489,13 +489,13 @@ export default function ArticleRenderer({ topicDetails, selectedTopic }) {
         {/* ── 13. Interview Follow-ups ── */}
         {topicDetails.interviewFollowups && (
           <Section id="followups" number={getNum('followups')} title="Common Interview Follow-ups">
-            <div className="space-y-0 ml-2">
+            <div className="space-y-0">
               {topicDetails.interviewFollowups.map((q, i) => (
                 <div key={i} className="py-6" style={{ borderBottom: i < topicDetails.interviewFollowups.length - 1 ? '1px solid #e5e7eb' : 'none' }}>
                   <SubHeading>
                     <span className="text-emerald-700 font-bold mr-1">Q{i + 1}.</span> {q.question}
                   </SubHeading>
-                  <div className={`${bodyText} ml-4`}>
+                  <div className={`${bodyText} ml-12`}>
                     <FormattedContent content={q.answer} color="emerald" />
                   </div>
                 </div>
