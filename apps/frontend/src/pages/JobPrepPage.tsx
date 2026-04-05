@@ -1155,280 +1155,391 @@ function StudyItem({ label, href, reason }: { label: string; href: string; reaso
   );
 }
 
+/* ──────────────────────────────── Styled helpers for book-style prep content ──────────────────────────────── */
+
+const S = {
+  h2: { fontSize: '18px', fontWeight: 700 as const, color: '#000', margin: '0 0 12px', borderBottom: '2px solid #d1fae5', paddingBottom: '6px' },
+  h3: { fontSize: '15px', fontWeight: 700 as const, color: '#111827', margin: '20px 0 8px', paddingLeft: '10px', borderLeft: '3px solid #6ee7b7' },
+  h4: { fontSize: '12px', fontWeight: 600 as const, color: '#059669', textTransform: 'uppercase' as const, letterSpacing: '0.08em', margin: '14px 0 6px 20px' },
+  p: { fontSize: '14px', color: '#1f2937', lineHeight: 1.8, margin: '0 0 8px 20px', whiteSpace: 'pre-wrap' as const },
+  li: { fontSize: '14px', color: '#1f2937', lineHeight: 1.7, marginBottom: '4px' },
+  ul: { margin: '0 0 8px', paddingLeft: '38px' },
+  callout: (color: string) => ({ background: color === 'green' ? '#f0fdf4' : color === 'blue' ? '#eff6ff' : color === 'amber' ? '#fffbeb' : color === 'red' ? '#fef2f2' : '#f5f3ff', borderLeft: `3px solid ${color === 'green' ? '#10b981' : color === 'blue' ? '#3b82f6' : color === 'amber' ? '#f59e0b' : color === 'red' ? '#ef4444' : '#8b5cf6'}`, borderRadius: '6px', padding: '12px 16px', margin: '8px 0 12px 20px' }),
+  divider: { borderBottom: '1px solid #e5e7eb', margin: '16px 0' },
+  code: { fontSize: '13px', background: '#0d1117', color: '#c9d1d9', borderRadius: '8px', padding: '14px 16px', overflow: 'auto' as const, margin: '8px 0 12px 20px', fontFamily: "'IBM Plex Mono', monospace" },
+  badge: (color: string) => ({ fontSize: '11px', fontWeight: 700 as const, color, background: color === '#dc2626' ? '#fef2f2' : color === '#d97706' ? '#fffbeb' : '#ecfdf5', padding: '2px 10px', borderRadius: '4px', textTransform: 'uppercase' as const }),
+};
+
 /* ──────────────────────────────── PrepSectionContent sub-component ──────────────────────────────── */
 
 function PrepSectionContent({ sectionKey, data }: { sectionKey: string; data: any }) {
   if (!data) return null;
 
-  const label = { fontSize: '11px', fontWeight: 600 as const, color: '#6b7280', textTransform: 'uppercase' as const, letterSpacing: '0.05em', margin: '0 0 6px' };
-  const card = { background: '#f9fafb', borderRadius: '8px', padding: '14px 16px', border: '1px solid #f3f4f6', marginBottom: '12px' };
-  const body = { fontSize: '13px', color: '#374151', lineHeight: 1.7, whiteSpace: 'pre-wrap' as const };
-
   // If data is a plain string, render it directly
   if (typeof data === 'string') {
-    return <div style={{ ...body, fontSize: '14px' }}>{data}</div>;
+    return <div style={S.p}>{data}</div>;
   }
 
-  // Elevator Pitch — pitchSections array with title/duration/bullets
+  // ═══════════════════════ ELEVATOR PITCH ═══════════════════════
   if (sectionKey === 'pitch') {
     const sections = data.pitchSections || data.sections;
     if (Array.isArray(sections)) {
       return (
         <div>
           {sections.map((sec: any, i: number) => (
-            <div key={i} style={{ ...card, borderLeft: '3px solid #10b981' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <span style={{ fontSize: '14px', fontWeight: 700, color: '#111827' }}>{sec.title}</span>
-                {sec.duration && <span style={{ fontSize: '11px', color: '#6b7280', background: '#f3f4f6', padding: '2px 8px', borderRadius: '4px' }}>{sec.duration}</span>}
-              </div>
-              {sec.context && <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '6px', fontStyle: 'italic' }}>{sec.context}</div>}
-              {sec.bullets && sec.bullets.map((b: string, j: number) => (
-                <div key={j} style={{ ...body, marginBottom: '4px', paddingLeft: '12px', borderLeft: '2px solid #d1fae5' }}>{b}</div>
-              ))}
+            <div key={i} style={{ marginBottom: '20px' }}>
+              <h3 style={S.h3}>
+                {sec.title}
+                {sec.duration && <span style={{ fontSize: '12px', fontWeight: 400, color: '#6b7280', marginLeft: '10px' }}>({sec.duration})</span>}
+              </h3>
+              {sec.context && <p style={{ ...S.p, fontStyle: 'italic', color: '#6b7280', fontSize: '13px' }}>{sec.context}</p>}
+              {sec.bullets && (
+                <ul style={S.ul}>
+                  {sec.bullets.map((b: string, j: number) => <li key={j} style={S.li}>{b}</li>)}
+                </ul>
+              )}
             </div>
           ))}
           {data.talkingPoints && Array.isArray(data.talkingPoints) && (
-            <div style={{ marginTop: '12px' }}>
-              <h5 style={label}>Talking Points</h5>
-              <ul style={{ margin: 0, paddingLeft: '18px' }}>
-                {data.talkingPoints.map((t: string, i: number) => <li key={i} style={{ ...body, marginBottom: '3px' }}>{t}</li>)}
-              </ul>
+            <div>
+              <h4 style={S.h4}>Key Talking Points</h4>
+              <ul style={S.ul}>{data.talkingPoints.map((t: string, i: number) => <li key={i} style={S.li}>{t}</li>)}</ul>
             </div>
           )}
-          {data.tips && <div style={{ ...card, borderLeft: '3px solid #fbbf24', marginTop: '12px' }}><h5 style={label}>Tips</h5><div style={body}>{typeof data.tips === 'string' ? data.tips : JSON.stringify(data.tips)}</div></div>}
+          {data.tips && (
+            <div style={S.callout('amber')}>
+              <h4 style={{ ...S.h4, margin: '0 0 6px 0', color: '#92400e' }}>Delivery Tips</h4>
+              <p style={{ ...S.p, margin: 0 }}>{typeof data.tips === 'string' ? data.tips : Array.isArray(data.tips) ? data.tips.join('\n') : ''}</p>
+            </div>
+          )}
+          {data.techStack && Array.isArray(data.techStack) && (
+            <div>
+              <h4 style={S.h4}>Tech Stack to Highlight</h4>
+              <ul style={S.ul}>{data.techStack.map((t: any, i: number) => <li key={i} style={S.li}><strong>{t.technology}</strong> — {t.relevance || t.experience}</li>)}</ul>
+            </div>
+          )}
         </div>
       );
     }
-    // Fallback for plain text pitch
     const pitch = data.pitch || data.content || data.text || '';
-    if (pitch) return <div style={{ ...card, borderLeft: '3px solid #10b981' }}><div style={body}>{pitch}</div></div>;
+    if (pitch) return <div style={S.callout('green')}><p style={{ ...S.p, margin: 0 }}>{pitch}</p></div>;
   }
 
-  // Q&A-based sections (HR, Hiring Manager, Behavioral)
+  // ═══════════════════════ HR / HIRING MANAGER / BEHAVIORAL ═══════════════════════
   if (['hr', 'hiring-manager', 'behavioral'].includes(sectionKey)) {
     const questions = data.questions || data.items || (Array.isArray(data) ? data : []);
-
-    // Summary / company insights at top
-    const summary = data.summary || data.companyInsights;
-    const salaryInfo = data.salaryNegotiation;
-    const questionsToAsk = data.questionsToAsk;
-
     return (
       <div>
         {data.summary && typeof data.summary === 'string' && (
-          <div style={{ ...card, borderLeft: '3px solid #3b82f6', marginBottom: '16px' }}>
-            <h5 style={label}>Overview</h5>
-            <div style={body}>{data.summary}</div>
+          <div style={S.callout('blue')}>
+            <h4 style={{ ...S.h4, margin: '0 0 6px 0', color: '#1e40af' }}>Overview</h4>
+            <p style={{ ...S.p, margin: 0 }}>{data.summary}</p>
           </div>
         )}
         {data.companyInsights && typeof data.companyInsights === 'object' && (
-          <div style={{ ...card, borderLeft: '3px solid #8b5cf6', marginBottom: '16px' }}>
-            <h5 style={label}>Company Insights</h5>
-            {data.companyInsights.culture && <div style={{ ...body, marginBottom: '4px' }}><strong>Culture:</strong> {data.companyInsights.culture}</div>}
-            {data.companyInsights.interviewFormat && <div style={{ ...body, marginBottom: '4px' }}><strong>Interview Format:</strong> {data.companyInsights.interviewFormat}</div>}
-            {data.companyInsights.values && Array.isArray(data.companyInsights.values) && <div style={{ ...body }}><strong>Values:</strong> {data.companyInsights.values.join(', ')}</div>}
+          <div style={S.callout('violet')}>
+            <h4 style={{ ...S.h4, margin: '0 0 8px 0', color: '#5b21b6' }}>Company Insights</h4>
+            {data.companyInsights.interviewFormat && <p style={{ ...S.p, margin: '0 0 4px' }}><strong>Interview Format:</strong> {data.companyInsights.interviewFormat}</p>}
+            {data.companyInsights.culture && <p style={{ ...S.p, margin: '0 0 4px' }}><strong>Culture:</strong> {data.companyInsights.culture}</p>}
+            {data.companyInsights.values && Array.isArray(data.companyInsights.values) && <p style={{ ...S.p, margin: 0 }}><strong>Values:</strong> {data.companyInsights.values.join(' · ')}</p>}
+            {data.companyInsights.recentNews && <p style={{ ...S.p, margin: '4px 0 0', fontSize: '13px', color: '#6b7280' }}>{data.companyInsights.recentNews}</p>}
           </div>
         )}
-        {Array.isArray(questions) && questions.length > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            {questions.map((q: any, i: number) => (
-              <div key={i} style={{ ...card }}>
-                <div style={{ fontSize: '14px', fontWeight: 600, color: '#111827', marginBottom: '8px', display: 'flex', gap: '8px' }}>
-                  <span style={{ color: '#10b981', fontWeight: 700, flexShrink: 0 }}>Q{i + 1}.</span>
-                  <span>{q.question || q.q || (typeof q === 'string' ? q : '')}</span>
-                </div>
-                {q.whyTheyAsk && (
-                  <div style={{ fontSize: '12px', color: '#6b7280', marginLeft: '32px', marginBottom: '6px', fontStyle: 'italic' }}>
-                    Why they ask: {q.whyTheyAsk}
-                  </div>
-                )}
-                {(q.suggestedAnswer || q.answer || q.a || q.sampleAnswer) && (
-                  <div style={{ ...body, marginLeft: '32px', background: '#f0fdf4', borderRadius: '6px', padding: '10px 14px', borderLeft: '2px solid #86efac' }}>
-                    {q.suggestedAnswer || q.answer || q.a || q.sampleAnswer}
-                  </div>
-                )}
-                {q.tips && <div style={{ fontSize: '12px', color: '#6b7280', marginLeft: '32px', marginTop: '6px' }}>💡 {q.tips}</div>}
-                {/* STAR format for behavioral */}
-                {sectionKey === 'behavioral' && (q.situation || q.task || q.action || q.result) && (
-                  <div style={{ marginLeft: '32px', marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    {q.situation && <div style={body}><span style={{ fontWeight: 700, color: '#10b981' }}>S</span><span style={{ fontWeight: 600 }}>ituation: </span>{q.situation}</div>}
-                    {q.task && <div style={body}><span style={{ fontWeight: 700, color: '#10b981' }}>T</span><span style={{ fontWeight: 600 }}>ask: </span>{q.task}</div>}
-                    {q.action && <div style={body}><span style={{ fontWeight: 700, color: '#10b981' }}>A</span><span style={{ fontWeight: 600 }}>ction: </span>{q.action}</div>}
-                    {q.result && <div style={body}><span style={{ fontWeight: 700, color: '#10b981' }}>R</span><span style={{ fontWeight: 600 }}>esult: </span>{q.result}</div>}
-                  </div>
-                )}
+
+        {Array.isArray(questions) && questions.length > 0 && questions.map((q: any, i: number) => (
+          <div key={i} style={{ marginBottom: '24px' }}>
+            <h3 style={S.h3}>
+              <span style={{ color: '#059669', marginRight: '6px' }}>Q{i + 1}.</span>
+              {q.question || q.q || (typeof q === 'string' ? q : '')}
+            </h3>
+            {q.whyTheyAsk && <p style={{ ...S.p, fontSize: '13px', color: '#6b7280', fontStyle: 'italic' }}>Why they ask this: {q.whyTheyAsk}</p>}
+            {(q.suggestedAnswer || q.answer || q.a || q.sampleAnswer) && (
+              <div style={S.callout('green')}>
+                <h4 style={{ ...S.h4, margin: '0 0 6px 0', color: '#065f46' }}>Suggested Answer</h4>
+                <p style={{ ...S.p, margin: 0 }}>{q.suggestedAnswer || q.answer || q.a || q.sampleAnswer}</p>
               </div>
-            ))}
+            )}
+            {q.tips && <p style={{ ...S.p, fontSize: '13px', color: '#6b7280' }}>Tip: {q.tips}</p>}
+            {sectionKey === 'behavioral' && (q.situation || q.task || q.action || q.result) && (
+              <div style={{ marginLeft: '20px', marginTop: '10px' }}>
+                <h4 style={{ ...S.h4, margin: '0 0 8px 0' }}>STAR Framework</h4>
+                {q.situation && <p style={S.p}><strong style={{ color: '#059669' }}>Situation:</strong> {q.situation}</p>}
+                {q.task && <p style={S.p}><strong style={{ color: '#059669' }}>Task:</strong> {q.task}</p>}
+                {q.action && <p style={S.p}><strong style={{ color: '#059669' }}>Action:</strong> {q.action}</p>}
+                {q.result && <p style={S.p}><strong style={{ color: '#059669' }}>Result:</strong> {q.result}</p>}
+              </div>
+            )}
+            {i < questions.length - 1 && <div style={S.divider} />}
+          </div>
+        ))}
+
+        {data.salaryNegotiation && typeof data.salaryNegotiation === 'object' && (
+          <div style={S.callout('amber')}>
+            <h4 style={{ ...S.h4, margin: '0 0 8px 0', color: '#92400e' }}>Salary Negotiation</h4>
+            {data.salaryNegotiation.rangeEstimate && <p style={{ ...S.p, margin: '0 0 4px' }}><strong>Expected Range:</strong> {data.salaryNegotiation.rangeEstimate}</p>}
+            {data.salaryNegotiation.companyContext && <p style={{ ...S.p, margin: '0 0 4px' }}>{data.salaryNegotiation.companyContext}</p>}
+            {data.salaryNegotiation.negotiationTips && <p style={{ ...S.p, margin: 0 }}><strong>Tips:</strong> {data.salaryNegotiation.negotiationTips}</p>}
           </div>
         )}
-        {salaryInfo && typeof salaryInfo === 'object' && (
-          <div style={{ ...card, borderLeft: '3px solid #f59e0b', marginTop: '16px' }}>
-            <h5 style={label}>Salary Negotiation</h5>
-            {salaryInfo.rangeEstimate && <div style={{ ...body, marginBottom: '4px' }}><strong>Range:</strong> {salaryInfo.rangeEstimate}</div>}
-            {salaryInfo.companyContext && <div style={{ ...body, marginBottom: '4px' }}>{salaryInfo.companyContext}</div>}
-            {salaryInfo.negotiationTips && <div style={{ ...body }}><strong>Tips:</strong> {salaryInfo.negotiationTips}</div>}
-          </div>
-        )}
-        {questionsToAsk && Array.isArray(questionsToAsk) && (
-          <div style={{ ...card, borderLeft: '3px solid #10b981', marginTop: '16px' }}>
-            <h5 style={label}>Questions to Ask Them</h5>
-            <ul style={{ margin: 0, paddingLeft: '18px' }}>
-              {questionsToAsk.map((q: string, i: number) => <li key={i} style={{ ...body, marginBottom: '3px' }}>{q}</li>)}
-            </ul>
+        {data.questionsToAsk && Array.isArray(data.questionsToAsk) && (
+          <div>
+            <h3 style={S.h3}>Questions You Should Ask</h3>
+            <ul style={S.ul}>{data.questionsToAsk.map((q: string, i: number) => <li key={i} style={S.li}>{q}</li>)}</ul>
           </div>
         )}
       </div>
     );
   }
 
-  // Coding Questions
+  // ═══════════════════════ CODING QUESTIONS ═══════════════════════
   if (sectionKey === 'coding') {
     const problems = data.questions || data.problems || data.items || (Array.isArray(data) ? data : []);
     return (
       <div>
-        {data.summary && <div style={{ ...card, borderLeft: '3px solid #8b5cf6', marginBottom: '16px' }}><h5 style={label}>Overview</h5><div style={body}>{data.summary}</div></div>}
+        {data.summary && <div style={S.callout('violet')}><p style={{ ...S.p, margin: 0 }}>{data.summary}</p></div>}
+        {data.companyInsights && <div style={S.callout('blue')}><h4 style={{ ...S.h4, margin: '0 0 6px 0', color: '#1e40af' }}>Company-Specific Notes</h4><p style={{ ...S.p, margin: 0 }}>{typeof data.companyInsights === 'string' ? data.companyInsights : ''}</p></div>}
         {data.keyTopics && Array.isArray(data.keyTopics) && (
-          <div style={{ ...card, marginBottom: '16px' }}>
-            <h5 style={label}>Key Topics</h5>
-            {data.keyTopics.map((t: any, i: number) => (
-              <div key={i} style={{ ...body, marginBottom: '4px' }}>
-                <strong>{t.topic || t}</strong>{t.frequency ? ` — ${t.frequency}` : ''}{t.whyImportant ? ` — ${t.whyImportant}` : ''}
+          <div>
+            <h3 style={S.h3}>Key Topics to Prepare</h3>
+            <ul style={S.ul}>
+              {data.keyTopics.map((t: any, i: number) => (
+                <li key={i} style={S.li}>
+                  <strong>{t.topic || t}</strong>
+                  {t.frequency && <span style={{ color: '#6b7280' }}> — {t.frequency}</span>}
+                  {t.whyImportant && <span style={{ color: '#6b7280' }}> — {t.whyImportant}</span>}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {Array.isArray(problems) && problems.map((p: any, i: number) => (
+          <div key={i} style={{ marginBottom: '28px' }}>
+            <h3 style={S.h3}>
+              <span style={S.badge((p.difficulty || '').toLowerCase() === 'hard' ? '#dc2626' : (p.difficulty || '').toLowerCase() === 'medium' ? '#d97706' : '#059669')}>{p.difficulty || 'Medium'}</span>
+              <span style={{ marginLeft: '8px' }}>{p.title || p.name || `Problem ${i + 1}`}</span>
+              {p.frequency && <span style={{ fontSize: '12px', fontWeight: 400, color: '#6b7280', marginLeft: '8px' }}>({p.frequency})</span>}
+            </h3>
+            {p.problemStatement && <p style={S.p}>{p.problemStatement}</p>}
+            {p.examples && Array.isArray(p.examples) && (
+              <div>
+                <h4 style={S.h4}>Examples</h4>
+                {p.examples.map((ex: any, j: number) => (
+                  <pre key={j} style={{ ...S.code, fontSize: '12px' }}>
+                    <code>Input:  {typeof ex.input === 'string' ? ex.input : JSON.stringify(ex.input)}{'\n'}Output: {typeof ex.output === 'string' ? ex.output : JSON.stringify(ex.output)}{ex.explanation ? `\n// ${ex.explanation}` : ''}</code>
+                  </pre>
+                ))}
+              </div>
+            )}
+            {p.approaches && Array.isArray(p.approaches) && p.approaches.map((a: any, j: number) => (
+              <div key={j} style={{ marginLeft: '20px', marginTop: '14px' }}>
+                <h4 style={{ ...S.h4, margin: '0 0 6px 0' }}>
+                  Approach {j + 1}: {a.name}
+                  <span style={{ fontWeight: 400, fontSize: '11px', color: '#6b7280', marginLeft: '8px' }}>
+                    Time: O({a.timeComplexity}) · Space: O({a.spaceComplexity})
+                  </span>
+                </h4>
+                {a.code && <pre style={S.code}><code>{a.code}</code></pre>}
+                {a.lineByLine && Array.isArray(a.lineByLine) && (
+                  <div style={{ marginLeft: '20px' }}>
+                    <h4 style={{ ...S.h4, fontSize: '11px' }}>Line-by-Line Explanation</h4>
+                    {a.lineByLine.map((l: any, k: number) => (
+                      <p key={k} style={{ ...S.p, fontSize: '12px', margin: '0 0 3px' }}><code style={{ color: '#059669' }}>{l.line}</code> — {l.explanation}</p>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+            {p.edgeCases && Array.isArray(p.edgeCases) && (
+              <div><h4 style={S.h4}>Edge Cases</h4><ul style={S.ul}>{p.edgeCases.map((e: any, j: number) => <li key={j} style={S.li}><strong>{e.case || e}:</strong> {e.explanation || ''}</li>)}</ul></div>
+            )}
+            {p.commonMistakes && Array.isArray(p.commonMistakes) && (
+              <div style={S.callout('red')}>
+                <h4 style={{ ...S.h4, margin: '0 0 6px 0', color: '#991b1b' }}>Common Mistakes</h4>
+                <ul style={{ ...S.ul, paddingLeft: '18px' }}>{p.commonMistakes.map((m: string, j: number) => <li key={j} style={{ ...S.li, color: '#991b1b' }}>{m}</li>)}</ul>
+              </div>
+            )}
+            {p.followUpQuestions && Array.isArray(p.followUpQuestions) && (
+              <div><h4 style={S.h4}>Follow-up Questions</h4><ul style={S.ul}>{p.followUpQuestions.map((f: string, j: number) => <li key={j} style={S.li}>{f}</li>)}</ul></div>
+            )}
+            {i < problems.length - 1 && <div style={S.divider} />}
+          </div>
+        ))}
+        {data.practiceRecommendations && Array.isArray(data.practiceRecommendations) && (
+          <div>
+            <h3 style={S.h3}>Practice Recommendations</h3>
+            {data.practiceRecommendations.map((r: any, i: number) => (
+              <div key={i} style={{ marginBottom: '10px', marginLeft: '20px' }}>
+                <p style={S.p}><strong>{r.platform}:</strong> {r.reason}</p>
+                {r.problems && Array.isArray(r.problems) && <ul style={S.ul}>{r.problems.map((p: string, j: number) => <li key={j} style={S.li}>{p}</li>)}</ul>}
               </div>
             ))}
           </div>
         )}
-        {Array.isArray(problems) && problems.map((p: any, i: number) => (
-          <div key={i} style={{ ...card }}>
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>
-              <span style={{ fontSize: '11px', fontWeight: 700, color: (p.difficulty || '').toLowerCase() === 'hard' ? '#dc2626' : (p.difficulty || '').toLowerCase() === 'medium' ? '#d97706' : '#059669', background: (p.difficulty || '').toLowerCase() === 'hard' ? '#fef2f2' : (p.difficulty || '').toLowerCase() === 'medium' ? '#fffbeb' : '#ecfdf5', padding: '2px 8px', borderRadius: '4px', textTransform: 'uppercase' as const }}>{p.difficulty || 'Medium'}</span>
-              <span style={{ fontSize: '14px', fontWeight: 600, color: '#111827' }}>{p.title || p.name || `Problem ${i + 1}`}</span>
-              {p.frequency && <span style={{ fontSize: '11px', color: '#6b7280' }}>({p.frequency})</span>}
-            </div>
-            {p.problemStatement && <div style={{ ...body, marginBottom: '8px' }}>{p.problemStatement}</div>}
-            {p.examples && Array.isArray(p.examples) && p.examples.map((ex: any, j: number) => (
-              <div key={j} style={{ fontSize: '12px', color: '#4b5563', background: '#f3f4f6', borderRadius: '6px', padding: '8px 12px', marginBottom: '6px', fontFamily: 'monospace' }}>
-                <div><strong>Input:</strong> {ex.input}</div>
-                <div><strong>Output:</strong> {ex.output}</div>
-                {ex.explanation && <div style={{ color: '#6b7280', fontStyle: 'italic' }}>{ex.explanation}</div>}
-              </div>
-            ))}
-            {p.approaches && Array.isArray(p.approaches) && p.approaches.map((a: any, j: number) => (
-              <div key={j} style={{ marginTop: '10px', marginLeft: '12px' }}>
-                <div style={{ fontSize: '13px', fontWeight: 600, color: '#111827', marginBottom: '4px' }}>{a.name} <span style={{ fontSize: '11px', color: '#6b7280', fontWeight: 400 }}>O({a.timeComplexity}) / O({a.spaceComplexity})</span></div>
-                {a.code && <pre style={{ fontSize: '12px', background: '#0d1117', color: '#c9d1d9', borderRadius: '6px', padding: '10px 14px', overflow: 'auto', margin: '4px 0 8px' }}><code>{a.code}</code></pre>}
-              </div>
-            ))}
-            {p.commonMistakes && Array.isArray(p.commonMistakes) && (
-              <div style={{ marginTop: '8px', marginLeft: '12px' }}>
-                <h5 style={label}>Common Mistakes</h5>
-                <ul style={{ margin: 0, paddingLeft: '16px' }}>{p.commonMistakes.map((m: string, j: number) => <li key={j} style={{ ...body, fontSize: '12px', color: '#dc2626' }}>{m}</li>)}</ul>
-              </div>
-            )}
-          </div>
-        ))}
       </div>
     );
   }
 
-  // System Design Questions
+  // ═══════════════════════ SYSTEM DESIGN ═══════════════════════
   if (sectionKey === 'system-design') {
     const questions = data.questions || data.scenarios || data.items || (Array.isArray(data) ? data : []);
     return (
       <div>
-        {data.summary && <div style={{ ...card, borderLeft: '3px solid #3b82f6', marginBottom: '16px' }}><h5 style={label}>Overview</h5><div style={body}>{data.summary}</div></div>}
-        {data.companyContext && <div style={{ ...card, borderLeft: '3px solid #8b5cf6', marginBottom: '16px' }}><h5 style={label}>Company Context</h5><div style={body}>{data.companyContext}</div></div>}
+        {data.summary && <div style={S.callout('blue')}><p style={{ ...S.p, margin: 0 }}>{data.summary}</p></div>}
+        {data.companyContext && <div style={S.callout('violet')}><h4 style={{ ...S.h4, margin: '0 0 6px 0', color: '#5b21b6' }}>Company Context</h4><p style={{ ...S.p, margin: 0 }}>{data.companyContext}</p></div>}
+        {data.ascendFramework && (
+          <div style={S.callout('green')}>
+            <h4 style={{ ...S.h4, margin: '0 0 8px 0', color: '#065f46' }}>Interview Framework</h4>
+            {data.ascendFramework.timeAllocation && (
+              <p style={{ ...S.p, margin: '0 0 6px', fontSize: '13px' }}>
+                <strong>Time:</strong> Requirements ({data.ascendFramework.timeAllocation.requirements}) → High Level ({data.ascendFramework.timeAllocation.highLevel}) → Deep Dive ({data.ascendFramework.timeAllocation.deepDive}) → Wrap Up ({data.ascendFramework.timeAllocation.wrapUp})
+              </p>
+            )}
+            {data.ascendFramework.whatTheyLookFor && <ul style={{ ...S.ul, margin: 0 }}>{data.ascendFramework.whatTheyLookFor.map((w: string, i: number) => <li key={i} style={S.li}>{w}</li>)}</ul>}
+          </div>
+        )}
         {Array.isArray(questions) && questions.map((q: any, i: number) => (
-          <div key={i} style={{ ...card }}>
-            <div style={{ fontSize: '14px', fontWeight: 700, color: '#111827', marginBottom: '10px' }}>{q.title || `Scenario ${i + 1}`}</div>
+          <div key={i} style={{ marginBottom: '30px' }}>
+            <h3 style={{ ...S.h3, fontSize: '16px' }}>
+              {q.title || `Design Scenario ${i + 1}`}
+              {q.frequency && <span style={{ fontSize: '12px', fontWeight: 400, color: '#6b7280', marginLeft: '8px' }}>({q.frequency})</span>}
+              {q.timeLimit && <span style={{ fontSize: '12px', fontWeight: 400, color: '#6b7280', marginLeft: '8px' }}>{q.timeLimit}</span>}
+            </h3>
             {q.clarifyingQuestions && Array.isArray(q.clarifyingQuestions) && (
-              <div style={{ marginBottom: '10px' }}><h5 style={label}>Clarifying Questions</h5><ul style={{ margin: 0, paddingLeft: '16px' }}>{q.clarifyingQuestions.map((c: string, j: number) => <li key={j} style={{ ...body, fontSize: '12px' }}>{c}</li>)}</ul></div>
+              <div><h4 style={S.h4}>Clarifying Questions to Ask</h4><ul style={S.ul}>{q.clarifyingQuestions.map((c: string, j: number) => <li key={j} style={S.li}>{c}</li>)}</ul></div>
             )}
             {q.requirements && (
-              <div style={{ marginBottom: '10px' }}>
-                {q.requirements.functional && (<><h5 style={label}>Functional Requirements</h5><ul style={{ margin: '0 0 8px', paddingLeft: '16px' }}>{q.requirements.functional.map((r: string, j: number) => <li key={j} style={{ ...body, fontSize: '12px' }}>{r}</li>)}</ul></>)}
-                {q.requirements.nonFunctional && (<><h5 style={label}>Non-Functional Requirements</h5><ul style={{ margin: 0, paddingLeft: '16px' }}>{q.requirements.nonFunctional.map((r: string, j: number) => <li key={j} style={{ ...body, fontSize: '12px' }}>{r}</li>)}</ul></>)}
+              <div>
+                {q.requirements.functional && (<><h4 style={S.h4}>Functional Requirements</h4><ul style={S.ul}>{q.requirements.functional.map((r: string, j: number) => <li key={j} style={S.li}>{r}</li>)}</ul></>)}
+                {q.requirements.nonFunctional && (<><h4 style={S.h4}>Non-Functional Requirements</h4><ul style={S.ul}>{q.requirements.nonFunctional.map((r: string, j: number) => <li key={j} style={S.li}>{r}</li>)}</ul></>)}
               </div>
             )}
-            {q.capacityEstimation && q.capacityEstimation.calculations && (
-              <div style={{ marginBottom: '10px' }}><h5 style={label}>Capacity Estimation</h5>
-                {q.capacityEstimation.assumptions && <div style={{ fontSize: '12px', color: '#6b7280', fontStyle: 'italic', marginBottom: '6px' }}>{Array.isArray(q.capacityEstimation.assumptions) ? q.capacityEstimation.assumptions.join(' | ') : q.capacityEstimation.assumptions}</div>}
-                <table style={{ width: '100%', fontSize: '12px', borderCollapse: 'collapse' }}><tbody>
-                  {q.capacityEstimation.calculations.map((c: any, j: number) => <tr key={j} style={{ borderBottom: '1px solid #f3f4f6' }}><td style={{ padding: '4px 8px', fontWeight: 600, color: '#374151' }}>{c.metric}</td><td style={{ padding: '4px 8px', color: '#059669', fontFamily: 'monospace' }}>{c.result}</td><td style={{ padding: '4px 8px', color: '#6b7280' }}>{c.calculation}</td></tr>)}
-                </tbody></table>
+            {q.capacityEstimation && (
+              <div>
+                <h4 style={S.h4}>Capacity Estimation</h4>
+                {q.capacityEstimation.assumptions && Array.isArray(q.capacityEstimation.assumptions) && (
+                  <ul style={S.ul}>{q.capacityEstimation.assumptions.map((a: string, j: number) => <li key={j} style={{ ...S.li, fontSize: '13px', color: '#6b7280' }}>{a}</li>)}</ul>
+                )}
+                {q.capacityEstimation.calculations && (
+                  <div style={{ margin: '8px 20px', overflow: 'auto' }}>
+                    <table style={{ width: '100%', fontSize: '13px', borderCollapse: 'collapse', border: '1px solid #e5e7eb', borderRadius: '6px' }}>
+                      <thead><tr style={{ background: '#f0fdf4' }}>
+                        <th style={{ textAlign: 'left', padding: '8px 12px', fontWeight: 700, color: '#065f46', borderBottom: '2px solid #a7f3d0' }}>Metric</th>
+                        <th style={{ textAlign: 'left', padding: '8px 12px', fontWeight: 700, color: '#065f46', borderBottom: '2px solid #a7f3d0' }}>Result</th>
+                        <th style={{ textAlign: 'left', padding: '8px 12px', fontWeight: 700, color: '#065f46', borderBottom: '2px solid #a7f3d0' }}>Calculation</th>
+                      </tr></thead>
+                      <tbody>{q.capacityEstimation.calculations.map((c: any, j: number) => (
+                        <tr key={j} style={{ borderBottom: '1px solid #f3f4f6' }}>
+                          <td style={{ padding: '6px 12px', fontWeight: 600, color: '#111827' }}>{c.metric}</td>
+                          <td style={{ padding: '6px 12px', fontFamily: 'monospace', color: '#059669', fontWeight: 600 }}>{c.result}</td>
+                          <td style={{ padding: '6px 12px', color: '#6b7280' }}>{c.calculation}</td>
+                        </tr>
+                      ))}</tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             )}
             {q.architecture && q.architecture.components && (
-              <div style={{ marginBottom: '10px' }}><h5 style={label}>Architecture Components</h5>
+              <div>
+                <h4 style={S.h4}>Architecture Components</h4>
+                {q.architecture.diagramDescription && <p style={{ ...S.p, fontSize: '13px', fontStyle: 'italic', color: '#6b7280' }}>{q.architecture.diagramDescription}</p>}
                 {q.architecture.components.map((c: any, j: number) => (
-                  <div key={j} style={{ ...body, fontSize: '12px', marginBottom: '4px' }}><strong>{c.name}</strong> ({c.technology}) — {c.responsibility}{c.whyThisChoice ? ` [${c.whyThisChoice}]` : ''}</div>
-                ))}
-              </div>
-            )}
-            {q.apiDesign && Array.isArray(q.apiDesign) && (
-              <div style={{ marginBottom: '10px' }}><h5 style={label}>API Design</h5>
-                {q.apiDesign.map((a: any, j: number) => <div key={j} style={{ fontSize: '12px', fontFamily: 'monospace', color: '#374151', marginBottom: '3px' }}><strong>{a.endpoint}</strong>{a.notes ? ` — ${a.notes}` : ''}</div>)}
-              </div>
-            )}
-            {q.scalabilityConsiderations && Array.isArray(q.scalabilityConsiderations) && (
-              <div><h5 style={label}>Scalability</h5>
-                {q.scalabilityConsiderations.map((s: any, j: number) => <div key={j} style={{ ...body, fontSize: '12px', marginBottom: '3px' }}><strong>{s.challenge}:</strong> {s.solution}</div>)}
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  // Tech Stack Analysis
-  if (sectionKey === 'techstack') {
-    const topics = data.technologies || data.topics || data.items || data.techStack || (Array.isArray(data) ? data : []);
-    return (
-      <div>
-        {data.summary && <div style={{ ...card, borderLeft: '3px solid #f59e0b', marginBottom: '16px' }}><h5 style={label}>Overview</h5><div style={body}>{data.summary}</div></div>}
-        {Array.isArray(topics) && topics.map((t: any, i: number) => (
-          <div key={i} style={{ ...card }}>
-            <div style={{ fontSize: '14px', fontWeight: 600, color: '#111827', marginBottom: '6px' }}>{t.technology || t.name || t.topic || (typeof t === 'string' ? t : `Topic ${i + 1}`)}</div>
-            {t.category && <span style={{ fontSize: '11px', color: '#6b7280', background: '#f3f4f6', padding: '2px 8px', borderRadius: '4px', marginBottom: '6px', display: 'inline-block' }}>{t.category}</span>}
-            {(t.description || t.detail || t.overview) && <div style={{ ...body, marginTop: '6px' }}>{t.description || t.detail || t.overview}</div>}
-            {t.keyConceptsToReview && Array.isArray(t.keyConceptsToReview) && (
-              <div style={{ marginTop: '8px' }}><h5 style={label}>Key Concepts</h5><ul style={{ margin: 0, paddingLeft: '16px' }}>{t.keyConceptsToReview.map((c: string, j: number) => <li key={j} style={{ ...body, fontSize: '12px' }}>{c}</li>)}</ul></div>
-            )}
-            {t.interviewQuestions && Array.isArray(t.interviewQuestions) && (
-              <div style={{ marginTop: '8px' }}><h5 style={label}>Likely Questions</h5>
-                {t.interviewQuestions.map((q: any, j: number) => (
-                  <div key={j} style={{ marginBottom: '8px', paddingLeft: '12px', borderLeft: '2px solid #d1fae5' }}>
-                    <div style={{ fontSize: '13px', fontWeight: 600, color: '#111827' }}>{typeof q === 'string' ? q : q.question}</div>
-                    {q.answer && <div style={{ ...body, fontSize: '12px', marginTop: '4px' }}>{q.answer}</div>}
+                  <div key={j} style={{ marginLeft: '20px', marginBottom: '8px', paddingLeft: '10px', borderLeft: '2px solid #d1fae5' }}>
+                    <p style={{ ...S.p, margin: '0 0 2px' }}><strong>{c.name}</strong> <span style={{ color: '#6b7280' }}>({c.technology})</span></p>
+                    <p style={{ ...S.p, margin: 0, fontSize: '13px', color: '#4b5563' }}>{c.responsibility}{c.whyThisChoice ? ` — ${c.whyThisChoice}` : ''}</p>
                   </div>
                 ))}
               </div>
             )}
+            {q.databaseDesign && q.databaseDesign.schema && (
+              <div>
+                <h4 style={S.h4}>Database Design</h4>
+                {q.databaseDesign.schema.map((t: any, j: number) => (
+                  <div key={j} style={{ marginBottom: '10px' }}>
+                    <p style={{ ...S.p, fontWeight: 700, marginBottom: '4px' }}>{t.table}</p>
+                    {t.columns && <pre style={{ ...S.code, fontSize: '12px' }}><code>{t.columns.map((col: any) => `${col.name}: ${col.type}${col.constraint ? ` (${col.constraint})` : ''}`).join('\n')}</code></pre>}
+                  </div>
+                ))}
+                {q.databaseDesign.indexStrategy && <p style={{ ...S.p, fontSize: '13px' }}><strong>Index Strategy:</strong> {q.databaseDesign.indexStrategy}</p>}
+              </div>
+            )}
+            {q.apiDesign && Array.isArray(q.apiDesign) && (
+              <div>
+                <h4 style={S.h4}>API Design</h4>
+                {q.apiDesign.map((a: any, j: number) => (
+                  <div key={j} style={{ marginLeft: '20px', marginBottom: '6px' }}>
+                    <code style={{ fontSize: '13px', fontWeight: 600, color: '#111827' }}>{a.endpoint}</code>
+                    {a.notes && <span style={{ fontSize: '12px', color: '#6b7280', marginLeft: '8px' }}>— {a.notes}</span>}
+                  </div>
+                ))}
+              </div>
+            )}
+            {q.scalabilityConsiderations && Array.isArray(q.scalabilityConsiderations) && (
+              <div>
+                <h4 style={S.h4}>Scalability Considerations</h4>
+                <ul style={S.ul}>{q.scalabilityConsiderations.map((s: any, j: number) => <li key={j} style={S.li}><strong>{s.challenge}:</strong> {s.solution}</li>)}</ul>
+              </div>
+            )}
+            {q.diagramUrl && <div style={{ margin: '12px 20px' }}><img src={q.diagramUrl} alt="Architecture Diagram" style={{ maxWidth: '100%', borderRadius: '8px', border: '1px solid #e5e7eb' }} /></div>}
+            {i < questions.length - 1 && <div style={S.divider} />}
           </div>
         ))}
       </div>
     );
   }
 
-  // Fallback — recursively render any JSON structure as readable content
+  // ═══════════════════════ TECH STACK ═══════════════════════
+  if (sectionKey === 'techstack') {
+    const topics = data.technologies || data.topics || data.items || data.techStack || (Array.isArray(data) ? data : []);
+    return (
+      <div>
+        {data.summary && <div style={S.callout('amber')}><p style={{ ...S.p, margin: 0 }}>{data.summary}</p></div>}
+        {Array.isArray(topics) && topics.map((t: any, i: number) => (
+          <div key={i} style={{ marginBottom: '24px' }}>
+            <h3 style={S.h3}>
+              {t.technology || t.name || t.topic || (typeof t === 'string' ? t : `Topic ${i + 1}`)}
+              {t.category && <span style={{ fontSize: '11px', fontWeight: 400, color: '#6b7280', marginLeft: '10px', background: '#f3f4f6', padding: '2px 8px', borderRadius: '4px' }}>{t.category}</span>}
+            </h3>
+            {(t.description || t.detail || t.overview) && <p style={S.p}>{t.description || t.detail || t.overview}</p>}
+            {t.keyConceptsToReview && Array.isArray(t.keyConceptsToReview) && (
+              <div><h4 style={S.h4}>Key Concepts to Review</h4><ul style={S.ul}>{t.keyConceptsToReview.map((c: string, j: number) => <li key={j} style={S.li}>{c}</li>)}</ul></div>
+            )}
+            {t.interviewQuestions && Array.isArray(t.interviewQuestions) && (
+              <div>
+                <h4 style={S.h4}>Likely Interview Questions</h4>
+                {t.interviewQuestions.map((q: any, j: number) => (
+                  <div key={j} style={{ marginBottom: '12px', marginLeft: '20px' }}>
+                    <p style={{ ...S.p, fontWeight: 600, margin: '0 0 4px' }}>{typeof q === 'string' ? q : q.question}</p>
+                    {q.answer && <div style={S.callout('green')}><p style={{ ...S.p, margin: 0, fontSize: '13px' }}>{q.answer}</p></div>}
+                  </div>
+                ))}
+              </div>
+            )}
+            {i < topics.length - 1 && <div style={S.divider} />}
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  // ═══════════════════════ FALLBACK ═══════════════════════
   if (typeof data === 'object') {
     return <div>{renderObject(data)}</div>;
   }
-
-  return <div style={{ ...body, fontSize: '14px' }}>{String(data)}</div>;
+  return <div style={S.p}>{String(data)}</div>;
 }
 
-/* ── Helper: recursively render any JSON object as readable HTML ── */
+/* ── Recursively render any JSON as readable tree ── */
 function renderObject(obj: any, depth = 0): any {
   if (obj === null || obj === undefined) return null;
   if (typeof obj === 'string' || typeof obj === 'number' || typeof obj === 'boolean') {
-    return <span style={{ fontSize: '13px', color: '#374151', lineHeight: 1.7 }}>{String(obj)}</span>;
+    return <span style={{ fontSize: '14px', color: '#1f2937', lineHeight: 1.8 }}>{String(obj)}</span>;
   }
   if (Array.isArray(obj)) {
     return (
-      <ul style={{ margin: 0, paddingLeft: '18px' }}>
+      <ul style={{ margin: '4px 0', paddingLeft: '24px' }}>
         {obj.map((item, i) => (
-          <li key={i} style={{ fontSize: '13px', color: '#374151', lineHeight: 1.7, marginBottom: '3px' }}>
+          <li key={i} style={{ fontSize: '14px', color: '#1f2937', lineHeight: 1.7, marginBottom: '4px' }}>
             {typeof item === 'object' ? renderObject(item, depth + 1) : String(item)}
           </li>
         ))}
@@ -1436,15 +1547,19 @@ function renderObject(obj: any, depth = 0): any {
     );
   }
   return (
-    <div style={{ marginLeft: depth > 0 ? '12px' : '0' }}>
-      {Object.entries(obj).map(([key, val]) => (
-        <div key={key} style={{ marginBottom: '6px' }}>
-          <span style={{ fontSize: '12px', fontWeight: 600, color: '#111827', textTransform: 'capitalize' }}>
-            {key.replace(/([A-Z])/g, ' $1').replace(/_/g, ' ')}:
-          </span>{' '}
-          {typeof val === 'object' ? renderObject(val, depth + 1) : <span style={{ fontSize: '13px', color: '#374151' }}>{String(val)}</span>}
-        </div>
-      ))}
+    <div style={{ marginLeft: depth > 0 ? '16px' : '0', marginTop: '4px' }}>
+      {Object.entries(obj).map(([key, val]) => {
+        const humanKey = key.replace(/([A-Z])/g, ' $1').replace(/_/g, ' ').trim();
+        return (
+          <div key={key} style={{ marginBottom: '8px' }}>
+            <strong style={{ fontSize: '13px', color: '#000', textTransform: 'capitalize' }}>{humanKey}: </strong>
+            {typeof val === 'string' || typeof val === 'number' || typeof val === 'boolean'
+              ? <span style={{ fontSize: '14px', color: '#1f2937' }}>{String(val)}</span>
+              : renderObject(val, depth + 1)
+            }
+          </div>
+        );
+      })}
     </div>
   );
 }
