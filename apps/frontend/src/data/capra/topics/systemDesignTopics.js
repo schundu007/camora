@@ -598,6 +598,25 @@ Traffic Estimates:
           useWhen: 'Non-critical features, third-party dependencies',
           example: 'Show cached data, disable recommendations, static fallback'
         }
+      ],
+      comparisonCards: [
+        {
+          title: '15 System Design Core Concepts',
+          items: [
+            { name: 'Requirement Gathering', description: 'Functional vs Non-Functional requirements. Define user stories and set priority.' },
+            { name: 'System Architecture', description: 'Define system components, choose architectural styles (monolith, microservices, event-driven). Consider scalability and maintainability.' },
+            { name: 'Data Design', description: 'Define data models and schemas. Choose proper database (SQL vs NoSQL). Define retention targets.' },
+            { name: 'Domain Design', description: 'Break system into business domains. Encapsulate functionality within modules. Minimize dependencies among domains.' },
+            { name: 'Scalability', description: 'Horizontal & vertical scaling. Load balancing strategies. Handle cold start problems.' },
+            { name: 'Reliability', description: 'Fault tolerance mechanisms. Monitoring and alerting. Recovery plans for failures.' },
+            { name: 'Availability', description: 'Data replication across zones/regions. Minimize system downtime. Disaster recovery planning.' },
+            { name: 'Performance', description: 'Define latency and throughput targets. Optimize data structures and encoding. Implement caching strategies.' },
+            { name: 'Security', description: 'Authentication & Authorization. Data encryption at rest and in transit. Sensitive data storage policies.' },
+            { name: 'Cost Estimation', description: 'Evaluate hardware TCO. Consider licensing and subscription fees. Plan for future scalability costs.' },
+            { name: 'Testing', description: 'Unit, integration, and system tests. Acceptance tests with users. Performance and security testing.' },
+            { name: 'Maintainability', description: 'Clear code structure and documentation. SDLC management. Evolvable architecture design.' }
+          ]
+        }
       ]
     },
     {
@@ -611,7 +630,9 @@ Traffic Estimates:
       tips: [
         'SQL for complex queries and transactions',
         'NoSQL for flexible schema and horizontal scaling',
-        'Shard by user_id for user-centric applications'
+        'Shard by user_id for user-centric applications',
+        'PostgreSQL is eating the database world — consider it as default for new projects unless you have specific NoSQL needs',
+        'Use Star Schema for analytics/OLAP workloads, normalized schemas for OLTP'
       ],
 
       introduction: `Database design is the foundation of every system. The choice between SQL and NoSQL, the sharding strategy, and indexing decisions fundamentally shape system capabilities and constraints.
@@ -966,6 +987,32 @@ NoSQL Graph:
           useWhen: 'Read-heavy, performance-critical queries',
           example: 'Store user_name in orders table instead of JOINing users'
         }
+      ],
+      comparisonCards: [
+        {
+          title: 'Database Models',
+          items: [
+            { name: 'Flat Model', description: 'Single table with rows and columns, like a spreadsheet (Excel). Simple but cannot handle complex relationships between data entities.' },
+            { name: 'Hierarchical Model', description: 'Tree-like structure where each record has a single parent but multiple children. Efficient for parent-child relationships (XML, JSON).' },
+            { name: 'Relational Model', description: 'Tables (relations) of rows and columns with keys and normalization. Most widely used — SQL (MySQL, PostgreSQL, Oracle). Supports complex queries and transactions.' },
+            { name: 'Star Schema', description: 'Central fact table surrounded by dimension tables. Optimized for OLAP/analytics — fast queries by minimizing joins (Redshift, Teradata).' },
+            { name: 'Snowflake Schema', description: 'Normalized star schema where dimensions have sub-dimensions. Reduces redundancy at the cost of more complex joins (Snowflake, Redshift).' },
+            { name: 'Network Model', description: 'Graph structure allowing many-to-many relationships. Each record can have multiple parents and children (Neo4j). Good for complex relationship modeling.' }
+          ]
+        },
+        {
+          title: 'Top Open-Source Databases',
+          items: [
+            { name: 'PostgreSQL', description: 'Full RDBMS features, ACID compliant, SQL query support. Best for web/cloud apps requiring complex queries and data integrity.' },
+            { name: 'MySQL', description: 'Most widely adopted open-source DB. Relational database for OLTP. Powers web apps, cloud apps, and enterprise systems.' },
+            { name: 'Redis', description: 'In-memory NoSQL. Ideal for caching, pub/sub, session stores. Sub-millisecond latency. Source available since 2024.' },
+            { name: 'MongoDB', description: 'NoSQL document database. Flexible schema, horizontal scaling. Good for rapid prototyping and versatile use cases.' },
+            { name: 'Cassandra', description: 'Distributed NoSQL by Facebook. Fault-tolerant, high performance, linearly scalable. AP system in CAP theorem.' },
+            { name: 'CockroachDB', description: 'Distributed SQL database. Horizontally scalable with strong consistency. ACID transactions across distributed nodes.' },
+            { name: 'Neo4j', description: 'Graph database. ACID compliant. Ideal for knowledge graphs, recommendation engines, and GenAI applications.' },
+            { name: 'SQLite', description: 'Lightweight embedded RDBMS. Uses disk files. Perfect for mobile apps, IoT devices, and web browsers.' }
+          ]
+        }
       ]
     },
     {
@@ -979,7 +1026,11 @@ NoSQL Graph:
       tips: [
         'Cache frequently accessed, rarely changing data',
         'Consider cache invalidation carefully',
-        'Use Redis for complex data structures, Memcached for simple key-value'
+        'Use Redis for complex data structures, Memcached for simple key-value',
+        'Watch for Thunder Herd: add jitter to TTLs to prevent mass expiration',
+        'Use Bloom filters to prevent cache penetration from non-existent keys',
+        'Never set TTL on hot keys — use explicit invalidation instead',
+        'Deploy cache clusters with replication for high availability (prevent Cache Crash)'
       ],
 
       introduction: `Caching is one of the most impactful performance optimizations. A well-designed cache can reduce latency from 100ms to 1ms and cut database load by 90%.
@@ -1370,6 +1421,30 @@ Request 100 ─┘
           useWhen: 'Memory management — always needed',
           example: 'LRU eviction in Redis with maxmemory-policy allkeys-lru'
         }
+      ],
+      comparisonCards: [
+        {
+          title: 'Cache Failure Patterns',
+          items: [
+            { name: 'Thunder Herd', description: 'Large number of keys expire simultaneously, all queries hit the database at once. Fix: Set random expiry times to spread expirations; allow only core data to hit DB until cache recovers.' },
+            { name: 'Cache Penetration', description: 'Queries for data that does not exist in cache OR database, causing every request to hit DB. Fix: Use a Bloom filter to quickly reject queries for non-existent keys.' },
+            { name: 'Cache Breakdown', description: 'A single hot key expires while under heavy load, causing a burst of DB queries. Fix: Never set expiry for hot keys; use mutex locks so only one thread rebuilds the cache.' },
+            { name: 'Cache Crash', description: 'Entire cache instance goes down, all traffic floods the database. Fix: Use circuit breakers to prevent cascading failure; deploy highly-available cache clusters with replication.' }
+          ]
+        },
+        {
+          title: 'Cache Eviction Strategies',
+          items: [
+            { name: 'LRU (Least Recently Used)', description: 'Evicts items not accessed for the longest time. Best general-purpose strategy — based on temporal locality principle.' },
+            { name: 'LFU (Least Frequently Used)', description: 'Evicts items with the lowest access count. Better for skewed workloads where popularity is stable.' },
+            { name: 'FIFO (First In First Out)', description: 'Evicts the oldest cached item regardless of access patterns. Simple but ignores popularity.' },
+            { name: 'SLRU (Segmented LRU)', description: 'Two segments: probation and protected. New entries go to probation; accessed again → promoted to protected. LRU eviction happens in probation first.' },
+            { name: 'TTL (Time-to-Live)', description: 'Each entry has an expiration timer. When TTL expires, entry becomes eligible for eviction. Often combined with other strategies.' },
+            { name: 'MRU (Most Recently Used)', description: 'Evicts the most recently accessed item. Useful for scanning workloads where recently accessed items are least likely to be reaccessed.' },
+            { name: 'Two-Tiered Caching', description: 'Hot tier (L1) for frequently used data, cold tier (L2) for less frequently used. Combines memory efficiency with hit rate.' },
+            { name: 'Random Replacement', description: 'Randomly picks a cache entry to evict. Surprisingly effective for uniform access patterns with minimal overhead.' }
+          ]
+        }
       ]
     },
     {
@@ -1758,6 +1833,18 @@ Messages that fail repeatedly go to separate queue for investigation.
           description: 'Store events as the source of truth, rebuild state from event log.',
           useWhen: 'Audit trail, temporal queries, CQRS',
           example: 'Bank transactions, shopping cart events'
+        }
+      ],
+      comparisonCards: [
+        {
+          title: 'Kafka Use Cases',
+          items: [
+            { name: 'Log Processing & Analysis', description: 'Services emit logs to Kafka → consumed by Elasticsearch → visualized in Kibana. Decouples log producers from consumers.' },
+            { name: 'Data Streaming for Recommendations', description: 'User click streams flow through Kafka → Flink aggregates data → feeds ML models for real-time recommendations.' },
+            { name: 'System Monitoring & Alerting', description: 'Services publish metrics to Kafka → stream processor (Flink) analyzes patterns → triggers real-time alerts on anomalies.' },
+            { name: 'Change Data Capture (CDC)', description: 'Database transaction logs flow to Kafka via connectors → consumed by ElasticSearch, Redis, and replica databases for sync.' },
+            { name: 'System Migration', description: 'Old and new services both write to Kafka during migration. Compare outputs for reconciliation before full cutover.' }
+          ]
         }
       ]
     },
@@ -2190,7 +2277,10 @@ JWT Payload:
       tips: [
         'Layer 7 (application) for content-based routing',
         'Layer 4 (transport) for raw performance',
-        'Use health checks to remove unhealthy servers'
+        'Use health checks to remove unhealthy servers',
+        'Use Least Connections for variable-duration requests; Round Robin for uniform workloads',
+        'Layer 4 (TCP) LBs are faster but Layer 7 (HTTP) LBs can route based on content, headers, and cookies',
+        'Always enable health checks — a load balancer routing to a dead server is worse than no LB at all'
       ],
 
       introduction: `Load balancing distributes incoming traffic across multiple servers to ensure no single server becomes overwhelmed. It's the foundation of horizontal scaling and high availability.
@@ -2636,6 +2726,30 @@ No server-side storage
           description: 'Stop routing to failing backends, try again after timeout.',
           useWhen: 'Prevent cascade failures when a backend is degraded',
           example: 'Envoy outlier detection, Istio circuit breaking'
+        }
+      ],
+      comparisonCards: [
+        {
+          title: 'Load Balancer Use Cases',
+          items: [
+            { name: 'Traffic Distribution', description: 'Evenly distribute incoming traffic among multiple servers, preventing any single server from being overwhelmed. Maintains optimal performance and scalability.' },
+            { name: 'High Availability', description: 'Reroute traffic away from failed or unhealthy servers to healthy ones automatically. Ensures uninterrupted service even during server failures.' },
+            { name: 'SSL Termination', description: 'Offload SSL/TLS encryption and decryption from backend servers, reducing their CPU workload and improving overall throughput.' },
+            { name: 'Session Persistence', description: 'Ensure a user\'s requests are consistently routed to the same backend server (sticky sessions). Critical for stateful applications.' },
+            { name: 'Scalability', description: 'Seamlessly add or remove servers behind the load balancer. New instances register automatically and start receiving traffic.' },
+            { name: 'Health Monitoring', description: 'Continuously monitor backend server health via heartbeats. Automatically remove unhealthy servers and add them back when recovered.' }
+          ]
+        },
+        {
+          title: 'Load Balancing Algorithms',
+          items: [
+            { name: 'Round Robin (Static)', description: 'Routes requests to servers in sequential order. Simple and effective when all servers have equal capacity. Services should be stateless.' },
+            { name: 'Sticky Round Robin (Static)', description: 'Improvement on round robin — once a user hits server A, all subsequent requests go to A. Useful for stateful sessions.' },
+            { name: 'Weighted Round Robin (Static)', description: 'Admin assigns weights to each server. Higher weight = more requests. Useful when servers have different capacities (e.g., 0.8, 0.1, 0.1).' },
+            { name: 'IP/URL Hash (Static)', description: 'Applies a hash function to the request IP or URL. Requests with same hash always route to the same server. Good for cache locality.' },
+            { name: 'Least Connections (Dynamic)', description: 'Routes to the server with the fewest active connections. Best when request processing times vary significantly.' },
+            { name: 'Least Response Time (Dynamic)', description: 'Routes to the server with the lowest current response time. Accounts for both load AND server performance.' }
+          ]
         }
       ]
     },
@@ -3489,6 +3603,21 @@ Supporting Infrastructure:
           useWhen: 'Different read/write patterns, event sourcing, read replicas',
           example: 'Write to normalized DB, read from denormalized view/cache'
         }
+      ],
+      comparisonCards: [
+        {
+          title: 'Microservice Architecture Components',
+          items: [
+            { name: 'API Gateway', description: 'Single entry point for all clients. Handles routing, authentication, rate limiting, and request aggregation. Examples: Kong, AWS API Gateway, Nginx.' },
+            { name: 'Service Registry & Discovery', description: 'Services register themselves on startup. Other services discover them dynamically. Examples: Consul, Eureka, Kubernetes DNS.' },
+            { name: 'Load Balancer', description: 'Distributes incoming traffic across multiple service instances. Can be client-side (Ribbon) or server-side (ALB, Nginx).' },
+            { name: 'Identity Provider', description: 'Centralized authentication and authorization. Issues tokens validated by individual services. Examples: Keycloak, Auth0, Okta.' },
+            { name: 'Distributed Caching', description: 'Shared cache layer across services. Redis, Memcached, or Couchbase. Reduces database load and improves response times.' },
+            { name: 'Message Broker', description: 'Async communication between services via Kafka, RabbitMQ, or SQS. Decouples producers from consumers for reliability.' },
+            { name: 'Metrics & Monitoring', description: 'Services publish metrics to Prometheus, visualized in Grafana. Essential for detecting issues in distributed systems.' },
+            { name: 'Log Aggregation', description: 'Centralized logging via ELK stack (Logstash → Elasticsearch → Kibana). Correlate logs across services with trace IDs.' }
+          ]
+        }
       ]
     },
     {
@@ -4037,6 +4166,18 @@ def verify_token(token, secret):
           description: 'Never trust, always verify. Authenticate every request.',
           useWhen: 'Microservices, cloud-native, remote workforce',
           example: 'mTLS between services, short-lived tokens, continuous verification'
+        }
+      ],
+      comparisonCards: [
+        {
+          title: 'Authentication Methods Compared',
+          items: [
+            { name: 'Session-Cookie', description: 'Server stores session state, sends session ID as cookie. Simple but doesn\'t scale horizontally well — requires sticky sessions or shared session store.' },
+            { name: 'Token-Based', description: 'Identity encoded into a token sent to browser. Stateless — no server-side session storage needed. But tokens need encryption/decryption.' },
+            { name: 'JWT (JSON Web Token)', description: 'Standardized token with header.payload.signature structure. Self-contained — signature allows verification without server lookup. Widely used in APIs.' },
+            { name: 'SSO (Single Sign-On)', description: 'Central Authentication Service (CAS) allows login once, access multiple apps (a.com, b.com). Reduces password fatigue but CAS is a single point of failure.' },
+            { name: 'OAuth 2.0', description: 'Delegated authorization standard. Supports multiple grant types: authorization code (web), implicit (SPA), password grant (native), client credentials (M2M).' }
+          ]
         }
       ]
     },
@@ -5900,6 +6041,17 @@ Directory-Based Partitioning:
           description: 'Lookup table maps each key to its partition.',
           useWhen: 'Need flexible mapping, willing to maintain directory',
           example: 'Separate lookup service: "user_123 → shard_7"'
+        }
+      ],
+      comparisonCards: [
+        {
+          title: 'Sharding Algorithms',
+          items: [
+            { name: 'Range-Based Sharding', description: 'Partition data by value ranges (e.g., A-G, H-N, O-Z for names, or date ranges). Simple but can lead to uneven distribution (hot spots) if data is skewed.' },
+            { name: 'Hash-Based Sharding', description: 'Apply hash function to shard key (e.g., hash(user_id) % N). Distributes data more evenly than range-based. Requires choosing a proper hash function to avoid collisions.' },
+            { name: 'Consistent Hashing', description: 'Extension of hash-based sharding using a hash ring. Minimizes data redistribution when adding/removing shards — only K/N keys need to move. Used by DynamoDB, Cassandra.' },
+            { name: 'Virtual Bucket Hashing', description: 'Two-level mapping: data → virtual buckets → physical shards. Allows flexible rebalancing without significant data movement. More complex to maintain but highly flexible.' }
+          ]
         }
       ]
     },
@@ -14018,6 +14170,22 @@ But for a page that makes 50 backend calls in parallel:
           description: 'p99/p999 latency matters more than average for user experience.',
           useWhen: 'SLA definitions, performance monitoring',
           example: 'p50=5ms, p99=500ms means 1% of users wait 100x longer'
+        }
+      ],
+      comparisonCards: [
+        {
+          title: 'Latency Numbers Every Developer Should Know',
+          items: [
+            { name: 'L1 Cache: 1 ns', description: 'Built onto the CPU chip. Fastest memory access. Unless you work with hardware directly, you rarely worry about this.' },
+            { name: 'L2 Cache: 10 ns', description: 'Slightly larger and slower than L1. Still on-chip. Both L1/L2 are managed by hardware automatically.' },
+            { name: 'RAM Access: 100 ns', description: 'Main memory read. Redis is in-memory, so Redis reads are approximately 100 ns.' },
+            { name: 'Send 1KB over 1Gbps Network: 10 us', description: 'Network transfer of small payloads. Memcached data retrieval over network takes ~10 microseconds.' },
+            { name: 'Read from SSD: 100 us', description: 'Solid-state disk read. RocksDB (disk-based K/V store) read latency is around 100 microseconds.' },
+            { name: 'Database Insert: 1 ms', description: 'PostgreSQL commit — store data, create index, flush logs. All disk I/O operations add up.' },
+            { name: 'HDD Disk Seek: 10 ms', description: 'Mechanical hard drive seek time. 100x slower than SSD. Avoid random reads on HDDs.' },
+            { name: 'Cross-Continent Packet: 100 ms', description: 'CA→Netherlands→CA round trip. A long-distance Zoom call has ~100ms latency.' },
+            { name: 'Retry/Refresh Interval: 1-10 s', description: 'Monitoring systems typically use 5-10 second refresh intervals for dashboards.' }
+          ]
         }
       ]
     },
