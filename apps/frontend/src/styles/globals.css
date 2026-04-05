@@ -28,26 +28,26 @@ body::after { bottom: 0; }
 
 @layer base {
   :root {
-    --bg: #f9fafb;
-    --bg2: #ffffff;
-    --primary: #059669;
-    --primary-light: #10b981;
-    --text: #111827;
-    --text-subtle: #374151;
-    --text-dim: #6b7280;
-    --text-muted: #4b5563;
-    --border: #d1d5db;
-    --border2: #9ca3af;
-    --surface: #ffffff;
-    --surface2: #f3f4f6;
-    --card-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
-    --nav-bg: #f8fafc;
-    --nav-bg-secondary: #ffffff;
-    --nav-border: #e2e8f0;
-    --nav-text: #111827;
-    --nav-text-secondary: #374151;
+    --bg: #09090b;
+    --bg2: #111111;
+    --primary: #10b981;
+    --primary-light: #34d399;
+    --text: #f3f4f6;
+    --text-subtle: #d1d5db;
+    --text-dim: #9ca3af;
+    --text-muted: #6b7280;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.15);
+    --surface: #161616;
+    --surface2: #1a1a1a;
+    --card-shadow: 0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
+    --nav-bg: #0a0a0a;
+    --nav-bg-secondary: #111111;
+    --nav-border: rgba(255,255,255,0.08);
+    --nav-text: #f3f4f6;
+    --nav-text-secondary: #d1d5db;
     --nav-text-muted: #6b7280;
-    --nav-hover: #f1f5f9;
+    --nav-hover: rgba(255,255,255,0.06);
   }
 
   /* Dark theme override — apply .dark-page to a page wrapper */
@@ -88,7 +88,7 @@ body::after { bottom: 0; }
   }
 
   ::-webkit-scrollbar-thumb {
-    background: rgba(0, 0, 0, 0.1);
+    background: rgba(255, 255, 255, 0.1);
     border-radius: 0;
   }
 
@@ -99,7 +99,7 @@ body::after { bottom: 0; }
   /* Selection */
   ::selection {
     background: rgba(16, 185, 129, 0.3);
-    color: #0f172a;
+    color: #ffffff;
   }
 
 }
@@ -175,7 +175,7 @@ body::after { bottom: 0; }
 
   .block-headline-text {
     @apply font-display text-sm font-bold leading-snug tracking-tight;
-    background: linear-gradient(135deg, #fafafa 30%, #10b981 100%);
+    background: linear-gradient(135deg, #ffffff 30%, #34d399 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -236,7 +236,8 @@ body::after { bottom: 0; }
   }
 
   .code-content {
-    @apply p-3 font-mono text-sm leading-snug bg-gray-100 overflow-x-auto;
+    @apply p-3 font-mono text-sm leading-snug overflow-x-auto;
+    background-color: var(--surface2);
   }
 
   /* Follow-up card */
@@ -348,13 +349,13 @@ body::after { bottom: 0; }
 
 /* Select dropdown */
 select {
-  color-scheme: light;
+  color-scheme: dark;
   border-radius: 2px;
 }
 
 select option {
-  background-color: #ffffff;
-  color: #0f172a;
+  background-color: #1a1a1a;
+  color: #f3f4f6;
   padding: 8px;
 }
 
@@ -365,13 +366,13 @@ select option:checked {
   color: white;
 }
 
-/* Light mode: darken neon accent colors for readability */
-:root .text-emerald-light { color: #059669 !important; }
-:root .text-amber-light { color: #d97706 !important; }
-:root .text-rose-light { color: #dc2626 !important; }
-:root .text-violet-light { color: #7c3aed !important; }
-:root .text-cyan-light { color: #0891b2 !important; }
-:root .text-indigo-light { color: #4338ca !important; }
+/* Accent colors for dark theme */
+:root .text-emerald-light { color: #34d399 !important; }
+:root .text-amber-light { color: #fbbf24 !important; }
+:root .text-rose-light { color: #fb7185 !important; }
+:root .text-violet-light { color: #a78bfa !important; }
+:root .text-cyan-light { color: #22d3ee !important; }
+:root .text-indigo-light { color: #818cf8 !important; }
 
 /* Highlight.js */
 .hljs {
@@ -464,9 +465,9 @@ main, [role="main"] {
 /* Lumora app background -- cyan-to-purple gradient */
 .lumora-app-bg {
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, #FFFFFF 100%),
-    linear-gradient(270deg, rgba(42, 240, 228, 0.10) 0%, rgba(140, 51, 255, 0.10) 100%),
-    #FFFFFF;
+    linear-gradient(180deg, rgba(9, 9, 11, 0) 0%, #09090b 100%),
+    linear-gradient(270deg, rgba(42, 240, 228, 0.06) 0%, rgba(140, 51, 255, 0.06) 100%),
+    #09090b;
 }
 
 /* Enterprise status bar */
@@ -648,4 +649,62 @@ main, [role="main"] {
 .prep-nav-item.custom.completed .prep-nav-icon {
   color: #8b5cf6;
 }
+
+/* ── Global Dark Theme Overrides ─────────────────────────── */
+/* Remap hardcoded Tailwind light-mode classes to dark values */
+
+/* Backgrounds */
+.bg-white { background-color: var(--bg2) !important; }
+.bg-gray-50 { background-color: var(--surface2) !important; }
+.bg-gray-100 { background-color: var(--surface2) !important; }
+.bg-gray-200 { background-color: rgba(255,255,255,0.08) !important; }
+
+/* Text */
+.text-black { color: #f3f4f6 !important; }
+.text-gray-900 { color: #f3f4f6 !important; }
+.text-gray-800 { color: #e5e7eb !important; }
+.text-gray-700 { color: #d1d5db !important; }
+.text-gray-600 { color: #9ca3af !important; }
+.text-gray-500 { color: #9ca3af !important; }
+.text-gray-400 { color: #6b7280 !important; }
+
+/* Borders */
+.border-gray-200 { border-color: rgba(255,255,255,0.08) !important; }
+.border-gray-300 { border-color: rgba(255,255,255,0.12) !important; }
+.border-gray-100 { border-color: rgba(255,255,255,0.06) !important; }
+.border-\[\#e3e8ee\] { border-color: rgba(255,255,255,0.08) !important; }
+
+/* Hover states */
+.hover\:bg-gray-50:hover { background-color: rgba(255,255,255,0.06) !important; }
+.hover\:bg-gray-100:hover { background-color: rgba(255,255,255,0.08) !important; }
+.hover\:bg-gray-200:hover { background-color: rgba(255,255,255,0.1) !important; }
+.hover\:text-gray-900:hover { color: #f3f4f6 !important; }
+.hover\:text-gray-800:hover { color: #e5e7eb !important; }
+.hover\:text-gray-700:hover { color: #d1d5db !important; }
+.hover\:border-gray-300:hover { border-color: rgba(255,255,255,0.15) !important; }
+
+/* Inline styles override */
+[style*="background: #f7f8f9"],
+[style*="background:#f7f8f9"],
+[style*="background: rgb(247, 248, 249)"] {
+  background: var(--bg) !important;
+}
+
+/* Shadows for dark mode */
+.shadow-\[0_1px_3px_rgba\(0\,0\,0\,0\.04\)\] {
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3) !important;
+}
+
+/* Card/surface overrides */
+.bg-white.rounded-2xl,
+.bg-white.rounded-xl,
+.bg-white.rounded-lg {
+  background-color: var(--surface) !important;
+  border-color: rgba(255,255,255,0.08) !important;
+}
+
+/* Button overrides — keep dark buttons dark */
+.bg-gray-900 { background-color: #f3f4f6 !important; color: #09090b !important; }
+.hover\:bg-gray-800:hover { background-color: #e5e7eb !important; color: #09090b !important; }
+.bg-gray-900.text-white { color: #09090b !important; }
 

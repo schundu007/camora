@@ -28,7 +28,7 @@ const Blind75PracticePage = lazy(() => import('./pages/Blind75PracticePage'));
 
 function Loading() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-white">
+    <div className="min-h-screen flex flex-col items-center justify-center gap-4" style={{ background: 'var(--bg)' }}>
       <div className="w-12 h-12 border-4 border-emerald-200 border-t-emerald-500 rounded-full animate-spin" />
     </div>
   );
@@ -50,7 +50,7 @@ function LoginPage() {
   const googleAuthUrl = `${import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com'}/api/auth/google/login`;
 
   return (
-    <div className="min-h-screen" style={{ background: '#f7f8f9' }}>
+    <div className="min-h-screen" style={{ background: 'var(--bg)' }}>
       {/* ── Nav ──────────────────────────────────────── */}
       <nav className="sticky top-0 z-50 bg-white border-b border-[#e3e8ee]">
         <div className="max-w-[85%] xl:max-w-7xl mx-auto h-14 flex items-center justify-between px-4">
