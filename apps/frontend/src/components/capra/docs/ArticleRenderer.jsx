@@ -6,7 +6,7 @@ import DiagramSVG from '../features/DiagramSVG.jsx';
 function ArticleTOC({ sections, activeId }) {
   return (
     <nav className="space-y-1">
-      <h4 className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: 'var(--text-dim)' }}>On This Page</h4>
+      <h4 className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: '#374151' }}>On This Page</h4>
       {sections.map(s => (
         <a
           key={s.id}
@@ -17,7 +17,7 @@ function ArticleTOC({ sections, activeId }) {
               ? 'border-emerald-500 font-semibold'
               : 'border-transparent hover:border-emerald-300'
           }`}
-          style={{ color: activeId === s.id ? 'var(--primary-light)' : 'var(--text-dim)' }}
+          style={{ color: activeId === s.id ? '#059669' : '#6b7280' }}
         >
           {s.label}
         </a>
@@ -32,7 +32,7 @@ function Section({ id, title, icon, children }) {
     <section id={id} className="scroll-mt-24 mb-14">
       <h2
         className="text-2xl font-bold tracking-tight mb-6 pb-3 border-l-4 border-emerald-500 pl-4"
-        style={{ color: 'var(--text)' }}
+        style={{ color: '#000000' }}
       >
         {icon && <span className="mr-2">{icon}</span>}
         {title}
@@ -54,7 +54,7 @@ function Callout({ children, accent = 'emerald' }) {
   return (
     <div
       className={`border-l-4 ${colors[accent]} rounded-r-lg py-4 pl-5 pr-4 mb-4`}
-      style={{ background: 'var(--surface)' }}
+      style={{ background: '#f9fafb' }}
     >
       {children}
     </div>
@@ -130,7 +130,7 @@ export default function ArticleRenderer({ topicDetails, selectedTopic }) {
     return () => observer.disconnect();
   }, [selectedTopic]);
 
-  const bodyStyle = { color: 'var(--text-subtle)', fontSize: '1.05rem', lineHeight: '1.8' };
+  const bodyStyle = { color: '#111827', fontSize: '1.05rem', lineHeight: '1.8' };
   const codeLangs = topicDetails.codeExamples ? Object.keys(topicDetails.codeExamples).filter(k => topicDetails.codeExamples[k]) : [];
 
   return (
@@ -152,7 +152,7 @@ export default function ArticleRenderer({ topicDetails, selectedTopic }) {
           <Section id="requirements" title="Requirements and Goals">
             {topicDetails.functionalRequirements && (
               <div className="mb-6">
-                <h3 className="text-xl font-semibold mb-3" style={{ color: 'var(--text)' }}>Functional Requirements</h3>
+                <h3 className="text-xl font-semibold mb-3" style={{ color: '#000000' }}>Functional Requirements</h3>
                 <ol className="space-y-2 pl-1">
                   {topicDetails.functionalRequirements.map((req, i) => (
                     <li key={i} className="flex items-start gap-3" style={bodyStyle}>
@@ -165,7 +165,7 @@ export default function ArticleRenderer({ topicDetails, selectedTopic }) {
             )}
             {topicDetails.nonFunctionalRequirements && (
               <div>
-                <h3 className="text-xl font-semibold mb-3" style={{ color: 'var(--text)' }}>Non-Functional Requirements</h3>
+                <h3 className="text-xl font-semibold mb-3" style={{ color: '#000000' }}>Non-Functional Requirements</h3>
                 <ul className="space-y-2 pl-1">
                   {topicDetails.nonFunctionalRequirements.map((req, i) => (
                     <li key={i} className="flex items-start gap-3" style={bodyStyle}>
@@ -184,25 +184,25 @@ export default function ArticleRenderer({ topicDetails, selectedTopic }) {
           <Section id="estimation" title="Capacity Estimation">
             {topicDetails.estimation.assumptions && (
               <Callout accent="blue">
-                <p className="text-sm font-semibold mb-1" style={{ color: 'var(--text)' }}>Assumptions</p>
+                <p className="text-sm font-semibold mb-1" style={{ color: '#000000' }}>Assumptions</p>
                 <p style={{ ...bodyStyle, fontSize: '0.95rem' }}>{topicDetails.estimation.assumptions}</p>
               </Callout>
             )}
-            <div className="rounded-lg overflow-hidden border" style={{ borderColor: 'var(--border)' }}>
+            <div className="rounded-lg overflow-hidden border" style={{ borderColor: '#e5e7eb' }}>
               <table className="w-full text-sm">
                 <thead>
-                  <tr style={{ background: 'var(--surface2)' }}>
-                    <th className="text-left px-4 py-3 font-semibold" style={{ color: 'var(--text)', borderBottom: '1px solid var(--border)' }}>Metric</th>
-                    <th className="text-left px-4 py-3 font-semibold" style={{ color: 'var(--text)', borderBottom: '1px solid var(--border)' }}>Value</th>
-                    <th className="text-left px-4 py-3 font-semibold hidden lg:table-cell" style={{ color: 'var(--text)', borderBottom: '1px solid var(--border)' }}>Calculation</th>
+                  <tr style={{ background: '#f3f4f6' }}>
+                    <th className="text-left px-4 py-3 font-semibold" style={{ color: '#000000', borderBottom: '1px solid #e5e7eb' }}>Metric</th>
+                    <th className="text-left px-4 py-3 font-semibold" style={{ color: '#000000', borderBottom: '1px solid #e5e7eb' }}>Value</th>
+                    <th className="text-left px-4 py-3 font-semibold hidden lg:table-cell" style={{ color: '#000000', borderBottom: '1px solid #e5e7eb' }}>Calculation</th>
                   </tr>
                 </thead>
                 <tbody>
                   {(topicDetails.estimation.calculations || []).map((row, i) => (
-                    <tr key={i} style={{ borderBottom: '1px solid var(--border)' }}>
-                      <td className="px-4 py-3 font-medium" style={{ color: 'var(--text-subtle)' }}>{row.label}</td>
+                    <tr key={i} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                      <td className="px-4 py-3 font-medium" style={{ color: '#111827' }}>{row.label}</td>
                       <td className="px-4 py-3 font-bold font-mono" style={{ color: '#10b981' }}>{row.value}</td>
-                      <td className="px-4 py-3 hidden lg:table-cell" style={{ color: 'var(--text-dim)', fontSize: '0.85rem' }}>{row.detail}</td>
+                      <td className="px-4 py-3 hidden lg:table-cell" style={{ color: '#374151', fontSize: '0.85rem' }}>{row.detail}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -229,7 +229,7 @@ export default function ArticleRenderer({ topicDetails, selectedTopic }) {
             )}
             <div className="space-y-4">
               {topicDetails.apiDesign.endpoints.map((ep, i) => (
-                <div key={i} className="rounded-lg p-4 border" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+                <div key={i} className="rounded-lg p-4 border" style={{ background: '#f9fafb', borderColor: '#e5e7eb' }}>
                   <div className="flex items-center gap-2 mb-2">
                     <span className={`px-2 py-0.5 rounded text-xs font-bold font-mono uppercase ${
                       ep.method === 'GET' ? 'bg-emerald-500/20 text-emerald-400' :
@@ -237,22 +237,22 @@ export default function ArticleRenderer({ topicDetails, selectedTopic }) {
                       ep.method === 'PUT' ? 'bg-blue-500/20 text-blue-400' :
                       'bg-red-500/20 text-red-400'
                     }`}>{ep.method}</span>
-                    <code className="font-mono text-base" style={{ color: 'var(--text)' }}>{ep.path}</code>
+                    <code className="font-mono text-base" style={{ color: '#000000' }}>{ep.path}</code>
                   </div>
                   {ep.params && (
-                    <p className="text-sm mb-1" style={{ color: 'var(--text-dim)' }}>
-                      <span className="font-semibold" style={{ color: 'var(--text-subtle)' }}>Params: </span>
+                    <p className="text-sm mb-1" style={{ color: '#374151' }}>
+                      <span className="font-semibold" style={{ color: '#111827' }}>Params: </span>
                       <code className="text-sm">{ep.params}</code>
                     </p>
                   )}
                   {ep.response && (
-                    <p className="text-sm mb-1" style={{ color: 'var(--text-dim)' }}>
-                      <span className="font-semibold" style={{ color: 'var(--text-subtle)' }}>Response: </span>
+                    <p className="text-sm mb-1" style={{ color: '#374151' }}>
+                      <span className="font-semibold" style={{ color: '#111827' }}>Response: </span>
                       <code className="text-sm">{ep.response}</code>
                     </p>
                   )}
                   {ep.notes && (
-                    <p className="text-sm mt-2" style={{ color: 'var(--text-dim)' }}>{ep.notes}</p>
+                    <p className="text-sm mt-2" style={{ color: '#374151' }}>{ep.notes}</p>
                   )}
                 </div>
               ))}
@@ -266,7 +266,7 @@ export default function ArticleRenderer({ topicDetails, selectedTopic }) {
             <div className="space-y-6">
               {topicDetails.keyQuestions.map((q, i) => (
                 <div key={i}>
-                  <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--text)' }}>
+                  <h3 className="text-lg font-semibold mb-2" style={{ color: '#000000' }}>
                     {i + 1}. {q.question}
                   </h3>
                   <div style={bodyStyle}>
@@ -284,27 +284,27 @@ export default function ArticleRenderer({ topicDetails, selectedTopic }) {
             <div className="space-y-8">
               {topicDetails.algorithmApproaches.map((algo, i) => (
                 <div key={i}>
-                  <h3 className="text-xl font-semibold mb-2" style={{ color: 'var(--text)' }}>
+                  <h3 className="text-xl font-semibold mb-2" style={{ color: '#000000' }}>
                     {i + 1}. {algo.name}
                   </h3>
                   <p className="mb-4" style={bodyStyle}>{algo.description}</p>
                   <div className="grid md:grid-cols-2 gap-4">
-                    <div className="rounded-lg p-4 border-l-4 border-emerald-500" style={{ background: 'var(--surface)' }}>
+                    <div className="rounded-lg p-4 border-l-4 border-emerald-500" style={{ background: '#f9fafb' }}>
                       <h4 className="text-sm font-bold uppercase tracking-wider text-emerald-500 mb-2">Pros</h4>
                       <ul className="space-y-1.5">
                         {algo.pros.map((p, j) => (
-                          <li key={j} className="flex items-start gap-2 text-sm" style={{ color: 'var(--text-subtle)' }}>
+                          <li key={j} className="flex items-start gap-2 text-sm" style={{ color: '#111827' }}>
                             <span className="text-emerald-500 mt-0.5">+</span>
                             <span>{p}</span>
                           </li>
                         ))}
                       </ul>
                     </div>
-                    <div className="rounded-lg p-4 border-l-4 border-red-500" style={{ background: 'var(--surface)' }}>
+                    <div className="rounded-lg p-4 border-l-4 border-red-500" style={{ background: '#f9fafb' }}>
                       <h4 className="text-sm font-bold uppercase tracking-wider text-red-400 mb-2">Cons</h4>
                       <ul className="space-y-1.5">
                         {algo.cons.map((c, j) => (
-                          <li key={j} className="flex items-start gap-2 text-sm" style={{ color: 'var(--text-subtle)' }}>
+                          <li key={j} className="flex items-start gap-2 text-sm" style={{ color: '#111827' }}>
                             <span className="text-red-400 mt-0.5">-</span>
                             <span>{c}</span>
                           </li>
@@ -323,7 +323,7 @@ export default function ArticleRenderer({ topicDetails, selectedTopic }) {
           <Section id="implementation" title="System Architecture">
             {topicDetails.basicImplementation && (
               <div className="mb-10">
-                <h3 className="text-xl font-semibold mb-3" style={{ color: 'var(--text)' }}>
+                <h3 className="text-xl font-semibold mb-3" style={{ color: '#000000' }}>
                   {topicDetails.basicImplementation.title || 'Basic Approach'}
                 </h3>
                 <p className="mb-4" style={bodyStyle}>{topicDetails.basicImplementation.description}</p>
@@ -337,7 +337,7 @@ export default function ArticleRenderer({ topicDetails, selectedTopic }) {
                     <h4 className="text-sm font-bold text-red-400 mb-2">Issues with this approach</h4>
                     <ul className="space-y-1.5">
                       {topicDetails.basicImplementation.problems.map((p, i) => (
-                        <li key={i} className="flex items-start gap-2 text-sm" style={{ color: 'var(--text-subtle)' }}>
+                        <li key={i} className="flex items-start gap-2 text-sm" style={{ color: '#111827' }}>
                           <span className="text-red-400 mt-0.5">&#10005;</span>
                           <span>{p}</span>
                         </li>
@@ -349,7 +349,7 @@ export default function ArticleRenderer({ topicDetails, selectedTopic }) {
             )}
             {topicDetails.advancedImplementation && (
               <div>
-                <h3 className="text-xl font-semibold mb-3" style={{ color: 'var(--text)' }}>
+                <h3 className="text-xl font-semibold mb-3" style={{ color: '#000000' }}>
                   {topicDetails.advancedImplementation.title || 'Scalable Solution'}
                 </h3>
                 <p className="mb-4" style={bodyStyle}>{topicDetails.advancedImplementation.description}</p>
@@ -363,7 +363,7 @@ export default function ArticleRenderer({ topicDetails, selectedTopic }) {
                     <h4 className="text-sm font-bold text-emerald-400 mb-2">Key Design Points</h4>
                     <ul className="space-y-1.5">
                       {topicDetails.advancedImplementation.keyPoints.map((p, i) => (
-                        <li key={i} className="flex items-start gap-2 text-sm" style={{ color: 'var(--text-subtle)' }}>
+                        <li key={i} className="flex items-start gap-2 text-sm" style={{ color: '#111827' }}>
                           <span className="text-emerald-500 mt-0.5">&#10003;</span>
                           <span>{p}</span>
                         </li>
@@ -374,15 +374,15 @@ export default function ArticleRenderer({ topicDetails, selectedTopic }) {
                 {(topicDetails.advancedImplementation.databaseChoice || topicDetails.advancedImplementation.caching) && (
                   <div className="grid md:grid-cols-2 gap-4 mt-4">
                     {topicDetails.advancedImplementation.databaseChoice && (
-                      <div className="rounded-lg p-4 border" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
-                        <h4 className="text-sm font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-dim)' }}>Database</h4>
-                        <p className="text-sm" style={{ color: 'var(--text-subtle)' }}>{topicDetails.advancedImplementation.databaseChoice}</p>
+                      <div className="rounded-lg p-4 border" style={{ background: '#f9fafb', borderColor: '#e5e7eb' }}>
+                        <h4 className="text-sm font-bold uppercase tracking-wider mb-2" style={{ color: '#374151' }}>Database</h4>
+                        <p className="text-sm" style={{ color: '#111827' }}>{topicDetails.advancedImplementation.databaseChoice}</p>
                       </div>
                     )}
                     {topicDetails.advancedImplementation.caching && (
-                      <div className="rounded-lg p-4 border" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
-                        <h4 className="text-sm font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-dim)' }}>Caching</h4>
-                        <p className="text-sm" style={{ color: 'var(--text-subtle)' }}>{topicDetails.advancedImplementation.caching}</p>
+                      <div className="rounded-lg p-4 border" style={{ background: '#f9fafb', borderColor: '#e5e7eb' }}>
+                        <h4 className="text-sm font-bold uppercase tracking-wider mb-2" style={{ color: '#374151' }}>Caching</h4>
+                        <p className="text-sm" style={{ color: '#111827' }}>{topicDetails.advancedImplementation.caching}</p>
                       </div>
                     )}
                   </div>
@@ -397,7 +397,7 @@ export default function ArticleRenderer({ topicDetails, selectedTopic }) {
           <Section id="system-flows" title="System Flows">
             {[topicDetails.createFlow, topicDetails.redirectFlow].filter(Boolean).map((flow, fi) => (
               <div key={fi} className="mb-8">
-                <h3 className="text-xl font-semibold mb-4" style={{ color: 'var(--text)' }}>{flow.title}</h3>
+                <h3 className="text-xl font-semibold mb-4" style={{ color: '#000000' }}>{flow.title}</h3>
                 <div className="space-y-3 pl-1">
                   {flow.steps.map((step, i) => (
                     <div key={i} className="flex items-start gap-4">
@@ -423,8 +423,8 @@ export default function ArticleRenderer({ topicDetails, selectedTopic }) {
                     {i + 1}
                   </div>
                   <div>
-                    <h4 className="text-base font-semibold mb-1" style={{ color: 'var(--text)' }}>{layer.name}</h4>
-                    <p className="text-sm leading-relaxed" style={{ color: 'var(--text-subtle)' }}>{layer.description}</p>
+                    <h4 className="text-base font-semibold mb-1" style={{ color: '#000000' }}>{layer.name}</h4>
+                    <p className="text-sm leading-relaxed" style={{ color: '#111827' }}>{layer.description}</p>
                   </div>
                 </div>
               ))}
@@ -438,7 +438,7 @@ export default function ArticleRenderer({ topicDetails, selectedTopic }) {
             <div className="space-y-6">
               {topicDetails.deepDiveTopics.map((topic, i) => (
                 <div key={i}>
-                  <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--text)' }}>{topic.topic}</h3>
+                  <h3 className="text-lg font-semibold mb-2" style={{ color: '#000000' }}>{topic.topic}</h3>
                   <p style={bodyStyle}>{topic.detail}</p>
                 </div>
               ))}
@@ -451,14 +451,14 @@ export default function ArticleRenderer({ topicDetails, selectedTopic }) {
           <Section id="tradeoffs" title="Trade-off Decisions">
             <div className="space-y-4">
               {topicDetails.tradeoffDecisions.map((td, i) => (
-                <div key={i} className="rounded-lg p-5 border" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+                <div key={i} className="rounded-lg p-5 border" style={{ background: '#f9fafb', borderColor: '#e5e7eb' }}>
                   <div className="flex items-center gap-3 mb-2">
-                    <span className="text-sm font-bold" style={{ color: 'var(--text-dim)' }}>{td.choice}</span>
+                    <span className="text-sm font-bold" style={{ color: '#374151' }}>{td.choice}</span>
                     <span className="text-xs font-bold uppercase px-2 py-0.5 rounded" style={{ background: 'rgba(16,185,129,0.15)', color: '#10b981' }}>
                       {td.picked}
                     </span>
                   </div>
-                  <p className="text-sm leading-relaxed" style={{ color: 'var(--text-subtle)' }}>{td.reason}</p>
+                  <p className="text-sm leading-relaxed" style={{ color: '#111827' }}>{td.reason}</p>
                 </div>
               ))}
             </div>
@@ -471,7 +471,7 @@ export default function ArticleRenderer({ topicDetails, selectedTopic }) {
             <div className="space-y-6">
               {topicDetails.interviewFollowups.map((q, i) => (
                 <div key={i}>
-                  <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--text)' }}>
+                  <h3 className="text-lg font-semibold mb-2" style={{ color: '#000000' }}>
                     Q: {q.question}
                   </h3>
                   <div style={bodyStyle}>
@@ -497,8 +497,8 @@ export default function ArticleRenderer({ topicDetails, selectedTopic }) {
                       : 'hover:opacity-80'
                   }`}
                   style={{
-                    background: codeTab === lang ? '#10b981' : 'var(--surface)',
-                    color: codeTab === lang ? 'white' : 'var(--text-dim)',
+                    background: codeTab === lang ? '#10b981' : '#f3f4f6',
+                    color: codeTab === lang ? 'white' : '#4b5563',
                   }}
                 >
                   {lang.charAt(0).toUpperCase() + lang.slice(1)}
@@ -515,7 +515,7 @@ export default function ArticleRenderer({ topicDetails, selectedTopic }) {
             <div className="space-y-6">
               {topicDetails.discussionPoints.map((dp, i) => (
                 <div key={i}>
-                  <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--text)' }}>{dp.topic}</h3>
+                  <h3 className="text-lg font-semibold mb-2" style={{ color: '#000000' }}>{dp.topic}</h3>
                   <ul className="space-y-1.5">
                     {dp.points.map((p, j) => (
                       <li key={j} className="flex items-start gap-2" style={bodyStyle}>
