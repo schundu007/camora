@@ -780,7 +780,7 @@ export default function JobPrepPage() {
                 <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
                 </svg>
-                Generate Prep Material
+                Prepare Material
               </button>
             )}
 
@@ -1160,44 +1160,120 @@ function StudyItem({ label, href, reason }: { label: string; href: string; reaso
 function PrepSectionContent({ sectionKey, data }: { sectionKey: string; data: any }) {
   if (!data) return null;
 
+  const label = { fontSize: '11px', fontWeight: 600 as const, color: '#6b7280', textTransform: 'uppercase' as const, letterSpacing: '0.05em', margin: '0 0 6px' };
+  const card = { background: '#f9fafb', borderRadius: '8px', padding: '14px 16px', border: '1px solid #f3f4f6', marginBottom: '12px' };
+  const body = { fontSize: '13px', color: '#374151', lineHeight: 1.7, whiteSpace: 'pre-wrap' as const };
+
   // If data is a plain string, render it directly
   if (typeof data === 'string') {
-    return (
-      <div style={{ fontSize: '14px', color: '#374151', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>
-        {data}
-      </div>
-    );
+    return <div style={{ ...body, fontSize: '14px' }}>{data}</div>;
   }
 
-  // Elevator Pitch — formatted text block
+  // Elevator Pitch — pitchSections array with title/duration/bullets
   if (sectionKey === 'pitch') {
-    const pitch = data.pitch || data.content || data.text || (typeof data === 'string' ? data : JSON.stringify(data));
+    const sections = data.pitchSections || data.sections;
+    if (Array.isArray(sections)) {
+      return (
+        <div>
+          {sections.map((sec: any, i: number) => (
+            <div key={i} style={{ ...card, borderLeft: '3px solid #10b981' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <span style={{ fontSize: '14px', fontWeight: 700, color: '#111827' }}>{sec.title}</span>
+                {sec.duration && <span style={{ fontSize: '11px', color: '#6b7280', background: '#f3f4f6', padding: '2px 8px', borderRadius: '4px' }}>{sec.duration}</span>}
+              </div>
+              {sec.context && <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '6px', fontStyle: 'italic' }}>{sec.context}</div>}
+              {sec.bullets && sec.bullets.map((b: string, j: number) => (
+                <div key={j} style={{ ...body, marginBottom: '4px', paddingLeft: '12px', borderLeft: '2px solid #d1fae5' }}>{b}</div>
+              ))}
+            </div>
+          ))}
+          {data.talkingPoints && Array.isArray(data.talkingPoints) && (
+            <div style={{ marginTop: '12px' }}>
+              <h5 style={label}>Talking Points</h5>
+              <ul style={{ margin: 0, paddingLeft: '18px' }}>
+                {data.talkingPoints.map((t: string, i: number) => <li key={i} style={{ ...body, marginBottom: '3px' }}>{t}</li>)}
+              </ul>
+            </div>
+          )}
+          {data.tips && <div style={{ ...card, borderLeft: '3px solid #fbbf24', marginTop: '12px' }}><h5 style={label}>Tips</h5><div style={body}>{typeof data.tips === 'string' ? data.tips : JSON.stringify(data.tips)}</div></div>}
+        </div>
+      );
+    }
+    // Fallback for plain text pitch
+    const pitch = data.pitch || data.content || data.text || '';
+    if (pitch) return <div style={{ ...card, borderLeft: '3px solid #10b981' }}><div style={body}>{pitch}</div></div>;
+  }
+
+  // Q&A-based sections (HR, Hiring Manager, Behavioral)
+  if (['hr', 'hiring-manager', 'behavioral'].includes(sectionKey)) {
+    const questions = data.questions || data.items || (Array.isArray(data) ? data : []);
+
+    // Summary / company insights at top
+    const summary = data.summary || data.companyInsights;
+    const salaryInfo = data.salaryNegotiation;
+    const questionsToAsk = data.questionsToAsk;
+
     return (
       <div>
-        {data.title && (
-          <h4 style={{ fontSize: '14px', fontWeight: 700, color: '#111827', margin: '0 0 12px', fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
-            {data.title}
-          </h4>
+        {data.summary && typeof data.summary === 'string' && (
+          <div style={{ ...card, borderLeft: '3px solid #3b82f6', marginBottom: '16px' }}>
+            <h5 style={label}>Overview</h5>
+            <div style={body}>{data.summary}</div>
+          </div>
         )}
-        <div style={{
-          fontSize: '14px',
-          color: '#374151',
-          lineHeight: 1.8,
-          whiteSpace: 'pre-wrap',
-          background: '#f9fafb',
-          borderRadius: '8px',
-          padding: '16px 20px',
-          borderLeft: '3px solid #10b981',
-        }}>
-          {pitch}
-        </div>
-        {data.tips && Array.isArray(data.tips) && (
-          <div style={{ marginTop: '16px' }}>
-            <h5 style={{ fontSize: '13px', fontWeight: 600, color: '#6b7280', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Tips</h5>
-            <ul style={{ margin: 0, paddingLeft: '20px' }}>
-              {data.tips.map((tip: string, i: number) => (
-                <li key={i} style={{ fontSize: '13px', color: '#6b7280', lineHeight: 1.6, marginBottom: '4px' }}>{tip}</li>
-              ))}
+        {data.companyInsights && typeof data.companyInsights === 'object' && (
+          <div style={{ ...card, borderLeft: '3px solid #8b5cf6', marginBottom: '16px' }}>
+            <h5 style={label}>Company Insights</h5>
+            {data.companyInsights.culture && <div style={{ ...body, marginBottom: '4px' }}><strong>Culture:</strong> {data.companyInsights.culture}</div>}
+            {data.companyInsights.interviewFormat && <div style={{ ...body, marginBottom: '4px' }}><strong>Interview Format:</strong> {data.companyInsights.interviewFormat}</div>}
+            {data.companyInsights.values && Array.isArray(data.companyInsights.values) && <div style={{ ...body }}><strong>Values:</strong> {data.companyInsights.values.join(', ')}</div>}
+          </div>
+        )}
+        {Array.isArray(questions) && questions.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            {questions.map((q: any, i: number) => (
+              <div key={i} style={{ ...card }}>
+                <div style={{ fontSize: '14px', fontWeight: 600, color: '#111827', marginBottom: '8px', display: 'flex', gap: '8px' }}>
+                  <span style={{ color: '#10b981', fontWeight: 700, flexShrink: 0 }}>Q{i + 1}.</span>
+                  <span>{q.question || q.q || (typeof q === 'string' ? q : '')}</span>
+                </div>
+                {q.whyTheyAsk && (
+                  <div style={{ fontSize: '12px', color: '#6b7280', marginLeft: '32px', marginBottom: '6px', fontStyle: 'italic' }}>
+                    Why they ask: {q.whyTheyAsk}
+                  </div>
+                )}
+                {(q.suggestedAnswer || q.answer || q.a || q.sampleAnswer) && (
+                  <div style={{ ...body, marginLeft: '32px', background: '#f0fdf4', borderRadius: '6px', padding: '10px 14px', borderLeft: '2px solid #86efac' }}>
+                    {q.suggestedAnswer || q.answer || q.a || q.sampleAnswer}
+                  </div>
+                )}
+                {q.tips && <div style={{ fontSize: '12px', color: '#6b7280', marginLeft: '32px', marginTop: '6px' }}>💡 {q.tips}</div>}
+                {/* STAR format for behavioral */}
+                {sectionKey === 'behavioral' && (q.situation || q.task || q.action || q.result) && (
+                  <div style={{ marginLeft: '32px', marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    {q.situation && <div style={body}><span style={{ fontWeight: 700, color: '#10b981' }}>S</span><span style={{ fontWeight: 600 }}>ituation: </span>{q.situation}</div>}
+                    {q.task && <div style={body}><span style={{ fontWeight: 700, color: '#10b981' }}>T</span><span style={{ fontWeight: 600 }}>ask: </span>{q.task}</div>}
+                    {q.action && <div style={body}><span style={{ fontWeight: 700, color: '#10b981' }}>A</span><span style={{ fontWeight: 600 }}>ction: </span>{q.action}</div>}
+                    {q.result && <div style={body}><span style={{ fontWeight: 700, color: '#10b981' }}>R</span><span style={{ fontWeight: 600 }}>esult: </span>{q.result}</div>}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+        {salaryInfo && typeof salaryInfo === 'object' && (
+          <div style={{ ...card, borderLeft: '3px solid #f59e0b', marginTop: '16px' }}>
+            <h5 style={label}>Salary Negotiation</h5>
+            {salaryInfo.rangeEstimate && <div style={{ ...body, marginBottom: '4px' }}><strong>Range:</strong> {salaryInfo.rangeEstimate}</div>}
+            {salaryInfo.companyContext && <div style={{ ...body, marginBottom: '4px' }}>{salaryInfo.companyContext}</div>}
+            {salaryInfo.negotiationTips && <div style={{ ...body }}><strong>Tips:</strong> {salaryInfo.negotiationTips}</div>}
+          </div>
+        )}
+        {questionsToAsk && Array.isArray(questionsToAsk) && (
+          <div style={{ ...card, borderLeft: '3px solid #10b981', marginTop: '16px' }}>
+            <h5 style={label}>Questions to Ask Them</h5>
+            <ul style={{ margin: 0, paddingLeft: '18px' }}>
+              {questionsToAsk.map((q: string, i: number) => <li key={i} style={{ ...body, marginBottom: '3px' }}>{q}</li>)}
             </ul>
           </div>
         )}
@@ -1205,64 +1281,47 @@ function PrepSectionContent({ sectionKey, data }: { sectionKey: string; data: an
     );
   }
 
-  // Q&A-based sections (HR, Hiring Manager, Behavioral)
-  if (['hr', 'hiring-manager', 'behavioral'].includes(sectionKey)) {
-    const questions = data.questions || data.items || (Array.isArray(data) ? data : []);
-    if (!Array.isArray(questions) || questions.length === 0) {
-      return <div style={{ fontSize: '14px', color: '#6b7280' }}>No questions generated.</div>;
-    }
+  // Coding Questions
+  if (sectionKey === 'coding') {
+    const problems = data.questions || data.problems || data.items || (Array.isArray(data) ? data : []);
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        {questions.map((q: any, i: number) => (
-          <div key={i} style={{ borderBottom: i < questions.length - 1 ? '1px solid #f3f4f6' : 'none', paddingBottom: i < questions.length - 1 ? '16px' : '0' }}>
-            <div style={{ fontSize: '14px', fontWeight: 600, color: '#111827', marginBottom: '8px', display: 'flex', gap: '8px' }}>
-              <span style={{ color: '#10b981', fontWeight: 700, flexShrink: 0 }}>Q{i + 1}.</span>
-              <span>{q.question || q.q || (typeof q === 'string' ? q : '')}</span>
-            </div>
-            {(q.answer || q.a || q.suggested_answer || q.sampleAnswer) && (
-              <div style={{
-                fontSize: '13px',
-                color: '#4b5563',
-                lineHeight: 1.7,
-                marginLeft: '32px',
-                background: '#f9fafb',
-                borderRadius: '6px',
-                padding: '12px 16px',
-                whiteSpace: 'pre-wrap',
-              }}>
-                {q.answer || q.a || q.suggested_answer || q.sampleAnswer}
+      <div>
+        {data.summary && <div style={{ ...card, borderLeft: '3px solid #8b5cf6', marginBottom: '16px' }}><h5 style={label}>Overview</h5><div style={body}>{data.summary}</div></div>}
+        {data.keyTopics && Array.isArray(data.keyTopics) && (
+          <div style={{ ...card, marginBottom: '16px' }}>
+            <h5 style={label}>Key Topics</h5>
+            {data.keyTopics.map((t: any, i: number) => (
+              <div key={i} style={{ ...body, marginBottom: '4px' }}>
+                <strong>{t.topic || t}</strong>{t.frequency ? ` — ${t.frequency}` : ''}{t.whyImportant ? ` — ${t.whyImportant}` : ''}
               </div>
-            )}
-            {sectionKey === 'behavioral' && (q.situation || q.task || q.action || q.result) && (
-              <div style={{ marginLeft: '32px', marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                {q.situation && (
-                  <div style={{ fontSize: '13px', color: '#4b5563', lineHeight: 1.6 }}>
-                    <span style={{ fontWeight: 700, color: '#10b981' }}>S</span>
-                    <span style={{ fontWeight: 600, color: '#374151' }}>ituation: </span>
-                    {q.situation}
-                  </div>
-                )}
-                {q.task && (
-                  <div style={{ fontSize: '13px', color: '#4b5563', lineHeight: 1.6 }}>
-                    <span style={{ fontWeight: 700, color: '#10b981' }}>T</span>
-                    <span style={{ fontWeight: 600, color: '#374151' }}>ask: </span>
-                    {q.task}
-                  </div>
-                )}
-                {q.action && (
-                  <div style={{ fontSize: '13px', color: '#4b5563', lineHeight: 1.6 }}>
-                    <span style={{ fontWeight: 700, color: '#10b981' }}>A</span>
-                    <span style={{ fontWeight: 600, color: '#374151' }}>ction: </span>
-                    {q.action}
-                  </div>
-                )}
-                {q.result && (
-                  <div style={{ fontSize: '13px', color: '#4b5563', lineHeight: 1.6 }}>
-                    <span style={{ fontWeight: 700, color: '#10b981' }}>R</span>
-                    <span style={{ fontWeight: 600, color: '#374151' }}>esult: </span>
-                    {q.result}
-                  </div>
-                )}
+            ))}
+          </div>
+        )}
+        {Array.isArray(problems) && problems.map((p: any, i: number) => (
+          <div key={i} style={{ ...card }}>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>
+              <span style={{ fontSize: '11px', fontWeight: 700, color: (p.difficulty || '').toLowerCase() === 'hard' ? '#dc2626' : (p.difficulty || '').toLowerCase() === 'medium' ? '#d97706' : '#059669', background: (p.difficulty || '').toLowerCase() === 'hard' ? '#fef2f2' : (p.difficulty || '').toLowerCase() === 'medium' ? '#fffbeb' : '#ecfdf5', padding: '2px 8px', borderRadius: '4px', textTransform: 'uppercase' as const }}>{p.difficulty || 'Medium'}</span>
+              <span style={{ fontSize: '14px', fontWeight: 600, color: '#111827' }}>{p.title || p.name || `Problem ${i + 1}`}</span>
+              {p.frequency && <span style={{ fontSize: '11px', color: '#6b7280' }}>({p.frequency})</span>}
+            </div>
+            {p.problemStatement && <div style={{ ...body, marginBottom: '8px' }}>{p.problemStatement}</div>}
+            {p.examples && Array.isArray(p.examples) && p.examples.map((ex: any, j: number) => (
+              <div key={j} style={{ fontSize: '12px', color: '#4b5563', background: '#f3f4f6', borderRadius: '6px', padding: '8px 12px', marginBottom: '6px', fontFamily: 'monospace' }}>
+                <div><strong>Input:</strong> {ex.input}</div>
+                <div><strong>Output:</strong> {ex.output}</div>
+                {ex.explanation && <div style={{ color: '#6b7280', fontStyle: 'italic' }}>{ex.explanation}</div>}
+              </div>
+            ))}
+            {p.approaches && Array.isArray(p.approaches) && p.approaches.map((a: any, j: number) => (
+              <div key={j} style={{ marginTop: '10px', marginLeft: '12px' }}>
+                <div style={{ fontSize: '13px', fontWeight: 600, color: '#111827', marginBottom: '4px' }}>{a.name} <span style={{ fontSize: '11px', color: '#6b7280', fontWeight: 400 }}>O({a.timeComplexity}) / O({a.spaceComplexity})</span></div>
+                {a.code && <pre style={{ fontSize: '12px', background: '#0d1117', color: '#c9d1d9', borderRadius: '6px', padding: '10px 14px', overflow: 'auto', margin: '4px 0 8px' }}><code>{a.code}</code></pre>}
+              </div>
+            ))}
+            {p.commonMistakes && Array.isArray(p.commonMistakes) && (
+              <div style={{ marginTop: '8px', marginLeft: '12px' }}>
+                <h5 style={label}>Common Mistakes</h5>
+                <ul style={{ margin: 0, paddingLeft: '16px' }}>{p.commonMistakes.map((m: string, j: number) => <li key={j} style={{ ...body, fontSize: '12px', color: '#dc2626' }}>{m}</li>)}</ul>
               </div>
             )}
           </div>
@@ -1271,58 +1330,77 @@ function PrepSectionContent({ sectionKey, data }: { sectionKey: string; data: an
     );
   }
 
-  // Coding Questions — list of problems with hints
-  if (sectionKey === 'coding') {
-    const problems = data.problems || data.questions || data.items || (Array.isArray(data) ? data : []);
-    if (!Array.isArray(problems) || problems.length === 0) {
-      return <div style={{ fontSize: '14px', color: '#6b7280' }}>No coding questions generated.</div>;
-    }
+  // System Design Questions
+  if (sectionKey === 'system-design') {
+    const questions = data.questions || data.scenarios || data.items || (Array.isArray(data) ? data : []);
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        {problems.map((p: any, i: number) => (
-          <div key={i} style={{
-            background: '#f9fafb',
-            borderRadius: '8px',
-            padding: '16px',
-            border: '1px solid #f3f4f6',
-          }}>
-            <div style={{ fontSize: '14px', fontWeight: 600, color: '#111827', marginBottom: '6px', display: 'flex', gap: '8px', alignItems: 'center' }}>
-              <span style={{
-                fontSize: '11px',
-                fontWeight: 700,
-                color: (p.difficulty || '').toLowerCase() === 'hard' ? '#dc2626' : (p.difficulty || '').toLowerCase() === 'medium' ? '#d97706' : '#059669',
-                background: (p.difficulty || '').toLowerCase() === 'hard' ? '#fef2f2' : (p.difficulty || '').toLowerCase() === 'medium' ? '#fffbeb' : '#ecfdf5',
-                padding: '2px 8px',
-                borderRadius: '4px',
-                textTransform: 'uppercase',
-                letterSpacing: '0.05em',
-              }}>
-                {p.difficulty || 'Medium'}
-              </span>
-              <span>{p.title || p.name || p.question || `Problem ${i + 1}`}</span>
-            </div>
-            {(p.description || p.problem) && (
-              <div style={{ fontSize: '13px', color: '#4b5563', lineHeight: 1.7, marginBottom: '8px', whiteSpace: 'pre-wrap' }}>
-                {p.description || p.problem}
+      <div>
+        {data.summary && <div style={{ ...card, borderLeft: '3px solid #3b82f6', marginBottom: '16px' }}><h5 style={label}>Overview</h5><div style={body}>{data.summary}</div></div>}
+        {data.companyContext && <div style={{ ...card, borderLeft: '3px solid #8b5cf6', marginBottom: '16px' }}><h5 style={label}>Company Context</h5><div style={body}>{data.companyContext}</div></div>}
+        {Array.isArray(questions) && questions.map((q: any, i: number) => (
+          <div key={i} style={{ ...card }}>
+            <div style={{ fontSize: '14px', fontWeight: 700, color: '#111827', marginBottom: '10px' }}>{q.title || `Scenario ${i + 1}`}</div>
+            {q.clarifyingQuestions && Array.isArray(q.clarifyingQuestions) && (
+              <div style={{ marginBottom: '10px' }}><h5 style={label}>Clarifying Questions</h5><ul style={{ margin: 0, paddingLeft: '16px' }}>{q.clarifyingQuestions.map((c: string, j: number) => <li key={j} style={{ ...body, fontSize: '12px' }}>{c}</li>)}</ul></div>
+            )}
+            {q.requirements && (
+              <div style={{ marginBottom: '10px' }}>
+                {q.requirements.functional && (<><h5 style={label}>Functional Requirements</h5><ul style={{ margin: '0 0 8px', paddingLeft: '16px' }}>{q.requirements.functional.map((r: string, j: number) => <li key={j} style={{ ...body, fontSize: '12px' }}>{r}</li>)}</ul></>)}
+                {q.requirements.nonFunctional && (<><h5 style={label}>Non-Functional Requirements</h5><ul style={{ margin: 0, paddingLeft: '16px' }}>{q.requirements.nonFunctional.map((r: string, j: number) => <li key={j} style={{ ...body, fontSize: '12px' }}>{r}</li>)}</ul></>)}
               </div>
             )}
-            {(p.hint || p.hints) && (
-              <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '8px' }}>
-                <span style={{ fontWeight: 600, color: '#9ca3af' }}>Hint: </span>
-                {typeof p.hints === 'string' ? p.hints : Array.isArray(p.hints) ? p.hints.join(' | ') : p.hint}
+            {q.capacityEstimation && q.capacityEstimation.calculations && (
+              <div style={{ marginBottom: '10px' }}><h5 style={label}>Capacity Estimation</h5>
+                {q.capacityEstimation.assumptions && <div style={{ fontSize: '12px', color: '#6b7280', fontStyle: 'italic', marginBottom: '6px' }}>{Array.isArray(q.capacityEstimation.assumptions) ? q.capacityEstimation.assumptions.join(' | ') : q.capacityEstimation.assumptions}</div>}
+                <table style={{ width: '100%', fontSize: '12px', borderCollapse: 'collapse' }}><tbody>
+                  {q.capacityEstimation.calculations.map((c: any, j: number) => <tr key={j} style={{ borderBottom: '1px solid #f3f4f6' }}><td style={{ padding: '4px 8px', fontWeight: 600, color: '#374151' }}>{c.metric}</td><td style={{ padding: '4px 8px', color: '#059669', fontFamily: 'monospace' }}>{c.result}</td><td style={{ padding: '4px 8px', color: '#6b7280' }}>{c.calculation}</td></tr>)}
+                </tbody></table>
               </div>
             )}
-            {p.topics && Array.isArray(p.topics) && (
-              <div className="flex flex-wrap gap-1" style={{ marginTop: '8px' }}>
-                {p.topics.map((t: string, ti: number) => (
-                  <span key={ti} style={{
-                    fontSize: '11px',
-                    fontWeight: 500,
-                    color: '#1d4ed8',
-                    background: '#eff6ff',
-                    padding: '2px 8px',
-                    borderRadius: '4px',
-                  }}>{t}</span>
+            {q.architecture && q.architecture.components && (
+              <div style={{ marginBottom: '10px' }}><h5 style={label}>Architecture Components</h5>
+                {q.architecture.components.map((c: any, j: number) => (
+                  <div key={j} style={{ ...body, fontSize: '12px', marginBottom: '4px' }}><strong>{c.name}</strong> ({c.technology}) — {c.responsibility}{c.whyThisChoice ? ` [${c.whyThisChoice}]` : ''}</div>
+                ))}
+              </div>
+            )}
+            {q.apiDesign && Array.isArray(q.apiDesign) && (
+              <div style={{ marginBottom: '10px' }}><h5 style={label}>API Design</h5>
+                {q.apiDesign.map((a: any, j: number) => <div key={j} style={{ fontSize: '12px', fontFamily: 'monospace', color: '#374151', marginBottom: '3px' }}><strong>{a.endpoint}</strong>{a.notes ? ` — ${a.notes}` : ''}</div>)}
+              </div>
+            )}
+            {q.scalabilityConsiderations && Array.isArray(q.scalabilityConsiderations) && (
+              <div><h5 style={label}>Scalability</h5>
+                {q.scalabilityConsiderations.map((s: any, j: number) => <div key={j} style={{ ...body, fontSize: '12px', marginBottom: '3px' }}><strong>{s.challenge}:</strong> {s.solution}</div>)}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  // Tech Stack Analysis
+  if (sectionKey === 'techstack') {
+    const topics = data.technologies || data.topics || data.items || data.techStack || (Array.isArray(data) ? data : []);
+    return (
+      <div>
+        {data.summary && <div style={{ ...card, borderLeft: '3px solid #f59e0b', marginBottom: '16px' }}><h5 style={label}>Overview</h5><div style={body}>{data.summary}</div></div>}
+        {Array.isArray(topics) && topics.map((t: any, i: number) => (
+          <div key={i} style={{ ...card }}>
+            <div style={{ fontSize: '14px', fontWeight: 600, color: '#111827', marginBottom: '6px' }}>{t.technology || t.name || t.topic || (typeof t === 'string' ? t : `Topic ${i + 1}`)}</div>
+            {t.category && <span style={{ fontSize: '11px', color: '#6b7280', background: '#f3f4f6', padding: '2px 8px', borderRadius: '4px', marginBottom: '6px', display: 'inline-block' }}>{t.category}</span>}
+            {(t.description || t.detail || t.overview) && <div style={{ ...body, marginTop: '6px' }}>{t.description || t.detail || t.overview}</div>}
+            {t.keyConceptsToReview && Array.isArray(t.keyConceptsToReview) && (
+              <div style={{ marginTop: '8px' }}><h5 style={label}>Key Concepts</h5><ul style={{ margin: 0, paddingLeft: '16px' }}>{t.keyConceptsToReview.map((c: string, j: number) => <li key={j} style={{ ...body, fontSize: '12px' }}>{c}</li>)}</ul></div>
+            )}
+            {t.interviewQuestions && Array.isArray(t.interviewQuestions) && (
+              <div style={{ marginTop: '8px' }}><h5 style={label}>Likely Questions</h5>
+                {t.interviewQuestions.map((q: any, j: number) => (
+                  <div key={j} style={{ marginBottom: '8px', paddingLeft: '12px', borderLeft: '2px solid #d1fae5' }}>
+                    <div style={{ fontSize: '13px', fontWeight: 600, color: '#111827' }}>{typeof q === 'string' ? q : q.question}</div>
+                    {q.answer && <div style={{ ...body, fontSize: '12px', marginTop: '4px' }}>{q.answer}</div>}
+                  </div>
                 ))}
               </div>
             )}
@@ -1332,86 +1410,41 @@ function PrepSectionContent({ sectionKey, data }: { sectionKey: string; data: an
     );
   }
 
-  // System Design Questions — list of design scenarios
-  if (sectionKey === 'system-design') {
-    const scenarios = data.scenarios || data.questions || data.items || (Array.isArray(data) ? data : []);
-    if (!Array.isArray(scenarios) || scenarios.length === 0) {
-      return <div style={{ fontSize: '14px', color: '#6b7280' }}>No system design questions generated.</div>;
-    }
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        {scenarios.map((s: any, i: number) => (
-          <div key={i} style={{
-            background: '#f9fafb',
-            borderRadius: '8px',
-            padding: '16px',
-            border: '1px solid #f3f4f6',
-          }}>
-            <div style={{ fontSize: '14px', fontWeight: 600, color: '#111827', marginBottom: '8px' }}>
-              {s.title || s.name || s.question || `Scenario ${i + 1}`}
-            </div>
-            {(s.description || s.prompt || s.scenario) && (
-              <div style={{ fontSize: '13px', color: '#4b5563', lineHeight: 1.7, marginBottom: '10px', whiteSpace: 'pre-wrap' }}>
-                {s.description || s.prompt || s.scenario}
-              </div>
-            )}
-            {(s.requirements || s.considerations) && (
-              <div style={{ marginTop: '8px' }}>
-                <h5 style={{ fontSize: '12px', fontWeight: 600, color: '#6b7280', margin: '0 0 6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  Key Considerations
-                </h5>
-                <ul style={{ margin: 0, paddingLeft: '20px' }}>
-                  {(s.requirements || s.considerations || []).map((r: string, ri: number) => (
-                    <li key={ri} style={{ fontSize: '13px', color: '#4b5563', lineHeight: 1.6, marginBottom: '4px' }}>{r}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            {s.approach && (
-              <div style={{
-                fontSize: '13px',
-                color: '#4b5563',
-                lineHeight: 1.7,
-                marginTop: '10px',
-                background: '#ffffff',
-                borderRadius: '6px',
-                padding: '12px 16px',
-                border: '1px solid #e5e7eb',
-                whiteSpace: 'pre-wrap',
-              }}>
-                <span style={{ fontWeight: 600, color: '#374151' }}>Approach: </span>
-                {s.approach}
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  // Fallback — render as formatted JSON or text
+  // Fallback — recursively render any JSON structure as readable content
   if (typeof data === 'object') {
-    return (
-      <pre style={{
-        fontSize: '13px',
-        color: '#374151',
-        lineHeight: 1.6,
-        whiteSpace: 'pre-wrap',
-        wordBreak: 'break-word',
-        background: '#f9fafb',
-        borderRadius: '8px',
-        padding: '16px',
-        margin: 0,
-        overflow: 'auto',
-      }}>
-        {JSON.stringify(data, null, 2)}
-      </pre>
-    );
+    return <div>{renderObject(data)}</div>;
   }
 
+  return <div style={{ ...body, fontSize: '14px' }}>{String(data)}</div>;
+}
+
+/* ── Helper: recursively render any JSON object as readable HTML ── */
+function renderObject(obj: any, depth = 0): any {
+  if (obj === null || obj === undefined) return null;
+  if (typeof obj === 'string' || typeof obj === 'number' || typeof obj === 'boolean') {
+    return <span style={{ fontSize: '13px', color: '#374151', lineHeight: 1.7 }}>{String(obj)}</span>;
+  }
+  if (Array.isArray(obj)) {
+    return (
+      <ul style={{ margin: 0, paddingLeft: '18px' }}>
+        {obj.map((item, i) => (
+          <li key={i} style={{ fontSize: '13px', color: '#374151', lineHeight: 1.7, marginBottom: '3px' }}>
+            {typeof item === 'object' ? renderObject(item, depth + 1) : String(item)}
+          </li>
+        ))}
+      </ul>
+    );
+  }
   return (
-    <div style={{ fontSize: '14px', color: '#374151', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>
-      {String(data)}
+    <div style={{ marginLeft: depth > 0 ? '12px' : '0' }}>
+      {Object.entries(obj).map(([key, val]) => (
+        <div key={key} style={{ marginBottom: '6px' }}>
+          <span style={{ fontSize: '12px', fontWeight: 600, color: '#111827', textTransform: 'capitalize' }}>
+            {key.replace(/([A-Z])/g, ' $1').replace(/_/g, ' ')}:
+          </span>{' '}
+          {typeof val === 'object' ? renderObject(val, depth + 1) : <span style={{ fontSize: '13px', color: '#374151' }}>{String(val)}</span>}
+        </div>
+      ))}
     </div>
   );
 }
