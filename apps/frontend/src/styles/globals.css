@@ -68,6 +68,7 @@ body::after { bottom: 0; }
     @apply antialiased scroll-smooth;
     overflow-x: hidden;
     zoom: 0.8;
+    width: 125%; /* 1/0.8 — compensate zoom so content fills viewport */
   }
 
   body {
