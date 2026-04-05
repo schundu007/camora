@@ -396,12 +396,11 @@ export default function PricingPage() {
 
           <div className="grid md:grid-cols-3 gap-4">
             {[
-              { name: '20 AI Questions', price: '$5', desc: 'Includes 3 bonus diagrams', packId: 'questions_20', icon: '💬' },
-              { name: '50 AI Questions', price: '$10', desc: 'Includes 8 bonus diagrams', packId: 'questions_50', icon: '🚀' },
-              { name: '5 Live Sessions', price: '$15', desc: '90 minutes per session', packId: 'sessions_5', icon: '🎯' },
+              { name: '20 AI Questions', price: '$5', desc: 'Includes 3 bonus diagrams', packId: 'questions_20' },
+              { name: '50 AI Questions', price: '$10', desc: 'Includes 8 bonus diagrams', packId: 'questions_50' },
+              { name: '5 Live Sessions', price: '$15', desc: '90 minutes per session', packId: 'sessions_5' },
             ].map((pack) => (
               <div key={pack.packId} className="bg-white rounded-2xl border border-[#e3e8ee] p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:border-emerald-300 transition-all">
-                <div className="text-3xl mb-3">{pack.icon}</div>
                 <h3 className="text-lg font-bold text-gray-900">{pack.name}</h3>
                 <div className="mt-1 flex items-baseline gap-1">
                   <span className="text-2xl font-bold text-emerald-600">{pack.price}</span>
