@@ -26,45 +26,36 @@ function ArticleTOC({ sections, activeId }) {
   );
 }
 
-/* ── Level 1: Section heading — numbered, with bottom divider ── */
-function SectionHeading({ number, title }) {
+/* ── H2: Section heading — numbered, with bottom accent ── */
+function Section({ id, number, title, children }) {
   return (
-    <div className="mb-6 pb-3" style={{ borderBottom: '3px solid #d1fae5' }}>
-      <h2 className="text-[1.6rem] font-extrabold tracking-tight leading-tight" style={{ color: '#000000' }}>
-        <span style={{ color: '#059669' }}>{number}. </span>
-        {title}
-      </h2>
-    </div>
+    <section id={id} className="scroll-mt-24 mb-14">
+      <div className="mb-5 pb-2" style={{ borderBottom: '2px solid #d1fae5' }}>
+        <h2 className="text-2xl font-extrabold tracking-tight" style={{ color: '#000000' }}>
+          <span style={{ color: '#059669' }}>{number}. </span>{title}
+        </h2>
+      </div>
+      {children}
+    </section>
   );
 }
 
-/* ── Level 2: Sub-heading — indented under section heading ── */
-function SubHeading({ children, icon }) {
+/* ── H3: Sub-heading — bold, slightly smaller, green left accent ── */
+function SubHeading({ children }) {
   return (
-    <h3 className="text-[1.1rem] font-bold mb-2 pl-4 flex items-center gap-2 ml-6" style={{ color: '#1f2937', borderLeft: '3px solid #a7f3d0' }}>
-      {icon && <span className="text-emerald-600">{icon}</span>}
+    <h3 className="text-lg font-bold mt-6 mb-3 pl-3" style={{ color: '#111827', borderLeft: '3px solid #6ee7b7' }}>
       {children}
     </h3>
   );
 }
 
-/* ── Level 3: Content wrapper — further indented under sub-heading ── */
+/* ── Indented content block under a sub-heading ── */
 function ContentBlock({ children }) {
-  return <div className="ml-14">{children}</div>;
-}
-
-/* ── Section wrapper ───────────────────────────────────── */
-function Section({ id, number, title, children }) {
-  return (
-    <section id={id} className="scroll-mt-24 mb-16">
-      <SectionHeading number={number} title={title} />
-      <div className="ml-4">{children}</div>
-    </section>
-  );
+  return <div className="pl-6">{children}</div>;
 }
 
 /* ── Callout box ───────────────────────────────────────── */
-function Callout({ children, accent = 'emerald', icon }) {
+function Callout({ children, accent = 'emerald' }) {
   const borderColors = {
     emerald: '#10b981', amber: '#f59e0b', red: '#ef4444', blue: '#3b82f6', violet: '#8b5cf6',
   };
@@ -76,7 +67,6 @@ function Callout({ children, accent = 'emerald', icon }) {
       className="rounded-lg py-4 pl-5 pr-5 mb-5"
       style={{ background: bgColors[accent], borderLeft: `4px solid ${borderColors[accent]}` }}
     >
-      {icon && <div className="text-lg mb-1">{icon}</div>}
       {children}
     </div>
   );
@@ -176,7 +166,7 @@ export default function ArticleRenderer({ topicDetails, selectedTopic }) {
           <Section id="requirements" number={getNum('requirements')} title="Requirements and Goals of the System">
             {topicDetails.functionalRequirements && (
               <div className="mb-8">
-                <SubHeading icon="✓">Functional Requirements</SubHeading>
+                <SubHeading>Functional Requirements</SubHeading>
                 <ContentBlock>
                   <ol className="space-y-2.5">
                     {topicDetails.functionalRequirements.map((req, i) => (
@@ -191,7 +181,7 @@ export default function ArticleRenderer({ topicDetails, selectedTopic }) {
             )}
             {topicDetails.nonFunctionalRequirements && (
               <div>
-                <SubHeading icon="⚡">Non-Functional Requirements</SubHeading>
+                <SubHeading>Non-Functional Requirements</SubHeading>
                 <ContentBlock>
                   <ul className="space-y-2.5">
                     {topicDetails.nonFunctionalRequirements.map((req, i) => (
@@ -211,7 +201,7 @@ export default function ArticleRenderer({ topicDetails, selectedTopic }) {
         {topicDetails.estimation && (
           <Section id="estimation" number={getNum('estimation')} title="Capacity Estimation and Constraints">
             {topicDetails.estimation.assumptions && (
-              <Callout accent="blue" icon="💡">
+              <Callout accent="blue">
                 <p className="text-sm font-bold text-blue-800 mb-1">Assumptions</p>
                 <p className="text-[0.95rem] leading-relaxed text-blue-900">{topicDetails.estimation.assumptions}</p>
               </Callout>
@@ -355,7 +345,7 @@ export default function ArticleRenderer({ topicDetails, selectedTopic }) {
           <Section id="implementation" number={getNum('implementation')} title="System Architecture">
             {topicDetails.basicImplementation && (
               <div className="mb-12">
-                <SubHeading icon="📐">
+                <SubHeading>
                   {topicDetails.basicImplementation.title || 'Basic Approach'}
                 </SubHeading>
                 <p className={`${bodyText} mb-5`}>{topicDetails.basicImplementation.description}</p>
@@ -365,7 +355,7 @@ export default function ArticleRenderer({ topicDetails, selectedTopic }) {
                   </div>
                 )}
                 {topicDetails.basicImplementation.problems && (
-                  <Callout accent="red" icon="⚠️">
+                  <Callout accent="red">
                     <h4 className="text-xs font-bold uppercase tracking-[0.15em] text-red-700 mb-2.5">Problems with this approach</h4>
                     <ul className="space-y-2">
                       {topicDetails.basicImplementation.problems.map((p, i) => (
@@ -381,7 +371,7 @@ export default function ArticleRenderer({ topicDetails, selectedTopic }) {
             )}
             {topicDetails.advancedImplementation && (
               <div>
-                <SubHeading icon="🚀">
+                <SubHeading>
                   {topicDetails.advancedImplementation.title || 'Scalable Solution'}
                 </SubHeading>
                 <p className={`${bodyText} mb-5`}>{topicDetails.advancedImplementation.description}</p>
@@ -391,7 +381,7 @@ export default function ArticleRenderer({ topicDetails, selectedTopic }) {
                   </div>
                 )}
                 {topicDetails.advancedImplementation.keyPoints && (
-                  <Callout accent="emerald" icon="✅">
+                  <Callout accent="emerald">
                     <h4 className="text-xs font-bold uppercase tracking-[0.15em] text-emerald-700 mb-2.5">Key Design Points</h4>
                     <ul className="space-y-2">
                       {topicDetails.advancedImplementation.keyPoints.map((p, i) => (
@@ -429,7 +419,7 @@ export default function ArticleRenderer({ topicDetails, selectedTopic }) {
           <Section id="system-flows" number={getNum('system-flows')} title="Request Flows">
             {[topicDetails.createFlow, topicDetails.redirectFlow].filter(Boolean).map((flow, fi) => (
               <div key={fi} className="mb-10">
-                <SubHeading icon={fi === 0 ? '📝' : '🔄'}>{flow.title}</SubHeading>
+                <SubHeading>{flow.title}</SubHeading>
                 <div className="ml-1 border-l-2 border-emerald-200 pl-6 space-y-4">
                   {flow.steps.map((step, i) => (
                     <div key={i} className="flex items-start gap-4 relative">
