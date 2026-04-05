@@ -752,9 +752,6 @@ export default function JobPrepPage() {
                 </span>
               )}
             </div>
-            <p style={{ fontSize: '13px', color: '#9ca3af', margin: '0 0 20px' }}>
-              Generate personalized prep material using AI based on this job's description and requirements
-            </p>
 
             {/* Generate button */}
             {Object.keys(generatedSections).length === 0 && !generating && (
