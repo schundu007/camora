@@ -140,6 +140,7 @@ export default function TopicDetail({
   setSelectedTopic, generatingDiagram, diagramData, diagramError,
   diagramDetailLevel, setDiagramDetailLevel, diagramCloudProvider, setDiagramCloudProvider,
   generateDiagram, codingTopics, systemDesignTopics, systemDesigns, behavioralTopics, filteredTopics,
+  progressInfo,
 }) {
   if (!topicDetails) return null;
 
@@ -232,9 +233,23 @@ export default function TopicDetail({
         </div>
       </div>
 
-      {/* ── Interactive Toolbar (AlgoMaster-inspired) ── */}
+      {/* ── Interactive Toolbar with Progress ── */}
       <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2.5 rounded-lg mb-2 bg-[#f7f8f9] border border-[#e3e8ee]">
         <div className="flex items-center gap-2">
+          {/* Progress */}
+          {progressInfo && (
+            <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-white border border-[#e3e8ee]">
+              <svg className="w-5 h-5 -rotate-90" viewBox="0 0 20 20">
+                <circle cx="10" cy="10" r="8" fill="none" stroke="#f1f5f9" strokeWidth="2.5" />
+                <circle cx="10" cy="10" r="8" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round"
+                  strokeDasharray={`${2 * Math.PI * 8}`}
+                  strokeDashoffset={`${2 * Math.PI * 8 * (1 - progressInfo.percent / 100)}`}
+                />
+              </svg>
+              <span className="text-[11px] font-bold text-gray-700 landing-mono">{progressInfo.percent}%</span>
+              <span className="text-[10px] text-gray-400 landing-mono hidden sm:inline">{progressInfo.completed}/{progressInfo.total}</span>
+            </div>
+          )}
           {/* Mark as Complete */}
           <button
             onClick={() => toggleComplete(selectedTopic)}
