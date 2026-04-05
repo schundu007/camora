@@ -535,7 +535,7 @@ export default function DocsPage({ onBack }) {
 
       <div className="relative min-h-screen flex">
           {/* Center Content */}
-          <div className={`flex-1 min-w-0 ${selectedTopic ? '' : 'mx-auto'} max-w-[85%] xl:max-w-7xl ${isMobile ? 'px-3' : 'px-10'}`}>
+          <div className={`flex-1 min-w-0 mx-auto max-w-[85%] xl:max-w-7xl ${isMobile ? 'px-3' : 'px-10'}`}>
             {/* APPA Nav Bar */}
             <div className="sticky top-0 z-30 bg-white border-b border-[#e3e8ee]">
               <div className="flex items-center justify-between px-3 sm:px-4 h-12">

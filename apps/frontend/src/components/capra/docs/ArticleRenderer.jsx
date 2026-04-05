@@ -26,11 +26,11 @@ function ArticleTOC({ sections, activeId }) {
   );
 }
 
-/* ── Section heading — numbered, with bottom divider ───── */
+/* ── Level 1: Section heading — numbered, with bottom divider ── */
 function SectionHeading({ number, title }) {
   return (
-    <div className="mb-8 pb-4 mt-4" style={{ borderBottom: '3px solid #d1fae5' }}>
-      <h2 className="text-[1.75rem] font-extrabold tracking-tight leading-tight" style={{ color: '#000000' }}>
+    <div className="mb-6 pb-3" style={{ borderBottom: '3px solid #d1fae5' }}>
+      <h2 className="text-[1.6rem] font-extrabold tracking-tight leading-tight" style={{ color: '#000000' }}>
         <span style={{ color: '#059669' }}>{number}. </span>
         {title}
       </h2>
@@ -38,22 +38,27 @@ function SectionHeading({ number, title }) {
   );
 }
 
-/* ── Sub-heading (h3) — indented under section heading ── */
+/* ── Level 2: Sub-heading — indented under section heading ── */
 function SubHeading({ children, icon }) {
   return (
-    <h3 className="text-[1.15rem] font-bold mb-3 ml-5 pl-4 flex items-center gap-2" style={{ color: '#1f2937', borderLeft: '3px solid #a7f3d0' }}>
+    <h3 className="text-[1.1rem] font-bold mb-2 pl-4 flex items-center gap-2 ml-6" style={{ color: '#1f2937', borderLeft: '3px solid #a7f3d0' }}>
       {icon && <span className="text-emerald-600">{icon}</span>}
       {children}
     </h3>
   );
 }
 
+/* ── Level 3: Content wrapper — further indented under sub-heading ── */
+function ContentBlock({ children }) {
+  return <div className="ml-14">{children}</div>;
+}
+
 /* ── Section wrapper ───────────────────────────────────── */
 function Section({ id, number, title, children }) {
   return (
-    <section id={id} className="scroll-mt-24 mb-20">
+    <section id={id} className="scroll-mt-24 mb-16">
       <SectionHeading number={number} title={title} />
-      {children}
+      <div className="ml-4">{children}</div>
     </section>
   );
 }
@@ -172,27 +177,31 @@ export default function ArticleRenderer({ topicDetails, selectedTopic }) {
             {topicDetails.functionalRequirements && (
               <div className="mb-8">
                 <SubHeading icon="✓">Functional Requirements</SubHeading>
-                <ol className="space-y-2.5 ml-1">
-                  {topicDetails.functionalRequirements.map((req, i) => (
-                    <li key={i} className="flex items-start gap-3">
-                      <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5 bg-emerald-100 text-emerald-700">{i + 1}</span>
-                      <span className={bodyText}>{req}</span>
-                    </li>
-                  ))}
-                </ol>
+                <ContentBlock>
+                  <ol className="space-y-2.5">
+                    {topicDetails.functionalRequirements.map((req, i) => (
+                      <li key={i} className="flex items-start gap-3">
+                        <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5 bg-emerald-100 text-emerald-700">{i + 1}</span>
+                        <span className={bodyText}>{req}</span>
+                      </li>
+                    ))}
+                  </ol>
+                </ContentBlock>
               </div>
             )}
             {topicDetails.nonFunctionalRequirements && (
               <div>
                 <SubHeading icon="⚡">Non-Functional Requirements</SubHeading>
-                <ul className="space-y-2.5 ml-1">
-                  {topicDetails.nonFunctionalRequirements.map((req, i) => (
-                    <li key={i} className="flex items-start gap-3">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0 mt-2.5" />
-                      <span className={bodyText}>{req}</span>
-                    </li>
-                  ))}
-                </ul>
+                <ContentBlock>
+                  <ul className="space-y-2.5">
+                    {topicDetails.nonFunctionalRequirements.map((req, i) => (
+                      <li key={i} className="flex items-start gap-3">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0 mt-2.5" />
+                        <span className={bodyText}>{req}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </ContentBlock>
               </div>
             )}
           </Section>
@@ -284,13 +293,15 @@ export default function ArticleRenderer({ topicDetails, selectedTopic }) {
           <Section id="key-questions" number={getNum('key-questions')} title="Key Design Questions">
             <div className="space-y-0">
               {topicDetails.keyQuestions.map((q, i) => (
-                <div key={i} className="py-6" style={{ borderBottom: i < topicDetails.keyQuestions.length - 1 ? '1px solid #e5e7eb' : 'none' }}>
+                <div key={i} className="py-5" style={{ borderBottom: i < topicDetails.keyQuestions.length - 1 ? '1px solid #e5e7eb' : 'none' }}>
                   <SubHeading>
                     <span className="text-emerald-600 font-bold mr-1">{String.fromCharCode(97 + i)})</span> {q.question}
                   </SubHeading>
-                  <div className={`${bodyText} ml-12`}>
-                    <FormattedContent content={q.answer} color="emerald" />
-                  </div>
+                  <ContentBlock>
+                    <div className={bodyText}>
+                      <FormattedContent content={q.answer} color="emerald" />
+                    </div>
+                  </ContentBlock>
                 </div>
               ))}
             </div>
@@ -306,8 +317,10 @@ export default function ArticleRenderer({ topicDetails, selectedTopic }) {
                   <SubHeading>
                     <span className="text-emerald-600 font-bold mr-1">{i + 1}.</span> {algo.name}
                   </SubHeading>
-                  <p className={`${bodyText} mb-5`}>{algo.description}</p>
-                  <div className="grid md:grid-cols-2 gap-4">
+                  <ContentBlock>
+                    <p className={`${bodyText} mb-5`}>{algo.description}</p>
+                  </ContentBlock>
+                  <ContentBlock><div className="grid md:grid-cols-2 gap-4">
                     <Callout accent="emerald">
                       <h4 className="text-xs font-bold uppercase tracking-[0.15em] text-emerald-700 mb-2.5">Advantages</h4>
                       <ul className="space-y-2">
@@ -330,7 +343,7 @@ export default function ArticleRenderer({ topicDetails, selectedTopic }) {
                         ))}
                       </ul>
                     </Callout>
-                  </div>
+                  </div></ContentBlock>
                 </div>
               ))}
             </div>
@@ -456,11 +469,13 @@ export default function ArticleRenderer({ topicDetails, selectedTopic }) {
           <Section id="deep-dive" number={getNum('deep-dive')} title="Deep Dive Topics">
             <div className="space-y-0">
               {topicDetails.deepDiveTopics.map((topic, i) => (
-                <div key={i} className="py-6" style={{ borderBottom: i < topicDetails.deepDiveTopics.length - 1 ? '1px solid #e5e7eb' : 'none' }}>
+                <div key={i} className="py-5" style={{ borderBottom: i < topicDetails.deepDiveTopics.length - 1 ? '1px solid #e5e7eb' : 'none' }}>
                   <SubHeading>
                     <span className="text-emerald-600 font-bold mr-1">{String.fromCharCode(97 + i)})</span> {topic.topic}
                   </SubHeading>
-                  <p className={`${bodyText} ml-12`}>{topic.detail}</p>
+                  <ContentBlock>
+                    <p className={bodyText}>{topic.detail}</p>
+                  </ContentBlock>
                 </div>
               ))}
             </div>
@@ -491,13 +506,15 @@ export default function ArticleRenderer({ topicDetails, selectedTopic }) {
           <Section id="followups" number={getNum('followups')} title="Common Interview Follow-ups">
             <div className="space-y-0">
               {topicDetails.interviewFollowups.map((q, i) => (
-                <div key={i} className="py-6" style={{ borderBottom: i < topicDetails.interviewFollowups.length - 1 ? '1px solid #e5e7eb' : 'none' }}>
+                <div key={i} className="py-5" style={{ borderBottom: i < topicDetails.interviewFollowups.length - 1 ? '1px solid #e5e7eb' : 'none' }}>
                   <SubHeading>
                     <span className="text-emerald-700 font-bold mr-1">Q{i + 1}.</span> {q.question}
                   </SubHeading>
-                  <div className={`${bodyText} ml-12`}>
-                    <FormattedContent content={q.answer} color="emerald" />
-                  </div>
+                  <ContentBlock>
+                    <div className={bodyText}>
+                      <FormattedContent content={q.answer} color="emerald" />
+                    </div>
+                  </ContentBlock>
                 </div>
               ))}
             </div>
