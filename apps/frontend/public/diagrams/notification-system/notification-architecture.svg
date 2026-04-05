@@ -1,0 +1,217 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600" font-family="'Segoe UI', system-ui, -apple-system, sans-serif">
+  <defs>
+    <filter id="shadow" x="-2%" y="-2%" width="104%" height="104%">
+      <feDropShadow dx="1" dy="1" stdDeviation="2" flood-opacity="0.1"/>
+    </filter>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f8fafc"/>
+      <stop offset="100%" stop-color="#eef2f7"/>
+    </linearGradient>
+    <linearGradient id="gatewayGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#2563eb"/>
+      <stop offset="100%" stop-color="#3b82f6"/>
+    </linearGradient>
+    <linearGradient id="analyticsGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#8b5cf6"/>
+      <stop offset="100%" stop-color="#7c3aed"/>
+    </linearGradient>
+    <marker id="arrowGray" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="#94a3b8"/>
+    </marker>
+    <marker id="arrowBlue" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="#3b82f6"/>
+    </marker>
+    <marker id="arrowOrange" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="#f59e0b"/>
+    </marker>
+    <marker id="arrowPurple" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="#8b5cf6"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="600" fill="url(#bgGrad)" rx="8"/>
+
+  <!-- Title -->
+  <text x="400" y="30" text-anchor="middle" font-size="18" font-weight="700" fill="#1e293b">Notification System Architecture</text>
+
+  <!-- STEP LABELS (left side) -->
+  <text x="18" y="82" font-size="8" font-weight="700" fill="#94a3b8" transform="rotate(-90, 18, 82)">STEP 1</text>
+  <text x="18" y="180" font-size="8" font-weight="700" fill="#94a3b8" transform="rotate(-90, 18, 180)">STEP 2</text>
+  <text x="18" y="310" font-size="8" font-weight="700" fill="#94a3b8" transform="rotate(-90, 18, 310)">STEP 3</text>
+  <text x="18" y="420" font-size="8" font-weight="700" fill="#94a3b8" transform="rotate(-90, 18, 420)">STEP 4</text>
+
+  <!-- BUSINESS SERVICES (Top) -->
+  <rect x="55" y="44" width="520" height="48" rx="6" fill="#ecfdf5" stroke="#a7f3d0" stroke-width="1" filter="url(#shadow)"/>
+  <text x="315" y="59" text-anchor="middle" font-size="9" fill="#065f46" font-weight="600" letter-spacing="1.2">BUSINESS SERVICES</text>
+
+  <rect x="75" y="66" width="105" height="22" rx="4" fill="#d1fae5" stroke="#6ee7b7" stroke-width="1"/>
+  <text x="127" y="80" text-anchor="middle" font-size="9" font-weight="500" fill="#065f46">Order Service</text>
+
+  <rect x="195" y="66" width="115" height="22" rx="4" fill="#d1fae5" stroke="#6ee7b7" stroke-width="1"/>
+  <text x="252" y="80" text-anchor="middle" font-size="9" font-weight="500" fill="#065f46">Payment Service</text>
+
+  <rect x="325" y="66" width="100" height="22" rx="4" fill="#d1fae5" stroke="#6ee7b7" stroke-width="1"/>
+  <text x="375" y="80" text-anchor="middle" font-size="9" font-weight="500" fill="#065f46">Auth Service</text>
+
+  <rect x="440" y="66" width="115" height="22" rx="4" fill="#d1fae5" stroke="#6ee7b7" stroke-width="1"/>
+  <text x="497" y="80" text-anchor="middle" font-size="9" font-weight="500" fill="#065f46">Ops / Marketing</text>
+
+  <!-- Step 1: Single or Batch labels -->
+  <rect x="145" y="100" width="80" height="18" rx="3" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>
+  <text x="185" y="112" text-anchor="middle" font-size="8" fill="#16a34a" font-weight="500">Single Notify</text>
+  <rect x="350" y="100" width="80" height="18" rx="3" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>
+  <text x="390" y="112" text-anchor="middle" font-size="8" fill="#16a34a" font-weight="500">Batch Notify</text>
+
+  <!-- Arrows down from services -->
+  <line x1="185" y1="118" x2="185" y2="132" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrowGray)"/>
+  <line x1="390" y1="118" x2="390" y2="132" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrowGray)"/>
+
+  <!-- NOTIFICATION GATEWAY -->
+  <rect x="100" y="134" width="420" height="40" rx="6" fill="url(#gatewayGrad)" filter="url(#shadow)"/>
+  <text x="310" y="155" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">Notification Gateway</text>
+  <text x="310" y="168" text-anchor="middle" font-size="8" fill="#bfdbfe">Rate Limiting | Deduplication | Validation</text>
+
+  <!-- Arrow down from Gateway -->
+  <line x1="310" y1="174" x2="310" y2="192" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrowGray)"/>
+
+  <!-- STEP 2: NOTIFICATION DISTRIBUTION -->
+  <rect x="55" y="194" width="520" height="75" rx="6" fill="#fff" stroke="#d1d5db" stroke-width="1" filter="url(#shadow)"/>
+  <text x="315" y="210" text-anchor="middle" font-size="10" font-weight="700" fill="#334155">Notification Distribution</text>
+
+  <!-- Distribution sub-components -->
+  <rect x="70" y="218" width="90" height="28" rx="4" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <text x="115" y="236" text-anchor="middle" font-size="8" font-weight="600" fill="#1d4ed8">Validation</text>
+
+  <rect x="175" y="218" width="80" height="28" rx="4" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <text x="215" y="236" text-anchor="middle" font-size="8" font-weight="600" fill="#1d4ed8">Priority</text>
+
+  <rect x="270" y="218" width="90" height="28" rx="4" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <text x="315" y="236" text-anchor="middle" font-size="8" font-weight="600" fill="#1d4ed8">Scheduler</text>
+
+  <rect x="375" y="218" width="85" height="28" rx="4" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <text x="417" y="236" text-anchor="middle" font-size="8" font-weight="600" fill="#1d4ed8">Template</text>
+
+  <rect x="475" y="218" width="85" height="28" rx="4" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <text x="517" y="236" text-anchor="middle" font-size="8" font-weight="600" fill="#1d4ed8">Preferences</text>
+
+  <!-- Template Repository (right side) -->
+  <rect x="620" y="194" width="140" height="50" rx="6" fill="#fef3c7" stroke="#fbbf24" stroke-width="1" filter="url(#shadow)"/>
+  <text x="690" y="215" text-anchor="middle" font-size="9" font-weight="600" fill="#92400e">Template Repository</text>
+  <text x="690" y="228" text-anchor="middle" font-size="8" fill="#a16207">HTML / Text / Push</text>
+  <text x="690" y="240" text-anchor="middle" font-size="8" fill="#a16207">{{placeholders}}</text>
+
+  <!-- Arrow Distribution to Template Repo -->
+  <line x1="575" y1="232" x2="618" y2="220" stroke="#fbbf24" stroke-width="1.2" stroke-dasharray="4,3"/>
+
+  <!-- Arrow down from Distribution -->
+  <line x1="310" y1="269" x2="310" y2="290" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrowGray)"/>
+
+  <!-- STEP 3: NOTIFICATION ROUTER / QUEUES -->
+  <rect x="100" y="292" width="420" height="48" rx="6" fill="#fff7ed" stroke="#fed7aa" stroke-width="1" filter="url(#shadow)"/>
+  <text x="310" y="312" text-anchor="middle" font-size="11" font-weight="700" fill="#9a3412">Notification Router</text>
+  <text x="310" y="326" text-anchor="middle" font-size="8" fill="#c2410c">Priority Queues | Channel Routing | Retry Logic</text>
+
+  <!-- Queue indicators -->
+  <rect x="130" y="326" width="55" height="10" rx="2" fill="#fdba74"/>
+  <text x="157" y="334" text-anchor="middle" font-size="6" fill="#9a3412">URGENT</text>
+  <rect x="200" y="326" width="55" height="10" rx="2" fill="#fed7aa"/>
+  <text x="227" y="334" text-anchor="middle" font-size="6" fill="#9a3412">NORMAL</text>
+  <rect x="270" y="326" width="55" height="10" rx="2" fill="#fff7ed" stroke="#fed7aa" stroke-width="0.5"/>
+  <text x="297" y="334" text-anchor="middle" font-size="6" fill="#9a3412">BATCH</text>
+
+  <!-- Arrows down from Router to channels -->
+  <line x1="150" y1="340" x2="115" y2="368" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#arrowOrange)"/>
+  <line x1="250" y1="340" x2="250" y2="368" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#arrowOrange)"/>
+  <line x1="370" y1="340" x2="385" y2="368" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#arrowOrange)"/>
+  <line x1="460" y1="340" x2="510" y2="368" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#arrowOrange)"/>
+
+  <!-- STEP 4: DELIVERY CHANNELS -->
+  <!-- Email -->
+  <rect x="55" y="370" width="120" height="55" rx="6" fill="#fff" stroke="#f59e0b" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="55" y="370" width="120" height="20" rx="6" fill="#fef3c7"/>
+  <rect x="55" y="383" width="120" height="7" fill="#fef3c7"/>
+  <text x="115" y="384" text-anchor="middle" font-size="9" font-weight="700" fill="#92400e">Email</text>
+  <text x="115" y="402" text-anchor="middle" font-size="7" fill="#78716c">SendGrid / SES</text>
+  <text x="115" y="414" text-anchor="middle" font-size="7" fill="#78716c">SMTP Relay</text>
+
+  <!-- SMS -->
+  <rect x="190" y="370" width="120" height="55" rx="6" fill="#fff" stroke="#f59e0b" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="190" y="370" width="120" height="20" rx="6" fill="#fef3c7"/>
+  <rect x="190" y="383" width="120" height="7" fill="#fef3c7"/>
+  <text x="250" y="384" text-anchor="middle" font-size="9" font-weight="700" fill="#92400e">SMS</text>
+  <text x="250" y="402" text-anchor="middle" font-size="7" fill="#78716c">Twilio / SNS</text>
+  <text x="250" y="414" text-anchor="middle" font-size="7" fill="#78716c">OTP / Alerts</text>
+
+  <!-- In-App -->
+  <rect x="325" y="370" width="120" height="55" rx="6" fill="#fff" stroke="#f59e0b" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="325" y="370" width="120" height="20" rx="6" fill="#fef3c7"/>
+  <rect x="325" y="383" width="120" height="7" fill="#fef3c7"/>
+  <text x="385" y="384" text-anchor="middle" font-size="9" font-weight="700" fill="#92400e">In-App</text>
+  <text x="385" y="402" text-anchor="middle" font-size="7" fill="#78716c">WebSocket / SSE</text>
+  <text x="385" y="414" text-anchor="middle" font-size="7" fill="#78716c">Notification Center</text>
+
+  <!-- Push / Social -->
+  <rect x="460" y="370" width="120" height="55" rx="6" fill="#fff" stroke="#f59e0b" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="460" y="370" width="120" height="20" rx="6" fill="#fef3c7"/>
+  <rect x="460" y="383" width="120" height="7" fill="#fef3c7"/>
+  <text x="520" y="384" text-anchor="middle" font-size="9" font-weight="700" fill="#92400e">Push / Social</text>
+  <text x="520" y="402" text-anchor="middle" font-size="7" fill="#78716c">FCM / APNs</text>
+  <text x="520" y="414" text-anchor="middle" font-size="7" fill="#78716c">Slack / Teams</text>
+
+  <!-- STEP 5-6: TRACING & ANALYTICS (right side, spanning) -->
+  <rect x="620" y="270" width="150" height="180" rx="6" fill="url(#analyticsGrad)" filter="url(#shadow)"/>
+  <text x="695" y="290" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">Notification</text>
+  <text x="695" y="304" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">Tracing & Analytics</text>
+
+  <rect x="635" y="316" width="120" height="20" rx="3" fill="rgba(255,255,255,0.15)"/>
+  <text x="695" y="330" text-anchor="middle" font-size="8" fill="#e9d5ff">Delivery Tracking</text>
+
+  <rect x="635" y="342" width="120" height="20" rx="3" fill="rgba(255,255,255,0.15)"/>
+  <text x="695" y="356" text-anchor="middle" font-size="8" fill="#e9d5ff">Open / Click Rates</text>
+
+  <rect x="635" y="368" width="120" height="20" rx="3" fill="rgba(255,255,255,0.15)"/>
+  <text x="695" y="382" text-anchor="middle" font-size="8" fill="#e9d5ff">Failure Analysis</text>
+
+  <rect x="635" y="394" width="120" height="20" rx="3" fill="rgba(255,255,255,0.15)"/>
+  <text x="695" y="408" text-anchor="middle" font-size="8" fill="#e9d5ff">A/B Testing</text>
+
+  <rect x="635" y="420" width="120" height="20" rx="3" fill="rgba(255,255,255,0.15)"/>
+  <text x="695" y="434" text-anchor="middle" font-size="8" fill="#e9d5ff">Dashboard</text>
+
+  <!-- Arrows from channels to analytics -->
+  <line x1="580" y1="397" x2="618" y2="380" stroke="#8b5cf6" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#arrowPurple)"/>
+
+  <!-- STEP 6: Analytics Dashboard (bottom) -->
+  <rect x="55" y="445" width="525" height="45" rx="6" fill="#f5f3ff" stroke="#c4b5fd" stroke-width="1" filter="url(#shadow)"/>
+  <text x="317" y="464" text-anchor="middle" font-size="10" font-weight="700" fill="#5b21b6">Analytics Dashboard</text>
+  <text x="317" y="480" text-anchor="middle" font-size="8" fill="#7c3aed">Delivery Metrics | Channel Performance | User Engagement | Cost Analysis</text>
+
+  <!-- Arrow from analytics panel to dashboard -->
+  <line x1="695" y1="450" x2="582" y2="465" stroke="#8b5cf6" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#arrowPurple)"/>
+
+  <!-- LEGEND -->
+  <rect x="55" y="510" width="715" height="70" rx="6" fill="#fff" stroke="#e2e8f0" stroke-width="1" opacity="0.9"/>
+  <text x="80" y="530" font-size="9" font-weight="700" fill="#475569">Legend:</text>
+
+  <rect x="80" y="542" width="14" height="10" rx="2" fill="#d1fae5" stroke="#6ee7b7" stroke-width="0.5"/>
+  <text x="100" y="551" font-size="8" fill="#475569">Business Services</text>
+
+  <rect x="200" y="542" width="14" height="10" rx="2" fill="#3b82f6"/>
+  <text x="220" y="551" font-size="8" fill="#475569">Gateway</text>
+
+  <rect x="280" y="542" width="14" height="10" rx="2" fill="#dbeafe" stroke="#93c5fd" stroke-width="0.5"/>
+  <text x="300" y="551" font-size="8" fill="#475569">Distribution</text>
+
+  <rect x="380" y="542" width="14" height="10" rx="2" fill="#fff7ed" stroke="#fed7aa" stroke-width="0.5"/>
+  <text x="400" y="551" font-size="8" fill="#475569">Router / Queues</text>
+
+  <rect x="490" y="542" width="14" height="10" rx="2" fill="#fef3c7" stroke="#f59e0b" stroke-width="0.5"/>
+  <text x="510" y="551" font-size="8" fill="#475569">Delivery Channels</text>
+
+  <rect x="610" y="542" width="14" height="10" rx="2" fill="#8b5cf6"/>
+  <text x="630" y="551" font-size="8" fill="#475569">Analytics & Tracing</text>
+
+  <rect x="730" y="542" width="14" height="10" rx="2" fill="#fef3c7" stroke="#fbbf24" stroke-width="0.5"/>
+  <text x="750" y="551" font-size="8" fill="#475569">Templates</text>
+</svg>

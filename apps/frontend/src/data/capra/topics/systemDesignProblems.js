@@ -4467,6 +4467,9 @@ const userTime = convertToTimezone(now(), user.timezone);
         'Delivery retry with exponential backoff',
         'User preference service for opt-outs',
         'Vendor abstraction: Switch between Twilio/SendGrid/FCM'
+      ],
+      staticDiagrams: [
+        { id: 'notification-arch', title: 'Notification System Architecture', description: 'Push notification system with Gateway, Distribution, Router, and multi-channel delivery', src: '/diagrams/notification-system/notification-architecture.svg', type: 'architecture' }
       ]
     },
     {

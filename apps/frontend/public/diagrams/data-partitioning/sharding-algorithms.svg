@@ -1,0 +1,228 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" font-family="Inter, system-ui, -apple-system, sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="1" stdDeviation="2" flood-opacity="0.25"/>
+    </filter>
+    <marker id="arrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#94a3b8"/>
+    </marker>
+    <marker id="arrowBlue" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#60a5fa"/>
+    </marker>
+    <marker id="arrowGreen" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#4ade80"/>
+    </marker>
+    <marker id="arrowAmber" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#fbbf24"/>
+    </marker>
+    <marker id="arrowPurple" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#a78bfa"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="600" fill="url(#bg)" rx="12"/>
+
+  <!-- Title -->
+  <text x="400" y="36" text-anchor="middle" fill="#f8fafc" font-size="18" font-weight="700">Data Sharding Algorithms</text>
+  <line x1="250" y1="46" x2="550" y2="46" stroke="#334155" stroke-width="1"/>
+
+  <!-- ==================== -->
+  <!-- Q1: Range-Based (Top Left) -->
+  <!-- ==================== -->
+  <rect x="20" y="60" width="370" height="240" rx="8" fill="#1e293b" stroke="#334155" stroke-width="1" filter="url(#shadow)"/>
+  <rect x="20" y="60" width="370" height="32" rx="8" fill="#1d4ed8" opacity="0.3"/>
+  <rect x="20" y="80" width="370" height="12" fill="#1e293b"/>
+  <text x="36" y="82" fill="#60a5fa" font-size="13" font-weight="700">1. Range-Based Sharding</text>
+
+  <!-- Data items -->
+  <text x="36" y="112" fill="#94a3b8" font-size="10">Data split by alphabetical / date ranges</text>
+
+  <!-- Range boxes -->
+  <rect x="40" y="124" width="90" height="50" rx="5" fill="#1e3a5f" stroke="#3b82f6" stroke-width="1"/>
+  <text x="85" y="145" text-anchor="middle" fill="#93c5fd" font-size="11" font-weight="600">A - G</text>
+  <text x="85" y="162" text-anchor="middle" fill="#64748b" font-size="9">Shard 1</text>
+
+  <rect x="148" y="124" width="90" height="50" rx="5" fill="#1e3a5f" stroke="#3b82f6" stroke-width="1"/>
+  <text x="193" y="145" text-anchor="middle" fill="#93c5fd" font-size="11" font-weight="600">H - N</text>
+  <text x="193" y="162" text-anchor="middle" fill="#64748b" font-size="9">Shard 2</text>
+
+  <rect x="256" y="124" width="90" height="50" rx="5" fill="#1e3a5f" stroke="#3b82f6" stroke-width="1"/>
+  <text x="301" y="145" text-anchor="middle" fill="#93c5fd" font-size="11" font-weight="600">O - Z</text>
+  <text x="301" y="162" text-anchor="middle" fill="#64748b" font-size="9">Shard 3</text>
+
+  <!-- Hot spot visualization -->
+  <rect x="40" y="186" width="306" height="24" rx="4" fill="#0f172a"/>
+  <rect x="40" y="186" width="42" height="24" rx="4" fill="#3b82f6" opacity="0.3"/>
+  <rect x="82" y="186" width="180" height="24" rx="4" fill="#ef4444" opacity="0.4"/>
+  <rect x="262" y="186" width="84" height="24" rx="4" fill="#3b82f6" opacity="0.3"/>
+  <text x="172" y="202" text-anchor="middle" fill="#fca5a5" font-size="9" font-weight="600">HOT SPOT</text>
+  <text x="40" y="198" fill="#64748b" font-size="8">A</text>
+  <text x="340" y="198" fill="#64748b" font-size="8">Z</text>
+
+  <!-- Pros/Cons -->
+  <text x="36" y="228" fill="#4ade80" font-size="9">+ Supports range queries natively</text>
+  <text x="36" y="244" fill="#4ade80" font-size="9">+ Simple to understand and implement</text>
+  <text x="36" y="260" fill="#f87171" font-size="9">- Can cause hot spots with skewed data</text>
+  <text x="36" y="276" fill="#f87171" font-size="9">- Uneven distribution if ranges are not tuned</text>
+
+  <!-- ==================== -->
+  <!-- Q2: Hash-Based (Top Right) -->
+  <!-- ==================== -->
+  <rect x="410" y="60" width="370" height="240" rx="8" fill="#1e293b" stroke="#334155" stroke-width="1" filter="url(#shadow)"/>
+  <rect x="410" y="60" width="370" height="32" rx="8" fill="#166534" opacity="0.3"/>
+  <rect x="410" y="80" width="370" height="12" fill="#1e293b"/>
+  <text x="426" y="82" fill="#4ade80" font-size="13" font-weight="700">2. Hash-Based Sharding</text>
+
+  <text x="426" y="112" fill="#94a3b8" font-size="10">hash(key) % N routes to shard</text>
+
+  <!-- Key → Hash → Shard flow -->
+  <rect x="432" y="124" width="60" height="30" rx="5" fill="#14532d" stroke="#22c55e" stroke-width="1"/>
+  <text x="462" y="143" text-anchor="middle" fill="#86efac" font-size="10" font-weight="600">key</text>
+
+  <line x1="492" y1="139" x2="520" y2="139" stroke="#4ade80" stroke-width="1.5" marker-end="url(#arrowGreen)"/>
+
+  <rect x="524" y="124" width="80" height="30" rx="5" fill="#14532d" stroke="#22c55e" stroke-width="1"/>
+  <text x="564" y="143" text-anchor="middle" fill="#86efac" font-size="10" font-weight="600">hash() % N</text>
+
+  <line x1="604" y1="139" x2="632" y2="139" stroke="#4ade80" stroke-width="1.5" marker-end="url(#arrowGreen)"/>
+
+  <rect x="636" y="124" width="60" height="30" rx="5" fill="#14532d" stroke="#22c55e" stroke-width="1"/>
+  <text x="666" y="143" text-anchor="middle" fill="#86efac" font-size="10" font-weight="600">shard</text>
+
+  <!-- Even distribution bars -->
+  <text x="426" y="174" fill="#94a3b8" font-size="9">Distribution across 4 shards:</text>
+  <rect x="432" y="180" width="72" height="18" rx="3" fill="#22c55e" opacity="0.5"/>
+  <text x="468" y="193" text-anchor="middle" fill="#dcfce7" font-size="8" font-weight="600">25%</text>
+  <rect x="512" y="180" width="72" height="18" rx="3" fill="#22c55e" opacity="0.5"/>
+  <text x="548" y="193" text-anchor="middle" fill="#dcfce7" font-size="8" font-weight="600">25%</text>
+  <rect x="592" y="180" width="72" height="18" rx="3" fill="#22c55e" opacity="0.5"/>
+  <text x="628" y="193" text-anchor="middle" fill="#dcfce7" font-size="8" font-weight="600">25%</text>
+  <rect x="672" y="180" width="72" height="18" rx="3" fill="#22c55e" opacity="0.5"/>
+  <text x="708" y="193" text-anchor="middle" fill="#dcfce7" font-size="8" font-weight="600">25%</text>
+  <text x="468" y="212" text-anchor="middle" fill="#475569" font-size="7">S0</text>
+  <text x="548" y="212" text-anchor="middle" fill="#475569" font-size="7">S1</text>
+  <text x="628" y="212" text-anchor="middle" fill="#475569" font-size="7">S2</text>
+  <text x="708" y="212" text-anchor="middle" fill="#475569" font-size="7">S3</text>
+
+  <!-- Pros/Cons -->
+  <text x="426" y="234" fill="#4ade80" font-size="9">+ Even data distribution</text>
+  <text x="426" y="250" fill="#4ade80" font-size="9">+ Simple implementation</text>
+  <text x="426" y="266" fill="#f87171" font-size="9">- Resharding moves ALL data (hash % N changes)</text>
+  <text x="426" y="282" fill="#f87171" font-size="9">- No range query support on shard key</text>
+
+  <!-- ==================== -->
+  <!-- Q3: Consistent Hashing (Bottom Left) -->
+  <!-- ==================== -->
+  <rect x="20" y="316" width="370" height="264" rx="8" fill="#1e293b" stroke="#334155" stroke-width="1" filter="url(#shadow)"/>
+  <rect x="20" y="316" width="370" height="32" rx="8" fill="#6d28d9" opacity="0.3"/>
+  <rect x="20" y="336" width="370" height="12" fill="#1e293b"/>
+  <text x="36" y="338" fill="#a78bfa" font-size="13" font-weight="700">3. Consistent Hashing</text>
+
+  <text x="36" y="366" fill="#94a3b8" font-size="10">Ring with nodes; only K/N keys move on changes</text>
+
+  <!-- Hash Ring -->
+  <circle cx="200" cy="456" r="68" fill="none" stroke="#4c1d95" stroke-width="2" stroke-dasharray="4,2"/>
+
+  <!-- Nodes on ring -->
+  <circle cx="200" cy="388" r="10" fill="#7c3aed" stroke="#a78bfa" stroke-width="1.5"/>
+  <text x="200" y="392" text-anchor="middle" fill="#fff" font-size="8" font-weight="700">N1</text>
+
+  <circle cx="259" cy="422" r="10" fill="#7c3aed" stroke="#a78bfa" stroke-width="1.5"/>
+  <text x="259" y="426" text-anchor="middle" fill="#fff" font-size="8" font-weight="700">N2</text>
+
+  <circle cx="259" cy="490" r="10" fill="#7c3aed" stroke="#a78bfa" stroke-width="1.5"/>
+  <text x="259" y="494" text-anchor="middle" fill="#fff" font-size="8" font-weight="700">N3</text>
+
+  <circle cx="200" cy="524" r="10" fill="#7c3aed" stroke="#a78bfa" stroke-width="1.5"/>
+  <text x="200" y="528" text-anchor="middle" fill="#fff" font-size="8" font-weight="700">N4</text>
+
+  <circle cx="141" cy="490" r="10" fill="#7c3aed" stroke="#a78bfa" stroke-width="1.5"/>
+  <text x="141" y="494" text-anchor="middle" fill="#fff" font-size="8" font-weight="700">N5</text>
+
+  <circle cx="141" cy="422" r="10" fill="#7c3aed" stroke="#a78bfa" stroke-width="1.5"/>
+  <text x="141" y="426" text-anchor="middle" fill="#fff" font-size="8" font-weight="700">N6</text>
+
+  <!-- Data keys on ring (small diamonds) -->
+  <rect x="226" y="399" width="7" height="7" rx="1" fill="#fbbf24" transform="rotate(45, 229.5, 402.5)"/>
+  <rect x="267" y="452" width="7" height="7" rx="1" fill="#fbbf24" transform="rotate(45, 270.5, 455.5)"/>
+  <rect x="233" y="515" width="7" height="7" rx="1" fill="#fbbf24" transform="rotate(45, 236.5, 518.5)"/>
+  <rect x="156" y="515" width="7" height="7" rx="1" fill="#fbbf24" transform="rotate(45, 159.5, 518.5)"/>
+
+  <!-- Annotations on right side -->
+  <text x="290" y="390" fill="#c4b5fd" font-size="9" font-weight="600">Add node:</text>
+  <text x="290" y="404" fill="#94a3b8" font-size="9">Only K/N keys move</text>
+  <text x="290" y="424" fill="#c4b5fd" font-size="9" font-weight="600">Remove node:</text>
+  <text x="290" y="438" fill="#94a3b8" font-size="9">Neighbors absorb keys</text>
+
+  <!-- Pros/Cons -->
+  <text x="36" y="548" fill="#4ade80" font-size="9">+ Minimal data movement on topology changes</text>
+  <text x="36" y="564" fill="#4ade80" font-size="9">+ Used by DynamoDB, Cassandra, Memcached</text>
+
+  <!-- ==================== -->
+  <!-- Q4: Virtual Bucket (Bottom Right) -->
+  <!-- ==================== -->
+  <rect x="410" y="316" width="370" height="264" rx="8" fill="#1e293b" stroke="#334155" stroke-width="1" filter="url(#shadow)"/>
+  <rect x="410" y="316" width="370" height="32" rx="8" fill="#92400e" opacity="0.3"/>
+  <rect x="410" y="336" width="370" height="12" fill="#1e293b"/>
+  <text x="426" y="338" fill="#fbbf24" font-size="13" font-weight="700">4. Virtual Bucket Sharding</text>
+
+  <text x="426" y="366" fill="#94a3b8" font-size="10">Two-level mapping for flexible rebalancing</text>
+
+  <!-- Level 1: Data → Virtual Buckets -->
+  <text x="426" y="388" fill="#fbbf24" font-size="9" font-weight="600">Level 1: Data -> Virtual Buckets</text>
+
+  <!-- Data items -->
+  <rect x="432" y="396" width="36" height="22" rx="3" fill="#78350f" stroke="#f59e0b" stroke-width="1"/>
+  <text x="450" y="411" text-anchor="middle" fill="#fde68a" font-size="8">D1</text>
+  <rect x="476" y="396" width="36" height="22" rx="3" fill="#78350f" stroke="#f59e0b" stroke-width="1"/>
+  <text x="494" y="411" text-anchor="middle" fill="#fde68a" font-size="8">D2</text>
+  <rect x="520" y="396" width="36" height="22" rx="3" fill="#78350f" stroke="#f59e0b" stroke-width="1"/>
+  <text x="538" y="411" text-anchor="middle" fill="#fde68a" font-size="8">D3</text>
+  <rect x="564" y="396" width="36" height="22" rx="3" fill="#78350f" stroke="#f59e0b" stroke-width="1"/>
+  <text x="582" y="411" text-anchor="middle" fill="#fde68a" font-size="8">D4</text>
+  <rect x="608" y="396" width="36" height="22" rx="3" fill="#78350f" stroke="#f59e0b" stroke-width="1"/>
+  <text x="626" y="411" text-anchor="middle" fill="#fde68a" font-size="8">D5</text>
+  <rect x="652" y="396" width="36" height="22" rx="3" fill="#78350f" stroke="#f59e0b" stroke-width="1"/>
+  <text x="670" y="411" text-anchor="middle" fill="#fde68a" font-size="8">D6</text>
+
+  <!-- Arrows down -->
+  <line x1="450" y1="418" x2="460" y2="438" stroke="#fbbf24" stroke-width="1" marker-end="url(#arrowAmber)"/>
+  <line x1="494" y1="418" x2="460" y2="438" stroke="#fbbf24" stroke-width="1"/>
+  <line x1="538" y1="418" x2="548" y2="438" stroke="#fbbf24" stroke-width="1" marker-end="url(#arrowAmber)"/>
+  <line x1="582" y1="418" x2="548" y2="438" stroke="#fbbf24" stroke-width="1"/>
+  <line x1="626" y1="418" x2="640" y2="438" stroke="#fbbf24" stroke-width="1" marker-end="url(#arrowAmber)"/>
+  <line x1="670" y1="418" x2="640" y2="438" stroke="#fbbf24" stroke-width="1"/>
+
+  <!-- Virtual Buckets -->
+  <rect x="432" y="440" width="56" height="26" rx="4" fill="#451a03" stroke="#d97706" stroke-width="1.5"/>
+  <text x="460" y="457" text-anchor="middle" fill="#fcd34d" font-size="9" font-weight="600">VB 1</text>
+  <rect x="520" y="440" width="56" height="26" rx="4" fill="#451a03" stroke="#d97706" stroke-width="1.5"/>
+  <text x="548" y="457" text-anchor="middle" fill="#fcd34d" font-size="9" font-weight="600">VB 2</text>
+  <rect x="612" y="440" width="56" height="26" rx="4" fill="#451a03" stroke="#d97706" stroke-width="1.5"/>
+  <text x="640" y="457" text-anchor="middle" fill="#fcd34d" font-size="9" font-weight="600">VB 3</text>
+
+  <!-- Level 2: Virtual Buckets → Physical Shards -->
+  <text x="426" y="486" fill="#fbbf24" font-size="9" font-weight="600">Level 2: Virtual Buckets -> Physical Shards</text>
+
+  <!-- Arrows down -->
+  <line x1="460" y1="466" x2="498" y2="498" stroke="#d97706" stroke-width="1.5" marker-end="url(#arrowAmber)"/>
+  <line x1="548" y1="466" x2="498" y2="498" stroke="#d97706" stroke-width="1.5"/>
+  <line x1="640" y1="466" x2="640" y2="498" stroke="#d97706" stroke-width="1.5" marker-end="url(#arrowAmber)"/>
+
+  <!-- Physical Shards -->
+  <rect x="456" y="500" width="86" height="30" rx="5" fill="#1c1917" stroke="#78716c" stroke-width="1.5"/>
+  <text x="499" y="519" text-anchor="middle" fill="#d6d3d1" font-size="10" font-weight="600">Shard A</text>
+  <rect x="598" y="500" width="86" height="30" rx="5" fill="#1c1917" stroke="#78716c" stroke-width="1.5"/>
+  <text x="641" y="519" text-anchor="middle" fill="#d6d3d1" font-size="10" font-weight="600">Shard B</text>
+
+  <!-- Rebalance note -->
+  <rect x="432" y="542" width="340" height="26" rx="4" fill="#422006" opacity="0.5"/>
+  <text x="602" y="559" text-anchor="middle" fill="#fbbf24" font-size="9">Rebalance: just remap VB -> Shard (no data rehash)</text>
+
+  <!-- Pros/Cons for Consistent Hashing and Virtual Bucket at bottom if space -->
+</svg>

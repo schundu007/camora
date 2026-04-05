@@ -1,0 +1,216 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600" font-family="'Segoe UI', system-ui, -apple-system, sans-serif">
+  <defs>
+    <filter id="shadow" x="-2%" y="-2%" width="104%" height="104%">
+      <feDropShadow dx="1" dy="1" stdDeviation="2" flood-opacity="0.1"/>
+    </filter>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f8fafc"/>
+      <stop offset="100%" stop-color="#eef2f7"/>
+    </linearGradient>
+    <linearGradient id="gatewayGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#2563eb"/>
+      <stop offset="100%" stop-color="#3b82f6"/>
+    </linearGradient>
+    <linearGradient id="lbGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+    <linearGradient id="identityGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#8b5cf6"/>
+      <stop offset="100%" stop-color="#7c3aed"/>
+    </linearGradient>
+    <linearGradient id="registryGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#14b8a6"/>
+      <stop offset="100%" stop-color="#0d9488"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="600" fill="url(#bgGrad)" rx="8"/>
+
+  <!-- Title -->
+  <text x="400" y="32" text-anchor="middle" font-size="18" font-weight="700" fill="#1e293b">Typical Microservice Architecture</text>
+
+  <!-- CLIENT LAYER -->
+  <rect x="230" y="46" width="340" height="44" rx="6" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="400" y="60" text-anchor="middle" font-size="9" fill="#64748b" font-weight="600" letter-spacing="1.5">CLIENTS</text>
+  <!-- Web -->
+  <rect x="260" y="66" width="60" height="18" rx="3" fill="#e2e8f0"/>
+  <text x="290" y="78" text-anchor="middle" font-size="9" fill="#475569" font-weight="500">Web</text>
+  <!-- Mobile -->
+  <rect x="340" y="66" width="60" height="18" rx="3" fill="#e2e8f0"/>
+  <text x="370" y="78" text-anchor="middle" font-size="9" fill="#475569" font-weight="500">Mobile</text>
+  <!-- PC -->
+  <rect x="420" y="66" width="60" height="18" rx="3" fill="#e2e8f0"/>
+  <text x="450" y="78" text-anchor="middle" font-size="9" fill="#475569" font-weight="500">Desktop</text>
+
+  <!-- Arrows from clients down -->
+  <line x1="290" y1="90" x2="290" y2="110" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrowGray)"/>
+  <line x1="400" y1="90" x2="400" y2="110" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrowGray)"/>
+  <line x1="450" y1="90" x2="450" y2="110" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrowGray)"/>
+
+  <!-- CDN -->
+  <rect x="80" y="110" width="110" height="38" rx="6" fill="#dbeafe" stroke="#93c5fd" stroke-width="1" filter="url(#shadow)"/>
+  <text x="135" y="133" text-anchor="middle" font-size="11" font-weight="600" fill="#1d4ed8">CDN</text>
+
+  <!-- LOAD BALANCER -->
+  <rect x="240" y="110" width="190" height="38" rx="6" fill="url(#lbGrad)" filter="url(#shadow)"/>
+  <text x="335" y="133" text-anchor="middle" font-size="11" font-weight="600" fill="#fff">Load Balancer</text>
+
+  <!-- Arrow CDN to LB -->
+  <line x1="190" y1="129" x2="238" y2="129" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="4,3"/>
+
+  <!-- Arrow LB down to Gateway -->
+  <line x1="335" y1="148" x2="335" y2="168" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrowGray)"/>
+
+  <!-- API GATEWAY -->
+  <rect x="120" y="168" width="430" height="42" rx="6" fill="url(#gatewayGrad)" filter="url(#shadow)"/>
+  <text x="335" y="193" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">API Gateway</text>
+  <text x="335" y="204" text-anchor="middle" font-size="8" fill="#bfdbfe">Authentication | Rate Limiting | Routing</text>
+
+  <!-- IDENTITY PROVIDER -->
+  <rect x="600" y="168" width="140" height="42" rx="6" fill="url(#identityGrad)" filter="url(#shadow)"/>
+  <text x="670" y="188" text-anchor="middle" font-size="10" font-weight="600" fill="#fff">Identity Provider</text>
+  <text x="670" y="200" text-anchor="middle" font-size="8" fill="#ddd6fe">OAuth / JWT / SSO</text>
+
+  <!-- Arrow Gateway to Identity -->
+  <line x1="550" y1="189" x2="598" y2="189" stroke="#8b5cf6" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrowPurple)"/>
+
+  <!-- Arrows from Gateway down -->
+  <line x1="220" y1="210" x2="220" y2="240" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrowGray)"/>
+  <line x1="450" y1="210" x2="450" y2="240" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrowGray)"/>
+
+  <!-- DOMAIN A -->
+  <rect x="70" y="240" width="300" height="195" rx="8" fill="#fff" stroke="#d1d5db" stroke-width="1" filter="url(#shadow)"/>
+  <rect x="70" y="240" width="300" height="28" rx="8" fill="#ecfdf5"/>
+  <rect x="70" y="256" width="300" height="12" fill="#ecfdf5"/>
+  <text x="220" y="259" text-anchor="middle" font-size="11" font-weight="700" fill="#065f46">Domain A - Order Management</text>
+
+  <!-- Service A.1 -->
+  <rect x="90" y="278" width="120" height="40" rx="5" fill="#d1fae5" stroke="#6ee7b7" stroke-width="1"/>
+  <text x="150" y="296" text-anchor="middle" font-size="9" font-weight="600" fill="#065f46">Service A.1</text>
+  <text x="150" y="310" text-anchor="middle" font-size="8" fill="#047857">Order Service</text>
+
+  <!-- Service A.2 -->
+  <rect x="230" y="278" width="120" height="40" rx="5" fill="#d1fae5" stroke="#6ee7b7" stroke-width="1"/>
+  <text x="290" y="296" text-anchor="middle" font-size="9" font-weight="600" fill="#065f46">Service A.2</text>
+  <text x="290" y="310" text-anchor="middle" font-size="8" fill="#047857">Payment Service</text>
+
+  <!-- Service A.3 -->
+  <rect x="155" y="330" width="120" height="40" rx="5" fill="#d1fae5" stroke="#6ee7b7" stroke-width="1"/>
+  <text x="215" y="348" text-anchor="middle" font-size="9" font-weight="600" fill="#065f46">Service A.3</text>
+  <text x="215" y="362" text-anchor="middle" font-size="8" fill="#047857">Inventory Service</text>
+
+  <!-- Connections between Domain A services -->
+  <line x1="150" y1="318" x2="155" y2="330" stroke="#a7f3d0" stroke-width="1" stroke-dasharray="3,2"/>
+  <line x1="290" y1="318" x2="275" y2="330" stroke="#a7f3d0" stroke-width="1" stroke-dasharray="3,2"/>
+
+  <!-- Database A -->
+  <ellipse cx="220" cy="405" rx="55" ry="14" fill="#bbf7d0" stroke="#6ee7b7" stroke-width="1"/>
+  <rect x="165" y="392" width="110" height="13" fill="#bbf7d0"/>
+  <ellipse cx="220" cy="392" rx="55" ry="14" fill="#d1fae5" stroke="#6ee7b7" stroke-width="1"/>
+  <text x="220" y="410" text-anchor="middle" font-size="9" font-weight="600" fill="#065f46">Database A</text>
+  <text x="220" y="422" text-anchor="middle" font-size="7" fill="#047857">PostgreSQL</text>
+
+  <!-- Arrow services to DB A -->
+  <line x1="215" y1="370" x2="215" y2="388" stroke="#6ee7b7" stroke-width="1.5" marker-end="url(#arrowGreen)"/>
+
+  <!-- DOMAIN B -->
+  <rect x="400" y="240" width="220" height="195" rx="8" fill="#fff" stroke="#d1d5db" stroke-width="1" filter="url(#shadow)"/>
+  <rect x="400" y="240" width="220" height="28" rx="8" fill="#ecfdf5"/>
+  <rect x="400" y="256" width="220" height="12" fill="#ecfdf5"/>
+  <text x="510" y="259" text-anchor="middle" font-size="11" font-weight="700" fill="#065f46">Domain B - User Management</text>
+
+  <!-- Service B.1 -->
+  <rect x="420" y="278" width="120" height="40" rx="5" fill="#d1fae5" stroke="#6ee7b7" stroke-width="1"/>
+  <text x="480" y="296" text-anchor="middle" font-size="9" font-weight="600" fill="#065f46">Service B.1</text>
+  <text x="480" y="310" text-anchor="middle" font-size="8" fill="#047857">User Service</text>
+
+  <!-- Service B.2 -->
+  <rect x="420" y="330" width="120" height="40" rx="5" fill="#d1fae5" stroke="#6ee7b7" stroke-width="1"/>
+  <text x="480" y="348" text-anchor="middle" font-size="9" font-weight="600" fill="#065f46">Service B.2</text>
+  <text x="480" y="362" text-anchor="middle" font-size="8" fill="#047857">Auth Service</text>
+
+  <!-- Connection B services -->
+  <line x1="480" y1="318" x2="480" y2="330" stroke="#a7f3d0" stroke-width="1" stroke-dasharray="3,2"/>
+
+  <!-- Database B -->
+  <ellipse cx="510" cy="405" rx="50" ry="14" fill="#bbf7d0" stroke="#6ee7b7" stroke-width="1"/>
+  <rect x="460" y="392" width="100" height="13" fill="#bbf7d0"/>
+  <ellipse cx="510" cy="392" rx="50" ry="14" fill="#d1fae5" stroke="#6ee7b7" stroke-width="1"/>
+  <text x="510" y="410" text-anchor="middle" font-size="9" font-weight="600" fill="#065f46">Database B</text>
+  <text x="510" y="422" text-anchor="middle" font-size="7" fill="#047857">MongoDB</text>
+
+  <!-- Arrow services to DB B -->
+  <line x1="480" y1="370" x2="500" y2="388" stroke="#6ee7b7" stroke-width="1.5" marker-end="url(#arrowGreen)"/>
+
+  <!-- SERVICE REGISTRY / DISCOVERY -->
+  <rect x="650" y="270" width="130" height="70" rx="6" fill="url(#registryGrad)" filter="url(#shadow)"/>
+  <text x="715" y="295" text-anchor="middle" font-size="10" font-weight="600" fill="#fff">Service Registry</text>
+  <text x="715" y="310" text-anchor="middle" font-size="9" fill="#ccfbf1">/ Discovery</text>
+  <text x="715" y="326" text-anchor="middle" font-size="8" fill="#99f6e4">Consul / Eureka</text>
+
+  <!-- Arrows from Registry to domains -->
+  <line x1="650" y1="290" x2="622" y2="290" stroke="#14b8a6" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#arrowTeal)"/>
+  <line x1="650" y1="310" x2="622" y2="340" stroke="#14b8a6" stroke-width="1.2" stroke-dasharray="4,3"/>
+  <line x1="650" y1="320" x2="372" y2="310" stroke="#14b8a6" stroke-width="1.0" stroke-dasharray="4,3"/>
+
+  <!-- MANAGEMENT / OBSERVABILITY -->
+  <rect x="650" y="370" width="130" height="70" rx="6" fill="#fff" stroke="#e2e8f0" stroke-width="1" filter="url(#shadow)"/>
+  <text x="715" y="392" text-anchor="middle" font-size="10" font-weight="600" fill="#334155">Management</text>
+  <text x="715" y="406" text-anchor="middle" font-size="8" fill="#64748b">Monitoring</text>
+  <text x="715" y="418" text-anchor="middle" font-size="8" fill="#64748b">Distributed Tracing</text>
+  <text x="715" y="430" text-anchor="middle" font-size="8" fill="#64748b">Logging (ELK)</text>
+
+  <!-- Arrow Management to services -->
+  <line x1="650" y1="400" x2="622" y2="370" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3,2"/>
+
+  <!-- MESSAGE BUS at bottom -->
+  <rect x="70" y="455" width="550" height="36" rx="6" fill="#fef3c7" stroke="#fbbf24" stroke-width="1" filter="url(#shadow)"/>
+  <text x="345" y="477" text-anchor="middle" font-size="11" font-weight="600" fill="#92400e">Message Bus / Event Streaming (Kafka / RabbitMQ)</text>
+
+  <!-- Arrows from domains to message bus -->
+  <line x1="220" y1="435" x2="220" y2="453" stroke="#fbbf24" stroke-width="1.5" marker-end="url(#arrowAmber)"/>
+  <line x1="510" y1="435" x2="510" y2="453" stroke="#fbbf24" stroke-width="1.5" marker-end="url(#arrowAmber)"/>
+
+  <!-- LEGEND -->
+  <rect x="70" y="510" width="660" height="70" rx="6" fill="#fff" stroke="#e2e8f0" stroke-width="1" opacity="0.9"/>
+  <text x="90" y="530" font-size="9" font-weight="700" fill="#475569">Legend:</text>
+  <!-- Gateway -->
+  <rect x="90" y="540" width="14" height="10" rx="2" fill="#3b82f6"/>
+  <text x="110" y="549" font-size="8" fill="#475569">API Gateway</text>
+  <!-- Services -->
+  <rect x="190" y="540" width="14" height="10" rx="2" fill="#d1fae5" stroke="#6ee7b7" stroke-width="0.5"/>
+  <text x="210" y="549" font-size="8" fill="#475569">Microservices</text>
+  <!-- LB -->
+  <rect x="300" y="540" width="14" height="10" rx="2" fill="#f59e0b"/>
+  <text x="320" y="549" font-size="8" fill="#475569">Load Balancer</text>
+  <!-- Identity -->
+  <rect x="410" y="540" width="14" height="10" rx="2" fill="#8b5cf6"/>
+  <text x="430" y="549" font-size="8" fill="#475569">Identity Provider</text>
+  <!-- Registry -->
+  <rect x="530" y="540" width="14" height="10" rx="2" fill="#14b8a6"/>
+  <text x="550" y="549" font-size="8" fill="#475569">Service Registry</text>
+  <!-- Event bus -->
+  <rect x="640" y="540" width="14" height="10" rx="2" fill="#fef3c7" stroke="#fbbf24" stroke-width="0.5"/>
+  <text x="660" y="549" font-size="8" fill="#475569">Event Bus</text>
+
+  <!-- Arrow markers -->
+  <defs>
+    <marker id="arrowGray" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="#94a3b8"/>
+    </marker>
+    <marker id="arrowGreen" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="#6ee7b7"/>
+    </marker>
+    <marker id="arrowPurple" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="#8b5cf6"/>
+    </marker>
+    <marker id="arrowTeal" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="#14b8a6"/>
+    </marker>
+    <marker id="arrowAmber" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="#fbbf24"/>
+    </marker>
+  </defs>
+</svg>

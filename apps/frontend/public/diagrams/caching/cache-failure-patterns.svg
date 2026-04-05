@@ -1,0 +1,327 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+  <defs>
+    <style>
+      text { font-family: system-ui, -apple-system, sans-serif; }
+      .main-title { font-size: 18px; font-weight: 700; fill: #1e293b; }
+      .main-subtitle { font-size: 11px; fill: #64748b; }
+      .card-title { font-size: 13px; font-weight: 700; fill: #fff; }
+      .label { font-size: 10px; font-weight: 600; fill: #fff; }
+      .box-text { font-size: 9px; font-weight: 600; fill: #334155; }
+      .problem-text { font-size: 8.5px; fill: #dc2626; font-weight: 600; }
+      .solution-label { font-size: 8.5px; font-weight: 700; fill: #fff; }
+      .solution-text { font-size: 8.5px; font-weight: 600; fill: #065f46; }
+      .desc-text { font-size: 8px; fill: #64748b; }
+      .arrow-label { font-size: 7.5px; fill: #94a3b8; font-weight: 500; }
+    </style>
+    <filter id="shadow" x="-4%" y="-4%" width="108%" height="108%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.08"/>
+    </filter>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f8fafc"/>
+      <stop offset="100%" stop-color="#f1f5f9"/>
+    </linearGradient>
+    <linearGradient id="emerald-header" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#059669"/>
+      <stop offset="100%" stop-color="#0d9488"/>
+    </linearGradient>
+    <linearGradient id="red-grad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#ef4444"/>
+      <stop offset="100%" stop-color="#f97316"/>
+    </linearGradient>
+    <linearGradient id="green-grad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#14b8a6"/>
+    </linearGradient>
+    <marker id="arr-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#ef4444"/>
+    </marker>
+    <marker id="arr-gray" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#94a3b8"/>
+    </marker>
+    <marker id="arr-emerald" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#10b981"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="600" rx="12" fill="url(#bg)"/>
+
+  <!-- Title -->
+  <text x="400" y="32" text-anchor="middle" class="main-title">Cache Failure Patterns &amp; Solutions</text>
+  <text x="400" y="48" text-anchor="middle" class="main-subtitle">Common cache failure modes and mitigation strategies</text>
+
+  <!-- ==================== CARD 1: Thunder Herd (top-left) ==================== -->
+  <g transform="translate(20, 62)">
+    <rect width="370" height="240" rx="10" fill="#fff" filter="url(#shadow)"/>
+    <!-- Header -->
+    <rect width="370" height="32" rx="10" fill="url(#emerald-header)"/>
+    <rect y="22" width="370" height="10" fill="url(#emerald-header)"/>
+    <text x="16" y="21" class="card-title">1. Thunder Herd</text>
+    <text x="354" y="21" text-anchor="end" style="font-size:10px;fill:rgba(255,255,255,0.7);">Stampede</text>
+
+    <!-- Problem flow -->
+    <text x="16" y="52" class="problem-text">PROBLEM: Many keys expire at the same time</text>
+
+    <!-- App box -->
+    <rect x="16" y="62" width="64" height="30" rx="5" fill="#e0f2fe" stroke="#38bdf8" stroke-width="1"/>
+    <text x="48" y="81" text-anchor="middle" class="box-text">App</text>
+
+    <!-- Cache box with X -->
+    <rect x="110" y="62" width="64" height="30" rx="5" fill="#fef2f2" stroke="#fca5a5" stroke-width="1"/>
+    <text x="142" y="78" text-anchor="middle" class="box-text">Cache</text>
+    <text x="142" y="87" text-anchor="middle" style="font-size:7px;fill:#ef4444;">EXPIRED</text>
+
+    <!-- Multiple arrows from App to Cache (representing many requests) -->
+    <line x1="80" y1="72" x2="108" y2="72" stroke="#ef4444" stroke-width="1.5" marker-end="url(#arr-red)"/>
+    <line x1="80" y1="77" x2="108" y2="77" stroke="#ef4444" stroke-width="1.5" marker-end="url(#arr-red)"/>
+    <line x1="80" y1="82" x2="108" y2="82" stroke="#ef4444" stroke-width="1.5" marker-end="url(#arr-red)"/>
+
+    <!-- DB box -->
+    <rect x="204" y="62" width="64" height="30" rx="5" fill="#fef2f2" stroke="#fca5a5" stroke-width="1"/>
+    <text x="236" y="78" text-anchor="middle" class="box-text">Database</text>
+    <text x="236" y="87" text-anchor="middle" style="font-size:7px;fill:#ef4444;">OVERLOADED</text>
+
+    <!-- Multiple arrows from Cache to DB -->
+    <line x1="174" y1="72" x2="202" y2="72" stroke="#ef4444" stroke-width="1.5" marker-end="url(#arr-red)"/>
+    <line x1="174" y1="77" x2="202" y2="77" stroke="#ef4444" stroke-width="1.5" marker-end="url(#arr-red)"/>
+    <line x1="174" y1="82" x2="202" y2="82" stroke="#ef4444" stroke-width="1.5" marker-end="url(#arr-red)"/>
+
+    <!-- Explosion icon near DB -->
+    <circle cx="285" cy="77" r="12" fill="#fef2f2" stroke="#ef4444" stroke-width="1"/>
+    <text x="285" y="81" text-anchor="middle" style="font-size:12px;">&#x26A0;</text>
+
+    <!-- Timeline showing TTL expiry -->
+    <text x="16" y="112" class="desc-text">TTL timeline (all keys expire together):</text>
+    <line x1="16" y1="120" x2="270" y2="120" stroke="#cbd5e1" stroke-width="1"/>
+    <rect x="200" y="115" width="3" height="10" fill="#ef4444"/>
+    <rect x="203" y="115" width="3" height="10" fill="#ef4444"/>
+    <rect x="206" y="115" width="3" height="10" fill="#ef4444"/>
+    <rect x="209" y="115" width="3" height="10" fill="#ef4444"/>
+    <rect x="212" y="115" width="3" height="10" fill="#ef4444"/>
+    <text x="208" y="138" text-anchor="middle" style="font-size:7px;fill:#ef4444;">All expire at T=60s</text>
+
+    <!-- Solution -->
+    <rect x="16" y="150" width="338" height="74" rx="6" fill="#ecfdf5" stroke="#a7f3d0" stroke-width="1"/>
+    <rect x="24" y="158" width="70" height="18" rx="9" fill="url(#green-grad)"/>
+    <text x="59" y="170" text-anchor="middle" class="solution-label">SOLUTION</text>
+    <text x="102" y="170" class="solution-text">Random TTL Jitter</text>
+    <text x="28" y="188" class="desc-text">Add random offset to TTL: TTL = base + random(0, jitter)</text>
+    <!-- Jittered timeline -->
+    <line x1="28" y1="200" x2="282" y2="200" stroke="#a7f3d0" stroke-width="1"/>
+    <rect x="120" y="195" width="3" height="10" fill="#10b981"/>
+    <rect x="155" y="195" width="3" height="10" fill="#10b981"/>
+    <rect x="185" y="195" width="3" height="10" fill="#10b981"/>
+    <rect x="220" y="195" width="3" height="10" fill="#10b981"/>
+    <rect x="250" y="195" width="3" height="10" fill="#10b981"/>
+    <text x="185" y="218" text-anchor="middle" style="font-size:7px;fill:#10b981;">Spread out over time</text>
+  </g>
+
+  <!-- ==================== CARD 2: Cache Penetration (top-right) ==================== -->
+  <g transform="translate(410, 62)">
+    <rect width="370" height="240" rx="10" fill="#fff" filter="url(#shadow)"/>
+    <!-- Header -->
+    <rect width="370" height="32" rx="10" fill="url(#emerald-header)"/>
+    <rect y="22" width="370" height="10" fill="url(#emerald-header)"/>
+    <text x="16" y="21" class="card-title">2. Cache Penetration</text>
+    <text x="354" y="21" text-anchor="end" style="font-size:10px;fill:rgba(255,255,255,0.7);">Miss Loop</text>
+
+    <!-- Problem flow -->
+    <text x="16" y="52" class="problem-text">PROBLEM: Query non-existent key, always misses cache</text>
+
+    <!-- Request -->
+    <rect x="16" y="62" width="52" height="30" rx="5" fill="#e0f2fe" stroke="#38bdf8" stroke-width="1"/>
+    <text x="42" y="78" text-anchor="middle" class="box-text">GET</text>
+    <text x="42" y="87" text-anchor="middle" style="font-size:7px;fill:#64748b;">key=999</text>
+
+    <!-- Cache box with miss -->
+    <rect x="98" y="62" width="64" height="30" rx="5" fill="#fef2f2" stroke="#fca5a5" stroke-width="1"/>
+    <text x="130" y="78" text-anchor="middle" class="box-text">Cache</text>
+    <text x="130" y="87" text-anchor="middle" style="font-size:7px;fill:#ef4444;">MISS</text>
+
+    <!-- Arrow: Request to Cache -->
+    <line x1="68" y1="77" x2="96" y2="77" stroke="#ef4444" stroke-width="1.5" marker-end="url(#arr-red)"/>
+
+    <!-- DB box with miss -->
+    <rect x="192" y="62" width="64" height="30" rx="5" fill="#fef2f2" stroke="#fca5a5" stroke-width="1"/>
+    <text x="224" y="78" text-anchor="middle" class="box-text">Database</text>
+    <text x="224" y="87" text-anchor="middle" style="font-size:7px;fill:#ef4444;">NOT FOUND</text>
+
+    <!-- Arrow: Cache to DB -->
+    <line x1="162" y1="77" x2="190" y2="77" stroke="#ef4444" stroke-width="1.5" marker-end="url(#arr-red)"/>
+
+    <!-- Loop arrow back -->
+    <path d="M 224 92 L 224 105 L 42 105 L 42 92" fill="none" stroke="#ef4444" stroke-width="1" stroke-dasharray="4,2" marker-end="url(#arr-red)"/>
+    <text x="133" y="114" text-anchor="middle" style="font-size:7px;fill:#ef4444;">Repeat every request (never cached)</text>
+
+    <!-- Attacker note -->
+    <rect x="280" y="64" width="72" height="26" rx="5" fill="#fef2f2" stroke="#ef4444" stroke-width="1" stroke-dasharray="3,2"/>
+    <text x="316" y="78" text-anchor="middle" style="font-size:8px;fill:#ef4444;font-weight:600;">Attacker</text>
+    <text x="316" y="87" text-anchor="middle" style="font-size:7px;fill:#ef4444;">fake IDs</text>
+
+    <!-- Solution -->
+    <rect x="16" y="130" width="338" height="94" rx="6" fill="#ecfdf5" stroke="#a7f3d0" stroke-width="1"/>
+    <rect x="24" y="138" width="70" height="18" rx="9" fill="url(#green-grad)"/>
+    <text x="59" y="150" text-anchor="middle" class="solution-label">SOLUTION</text>
+    <text x="102" y="150" class="solution-text">Bloom Filter + Null Cache</text>
+
+    <!-- Bloom filter flow -->
+    <rect x="28" y="164" width="52" height="22" rx="4" fill="#d1fae5" stroke="#6ee7b7" stroke-width="1"/>
+    <text x="54" y="178" text-anchor="middle" style="font-size:8px;fill:#065f46;font-weight:600;">Request</text>
+
+    <rect x="106" y="164" width="68" height="22" rx="4" fill="#d1fae5" stroke="#6ee7b7" stroke-width="1"/>
+    <text x="140" y="178" text-anchor="middle" style="font-size:8px;fill:#065f46;font-weight:600;">Bloom Filter</text>
+
+    <line x1="80" y1="175" x2="104" y2="175" stroke="#10b981" stroke-width="1" marker-end="url(#arr-emerald)"/>
+
+    <!-- Reject path -->
+    <text x="140" y="198" text-anchor="middle" style="font-size:7.5px;fill:#10b981;font-weight:600;">Not in set? REJECT</text>
+
+    <!-- Pass path -->
+    <rect x="200" y="164" width="52" height="22" rx="4" fill="#d1fae5" stroke="#6ee7b7" stroke-width="1"/>
+    <text x="226" y="178" text-anchor="middle" style="font-size:8px;fill:#065f46;font-weight:600;">Cache</text>
+    <line x1="174" y1="175" x2="198" y2="175" stroke="#10b981" stroke-width="1" marker-end="url(#arr-emerald)"/>
+
+    <text x="28" y="214" class="desc-text">Also cache null results with short TTL (e.g., 60s)</text>
+  </g>
+
+  <!-- ==================== CARD 3: Cache Breakdown (bottom-left) ==================== -->
+  <g transform="translate(20, 318)">
+    <rect width="370" height="240" rx="10" fill="#fff" filter="url(#shadow)"/>
+    <!-- Header -->
+    <rect width="370" height="32" rx="10" fill="url(#emerald-header)"/>
+    <rect y="22" width="370" height="10" fill="url(#emerald-header)"/>
+    <text x="16" y="21" class="card-title">3. Cache Breakdown</text>
+    <text x="354" y="21" text-anchor="end" style="font-size:10px;fill:rgba(255,255,255,0.7);">Hot Key</text>
+
+    <!-- Problem flow -->
+    <text x="16" y="52" class="problem-text">PROBLEM: Hot key expires, burst of concurrent DB queries</text>
+
+    <!-- Hot key indicator -->
+    <rect x="16" y="62" width="70" height="30" rx="5" fill="#fef3c7" stroke="#fbbf24" stroke-width="1.5"/>
+    <text x="51" y="78" text-anchor="middle" style="font-size:9px;font-weight:700;fill:#92400e;">HOT KEY</text>
+    <text x="51" y="87" text-anchor="middle" style="font-size:7px;fill:#b45309;">10K req/s</text>
+
+    <!-- Cache with expired -->
+    <rect x="116" y="62" width="64" height="30" rx="5" fill="#fef2f2" stroke="#fca5a5" stroke-width="1"/>
+    <text x="148" y="78" text-anchor="middle" class="box-text">Cache</text>
+    <text x="148" y="87" text-anchor="middle" style="font-size:7px;fill:#ef4444;">KEY EXPIRED</text>
+
+    <line x1="86" y1="77" x2="114" y2="77" stroke="#ef4444" stroke-width="1.5" marker-end="url(#arr-red)"/>
+
+    <!-- DB overwhelmed -->
+    <rect x="210" y="62" width="64" height="30" rx="5" fill="#fef2f2" stroke="#fca5a5" stroke-width="1"/>
+    <text x="242" y="78" text-anchor="middle" class="box-text">Database</text>
+    <text x="242" y="87" text-anchor="middle" style="font-size:7px;fill:#ef4444;">10K queries!</text>
+
+    <!-- Burst arrows -->
+    <line x1="180" y1="70" x2="208" y2="70" stroke="#ef4444" stroke-width="1" marker-end="url(#arr-red)"/>
+    <line x1="180" y1="77" x2="208" y2="77" stroke="#ef4444" stroke-width="1.5" marker-end="url(#arr-red)"/>
+    <line x1="180" y1="84" x2="208" y2="84" stroke="#ef4444" stroke-width="1" marker-end="url(#arr-red)"/>
+
+    <!-- Spike visualization -->
+    <rect x="290" y="62" width="62" height="30" rx="5" fill="#fef2f2" stroke="#fca5a5" stroke-width="1"/>
+    <polyline points="296,87 302,85 308,82 314,60 320,82 326,85 332,87 338,87 344,87" fill="none" stroke="#ef4444" stroke-width="1.5"/>
+    <text x="321" y="97" text-anchor="middle" style="font-size:7px;fill:#ef4444;">DB load spike</text>
+
+    <!-- Solution -->
+    <rect x="16" y="112" width="338" height="112" rx="6" fill="#ecfdf5" stroke="#a7f3d0" stroke-width="1"/>
+    <rect x="24" y="120" width="70" height="18" rx="9" fill="url(#green-grad)"/>
+    <text x="59" y="132" text-anchor="middle" class="solution-label">SOLUTION</text>
+    <text x="102" y="132" class="solution-text">No TTL for Hot Keys + Mutex Lock</text>
+
+    <!-- Strategy 1 -->
+    <rect x="28" y="146" width="12" height="12" rx="2" fill="#10b981"/>
+    <text x="34" y="155" text-anchor="middle" style="font-size:8px;fill:#fff;font-weight:700;">1</text>
+    <text x="48" y="156" class="desc-text">Never expire: Remove TTL for hot keys, invalidate manually</text>
+
+    <!-- Strategy 2 -->
+    <rect x="28" y="166" width="12" height="12" rx="2" fill="#10b981"/>
+    <text x="34" y="175" text-anchor="middle" style="font-size:8px;fill:#fff;font-weight:700;">2</text>
+    <text x="48" y="176" class="desc-text">Mutex lock: Only 1 thread rebuilds cache, others wait</text>
+
+    <!-- Mutex diagram -->
+    <rect x="48" y="186" width="44" height="18" rx="3" fill="#d1fae5" stroke="#6ee7b7" stroke-width="1"/>
+    <text x="70" y="198" text-anchor="middle" style="font-size:7px;fill:#065f46;font-weight:600;">Thread 1</text>
+    <text x="100" y="198" style="font-size:7px;fill:#10b981;">acquires lock, rebuilds</text>
+
+    <rect x="48" y="206" width="44" height="18" rx="3" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>
+    <text x="70" y="218" text-anchor="middle" style="font-size:7px;fill:#065f46;font-weight:600;">Thread 2-N</text>
+    <text x="100" y="218" style="font-size:7px;fill:#64748b;">wait or return stale data</text>
+  </g>
+
+  <!-- ==================== CARD 4: Cache Crash (bottom-right) ==================== -->
+  <g transform="translate(410, 318)">
+    <rect width="370" height="240" rx="10" fill="#fff" filter="url(#shadow)"/>
+    <!-- Header -->
+    <rect width="370" height="32" rx="10" fill="url(#emerald-header)"/>
+    <rect y="22" width="370" height="10" fill="url(#emerald-header)"/>
+    <text x="16" y="21" class="card-title">4. Cache Crash</text>
+    <text x="354" y="21" text-anchor="end" style="font-size:10px;fill:rgba(255,255,255,0.7);">Avalanche</text>
+
+    <!-- Problem flow -->
+    <text x="16" y="52" class="problem-text">PROBLEM: Cache node goes down, all traffic floods DB</text>
+
+    <!-- App -->
+    <rect x="16" y="62" width="52" height="30" rx="5" fill="#e0f2fe" stroke="#38bdf8" stroke-width="1"/>
+    <text x="42" y="81" text-anchor="middle" class="box-text">App</text>
+
+    <!-- Cache DOWN -->
+    <rect x="98" y="62" width="64" height="30" rx="5" fill="#fee2e2" stroke="#ef4444" stroke-width="2" stroke-dasharray="4,2"/>
+    <text x="130" y="75" text-anchor="middle" class="box-text">Cache</text>
+    <line x1="108" y1="67" x2="152" y2="87" stroke="#ef4444" stroke-width="2"/>
+    <line x1="152" y1="67" x2="108" y2="87" stroke="#ef4444" stroke-width="2"/>
+
+    <!-- Arrow through cache to DB -->
+    <line x1="68" y1="77" x2="96" y2="77" stroke="#ef4444" stroke-width="1.5" marker-end="url(#arr-red)"/>
+
+    <!-- DB -->
+    <rect x="192" y="62" width="64" height="30" rx="5" fill="#fef2f2" stroke="#fca5a5" stroke-width="1"/>
+    <text x="224" y="78" text-anchor="middle" class="box-text">Database</text>
+    <text x="224" y="87" text-anchor="middle" style="font-size:7px;fill:#ef4444;">CRUSHED</text>
+
+    <!-- Bypass arrow -->
+    <path d="M 68 82 Q 130 110 192 82" fill="none" stroke="#ef4444" stroke-width="1.5" marker-end="url(#arr-red)"/>
+    <text x="130" y="106" text-anchor="middle" style="font-size:7px;fill:#ef4444;">100% traffic bypasses</text>
+
+    <!-- Cascade -->
+    <rect x="274" y="64" width="78" height="26" rx="5" fill="#fef2f2" stroke="#ef4444" stroke-width="1"/>
+    <text x="313" y="76" text-anchor="middle" style="font-size:8px;fill:#ef4444;font-weight:600;">Cascade</text>
+    <text x="313" y="86" text-anchor="middle" style="font-size:7px;fill:#ef4444;">DB also crashes</text>
+
+    <line x1="256" y1="77" x2="272" y2="77" stroke="#ef4444" stroke-width="1" marker-end="url(#arr-red)"/>
+
+    <!-- Solution -->
+    <rect x="16" y="120" width="338" height="104" rx="6" fill="#ecfdf5" stroke="#a7f3d0" stroke-width="1"/>
+    <rect x="24" y="128" width="70" height="18" rx="9" fill="url(#green-grad)"/>
+    <text x="59" y="140" text-anchor="middle" class="solution-label">SOLUTION</text>
+    <text x="102" y="140" class="solution-text">Circuit Breaker + HA Cluster</text>
+
+    <!-- Strategy 1 -->
+    <rect x="28" y="154" width="12" height="12" rx="2" fill="#10b981"/>
+    <text x="34" y="163" text-anchor="middle" style="font-size:8px;fill:#fff;font-weight:700;">1</text>
+    <text x="48" y="164" class="desc-text">HA cluster: Redis Sentinel or Redis Cluster for failover</text>
+
+    <!-- Strategy 2 -->
+    <rect x="28" y="174" width="12" height="12" rx="2" fill="#10b981"/>
+    <text x="34" y="183" text-anchor="middle" style="font-size:8px;fill:#fff;font-weight:700;">2</text>
+    <text x="48" y="184" class="desc-text">Circuit breaker: Stop DB calls when failure rate is high</text>
+
+    <!-- Strategy 3 -->
+    <rect x="28" y="194" width="12" height="12" rx="2" fill="#10b981"/>
+    <text x="34" y="203" text-anchor="middle" style="font-size:8px;fill:#fff;font-weight:700;">3</text>
+    <text x="48" y="204" class="desc-text">Local fallback cache (L1) as emergency backup</text>
+
+    <!-- HA cluster mini diagram -->
+    <rect x="220" y="154" width="40" height="16" rx="3" fill="#d1fae5" stroke="#6ee7b7" stroke-width="1"/>
+    <text x="240" y="165" text-anchor="middle" style="font-size:7px;fill:#065f46;font-weight:600;">Primary</text>
+    <rect x="270" y="148" width="40" height="16" rx="3" fill="#d1fae5" stroke="#6ee7b7" stroke-width="1"/>
+    <text x="290" y="159" text-anchor="middle" style="font-size:7px;fill:#065f46;font-weight:600;">Replica</text>
+    <rect x="270" y="166" width="40" height="16" rx="3" fill="#d1fae5" stroke="#6ee7b7" stroke-width="1"/>
+    <text x="290" y="177" text-anchor="middle" style="font-size:7px;fill:#065f46;font-weight:600;">Replica</text>
+    <line x1="260" y1="162" x2="268" y2="156" stroke="#10b981" stroke-width="1"/>
+    <line x1="260" y1="162" x2="268" y2="174" stroke="#10b981" stroke-width="1"/>
+  </g>
+
+  <!-- Footer -->
+  <text x="400" y="580" text-anchor="middle" style="font-size:9px;fill:#94a3b8;">Key insight: Cache failures cascade — always design for resilience with multiple mitigation layers</text>
+</svg>

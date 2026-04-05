@@ -1346,7 +1346,8 @@ Request 100 ─┘
         }
       ],
       staticDiagrams: [
-        { id: 'eraser-caching', title: 'Multi-Layer Caching (Eraser)', description: 'Browser cache, CDN, Redis application cache, and database query cache with cache-aside pattern', src: '/diagrams/caching/eraser-caching-layers.png', type: 'cloud-architecture' }
+        { id: 'eraser-caching', title: 'Multi-Layer Caching (Eraser)', description: 'Browser cache, CDN, Redis application cache, and database query cache with cache-aside pattern', src: '/diagrams/caching/eraser-caching-layers.png', type: 'cloud-architecture' },
+        { id: 'cache-failure-patterns', title: 'Cache Failure Patterns', description: 'Thunder Herd, Penetration, Breakdown, and Crash — common cache failures and their solutions', src: '/diagrams/caching/cache-failure-patterns.svg', type: 'architecture' }
       ],
       comparisonTables: [
         {
@@ -2676,7 +2677,8 @@ No server-side storage
         }
       ],
       staticDiagrams: [
-        { id: 'eraser-lb', title: 'Load Balancing Architecture (Eraser)', description: 'DNS-based global routing, L7 ALB, auto-scaling groups, health checks, and SSL termination', src: '/diagrams/load-balancing/eraser-lb-architecture.png', type: 'cloud-architecture' }
+        { id: 'eraser-lb', title: 'Load Balancing Architecture (Eraser)', description: 'DNS-based global routing, L7 ALB, auto-scaling groups, health checks, and SSL termination', src: '/diagrams/load-balancing/eraser-lb-architecture.png', type: 'cloud-architecture' },
+        { id: 'lb-algorithms', title: 'Load Balancing Algorithms', description: '6 algorithms: Round Robin, Sticky RR, Weighted RR, IP Hash, Least Connections, Least Time', src: '/diagrams/load-balancing/lb-algorithms.svg', type: 'architecture' }
       ],
       comparisonTables: [
         {
@@ -3485,7 +3487,8 @@ Supporting Infrastructure:
         }
       ],
       staticDiagrams: [
-        { id: 'eraser-microservices', title: 'Microservices Architecture (Eraser)', description: 'API Gateway, service mesh with Envoy sidecars, Kafka event bus, Consul discovery, ELK logging', src: '/diagrams/microservices/eraser-microservices.png', type: 'cloud-architecture' }
+        { id: 'eraser-microservices', title: 'Microservices Architecture (Eraser)', description: 'API Gateway, service mesh with Envoy sidecars, Kafka event bus, Consul discovery, ELK logging', src: '/diagrams/microservices/eraser-microservices.png', type: 'cloud-architecture' },
+        { id: 'microservice-arch', title: 'Microservice Architecture', description: 'Typical microservice architecture with API Gateway, Service Registry, Load Balancer, and Identity Provider', src: '/diagrams/microservices/microservice-architecture.svg', type: 'architecture' }
       ],
       comparisonTables: [
         {
@@ -4046,7 +4049,8 @@ def verify_token(token, secret):
         }
       ],
       staticDiagrams: [
-        { id: 'eraser-security', title: 'Security Architecture (Eraser)', description: 'WAF, API Gateway, OAuth2, JWT, RBAC, mTLS, Vault secrets, SIEM audit, KMS encryption', src: '/diagrams/security/eraser-security-architecture.png', type: 'cloud-architecture' }
+        { id: 'eraser-security', title: 'Security Architecture (Eraser)', description: 'WAF, API Gateway, OAuth2, JWT, RBAC, mTLS, Vault secrets, SIEM audit, KMS encryption', src: '/diagrams/security/eraser-security-architecture.png', type: 'cloud-architecture' },
+        { id: 'auth-methods', title: 'Authentication Methods', description: 'Session, Token, JWT, SSO, and OAuth 2.0 — how different auth mechanisms work', src: '/diagrams/security/auth-methods.svg', type: 'architecture' }
       ],
       comparisonTables: [
         {
@@ -5681,6 +5685,16 @@ Optimal parameters:
         'Directory-based partitioning is the most flexible but adds a lookup hop',
         'Always plan for rebalancing before you need it',
         'Monitor partition sizes -- skewed partitions defeat the purpose of sharding'
+      ],
+
+      staticDiagrams: [
+        {
+          id: 'sharding-algorithms',
+          title: 'Sharding Algorithms',
+          description: 'Range-based, Hash-based, Consistent Hashing, and Virtual Bucket sharding strategies',
+          src: '/diagrams/data-partitioning/sharding-algorithms.svg',
+          type: 'architecture'
+        }
       ],
 
       introduction: `**Data partitioning** (also called sharding) is the technique of splitting a large dataset across multiple machines so that no single node holds all the data. It is the primary mechanism for horizontal scaling of databases and storage systems. Without partitioning, you eventually hit the limits of a single machine's storage, memory, or I/O capacity.
@@ -13850,6 +13864,16 @@ Instead of a single timestamp, TrueTime returns an interval:
         'Always define SLOs (service level objectives) before optimizing performance'
       ],
 
+      staticDiagrams: [
+        {
+          id: 'latency-numbers',
+          title: 'Latency Numbers',
+          description: 'Key latency numbers from 1ns (L1 cache) to 10s (retry interval) every developer should know',
+          src: '/diagrams/latency-vs-throughput/latency-numbers.svg',
+          type: 'architecture'
+        }
+      ],
+
       introduction: `**Latency** and **throughput** are the two fundamental performance metrics in system design. Latency measures how long a single operation takes (typically in milliseconds), while throughput measures how many operations the system completes per unit time (typically requests per second). Understanding the relationship between them -- and how to optimize each -- is essential for capacity planning and system design interviews.
 
 **Little's Law** (L = lambda * W) is the cornerstone equation: the average number of items in a system equals the arrival rate times the average time each item spends in the system. This single formula lets you calculate required concurrency, estimate queue depths, and plan capacity. Combined with **back-of-envelope estimation** techniques, it gives you the tools to quickly size any system during an interview.
@@ -14857,6 +14881,15 @@ MVCC (Multi-Version Concurrency Control):
           description: 'Sequence of local ACID transactions with compensating actions.',
           useWhen: 'Microservices where 2PC is too slow or unavailable',
           example: 'Order→Pay→Ship — if Ship fails, compensate: Refund→Cancel'
+        }
+      ],
+      staticDiagrams: [
+        {
+          id: 'acid-properties',
+          title: 'ACID Properties',
+          description: 'Atomicity, Consistency, Isolation, Durability — the four guarantees of database transactions',
+          src: '/diagrams/acid-vs-base/acid-properties.svg',
+          type: 'architecture'
         }
       ]
     },

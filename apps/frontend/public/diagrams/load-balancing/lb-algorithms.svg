@@ -1,0 +1,417 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 700" width="800" height="700" font-family="'Segoe UI', Arial, Helvetica, sans-serif">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+    <linearGradient id="lbGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0d9488"/>
+      <stop offset="100%" stop-color="#0891b2"/>
+    </linearGradient>
+    <linearGradient id="serverGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e40af"/>
+      <stop offset="100%" stop-color="#3b82f6"/>
+    </linearGradient>
+    <linearGradient id="clientGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6d28d9"/>
+      <stop offset="100%" stop-color="#8b5cf6"/>
+    </linearGradient>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="#000" flood-opacity="0.3"/>
+    </filter>
+    <filter id="glow" x="-10%" y="-10%" width="120%" height="120%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="700" fill="url(#bgGrad)" rx="12"/>
+
+  <!-- Title -->
+  <text x="400" y="38" text-anchor="middle" fill="#f1f5f9" font-size="20" font-weight="700" letter-spacing="0.5">Load Balancing Algorithms</text>
+
+  <!-- Category Labels -->
+  <rect x="170" y="52" width="130" height="22" rx="11" fill="#0d9488" opacity="0.25"/>
+  <text x="235" y="67" text-anchor="middle" fill="#5eead4" font-size="11" font-weight="600">STATIC ALGORITHMS</text>
+  <rect x="500" y="52" width="140" height="22" rx="11" fill="#f59e0b" opacity="0.25"/>
+  <text x="570" y="67" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="600">DYNAMIC ALGORITHMS</text>
+
+  <!-- ============================================ -->
+  <!-- CELL 1: Round Robin (top-left) -->
+  <!-- ============================================ -->
+  <g transform="translate(15, 82)">
+    <rect width="250" height="190" rx="10" fill="#1e293b" stroke="#334155" stroke-width="1" filter="url(#shadow)"/>
+    <rect width="250" height="3" rx="1.5" fill="#0d9488" y="0"/>
+    <text x="125" y="22" text-anchor="middle" fill="#e2e8f0" font-size="13" font-weight="700">Round Robin</text>
+    <text x="125" y="36" text-anchor="middle" fill="#64748b" font-size="9">Sequential distribution</text>
+
+    <!-- Clients -->
+    <rect x="15" y="55" width="50" height="20" rx="4" fill="url(#clientGrad)" opacity="0.9"/>
+    <text x="40" y="68" text-anchor="middle" fill="#fff" font-size="8" font-weight="600">req 1</text>
+    <rect x="15" y="82" width="50" height="20" rx="4" fill="url(#clientGrad)" opacity="0.9"/>
+    <text x="40" y="95" text-anchor="middle" fill="#fff" font-size="8" font-weight="600">req 2</text>
+    <rect x="15" y="109" width="50" height="20" rx="4" fill="url(#clientGrad)" opacity="0.9"/>
+    <text x="40" y="122" text-anchor="middle" fill="#fff" font-size="8" font-weight="600">req 3</text>
+
+    <!-- LB -->
+    <rect x="95" y="70" width="55" height="40" rx="6" fill="url(#lbGrad)" filter="url(#shadow)"/>
+    <text x="122" y="87" text-anchor="middle" fill="#fff" font-size="9" font-weight="700">LB</text>
+    <text x="122" y="100" text-anchor="middle" fill="#ccfbf1" font-size="7">1→2→3</text>
+
+    <!-- Arrows client to LB -->
+    <line x1="65" y1="65" x2="95" y2="82" stroke="#5eead4" stroke-width="1.2" opacity="0.6"/>
+    <line x1="65" y1="92" x2="95" y2="90" stroke="#5eead4" stroke-width="1.2" opacity="0.6"/>
+    <line x1="65" y1="119" x2="95" y2="100" stroke="#5eead4" stroke-width="1.2" opacity="0.6"/>
+
+    <!-- Servers -->
+    <rect x="182" y="50" width="52" height="22" rx="4" fill="url(#serverGrad)"/>
+    <text x="208" y="65" text-anchor="middle" fill="#fff" font-size="8" font-weight="600">Server A</text>
+    <rect x="182" y="80" width="52" height="22" rx="4" fill="url(#serverGrad)"/>
+    <text x="208" y="95" text-anchor="middle" fill="#fff" font-size="8" font-weight="600">Server B</text>
+    <rect x="182" y="110" width="52" height="22" rx="4" fill="url(#serverGrad)"/>
+    <text x="208" y="125" text-anchor="middle" fill="#fff" font-size="8" font-weight="600">Server C</text>
+
+    <!-- Arrows LB to Servers -->
+    <line x1="150" y1="82" x2="182" y2="61" stroke="#38bdf8" stroke-width="1.5" marker-end="url(#arrowBlue)"/>
+    <line x1="150" y1="90" x2="182" y2="91" stroke="#38bdf8" stroke-width="1.5" marker-end="url(#arrowBlue)"/>
+    <line x1="150" y1="98" x2="182" y2="121" stroke="#38bdf8" stroke-width="1.5" marker-end="url(#arrowBlue)"/>
+
+    <!-- Labels on arrows -->
+    <text x="166" y="58" text-anchor="middle" fill="#7dd3fc" font-size="7" font-weight="600">1st</text>
+    <text x="166" y="86" text-anchor="middle" fill="#7dd3fc" font-size="7" font-weight="600">2nd</text>
+    <text x="166" y="120" text-anchor="middle" fill="#7dd3fc" font-size="7" font-weight="600">3rd</text>
+
+    <!-- Description -->
+    <text x="125" y="150" text-anchor="middle" fill="#94a3b8" font-size="8">Requests cycle through servers</text>
+    <text x="125" y="162" text-anchor="middle" fill="#94a3b8" font-size="8">in sequential order: A → B → C → A</text>
+    <text x="125" y="178" text-anchor="middle" fill="#5eead4" font-size="7.5" font-weight="600">Best for: equal-capacity servers</text>
+  </g>
+
+  <!-- ============================================ -->
+  <!-- CELL 2: Sticky Round Robin (top-center) -->
+  <!-- ============================================ -->
+  <g transform="translate(275, 82)">
+    <rect width="250" height="190" rx="10" fill="#1e293b" stroke="#334155" stroke-width="1" filter="url(#shadow)"/>
+    <rect width="250" height="3" rx="1.5" fill="#0d9488" y="0"/>
+    <text x="125" y="22" text-anchor="middle" fill="#e2e8f0" font-size="13" font-weight="700">Sticky Round Robin</text>
+    <text x="125" y="36" text-anchor="middle" fill="#64748b" font-size="9">Session affinity</text>
+
+    <!-- Client Alice -->
+    <rect x="10" y="55" width="55" height="20" rx="4" fill="#7c3aed" opacity="0.9"/>
+    <text x="37" y="68" text-anchor="middle" fill="#fff" font-size="8" font-weight="600">Alice #1</text>
+    <rect x="10" y="82" width="55" height="20" rx="4" fill="#7c3aed" opacity="0.9"/>
+    <text x="37" y="95" text-anchor="middle" fill="#fff" font-size="8" font-weight="600">Alice #2</text>
+    <rect x="10" y="109" width="55" height="20" rx="4" fill="#7c3aed" opacity="0.9"/>
+    <text x="37" y="122" text-anchor="middle" fill="#fff" font-size="8" font-weight="600">Alice #3</text>
+
+    <!-- LB -->
+    <rect x="95" y="70" width="55" height="40" rx="6" fill="url(#lbGrad)" filter="url(#shadow)"/>
+    <text x="122" y="87" text-anchor="middle" fill="#fff" font-size="9" font-weight="700">LB</text>
+    <text x="122" y="100" text-anchor="middle" fill="#ccfbf1" font-size="7">sticky</text>
+
+    <!-- Arrows client to LB -->
+    <line x1="65" y1="65" x2="95" y2="82" stroke="#c4b5fd" stroke-width="1.2" opacity="0.6"/>
+    <line x1="65" y1="92" x2="95" y2="90" stroke="#c4b5fd" stroke-width="1.2" opacity="0.6"/>
+    <line x1="65" y1="119" x2="95" y2="100" stroke="#c4b5fd" stroke-width="1.2" opacity="0.6"/>
+
+    <!-- Servers -->
+    <rect x="182" y="50" width="52" height="22" rx="4" fill="#1d4ed8"/>
+    <text x="208" y="65" text-anchor="middle" fill="#fff" font-size="8" font-weight="600">Server A</text>
+    <rect x="182" y="80" width="52" height="22" rx="4" fill="url(#serverGrad)" opacity="0.4"/>
+    <text x="208" y="95" text-anchor="middle" fill="#94a3b8" font-size="8" font-weight="600">Server B</text>
+    <rect x="182" y="110" width="52" height="22" rx="4" fill="url(#serverGrad)" opacity="0.4"/>
+    <text x="208" y="125" text-anchor="middle" fill="#94a3b8" font-size="8" font-weight="600">Server C</text>
+
+    <!-- All arrows go to Server A -->
+    <line x1="150" y1="82" x2="182" y2="61" stroke="#a78bfa" stroke-width="1.8"/>
+    <line x1="150" y1="88" x2="182" y2="61" stroke="#a78bfa" stroke-width="1.8"/>
+    <line x1="150" y1="94" x2="182" y2="61" stroke="#a78bfa" stroke-width="1.8"/>
+
+    <!-- Sticky indicator -->
+    <rect x="161" y="44" width="18" height="14" rx="3" fill="#7c3aed" opacity="0.8"/>
+    <text x="170" y="54" text-anchor="middle" fill="#fff" font-size="7" font-weight="700">ALL</text>
+
+    <!-- Description -->
+    <text x="125" y="150" text-anchor="middle" fill="#94a3b8" font-size="8">Same client always routes to</text>
+    <text x="125" y="162" text-anchor="middle" fill="#94a3b8" font-size="8">same server (cookie/session ID)</text>
+    <text x="125" y="178" text-anchor="middle" fill="#5eead4" font-size="7.5" font-weight="600">Best for: stateful sessions</text>
+  </g>
+
+  <!-- ============================================ -->
+  <!-- CELL 3: Weighted Round Robin (top-right) -->
+  <!-- ============================================ -->
+  <g transform="translate(535, 82)">
+    <rect width="250" height="190" rx="10" fill="#1e293b" stroke="#334155" stroke-width="1" filter="url(#shadow)"/>
+    <rect width="250" height="3" rx="1.5" fill="#0d9488" y="0"/>
+    <text x="125" y="22" text-anchor="middle" fill="#e2e8f0" font-size="13" font-weight="700">Weighted Round Robin</text>
+    <text x="125" y="36" text-anchor="middle" fill="#64748b" font-size="9">Capacity-based distribution</text>
+
+    <!-- Traffic -->
+    <rect x="10" y="75" width="55" height="28" rx="4" fill="url(#clientGrad)" opacity="0.9"/>
+    <text x="37" y="92" text-anchor="middle" fill="#fff" font-size="8" font-weight="600">Traffic</text>
+
+    <!-- LB -->
+    <rect x="90" y="68" width="60" height="42" rx="6" fill="url(#lbGrad)" filter="url(#shadow)"/>
+    <text x="120" y="85" text-anchor="middle" fill="#fff" font-size="9" font-weight="700">LB</text>
+    <text x="120" y="100" text-anchor="middle" fill="#ccfbf1" font-size="7">weighted</text>
+
+    <!-- Arrow client to LB -->
+    <line x1="65" y1="89" x2="90" y2="89" stroke="#5eead4" stroke-width="1.5" opacity="0.6"/>
+
+    <!-- Servers with weights -->
+    <rect x="178" y="48" width="60" height="26" rx="4" fill="#1d4ed8"/>
+    <text x="208" y="63" text-anchor="middle" fill="#fff" font-size="8" font-weight="600">Server A</text>
+    <rect x="178" y="82" width="60" height="22" rx="4" fill="url(#serverGrad)" opacity="0.7"/>
+    <text x="208" y="96" text-anchor="middle" fill="#dbeafe" font-size="8" font-weight="600">Server B</text>
+    <rect x="178" y="112" width="60" height="22" rx="4" fill="url(#serverGrad)" opacity="0.5"/>
+    <text x="208" y="126" text-anchor="middle" fill="#93c5fd" font-size="8" font-weight="600">Server C</text>
+
+    <!-- Arrows LB to Servers with weights -->
+    <line x1="150" y1="80" x2="178" y2="61" stroke="#38bdf8" stroke-width="3" opacity="0.9"/>
+    <line x1="150" y1="89" x2="178" y2="93" stroke="#38bdf8" stroke-width="1.2" opacity="0.6"/>
+    <line x1="150" y1="98" x2="178" y2="123" stroke="#38bdf8" stroke-width="1" opacity="0.4"/>
+
+    <!-- Weight labels -->
+    <text x="165" y="58" text-anchor="middle" fill="#7dd3fc" font-size="8" font-weight="700">80%</text>
+    <text x="165" y="90" text-anchor="middle" fill="#7dd3fc" font-size="7" font-weight="600">10%</text>
+    <text x="165" y="120" text-anchor="middle" fill="#7dd3fc" font-size="7" font-weight="600">10%</text>
+
+    <!-- Description -->
+    <text x="125" y="150" text-anchor="middle" fill="#94a3b8" font-size="8">Distribute proportionally by</text>
+    <text x="125" y="162" text-anchor="middle" fill="#94a3b8" font-size="8">server capacity: w=0.8, 0.1, 0.1</text>
+    <text x="125" y="178" text-anchor="middle" fill="#5eead4" font-size="7.5" font-weight="600">Best for: heterogeneous servers</text>
+  </g>
+
+  <!-- ============================================ -->
+  <!-- CELL 4: IP/URL Hash (bottom-left) -->
+  <!-- ============================================ -->
+  <g transform="translate(15, 290)">
+    <rect width="250" height="190" rx="10" fill="#1e293b" stroke="#334155" stroke-width="1" filter="url(#shadow)"/>
+    <rect width="250" height="3" rx="1.5" fill="#0d9488" y="0"/>
+    <text x="125" y="22" text-anchor="middle" fill="#e2e8f0" font-size="13" font-weight="700">IP / URL Hash</text>
+    <text x="125" y="36" text-anchor="middle" fill="#64748b" font-size="9">Deterministic mapping</text>
+
+    <!-- Client with IP -->
+    <rect x="10" y="55" width="60" height="26" rx="4" fill="url(#clientGrad)" opacity="0.9"/>
+    <text x="40" y="66" text-anchor="middle" fill="#fff" font-size="7" font-weight="600">Client</text>
+    <text x="40" y="76" text-anchor="middle" fill="#ddd6fe" font-size="6.5">10.0.0.42</text>
+
+    <!-- Hash function -->
+    <rect x="88" y="52" width="70" height="34" rx="6" fill="#0f766e" stroke="#14b8a6" stroke-width="1"/>
+    <text x="123" y="66" text-anchor="middle" fill="#fff" font-size="8" font-weight="700">hash(IP)</text>
+    <text x="123" y="78" text-anchor="middle" fill="#99f6e4" font-size="7">mod N</text>
+
+    <!-- Arrow client to hash -->
+    <line x1="70" y1="68" x2="88" y2="68" stroke="#5eead4" stroke-width="1.2" opacity="0.6"/>
+
+    <!-- LB -->
+    <rect x="100" y="95" width="45" height="25" rx="5" fill="url(#lbGrad)" opacity="0.7"/>
+    <text x="122" y="111" text-anchor="middle" fill="#fff" font-size="8" font-weight="600">LB</text>
+
+    <!-- Arrow hash to LB -->
+    <line x1="123" y1="86" x2="123" y2="95" stroke="#5eead4" stroke-width="1" opacity="0.5"/>
+
+    <!-- Servers -->
+    <rect x="182" y="50" width="52" height="22" rx="4" fill="url(#serverGrad)" opacity="0.4"/>
+    <text x="208" y="64" text-anchor="middle" fill="#94a3b8" font-size="8" font-weight="600">Server A</text>
+    <rect x="182" y="80" width="52" height="22" rx="4" fill="#1d4ed8"/>
+    <text x="208" y="94" text-anchor="middle" fill="#fff" font-size="8" font-weight="600">Server B</text>
+    <rect x="182" y="110" width="52" height="22" rx="4" fill="url(#serverGrad)" opacity="0.4"/>
+    <text x="208" y="124" text-anchor="middle" fill="#94a3b8" font-size="8" font-weight="600">Server C</text>
+
+    <!-- Arrow to specific server -->
+    <line x1="145" y1="107" x2="182" y2="91" stroke="#fbbf24" stroke-width="2" marker-end="url(#arrowYellow)"/>
+
+    <!-- Hash result label -->
+    <rect x="152" y="92" width="28" height="14" rx="3" fill="#92400e" opacity="0.8"/>
+    <text x="166" y="102" text-anchor="middle" fill="#fde68a" font-size="7" font-weight="700">= 1</text>
+
+    <!-- Description -->
+    <text x="125" y="150" text-anchor="middle" fill="#94a3b8" font-size="8">hash(client_ip) % server_count</text>
+    <text x="125" y="162" text-anchor="middle" fill="#94a3b8" font-size="8">Same IP always hits same server</text>
+    <text x="125" y="178" text-anchor="middle" fill="#5eead4" font-size="7.5" font-weight="600">Best for: caching, session locality</text>
+  </g>
+
+  <!-- ============================================ -->
+  <!-- CELL 5: Least Connections (bottom-center) -->
+  <!-- ============================================ -->
+  <g transform="translate(275, 290)">
+    <rect width="250" height="190" rx="10" fill="#1e293b" stroke="#334155" stroke-width="1" filter="url(#shadow)"/>
+    <rect width="250" height="3" rx="1.5" fill="#f59e0b" y="0"/>
+    <text x="125" y="22" text-anchor="middle" fill="#e2e8f0" font-size="13" font-weight="700">Least Connections</text>
+    <text x="125" y="36" text-anchor="middle" fill="#64748b" font-size="9">Route to least busy</text>
+
+    <!-- New Request -->
+    <rect x="10" y="75" width="55" height="28" rx="4" fill="url(#clientGrad)" opacity="0.9"/>
+    <text x="37" y="88" text-anchor="middle" fill="#fff" font-size="7" font-weight="600">New</text>
+    <text x="37" y="98" text-anchor="middle" fill="#ddd6fe" font-size="7" font-weight="600">Request</text>
+
+    <!-- LB -->
+    <rect x="90" y="68" width="60" height="42" rx="6" fill="url(#lbGrad)" filter="url(#shadow)"/>
+    <text x="120" y="85" text-anchor="middle" fill="#fff" font-size="9" font-weight="700">LB</text>
+    <text x="120" y="98" text-anchor="middle" fill="#ccfbf1" font-size="7">min(conn)</text>
+
+    <!-- Arrow client to LB -->
+    <line x1="65" y1="89" x2="90" y2="89" stroke="#5eead4" stroke-width="1.5" opacity="0.6"/>
+
+    <!-- Server A - heavily loaded -->
+    <rect x="178" y="48" width="60" height="26" rx="4" fill="#991b1b" opacity="0.8"/>
+    <text x="208" y="58" text-anchor="middle" fill="#fca5a5" font-size="7" font-weight="600">Server A</text>
+    <text x="208" y="70" text-anchor="middle" fill="#fecaca" font-size="8" font-weight="700">1000</text>
+
+    <!-- Server B - medium loaded -->
+    <rect x="178" y="82" width="60" height="22" rx="4" fill="#92400e" opacity="0.8"/>
+    <text x="208" y="91" text-anchor="middle" fill="#fde68a" font-size="7" font-weight="600">Server B</text>
+    <text x="222" y="100" text-anchor="middle" fill="#fef3c7" font-size="7" font-weight="700">100</text>
+
+    <!-- Server C - least loaded -->
+    <rect x="178" y="112" width="60" height="26" rx="4" fill="#065f46" stroke="#10b981" stroke-width="1.5"/>
+    <text x="208" y="122" text-anchor="middle" fill="#6ee7b7" font-size="7" font-weight="600">Server C</text>
+    <text x="208" y="134" text-anchor="middle" fill="#a7f3d0" font-size="8" font-weight="700">10</text>
+
+    <!-- Arrow to least loaded -->
+    <line x1="150" y1="95" x2="178" y2="125" stroke="#10b981" stroke-width="2.5"/>
+    <!-- Small check -->
+    <text x="170" y="118" text-anchor="middle" fill="#10b981" font-size="10" font-weight="700">&#x2713;</text>
+
+    <!-- Description -->
+    <text x="125" y="154" text-anchor="middle" fill="#94a3b8" font-size="8">Routes to server with fewest</text>
+    <text x="125" y="166" text-anchor="middle" fill="#94a3b8" font-size="8">active connections (10 &lt; 100 &lt; 1000)</text>
+    <text x="125" y="178" text-anchor="middle" fill="#fbbf24" font-size="7.5" font-weight="600">Best for: variable-duration requests</text>
+  </g>
+
+  <!-- ============================================ -->
+  <!-- CELL 6: Least Response Time (bottom-right) -->
+  <!-- ============================================ -->
+  <g transform="translate(535, 290)">
+    <rect width="250" height="190" rx="10" fill="#1e293b" stroke="#334155" stroke-width="1" filter="url(#shadow)"/>
+    <rect width="250" height="3" rx="1.5" fill="#f59e0b" y="0"/>
+    <text x="125" y="22" text-anchor="middle" fill="#e2e8f0" font-size="13" font-weight="700">Least Response Time</text>
+    <text x="125" y="36" text-anchor="middle" fill="#64748b" font-size="9">Route to fastest responder</text>
+
+    <!-- New Request -->
+    <rect x="10" y="75" width="55" height="28" rx="4" fill="url(#clientGrad)" opacity="0.9"/>
+    <text x="37" y="88" text-anchor="middle" fill="#fff" font-size="7" font-weight="600">New</text>
+    <text x="37" y="98" text-anchor="middle" fill="#ddd6fe" font-size="7" font-weight="600">Request</text>
+
+    <!-- LB -->
+    <rect x="90" y="68" width="60" height="42" rx="6" fill="url(#lbGrad)" filter="url(#shadow)"/>
+    <text x="120" y="85" text-anchor="middle" fill="#fff" font-size="9" font-weight="700">LB</text>
+    <text x="120" y="98" text-anchor="middle" fill="#ccfbf1" font-size="7">min(latency)</text>
+
+    <!-- Arrow client to LB -->
+    <line x1="65" y1="89" x2="90" y2="89" stroke="#5eead4" stroke-width="1.5" opacity="0.6"/>
+
+    <!-- Server A - slow -->
+    <rect x="178" y="48" width="60" height="26" rx="4" fill="#991b1b" opacity="0.8"/>
+    <text x="208" y="58" text-anchor="middle" fill="#fca5a5" font-size="7" font-weight="600">Server A</text>
+    <text x="208" y="70" text-anchor="middle" fill="#fecaca" font-size="8" font-weight="700">100ms</text>
+
+    <!-- Server B - medium -->
+    <rect x="178" y="82" width="60" height="22" rx="4" fill="#92400e" opacity="0.8"/>
+    <text x="208" y="91" text-anchor="middle" fill="#fde68a" font-size="7" font-weight="600">Server B</text>
+    <text x="222" y="100" text-anchor="middle" fill="#fef3c7" font-size="7" font-weight="700">10ms</text>
+
+    <!-- Server C - fastest -->
+    <rect x="178" y="112" width="60" height="26" rx="4" fill="#065f46" stroke="#10b981" stroke-width="1.5"/>
+    <text x="208" y="122" text-anchor="middle" fill="#6ee7b7" font-size="7" font-weight="600">Server C</text>
+    <text x="208" y="134" text-anchor="middle" fill="#a7f3d0" font-size="8" font-weight="700">1ms</text>
+
+    <!-- Arrow to fastest -->
+    <line x1="150" y1="95" x2="178" y2="125" stroke="#10b981" stroke-width="2.5"/>
+    <!-- Small check -->
+    <text x="170" y="118" text-anchor="middle" fill="#10b981" font-size="10" font-weight="700">&#x2713;</text>
+
+    <!-- Description -->
+    <text x="125" y="154" text-anchor="middle" fill="#94a3b8" font-size="8">Routes to server with lowest</text>
+    <text x="125" y="166" text-anchor="middle" fill="#94a3b8" font-size="8">avg response time (1ms &lt; 10ms &lt; 100ms)</text>
+    <text x="125" y="178" text-anchor="middle" fill="#fbbf24" font-size="7.5" font-weight="600">Best for: latency-sensitive apps</text>
+  </g>
+
+  <!-- ============================================ -->
+  <!-- Legend / Footer -->
+  <!-- ============================================ -->
+  <g transform="translate(0, 495)">
+    <rect x="15" y="0" width="770" height="68" rx="8" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+
+    <!-- Static vs Dynamic legend -->
+    <text x="40" y="20" fill="#e2e8f0" font-size="10" font-weight="700">Legend</text>
+
+    <!-- Static -->
+    <rect x="40" y="30" width="10" height="10" rx="2" fill="#0d9488"/>
+    <text x="55" y="39" fill="#94a3b8" font-size="9">Static - Don't consider server state (RR, Sticky RR, Weighted RR, IP Hash)</text>
+
+    <!-- Dynamic -->
+    <rect x="40" y="47" width="10" height="10" rx="2" fill="#f59e0b"/>
+    <text x="55" y="56" fill="#94a3b8" font-size="9">Dynamic - Adapt based on real-time server metrics (Least Connections, Least Response Time)</text>
+
+    <!-- Color key -->
+    <rect x="570" y="26" width="10" height="10" rx="2" fill="url(#clientGrad)"/>
+    <text x="585" y="35" fill="#94a3b8" font-size="8">Client/Request</text>
+    <rect x="660" y="26" width="10" height="10" rx="2" fill="url(#lbGrad)"/>
+    <text x="675" y="35" fill="#94a3b8" font-size="8">Load Balancer</text>
+    <rect x="570" y="44" width="10" height="10" rx="2" fill="url(#serverGrad)"/>
+    <text x="585" y="53" fill="#94a3b8" font-size="8">Server</text>
+    <rect x="660" y="44" width="10" height="10" rx="2" fill="#065f46" stroke="#10b981" stroke-width="1"/>
+    <text x="675" y="53" fill="#94a3b8" font-size="8">Selected Target</text>
+  </g>
+
+  <!-- ============================================ -->
+  <!-- Algorithm Comparison Table -->
+  <!-- ============================================ -->
+  <g transform="translate(15, 575)">
+    <rect width="770" height="110" rx="8" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+    <text x="385" y="18" text-anchor="middle" fill="#e2e8f0" font-size="11" font-weight="700">Quick Comparison</text>
+
+    <!-- Header row -->
+    <text x="25" y="38" fill="#64748b" font-size="8" font-weight="700">Algorithm</text>
+    <text x="170" y="38" fill="#64748b" font-size="8" font-weight="700">Type</text>
+    <text x="240" y="38" fill="#64748b" font-size="8" font-weight="700">Complexity</text>
+    <text x="330" y="38" fill="#64748b" font-size="8" font-weight="700">Stickiness</text>
+    <text x="430" y="38" fill="#64748b" font-size="8" font-weight="700">Weakness</text>
+    <text x="610" y="38" fill="#64748b" font-size="8" font-weight="700">Use Case</text>
+
+    <line x1="20" y1="42" x2="750" y2="42" stroke="#334155" stroke-width="0.5"/>
+
+    <!-- Row 1 -->
+    <text x="25" y="54" fill="#e2e8f0" font-size="7.5">Round Robin</text>
+    <text x="170" y="54" fill="#5eead4" font-size="7.5">Static</text>
+    <text x="240" y="54" fill="#94a3b8" font-size="7.5">O(1)</text>
+    <text x="330" y="54" fill="#94a3b8" font-size="7.5">None</text>
+    <text x="430" y="54" fill="#94a3b8" font-size="7.5">Ignores server load</text>
+    <text x="610" y="54" fill="#94a3b8" font-size="7.5">Homogeneous fleets</text>
+
+    <!-- Row 2 -->
+    <text x="25" y="66" fill="#e2e8f0" font-size="7.5">Sticky RR</text>
+    <text x="170" y="66" fill="#5eead4" font-size="7.5">Static</text>
+    <text x="240" y="66" fill="#94a3b8" font-size="7.5">O(1)</text>
+    <text x="330" y="66" fill="#94a3b8" font-size="7.5">Per-client</text>
+    <text x="430" y="66" fill="#94a3b8" font-size="7.5">Uneven load over time</text>
+    <text x="610" y="66" fill="#94a3b8" font-size="7.5">Stateful sessions</text>
+
+    <!-- Row 3 -->
+    <text x="25" y="78" fill="#e2e8f0" font-size="7.5">Weighted RR</text>
+    <text x="170" y="78" fill="#5eead4" font-size="7.5">Static</text>
+    <text x="240" y="78" fill="#94a3b8" font-size="7.5">O(1)</text>
+    <text x="330" y="78" fill="#94a3b8" font-size="7.5">None</text>
+    <text x="430" y="78" fill="#94a3b8" font-size="7.5">Manual weight tuning</text>
+    <text x="610" y="78" fill="#94a3b8" font-size="7.5">Mixed hardware</text>
+
+    <!-- Row 4 -->
+    <text x="25" y="90" fill="#e2e8f0" font-size="7.5">IP / URL Hash</text>
+    <text x="170" y="90" fill="#5eead4" font-size="7.5">Static</text>
+    <text x="240" y="90" fill="#94a3b8" font-size="7.5">O(1)</text>
+    <text x="330" y="90" fill="#94a3b8" font-size="7.5">Per-IP</text>
+    <text x="430" y="90" fill="#94a3b8" font-size="7.5">Rehash on server change</text>
+    <text x="610" y="90" fill="#94a3b8" font-size="7.5">Caching, locality</text>
+
+    <!-- Row 5 -->
+    <text x="25" y="102" fill="#e2e8f0" font-size="7.5">Least Connections</text>
+    <text x="170" y="102" fill="#fbbf24" font-size="7.5">Dynamic</text>
+    <text x="240" y="102" fill="#94a3b8" font-size="7.5">O(n) / O(log n)</text>
+    <text x="330" y="102" fill="#94a3b8" font-size="7.5">None</text>
+    <text x="430" y="102" fill="#94a3b8" font-size="7.5">Tracking overhead</text>
+    <text x="610" y="102" fill="#94a3b8" font-size="7.5">Long-lived connections</text>
+  </g>
+</svg>
