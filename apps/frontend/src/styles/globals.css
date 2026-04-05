@@ -67,6 +67,7 @@ body::after { bottom: 0; }
   html {
     @apply antialiased scroll-smooth;
     overflow-x: hidden;
+    zoom: 1.25;
   }
 
   body {
