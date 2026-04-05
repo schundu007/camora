@@ -1925,6 +1925,31 @@ gRPC (Method-oriented):
         ]
       },
 
+      comparisonCards: [
+        {
+          title: 'REST API 6 Core Principles',
+          items: [
+            { name: 'Client-Server', description: 'Separate UI concerns from data storage concerns. Client handles presentation, server handles data. Improves portability and scalability.' },
+            { name: 'Stateless', description: 'Each request must contain all information needed for processing. No session state stored on server between requests.' },
+            { name: 'Cacheable', description: 'Responses must be explicitly marked as cacheable or non-cacheable. Clients can reuse previously fetched responses to reduce load.' },
+            { name: 'Layered System', description: 'Client cannot tell if it is connected directly to the server or through intermediary (proxy, LB). Each layer only knows about the immediate layer it interacts with.' },
+            { name: 'Code-on-Demand (optional)', description: 'Servers can temporarily extend client functionality by transferring executable code (e.g., JavaScript). Enhances flexibility.' },
+            { name: 'Uniform Interface', description: 'Consistent and standardized interface. Use nouns for resources, HTTP verbs for actions. Makes systems independent and easier to evolve.' }
+          ]
+        },
+        {
+          title: 'REST API URL Anatomy',
+          items: [
+            { name: 'Protocol', description: 'Always use HTTPS:// for API calls to ensure security and data privacy.' },
+            { name: 'Sub-domain', description: 'Use clear naming conventions like api.example.com. Subdomains separate API endpoints from web frontend.' },
+            { name: 'Versioning', description: 'Version your API (e.g., /v1/) to manage changes and maintain backward compatibility across releases.' },
+            { name: 'Endpoint', description: 'Use nouns to represent resources (/users, /orders). Paths should be intuitive and follow RESTful principles.' },
+            { name: 'Filtering & Pagination', description: 'Specify criteria to retrieve relevant subsets (?age=25&gender=male). Divide large data sets into pages (?page=2&limit=10).' },
+            { name: 'HTTP Methods', description: 'GET (retrieve), POST (create), PUT (update/replace), PATCH (partial update), DELETE (remove). Use the right verb for each operation.' }
+          ]
+        }
+      ],
+
       keyQuestions: [
         {
           question: 'REST vs GraphQL vs gRPC - when to use each?',
@@ -4719,6 +4744,19 @@ http_requests_total{endpoint="/api/orders", status="200"}
           }
         }
       ],
+      comparisonCards: [
+        {
+          title: 'Observability Stack Components',
+          items: [
+            { name: 'Metrics (Prometheus + Grafana)', description: 'Collect time-series metrics from services. Prometheus scrapes endpoints, Grafana visualizes dashboards. Best for: CPU, memory, request rates, error rates.' },
+            { name: 'Logging (ELK Stack)', description: 'Logstash aggregates logs from services → Elasticsearch indexes and stores → Kibana visualizes and searches. Correlate with trace IDs across services.' },
+            { name: 'Tracing (Jaeger/Zipkin)', description: 'Track requests as they flow through distributed services. Each span represents work in one service. Essential for debugging microservices latency.' },
+            { name: 'Alerting (PagerDuty/OpsGenie)', description: 'Set thresholds on metrics. Trigger alerts when anomalies detected. Route to on-call engineers. Avoid alert fatigue with proper severity levels.' },
+            { name: 'Health Checks', description: 'Periodic probes (HTTP /health endpoint, TCP checks) to verify service liveness and readiness. Load balancers and orchestrators use these to route traffic.' },
+            { name: 'Synthetic Monitoring', description: 'Simulate user interactions from global locations to detect issues before users do. Measures end-to-end latency and availability from outside.' }
+          ]
+        }
+      ],
       visualCards: [
         {
           id: 'golden-signals',
@@ -4810,7 +4848,10 @@ http_requests_total{endpoint="/api/orders", status="200"}
         'It is the backbone of DynamoDB, Cassandra, and most distributed caches',
         'Without virtual nodes, data skew is almost guaranteed',
         'Replication is easy: replicate to the next N nodes clockwise on the ring',
-        'Weighted virtual nodes let you assign more load to beefier machines'
+        'Weighted virtual nodes let you assign more load to beefier machines',
+        'Virtual nodes solve the problem of uneven distribution — map each physical node to 100-200 virtual positions on the ring',
+        'Used in production by DynamoDB, Cassandra, and Akamai CDN for data partitioning and request routing',
+        'When a node is added/removed, only K/N keys need to be remapped (K = total keys, N = total nodes)'
       ],
 
       introduction: `**Consistent hashing** is a distributed hashing technique that maps both data items and server nodes onto the same circular hash space, often called a **hash ring**. When a node is added or removed, only a small fraction of keys need to be remapped, making it far superior to naive modular hashing (hash(key) % N) where adding one server reshuffles almost every key.
@@ -6905,6 +6946,17 @@ Layer 7 (Application) Proxy:
           useWhen: 'Service mesh, consistent networking policies',
           example: 'Envoy sidecar in Istio — mTLS, retries, tracing'
         }
+      ],
+      comparisonCards: [
+        {
+          title: 'Proxy Types Compared',
+          items: [
+            { name: 'Forward Proxy', description: 'Sits between client and internet. Client sends requests to proxy, proxy forwards to server. Hides client identity. Used for: content filtering, bypassing geo-restrictions, corporate firewalls.' },
+            { name: 'Reverse Proxy', description: 'Sits between internet and servers. Clients don\'t know which server handles their request. Hides server identity. Used for: SSL termination, caching, DDoS protection. Example: Nginx.' },
+            { name: 'API Gateway', description: 'Specialized reverse proxy for APIs. Routes requests to different backend services. Adds auth, rate limiting, request transformation, and monitoring. Example: Kong, AWS API Gateway.' },
+            { name: 'Load Balancer', description: 'Distributes traffic to multiple instances of the same service. Purely focused on traffic distribution and health. Can be L4 (TCP) or L7 (HTTP). Example: ALB, HAProxy.' }
+          ]
+        }
       ]
     },
     {
@@ -8299,6 +8351,19 @@ Failover States:
           useWhen: 'Global users, regulatory requirements, DR',
           example: 'AWS RDS cross-region read replicas, CockroachDB multi-region'
         }
+      ],
+      comparisonCards: [
+        {
+          title: 'Fault-Tolerant System Design Principles',
+          items: [
+            { name: 'Replication', description: 'Create multiple copies of data or services across different nodes/regions. If one node fails, others serve the data. Used by Cassandra, Aurora, DynamoDB.' },
+            { name: 'Redundancy', description: 'Deploy additional standby components that take over on failure. Active-Active (both serve traffic) or Active-Passive (standby activates on failure). Includes RAID storage.' },
+            { name: 'Load Balancing', description: 'Distribute traffic across servers so no single server is a point of failure. Combined with health checks, automatically removes failed servers.' },
+            { name: 'Failover Mechanisms', description: 'Automatically switch to a standby system when the primary fails. Requires health monitoring and fast detection. Examples: DNS failover, database failover.' },
+            { name: 'Graceful Degradation', description: 'System continues operating at reduced functionality rather than completely failing. Disable non-essential features during overload (e.g., disable recommendations, serve cached pages).' },
+            { name: 'Monitoring & Alerting', description: 'Continuously monitor health and performance. Set up alerts for anomalies. Tools: Prometheus + Grafana for metrics, ELK for logs, PagerDuty for alerting.' }
+          ]
+        }
       ]
     },
     {
@@ -8743,6 +8808,17 @@ TCP was designed in 1974 and is baked into operating systems, routers, and middl
           description: 'Reuse TCP connection for multiple HTTP requests.',
           useWhen: 'Multiple requests to same server (default in HTTP/1.1+)',
           example: 'Connection: keep-alive header, avoid handshake per request'
+        }
+      ],
+      comparisonCards: [
+        {
+          title: 'UDP Use Cases',
+          items: [
+            { name: 'Live Video Streaming', description: 'VoIP and video conferencing use UDP for lower overhead and tolerance of packet loss. Real-time communication benefits from reduced latency vs TCP.' },
+            { name: 'DNS Queries', description: 'DNS queries use UDP for fast, lightweight resolution. Most queries fit in single packets. TCP is only used for large responses or zone transfers.' },
+            { name: 'Market Data Multicast', description: 'Low-latency trading systems use UDP multicast for efficient market data delivery to multiple recipients simultaneously.' },
+            { name: 'IoT Communications', description: 'IoT devices send small packets of data between devices. UDP\'s low overhead is ideal for resource-constrained devices.' }
+          ]
         }
       ]
     },
@@ -9752,6 +9828,16 @@ Consistency Spectrum:
           }
         }
       ],
+      comparisonCards: [
+        {
+          title: 'CAP Theorem Critique',
+          items: [
+            { name: 'The Real Choice', description: 'Network partitions are guaranteed to happen in distributed systems. So the practical choice is between CP (consistency over availability) and AP (availability over consistency).' },
+            { name: 'Stop Calling DBs CP or AP', description: 'Martin Kleppmann argues CAP is too narrow for categorizing databases. Real systems make nuanced trade-offs that don\'t fit neatly into CP/AP buckets.' },
+            { name: 'PACELC Extension', description: 'When Partitioned: choose Availability or Consistency. Else (normal operation): choose Latency or Consistency. Captures the full trade-off spectrum.' }
+          ]
+        }
+      ],
       visualCards: [
         {
           id: 'pacelc-systems',
@@ -10726,6 +10812,31 @@ Wire format comparison (same user object):
         ]
       },
 
+      comparisonCards: [
+        {
+          title: 'Reverse Proxy vs API Gateway vs Load Balancer',
+          items: [
+            { name: 'Reverse Proxy', description: 'Hides backend server addresses from clients. Fetches data from servers on behalf of clients. Perfect for shielding servers from direct exposure and cyber-attacks. Examples: Nginx, HAProxy.' },
+            { name: 'API Gateway', description: 'Single entry point for ALL client requests to DIFFERENT backend APIs/services. Handles authentication, rate limiting, request routing, and protocol translation. Examples: Kong, AWS API Gateway.' },
+            { name: 'Load Balancer', description: 'Distributes traffic across multiple instances of the SAME service. Focuses purely on traffic distribution and health checking. Examples: ALB, NLB, HAProxy.' }
+          ]
+        },
+        {
+          title: '9 System Integration Patterns',
+          items: [
+            { name: 'Peer-to-Peer', description: 'Direct communication between components without a central coordinator. Each node acts as both client and server.' },
+            { name: 'API Gateway', description: 'Single entry point for all clients. Handles auth, rate limiting, routing, and protocol translation.' },
+            { name: 'Pub-Sub', description: 'Publishers send messages to topics. Subscribers receive messages from topics they are interested in. Full decoupling.' },
+            { name: 'Request-Response', description: 'Client sends request, waits for server response. Most common HTTP pattern. Simple but synchronous.' },
+            { name: 'Event Sourcing', description: 'Store all state changes as a sequence of events. Event store is the source of truth. Enables full audit trail and replay.' },
+            { name: 'ETL (Extract-Transform-Load)', description: 'Extract data from sources, transform to desired format, load into target system. Standard for data pipelines and warehousing.' },
+            { name: 'Batching', description: 'Collect multiple inputs, process them together in one batch. Higher throughput but increased latency.' },
+            { name: 'Stream Processing', description: 'Process data in real-time as it arrives. Low latency, continuous output. Used with Kafka, Flink, Spark Streaming.' },
+            { name: 'Orchestration', description: 'Central orchestrator coordinates and manages workflows across multiple services. Controls sequence and handles failures.' }
+          ]
+        }
+      ],
+
       keyQuestions: [
         {
           question: 'When should you choose REST vs gRPC vs GraphQL?',
@@ -11419,6 +11530,23 @@ Common Async Patterns:
           description: 'Polling: client checks periodically. Push: server notifies client.',
           useWhen: 'Real-time updates needed — push preferred if possible',
           example: 'Long polling for compatibility, SSE/WebSocket for true push'
+        }
+      ],
+      comparisonCards: [
+        {
+          title: '10 System Design Trade-offs You Cannot Ignore',
+          items: [
+            { name: 'Vertical vs Horizontal Scaling', description: 'Vertical: add more CPU/RAM to one server (simpler, has limits). Horizontal: add more servers (complex but unlimited scale).' },
+            { name: 'SQL vs NoSQL', description: 'SQL: tables with rows/columns, ACID, complex queries. NoSQL: flexible schema, horizontal scale, eventual consistency.' },
+            { name: 'Batch vs Stream Processing', description: 'Batch: process accumulated data periodically (higher throughput). Stream: process in real-time as data arrives (lower latency).' },
+            { name: 'Normalization vs Denormalization', description: 'Normalized: no redundancy, complex joins. Denormalized: redundant data, faster reads, harder writes.' },
+            { name: 'Consistency vs Availability (CAP)', description: 'CP systems reject requests during partition to maintain consistency. AP systems serve stale data to remain available.' },
+            { name: 'Strong vs Eventual Consistency', description: 'Strong: every read sees the latest write (slower). Eventual: reads may be stale temporarily but converge (faster).' },
+            { name: 'REST vs GraphQL', description: 'REST: multiple endpoints, simple caching. GraphQL: single endpoint, client specifies exact fields needed, prevents over/under-fetching.' },
+            { name: 'Stateful vs Stateless', description: 'Stateful: server stores session state (simpler logic, harder to scale). Stateless: each request is independent (easy to scale, requires external state store).' },
+            { name: 'Read-Through vs Write-Through Cache', description: 'Read-through: cache loads data on miss. Write-through: writes go to cache and DB simultaneously (consistent but slower writes).' },
+            { name: 'Sync vs Async Processing', description: 'Sync: client waits for response (simple, higher latency). Async: client gets immediate ack, result delivered later via callback/queue.' }
+          ]
         }
       ]
     },
@@ -14680,6 +14808,26 @@ MVCC (Multi-Version Concurrency Control):
               { label: 'Examples', value: 'Cassandra, DynamoDB, CouchDB, Riak' }
             ]
           }
+        }
+      ],
+      comparisonCards: [
+        {
+          title: 'ACID Properties Explained',
+          items: [
+            { name: 'Atomicity', description: 'All writes in a transaction execute as one unit — "all or nothing". If any operation fails, the entire transaction is rolled back. No partial commits.' },
+            { name: 'Consistency', description: 'Every transaction moves the database from one valid state to another. All defined rules, constraints, and invariants are preserved. Different from CAP "consistency".' },
+            { name: 'Isolation', description: 'Concurrent transactions are isolated from each other. The strictest level is "serializability" (each transaction acts like it is the only one running). In practice, weaker isolation levels are used for performance.' },
+            { name: 'Durability', description: 'Once a transaction is committed, data is persisted even after system failure. In distributed systems, this means replication to multiple nodes.' }
+          ]
+        },
+        {
+          title: 'System Design Acronyms',
+          items: [
+            { name: 'CAP', description: 'Consistency, Availability, Partition tolerance — distributed systems can only guarantee two of three. Network partitions are inevitable, so the real choice is CP vs AP.' },
+            { name: 'BASE', description: 'Basically Available, Soft state, Eventually consistent — the NoSQL alternative to ACID. States will be consistent over time, not immediately.' },
+            { name: 'SOLID', description: 'Single Responsibility, Open-Closed, Liskov Substitution, Interface Segregation, Dependency Inversion — five OOP design principles for maintainable code.' },
+            { name: 'KISS', description: 'Keep It Simple, Stupid — avoid unnecessary complexity. Focus on user needs and stakeholder requirements over clever engineering.' }
+          ]
         }
       ],
       visualCards: [
