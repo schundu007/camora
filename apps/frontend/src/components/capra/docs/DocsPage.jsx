@@ -2093,25 +2093,8 @@ export default function DocsPage({ onBack }) {
         </div>
         </div>
 
-        {/* ── Right Sidebar — TOC only for SD problems, full for others ── */}
-        {selectedTopic && topicDetails && activePage === 'system-design' && (topicDetails.functionalRequirements || topicDetails.advancedImplementation) && tableOfContents.length > 0 && (
-          <div className="w-48 flex-shrink-0 h-screen sticky top-0 hidden xl:flex flex-col py-6 px-3 overflow-y-auto bg-white border-l border-[#e3e8ee]">
-            <div className="landing-mono text-[10px] text-emerald-600 tracking-widest uppercase mb-3">On This Page</div>
-            <div className="space-y-0.5">
-              {tableOfContents.map((item, i) => (
-                <a
-                  key={i}
-                  href={`#${item.id}`}
-                  onClick={e => { e.preventDefault(); document.getElementById(item.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}
-                  className="block px-2 py-1.5 rounded text-xs text-gray-600 hover:text-emerald-700 hover:bg-emerald-50 transition-all truncate landing-body"
-                >
-                  {item.label}
-                </a>
-              ))}
-            </div>
-          </div>
-        )}
-        {selectedTopic && topicDetails && !(activePage === 'system-design' && (topicDetails.functionalRequirements || topicDetails.advancedImplementation)) && (
+        {/* ── Right Sidebar — Progress & TOC (visible when topic selected) ── */}
+        {selectedTopic && topicDetails && (
           <div className="w-64 flex-shrink-0 h-screen sticky top-0 hidden xl:flex flex-col py-6 px-4 overflow-y-auto bg-white border-l border-[#e3e8ee]">
             {/* Progress Ring */}
             <div className="text-center mb-6">
