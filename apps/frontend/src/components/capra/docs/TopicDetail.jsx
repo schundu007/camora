@@ -104,7 +104,7 @@ function StaticCloudDiagram({ topicId, provider, staticSrc, diagramData, generat
 
   return (
     <div>
-      <div className="rounded-lg overflow-hidden flex items-center justify-center" style={{ background: '#ffffff' }}>
+      <div className="rounded-lg overflow-hidden flex items-center justify-center" style={{ background: '#1e293b' }}>
         <img
           src={staticSrc}
           alt={`${topicId} ${provider.toUpperCase()} architecture diagram`}
@@ -115,9 +115,18 @@ function StaticCloudDiagram({ topicId, provider, staticSrc, diagramData, generat
       </div>
       <div className="mt-2 flex items-center justify-between text-sm text-gray-400 landing-mono">
         <span>{provider.toUpperCase()} Architecture</span>
-        <a href={staticSrc} target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:text-emerald-500">
-          Full Size →
-        </a>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onGenerate}
+            className="text-xs text-violet-500 hover:text-violet-400 transition-colors"
+            title="Generate a fresh diagram using AI"
+          >
+            Regenerate →
+          </button>
+          <a href={staticSrc} target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:text-emerald-500">
+            Full Size →
+          </a>
+        </div>
       </div>
     </div>
   );
