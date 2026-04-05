@@ -67,7 +67,6 @@ body::after { bottom: 0; }
   html {
     @apply antialiased scroll-smooth;
     overflow-x: hidden;
-    font-size: 80%;
   }
 
   body {
