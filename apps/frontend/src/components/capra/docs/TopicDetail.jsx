@@ -141,11 +141,13 @@ export default function TopicDetail({
   setSelectedTopic, generatingDiagram, diagramData, diagramError,
   diagramDetailLevel, setDiagramDetailLevel, diagramCloudProvider, setDiagramCloudProvider,
   generateDiagram, codingTopics, systemDesignTopics, systemDesigns, behavioralTopics, filteredTopics,
+  tableOfContents = [], progressInfo,
 }) {
   if (!topicDetails) return null;
 
   // Pages that use system-design-style rendering (concepts, keyQuestions, dataModel, etc.)
   const isSDStyle = ['system-design', 'microservices', 'databases'].includes(activePage);
+  const isSDProblem = isSDStyle && (topicDetails.functionalRequirements || topicDetails.advancedImplementation);
   // SQL uses coding/DSA-style rendering (whenToUse, approach, commonProblems, etc.)
   const isCodingStyle = activePage === 'coding' || activePage === 'sql';
 
@@ -233,9 +235,15 @@ export default function TopicDetail({
         </div>
       </div>
 
-      {/* ── Interactive Toolbar (AlgoMaster-inspired) ── */}
+      {/* ── Interactive Toolbar ── */}
       <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2.5 rounded-lg mb-2 bg-[#f7f8f9] border border-[#e3e8ee]">
         <div className="flex items-center gap-2">
+          {/* Progress (SD problems only) */}
+          {isSDProblem && progressInfo && (
+            <span className="text-xs font-bold text-emerald-600 px-2 py-1 bg-emerald-50 rounded-lg border border-emerald-200 landing-mono">
+              {progressInfo.percent}% · {progressInfo.completed}/{progressInfo.total}
+            </span>
+          )}
           {/* Mark as Complete */}
           <button
             onClick={() => toggleComplete(selectedTopic)}
@@ -271,6 +279,23 @@ export default function TopicDetail({
           </button>
         </div>
       </div>
+
+      {/* ── On This Page — inline TOC for SD problems ── */}
+      {isSDProblem && tableOfContents.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5 px-3 py-2 rounded-lg mb-2 bg-white border border-[#e3e8ee]">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-600 mr-2 landing-mono">On This Page</span>
+          {tableOfContents.map((item, i) => (
+            <a
+              key={i}
+              href={`#${item.id}`}
+              onClick={e => { e.preventDefault(); document.getElementById(item.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}
+              className="text-xs text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 px-2 py-1 rounded transition-all landing-body"
+            >
+              {item.label}
+            </a>
+          ))}
+        </div>
+      )}
 
       {/* Ask AI Panel */}
       {showAskAI && (

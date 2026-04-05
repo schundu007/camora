@@ -659,7 +659,7 @@ export default function DocsPage({ onBack }) {
                     </button>
                   </div>
                 </div>
-              ) : selectedTopic ? <TopicDetail activePage={activePage} selectedTopic={selectedTopic} topicDetails={topicDetails} pageConfig={pageConfig} completedTopics={completedTopics} starredTopics={starredTopics} toggleComplete={toggleComplete} toggleStar={toggleStar} showAskAI={showAskAI} setShowAskAI={setShowAskAI} aiQuestion={aiQuestion} setAiQuestion={setAiQuestion} aiAnswer={aiAnswer} aiLoading={aiLoading} handleAskAI={handleAskAI} showRoadmap={showRoadmap} setShowRoadmap={setShowRoadmap} expandedTheoryQuestions={expandedTheoryQuestions} setExpandedTheoryQuestions={setExpandedTheoryQuestions} setSelectedTopic={setSelectedTopic} generatingDiagram={generatingDiagram} diagramData={diagramData} diagramError={diagramError} diagramDetailLevel={diagramDetailLevel} setDiagramDetailLevel={setDiagramDetailLevel} diagramCloudProvider={diagramCloudProvider} setDiagramCloudProvider={setDiagramCloudProvider} generateDiagram={handleGenerateDiagram} codingTopics={codingTopics} systemDesignTopics={systemDesignTopics} systemDesigns={systemDesigns} behavioralTopics={behavioralTopics} filteredTopics={filteredTopics} /> : (
+              ) : selectedTopic ? <TopicDetail activePage={activePage} selectedTopic={selectedTopic} topicDetails={topicDetails} pageConfig={pageConfig} completedTopics={completedTopics} starredTopics={starredTopics} toggleComplete={toggleComplete} toggleStar={toggleStar} showAskAI={showAskAI} setShowAskAI={setShowAskAI} aiQuestion={aiQuestion} setAiQuestion={setAiQuestion} aiAnswer={aiAnswer} aiLoading={aiLoading} handleAskAI={handleAskAI} showRoadmap={showRoadmap} setShowRoadmap={setShowRoadmap} expandedTheoryQuestions={expandedTheoryQuestions} setExpandedTheoryQuestions={setExpandedTheoryQuestions} setSelectedTopic={setSelectedTopic} generatingDiagram={generatingDiagram} diagramData={diagramData} diagramError={diagramError} diagramDetailLevel={diagramDetailLevel} setDiagramDetailLevel={setDiagramDetailLevel} diagramCloudProvider={diagramCloudProvider} setDiagramCloudProvider={setDiagramCloudProvider} generateDiagram={handleGenerateDiagram} codingTopics={codingTopics} systemDesignTopics={systemDesignTopics} systemDesigns={systemDesigns} behavioralTopics={behavioralTopics} filteredTopics={filteredTopics} tableOfContents={tableOfContents} progressInfo={getProgress()} /> : (
                 <>
                   {/* ── Overview Dashboard ── */}
                   {activePage === 'overview' && (
@@ -2093,8 +2093,8 @@ export default function DocsPage({ onBack }) {
         </div>
         </div>
 
-        {/* ── Right Sidebar — Progress & TOC (visible when topic selected) ── */}
-        {selectedTopic && topicDetails && (
+        {/* ── Right Sidebar — Progress & TOC (hidden for SD problems) ── */}
+        {selectedTopic && topicDetails && !(activePage === 'system-design' && (topicDetails.functionalRequirements || topicDetails.advancedImplementation)) && (
           <div className="w-64 flex-shrink-0 h-screen sticky top-0 hidden xl:flex flex-col py-6 px-4 overflow-y-auto bg-white border-l border-[#e3e8ee]">
             {/* Progress Ring */}
             <div className="text-center mb-6">
