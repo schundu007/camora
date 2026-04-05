@@ -9,7 +9,6 @@ import {
   ComparisonCard, CheatSheetCard, EvolutionTimeline,
   PatternCardGrid, StaticDiagramGrid, FlowchartCard, ChartCard
 } from './TopicVisuals.jsx';
-import ArticleRenderer from './ArticleRenderer.jsx';
 
 /**
  * Table for capacity planning / back-of-envelope estimation.
@@ -105,12 +104,12 @@ function StaticCloudDiagram({ topicId, provider, staticSrc, diagramData, generat
 
   return (
     <div>
-      <div className="rounded-lg overflow-hidden flex items-center justify-center" style={{ background: '#ffffff' }}>
+      <div className="rounded-lg overflow-hidden flex items-center justify-center bg-white">
         <img
           src={staticSrc}
           alt={`${topicId} ${provider.toUpperCase()} architecture diagram`}
           className="w-full h-auto object-contain"
-          style={{ maxHeight: '100%', width: '100%' }}
+          style={{ maxHeight: '100%', width: '100%', filter: 'contrast(1.6) saturate(1.4)' }}
           onError={() => setImgError(true)}
         />
       </div>
@@ -141,13 +140,11 @@ export default function TopicDetail({
   setSelectedTopic, generatingDiagram, diagramData, diagramError,
   diagramDetailLevel, setDiagramDetailLevel, diagramCloudProvider, setDiagramCloudProvider,
   generateDiagram, codingTopics, systemDesignTopics, systemDesigns, behavioralTopics, filteredTopics,
-  tableOfContents = [], progressInfo,
 }) {
   if (!topicDetails) return null;
 
   // Pages that use system-design-style rendering (concepts, keyQuestions, dataModel, etc.)
   const isSDStyle = ['system-design', 'microservices', 'databases'].includes(activePage);
-  const isSDProblem = isSDStyle && (topicDetails.functionalRequirements || topicDetails.advancedImplementation);
   // SQL uses coding/DSA-style rendering (whenToUse, approach, commonProblems, etc.)
   const isCodingStyle = activePage === 'coding' || activePage === 'sql';
 
@@ -235,15 +232,9 @@ export default function TopicDetail({
         </div>
       </div>
 
-      {/* ── Interactive Toolbar ── */}
+      {/* ── Interactive Toolbar (AlgoMaster-inspired) ── */}
       <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2.5 rounded-lg mb-2 bg-[#f7f8f9] border border-[#e3e8ee]">
         <div className="flex items-center gap-2">
-          {/* Progress (SD problems only) */}
-          {isSDProblem && progressInfo && (
-            <span className="text-xs font-bold text-emerald-600 px-2 py-1 bg-emerald-50 rounded-lg border border-emerald-200 landing-mono">
-              {progressInfo.percent}% · {progressInfo.completed}/{progressInfo.total}
-            </span>
-          )}
           {/* Mark as Complete */}
           <button
             onClick={() => toggleComplete(selectedTopic)}
@@ -279,7 +270,6 @@ export default function TopicDetail({
           </button>
         </div>
       </div>
-
 
       {/* Ask AI Panel */}
       {showAskAI && (
@@ -622,13 +612,8 @@ export default function TopicDetail({
         </div>
       )}
 
-      {/* Article-style renderer for system design problems (URL Shortener, Twitter, Uber, etc.) */}
-      {isSDStyle && (topicDetails.functionalRequirements || topicDetails.advancedImplementation) && (
-        <ArticleRenderer topicDetails={topicDetails} selectedTopic={selectedTopic} />
-      )}
-
-      {/* System Design / LLD Topic Detail (concepts, non-problem topics) */}
-      {(isSDStyle || activePage === 'low-level') && !(isSDStyle && (topicDetails.functionalRequirements || topicDetails.advancedImplementation)) && (topicDetails.concepts || topicDetails.requirements || topicDetails.functionalRequirements || topicDetails.primitives || topicDetails.problems || topicDetails.structures || topicDetails.coreEntities || topicDetails.implementation) && (
+      {/* System Design / LLD Problem Detail */}
+      {(isSDStyle || activePage === 'low-level') && (topicDetails.concepts || topicDetails.requirements || topicDetails.functionalRequirements || topicDetails.primitives || topicDetails.problems || topicDetails.structures || topicDetails.coreEntities || topicDetails.implementation) && (
         <div className="space-y-3">
           {/* Comprehensive System Design / LLD Problem Content */}
           {(topicDetails.requirements || topicDetails.functionalRequirements || topicDetails.introduction || topicDetails.concepts) && (

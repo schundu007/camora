@@ -464,32 +464,13 @@ export default function DocsPage({ onBack }) {
       if (topicDetails.commonProblems) toc.push({ id: 'practice', label: 'Practice Problems' });
       if (topicDetails.tips) toc.push({ id: 'tips', label: 'Interview Tips' });
     } else if (activePage === 'system-design') {
-      // Article-style SD problems (URL Shortener, Twitter, etc.)
-      const isSDProblem = topicDetails.functionalRequirements || topicDetails.advancedImplementation;
-      if (isSDProblem) {
-        if (topicDetails.introduction) toc.push({ id: 'introduction', label: 'Introduction' });
-        if (topicDetails.functionalRequirements || topicDetails.nonFunctionalRequirements) toc.push({ id: 'requirements', label: 'Requirements & Goals' });
-        if (topicDetails.estimation) toc.push({ id: 'estimation', label: 'Capacity Estimation' });
-        if (topicDetails.dataModel) toc.push({ id: 'data-model', label: 'Data Model' });
-        if (topicDetails.apiDesign?.endpoints) toc.push({ id: 'api-design', label: 'API Design' });
-        if (topicDetails.keyQuestions) toc.push({ id: 'key-questions', label: 'Key Questions' });
-        if (topicDetails.algorithmApproaches) toc.push({ id: 'algorithms', label: 'Algorithms' });
-        if (topicDetails.basicImplementation || topicDetails.advancedImplementation) toc.push({ id: 'implementation', label: 'Architecture' });
-        if (topicDetails.createFlow || topicDetails.redirectFlow) toc.push({ id: 'system-flows', label: 'System Flows' });
-        if (topicDetails.architectureLayers) toc.push({ id: 'architecture', label: 'Architecture Layers' });
-        if (topicDetails.deepDiveTopics) toc.push({ id: 'deep-dive', label: 'Deep Dive' });
-        if (topicDetails.tradeoffDecisions) toc.push({ id: 'tradeoffs', label: 'Trade-offs' });
-        if (topicDetails.interviewFollowups) toc.push({ id: 'followups', label: 'Follow-ups' });
-        if (topicDetails.codeExamples) toc.push({ id: 'code', label: 'Code' });
-      } else {
-        if (topicDetails.introduction) toc.push({ id: 'overview', label: 'Overview' });
-        if (topicDetails.requirements) toc.push({ id: 'requirements', label: 'Requirements' });
-        if (topicDetails.keyQuestions) toc.push({ id: 'key-questions', label: 'Key Questions' });
-        if (topicDetails.estimation) toc.push({ id: 'estimation', label: 'Estimation' });
-        if (topicDetails.apiDesign) toc.push({ id: 'api-design', label: 'API Design' });
-        if (topicDetails.dataModel) toc.push({ id: 'data-model', label: 'Data Model' });
-        if (topicDetails.basicImplementation) toc.push({ id: 'architecture', label: 'Architecture' });
-      }
+      if (topicDetails.introduction) toc.push({ id: 'overview', label: 'Overview' });
+      if (topicDetails.requirements) toc.push({ id: 'requirements', label: 'Requirements' });
+      if (topicDetails.keyQuestions) toc.push({ id: 'key-questions', label: 'Key Questions' });
+      if (topicDetails.estimation) toc.push({ id: 'estimation', label: 'Estimation' });
+      if (topicDetails.apiDesign) toc.push({ id: 'api-design', label: 'API Design' });
+      if (topicDetails.dataModel) toc.push({ id: 'data-model', label: 'Data Model' });
+      if (topicDetails.basicImplementation) toc.push({ id: 'architecture', label: 'Architecture' });
     } else if (activePage === 'low-level') {
       if (topicDetails.introduction) toc.push({ id: 'overview', label: 'Overview' });
       if (topicDetails.keyQuestions) toc.push({ id: 'key-questions', label: 'Key Questions' });
@@ -659,7 +640,7 @@ export default function DocsPage({ onBack }) {
                     </button>
                   </div>
                 </div>
-              ) : selectedTopic ? <TopicDetail activePage={activePage} selectedTopic={selectedTopic} topicDetails={topicDetails} pageConfig={pageConfig} completedTopics={completedTopics} starredTopics={starredTopics} toggleComplete={toggleComplete} toggleStar={toggleStar} showAskAI={showAskAI} setShowAskAI={setShowAskAI} aiQuestion={aiQuestion} setAiQuestion={setAiQuestion} aiAnswer={aiAnswer} aiLoading={aiLoading} handleAskAI={handleAskAI} showRoadmap={showRoadmap} setShowRoadmap={setShowRoadmap} expandedTheoryQuestions={expandedTheoryQuestions} setExpandedTheoryQuestions={setExpandedTheoryQuestions} setSelectedTopic={setSelectedTopic} generatingDiagram={generatingDiagram} diagramData={diagramData} diagramError={diagramError} diagramDetailLevel={diagramDetailLevel} setDiagramDetailLevel={setDiagramDetailLevel} diagramCloudProvider={diagramCloudProvider} setDiagramCloudProvider={setDiagramCloudProvider} generateDiagram={handleGenerateDiagram} codingTopics={codingTopics} systemDesignTopics={systemDesignTopics} systemDesigns={systemDesigns} behavioralTopics={behavioralTopics} filteredTopics={filteredTopics} tableOfContents={tableOfContents} progressInfo={getProgress()} /> : (
+              ) : selectedTopic ? <TopicDetail activePage={activePage} selectedTopic={selectedTopic} topicDetails={topicDetails} pageConfig={pageConfig} completedTopics={completedTopics} starredTopics={starredTopics} toggleComplete={toggleComplete} toggleStar={toggleStar} showAskAI={showAskAI} setShowAskAI={setShowAskAI} aiQuestion={aiQuestion} setAiQuestion={setAiQuestion} aiAnswer={aiAnswer} aiLoading={aiLoading} handleAskAI={handleAskAI} showRoadmap={showRoadmap} setShowRoadmap={setShowRoadmap} expandedTheoryQuestions={expandedTheoryQuestions} setExpandedTheoryQuestions={setExpandedTheoryQuestions} setSelectedTopic={setSelectedTopic} generatingDiagram={generatingDiagram} diagramData={diagramData} diagramError={diagramError} diagramDetailLevel={diagramDetailLevel} setDiagramDetailLevel={setDiagramDetailLevel} diagramCloudProvider={diagramCloudProvider} setDiagramCloudProvider={setDiagramCloudProvider} generateDiagram={handleGenerateDiagram} codingTopics={codingTopics} systemDesignTopics={systemDesignTopics} systemDesigns={systemDesigns} behavioralTopics={behavioralTopics} filteredTopics={filteredTopics} /> : (
                 <>
                   {/* ── Overview Dashboard ── */}
                   {activePage === 'overview' && (

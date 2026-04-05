@@ -32,9 +32,9 @@ body::after { bottom: 0; }
     --bg2: #ffffff;
     --primary: #059669;
     --primary-light: #10b981;
-    --text: #000000;
-    --text-subtle: #111827;
-    --text-dim: #374151;
+    --text: #111827;
+    --text-subtle: #374151;
+    --text-dim: #6b7280;
     --text-muted: #4b5563;
     --border: #d1d5db;
     --border2: #9ca3af;
@@ -44,9 +44,9 @@ body::after { bottom: 0; }
     --nav-bg: #f8fafc;
     --nav-bg-secondary: #ffffff;
     --nav-border: #e2e8f0;
-    --nav-text: #000000;
-    --nav-text-secondary: #111827;
-    --nav-text-muted: #4b5563;
+    --nav-text: #111827;
+    --nav-text-secondary: #374151;
+    --nav-text-muted: #6b7280;
     --nav-hover: #f1f5f9;
   }
 
@@ -99,7 +99,7 @@ body::after { bottom: 0; }
   /* Selection */
   ::selection {
     background: rgba(16, 185, 129, 0.3);
-    color: #000000;
+    color: #0f172a;
   }
 
 }
@@ -175,7 +175,7 @@ body::after { bottom: 0; }
 
   .block-headline-text {
     @apply font-display text-sm font-bold leading-snug tracking-tight;
-    background: linear-gradient(135deg, #ffffff 30%, #34d399 100%);
+    background: linear-gradient(135deg, #fafafa 30%, #10b981 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -236,8 +236,7 @@ body::after { bottom: 0; }
   }
 
   .code-content {
-    @apply p-3 font-mono text-sm leading-snug overflow-x-auto;
-    background-color: var(--surface2);
+    @apply p-3 font-mono text-sm leading-snug bg-gray-100 overflow-x-auto;
   }
 
   /* Follow-up card */
@@ -355,7 +354,7 @@ select {
 
 select option {
   background-color: #ffffff;
-  color: #000000;
+  color: #0f172a;
   padding: 8px;
 }
 
@@ -366,12 +365,12 @@ select option:checked {
   color: white;
 }
 
-/* Accent colors — high contrast for readability */
-:root .text-emerald-light { color: #047857 !important; }
-:root .text-amber-light { color: #b45309 !important; }
-:root .text-rose-light { color: #be123c !important; }
-:root .text-violet-light { color: #6d28d9 !important; }
-:root .text-cyan-light { color: #0e7490 !important; }
+/* Light mode: darken neon accent colors for readability */
+:root .text-emerald-light { color: #059669 !important; }
+:root .text-amber-light { color: #d97706 !important; }
+:root .text-rose-light { color: #dc2626 !important; }
+:root .text-violet-light { color: #7c3aed !important; }
+:root .text-cyan-light { color: #0891b2 !important; }
 :root .text-indigo-light { color: #4338ca !important; }
 
 /* Highlight.js */
@@ -649,13 +648,4 @@ main, [role="main"] {
 .prep-nav-item.custom.completed .prep-nav-icon {
   color: #8b5cf6;
 }
-
-/* ── Global Text Visibility — ensure dark black text everywhere ── */
-.text-gray-900 { color: #000000 !important; }
-.text-gray-800 { color: #0a0a0a !important; }
-.text-gray-700 { color: #111827 !important; }
-.text-gray-600 { color: #1f2937 !important; }
-.text-gray-500 { color: #374151 !important; }
-.text-gray-400 { color: #4b5563 !important; }
-.text-gray-300 { color: #6b7280 !important; }
 
