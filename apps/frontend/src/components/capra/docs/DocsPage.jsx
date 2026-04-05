@@ -2076,51 +2076,7 @@ export default function DocsPage({ onBack }) {
 
         {/* ── Right Sidebar — Progress & TOC (visible when topic selected) ── */}
         {selectedTopic && topicDetails && (
-          <div className="w-64 flex-shrink-0 h-screen sticky top-0 hidden xl:flex flex-col py-6 px-4 overflow-y-auto bg-white border-l border-[#e3e8ee]">
-            {/* Progress Ring */}
-            <div className="text-center mb-6">
-              <div className="relative w-20 h-20 mx-auto mb-3">
-                <svg className="w-20 h-20 -rotate-90" viewBox="0 0 80 80">
-                  <circle cx="40" cy="40" r="35" fill="none" stroke="#f1f5f9" strokeWidth="6" />
-                  <circle cx="40" cy="40" r="35" fill="none" stroke="#10b981" strokeWidth="6" strokeLinecap="round"
-                    strokeDasharray={`${2 * Math.PI * 35}`}
-                    strokeDashoffset={`${2 * Math.PI * 35 * (1 - getProgress().percent / 100)}`}
-                    style={{ transition: 'stroke-dashoffset 0.5s ease' }}
-                  />
-                </svg>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-sm font-bold text-gray-900">{getProgress().percent}%</span>
-                </div>
-              </div>
-              <div className="text-sm text-gray-500 landing-body">{getProgress().completed}/{getProgress().total} topics</div>
-              <div className="text-xs text-gray-400 landing-mono mt-1">{pageConfig.title}</div>
-            </div>
-
-            {/* Quick Actions */}
-            <div className="space-y-1.5 mb-6">
-              <button
-                onClick={() => toggleComplete(selectedTopic)}
-                className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all landing-body ${completedTopics[selectedTopic] ? 'bg-emerald-50 text-emerald-600' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'}`}
-              >
-                <Icon name={completedTopics[selectedTopic] ? 'checkCircle' : 'check'} size={14} />
-                {completedTopics[selectedTopic] ? 'Completed' : 'Mark Complete'}
-              </button>
-              <button
-                onClick={() => toggleStar(selectedTopic)}
-                className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all landing-body ${starredTopics[selectedTopic] ? 'text-yellow-500 bg-amber-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'}`}
-              >
-                <Icon name={starredTopics[selectedTopic] ? 'star5' : 'star'} size={14} />
-                {starredTopics[selectedTopic] ? 'Starred' : 'Add to Favorites'}
-              </button>
-              <button
-                onClick={() => setShowAskAI(!showAskAI)}
-                className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 transition-all landing-body"
-              >
-                <Icon name="sparkles" size={14} />
-                Ask AI
-              </button>
-            </div>
-
+          <div className="w-48 flex-shrink-0 h-screen sticky top-0 hidden xl:flex flex-col py-6 px-3 overflow-y-auto bg-white border-l border-[#e3e8ee]">
             {/* Table of Contents */}
             {tableOfContents.length > 0 && (
               <div>
