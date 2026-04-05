@@ -740,11 +740,11 @@ export default function JobPrepPage() {
             ))}
           </section>
 
-          {/* ── AI-Generated Interview Preparation ── */}
+          {/* ── JD based Interview Preparation ── */}
           <section style={{ background: '#ffffff', border: '1px solid #e3e8ee', borderRadius: '12px', padding: '24px', marginBottom: '24px' }}>
             <div className="flex items-start justify-between mb-1">
               <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#111827', margin: 0, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
-                AI-Generated Interview Preparation
+                JD based Interview Preparation
               </h2>
               {Object.keys(generatedSections).length > 0 && !generating && (
                 <span style={{ fontSize: '12px', color: '#10b981', fontWeight: 600 }}>
