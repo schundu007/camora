@@ -227,9 +227,8 @@ export default function PricingPage() {
         <h1 className="mt-3 text-3xl md:text-4xl font-semibold tracking-tight text-gray-900">
           The APPA platform. All-in-one.
         </h1>
-        <p className="mt-3 text-base text-gray-600 max-w-xl mx-auto">
-          Apply. Prepare. Practice. Attend. Others charge $25-150/mo for just the copilot.
-          Camora gives you the complete interview pipeline — starting free.
+        <p className="mt-3 text-sm text-gray-500 max-w-md mx-auto">
+          The complete interview pipeline — from job search to live AI. Starting free.
         </p>
       </section>
 
@@ -260,52 +259,34 @@ export default function PricingPage() {
           >
             <table className="w-full text-[13px]">
               <thead>
-                <tr style={{ borderBottom: '2px solid #e2e8f0' }}>
-                  <th className="text-left py-4 px-4 text-gray-500 font-mono text-[10px] uppercase tracking-wider min-w-[220px]">Feature</th>
-                  <th className="py-5 px-3 text-center min-w-[100px]" style={{ background: 'linear-gradient(180deg, #ecfdf5 0%, #d1fae5 100%)', borderRadius: '14px 14px 0 0', boxShadow: 'inset 0 -2px 0 #34d399' }}>
-                    <div className="font-extrabold text-base" style={{ background: 'linear-gradient(135deg, #059669, #0891b2)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Camora</div>
-                    <div className="text-lg font-black mt-1" style={{ color: '#059669' }}>FREE</div>
-                  </th>
-                  <th className="py-4 px-3 text-center min-w-[80px]">
-                    <div className="text-gray-500 text-xs font-medium">Final Round</div>
-                    <div className="text-base font-extrabold mt-1" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>$100<span className="text-[10px] font-normal text-gray-400">/mo</span></div>
-                  </th>
-                  <th className="py-4 px-3 text-center min-w-[80px]">
-                    <div className="text-gray-500 text-xs font-medium">LockedIn</div>
-                    <div className="text-base font-extrabold mt-1" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>$55-120<span className="text-[10px] font-normal text-gray-400">/mo</span></div>
-                  </th>
-                  <th className="py-4 px-3 text-center min-w-[80px] hidden md:table-cell">
-                    <div className="text-gray-500 text-xs font-medium">Solver</div>
-                    <div className="text-base font-extrabold mt-1" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>$39<span className="text-[10px] font-normal text-gray-400">/mo</span></div>
-                  </th>
-                  <th className="py-4 px-3 text-center min-w-[80px] hidden md:table-cell">
-                    <div className="text-gray-500 text-xs font-medium">Sensei</div>
-                    <div className="text-base font-extrabold mt-1" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>$24-89<span className="text-[10px] font-normal text-gray-400">/mo</span></div>
-                  </th>
-                  <th className="py-4 px-3 text-center min-w-[80px] hidden lg:table-cell">
-                    <div className="text-gray-500 text-xs font-medium">TechPrep</div>
-                    <div className="text-base font-extrabold mt-1" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>$39<span className="text-[10px] font-normal text-gray-400">/mo</span></div>
-                  </th>
-                  <th className="py-4 px-3 text-center min-w-[80px] hidden lg:table-cell">
-                    <div className="text-gray-500 text-xs font-medium">AlgoMaster</div>
-                    <div className="text-base font-extrabold mt-1" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>$29<span className="text-[10px] font-normal text-gray-400">/mo</span></div>
-                  </th>
-                  <th className="py-4 px-3 text-center min-w-[80px] hidden lg:table-cell">
-                    <div className="text-gray-500 text-xs font-medium">DesignGurus</div>
-                    <div className="text-base font-extrabold mt-1" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>$98-197<span className="text-[10px] font-normal text-gray-400">/course</span></div>
-                  </th>
-                  <th className="py-4 px-3 text-center min-w-[80px] hidden xl:table-cell">
-                    <div className="text-gray-500 text-xs font-medium">AIApply</div>
-                    <div className="text-base font-extrabold mt-1" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>$29-200<span className="text-[10px] font-normal text-gray-400">/mo</span></div>
-                  </th>
-                  <th className="py-4 px-3 text-center min-w-[80px] hidden xl:table-cell">
-                    <div className="text-gray-500 text-xs font-medium">OfferGoose</div>
-                    <div className="text-base font-extrabold mt-1" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>$89-200<span className="text-[10px] font-normal text-gray-400">/mo</span></div>
-                  </th>
-                  <th className="py-4 px-3 text-center min-w-[80px] hidden xl:table-cell">
-                    <div className="text-gray-500 text-xs font-medium">Parakeet</div>
-                    <div className="text-base font-extrabold mt-1" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>$100-200<span className="text-[10px] font-normal text-gray-400">/mo</span></div>
-                  </th>
+                <tr style={{ borderBottom: '2px solid #e2e8f0', verticalAlign: 'bottom' }}>
+                  <th className="text-left py-3 px-4 text-gray-500 font-mono text-[10px] uppercase tracking-wider min-w-[200px]">Feature</th>
+                  {[
+                    { name: 'Camora', price: 'FREE', unit: '', highlight: true },
+                    { name: 'Final Round', price: '$100', unit: '/mo' },
+                    { name: 'LockedIn', price: '$55-120', unit: '/mo' },
+                    { name: 'Solver', price: '$39', unit: '/mo', hide: 'md' },
+                    { name: 'Sensei', price: '$24-89', unit: '/mo', hide: 'md' },
+                    { name: 'TechPrep', price: '$39', unit: '/mo', hide: 'lg' },
+                    { name: 'AlgoMaster', price: '$29', unit: '/mo', hide: 'lg' },
+                    { name: 'DesignGurus', price: '$98-197', unit: '/course', hide: 'lg' },
+                    { name: 'AIApply', price: '$29-200', unit: '/mo', hide: 'xl' },
+                    { name: 'OfferGoose', price: '$89-200', unit: '/mo', hide: 'xl' },
+                    { name: 'Parakeet', price: '$100-200', unit: '/mo', hide: 'xl' },
+                  ].map((col) => (
+                    <th
+                      key={col.name}
+                      className={`py-3 px-2 text-center whitespace-nowrap ${col.hide ? `hidden ${col.hide}:table-cell` : ''}`}
+                      style={col.highlight ? { background: 'linear-gradient(180deg, #ecfdf5, #d1fae5)', borderRadius: '14px 14px 0 0', boxShadow: 'inset 0 -2px 0 #34d399' } : {}}
+                    >
+                      <div className={`text-[11px] font-medium ${col.highlight ? '' : 'text-gray-500'}`} style={col.highlight ? { background: 'linear-gradient(135deg, #059669, #0891b2)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontSize: '13px', fontWeight: 800 } : {}}>
+                        {col.name}
+                      </div>
+                      <div className="text-sm font-extrabold mt-0.5" style={col.highlight ? { color: '#059669' } : { background: 'linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                        {col.price}<span className="text-[9px] font-normal text-gray-400">{col.unit}</span>
+                      </div>
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
