@@ -181,7 +181,7 @@ export default function PricingPage() {
                 <button onClick={logout} className="text-[13px] text-gray-400 hover:text-red-500 transition-colors font-medium">Sign out</button>
               </>
             ) : (
-              <Link to="/login" className="text-[13px] text-gray-500 hover:text-gray-900 transition-colors font-medium">Sign in</Link>
+              <Link to="/login?redirect=/pricing" className="text-[13px] text-gray-500 hover:text-gray-900 transition-colors font-medium">Sign in</Link>
             )}
             <Link to="/lumora" className="px-4 py-1.5 text-[13px] font-medium text-black bg-emerald-400 hover:bg-emerald-300 transition-colors">
               Launch App
@@ -196,7 +196,7 @@ export default function PricingPage() {
           </button>
         </div>
         {mobileMenuOpen && (
-          <div className="md:hidden border-t border-[#e3e8ee] bg-white px-6 py-4 border-b border-[#e3e8ee] space-y-2">
+          <div className="md:hidden border-t border-[#e3e8ee] px-6 py-4 border-b border-[#e3e8ee] space-y-2" style={{ background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)' }}>
             {NAV_LINKS.map((link) =>
               link.external ? (
                 <a key={link.label} href={link.href} className="block py-2 text-sm text-gray-600 font-medium">{link.label}</a>
@@ -212,7 +212,7 @@ export default function PricingPage() {
                 <button onClick={() => { logout(); setMobileMenuOpen(false); }} className="block py-2 text-sm text-red-500 font-medium">Sign out</button>
               </>
             ) : (
-              <Link to="/login" className="block py-2 text-sm text-gray-600 font-medium"
+              <Link to="/login?redirect=/pricing" className="block py-2 text-sm text-gray-600 font-medium"
                     onClick={() => setMobileMenuOpen(false)}>Sign in</Link>
             )}
             <Link to="/lumora" className="block py-2 text-sm text-emerald-600 font-semibold"

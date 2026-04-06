@@ -430,7 +430,7 @@ export default function JobsPage() {
               </>
             ) : !authLoading ? (
               <Link
-                to="/login"
+                to="/login?redirect=/jobs"
                 style={{
                   fontSize: '14px',
                   fontWeight: 500,
@@ -462,9 +462,10 @@ export default function JobsPage() {
       {/* ═══════════════════════ Mobile Menu ═══════════════════════ */}
       {mobileMenuOpen && (
         <div
-          className="fixed top-14 left-0 right-0 z-40 md:hidden"
+          className="fixed top-14 left-0 right-0 z-50 md:hidden"
           style={{
-            background: '#ffffff',
+            background: 'rgba(255,255,255,0.95)',
+            backdropFilter: 'blur(12px)',
             borderBottom: '1px solid #e3e8ee',
             padding: '8px 16px',
           }}

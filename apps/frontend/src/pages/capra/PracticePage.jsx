@@ -293,7 +293,7 @@ export default function PracticePage() {
               </>
             ) : !loading ? (
               <Link
-                to="/login"
+                to="/login?redirect=/capra/practice"
                 className="practice-body"
                 style={{
                   fontSize: '14px',
@@ -320,9 +320,10 @@ export default function PracticePage() {
       {/* ═══════════════════════ Mobile Menu ═══════════════════════ */}
       {mobileMenuOpen && (
         <div
-          className="fixed top-14 left-0 right-0 z-40 md:hidden"
+          className="fixed top-14 left-0 right-0 z-50 md:hidden"
           style={{
-            background: '#ffffff',
+            background: 'rgba(255,255,255,0.95)',
+            backdropFilter: 'blur(12px)',
             borderBottom: '1px solid #e3e8ee',
             padding: '8px 16px',
           }}
@@ -411,7 +412,7 @@ export default function PracticePage() {
             </>
           ) : !loading ? (
             <Link
-              to="/login"
+              to="/login?redirect=/capra/practice"
               onClick={() => setMobileMenuOpen(false)}
               className="practice-body"
               style={{
