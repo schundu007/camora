@@ -365,7 +365,6 @@ export default function PricingPage() {
                 backgroundOrigin: 'border-box',
                 backgroundClip: 'padding-box, border-box',
                 boxShadow: '0 8px 32px rgba(99,102,241,0.2), 0 2px 8px rgba(99,102,241,0.1)',
-                transform: 'scale(1.04)',
                 zIndex: 2,
               } : plan.name === 'Annual' ? {
                 background: 'linear-gradient(180deg, #fffbeb 0%, #ffffff 100%)',
@@ -377,8 +376,7 @@ export default function PricingPage() {
                 backgroundSize: '100% 100%, 300% 300%',
                 animation: 'gradient-border 4s ease-in-out infinite',
                 boxShadow: '0 16px 50px rgba(245,158,11,0.3), 0 6px 20px rgba(245,158,11,0.2), 0 0 0 4px rgba(251,191,36,0.1)',
-                transform: 'scale(1.1)',
-                zIndex: 4,
+                zIndex: 3,
               } : { borderRadius: '24px', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}
             >
               {plan.popular && (
