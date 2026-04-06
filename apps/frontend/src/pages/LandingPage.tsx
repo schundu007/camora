@@ -520,7 +520,7 @@ export default function LandingPage() {
       {/* ── PROCESS — Accordion (MetAntz-style) ── */}
       <section id="process" className="px-6 py-12 md:py-16" style={{ zIndex: 1 }}>
         <div className="max-w-6xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-16 lg:gap-24 items-start">
+          <div className="grid lg:grid-cols-2 gap-16 lg:gap-24 items-stretch">
             <FadeIn>
               <span className="gradient-text text-sm font-bold tracking-[0.2em] uppercase">Our Process</span>
               <h2 className="font-display text-4xl md:text-5xl font-bold tracking-tight mt-4 leading-[1.1]">Your path to the offer</h2>
