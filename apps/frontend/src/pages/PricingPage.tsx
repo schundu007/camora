@@ -368,15 +368,17 @@ export default function PricingPage() {
                 transform: 'scale(1.04)',
                 zIndex: 2,
               } : plan.name === 'Annual' ? {
-                background: 'white',
-                borderRadius: '24px',
-                border: '3px solid transparent',
-                backgroundImage: 'linear-gradient(white, white), linear-gradient(135deg, #fbbf24, #f59e0b, #d97706)',
+                background: 'linear-gradient(180deg, #fffbeb 0%, #ffffff 100%)',
+                borderRadius: '28px',
+                border: '3.5px solid transparent',
+                backgroundImage: 'linear-gradient(180deg, #fffbeb, #ffffff), linear-gradient(135deg, #fbbf24, #f59e0b, #d97706, #fbbf24)',
                 backgroundOrigin: 'border-box',
                 backgroundClip: 'padding-box, border-box',
-                boxShadow: '0 12px 40px rgba(245,158,11,0.25), 0 4px 12px rgba(245,158,11,0.15)',
-                transform: 'scale(1.07)',
-                zIndex: 3,
+                backgroundSize: '100% 100%, 300% 300%',
+                animation: 'gradient-border 4s ease-in-out infinite',
+                boxShadow: '0 16px 50px rgba(245,158,11,0.3), 0 6px 20px rgba(245,158,11,0.2), 0 0 0 4px rgba(251,191,36,0.1)',
+                transform: 'scale(1.1)',
+                zIndex: 4,
               } : { borderRadius: '24px', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}
             >
               {plan.popular && (
