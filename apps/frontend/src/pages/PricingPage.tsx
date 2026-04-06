@@ -342,15 +342,30 @@ export default function PricingPage() {
           {PLANS.map((plan) => (
             <div
               key={plan.name}
-              className={`relative bg-white p-6 border border-[#e3e8ee] shadow-[0_1px_3px_rgba(0,0,0,0.04)] flex flex-col ${plan.popular ? 'ring-2 ring-emerald-500/30 bg-emerald-50/50' : ''}`}
+              className={`relative p-6 flex flex-col ${plan.popular ? '' : plan.name === 'Annual' ? '' : 'bg-white border border-[#e3e8ee]'}`}
+              style={plan.popular ? {
+                background: 'white',
+                border: '2px solid transparent',
+                backgroundImage: 'linear-gradient(white, white), linear-gradient(135deg, #34d399, #38bdf8, #818cf8, #c084fc)',
+                backgroundOrigin: 'border-box',
+                backgroundClip: 'padding-box, border-box',
+                boxShadow: '0 4px 20px rgba(99,102,241,0.15)',
+              } : plan.name === 'Annual' ? {
+                background: 'white',
+                border: '2px solid transparent',
+                backgroundImage: 'linear-gradient(white, white), linear-gradient(135deg, #fbbf24, #f59e0b, #d97706)',
+                backgroundOrigin: 'border-box',
+                backgroundClip: 'padding-box, border-box',
+                boxShadow: '0 4px 20px rgba(245,158,11,0.15)',
+              } : { boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
             >
               {plan.popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 bg-emerald-500 text-[10px] font-bold text-black uppercase tracking-wider">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-[10px] font-bold text-white uppercase tracking-wider" style={{ background: 'linear-gradient(135deg, #34d399, #818cf8)' }}>
                   Most Popular
                 </div>
               )}
               {plan.name === 'Annual' && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 bg-amber-400 text-[10px] font-bold text-black uppercase tracking-wider">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-[10px] font-bold text-white uppercase tracking-wider" style={{ background: 'linear-gradient(135deg, #fbbf24, #d97706)' }}>
                   Best Value
                 </div>
               )}
