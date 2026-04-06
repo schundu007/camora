@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { detectRoleFromTitle } from '../data/capra/jobRoleTopicMapping';
 import CamoraLogo from '../components/shared/CamoraLogo';
+import { useContentAccess } from '../hooks/useContentAccess';
 
 /* ──────────────────────────────── Types ──────────────────────────────── */
 
@@ -263,6 +264,8 @@ function getCategoryStyle(category: string) {
 export default function JobPrepPage() {
   const { id } = useParams<{ id: string }>();
   const { token } = useAuth();
+  const { isPaidUser } = useContentAccess();
+  const [showPaywall, setShowPaywall] = useState(false);
 
   const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
@@ -276,6 +279,11 @@ export default function JobPrepPage() {
 
   const generatePrep = async () => {
     if (!job) return;
+    // Gate: free users can't generate prep material
+    if (!isPaidUser) {
+      setShowPaywall(true);
+      return;
+    }
     setGenerating(true);
     setPrepError(null);
     setGeneratedSections({});
@@ -1101,6 +1109,28 @@ export default function JobPrepPage() {
 
         </div>
       </div>
+      {/* Paywall Modal */}
+      {showPaywall && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setShowPaywall(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md mx-4 p-8 text-center" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+            <div className="w-14 h-14 mx-auto mb-4 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #10b981, #3b82f6, #8b5cf6)' }}>
+              <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">Upgrade to Generate Prep Material</h3>
+            <p className="text-sm text-gray-500 mb-6">
+              AI-powered interview preparation with personalized questions, coding problems, system design scenarios, and behavioral answers — all tailored to this specific job.
+            </p>
+            <div className="flex gap-3 justify-center">
+              <Link to="/pricing" className="px-6 py-3 rounded-xl text-sm font-semibold text-white" style={{ background: 'linear-gradient(135deg, #10b981, #3b82f6, #8b5cf6)' }}>
+                View Plans
+              </Link>
+              <button onClick={() => setShowPaywall(false)} className="px-6 py-3 rounded-xl text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200">
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
