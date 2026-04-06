@@ -105,7 +105,7 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
   };
 
   return (
-    <header className="flex items-center h-11 bg-gray-950 border-b border-gray-800 z-50 shrink-0 max-w-full">
+    <header className="flex items-center flex-wrap h-auto min-h-[44px] bg-gray-950 border-b border-gray-800 z-50 shrink-0 max-w-full">
       {/* Logo */}
       <Link to="/" className="flex items-center gap-1.5 px-3 border-r border-gray-800 h-full shrink-0">
         <CamoraLogo size={24} />
@@ -149,8 +149,8 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
         </select>
       </div>
 
-      {/* Status */}
-      <div className="hidden sm:flex items-center gap-1.5 px-2 border-r border-gray-800 h-full shrink-0 max-w-[160px]">
+      {/* Status — hide on small screens to save space */}
+      <div className="hidden md:flex items-center gap-1.5 px-2 border-r border-gray-800 h-full shrink-0 max-w-[160px]">
         <div className={`w-2 h-2 rounded-full shrink-0 transition-all duration-300 ${
           status.state === 'ready' ? 'bg-emerald-500' :
           status.state === 'error' ? 'bg-red-500' :
