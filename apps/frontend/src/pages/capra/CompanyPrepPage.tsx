@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Icon } from '../../components/shared/Icons.jsx';
+import CamoraLogo from '../../components/shared/CamoraLogo';
 
 /* ──────────────────────────────── Types ──────────────────────────────── */
 
@@ -422,10 +423,8 @@ export default function CompanyPrepPage() {
         <nav className="fixed top-0 left-0 right-0 z-50" style={{ background: '#ffffff', borderBottom: '1px solid #e3e8ee', height: 56 }}>
           <div className="max-w-4xl mx-auto h-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
             <Link to="/" className="flex items-center gap-2.5 no-underline">
-              <div className="flex items-center justify-center" style={{ width: 28, height: 28, background: '#10b981', borderRadius: 8 }}>
-                <Icon name="ascend" size={14} style={{ color: '#fff' }} />
-              </div>
-              <span className="practice-display" style={{ fontWeight: 700, fontSize: 16, color: '#111827' }}>Camora</span>
+              <CamoraLogo size={28} />
+              <span style={{ fontWeight: 700, fontSize: 16, color: '#111827', fontFamily: "'Comfortaa', sans-serif" }}>Camora</span>
             </Link>
             <div className="hidden sm:flex items-center gap-1">
               {navLinks.map((link) => (
@@ -569,13 +568,8 @@ export default function CompanyPrepPage() {
         <div className="max-w-[85%] xl:max-w-7xl mx-auto h-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2.5 no-underline">
-            <div
-              className="flex items-center justify-center"
-              style={{ width: 28, height: 28, background: '#10b981', borderRadius: 8 }}
-            >
-              <Icon name="ascend" size={14} style={{ color: '#fff' }} />
-            </div>
-            <span className="practice-display" style={{ fontWeight: 700, fontSize: 16, color: '#111827', letterSpacing: '-0.01em' }}>
+            <CamoraLogo size={28} />
+            <span style={{ fontWeight: 700, fontSize: 16, color: '#111827', letterSpacing: '-0.01em', fontFamily: "'Comfortaa', sans-serif" }}>
               Camora
             </span>
           </Link>
@@ -943,10 +937,8 @@ export default function CompanyPrepPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16, alignItems: 'center' }}>
             {/* Logo */}
             <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
-              <div style={{ width: 22, height: 22, background: '#10b981', borderRadius: 5, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Icon name="ascend" size={11} style={{ color: '#fff' }} />
-              </div>
-              <span className="practice-display" style={{ fontWeight: 700, fontSize: 14, color: '#111827' }}>
+              <CamoraLogo size={22} />
+              <span style={{ fontWeight: 700, fontSize: 14, color: '#111827', fontFamily: "'Comfortaa', sans-serif" }}>
                 Camora
               </span>
             </Link>

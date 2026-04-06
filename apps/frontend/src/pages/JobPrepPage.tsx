@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { detectRoleFromTitle } from '../data/capra/jobRoleTopicMapping';
+import CamoraLogo from '../components/shared/CamoraLogo';
 
 /* ──────────────────────────────── Types ──────────────────────────────── */
 
@@ -421,10 +422,8 @@ export default function JobPrepPage() {
         <nav style={{ background: '#ffffff', borderBottom: '1px solid #e3e8ee', height: '56px' }}>
           <div className="max-w-4xl mx-auto h-full px-4 sm:px-6 lg:px-8 flex items-center">
             <Link to="/" className="flex items-center gap-2.5 no-underline">
-              <div style={{ width: '28px', height: '28px', background: '#10b981', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <span style={{ color: '#fff', fontSize: '12px', fontWeight: 800 }}>C</span>
-              </div>
-              <span style={{ fontWeight: 700, fontSize: '16px', color: '#111827', fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>Camora</span>
+              <CamoraLogo size={28} />
+              <span style={{ fontWeight: 700, fontSize: '16px', color: '#111827', fontFamily: "'Comfortaa', sans-serif" }}>Camora</span>
             </Link>
           </div>
         </nav>
@@ -445,10 +444,8 @@ export default function JobPrepPage() {
         <nav style={{ background: '#ffffff', borderBottom: '1px solid #e3e8ee', height: '56px' }}>
           <div className="max-w-4xl mx-auto h-full px-4 sm:px-6 lg:px-8 flex items-center">
             <Link to="/" className="flex items-center gap-2.5 no-underline">
-              <div style={{ width: '28px', height: '28px', background: '#10b981', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <span style={{ color: '#fff', fontSize: '12px', fontWeight: 800 }}>C</span>
-              </div>
-              <span style={{ fontWeight: 700, fontSize: '16px', color: '#111827', fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>Camora</span>
+              <CamoraLogo size={28} />
+              <span style={{ fontWeight: 700, fontSize: '16px', color: '#111827', fontFamily: "'Comfortaa', sans-serif" }}>Camora</span>
             </Link>
           </div>
         </nav>
@@ -475,10 +472,8 @@ export default function JobPrepPage() {
         <nav style={{ background: '#ffffff', borderBottom: '1px solid #e3e8ee', height: '56px' }}>
           <div className="max-w-4xl mx-auto h-full px-4 sm:px-6 lg:px-8 flex items-center">
             <Link to="/" className="flex items-center gap-2.5 no-underline">
-              <div style={{ width: '28px', height: '28px', background: '#10b981', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <span style={{ color: '#fff', fontSize: '12px', fontWeight: 800 }}>C</span>
-              </div>
-              <span style={{ fontWeight: 700, fontSize: '16px', color: '#111827', fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>Camora</span>
+              <CamoraLogo size={28} />
+              <span style={{ fontWeight: 700, fontSize: '16px', color: '#111827', fontFamily: "'Comfortaa', sans-serif" }}>Camora</span>
             </Link>
           </div>
         </nav>
@@ -509,10 +504,8 @@ export default function JobPrepPage() {
       <nav style={{ background: '#ffffff', borderBottom: '1px solid #e3e8ee', height: '56px', position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50 }}>
         <div className="max-w-4xl mx-auto h-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2.5 no-underline">
-            <div style={{ width: '28px', height: '28px', background: '#10b981', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ color: '#fff', fontSize: '12px', fontWeight: 800 }}>C</span>
-            </div>
-            <span style={{ fontWeight: 700, fontSize: '16px', color: '#111827', fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>Camora</span>
+            <CamoraLogo size={28} />
+            <span style={{ fontWeight: 700, fontSize: '16px', color: '#111827', fontFamily: "'Comfortaa', sans-serif" }}>Camora</span>
           </Link>
           <div className="hidden sm:flex items-center gap-1">
             {[

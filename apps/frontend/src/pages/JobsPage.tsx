@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import CamoraLogo from '../components/shared/CamoraLogo';
 
 /* ──────────────────────────────── Constants ──────────────────────────────── */
 
@@ -372,18 +373,8 @@ export default function JobsPage() {
         <div className="max-w-[85%] xl:max-w-7xl mx-auto h-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
           {/* Left: Logo */}
           <Link to="/" className="flex items-center gap-2.5 no-underline">
-            <div
-              className="flex items-center justify-center"
-              style={{
-                width: '28px',
-                height: '28px',
-                background: '#10b981',
-                borderRadius: '8px',
-              }}
-            >
-              <span style={{ color: '#fff', fontSize: '12px', fontWeight: 800 }}>C</span>
-            </div>
-            <span style={{ fontWeight: 700, fontSize: '16px', color: '#111827', letterSpacing: '-0.01em', fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
+            <CamoraLogo size={36} />
+            <span style={{ fontWeight: 700, fontSize: '16px', color: '#111827', fontFamily: "'Comfortaa', sans-serif" }}>
               Camora
             </span>
           </Link>
@@ -1137,20 +1128,8 @@ export default function JobsPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center' }}>
             {/* Logo */}
             <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
-              <div
-                style={{
-                  width: '22px',
-                  height: '22px',
-                  background: '#10b981',
-                  borderRadius: '5px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <span style={{ color: '#fff', fontSize: '10px', fontWeight: 800 }}>C</span>
-              </div>
-              <span style={{ fontWeight: 700, fontSize: '14px', color: '#111827', fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
+              <CamoraLogo size={28} />
+              <span style={{ fontWeight: 700, fontSize: '14px', color: '#111827', fontFamily: "'Comfortaa', sans-serif" }}>
                 Camora
               </span>
             </Link>
