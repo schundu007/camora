@@ -654,6 +654,11 @@ export default function DocsPage({ onBack }) {
                         </p>
                       </div>
 
+                      {/* Progress Tracker — compact, top of page */}
+                      <div className="mb-6">
+                        <ProgressTracker />
+                      </div>
+
                       {/* Progress Stats Row */}
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
                         <div className="rounded-xl border border-[#e3e8ee] bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:border-[#d0d5dd] transition-colors">
@@ -702,10 +707,7 @@ export default function DocsPage({ onBack }) {
                         </div>
                       </div>
 
-                      {/* Progress Tracker */}
-                      <div className="mb-6">
-                        <ProgressTracker />
-                      </div>
+                      {/* Progress Tracker — moved here, after categories */}
 
                       {/* Recommended Learning Path */}
                       <div className="mb-6">
