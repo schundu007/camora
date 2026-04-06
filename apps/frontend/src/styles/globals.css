@@ -375,9 +375,10 @@ select option:checked {
 :root .text-indigo-light { color: #4338ca !important; }
 
 /* ── Card borders & shadows — solid, visible ── */
-.border-\[\#e3e8ee\] { border-color: #a0aec0 !important; }
-.border-gray-200 { border-color: #a0aec0 !important; }
-.border-gray-100 { border-color: #cbd5e1 !important; }
+.border-\[\#e3e8ee\] { border-color: #7189a8 !important; border-width: 1.5px !important; }
+.border-gray-200 { border-color: #7189a8 !important; border-width: 1.5px !important; }
+.border-gray-100 { border-color: #8fa3bd !important; border-width: 1.5px !important; }
+.border-gray-300 { border-color: #5a7394 !important; border-width: 1.5px !important; }
 
 .shadow-\[0_1px_3px_rgba\(0\,0\,0\,0\.04\)\] {
   box-shadow: 0 2px 8px rgba(0,0,0,0.10), 0 4px 16px rgba(0,0,0,0.06) !important;
