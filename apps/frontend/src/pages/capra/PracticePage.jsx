@@ -454,10 +454,6 @@ export default function PracticePage() {
               Practice Topics
             </h1>
 
-            {/* Subtitle */}
-            <p className="practice-body" style={{ fontSize: '15px', color: '#6b7280', margin: '0 0 16px', maxWidth: '540px', lineHeight: 1.5 }}>
-              Curated interview practice across system design, coding, behavioral, and more.
-            </p>
 
             {/* Stats row */}
             <div className="practice-body" style={{ fontSize: '13px', color: '#9ca3af', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
@@ -844,9 +840,6 @@ export default function PracticePage() {
               </span>
             </div>
 
-            <p className="practice-body" style={{ fontSize: '13px', color: '#6b7280', margin: '0 0 16px', fontWeight: 500 }}>
-              Free for all users — 75 problems, algorithm guides, behavioral questions
-            </p>
 
             <div
               style={{

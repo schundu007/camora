@@ -155,9 +155,6 @@ export default function ProgressTracker() {
           <p style={{ fontSize: '14px', fontWeight: 600, color: '#374151', margin: '0 0 4px' }}>
             Start learning!
           </p>
-          <p style={{ fontSize: '13px', color: '#9ca3af', margin: 0 }}>
-            Complete your first topic to track progress here.
-          </p>
         </div>
       ) : (
         /* Category breakdown */
@@ -206,17 +203,6 @@ export default function ProgressTracker() {
         </div>
       )}
 
-      {/* Footer note */}
-      <p
-        style={{
-          fontSize: '11px',
-          color: '#c0c5cc',
-          margin: '16px 0 0',
-          textAlign: 'center',
-        }}
-      >
-        Progress saved locally in your browser
-      </p>
     </div>
   );
 }
