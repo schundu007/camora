@@ -12,6 +12,7 @@ import { useAppShell } from '../../components/capra/layout/AppShellContext';
 import MobileBottomNav from '../../components/capra/layout/MobileBottomNav';
 import MobileTabView from '../../components/capra/layout/MobileTabView';
 import ErrorBoundary from '../../components/shared/ErrorBoundaryCapra';
+import CamoraLogo from '../../components/shared/CamoraLogo';
 
 // Lazy-loaded components (modals, panels rendered on demand)
 const OnboardingModal = lazy(() => import('../../components/capra/onboarding/OnboardingModal'));
@@ -933,11 +934,7 @@ function Header({ ascendMode, onModeChange, showSidebar, onToggleSidebar, isLoad
       {/* Left: Camora logo + brand */}
       <div className="flex items-center gap-3">
         <a href="/" className="flex items-center gap-2">
-          <div className="w-7 h-7 bg-emerald-500 flex items-center justify-center rounded-lg">
-            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-            </svg>
-          </div>
+          <CamoraLogo size={28} />
           <span className="text-sm font-bold text-gray-900 hidden sm:inline">Camora</span>
         </a>
         <div className="w-px h-5 bg-gray-200 hidden sm:block" />

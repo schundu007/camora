@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import CamoraLogo from '../components/shared/CamoraLogo';
 
 const NAV_LINKS = [
   { label: 'Apply', href: '/jobs', external: false },
@@ -19,9 +20,7 @@ export default function NotFoundPage() {
       <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/[0.06] bg-[#09090b]/80 backdrop-blur-xl">
         <div className="max-w-6xl mx-auto flex items-center justify-between px-6 h-14">
           <Link to="/" className="flex items-center gap-2.5">
-            <div className="w-7 h-7 bg-emerald-500 flex items-center justify-center" style={{ clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)' }}>
-              <span className="text-[10px] font-black text-white tracking-tight">C</span>
-            </div>
+            <CamoraLogo size={28} />
             <span className="text-sm font-semibold tracking-tight text-white">Camora</span>
           </Link>
           <div className="hidden md:flex items-center gap-1">
@@ -75,9 +74,7 @@ export default function NotFoundPage() {
         <div className="relative z-10 text-center max-w-md">
           {/* Hexagonal logo */}
           <div className="flex justify-center mb-10">
-            <div className="w-14 h-14 bg-emerald-500 flex items-center justify-center" style={{ clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)' }}>
-              <span className="text-lg font-black text-white tracking-tight">C</span>
-            </div>
+            <CamoraLogo size={48} />
           </div>
 
           {/* 404 */}

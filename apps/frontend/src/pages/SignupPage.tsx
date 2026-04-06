@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import CamoraLogo from '../components/shared/CamoraLogo';
 
 export default function SignupPage() {
   const googleAuthUrl = `${import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com'}/api/auth/google/login`;
@@ -18,11 +19,7 @@ export default function SignupPage() {
       <nav className="fixed top-0 left-0 right-0 z-50 border-b border-[#e3e8ee] bg-white/90 backdrop-blur-xl">
         <div className="max-w-6xl mx-auto flex items-center justify-between px-6 h-14">
           <Link to="/" className="flex items-center gap-2.5">
-            <div className="w-7 h-7 bg-emerald-500 flex items-center justify-center rounded-lg">
-              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-              </svg>
-            </div>
+            <CamoraLogo size={28} />
             <span className="text-sm font-semibold tracking-tight text-gray-900">Camora</span>
           </Link>
           <div className="hidden md:flex items-center gap-1">
