@@ -394,6 +394,13 @@ select option:checked {
 .text-gray-400 { color: #64748b !important; }
 .text-black { color: #000000 !important; }
 
+/* Animated gradient border */
+@keyframes gradient-border {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
 /* Highlight.js */
 .hljs {
   background: transparent !important;

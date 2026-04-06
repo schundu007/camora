@@ -237,33 +237,34 @@ export default function PricingPage() {
       <section className="px-6 py-16">
         <div className="max-w-[95%] xl:max-w-7xl mx-auto">
           <div className="mb-10 text-center">
-            <span className="text-[11px] font-mono text-gray-500 uppercase tracking-wider">Comparison</span>
-            <h2 className="mt-3 text-2xl md:text-3xl font-semibold tracking-tight text-gray-900">
-              How Camora compares.
+            <span className="text-xs font-bold uppercase tracking-[0.2em]" style={{ background: 'linear-gradient(135deg, #34d399, #38bdf8, #818cf8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Why Camora Wins</span>
+            <h2 className="mt-3 text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900">
+              See how we compare.
             </h2>
           </div>
 
           <div
             className="overflow-x-auto"
             style={{
-              background: 'white',
-              border: '2.5px solid transparent',
-              borderRadius: '20px',
-              backgroundImage: 'linear-gradient(white, white), linear-gradient(135deg, #34d399, #38bdf8, #818cf8, #c084fc, #34d399)',
+              background: 'linear-gradient(135deg, #ffffff 0%, #f8faff 50%, #faf8ff 100%)',
+              border: '3px solid transparent',
+              borderRadius: '24px',
+              backgroundImage: 'linear-gradient(135deg, #ffffff, #f8faff, #faf8ff), linear-gradient(135deg, #34d399, #06b6d4, #6366f1, #a855f7, #ec4899, #34d399)',
               backgroundOrigin: 'border-box',
               backgroundClip: 'padding-box, border-box',
-              boxShadow: '0 12px 48px rgba(99,102,241,0.15), 0 4px 16px rgba(52,211,153,0.08), 0 2px 6px rgba(0,0,0,0.04)',
-              padding: '8px 12px',
-              transform: 'scale(1.01)',
+              backgroundSize: '100% 100%, 300% 300%',
+              animation: 'gradient-border 6s ease-in-out infinite',
+              boxShadow: '0 20px 60px rgba(99,102,241,0.18), 0 8px 24px rgba(52,211,153,0.1), 0 0 0 1px rgba(99,102,241,0.05)',
+              padding: '12px 16px',
             }}
           >
             <table className="w-full text-[13px]">
               <thead>
                 <tr style={{ borderBottom: '2px solid #e2e8f0' }}>
                   <th className="text-left py-4 px-4 text-gray-500 font-mono text-[10px] uppercase tracking-wider min-w-[220px]">Feature</th>
-                  <th className="py-4 px-3 text-center min-w-[90px]" style={{ background: 'linear-gradient(180deg, #ecfdf5 0%, #ffffff 100%)', borderRadius: '10px 10px 0 0' }}>
-                    <div className="font-bold text-sm" style={{ background: 'linear-gradient(135deg, #059669, #0891b2)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Camora</div>
-                    <div className="text-base font-extrabold mt-1" style={{ color: '#059669' }}>FREE</div>
+                  <th className="py-5 px-3 text-center min-w-[100px]" style={{ background: 'linear-gradient(180deg, #ecfdf5 0%, #d1fae5 100%)', borderRadius: '14px 14px 0 0', boxShadow: 'inset 0 -2px 0 #34d399' }}>
+                    <div className="font-extrabold text-base" style={{ background: 'linear-gradient(135deg, #059669, #0891b2)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Camora</div>
+                    <div className="text-lg font-black mt-1" style={{ color: '#059669' }}>FREE</div>
                   </th>
                   <th className="py-4 px-3 text-center min-w-[80px]">
                     <div className="text-gray-500 text-xs font-medium">Final Round</div>
