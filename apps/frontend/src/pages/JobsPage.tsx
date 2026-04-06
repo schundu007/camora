@@ -931,7 +931,7 @@ export default function JobsPage() {
             /* Job cards grid */
             <div
               className="grid gap-5"
-              style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}
+              style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', alignItems: 'start' }}
             >
               {filteredJobs.map((job) => {
                 const category = detectCategory(job.title);
@@ -1083,14 +1083,16 @@ export default function JobsPage() {
           display: none;
         }
 
-        /* Card hover — expand details */
+        /* Card hover — expand only the hovered card */
         .jobs-card {
-          transition: box-shadow 0.3s, border-color 0.3s, transform 0.3s;
+          transition: box-shadow 0.3s, border-color 0.3s;
+          position: relative;
+          z-index: 1;
         }
         .jobs-card:hover {
-          box-shadow: 0 8px 30px rgba(0,0,0,0.12) !important;
-          border-color: #a0aec0 !important;
-          transform: translateY(-2px);
+          box-shadow: 0 12px 40px rgba(0,0,0,0.15) !important;
+          border-color: #7c8db5 !important;
+          z-index: 10;
         }
         .jobs-card:hover .jobs-card-details {
           max-height: 200px !important;
