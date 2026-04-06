@@ -27,7 +27,7 @@ export function CalibrationButton({ deviceId, disabled }: CalibrationButtonProps
     <button
       onClick={handleCalibrate}
       disabled={isCalibrating || disabled}
-      className="px-2 py-1 text-xs font-bold text-white hover:text-white border border-gray-600 rounded transition-colors"
+      className="px-2 py-1 text-xs font-bold text-white hover:text-white border border-gray-500 rounded transition-colors"
       title="Calibrate VAD threshold based on ambient noise"
     >
       {isCalibrating ? (

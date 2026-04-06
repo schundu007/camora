@@ -303,13 +303,13 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
       <MicrophoneSelector disabled={storeIsRecording} />
 
       {/* Live / Manual Mode Tabs */}
-      <div className="flex items-center h-full border border-gray-600 rounded overflow-hidden">
+      <div className="flex items-center h-full border border-gray-500 rounded overflow-hidden">
         <button
           onClick={() => { if (!continuousMode) handleModeToggle(); }}
           className={`px-2.5 py-1 text-sm font-mono font-semibold transition-colors ${
             continuousMode
               ? 'bg-red-500 text-white'
-              : 'bg-transparent text-white/80 hover:text-white'
+              : 'bg-transparent text-white hover:text-white'
           }`}
           title="Live mode - always listening, auto-restarts after each question"
         >
@@ -323,7 +323,7 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
           className={`px-2.5 py-1 text-sm font-mono font-semibold transition-colors border-l border-gray-600 ${
             !continuousMode
               ? 'bg-emerald-500 text-white'
-              : 'bg-transparent text-white/80 hover:text-white'
+              : 'bg-transparent text-white hover:text-white'
           }`}
           title="Manual mode - press Cmd+M to start/stop recording"
         >
@@ -432,7 +432,7 @@ function SystemAudioButton({ onTranscription, disabled }: { onTranscription?: (t
       className={`hidden sm:flex items-center gap-1 px-2 py-1 text-xs font-bold rounded border transition-colors ${
         capturing
           ? 'bg-red-500 text-white border-red-600 animate-pulse'
-          : 'text-white/80 hover:text-white border-gray-600 hover:bg-gray-800'
+          : 'text-white hover:text-white border-gray-600 hover:bg-gray-800'
       } disabled:opacity-50`}
       title={capturing ? 'Stop capturing interviewer audio' : 'Capture interviewer audio from Zoom/Meet (screen share)'}
     >
