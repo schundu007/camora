@@ -407,7 +407,7 @@ export default function LandingPage() {
         .shimmer-btn:hover::before { opacity: 1; }
         .shimmer-btn::after { content: ''; position: absolute; inset: 0; border-radius: inherit; background: inherit; z-index: -1; }
         .gradient-text {
-          background: linear-gradient(135deg, #059669, #0891b2, #6366f1, #059669);
+          background: linear-gradient(135deg, #2563eb, #7c3aed, #c026d3, #2563eb);
           background-size: 200% 200%; -webkit-background-clip: text; background-clip: text;
           color: transparent; animation: gradient-text 6s ease-in-out infinite;
         }
