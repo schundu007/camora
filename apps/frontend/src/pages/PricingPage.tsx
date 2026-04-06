@@ -263,47 +263,47 @@ export default function PricingPage() {
                   <th className="text-left py-4 px-4 text-gray-500 font-mono text-[10px] uppercase tracking-wider min-w-[220px]">Feature</th>
                   <th className="py-4 px-3 text-center min-w-[90px]" style={{ background: 'linear-gradient(180deg, #ecfdf5 0%, #ffffff 100%)', borderRadius: '10px 10px 0 0' }}>
                     <div className="font-bold text-sm" style={{ background: 'linear-gradient(135deg, #059669, #0891b2)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Camora</div>
-                    <div className="text-xs font-bold text-emerald-700 mt-0.5">FREE</div>
+                    <div className="text-base font-extrabold mt-1" style={{ color: '#059669' }}>FREE</div>
                   </th>
                   <th className="py-4 px-3 text-center min-w-[80px]">
                     <div className="text-gray-500 text-xs font-medium">Final Round</div>
-                    <div className="text-sm font-bold text-gray-800 mt-0.5">$100<span className="text-[10px] font-normal text-gray-400">/mo</span></div>
+                    <div className="text-base font-extrabold mt-1" style={{ color: '#dc2626' }}>$100<span className="text-[10px] font-normal text-gray-400">/mo</span></div>
                   </th>
                   <th className="py-4 px-3 text-center min-w-[80px]">
                     <div className="text-gray-500 text-xs font-medium">LockedIn</div>
-                    <div className="text-sm font-bold text-gray-800 mt-0.5">$55-120<span className="text-[10px] font-normal text-gray-400">/mo</span></div>
+                    <div className="text-base font-extrabold mt-1" style={{ color: '#dc2626' }}>$55-120<span className="text-[10px] font-normal text-gray-400">/mo</span></div>
                   </th>
                   <th className="py-4 px-3 text-center min-w-[80px] hidden md:table-cell">
                     <div className="text-gray-500 text-xs font-medium">Solver</div>
-                    <div className="text-sm font-bold text-gray-800 mt-0.5">$39<span className="text-[10px] font-normal text-gray-400">/mo</span></div>
+                    <div className="text-base font-extrabold mt-1" style={{ color: '#b91c1c' }}>$39<span className="text-[10px] font-normal text-gray-400">/mo</span></div>
                   </th>
                   <th className="py-4 px-3 text-center min-w-[80px] hidden md:table-cell">
                     <div className="text-gray-500 text-xs font-medium">Sensei</div>
-                    <div className="text-sm font-bold text-gray-800 mt-0.5">$24-89<span className="text-[10px] font-normal text-gray-400">/mo</span></div>
+                    <div className="text-base font-extrabold mt-1" style={{ color: '#b91c1c' }}>$24-89<span className="text-[10px] font-normal text-gray-400">/mo</span></div>
                   </th>
                   <th className="py-4 px-3 text-center min-w-[80px] hidden lg:table-cell">
                     <div className="text-gray-500 text-xs font-medium">TechPrep</div>
-                    <div className="text-sm font-bold text-gray-800 mt-0.5">$39<span className="text-[10px] font-normal text-gray-400">/mo</span></div>
+                    <div className="text-base font-extrabold mt-1" style={{ color: '#b91c1c' }}>$39<span className="text-[10px] font-normal text-gray-400">/mo</span></div>
                   </th>
                   <th className="py-4 px-3 text-center min-w-[80px] hidden lg:table-cell">
                     <div className="text-gray-500 text-xs font-medium">AlgoMaster</div>
-                    <div className="text-sm font-bold text-gray-800 mt-0.5">$29<span className="text-[10px] font-normal text-gray-400">/mo</span></div>
+                    <div className="text-base font-extrabold mt-1" style={{ color: '#b91c1c' }}>$29<span className="text-[10px] font-normal text-gray-400">/mo</span></div>
                   </th>
                   <th className="py-4 px-3 text-center min-w-[80px] hidden lg:table-cell">
                     <div className="text-gray-500 text-xs font-medium">DesignGurus</div>
-                    <div className="text-sm font-bold text-gray-800 mt-0.5">$98-197<span className="text-[10px] font-normal text-gray-400">/course</span></div>
+                    <div className="text-base font-extrabold mt-1" style={{ color: '#b91c1c' }}>$98-197<span className="text-[10px] font-normal text-gray-400">/course</span></div>
                   </th>
                   <th className="py-4 px-3 text-center min-w-[80px] hidden xl:table-cell">
                     <div className="text-gray-500 text-xs font-medium">AIApply</div>
-                    <div className="text-sm font-bold text-gray-800 mt-0.5">$29-200<span className="text-[10px] font-normal text-gray-400">/mo</span></div>
+                    <div className="text-base font-extrabold mt-1" style={{ color: '#b91c1c' }}>$29-200<span className="text-[10px] font-normal text-gray-400">/mo</span></div>
                   </th>
                   <th className="py-4 px-3 text-center min-w-[80px] hidden xl:table-cell">
                     <div className="text-gray-500 text-xs font-medium">OfferGoose</div>
-                    <div className="text-sm font-bold text-gray-800 mt-0.5">$89-200<span className="text-[10px] font-normal text-gray-400">/mo</span></div>
+                    <div className="text-base font-extrabold mt-1" style={{ color: '#b91c1c' }}>$89-200<span className="text-[10px] font-normal text-gray-400">/mo</span></div>
                   </th>
                   <th className="py-4 px-3 text-center min-w-[80px] hidden xl:table-cell">
                     <div className="text-gray-500 text-xs font-medium">Parakeet</div>
-                    <div className="text-sm font-bold text-gray-800 mt-0.5">$100-200<span className="text-[10px] font-normal text-gray-400">/mo</span></div>
+                    <div className="text-base font-extrabold mt-1" style={{ color: '#b91c1c' }}>$100-200<span className="text-[10px] font-normal text-gray-400">/mo</span></div>
                   </th>
                 </tr>
               </thead>
