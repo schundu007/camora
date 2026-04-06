@@ -523,7 +523,7 @@ export default function DocsPage({ onBack }) {
               <div className="flex items-center justify-between px-3 sm:px-4 h-12">
                 <a href="/" className="flex items-center gap-2">
                   <CamoraLogo size={36} />
-                  <span className="text-sm font-bold text-gray-900 hidden sm:inline">Camora</span>
+                  <span className="text-sm font-bold text-gray-900 hidden sm:inline" style={{ fontFamily: "'Comfortaa', sans-serif" }}>Camora</span>
                 </a>
                 <div className="hidden md:flex items-center gap-1">
                   {[

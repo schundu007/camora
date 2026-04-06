@@ -426,7 +426,7 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto flex items-center justify-between px-6 h-16">
           <Link to="/" className="flex items-center gap-2.5">
             <CamoraLogo size={40} />
-            <span className="font-display text-lg font-bold tracking-tight">Camora</span>
+            <span className="text-lg font-bold tracking-tight" style={{ fontFamily: "'Comfortaa', sans-serif" }}>Camora</span>
           </Link>
           <div className="hidden lg:flex items-center gap-1">
             {NAV_LINKS.map(link => (
@@ -816,7 +816,7 @@ export default function LandingPage() {
             <div className="flex items-center gap-3">
               <CamoraLogo size={36} />
               <div>
-                <span className="font-display text-base font-bold">Camora</span>
+                <span className="text-base font-bold" style={{ fontFamily: "'Comfortaa', sans-serif" }}>Camora</span>
                 <span className="block text-xs text-gray-400 mt-0.5">Apply · Prepare · Practice · Attend</span>
               </div>
             </div>

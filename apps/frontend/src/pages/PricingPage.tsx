@@ -156,7 +156,7 @@ export default function PricingPage() {
         <div className="max-w-6xl mx-auto flex items-center justify-between px-6 h-14">
           <Link to="/" className="flex items-center gap-2.5">
             <CamoraLogo size={36} />
-            <span className="text-sm font-semibold tracking-tight text-gray-900">Camora</span>
+            <span className="text-sm font-bold tracking-tight text-gray-900" style={{ fontFamily: "'Comfortaa', sans-serif" }}>Camora</span>
           </Link>
           <div className="hidden md:flex items-center gap-1">
             {NAV_LINKS.map((link) =>
@@ -531,7 +531,7 @@ export default function PricingPage() {
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="flex items-center gap-2.5">
             <CamoraLogo size={32} />
-            <span className="text-sm font-semibold text-gray-900">Camora</span>
+            <span className="text-sm font-bold text-gray-900" style={{ fontFamily: "'Comfortaa', sans-serif" }}>Camora</span>
           </div>
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
             {NAV_LINKS.map((link) =>

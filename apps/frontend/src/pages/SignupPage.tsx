@@ -20,7 +20,7 @@ export default function SignupPage() {
         <div className="max-w-6xl mx-auto flex items-center justify-between px-6 h-14">
           <Link to="/" className="flex items-center gap-2.5">
             <CamoraLogo size={36} />
-            <span className="text-sm font-semibold tracking-tight text-gray-900">Camora</span>
+            <span className="text-sm font-bold tracking-tight text-gray-900" style={{ fontFamily: "'Comfortaa', sans-serif" }}>Camora</span>
           </Link>
           <div className="hidden md:flex items-center gap-1">
             {navLinks.map((link) => (

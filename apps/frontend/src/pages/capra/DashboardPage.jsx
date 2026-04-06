@@ -935,7 +935,7 @@ function Header({ ascendMode, onModeChange, showSidebar, onToggleSidebar, isLoad
       <div className="flex items-center gap-3">
         <a href="/" className="flex items-center gap-2">
           <CamoraLogo size={36} />
-          <span className="text-sm font-bold text-gray-900 hidden sm:inline">Camora</span>
+          <span className="text-sm font-bold text-gray-900 hidden sm:inline" style={{ fontFamily: "'Comfortaa', sans-serif" }}>Camora</span>
         </a>
         <div className="w-px h-5 bg-gray-200 hidden sm:block" />
         <div className="flex items-center gap-1.5">

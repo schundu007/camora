@@ -57,7 +57,7 @@ function LoginPage() {
         <div className="max-w-[85%] xl:max-w-7xl mx-auto h-14 flex items-center justify-between px-4">
           <Link to="/" className="flex items-center gap-2.5">
             <CamoraLogo size={36} />
-            <span className="text-sm font-bold text-gray-900">Camora</span>
+            <span className="text-sm font-bold text-gray-900" style={{ fontFamily: "'Comfortaa', sans-serif" }}>Camora</span>
           </Link>
           <div className="hidden md:flex items-center gap-1">
             {[
@@ -146,36 +146,45 @@ function AppaSideIndicator() {
     { label: 'Attend', href: '/lumora', color: '#fbbf24', match: '/lumora' },
   ];
   return (
-    <div className="fixed top-0 bottom-0 z-40 hidden xl:flex flex-col items-start justify-center" style={{ right: '12px' }}>
-      {/* Full-height gradient line */}
-      <div className="absolute" style={{ top: 0, bottom: 0, width: '2px', left: '9px', background: 'linear-gradient(180deg, transparent 8%, #34d39940 18%, #34d399 28%, #818cf8 44%, #38bdf8 60%, #fbbf24 76%, #fbbf2440 88%, transparent 96%)' }} />
+    <div className="fixed top-0 bottom-0 z-40 hidden xl:flex flex-col items-start justify-center" style={{ left: '16px' }}>
+      {/* Full-height gradient line — modern glow */}
+      <div className="absolute" style={{ top: 0, bottom: 0, width: '2px', left: '10px', background: 'linear-gradient(180deg, transparent 5%, #34d39950 15%, #34d399 25%, #818cf8 43%, #38bdf8 60%, #fbbf24 78%, #fbbf2450 90%, transparent 98%)', filter: 'blur(0.3px)' }} />
+      {/* Glow behind the line */}
+      <div className="absolute" style={{ top: 0, bottom: 0, width: '6px', left: '8px', background: 'linear-gradient(180deg, transparent 5%, #34d39915 20%, #818cf815 45%, #38bdf815 60%, #fbbf2415 80%, transparent 98%)', filter: 'blur(4px)' }} />
 
       {/* 4 nodes with horizontal labels */}
-      <div className="flex flex-col" style={{ gap: '28px' }}>
+      <div className="flex flex-col" style={{ gap: '24px' }}>
         {steps.map((step) => {
           const isActive = location.pathname.startsWith(step.match);
           return (
             <Link
               key={step.label}
               to={step.href}
-              className="flex items-center gap-2.5 group"
+              className="flex items-center gap-3 group transition-all duration-300"
               title={step.label}
+              style={{ transform: isActive ? 'translateX(2px)' : 'none' }}
             >
-              {/* Dot */}
+              {/* Dot with modern glow */}
               <div
                 className="rounded-full transition-all duration-300 flex-shrink-0"
                 style={{
                   width: '20px',
                   height: '20px',
-                  background: isActive ? step.color : '#ffffff',
-                  border: `2.5px solid ${step.color}`,
-                  boxShadow: isActive ? `0 0 14px ${step.color}50` : `0 0 0 2px #ffffff`,
+                  background: isActive ? step.color : 'rgba(255,255,255,0.9)',
+                  border: `2px solid ${step.color}`,
+                  boxShadow: isActive
+                    ? `0 0 12px ${step.color}60, inset 0 0 4px ${step.color}30`
+                    : `0 1px 3px rgba(0,0,0,0.08)`,
                 }}
               />
-              {/* Horizontal label */}
+              {/* Label */}
               <span
-                className="text-[11px] font-bold tracking-wide transition-all duration-200 whitespace-nowrap"
-                style={{ color: isActive ? step.color : '#b0b0b0' }}
+                className="text-[11px] font-bold tracking-wider whitespace-nowrap transition-all duration-300"
+                style={{
+                  color: isActive ? step.color : '#c0c0c0',
+                  opacity: isActive ? 1 : 0.7,
+                  fontFamily: "'Comfortaa', sans-serif",
+                }}
               >
                 {step.label}
               </span>
