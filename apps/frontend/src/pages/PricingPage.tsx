@@ -247,62 +247,63 @@ export default function PricingPage() {
             className="overflow-x-auto"
             style={{
               background: 'white',
-              border: '2px solid transparent',
-              borderRadius: '16px',
-              backgroundImage: 'linear-gradient(white, white), linear-gradient(135deg, #34d399, #38bdf8, #818cf8, #c084fc)',
+              border: '2.5px solid transparent',
+              borderRadius: '20px',
+              backgroundImage: 'linear-gradient(white, white), linear-gradient(135deg, #34d399, #38bdf8, #818cf8, #c084fc, #34d399)',
               backgroundOrigin: 'border-box',
               backgroundClip: 'padding-box, border-box',
-              boxShadow: '0 8px 32px rgba(99,102,241,0.12), 0 2px 8px rgba(0,0,0,0.06)',
-              padding: '4px',
+              boxShadow: '0 12px 48px rgba(99,102,241,0.15), 0 4px 16px rgba(52,211,153,0.08), 0 2px 6px rgba(0,0,0,0.04)',
+              padding: '8px 12px',
+              transform: 'scale(1.01)',
             }}
           >
             <table className="w-full text-[13px]">
               <thead>
-                <tr style={{ borderBottom: '2px solid #e5e7eb' }}>
-                  <th className="text-left py-3 px-4 text-gray-500 font-mono text-[10px] uppercase tracking-wider min-w-[220px]">Feature</th>
-                  <th className="py-3 px-3 text-center min-w-[80px]">
-                    <div className="text-emerald-600 font-semibold text-sm">Camora</div>
-                    <div className="text-[10px] text-gray-500 font-mono">from $0</div>
+                <tr style={{ borderBottom: '2px solid #e2e8f0' }}>
+                  <th className="text-left py-4 px-4 text-gray-500 font-mono text-[10px] uppercase tracking-wider min-w-[220px]">Feature</th>
+                  <th className="py-4 px-3 text-center min-w-[90px]" style={{ background: 'linear-gradient(180deg, #ecfdf5 0%, #ffffff 100%)', borderRadius: '10px 10px 0 0' }}>
+                    <div className="font-bold text-sm" style={{ background: 'linear-gradient(135deg, #059669, #0891b2)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Camora</div>
+                    <div className="text-xs font-bold text-emerald-700 mt-0.5">FREE</div>
                   </th>
-                  <th className="py-3 px-3 text-center min-w-[80px]">
-                    <div className="text-gray-400 text-xs">Final Round</div>
-                    <div className="text-[10px] text-gray-600 font-mono">$100/mo</div>
+                  <th className="py-4 px-3 text-center min-w-[80px]">
+                    <div className="text-gray-500 text-xs font-medium">Final Round</div>
+                    <div className="text-sm font-bold text-gray-800 mt-0.5">$100<span className="text-[10px] font-normal text-gray-400">/mo</span></div>
                   </th>
-                  <th className="py-3 px-3 text-center min-w-[80px]">
-                    <div className="text-gray-400 text-xs">LockedIn</div>
-                    <div className="text-[10px] text-gray-600 font-mono">$55-120/mo</div>
+                  <th className="py-4 px-3 text-center min-w-[80px]">
+                    <div className="text-gray-500 text-xs font-medium">LockedIn</div>
+                    <div className="text-sm font-bold text-gray-800 mt-0.5">$55-120<span className="text-[10px] font-normal text-gray-400">/mo</span></div>
                   </th>
-                  <th className="py-3 px-3 text-center min-w-[80px] hidden md:table-cell">
-                    <div className="text-gray-400 text-xs">Solver</div>
-                    <div className="text-[10px] text-gray-600 font-mono">$39/mo</div>
+                  <th className="py-4 px-3 text-center min-w-[80px] hidden md:table-cell">
+                    <div className="text-gray-500 text-xs font-medium">Solver</div>
+                    <div className="text-sm font-bold text-gray-800 mt-0.5">$39<span className="text-[10px] font-normal text-gray-400">/mo</span></div>
                   </th>
-                  <th className="py-3 px-3 text-center min-w-[80px] hidden md:table-cell">
-                    <div className="text-gray-400 text-xs">Sensei</div>
-                    <div className="text-[10px] text-gray-600 font-mono">$24-89/mo</div>
+                  <th className="py-4 px-3 text-center min-w-[80px] hidden md:table-cell">
+                    <div className="text-gray-500 text-xs font-medium">Sensei</div>
+                    <div className="text-sm font-bold text-gray-800 mt-0.5">$24-89<span className="text-[10px] font-normal text-gray-400">/mo</span></div>
                   </th>
-                  <th className="py-3 px-3 text-center min-w-[80px] hidden lg:table-cell">
-                    <div className="text-gray-400 text-xs">TechPrep</div>
-                    <div className="text-[10px] text-gray-600 font-mono">$39/mo</div>
+                  <th className="py-4 px-3 text-center min-w-[80px] hidden lg:table-cell">
+                    <div className="text-gray-500 text-xs font-medium">TechPrep</div>
+                    <div className="text-sm font-bold text-gray-800 mt-0.5">$39<span className="text-[10px] font-normal text-gray-400">/mo</span></div>
                   </th>
-                  <th className="py-3 px-3 text-center min-w-[80px] hidden lg:table-cell">
-                    <div className="text-gray-400 text-xs">AlgoMaster</div>
-                    <div className="text-[10px] text-gray-600 font-mono">$29/mo</div>
+                  <th className="py-4 px-3 text-center min-w-[80px] hidden lg:table-cell">
+                    <div className="text-gray-500 text-xs font-medium">AlgoMaster</div>
+                    <div className="text-sm font-bold text-gray-800 mt-0.5">$29<span className="text-[10px] font-normal text-gray-400">/mo</span></div>
                   </th>
-                  <th className="py-3 px-3 text-center min-w-[80px] hidden lg:table-cell">
-                    <div className="text-gray-400 text-xs">DesignGurus</div>
-                    <div className="text-[10px] text-gray-600 font-mono">$98-197/course</div>
+                  <th className="py-4 px-3 text-center min-w-[80px] hidden lg:table-cell">
+                    <div className="text-gray-500 text-xs font-medium">DesignGurus</div>
+                    <div className="text-sm font-bold text-gray-800 mt-0.5">$98-197<span className="text-[10px] font-normal text-gray-400">/course</span></div>
                   </th>
-                  <th className="py-3 px-3 text-center min-w-[80px] hidden xl:table-cell">
-                    <div className="text-gray-400 text-xs">AIApply</div>
-                    <div className="text-[10px] text-gray-600 font-mono">$29-200/mo</div>
+                  <th className="py-4 px-3 text-center min-w-[80px] hidden xl:table-cell">
+                    <div className="text-gray-500 text-xs font-medium">AIApply</div>
+                    <div className="text-sm font-bold text-gray-800 mt-0.5">$29-200<span className="text-[10px] font-normal text-gray-400">/mo</span></div>
                   </th>
-                  <th className="py-3 px-3 text-center min-w-[80px] hidden xl:table-cell">
-                    <div className="text-gray-400 text-xs">OfferGoose</div>
-                    <div className="text-[10px] text-gray-600 font-mono">$89-200/mo</div>
+                  <th className="py-4 px-3 text-center min-w-[80px] hidden xl:table-cell">
+                    <div className="text-gray-500 text-xs font-medium">OfferGoose</div>
+                    <div className="text-sm font-bold text-gray-800 mt-0.5">$89-200<span className="text-[10px] font-normal text-gray-400">/mo</span></div>
                   </th>
-                  <th className="py-3 px-3 text-center min-w-[80px] hidden xl:table-cell">
-                    <div className="text-gray-400 text-xs">Parakeet</div>
-                    <div className="text-[10px] text-gray-600 font-mono">$100-200/mo</div>
+                  <th className="py-4 px-3 text-center min-w-[80px] hidden xl:table-cell">
+                    <div className="text-gray-500 text-xs font-medium">Parakeet</div>
+                    <div className="text-sm font-bold text-gray-800 mt-0.5">$100-200<span className="text-[10px] font-normal text-gray-400">/mo</span></div>
                   </th>
                 </tr>
               </thead>
@@ -314,13 +315,13 @@ export default function PricingPage() {
                     return <span className="text-[10px] text-amber-400 font-mono">{val}</span>;
                   };
                   return (
-                    <tr key={i} className="border-b border-[#f0f0f5]">
-                      <td className={`py-2.5 px-4 ${row.unique ? 'text-emerald-400 font-medium' : 'text-gray-400'}`}>
+                    <tr key={i} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                      <td className={`py-3 px-4 text-sm ${row.unique ? 'text-emerald-600 font-semibold' : 'text-gray-700'}`}>
                         {row.feature}
                       </td>
-                      <td className="py-2.5 px-3 text-center">
+                      <td className="py-3 px-3 text-center" style={{ background: '#f0fdf4' }}>
                         {row.camora === true
-                          ? <span className="text-emerald-400 font-bold">&#10003;</span>
+                          ? <span className="text-emerald-500 font-bold text-base">&#10003;</span>
                           : <Cell val={row.camora} />
                         }
                       </td>
