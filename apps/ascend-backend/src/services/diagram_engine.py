@@ -242,6 +242,27 @@ def extract_code(text):
     return text
 
 
+def _build_class_to_import(provider):
+    """Build a map of ClassName -> full import line for auto-fixing missing imports."""
+    mapping = {}
+    modules = PROVIDER_IMPORTS.get(provider, PROVIDER_IMPORTS["aws"])
+    prefix = f"diagrams.{provider}"
+    for module, classes in modules.items():
+        for cls in classes:
+            mapping[cls] = f"from {prefix}.{module} import {cls}"
+    # Add common onprem classes
+    mapping["Kafka"] = "from diagrams.onprem.queue import Kafka"
+    mapping["RabbitMQ"] = "from diagrams.onprem.queue import RabbitMQ"
+    mapping["Grafana"] = "from diagrams.onprem.monitoring import Grafana"
+    mapping["Prometheus"] = "from diagrams.onprem.monitoring import Prometheus"
+    mapping["Nginx"] = "from diagrams.onprem.network import Nginx"
+    mapping["Redis"] = "from diagrams.onprem.inmemory import Redis"
+    mapping["PostgreSQL"] = "from diagrams.onprem.database import PostgreSQL"
+    mapping["MySQL"] = "from diagrams.onprem.database import MySQL"
+    mapping["MongoDB"] = "from diagrams.onprem.database import MongoDB"
+    return mapping
+
+
 def assemble_code(raw_output, provider, direction):
     """Split Claude's output into imports + body, wrap in template."""
     lines = raw_output.split("\n")
@@ -255,8 +276,8 @@ def assemble_code(raw_output, provider, direction):
             if in_body:
                 body_lines.append("")
             continue
-        # Import lines (unindented, start with "from" or "import")
-        if not in_body and (stripped.startswith("from diagrams") or stripped.startswith("import diagrams")):
+        # Import lines: start with "from" or "import", anywhere in the output
+        if stripped.startswith("from diagrams") or stripped.startswith("import diagrams"):
             # Skip base imports we already have in template
             if "from diagrams import Diagram" in stripped:
                 continue
@@ -265,6 +286,9 @@ def assemble_code(raw_output, provider, direction):
             if "from diagrams.onprem.client import Users" in stripped:
                 continue
             imports.append(stripped)
+            # Don't set in_body — imports can appear after body lines in Claude's output
+        elif stripped.startswith("import "):
+            continue  # Skip any other imports
         else:
             in_body = True
             # Ensure 4-space indent
@@ -273,7 +297,25 @@ def assemble_code(raw_output, provider, direction):
             else:
                 body_lines.append(line)
 
-    import_block = "\n".join(imports)
+    # Auto-detect missing imports: scan body for class names that aren't imported
+    class_map = _build_class_to_import(provider)
+    imported_classes = set()
+    for imp in imports:
+        # Extract class names from "from x.y import A, B, C"
+        match = re.search(r'import\s+(.+)$', imp)
+        if match:
+            for cls in match.group(1).split(','):
+                imported_classes.add(cls.strip())
+
+    body_text = "\n".join(body_lines)
+    for cls_name, import_line in class_map.items():
+        # Check if class is used in body but not imported
+        if re.search(rf'\b{cls_name}\s*\(', body_text) and cls_name not in imported_classes:
+            imports.append(import_line)
+            imported_classes.add(cls_name)
+
+    # Deduplicate and merge imports from the same module
+    import_block = "\n".join(sorted(set(imports)))
     body_block = "\n".join(body_lines)
 
     code = TEMPLATE.replace("{{IMPORTS}}", import_block)
