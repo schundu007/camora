@@ -595,20 +595,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── PREPARATION AT SCALE — Donut + Topic Cards ── */}
-      <section className="px-6 py-12 md:py-16" style={{ zIndex: 1 }}>
-        <div className="max-w-6xl mx-auto">
-          <FadeIn className="text-center mb-10">
-            <span className="gradient-text text-sm font-bold tracking-[0.2em] uppercase">Preparation at Scale</span>
-            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mt-4">Everything you need to prepare.</h2>
-          </FadeIn>
-          <PrepShowcase />
-        </div>
-      </section>
-
-
       {/* ── JOB URL ANALYSIS — Highlighted Feature ── */}
-      <section className="px-6 py-12 md:py-16" style={{ zIndex: 1, background: 'linear-gradient(135deg, #ecfdf5 0%, #eff6ff 50%, #faf5ff 100%)' }}>
+      <section className="px-6 py-12 md:py-16" style={{ zIndex: 1 }}>
         <div className="max-w-5xl mx-auto">
           <FadeIn className="text-center mb-10">
             <span className="inline-flex items-center gap-2 text-sm font-bold tracking-[0.15em] uppercase px-5 py-2 rounded-full border border-emerald-300 bg-white text-emerald-700 shadow-sm">
@@ -625,7 +613,6 @@ export default function LandingPage() {
 
           <FadeIn delay={0.15}>
             <div className="max-w-3xl mx-auto rounded-2xl border border-gray-200 bg-white shadow-xl shadow-gray-100/60 overflow-hidden">
-              {/* Mock URL input */}
               <div className="px-6 py-5 border-b border-gray-100">
                 <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-gray-50 border border-gray-200">
                   <svg width="18" height="18" fill="none" stroke="#9ca3af" viewBox="0 0 24 24" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m9.86-4.122a4.5 4.5 0 00-6.364-6.364L4.5 6.1" /></svg>
@@ -633,7 +620,6 @@ export default function LandingPage() {
                   <span className="ml-auto px-4 py-1.5 text-xs font-bold text-white bg-emerald-500 rounded-lg">Analyze</span>
                 </div>
               </div>
-              {/* Results preview */}
               <div className="px-6 py-5">
                 <div className="flex items-center gap-2 mb-4">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
@@ -669,6 +655,17 @@ export default function LandingPage() {
               Supports Workday, Greenhouse, Lever, Ashby, SmartRecruiters, LinkedIn &amp; more
             </p>
           </FadeIn>
+        </div>
+      </section>
+
+      {/* ── PREPARATION AT SCALE — Donut + Topic Cards ── */}
+      <section className="px-6 py-12 md:py-16" style={{ zIndex: 1 }}>
+        <div className="max-w-6xl mx-auto">
+          <FadeIn className="text-center mb-10">
+            <span className="gradient-text text-sm font-bold tracking-[0.2em] uppercase">Preparation at Scale</span>
+            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mt-4">Everything you need to prepare.</h2>
+          </FadeIn>
+          <PrepShowcase />
         </div>
       </section>
 
