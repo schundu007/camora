@@ -314,16 +314,18 @@ function StreamingDesignView({ blocks }: { blocks: Record<string, ParsedBlock> }
         )}
       </div>
 
-      {/* Row 1: FUNCTIONAL | NON-FUNCTIONAL | SCALE MATH | EDGE CASES */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+      {/* Row 1: FUNCTIONAL | NON-FUNCTIONAL | SCALE MATH */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
         <StreamingGridCard title="FUNCTIONAL" titleColor="text-indigo-light" block={blocks.REQUIREMENTS} type="functional" />
         <StreamingGridCard title="NON-FUNCTIONAL" titleColor="text-violet-light" block={blocks.REQUIREMENTS} type="nonfunctional" />
         <StreamingGridCard title="SCALE MATH" titleColor="text-emerald-light" block={blocks.SCALEMATH} type="scalemath" />
-        <StreamingGridCard title="EDGE CASES" titleColor="text-amber-light" block={blocks.EDGECASES} type="edgecases" />
       </div>
 
-      {/* Row 2: TRADE-OFFS (full width) */}
-      <StreamingGridCard title="TRADE-OFFS" titleColor="text-rose-light" block={blocks.TRADEOFFS} type="tradeoffs" />
+      {/* Row 2: TRADE-OFFS | EDGE CASES */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <StreamingGridCard title="TRADE-OFFS" titleColor="text-rose-light" block={blocks.TRADEOFFS} type="tradeoffs" />
+        <StreamingGridCard title="EDGE CASES" titleColor="text-amber-light" block={blocks.EDGECASES} type="edgecases" />
+      </div>
 
       {/* Row 3: ARCHITECTURE | LAYER DESIGN | FOLLOW-UP Q&A */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-start">

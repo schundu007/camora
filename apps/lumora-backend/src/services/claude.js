@@ -137,7 +137,16 @@ Bandwidth: network bandwidth estimate
 [/SCALEMATH]
 
 [DIAGRAM]
-Skip - auto-generated separately
+Draw an ASCII architecture diagram showing the main components and data flow.
+Use box-drawing characters and arrows to show:
+- Client/CDN layer
+- Load balancer
+- Application servers
+- Cache layer
+- Database (primary + replicas)
+- Message queues / async workers
+- Any other relevant services
+Keep it clean and readable, max ~20 lines.
 [/DIAGRAM]
 
 [DEEPDESIGN]

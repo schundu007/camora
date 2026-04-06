@@ -339,8 +339,8 @@ function SystemDesignView({ blocks }: { blocks: ParsedBlock[] }) {
         </div>
       )}
 
-      {/* Row 1: FUNCTIONAL | NON-FUNCTIONAL | SCALE MATH | EDGE CASES */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+      {/* Row 1: FUNCTIONAL | NON-FUNCTIONAL | SCALE MATH */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
         <GridCard title="FUNCTIONAL" titleColor="text-indigo-light">
           {byType.REQUIREMENTS ? (
             <RequirementsList content={byType.REQUIREMENTS.content} type="functional" />
@@ -356,6 +356,15 @@ function SystemDesignView({ blocks }: { blocks: ParsedBlock[] }) {
             <ScaleMathList content={byType.SCALEMATH.content} />
           ) : <Shimmer />}
         </GridCard>
+      </div>
+
+      {/* Row 2: TRADE-OFFS | EDGE CASES */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <GridCard title="TRADE-OFFS" titleColor="text-rose-light">
+          {byType.TRADEOFFS ? (
+            <TradeoffsList content={byType.TRADEOFFS.content} />
+          ) : <Shimmer />}
+        </GridCard>
         <GridCard title="EDGE CASES" titleColor="text-amber-light">
           {byType.EDGECASES ? (
             <EdgeCasesList content={byType.EDGECASES.content} />
@@ -363,18 +372,11 @@ function SystemDesignView({ blocks }: { blocks: ParsedBlock[] }) {
         </GridCard>
       </div>
 
-      {/* Row 2: TRADE-OFFS (full width) */}
-      <GridCard title="TRADE-OFFS" titleColor="text-rose-light">
-        {byType.TRADEOFFS ? (
-          <TradeoffsList content={byType.TRADEOFFS.content} />
-        ) : <Shimmer />}
-      </GridCard>
-
       {/* Row 3: ARCHITECTURE | LAYER DESIGN | FOLLOW-UP Q&A */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-start">
         <GridCard title="ARCHITECTURE" titleColor="text-cyan-light" className="border-cyan/15 bg-cyan/[0.02]">
           {byType.DIAGRAM && byType.DIAGRAM.content.trim() && !/^skip/i.test(byType.DIAGRAM.content.trim()) ? (
-            <pre className="font-mono text-[13px] text-cyan-light leading-[1.5] whitespace-pre overflow-x-auto">
+            <pre className="font-mono text-[11px] text-cyan-light leading-[1.4] whitespace-pre overflow-x-auto">
               {byType.DIAGRAM.content.trim()}
             </pre>
           ) : (
