@@ -47,9 +47,8 @@ router.post('/stream', validate('solve'), async (req, res, next) => {
     // Check for webapp user (JWT auth) and verify subscription + usage allowance
     let webappUserId = null;
     const authHeader = req.headers.authorization;
-    const isElectron = req.headers['x-electron-app'] === 'true';
 
-    if (authHeader && authHeader.startsWith('Bearer ') && !isElectron) {
+    if (authHeader && authHeader.startsWith('Bearer ')) {
       try {
         const token = authHeader.substring(7);
         const decoded = await verifyJWT(token);

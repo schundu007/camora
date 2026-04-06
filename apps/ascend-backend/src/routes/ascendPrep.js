@@ -13,9 +13,6 @@ const router = Router();
  * Returns true if allowed (Electron or subscription or free allowance remaining)
  */
 async function checkFeatureAccess(req, res, featureType = 'design') {
-  const isElectron = req.headers['x-electron-app'] === 'true';
-  if (isElectron) return true;
-
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     res.setHeader('Content-Type', 'text/event-stream');

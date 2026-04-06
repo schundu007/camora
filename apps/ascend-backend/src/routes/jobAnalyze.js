@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import * as cheerio from 'cheerio';
 import Anthropic from '@anthropic-ai/sdk';
+import * as freeUsageService from '../services/freeUsageService.js';
 
 const router = Router();
 
@@ -376,6 +377,15 @@ async function analyzeJobDescription(jobText, pageTitle) {
  * Returns: structured job analysis with role-specific prep recommendations
  */
 router.post('/', async (req, res) => {
+  // Check free usage limits
+  const userId = req.user?.id;
+  if (userId) {
+    const canUse = await freeUsageService.canUseFeature(userId, 'company_prep');
+    if (!canUse.allowed) {
+      return res.status(429).json({ error: canUse.reason || 'Free trial exhausted.', subscriptionRequired: true });
+    }
+  }
+
   const { url } = req.body;
 
   if (!url || typeof url !== 'string') {
@@ -428,6 +438,9 @@ router.post('/', async (req, res) => {
     // Step 3: Analyze with Claude
     const analysis = await analyzeJobDescription(jobText, pageTitle);
 
+    // Deduct free usage on success
+    if (userId) await freeUsageService.useFreeAllowance(userId, 'company_prep');
+
     return res.json({
       success: true,
       source_url: url,
@@ -457,6 +470,15 @@ router.post('/', async (req, res) => {
  * Returns: same structured analysis, for when URL scraping doesn't work
  */
 router.post('/text', async (req, res) => {
+  // Check free usage limits
+  const userId = req.user?.id;
+  if (userId) {
+    const canUse = await freeUsageService.canUseFeature(userId, 'company_prep');
+    if (!canUse.allowed) {
+      return res.status(429).json({ error: canUse.reason || 'Free trial exhausted.', subscriptionRequired: true });
+    }
+  }
+
   const { text, title } = req.body;
 
   if (!text || typeof text !== 'string' || text.trim().length < 50) {
@@ -466,6 +488,8 @@ router.post('/text', async (req, res) => {
   try {
     const jobText = cleanText(text);
     const analysis = await analyzeJobDescription(jobText, title || '');
+    // Deduct free usage on success
+    if (userId) await freeUsageService.useFreeAllowance(userId, 'company_prep');
     return res.json({ success: true, source: 'text', ...analysis });
   } catch (err) {
     console.error('[job-analyze/text] Error:', err.message);

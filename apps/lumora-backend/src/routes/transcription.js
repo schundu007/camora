@@ -10,6 +10,7 @@ import { Router } from 'express';
 import multer from 'multer';
 import { authenticate } from '../middleware/authenticate.js';
 import { transcribe } from '../services/transcription.js';
+import { checkLimit, incrementUsage } from '../services/usage.js';
 
 const router = Router();
 
@@ -82,6 +83,14 @@ router.post(
     const start = performance.now();
 
     try {
+      // Check usage limits
+      if (req.user?.id) {
+        const limitCheck = await checkLimit(req.user.id, 'questions');
+        if (!limitCheck.allowed) {
+          return res.status(429).json({ error: 'Usage limit reached. Please upgrade your plan.', subscriptionRequired: true });
+        }
+      }
+
       const file = req.file;
       if (!file || file.size === 0) {
         return res.status(400).json({ error: 'Empty or missing audio file' });
