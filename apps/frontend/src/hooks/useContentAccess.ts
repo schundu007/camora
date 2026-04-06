@@ -45,14 +45,16 @@ export function useContentAccess() {
   }, []);
 
   const canReadTopic = useCallback((category: Category, topicId: string): boolean => {
-    if (isPaidUser) return true;
+    if (isPaidUser) {
+      console.log('[ContentAccess] isPaidUser=true, allowing', category, topicId);
+      return true;
+    }
     const data = getReadTopics();
     const readList = data[category] || [];
-    // Already read this topic — always allow re-reads
-    if (readList.includes(topicId)) return true;
-    // Under the limit — allow
-    return readList.length < FREE_TOPICS_PER_CATEGORY;
-  }, [isPaidUser]);
+    const canRead = readList.includes(topicId) || readList.length < FREE_TOPICS_PER_CATEGORY;
+    console.log('[ContentAccess]', { category, topicId, isPaidUser, readList, canRead, subscriptionLoading });
+    return canRead;
+  }, [isPaidUser, subscriptionLoading]);
 
   const isTopicLocked = useCallback((category: Category, topicId: string): boolean => {
     return !canReadTopic(category, topicId);
