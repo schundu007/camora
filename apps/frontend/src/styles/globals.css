@@ -385,14 +385,41 @@ select option:checked {
   box-shadow: 0 2px 8px rgba(0,0,0,0.10), 0 4px 16px rgba(0,0,0,0.06) !important;
 }
 
-/* Dark text on all cards — override any light text */
+/* ── GLOBAL TEXT CONTRAST — dark black on all light backgrounds ── */
 .text-gray-900 { color: #0f172a !important; }
 .text-gray-800 { color: #1e293b !important; }
 .text-gray-700 { color: #1e293b !important; }
 .text-gray-600 { color: #334155 !important; }
-.text-gray-500 { color: #475569 !important; }
-.text-gray-400 { color: #64748b !important; }
+.text-gray-500 { color: #334155 !important; }
+.text-gray-400 { color: #475569 !important; }
+.text-gray-300 { color: #64748b !important; }
+.text-gray-200 { color: #64748b !important; }
+.text-gray-100 { color: #94a3b8 !important; }
 .text-black { color: #000000 !important; }
+
+/* Override inline color styles for common light grays */
+[style*="color: #9ca3af"],
+[style*="color:#9ca3af"],
+[style*="color: rgb(156, 163, 175)"] {
+  color: #475569 !important;
+}
+[style*="color: #d1d5db"],
+[style*="color:#d1d5db"],
+[style*="color: rgb(209, 213, 219)"] {
+  color: #64748b !important;
+}
+[style*="color: #e5e7eb"],
+[style*="color:#e5e7eb"] {
+  color: #94a3b8 !important;
+}
+[style*="color: #f3f4f6"],
+[style*="color:#f3f4f6"] {
+  color: #94a3b8 !important;
+}
+
+/* Stroke colors for SVG icons — make visible */
+[stroke="#9ca3af"] { stroke: #475569 !important; }
+[stroke="#d1d5db"] { stroke: #94a3b8 !important; }
 
 /* Animated gradient border */
 @keyframes gradient-border {
