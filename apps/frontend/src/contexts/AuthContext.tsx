@@ -14,12 +14,19 @@ interface AuthUser {
   job_roles?: string[];
 }
 
+interface SubscriptionInfo {
+  plan: string;
+  status?: string;
+}
+
 interface AuthContextType {
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   user: AuthUser | null;
   onboardingCompleted: boolean | null;
+  subscription: SubscriptionInfo | null;
+  subscriptionLoading: boolean;
   logout: () => void;
 }
 
@@ -29,6 +36,8 @@ const AuthContext = createContext<AuthContextType>({
   isLoading: true,
   user: null,
   onboardingCompleted: null,
+  subscription: null,
+  subscriptionLoading: true,
   logout: () => {},
 });
 
@@ -46,6 +55,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [onboardingCompleted, setOnboardingCompleted] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [subscription, setSubscription] = useState<SubscriptionInfo | null>(null);
+  const [subscriptionLoading, setSubscriptionLoading] = useState(true);
 
   useEffect(() => {
     async function init() {
@@ -151,16 +162,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     init();
   }, []);
 
+  // Fetch subscription status when token becomes available
+  useEffect(() => {
+    if (!token) { setSubscriptionLoading(false); setSubscription({ plan: 'free' }); return; }
+    (async () => {
+      try {
+        const res = await fetch(`${LUMORA_API_URL}/api/v1/billing/subscription`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setSubscription({ plan: data.plan || data.plan_type || 'free', status: data.status });
+        } else {
+          setSubscription({ plan: 'free' });
+        }
+      } catch {
+        setSubscription({ plan: 'free' });
+      }
+      setSubscriptionLoading(false);
+    })();
+  }, [token]);
+
   const logout = useCallback(() => {
     setToken(null);
     setUser(null);
     setOnboardingCompleted(null);
+    setSubscription(null);
     clearCookie('cariara_sso');
     window.location.href = ASCEND_URL;
   }, []);
 
   return (
-    <AuthContext.Provider value={{ token, isAuthenticated: !!token, isLoading, user, onboardingCompleted, logout }}>
+    <AuthContext.Provider value={{ token, isAuthenticated: !!token, isLoading, user, onboardingCompleted, subscription, subscriptionLoading, logout }}>
       {children}
     </AuthContext.Provider>
   );

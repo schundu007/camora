@@ -140,9 +140,16 @@ export default function TopicDetail({
   setSelectedTopic, generatingDiagram, diagramData, diagramError,
   diagramDetailLevel, setDiagramDetailLevel, diagramCloudProvider, setDiagramCloudProvider,
   generateDiagram, codingTopics, systemDesignTopics, systemDesigns, behavioralTopics, filteredTopics,
-  progressInfo,
+  progressInfo, isLocked = false, contentAccess,
 }) {
   if (!topicDetails) return null;
+
+  // Mark topic as read when viewing (only if not locked)
+  useEffect(() => {
+    if (!isLocked && contentAccess && activePage && selectedTopic) {
+      contentAccess.markTopicRead(activePage, selectedTopic);
+    }
+  }, [selectedTopic, activePage, isLocked]);
 
   // Pages that use system-design-style rendering (concepts, keyQuestions, dataModel, etc.)
   const isSDStyle = ['system-design', 'microservices', 'databases'].includes(activePage);
@@ -286,8 +293,58 @@ export default function TopicDetail({
         </div>
       </div>
 
-      {/* Ask AI Panel */}
-      {showAskAI && (
+      {/* ── LOCKED CONTENT OVERLAY ── */}
+      {isLocked && (
+        <div className="relative">
+          {/* Preview: show introduction first paragraph */}
+          {topicDetails.introduction && (
+            <div className="rounded-lg overflow-hidden border border-[#e3e8ee] bg-white mb-3">
+              <div className="px-3 py-1.5 border-b border-[#e3e8ee] bg-[#f7f8f9] flex items-center gap-2">
+                <Icon name="book" size={14} className="text-emerald-700" />
+                <h2 className="text-sm font-bold text-blue-800 landing-display">Introduction</h2>
+              </div>
+              <div className="p-3">
+                <p className="text-gray-700 text-sm landing-body leading-relaxed">
+                  {topicDetails.introduction.split('\n')[0]}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Blur skeleton + upgrade CTA */}
+          <div className="relative rounded-xl overflow-hidden">
+            {/* Fake blurred content skeleton */}
+            <div className="space-y-3 filter blur-sm pointer-events-none select-none" aria-hidden="true">
+              <div className="rounded-lg bg-gray-100 h-24 w-full" />
+              <div className="rounded-lg bg-gray-100 h-32 w-full" />
+              <div className="rounded-lg bg-gray-100 h-20 w-full" />
+              <div className="rounded-lg bg-gray-100 h-28 w-full" />
+              <div className="rounded-lg bg-gray-100 h-16 w-full" />
+            </div>
+
+            {/* Gradient overlay + upgrade card */}
+            <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.95) 40%, rgba(255,255,255,1) 100%)' }}>
+              <div className="text-center max-w-sm mx-auto px-6">
+                <div className="w-14 h-14 mx-auto mb-4 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #10b981, #3b82f6, #8b5cf6)' }}>
+                  <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                </div>
+                <h3 className="text-lg font-bold text-gray-900 mb-2 landing-display">Upgrade to unlock this topic</h3>
+                <p className="text-sm text-gray-500 mb-4 landing-body">
+                  You've read your {contentAccess?.FREE_TOPICS_PER_CATEGORY || 3} free topics in this category. Upgrade to access all {activePage === 'coding' ? '36+' : activePage === 'system-design' ? '300+' : '50+'} topics with full explanations, code examples, and diagrams.
+                </p>
+                <a href="/pricing" className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90" style={{ background: 'linear-gradient(135deg, #10b981, #3b82f6, #8b5cf6)', boxShadow: '0 4px 14px rgba(99,102,241,0.25)' }}>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>
+                  View Plans
+                </a>
+                <p className="mt-3 text-xs text-gray-400">Free users: {contentAccess?.FREE_TOPICS_PER_CATEGORY || 3} topics per category</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── UNLOCKED CONTENT ── */}
+      {!isLocked && showAskAI && (
         <div className="p-3 rounded-xl mb-2 bg-emerald-50/50 border border-emerald-200">
           <div className="flex items-center gap-2 mb-2">
             <Icon name="sparkles" size={16} className="text-gray-900" />
@@ -319,7 +376,7 @@ export default function TopicDetail({
       )}
 
       {/* Course Roadmap Panel */}
-      {showRoadmap && (
+      {!isLocked && showRoadmap && (
         <div className="p-3 rounded-xl mb-2 bg-[#f7f8f9] border border-[#e3e8ee]">
           <div className="flex items-center gap-2 mb-2">
             <Icon name="compass" size={16} className="text-gray-900" />
@@ -344,7 +401,7 @@ export default function TopicDetail({
       )}
 
       {/* DSA Topic Detail */}
-      {isCodingStyle && topicDetails.keyPatterns && (
+      {!isLocked && isCodingStyle && topicDetails.keyPatterns && (
         <div className="space-y-3">
           {/* Overview + Complexity in one row */}
           <div className="grid  gap-2">
@@ -627,8 +684,8 @@ export default function TopicDetail({
         </div>
       )}
 
-      {/* System Design / LLD Problem Detail */}
-      {(isSDStyle || activePage === 'low-level') && (topicDetails.concepts || topicDetails.requirements || topicDetails.functionalRequirements || topicDetails.primitives || topicDetails.problems || topicDetails.structures || topicDetails.coreEntities || topicDetails.implementation) && (
+      {/* System Design / LLD Problem Detail — gated for locked topics */}
+      {!isLocked && (isSDStyle || activePage === 'low-level') && (topicDetails.concepts || topicDetails.requirements || topicDetails.functionalRequirements || topicDetails.primitives || topicDetails.problems || topicDetails.structures || topicDetails.coreEntities || topicDetails.implementation) && (
         <div className="space-y-3">
           {/* Comprehensive System Design / LLD Problem Content */}
           {(topicDetails.requirements || topicDetails.functionalRequirements || topicDetails.introduction || topicDetails.concepts) && (
@@ -1444,7 +1501,7 @@ export default function TopicDetail({
       )}
 
       {/* Behavioral Topic Detail */}
-      {(activePage === 'behavioral' || (activePage === 'low-level' && !topicDetails.coreEntities && !topicDetails.implementation && !topicDetails.functionalRequirements)) && (topicDetails.sampleQuestions || topicDetails.starExample || topicDetails.introduction || topicDetails.keyQuestions) && (
+      {!isLocked && (activePage === 'behavioral' || (activePage === 'low-level' && !topicDetails.coreEntities && !topicDetails.implementation && !topicDetails.functionalRequirements)) && (topicDetails.sampleQuestions || topicDetails.starExample || topicDetails.introduction || topicDetails.keyQuestions) && (
         <div className="space-y-3">
           {/* Introduction + Key Principles — side by side */}
           {(topicDetails.introduction || topicDetails.principles?.length > 0) && (

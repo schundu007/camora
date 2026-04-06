@@ -6,6 +6,7 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { Icon } from '../../shared/Icons.jsx';
 import CamoraLogo from '../../shared/CamoraLogo';
 import { getAuthHeaders } from '../../../utils/authHeaders.js';
+import { useContentAccess } from '../../../hooks/useContentAccess';
 import { codingCategories, codingCategoryMap as _codingCategoryMap, codingTopics as _codingTopics } from '../../../data/capra/topics/codingTopics.js';
 import { extraCodingCategoryMap, extraCodingTopics } from '../../../data/capra/topics/codingTopicsExtra.js';
 import { systemDesignCategories, systemDesignCategoryMap, systemDesignTopics } from '../../../data/capra/topics/systemDesignTopics.js';
@@ -52,6 +53,7 @@ export default function DocsPage({ onBack }) {
   const { isMobile } = useIsMobile();
   const { openSidebar, setActiveSection } = useAppShell();
   const { user } = useAuth();
+  const contentAccess = useContentAccess();
   const routerLocation = useLocation();
   const isElectron = false; // Electron removed in unified frontend
   // Initialize state from URL params for persistence on refresh
@@ -637,7 +639,7 @@ export default function DocsPage({ onBack }) {
                     </button>
                   </div>
                 </div>
-              ) : selectedTopic ? <TopicDetail activePage={activePage} selectedTopic={selectedTopic} topicDetails={topicDetails} pageConfig={pageConfig} completedTopics={completedTopics} starredTopics={starredTopics} toggleComplete={toggleComplete} toggleStar={toggleStar} showAskAI={showAskAI} setShowAskAI={setShowAskAI} aiQuestion={aiQuestion} setAiQuestion={setAiQuestion} aiAnswer={aiAnswer} aiLoading={aiLoading} handleAskAI={handleAskAI} showRoadmap={showRoadmap} setShowRoadmap={setShowRoadmap} expandedTheoryQuestions={expandedTheoryQuestions} setExpandedTheoryQuestions={setExpandedTheoryQuestions} setSelectedTopic={setSelectedTopic} generatingDiagram={generatingDiagram} diagramData={diagramData} diagramError={diagramError} diagramDetailLevel={diagramDetailLevel} setDiagramDetailLevel={setDiagramDetailLevel} diagramCloudProvider={diagramCloudProvider} setDiagramCloudProvider={setDiagramCloudProvider} generateDiagram={handleGenerateDiagram} codingTopics={codingTopics} systemDesignTopics={systemDesignTopics} systemDesigns={systemDesigns} behavioralTopics={behavioralTopics} filteredTopics={filteredTopics} progressInfo={getProgress()} /> : (
+              ) : selectedTopic ? <TopicDetail activePage={activePage} selectedTopic={selectedTopic} topicDetails={topicDetails} pageConfig={pageConfig} completedTopics={completedTopics} starredTopics={starredTopics} toggleComplete={toggleComplete} toggleStar={toggleStar} showAskAI={showAskAI} setShowAskAI={setShowAskAI} aiQuestion={aiQuestion} setAiQuestion={setAiQuestion} aiAnswer={aiAnswer} aiLoading={aiLoading} handleAskAI={handleAskAI} showRoadmap={showRoadmap} setShowRoadmap={setShowRoadmap} expandedTheoryQuestions={expandedTheoryQuestions} setExpandedTheoryQuestions={setExpandedTheoryQuestions} setSelectedTopic={setSelectedTopic} generatingDiagram={generatingDiagram} diagramData={diagramData} diagramError={diagramError} diagramDetailLevel={diagramDetailLevel} setDiagramDetailLevel={setDiagramDetailLevel} diagramCloudProvider={diagramCloudProvider} setDiagramCloudProvider={setDiagramCloudProvider} generateDiagram={handleGenerateDiagram} codingTopics={codingTopics} systemDesignTopics={systemDesignTopics} systemDesigns={systemDesigns} behavioralTopics={behavioralTopics} filteredTopics={filteredTopics} progressInfo={getProgress()} isLocked={contentAccess.isTopicLocked(activePage, selectedTopic)} contentAccess={contentAccess} /> : (
                 <>
                   {/* ── Overview Dashboard ── */}
                   {activePage === 'overview' && (
