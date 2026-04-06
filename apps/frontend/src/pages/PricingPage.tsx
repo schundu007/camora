@@ -352,13 +352,14 @@ export default function PricingPage() {
 
       {/* Plans */}
       <section className="max-w-[85%] xl:max-w-7xl mx-auto px-6 py-10">
-        <div className="grid md:grid-cols-4 gap-px bg-white/[0.04]">
+        <div className="grid md:grid-cols-4 gap-5" style={{ alignItems: 'start' }}>
           {PLANS.map((plan) => (
             <div
               key={plan.name}
               className={`relative p-6 flex flex-col ${plan.popular ? '' : plan.name === 'Annual' ? '' : 'bg-white border border-[#e3e8ee]'}`}
               style={plan.popular ? {
                 background: 'white',
+                borderRadius: '24px',
                 border: '2.5px solid transparent',
                 backgroundImage: 'linear-gradient(white, white), linear-gradient(135deg, #34d399, #38bdf8, #818cf8, #c084fc)',
                 backgroundOrigin: 'border-box',
@@ -368,6 +369,7 @@ export default function PricingPage() {
                 zIndex: 2,
               } : plan.name === 'Annual' ? {
                 background: 'white',
+                borderRadius: '24px',
                 border: '3px solid transparent',
                 backgroundImage: 'linear-gradient(white, white), linear-gradient(135deg, #fbbf24, #f59e0b, #d97706)',
                 backgroundOrigin: 'border-box',
@@ -375,7 +377,7 @@ export default function PricingPage() {
                 boxShadow: '0 12px 40px rgba(245,158,11,0.25), 0 4px 12px rgba(245,158,11,0.15)',
                 transform: 'scale(1.07)',
                 zIndex: 3,
-              } : { boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
+              } : { borderRadius: '24px', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}
             >
               {plan.popular && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-[10px] font-bold text-white uppercase tracking-wider" style={{ background: 'linear-gradient(135deg, #34d399, #818cf8)' }}>
