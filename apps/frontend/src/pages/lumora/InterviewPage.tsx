@@ -129,7 +129,10 @@ export function InterviewPage() {
     return sessionStorage.getItem('lumora_mic_checked') === '1';
   });
   const { handleSubmit, resetState } = useStreamingInterview();
-  const { clearStreamChunks, setParsedBlocks, setQuestion, setError, setIsStreaming, setStatus, isStreaming, history } = useInterviewStore();
+  const { clearStreamChunks, setParsedBlocks, setQuestion, setError, setIsStreaming, setStatus, isStreaming, history, question, parsedBlocks } = useInterviewStore();
+
+  // Hide the full tool header on the empty/landing state
+  const isEmptyState = !question && !isStreaming && parsedBlocks.length === 0 && history.length === 0;
 
   // Emergency blank: Cmd+B or Ctrl+B to hide/show everything
   useEffect(() => {
@@ -172,13 +175,15 @@ export function InterviewPage() {
 
   return (
     <div className="h-screen w-full flex flex-col overflow-hidden lumora-app-bg">
-      <Header
-        inputValue={inputValue}
-        onInputChange={setInputValue}
-        onSubmit={handleInputSubmit}
-        onTranscription={handleTranscription}
-        showInputBar={true}
-      />
+      {!isEmptyState && (
+        <Header
+          inputValue={inputValue}
+          onInputChange={setInputValue}
+          onSubmit={handleInputSubmit}
+          onTranscription={handleTranscription}
+          showInputBar={true}
+        />
+      )}
 
       <ErrorBoundary>
         <InterviewPanel
