@@ -243,10 +243,22 @@ export default function PricingPage() {
             </h2>
           </div>
 
-          <div className="overflow-x-auto">
+          <div
+            className="overflow-x-auto"
+            style={{
+              background: 'white',
+              border: '2px solid transparent',
+              borderRadius: '16px',
+              backgroundImage: 'linear-gradient(white, white), linear-gradient(135deg, #34d399, #38bdf8, #818cf8, #c084fc)',
+              backgroundOrigin: 'border-box',
+              backgroundClip: 'padding-box, border-box',
+              boxShadow: '0 8px 32px rgba(99,102,241,0.12), 0 2px 8px rgba(0,0,0,0.06)',
+              padding: '4px',
+            }}
+          >
             <table className="w-full text-[13px]">
               <thead>
-                <tr className="border-b border-[#e3e8ee]">
+                <tr style={{ borderBottom: '2px solid #e5e7eb' }}>
                   <th className="text-left py-3 px-4 text-gray-500 font-mono text-[10px] uppercase tracking-wider min-w-[220px]">Feature</th>
                   <th className="py-3 px-3 text-center min-w-[80px]">
                     <div className="text-emerald-600 font-semibold text-sm">Camora</div>
