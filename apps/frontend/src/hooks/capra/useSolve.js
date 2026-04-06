@@ -79,17 +79,31 @@ async function solveWithStream(
           }
           if (data.done && data.result) {
             result = data.result;
-            // Clean up text fields
+            // Clean up text fields in all systemDesign sub-objects
             if (result.pitch && typeof result.pitch === 'string') {
               result.pitch = cleanupText(result.pitch);
             }
-            if (result.systemDesign?.overview) {
-              result.systemDesign.overview = cleanupText(result.systemDesign.overview);
-            }
-            if (result.systemDesign?.architecture?.description) {
-              result.systemDesign.architecture.description = cleanupText(
-                result.systemDesign.architecture.description
-              );
+            if (result.systemDesign) {
+              const sd = result.systemDesign;
+              if (sd.overview) sd.overview = cleanupText(sd.overview);
+              if (sd.architecture?.description) sd.architecture.description = cleanupText(sd.architecture.description);
+              // Clean requirements arrays
+              if (sd.requirements?.functional) sd.requirements.functional = sd.requirements.functional.map(r => typeof r === 'string' ? cleanupText(r) : r);
+              if (sd.requirements?.nonFunctional) sd.requirements.nonFunctional = sd.requirements.nonFunctional.map(r => typeof r === 'string' ? cleanupText(r) : r);
+              // Clean scalability, tradeoffs, edgeCases arrays
+              if (Array.isArray(sd.scalability)) sd.scalability = sd.scalability.map(s => typeof s === 'string' ? cleanupText(s) : s);
+              if (Array.isArray(sd.tradeoffs)) sd.tradeoffs = sd.tradeoffs.map(t => typeof t === 'string' ? cleanupText(t) : t);
+              if (Array.isArray(sd.edgeCases)) sd.edgeCases = sd.edgeCases.map(e => typeof e === 'string' ? cleanupText(e) : e);
+              // Clean techJustifications
+              if (Array.isArray(sd.techJustifications)) {
+                sd.techJustifications = sd.techJustifications.map(t => {
+                  if (typeof t === 'object' && t) {
+                    if (t.justification) t.justification = cleanupText(t.justification);
+                    if (t.description) t.description = cleanupText(t.description);
+                  }
+                  return t;
+                });
+              }
             }
           }
           if (data.error) {

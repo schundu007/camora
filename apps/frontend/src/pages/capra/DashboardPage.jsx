@@ -576,8 +576,16 @@ export default function DashboardPage() {
             try {
               const data = JSON.parse(line.slice(6));
               if (data.done && data.result) result = data.result;
-              if (data.error) throw new Error(data.error);
-            } catch {}
+              if (data.error) {
+                console.error('[FollowUp] API error:', data.error);
+                throw new Error(data.error);
+              }
+            } catch (e) {
+              // Only rethrow actual errors, ignore incomplete JSON during streaming
+              if (e.message && e.message !== 'Unexpected end of JSON input') {
+                console.error('[FollowUp] Parse error:', e.message);
+              }
+            }
           }
         }
       }

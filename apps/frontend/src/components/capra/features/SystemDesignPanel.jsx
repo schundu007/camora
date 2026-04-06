@@ -414,7 +414,12 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
   };
 
   if (!systemDesign || !systemDesign.included) {
-    return null;
+    return (
+      <div className="text-center py-8 text-gray-500">
+        <p className="text-sm">System design analysis not available for this problem.</p>
+        <p className="text-xs mt-1 text-gray-400">Try a different system design question or check your connection.</p>
+      </div>
+    );
   }
 
   // Calculate section counts for dynamic layout

@@ -86,27 +86,35 @@ export function parseStreamingContent(text) {
     result.complexity = { time: complexityMatch[1], space: complexityMatch[2] };
   }
 
-  // Extract systemDesign
-  const systemDesignMatch = text.match(/"systemDesign"\s*:\s*(\{[\s\S]*?\})\s*(?:,|\})/);
-  if (systemDesignMatch) {
-    try {
-      const sdText = systemDesignMatch[1];
-      const includedMatch = sdText.match(/"included"\s*:\s*(true|false)/);
-      if (includedMatch) {
-        result.systemDesign = { included: includedMatch[1] === 'true' };
-        if (includedMatch[1] === 'true') {
-          try {
-            const fullMatch = text.match(/"systemDesign"\s*:\s*(\{(?:[^{}]|\{(?:[^{}]|\{[^{}]*\})*\})*\})/s);
-            if (fullMatch) {
-              result.systemDesign = JSON.parse(fullMatch[1]);
-            }
-          } catch {
-            // Keep partial result
+  // Extract systemDesign — use balanced brace matching for deeply nested objects
+  const sdKeyIdx = text.indexOf('"systemDesign"');
+  if (sdKeyIdx !== -1) {
+    const braceStart = text.indexOf('{', sdKeyIdx);
+    if (braceStart !== -1) {
+      let depth = 0;
+      let braceEnd = -1;
+      for (let i = braceStart; i < text.length; i++) {
+        if (text[i] === '{') depth++;
+        else if (text[i] === '}') { depth--; if (depth === 0) { braceEnd = i; break; } }
+      }
+      if (braceEnd !== -1) {
+        const sdJson = text.substring(braceStart, braceEnd + 1);
+        try {
+          result.systemDesign = JSON.parse(sdJson);
+        } catch {
+          // Partial — extract what we can
+          const includedMatch = sdJson.match(/"included"\s*:\s*(true|false)/);
+          if (includedMatch) {
+            result.systemDesign = { included: includedMatch[1] === 'true' };
           }
         }
+      } else {
+        // Stream not complete yet — extract included flag
+        const includedMatch = text.match(/"included"\s*:\s*(true|false)/);
+        if (includedMatch) {
+          result.systemDesign = { included: includedMatch[1] === 'true' };
+        }
       }
-    } catch {
-      // Ignore parse errors during streaming
     }
   }
 
