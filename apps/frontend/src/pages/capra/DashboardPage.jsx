@@ -934,7 +934,7 @@ function Header({ ascendMode, onModeChange, showSidebar, onToggleSidebar, isLoad
       {/* Left: Camora logo + brand */}
       <div className="flex items-center gap-3">
         <a href="/" className="flex items-center gap-2">
-          <CamoraLogo size={28} />
+          <CamoraLogo size={36} />
           <span className="text-sm font-bold text-gray-900 hidden sm:inline">Camora</span>
         </a>
         <div className="w-px h-5 bg-gray-200 hidden sm:block" />

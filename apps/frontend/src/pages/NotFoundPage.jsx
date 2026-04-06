@@ -20,7 +20,7 @@ export default function NotFoundPage() {
       <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/[0.06] bg-[#09090b]/80 backdrop-blur-xl">
         <div className="max-w-6xl mx-auto flex items-center justify-between px-6 h-14">
           <Link to="/" className="flex items-center gap-2.5">
-            <CamoraLogo size={28} />
+            <CamoraLogo size={36} />
             <span className="text-sm font-semibold tracking-tight text-white">Camora</span>
           </Link>
           <div className="hidden md:flex items-center gap-1">

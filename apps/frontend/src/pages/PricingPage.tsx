@@ -155,7 +155,7 @@ export default function PricingPage() {
       <nav className="fixed top-0 left-0 right-0 z-50 border-b border-[#e3e8ee] bg-white/90 backdrop-blur-xl">
         <div className="max-w-6xl mx-auto flex items-center justify-between px-6 h-14">
           <Link to="/" className="flex items-center gap-2.5">
-            <CamoraLogo size={28} />
+            <CamoraLogo size={36} />
             <span className="text-sm font-semibold tracking-tight text-gray-900">Camora</span>
           </Link>
           <div className="hidden md:flex items-center gap-1">
@@ -530,7 +530,7 @@ export default function PricingPage() {
       <footer className="border-t border-[#e3e8ee] px-6 py-10">
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="flex items-center gap-2.5">
-            <CamoraLogo size={24} />
+            <CamoraLogo size={32} />
             <span className="text-sm font-semibold text-gray-900">Camora</span>
           </div>
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2">

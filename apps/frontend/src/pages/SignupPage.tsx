@@ -19,7 +19,7 @@ export default function SignupPage() {
       <nav className="fixed top-0 left-0 right-0 z-50 border-b border-[#e3e8ee] bg-white/90 backdrop-blur-xl">
         <div className="max-w-6xl mx-auto flex items-center justify-between px-6 h-14">
           <Link to="/" className="flex items-center gap-2.5">
-            <CamoraLogo size={28} />
+            <CamoraLogo size={36} />
             <span className="text-sm font-semibold tracking-tight text-gray-900">Camora</span>
           </Link>
           <div className="hidden md:flex items-center gap-1">

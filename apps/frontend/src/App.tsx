@@ -56,7 +56,7 @@ function LoginPage() {
       <nav className="sticky top-0 z-50 bg-white border-b border-[#e3e8ee]">
         <div className="max-w-[85%] xl:max-w-7xl mx-auto h-14 flex items-center justify-between px-4">
           <Link to="/" className="flex items-center gap-2.5">
-            <CamoraLogo size={28} />
+            <CamoraLogo size={36} />
             <span className="text-sm font-bold text-gray-900">Camora</span>
           </Link>
           <div className="hidden md:flex items-center gap-1">
