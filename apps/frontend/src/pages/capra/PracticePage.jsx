@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Icon } from '../../components/shared/Icons.jsx';
 import CamoraLogo from '../../components/shared/CamoraLogo';
+import { useContentAccess } from '../../hooks/useContentAccess';
 import { interviewCheatsheet, behavioralQuestions } from '../../data/capra/topics/techInterviewHandbook';
 
 /* ──────────────────────────────── Data ──────────────────────────────── */
@@ -119,7 +120,9 @@ const TOTAL_TOPICS = SECTIONS.reduce((sum, s) => sum + s.items.length, 0);
 export default function PracticePage() {
   const navigate = useNavigate();
   const { user, loading, logout } = useAuth();
+  const { isPaidUser, canReadTopic, markTopicRead, FREE_TOPICS_PER_CATEGORY, getReadCount } = useContentAccess();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showPaywall, setShowPaywall] = useState(false);
 
   // Progress tracking
   const [progressPercentage, setProgressPercentage] = useState(0);
