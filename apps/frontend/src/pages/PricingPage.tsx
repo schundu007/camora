@@ -247,13 +247,13 @@ export default function PricingPage() {
             className="overflow-x-auto"
             style={{
               background: 'white',
-              borderTop: '3px solid',
-              borderBottom: '3px solid',
-              borderLeft: 'none',
-              borderRight: 'none',
-              borderImage: 'linear-gradient(90deg, #34d399, #38bdf8, #818cf8, #c084fc) 1',
+              border: '2px solid transparent',
+              borderRadius: '16px',
+              backgroundImage: 'linear-gradient(white, white), linear-gradient(135deg, #34d399, #38bdf8, #818cf8, #c084fc)',
+              backgroundOrigin: 'border-box',
+              backgroundClip: 'padding-box, border-box',
               boxShadow: '0 8px 32px rgba(99,102,241,0.12), 0 2px 8px rgba(0,0,0,0.06)',
-              padding: '4px 0',
+              padding: '4px',
             }}
           >
             <table className="w-full text-[13px]">
