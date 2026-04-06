@@ -71,7 +71,7 @@ body::after { bottom: 0; }
 
   body {
     @apply font-sans;
-    background: linear-gradient(135deg, #b2ebf2 0%, #b3c6e7 30%, #c5b3e3 55%, #d4b8e8 80%, #e1bee7 100%);
+    background: linear-gradient(135deg, #ecfdf5 0%, #e0f2fe 25%, #ede9fe 55%, #fef3c7 85%, #ecfdf5 100%);
     background-attachment: fixed;
     color: var(--text);
     overflow-x: hidden;
