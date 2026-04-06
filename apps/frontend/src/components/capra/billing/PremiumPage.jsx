@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { Icon } from '../../shared/Icons.jsx';
+import CamoraLogo from '../../shared/CamoraLogo';
 import CompetitorComparison from './CompetitorComparison.jsx';
 
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
@@ -73,8 +74,8 @@ export default function PremiumPage() {
     <div className="min-h-screen text-gray-900 overflow-hidden landing-root" style={{ background: 'linear-gradient(180deg, #fdf2f8 0%, #ede9fe 50%, #e0e7ff 100%)', paddingTop: '64px', paddingBottom: '52px' }}>
       <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-12 py-4" style={{ background: '#111827' }}>
         <a href="/" className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center"><Icon name="ascend" size={16} className="text-white" /></div>
-          <div><span className="landing-display font-bold text-lg tracking-tight text-white">Ascend</span><span className="block text-[10px] landing-mono uppercase tracking-[0.2em] text-emerald-400 -mt-0.5">Interview AI</span></div>
+          <CamoraLogo size={32} />
+          <div><span className="landing-display font-bold text-lg tracking-tight text-white" style={{ fontFamily: "'Comfortaa', sans-serif" }}>Camora</span><span className="block text-[10px] landing-mono uppercase tracking-[0.2em] text-emerald-400 -mt-0.5">Interview AI</span></div>
         </a>
         <div className="hidden md:flex items-center gap-6">
           <button onClick={() => scrollTo('plans')} className="text-sm text-gray-400 hover:text-white transition-colors font-medium landing-body">Plans</button>
@@ -179,7 +180,7 @@ export default function PremiumPage() {
 
       <footer className="fixed bottom-0 left-0 right-0 z-50 px-6 md:px-12 py-3" style={{ background: '#111827' }}>
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
-          <a href="/" className="flex items-center gap-2"><div className="w-6 h-6 bg-emerald-500 rounded flex items-center justify-center"><Icon name="ascend" size={12} className="text-white" /></div><span className="landing-display font-bold text-sm text-white">Ascend</span></a>
+          <a href="/" className="flex items-center gap-2"><CamoraLogo size={24} /><span className="landing-display font-bold text-sm text-white" style={{ fontFamily: "'Comfortaa', sans-serif" }}>Camora</span></a>
           <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
             {[{ label: 'Apply', href: '/jobs' }, { label: 'Prepare', href: '/capra/prepare' }, { label: 'Practice', href: '/capra/practice' }, { label: 'Attend', href: '/lumora' }, { label: 'Pricing', href: '/pricing' }, { label: 'Support', href: 'mailto:support@cariara.com' }].map((link) => (
               <a key={link.label} href={link.href} className="text-xs text-gray-400 hover:text-emerald-400 transition-colors landing-body font-medium">{link.label}</a>

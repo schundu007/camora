@@ -4,6 +4,7 @@ import { useInterviewStore } from '@/stores/interview-store';
 import { useAuth } from '@/contexts/AuthContext';
 import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
 import { DocumentUpload } from '@/components/lumora/documents/DocumentUpload';
+import CamoraLogo from '../../shared/CamoraLogo';
 
 export type TabType = 'interview' | 'coding' | 'design';
 
@@ -107,11 +108,9 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
     <header className="flex items-center h-11 bg-gray-950 border-b border-gray-800 z-50 shrink-0 max-w-full">
       {/* Logo */}
       <Link to="/" className="flex items-center gap-1.5 px-3 border-r border-gray-800 h-full shrink-0">
-        <div className="w-5 h-5 md:w-6 md:h-6 rounded bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center">
-          <span className="font-display text-[10px] md:text-xs font-extrabold text-white">L</span>
-        </div>
+        <CamoraLogo size={24} />
         <div className="hidden sm:block">
-          <span className="font-display font-bold text-xs md:text-sm tracking-tight text-white">Lumora</span>
+          <span className="font-display font-bold text-xs md:text-sm tracking-tight text-white" style={{ fontFamily: "'Comfortaa', sans-serif" }}>Camora</span>
         </div>
       </Link>
 

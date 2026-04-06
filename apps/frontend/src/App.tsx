@@ -136,71 +136,10 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-/* ── APPA Side Rail — full-height left edge with 4 glowing nodes ── */
-function AppaSideIndicator() {
-  const location = useLocation();
-  const steps = [
-    { label: 'Apply', href: '/jobs', color: '#34d399', match: '/jobs' },
-    { label: 'Prepare', href: '/capra/prepare', color: '#818cf8', match: '/capra/prepare' },
-    { label: 'Practice', href: '/capra/practice', color: '#38bdf8', match: '/capra/practice' },
-    { label: 'Attend', href: '/lumora', color: '#fbbf24', match: '/lumora' },
-  ];
-  return (
-    <div className="fixed top-0 bottom-0 z-40 hidden xl:flex flex-col items-start justify-center" style={{ left: '16px' }}>
-      {/* Full-height gradient line — modern glow */}
-      <div className="absolute" style={{ top: 0, bottom: 0, width: '2px', left: '10px', background: 'linear-gradient(180deg, transparent 5%, #34d39950 15%, #34d399 25%, #818cf8 43%, #38bdf8 60%, #fbbf24 78%, #fbbf2450 90%, transparent 98%)', filter: 'blur(0.3px)' }} />
-      {/* Glow behind the line */}
-      <div className="absolute" style={{ top: 0, bottom: 0, width: '6px', left: '8px', background: 'linear-gradient(180deg, transparent 5%, #34d39915 20%, #818cf815 45%, #38bdf815 60%, #fbbf2415 80%, transparent 98%)', filter: 'blur(4px)' }} />
-
-      {/* 4 nodes with horizontal labels */}
-      <div className="flex flex-col" style={{ gap: '24px' }}>
-        {steps.map((step) => {
-          const isActive = location.pathname.startsWith(step.match);
-          return (
-            <Link
-              key={step.label}
-              to={step.href}
-              className="flex items-center gap-3 group transition-all duration-300"
-              title={step.label}
-              style={{ transform: isActive ? 'translateX(2px)' : 'none' }}
-            >
-              {/* Dot with modern glow */}
-              <div
-                className="rounded-full transition-all duration-300 flex-shrink-0"
-                style={{
-                  width: '20px',
-                  height: '20px',
-                  background: isActive ? step.color : 'rgba(255,255,255,0.9)',
-                  border: `2px solid ${step.color}`,
-                  boxShadow: isActive
-                    ? `0 0 12px ${step.color}60, inset 0 0 4px ${step.color}30`
-                    : `0 1px 3px rgba(0,0,0,0.08)`,
-                }}
-              />
-              {/* Label */}
-              <span
-                className="text-[11px] font-bold tracking-wider whitespace-nowrap transition-all duration-300"
-                style={{
-                  color: isActive ? step.color : '#c0c0c0',
-                  opacity: isActive ? 1 : 0.7,
-                  fontFamily: "'Comfortaa', sans-serif",
-                }}
-              >
-                {step.label}
-              </span>
-            </Link>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
 export function App() {
   return (
     <AuthProvider>
       <Suspense fallback={<Loading />}>
-        <AppaSideIndicator />
         <Routes>
           {/* ── Public ─────────────────────────────────── */}
           <Route path="/" element={<LandingPage />} />

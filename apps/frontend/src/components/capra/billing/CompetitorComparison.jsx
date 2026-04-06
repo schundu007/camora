@@ -324,7 +324,7 @@ export default function CompetitorComparison({ isOpen, onClose }) {
                 <div className="mt-3 flex items-center justify-center gap-3 text-sm" style={{ color: '#666' }}>
                   <span style={{ color: '#ef4444', textDecoration: 'line-through', fontFamily: 'monospace' }}>$299/mo InterviewCoder</span>
                   <span style={{ color: '#ccc' }}>vs</span>
-                  <span style={{ color: '#059669', fontWeight: 700, fontFamily: 'monospace' }}>$49/mo Lumora</span>
+                  <span style={{ color: '#059669', fontWeight: 700, fontFamily: 'monospace' }}>$49/mo Camora</span>
                 </div>
               </div>
 

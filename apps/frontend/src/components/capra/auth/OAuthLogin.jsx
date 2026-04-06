@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Icon } from '../../shared/Icons.jsx';
+import CamoraLogo from '../../shared/CamoraLogo';
 import { useAuth } from '../../../contexts/AuthContext';
 
 function useInView(threshold = 0.2) {
@@ -36,11 +37,9 @@ export default function OAuthLogin() {
       {/* Nav */}
       <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-12 py-4" style={{ background: '#111827' }}>
         <a href="/" className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
-            <Icon name="ascend" size={16} className="text-white" />
-          </div>
+          <CamoraLogo size={32} />
           <div>
-            <span className="landing-display font-bold text-lg tracking-tight text-white">Ascend</span>
+            <span className="landing-display font-bold text-lg tracking-tight text-white" style={{ fontFamily: "'Comfortaa', sans-serif" }}>Camora</span>
             <span className="block text-[10px] landing-mono uppercase tracking-[0.2em] text-emerald-400 -mt-0.5">Interview AI</span>
           </div>
         </a>
@@ -249,10 +248,8 @@ export default function OAuthLogin() {
       <footer className="fixed bottom-0 left-0 right-0 z-50 px-6 md:px-12 py-3" style={{ background: '#111827' }}>
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
           <a href="/" className="flex items-center gap-2">
-            <div className="w-6 h-6 bg-emerald-500 rounded flex items-center justify-center">
-              <Icon name="ascend" size={12} className="text-white" />
-            </div>
-            <span className="landing-display font-bold text-sm text-white">Ascend</span>
+            <CamoraLogo size={24} />
+            <span className="landing-display font-bold text-sm text-white" style={{ fontFamily: "'Comfortaa', sans-serif" }}>Camora</span>
           </a>
           <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
             {[

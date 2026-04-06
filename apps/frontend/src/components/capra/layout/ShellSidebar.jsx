@@ -1,5 +1,6 @@
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { Icon } from '../../shared/Icons.jsx';
+import CamoraLogo from '../../shared/CamoraLogo';
 import { useAppShell } from './AppShellContext.jsx';
 import { useIsMobile } from '../../../hooks/capra/useIsMobile.js';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -68,7 +69,7 @@ export default function ShellSidebar() {
               <Icon name="ascend" size={16} className="text-white" />
             </div>
             <div>
-              <span className="font-bold text-base tracking-tight text-gray-900">Ascend</span>
+              <span className="font-bold text-base tracking-tight text-gray-900" style={{ fontFamily: "'Comfortaa', sans-serif" }}>Camora</span>
               <span className="block text-[9px] font-mono uppercase tracking-[0.2em] text-emerald-600 -mt-0.5">Interview AI</span>
             </div>
           </a>
@@ -188,7 +189,7 @@ export default function ShellSidebar() {
             className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium text-amber-600 hover:bg-amber-50 transition-all"
           >
             <Icon name="microphone" size={15} className="text-amber-500" />
-            <span>Lumora — Live AI</span>
+            <span>Camora — Live AI</span>
           </Link>
         )}
 

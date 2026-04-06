@@ -6134,6 +6134,24 @@ Phase 3 (Fetch):
       'Primary-replica model with replica promotion for high availability',
       'Tiered segment merging to balance query performance and indexing throughput',
       'DFS_QUERY_THEN_FETCH for globally consistent BM25 scoring when precision matters'
+    ],
+
+    comparisonCards: [
+      {
+        title: 'ElasticSearch Use Cases',
+        items: [
+          { name: 'Full-Text Search', description: 'Robust, scalable, near real-time search using inverted indexes. Handles complex queries across millions of documents. The core use case.' },
+          { name: 'Real-Time Analytics', description: 'Track live data like user activity, transactions, and sensor outputs. Aggregation queries return in milliseconds with Kibana dashboards.' },
+          { name: 'Log Analysis (ELK Stack)', description: 'Filebeat/Logstash collects logs → Kafka buffers → Logstash processes → Elasticsearch stores → Kibana visualizes. The standard log management pipeline.' },
+          { name: 'Machine Learning', description: 'X-Pack ML detects anomalies, patterns, and trends in data automatically. Proactive observability and alerting without manual threshold setting.' },
+          { name: 'Geo-Data Applications', description: 'Balanced k-d tree geo indexing enables proximity searches and geographic data visualization. Used by mapping and location services.' },
+          { name: 'Security Information & Event Management', description: 'Elastic Agent collects security events → detection rules identify anomalies → real-time alerts and dashboards for security operations centers.' }
+        ]
+      }
+    ],
+
+    staticDiagrams: [
+      { id: 'elasticsearch-use-cases', title: 'ElasticSearch Use Cases', description: 'Full-text search, real-time analytics, log analysis, ML, geo-data, and SIEM', src: '/diagrams/distributed-search/elasticsearch-use-cases.svg', type: 'architecture' }
     ]
   },
 
