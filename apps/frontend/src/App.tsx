@@ -1,6 +1,6 @@
 import { Routes, Route, Navigate, useLocation, Link } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import CamoraLogo from './components/shared/CamoraLogo';
 
 // ── Shared pages ────────────────────────────────────────
@@ -136,10 +136,17 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+  return null;
+}
+
 export function App() {
   return (
     <AuthProvider>
       <Suspense fallback={<Loading />}>
+        <ScrollToTop />
         <Routes>
           {/* ── Public ─────────────────────────────────── */}
           <Route path="/" element={<LandingPage />} />
