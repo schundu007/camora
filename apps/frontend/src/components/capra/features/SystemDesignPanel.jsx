@@ -376,13 +376,17 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
 
       if (!response.ok) {
         let errorMessage = `Failed to generate diagram (${response.status})`;
+        let needsSubscription = false;
         try {
           const errorData = await response.json();
           errorMessage = errorData.error || errorData.details || errorMessage;
+          needsSubscription = errorData.subscriptionRequired || false;
         } catch {
           errorMessage = `Server error: ${response.status} ${response.statusText}`;
         }
-        throw new Error(errorMessage);
+        const err = new Error(errorMessage);
+        err.subscriptionRequired = needsSubscription;
+        throw err;
       }
 
       const result = await response.json();
@@ -403,7 +407,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
         throw new Error(result.error || 'Diagram generation failed');
       }
     } catch (error) {
-      setDiagramError(error.message);
+      setDiagramError({ message: error.message, subscriptionRequired: error.subscriptionRequired || false });
     } finally {
       setGeneratingDiagram(false);
     }
@@ -475,7 +479,27 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
               <span className="text-xs">Generating diagram...</span>
             </div>
           ) : diagramError ? (
-            <div className="p-3 text-center text-red-500 text-xs">{diagramError}</div>
+            <div className="flex flex-col items-center justify-center h-full p-6">
+              {diagramError.subscriptionRequired ? (
+                <>
+                  <div className="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center mb-3">
+                    <svg className="w-6 h-6 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                  </div>
+                  <p className="text-sm font-semibold text-gray-900 mb-1">Free diagrams used up</p>
+                  <p className="text-xs text-gray-500 mb-4 text-center max-w-xs">Upgrade to Premium for unlimited architecture diagram generation.</p>
+                  <a href="/pricing" className="px-4 py-2 bg-emerald-500 text-white text-xs font-bold rounded-lg hover:bg-emerald-600 transition-colors">View Plans</a>
+                </>
+              ) : (
+                <>
+                  <div className="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center mb-3">
+                    <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" /></svg>
+                  </div>
+                  <p className="text-sm font-semibold text-gray-900 mb-1">Diagram generation failed</p>
+                  <p className="text-xs text-gray-500 mb-3 text-center max-w-xs">{diagramError.message}</p>
+                  <button onClick={() => { setDiagramError(null); handleGenerateDiagram(diagramDetailLevel, diagramDirection); }} className="px-4 py-2 bg-gray-100 text-gray-700 text-xs font-bold rounded-lg hover:bg-gray-200 transition-colors">Retry</button>
+                </>
+              )}
+            </div>
           ) : (
             <div className="flex flex-col items-center justify-center h-full text-gray-400">
               <svg className="w-8 h-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" /></svg>
