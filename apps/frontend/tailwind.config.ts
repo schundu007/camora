@@ -5,8 +5,9 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        display: ['Inter', 'system-ui', 'sans-serif'],
-        mono: ['JetBrains Mono', 'monospace'],
+        display: ['Plus Jakarta Sans', 'Inter', 'system-ui', 'sans-serif'],
+        code: ['IBM Plex Mono', 'JetBrains Mono', 'monospace'],
+        mono: ['IBM Plex Mono', 'JetBrains Mono', 'monospace'],
       },
       colors: {
         primary: {

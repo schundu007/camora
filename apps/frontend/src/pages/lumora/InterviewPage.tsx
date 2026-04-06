@@ -55,13 +55,13 @@ function MicCheck({ onReady }: { onReady: () => void }) {
   return (
     <div className="h-screen w-full flex items-center justify-center lumora-app-bg">
       <div className="max-w-md w-full mx-4 bg-white rounded-2xl shadow-xl border border-gray-200 p-8 text-center">
-        <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center">
+        <div className="w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #10b981, #06b6d4)' }}>
           <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
           </svg>
         </div>
         <h2 className="text-xl font-display font-bold text-gray-900 mb-2">Pre-Interview Check</h2>
-        <p className="text-sm text-gray-500 mb-6">Make sure your microphone is working before the interview starts.</p>
+        <p className="text-sm font-display text-gray-500 mb-6">Make sure your microphone is working before the interview starts.</p>
 
         {error ? (
           <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm mb-4">{error}</div>
@@ -106,15 +106,15 @@ function MicCheck({ onReady }: { onReady: () => void }) {
         )}
 
         <div className="flex gap-3">
-          <button onClick={onReady} className="flex-1 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold text-sm rounded-xl hover:from-emerald-600 hover:to-teal-600 transition-all shadow-lg shadow-emerald-500/25">
+          <button onClick={onReady} className="font-display flex-1 py-3 text-white font-bold text-sm rounded-xl transition-all shadow-lg shadow-emerald-500/25 hover:opacity-90" style={{ background: 'linear-gradient(135deg, #10b981, #06b6d4)' }}>
             {micOk ? "I'm Ready" : 'Skip Check'}
           </button>
         </div>
 
-        <p className="mt-3 text-xs text-gray-400">
-          Hotkeys: <kbd className="px-1 py-0.5 bg-gray-100 rounded text-gray-500">Cmd+M</kbd> mic &nbsp;
-          <kbd className="px-1 py-0.5 bg-gray-100 rounded text-gray-500">Cmd+B</kbd> blank &nbsp;
-          <kbd className="px-1 py-0.5 bg-gray-100 rounded text-gray-500">Cmd+K</kbd> focus
+        <p className="mt-3 text-xs font-code text-gray-400">
+          Hotkeys: <kbd className="px-1 py-0.5 bg-gray-100 rounded-md text-gray-500 font-code">Cmd+M</kbd> mic &nbsp;
+          <kbd className="px-1 py-0.5 bg-gray-100 rounded-md text-gray-500 font-code">Cmd+B</kbd> blank &nbsp;
+          <kbd className="px-1 py-0.5 bg-gray-100 rounded-md text-gray-500 font-code">Cmd+K</kbd> focus
         </p>
       </div>
     </div>
@@ -193,30 +193,30 @@ export function InterviewPage() {
       </ErrorBoundary>
 
       {/* Enterprise Status Bar */}
-      <div className="hidden sm:flex items-center justify-between h-7 px-3 bg-gray-950 border-t border-gray-800 shrink-0">
+      <div className="hidden sm:flex items-center justify-between h-7 px-3 bg-gray-900/80 backdrop-blur-xl border-t border-gray-800/50 shrink-0">
         <div className="flex items-center gap-2">
-          <span className={`w-2 h-2 rounded-full ${isStreaming ? 'bg-emerald-500 animate-pulse' : 'bg-emerald-400'}`} />
-          <span className="text-[10px] font-mono text-gray-400">
+          <span className={`w-2 h-2 rounded-full ${isStreaming ? 'bg-emerald-400 animate-pulse' : 'bg-emerald-400'}`} style={!isStreaming ? { boxShadow: '0 0 6px rgba(52, 211, 153, 0.4)' } : {}} />
+          <span className="text-[10px] font-code text-gray-200">
             {isStreaming ? 'Generating...' : 'Ready'}
           </span>
           {history.length > 0 && (
-            <span className="text-[10px] font-mono text-gray-500 border-l border-gray-700 pl-2">
+            <span className="text-[10px] font-code text-gray-300 border-l border-gray-700/50 pl-2">
               {history.length} Q&A{history.length !== 1 ? 's' : ''}
             </span>
           )}
         </div>
-        <div className="flex items-center gap-3 text-[10px] font-mono text-gray-500">
+        <div className="flex items-center gap-3 text-[10px] font-code text-gray-300">
           <span>
-            <kbd className="px-1 py-0.5 rounded border border-gray-700 text-gray-400 text-[9px]">Cmd+M</kbd> mic
+            <kbd className="px-1 py-0.5 rounded-md border border-gray-700/50 text-gray-200 text-[9px] bg-white/5">Cmd+M</kbd> mic
           </span>
           <span>
-            <kbd className="px-1 py-0.5 rounded border border-gray-700 text-gray-400 text-[9px]">Cmd+K</kbd> focus
+            <kbd className="px-1 py-0.5 rounded-md border border-gray-700/50 text-gray-200 text-[9px] bg-white/5">Cmd+K</kbd> focus
           </span>
           <span>
-            <kbd className="px-1 py-0.5 rounded border border-gray-700 text-gray-400 text-[9px]">Cmd+S</kbd> search
+            <kbd className="px-1 py-0.5 rounded-md border border-gray-700/50 text-gray-200 text-[9px] bg-white/5">Cmd+S</kbd> search
           </span>
           <span>
-            <kbd className="px-1 py-0.5 rounded border border-gray-700 text-gray-400 text-[9px]">Cmd+B</kbd> blank
+            <kbd className="px-1 py-0.5 rounded-md border border-gray-700/50 text-gray-200 text-[9px] bg-white/5">Cmd+B</kbd> blank
           </span>
         </div>
       </div>

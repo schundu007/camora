@@ -80,7 +80,7 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
           {/* All Q&As from history - compact pill navigation */}
           {history.length > 0 && (
             <div className="flex items-center gap-1.5 pb-2 border-b border-gray-200 shrink-0 overflow-x-auto">
-              <span className="text-[10px] font-mono font-semibold text-gray-400 uppercase tracking-wider shrink-0 mr-1">History</span>
+              <span className="text-[10px] font-code font-semibold text-gray-700 uppercase tracking-wider shrink-0 mr-1">History</span>
               {history.map((entry, idx) => (
                 <div key={idx} className="group relative flex items-center shrink-0">
                   <button
@@ -90,7 +90,7 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
                         ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
                         : idx === history.length - 1 && !isStreaming
                           ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                          : 'bg-gray-50 text-gray-500 border-gray-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200'
+                          : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200'
                     }`}
                     title={entry.question}
                   >
@@ -124,7 +124,7 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
           {expandedIdx !== null && history[expandedIdx] && (
             <div className="flex-1 flex flex-col gap-2 overflow-auto">
               <div className="history-question-card shrink-0">
-                <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 text-xs font-bold font-mono shrink-0">
+                <span className="flex items-center justify-center w-7 h-7 rounded-xl bg-indigo-50 text-indigo-600 text-xs font-bold font-code shrink-0">
                   Q{expandedIdx + 1}
                 </span>
                 <div className="min-w-0 flex-1">
@@ -148,16 +148,16 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
               {isStreaming && question && (
                 <div className="history-question-card shrink-0 border-emerald-200 bg-emerald-50/30">
                   <div className="relative flex items-center justify-center w-7 h-7 shrink-0">
-                    <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 text-xs font-bold font-mono">
+                    <span className="flex items-center justify-center w-7 h-7 rounded-xl bg-emerald-50 text-emerald-600 text-xs font-bold font-code">
                       Q{history.length + 1}
                     </span>
-                    <div className="absolute inset-0 border-2 border-transparent border-t-emerald-500 rounded-lg animate-spin" />
+                    <div className="absolute inset-0 border-2 border-transparent border-t-emerald-500 rounded-xl animate-spin" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <span className="font-display text-sm font-semibold text-gray-900 leading-snug">
                       {question}
                     </span>
-                    <span className="ml-2 text-[10px] font-mono text-emerald-600">Analyzing...</span>
+                    <span className="ml-2 text-[10px] font-code text-emerald-600">Analyzing...</span>
                   </div>
                 </div>
               )}
@@ -175,7 +175,7 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
               {!isStreaming && history.length > 0 && (
                 <div className="flex-1 flex flex-col gap-2 overflow-auto">
                   <div className="history-question-card shrink-0 border-emerald-200 bg-emerald-50/20">
-                    <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 text-xs font-bold font-mono shrink-0">
+                    <span className="flex items-center justify-center w-7 h-7 rounded-xl bg-emerald-50 text-emerald-600 text-xs font-bold font-code shrink-0">
                       Q{history.length}
                     </span>
                     <div className="min-w-0 flex-1">
@@ -196,15 +196,15 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
 
           {/* Cross-sell: Ascend preparation */}
           {history.length > 0 && history.length % 3 === 0 && (
-            <div className="flex items-center gap-3 p-3 rounded-xl border border-amber-200 bg-amber-50/50">
-              <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center shrink-0">
+            <div className="flex items-center gap-3 p-3 rounded-2xl border border-amber-200 bg-amber-50/50">
+              <div className="w-8 h-8 rounded-xl bg-amber-100 flex items-center justify-center shrink-0">
                 <svg className="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-amber-800">Want deeper preparation?</p>
-                <p className="text-xs text-amber-600">Ascend has 300+ DSA topics, system design problems, and mock interviews.</p>
+                <p className="text-sm font-display font-semibold text-amber-800">Want deeper preparation?</p>
+                <p className="text-xs font-display text-amber-600">Ascend has 300+ DSA topics, system design problems, and mock interviews.</p>
               </div>
-              <a href="/capra/prepare" className="shrink-0 px-3 py-1.5 bg-amber-500 text-white text-xs font-bold rounded-lg hover:bg-amber-600 transition-colors">
+              <a href="/capra/prepare" className="shrink-0 px-3 py-1.5 text-white text-xs font-display font-bold rounded-xl hover:opacity-90 transition-all" style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}>
                 Prepare →
               </a>
             </div>
@@ -212,15 +212,15 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
 
           {/* Error display */}
           {error && (
-            <div className="flex items-start gap-2 p-3 rounded-lg border border-red-200 bg-red-50 text-sm">
+            <div className="flex items-start gap-2 p-3 rounded-2xl border border-red-200 bg-red-50 text-sm">
               <svg className="w-4 h-4 text-red-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
               </svg>
               <div className="flex-1 min-w-0">
-                <p className="text-red-700 font-medium">{error}</p>
+                <p className="text-red-700 font-display font-medium">{error}</p>
                 <button
                   onClick={() => setError(null)}
-                  className="mt-1.5 text-xs text-red-500 hover:text-red-700 font-mono hover:underline"
+                  className="mt-1.5 text-xs text-red-500 hover:text-red-700 font-code hover:underline"
                 >
                   Dismiss
                 </button>
@@ -235,29 +235,29 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
 
 function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: { onAskQuestion?: (question: string) => void; onSwitchToCoding?: (problem?: string) => void; onSwitchToDesign?: (problem?: string) => void }) {
   return (
-      <div className="flex-1 flex flex-col items-center justify-center overflow-auto py-8 md:py-12" style={{ background: 'linear-gradient(180deg, #ffffff 0%, #ecfdf5 40%, #e0f2fe 70%, #f5f3ff 90%, #ffffff 100%)' }}>
+      <div className="flex-1 flex flex-col items-center justify-center overflow-auto py-8 md:py-12" style={{ background: 'radial-gradient(ellipse 80% 60% at 50% 0%, rgba(16,185,129,0.06) 0%, transparent 60%), linear-gradient(180deg, #ffffff 0%, #ecfdf5 35%, #e0f2fe 60%, #f5f3ff 85%, #ffffff 100%)' }}>
         <div className="max-w-4xl w-full px-6 md:px-12 text-center">
 
           {/* Hero */}
           <h1 className="font-display text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight leading-tight">
-            Your AI co-pilot for <span className="bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-500 bg-clip-text text-transparent">live interviews</span>
+            Your AI co-pilot for <span className="bg-clip-text text-transparent" style={{ backgroundImage: 'linear-gradient(135deg, #34d399, #06b6d4, #818cf8)' }}>live interviews</span>
           </h1>
 
           {/* How it works - 2 steps */}
           <div className="mt-10 grid grid-cols-2 gap-4 md:gap-6 text-center">
-            <div className="p-4 rounded-2xl bg-white/80 border border-emerald-100 shadow-sm">
-              <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
-                <span className="text-white font-extrabold text-xl">1</span>
+            <div className="p-4 rounded-2xl bg-white/80 border border-emerald-100 shadow-sm hover:shadow-md transition-shadow">
+              <div className="w-12 h-12 mx-auto mb-3 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20" style={{ background: 'linear-gradient(135deg, #34d399, #10b981)' }}>
+                <span className="text-white font-display font-extrabold text-xl">1</span>
               </div>
-              <p className="text-sm font-bold text-gray-900">Join your interview</p>
-              <p className="text-xs text-gray-500 mt-1">Open Zoom, Meet, or Teams alongside</p>
+              <p className="text-sm font-display font-bold text-gray-900">Join your interview</p>
+              <p className="text-xs font-display text-gray-500 mt-1">Open Zoom, Meet, or Teams alongside</p>
             </div>
-            <div className="p-4 rounded-2xl bg-white/80 border border-violet-100 shadow-sm">
-              <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-gradient-to-br from-violet-400 to-violet-500 flex items-center justify-center shadow-lg shadow-violet-500/20">
-                <span className="text-white font-extrabold text-xl">2</span>
+            <div className="p-4 rounded-2xl bg-white/80 border border-violet-100 shadow-sm hover:shadow-md transition-shadow">
+              <div className="w-12 h-12 mx-auto mb-3 rounded-xl flex items-center justify-center shadow-lg shadow-violet-500/20" style={{ background: 'linear-gradient(135deg, #818cf8, #7c3aed)' }}>
+                <span className="text-white font-display font-extrabold text-xl">2</span>
               </div>
-              <p className="text-sm font-bold text-gray-900">Ask anything in real-time</p>
-              <p className="text-xs text-gray-500 mt-1">Type, paste, or use your mic</p>
+              <p className="text-sm font-display font-bold text-gray-900">Ask anything in real-time</p>
+              <p className="text-xs font-display text-gray-500 mt-1">Type, paste, or use your mic</p>
             </div>
           </div>
 
@@ -266,7 +266,8 @@ function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: { onA
             <div className="flex justify-center">
               <button
                 onClick={() => onAskQuestion?.('Help me with my interview — I just joined the call')}
-                className="group px-10 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold text-lg rounded-2xl hover:from-emerald-600 hover:to-teal-600 transition-all shadow-xl shadow-emerald-500/30 hover:-translate-y-1 flex items-center justify-center gap-2"
+                className="group font-display px-10 py-4 text-white font-bold text-lg rounded-2xl transition-all shadow-xl shadow-emerald-500/30 hover:-translate-y-1 hover:opacity-90 flex items-center justify-center gap-2"
+                style={{ background: 'linear-gradient(135deg, #10b981, #06b6d4)' }}
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
                 Start Live Interview

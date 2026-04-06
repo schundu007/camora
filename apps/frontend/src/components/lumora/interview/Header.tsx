@@ -105,9 +105,9 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
   };
 
   return (
-    <header className="flex items-center flex-wrap h-auto min-h-[44px] bg-gray-950 border-b border-gray-800 z-50 shrink-0 max-w-full">
+    <header className="flex items-center flex-wrap h-auto min-h-[44px] bg-gray-900/80 backdrop-blur-xl border-b border-gray-800/50 z-50 shrink-0 max-w-full">
       {/* Logo */}
-      <Link to="/" className="flex items-center gap-1.5 px-3 border-r border-gray-800 h-full shrink-0">
+      <Link to="/" className="flex items-center gap-1.5 px-3 border-r border-gray-800/50 h-full shrink-0">
         <CamoraLogo size={24} />
         <div className="hidden sm:block">
           <span className="font-display font-bold text-xs md:text-sm tracking-tight text-white" style={{ fontFamily: "'Comfortaa', sans-serif" }}>Camora</span>
@@ -115,17 +115,17 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
       </Link>
 
       {/* Tabs */}
-      <div className="flex items-center gap-0.5 px-1.5 md:px-2 h-full shrink-0 border-r border-gray-800 overflow-x-auto no-scrollbar">
+      <div className="flex items-center gap-0.5 px-1.5 md:px-2 h-full shrink-0 border-r border-gray-800/50 overflow-x-auto no-scrollbar">
         {TABS.map((tab) => (
           <button
             key={tab.id}
             onClick={() => handleTabClick(tab.id)}
-            className={`flex items-center gap-1.5 px-2 md:px-3 py-1 text-xs font-bold rounded-md transition-all duration-150 ${
+            className={`font-display flex items-center gap-1.5 px-2 md:px-3 py-1 text-xs font-bold rounded-xl transition-all duration-150 ${
               currentTab === tab.id
-                ? 'bg-emerald-500 text-white shadow-sm'
-                : 'text-white/80 hover:text-white hover:bg-gray-800'
+                ? 'text-white shadow-sm'
+                : 'text-white hover:bg-white/10'
             }`}
-            style={currentTab === tab.id ? { boxShadow: '0 1px 3px rgba(5, 150, 105, 0.3)' } : {}}
+            style={currentTab === tab.id ? { background: 'linear-gradient(135deg, #10b981, #059669)', boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)' } : {}}
           >
             <span className="hidden md:inline">{TAB_ICONS[tab.id]}</span>
             <span>{tab.label}</span>
@@ -134,9 +134,9 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
       </div>
 
       {/* Platform Selector */}
-      <div className="hidden md:flex items-center px-1.5 border-r border-gray-800 h-full shrink-0">
+      <div className="hidden md:flex items-center px-1.5 border-r border-gray-800/50 h-full shrink-0">
         <select
-          className="bg-gray-800 text-white font-bold text-[10px] border border-gray-700 rounded px-1.5 py-1 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
+          className="font-display bg-white/10 text-white font-bold text-[10px] border border-gray-700/50 rounded-lg px-1.5 py-1 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer backdrop-blur-sm"
           defaultValue="general"
         >
           <option value="general">General</option>
@@ -150,21 +150,21 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
       </div>
 
       {/* Status — hide on small screens to save space */}
-      <div className="hidden md:flex items-center gap-1.5 px-2 border-r border-gray-800 h-full shrink-0 max-w-[160px]">
+      <div className="hidden md:flex items-center gap-1.5 px-2 border-r border-gray-800/50 h-full shrink-0 max-w-[160px]">
         <div className={`w-2 h-2 rounded-full shrink-0 transition-all duration-300 ${
-          status.state === 'ready' ? 'bg-emerald-500' :
+          status.state === 'ready' ? 'bg-emerald-400' :
           status.state === 'error' ? 'bg-red-500' :
           status.state === 'warn' ? 'bg-amber-500' :
-          status.state === 'listen' || status.state === 'write' ? 'bg-emerald-500 animate-pulse' :
+          status.state === 'listen' || status.state === 'write' ? 'bg-emerald-400 animate-pulse' :
           'bg-gray-500'
-        }`} style={status.state === 'ready' ? { boxShadow: '0 0 6px rgba(16, 185, 129, 0.5)' } : {}} />
-        <span className="font-mono text-[10px] md:text-xs text-white font-bold truncate">
+        }`} style={status.state === 'ready' ? { boxShadow: '0 0 8px rgba(52, 211, 153, 0.5)' } : {}} />
+        <span className="font-code text-[10px] md:text-xs text-white font-medium truncate whitespace-nowrap">
           {status.message}
         </span>
       </div>
 
       {/* Audio Capture */}
-      <div className="flex items-center px-1.5 border-r border-gray-800 h-full shrink-0">
+      <div className="flex items-center px-1.5 border-r border-gray-800/50 h-full shrink-0">
         <AudioCapture onTranscription={onTranscription} />
       </div>
 
@@ -177,12 +177,13 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
           onChange={(e) => onInputChange(e.target.value)}
           onKeyDown={handleInputKeyDown}
           placeholder="Type or paste question... (⌘K)"
-          className="flex-1 bg-transparent border-none outline-none text-xs md:text-sm text-white placeholder:text-gray-500 min-w-0"
+          className="font-display flex-1 bg-transparent border-none outline-none text-xs md:text-sm text-white placeholder:text-gray-400 min-w-0"
         />
         {inputValue && (
           <button
             onClick={onSubmit}
-            className="flex items-center gap-1.5 px-3 py-1 bg-emerald-500 text-white text-xs font-bold rounded-md hover:bg-emerald-600 transition-colors ml-2 shadow-sm"
+            className="font-display flex items-center gap-1.5 px-3 py-1 text-white text-xs font-bold rounded-xl hover:opacity-90 transition-all ml-2"
+            style={{ background: 'linear-gradient(135deg, #10b981, #059669)', boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)' }}
           >
             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
@@ -193,21 +194,22 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
       </div>
 
       {/* Controls */}
-      <div className="flex items-center gap-0.5 px-1.5 md:px-2 border-l border-gray-800 h-full shrink-0">
+      <div className="flex items-center gap-0.5 px-1.5 md:px-2 border-l border-gray-800/50 h-full shrink-0">
         <DocumentUpload />
         <button
           onClick={() => setUseSearch(!useSearch)}
-          className={`p-1.5 rounded-md transition-all duration-150 ${
+          className={`p-1.5 rounded-lg transition-all duration-150 ${
             useSearch
-              ? 'bg-emerald-500 text-white shadow-sm'
-              : 'text-white/80 hover:text-white hover:bg-gray-800'
+              ? 'text-white shadow-sm'
+              : 'text-white hover:bg-white/10'
           }`}
+          style={useSearch ? { background: 'linear-gradient(135deg, #10b981, #059669)', boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)' } : {}}
           title="Toggle web search (⌘S)"
         >
           <SearchIcon />
         </button>
         <button
-          className="p-1.5 rounded-md text-white/80 hover:text-white hover:bg-gray-800 transition-all duration-150"
+          className="p-1.5 rounded-lg text-white hover:bg-white/10 transition-all duration-150"
           onClick={() => clearHistory()}
           title="Reset (⌘⌫)"
         >
@@ -216,7 +218,7 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
       </div>
 
       {/* User info */}
-      <div className="flex items-center gap-1.5 px-2 border-l border-gray-800 h-full shrink-0">
+      <div className="flex items-center gap-1.5 px-2 border-l border-gray-800/50 h-full shrink-0">
         <UserBadge />
       </div>
     </header>
@@ -235,17 +237,17 @@ function UserBadge() {
     <div className="relative">
       <button
         onClick={() => setShowMenu(!showMenu)}
-        className="flex items-center gap-1.5 px-1 py-0.5 rounded-md hover:bg-gray-800 transition-colors"
+        className="flex items-center gap-1.5 px-1 py-0.5 rounded-lg hover:bg-white/10 transition-colors"
         title={user.email || ''}
       >
         {user.image ? (
           <img src={user.image} alt="" className="w-6 h-6 rounded-full" />
         ) : (
-          <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center text-white text-[9px] font-bold">
+          <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[9px] font-bold" style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}>
             {initials}
           </div>
         )}
-        <span className="hidden lg:inline text-[11px] text-white/80 font-medium truncate max-w-[80px]">
+        <span className="hidden lg:inline font-display text-[11px] text-white font-medium truncate max-w-[80px]">
           {user.name || user.email?.split('@')[0]}
         </span>
       </button>
@@ -253,15 +255,15 @@ function UserBadge() {
       {showMenu && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
-          <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-50 py-1">
+          <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-2xl shadow-xl border border-gray-200 z-50 py-1 overflow-hidden">
             <div className="px-3 py-2 border-b border-gray-100">
-              <p className="text-sm font-semibold text-gray-900 truncate">{user.name || 'User'}</p>
-              <p className="text-xs text-gray-500 truncate">{user.email}</p>
+              <p className="font-display text-sm font-semibold text-gray-900 truncate">{user.name || 'User'}</p>
+              <p className="font-code text-xs text-gray-500 truncate">{user.email}</p>
             </div>
-            <a href="/pricing" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">Pricing</a>
+            <a href="/pricing" className="block px-3 py-2 text-sm font-display text-gray-700 hover:bg-gray-50">Pricing</a>
             <button
               onClick={() => logout()}
-              className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50"
+              className="w-full text-left px-3 py-2 text-sm font-display text-red-600 hover:bg-red-50"
             >
               Sign Out
             </button>

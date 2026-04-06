@@ -519,9 +519,8 @@ main, [role="main"] {
 /* Lumora app background */
 .lumora-app-bg {
   background:
-    linear-gradient(180deg, rgba(255,255,255,0) 0%, #f0f0f8 100%),
-    linear-gradient(270deg, rgba(99, 102, 241, 0.06) 0%, rgba(139, 92, 246, 0.06) 100%),
-    #f0f0f8;
+    radial-gradient(ellipse 70% 50% at 50% 0%, rgba(16,185,129,0.05) 0%, transparent 70%),
+    linear-gradient(180deg, #ffffff 0%, #f0fdf4 40%, #f8fafc 100%);
 }
 
 /* Enterprise status bar */
@@ -559,26 +558,26 @@ main, [role="main"] {
 
 /* Q history pill */
 .q-pill {
-  @apply inline-flex items-center gap-0.5 text-xs font-mono font-bold rounded-md transition-all duration-150 cursor-pointer;
-  padding: 2px 8px;
+  @apply inline-flex items-center gap-0.5 text-xs font-code font-bold rounded-xl transition-all duration-150 cursor-pointer;
+  padding: 3px 10px;
   border: 1px solid transparent;
 }
 
 .q-pill:hover {
   transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
 }
 
 /* Interview history card */
 .history-question-card {
-  @apply flex items-start gap-2 p-2.5 rounded-lg border transition-all duration-150;
+  @apply flex items-start gap-2.5 p-3 rounded-2xl border transition-all duration-150;
   border-color: var(--border);
   background: var(--surface);
 }
 
 .history-question-card:hover {
-  border-color: rgba(5, 150, 105, 0.3);
-  box-shadow: 0 2px 8px rgba(5, 150, 105, 0.06);
+  border-color: rgba(5, 150, 105, 0.25);
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.08);
 }
 
 /* Timer ring animation */

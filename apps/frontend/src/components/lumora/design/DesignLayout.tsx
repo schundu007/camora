@@ -559,7 +559,7 @@ export function DesignLayout({ onBack, initialProblem }: DesignLayoutProps) {
       {/* Header — matching coding page enterprise style */}
       <header className="flex items-center justify-between h-11 px-3 bg-white border-b border-gray-200 shrink-0">
         <div className="flex items-center gap-2 md:gap-3">
-          <button onClick={onBack} className="flex items-center gap-1 px-1.5 py-1 text-xs md:text-sm font-medium text-gray-500 hover:text-gray-900 rounded transition-colors">
+          <button onClick={onBack} className="flex items-center gap-1 px-1.5 py-1 text-xs md:text-sm font-medium text-gray-700 hover:text-gray-900 rounded transition-colors">
             <svg className="w-3 h-3 md:w-3.5 md:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
             </svg>
@@ -578,13 +578,13 @@ export function DesignLayout({ onBack, initialProblem }: DesignLayoutProps) {
             <button
               onClick={() => setDetailLevel('basic')}
               className={`px-2.5 py-1 text-[10px] md:text-xs font-semibold rounded-md transition-all ${
-                detailLevel === 'basic' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                detailLevel === 'basic' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-700 hover:text-gray-900'
               }`}
             >Basic</button>
             <button
               onClick={() => setDetailLevel('full')}
               className={`px-2.5 py-1 text-[10px] md:text-xs font-semibold rounded-md transition-all ${
-                detailLevel === 'full' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                detailLevel === 'full' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-700 hover:text-gray-900'
               }`}
             >Full</button>
           </div>
@@ -595,7 +595,7 @@ export function DesignLayout({ onBack, initialProblem }: DesignLayoutProps) {
           {timerDuration > 0 ? (
             <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-xs font-mono font-bold transition-colors ${
               timerUrgent ? 'bg-red-50 border-red-200 text-red-600' :
-              timerSeconds === 0 ? 'bg-gray-100 border-gray-200 text-gray-400' :
+              timerSeconds === 0 ? 'bg-gray-100 border-gray-200 text-gray-700' :
               'bg-emerald-50 border-emerald-200 text-emerald-700'
             } ${timerUrgent ? 'timer-urgent' : ''}`}>
               <div className="relative w-4 h-4">
@@ -606,7 +606,7 @@ export function DesignLayout({ onBack, initialProblem }: DesignLayoutProps) {
                 </svg>
               </div>
               <span>{formatTime(timerSeconds)}</span>
-              <button onClick={stopTimer} className="ml-1 text-gray-400 hover:text-red-500 transition-colors" title="Stop timer">
+              <button onClick={stopTimer} className="ml-1 text-gray-700 hover:text-red-500 transition-colors" title="Stop timer">
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -616,7 +616,7 @@ export function DesignLayout({ onBack, initialProblem }: DesignLayoutProps) {
             <div className="flex items-center">
               {[15, 30, 45, 60].map(m => (
                 <button key={m} onClick={() => startTimer(m)}
-                  className="px-1.5 py-0.5 text-[10px] font-mono text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded transition-colors"
+                  className="px-1.5 py-0.5 text-[10px] font-mono text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 rounded transition-colors"
                   title={`${m} min timer`}>
                   {m}m
                 </button>
@@ -632,7 +632,7 @@ export function DesignLayout({ onBack, initialProblem }: DesignLayoutProps) {
           )}
 
           {/* Reset */}
-          <button onClick={handleReset} className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors" title="Reset">
+          <button onClick={handleReset} className="p-1.5 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors" title="Reset">
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
