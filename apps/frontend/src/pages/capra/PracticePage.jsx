@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Icon } from '../../components/shared/Icons.jsx';
+import CamoraLogo from '../../components/shared/CamoraLogo';
 import { interviewCheatsheet, behavioralQuestions } from '../../data/capra/topics/techInterviewHandbook';
 
 /* ──────────────────────────────── Data ──────────────────────────────── */
@@ -209,32 +210,21 @@ export default function PracticePage() {
   };
 
   return (
-    <div className="practice-root" style={{ background: '#f7f8f9', minHeight: '100vh' }}>
+    <div className="practice-root" style={{ background: 'transparent', minHeight: '100vh' }}>
 
       {/* ═══════════════════════ Top Navigation ═══════════════════════ */}
       <nav
-        className="fixed top-0 left-0 right-0 z-50"
+        className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl"
         style={{
-          background: '#ffffff',
-          borderBottom: '1px solid #e3e8ee',
+          background: 'linear-gradient(135deg, rgba(178,235,242,0.7) 0%, rgba(179,198,231,0.7) 30%, rgba(197,179,227,0.7) 55%, rgba(212,184,232,0.7) 80%, rgba(225,190,231,0.7) 100%)',
           height: '56px',
         }}
       >
         <div className="max-w-[85%] xl:max-w-7xl mx-auto h-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
           {/* Left: Logo */}
           <Link to="/" className="flex items-center gap-2.5 no-underline">
-            <div
-              className="flex items-center justify-center"
-              style={{
-                width: '28px',
-                height: '28px',
-                background: '#10b981',
-                borderRadius: '8px',
-              }}
-            >
-              <Icon name="ascend" size={14} style={{ color: '#fff' }} />
-            </div>
-            <span className="practice-display" style={{ fontWeight: 700, fontSize: '16px', color: '#111827', letterSpacing: '-0.01em' }}>
+            <CamoraLogo size={36} />
+            <span style={{ fontWeight: 700, fontSize: '16px', color: '#111827', fontFamily: "'Comfortaa', sans-serif" }}>
               Camora
             </span>
           </Link>
