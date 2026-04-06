@@ -352,7 +352,7 @@ export default function PricingPage() {
 
       {/* Plans */}
       <section className="max-w-[85%] xl:max-w-7xl mx-auto px-6 py-10">
-        <div className="grid md:grid-cols-4 gap-5" style={{ alignItems: 'start' }}>
+        <div className="grid md:grid-cols-4 gap-5" style={{ alignItems: 'stretch' }}>
           {PLANS.map((plan) => (
             <div
               key={plan.name}
@@ -430,7 +430,6 @@ export default function PricingPage() {
           <div className="mb-10 text-center">
             <span className="text-[11px] font-mono text-emerald-600 uppercase tracking-wider">Need More Credits?</span>
             <h2 className="mt-3 text-2xl font-semibold tracking-tight text-gray-900">Top-Up Packs</h2>
-            <p className="mt-2 text-base text-gray-500">Hit your limit? Add more credits instantly. No subscription required.</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-4">
