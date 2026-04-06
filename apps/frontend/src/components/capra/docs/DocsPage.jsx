@@ -4,6 +4,7 @@ import { useIsMobile } from '../../../hooks/capra/useIsMobile';
 import { useAppShell } from '../layout/AppShellContext';
 import { useAuth } from '../../../contexts/AuthContext';
 import { Icon } from '../../shared/Icons.jsx';
+import CamoraLogo from '../../shared/CamoraLogo';
 import { getAuthHeaders } from '../../../utils/authHeaders.js';
 import { codingCategories, codingCategoryMap as _codingCategoryMap, codingTopics as _codingTopics } from '../../../data/capra/topics/codingTopics.js';
 import { extraCodingCategoryMap, extraCodingTopics } from '../../../data/capra/topics/codingTopicsExtra.js';
@@ -521,11 +522,7 @@ export default function DocsPage({ onBack }) {
             <div className="sticky top-0 z-30 bg-white border-b border-[#e3e8ee]">
               <div className="flex items-center justify-between px-3 sm:px-4 h-12">
                 <a href="/" className="flex items-center gap-2">
-                  <div className="w-7 h-7 bg-emerald-500 flex items-center justify-center rounded-lg">
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-                    </svg>
-                  </div>
+                  <CamoraLogo size={28} />
                   <span className="text-sm font-bold text-gray-900 hidden sm:inline">Camora</span>
                 </a>
                 <div className="hidden md:flex items-center gap-1">

@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate, useLocation, Link } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { lazy, Suspense } from 'react';
+import CamoraLogo from './components/shared/CamoraLogo';
 
 // ── Shared pages ────────────────────────────────────────
 const LandingPage = lazy(() => import('./pages/LandingPage'));
@@ -55,11 +56,7 @@ function LoginPage() {
       <nav className="sticky top-0 z-50 bg-white border-b border-[#e3e8ee]">
         <div className="max-w-[85%] xl:max-w-7xl mx-auto h-14 flex items-center justify-between px-4">
           <Link to="/" className="flex items-center gap-2.5">
-            <div className="w-7 h-7 bg-emerald-500 flex items-center justify-center rounded-lg">
-              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-              </svg>
-            </div>
+            <CamoraLogo size={28} />
             <span className="text-sm font-bold text-gray-900">Camora</span>
           </Link>
           <div className="hidden md:flex items-center gap-1">
@@ -139,50 +136,81 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-/* ── APPA Side Indicator — fixed left vertical line with 4 dots ── */
+/* ── APPA Side Rail — full-height left edge with 4 glowing nodes ── */
 function AppaSideIndicator() {
   const location = useLocation();
   const steps = [
-    { label: 'Apply', letter: 'A', href: '/jobs', color: '#34d399', match: '/jobs' },
-    { label: 'Prepare', letter: 'P', href: '/capra/prepare', color: '#818cf8', match: '/capra/prepare' },
-    { label: 'Practice', letter: 'P', href: '/capra/practice', color: '#38bdf8', match: '/capra/practice' },
-    { label: 'Attend', letter: 'A', href: '/lumora', color: '#fbbf24', match: '/lumora' },
+    { label: 'Apply', href: '/jobs', color: '#34d399', match: '/jobs' },
+    { label: 'Prepare', href: '/capra/prepare', color: '#818cf8', match: '/capra/prepare' },
+    { label: 'Practice', href: '/capra/practice', color: '#38bdf8', match: '/capra/practice' },
+    { label: 'Attend', href: '/lumora', color: '#fbbf24', match: '/lumora' },
   ];
   return (
-    <div className="fixed left-0 top-1/2 -translate-y-1/2 z-50 hidden lg:flex flex-col items-center" style={{ marginLeft: '18px' }}>
-      {/* Vertical connecting line */}
-      <div className="absolute w-0.5" style={{ left: '50%', transform: 'translateX(-50%)', top: '14px', bottom: '14px', background: 'linear-gradient(180deg, #34d399, #818cf8, #38bdf8, #fbbf24)' }} />
-      {steps.map((step, i) => {
-        const isActive = location.pathname.startsWith(step.match);
-        return (
-          <Link
-            key={step.label}
-            to={step.href}
-            className="relative group flex items-center"
-            style={{ padding: '18px 0' }}
-            title={step.label}
-          >
-            {/* Dot — larger, ring style */}
-            <div
-              className="rounded-full transition-all duration-200"
-              style={{
-                width: '18px',
-                height: '18px',
-                border: `3px solid ${step.color}`,
-                background: isActive ? step.color : '#ffffff',
-                boxShadow: isActive ? `0 0 12px ${step.color}50` : `0 0 0 3px #ffffff`,
-              }}
-            />
-            {/* Label on hover */}
-            <span
-              className="absolute left-8 whitespace-nowrap text-sm font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none px-3 py-1.5 rounded-lg"
-              style={{ color: step.color, background: '#ffffff', boxShadow: '0 2px 8px rgba(0,0,0,0.12)' }}
+    <div className="fixed left-0 top-0 bottom-0 z-50 hidden lg:flex flex-col items-center justify-center" style={{ width: '48px' }}>
+      {/* Full-height gradient rail line */}
+      <div className="absolute left-1/2 -translate-x-1/2" style={{ top: 0, bottom: 0, width: '2px', background: 'linear-gradient(180deg, transparent 5%, #34d39930 20%, #34d399 30%, #818cf8 45%, #38bdf8 60%, #fbbf24 75%, #fbbf2430 85%, transparent 95%)' }} />
+
+      {/* Top fade glow */}
+      <div className="absolute left-1/2 -translate-x-1/2 top-0" style={{ width: '20px', height: '80px', background: 'linear-gradient(180deg, transparent, #34d39910)', borderRadius: '0 0 10px 10px' }} />
+
+      {/* Nodes — evenly distributed across page height */}
+      <div className="flex flex-col items-center" style={{ gap: '60px' }}>
+        {steps.map((step) => {
+          const isActive = location.pathname.startsWith(step.match);
+          return (
+            <Link
+              key={step.label}
+              to={step.href}
+              className="relative group flex items-center justify-center"
+              title={step.label}
             >
-              {step.label}
-            </span>
-          </Link>
-        );
-      })}
+              {/* Outer glow ring */}
+              <div
+                className="absolute rounded-full transition-all duration-300"
+                style={{
+                  width: '32px',
+                  height: '32px',
+                  background: `${step.color}${isActive ? '20' : '08'}`,
+                  border: `1px solid ${step.color}${isActive ? '40' : '15'}`,
+                }}
+              />
+              {/* Inner dot */}
+              <div
+                className="relative rounded-full transition-all duration-300"
+                style={{
+                  width: '14px',
+                  height: '14px',
+                  background: isActive ? step.color : '#ffffff',
+                  border: `2.5px solid ${step.color}`,
+                  boxShadow: isActive ? `0 0 14px ${step.color}60, 0 0 4px ${step.color}40` : 'none',
+                }}
+              />
+              {/* Letter inside dot when active */}
+              {isActive && (
+                <span className="absolute text-[8px] font-black text-white" style={{ lineHeight: 1 }}>
+                  {step.label[0]}
+                </span>
+              )}
+              {/* Tooltip label */}
+              <span
+                className="absolute left-10 whitespace-nowrap text-xs font-bold tracking-wide opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none px-3 py-1.5 rounded-lg"
+                style={{
+                  color: '#ffffff',
+                  background: step.color,
+                  boxShadow: `0 4px 12px ${step.color}40`,
+                  transform: 'translateX(-4px)',
+                }}
+              >
+                {step.label}
+                <span className="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 rotate-45" style={{ background: step.color }} />
+              </span>
+            </Link>
+          );
+        })}
+      </div>
+
+      {/* Bottom fade glow */}
+      <div className="absolute left-1/2 -translate-x-1/2 bottom-0" style={{ width: '20px', height: '80px', background: 'linear-gradient(0deg, transparent, #fbbf2410)', borderRadius: '10px 10px 0 0' }} />
     </div>
   );
 }
