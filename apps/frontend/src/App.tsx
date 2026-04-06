@@ -146,71 +146,43 @@ function AppaSideIndicator() {
     { label: 'Attend', href: '/lumora', color: '#fbbf24', match: '/lumora' },
   ];
   return (
-    <div className="fixed left-0 top-0 bottom-0 z-50 hidden lg:flex flex-col items-center justify-center" style={{ width: '48px' }}>
-      {/* Full-height gradient rail line */}
-      <div className="absolute left-1/2 -translate-x-1/2" style={{ top: 0, bottom: 0, width: '2px', background: 'linear-gradient(180deg, transparent 5%, #34d39930 20%, #34d399 30%, #818cf8 45%, #38bdf8 60%, #fbbf24 75%, #fbbf2430 85%, transparent 95%)' }} />
+    <div className="fixed top-0 bottom-0 z-40 hidden lg:flex flex-col items-center justify-center" style={{ left: '7.5%' }}>
+      {/* Full-height gradient line */}
+      <div className="absolute" style={{ top: 0, bottom: 0, width: '2px', left: '8px', background: 'linear-gradient(180deg, transparent 8%, #34d39940 18%, #34d399 28%, #818cf8 44%, #38bdf8 60%, #fbbf24 76%, #fbbf2440 88%, transparent 96%)' }} />
 
-      {/* Top fade glow */}
-      <div className="absolute left-1/2 -translate-x-1/2 top-0" style={{ width: '20px', height: '80px', background: 'linear-gradient(180deg, transparent, #34d39910)', borderRadius: '0 0 10px 10px' }} />
-
-      {/* Nodes — evenly distributed across page height */}
-      <div className="flex flex-col items-center" style={{ gap: '60px' }}>
+      {/* 4 nodes with always-visible APPA letters */}
+      <div className="flex flex-col items-center" style={{ gap: '44px' }}>
         {steps.map((step) => {
           const isActive = location.pathname.startsWith(step.match);
           return (
             <Link
               key={step.label}
               to={step.href}
-              className="relative group flex items-center justify-center"
+              className="relative flex items-center gap-2.5 group"
               title={step.label}
             >
-              {/* Outer glow ring */}
+              {/* Dot */}
               <div
-                className="absolute rounded-full transition-all duration-300"
+                className="rounded-full transition-all duration-300 flex-shrink-0"
                 style={{
-                  width: '32px',
-                  height: '32px',
-                  background: `${step.color}${isActive ? '20' : '08'}`,
-                  border: `1px solid ${step.color}${isActive ? '40' : '15'}`,
-                }}
-              />
-              {/* Inner dot */}
-              <div
-                className="relative rounded-full transition-all duration-300"
-                style={{
-                  width: '14px',
-                  height: '14px',
+                  width: '16px',
+                  height: '16px',
                   background: isActive ? step.color : '#ffffff',
                   border: `2.5px solid ${step.color}`,
-                  boxShadow: isActive ? `0 0 14px ${step.color}60, 0 0 4px ${step.color}40` : 'none',
+                  boxShadow: isActive ? `0 0 12px ${step.color}50` : `0 0 0 2px #ffffff`,
                 }}
               />
-              {/* Letter inside dot when active */}
-              {isActive && (
-                <span className="absolute text-[8px] font-black text-white" style={{ lineHeight: 1 }}>
-                  {step.label[0]}
-                </span>
-              )}
-              {/* Tooltip label */}
+              {/* Always-visible letter */}
               <span
-                className="absolute left-10 whitespace-nowrap text-xs font-bold tracking-wide opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none px-3 py-1.5 rounded-lg"
-                style={{
-                  color: '#ffffff',
-                  background: step.color,
-                  boxShadow: `0 4px 12px ${step.color}40`,
-                  transform: 'translateX(-4px)',
-                }}
+                className="text-[11px] font-extrabold tracking-wider transition-all duration-200"
+                style={{ color: isActive ? step.color : '#9ca3af', textShadow: isActive ? `0 0 8px ${step.color}30` : 'none' }}
               >
-                {step.label}
-                <span className="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 rotate-45" style={{ background: step.color }} />
+                {step.label[0]}
               </span>
             </Link>
           );
         })}
       </div>
-
-      {/* Bottom fade glow */}
-      <div className="absolute left-1/2 -translate-x-1/2 bottom-0" style={{ width: '20px', height: '80px', background: 'linear-gradient(0deg, transparent, #fbbf2410)', borderRadius: '10px 10px 0 0' }} />
     </div>
   );
 }
