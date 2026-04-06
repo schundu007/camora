@@ -520,9 +520,9 @@ export default function DocsPage({ onBack }) {
       <div className="relative min-h-screen flex">
           {/* Center Content */}
           <div className={`flex-1 min-w-0 mx-auto max-w-[85%] xl:max-w-7xl ${isMobile ? 'px-3' : 'px-10'}`}>
-            {/* APPA Nav Bar */}
-            <div className="sticky top-0 z-30 backdrop-blur-xl" style={{ background: 'linear-gradient(135deg, rgba(178,235,242,0.7) 0%, rgba(179,198,231,0.7) 30%, rgba(197,179,227,0.7) 55%, rgba(212,184,232,0.7) 80%, rgba(225,190,231,0.7) 100%)' }}>
-              <div className="flex items-center justify-between px-3 sm:px-4 h-12">
+            {/* APPA Nav Bar — break out of centered container to span full width */}
+            <div className="sticky top-0 z-30 backdrop-blur-xl -mx-[calc((100vw-100%)/2)] px-[calc((100vw-100%)/2)]" style={{ background: 'linear-gradient(135deg, rgba(178,235,242,0.7) 0%, rgba(179,198,231,0.7) 30%, rgba(197,179,227,0.7) 55%, rgba(212,184,232,0.7) 80%, rgba(225,190,231,0.7) 100%)' }}>
+              <div className="max-w-[85%] xl:max-w-7xl mx-auto flex items-center justify-between px-3 sm:px-4 h-12">
                 <a href="/" className="flex items-center gap-2">
                   <CamoraLogo size={36} />
                   <span className="text-sm font-bold text-gray-900 hidden sm:inline" style={{ fontFamily: "'Comfortaa', sans-serif" }}>Camora</span>

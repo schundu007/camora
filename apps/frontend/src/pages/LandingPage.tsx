@@ -529,29 +529,46 @@ export default function LandingPage() {
             </FadeIn>
             <FadeIn delay={0.2} className="hidden lg:flex">
               <div className="h-full flex flex-col">
-                <div className="rounded-3xl border border-gray-200 bg-white p-10 shadow-lg shadow-gray-100/50 flex-1 flex flex-col justify-center">
-                  <div className="flex items-center gap-3 mb-10">
-                    <div className="w-3 h-3 rounded-full bg-emerald-400 animate-pulse" />
-                    <span className="text-sm font-semibold text-gray-300 tracking-wider uppercase">APPA Flow</span>
-                  </div>
-                  <div className="space-y-1">
-                    {PROCESS_STEPS.map((step, i) => (
-                      <div key={step.label} className="flex items-start gap-5">
-                        <div className="flex flex-col items-center">
-                          <div className="w-12 h-12 rounded-2xl flex items-center justify-center border"
-                               style={{ background: `${step.color}10`, borderColor: `${step.color}30`, color: step.color }}>
-                            {step.icon}
+                <div className="relative rounded-3xl p-10 flex-1 flex flex-col justify-center overflow-hidden"
+                     style={{
+                       background: 'linear-gradient(145deg, rgba(255,255,255,0.95) 0%, rgba(236,253,245,0.9) 25%, rgba(224,242,254,0.85) 50%, rgba(245,243,255,0.9) 75%, rgba(255,255,255,0.95) 100%)',
+                       boxShadow: '0 8px 40px rgba(16,185,129,0.12), 0 2px 8px rgba(99,102,241,0.08), inset 0 1px 0 rgba(255,255,255,0.8)',
+                       border: '1px solid rgba(16,185,129,0.15)',
+                     }}>
+                  {/* Gradient glow orbs */}
+                  <div className="absolute top-0 right-0 w-40 h-40 rounded-full blur-3xl opacity-30" style={{ background: 'radial-gradient(circle, #34d399, transparent)' }} />
+                  <div className="absolute bottom-0 left-0 w-32 h-32 rounded-full blur-3xl opacity-20" style={{ background: 'radial-gradient(circle, #818cf8, transparent)' }} />
+                  <div className="absolute top-1/2 right-1/4 w-24 h-24 rounded-full blur-2xl opacity-15" style={{ background: 'radial-gradient(circle, #38bdf8, transparent)' }} />
+
+                  <div className="relative z-10">
+                    <div className="flex items-center gap-3 mb-10">
+                      <div className="w-3 h-3 rounded-full animate-pulse" style={{ background: 'linear-gradient(135deg, #34d399, #06b6d4)', boxShadow: '0 0 8px rgba(52,211,153,0.5)' }} />
+                      <span className="text-sm font-bold tracking-wider uppercase bg-clip-text text-transparent" style={{ backgroundImage: 'linear-gradient(135deg, #34d399, #06b6d4, #818cf8)' }}>APPA Flow</span>
+                    </div>
+                    <div className="space-y-1">
+                      {PROCESS_STEPS.map((step, i) => (
+                        <div key={step.label} className="flex items-start gap-5">
+                          <div className="flex flex-col items-center">
+                            <div className="w-12 h-12 rounded-2xl flex items-center justify-center border backdrop-blur-sm transition-all duration-300 hover:scale-110"
+                                 style={{
+                                   background: `linear-gradient(135deg, ${step.color}15, ${step.color}08)`,
+                                   borderColor: `${step.color}30`,
+                                   color: step.color,
+                                   boxShadow: `0 4px 12px ${step.color}15`,
+                                 }}>
+                              {step.icon}
+                            </div>
+                            {i < PROCESS_STEPS.length - 1 && (
+                              <div className="w-[2px] h-10 my-1 rounded-full" style={{ background: `linear-gradient(to bottom, ${step.color}50, ${PROCESS_STEPS[i + 1].color}50)` }} />
+                            )}
                           </div>
-                          {i < PROCESS_STEPS.length - 1 && (
-                            <div className="w-[2px] h-10 my-1" style={{ background: `linear-gradient(to bottom, ${step.color}40, ${PROCESS_STEPS[i + 1].color}40)` }} />
-                          )}
+                          <div className="pt-2.5">
+                            <span className="text-base font-bold text-gray-900">{step.label.split(' ')[0]}</span>
+                            <p className="text-sm text-gray-500 mt-1 leading-relaxed">{step.label.split(' ').slice(1).join(' ')}</p>
+                          </div>
                         </div>
-                        <div className="pt-2.5">
-                          <span className="text-base font-semibold text-gray-900">{step.label.split(' ')[0]}</span>
-                          <p className="text-sm text-gray-400 mt-1 leading-relaxed">{step.label.split(' ').slice(1).join(' ')}</p>
-                        </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
