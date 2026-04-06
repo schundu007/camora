@@ -245,7 +245,7 @@ function PrepShowcase() {
   return (
     <div ref={ref}>
       {/* Donut chart + Legend */}
-      <div className="flex flex-col md:flex-row items-center justify-center gap-10 md:gap-16 mb-16"
+      <div className="flex flex-col md:flex-row items-center justify-center gap-10 md:gap-16 mb-10"
         style={{ opacity: inView ? 1 : 0, transform: inView ? 'translateY(0)' : 'translateY(20px)',
           transition: 'opacity 0.7s ease, transform 0.7s ease', transitionDelay: '200ms' }}>
         <div className="relative flex-shrink-0" style={{ width: 220, height: 220 }}>
@@ -490,27 +490,27 @@ export default function LandingPage() {
       </nav>
 
       {/* ── HERO ── */}
-      <section className="relative pt-36 pb-16 md:pt-48 md:pb-24 px-6" style={{ zIndex: 1 }}>
+      <section className="relative pt-24 pb-10 md:pt-32 md:pb-14 px-6" style={{ zIndex: 1 }}>
         <div className="max-w-4xl mx-auto text-center">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-            <div className="inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-emerald-50 border border-emerald-200/60 mb-10">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 border border-emerald-200/60 mb-6">
               <span className="relative flex h-2 w-2">
                 <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 animate-ping opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
               </span>
-              <span className="text-sm font-semibold text-emerald-700 tracking-wide">APPA — Apply · Prepare · Practice · Attend</span>
+              <span className="text-xs font-semibold text-emerald-700 tracking-wide">APPA — Apply · Prepare · Practice · Attend</span>
             </div>
           </motion.div>
           <motion.h1 className="font-display font-extrabold tracking-[-0.04em]"
             initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.1 }}>
-            <span className="block text-5xl sm:text-6xl md:text-7xl lg:text-[84px] leading-[1.05]">Application to <span className="gradient-text">Offer.</span></span>
+            <span className="block text-4xl sm:text-5xl md:text-6xl leading-[1.1]">Application to <span className="gradient-text">Offer.</span></span>
           </motion.h1>
-          <motion.div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4"
+          <motion.div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3"
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.3 }}>
-            <Link to="/signup" className="shimmer-btn px-8 py-4 text-lg font-semibold text-white bg-gray-900 rounded-2xl hover:bg-gray-800 transition-colors">
+            <Link to="/signup" className="shimmer-btn px-6 py-3 text-base font-semibold rounded-xl text-white transition-colors" style={{ background: 'linear-gradient(135deg, #10b981, #3b82f6, #8b5cf6)' }}>
               Get Started Free
             </Link>
-            <a href="#process" className="px-8 py-4 text-lg font-semibold text-gray-600 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors border border-gray-200">
+            <a href="#process" className="px-6 py-3 text-base font-semibold text-gray-600 rounded-xl hover:bg-white/50 transition-colors border border-gray-300">
               See How It Works
             </a>
           </motion.div>
@@ -518,7 +518,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── PROCESS — Accordion (MetAntz-style) ── */}
-      <section id="process" className="px-6 py-20 md:py-28" style={{ zIndex: 1 }}>
+      <section id="process" className="px-6 py-12 md:py-16" style={{ zIndex: 1 }}>
         <div className="max-w-6xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-16 lg:gap-24 items-start">
             <FadeIn>
@@ -561,7 +561,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── DEMO — Videos ── */}
-      <section className="px-6 pb-20 md:pb-32" style={{ zIndex: 1 }}>
+      <section className="px-6 pb-10 md:pb-16" style={{ zIndex: 1 }}>
         <FadeIn className="max-w-5xl mx-auto">
           <BrowserChrome url="camora.cariara.com/lumora">
             <div className="aspect-video bg-gray-100">
@@ -596,9 +596,9 @@ export default function LandingPage() {
       </section>
 
       {/* ── PREPARATION AT SCALE — Donut + Topic Cards ── */}
-      <section className="px-6 py-20 md:py-28" style={{ zIndex: 1 }}>
+      <section className="px-6 py-12 md:py-16" style={{ zIndex: 1 }}>
         <div className="max-w-6xl mx-auto">
-          <FadeIn className="text-center mb-16">
+          <FadeIn className="text-center mb-10">
             <span className="gradient-text text-sm font-bold tracking-[0.2em] uppercase">Preparation at Scale</span>
             <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mt-4">Everything you need to prepare.</h2>
           </FadeIn>
@@ -607,9 +607,9 @@ export default function LandingPage() {
       </section>
 
       {/* ── THREE INTERVIEW MODES ── */}
-      <section className="px-6 py-20 md:py-28" style={{ zIndex: 1 }}>
+      <section className="px-6 py-12 md:py-16" style={{ zIndex: 1 }}>
         <div className="max-w-6xl mx-auto">
-          <FadeIn className="text-center mb-16">
+          <FadeIn className="text-center mb-10">
             <span className="gradient-text text-sm font-bold tracking-[0.2em] uppercase">Three Interview Modes</span>
             <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mt-4">System Design. Coding. Behavioral.</h2>
           </FadeIn>
@@ -671,7 +671,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── JOB URL ANALYSIS — Highlighted Feature ── */}
-      <section className="px-6 py-20 md:py-28" style={{ zIndex: 1, background: 'linear-gradient(135deg, #ecfdf5 0%, #eff6ff 50%, #faf5ff 100%)' }}>
+      <section className="px-6 py-12 md:py-16" style={{ zIndex: 1, background: 'linear-gradient(135deg, #ecfdf5 0%, #eff6ff 50%, #faf5ff 100%)' }}>
         <div className="max-w-5xl mx-auto">
           <FadeIn className="text-center mb-10">
             <span className="inline-flex items-center gap-2 text-sm font-bold tracking-[0.15em] uppercase px-5 py-2 rounded-full border border-emerald-300 bg-white text-emerald-700 shadow-sm">
@@ -736,7 +736,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── WHAT SETS CAMORA APART — Feature Groups ── */}
-      <section className="px-6 py-20 md:py-28" style={{ zIndex: 1 }}>
+      <section className="px-6 py-12 md:py-16" style={{ zIndex: 1 }}>
         <div className="max-w-6xl mx-auto">
           <FadeIn className="text-center mb-20">
             <span className="inline-block text-sm font-bold tracking-[0.2em] uppercase px-4 py-1.5 rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700">ONLY ON CAMORA</span>
@@ -771,9 +771,9 @@ export default function LandingPage() {
       </section>
 
       {/* ── CAMORA VS COMPETITORS — Bar Chart ── */}
-      <section ref={compRef} className="px-6 py-20 md:py-28" style={{ zIndex: 1 }}>
+      <section ref={compRef} className="px-6 py-12 md:py-16" style={{ zIndex: 1 }}>
         <div className="max-w-6xl mx-auto">
-          <FadeIn className="text-center mb-16">
+          <FadeIn className="text-center mb-10">
             <span className="gradient-text text-sm font-bold tracking-[0.2em] uppercase">Head-to-Head</span>
             <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mt-4">See why engineers switch to Camora.</h2>
           </FadeIn>
