@@ -105,121 +105,128 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
   };
 
   return (
-    <header className="flex items-center flex-wrap h-auto min-h-[44px] bg-gray-900/80 backdrop-blur-xl border-b border-gray-800/50 z-50 shrink-0 max-w-full">
-      {/* Logo */}
-      <Link to="/" className="flex items-center gap-1.5 px-3 border-r border-gray-800/50 h-full shrink-0">
-        <CamoraLogo size={24} />
-        <div className="hidden sm:block">
-          <span className="font-display font-bold text-xs md:text-sm tracking-tight text-white" style={{ fontFamily: "'Comfortaa', sans-serif" }}>Camora</span>
-        </div>
-      </Link>
+    <header className="bg-gray-900/80 backdrop-blur-xl border-b border-gray-800/50 z-50 shrink-0">
+      {/* Row 1: Nav */}
+      <div className="flex items-center h-[44px]">
+        {/* Logo */}
+        <Link to="/" className="flex items-center gap-1.5 px-3 border-r border-gray-800/50 h-full shrink-0">
+          <CamoraLogo size={24} />
+          <div className="hidden sm:block">
+            <span className="font-display font-bold text-xs md:text-sm tracking-tight text-white" style={{ fontFamily: "'Comfortaa', sans-serif" }}>Camora</span>
+          </div>
+        </Link>
 
-      {/* Tabs */}
-      <div className="flex items-center gap-0.5 px-1.5 md:px-2 h-full shrink-0 border-r border-gray-800/50 overflow-x-auto no-scrollbar">
-        {TABS.map((tab) => (
+        {/* Tabs */}
+        <div className="flex items-center gap-0.5 px-1.5 md:px-2 h-full shrink-0 border-r border-gray-800/50 overflow-x-auto no-scrollbar">
+          {TABS.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => handleTabClick(tab.id)}
+              className={`font-display flex items-center gap-1.5 px-2 md:px-3 py-1 text-xs font-bold rounded-xl transition-all duration-150 ${
+                currentTab === tab.id
+                  ? 'text-white shadow-sm'
+                  : 'text-white hover:bg-white/10'
+              }`}
+              style={currentTab === tab.id ? { background: 'linear-gradient(135deg, #10b981, #059669)', boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)' } : {}}
+            >
+              <span className="hidden md:inline">{TAB_ICONS[tab.id]}</span>
+              <span>{tab.label}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Platform Selector */}
+        <div className="hidden md:flex items-center px-1.5 border-r border-gray-800/50 h-full shrink-0">
+          <select
+            className="font-display bg-white/10 text-white font-bold text-[10px] border border-gray-700/50 rounded-lg px-1.5 py-1 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer backdrop-blur-sm"
+            defaultValue="general"
+          >
+            <option value="general">General</option>
+            <option value="zoom">Zoom</option>
+            <option value="meet">Google Meet</option>
+            <option value="teams">MS Teams</option>
+            <option value="hackerrank">HackerRank</option>
+            <option value="coderpad">CoderPad</option>
+            <option value="codility">Codility</option>
+          </select>
+        </div>
+
+        {/* Status */}
+        <div className="hidden md:flex items-center gap-1.5 px-2 border-r border-gray-800/50 h-full shrink-0 max-w-[160px]">
+          <div className={`w-2 h-2 rounded-full shrink-0 transition-all duration-300 ${
+            status.state === 'ready' ? 'bg-emerald-400' :
+            status.state === 'error' ? 'bg-red-500' :
+            status.state === 'warn' ? 'bg-amber-500' :
+            status.state === 'listen' || status.state === 'write' ? 'bg-emerald-400 animate-pulse' :
+            'bg-gray-500'
+          }`} style={status.state === 'ready' ? { boxShadow: '0 0 8px rgba(52, 211, 153, 0.5)' } : {}} />
+          <span className="font-code text-[10px] md:text-xs text-white font-medium truncate whitespace-nowrap">
+            {status.message}
+          </span>
+        </div>
+
+        {/* Spacer */}
+        <div className="flex-1 min-w-0" />
+
+        {/* Controls */}
+        <div className="flex items-center gap-0.5 px-1.5 md:px-2 border-l border-gray-800/50 h-full shrink-0">
+          <DocumentUpload />
           <button
-            key={tab.id}
-            onClick={() => handleTabClick(tab.id)}
-            className={`font-display flex items-center gap-1.5 px-2 md:px-3 py-1 text-xs font-bold rounded-xl transition-all duration-150 ${
-              currentTab === tab.id
+            onClick={() => setUseSearch(!useSearch)}
+            className={`p-1.5 rounded-lg transition-all duration-150 ${
+              useSearch
                 ? 'text-white shadow-sm'
                 : 'text-white hover:bg-white/10'
             }`}
-            style={currentTab === tab.id ? { background: 'linear-gradient(135deg, #10b981, #059669)', boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)' } : {}}
+            style={useSearch ? { background: 'linear-gradient(135deg, #10b981, #059669)', boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)' } : {}}
+            title="Toggle web search (⌘S)"
           >
-            <span className="hidden md:inline">{TAB_ICONS[tab.id]}</span>
-            <span>{tab.label}</span>
+            <SearchIcon />
           </button>
-        ))}
-      </div>
-
-      {/* Platform Selector */}
-      <div className="hidden md:flex items-center px-1.5 border-r border-gray-800/50 h-full shrink-0">
-        <select
-          className="font-display bg-white/10 text-white font-bold text-[10px] border border-gray-700/50 rounded-lg px-1.5 py-1 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer backdrop-blur-sm"
-          defaultValue="general"
-        >
-          <option value="general">General</option>
-          <option value="zoom">Zoom</option>
-          <option value="meet">Google Meet</option>
-          <option value="teams">MS Teams</option>
-          <option value="hackerrank">HackerRank</option>
-          <option value="coderpad">CoderPad</option>
-          <option value="codility">Codility</option>
-        </select>
-      </div>
-
-      {/* Status — hide on small screens to save space */}
-      <div className="hidden md:flex items-center gap-1.5 px-2 border-r border-gray-800/50 h-full shrink-0 max-w-[160px]">
-        <div className={`w-2 h-2 rounded-full shrink-0 transition-all duration-300 ${
-          status.state === 'ready' ? 'bg-emerald-400' :
-          status.state === 'error' ? 'bg-red-500' :
-          status.state === 'warn' ? 'bg-amber-500' :
-          status.state === 'listen' || status.state === 'write' ? 'bg-emerald-400 animate-pulse' :
-          'bg-gray-500'
-        }`} style={status.state === 'ready' ? { boxShadow: '0 0 8px rgba(52, 211, 153, 0.5)' } : {}} />
-        <span className="font-code text-[10px] md:text-xs text-white font-medium truncate whitespace-nowrap">
-          {status.message}
-        </span>
-      </div>
-
-      {/* Audio Capture */}
-      <div className="flex items-center px-1.5 border-r border-gray-800/50 h-full shrink-0">
-        <AudioCapture onTranscription={onTranscription} />
-      </div>
-
-      {/* Question Input */}
-      <div className="flex-1 flex items-center px-2 md:px-3 min-w-0">
-        <input
-          ref={inputRef}
-          type="text"
-          value={inputValue}
-          onChange={(e) => onInputChange(e.target.value)}
-          onKeyDown={handleInputKeyDown}
-          placeholder="Type or paste question... (⌘K)"
-          className="font-display flex-1 bg-transparent border-none outline-none text-xs md:text-sm text-white placeholder:text-gray-400 min-w-0"
-        />
-        {inputValue && (
           <button
-            onClick={onSubmit}
-            className="font-display flex items-center gap-1.5 px-3 py-1 text-white text-xs font-bold rounded-xl hover:opacity-90 transition-all ml-2"
-            style={{ background: 'linear-gradient(135deg, #10b981, #059669)', boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)' }}
+            className="p-1.5 rounded-lg text-white hover:bg-white/10 transition-all duration-150"
+            onClick={() => clearHistory()}
+            title="Reset (⌘⌫)"
           >
-            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-            </svg>
-            Ask
+            <ResetIcon />
           </button>
-        )}
+        </div>
+
+        {/* User info */}
+        <div className="flex items-center gap-1.5 px-2 border-l border-gray-800/50 h-full shrink-0">
+          <UserBadge />
+        </div>
       </div>
 
-      {/* Controls */}
-      <div className="flex items-center gap-0.5 px-1.5 md:px-2 border-l border-gray-800/50 h-full shrink-0">
-        <DocumentUpload />
-        <button
-          onClick={() => setUseSearch(!useSearch)}
-          className={`p-1.5 rounded-lg transition-all duration-150 ${
-            useSearch
-              ? 'text-white shadow-sm'
-              : 'text-white hover:bg-white/10'
-          }`}
-          style={useSearch ? { background: 'linear-gradient(135deg, #10b981, #059669)', boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)' } : {}}
-          title="Toggle web search (⌘S)"
-        >
-          <SearchIcon />
-        </button>
-        <button
-          className="p-1.5 rounded-lg text-white hover:bg-white/10 transition-all duration-150"
-          onClick={() => clearHistory()}
-          title="Reset (⌘⌫)"
-        >
-          <ResetIcon />
-        </button>
-      </div>
+      {/* Row 2: Audio + Input */}
+      <div className="flex items-center h-[38px] border-t border-gray-800/50">
+        <div className="flex items-center px-1.5 border-r border-gray-800/50 h-full shrink-0 overflow-x-auto no-scrollbar">
+          <AudioCapture onTranscription={onTranscription} />
+        </div>
 
-      {/* User info */}
-      <div className="flex items-center gap-1.5 px-2 border-l border-gray-800/50 h-full shrink-0">
-        <UserBadge />
+        <div className="flex-1 flex items-center px-2 md:px-3 min-w-0">
+          <input
+            ref={inputRef}
+            type="text"
+            value={inputValue}
+            onChange={(e) => onInputChange(e.target.value)}
+            onKeyDown={handleInputKeyDown}
+            placeholder="Type or paste question... (⌘K)"
+            className="font-display flex-1 bg-transparent border-none outline-none text-xs md:text-sm text-white placeholder:text-gray-400 min-w-0"
+          />
+          {inputValue && (
+            <button
+              onClick={onSubmit}
+              className="font-display flex items-center gap-1.5 px-3 py-1 text-white text-xs font-bold rounded-xl hover:opacity-90 transition-all ml-2"
+              style={{ background: 'linear-gradient(135deg, #10b981, #059669)', boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)' }}
+            >
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+              Ask
+            </button>
+          )}
+        </div>
       </div>
     </header>
   );
