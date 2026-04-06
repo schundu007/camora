@@ -951,161 +951,55 @@ export default function JobsPage() {
                       overflow: 'hidden',
                       display: 'flex',
                       flexDirection: 'column',
-                      transition: 'box-shadow 0.25s, transform 0.25s, border-color 0.25s',
                       cursor: 'default',
                     }}
                   >
-                    {/* Colored header */}
-                    <div
-                      style={{
-                        background: `linear-gradient(135deg, ${color} 0%, ${color}cc 100%)`,
-                        height: '80px',
-                        position: 'relative',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      {/* Decorative dots */}
-                      <div style={{ position: 'absolute', top: '12px', right: '14px', display: 'flex', gap: '4px', opacity: 0.3 }}>
-                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#ffffff' }} />
-                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#ffffff' }} />
-                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#ffffff' }} />
+                    {/* Compact colored strip + title row */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 16px', borderBottom: '1px solid #f3f4f6' }}>
+                      <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: `linear-gradient(135deg, ${color}, ${color}cc)`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <CategoryIcon category={category} size={20} />
                       </div>
-                      {/* Icon circle */}
-                      <div
-                        style={{
-                          width: '52px',
-                          height: '52px',
-                          borderRadius: '50%',
-                          background: 'rgba(255,255,255,0.2)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          backdropFilter: 'blur(4px)',
-                        }}
-                      >
-                        <CategoryIcon category={category} size={26} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#111827', margin: 0, lineHeight: 1.3, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {job.title}
+                        </h3>
+                        <div style={{ fontSize: '12px', color: '#4b5563', fontWeight: 500, marginTop: '2px' }}>{job.company_name}</div>
+                      </div>
+                      <div className="flex gap-1" style={{ flexShrink: 0 }}>
+                        <span style={{ fontSize: '10px', fontWeight: 600, color, background: `${color}14`, padding: '2px 8px', borderRadius: '9999px', border: `1px solid ${color}30` }}>{categoryLabel}</span>
                       </div>
                     </div>
 
-                    {/* Card body */}
-                    <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', flex: 1, gap: '10px' }}>
-                      {/* Title */}
-                      <h3 style={{
-                        fontSize: '17px',
-                        fontWeight: 700,
-                        color: '#111827',
-                        margin: 0,
-                        lineHeight: 1.35,
-                        fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
-                      }}>
-                        {job.title}
-                      </h3>
-
-                      {/* Company */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '14px', color: '#4b5563' }}>
-                        <svg width="14" height="14" fill="none" stroke="#9ca3af" viewBox="0 0 24 24" strokeWidth={1.8}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21" />
-                        </svg>
-                        <span style={{ fontWeight: 500 }}>{job.company_name}</span>
-                      </div>
-
-                      {/* Location */}
-                      {job.location && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: '#6b7280' }}>
-                          <svg width="13" height="13" fill="none" stroke="#9ca3af" viewBox="0 0 24 24" strokeWidth={1.8}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
-                          </svg>
-                          <span>{job.location}</span>
-                        </div>
-                      )}
-
-                      {/* Tags row */}
-                      <div className="flex flex-wrap gap-1.5" style={{ marginTop: '4px' }}>
-                        <span
-                          style={{
-                            fontSize: '11px',
-                            fontWeight: 600,
-                            color: color,
-                            background: `${color}14`,
-                            padding: '3px 10px',
-                            borderRadius: '9999px',
-                            border: `1px solid ${color}30`,
-                          }}
-                        >
-                          {categoryLabel}
-                        </span>
-                        <span
-                          style={{
-                            fontSize: '11px',
-                            fontWeight: 600,
-                            color: workType === 'Remote' ? '#059669' : workType === 'Hybrid' ? '#d97706' : '#6b7280',
-                            background: workType === 'Remote' ? '#ecfdf5' : workType === 'Hybrid' ? '#fffbeb' : '#f3f4f6',
-                            padding: '3px 10px',
-                            borderRadius: '9999px',
-                            border: `1px solid ${workType === 'Remote' ? '#a7f3d0' : workType === 'Hybrid' ? '#fde68a' : '#e5e7eb'}`,
-                          }}
-                        >
-                          {workType}
-                        </span>
+                    {/* Expandable details — hidden by default, shown on hover */}
+                    <div className="jobs-card-details" style={{ maxHeight: '0', overflow: 'hidden', transition: 'max-height 0.35s ease, padding 0.35s ease', padding: '0 16px' }}>
+                      {/* Location + Work Type */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '12px', fontSize: '13px', color: '#4b5563' }}>
+                        {job.location && (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <svg width="13" height="13" fill="none" stroke="#9ca3af" viewBox="0 0 24 24" strokeWidth={1.8}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+                            </svg>
+                            <span>{job.location}</span>
+                          </div>
+                        )}
+                        <span style={{ fontSize: '11px', fontWeight: 600, color: workType === 'Remote' ? '#059669' : workType === 'Hybrid' ? '#d97706' : '#6b7280', background: workType === 'Remote' ? '#ecfdf5' : workType === 'Hybrid' ? '#fffbeb' : '#f3f4f6', padding: '2px 8px', borderRadius: '9999px' }}>{workType}</span>
                       </div>
 
                       {/* Salary */}
-                      <p style={{
-                        fontSize: '14px',
-                        fontWeight: 600,
-                        color: (job.salary_min || job.salary_max) ? '#111827' : '#9ca3af',
-                        margin: '4px 0 0 0',
-                      }}>
+                      <p style={{ fontSize: '14px', fontWeight: 600, color: (job.salary_min || job.salary_max) ? '#111827' : '#9ca3af', margin: '10px 0 0 0' }}>
                         {salary}
                       </p>
 
-                      {/* Spacer */}
-                      <div style={{ flex: 1 }} />
-
                       {/* Action links */}
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #f3f4f6', paddingTop: '14px', marginTop: '6px' }}>
-                        <a
-                          href={job.job_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="jobs-action-link"
-                          style={{
-                            fontSize: '14px',
-                            fontWeight: 600,
-                            color: '#10b981',
-                            textDecoration: 'none',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                            transition: 'color 0.15s',
-                          }}
-                        >
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #f3f4f6', paddingTop: '12px', marginTop: '12px', paddingBottom: '14px' }}>
+                        <a href={job.job_url} target="_blank" rel="noopener noreferrer" className="jobs-action-link" style={{ fontSize: '13px', fontWeight: 600, color: '#10b981', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
                           Apply Now
-                          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                          </svg>
+                          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" /></svg>
                         </a>
-                        <Link
-                          to={`/jobs/${job.id}/prepare`}
-                          className="jobs-action-link-gray"
-                          style={{
-                            fontSize: '14px',
-                            fontWeight: 600,
-                            color: '#6b7280',
-                            textDecoration: 'none',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                            transition: 'color 0.15s',
-                          }}
-                        >
+                        <Link to={`/jobs/${job.id}/prepare`} className="jobs-action-link-gray" style={{ fontSize: '13px', fontWeight: 600, color: '#6b7280', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
                           Prepare
-                          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                          </svg>
+                          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" /></svg>
                         </Link>
                       </div>
                     </div>
@@ -1189,11 +1083,18 @@ export default function JobsPage() {
           display: none;
         }
 
-        /* Card hover */
+        /* Card hover — expand details */
+        .jobs-card {
+          transition: box-shadow 0.3s, border-color 0.3s, transform 0.3s;
+        }
         .jobs-card:hover {
-          box-shadow: 0 8px 30px rgba(0,0,0,0.08) !important;
-          border-color: #d1d5db !important;
+          box-shadow: 0 8px 30px rgba(0,0,0,0.12) !important;
+          border-color: #a0aec0 !important;
           transform: translateY(-2px);
+        }
+        .jobs-card:hover .jobs-card-details {
+          max-height: 200px !important;
+          padding: 0 16px !important;
         }
 
         /* Search bar focus-within */
