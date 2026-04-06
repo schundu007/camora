@@ -365,8 +365,9 @@ export default function JobsPage() {
       <nav
         className="fixed top-0 left-0 right-0 z-50"
         style={{
-          background: '#ffffff',
-          borderBottom: '1px solid #e3e8ee',
+          background: 'linear-gradient(135deg, rgba(178,235,242,0.7) 0%, rgba(179,198,231,0.7) 30%, rgba(197,179,227,0.7) 55%, rgba(212,184,232,0.7) 80%, rgba(225,190,231,0.7) 100%)',
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
           height: '56px',
         }}
       >
