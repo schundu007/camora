@@ -374,11 +374,25 @@ const COMP_BARS = [
 /* ════════════════════════════════════════════════════════════
    LANDING PAGE
    ════════════════════════════════════════════════════════════ */
+function useVisitorCount() {
+  const [count, setCount] = useState<number | null>(null);
+  useEffect(() => {
+    const API = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
+    // Track visit + get count
+    fetch(`${API}/api/visitors/track`, { method: 'POST' })
+      .then(r => r.json())
+      .then(d => setCount(d.total))
+      .catch(() => {});
+  }, []);
+  return count;
+}
+
 export default function LandingPage() {
   const { isAuthenticated, logout, user } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const compRef = useRef<HTMLDivElement>(null);
   const compInView = useInView(compRef, { once: true, margin: '-80px' });
+  const visitorCount = useVisitorCount();
 
   useEffect(() => { window.scrollTo(0, 0); }, []);
 
@@ -514,6 +528,21 @@ export default function LandingPage() {
               See How It Works
             </a>
           </motion.div>
+
+          {/* Visitor Count */}
+          {visitorCount !== null && visitorCount > 0 && (
+            <motion.div className="mt-8 flex items-center justify-center gap-2"
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6, delay: 0.5 }}>
+              <div className="flex -space-x-1.5">
+                {['#34d399','#818cf8','#38bdf8','#fbbf24'].map((c, i) => (
+                  <div key={i} className="w-6 h-6 rounded-full border-2 border-white" style={{ background: c }} />
+                ))}
+              </div>
+              <span className="text-sm text-gray-500">
+                <span className="font-bold text-gray-900">{visitorCount.toLocaleString()}+</span> engineers visited
+              </span>
+            </motion.div>
+          )}
         </div>
       </section>
 
