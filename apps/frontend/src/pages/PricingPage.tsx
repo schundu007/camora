@@ -350,6 +350,11 @@ export default function PricingPage() {
                   Most Popular
                 </div>
               )}
+              {plan.name === 'Annual' && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 bg-amber-400 text-[10px] font-bold text-black uppercase tracking-wider">
+                  Best Value
+                </div>
+              )}
 
               <div className="mb-4">
                 <h3 className="text-sm font-semibold text-gray-900">{plan.name}</h3>
@@ -516,7 +521,7 @@ export default function PricingPage() {
           <Link to="/lumora" className="px-6 py-2.5 text-sm font-medium text-black bg-emerald-400 hover:bg-emerald-300 transition-colors">
             Start Free
           </Link>
-          <Link to="/capra/prepare" className="px-6 py-2.5 text-sm font-medium text-gray-300 border border-white/10 hover:border-white/20 hover:text-white transition-all">
+          <Link to="/capra/prepare" className="px-6 py-2.5 text-sm font-medium text-gray-700 border border-gray-300 hover:border-gray-400 hover:text-gray-900 transition-all">
             Browse Topics
           </Link>
         </div>
