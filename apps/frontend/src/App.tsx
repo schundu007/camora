@@ -146,36 +146,36 @@ function AppaSideIndicator() {
     { label: 'Attend', href: '/lumora', color: '#fbbf24', match: '/lumora' },
   ];
   return (
-    <div className="fixed top-0 bottom-0 z-40 hidden lg:flex flex-col items-center justify-center" style={{ left: '5%' }}>
+    <div className="fixed top-0 bottom-0 z-40 hidden xl:flex flex-col items-start justify-center" style={{ right: '12px' }}>
       {/* Full-height gradient line */}
-      <div className="absolute" style={{ top: 0, bottom: 0, width: '2px', left: '8px', background: 'linear-gradient(180deg, transparent 8%, #34d39940 18%, #34d399 28%, #818cf8 44%, #38bdf8 60%, #fbbf24 76%, #fbbf2440 88%, transparent 96%)' }} />
+      <div className="absolute" style={{ top: 0, bottom: 0, width: '2px', left: '9px', background: 'linear-gradient(180deg, transparent 8%, #34d39940 18%, #34d399 28%, #818cf8 44%, #38bdf8 60%, #fbbf24 76%, #fbbf2440 88%, transparent 96%)' }} />
 
-      {/* 4 nodes with full APPA labels */}
-      <div className="flex flex-col items-center" style={{ gap: '32px' }}>
+      {/* 4 nodes with horizontal labels */}
+      <div className="flex flex-col" style={{ gap: '28px' }}>
         {steps.map((step) => {
           const isActive = location.pathname.startsWith(step.match);
           return (
             <Link
               key={step.label}
               to={step.href}
-              className="relative flex items-center gap-3 group"
+              className="flex items-center gap-2.5 group"
               title={step.label}
             >
               {/* Dot */}
               <div
                 className="rounded-full transition-all duration-300 flex-shrink-0"
                 style={{
-                  width: '18px',
-                  height: '18px',
+                  width: '20px',
+                  height: '20px',
                   background: isActive ? step.color : '#ffffff',
                   border: `2.5px solid ${step.color}`,
                   boxShadow: isActive ? `0 0 14px ${step.color}50` : `0 0 0 2px #ffffff`,
                 }}
               />
-              {/* Always-visible full label */}
+              {/* Horizontal label */}
               <span
-                className="text-[11px] font-bold tracking-wide transition-all duration-200"
-                style={{ color: isActive ? step.color : '#b0b0b0', writingMode: 'vertical-rl', textOrientation: 'mixed', transform: 'rotate(180deg)', letterSpacing: '0.1em' }}
+                className="text-[11px] font-bold tracking-wide transition-all duration-200 whitespace-nowrap"
+                style={{ color: isActive ? step.color : '#b0b0b0' }}
               >
                 {step.label}
               </span>
