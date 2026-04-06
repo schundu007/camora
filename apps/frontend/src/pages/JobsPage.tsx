@@ -963,7 +963,7 @@ export default function JobsPage() {
                         <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#111827', margin: 0, lineHeight: 1.3, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {job.title}
                         </h3>
-                        <div style={{ fontSize: '12px', color: '#4b5563', fontWeight: 500, marginTop: '2px' }}>{job.company_name}</div>
+                        <div style={{ fontSize: '12px', color: '#4b5563', fontWeight: 500, marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{job.company_name}</div>
                       </div>
                       <div className="flex gap-1" style={{ flexShrink: 0 }}>
                         <span style={{ fontSize: '10px', fontWeight: 600, color, background: `${color}14`, padding: '2px 8px', borderRadius: '9999px', border: `1px solid ${color}30` }}>{categoryLabel}</span>
