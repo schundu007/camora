@@ -659,25 +659,7 @@ export default function DocsPage({ onBack }) {
                         <ProgressTracker />
                       </div>
 
-                      {/* Progress Stats Row */}
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-                        <div className="rounded-xl border border-[#e3e8ee] bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:border-[#d0d5dd] transition-colors">
-                          <div className="text-2xl font-bold text-emerald-600 landing-display">{overviewTotalCompleted}</div>
-                          <div className="text-xs text-gray-500 landing-body">Topics Completed</div>
-                        </div>
-                        <div className="rounded-xl border border-[#e3e8ee] bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:border-[#d0d5dd] transition-colors">
-                          <div className="text-2xl font-bold text-gray-900 landing-display">{overviewTotalTopics}</div>
-                          <div className="text-xs text-gray-500 landing-body">Total Topics</div>
-                        </div>
-                        <div className="rounded-xl border border-[#e3e8ee] bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:border-[#d0d5dd] transition-colors">
-                          <div className="text-2xl font-bold text-blue-600 landing-display">{overviewCategories.length}</div>
-                          <div className="text-xs text-gray-500 landing-body">Categories</div>
-                        </div>
-                        <div className="rounded-xl border border-[#e3e8ee] bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:border-[#d0d5dd] transition-colors">
-                          <div className="text-2xl font-bold text-purple-600 landing-display">{overviewTotalTopics > 0 ? Math.round((overviewTotalCompleted / overviewTotalTopics) * 100) : 0}%</div>
-                          <div className="text-xs text-gray-500 landing-body">Complete</div>
-                        </div>
-                      </div>
+                      {/* Stats merged into ProgressTracker above */}
 
                       {/* Category Cards Grid */}
                       <div className="mb-6">
