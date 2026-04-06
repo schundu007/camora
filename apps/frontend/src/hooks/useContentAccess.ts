@@ -23,9 +23,10 @@ export function useContentAccess() {
   const { subscription, subscriptionLoading } = useAuth();
 
   const isPaidUser = useMemo(() => {
-    if (subscriptionLoading) return true; // default-open while loading
+    if (subscriptionLoading) return false; // default-locked while loading
     if (!subscription) return false;
-    return subscription.plan !== 'free' && subscription.plan !== null;
+    const plan = subscription.plan;
+    return plan !== 'free' && plan !== null && plan !== undefined && plan !== '';
   }, [subscription, subscriptionLoading]);
 
   const getReadCount = useCallback((category: Category): number => {
