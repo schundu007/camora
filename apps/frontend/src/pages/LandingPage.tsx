@@ -507,8 +507,8 @@ export default function LandingPage() {
           </motion.h1>
           <motion.div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3"
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.3 }}>
-            <Link to="/signup" className="shimmer-btn px-6 py-3 text-base font-semibold rounded-xl text-white transition-colors" style={{ background: 'linear-gradient(135deg, #10b981, #3b82f6, #8b5cf6)' }}>
-              Get Started Free
+            <Link to={isAuthenticated ? "/capra/prepare" : "/signup"} className="shimmer-btn px-6 py-3 text-base font-semibold rounded-xl text-white transition-colors" style={{ background: 'linear-gradient(135deg, #10b981, #3b82f6, #8b5cf6)' }}>
+              {isAuthenticated ? 'Go to Dashboard' : 'Get Started Free'}
             </Link>
             <a href="#process" className="px-6 py-3 text-base font-semibold text-gray-600 rounded-xl hover:bg-white/50 transition-colors border border-gray-300">
               See How It Works
