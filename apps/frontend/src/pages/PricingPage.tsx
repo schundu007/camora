@@ -468,17 +468,29 @@ export default function PricingPage() {
           <h2 className="text-xl md:text-2xl font-semibold tracking-tight text-gray-900">
             No other tool gives you the full pipeline.
           </h2>
-          <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-px bg-white/[0.04]">
+          <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
-              { step: '01', label: 'Apply', desc: 'AI-matched jobs from 1000+ companies' },
-              { step: '02', label: 'Prepare', desc: '300+ topics with AI explanations' },
-              { step: '03', label: 'Practice', desc: 'Mock interviews with feedback' },
-              { step: '04', label: 'Attend', desc: 'Real-time AI during your interview' },
+              { step: '01', label: 'Apply', desc: 'AI-matched jobs from 1000+ companies', color: '#34d399' },
+              { step: '02', label: 'Prepare', desc: '300+ topics with AI explanations', color: '#818cf8' },
+              { step: '03', label: 'Practice', desc: 'Mock interviews with feedback', color: '#38bdf8' },
+              { step: '04', label: 'Attend', desc: 'Real-time AI during your interview', color: '#fbbf24' },
             ].map((s) => (
-              <div key={s.step} className="bg-white p-5 text-center border border-[#e3e8ee]">
-                <span className="text-[11px] font-mono text-emerald-400/60">{s.step}</span>
-                <div className="mt-1 text-sm font-semibold text-gray-900">{s.label}</div>
-                <div className="mt-1 text-[12px] text-gray-500">{s.desc}</div>
+              <div
+                key={s.step}
+                className="p-5 text-center transition-transform duration-300 hover:scale-105"
+                style={{
+                  background: 'white',
+                  border: '2px solid transparent',
+                  borderRadius: '12px',
+                  backgroundImage: `linear-gradient(white, white), linear-gradient(135deg, ${s.color}, ${s.color}88)`,
+                  backgroundOrigin: 'border-box',
+                  backgroundClip: 'padding-box, border-box',
+                  boxShadow: `0 4px 16px ${s.color}20, 0 1px 4px rgba(0,0,0,0.06)`,
+                }}
+              >
+                <span className="text-[11px] font-mono font-bold" style={{ color: s.color }}>{s.step}</span>
+                <div className="mt-1 text-sm font-bold text-gray-900">{s.label}</div>
+                <div className="mt-1 text-[12px] text-gray-600">{s.desc}</div>
               </div>
             ))}
           </div>
