@@ -155,7 +155,7 @@ function CodingView({ blocks }: { blocks: ParsedBlock[] }) {
   return (
     <div className="flex flex-col gap-2">
       {/* Problem & Approach Row */}
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         <GridCard title="PROBLEM" titleColor="text-indigo-light">
           {byType.PROBLEM ? (
             <p className="text-[13px] text-text-muted leading-relaxed">
@@ -204,7 +204,7 @@ function CodingView({ blocks }: { blocks: ParsedBlock[] }) {
       </div>
 
       {/* Complexity & Walkthrough Row */}
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         <GridCard title="COMPLEXITY" titleColor="text-cyan-light" className="border-cyan/15 bg-cyan/[0.02]">
           {byType.COMPLEXITY ? (
             <ComplexityList content={byType.COMPLEXITY.content} />
@@ -218,7 +218,7 @@ function CodingView({ blocks }: { blocks: ParsedBlock[] }) {
       </div>
 
       {/* Edge Cases & Test Cases Row */}
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         <GridCard title="EDGE CASES" titleColor="text-amber-light" className="border-amber/15 bg-amber/[0.02]">
           {byType.EDGECASES ? (
             <EdgeCasesList content={byType.EDGECASES.content} />
@@ -340,7 +340,7 @@ function SystemDesignView({ blocks }: { blocks: ParsedBlock[] }) {
       )}
 
       {/* Row 1: FUNCTIONAL | NON-FUNCTIONAL | SCALE MATH | EDGE CASES */}
-      <div className="grid grid-cols-4 gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
         <GridCard title="FUNCTIONAL" titleColor="text-indigo-light">
           {byType.REQUIREMENTS ? (
             <RequirementsList content={byType.REQUIREMENTS.content} type="functional" />
@@ -371,7 +371,7 @@ function SystemDesignView({ blocks }: { blocks: ParsedBlock[] }) {
       </GridCard>
 
       {/* Row 3: ARCHITECTURE | LAYER DESIGN | FOLLOW-UP Q&A */}
-      <div className="grid grid-cols-3 gap-2 items-start">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-start">
         <GridCard title="ARCHITECTURE" titleColor="text-cyan-light" className="border-cyan/15 bg-cyan/[0.02]">
           {byType.DIAGRAM && byType.DIAGRAM.content.trim() && !/^skip/i.test(byType.DIAGRAM.content.trim()) ? (
             <pre className="font-mono text-[13px] text-cyan-light leading-[1.5] whitespace-pre overflow-x-auto">

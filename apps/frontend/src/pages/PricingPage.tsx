@@ -333,7 +333,7 @@ export default function PricingPage() {
 
       {/* Plans */}
       <section className="max-w-[85%] xl:max-w-7xl mx-auto px-6 py-10">
-        <div className="grid md:grid-cols-4 gap-5" style={{ alignItems: 'stretch' }}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5" style={{ alignItems: 'stretch' }}>
           {PLANS.map((plan) => (
             <div
               key={plan.name}
@@ -422,7 +422,7 @@ export default function PricingPage() {
             <h2 className="mt-3 text-2xl font-semibold tracking-tight text-gray-900">Top-Up Packs</h2>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {[
               { name: '20 AI Questions', price: '$5', desc: 'Includes 3 bonus diagrams', packId: 'questions_20' },
               { name: '50 AI Questions', price: '$10', desc: 'Includes 8 bonus diagrams', packId: 'questions_50' },

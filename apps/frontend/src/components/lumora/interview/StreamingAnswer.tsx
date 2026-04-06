@@ -136,7 +136,7 @@ function StreamingCodingView({ blocks }: { blocks: Record<string, ParsedBlock> }
   return (
     <div className="flex flex-col gap-2">
       {/* Problem & Approach Row */}
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         <StreamingCodingCard title="PROBLEM" titleColor="text-indigo-light" block={blocks.PROBLEM} />
         <StreamingCodingCard title="APPROACH" titleColor="text-violet-light" block={blocks.APPROACH} />
       </div>
@@ -166,7 +166,7 @@ function StreamingCodingView({ blocks }: { blocks: Record<string, ParsedBlock> }
       </div>
 
       {/* Complexity & Walkthrough Row */}
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         <div className="rounded-md border border-cyan/15 bg-cyan/[0.02] p-3">
           <div className="font-display text-base font-bold tracking-[0.1em] uppercase mb-2 pb-1 border-b border-border text-cyan-light">
             COMPLEXITY
@@ -179,7 +179,7 @@ function StreamingCodingView({ blocks }: { blocks: Record<string, ParsedBlock> }
       </div>
 
       {/* Edge Cases & Test Cases Row */}
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         <div className="rounded-md border border-amber/15 bg-amber/[0.02] p-3">
           <div className="font-display text-base font-bold tracking-[0.1em] uppercase mb-2 pb-1 border-b border-border text-amber-light">
             EDGE CASES
@@ -315,7 +315,7 @@ function StreamingDesignView({ blocks }: { blocks: Record<string, ParsedBlock> }
       </div>
 
       {/* Row 1: FUNCTIONAL | NON-FUNCTIONAL | SCALE MATH | EDGE CASES */}
-      <div className="grid grid-cols-4 gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
         <StreamingGridCard title="FUNCTIONAL" titleColor="text-indigo-light" block={blocks.REQUIREMENTS} type="functional" />
         <StreamingGridCard title="NON-FUNCTIONAL" titleColor="text-violet-light" block={blocks.REQUIREMENTS} type="nonfunctional" />
         <StreamingGridCard title="SCALE MATH" titleColor="text-emerald-light" block={blocks.SCALEMATH} type="scalemath" />
@@ -326,7 +326,7 @@ function StreamingDesignView({ blocks }: { blocks: Record<string, ParsedBlock> }
       <StreamingGridCard title="TRADE-OFFS" titleColor="text-rose-light" block={blocks.TRADEOFFS} type="tradeoffs" />
 
       {/* Row 3: ARCHITECTURE | LAYER DESIGN | FOLLOW-UP Q&A */}
-      <div className="grid grid-cols-3 gap-2 items-start">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-start">
         <div className="rounded-md border border-cyan/15 bg-cyan/[0.02] p-3">
           <div className="font-display text-base font-bold tracking-[0.1em] uppercase mb-2 pb-1 border-b border-border text-cyan-light">
             ARCHITECTURE

@@ -1248,7 +1248,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem }: Co
                             <button onClick={() => removeTestCase(i)} className="text-[10px] text-gray-400 hover:text-red-500 transition-colors">Remove</button>
                           )}
                         </div>
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                           <div>
                             <label className="block text-[9px] font-medium text-gray-400 mb-0.5 uppercase">Input</label>
                             <textarea value={tc.input} onChange={(e) => updateTestCase(i, 'input', e.target.value)}

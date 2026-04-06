@@ -312,31 +312,53 @@ export default function TopicDetail({
           )}
 
           {/* Blur skeleton + upgrade CTA */}
+          {/* Blur skeleton + inline pricing cards */}
           <div className="relative rounded-xl overflow-hidden">
-            {/* Fake blurred content skeleton */}
             <div className="space-y-3 filter blur-sm pointer-events-none select-none" aria-hidden="true">
               <div className="rounded-lg bg-gray-100 h-24 w-full" />
               <div className="rounded-lg bg-gray-100 h-32 w-full" />
               <div className="rounded-lg bg-gray-100 h-20 w-full" />
               <div className="rounded-lg bg-gray-100 h-28 w-full" />
-              <div className="rounded-lg bg-gray-100 h-16 w-full" />
             </div>
 
-            {/* Gradient overlay + upgrade card */}
-            <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.95) 40%, rgba(255,255,255,1) 100%)' }}>
-              <div className="text-center max-w-sm mx-auto px-6">
-                <div className="w-14 h-14 mx-auto mb-4 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #10b981, #3b82f6, #8b5cf6)' }}>
-                  <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+            <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.95) 35%, rgba(255,255,255,1) 100%)' }}>
+              <div className="max-w-2xl w-full px-4">
+                <div className="text-center mb-5">
+                  <div className="w-12 h-12 mx-auto mb-3 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #10b981, #3b82f6, #8b5cf6)' }}>
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-1 landing-display">Upgrade to unlock all topics</h3>
+                  <p className="text-xs text-gray-500 landing-body">Choose a plan to access {activePage === 'coding' ? '36+' : activePage === 'system-design' ? '300+' : '50+'} topics with full content</p>
                 </div>
-                <h3 className="text-lg font-bold text-gray-900 mb-2 landing-display">Upgrade to unlock this topic</h3>
-                <p className="text-sm text-gray-500 mb-4 landing-body">
-                  You've read your {contentAccess?.FREE_TOPICS_PER_CATEGORY || 3} free topics in this category. Upgrade to access all {activePage === 'coding' ? '36+' : activePage === 'system-design' ? '300+' : '50+'} topics with full explanations, code examples, and diagrams.
-                </p>
-                <a href="/pricing" className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90" style={{ background: 'linear-gradient(135deg, #10b981, #3b82f6, #8b5cf6)', boxShadow: '0 4px 14px rgba(99,102,241,0.25)' }}>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>
-                  View Plans
-                </a>
-                <p className="mt-3 text-xs text-gray-400">Free users: {contentAccess?.FREE_TOPICS_PER_CATEGORY || 3} topics per category</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { name: 'Starter', price: '$29', period: '/mo', features: ['Unlimited topics', '10 live sessions/mo', 'AI explanations'] },
+                    { name: 'Pro', price: '$49', period: '/mo', features: ['Everything in Starter', 'Unlimited sessions', 'Company-specific prep'], popular: true },
+                    { name: 'Annual', price: '$19', period: '/mo', features: ['Everything in Pro', 'Save 61%', 'Priority support'], best: true },
+                  ].map(plan => (
+                    <div key={plan.name} className="relative rounded-xl p-3 flex flex-col" style={plan.popular ? {
+                      border: '2px solid transparent', backgroundImage: 'linear-gradient(white, white), linear-gradient(135deg, #34d399, #38bdf8, #818cf8)', backgroundOrigin: 'border-box', backgroundClip: 'padding-box, border-box',
+                    } : plan.best ? {
+                      border: '2px solid transparent', backgroundImage: 'linear-gradient(white, white), linear-gradient(135deg, #fbbf24, #f59e0b, #d97706)', backgroundOrigin: 'border-box', backgroundClip: 'padding-box, border-box',
+                    } : { border: '1.5px solid #e3e8ee' }}>
+                      {plan.popular && <span className="absolute -top-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[8px] font-bold text-white uppercase" style={{ background: 'linear-gradient(135deg, #34d399, #818cf8)' }}>Popular</span>}
+                      {plan.best && <span className="absolute -top-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[8px] font-bold text-white uppercase" style={{ background: 'linear-gradient(135deg, #fbbf24, #d97706)' }}>Best Value</span>}
+                      <h4 className="text-xs font-bold text-gray-900">{plan.name}</h4>
+                      <div className="flex items-baseline gap-0.5 mt-0.5">
+                        <span className="text-lg font-bold text-gray-900">{plan.price}</span>
+                        <span className="text-[10px] text-gray-500">{plan.period}</span>
+                      </div>
+                      <ul className="mt-2 space-y-1 flex-1">
+                        {plan.features.map(f => (
+                          <li key={f} className="flex items-start gap-1 text-[10px] text-gray-600"><span className="text-emerald-500 flex-shrink-0">✓</span>{f}</li>
+                        ))}
+                      </ul>
+                      <a href="/pricing" className={`mt-2 block text-center py-1.5 rounded-lg text-[10px] font-semibold ${plan.popular ? 'text-white' : plan.best ? 'text-white' : 'text-gray-700 border border-gray-300'}`} style={plan.popular ? { background: 'linear-gradient(135deg, #10b981, #3b82f6, #8b5cf6)' } : plan.best ? { background: 'linear-gradient(135deg, #fbbf24, #d97706)' } : {}}>
+                        Get {plan.name}
+                      </a>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>

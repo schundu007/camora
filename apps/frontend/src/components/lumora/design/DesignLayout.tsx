@@ -932,7 +932,7 @@ export function DesignLayout({ onBack, initialProblem }: DesignLayoutProps) {
                     <h2 className="text-sm font-bold text-violet-800">Scale Estimates</h2>
                   </div>
                   <div className="px-4 py-3">
-                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
                       {Object.entries(sd.scaleEstimates).filter(([, v]) => v && v.trim()).map(([key, val]) => {
                         const highlight = parseMetricHighlight(val);
                         return (
@@ -956,7 +956,7 @@ export function DesignLayout({ onBack, initialProblem }: DesignLayoutProps) {
                     <h2 className="text-sm font-bold text-teal-800">Scalability Tiers</h2>
                   </div>
                   <div className="px-4 py-3">
-                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
                       {sd.techJustifications.map((tier, i) => {
                         const color = tierColors[i % tierColors.length];
                         return (

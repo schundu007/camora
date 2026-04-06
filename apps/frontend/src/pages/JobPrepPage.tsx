@@ -1112,22 +1112,48 @@ export default function JobPrepPage() {
       {/* Paywall Modal */}
       {showPaywall && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setShowPaywall(false)}>
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md mx-4 p-8 text-center" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
-            <div className="w-14 h-14 mx-auto mb-4 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #10b981, #3b82f6, #8b5cf6)' }}>
-              <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+          <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full mx-4 p-8" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+            <div className="text-center mb-6">
+              <div className="w-14 h-14 mx-auto mb-4 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #10b981, #3b82f6, #8b5cf6)' }}>
+                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-1">Upgrade to Generate Prep Material</h3>
+              <p className="text-sm text-gray-500">AI-powered interview prep tailored to this specific job</p>
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">Upgrade to Generate Prep Material</h3>
-            <p className="text-sm text-gray-500 mb-6">
-              AI-powered interview preparation with personalized questions, coding problems, system design scenarios, and behavioral answers — all tailored to this specific job.
-            </p>
-            <div className="flex gap-3 justify-center">
-              <Link to="/pricing" className="px-6 py-3 rounded-xl text-sm font-semibold text-white" style={{ background: 'linear-gradient(135deg, #10b981, #3b82f6, #8b5cf6)' }}>
-                View Plans
-              </Link>
-              <button onClick={() => setShowPaywall(false)} className="px-6 py-3 rounded-xl text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200">
-                Close
-              </button>
+            <div className="grid grid-cols-3 gap-3 mb-6">
+              {[
+                { name: 'Starter', price: '$29', period: '/mo', features: ['Unlimited prep & practice', '10 live sessions/mo', 'AI explanations', 'System design diagrams'] },
+                { name: 'Pro', price: '$49', period: '/mo', features: ['Everything in Starter', 'Unlimited live sessions', 'Job matching & auto apply', 'Company-specific prep'], popular: true },
+                { name: 'Annual', price: '$19', period: '/mo', features: ['Everything in Pro', 'Save 61% vs monthly', 'Locked-in pricing', 'Priority support'], best: true },
+              ].map(plan => (
+                <div key={plan.name} className="relative rounded-2xl p-4 flex flex-col" style={plan.popular ? {
+                  border: '2px solid transparent', backgroundImage: 'linear-gradient(white, white), linear-gradient(135deg, #34d399, #38bdf8, #818cf8)', backgroundOrigin: 'border-box', backgroundClip: 'padding-box, border-box', boxShadow: '0 4px 16px rgba(99,102,241,0.15)',
+                } : plan.best ? {
+                  border: '2px solid transparent', backgroundImage: 'linear-gradient(white, white), linear-gradient(135deg, #fbbf24, #f59e0b, #d97706)', backgroundOrigin: 'border-box', backgroundClip: 'padding-box, border-box', boxShadow: '0 4px 16px rgba(245,158,11,0.15)',
+                } : { border: '1.5px solid #e3e8ee' }}>
+                  {plan.popular && <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full text-[9px] font-bold text-white uppercase tracking-wider" style={{ background: 'linear-gradient(135deg, #34d399, #818cf8)' }}>Popular</span>}
+                  {plan.best && <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full text-[9px] font-bold text-white uppercase tracking-wider" style={{ background: 'linear-gradient(135deg, #fbbf24, #d97706)' }}>Best Value</span>}
+                  <h4 className="text-sm font-bold text-gray-900">{plan.name}</h4>
+                  <div className="mt-1 flex items-baseline gap-0.5">
+                    <span className="text-2xl font-bold text-gray-900">{plan.price}</span>
+                    <span className="text-xs text-gray-500">{plan.period}</span>
+                  </div>
+                  <ul className="mt-3 space-y-1.5 flex-1">
+                    {plan.features.map((f: string) => (
+                      <li key={f} className="flex items-start gap-1.5 text-xs text-gray-600">
+                        <span className="text-emerald-500 mt-0.5 flex-shrink-0">✓</span>{f}
+                      </li>
+                    ))}
+                  </ul>
+                  <Link to="/pricing" className={`mt-3 block text-center py-2 rounded-lg text-xs font-semibold transition-all ${plan.popular ? 'text-white' : plan.best ? 'text-white' : 'text-gray-700 border border-gray-300 hover:border-gray-400'}`} style={plan.popular ? { background: 'linear-gradient(135deg, #10b981, #3b82f6, #8b5cf6)' } : plan.best ? { background: 'linear-gradient(135deg, #fbbf24, #d97706)' } : {}}>
+                    Get {plan.name}
+                  </Link>
+                </div>
+              ))}
             </div>
+            <button onClick={() => setShowPaywall(false)} className="w-full text-center text-sm text-gray-400 hover:text-gray-600 transition-colors">
+              Continue with free plan
+            </button>
           </div>
         </div>
       )}
