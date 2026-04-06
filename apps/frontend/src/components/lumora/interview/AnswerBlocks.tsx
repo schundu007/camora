@@ -373,11 +373,18 @@ function SystemDesignView({ blocks }: { blocks: ParsedBlock[] }) {
       {/* Row 3: ARCHITECTURE | LAYER DESIGN | FOLLOW-UP Q&A */}
       <div className="grid grid-cols-3 gap-2 items-start">
         <GridCard title="ARCHITECTURE" titleColor="text-cyan-light" className="border-cyan/15 bg-cyan/[0.02]">
-          {byType.DIAGRAM ? (
+          {byType.DIAGRAM && byType.DIAGRAM.content.trim() && !/^skip/i.test(byType.DIAGRAM.content.trim()) ? (
             <pre className="font-mono text-[13px] text-cyan-light leading-[1.5] whitespace-pre overflow-x-auto">
               {byType.DIAGRAM.content.trim()}
             </pre>
-          ) : <Shimmer />}
+          ) : (
+            <div className="flex flex-col items-center justify-center py-6 text-center">
+              <svg className="w-8 h-8 text-cyan-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+              <p className="text-xs text-gray-400 font-mono">Use the Design tab for full architecture diagrams</p>
+            </div>
+          )}
         </GridCard>
         <GridCard title="LAYER DESIGN" titleColor="text-violet-light">
           {byType.DEEPDESIGN ? (
@@ -502,16 +509,41 @@ function ScaleMathList({ content }: { content: string }) {
 }
 
 function DeepDesignList({ content }: { content: string }) {
-  const lines = content.split('\n').map(l => cleanText(l)).filter(l => /^\d+[.)]\s/.test(l));
+  const lines = content.split('\n').map(l => cleanText(l)).filter(Boolean);
+
+  if (lines.length === 0) return <div className="text-[13px] text-text-muted italic">No layer design data</div>;
+
+  let itemNum = 0;
   return (
     <div className="space-y-1">
       {lines.map((line, i) => {
+        // Try numbered format: "1. Something" or "1) Something"
         const match = line.match(/^(\d+)[.)]\s*(.*)/);
-        if (!match) return null;
+        if (match) {
+          itemNum = parseInt(match[1]);
+          return (
+            <div key={i} className="flex items-start gap-2 py-0.5">
+              <span className="font-mono text-xs font-bold text-violet-light w-4 text-right shrink-0">{match[1]}</span>
+              <span className="text-[13px] text-text-muted leading-snug">{match[2]}</span>
+            </div>
+          );
+        }
+        // Sub-bullet under a numbered item
+        const subLine = line.replace(/^[-*]\s*/, '');
+        if (subLine && itemNum > 0) {
+          return (
+            <div key={i} className="flex items-start gap-2 py-0.5 pl-6">
+              <span className="w-1.5 h-1.5 rounded-full bg-violet/40 shrink-0 mt-1.5" />
+              <span className="text-[13px] text-text-muted leading-snug">{subLine}</span>
+            </div>
+          );
+        }
+        // Fallback: treat as a layer heading or plain line
+        itemNum++;
         return (
           <div key={i} className="flex items-start gap-2 py-0.5">
-            <span className="font-mono text-xs font-bold text-violet-light w-4 text-right shrink-0">{match[1]}</span>
-            <span className="text-[13px] text-text-muted leading-snug">{match[2]}</span>
+            <span className="font-mono text-xs font-bold text-violet-light w-4 text-right shrink-0">{itemNum}</span>
+            <span className="text-[13px] text-text-muted leading-snug">{line}</span>
           </div>
         );
       })}
@@ -543,28 +575,50 @@ function EdgeCasesList({ content }: { content: string }) {
 
 function TradeoffsList({ content }: { content: string }) {
   const lines = content.split('\n').map(l => cleanText(l).replace(/^[-*]\s*/, '')).filter(Boolean);
+
+  if (lines.length === 0) return <div className="text-[13px] text-text-muted italic">No trade-offs data</div>;
+
   return (
     <div className="space-y-1.5">
       {lines.map((line, i) => {
-        // Try to parse "Decision: X | vs: Y | because: Z" format
+        // Try pipe format: "Decision: X | vs: Y | because: Z"
         const parts = line.split('|').map(p => p.trim());
         let pick = parts[0]?.replace(/^(Decision|Choice):\s*/i, '') || '';
         let alt = parts[1]?.replace(/^(vs|Rejected|Alt):\s*/i, '') || '';
         let reason = parts[2]?.replace(/^(because|Reason|Why):\s*/i, '') || '';
 
-        // Also try "X vs Y" format
-        if (!alt && pick.includes(' vs ')) {
-          const vsParts = pick.split(' vs ');
+        // Try "X vs Y" or "X vs. Y"
+        if (!alt && / vs\.? /i.test(pick)) {
+          const vsParts = pick.split(/ vs\.? /i);
           pick = vsParts[0].trim();
           alt = vsParts[1]?.trim() || '';
         }
 
-        // Try colon format "X vs. Y: reason"
+        // Try "Chose X over Y: reason"
+        if (!alt && /chose .+ over /i.test(pick)) {
+          const overMatch = pick.match(/^(?:Chose\s+)(.+?)\s+over\s+(.+?)(?::\s*(.*))?$/i);
+          if (overMatch) {
+            pick = overMatch[1].trim();
+            alt = overMatch[2].trim();
+            reason = overMatch[3]?.trim() || reason;
+          }
+        }
+
+        // Extract reason from colon in alt
         if (!reason && alt) {
           const colonIdx = alt.indexOf(':');
           if (colonIdx > 0) {
             reason = alt.slice(colonIdx + 1).trim();
             alt = alt.slice(0, colonIdx).trim();
+          }
+        }
+
+        // Extract reason from colon in pick (if no alt found)
+        if (!alt && !reason) {
+          const colonIdx = pick.indexOf(':');
+          if (colonIdx > 0 && colonIdx < pick.length - 1) {
+            reason = pick.slice(colonIdx + 1).trim();
+            pick = pick.slice(0, colonIdx).trim();
           }
         }
 

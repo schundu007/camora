@@ -331,7 +331,7 @@ function StreamingDesignView({ blocks }: { blocks: Record<string, ParsedBlock> }
           <div className="font-display text-base font-bold tracking-[0.1em] uppercase mb-2 pb-1 border-b border-border text-cyan-light">
             ARCHITECTURE
           </div>
-          {blocks.DIAGRAM ? (
+          {blocks.DIAGRAM && blocks.DIAGRAM.content.trim() && !/^skip/i.test(blocks.DIAGRAM.content.trim()) ? (
             blocks.DIAGRAM.isComplete ? (
               <MermaidDiagram content={blocks.DIAGRAM.content} />
             ) : (
@@ -341,7 +341,12 @@ function StreamingDesignView({ blocks }: { blocks: Record<string, ParsedBlock> }
               </pre>
             )
           ) : (
-            <ShimmerBlock lines={8} />
+            <div className="flex flex-col items-center justify-center py-6 text-center">
+              <svg className="w-8 h-8 text-cyan-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+              <p className="text-xs text-gray-400 font-mono">Use the Design tab for architecture diagrams</p>
+            </div>
           )}
         </div>
         <StreamingGridCard title="LAYER DESIGN" titleColor="text-violet-light" block={blocks.DEEPDESIGN} type="deepdesign" />
@@ -525,15 +530,17 @@ function ScaleMathList({ content, isComplete }: { content: string; isComplete: b
 }
 
 function DeepDesignList({ content, isComplete }: { content: string; isComplete: boolean }) {
-  const lines = content.split('\n').map(l => cleanText(l)).filter(l => /^\d+[.)]\s/.test(l) || l.trim());
+  const lines = content.split('\n').map(l => cleanText(l)).filter(Boolean);
 
   if (lines.length === 0) return <ShimmerBlock lines={4} />;
 
+  let itemNum = 0;
   return (
     <div className="space-y-1">
       {lines.map((line, i) => {
         const match = line.match(/^(\d+)[.)]\s*(.*)/);
         if (match) {
+          itemNum = parseInt(match[1]);
           return (
             <div key={i} className="flex items-start gap-2 py-0.5">
               <span className="font-mono text-base font-bold text-violet-light w-4 text-right shrink-0">{match[1]}</span>
@@ -541,7 +548,24 @@ function DeepDesignList({ content, isComplete }: { content: string; isComplete: 
             </div>
           );
         }
-        return <div key={i} className="text-base text-text-muted leading-snug pl-5">{line}</div>;
+        // Sub-bullet under a numbered item
+        const subLine = line.replace(/^[-*]\s*/, '');
+        if (subLine && itemNum > 0) {
+          return (
+            <div key={i} className="flex items-start gap-2 py-0.5 pl-5">
+              <span className="w-1.5 h-1.5 rounded-full bg-violet/40 shrink-0 mt-1.5" />
+              <span className="text-base text-text-muted leading-snug">{subLine}</span>
+            </div>
+          );
+        }
+        // Fallback: assign a number
+        itemNum++;
+        return (
+          <div key={i} className="flex items-start gap-2 py-0.5">
+            <span className="font-mono text-base font-bold text-violet-light w-4 text-right shrink-0">{itemNum}</span>
+            <span className="text-base text-text-muted leading-snug">{line}</span>
+          </div>
+        );
       })}
       {!isComplete && <Cursor />}
     </div>
@@ -582,15 +606,45 @@ function TradeoffsList({ content, isComplete }: { content: string; isComplete: b
   return (
     <div className="space-y-1.5">
       {lines.map((line, i) => {
+        // Try pipe format: "Decision: X | vs: Y | because: Z"
         const parts = line.split('|').map(p => p.trim());
         let pick = parts[0]?.replace(/^(Decision|Choice):\s*/i, '') || '';
         let alt = parts[1]?.replace(/^(vs|Rejected|Alt):\s*/i, '') || '';
         let reason = parts[2]?.replace(/^(because|Reason|Why):\s*/i, '') || '';
 
-        if (!alt && pick.includes(' vs ')) {
-          const vsParts = pick.split(' vs ');
+        // Try "X vs Y" or "X vs. Y"
+        if (!alt && / vs\.? /i.test(pick)) {
+          const vsParts = pick.split(/ vs\.? /i);
           pick = vsParts[0].trim();
           alt = vsParts[1]?.trim() || '';
+        }
+
+        // Try "Chose X over Y: reason"
+        if (!alt && /chose .+ over /i.test(pick)) {
+          const overMatch = pick.match(/^(?:Chose\s+)(.+?)\s+over\s+(.+?)(?::\s*(.*))?$/i);
+          if (overMatch) {
+            pick = overMatch[1].trim();
+            alt = overMatch[2].trim();
+            reason = overMatch[3]?.trim() || reason;
+          }
+        }
+
+        // Extract reason from colon in alt
+        if (!reason && alt) {
+          const colonIdx = alt.indexOf(':');
+          if (colonIdx > 0) {
+            reason = alt.slice(colonIdx + 1).trim();
+            alt = alt.slice(0, colonIdx).trim();
+          }
+        }
+
+        // Extract reason from colon in pick (if no alt found)
+        if (!alt && !reason) {
+          const colonIdx = pick.indexOf(':');
+          if (colonIdx > 0 && colonIdx < pick.length - 1) {
+            reason = pick.slice(colonIdx + 1).trim();
+            pick = pick.slice(0, colonIdx).trim();
+          }
         }
 
         if (!pick) return <div key={i} className="text-base text-text-muted leading-snug">{line}</div>;
