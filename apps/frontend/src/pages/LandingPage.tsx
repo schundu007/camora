@@ -527,9 +527,9 @@ export default function LandingPage() {
               <p className="text-lg text-gray-400 mt-5 leading-relaxed">A streamlined process designed for engineers who want to land their dream role.</p>
               <ProcessAccordion />
             </FadeIn>
-            <FadeIn delay={0.2} className="hidden lg:block">
-              <div className="sticky top-32">
-                <div className="rounded-3xl border border-gray-200 bg-white p-10 shadow-lg shadow-gray-100/50">
+            <FadeIn delay={0.2} className="hidden lg:flex">
+              <div className="h-full flex flex-col">
+                <div className="rounded-3xl border border-gray-200 bg-white p-10 shadow-lg shadow-gray-100/50 flex-1 flex flex-col justify-center">
                   <div className="flex items-center gap-3 mb-10">
                     <div className="w-3 h-3 rounded-full bg-emerald-400 animate-pulse" />
                     <span className="text-sm font-semibold text-gray-300 tracking-wider uppercase">APPA Flow</span>
