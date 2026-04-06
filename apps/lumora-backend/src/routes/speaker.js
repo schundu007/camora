@@ -80,8 +80,9 @@ router.get('/status', async (req, res) => {
     const data = await upstream.json();
     return res.status(upstream.status).json(data);
   } catch (err) {
-    console.error('speaker status proxy error:', err);
-    return res.status(502).json({ error: 'Failed to reach ai-services' });
+    console.error('speaker status proxy error:', err.message);
+    // Gracefully degrade when ai-services is down — report as not enrolled
+    return res.json({ enrolled: false, service_unavailable: true });
   }
 });
 

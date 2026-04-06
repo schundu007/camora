@@ -56,22 +56,28 @@ const AI_SERVICES_URL = process.env.AI_SERVICES_URL || 'http://localhost:8001';
  * the user's enrolled voice. Returns { should_transcribe, similarity }.
  */
 async function verifySpeaker(userId, audioBuffer, filename) {
-  const formData = new FormData();
-  formData.append('user_id', userId);
-  formData.append('file', new Blob([audioBuffer]), filename);
+  try {
+    const formData = new FormData();
+    formData.append('user_id', userId);
+    formData.append('file', new Blob([audioBuffer]), filename);
 
-  const res = await fetch(`${AI_SERVICES_URL}/api/v1/speaker/verify`, {
-    method: 'POST',
-    body: formData,
-  });
+    const res = await fetch(`${AI_SERVICES_URL}/api/v1/speaker/verify`, {
+      method: 'POST',
+      body: formData,
+      signal: AbortSignal.timeout(5000),
+    });
 
-  if (!res.ok) {
-    // If verification service is unavailable, default to transcribing
-    console.warn(`Speaker verification failed (${res.status}), proceeding with transcription`);
+    if (!res.ok) {
+      console.warn(`Speaker verification failed (${res.status}), proceeding with transcription`);
+      return { should_transcribe: true, similarity: 0 };
+    }
+
+    return res.json();
+  } catch (err) {
+    // ai-services is down or unreachable — skip verification, proceed with transcription
+    console.warn(`Speaker verification unreachable: ${err.message}, proceeding with transcription`);
     return { should_transcribe: true, similarity: 0 };
   }
-
-  return res.json();
 }
 
 // ── POST / (mounted at /api/v1/transcribe) ──────────────────────────────────
