@@ -36,11 +36,11 @@ body::after { bottom: 0; }
     --text-subtle: #1e293b;
     --text-dim: #475569;
     --text-muted: #64748b;
-    --border: #c7cfe0;
-    --border2: #94a3b8;
+    --border: #a0aec0;
+    --border2: #718096;
     --surface: #ffffff;
     --surface2: #f1f3f9;
-    --card-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --card-shadow: 0 2px 8px rgba(0,0,0,0.10), 0 4px 16px rgba(0,0,0,0.06);
     --nav-bg: rgba(255,255,255,0.85);
     --nav-bg-secondary: #ffffff;
     --nav-border: #d4d9e8;
@@ -373,6 +373,19 @@ select option:checked {
 :root .text-violet-light { color: #6d28d9 !important; }
 :root .text-cyan-light { color: #0e7490 !important; }
 :root .text-indigo-light { color: #4338ca !important; }
+
+/* ── Card borders & shadows — solid, visible ── */
+.border-\[\#e3e8ee\] { border-color: #a0aec0 !important; }
+.border-gray-200 { border-color: #a0aec0 !important; }
+.border-gray-100 { border-color: #cbd5e1 !important; }
+
+.shadow-\[0_1px_3px_rgba\(0\,0\,0\,0\.04\)\] {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.10), 0 4px 16px rgba(0,0,0,0.06) !important;
+}
+
+.rounded-2xl, .rounded-xl, .rounded-lg {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.10), 0 4px 16px rgba(0,0,0,0.06);
+}
 
 /* Highlight.js */
 .hljs {
