@@ -411,11 +411,20 @@ export default function PricingPage() {
               <button
                 onClick={() => handleCheckout(plan)}
                 disabled={loading === plan.name}
-                className={`w-full py-2.5 text-[13px] font-medium transition-colors ${
+                className={`w-full py-3 text-sm font-semibold rounded-xl cursor-pointer transition-all duration-200 ${
                   plan.popular
-                    ? 'bg-emerald-400 text-black hover:bg-emerald-300'
-                    : 'border border-[#e3e8ee] text-gray-700 hover:border-[#d0d5dd] hover:text-gray-900'
+                    ? 'text-white hover:opacity-90'
+                    : plan.name === 'Annual'
+                    ? 'text-white hover:opacity-90'
+                    : 'border-2 border-[#c7cfe0] text-gray-800 hover:border-indigo-400 hover:text-indigo-600 hover:shadow-md'
                 } disabled:opacity-50`}
+                style={plan.popular ? {
+                  background: 'linear-gradient(135deg, #34d399, #06b6d4, #6366f1)',
+                  boxShadow: '0 4px 14px rgba(99,102,241,0.3)',
+                } : plan.name === 'Annual' ? {
+                  background: 'linear-gradient(135deg, #fbbf24, #f59e0b, #d97706)',
+                  boxShadow: '0 4px 14px rgba(245,158,11,0.3)',
+                } : {}}
               >
                 {loading === plan.name ? 'Loading...' : plan.cta}
               </button>
@@ -477,54 +486,16 @@ export default function PricingPage() {
         <div className="h-px bg-[#e3e8ee]" />
       </div>
 
-      {/* Value prop */}
-      <section className="px-6 py-12">
-        <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-xl md:text-2xl font-semibold tracking-tight text-gray-900">
-            No other tool gives you the full pipeline.
-          </h2>
-          <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[
-              { step: '01', label: 'Apply', desc: 'AI-matched jobs from 1000+ companies', color: '#34d399' },
-              { step: '02', label: 'Prepare', desc: '300+ topics with AI explanations', color: '#818cf8' },
-              { step: '03', label: 'Practice', desc: 'Mock interviews with feedback', color: '#38bdf8' },
-              { step: '04', label: 'Attend', desc: 'Real-time AI during your interview', color: '#fbbf24' },
-            ].map((s) => (
-              <div
-                key={s.step}
-                className="p-5 text-center transition-transform duration-300 hover:scale-105"
-                style={{
-                  background: 'white',
-                  border: '2px solid transparent',
-                  borderRadius: '12px',
-                  backgroundImage: `linear-gradient(white, white), linear-gradient(135deg, ${s.color}, ${s.color}88)`,
-                  backgroundOrigin: 'border-box',
-                  backgroundClip: 'padding-box, border-box',
-                  boxShadow: `0 4px 16px ${s.color}20, 0 1px 4px rgba(0,0,0,0.06)`,
-                }}
-              >
-                <span className="text-[11px] font-mono font-bold" style={{ color: s.color }}>{s.step}</span>
-                <div className="mt-1 text-sm font-bold text-gray-900">{s.label}</div>
-                <div className="mt-1 text-[12px] text-gray-600">{s.desc}</div>
-              </div>
-            ))}
-          </div>
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-            {[
-              { label: 'Auto Cloud Diagrams', color: '#34d399' },
-              { label: '50+ Languages', color: '#06b6d4' },
-              { label: 'Real Interview DB', color: '#818cf8' },
-              { label: 'Auto-Fix Code', color: '#f59e0b' },
-            ].map((badge) => (
-              <span
-                key={badge.label}
-                className="px-3 py-1.5 rounded-lg border border-white/[0.08] text-sm text-gray-300 font-medium inline-flex items-center gap-2"
-              >
-                <span className="w-2 h-2 rounded-full shrink-0" style={{ background: badge.color }} />
-                {badge.label}
-              </span>
-            ))}
-          </div>
+
+      {/* CTA buttons */}
+      <section className="px-6 py-10 text-center">
+        <div className="flex items-center justify-center gap-4">
+          <Link to="/lumora" className="px-6 py-2.5 text-sm font-semibold rounded-xl text-white transition-all hover:opacity-90" style={{ background: 'linear-gradient(135deg, #10b981, #3b82f6, #8b5cf6)', boxShadow: '0 4px 14px rgba(99,102,241,0.25)' }}>
+            Start Free
+          </Link>
+          <Link to="/capra/prepare" className="px-6 py-2.5 text-sm font-semibold rounded-xl text-gray-700 border-2 border-[#c7cfe0] hover:border-indigo-400 hover:text-indigo-600 transition-all">
+            Browse Topics
+          </Link>
         </div>
       </section>
 
@@ -554,23 +525,6 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="px-6 py-16 text-center">
-        <h2 className="text-2xl font-semibold tracking-tight text-gray-900">
-          Start free. Upgrade when you are ready.
-        </h2>
-        <p className="mt-3 text-sm text-gray-500 max-w-md mx-auto">
-          3 free interview sessions. No credit card. No commitment.
-        </p>
-        <div className="mt-8 flex items-center justify-center gap-4">
-          <Link to="/lumora" className="px-6 py-2.5 text-sm font-medium text-black bg-emerald-400 hover:bg-emerald-300 transition-colors">
-            Start Free
-          </Link>
-          <Link to="/capra/prepare" className="px-6 py-2.5 text-sm font-medium text-gray-700 border border-gray-300 hover:border-gray-400 hover:text-gray-900 transition-all">
-            Browse Topics
-          </Link>
-        </div>
-      </section>
 
       {/* Footer */}
       <footer className="border-t border-[#e3e8ee] px-6 py-10">
