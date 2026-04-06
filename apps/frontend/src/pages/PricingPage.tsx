@@ -267,43 +267,43 @@ export default function PricingPage() {
                   </th>
                   <th className="py-4 px-3 text-center min-w-[80px]">
                     <div className="text-gray-500 text-xs font-medium">Final Round</div>
-                    <div className="text-base font-extrabold mt-1" style={{ color: '#dc2626' }}>$100<span className="text-[10px] font-normal text-gray-400">/mo</span></div>
+                    <div className="text-base font-extrabold mt-1" style={{ color: '#6366f1' }}>$100<span className="text-[10px] font-normal text-gray-400">/mo</span></div>
                   </th>
                   <th className="py-4 px-3 text-center min-w-[80px]">
                     <div className="text-gray-500 text-xs font-medium">LockedIn</div>
-                    <div className="text-base font-extrabold mt-1" style={{ color: '#dc2626' }}>$55-120<span className="text-[10px] font-normal text-gray-400">/mo</span></div>
+                    <div className="text-base font-extrabold mt-1" style={{ color: '#6366f1' }}>$55-120<span className="text-[10px] font-normal text-gray-400">/mo</span></div>
                   </th>
                   <th className="py-4 px-3 text-center min-w-[80px] hidden md:table-cell">
                     <div className="text-gray-500 text-xs font-medium">Solver</div>
-                    <div className="text-base font-extrabold mt-1" style={{ color: '#b91c1c' }}>$39<span className="text-[10px] font-normal text-gray-400">/mo</span></div>
+                    <div className="text-base font-extrabold mt-1" style={{ color: '#7c3aed' }}>$39<span className="text-[10px] font-normal text-gray-400">/mo</span></div>
                   </th>
                   <th className="py-4 px-3 text-center min-w-[80px] hidden md:table-cell">
                     <div className="text-gray-500 text-xs font-medium">Sensei</div>
-                    <div className="text-base font-extrabold mt-1" style={{ color: '#b91c1c' }}>$24-89<span className="text-[10px] font-normal text-gray-400">/mo</span></div>
+                    <div className="text-base font-extrabold mt-1" style={{ color: '#7c3aed' }}>$24-89<span className="text-[10px] font-normal text-gray-400">/mo</span></div>
                   </th>
                   <th className="py-4 px-3 text-center min-w-[80px] hidden lg:table-cell">
                     <div className="text-gray-500 text-xs font-medium">TechPrep</div>
-                    <div className="text-base font-extrabold mt-1" style={{ color: '#b91c1c' }}>$39<span className="text-[10px] font-normal text-gray-400">/mo</span></div>
+                    <div className="text-base font-extrabold mt-1" style={{ color: '#7c3aed' }}>$39<span className="text-[10px] font-normal text-gray-400">/mo</span></div>
                   </th>
                   <th className="py-4 px-3 text-center min-w-[80px] hidden lg:table-cell">
                     <div className="text-gray-500 text-xs font-medium">AlgoMaster</div>
-                    <div className="text-base font-extrabold mt-1" style={{ color: '#b91c1c' }}>$29<span className="text-[10px] font-normal text-gray-400">/mo</span></div>
+                    <div className="text-base font-extrabold mt-1" style={{ color: '#7c3aed' }}>$29<span className="text-[10px] font-normal text-gray-400">/mo</span></div>
                   </th>
                   <th className="py-4 px-3 text-center min-w-[80px] hidden lg:table-cell">
                     <div className="text-gray-500 text-xs font-medium">DesignGurus</div>
-                    <div className="text-base font-extrabold mt-1" style={{ color: '#b91c1c' }}>$98-197<span className="text-[10px] font-normal text-gray-400">/course</span></div>
+                    <div className="text-base font-extrabold mt-1" style={{ color: '#7c3aed' }}>$98-197<span className="text-[10px] font-normal text-gray-400">/course</span></div>
                   </th>
                   <th className="py-4 px-3 text-center min-w-[80px] hidden xl:table-cell">
                     <div className="text-gray-500 text-xs font-medium">AIApply</div>
-                    <div className="text-base font-extrabold mt-1" style={{ color: '#b91c1c' }}>$29-200<span className="text-[10px] font-normal text-gray-400">/mo</span></div>
+                    <div className="text-base font-extrabold mt-1" style={{ color: '#7c3aed' }}>$29-200<span className="text-[10px] font-normal text-gray-400">/mo</span></div>
                   </th>
                   <th className="py-4 px-3 text-center min-w-[80px] hidden xl:table-cell">
                     <div className="text-gray-500 text-xs font-medium">OfferGoose</div>
-                    <div className="text-base font-extrabold mt-1" style={{ color: '#b91c1c' }}>$89-200<span className="text-[10px] font-normal text-gray-400">/mo</span></div>
+                    <div className="text-base font-extrabold mt-1" style={{ color: '#7c3aed' }}>$89-200<span className="text-[10px] font-normal text-gray-400">/mo</span></div>
                   </th>
                   <th className="py-4 px-3 text-center min-w-[80px] hidden xl:table-cell">
                     <div className="text-gray-500 text-xs font-medium">Parakeet</div>
-                    <div className="text-base font-extrabold mt-1" style={{ color: '#b91c1c' }}>$100-200<span className="text-[10px] font-normal text-gray-400">/mo</span></div>
+                    <div className="text-base font-extrabold mt-1" style={{ color: '#7c3aed' }}>$100-200<span className="text-[10px] font-normal text-gray-400">/mo</span></div>
                   </th>
                 </tr>
               </thead>
