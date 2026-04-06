@@ -354,13 +354,13 @@ export default function PricingPage() {
                 zIndex: 2,
               } : plan.name === 'Annual' ? {
                 background: 'white',
-                border: '2.5px solid transparent',
+                border: '3px solid transparent',
                 backgroundImage: 'linear-gradient(white, white), linear-gradient(135deg, #fbbf24, #f59e0b, #d97706)',
                 backgroundOrigin: 'border-box',
                 backgroundClip: 'padding-box, border-box',
-                boxShadow: '0 8px 32px rgba(245,158,11,0.2), 0 2px 8px rgba(245,158,11,0.1)',
-                transform: 'scale(1.04)',
-                zIndex: 2,
+                boxShadow: '0 12px 40px rgba(245,158,11,0.25), 0 4px 12px rgba(245,158,11,0.15)',
+                transform: 'scale(1.07)',
+                zIndex: 3,
               } : { boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
             >
               {plan.popular && (
