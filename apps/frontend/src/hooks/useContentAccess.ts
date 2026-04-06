@@ -2,7 +2,7 @@ import { useCallback, useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 
 const STORAGE_KEY = 'camora_topics_read';
-const FREE_TOPICS_PER_CATEGORY = 3;
+const FREE_TOPICS_PER_CATEGORY = 1;
 
 type Category = string; // 'coding' | 'system-design' | 'behavioral' | 'low-level' | 'microservices' | 'databases' | 'sql'
 
@@ -45,16 +45,12 @@ export function useContentAccess() {
   }, []);
 
   const canReadTopic = useCallback((category: Category, topicId: string): boolean => {
-    if (isPaidUser) {
-      console.log('[ContentAccess] isPaidUser=true, allowing', category, topicId);
-      return true;
-    }
+    if (isPaidUser) return true;
     const data = getReadTopics();
     const readList = data[category] || [];
-    const canRead = readList.includes(topicId) || readList.length < FREE_TOPICS_PER_CATEGORY;
-    console.log('[ContentAccess]', { category, topicId, isPaidUser, readList, canRead, subscriptionLoading });
-    return canRead;
-  }, [isPaidUser, subscriptionLoading]);
+    if (readList.includes(topicId)) return true;
+    return readList.length < FREE_TOPICS_PER_CATEGORY;
+  }, [isPaidUser]);
 
   const isTopicLocked = useCallback((category: Category, topicId: string): boolean => {
     return !canReadTopic(category, topicId);
