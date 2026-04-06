@@ -724,7 +724,7 @@ export default function LandingPage() {
 
           <FadeIn delay={0.25} className="text-center mt-10">
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link to="/jobs" className="shimmer-btn px-8 py-3.5 text-base font-semibold text-white bg-gray-900 rounded-xl hover:bg-gray-800 transition-colors">
+              <Link to="/jobs" className="shimmer-btn px-8 py-3.5 text-base font-semibold rounded-xl transition-colors" style={{ background: 'linear-gradient(135deg, #10b981, #3b82f6, #8b5cf6)', color: '#ffffff' }}>
                 Try It Now — Paste a Job URL
               </Link>
             </div>
