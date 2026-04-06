@@ -235,7 +235,7 @@ export default function PricingPage() {
 
       {/* Competitor comparison */}
       <section className="px-6 py-16">
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-[95%] xl:max-w-7xl mx-auto">
           <div className="mb-10 text-center">
             <span className="text-[11px] font-mono text-gray-500 uppercase tracking-wider">Comparison</span>
             <h2 className="mt-3 text-2xl md:text-3xl font-semibold tracking-tight text-gray-900">
