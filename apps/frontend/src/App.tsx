@@ -151,30 +151,30 @@ function AppaSideIndicator() {
       <div className="absolute" style={{ top: 0, bottom: 0, width: '2px', left: '8px', background: 'linear-gradient(180deg, transparent 8%, #34d39940 18%, #34d399 28%, #818cf8 44%, #38bdf8 60%, #fbbf24 76%, #fbbf2440 88%, transparent 96%)' }} />
 
       {/* 4 nodes with always-visible APPA letters */}
-      <div className="flex flex-col items-center" style={{ gap: '44px' }}>
+      <div className="flex flex-col items-center" style={{ gap: '40px' }}>
         {steps.map((step) => {
           const isActive = location.pathname.startsWith(step.match);
           return (
             <Link
               key={step.label}
               to={step.href}
-              className="relative flex items-center gap-2.5 group"
+              className="relative flex items-center gap-3 group"
               title={step.label}
             >
               {/* Dot */}
               <div
                 className="rounded-full transition-all duration-300 flex-shrink-0"
                 style={{
-                  width: '16px',
-                  height: '16px',
+                  width: '22px',
+                  height: '22px',
                   background: isActive ? step.color : '#ffffff',
-                  border: `2.5px solid ${step.color}`,
-                  boxShadow: isActive ? `0 0 12px ${step.color}50` : `0 0 0 2px #ffffff`,
+                  border: `3px solid ${step.color}`,
+                  boxShadow: isActive ? `0 0 16px ${step.color}50` : `0 0 0 3px #ffffff`,
                 }}
               />
               {/* Always-visible letter */}
               <span
-                className="text-[11px] font-extrabold tracking-wider transition-all duration-200"
+                className="text-xs font-extrabold tracking-wider transition-all duration-200"
                 style={{ color: isActive ? step.color : '#9ca3af', textShadow: isActive ? `0 0 8px ${step.color}30` : 'none' }}
               >
                 {step.label[0]}
