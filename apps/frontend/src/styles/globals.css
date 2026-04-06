@@ -374,11 +374,24 @@ select option:checked {
 :root .text-cyan-light { color: #0e7490 !important; }
 :root .text-indigo-light { color: #4338ca !important; }
 
-/* ── Card borders & shadows — solid, visible ── */
-.border-\[\#e3e8ee\] { border-color: #7189a8 !important; border-width: 1.5px !important; }
-.border-gray-200 { border-color: #7189a8 !important; border-width: 1.5px !important; }
-.border-gray-100 { border-color: #8fa3bd !important; border-width: 1.5px !important; }
-.border-gray-300 { border-color: #5a7394 !important; border-width: 1.5px !important; }
+/* ── Card borders — colorful gradient ── */
+.border-\[\#e3e8ee\],
+.border-gray-200,
+.border-gray-100,
+.border-gray-300 {
+  border-color: transparent !important;
+  border-width: 1.5px !important;
+  background-clip: padding-box !important;
+  position: relative;
+}
+
+/* Gradient border via box-shadow for cards */
+.rounded-2xl, .rounded-xl, .rounded-lg {
+  border: 1.5px solid transparent !important;
+  background-image: linear-gradient(white, white), linear-gradient(135deg, #34d399, #38bdf8, #818cf8, #c084fc) !important;
+  background-origin: border-box !important;
+  background-clip: padding-box, border-box !important;
+}
 
 .shadow-\[0_1px_3px_rgba\(0\,0\,0\,0\.04\)\] {
   box-shadow: 0 2px 8px rgba(0,0,0,0.10), 0 4px 16px rgba(0,0,0,0.06) !important;
