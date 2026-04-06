@@ -243,24 +243,6 @@ function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: { onA
             Your AI co-pilot for <span className="bg-clip-text text-transparent" style={{ backgroundImage: 'linear-gradient(135deg, #34d399, #06b6d4, #818cf8)' }}>live interviews</span>
           </h1>
 
-          {/* How it works - 2 steps */}
-          <div className="mt-10 grid grid-cols-2 gap-4 md:gap-6 text-center">
-            <div className="p-4 rounded-2xl bg-white/80 border border-emerald-100 shadow-sm hover:shadow-md transition-shadow">
-              <div className="w-12 h-12 mx-auto mb-3 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20" style={{ background: 'linear-gradient(135deg, #34d399, #10b981)' }}>
-                <span className="text-white font-display font-extrabold text-xl">1</span>
-              </div>
-              <p className="text-sm font-display font-bold text-gray-900">Join your interview</p>
-              <p className="text-xs font-display text-gray-500 mt-1">Open Zoom, Meet, or Teams alongside</p>
-            </div>
-            <div className="p-4 rounded-2xl bg-white/80 border border-violet-100 shadow-sm hover:shadow-md transition-shadow">
-              <div className="w-12 h-12 mx-auto mb-3 rounded-xl flex items-center justify-center shadow-lg shadow-violet-500/20" style={{ background: 'linear-gradient(135deg, #818cf8, #7c3aed)' }}>
-                <span className="text-white font-display font-extrabold text-xl">2</span>
-              </div>
-              <p className="text-sm font-display font-bold text-gray-900">Ask anything in real-time</p>
-              <p className="text-xs font-display text-gray-500 mt-1">Type, paste, or use your mic</p>
-            </div>
-          </div>
-
           {/* Demo Walkthrough */}
           <div className="mt-12 text-left max-w-2xl mx-auto">
             <div className="text-center mb-6">
