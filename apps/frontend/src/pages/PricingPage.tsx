@@ -149,7 +149,7 @@ export default function PricingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f7f8f9] text-gray-900">
+    <div className="min-h-screen text-gray-900">
 
       {/* Nav */}
       <nav className="fixed top-0 left-0 right-0 z-50 border-b border-[#e3e8ee] bg-white/90 backdrop-blur-xl">

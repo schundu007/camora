@@ -730,7 +730,7 @@ export default function DashboardPage() {
   // Main App Render
   // ---------------------------------------------------------------------------
   return (
-    <div className={`h-screen flex overflow-hidden landing-root text-gray-900`} style={{ background: '#f7f8f9', ...(isMobile ? { paddingBottom: 'calc(52px + env(safe-area-inset-bottom, 0px))' } : {}) }}>
+    <div className={`h-screen flex overflow-hidden landing-root text-gray-900`} style={{ background: 'transparent', ...(isMobile ? { paddingBottom: 'calc(52px + env(safe-area-inset-bottom, 0px))' } : {}) }}>
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">

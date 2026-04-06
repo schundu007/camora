@@ -359,7 +359,7 @@ export default function JobsPage() {
     : jobs.filter((job) => detectCategory(job.title) === role);
 
   return (
-    <div style={{ background: '#f7f8f9', minHeight: '100vh', fontFamily: "'Plus Jakarta Sans', 'Work Sans', system-ui, sans-serif" }}>
+    <div style={{ background: 'transparent', minHeight: '100vh', fontFamily: "'Plus Jakarta Sans', 'Work Sans', system-ui, sans-serif" }}>
 
       {/* ═══════════════════════ Top Navigation ═══════════════════════ */}
       <nav

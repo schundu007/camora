@@ -383,7 +383,7 @@ export default function LandingPage() {
   useEffect(() => { window.scrollTo(0, 0); }, []);
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 overflow-hidden" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
+    <div className="min-h-screen text-gray-900 overflow-hidden" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
 
       {/* ── Styles ── */}
       <style>{`
@@ -596,7 +596,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── PREPARATION AT SCALE — Donut + Topic Cards ── */}
-      <section className="px-6 py-20 md:py-28" style={{ zIndex: 1, background: 'linear-gradient(180deg, #fafafa 0%, #ffffff 100%)' }}>
+      <section className="px-6 py-20 md:py-28" style={{ zIndex: 1 }}>
         <div className="max-w-6xl mx-auto">
           <FadeIn className="text-center mb-16">
             <span className="gradient-text text-sm font-bold tracking-[0.2em] uppercase">Preparation at Scale</span>
@@ -736,7 +736,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── WHAT SETS CAMORA APART — Feature Groups ── */}
-      <section className="px-6 py-20 md:py-28" style={{ zIndex: 1, background: 'linear-gradient(180deg, #fafafa 0%, #ffffff 100%)' }}>
+      <section className="px-6 py-20 md:py-28" style={{ zIndex: 1 }}>
         <div className="max-w-6xl mx-auto">
           <FadeIn className="text-center mb-20">
             <span className="inline-block text-sm font-bold tracking-[0.2em] uppercase px-4 py-1.5 rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700">ONLY ON CAMORA</span>

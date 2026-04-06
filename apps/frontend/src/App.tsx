@@ -51,7 +51,7 @@ function LoginPage() {
   const googleAuthUrl = `${import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com'}/api/auth/google/login`;
 
   return (
-    <div className="min-h-screen" style={{ background: '#f7f8f9' }}>
+    <div className="min-h-screen" style={{ background: 'transparent' }}>
       {/* ── Nav ──────────────────────────────────────── */}
       <nav className="sticky top-0 z-50 bg-white border-b border-[#e3e8ee]">
         <div className="max-w-[85%] xl:max-w-7xl mx-auto h-14 flex items-center justify-between px-4">

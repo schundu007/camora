@@ -13,7 +13,7 @@ export default function SignupPage() {
   ];
 
   return (
-    <div className="min-h-screen" style={{ background: '#f7f8f9' }}>
+    <div className="min-h-screen" style={{ background: 'transparent' }}>
 
       {/* Nav */}
       <nav className="fixed top-0 left-0 right-0 z-50 border-b border-[#e3e8ee] bg-white/90 backdrop-blur-xl">
