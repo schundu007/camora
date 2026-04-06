@@ -174,7 +174,7 @@ export default function PracticePage() {
       }
       // Behavioral → prep workspace
       else if (mode === 'behavioral') {
-        navigate(`/capra/prep?problem=${problem}`);
+        navigate(`/capra/prep?problem=${problem}&mode=behavioral&autosolve=true`);
       }
       // Coding → coding workspace
       else {
