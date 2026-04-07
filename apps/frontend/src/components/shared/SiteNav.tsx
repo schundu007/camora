@@ -9,6 +9,7 @@ const NAV_LINKS = [
   { label: 'Practice', href: '/capra/practice' },
   { label: 'Attend', href: '/lumora' },
   { label: 'Pricing', href: '/pricing' },
+  { label: 'Challenge', href: '/challenge' },
 ];
 
 export default function SiteNav() {

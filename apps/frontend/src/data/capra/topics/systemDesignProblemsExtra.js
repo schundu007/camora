@@ -2154,7 +2154,27 @@ def process_transfer(request):
       'Event-sourced ledger: balance is a projection of immutable ledger entries',
       'Inline fraud scoring with ML model before transaction execution',
       'Sharding by wallet_id with distributed transactions for cross-shard transfers'
-    ]
+    ],
+
+    edgeCases: [
+      { scenario: 'Double-spend: user initiates two payments simultaneously from same balance', impact: 'Both transactions succeed, resulting in negative balance and financial loss', mitigation: 'Optimistic locking with version checks on balance, or pessimistic row-level lock during transaction execution' },
+      { scenario: 'Payment gateway timeout during fund transfer', impact: 'Money debited from sender but status unknown, user panics and retries', mitigation: 'Idempotency keys on all payment APIs, two-phase commit with pending state, background reconciliation to resolve ambiguous transactions' },
+      { scenario: 'Refund requested after merchant has already withdrawn funds', impact: 'Wallet balance goes negative for merchant, platform absorbs the loss', mitigation: 'Hold period before merchant withdrawal, reserve refund buffer, escrow pattern for high-risk transactions' },
+      { scenario: 'Fraud ring creating multiple wallets for promotional credit abuse', impact: 'Promotional budget drained by fake accounts, distorts unit economics', mitigation: 'Device fingerprinting, phone number verification, graph analysis of linked wallets, velocity checks on promo redemption' },
+      { scenario: 'Regulatory requirement to freeze wallet mid-transaction', impact: 'In-flight transactions may complete after freeze order, violating compliance', mitigation: 'Freeze flag checked at transaction execution time (not just initiation), queue pending transactions for review' },
+    ],
+    tradeoffs: [
+      { decision: 'Synchronous vs asynchronous transaction processing', pros: 'Synchronous gives instant confirmation; asynchronous enables higher throughput', cons: 'Synchronous limits throughput under contention; asynchronous complicates UX (pending states)', recommendation: 'Synchronous for P2P transfers (user expects instant), asynchronous for batch operations and merchant settlements' },
+      { decision: 'Single ledger database vs event-sourced ledger', pros: 'Single DB is simple and queryable; event sourcing provides complete audit trail', cons: 'Single DB loses history on updates; event sourcing is complex and storage-heavy', recommendation: 'Event-sourced ledger for financial transactions (immutable audit trail is a regulatory requirement)' },
+      { decision: 'Real-time fraud detection vs post-transaction analysis', pros: 'Real-time blocks fraud before loss; post-transaction avoids user friction', cons: 'Real-time adds latency to every transaction; post-transaction means losses before detection', recommendation: 'Tiered approach: lightweight real-time scoring for all transactions, deep analysis async for flagged ones' },
+      { decision: 'Single currency vs multi-currency wallet', pros: 'Single currency is simple; multi-currency serves international users', cons: 'Single currency requires conversions; multi-currency adds FX rate management complexity', recommendation: 'Multi-currency with real-time FX rates and transparent conversion at transaction time' },
+    ],
+    layeredDesign: [
+      { name: 'Client & API Layer', purpose: 'Mobile/web apps for payments, transfers, and wallet management', components: ['Mobile App', 'Web Dashboard', 'Payment API', 'Merchant SDK'] },
+      { name: 'Transaction Processing Layer', purpose: 'Execute financial transactions with ACID guarantees', components: ['Transaction Engine', 'Balance Manager', 'Idempotency Store', 'Two-Phase Commit Coordinator'] },
+      { name: 'Risk & Compliance Layer', purpose: 'Fraud detection, KYC, and regulatory compliance', components: ['Fraud Scoring Engine', 'KYC/AML Service', 'Transaction Monitor', 'Regulatory Reporter'] },
+      { name: 'Ledger & Data Layer', purpose: 'Immutable financial record keeping and reconciliation', components: ['Event-Sourced Ledger', 'PostgreSQL (account state)', 'Reconciliation Engine', 'Audit Log'] },
+    ],
   },
 
   // ─── 10. Stock Exchange ─────────────────────────────────────────────
@@ -2389,7 +2409,27 @@ $150.40| [B4:200, B5:100]   $150.75| [A4:500]
       'Kernel bypass (DPDK) and CPU pinning for microsecond-level latency',
       'Separated market data distribution via multicast to avoid adding matching latency',
       'WAL on NVMe SSDs with periodic checkpointing for crash recovery'
-    ]
+    ],
+
+    edgeCases: [
+      { scenario: 'Two orders arrive at exact same price and nanosecond timestamp', impact: 'Undefined ordering can lead to disputes about execution priority', mitigation: 'Deterministic tiebreaking by order sequence number (monotonic counter), FIFO within same price level' },
+      { scenario: 'Flash crash: cascading stop-loss orders trigger rapid price decline', impact: 'Market drops 10%+ in seconds, massive unintended liquidations', mitigation: 'Circuit breakers that halt trading when price moves exceed threshold (e.g., 5% in 5 minutes), cool-down period before resume' },
+      { scenario: 'Market maker withdraws all liquidity simultaneously', impact: 'Order book becomes thin, huge spread, next market order fills at extreme price', mitigation: 'Market maker obligations (minimum quote size/time), synthetic liquidity bands, price band rejection for orders far from mid-price' },
+      { scenario: 'Network partition between matching engine and order gateway', impact: 'Orders accepted but not matched, or matched but confirmations lost', mitigation: 'Synchronous acknowledgment chain: gateway -> sequencer -> matcher, reject if any link breaks, clients retry with idempotency key' },
+      { scenario: 'Replay attack: duplicate order submission after network timeout', impact: 'Same order executed twice, doubling the intended position', mitigation: 'Client-assigned order IDs with server-side deduplication window, reject duplicate IDs within time window' },
+    ],
+    tradeoffs: [
+      { decision: 'Single-threaded matching engine vs multi-threaded', pros: 'Single-threaded avoids lock contention, deterministic ordering; multi-threaded gives higher throughput', cons: 'Single-threaded limits throughput to one core; multi-threaded introduces ordering complexity', recommendation: 'Single-threaded per symbol/instrument with symbol-level partitioning across cores' },
+      { decision: 'In-memory order book vs persistent order book', pros: 'In-memory gives microsecond latency; persistent survives crashes', cons: 'In-memory loses state on crash; persistent adds write latency per order', recommendation: 'In-memory with write-ahead log (WAL) for crash recovery, periodic snapshots to reduce replay time' },
+      { decision: 'FIFO matching vs pro-rata matching', pros: 'FIFO rewards speed and is simple; pro-rata is fairer for large resting orders', cons: 'FIFO incentivizes latency arms race; pro-rata discourages small orders', recommendation: 'FIFO (price-time priority) for equities, pro-rata for certain derivatives and options markets' },
+      { decision: 'Colocation vs remote access for trading firms', pros: 'Colocation gives lowest latency; remote access is more accessible', cons: 'Colocation creates unfair advantages; remote adds variable network latency', recommendation: 'Offer both with fair access policies, consider speed bumps (IEX-style) to level the playing field' },
+    ],
+    layeredDesign: [
+      { name: 'Gateway Layer', purpose: 'Accept, validate, and sequence incoming orders', components: ['Order Gateway (FIX protocol)', 'Order Validator', 'Sequencer', 'Deduplication Engine'] },
+      { name: 'Matching Engine Layer', purpose: 'Execute order matching with price-time priority', components: ['Order Book (per symbol)', 'Matching Algorithm', 'Trade Generator', 'WAL Writer'] },
+      { name: 'Market Data Layer', purpose: 'Distribute real-time price and trade data to subscribers', components: ['Market Data Publisher (multicast)', 'Tick Database', 'Level 2 Book Builder', 'Historical Data Store'] },
+      { name: 'Risk & Settlement Layer', purpose: 'Pre-trade risk checks and post-trade settlement', components: ['Pre-Trade Risk Engine', 'Position Manager', 'Clearing Interface', 'Regulatory Reporter'] },
+    ],
   },
 
   // ─── 11. API Gateway ────────────────────────────────────────────────
@@ -2636,7 +2676,27 @@ Admin API -> Config DB (etcd) -> Control Plane -> gRPC Stream -> Gateway Instanc
       'Shared circuit breaker state in Redis for consistent failure detection',
       'Async I/O (event loop) for handling 100K+ concurrent connections per instance',
       'Atomic route table swap for safe, non-blocking configuration updates'
-    ]
+    ],
+
+    edgeCases: [
+      { scenario: 'Backend service is slow but not fully down', impact: 'Gateway threads/connections pile up waiting, cascading slowness to all routes', mitigation: 'Per-route circuit breakers with timeout thresholds, bulkhead pattern to isolate slow backends' },
+      { scenario: 'Rate limit counter desync across gateway replicas', impact: 'Users exceed rate limits by distributing requests across gateway instances', mitigation: 'Centralized rate limit store (Redis) with sliding window counters, or accept approximate limits with local counters synced periodically' },
+      { scenario: 'Malformed request triggers unhandled exception in gateway', impact: 'Gateway process crashes, dropping all in-flight requests on that instance', mitigation: 'Robust input validation, graceful error handling with catch-all middleware, process supervisor for automatic restart' },
+      { scenario: 'Configuration update with invalid routing rules pushed to all instances', impact: 'All gateway instances start returning 404/500, total service outage', mitigation: 'Canary config deployment (roll to 1 instance first), config validation before apply, instant rollback capability' },
+      { scenario: 'JWT validation key rotation during active traffic', impact: 'Requests signed with old key are rejected, causing user-facing auth failures', mitigation: 'Support multiple active verification keys during rotation window, graceful key transition with overlap period' },
+    ],
+    tradeoffs: [
+      { decision: 'Centralized gateway vs sidecar proxy (service mesh)', pros: 'Centralized is simpler to manage; sidecar gives per-service control', cons: 'Centralized is a single point of failure; sidecar adds resource overhead per pod', recommendation: 'Centralized gateway for north-south traffic (external), sidecar for east-west traffic (inter-service)' },
+      { decision: 'Synchronous request proxying vs async message passing', pros: 'Sync is simple and familiar (HTTP); async decouples services and handles spikes', cons: 'Sync has cascading failure risk; async adds complexity and eventual consistency', recommendation: 'Sync for real-time user-facing APIs, async via message queue for background and fire-and-forget operations' },
+      { decision: 'Token validation at gateway vs pass-through to services', pros: 'Gateway validation offloads auth from services; pass-through gives services full control', cons: 'Gateway validation couples auth logic to gateway; pass-through duplicates validation', recommendation: 'Gateway validates token signature and expiration, services validate fine-grained permissions' },
+      { decision: 'Static routing config vs dynamic service discovery', pros: 'Static is predictable and debuggable; dynamic adapts to scaling and failures', cons: 'Static requires redeployment for routing changes; dynamic adds discovery infrastructure', recommendation: 'Dynamic service discovery (Consul/etcd) with static fallback routes for critical paths' },
+    ],
+    layeredDesign: [
+      { name: 'Edge Layer', purpose: 'TLS termination, DDoS protection, and initial request handling', components: ['TLS Terminator', 'IP Allowlist/Blocklist', 'DDoS Shield', 'Load Balancer'] },
+      { name: 'Gateway Core Layer', purpose: 'Request routing, transformation, and policy enforcement', components: ['Route Matcher', 'Request Transformer', 'Response Transformer', 'Plugin Engine'] },
+      { name: 'Security & Policy Layer', purpose: 'Authentication, authorization, and rate limiting', components: ['Auth Handler (JWT/OAuth)', 'Rate Limiter', 'Circuit Breaker', 'Request Validator'] },
+      { name: 'Backend Integration Layer', purpose: 'Service discovery, health checking, and load balancing', components: ['Service Registry Client', 'Health Checker', 'Load Balancer (round-robin/least-conn)', 'Retry Handler'] },
+    ],
   },
 
   // ─── 12. Distributed Cache ──────────────────────────────────────────
@@ -2870,7 +2930,27 @@ if value is MISS:
       'Cache lease mechanism to prevent thundering herd on popular key expiration',
       'Lazy expiration with background sweeper to balance CPU and memory usage',
       'Gossip protocol for decentralized cluster membership and failure detection'
-    ]
+    ],
+
+    edgeCases: [
+      { scenario: 'Hot key accessed by thousands of clients simultaneously', impact: 'Single cache node becomes CPU/network bottleneck, increased latency for co-located keys', mitigation: 'Hot key detection with automatic replication to multiple nodes, or client-side local caching for hot keys' },
+      { scenario: 'Cache node failure causes thundering herd to database', impact: 'All keys on failed node miss simultaneously, database overwhelmed by sudden load spike', mitigation: 'Consistent hashing with virtual nodes to spread impact, circuit breaker on DB, warm up replacement node from replica' },
+      { scenario: 'Large value (>1MB) evicts many small values during memory pressure', impact: 'Cache hit rate drops dramatically for small frequently-accessed keys', mitigation: 'Separate pools for large and small values, or reject values above a size threshold with external storage redirect' },
+      { scenario: 'Cache poisoning: incorrect value cached with long TTL', impact: 'Stale or wrong data served for extended period across all clients', mitigation: 'Support explicit key invalidation API, version-tagged keys, short TTLs for mutable data with cache-aside pattern' },
+      { scenario: 'Network partition between cache nodes splits the hash ring', impact: 'Clients route to different subsets of nodes, causing inconsistent reads', mitigation: 'Clients detect partition via health checks, fall through to database, automatic rebalancing on partition heal' },
+    ],
+    tradeoffs: [
+      { decision: 'Consistent hashing vs hash slot (Redis Cluster style)', pros: 'Consistent hashing minimizes key movement; hash slots are simpler to manage', cons: 'Consistent hashing can create imbalanced load; hash slots require explicit slot management', recommendation: 'Consistent hashing with virtual nodes for automated balancing, hash slots if manual control is preferred' },
+      { decision: 'Write-through vs write-behind vs cache-aside', pros: 'Write-through ensures consistency; write-behind improves write performance; cache-aside is simplest', cons: 'Write-through adds write latency; write-behind risks data loss; cache-aside has cache miss penalty', recommendation: 'Cache-aside for most use cases; write-through for critical data requiring strong consistency' },
+      { decision: 'LRU vs LFU eviction policy', pros: 'LRU is simple and handles recency; LFU handles frequency-based access patterns', cons: 'LRU evicts frequently-used items after a cold spell; LFU is slow to adapt to changing patterns', recommendation: 'LFU with aging (like Redis allkeys-lfu) to balance frequency and recency' },
+      { decision: 'Embedded cache vs external cache service', pros: 'Embedded eliminates network hop; external enables shared cache across services', cons: 'Embedded duplicates data per instance; external adds latency and operational overhead', recommendation: 'Two-tier: embedded L1 cache for hot data, external L2 (Redis/Memcached) for shared state' },
+    ],
+    layeredDesign: [
+      { name: 'Client SDK Layer', purpose: 'Provide transparent caching API with connection pooling', components: ['Cache Client Library', 'Connection Pool', 'Consistent Hash Router', 'Local L1 Cache'] },
+      { name: 'Cache Server Layer', purpose: 'Store and serve cached data with high throughput', components: ['Memory Store (hash table)', 'Eviction Engine (LRU/LFU)', 'Expiration Manager', 'Replication Handler'] },
+      { name: 'Cluster Management Layer', purpose: 'Coordinate cache nodes and handle topology changes', components: ['Gossip Protocol', 'Failure Detector', 'Rebalancing Engine', 'Node Registry'] },
+      { name: 'Persistence & Recovery Layer', purpose: 'Optional durability and warm-start capability', components: ['AOF/RDB Snapshots', 'Replica Sync', 'Backup Manager', 'Warm-Up Loader'] },
+    ],
   },
 
   // ─── 13. CDN ────────────────────────────────────────────────────────
@@ -3110,7 +3190,27 @@ User -> Edge PoP (SFO) -> [MISS] -> Shield (US-West) -> [MISS] -> Origin -> serv
       'Push-based invalidation fanout tree for sub-5-second global cache purging',
       'Consistent hashing within PoPs for even load distribution across cache servers',
       'Stale-while-revalidate for seamless background cache refresh without latency spikes'
-    ]
+    ],
+
+    edgeCases: [
+      { scenario: 'Origin server goes down during a cache miss', impact: 'Edge nodes cannot serve content, users see errors for uncached resources', mitigation: 'Serve stale content with stale-if-error directive, maintain origin health checks, failover to backup origin' },
+      { scenario: 'Cache stampede when popular content expires simultaneously', impact: 'All edge nodes hit origin at once, overwhelming it', mitigation: 'Request coalescing at edge (single flight), stale-while-revalidate, jittered TTLs to spread expiration' },
+      { scenario: 'Content purge needed immediately (legal takedown, security incident)', impact: 'Stale content served from thousands of edge nodes until TTL expires', mitigation: 'Fast purge API that broadcasts invalidation to all PoPs within seconds, support for instant purge via token-based versioning' },
+      { scenario: 'DDoS attack targeting a specific URL pattern', impact: 'Edge nodes forward attack traffic to origin, or cache fills with attack responses', mitigation: 'Rate limiting at edge, WAF rules, challenge pages for suspicious traffic, origin shielding' },
+      { scenario: 'Video live stream with millions of concurrent viewers across regions', impact: 'Origin bandwidth exhausted, cache fragmentation across bitrates and segments', mitigation: 'Origin shield (mid-tier cache), segment-level caching with predictive pre-fetch for next segments' },
+    ],
+    tradeoffs: [
+      { decision: 'Push-based vs pull-based cache population', pros: 'Push pre-warms caches for predictable traffic; pull is simple and demand-driven', cons: 'Push wastes bandwidth for unpopular content; pull causes cold-start latency', recommendation: 'Pull-based for general content with push pre-warming for known high-traffic events (product launches, live streams)' },
+      { decision: 'Single-tier vs multi-tier caching (edge + shield)', pros: 'Single-tier is simpler; multi-tier reduces origin load dramatically', cons: 'Single-tier hammers origin on cache misses; multi-tier adds latency and complexity', recommendation: 'Multi-tier with origin shield (mid-tier) to absorb cache misses from regional edges' },
+      { decision: 'Anycast vs DNS-based routing to nearest PoP', pros: 'Anycast is instant and transparent; DNS gives more control over routing', cons: 'Anycast can route to suboptimal PoP; DNS has TTL-based propagation delay', recommendation: 'Anycast for initial routing with DNS fine-tuning for geographic optimization' },
+      { decision: 'Cache everything vs selective caching', pros: 'Cache everything maximizes hit rate; selective caching saves edge storage', cons: 'Cache everything includes uncacheable/dynamic content; selective misses optimization opportunities', recommendation: 'Cache by default with explicit no-cache directives for dynamic or personalized content' },
+    ],
+    layeredDesign: [
+      { name: 'Edge Layer (PoPs)', purpose: 'Serve content from geographically distributed points of presence', components: ['Edge Cache Servers', 'TLS Termination', 'WAF/DDoS Protection', 'Request Router (Anycast)'] },
+      { name: 'Mid-Tier / Shield Layer', purpose: 'Reduce origin load by aggregating cache misses from edge nodes', components: ['Origin Shield Cache', 'Request Coalescing', 'Health Checker', 'Failover Manager'] },
+      { name: 'Origin Integration Layer', purpose: 'Connect CDN to customer origin servers', components: ['Origin Connector', 'Pull/Push Manager', 'Purge API', 'Certificate Manager'] },
+      { name: 'Control Plane', purpose: 'Configure, monitor, and manage CDN behavior', components: ['Configuration API', 'Analytics Pipeline', 'Real-Time Monitoring', 'DNS Management'] },
+    ],
   },
 
   // ─── 14. Object Storage (S3) ───────────────────────────────────────
@@ -3352,7 +3452,27 @@ Body: { parts: [{partNumber: 1, ETag: "..."}, {partNumber: 2, ETag: "..."}, ...]
       'Multipart upload protocol for reliable large object transfers',
       'Background integrity checker continuously verifies checksums and repairs degraded fragments',
       'Storage tiering (SSD -> HDD -> archive) for cost optimization'
-    ]
+    ],
+
+    edgeCases: [
+      { scenario: 'Concurrent writes to the same object key from multiple clients', impact: 'Last-writer-wins silently overwrites data, one client loses their upload', mitigation: 'Support conditional writes with ETags/If-Match headers, return 412 on conflict for client-side resolution' },
+      { scenario: 'Disk failure loses data chunks before replication completes', impact: 'Partial object stored, reads return corrupted or incomplete data', mitigation: 'Write to minimum replication factor before acknowledging success, use erasure coding for space-efficient durability' },
+      { scenario: 'Multi-part upload abandoned halfway through', impact: 'Orphaned chunks consume storage indefinitely without forming a complete object', mitigation: 'TTL on incomplete multipart uploads, background garbage collector cleans orphaned parts after configurable period' },
+      { scenario: 'Object listing on a bucket with billions of objects', impact: 'LIST operation times out or consumes excessive memory', mitigation: 'Prefix-based partitioned index, paginated listing with continuation tokens, limit results per page' },
+      { scenario: 'Hot object accessed millions of times per second (viral content)', impact: 'Single storage node becomes bottleneck, degrading access for co-located objects', mitigation: 'Automatic hot-object detection with read replicas or CDN integration for frequently accessed objects' },
+    ],
+    tradeoffs: [
+      { decision: 'Replication vs erasure coding for durability', pros: 'Replication is simple with fast reads; erasure coding uses 50% less storage', cons: 'Replication triples storage cost; erasure coding adds CPU overhead for encode/decode', recommendation: 'Erasure coding (e.g., Reed-Solomon 6+3) for cold data, replication for frequently accessed objects' },
+      { decision: 'Strong consistency vs eventual consistency for object reads', pros: 'Strong consistency avoids stale reads; eventual consistency gives lower latency', cons: 'Strong consistency requires synchronous replication; eventual consistency confuses clients', recommendation: 'Read-after-write consistency for the uploading client, eventual consistency for other readers (like S3 model)' },
+      { decision: 'Flat namespace vs hierarchical directory structure', pros: 'Flat namespace scales infinitely; hierarchical is intuitive for users', cons: 'Flat namespace makes prefix listing expensive; hierarchical complicates rename operations', recommendation: 'Flat namespace internally with virtual directory emulation via key prefixes (the S3 approach)' },
+      { decision: 'Inline metadata vs separate metadata service', pros: 'Inline is simpler; separate metadata service scales independently', cons: 'Inline couples data and metadata; separate adds network hop for every operation', recommendation: 'Separate metadata service for scalability, with metadata caching for hot objects' },
+    ],
+    layeredDesign: [
+      { name: 'API Gateway Layer', purpose: 'Handle HTTP requests, authentication, and request routing', components: ['REST API (S3-compatible)', 'Auth & ACL Checker', 'Rate Limiter', 'Request Router'] },
+      { name: 'Metadata Layer', purpose: 'Track object locations, versions, and bucket configurations', components: ['Metadata Service', 'Namespace Manager', 'Versioning Engine', 'Bucket Policy Engine'] },
+      { name: 'Data Layer', purpose: 'Store and retrieve actual object bytes with durability guarantees', components: ['Chunk Manager', 'Erasure Coding Engine', 'Replication Controller', 'Integrity Verifier'] },
+      { name: 'Storage Infrastructure Layer', purpose: 'Physical storage management and lifecycle automation', components: ['Disk Manager', 'Storage Tiering (SSD/HDD/Archive)', 'Garbage Collector', 'Capacity Planner'] },
+    ],
   },
 
   // ─── 15. Time Series Database ──────────────────────────────────────
@@ -3596,7 +3716,27 @@ data/
       'Inverted tag index with Roaring Bitmaps for fast series filtering',
       'Multi-resolution downsampling for efficient long-range queries',
       'Query engine auto-selects resolution based on query time range'
-    ]
+    ],
+
+    edgeCases: [
+      { scenario: 'Late-arriving data points with timestamps far in the past', impact: 'Already-compacted time windows need reopening, breaking immutable segment assumptions', mitigation: 'Buffer window for late data (e.g., 1 hour), write late points to a separate out-of-order segment merged during compaction' },
+      { scenario: 'High-cardinality labels (e.g., user_id as a tag) explode the index', impact: 'Inverted index grows unbounded, memory exhaustion, slow queries', mitigation: 'Enforce cardinality limits per metric, reject or drop high-cardinality labels, use bloom filters for existence checks' },
+      { scenario: 'Clock skew between data sources sending metrics', impact: 'Out-of-order writes within the same time series cause incorrect aggregations', mitigation: 'Accept writes within a configurable disorder window, sort within ingestion buffer before flush' },
+      { scenario: 'Query spans years of data across thousands of series', impact: 'Query exhausts memory or times out scanning massive data ranges', mitigation: 'Auto-select downsampled resolution for large ranges, enforce query time/series limits, use pre-computed rollups' },
+      { scenario: 'Retention policy deletes data still referenced by active dashboards', impact: 'Dashboard queries return gaps or errors for deleted time ranges', mitigation: 'Soft-delete with grace period, notify dashboard owners before deletion, support tiered storage (hot/warm/cold) instead of hard delete' },
+    ],
+    tradeoffs: [
+      { decision: 'Write-optimized LSM tree vs read-optimized B-tree storage', pros: 'LSM handles high write throughput; B-tree gives faster point queries', cons: 'LSM has write amplification during compaction; B-tree has slower bulk inserts', recommendation: 'LSM-tree based storage (like Prometheus TSDB) optimized for append-heavy time series workloads' },
+      { decision: 'Pull-based vs push-based metric collection', pros: 'Pull (Prometheus-style) gives central control; push (StatsD-style) works behind firewalls', cons: 'Pull requires service discovery and network access; push can overwhelm the receiver', recommendation: 'Pull-based for infrastructure metrics, push-based for short-lived jobs and serverless functions' },
+      { decision: 'Pre-computed rollups vs query-time aggregation', pros: 'Pre-computed is fast for dashboards; query-time is flexible for ad-hoc queries', cons: 'Pre-computed wastes storage on unused aggregations; query-time is slow for large ranges', recommendation: 'Pre-compute common rollups (1m, 5m, 1h) on write path, support query-time aggregation for ad-hoc analysis' },
+      { decision: 'Single-node vs distributed time series storage', pros: 'Single-node is simple with no coordination overhead; distributed handles larger scale', cons: 'Single-node has capacity limits; distributed adds complexity for cross-shard queries', recommendation: 'Start single-node, shard by metric name hash when capacity requires it' },
+    ],
+    layeredDesign: [
+      { name: 'Ingestion Layer', purpose: 'Receive and buffer high-throughput metric data points', components: ['Push/Pull Collector', 'Write Buffer', 'Label Validator', 'Cardinality Enforcer'] },
+      { name: 'Storage Engine Layer', purpose: 'Compress and persist time series data efficiently', components: ['LSM-Tree Engine', 'Compaction Manager', 'Chunk Encoder (Gorilla compression)', 'Retention Manager'] },
+      { name: 'Query Engine Layer', purpose: 'Execute time-range queries with aggregation and filtering', components: ['Query Parser (PromQL-like)', 'Resolution Selector', 'Series Scanner', 'Aggregation Engine'] },
+      { name: 'Index & Metadata Layer', purpose: 'Fast series lookup by labels and metric names', components: ['Inverted Index', 'Label Index', 'Bloom Filters', 'Series Registry'] },
+    ],
   },
 
   // ─── 16. Distributed Lock ──────────────────────────────────────────
@@ -3841,7 +3981,26 @@ Time 40: Waiters notified, next in queue acquires lock
       'Sequential ephemeral nodes for fair FIFO lock queuing',
       'Watch mechanism for efficient notification of waiters (no polling)',
       'ReadIndex optimization for low-latency lock status queries'
-    ]
+    ],
+
+    edgeCases: [
+      { scenario: 'Lock holder process crashes without releasing the lock', impact: 'Resource is permanently locked, blocking all other consumers (deadlock)', mitigation: 'TTL-based auto-expiration on all locks; lock holder must renew lease before TTL expires via background thread' },
+      { scenario: 'GC pause causes lock holder to miss lease renewal', impact: 'Lock expires and another process acquires it while original holder still believes it holds the lock', mitigation: 'Fencing tokens: monotonically increasing token issued with each lock grant, resource validates token before accepting writes' },
+      { scenario: 'Network partition splits lock service nodes', impact: 'Split-brain: both partitions may grant the same lock to different clients', mitigation: 'Require majority quorum (Redlock algorithm) or use consensus-based system (etcd/ZooKeeper) that refuses writes without quorum' },
+      { scenario: 'Clock skew between lock service nodes', impact: 'TTL expiration happens at different times on different nodes, causing premature or delayed release', mitigation: 'Use logical clocks or lease-based approach where leader alone tracks expiration, avoid relying on wall clocks' },
+      { scenario: 'Thundering herd when a popular lock is released', impact: 'All waiting clients simultaneously retry, overloading the lock service', mitigation: 'Use fair queuing (FIFO waiters list) and notify only the next waiter, not all waiters' },
+    ],
+    tradeoffs: [
+      { decision: 'Redis-based (Redlock) vs consensus-based (ZooKeeper/etcd) locks', pros: 'Redis is fast and simple; consensus-based provides stronger correctness guarantees', cons: 'Redis lacks true consensus under partitions; ZooKeeper/etcd adds operational complexity', recommendation: 'etcd/ZooKeeper for critical locks (financial, inventory); Redis for advisory locks where brief overlap is tolerable' },
+      { decision: 'TTL-based expiration vs explicit release only', pros: 'TTL prevents permanent deadlocks; explicit release is precise', cons: 'TTL can release too early if holder is slow; explicit release fails if holder crashes', recommendation: 'TTL with renewal (lease pattern): short TTL (10-30s) with active renewal by holder' },
+      { decision: 'Blocking wait vs spin/retry for lock acquisition', pros: 'Blocking is efficient (no wasted CPU); spin/retry is simpler to implement', cons: 'Blocking requires watch/notification infrastructure; spin/retry wastes resources', recommendation: 'Blocking wait with watch notifications and a timeout to avoid indefinite blocking' },
+    ],
+    layeredDesign: [
+      { name: 'Client SDK Layer', purpose: 'Provide simple lock/unlock API with automatic lease renewal', components: ['Lock Client SDK', 'Lease Renewal Thread', 'Fencing Token Manager', 'Retry/Backoff Logic'] },
+      { name: 'Lock Coordination Layer', purpose: 'Manage lock state with distributed consensus', components: ['Lock Manager', 'Waiter Queue (FIFO)', 'Lease Tracker', 'Watch/Notification Engine'] },
+      { name: 'Consensus Layer', purpose: 'Ensure consistent lock state across nodes', components: ['Raft/Paxos Consensus', 'Leader Election', 'Log Replication', 'Snapshot Manager'] },
+      { name: 'Storage & Monitoring Layer', purpose: 'Persist lock state and provide operational visibility', components: ['Replicated State Machine', 'Audit Log', 'Metrics (lock contention, wait times)', 'Health Checker'] },
+    ],
   },
 
   // ─── 17. Job Scheduler ─────────────────────────────────────────────
@@ -4113,7 +4272,27 @@ WHERE td.depends_on_task_id = 'B'
       'Idempotent worker execution with unique run_id for safety under retries',
       'DAG-based dependency resolution with topological ordering',
       'Worker heartbeat + lease expiration for transparent failure handling'
-    ]
+    ],
+
+    edgeCases: [
+      { scenario: 'Job scheduled for exact time a worker node fails', impact: 'Job is lost or executed twice if recovery assigns it to another worker', mitigation: 'Use lease-based ownership with heartbeats; missed heartbeat triggers reassignment with idempotency checks' },
+      { scenario: 'Cron job takes longer than its interval to complete', impact: 'Overlapping executions cause resource contention or data corruption', mitigation: 'Enforce run-once semantics with distributed lock per job, skip or queue subsequent triggers' },
+      { scenario: 'Massive backlog of delayed jobs after scheduler outage', impact: 'Thundering herd when scheduler recovers, overwhelming downstream services', mitigation: 'Gradual backlog drain with rate limiting, prioritize by job age and priority, shed expired jobs' },
+      { scenario: 'Circular dependency in job DAG', impact: 'Deadlock where jobs wait on each other indefinitely, consuming queue slots', mitigation: 'Validate DAG at submission time with cycle detection, reject circular dependencies upfront' },
+      { scenario: 'Clock skew between scheduler nodes causes duplicate or missed triggers', impact: 'Jobs fire at wrong times or fire multiple times across nodes', mitigation: 'Use a single leader for cron evaluation with NTP-synchronized clocks, heartbeat-based leader election' },
+    ],
+    tradeoffs: [
+      { decision: 'Push-based vs pull-based job distribution', pros: 'Push gives lower latency; pull gives natural load balancing', cons: 'Push can overwhelm slow workers; pull has polling overhead', recommendation: 'Pull-based with long polling for natural backpressure and worker self-selection by capability' },
+      { decision: 'At-least-once vs exactly-once execution', pros: 'At-least-once is simple and reliable; exactly-once prevents side effects', cons: 'At-least-once requires idempotent jobs; exactly-once is extremely hard to guarantee', recommendation: 'At-least-once delivery with idempotency keys, making jobs safe to retry' },
+      { decision: 'Priority queue vs FIFO queue', pros: 'Priority queue ensures critical jobs run first; FIFO is fair and simple', cons: 'Priority queue can starve low-priority jobs; FIFO ignores urgency', recommendation: 'Multi-level priority queues with aging to prevent starvation of low-priority jobs' },
+      { decision: 'Centralized scheduler vs distributed scheduling', pros: 'Centralized is easier to reason about ordering; distributed scales better', cons: 'Centralized is a single point of failure; distributed has coordination overhead', recommendation: 'Leader-elected centralized scheduler with hot standby for fast failover' },
+    ],
+    layeredDesign: [
+      { name: 'API & Submission Layer', purpose: 'Accept job definitions, schedules, and DAG specifications', components: ['Job Submission API', 'DAG Validator', 'Cron Parser', 'Schedule Registry'] },
+      { name: 'Scheduling Layer', purpose: 'Determine when and where jobs should run', components: ['Cron Evaluator', 'Priority Queue', 'Dependency Resolver', 'Leader Election'] },
+      { name: 'Execution Layer', purpose: 'Run jobs on distributed workers with monitoring', components: ['Worker Pool', 'Job Executor', 'Heartbeat Monitor', 'Retry Handler'] },
+      { name: 'Data & Observability Layer', purpose: 'Store job state and provide operational visibility', components: ['PostgreSQL (job metadata)', 'Redis (queues, locks)', 'Logging Pipeline', 'Metrics Dashboard'] },
+    ],
   },
 
   // ─── 18. CI/CD Pipeline ────────────────────────────────────────────
@@ -4390,7 +4569,27 @@ cache:
       'Log streaming via Kafka + WebSocket for real-time build output',
       'Vault-based secret injection at runtime with log scrubbing for defense in depth',
       'Auto-scaling worker pool to handle burst traffic and minimize idle cost'
-    ]
+    ],
+
+    edgeCases: [
+      { scenario: 'Build step produces non-deterministic output (timestamps, random IDs)', impact: 'Cache invalidation fails, deployments differ between runs despite identical code', mitigation: 'Enforce deterministic builds via SOURCE_DATE_EPOCH, fixed seeds, and content-addressable artifact hashing' },
+      { scenario: 'Flaky test passes on retry but masks a real intermittent bug', impact: 'Broken code reaches production, test suite loses credibility', mitigation: 'Track flaky test history, quarantine repeat offenders, require N consecutive passes after flake detection' },
+      { scenario: 'Pipeline runs on a forked repo with malicious code in CI config', impact: 'Secrets exfiltrated, supply chain attack on downstream artifacts', mitigation: 'Run forked PR builds in sandboxed environment without secret access, require maintainer approval for CI on forks' },
+      { scenario: 'Deployment rollback needed but database migration is irreversible', impact: 'Cannot revert to previous version without data loss or schema conflicts', mitigation: 'Enforce forward-only compatible migrations, separate deploy from migrate, use expand-contract migration pattern' },
+      { scenario: 'Concurrent merges trigger parallel pipelines deploying to same environment', impact: 'Race condition causes partial deployments or resource conflicts', mitigation: 'Serialize deployments per environment with a deployment lock, queue subsequent pipelines' },
+    ],
+    tradeoffs: [
+      { decision: 'Monorepo pipeline vs per-service pipelines', pros: 'Monorepo gives atomic cross-service changes; per-service gives independent velocity', cons: 'Monorepo pipelines are slow without smart change detection; per-service complicates integration testing', recommendation: 'Monorepo with affected-service detection (e.g., Turborepo, Bazel) to build only what changed' },
+      { decision: 'Self-hosted runners vs cloud-managed runners', pros: 'Self-hosted gives full control and GPU access; cloud-managed is zero maintenance', cons: 'Self-hosted requires patching, scaling, and security hardening; cloud-managed has cold start latency', recommendation: 'Cloud-managed for standard builds, self-hosted for specialized workloads (GPU, large builds)' },
+      { decision: 'Blue-green deployment vs canary deployment', pros: 'Blue-green gives instant rollback; canary reduces blast radius', cons: 'Blue-green doubles infrastructure cost; canary is complex to monitor and route', recommendation: 'Canary for high-traffic services with automated rollback, blue-green for stateful services' },
+      { decision: 'Artifact caching aggressiveness', pros: 'Aggressive caching dramatically speeds up builds; minimal caching ensures correctness', cons: 'Aggressive caching can serve stale artifacts; minimal caching wastes compute', recommendation: 'Content-addressable caching with dependency-graph-aware invalidation' },
+    ],
+    layeredDesign: [
+      { name: 'Source & Trigger Layer', purpose: 'Detect code changes and trigger appropriate pipelines', components: ['Webhook Receiver', 'Change Detector', 'Pipeline Scheduler', 'Branch Policy Engine'] },
+      { name: 'Build & Test Layer', purpose: 'Compile, test, and produce deployable artifacts', components: ['Build Orchestrator', 'Test Runner', 'Artifact Builder', 'Cache Manager'] },
+      { name: 'Deployment Layer', purpose: 'Ship artifacts to target environments safely', components: ['Deployment Controller', 'Canary Manager', 'Rollback Engine', 'Environment Manager'] },
+      { name: 'Infrastructure Layer', purpose: 'Compute, storage, and security for pipeline execution', components: ['Worker Pool (auto-scaling)', 'Artifact Storage', 'Secret Vault', 'Container Registry'] },
+    ],
   },
 
   // ─── 19. Calendar System ───────────────────────────────────────────
@@ -4672,7 +4871,27 @@ The UTC value changes! But the local time (3pm ET) stays the same.
       'Materialized free/busy blocks for fast availability queries',
       'UTC storage with IANA timezone identifiers for correct DST handling',
       'Interval gap-finding algorithm for smart meeting scheduling'
-    ]
+    ],
+
+    edgeCases: [
+      { scenario: 'Recurring event spanning a DST transition', impact: 'Meeting shifts by an hour or duplicates/skips an occurrence', mitigation: 'Store recurrence rules with IANA timezone, compute occurrences at query time using timezone-aware libraries' },
+      { scenario: 'Organizer changes timezone of a recurring event after attendees accepted', impact: 'Existing attendees see wrong times or miss meetings', mitigation: 'Send update notifications with old and new times, require re-confirmation for affected occurrences' },
+      { scenario: 'Conflicting meeting invitations accepted simultaneously', impact: 'User double-booked without realizing, misses one meeting', mitigation: 'Real-time conflict detection on accept, warn user with option to decline conflicting event' },
+      { scenario: 'Free/busy lookup across thousands of attendees for room scheduling', impact: 'Query timeout when finding available slots for large groups', mitigation: 'Pre-compute free/busy bitmaps per user per day, use bitwise AND for fast intersection queries' },
+      { scenario: 'Calendar sync across multiple providers (Google, Outlook, Apple)', impact: 'Events duplicated, deleted, or out of sync across platforms', mitigation: 'Use CalDAV/iCal standards with sync tokens, implement conflict resolution with last-writer-wins per field' },
+    ],
+    tradeoffs: [
+      { decision: 'Store individual occurrences vs recurrence rules', pros: 'Individual occurrences are simple to query; rules save massive storage', cons: 'Individual occurrences explode storage for daily events; rules require complex expansion logic', recommendation: 'Store recurrence rules and expand on read, with materialized occurrences for the next 6 months' },
+      { decision: 'Push notifications vs polling for calendar updates', pros: 'Push gives instant awareness; polling is simpler and works offline', cons: 'Push requires maintaining notification channels; polling wastes bandwidth and has latency', recommendation: 'Push via WebSocket for active sessions, email/mobile push for important changes, polling as fallback' },
+      { decision: 'Per-user timezone storage vs UTC-only', pros: 'Per-user timezone gives natural display; UTC-only simplifies storage', cons: 'Per-user timezone complicates queries; UTC-only requires client-side conversion', recommendation: 'Store all times in UTC with IANA timezone metadata, render in user local timezone on client' },
+      { decision: 'Centralized vs federated calendar system', pros: 'Centralized is simpler to maintain; federated enables cross-org scheduling', cons: 'Centralized creates vendor lock-in; federated has consistency challenges', recommendation: 'Centralized with CalDAV federation endpoints for external calendar interop' },
+    ],
+    layeredDesign: [
+      { name: 'Client Layer', purpose: 'Calendar views (day/week/month) with drag-and-drop scheduling', components: ['Web Calendar UI', 'Mobile Calendar App', 'Timezone Converter', 'Notification Handler'] },
+      { name: 'API & Scheduling Layer', purpose: 'Event CRUD, recurrence expansion, and conflict detection', components: ['Event Service', 'Recurrence Engine', 'Conflict Detector', 'Free/Busy Service'] },
+      { name: 'Notification & Sync Layer', purpose: 'Reminders, invitations, and cross-platform synchronization', components: ['Reminder Scheduler', 'Email/Push Notifier', 'CalDAV Sync Engine', 'Webhook Dispatcher'] },
+      { name: 'Data Layer', purpose: 'Persistent storage for events, calendars, and user preferences', components: ['PostgreSQL (events, calendars)', 'Redis (free/busy bitmaps, caches)', 'Message Queue (notifications)', 'Blob Storage (attachments)'] },
+    ],
   },
 
   // ─── 20. Online Chess ──────────────────────────────────────────────
@@ -4958,7 +5177,27 @@ After 6 months inactive: RD increases back toward 350 (uncertainty grows)
       'Glicko-2 rating system with rating deviation for uncertainty tracking',
       'Redis-backed active game state with crash recovery via checkpointing',
       'Separate spectator fan-out via pub/sub to avoid impacting gameplay latency'
-    ]
+    ],
+
+    edgeCases: [
+      { scenario: 'Clock synchronization between player clients and server', impact: 'Players see different remaining times, leading to disputes or unfair timeouts', mitigation: 'Server is authoritative for all time tracking; client clocks are display-only with periodic server sync' },
+      { scenario: 'Player disconnects mid-game in a timed match', impact: 'Opponent waits indefinitely or game state becomes orphaned', mitigation: 'Grace period (30-60s) with clock still running; auto-forfeit on timeout; allow reconnection to resume' },
+      { scenario: 'Rapid move sequences in bullet chess (1-minute games)', impact: 'Network latency causes move ordering issues and race conditions', mitigation: 'Server-side move validation with sequence numbers; optimistic client rendering with rollback on rejection' },
+      { scenario: 'Cheating via external chess engines', impact: 'Destroys competitive integrity and drives away legitimate players', mitigation: 'Statistical move analysis comparing to engine suggestions, time-per-move pattern detection, post-game engine correlation scoring' },
+      { scenario: 'Matchmaking during off-peak hours with few players online', impact: 'Long wait times or very unbalanced skill pairings', mitigation: 'Gradually widen Elo range over wait time, offer bot opponents after threshold, cross-region matching with latency warnings' },
+    ],
+    tradeoffs: [
+      { decision: 'Server-authoritative vs client-authoritative game state', pros: 'Server-authoritative prevents cheating entirely; client-authoritative gives instant feedback', cons: 'Server-authoritative adds round-trip latency to every move; client-authoritative is exploitable', recommendation: 'Server-authoritative with optimistic client rendering and rollback on invalid moves' },
+      { decision: 'WebSocket vs HTTP polling for real-time game updates', pros: 'WebSocket gives sub-50ms delivery; HTTP polling is simpler and stateless', cons: 'WebSocket requires connection management and sticky sessions; polling wastes bandwidth', recommendation: 'WebSocket for active games, HTTP for lobby and matchmaking' },
+      { decision: 'Elo rating vs Glicko-2 rating system', pros: 'Elo is simple and well-understood; Glicko-2 accounts for rating uncertainty and volatility', cons: 'Elo converges slowly for new players; Glicko-2 is more complex to implement', recommendation: 'Glicko-2 for more accurate matchmaking, especially for players with few games' },
+      { decision: 'Store full game history vs just final state', pros: 'Full history enables replay, analysis, and cheat detection; final state saves storage', cons: 'Full history requires more storage and indexing; final state loses analytical value', recommendation: 'Store full move history (PGN format is compact) for replay and engine analysis' },
+    ],
+    layeredDesign: [
+      { name: 'Client Layer', purpose: 'Interactive chess board with real-time updates and move validation', components: ['Web/Mobile Chess UI', 'Move Validator (client-side)', 'WebSocket Client', 'Clock Display'] },
+      { name: 'Game Server Layer', purpose: 'Authoritative game state management and real-time move processing', components: ['Game State Manager', 'Move Validator (server-side)', 'Clock Service', 'WebSocket Server'] },
+      { name: 'Matchmaking & Social Layer', purpose: 'Player pairing, ratings, and community features', components: ['Matchmaking Service', 'Rating Engine (Glicko-2)', 'Tournament Manager', 'Spectator Service'] },
+      { name: 'Data Layer', purpose: 'Persistent storage for games, ratings, and player profiles', components: ['Redis (active game state)', 'PostgreSQL (games, ratings, profiles)', 'S3 (PGN archives)', 'Elasticsearch (game search)'] },
+    ],
   },
 
   // ─── 21. Recommendation Engine ──────────────────────────────────────
