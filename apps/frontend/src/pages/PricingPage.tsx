@@ -151,9 +151,6 @@ export default function PricingPage() {
         <h1 className="mt-1 text-3xl md:text-4xl font-semibold tracking-tight text-gray-900">
           The APPA platform. All-in-one.
         </h1>
-        <p className="mt-1 text-sm text-gray-500 max-w-md mx-auto">
-          The complete interview pipeline — from job search to live AI. Starting free.
-        </p>
       </section>
 
       {/* Competitor comparison */}
