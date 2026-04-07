@@ -14066,6 +14066,24 @@ Merkle Tree (used for replica comparison):
           useWhen: 'Unreliable storage or transmission channels',
           example: 'QR codes, CDs, RAID-6 use Reed-Solomon ECC'
         }
+      ],
+      edgeCases: [
+        { scenario: 'Silent data corruption on disk (bit rot)', impact: 'Data degrades over time without any error signal, returning corrupted bytes that applications treat as valid', mitigation: 'Run periodic data scrubbing that reads and verifies checksums for all stored blocks, use ZFS or similar filesystem with built-in checksums' },
+        { scenario: 'Hash collision in content-addressable storage', impact: 'Two different files produce the same hash, causing one to silently overwrite the other', mitigation: 'Use SHA-256 or stronger cryptographic hashes where collision probability is negligible, implement full-content comparison for critical writes' },
+        { scenario: 'Checksum computed after corruption already occurred', impact: 'Corrupted data is stored with a valid checksum because the checksum was calculated on already-corrupt bytes', mitigation: 'Implement end-to-end checksums from producer to storage, verify at each layer boundary, use hardware ECC memory' },
+        { scenario: 'ETag mismatch causes unnecessary full downloads', impact: 'Weak ETags generated differently across servers cause cache invalidation even when content has not changed', mitigation: 'Use strong ETags based on content hash rather than server-specific metadata, ensure consistent ETag generation across all servers' },
+        { scenario: 'Merkle tree root diverges after single corrupted leaf', impact: 'Anti-entropy process must walk the entire tree to locate the one corrupted block, consuming significant I/O', mitigation: 'Use balanced Merkle trees with efficient diff algorithms, implement incremental tree updates, cache intermediate tree nodes' }
+      ],
+      tradeoffs: [
+        { decision: 'Fast non-cryptographic hash vs Cryptographic hash', pros: 'Non-cryptographic hashes (CRC32, xxHash) are 10-100x faster for integrity checks; Cryptographic hashes (SHA-256) resist deliberate tampering', cons: 'Non-cryptographic hashes have higher collision rates and no security guarantee; Cryptographic hashes consume significantly more CPU', recommendation: 'Use CRC32/xxHash for data integrity verification in trusted environments; SHA-256 for content addressing, downloads, and security-sensitive deduplication' },
+        { decision: 'Per-block checksums vs Whole-file checksums', pros: 'Per-block checksums localize corruption to specific blocks for targeted repair; Whole-file checksums are simpler with less metadata overhead', cons: 'Per-block checksums increase metadata storage and verification time; Whole-file checksums require re-reading the entire file to locate corruption', recommendation: 'Use per-block checksums for large files and distributed storage systems; whole-file checksums for small files and download verification' },
+        { decision: 'Inline verification vs Background scrubbing', pros: 'Inline verification catches corruption immediately on read; Background scrubbing catches corruption before it is needed', cons: 'Inline verification adds latency to every read; Background scrubbing consumes I/O bandwidth and may not catch corruption before data is accessed', recommendation: 'Use both: inline verification on reads for immediate detection, background scrubbing for proactive detection of cold data corruption' }
+      ],
+      layeredDesign: [
+        { name: 'Application Layer', purpose: 'Verifies data integrity at the application level for end-to-end guarantees', components: ['ETag Validator', 'Content Hash Verifier', 'Digital Signature Checker', 'HMAC Authenticator'] },
+        { name: 'Transport Layer', purpose: 'Ensures data integrity during network transmission', components: ['TCP Checksum', 'TLS MAC', 'HTTP Content-MD5', 'gRPC Message Checksum'] },
+        { name: 'Storage Layer', purpose: 'Detects and prevents data corruption at rest', components: ['Block Checksum', 'Merkle Tree', 'Data Scrubber', 'ECC Memory'] },
+        { name: 'Repair Layer', purpose: 'Recovers corrupted data using redundancy', components: ['Reed-Solomon ECC', 'Replica Comparison', 'Anti-Entropy Repair', 'RAID Reconstruction'] }
       ]
     },
     {
@@ -14579,6 +14597,24 @@ Instead of a single timestamp, TrueTime returns an interval:
           src: '/diagrams/strong-vs-eventual-consistency/consistency-spectrum.svg',
           type: 'architecture'
         }
+      ],
+      edgeCases: [
+        { scenario: 'Stale read after write in eventually consistent system', impact: 'User updates their profile but immediately sees the old version, causing confusion and repeat submissions', mitigation: 'Implement read-your-writes consistency by routing reads to the same node that handled the write, or using session tokens with version tracking' },
+        { scenario: 'Monotonic read violation across load-balanced replicas', impact: 'User refreshes a page and sees older data than what they saw previously because the request hit a less up-to-date replica', mitigation: 'Use sticky sessions to route a user to the same replica, or implement monotonic read guarantees by tracking the minimum version the client has seen' },
+        { scenario: 'Linearizability violation in leader-based system during failover', impact: 'Reads served by the new leader return data that does not include the most recent confirmed writes, violating strong consistency guarantees', mitigation: 'Ensure new leader has all committed writes before accepting reads, use read leases that expire during leader transitions' },
+        { scenario: 'Causal ordering violated in multi-datacenter setup', impact: 'A reply to a message is delivered before the original message, or a delete is processed before the create', mitigation: 'Use vector clocks or hybrid logical clocks to track causal dependencies, buffer and reorder messages before delivery' },
+        { scenario: 'Eventual consistency convergence takes unexpectedly long', impact: 'Replicas remain diverged for minutes or hours due to network issues, causing prolonged stale reads across the system', mitigation: 'Implement active anti-entropy with Merkle trees, set alerts on replication lag, provide consistency SLOs with monitoring' }
+      ],
+      tradeoffs: [
+        { decision: 'Strong (linearizable) vs Eventual consistency', pros: 'Strong consistency makes application logic simple and correct by default; Eventual consistency provides lower latency and higher availability', cons: 'Strong consistency requires coordination on every operation, limiting throughput; Eventual consistency requires application-level conflict handling', recommendation: 'Use strong consistency for financial transactions, inventory, and user-critical writes; eventual consistency for feeds, analytics, and read-heavy workloads' },
+        { decision: 'Causal consistency vs Eventual consistency', pros: 'Causal consistency preserves cause-and-effect ordering without full coordination; Eventual consistency is the most performant', cons: 'Causal consistency requires tracking dependencies (vector clocks) adding metadata overhead; Eventual may violate intuitive ordering expectations', recommendation: 'Use causal consistency for collaborative applications and social features where ordering matters; eventual for simple counters and analytics' },
+        { decision: 'Session consistency vs Global consistency', pros: 'Session consistency guarantees read-your-writes per user session cheaply; Global consistency ensures all users see the same state', cons: 'Session consistency still allows cross-user staleness; Global consistency requires expensive distributed coordination', recommendation: 'Use session consistency as the baseline for user-facing applications, upgrade to global only for shared resources like inventory counts' }
+      ],
+      layeredDesign: [
+        { name: 'Application Layer', purpose: 'Selects the appropriate consistency level for each operation', components: ['Consistency Annotation', 'Session Manager', 'Version Tracker', 'Conflict Resolver'] },
+        { name: 'Coordination Layer', purpose: 'Enforces consistency guarantees across distributed nodes', components: ['Consensus Protocol (Raft/Paxos)', 'Logical Clock Service', 'Barrier Synchronization', 'Read Lease Manager'] },
+        { name: 'Replication Layer', purpose: 'Propagates updates between replicas with ordering guarantees', components: ['Sync Replicator', 'Async Replicator', 'Causal Broadcast', 'Anti-Entropy Repair'] },
+        { name: 'Conflict Resolution Layer', purpose: 'Detects and resolves divergent state across replicas', components: ['Vector Clock Comparator', 'CRDT Merge Engine', 'Last-Write-Wins Resolver', 'Application Merge Callback'] }
       ]
     },
     {
@@ -15073,6 +15109,24 @@ But for a page that makes 50 backend calls in parallel:
             { name: 'Retry/Refresh Interval: 1-10 s', description: 'Monitoring systems typically use 5-10 second refresh intervals for dashboards.' }
           ]
         }
+      ],
+      edgeCases: [
+        { scenario: 'Tail latency amplification in fan-out requests', impact: 'A single slow backend in a fan-out of 100 services determines the overall response time, making p99 latency dominate user experience', mitigation: 'Send redundant requests to multiple replicas and use the first response, set aggressive per-service timeouts, implement hedged requests' },
+        { scenario: 'Throughput collapse under excessive concurrency', impact: 'Adding more concurrent requests beyond optimal point causes context switching overhead that reduces total throughput', mitigation: 'Use connection pooling with bounded concurrency, apply Little\'s Law to size thread pools, implement admission control and load shedding' },
+        { scenario: 'Batching optimizes throughput but destroys latency', impact: 'Waiting to accumulate a full batch adds delay to every individual request, making real-time requirements impossible to meet', mitigation: 'Use time-bounded batching (flush every N ms OR when batch is full), implement separate paths for latency-sensitive and batch-tolerant requests' },
+        { scenario: 'Cache stampede after TTL expiry causes latency spike', impact: 'Many requests simultaneously miss the cache and hit the database, spiking latency from milliseconds to seconds', mitigation: 'Use stale-while-revalidate pattern, probabilistic early expiration, or single-flight request deduplication for cache population' },
+        { scenario: 'Compression reduces bandwidth but increases CPU latency', impact: 'CPU-bound compression on hot path adds latency per request, negating network savings for small payloads', mitigation: 'Only compress payloads above a minimum size threshold (e.g., 1KB), use hardware-accelerated compression, pre-compress static assets' }
+      ],
+      tradeoffs: [
+        { decision: 'Optimize for latency vs Optimize for throughput', pros: 'Low latency gives better user experience for interactive applications; High throughput maximizes system utilization for batch workloads', cons: 'Low latency requires over-provisioning and limits batching; High throughput increases per-request latency from queuing and batching', recommendation: 'Optimize for latency on user-facing request paths; optimize for throughput on background processing, data pipelines, and analytics' },
+        { decision: 'Caching vs Direct database access', pros: 'Caching dramatically reduces latency and increases throughput for repeated reads; Direct access is simpler and always returns fresh data', cons: 'Caching adds staleness risk and invalidation complexity; Direct access has higher latency and limits throughput to database capacity', recommendation: 'Cache aggressively for read-heavy workloads with tolerance for brief staleness; bypass cache for write-heavy paths and strong consistency needs' },
+        { decision: 'Horizontal scaling vs Vertical scaling', pros: 'Horizontal scaling increases throughput linearly by adding servers; Vertical scaling is simpler with no distribution overhead', cons: 'Horizontal scaling adds network latency and coordination complexity; Vertical scaling has hardware limits and creates single points of failure', recommendation: 'Start with vertical scaling for simplicity; switch to horizontal when single-node capacity is insufficient or high availability is required' }
+      ],
+      layeredDesign: [
+        { name: 'Client Layer', purpose: 'Minimizes perceived latency through prefetching and local caching', components: ['Client Cache', 'Prefetch Engine', 'Connection Keep-Alive', 'Compression Negotiation'] },
+        { name: 'Edge Layer', purpose: 'Reduces network latency by serving content from locations near the user', components: ['CDN Cache', 'Edge Compute', 'DNS-Based Routing', 'TLS Session Resumption'] },
+        { name: 'Application Layer', purpose: 'Optimizes request processing throughput and individual response latency', components: ['Thread Pool', 'Connection Pool', 'Request Batching', 'Circuit Breaker', 'Load Shedder'] },
+        { name: 'Data Layer', purpose: 'Provides fast data access with high read/write throughput', components: ['In-Memory Cache (Redis)', 'Read Replicas', 'Write-Behind Queue', 'Index Optimization'] }
       ]
     },
     {
@@ -15625,6 +15679,25 @@ MVCC (Multi-Version Concurrency Control):
           src: '/diagrams/acid-vs-base/acid-properties.svg',
           type: 'architecture'
         }
+      ],
+      edgeCases: [
+        { scenario: 'Distributed transaction coordinator failure during 2PC prepare phase', impact: 'All participating nodes hold locks indefinitely waiting for a commit/abort decision that never arrives, blocking other transactions', mitigation: 'Implement coordinator timeout with presumed-abort protocol, use three-phase commit for better availability, prefer Saga pattern over 2PC' },
+        { scenario: 'Phantom reads under Read Committed isolation level', impact: 'Transaction sees different sets of rows for the same query when another transaction inserts/deletes rows between reads', mitigation: 'Upgrade to Repeatable Read or Serializable isolation for queries that must see a consistent snapshot, use SELECT FOR UPDATE for critical ranges' },
+        { scenario: 'Write skew anomaly under Snapshot Isolation', impact: 'Two transactions read overlapping data, make decisions based on what they read, and write non-overlapping data, violating an invariant', mitigation: 'Use Serializable Snapshot Isolation (SSI) which detects write skew, or add explicit locking on shared resources' },
+        { scenario: 'Saga compensation fails leaving system in inconsistent state', impact: 'A compensating transaction fails (e.g., refund API is down), leaving the saga half-completed with no automatic resolution', mitigation: 'Make compensating actions idempotent and retryable, implement a saga log for manual recovery, use dead letter queues for failed compensations' },
+        { scenario: 'MVCC bloat from long-running transactions', impact: 'Long-running transactions prevent old row versions from being cleaned up, causing table bloat and degraded query performance', mitigation: 'Set statement and transaction timeout limits, monitor long-running transactions with alerts, run vacuum/compaction regularly' }
+      ],
+      tradeoffs: [
+        { decision: 'ACID transactions vs BASE eventual consistency', pros: 'ACID guarantees correctness with all-or-nothing semantics; BASE provides higher availability and lower latency', cons: 'ACID requires coordination overhead that limits throughput; BASE pushes consistency responsibility to the application layer', recommendation: 'Use ACID for payment processing, inventory management, and user account operations; BASE for feeds, analytics, and content delivery' },
+        { decision: 'Two-Phase Commit (2PC) vs Saga pattern', pros: '2PC provides true atomic distributed transactions; Saga provides better availability and no distributed locking', cons: '2PC is blocking and reduces availability if coordinator fails; Saga requires designing compensating actions for every step', recommendation: 'Use Saga pattern for microservice architectures; 2PC only within a single database or tightly coupled services' },
+        { decision: 'Optimistic locking vs Pessimistic locking', pros: 'Optimistic locking allows high concurrency with no lock contention; Pessimistic locking guarantees exclusive access preventing conflicts', cons: 'Optimistic locking wastes work on conflicts requiring retries; Pessimistic locking reduces concurrency and risks deadlocks', recommendation: 'Use optimistic locking for web APIs with low contention; pessimistic locking for financial operations with high contention risk' },
+        { decision: 'Higher isolation level vs Lower isolation level', pros: 'Higher isolation prevents more anomalies and simplifies reasoning; Lower isolation provides better concurrency and throughput', cons: 'Higher isolation increases lock contention and deadlock risk; Lower isolation allows dirty reads, phantom reads, or write skew', recommendation: 'Default to Read Committed for most OLTP workloads; upgrade to Serializable only for invariant-critical operations' }
+      ],
+      layeredDesign: [
+        { name: 'Application Layer', purpose: 'Defines transaction boundaries and consistency requirements per operation', components: ['Transaction Manager', 'Saga Orchestrator', 'Retry Handler', 'Idempotency Key Store'] },
+        { name: 'Coordination Layer', purpose: 'Manages distributed transaction protocols across services', components: ['2PC Coordinator', 'Saga State Machine', 'Compensation Engine', 'Distributed Lock Manager'] },
+        { name: 'Concurrency Control Layer', purpose: 'Manages concurrent access to shared data with isolation guarantees', components: ['MVCC Engine', 'Lock Manager', 'Deadlock Detector', 'Serialization Graph'] },
+        { name: 'Durability Layer', purpose: 'Ensures committed data survives crashes and failures', components: ['Write-Ahead Log', 'Checkpoint Manager', 'Replication Stream', 'Crash Recovery Service'] }
       ]
     },
   ];
