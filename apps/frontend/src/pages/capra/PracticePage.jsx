@@ -808,12 +808,25 @@ export default function PracticePage() {
                 <div style={{ marginBottom: 24 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                     <h2 className="practice-display" style={{ fontSize: 18, fontWeight: 700, color: '#111827', margin: 0 }}>Challenge History</h2>
-                    {scoreTrend.length >= 2 && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span style={{ fontSize: 11, color: '#9ca3af' }}>Score trend</span>
-                        <Sparkline data={scoreTrend} width={80} height={24} />
-                      </div>
-                    )}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      {scoreTrend.length >= 2 && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <span style={{ fontSize: 11, color: '#9ca3af' }}>Score trend</span>
+                          <Sparkline data={scoreTrend} width={80} height={24} />
+                        </div>
+                      )}
+                      <button
+                        onClick={() => {
+                          if (window.confirm('Reset all challenge history? This cannot be undone.')) {
+                            localStorage.removeItem('camora_challenge_stats');
+                            setStats(getStats());
+                          }
+                        }}
+                        style={{ padding: '5px 12px', fontSize: 11, fontWeight: 600, color: '#ef4444', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, cursor: 'pointer', transition: 'all 0.15s' }}
+                      >
+                        Reset History
+                      </button>
+                    </div>
                   </div>
                   <div style={{ display: 'grid', gap: 10 }}>
                     {stats.history.slice(0, 10).map((h, i) => {
