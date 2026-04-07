@@ -335,6 +335,12 @@ export default function TopicDetail({
   const [sdAllQsExpanded, setSdAllQsExpanded] = useState(false);
   const [sdExpandedDPs, setSdExpandedDPs] = useState({});
 
+  // Coding section accordion state
+  const [codingAllQsExpanded, setCodingAllQsExpanded] = useState(false);
+
+  // Coding code-example copy state
+  const [copiedCodeIdx, setCopiedCodeIdx] = useState(null);
+
   // Reset SD accordion state when topic changes
   useEffect(() => {
     setSdExpandedQs({});
@@ -633,66 +639,106 @@ export default function TopicDetail({
       {/* DSA Topic Detail */}
       {!isLocked && isCodingStyle && topicDetails.keyPatterns && (
         <div className="space-y-3">
-          {/* Overview + Complexity in one row */}
-          <div className="grid  gap-2">
-            {/* Introduction - Comprehensive Overview */}
-            {topicDetails.introduction && (
-              <div id="overview" className="rounded-lg overflow-hidden scroll-mt-24 border border-[#e3e8ee] bg-white">
-                <div className="px-3 py-1.5 border-b border-[#e3e8ee] flex items-center gap-2 bg-emerald-50/50">
-                  <Icon name="book" size={14} className="text-emerald-700" />
-                  <h3 className="text-sm font-bold text-emerald-800 landing-display">Overview</h3>
-                </div>
-                <div className="p-3">
+
+          {/* 1. Overview / Introduction */}
+          {topicDetails.introduction && (
+            <div id="overview" className="rounded-xl overflow-hidden scroll-mt-24 border border-[#e3e8ee]" style={{ background: `linear-gradient(180deg, ${topicDetails.color || '#10b981'}12 0%, #ffffff 100%)` }}>
+              <div className="px-4 py-2.5 border-b border-[#e3e8ee] bg-white/80 flex items-center gap-2">
+                <Icon name="book" size={14} className="text-emerald-600" />
+                <h3 className="text-sm font-bold text-gray-900 landing-display">Overview</h3>
+              </div>
+              <div className="p-4">
+                <div className="text-[15px] leading-relaxed text-gray-600 landing-body">
                   <FormattedContent content={topicDetails.introduction} color="emerald" />
                 </div>
-              </div>
-            )}
-            {/* Complexity */}
-            <div className="flex flex-col gap-2">
-              <div className="p-3 rounded-lg flex-1 bg-emerald-50/50 border border-emerald-200">
-                <div className="text-emerald-600 text-xs font-medium mb-1 landing-mono tracking-widest uppercase">Time Complexity</div>
-                <div className="text-gray-900 font-mono text-sm landing-mono">{topicDetails.timeComplexity}</div>
-              </div>
-              <div className="p-3 rounded-lg flex-1 bg-emerald-50/50 border border-emerald-200">
-                <div className="text-emerald-600 text-xs font-medium mb-1 landing-mono tracking-widest uppercase">Space Complexity</div>
-                <div className="text-gray-900 font-mono text-sm landing-mono">{topicDetails.spaceComplexity}</div>
+                {/* Key Insight callout */}
+                {(() => {
+                  const intro = topicDetails.introduction || '';
+                  const insightMatch = intro.match(/\*\*Key Insight[:\s]*\*\*\s*(.+?)(?:\n|$)/i) || intro.match(/Key Insight:\s*(.+?)(?:\n|$)/i);
+                  if (!insightMatch) return null;
+                  return (
+                    <div className="mt-4 flex items-start gap-3 rounded-lg bg-amber-50 border border-amber-200 p-3">
+                      <Icon name="lightbulb" size={16} className="text-amber-600 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <div className="text-xs font-bold text-amber-800 landing-display mb-0.5">Key Insight</div>
+                        <div className="text-sm text-amber-900 leading-relaxed landing-body">{insightMatch[1].trim()}</div>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
             </div>
-          </div>
+          )}
 
-          {/* When to Use + Key Patterns - Side by Side Row */}
-          <div id="when-to-use" className={`grid gap-2 scroll-mt-24 ${topicDetails.whenToUse && topicDetails.keyPatterns ? '' : 'grid-cols-1'}`}>
-            {/* When to Use */}
-            {topicDetails.whenToUse && (
-              <div className="rounded-lg overflow-hidden border border-[#e3e8ee] bg-white">
-                <div className="px-3 py-1.5 border-b border-[#e3e8ee] flex items-center gap-2 bg-[#f7f8f9]">
-                  <Icon name="target" size={14} className="text-emerald-700" />
-                  <h3 className="text-sm font-bold text-emerald-800 landing-display">When to Use</h3>
+          {/* 2. Time + Space Complexity — side by side cards */}
+          {(topicDetails.timeComplexity || topicDetails.spaceComplexity) && (
+            <div className="grid grid-cols-2 gap-3">
+              {topicDetails.timeComplexity && (
+                <div className="rounded-xl overflow-hidden bg-white border border-[#e3e8ee] shadow-sm flex">
+                  <div className="w-1 bg-cyan-400 flex-shrink-0" />
+                  <div className="p-3 flex items-start gap-3 flex-1">
+                    <div className="w-8 h-8 rounded-lg bg-cyan-50 flex items-center justify-center flex-shrink-0">
+                      <Icon name="clock" size={16} className="text-cyan-600" />
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-bold text-cyan-700 landing-mono tracking-widest uppercase mb-1">Time</div>
+                      <div className="text-[16px] font-bold text-gray-900 font-mono landing-mono">{topicDetails.timeComplexity}</div>
+                    </div>
+                  </div>
                 </div>
-                <div className="p-3">
-                  <ul className="grid grid-cols-1  gap-1">
-                    {topicDetails.whenToUse.map((item, i) => (
-                      <li key={i} className="flex items-start gap-2 text-sm landing-body">
-                        <span className="text-emerald-600 mt-0.5">→</span>
-                        <span className="text-gray-700">{item}</span>
-                      </li>
-                    ))}
-                  </ul>
+              )}
+              {topicDetails.spaceComplexity && (
+                <div className="rounded-xl overflow-hidden bg-white border border-[#e3e8ee] shadow-sm flex">
+                  <div className="w-1 bg-violet-400 flex-shrink-0" />
+                  <div className="p-3 flex items-start gap-3 flex-1">
+                    <div className="w-8 h-8 rounded-lg bg-violet-50 flex items-center justify-center flex-shrink-0">
+                      <Icon name="layers" size={16} className="text-violet-600" />
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-bold text-violet-700 landing-mono tracking-widest uppercase mb-1">Space</div>
+                      <div className="text-[16px] font-bold text-gray-900 font-mono landing-mono">{topicDetails.spaceComplexity}</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* 3. When to Use + Key Patterns */}
+          <div id="when-to-use" className={`grid gap-3 scroll-mt-24 ${topicDetails.whenToUse && topicDetails.keyPatterns ? '' : 'grid-cols-1'}`}>
+            {/* When to Use — mini-cards with green checkmark */}
+            {topicDetails.whenToUse && (
+              <div className="rounded-xl overflow-hidden border border-[#e3e8ee] bg-white shadow-sm">
+                <div className="px-4 py-2.5 border-b border-[#e3e8ee] flex items-center gap-2 bg-white">
+                  <Icon name="target" size={14} className="text-emerald-600" />
+                  <h3 className="text-sm font-bold text-gray-900 landing-display">When to Use</h3>
+                  <span className="ml-auto text-[10px] landing-mono text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-full">{topicDetails.whenToUse.length}</span>
+                </div>
+                <div className="p-3 grid grid-cols-1 gap-1.5">
+                  {topicDetails.whenToUse.map((item, i) => (
+                    <div key={i} className="flex items-start gap-2.5 p-2.5 rounded-lg bg-white border border-[#e3e8ee] hover:shadow-md hover:border-gray-300 transition-all landing-body">
+                      <span className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <Icon name="check" size={10} className="text-emerald-600" />
+                      </span>
+                      <span className="text-sm text-gray-700 leading-relaxed">{item}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
 
-            {/* Key Patterns */}
+            {/* Key Patterns — larger chips with border */}
             {topicDetails.keyPatterns && (
-              <div className="rounded-lg overflow-hidden" style={{ background: `linear-gradient(180deg, ${topicDetails.color}10 0%, transparent 100%)`, border: `1px solid ${topicDetails.color}30` }}>
-                <div className="px-3 py-1.5 border-b flex items-center gap-2" style={{ background: `${topicDetails.color}08`, borderColor: `${topicDetails.color}20` }}>
-                  <Icon name="puzzle" size={14} style={{ color: topicDetails.color }} />
-                  <h3 className="text-sm font-bold text-emerald-800 landing-display">Key Patterns</h3>
+              <div className="rounded-xl overflow-hidden border border-[#e3e8ee] bg-white shadow-sm">
+                <div className="px-4 py-2.5 border-b border-[#e3e8ee] flex items-center gap-2 bg-white">
+                  <Icon name="puzzle" size={14} className="text-blue-600" />
+                  <h3 className="text-sm font-bold text-gray-900 landing-display">Key Patterns</h3>
+                  <span className="ml-auto text-[10px] landing-mono text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-full">{topicDetails.keyPatterns.length}</span>
                 </div>
                 <div className="p-3">
-                  <div className="flex flex-wrap gap-1.5">
+                  <div className="flex flex-wrap gap-2">
                     {topicDetails.keyPatterns.map((pattern, i) => (
-                      <span key={i} className="px-2 py-1 rounded text-xs landing-mono" style={{ background: `${topicDetails.color}15`, color: topicDetails.color }}>
+                      <span key={i} className="px-3 py-1.5 rounded-lg text-xs font-medium landing-mono border hover:shadow-sm transition-shadow" style={{ background: `${topicDetails.color || '#10b981'}10`, color: topicDetails.color || '#10b981', borderColor: `${topicDetails.color || '#10b981'}30` }}>
                         {pattern}
                       </span>
                     ))}
@@ -702,44 +748,49 @@ export default function TopicDetail({
             )}
           </div>
 
-          {/* Approach + Common Mistakes - Side by Side Row */}
-          <div id="approach" className={`grid gap-2 scroll-mt-24 ${topicDetails.approach && topicDetails.commonMistakes ? '' : 'grid-cols-1'}`}>
-            {/* Approach - Step by Step */}
+          {/* 4. Step-by-Step Approach + Common Mistakes */}
+          <div id="approach" className={`grid gap-3 scroll-mt-24 ${topicDetails.approach && topicDetails.commonMistakes ? '' : 'grid-cols-1'}`}>
+            {/* Approach — vertical timeline */}
             {topicDetails.approach && (
-              <div className="rounded-lg overflow-hidden border border-[#e3e8ee] bg-white">
-                <div className="px-3 py-1.5 border-b border-[#e3e8ee] flex items-center gap-2 bg-[#f7f8f9]">
-                  <Icon name="list" size={14} className="text-emerald-700" />
-                  <h3 className="text-sm font-bold text-emerald-800 landing-display">Step-by-Step Approach</h3>
+              <div className="rounded-xl overflow-hidden border border-[#e3e8ee] bg-white shadow-sm">
+                <div className="px-4 py-2.5 border-b border-[#e3e8ee] flex items-center gap-2 bg-white">
+                  <Icon name="list" size={14} className="text-emerald-600" />
+                  <h3 className="text-sm font-bold text-gray-900 landing-display">Step-by-Step Approach</h3>
+                  <span className="ml-auto text-[10px] landing-mono text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-full">{topicDetails.approach.length}</span>
                 </div>
-                <div className="p-2">
-                  <ol className="grid grid-cols-1  gap-1">
+                <div className="p-4">
+                  <div className="relative">
                     {topicDetails.approach.map((step, i) => (
-                      <li key={i} className="flex items-start gap-2 text-sm landing-body">
-                        <span className="w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 bg-emerald-500 text-white">{i + 1}</span>
-                        <span className="text-gray-700">{step}</span>
-                      </li>
+                      <div key={i} className="flex items-start gap-3 relative">
+                        {i < topicDetails.approach.length - 1 && (
+                          <div className="absolute left-[11px] top-6 w-0.5 bg-emerald-200" style={{ height: 'calc(100% - 4px)' }} />
+                        )}
+                        <div className="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[11px] font-bold flex-shrink-0 z-10 landing-mono">{i + 1}</div>
+                        <div className="text-sm text-gray-700 leading-relaxed pb-4 landing-body">{step}</div>
+                      </div>
                     ))}
-                  </ol>
+                  </div>
                 </div>
               </div>
             )}
 
-            {/* Common Mistakes */}
+            {/* Common Mistakes — red-tinted mini-cards */}
             {topicDetails.commonMistakes && (
-              <div className="rounded-lg overflow-hidden border border-[#e3e8ee] bg-white">
-                <div className="px-3 py-1.5 border-b border-[#e3e8ee] flex items-center gap-2 bg-[#f7f8f9]">
-                  <Icon name="alertTriangle" size={14} className="text-gray-900" />
-                  <h3 className="text-sm font-bold text-rose-800 landing-display">Common Mistakes</h3>
+              <div className="rounded-xl overflow-hidden border border-[#e3e8ee] bg-white shadow-sm">
+                <div className="px-4 py-2.5 border-b border-[#e3e8ee] flex items-center gap-2 bg-white">
+                  <Icon name="alertTriangle" size={14} className="text-red-500" />
+                  <h3 className="text-sm font-bold text-red-700 landing-display">Common Mistakes</h3>
+                  <span className="ml-auto text-[10px] landing-mono text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-full">{topicDetails.commonMistakes.length}</span>
                 </div>
-                <div className="p-2">
-                  <ul className="grid grid-cols-1  gap-1">
-                    {topicDetails.commonMistakes.map((mistake, i) => (
-                      <li key={i} className="flex items-start gap-2 text-sm landing-body">
-                        <span className="text-red-500 mt-0.5">✗</span>
-                        <span className="text-gray-700">{mistake}</span>
-                      </li>
-                    ))}
-                  </ul>
+                <div className="p-3 grid grid-cols-1 gap-1.5">
+                  {topicDetails.commonMistakes.map((mistake, i) => (
+                    <div key={i} className="flex items-start gap-2.5 p-2.5 rounded-lg bg-red-50/50 border border-red-100 hover:shadow-md hover:border-red-200 transition-all">
+                      <span className="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <span className="text-red-500 text-xs font-bold leading-none">&#10005;</span>
+                      </span>
+                      <span className="text-sm text-gray-700 leading-relaxed landing-body">{mistake}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
@@ -1824,21 +1875,35 @@ export default function TopicDetail({
               {topicDetails.introduction && (() => {
                 const quoteMatch = topicDetails.introduction.match(/^"([^"]+)"\s*(.*)/s);
                 return (
-                  <div id="overview" className={`scroll-mt-24 rounded-lg border border-[#e3e8ee] bg-white overflow-hidden ${topicDetails.principles?.length > 0 ? '' : ''}`}>
-                    <div className="px-3 py-1.5 border-b border-[#e3e8ee] bg-[#f7f8f9] flex items-center gap-2">
-                      <Icon name="book" size={14} style={{ color: topicDetails.color }} />
-                      <h2 className="text-sm font-bold text-blue-800 landing-display">Overview</h2>
+                  <div id="overview" className="scroll-mt-24 rounded-2xl border border-[#e3e8ee] overflow-hidden" style={{ background: 'linear-gradient(180deg, #f0fdf4 0%, #ffffff 100%)' }}>
+                    <div className="px-4 py-2 border-b border-[#e3e8ee] bg-emerald-50/60 flex items-center gap-2">
+                      <Icon name="book" size={14} className="text-emerald-700" />
+                      <h2 className="text-sm font-bold text-emerald-900 landing-display">Overview</h2>
                     </div>
-                    <div className="p-3">
+                    <div className="p-5">
                       {quoteMatch ? (
                         <>
-                          <div className="p-3 rounded-lg mb-2" style={{ background: `${topicDetails.color}08`, borderLeft: `4px solid ${topicDetails.color}` }}>
-                            <p className="text-sm font-semibold text-gray-900 italic landing-body">"{quoteMatch[1]}"</p>
+                          <div className="p-3.5 rounded-xl mb-3" style={{ background: `${topicDetails.color}06`, borderLeft: `4px solid ${topicDetails.color}` }}>
+                            <p className="text-[15px] font-semibold text-gray-900 italic landing-body leading-relaxed">"{quoteMatch[1]}"</p>
                           </div>
-                          <p className="text-gray-700 text-sm leading-relaxed landing-body">{quoteMatch[2].trim()}</p>
+                          <p className="text-gray-700 text-[15px] leading-relaxed landing-body">{quoteMatch[2].trim()}</p>
                         </>
                       ) : (
-                        <p className="text-gray-700 text-sm leading-relaxed landing-body">{topicDetails.introduction}</p>
+                        <p className="text-gray-700 text-[15px] leading-relaxed landing-body">{topicDetails.introduction}</p>
+                      )}
+                      {/* Key insight callout */}
+                      {topicDetails.introduction && (
+                        <div className="mt-4 flex items-start gap-3 p-3.5 rounded-xl bg-amber-50/70 border border-amber-200/60">
+                          <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <Icon name="lightbulb" size={16} className="text-amber-600" />
+                          </div>
+                          <div>
+                            <span className="text-xs font-bold text-amber-800 landing-display uppercase tracking-wider">Key Insight</span>
+                            <p className="text-sm text-amber-900/80 mt-0.5 leading-relaxed landing-body">
+                              {topicDetails.introduction.split('.').filter(s => s.trim().length > 20).slice(-2, -1)[0]?.trim() || topicDetails.introduction.split('.').slice(0, 1)[0]?.trim()}.
+                            </p>
+                          </div>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -1847,14 +1912,15 @@ export default function TopicDetail({
 
               {/* Key Principles */}
               {topicDetails.principles && topicDetails.principles.length > 0 && (
-                <div className="scroll-mt-24 rounded-lg border border-[#e3e8ee] bg-white overflow-hidden">
-                  <div className="px-3 py-1.5 border-b border-[#e3e8ee] bg-[#f7f8f9] flex items-center gap-2">
+                <div className="scroll-mt-24 rounded-2xl border border-[#e3e8ee] bg-white overflow-hidden">
+                  <div className="px-4 py-2 border-b border-[#e3e8ee] bg-[#f7f8f9] flex items-center gap-2">
                     <Icon name="award" size={14} style={{ color: topicDetails.color }} />
                     <h2 className="text-sm font-bold text-violet-800 landing-display">Key Principles</h2>
+                    <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full landing-mono" style={{ background: `${topicDetails.color}12`, color: topicDetails.color }}>{topicDetails.principles.length} principles</span>
                   </div>
-                  <div className="p-2 flex flex-wrap gap-1.5">
+                  <div className="p-3 flex flex-wrap gap-1.5">
                     {topicDetails.principles.map((principle, i) => (
-                      <span key={i} className="px-2 py-1 rounded-md landing-mono text-[10px] font-semibold" style={{ background: `${topicDetails.color}12`, color: topicDetails.color, border: `1px solid ${topicDetails.color}25` }}>
+                      <span key={i} className="px-2.5 py-1.5 rounded-lg landing-mono text-xs font-medium" style={{ background: `${topicDetails.color}12`, color: topicDetails.color, border: `1px solid ${topicDetails.color}20` }}>
                         {principle}
                       </span>
                     ))}
@@ -1866,26 +1932,26 @@ export default function TopicDetail({
 
           {/* Key Questions — Expandable single-column cards */}
           {topicDetails.keyQuestions && topicDetails.keyQuestions.length > 0 && (
-            <div id="key-questions" className="rounded-lg overflow-hidden scroll-mt-24 border border-[#e3e8ee] bg-white">
-              <div className="px-3 py-2 border-b border-[#e3e8ee] flex items-center gap-2 bg-[#f7f8f9]">
-                <div className="w-6 h-6 rounded flex items-center justify-center" style={{ background: topicDetails.color }}>
+            <div id="key-questions" className="rounded-2xl overflow-hidden scroll-mt-24 border border-[#e3e8ee] bg-white">
+              <div className="px-4 py-2 border-b border-[#e3e8ee] flex items-center gap-2 bg-violet-50/50">
+                <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: topicDetails.color }}>
                   <Icon name="messageSquare" size={12} className="text-white" />
                 </div>
-                <h3 className="text-sm font-bold text-violet-800 landing-display">Questions & Answers</h3>
-                <span className="text-[10px] landing-mono text-gray-400 ml-auto">{topicDetails.keyQuestions.length}Q</span>
+                <h3 className="text-sm font-bold text-violet-900 landing-display">Questions & Answers</h3>
+                <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-violet-100 text-violet-700 landing-mono">{topicDetails.keyQuestions.length} questions</span>
               </div>
-              <div className="p-2 space-y-2">
+              <div className="p-2.5 space-y-2">
                 {topicDetails.keyQuestions.map((item, index) => {
                   const questionKey = `behavioral-${index}`;
                   const isExpanded = expandedTheoryQuestions[questionKey] === undefined ? index < 2 : expandedTheoryQuestions[questionKey];
                   return (
-                    <div key={index} className="rounded-lg overflow-hidden border border-[#e3e8ee] bg-white hover:border-[#d0d5dd] transition-all">
+                    <div key={index} className="rounded-xl overflow-hidden border border-[#e3e8ee] bg-white hover:border-[#d0d5dd] hover:shadow-sm transition-all">
                       {/* Question header — clickable to expand/collapse */}
                       <button
                         onClick={() => setExpandedTheoryQuestions(prev => ({ ...prev, [questionKey]: !isExpanded }))}
                         className="w-full px-3 py-2.5 flex items-center gap-2.5 bg-[#f7f8f9] hover:bg-gray-100 transition-colors text-left"
                       >
-                        <span className="w-6 h-6 rounded flex items-center justify-center text-[11px] font-bold text-white flex-shrink-0" style={{ background: topicDetails.color }}>
+                        <span className="w-6 h-6 rounded-md flex items-center justify-center text-[11px] font-bold text-white flex-shrink-0" style={{ background: topicDetails.color }}>
                           {index + 1}
                         </span>
                         <h4 className="text-gray-900 font-semibold text-sm leading-snug landing-display flex-1">{item.question}</h4>
@@ -1951,38 +2017,46 @@ export default function TopicDetail({
                               if (!h && block.children.length > 0) {
                                 return <div key={bi}>{block.children.map((c, ci) => renderLine(c, ci))}</div>;
                               }
-                              // STAR keyword block
+                              // STAR keyword block — colored card with label
                               if (block.type === 'star') {
                                 const sm = h.match(/^\*\*(?:[STAR]\s*[-–—]\s*)?(Situation|Task|Action|Result)\*\*\s*[:–—-]?\s*(.*)/i) || h.match(/^(Situation|Task|Action|Result)\s*[:–—-]\s*(.*)/i);
                                 if (sm) {
                                   const kw = sm[1].charAt(0).toUpperCase() + sm[1].slice(1).toLowerCase();
                                   const sc = starColors[kw] || topicDetails.color;
+                                  const starBgs = { Situation: '#eff6ff', Task: '#faf5ff', Action: '#ecfdf5', Result: '#fffbeb' };
+                                  const starBorders = { Situation: '#bfdbfe', Task: '#e9d5ff', Action: '#a7f3d0', Result: '#fde68a' };
                                   const headerRest = (sm[2] || '').replace(/^["\u201C\s\u2014\u2013-]+|["\u201D\s]+$/g, '').trim();
-                                  return <div key={bi} className="rounded-lg overflow-hidden" style={{ background: `${sc}08`, borderLeft: `3px solid ${sc}`, border: `1px solid ${sc}20`, borderLeftWidth: '3px', borderLeftColor: sc }}>
-                                    <div className="px-3 py-2.5">
-                                      <div className="flex items-center gap-2"><span className="w-6 h-6 rounded flex items-center justify-center text-[11px] font-extrabold text-white flex-shrink-0 landing-mono" style={{ background: sc }}>{kw.charAt(0)}</span><span className="text-sm font-bold landing-mono" style={{ color: sc }}>{kw}</span></div>
-                                      {headerRest && <p className="text-sm text-gray-500 mt-1.5 ml-8 landing-body">{headerRest}</p>}
-                                      {block.children.length > 0 && <div className="mt-1.5 ml-8 space-y-1">{block.children.map((c, ci) => renderLine(c, ci))}</div>}
+                                  return <div key={bi} className="rounded-xl overflow-hidden" style={{ background: starBgs[kw] || `${sc}08`, border: `1px solid ${starBorders[kw] || `${sc}20`}`, borderLeftWidth: '4px', borderLeftColor: sc }}>
+                                    <div className="px-4 py-3">
+                                      <div className="flex items-center gap-2.5">
+                                        <span className="w-7 h-7 rounded-lg flex items-center justify-center text-[12px] font-extrabold text-white flex-shrink-0 landing-mono shadow-sm" style={{ background: sc }}>{kw.charAt(0)}</span>
+                                        <span className="text-sm font-bold landing-display" style={{ color: sc }}>{kw}</span>
+                                      </div>
+                                      {headerRest && <p className="text-sm text-gray-600 mt-2 ml-9 landing-body leading-relaxed">{headerRest}</p>}
+                                      {block.children.length > 0 && <div className="mt-2 ml-9 space-y-1">{block.children.map((c, ci) => renderLine(c, ci))}</div>}
                                     </div>
                                   </div>;
                                 }
                               }
                               // STAR Example header
                               if (block.type === 'star-header') {
-                                return <div key={bi} className="flex items-center gap-2 mt-1"><span className="text-[10px] font-bold text-white px-2 py-0.5 rounded landing-mono" style={{ background: topicDetails.color }}>STAR</span><span className="text-sm font-bold text-blue-800 landing-display">Example</span></div>;
+                                return <div key={bi} className="flex items-center gap-2 mt-2 mb-1">
+                                  <span className="text-[10px] font-bold text-white px-2.5 py-1 rounded-md landing-mono shadow-sm" style={{ background: `linear-gradient(135deg, ${topicDetails.color}, ${topicDetails.color}cc)` }}>STAR</span>
+                                  <span className="text-sm font-bold text-gray-900 landing-display">Example Response</span>
+                                </div>;
                               }
                               // Numbered step or section header
                               const numMatch = h.replace(/\*\*/g, '').match(/^(\d+)\.\s*(.*)/);
                               const sectionTitle = h.replace(/\*\*/g, '').replace(/:$/, '');
-                              return <div key={bi} className="rounded-lg overflow-hidden" style={{ background: '#fff', border: '1px solid #e5e7eb', borderLeft: `3px solid ${topicDetails.color}` }}>
-                                <div className="px-3 py-2.5">
-                                  <div className="flex items-center gap-2">
+                              return <div key={bi} className="rounded-xl overflow-hidden" style={{ background: '#fff', border: '1px solid #e5e7eb', borderLeft: `4px solid ${topicDetails.color}` }}>
+                                <div className="px-4 py-3">
+                                  <div className="flex items-center gap-2.5">
                                     {numMatch
-                                      ? <><span className="w-6 h-6 rounded flex items-center justify-center text-[11px] font-bold text-white flex-shrink-0 landing-mono" style={{ background: topicDetails.color }}>{numMatch[1]}</span><span className="text-sm font-bold text-blue-800 landing-display">{numMatch[2].replace(/:$/, '')}</span></>
-                                      : <><span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: topicDetails.color }} /><span className="text-sm font-bold text-blue-800 landing-display">{sectionTitle}</span></>
+                                      ? <><span className="w-6 h-6 rounded-md flex items-center justify-center text-[11px] font-bold text-white flex-shrink-0 landing-mono shadow-sm" style={{ background: topicDetails.color }}>{numMatch[1]}</span><span className="text-sm font-bold text-gray-900 landing-display">{numMatch[2].replace(/:$/, '')}</span></>
+                                      : <><span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: topicDetails.color }} /><span className="text-sm font-bold text-gray-900 landing-display">{sectionTitle}</span></>
                                     }
                                   </div>
-                                  {block.children.length > 0 && <div className="mt-1.5 ml-8 space-y-1">{block.children.map((c, ci) => renderLine(c, ci))}</div>}
+                                  {block.children.length > 0 && <div className="mt-2 ml-8 space-y-1">{block.children.map((c, ci) => renderLine(c, ci))}</div>}
                                 </div>
                               </div>;
                             };
@@ -2002,38 +2076,41 @@ export default function TopicDetail({
           {(topicDetails.starExample || topicDetails.exampleResponse) && (
             <div className={`grid gap-2 ${topicDetails.starExample && topicDetails.exampleResponse ? '' : 'grid-cols-1'}`}>
 
-          {/* STAR Framework Example */}
+          {/* STAR Framework Example — structured cards with colored labels */}
           {topicDetails.starExample && (
-            <div id="star-example" className="rounded-lg overflow-hidden scroll-mt-24 border border-[#e3e8ee] bg-white">
-              <div className="px-3 py-2 border-b border-[#e3e8ee] flex items-center gap-2 bg-[#f7f8f9]">
-                <Icon name="target" size={14} className="text-emerald-700" />
-                <h3 className="text-sm font-bold text-blue-800 landing-display">STAR Framework Example</h3>
+            <div id="star-example" className="rounded-2xl overflow-hidden scroll-mt-24 border border-[#e3e8ee] bg-white">
+              <div className="px-4 py-2 border-b border-[#e3e8ee] flex items-center gap-2" style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #ecfdf5 50%, #fef2f2 100%)' }}>
+                <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #3b82f6, #10b981)' }}>
+                  <Icon name="target" size={12} className="text-white" />
+                </div>
+                <h3 className="text-sm font-bold text-gray-900 landing-display">STAR Framework Example</h3>
+                <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full landing-mono" style={{ background: 'linear-gradient(135deg, #3b82f620, #10b98120)', color: '#059669' }}>4 steps</span>
               </div>
               <div className="p-4">
                 <div className="relative">
                   {/* Vertical connector line */}
-                  <div className="absolute left-5 top-0 bottom-0 w-0.5 bg-gradient-to-b from-blue-300 via-emerald-300 to-red-300 rounded-full" style={{ zIndex: 0 }} />
+                  <div className="absolute left-5 top-0 bottom-0 w-0.5 rounded-full" style={{ zIndex: 0, background: 'linear-gradient(to bottom, #3b82f6, #8b5cf6, #10b981, #f59e0b)' }} />
                   <div className="relative space-y-0" style={{ zIndex: 1 }}>
                     {Object.entries(topicDetails.starExample).map(([key, value], idx, arr) => {
                       const config = {
-                        situation: { color: '#3b82f6', bg: '#eff6ff', border: '#bfdbfe', label: 'Situation' },
-                        task: { color: '#f59e0b', bg: '#fffbeb', border: '#fde68a', label: 'Task' },
-                        action: { color: '#10b981', bg: '#ecfdf5', border: '#a7f3d0', label: 'Action' },
-                        result: { color: '#ef4444', bg: '#fef2f2', border: '#fecaca', label: 'Result' },
+                        situation: { color: '#3b82f6', bg: '#eff6ff', border: '#bfdbfe', label: 'Situation', icon: 'S' },
+                        task: { color: '#8b5cf6', bg: '#faf5ff', border: '#e9d5ff', label: 'Task', icon: 'T' },
+                        action: { color: '#10b981', bg: '#ecfdf5', border: '#a7f3d0', label: 'Action', icon: 'A' },
+                        result: { color: '#f59e0b', bg: '#fffbeb', border: '#fde68a', label: 'Result', icon: 'R' },
                       };
-                      const c = config[key.toLowerCase()] || { color: '#a855f7', bg: '#faf5ff', border: '#e9d5ff', label: key };
+                      const c = config[key.toLowerCase()] || { color: '#a855f7', bg: '#faf5ff', border: '#e9d5ff', label: key, icon: key.charAt(0).toUpperCase() };
                       return (
                         <div key={key}>
                           <div className="flex items-start gap-4">
                             {/* Circle node on the connector line */}
-                            <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-sm font-extrabold text-white landing-mono shadow-sm" style={{ background: c.color, zIndex: 2 }}>
-                              {c.label.charAt(0)}
+                            <div className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center text-sm font-extrabold text-white landing-mono shadow-md" style={{ background: c.color, zIndex: 2 }}>
+                              {c.icon}
                             </div>
                             {/* Card */}
-                            <div className="flex-1 rounded-lg overflow-hidden" style={{ background: c.bg, borderLeft: `4px solid ${c.color}`, border: `1px solid ${c.border}`, borderLeftWidth: '4px', borderLeftColor: c.color }}>
-                              <div className="px-4 py-3">
-                                <span className="text-sm font-extrabold landing-display" style={{ color: c.color }}>{c.label}</span>
-                                <p className="text-gray-600 text-sm leading-relaxed mt-1 landing-body">{value}</p>
+                            <div className="flex-1 rounded-xl overflow-hidden shadow-sm" style={{ background: c.bg, border: `1px solid ${c.border}`, borderLeftWidth: '4px', borderLeftColor: c.color }}>
+                              <div className="px-4 py-3.5">
+                                <span className="text-xs font-extrabold uppercase tracking-wider landing-display" style={{ color: c.color }}>{c.label}</span>
+                                <p className="text-gray-700 text-sm leading-relaxed mt-1.5 landing-body">{value}</p>
                               </div>
                             </div>
                           </div>
@@ -2050,27 +2127,33 @@ export default function TopicDetail({
 
           {/* Example Response */}
           {topicDetails.exampleResponse && (
-            <div id="example-response" className="rounded-lg overflow-hidden scroll-mt-24 border border-[#e3e8ee] bg-white">
-              <div className="px-3 py-2 border-b border-[#e3e8ee] flex items-center gap-2 bg-[#f7f8f9]">
-                <div className="w-6 h-6 rounded flex items-center justify-center bg-emerald-50">
+            <div id="example-response" className="rounded-2xl overflow-hidden scroll-mt-24 border border-[#e3e8ee] bg-white">
+              <div className="px-4 py-2 border-b border-[#e3e8ee] flex items-center gap-2 bg-emerald-50/50">
+                <div className="w-6 h-6 rounded-lg flex items-center justify-center bg-emerald-100">
                   <Icon name="messageSquare" size={12} className="text-emerald-700" />
                 </div>
-                <h3 className="text-sm font-bold text-emerald-800 landing-display">Example Response</h3>
-                <span className="text-[10px] landing-mono text-emerald-600 ml-auto px-1.5 py-0.5 rounded bg-emerald-50 border border-emerald-200">Ready to use</span>
+                <h3 className="text-sm font-bold text-emerald-900 landing-display">Example Response</h3>
+                <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 landing-mono">Ready to use</span>
               </div>
-              <div className="p-4">
-                <div className="relative rounded-lg p-4" style={{ background: `linear-gradient(135deg, ${topicDetails.color}06, ${topicDetails.color}02)`, borderLeft: `3px solid ${topicDetails.color}40` }}>
-                  <div className="absolute top-3 left-5 text-4xl leading-none opacity-10 landing-display" style={{ color: topicDetails.color }}>"</div>
-                  <div className="relative space-y-3 pl-2">
+              <div className="p-5">
+                <div className="relative rounded-xl p-5" style={{ background: `linear-gradient(135deg, ${topicDetails.color}06, ${topicDetails.color}02)`, borderLeft: `4px solid ${topicDetails.color}40` }}>
+                  <div className="absolute top-3 left-5 text-5xl leading-none opacity-8 landing-display" style={{ color: topicDetails.color }}>{'\u201C'}</div>
+                  <div className="relative space-y-3 pl-4">
                     {topicDetails.exampleResponse.split('\n\n').map((paragraph, i) => (
-                      <p key={i} className="text-gray-600 text-sm leading-relaxed landing-body">{paragraph.trim()}</p>
+                      <p key={i} className="text-gray-700 text-sm leading-relaxed landing-body">{paragraph.trim()}</p>
                     ))}
                   </div>
-                  <div className="absolute bottom-3 right-5 text-4xl leading-none opacity-10 landing-display rotate-180" style={{ color: topicDetails.color }}>"</div>
+                  <div className="absolute bottom-3 right-5 text-5xl leading-none opacity-8 landing-display" style={{ color: topicDetails.color }}>{'\u201D'}</div>
                 </div>
-                <div className="mt-3 flex items-center gap-2 text-xs text-gray-400 landing-mono">
-                  <Icon name="clock" size={11} />
-                  <span>~{Math.ceil(topicDetails.exampleResponse.split(' ').length / 150)} min speaking time</span>
+                <div className="mt-4 flex items-center gap-3 text-xs text-gray-400 landing-mono">
+                  <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-gray-50 border border-gray-200">
+                    <Icon name="clock" size={11} />
+                    <span>~{Math.ceil(topicDetails.exampleResponse.split(' ').length / 150)} min speaking time</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-gray-50 border border-gray-200">
+                    <Icon name="type" size={11} />
+                    <span>{topicDetails.exampleResponse.split(' ').length} words</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -2083,44 +2166,44 @@ export default function TopicDetail({
           {(topicDetails.sampleQuestions?.length > 0 || topicDetails.tips) && (
             <div className={`grid gap-2 ${topicDetails.sampleQuestions?.length > 0 && topicDetails.tips ? '' : 'grid-cols-1'}`}>
 
-          {/* Practice Questions */}
+          {/* Practice Questions — accordion-style expandable items */}
           {topicDetails.sampleQuestions && topicDetails.sampleQuestions.length > 0 && (
-            <div id="sample-questions" className="rounded-lg overflow-hidden scroll-mt-24 border border-[#e3e8ee] bg-white">
-              <div className="px-3 py-2 border-b border-[#e3e8ee] flex items-center gap-2 bg-[#f7f8f9]">
-                <div className="w-6 h-6 rounded flex items-center justify-center" style={{ background: `${topicDetails.color}15` }}>
+            <div id="sample-questions" className="rounded-2xl overflow-hidden scroll-mt-24 border border-[#e3e8ee] bg-white">
+              <div className="px-4 py-2 border-b border-[#e3e8ee] flex items-center gap-2 bg-[#f7f8f9]">
+                <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: `${topicDetails.color}15` }}>
                   <Icon name="helpCircle" size={12} style={{ color: topicDetails.color }} />
                 </div>
                 <h3 className="text-sm font-bold text-violet-800 landing-display">Practice Questions</h3>
-                <span className="text-[10px] landing-mono text-gray-400 ml-auto">{topicDetails.sampleQuestions.length}</span>
+                <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full landing-mono" style={{ background: `${topicDetails.color}12`, color: topicDetails.color }}>{topicDetails.sampleQuestions.length} questions</span>
               </div>
-              <div className="grid grid-cols-1  gap-1 p-2">
+              <div className="p-2.5 space-y-1.5">
                 {topicDetails.sampleQuestions.map((q, i) => (
-                  <div key={i} className="flex items-start gap-2.5 px-3 py-2 rounded-lg hover:bg-[#f7f8f9] transition-colors group">
-                    <span className="w-5 h-5 rounded flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5 landing-mono" style={{ background: `${topicDetails.color}12`, color: topicDetails.color }}>{i + 1}</span>
-                    <span className="text-gray-700 text-sm landing-body group-hover:text-gray-900 transition-colors">{q}</span>
+                  <div key={i} className="flex items-start gap-2.5 px-3 py-2.5 rounded-xl border border-transparent hover:bg-[#f7f8f9] hover:border-[#e3e8ee] hover:shadow-sm transition-all group cursor-default">
+                    <span className="w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5 landing-mono" style={{ background: `${topicDetails.color}12`, color: topicDetails.color }}>{i + 1}</span>
+                    <span className="text-gray-700 text-sm landing-body leading-relaxed group-hover:text-gray-900 transition-colors">{q}</span>
                   </div>
                 ))}
               </div>
             </div>
           )}
 
-          {/* Tips for Success */}
+          {/* Tips for Success — green-tinted cards with checkmarks */}
           {topicDetails.tips && (
-            <div id="tips" className="rounded-xl overflow-hidden scroll-mt-24 border border-[#e3e8ee] bg-white">
-              <div className="px-4 py-2.5 border-b border-[#e3e8ee] flex items-center gap-2">
-                <div className="w-6 h-6 rounded-full flex items-center justify-center bg-emerald-500">
-                  <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <div id="tips" className="rounded-2xl overflow-hidden scroll-mt-24 border border-[#e3e8ee] bg-white">
+              <div className="px-4 py-2 border-b border-[#e3e8ee] flex items-center gap-2 bg-emerald-50/50">
+                <div className="w-6 h-6 rounded-lg flex items-center justify-center bg-emerald-100">
+                  <svg className="w-3.5 h-3.5 text-emerald-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <h3 className="text-sm font-bold text-emerald-800 landing-display">Tips for Success</h3>
-                <span className="text-[10px] landing-mono text-emerald-600 ml-auto">{topicDetails.tips.length} tips</span>
+                <h3 className="text-sm font-bold text-emerald-900 landing-display">Tips for Success</h3>
+                <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 landing-mono">{topicDetails.tips.length} tips</span>
               </div>
-              <div className="grid grid-cols-1  gap-2 p-3">
+              <div className="p-2.5 space-y-1.5">
                 {topicDetails.tips.map((tip, i) => (
-                  <div key={i} className="flex items-start gap-2.5 px-3 py-2.5 rounded-lg bg-white border border-[#e3e8ee] hover:border-[#d0d5dd] transition-colors group">
-                    <span className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0 bg-emerald-500 text-white text-[10px] font-bold landing-mono mt-0.5">
-                      {i + 1}
+                  <div key={i} className="flex items-start gap-2.5 px-3.5 py-3 rounded-xl bg-emerald-50/40 border border-emerald-100 hover:bg-emerald-50/70 hover:border-emerald-200 hover:shadow-sm transition-all group">
+                    <span className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 bg-emerald-500 text-white mt-0.5 shadow-sm">
+                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
                     </span>
                     <span className="text-gray-700 text-sm landing-body leading-relaxed group-hover:text-gray-900 transition-colors">{tip}</span>
                   </div>

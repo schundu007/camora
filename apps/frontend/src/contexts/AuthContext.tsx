@@ -128,6 +128,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               setOnboardingCompleted(data.onboarding_completed);
             }
           } catch { /* capra backend may not be available */ }
+
+          // Apply referral code if present (runs once after OAuth callback)
+          const referralCode = localStorage.getItem('camora_referral_code');
+          if (referralCode && hashToken) {
+            fetch(`${CAPRA_API_URL}/api/referral/apply`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${hashToken}` },
+              body: JSON.stringify({ code: referralCode }),
+            }).then(() => localStorage.removeItem('camora_referral_code')).catch(() => {});
+          }
+
           setIsLoading(false);
           return;
         }
