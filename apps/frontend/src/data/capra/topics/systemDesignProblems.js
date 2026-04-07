@@ -7625,7 +7625,26 @@ Returns decryption key (valid for 30 days)
         'Collaborative filtering + content-based recommendations',
         'Pre-load next tracks for gapless playback',
         'Offline: Encrypted local cache with license management'
-      ]
+      ],
+      edgeCases: [
+        { scenario: 'User switches between devices mid-song during playback', impact: 'Audio cuts out or restarts from the beginning on the new device', mitigation: 'Use Spotify Connect protocol to sync playback position across devices via a centralized session service' },
+        { scenario: 'Massive spike in streams for a viral new album release', impact: 'CDN cache misses and origin server overload cause buffering for millions of users', mitigation: 'Pre-warm CDN edges with anticipated popular releases and use tiered caching with origin shielding' },
+        { scenario: 'Artist pulls their catalog from the platform mid-stream', impact: 'Users with downloaded tracks still have access, active streams may break, and playlists become incomplete', mitigation: 'DRM license revocation on next sync, graceful skip for removed tracks, and tombstone entries in playlists' },
+        { scenario: 'Collaborative playlist edited simultaneously by many users', impact: 'Conflicting additions and removals cause lost updates or duplicate tracks', mitigation: 'Use CRDTs or operational transforms for collaborative playlists with last-writer-wins for conflicts' },
+        { scenario: 'Network fluctuation during streaming in a tunnel or subway', impact: 'Playback stutters and stops, degrading user experience significantly', mitigation: 'Buffer 30+ seconds ahead, automatically downgrade bitrate on poor connections, and seamlessly fall back to offline cache' },
+      ],
+      tradeoffs: [
+        { decision: 'Adaptive bitrate streaming vs fixed quality', pros: 'Adaptive adjusts to network conditions and prevents buffering automatically', cons: 'Quality changes mid-song are noticeable and annoying to audiophiles', recommendation: 'Default to adaptive with a user setting to lock quality for premium subscribers on WiFi' },
+        { decision: 'Collaborative filtering vs content-based recommendations', pros: 'Collaborative finds unexpected gems based on similar user behavior; content-based understands audio features', cons: 'Collaborative has cold-start problems for new users; content-based misses social trends', recommendation: 'Hybrid approach blending both signals, with content-based weighted more for new users' },
+        { decision: 'Client-side vs server-side playlist shuffling', pros: 'Client-side shuffle reduces server load; server-side ensures consistent shuffle across devices', cons: 'Client-side shuffle diverges between devices; server-side adds latency per track', recommendation: 'Generate shuffle sequence server-side, cache it on client, and sync via session service' },
+      ],
+      layeredDesign: [
+        { name: 'Client Layer', purpose: 'Audio playback, offline caching, and device session management', components: ['Audio Player Engine', 'Download Manager', 'Spotify Connect Client'] },
+        { name: 'API Gateway Layer', purpose: 'Authentication, request routing, and DRM license verification', components: ['Auth Service', 'API Router', 'License Server'] },
+        { name: 'Content Delivery Layer', purpose: 'Low-latency audio chunk delivery from geographically distributed edges', components: ['CDN Edge Nodes', 'Origin Shield', 'Bitrate Selector'] },
+        { name: 'Application Layer', purpose: 'Playlist management, search, social features, and recommendation serving', components: ['Playlist Service', 'Search Index (Elasticsearch)', 'Recommendation Engine', 'Social Graph'] },
+        { name: 'Data Layer', purpose: 'Catalog metadata, user data, and analytics event storage', components: ['Catalog DB (Cassandra)', 'User DB (PostgreSQL)', 'Event Stream (Kafka)', 'Blob Storage (audio files)'] },
+      ],
     },
     {
       id: 'airbnb',
@@ -8047,7 +8066,27 @@ Optimization:
         'Double-booking prevention: Optimistic locking on booking',
         'Dynamic pricing based on demand, events, seasonality',
         'Trust & safety: Photo verification, reviews, identity verification'
-      ]
+      ],
+      edgeCases: [
+        { scenario: 'Two guests attempt to book the same property for overlapping dates simultaneously', impact: 'Double-booking leads to one guest arriving with no accommodation available', mitigation: 'Use optimistic locking with version numbers on the calendar table and retry the losing transaction' },
+        { scenario: 'Host cancels a confirmed booking close to check-in date', impact: 'Guest is stranded with no accommodation and trust in the platform erodes', mitigation: 'Enforce Superhost penalties for late cancellations, auto-rebook guest into similar listings, and provide compensation credits' },
+        { scenario: 'Fraudulent listing with stolen photos of a property that does not exist', impact: 'Guests pay for a non-existent stay and lose money and trust', mitigation: 'Require host identity verification, cross-check listing photos with reverse image search, and hold payouts until after check-in' },
+        { scenario: 'Guest damages property and disputes the claim', impact: 'Host absorbs repair costs and may leave the platform', mitigation: 'Require security deposits, offer host damage protection insurance, and use photo-based pre/post check-in verification' },
+        { scenario: 'Currency conversion fluctuation between booking and payout', impact: 'Host receives less than expected or platform absorbs exchange rate losses', mitigation: 'Lock exchange rate at booking time, settle in host local currency, and use hedging for major currency pairs' },
+      ],
+      tradeoffs: [
+        { decision: 'Instant Book vs Host Approval required', pros: 'Instant Book increases conversion rates and reduces booking friction', cons: 'Hosts lose control over who stays, leading to potential bad guest experiences', recommendation: 'Default to Instant Book with host-defined auto-reject rules for guest rating thresholds' },
+        { decision: 'Elasticsearch vs dedicated geo-database for search', pros: 'Elasticsearch handles full-text plus geo queries in one system with great performance', cons: 'Complex availability and date-range filtering in Elasticsearch is hard to tune and can be slow', recommendation: 'Use Elasticsearch for geo and text search, but pre-filter availability in a relational DB before sending candidates to ES' },
+        { decision: 'Store calendar as individual dates vs date ranges', pros: 'Date ranges use far less storage and make bulk availability updates fast', cons: 'Range-based queries are more complex and splitting ranges on partial bookings requires careful logic', recommendation: 'Use date ranges with a merge/split algorithm, and materialize individual dates into a cache for fast availability checks' },
+        { decision: 'Platform-managed payments vs direct host payment', pros: 'Platform-managed enables refunds, dispute resolution, and trust', cons: 'Adds payment processing complexity, regulatory burden, and payout delays for hosts', recommendation: 'Always use platform-managed payments with configurable payout schedules to balance host cash flow and buyer protection' },
+      ],
+      layeredDesign: [
+        { name: 'Client Layer', purpose: 'Search UI with map integration, booking flow, and messaging interface', components: ['Map View (Mapbox)', 'Search Filters', 'Booking Wizard', 'Messaging UI'] },
+        { name: 'API Gateway Layer', purpose: 'Request routing, authentication, and rate limiting for guests and hosts', components: ['Auth Middleware', 'Rate Limiter', 'API Router', 'CDN for listing images'] },
+        { name: 'Application Layer', purpose: 'Core business logic for listings, bookings, pricing, and reviews', components: ['Listing Service', 'Booking Service', 'Pricing Engine', 'Review Service', 'Messaging Service'] },
+        { name: 'Search Layer', purpose: 'Geo-aware search with availability filtering and ranking', components: ['Elasticsearch Cluster', 'Availability Index', 'Ranking Service'] },
+        { name: 'Data Layer', purpose: 'Persistent storage for listings, bookings, user profiles, and financial transactions', components: ['PostgreSQL (bookings/users)', 'Elasticsearch (search)', 'Redis (availability cache)', 'S3 (photos)', 'Payment Ledger DB'] },
+      ],
     },
     {
       id: 'doordash',
@@ -8434,7 +8473,26 @@ If demand > supply by X%:
         'ETA prediction: ML model with traffic, order prep time, driver location',
         'Kitchen display system integration for order status',
         'Surge pricing during peak demand'
-      ]
+      ],
+      edgeCases: [
+        { scenario: 'Restaurant marks order as ready but no drivers are available nearby', impact: 'Food sits and gets cold, customer receives poor quality meal and leaves bad review', mitigation: 'Pre-dispatch drivers based on predicted prep time, expand search radius dynamically, and offer priority pay to attract drivers' },
+        { scenario: 'Driver app crashes mid-delivery and location updates stop', impact: 'Customer sees stale tracking, support cannot locate the order, and ETA becomes meaningless', mitigation: 'Detect heartbeat loss after 60 seconds, switch to SMS-based location polling, and auto-reassign if unresponsive for 5 minutes' },
+        { scenario: 'Super Bowl Sunday causes 10x order spike in a metro area', impact: 'Dispatch queue backs up, ETAs blow past estimates, and driver supply is exhausted', mitigation: 'Activate surge pricing to balance demand, pre-position drivers in hot zones, and temporarily increase batch order size' },
+        { scenario: 'Customer reports food never arrived but driver marked as delivered', impact: 'Dispute between customer and driver with no clear resolution and potential fraud', mitigation: 'Require delivery photo proof, use GPS geofence to confirm driver was at drop-off location, and ML fraud scoring on repeat claims' },
+        { scenario: 'Restaurant goes offline mid-order without canceling pending orders', impact: 'Orders stuck in preparing state indefinitely, customers wait with no food coming', mitigation: 'Heartbeat monitoring on restaurant tablet, auto-cancel orders after timeout, and notify customer with alternatives' },
+      ],
+      tradeoffs: [
+        { decision: 'Single-order dispatch vs batched multi-order dispatch', pros: 'Batching improves driver utilization and reduces cost per delivery', cons: 'Second order in a batch gets delayed, increasing that customer wait time', recommendation: 'Batch only when restaurants are within 0.5 miles and drop-offs are on the same route with under 5 minutes added delay' },
+        { decision: 'Push-based driver assignment vs driver bidding on orders', pros: 'Push assignment is faster and ensures consistent ETAs; bidding lets drivers optimize their routes', cons: 'Push can assign suboptimal drivers; bidding adds latency and may leave less popular orders unserved', recommendation: 'Use push-based assignment with ML optimization, and let drivers decline with a cooldown penalty' },
+        { decision: 'Real-time ETA vs padded conservative ETA', pros: 'Real-time ETA feels responsive and accurate; padded ETA reduces disappointment from late deliveries', cons: 'Real-time ETA causes frustration when it increases; padded ETA feels slow even when delivery is fast', recommendation: 'Show padded ETA initially and reveal faster actual progress, so the customer feels the delivery is ahead of schedule' },
+      ],
+      layeredDesign: [
+        { name: 'Client Layer', purpose: 'Customer ordering UI, driver delivery app, and restaurant management dashboard', components: ['Customer App', 'Driver App', 'Restaurant Tablet App', 'Real-time Map'] },
+        { name: 'API Gateway Layer', purpose: 'Route requests from three client types with auth and rate limiting', components: ['Auth Service', 'Rate Limiter', 'WebSocket Server', 'API Router'] },
+        { name: 'Order Orchestration Layer', purpose: 'Manage order lifecycle from placement through delivery completion', components: ['Order Service', 'Payment Service', 'Notification Service', 'ETA Predictor'] },
+        { name: 'Dispatch Layer', purpose: 'Match orders to drivers using real-time location and optimization algorithms', components: ['Dispatch Engine', 'Geospatial Index', 'Driver Pool Manager', 'Route Optimizer'] },
+        { name: 'Data Layer', purpose: 'Store orders, menus, driver locations, and delivery history', components: ['PostgreSQL (orders/users)', 'Redis (driver locations)', 'Kafka (event stream)', 'S3 (delivery photos)'] },
+      ],
     },
     {
       id: 'twitter-trends',
@@ -8863,7 +8921,25 @@ Where credibility considers:
         'Time-decay: Exponential decay to favor recent activity',
         'Anomaly detection: Compare current rate vs baseline',
         'Spam filtering: Rate limit per user, detect coordinated campaigns'
-      ]
+      ],
+      edgeCases: [
+        { scenario: 'Coordinated bot network artificially inflates a hashtag to manipulate trends', impact: 'Fake topics displace genuine trends and erode user trust in the feature', mitigation: 'Detect coordinated behavior via account age clustering, shared IP ranges, and burst velocity anomaly detection' },
+        { scenario: 'Breaking news event generates millions of tweets per minute with varied hashtags', impact: 'Related but differently-spelled hashtags fragment what should be one trend', mitigation: 'Use NLP-based topic clustering to merge semantically equivalent hashtags into a single trend entry' },
+        { scenario: 'Count-min sketch hash collisions cause two unrelated topics to share counters', impact: 'A niche topic appears falsely trending due to inflated counts from a popular unrelated topic', mitigation: 'Use multiple independent hash functions and take the minimum count; increase sketch width during high-traffic periods' },
+        { scenario: 'Regional trends spike during a local holiday while global trends dominate', impact: 'Local users never see locally relevant trends because global topics overshadow them', mitigation: 'Maintain separate trend lists per geohash region and blend local and global trends with configurable weighting' },
+        { scenario: 'A previously trending topic resurges hours later after new developments', impact: 'Time-decay function suppresses it even though genuine renewed interest exists', mitigation: 'Track rate-of-change relative to recent baseline rather than absolute time, so resurgences are detected as new spikes' },
+      ],
+      tradeoffs: [
+        { decision: 'Count-min sketch vs exact counting with hash maps', pros: 'Count-min sketch uses constant memory regardless of cardinality; exact counting gives precise results', cons: 'Count-min sketch has over-counting errors from hash collisions; exact counting needs unbounded memory', recommendation: 'Use count-min sketch for real-time counting with periodic exact count reconciliation for top candidates' },
+        { decision: 'Sliding window vs tumbling window for trend detection', pros: 'Sliding windows detect trends immediately as they form; tumbling windows are simpler and cheaper to compute', cons: 'Sliding windows require more memory and computation; tumbling windows miss trends that span window boundaries', recommendation: 'Use hopping windows with 1-minute hops and 5-minute window size as a practical compromise' },
+        { decision: 'Global single trend list vs per-region trend computation', pros: 'Global is simpler to implement and maintain; per-region captures local relevance', cons: 'Global misses local events; per-region multiplies compute and storage costs by number of regions', recommendation: 'Compute trends per-region on separate Flink jobs and merge into a global list with regional boost factors' },
+      ],
+      layeredDesign: [
+        { name: 'Ingestion Layer', purpose: 'Capture tweet stream in real-time and extract hashtags and keywords for processing', components: ['Kafka Tweet Stream', 'Hashtag Extractor', 'Spam Pre-filter'] },
+        { name: 'Stream Processing Layer', purpose: 'Count topic frequencies in real-time using probabilistic data structures', components: ['Apache Flink Jobs', 'Count-Min Sketch', 'Time-Decay Calculator'] },
+        { name: 'Ranking Layer', purpose: 'Score and rank topics by velocity of growth relative to their baseline', components: ['Anomaly Detector', 'Trend Scorer', 'Topic Deduplicator'] },
+        { name: 'Serving Layer', purpose: 'Serve personalized trend lists to users with low latency', components: ['Trend Cache (Redis)', 'API Servers', 'Geo-Router'] },
+      ],
     },
     {
       id: 'pastebin',
@@ -9231,7 +9307,24 @@ Read: API → Lookup metadata → Redirect to S3 (or proxy)`,
         'TTL-based expiration with background cleanup job',
         'Rate limiting to prevent abuse',
         'Private pastes: Add password/auth requirement'
-      ]
+      ],
+      edgeCases: [
+        { scenario: 'User pastes a 100MB file that exceeds expected size limits', impact: 'Object storage costs spike, page load times become unacceptable, and other users experience degraded performance', mitigation: 'Enforce a hard size limit (10MB), reject oversized uploads at the API gateway, and return a clear error message' },
+        { scenario: 'Paste contains malware, phishing links, or illegal content', impact: 'Platform becomes a vector for distributing harmful content and faces legal liability', mitigation: 'Scan paste content asynchronously with malware and URL reputation checks, flag suspicious pastes, and add a content warning interstitial' },
+        { scenario: 'Viral paste gets millions of views in minutes', impact: 'Origin storage is overwhelmed and paste becomes unavailable at peak demand', mitigation: 'Cache popular pastes at CDN edge nodes with automatic cache warming when view count exceeds threshold' },
+        { scenario: 'Expired paste URL is still indexed by search engines and bookmarked by users', impact: 'Users hit dead links and get confusing 404 errors with no context', mitigation: 'Return a friendly expiration page with metadata about when the paste expired and suggest creating a new one' },
+      ],
+      tradeoffs: [
+        { decision: 'Object storage (S3) vs database for paste content', pros: 'S3 is cheaper for large blobs and scales infinitely; DB keeps everything in one system', cons: 'S3 adds a network hop and complexity; DB row size limits constrain paste size', recommendation: 'Store content in S3 with metadata in a relational DB for the best balance of cost and query flexibility' },
+        { decision: 'Base62 random key vs auto-increment ID for paste URLs', pros: 'Random keys are non-guessable and harder to enumerate; auto-increment is simpler and collision-free', cons: 'Random keys need collision checking; auto-increment exposes paste creation order and volume', recommendation: 'Use Base62 encoding of a globally unique counter (Snowflake-style) for both uniqueness and non-guessability' },
+        { decision: 'Eager expiration cleanup vs lazy deletion', pros: 'Eager cleanup keeps storage costs low; lazy deletion is simpler and avoids background job complexity', cons: 'Eager cleanup wastes compute scanning for expired pastes; lazy deletion leaves stale data consuming storage', recommendation: 'Use lazy deletion with TTL on cache entries, plus a nightly background job to purge expired content from S3' },
+      ],
+      layeredDesign: [
+        { name: 'API Layer', purpose: 'Handle paste creation, retrieval, and deletion with rate limiting and auth', components: ['REST API', 'Rate Limiter', 'Auth Middleware'] },
+        { name: 'Application Layer', purpose: 'Generate unique keys, validate content, and manage paste lifecycle', components: ['Key Generator', 'Content Validator', 'Expiration Manager'] },
+        { name: 'Cache Layer', purpose: 'Serve frequently accessed pastes with sub-millisecond latency', components: ['Redis Cache', 'CDN Edge Cache'] },
+        { name: 'Storage Layer', purpose: 'Persist paste content and metadata durably', components: ['Object Storage (S3)', 'Metadata DB (PostgreSQL)', 'Cleanup Job'] },
+      ],
     },
     {
       id: 'web-crawler',
@@ -9400,7 +9493,25 @@ Bloom filter for fast "definitely not seen" checks before expensive hash lookups
         'Duplicate detection: Simhash or MinHash for near-duplicate content',
         'robots.txt: Cache and respect crawl-delay directives',
         'Checkpointing: Resume crawl from last known state'
-      ]
+      ],
+      edgeCases: [
+        { scenario: 'Spider trap website generates infinite URLs through dynamic query parameters or calendars', impact: 'Crawler gets stuck in an infinite loop, wasting resources and never progressing to other domains', mitigation: 'Set a max URL depth and max pages per domain limit, detect URL pattern repetition, and blacklist trap domains' },
+        { scenario: 'Website serves different content to crawlers than to real users (cloaking)', impact: 'Search index contains misleading content that does not match what users actually see', mitigation: 'Periodically re-crawl with browser-like user agents, compare content hashes between bot and browser renders' },
+        { scenario: 'DNS resolution fails or times out for a large batch of queued URLs', impact: 'Worker threads block on DNS, throughput drops dramatically, and crawl frontier backs up', mitigation: 'Use async DNS resolution with local caching, set aggressive DNS timeouts, and skip unresolvable domains with exponential backoff retry' },
+        { scenario: 'Website changes robots.txt to disallow crawling after pages are already indexed', impact: 'Previously crawled content should be removed but stale index entries persist', mitigation: 'Re-check robots.txt before each crawl cycle, purge index entries for newly disallowed paths within 24 hours' },
+        { scenario: 'Near-duplicate pages with minor template differences across millions of URLs', impact: 'Index bloats with redundant content, wasting storage and degrading search quality', mitigation: 'Use SimHash fingerprinting to detect near-duplicates and keep only the canonical version in the index' },
+      ],
+      tradeoffs: [
+        { decision: 'Breadth-first vs depth-first crawl strategy', pros: 'BFS discovers more domains quickly and finds important pages first; DFS thoroughly indexes one site', cons: 'BFS keeps many connections open and may miss deep pages; DFS can get stuck on one large site', recommendation: 'Use BFS with priority scoring that favors high-PageRank domains and important deep pages' },
+        { decision: 'Politeness delay per domain vs aggressive parallel crawling', pros: 'Politeness respects server capacity and avoids IP bans; aggressive crawling maximizes throughput', cons: 'Politeness dramatically slows crawl speed; aggressive crawling may get blocked or crash small servers', recommendation: 'Respect robots.txt crawl-delay, default to 1-second delay per domain, and parallelize across many domains simultaneously' },
+        { decision: 'Store raw HTML vs parsed/extracted content only', pros: 'Raw HTML allows re-processing without re-crawling; parsed content uses far less storage', cons: 'Raw HTML storage costs are massive at web scale; parsed content cannot be reprocessed with new extractors', recommendation: 'Store raw HTML in compressed blob storage with a TTL, and keep parsed content in the search index for serving' },
+      ],
+      layeredDesign: [
+        { name: 'URL Frontier Layer', purpose: 'Manage the queue of URLs to crawl with priority and politeness scheduling', components: ['Priority Queue', 'Politeness Enforcer', 'Domain Partitioner', 'URL Deduplicator'] },
+        { name: 'Fetcher Layer', purpose: 'Download web pages in parallel while respecting rate limits and handling failures', components: ['HTTP Fetcher Workers', 'DNS Resolver Cache', 'robots.txt Cache', 'Retry Handler'] },
+        { name: 'Processing Layer', purpose: 'Parse downloaded pages, extract links, and detect duplicates', components: ['HTML Parser', 'Link Extractor', 'SimHash Deduplicator', 'Content Extractor'] },
+        { name: 'Storage Layer', purpose: 'Persist crawled content, URL metadata, and crawl state for checkpointing', components: ['Blob Storage (raw HTML)', 'URL Metadata DB', 'Crawl State Checkpoint Store', 'Search Index Writer'] },
+      ],
     },
     {
       id: 'facebook-newsfeed',
@@ -9814,7 +9925,27 @@ Instead:
         'Edge caching: CDN for media, Redis for feed',
         'Real-time: Long polling or WebSocket for new posts',
         'Cold start: Use interest signals for new users'
-      ]
+      ],
+      edgeCases: [
+        { scenario: 'Celebrity with 10M followers creates a post during peak hours', impact: 'Fan-out-on-write would require 10M cache writes, causing massive write amplification and lag', mitigation: 'Use hybrid fan-out: push for normal users and pull for celebrity posts at read time, merging both at feed assembly' },
+        { scenario: 'User blocks someone but their cached feed still contains the blocked person posts', impact: 'Blocked content appears in the feed until the cache refreshes, violating privacy expectations', mitigation: 'Apply block list as a post-cache filter at read time, and asynchronously purge blocked user posts from the feed cache' },
+        { scenario: 'User scrolls rapidly through feed causing hundreds of ranking requests per minute', impact: 'Ranking service gets overwhelmed with per-request ML inference, degrading latency for all users', mitigation: 'Pre-rank larger batches of 500 posts at once and paginate from the pre-ranked result, re-ranking only on feed refresh' },
+        { scenario: 'New user with no friends and no activity history opens the feed', impact: 'Empty feed provides a terrible first impression and high chance of immediate churn', mitigation: 'Serve trending content and popular pages during cold start, and aggressively prompt friend suggestions from contact list' },
+        { scenario: 'Post containing misinformation goes viral and reaches millions of feeds before detection', impact: 'Harmful content spreads widely and erodes platform trust before fact-checkers can respond', mitigation: 'Add velocity-based circuit breaker that throttles distribution of rapidly-spreading posts pending automated content review' },
+      ],
+      tradeoffs: [
+        { decision: 'Fan-out-on-write vs fan-out-on-read', pros: 'Write fan-out gives instant feed reads with pre-computed results; read fan-out avoids massive write amplification', cons: 'Write fan-out is extremely expensive for popular users; read fan-out adds latency to every feed request', recommendation: 'Hybrid approach: fan-out-on-write for users with under 10K followers, fan-out-on-read for celebrities' },
+        { decision: 'Chronological feed vs ML-ranked feed', pros: 'Chronological is predictable and transparent; ML ranking maximizes engagement and surfaces relevant content', cons: 'Chronological buries important posts under recent noise; ML ranking is opaque and can create filter bubbles', recommendation: 'Default to ML-ranked with a user toggle for chronological, and always boost time-sensitive content types like live events' },
+        { decision: 'Redis feed cache per user vs on-demand feed computation', pros: 'Redis cache gives sub-10ms feed reads; on-demand saves memory for inactive users', cons: 'Redis cache consumes massive memory for billions of users; on-demand has unpredictable cold-read latency', recommendation: 'Cache feeds for active users (last 7 days) in Redis, evict inactive feeds, and compute on-demand for returning users' },
+        { decision: 'Single global feed service vs geo-distributed feed services', pros: 'Global is simpler to maintain consistency; geo-distributed reduces latency for international users', cons: 'Global adds latency for distant regions; geo-distributed requires cross-region replication of social graphs', recommendation: 'Geo-distribute the feed cache and ranking service, but keep the social graph and post store centrally replicated' },
+      ],
+      layeredDesign: [
+        { name: 'Client Layer', purpose: 'Infinite scroll feed UI with optimistic updates and real-time new post indicators', components: ['Feed Renderer', 'Infinite Scroll Manager', 'WebSocket Client', 'Media Lazy Loader'] },
+        { name: 'API Gateway Layer', purpose: 'Authenticate requests, route to feed or post services, and serve cached responses', components: ['Auth Middleware', 'Feed API', 'Post API', 'CDN for media'] },
+        { name: 'Feed Assembly Layer', purpose: 'Merge pre-computed feed cache with celebrity pulls and apply ML ranking', components: ['Feed Aggregator', 'Celebrity Post Fetcher', 'Ranking Service (ML)', 'Business Rules Engine'] },
+        { name: 'Fan-out Layer', purpose: 'Distribute new posts to follower feed caches based on follower count threshold', components: ['Fan-out Workers', 'Kafka Post Stream', 'Follower Graph Lookup', 'Feed Cache Writer'] },
+        { name: 'Data Layer', purpose: 'Persist posts, social graph, user features, and feed caches', components: ['Post DB (sharded)', 'Social Graph (TAO)', 'Feed Cache (Redis Cluster)', 'Media Storage (S3 + CDN)', 'ML Feature Store'] },
+      ],
     },
     {
       id: 'key-value-store',
@@ -10215,6 +10346,78 @@ Merkle Tree sync:
         'Consistency: Tunable (strong vs eventual)',
         'Conflict resolution: Last-write-wins or vector clocks',
         'Failure detection: Gossip protocol'
+      ],
+
+      edgeCases: [
+        {
+          scenario: 'Network partition splits the cluster into two groups that both accept writes.',
+          impact: 'Conflicting versions of the same key diverge across partitions, risking silent data loss on merge.',
+          mitigation: 'Use vector clocks or CRDTs to detect and resolve conflicts; expose conflict resolution to the application layer.'
+        },
+        {
+          scenario: 'A hot key receives disproportionate traffic, overwhelming a single node.',
+          impact: 'One node becomes a bottleneck while the rest of the cluster sits idle, degrading overall throughput.',
+          mitigation: 'Replicate hot keys to additional nodes and add a caching layer; monitor per-key request rates for early detection.'
+        },
+        {
+          scenario: 'Clock skew between nodes causes last-write-wins to silently discard the correct value.',
+          impact: 'Newer data is overwritten by a stale write with a higher timestamp, causing data corruption.',
+          mitigation: 'Use logical clocks (Lamport or hybrid) instead of wall-clock time; run NTP sync on all nodes.'
+        },
+        {
+          scenario: 'A node fails mid-compaction, leaving SSTables in an inconsistent state on disk.',
+          impact: 'Reads return stale or incomplete data from the affected node until recovery completes.',
+          mitigation: 'Write a compaction journal before starting; on restart, either complete or roll back the partial compaction.'
+        },
+        {
+          scenario: 'Consistent hashing ring rebalance during peak traffic causes cascading timeouts.',
+          impact: 'Data migration saturates network bandwidth and spikes latency for all operations.',
+          mitigation: 'Throttle rebalancing rate and use virtual nodes to limit per-move data size; schedule rebalances during off-peak.'
+        }
+      ],
+
+      tradeoffs: [
+        {
+          decision: 'Strong consistency vs eventual consistency for reads.',
+          pros: 'Strong consistency guarantees clients always read the latest write, simplifying application logic.',
+          cons: 'Requires quorum reads (R + W > N) which increases latency and reduces availability during partitions.',
+          recommendation: 'Default to eventual consistency for high-throughput workloads; offer tunable consistency so latency-sensitive reads can opt in to quorum.'
+        },
+        {
+          decision: 'In-memory storage vs LSM-tree disk-based storage.',
+          pros: 'In-memory delivers sub-millisecond reads and writes with predictable performance.',
+          cons: 'Limited by RAM capacity and requires persistence strategies (snapshots + AOF) to survive restarts.',
+          recommendation: 'Use in-memory for hot data and cache layers; back with LSM-tree storage for datasets that exceed available memory.'
+        },
+        {
+          decision: 'Leaderless replication vs leader-based replication.',
+          pros: 'Leaderless avoids single-point-of-failure and allows writes to any node, improving write availability.',
+          cons: 'Conflict resolution is complex and read-repair adds overhead; harder to maintain strong ordering.',
+          recommendation: 'Choose leaderless for AP workloads where availability trumps consistency; use leader-based when strict ordering is required.'
+        }
+      ],
+
+      layeredDesign: [
+        {
+          name: 'Client Layer',
+          purpose: 'Routes requests to the correct node and handles retries, timeouts, and conflict resolution.',
+          components: ['Client SDK', 'Request router', 'Retry handler', 'Conflict resolver']
+        },
+        {
+          name: 'Coordination Layer',
+          purpose: 'Manages cluster membership, consistent hashing, and quorum enforcement.',
+          components: ['Coordinator node', 'Gossip protocol', 'Consistent hash ring', 'Failure detector']
+        },
+        {
+          name: 'Storage Engine Layer',
+          purpose: 'Handles the actual read/write path including memtable, WAL, and SSTable compaction.',
+          components: ['Write-ahead log', 'Memtable', 'SSTable files', 'Compaction manager', 'Bloom filters']
+        },
+        {
+          name: 'Replication Layer',
+          purpose: 'Ensures data durability by replicating writes across multiple nodes and repairing divergence.',
+          components: ['Replication manager', 'Hinted handoff queue', 'Anti-entropy (Merkle trees)', 'Read repair']
+        }
       ]
     },
     {
@@ -10603,6 +10806,73 @@ No coordination, but:
         'No coordination needed: Each machine generates independently',
         'Clock skew: Reject requests if clock goes backwards',
         'UUID alternative: 128-bit, no coordination, not sortable'
+      ],
+
+      edgeCases: [
+        {
+          scenario: 'NTP daemon corrects a clock backwards, causing the Snowflake generator to produce duplicate timestamps.',
+          impact: 'Two IDs share the same timestamp prefix, and if the sequence resets, a collision occurs.',
+          mitigation: 'Detect backward clock jumps and either wait until time catches up or reject requests until the clock advances.'
+        },
+        {
+          scenario: 'A machine ID is accidentally reused after a server replacement without updating the registry.',
+          impact: 'Two machines generate IDs with identical machine bits, creating collisions under concurrent load.',
+          mitigation: 'Use ZooKeeper or etcd for machine ID allocation with lease-based ownership; validate uniqueness on startup.'
+        },
+        {
+          scenario: 'Burst traffic exceeds 4096 requests in a single millisecond on one machine.',
+          impact: 'The 12-bit sequence number overflows, and the generator must block until the next millisecond.',
+          mitigation: 'Pre-allocate ID batches during low traffic or spread load across multiple generator instances per host.'
+        },
+        {
+          scenario: 'The 41-bit timestamp epoch rolls over after 69 years, exhausting the ID space.',
+          impact: 'All new IDs wrap around to zero, colliding with historical IDs and breaking sort ordering.',
+          mitigation: 'Choose a custom epoch close to the system launch date; plan a migration strategy well before the 69-year limit.'
+        },
+        {
+          scenario: 'Datacenter failover reassigns machine IDs that were in use at the failed site.',
+          impact: 'During split-brain, both datacenters may issue IDs with overlapping machine ID bits.',
+          mitigation: 'Reserve separate machine ID ranges per datacenter; use the datacenter bits in Snowflake to namespace IDs.'
+        }
+      ],
+
+      tradeoffs: [
+        {
+          decision: 'Snowflake (64-bit sortable) vs UUID (128-bit random).',
+          pros: 'Snowflake IDs are time-sortable, compact, and enable efficient B-tree indexing in databases.',
+          cons: 'Snowflake requires machine ID coordination and is vulnerable to clock skew; UUIDs need no coordination.',
+          recommendation: 'Use Snowflake for internal systems where sort order and compactness matter; use UUIDs for external-facing IDs where unpredictability is valued.'
+        },
+        {
+          decision: 'Centralized ID service vs embedded per-machine generation.',
+          pros: 'Centralized services guarantee global uniqueness without machine ID management overhead.',
+          cons: 'Adds network latency to every ID request and creates a single point of failure.',
+          recommendation: 'Prefer embedded per-machine generation for high-throughput systems; use centralized only when strict sequential ordering is required.'
+        },
+        {
+          decision: 'Pre-allocating ID ranges vs generating on demand.',
+          pros: 'Pre-allocation eliminates per-request coordination and handles burst traffic without blocking.',
+          cons: 'Wastes ID space if allocated ranges are never fully used; complicates machine decommissioning.',
+          recommendation: 'Pre-allocate in small batches (e.g., 1000 IDs) for write-heavy services; generate on demand for low-throughput use cases.'
+        }
+      ],
+
+      layeredDesign: [
+        {
+          name: 'Client SDK Layer',
+          purpose: 'Provides a simple API for services to request unique IDs without knowing the generation strategy.',
+          components: ['ID client library', 'Local ID buffer', 'Retry logic']
+        },
+        {
+          name: 'Generator Layer',
+          purpose: 'Combines timestamp, machine ID, and sequence number to produce unique 64-bit IDs.',
+          components: ['Clock source', 'Sequence counter', 'Bit packing logic', 'Clock skew detector']
+        },
+        {
+          name: 'Coordination Layer',
+          purpose: 'Assigns and manages machine IDs across the cluster to prevent collisions.',
+          components: ['ZooKeeper/etcd registry', 'Machine ID allocator', 'Lease manager', 'Health checker']
+        }
       ]
     },
     {
@@ -11020,6 +11290,73 @@ if story involves major entity (president, CEO):
         'Clustering: Group similar articles about same story',
         'Ranking: Freshness, source authority, engagement',
         'Personalization: User interests + collaborative filtering'
+      ],
+
+      edgeCases: [
+        {
+          scenario: 'A major breaking news event causes thousands of near-identical articles to flood the system within minutes.',
+          impact: 'The clustering pipeline becomes overwhelmed, and duplicate stories appear in the feed before dedup catches up.',
+          mitigation: 'Use a real-time streaming dedup layer (MinHash/SimHash) before the main clustering pipeline; increase cluster merge frequency during detected surges.'
+        },
+        {
+          scenario: 'A source publishes misleading or AI-generated clickbait articles at high volume.',
+          impact: 'Low-quality content dominates the feed and erodes user trust in the aggregator.',
+          mitigation: 'Maintain source authority scores updated by editorial review and user feedback; apply content quality classifiers before ranking.'
+        },
+        {
+          scenario: 'RSS feed URLs change or sources switch to paywalled content without notice.',
+          impact: 'Ingestion silently fails for affected sources, creating blind spots in news coverage.',
+          mitigation: 'Monitor feed health with heartbeat checks; fall back to web scraping when RSS becomes unavailable; alert on coverage gaps per category.'
+        },
+        {
+          scenario: 'Personalization creates a filter bubble where users only see articles confirming their existing views.',
+          impact: 'Users miss important diverse perspectives, and the platform faces criticism for amplifying bias.',
+          mitigation: 'Inject serendipity by mixing in editorially curated and opposing-viewpoint articles; show topic diversity metrics to users.'
+        }
+      ],
+
+      tradeoffs: [
+        {
+          decision: 'Pull-based RSS ingestion vs push-based publisher webhooks.',
+          pros: 'RSS polling is simple to implement and works with any source without requiring publisher cooperation.',
+          cons: 'Polling at scale wastes bandwidth on unchanged feeds and introduces latency between publication and ingestion.',
+          recommendation: 'Use RSS polling as the default with adaptive intervals; offer webhook integration for high-priority publishers who support it.'
+        },
+        {
+          decision: 'Pre-computed personalized feeds vs on-the-fly ranking.',
+          pros: 'Pre-computed feeds deliver instant page loads with zero ranking latency at read time.',
+          cons: 'Stale for fast-moving news; requires expensive fan-out to update millions of user feeds on every new story.',
+          recommendation: 'Use a hybrid approach: pre-compute a candidate set periodically, then apply lightweight real-time re-ranking at request time.'
+        },
+        {
+          decision: 'NLP-based clustering vs simpler URL/title deduplication.',
+          pros: 'NLP clustering correctly groups articles about the same event even when headlines and URLs differ completely.',
+          cons: 'Computationally expensive and harder to debug; may incorrectly merge distinct stories with similar language.',
+          recommendation: 'Use NLP clustering for story grouping but keep a fast title/URL dedup as a first pass to reduce the volume entering the NLP pipeline.'
+        }
+      ],
+
+      layeredDesign: [
+        {
+          name: 'Ingestion Layer',
+          purpose: 'Crawls RSS feeds and scrapes web sources to collect raw articles at scale.',
+          components: ['RSS poller', 'Web scraper', 'Feed health monitor', 'Raw article queue (Kafka)']
+        },
+        {
+          name: 'Processing Layer',
+          purpose: 'Extracts entities, classifies topics, detects duplicates, and clusters articles into stories.',
+          components: ['NLP pipeline', 'Entity extractor', 'SimHash deduplicator', 'Story clustering engine']
+        },
+        {
+          name: 'Ranking Layer',
+          purpose: 'Scores and orders stories based on freshness, source authority, and user preferences.',
+          components: ['Ranking service', 'Source authority scorer', 'Freshness decay function', 'A/B test framework']
+        },
+        {
+          name: 'Serving Layer',
+          purpose: 'Delivers personalized news feeds to users with low latency and real-time updates.',
+          components: ['Personalization engine', 'Feed cache (Redis)', 'CDN', 'Push notification service']
+        }
       ]
     },
     {
@@ -13511,7 +13848,27 @@ If version mismatch, retry. If quantity = 0, sold out.
         'Redis for cart persistence and inventory token pre-sharding',
         'Optimistic locking for inventory consistency',
         'Event-driven architecture for order status updates'
-      ]
+      ],
+      edgeCases: [
+        { scenario: 'Flash sale triggers thousands of concurrent purchases for a single item', impact: 'Inventory count goes negative or database locks cause checkout timeouts', mitigation: 'Pre-shard inventory tokens into Redis and use atomic LPOP so each token represents one purchasable unit' },
+        { scenario: 'Payment succeeds but order service is temporarily unreachable', impact: 'Customer is charged but sees no order confirmation, generating support tickets', mitigation: 'Use the Saga pattern with compensating transactions and a persistent outbox to retry order creation' },
+        { scenario: 'User adds item to cart but price changes before checkout', impact: 'Customer anger if charged more, revenue loss if charged less than current price', mitigation: 'Re-validate price at checkout time and show a clear notification if the price has changed since carting' },
+        { scenario: 'Elasticsearch index lags behind the product catalog database', impact: 'Newly listed products are invisible to search, or deleted products still appear', mitigation: 'Use CDC from the products table to Kafka and near-real-time indexing, with a fallback database query for very recent items' },
+        { scenario: 'Cart session expires while user is mid-checkout', impact: 'User loses cart contents and abandons the purchase entirely', mitigation: 'Persist cart server-side keyed by user ID with a generous TTL and restore automatically on next login' },
+      ],
+      tradeoffs: [
+        { decision: 'Microservices vs monolith for e-commerce', pros: 'Microservices allow independent scaling and deployment of catalog, cart, and order services', cons: 'Distributed transactions are complex and debugging cross-service issues is harder', recommendation: 'Microservices with Saga-based checkout for large-scale platforms, monolith for smaller shops' },
+        { decision: 'Optimistic locking vs pessimistic locking for inventory', pros: 'Optimistic locking avoids holding DB locks and scales better under normal load', cons: 'High contention during flash sales causes excessive retry loops with optimistic locking', recommendation: 'Optimistic locking for normal traffic, Redis token pre-sharding for hot items during flash sales' },
+        { decision: 'Elasticsearch vs database full-text search', pros: 'Elasticsearch provides fast faceted search and relevance scoring across millions of products', cons: 'Adds operational complexity and introduces index staleness risk', recommendation: 'Elasticsearch for primary product search with CDC-based near-real-time indexing from the source database' },
+        { decision: 'Synchronous vs event-driven order processing', pros: 'Synchronous gives immediate feedback; event-driven decouples services and handles spikes', cons: 'Synchronous blocks on slow downstream services; event-driven adds latency and debugging difficulty', recommendation: 'Event-driven with Kafka for post-checkout processing, synchronous only for the initial inventory reservation' },
+      ],
+      layeredDesign: [
+        { name: 'Presentation Layer', purpose: 'Serve product pages, cart UI, and checkout flow to end users', components: ['CDN', 'Web/Mobile Clients', 'API Gateway'] },
+        { name: 'Application Layer', purpose: 'Orchestrate business logic across product, cart, order, and payment domains', components: ['Product Service', 'Cart Service', 'Order Service', 'Checkout Orchestrator'] },
+        { name: 'Search Layer', purpose: 'Index and serve fast product search with faceted filtering', components: ['Elasticsearch Cluster', 'CDC Indexer', 'Query Parser'] },
+        { name: 'Data Layer', purpose: 'Persist product catalog, inventory, orders, and user data with consistency guarantees', components: ['PostgreSQL (Orders)', 'Redis (Cart/Inventory Tokens)', 'S3 (Product Images)'] },
+        { name: 'Event Layer', purpose: 'Decouple services and drive async workflows like notifications and analytics', components: ['Kafka', 'Order Event Consumers', 'Notification Service'] },
+      ],
     },
     {
       id: 'messaging-app',
