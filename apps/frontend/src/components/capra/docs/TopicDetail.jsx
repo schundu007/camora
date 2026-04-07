@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Icon } from '../../shared/Icons.jsx';
 import FormattedContent from './FormattedContent.jsx';
 import CloudArchitectureDiagram from './CloudArchitectureDiagram.jsx';
@@ -69,6 +69,178 @@ function CapacityPlanningGrid({ estimation }) {
                 <td className="px-3 py-2.5 font-semibold text-gray-700 border-b border-gray-100">{row.metric}</td>
                 <td className="px-3 py-2.5 font-bold text-violet-700 landing-mono border-b border-gray-100">{row.value}</td>
                 <td className="px-3 py-2.5 text-gray-500 text-xs border-b border-gray-100 hidden lg:table-cell">{row.detail}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Structured data model rendering — parses SQL-like schema text into table cards.
+ * Falls back to enhanced code block with line numbers and copy button.
+ */
+function DataModelSection({ schema }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = useCallback(() => {
+    navigator.clipboard.writeText(schema);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }, [schema]);
+
+  // Try to parse schema into structured tables
+  const tables = useMemo(() => {
+    if (!schema) return [];
+    const parsed = [];
+    // Match table blocks like "Table users {" or "CREATE TABLE users (" or just "users:" or "Users" followed by fields
+    const lines = schema.split('\n');
+    let currentTable = null;
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue;
+
+      // Detect table headers: "Table name {", "tableName:", "CREATE TABLE name", or standalone PascalCase/UPPER names
+      const tableMatch = line.match(/^(?:Table\s+|CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?)?(\w+)\s*[{(:]?\s*$/i)
+        || line.match(/^(?:Table\s+|CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?)(\w+)\s*\{/i)
+        || line.match(/^(\w+)\s*\(/i);
+
+      if (tableMatch && !line.match(/^\s*(id|name|uuid|varchar|int|text|timestamp|boolean|created|updated|status|type|email|title|description|content|url|user_id|post_id)/i)) {
+        if (currentTable && currentTable.fields.length > 0) {
+          parsed.push(currentTable);
+        }
+        currentTable = { name: tableMatch[1], fields: [] };
+        continue;
+      }
+
+      // Parse fields if we're inside a table
+      if (currentTable) {
+        // Skip closing braces/parens
+        if (line === '}' || line === ')' || line === ');') continue;
+
+        // Parse field: "  id uuid PK" or "  name varchar(255) NOT NULL" etc.
+        const fieldMatch = line.match(/^\s*(\w+)\s+([\w()]+(?:\(\d+\))?)\s*(.*)?$/);
+        if (fieldMatch) {
+          const notes = (fieldMatch[3] || '').replace(/,\s*$/, '').trim();
+          currentTable.fields.push({
+            name: fieldMatch[1],
+            type: fieldMatch[2],
+            notes: notes,
+          });
+        }
+      }
+    }
+    if (currentTable && currentTable.fields.length > 0) {
+      parsed.push(currentTable);
+    }
+    return parsed;
+  }, [schema]);
+
+  const typeColor = (type) => {
+    const t = type.toLowerCase();
+    if (t.includes('uuid')) return 'text-violet-600 bg-violet-50';
+    if (t.includes('varchar') || t.includes('text') || t.includes('string') || t.includes('char')) return 'text-blue-600 bg-blue-50';
+    if (t.includes('int') || t.includes('bigint') || t.includes('serial') || t.includes('float') || t.includes('decimal') || t.includes('numeric')) return 'text-amber-600 bg-amber-50';
+    if (t.includes('bool')) return 'text-emerald-600 bg-emerald-50';
+    if (t.includes('timestamp') || t.includes('date') || t.includes('time')) return 'text-rose-600 bg-rose-50';
+    if (t.includes('json') || t.includes('jsonb') || t.includes('array')) return 'text-indigo-600 bg-indigo-50';
+    return 'text-gray-600 bg-gray-50';
+  };
+
+  // If we successfully parsed tables, show structured view
+  if (tables.length > 0) {
+    return (
+      <div id="data-model" className="rounded-2xl overflow-hidden scroll-mt-24 border border-[#e3e8ee] bg-white">
+        <div className="bg-violet-50/50 border-b border-[#e3e8ee] px-4 py-2 flex items-center gap-2">
+          <Icon name="database" size={14} className="text-violet-600" />
+          <h3 className="text-sm font-bold text-violet-800 landing-display">Data Model</h3>
+          <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-violet-100 text-violet-700 landing-mono">{tables.length} tables</span>
+        </div>
+        <div className="p-3 grid grid-cols-1 gap-3">
+          {tables.map((table, ti) => (
+            <div key={ti} className="rounded-xl border border-[#e3e8ee] overflow-hidden">
+              <div className="px-3 py-2 bg-[#f7f8f9] border-b border-[#e3e8ee] flex items-center gap-2">
+                <Icon name="database" size={12} className="text-violet-500" />
+                <span className="text-sm font-bold text-gray-900 landing-mono">{table.name}</span>
+                <span className="text-[10px] text-gray-400 landing-mono ml-auto">{table.fields.length} fields</span>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-[#f7f8f9]/50">
+                      <th className="text-left px-3 py-1.5 text-[10px] font-bold text-gray-500 uppercase tracking-wider landing-display border-b border-[#e3e8ee]">Field</th>
+                      <th className="text-left px-3 py-1.5 text-[10px] font-bold text-gray-500 uppercase tracking-wider landing-display border-b border-[#e3e8ee]">Type</th>
+                      <th className="text-left px-3 py-1.5 text-[10px] font-bold text-gray-500 uppercase tracking-wider landing-display border-b border-[#e3e8ee]">Notes</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {table.fields.map((field, fi) => (
+                      <tr key={fi} className="hover:bg-violet-50/30 transition-colors border-b border-[#e3e8ee] last:border-b-0">
+                        <td className="px-3 py-2 font-medium text-gray-900 landing-mono text-xs">{field.name}</td>
+                        <td className="px-3 py-2">
+                          <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded landing-mono ${typeColor(field.type)}`}>{field.type}</span>
+                        </td>
+                        <td className="px-3 py-2 text-xs text-gray-500 landing-body">
+                          {field.notes && (
+                            <>
+                              {field.notes.match(/PK|PRIMARY/i) && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 mr-1 landing-mono">PK</span>}
+                              {field.notes.match(/FK|FOREIGN|REFERENCES/i) && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 mr-1 landing-mono">FK</span>}
+                              {field.notes.match(/NOT NULL/i) && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 mr-1 landing-mono">NOT NULL</span>}
+                              <span>{field.notes.replace(/(PK|PRIMARY KEY|FK|FOREIGN KEY|NOT NULL|REFERENCES\s+\w+)/gi, '').replace(/,/g, '').trim()}</span>
+                            </>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Fallback: enhanced code block with line numbers, syntax coloring, and Copy button
+  const schemaLines = (schema || '').split('\n');
+  return (
+    <div id="data-model" className="rounded-2xl overflow-hidden scroll-mt-24 border border-[#e3e8ee] bg-white">
+      <div className="bg-violet-50/50 border-b border-[#e3e8ee] px-4 py-2 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Icon name="database" size={14} className="text-violet-600" />
+          <h3 className="text-sm font-bold text-violet-800 landing-display">Data Model</h3>
+        </div>
+        <button
+          onClick={handleCopy}
+          className="text-[11px] font-medium px-2.5 py-1 rounded-lg border border-[#e3e8ee] bg-white hover:bg-gray-50 text-gray-600 hover:text-gray-900 transition-all landing-mono flex items-center gap-1.5"
+        >
+          {copied ? (
+            <><svg className="w-3 h-3 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> Copied</>
+          ) : (
+            <><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg> Copy</>
+          )}
+        </button>
+      </div>
+      <div className="overflow-x-auto bg-[#f6f8fa] max-h-96 overflow-y-auto">
+        <table className="w-full">
+          <tbody>
+            {schemaLines.map((line, i) => (
+              <tr key={i} className="hover:bg-violet-50/30">
+                <td className="text-right pr-3 pl-3 py-0 select-none text-[10px] text-gray-400 landing-mono" style={{ minWidth: '2.5rem', lineHeight: '1.375rem' }}>{i + 1}</td>
+                <td className="pr-4 py-0 landing-mono text-xs whitespace-pre" style={{ lineHeight: '1.375rem' }}>
+                  {(() => {
+                    // Simple syntax coloring
+                    if (line.trim().match(/^(Table|CREATE|ALTER|DROP|INSERT|SELECT|INDEX)/i)) return <span className="text-violet-700 font-semibold">{line}</span>;
+                    if (line.trim().match(/^(id|uuid|varchar|int|bigint|text|boolean|timestamp|serial|jsonb?|float|decimal|numeric)\b/i)) return <span className="text-blue-600">{line}</span>;
+                    if (line.trim().startsWith('--') || line.trim().startsWith('//')) return <span className="text-gray-400 italic">{line}</span>;
+                    if (line.trim() === '}' || line.trim() === ')' || line.trim() === ');') return <span className="text-gray-500">{line}</span>;
+                    return <span className="text-emerald-700">{line}</span>;
+                  })()}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -156,6 +328,18 @@ export default function TopicDetail({
   const isSDStyle = ['system-design', 'microservices', 'databases'].includes(activePage);
   // SQL uses coding/DSA-style rendering (whenToUse, approach, commonProblems, etc.)
   const isCodingStyle = activePage === 'coding' || activePage === 'sql';
+
+  // SD section accordion states
+  const [sdExpandedQs, setSdExpandedQs] = useState({});
+  const [sdAllQsExpanded, setSdAllQsExpanded] = useState(false);
+  const [sdExpandedDPs, setSdExpandedDPs] = useState({});
+
+  // Reset SD accordion state when topic changes
+  useEffect(() => {
+    setSdExpandedQs({});
+    setSdAllQsExpanded(false);
+    setSdExpandedDPs({});
+  }, [selectedTopic]);
 
   return (
     <div className="landing-root animate-fade-in">
@@ -735,25 +919,41 @@ export default function TopicDetail({
               {(topicDetails.introduction || (topicDetails.concepts && !topicDetails.introduction)) && (
                 <div className={`grid gap-2 ${topicDetails.introduction && topicDetails.concepts ? '' : 'grid-cols-1'}`}>
                   {topicDetails.introduction && (
-                    <div id="overview" className={`rounded-lg overflow-hidden scroll-mt-24 border border-[#e3e8ee] bg-white ${topicDetails.concepts ? '' : ''}`}>
-                      <div className="px-3 py-1.5 border-b border-[#e3e8ee] bg-[#f7f8f9] flex items-center gap-2">
+                    <div id="overview" className="rounded-2xl overflow-hidden scroll-mt-24 border border-[#e3e8ee]" style={{ background: 'linear-gradient(180deg, #ecfdf5 0%, #ffffff 100%)' }}>
+                      <div className="px-4 py-2 border-b border-[#e3e8ee] bg-emerald-50/60 flex items-center gap-2">
                         <Icon name="book" size={14} className="text-emerald-700" />
-                        <h2 className="text-sm font-bold text-blue-800 landing-display">Introduction</h2>
+                        <h2 className="text-sm font-bold text-emerald-900 landing-display">Introduction</h2>
                       </div>
-                      <div className="p-3">
-                        <FormattedContent content={topicDetails.introduction} color="blue" />
+                      <div className="p-5">
+                        <div className="text-gray-700 text-[15px] leading-relaxed landing-body">
+                          <FormattedContent content={topicDetails.introduction} color="emerald" />
+                        </div>
+                        {/* Key challenge callout */}
+                        {topicDetails.introduction && (
+                          <div className="mt-4 flex items-start gap-3 p-3.5 rounded-xl bg-amber-50/70 border border-amber-200/60">
+                            <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                              <Icon name="lightbulb" size={16} className="text-amber-600" />
+                            </div>
+                            <div>
+                              <span className="text-xs font-bold text-amber-800 landing-display uppercase tracking-wider">Key Challenge</span>
+                              <p className="text-sm text-amber-900/80 mt-0.5 leading-relaxed landing-body">
+                                {topicDetails.introduction.split('.').filter(s => s.trim().length > 20).slice(-2, -1)[0]?.trim() || topicDetails.introduction.split('.').slice(0, 1)[0]?.trim()}.
+                              </p>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}
                   {topicDetails.concepts && (
-                    <div className="rounded-lg overflow-hidden border border-[#e3e8ee] bg-white">
-                      <div className="px-3 py-1.5 border-b border-[#e3e8ee] bg-[#f7f8f9] flex items-center gap-2">
+                    <div className="rounded-2xl overflow-hidden border border-[#e3e8ee] bg-white">
+                      <div className="px-4 py-2 border-b border-[#e3e8ee] bg-[#f7f8f9] flex items-center gap-2">
                         <Icon name="puzzle" size={14} style={{ color: topicDetails.color }} />
                         <h2 className="text-sm font-bold text-violet-800 landing-display">Key Concepts</h2>
                       </div>
-                      <div className="p-2 flex flex-wrap gap-1.5">
+                      <div className="p-3 flex flex-wrap gap-1.5">
                         {topicDetails.concepts.map((concept, i) => (
-                          <span key={i} className="px-2 py-1 rounded text-xs landing-mono" style={{ background: `${topicDetails.color}15`, color: topicDetails.color }}>
+                          <span key={i} className="px-2.5 py-1.5 rounded-lg text-xs landing-mono font-medium" style={{ background: `${topicDetails.color}12`, color: topicDetails.color, border: `1px solid ${topicDetails.color}20` }}>
                             {concept}
                           </span>
                         ))}
@@ -763,45 +963,62 @@ export default function TopicDetail({
                 </div>
               )}
 
-              {/* Requirements - Functional & Non-Functional */}
+              {/* Requirements - Functional & Non-Functional — side-by-side grid */}
               {(topicDetails.functionalRequirements || topicDetails.requirements || topicDetails.nonFunctionalRequirements) && (
-              <div id="requirements" className="grid  gap-2 scroll-mt-24">
+              <div id="requirements" className={`grid gap-2 scroll-mt-24 ${(topicDetails.functionalRequirements || topicDetails.requirements) && topicDetails.nonFunctionalRequirements ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
                 {/* Functional Requirements */}
                 {(topicDetails.functionalRequirements || topicDetails.requirements) && (
-                <div className="rounded-lg overflow-hidden border border-[#e3e8ee] bg-white">
-                  <div className="bg-emerald-50/50 border-b border-[#e3e8ee] px-3 py-2 flex items-center gap-2">
+                <div className="rounded-2xl overflow-hidden border border-[#e3e8ee] bg-white">
+                  <div className="bg-emerald-50/50 border-b border-[#e3e8ee] px-4 py-2 flex items-center gap-2">
                     <Icon name="check" size={14} className="text-emerald-700" />
                     <h3 className="text-sm font-bold text-emerald-800 landing-display">Functional Requirements</h3>
+                    <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 landing-mono">{(topicDetails.functionalRequirements || topicDetails.requirements).length} requirements</span>
                   </div>
-                  <div className="p-3">
-                    <ul className="grid grid-cols-1  gap-1">
+                  <div className="p-2.5">
+                    <div className="grid grid-cols-1 gap-1.5">
                       {(topicDetails.functionalRequirements || topicDetails.requirements).map((req, i) => (
-                        <li key={i} className="flex items-start gap-2 rounded hover:bg-[#f7f8f9] transition-colors">
-                          <span className="w-4 h-4 rounded-full flex items-center justify-center text-xs flex-shrink-0 bg-emerald-50 text-emerald-700 mt-0.5">✓</span>
-                          <span className="text-gray-500 text-xs landing-body">{req}</span>
-                        </li>
+                        <div key={i} className="flex items-start gap-2.5 px-3 py-2.5 rounded-xl border border-transparent bg-[#f7f8f9] hover:border-emerald-200 hover:bg-emerald-50/40 hover:shadow-sm transition-all cursor-default">
+                          <span className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 bg-emerald-100 text-emerald-700 mt-0.5">
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                          </span>
+                          <span className="text-gray-700 text-sm landing-body leading-relaxed">{req}</span>
+                        </div>
                       ))}
-                    </ul>
+                    </div>
                   </div>
                 </div>
                 )}
 
                 {/* Non-Functional Requirements */}
                 {topicDetails.nonFunctionalRequirements && (
-                  <div className="rounded-lg overflow-hidden border border-[#e3e8ee] bg-white">
-                    <div className="px-3 py-2 border-b border-[#e3e8ee] flex items-center gap-2 bg-[#f7f8f9]">
-                      <Icon name="zap" size={14} className="text-emerald-700" />
-                      <h3 className="text-sm font-bold text-emerald-800 landing-display">Non-Functional Requirements</h3>
+                  <div className="rounded-2xl overflow-hidden border border-[#e3e8ee] bg-white">
+                    <div className="px-4 py-2 border-b border-[#e3e8ee] flex items-center gap-2 bg-amber-50/50">
+                      <Icon name="zap" size={14} className="text-amber-600" />
+                      <h3 className="text-sm font-bold text-amber-800 landing-display">Non-Functional Requirements</h3>
+                      <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 landing-mono">{topicDetails.nonFunctionalRequirements.length} requirements</span>
                     </div>
-                    <div className="p-3">
-                      <ul className="grid grid-cols-1  gap-1">
-                        {topicDetails.nonFunctionalRequirements.map((req, i) => (
-                          <li key={i} className="flex items-start gap-2 rounded hover:bg-[#f7f8f9] transition-colors">
-                            <span className="w-4 h-4 rounded-full flex items-center justify-center text-xs flex-shrink-0 bg-emerald-50 text-emerald-700 mt-0.5">•</span>
-                            <span className="text-gray-500 text-xs landing-body">{req}</span>
-                          </li>
-                        ))}
-                      </ul>
+                    <div className="p-2.5">
+                      <div className="grid grid-cols-1 gap-1.5">
+                        {topicDetails.nonFunctionalRequirements.map((req, i) => {
+                          // Extract metric-like values from the requirement text (e.g., "<3s", "99.9%", "1M")
+                          const metricMatch = req.match(/([<>~]?\d+\.?\d*\s*(?:ms|s|%|M|K|GB|TB|MB|req\/s|QPS|RPS|rpm|tps)?)/i);
+                          return (
+                            <div key={i} className="flex items-start gap-2.5 px-3 py-2.5 rounded-xl border border-transparent bg-[#f7f8f9] hover:border-amber-200 hover:bg-amber-50/40 hover:shadow-sm transition-all cursor-default">
+                              <div className="flex items-center gap-2 flex-1 min-w-0">
+                                <span className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 bg-amber-100 text-amber-700 mt-0.5">
+                                  <Icon name="zap" size={10} className="text-amber-600" />
+                                </span>
+                                <span className="text-gray-700 text-sm landing-body leading-relaxed flex-1">{req}</span>
+                              </div>
+                              {metricMatch && (
+                                <span className="flex-shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 landing-mono border border-amber-200/60">
+                                  {metricMatch[1].trim()}
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
                 )}
@@ -811,27 +1028,32 @@ export default function TopicDetail({
               {/* API Design + Data Model — side by side */}
               {(topicDetails.apiDesign?.endpoints || topicDetails.dataModel) && (
                 <div className={`grid gap-2 scroll-mt-24 ${topicDetails.apiDesign?.endpoints && topicDetails.dataModel ? '' : 'grid-cols-1'}`}>
-                  {/* API Design — dense multi-column endpoint grid */}
+                  {/* API Design — Stripe-style endpoint cards */}
                   {topicDetails.apiDesign && topicDetails.apiDesign.endpoints && (
-                    <div id="api-design" className="rounded-lg overflow-hidden scroll-mt-24 border border-[#e3e8ee] bg-white">
-                      <div className="bg-emerald-50/50 border-b border-[#e3e8ee] px-3 py-1.5 flex items-center gap-2">
-                        <Icon name="code" size={14} className="text-emerald-700" />
+                    <div id="api-design" className="rounded-2xl overflow-hidden scroll-mt-24 border border-[#e3e8ee] bg-white">
+                      <div className="bg-blue-50/50 border-b border-[#e3e8ee] px-4 py-2 flex items-center gap-2">
+                        <Icon name="code" size={14} className="text-blue-600" />
                         <h3 className="text-sm font-bold text-blue-800 landing-display">API Design</h3>
+                        <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 landing-mono">{topicDetails.apiDesign.endpoints.length} endpoints</span>
                       </div>
-                      <div className="p-2">
-                        <div className={`grid gap-1.5 ${topicDetails.apiDesign.endpoints.length > 4 ? 'grid-cols-1 ' : 'grid-cols-1 '}`}>
+                      <div className="p-3">
+                        <div className="grid grid-cols-1 gap-2">
                           {topicDetails.apiDesign.endpoints.map((endpoint, i) => (
-                            <div key={i} className="rounded-md px-2.5 py-2 bg-[#f7f8f9] border border-[#e3e8ee]">
-                              <div className="flex items-center gap-1.5 mb-1">
-                                <span className={`text-[9px] landing-mono px-1 py-0.5 rounded font-bold uppercase leading-none ${
-                                  endpoint.method === 'GET' ? 'bg-emerald-50 text-emerald-700' :
-                                  endpoint.method === 'POST' || endpoint.method === 'INSERT' ? 'bg-amber-50 text-amber-700' :
-                                  endpoint.method === 'PUT' || endpoint.method === 'UPDATE' ? 'bg-blue-50 text-blue-700' :
-                                  'bg-red-50 text-red-700'
+                            <div key={i} className="rounded-xl p-3.5 bg-white border border-[#e3e8ee] hover:shadow-md hover:border-[#d0d5dd] hover:-translate-y-0.5 transition-all">
+                              <div className="flex items-center gap-2.5 mb-2">
+                                <span className={`text-[11px] landing-mono px-2.5 py-1 rounded-full font-bold uppercase tracking-wide ${
+                                  endpoint.method === 'GET' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' :
+                                  endpoint.method === 'POST' || endpoint.method === 'INSERT' ? 'bg-amber-100 text-amber-700 border border-amber-200' :
+                                  endpoint.method === 'PUT' || endpoint.method === 'UPDATE' ? 'bg-blue-100 text-blue-700 border border-blue-200' :
+                                  'bg-red-100 text-red-700 border border-red-200'
                                 }`}>{endpoint.method}</span>
-                                <code className="text-gray-900 landing-mono text-xs truncate">{endpoint.path}</code>
+                                <code className="text-gray-900 landing-mono text-sm font-medium">{endpoint.path}</code>
                               </div>
-                              <div className="text-gray-400 text-xs landing-body truncate">{endpoint.response}</div>
+                              {endpoint.response && (
+                                <div className="rounded-lg bg-[#f6f8fa] border border-[#e3e8ee] px-3 py-2 overflow-x-auto">
+                                  <code className="text-xs landing-mono text-gray-600 whitespace-pre-wrap leading-5">{endpoint.response}</code>
+                                </div>
+                              )}
                             </div>
                           ))}
                         </div>
@@ -839,95 +1061,114 @@ export default function TopicDetail({
                     </div>
                   )}
 
-                  {/* Data Model — compact code block */}
+                  {/* Data Model — structured schema presentation */}
                   {topicDetails.dataModel && (
-                    <div id="data-model" className="rounded-lg overflow-hidden scroll-mt-24 border border-[#e3e8ee] bg-white">
-                      <div className="bg-emerald-50/50 border-b border-[#e3e8ee] px-3 py-1.5 flex items-center gap-2">
-                        <Icon name="database" size={14} className="text-emerald-700" />
-                        <h3 className="text-sm font-bold text-blue-800 landing-display">Data Model</h3>
-                      </div>
-                      <div className="overflow-x-auto bg-[#f6f8fa] max-h-80 overflow-y-auto">
-                        <pre className="p-2.5 text-xs leading-5 text-emerald-700 landing-mono" style={{ whiteSpace: 'pre', margin: 0, tabSize: 4 }}>
-                          {topicDetails.dataModel.schema}
-                        </pre>
-                      </div>
-                    </div>
+                    <DataModelSection schema={topicDetails.dataModel.schema} />
                   )}
                 </div>
               )}
 
-              {/* Key Questions */}
+              {/* Key Questions — Accordion style */}
               {topicDetails.keyQuestions && (
-                <div id="key-questions" className="rounded-xl overflow-hidden scroll-mt-24 border border-[#e3e8ee] bg-white">
-                  <div className="bg-emerald-50/50 border-b border-[#e3e8ee] px-3 py-2 flex items-center gap-2">
-                    <Icon name="messageSquare" size={14} className="text-emerald-700" />
-                    <h3 className="text-sm font-bold text-emerald-800 landing-display">Key Questions</h3>
-                    <span className="text-[10px] landing-mono text-gray-400 ml-auto">{topicDetails.keyQuestions.length} topics</span>
+                <div id="key-questions" className="rounded-2xl overflow-hidden scroll-mt-24 border border-[#e3e8ee] bg-white">
+                  <div className="bg-indigo-50/50 border-b border-[#e3e8ee] px-4 py-2 flex items-center gap-2">
+                    <Icon name="messageSquare" size={14} className="text-indigo-600" />
+                    <h3 className="text-sm font-bold text-indigo-800 landing-display">Key Questions</h3>
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 landing-mono">{topicDetails.keyQuestions.length} topics</span>
+                    <button
+                      onClick={() => {
+                        if (sdAllQsExpanded) {
+                          setSdExpandedQs({});
+                        } else {
+                          const all = {};
+                          topicDetails.keyQuestions.forEach((_, i) => { all[i] = true; });
+                          setSdExpandedQs(all);
+                        }
+                        setSdAllQsExpanded(!sdAllQsExpanded);
+                      }}
+                      className="ml-auto text-[11px] font-medium text-indigo-600 hover:text-indigo-800 transition-colors landing-mono flex items-center gap-1"
+                    >
+                      {sdAllQsExpanded ? 'Collapse all' : 'Expand all'}
+                      <svg className={`w-3 h-3 transition-transform ${sdAllQsExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                    </button>
                   </div>
-                  <div className="grid grid-cols-1 gap-2 p-2">
-                    {topicDetails.keyQuestions.map((q, i) => (
-                      <div key={i} className="p-3 rounded-lg hover:bg-[#f7f8f9] hover:border-[#d0d5dd] transition-colors bg-white border border-[#e3e8ee]">
-                        <div className="flex items-start gap-2">
-                          <span className="w-7 h-7 rounded-lg bg-emerald-500 flex items-center justify-center text-xs text-white font-bold flex-shrink-0 landing-mono">{i + 1}</span>
-                          <div className="flex-1 min-w-0">
-                            <h4 className="text-blue-900 font-semibold text-sm mb-2 landing-display">{q.question}</h4>
-                            <div className="text-gray-700 landing-body">
-                              <FormattedContent content={q.answer} color="emerald" />
+                  <div className="p-2.5 space-y-1.5">
+                    {topicDetails.keyQuestions.map((q, i) => {
+                      const isOpen = sdExpandedQs[i] || false;
+                      return (
+                        <div key={i} className={`rounded-xl overflow-hidden border transition-all ${isOpen ? 'border-emerald-200 shadow-sm' : 'border-[#e3e8ee] hover:border-[#d0d5dd]'}`}>
+                          <button
+                            onClick={() => setSdExpandedQs(prev => ({ ...prev, [i]: !prev[i] }))}
+                            className="w-full flex items-center gap-2.5 px-3.5 py-3 bg-white hover:bg-[#f7f8f9] transition-colors text-left"
+                          >
+                            <span className="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-bold flex-shrink-0 landing-mono">{i + 1}</span>
+                            <h4 className="text-gray-900 font-semibold text-sm flex-1 landing-display leading-snug">{q.question}</h4>
+                            <svg className={`w-4 h-4 text-gray-400 transition-transform flex-shrink-0 ${isOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                          </button>
+                          {isOpen && (
+                            <div className="px-4 pb-4 pt-1 border-t border-[#e3e8ee]" style={{ borderLeft: '3px solid #10b981' }}>
+                              <div className="pl-9 text-gray-600 text-sm leading-relaxed landing-body">
+                                <FormattedContent content={q.answer} color="emerald" />
+                              </div>
                             </div>
-                          </div>
+                          )}
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               )}
 
-              {/* Basic + Advanced Implementation */}
+              {/* Basic + Advanced Implementation — Before/After comparison */}
               {(topicDetails.basicImplementation || topicDetails.advancedImplementation) && (
-                <div id="architecture" className={`grid gap-2 scroll-mt-24 ${topicDetails.basicImplementation && topicDetails.advancedImplementation ? '' : 'grid-cols-1'}`}>
+                <div id="architecture" className={`grid gap-2 scroll-mt-24 ${topicDetails.basicImplementation && topicDetails.advancedImplementation ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
                   {/* Basic Implementation */}
                   {topicDetails.basicImplementation && (
-                    <div className="rounded-xl overflow-hidden border border-[#e3e8ee] bg-white">
-                      <div className="bg-emerald-50/50 border-b border-[#e3e8ee] px-3 py-2 flex items-center gap-2">
-                        <Icon name="layers" size={14} className="text-emerald-700" />
-                        <h3 className="text-sm font-bold text-blue-800 landing-display">{topicDetails.basicImplementation.title || 'Basic Approach'}</h3>
+                    <div className="rounded-2xl overflow-hidden border border-gray-200 bg-white">
+                      <div className="border-b border-gray-200 px-4 py-2 flex items-center gap-2 bg-gray-50">
+                        <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-gray-200 text-gray-700 uppercase tracking-wider landing-mono">Basic</span>
+                        <h3 className="text-sm font-bold text-gray-700 landing-display">{topicDetails.basicImplementation.title || 'Basic Approach'}</h3>
                       </div>
-                      <div className="p-3">
-                        <p className="text-gray-500 text-sm mb-2 leading-relaxed landing-body">{topicDetails.basicImplementation.description}</p>
+                      <div className="p-4">
+                        <p className="text-gray-600 text-sm mb-3 leading-relaxed landing-body">{topicDetails.basicImplementation.description}</p>
                         {topicDetails.basicImplementation.svgTemplate && (
                           <DiagramSVG
                             template={topicDetails.basicImplementation.svgTemplate}
-                            className="mb-2"
+                            className="mb-3"
                           />
                         )}
                         {topicDetails.basicImplementation.architecture && !topicDetails.basicImplementation.svgTemplate && (
-                          <div className="rounded-lg overflow-x-auto mb-2 bg-[#0d1117]">
-                            <pre
-                              className="p-4 text-sm leading-6 text-gray-300 landing-mono"
-                              style={{
-                                whiteSpace: 'pre',
-                                margin: 0,
-                                tabSize: 4
-                              }}
-                            >
-                              {topicDetails.basicImplementation.architecture}
-                            </pre>
+                          <div className="rounded-xl overflow-hidden mb-3 border border-[#e3e8ee]">
+                            <div className="px-3 py-1.5 bg-gray-100 border-b border-[#e3e8ee] flex items-center gap-2">
+                              <Icon name="layers" size={12} className="text-gray-500" />
+                              <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider landing-mono">Architecture</span>
+                            </div>
+                            <div className="bg-[#0d1117] overflow-x-auto">
+                              <pre
+                                className="p-4 text-sm leading-6 text-gray-300 landing-mono"
+                                style={{ whiteSpace: 'pre', margin: 0, tabSize: 4 }}
+                              >
+                                {topicDetails.basicImplementation.architecture}
+                              </pre>
+                            </div>
                           </div>
                         )}
                         {topicDetails.basicImplementation.problems && (
                           <div>
-                            <h4 className="text-gray-900 text-sm font-semibold mb-2 flex items-center gap-2 landing-display">
-                              <Icon name="alertTriangle" size={14} />
-                              Issues:
+                            <h4 className="text-gray-900 text-xs font-bold mb-2 flex items-center gap-2 landing-display uppercase tracking-wider">
+                              <Icon name="alertTriangle" size={12} className="text-red-500" />
+                              Issues
                             </h4>
-                            <ul className="grid grid-cols-1 gap-1">
+                            <div className="grid grid-cols-1 gap-1.5">
                               {topicDetails.basicImplementation.problems.map((problem, i) => (
-                                <li key={i} className="flex items-start gap-2 text-gray-500 text-sm landing-body">
-                                  <span className="text-red-500 mt-0.5">✗</span>
-                                  <span>{problem}</span>
-                                </li>
+                                <div key={i} className="flex items-start gap-2.5 px-3 py-2 rounded-lg bg-red-50/50 border border-red-100 text-sm landing-body">
+                                  <span className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 bg-red-100 mt-0.5">
+                                    <svg className="w-2.5 h-2.5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                                  </span>
+                                  <span className="text-gray-700">{problem}</span>
+                                </div>
                               ))}
-                            </ul>
+                            </div>
                           </div>
                         )}
                       </div>
@@ -936,57 +1177,59 @@ export default function TopicDetail({
 
                   {/* Advanced Implementation */}
                   {topicDetails.advancedImplementation && (
-                    <div className="rounded-xl overflow-hidden border border-[#e3e8ee] bg-white">
-                      <div className="bg-emerald-50/50 border-b border-[#e3e8ee] px-3 py-2 flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-emerald-50">
-                          <Icon name="zap" size={18} className="text-emerald-700" />
-                        </div>
-                        <h3 className="text-sm font-bold text-violet-800 landing-display">{topicDetails.advancedImplementation.title || 'Scalable Solution'}</h3>
+                    <div className="rounded-2xl overflow-hidden border border-emerald-200 bg-white">
+                      <div className="border-b border-emerald-200 px-4 py-2 flex items-center gap-2 bg-emerald-50/60">
+                        <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 uppercase tracking-wider landing-mono">Advanced</span>
+                        <h3 className="text-sm font-bold text-emerald-800 landing-display">{topicDetails.advancedImplementation.title || 'Scalable Solution'}</h3>
                       </div>
-                      <div className="p-3">
-                        <p className="text-gray-500 text-sm mb-2 leading-relaxed landing-body">{topicDetails.advancedImplementation.description}</p>
+                      <div className="p-4">
+                        <p className="text-gray-600 text-sm mb-3 leading-relaxed landing-body">{topicDetails.advancedImplementation.description}</p>
                         {topicDetails.advancedImplementation.svgTemplate && (
                           <DiagramSVG
                             template={topicDetails.advancedImplementation.svgTemplate}
-                            className="mb-2"
+                            className="mb-3"
                           />
                         )}
                         {topicDetails.advancedImplementation.architecture && !topicDetails.advancedImplementation.svgTemplate && (
-                          <div className="rounded-lg overflow-x-auto mb-2 bg-[#f6f8fa] border border-[#e3e8ee]">
-                            <pre
-                              className="p-3 text-sm leading-7 text-emerald-700 landing-mono"
-                              style={{
-                                whiteSpace: 'pre',
-                                margin: 0,
-                                tabSize: 4
-                              }}
-                            >
-                              {topicDetails.advancedImplementation.architecture}
-                            </pre>
+                          <div className="rounded-xl overflow-hidden mb-3 border border-emerald-200">
+                            <div className="px-3 py-1.5 bg-emerald-50 border-b border-emerald-200 flex items-center gap-2">
+                              <Icon name="zap" size={12} className="text-emerald-600" />
+                              <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider landing-mono">Architecture</span>
+                            </div>
+                            <div className="bg-[#f6f8fa] overflow-x-auto border-[#e3e8ee]">
+                              <pre
+                                className="p-4 text-sm leading-7 text-emerald-700 landing-mono"
+                                style={{ whiteSpace: 'pre', margin: 0, tabSize: 4 }}
+                              >
+                                {topicDetails.advancedImplementation.architecture}
+                              </pre>
+                            </div>
                           </div>
                         )}
                         {topicDetails.advancedImplementation.keyPoints && (
-                          <div className="mb-2">
-                            <h4 className="text-gray-900 text-sm font-semibold mb-2 landing-display">Key Points:</h4>
-                            <ul className="grid grid-cols-1 gap-1">
+                          <div className="mb-3">
+                            <h4 className="text-gray-900 text-xs font-bold mb-2 landing-display uppercase tracking-wider">Key Points</h4>
+                            <div className="grid grid-cols-1 gap-1.5">
                               {topicDetails.advancedImplementation.keyPoints.map((point, i) => (
-                                <li key={i} className="flex items-start gap-2 text-gray-500 text-sm landing-body">
-                                  <span className="text-emerald-600 mt-0.5">✓</span>
-                                  <span>{point}</span>
-                                </li>
+                                <div key={i} className="flex items-start gap-2.5 px-3 py-2 rounded-lg bg-emerald-50/50 border border-emerald-100 text-sm landing-body">
+                                  <span className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 bg-emerald-100 mt-0.5">
+                                    <svg className="w-2.5 h-2.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                                  </span>
+                                  <span className="text-gray-700">{point}</span>
+                                </div>
                               ))}
-                            </ul>
+                            </div>
                           </div>
                         )}
                         {(topicDetails.advancedImplementation.databaseChoice || topicDetails.advancedImplementation.caching) && (
                           <div className="flex flex-wrap gap-2">
                             {topicDetails.advancedImplementation.databaseChoice && (
-                              <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border bg-emerald-50 text-emerald-700 border-emerald-200">
+                              <span className="text-[10px] landing-mono px-2 py-1 rounded-lg border bg-emerald-50 text-emerald-700 border-emerald-200 font-semibold">
                                 DB: {topicDetails.advancedImplementation.databaseChoice}
                               </span>
                             )}
                             {topicDetails.advancedImplementation.caching && (
-                              <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border bg-emerald-50 text-emerald-700 border-emerald-200">
+                              <span className="text-[10px] landing-mono px-2 py-1 rounded-lg border bg-emerald-50 text-emerald-700 border-emerald-200 font-semibold">
                                 Cache: {topicDetails.advancedImplementation.caching}
                               </span>
                             )}
@@ -1176,35 +1419,56 @@ export default function TopicDetail({
                 </div>
               )}
 
-              {/* Discussion Points - Compact Grid */}
-              {topicDetails.discussionPoints && (
-                <div className="rounded-lg overflow-hidden bg-[#f7f8f9] border border-[#e3e8ee]">
-                  <div className="px-3 py-2 border-b border-[#e3e8ee] flex items-center gap-2 bg-[#f7f8f9]">
-                    <Icon name="messageCircle" size={16} className="text-gray-900" />
+              {/* Discussion Points — Full-width expandable cards */}
+              {topicDetails.discussionPoints && (() => {
+                const TOPIC_COLORS = ['#10b981', '#6366f1', '#f59e0b', '#3b82f6', '#ef4444', '#8b5cf6', '#14b8a6', '#ec4899'];
+                return (
+                <div className="rounded-2xl overflow-hidden bg-white border border-[#e3e8ee]">
+                  <div className="px-4 py-2 border-b border-[#e3e8ee] flex items-center gap-2 bg-indigo-50/50">
+                    <Icon name="messageCircle" size={14} className="text-indigo-600" />
                     <h3 className="text-sm font-bold text-indigo-800 landing-display">Discussion Points</h3>
+                    <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 landing-mono">{topicDetails.discussionPoints.length} topics</span>
                   </div>
-                  <div className="p-3">
-                    <div className="grid grid-cols-1   gap-2">
-                      {topicDetails.discussionPoints.map((point, i) => (
-                        <div key={i} className="p-3 rounded-lg bg-white border border-[#e3e8ee] hover:border-[#d0d5dd] transition-colors">
-                          <h4 className="text-gray-900 font-semibold mb-1.5 text-sm landing-display">{point.topic}</h4>
-                          <ul className="space-y-0.5">
-                            {point.points.slice(0, 3).map((p, j) => (
-                              <li key={j} className="flex items-start gap-1 text-gray-500 text-sm landing-body">
-                                <span className="text-gray-400 mt-0.5">•</span>
-                                <span className="truncate">{p}</span>
-                              </li>
-                            ))}
-                            {point.points.length > 3 && (
-                              <li className="text-gray-400 text-sm landing-body">+{point.points.length - 3} more</li>
+                  <div className="p-2.5 space-y-2">
+                    {topicDetails.discussionPoints.map((point, i) => {
+                      const dotColor = TOPIC_COLORS[i % TOPIC_COLORS.length];
+                      const isExpanded = sdExpandedDPs[i] || false;
+                      const visiblePoints = isExpanded ? point.points : point.points.slice(0, 2);
+                      const hasMore = point.points.length > 2;
+                      return (
+                        <div key={i} className="rounded-xl border border-[#e3e8ee] bg-white hover:border-[#d0d5dd] transition-all overflow-hidden">
+                          <div className="px-4 py-3">
+                            <div className="flex items-center gap-2.5 mb-2.5">
+                              <span className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `${dotColor}15` }}>
+                                <Icon name="messageCircle" size={12} style={{ color: dotColor }} />
+                              </span>
+                              <h4 className="text-gray-900 font-semibold text-sm landing-display flex-1">{point.topic}</h4>
+                            </div>
+                            <ul className="space-y-1.5 ml-8">
+                              {visiblePoints.map((p, j) => (
+                                <li key={j} className="flex items-start gap-2 text-sm landing-body">
+                                  <span className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0" style={{ background: dotColor }} />
+                                  <span className="text-gray-600 leading-relaxed">{p}</span>
+                                </li>
+                              ))}
+                            </ul>
+                            {hasMore && (
+                              <button
+                                onClick={() => setSdExpandedDPs(prev => ({ ...prev, [i]: !prev[i] }))}
+                                className="ml-8 mt-2 text-[11px] font-medium text-indigo-600 hover:text-indigo-800 transition-colors landing-mono flex items-center gap-1"
+                              >
+                                {isExpanded ? 'Show less' : `Show ${point.points.length - 2} more`}
+                                <svg className={`w-3 h-3 transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                              </button>
                             )}
-                          </ul>
+                          </div>
                         </div>
-                      ))}
-                    </div>
+                      );
+                    })}
                   </div>
                 </div>
-              )}
+                );
+              })()}
 
               {/* Back-of-Envelope Estimation — AG Grid Table */}
               {topicDetails.estimation && (
@@ -1354,15 +1618,15 @@ export default function TopicDetail({
                 <div className={`grid gap-2 ${(!topicDetails.introduction && topicDetails.components) && topicDetails.keyDecisions ? '' : 'grid-cols-1'}`}>
                   {/* System Components */}
                   {!topicDetails.introduction && topicDetails.components && (
-                    <div className="rounded-lg overflow-hidden border border-[#e3e8ee] bg-white">
-                      <div className="px-3 py-2 border-b border-[#e3e8ee] flex items-center gap-2 bg-[#f7f8f9]">
-                        <Icon name="layers" size={16} className="text-emerald-700" />
+                    <div className="rounded-2xl overflow-hidden border border-[#e3e8ee] bg-white">
+                      <div className="px-4 py-2 border-b border-[#e3e8ee] flex items-center gap-2 bg-[#f7f8f9]">
+                        <Icon name="layers" size={14} className="text-emerald-700" />
                         <h3 className="text-sm font-bold text-blue-800 landing-display">System Components</h3>
                       </div>
-                      <div className="p-4">
+                      <div className="p-3">
                         <div className="flex flex-wrap gap-2">
                           {topicDetails.components.map((comp, i) => (
-                            <span key={i} className="text-[10px] landing-mono px-1.5 py-0.5 rounded border bg-emerald-50 text-emerald-700 border-emerald-200">
+                            <span key={i} className="text-[10px] landing-mono px-2 py-1 rounded-lg border bg-emerald-50 text-emerald-700 border-emerald-200 font-semibold">
                               {comp}
                             </span>
                           ))}
@@ -1371,24 +1635,28 @@ export default function TopicDetail({
                     </div>
                   )}
 
-                  {/* Key Design Decisions */}
+                  {/* Key Design Decisions — Numbered timeline cards */}
                   {topicDetails.keyDecisions && (
-                    <div className="rounded-lg overflow-hidden bg-[#f7f8f9] border border-[#e3e8ee]">
-                      <div className="px-3 py-2 border-b border-[#e3e8ee] flex items-center gap-2 bg-[#f7f8f9]">
-                        <Icon name="lightbulb" size={16} className="text-gray-900" />
-                        <h3 className="text-sm font-bold text-violet-800 landing-display">Key Design Decisions</h3>
+                    <div className="rounded-2xl overflow-hidden bg-white border border-[#e3e8ee]">
+                      <div className="px-4 py-2 border-b border-[#e3e8ee] flex items-center gap-2 bg-emerald-50/50">
+                        <Icon name="lightbulb" size={14} className="text-emerald-600" />
+                        <h3 className="text-sm font-bold text-emerald-800 landing-display">Key Design Decisions</h3>
+                        <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 landing-mono">{topicDetails.keyDecisions.length}</span>
                       </div>
                       <div className="p-3">
-                        <ol className="grid grid-cols-1  gap-1">
+                        <div className="flex flex-nowrap gap-2.5 overflow-x-auto pb-2" style={{ scrollbarWidth: 'thin' }}>
                           {topicDetails.keyDecisions.map((decision, i) => (
-                            <li key={i} className="flex items-start gap-2 rounded hover:bg-[#f7f8f9] transition-colors">
-                              <span className="w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 bg-[#f7f8f9] text-gray-900 border border-amber-500/30 landing-mono">
-                                {i + 1}
-                              </span>
-                              <span className="text-gray-500 text-sm landing-body">{decision}</span>
-                            </li>
+                            <div key={i} className="flex-shrink-0 w-56 p-3.5 rounded-xl border border-[#e3e8ee] bg-[#f7f8f9] hover:border-emerald-200 hover:shadow-sm transition-all">
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 bg-emerald-500 text-white landing-mono">
+                                  {i + 1}
+                                </span>
+                                <div className="h-px flex-1 bg-emerald-200" />
+                              </div>
+                              <p className="text-gray-700 text-sm leading-relaxed landing-body">{decision}</p>
+                            </div>
                           ))}
-                        </ol>
+                        </div>
                       </div>
                     </div>
                   )}
