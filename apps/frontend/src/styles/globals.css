@@ -1,10 +1,129 @@
-@import url('https://fonts.googleapis.com/css2?family=Work+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Comfortaa:wght@700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Comfortaa:wght@700&display=swap');
 @import "tailwindcss";
 @config "../../tailwind.config.ts";
 
 body {
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
 }
+
+/* ══════════════════════════════════════════════════════════════
+   CAMORA DESIGN SYSTEM — Utility Classes
+   ══════════════════════════════════════════════════════════════ */
+
+/* Cards */
+.card {
+  background: #ffffff;
+  border: 1px solid #e3e8ee;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.card-sm {
+  background: #ffffff;
+  border: 1px solid #e3e8ee;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.card:hover, .card-sm:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  border-color: #d0d5dd;
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+/* Buttons */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  box-shadow: 0 2px 8px rgba(16,185,129,0.25);
+}
+.btn-primary:hover { opacity: 0.9; }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: #ffffff;
+  color: #374151;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 12px;
+  border: 2px solid #c7cfe0;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.btn-secondary:hover { border-color: #10b981; color: #059669; }
+
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: transparent;
+  color: #6b7280;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 8px;
+  border: 1px solid #e3e8ee;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-ghost:hover { background: #f3f4f6; }
+
+.btn-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: #fef2f2;
+  color: #dc2626;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 8px;
+  border: 1px solid #fecaca;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-danger:hover { background: #fee2e2; }
+
+/* Badges */
+.badge-easy { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 4px; color: #059669; background: #ecfdf5; border: 1px solid #a7f3d0; }
+.badge-medium { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 4px; color: #d97706; background: #fffbeb; border: 1px solid #fde68a; }
+.badge-hard { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 4px; color: #dc2626; background: #fef2f2; border: 1px solid #fecaca; }
+.badge-new { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; color: #059669; background: #ecfdf5; border: 1px solid #a7f3d0; text-transform: uppercase; }
+.badge-neutral { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 4px; color: #6b7280; background: #f3f4f6; border: 1px solid #e5e7eb; }
+
+/* Category pills */
+.pill { font-size: 12px; font-weight: 500; padding: 4px 12px; border-radius: 9999px; border: 1px solid #e3e8ee; background: #ffffff; color: #4b5563; cursor: pointer; transition: all 0.15s; }
+.pill:hover { border-color: #d0d5dd; }
+.pill-active { border-color: #10b981; background: #ecfdf5; color: #059669; }
+
+/* Section label */
+.section-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #6b7280; }
+
+/* Typography */
+.heading-1 { font-size: 30px; font-weight: 700; color: #111827; line-height: 1.2; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+.heading-2 { font-size: 20px; font-weight: 700; color: #111827; line-height: 1.3; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+.heading-3 { font-size: 16px; font-weight: 600; color: #111827; line-height: 1.4; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+.text-body { font-size: 14px; color: #374151; line-height: 1.6; }
+.text-small { font-size: 12px; color: #6b7280; line-height: 1.5; }
+.text-mono { font-family: 'IBM Plex Mono', monospace; font-size: 13px; }
 
 /* APPA gradient strip — top and bottom of every page */
 body::before,
