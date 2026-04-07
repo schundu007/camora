@@ -118,11 +118,21 @@ router.post('/generate', async (req, res, next) => {
     const problemHash = hashProblem(`${cacheKey || question}::${provider}::${direction}::${detailLevel}`);
     try {
       const cached = await query(
-        'SELECT image_url FROM ascend_diagram_cache WHERE problem_hash = $1 AND image_data IS NOT NULL',
+        'SELECT image_url, mermaid_code FROM ascend_diagram_cache WHERE problem_hash = $1 AND (image_data IS NOT NULL OR mermaid_code IS NOT NULL)',
         [problemHash]
       );
       if (cached.rows.length > 0) {
         console.log('[DiagramCache] Cache hit for hash:', problemHash);
+        // Return mermaid code if that's what was cached
+        if (cached.rows[0].mermaid_code) {
+          return res.json({
+            success: true,
+            type: 'mermaid',
+            mermaid_code: cached.rows[0].mermaid_code,
+            cloud_provider: provider,
+            cached: true,
+          });
+        }
         return res.json({
           success: true,
           image_url: cached.rows[0].image_url,
@@ -146,25 +156,69 @@ router.post('/generate', async (req, res, next) => {
       throw new AppError('Diagram generation not configured — ANTHROPIC_API_KEY is not set', ErrorCode.EXTERNAL_API_ERROR);
     }
 
-    // 4. Generate
-    const result = await pythonDiagrams.generateDiagram({
-      question,
-      cloudProvider: provider,
-      difficulty: difficulty || 'medium',
-      category: category || 'System Design',
-      format: format || 'png',
-      detailLevel,
-      direction,
-    });
-
-    if (!result.success) {
-      throw new AppError(result.error || 'Diagram generation failed', ErrorCode.EXTERNAL_API_ERROR);
+    // 4. Try Python diagrams first, fall back to Mermaid code generation
+    let pythonResult = null;
+    let pythonError = null;
+    try {
+      pythonResult = await pythonDiagrams.generateDiagram({
+        question,
+        cloudProvider: provider,
+        difficulty: difficulty || 'medium',
+        category: category || 'System Design',
+        format: format || 'png',
+        detailLevel,
+        direction,
+      });
+      if (!pythonResult.success) {
+        pythonError = pythonResult.error || 'Diagram generation failed';
+        pythonResult = null;
+      }
+    } catch (err) {
+      pythonError = err.message || 'Python diagram generation failed';
+      console.warn('[Diagram] Python generation failed, trying Mermaid fallback:', pythonError);
     }
 
-    // 5. Read PNG into buffer and persist in DB
+    // 4a. Mermaid fallback — single Claude call, ~3s, no Python needed
+    if (!pythonResult) {
+      console.log('[Diagram] Attempting Mermaid fallback for:', question.slice(0, 80));
+      try {
+        const mermaidResult = await pythonDiagrams.generateMermaidFallback({
+          question,
+          cloudProvider: provider,
+          detailLevel,
+        });
+
+        // Cache mermaid code in DB
+        try {
+          await query(
+            `INSERT INTO ascend_diagram_cache (problem_hash, detail_level, cloud_provider, direction, image_url, mermaid_code, description)
+             VALUES ($1, $2, $3, $4, $5, $6, $7)
+             ON CONFLICT (problem_hash) DO UPDATE SET mermaid_code = $6, image_url = $5`,
+            [problemHash, detailLevel, provider, direction, '', mermaidResult.mermaid_code, (cacheKey || question).slice(0, 500)]
+          );
+          console.log('[DiagramCache] Mermaid code cached, hash:', problemHash);
+        } catch (cacheErr) {
+          console.warn('[DiagramCache] Failed to cache mermaid code:', cacheErr.message);
+        }
+
+        return res.json({
+          success: true,
+          type: 'mermaid',
+          mermaid_code: mermaidResult.mermaid_code,
+          cloud_provider: provider,
+          cached: false,
+        });
+      } catch (mermaidErr) {
+        console.error('[Diagram] Mermaid fallback also failed:', mermaidErr.message);
+        // Both methods failed — throw the original Python error
+        throw new AppError(pythonError || mermaidErr.message || 'Diagram generation failed', ErrorCode.EXTERNAL_API_ERROR);
+      }
+    }
+
+    // 5. Read PNG into buffer and persist in DB (Python succeeded)
     const imageUrl = `/api/diagram/image/${problemHash}`;
     try {
-      const filePath = path.join(pythonDiagrams.getOutputDir(), path.basename(result.image_url));
+      const filePath = path.join(pythonDiagrams.getOutputDir(), path.basename(pythonResult.image_url));
       const imageBuffer = fs.readFileSync(filePath);
       await query(
         `INSERT INTO ascend_diagram_cache (problem_hash, detail_level, cloud_provider, direction, image_url, image_data, description)
@@ -178,7 +232,7 @@ router.post('/generate', async (req, res, next) => {
     } catch (err) {
       console.warn('[DiagramCache] Failed to persist image:', err.message);
       // Fall back to temp file URL if DB storage fails
-      return res.json({ ...result, cloud_provider: provider });
+      return res.json({ ...pythonResult, cloud_provider: provider });
     }
 
     res.json({ success: true, image_url: imageUrl, cloud_provider: provider, cached: false });

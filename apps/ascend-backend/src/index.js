@@ -65,6 +65,7 @@ async function runMigrations() {
     await query('ALTER TABLE ascend_diagram_cache ADD COLUMN IF NOT EXISTS image_data BYTEA');
     await query('ALTER TABLE ascend_diagram_cache ADD COLUMN IF NOT EXISTS cloud_provider VARCHAR(10) DEFAULT \'auto\'');
     await query('ALTER TABLE ascend_diagram_cache ADD COLUMN IF NOT EXISTS direction VARCHAR(5) DEFAULT \'LR\'');
+    await query('ALTER TABLE ascend_diagram_cache ADD COLUMN IF NOT EXISTS mermaid_code TEXT');
     // Purge old cache entries — they point to deleted /tmp files and use old hash keys
     await query(`DELETE FROM ascend_diagram_cache WHERE image_data IS NULL AND image_url LIKE '/static/%'`);
     // New unique constraint: hash now encodes all dimensions (question+provider+direction+detailLevel)

@@ -1,11 +1,10 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { MermaidDiagram } from './MermaidDiagram';
+import { getDiagramCache, setDiagramCache } from '@/hooks/useDiagramCache';
 
 // Use ascend-backend which has DB caching (ascend_diagram_cache table)
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
-
-// In-memory cache: survives re-renders and navigation within same session
-const diagramMemoryCache: Record<string, string> = {};
 
 function getCacheKey(question: string, provider: string, detail: string, dir: string) {
   return `${question}::${provider}::${dir}::${detail}`;
@@ -19,6 +18,7 @@ interface ArchitectureDiagramProps {
 export function ArchitectureDiagram({ question, className = '' }: ArchitectureDiagramProps) {
   const { token } = useAuth();
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [mermaidCode, setMermaidCode] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [detailLevel, setDetailLevel] = useState<'overview' | 'detailed'>('overview');
@@ -69,8 +69,15 @@ export function ArchitectureDiagram({ question, className = '' }: ArchitectureDi
     const key = getCacheKey(question, cloudProvider, detailLevel, direction);
 
     // 1. Check in-memory cache first (instant, no API call)
-    if (diagramMemoryCache[key]) {
-      setImageUrl(diagramMemoryCache[key]);
+    if (getDiagramCache(key)) {
+      const cached = getDiagramCache(key);
+      if (cached.type === 'mermaid') {
+        setMermaidCode(cached.data);
+        setImageUrl(null);
+      } else {
+        setImageUrl(cached.data);
+        setMermaidCode(null);
+      }
       setLoading(false);
       setError(null);
       resetView();
@@ -102,13 +109,22 @@ export function ArchitectureDiagram({ question, className = '' }: ArchitectureDi
         const data = await response.json();
 
         if (!cancelled) {
-          if (data.success && data.image_url) {
-            // Resolve relative URLs to absolute
-            const url = data.image_url.startsWith('/')
-              ? `${API_URL}${data.image_url}`
-              : data.image_url;
-            setImageUrl(url);
-            diagramMemoryCache[key] = url; // cache for session
+          if (data.success) {
+            if (data.type === 'mermaid' && data.mermaid_code) {
+              setMermaidCode(data.mermaid_code);
+              setImageUrl(null);
+              setDiagramCache(key, { type: 'mermaid', data: data.mermaid_code, timestamp: Date.now() });
+            } else if (data.image_url) {
+              // Resolve relative URLs to absolute
+              const url = data.image_url.startsWith('/')
+                ? `${API_URL}${data.image_url}`
+                : data.image_url;
+              setImageUrl(url);
+              setMermaidCode(null);
+              setDiagramCache(key, { type: 'png', data: url, timestamp: Date.now() });
+            } else {
+              setError(data.error || 'Failed to generate diagram');
+            }
             resetView();
           } else {
             setError(data.error || 'Failed to generate diagram');
@@ -170,7 +186,7 @@ export function ArchitectureDiagram({ question, className = '' }: ArchitectureDi
             >Detailed</button>
           </div>
         </div>
-        {imageUrl && !loading && (
+        {(imageUrl || mermaidCode) && !loading && (
           <div className="flex items-center gap-1">
             <button onClick={() => setScale(s => Math.min(s + 0.25, 4))} className="px-1.5 py-0.5 text-xs font-mono border border-gray-200 rounded hover:bg-gray-50 text-gray-500">+</button>
             <span className="text-xs font-mono text-gray-400 min-w-[3ch] text-center">{Math.round(scale * 100)}%</span>
@@ -206,7 +222,7 @@ export function ArchitectureDiagram({ question, className = '' }: ArchitectureDi
         </div>
       )}
 
-      {imageUrl && !loading && (
+      {imageUrl && !loading && !mermaidCode && (
         <div
           ref={containerRef}
           className="border border-[#e3e8ee] rounded-lg bg-white select-none"
@@ -229,6 +245,12 @@ export function ArchitectureDiagram({ question, className = '' }: ArchitectureDi
               height: 'auto',
             }}
           />
+        </div>
+      )}
+
+      {mermaidCode && !loading && (
+        <div className="border border-[#e3e8ee] rounded-lg bg-white p-4">
+          <MermaidDiagram content={mermaidCode} />
         </div>
       )}
     </div>
