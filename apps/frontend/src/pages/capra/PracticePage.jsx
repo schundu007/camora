@@ -4,6 +4,7 @@ import { Icon } from '../../components/shared/Icons.jsx';
 import SiteNav from '../../components/shared/SiteNav';
 import SiteFooter from '../../components/shared/SiteFooter';
 import { getAuthHeaders } from '../../utils/authHeaders.js';
+import { ArchitectureDiagram } from '../../components/lumora/interview/ArchitectureDiagram';
 
 
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
@@ -904,7 +905,19 @@ export default function PracticePage() {
                 const parts = (answers[currentIdx] || '').split('---SECTION---');
                 return (
                   <div style={{ marginBottom: 8 }}>
-                    {/* Section text areas — 2 columns */}
+                    {/* Architecture Diagram */}
+                    <div style={{ marginBottom: 12 }}>
+                      <label style={{ fontSize: 11, fontWeight: 600, color: '#6b7280', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        <Icon name="layers" size={12} style={{ color: '#10b981' }} />
+                        Reference Architecture
+                      </label>
+                      <ArchitectureDiagram
+                        question={`${questions[currentIdx].q}: ${questions[currentIdx].desc}`}
+                        className="rounded-lg border border-[#e3e8ee] overflow-hidden"
+                      />
+                    </div>
+
+                    {/* Section text areas — responsive grid */}
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 10 }}>
                       {SD_SECTIONS.map((section, si) => {
                         const val = parts[si] || '';
