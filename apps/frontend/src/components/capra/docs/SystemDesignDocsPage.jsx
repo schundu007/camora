@@ -1013,7 +1013,7 @@ export default function SystemDesignDocsPage() {
               </div>
 
               {/* YES / NO branches */}
-              <div className="grid grid-cols-2 gap-8 mb-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mb-4">
                 {/* YES Branch */}
                 <div className="flex flex-col items-center">
                   <span className="landing-mono text-xs font-bold text-emerald-600 mb-2">YES</span>
@@ -1037,7 +1037,7 @@ export default function SystemDesignDocsPage() {
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4 w-full">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
                     {/* YES → Core Loop */}
                     <div className="flex flex-col items-center">
                       <span className="landing-mono text-xs font-bold text-blue-600 mb-2">YES</span>

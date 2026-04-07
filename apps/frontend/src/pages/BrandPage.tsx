@@ -307,7 +307,7 @@ export default function BrandPage() {
                 style={{ background: 'rgba(255,255,255,0.02)' }}
               >
                 {/* Dark + Light previews */}
-                <div className="grid grid-cols-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2">
                   {/* Dark bg */}
                   <div className="flex flex-col items-center justify-center py-10 px-6" style={{ background: C.dark }}>
                     <logo.Component size={96} />
@@ -357,7 +357,7 @@ export default function BrandPage() {
                 }`}
                 style={{ background: 'rgba(255,255,255,0.02)' }}
               >
-                <div className="grid grid-cols-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2">
                   {/* Dark */}
                   <div className="flex items-center justify-center py-10 px-8" style={{ background: C.dark }}>
                     <wm.Component dark={true} />

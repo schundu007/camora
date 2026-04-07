@@ -525,7 +525,7 @@ export default function DocsPage({ onBack }) {
             {/* APPA Nav Bar — break out of centered container to span full width */}
             <div className="sticky top-0 z-30 backdrop-blur-xl -mx-[calc((100vw-100%)/2)] px-[calc((100vw-100%)/2)]" style={{ background: 'linear-gradient(135deg, rgba(178,235,242,0.7) 0%, rgba(179,198,231,0.7) 30%, rgba(197,179,227,0.7) 55%, rgba(212,184,232,0.7) 80%, rgba(225,190,231,0.7) 100%)' }}>
               <div className="w-full lg:max-w-[70%] mx-auto flex items-center justify-between px-3 sm:px-4 h-12">
-                <a href="/" className="flex items-center gap-2">
+                <a href="/" className="flex items-center gap-1.5 flex-shrink-0">
                   <CamoraLogo size={36} />
                   <span className="text-sm font-bold text-gray-900 hidden sm:inline" style={{ fontFamily: "'Comfortaa', sans-serif" }}>Camora</span>
                 </a>
@@ -818,7 +818,7 @@ export default function DocsPage({ onBack }) {
                                     </div>
                                     <span className="text-sm font-medium text-gray-900 landing-body group-hover:text-emerald-600 transition-colors">{topic.title}</span>
                                   </div>
-                                  <div className="flex items-center gap-2">
+                                  <div className="flex items-center gap-1.5 flex-shrink-0">
                                     {starredTopics[topic.id] && <Icon name="star5" size={10} className="text-yellow-500" />}
                                     {completedTopics[topic.id] && <Icon name="check" size={10} className="text-emerald-500" />}
                                     <Icon name="chevronRight" size={12} className="text-gray-300 group-hover:text-emerald-500 transition-all" />
@@ -996,7 +996,7 @@ export default function DocsPage({ onBack }) {
                               </div>
                               <span className={`text-sm landing-body font-medium group-hover:text-emerald-600 transition-colors ${completedTopics[topic.id] ? 'text-gray-400 line-through' : 'text-gray-900'}`}>{topic.title}</span>
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1.5 flex-shrink-0">
                               <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[#e3e8ee] text-gray-400">
                                 {topic.commonProblems?.length || topic.keyQuestions?.length || 0}Q
                               </span>
@@ -1128,12 +1128,12 @@ export default function DocsPage({ onBack }) {
                                   <div className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0" style={{ background: completedTopics[topic.id] ? '#d1fae5' : `${topic.color}12` }}>
                                     {completedTopics[topic.id] ? <Icon name="check" size={11} className="text-emerald-600" /> : <Icon name={topic.icon} size={11} style={{ color: topic.color }} />}
                                   </div>
-                                  <div className="flex items-center gap-2">
+                                  <div className="flex items-center gap-1.5 flex-shrink-0">
                                     <span className={`text-sm landing-body font-medium group-hover:text-emerald-600 transition-colors ${completedTopics[topic.id] ? 'text-gray-400 line-through' : 'text-gray-900'}`}>{topic.title}</span>
                                     {starredTopics[topic.id] && <Icon name="star5" size={10} className="text-yellow-500" />}
                                   </div>
                                 </div>
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-1.5 flex-shrink-0">
                                   <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[#e3e8ee] text-gray-400">
                                     {topic.keyQuestions?.length || topic.questions || 0}Q
                                   </span>
@@ -1190,11 +1190,11 @@ export default function DocsPage({ onBack }) {
                               return (
                                 <div
                                   key={design.id}
-                                  className="px-4 py-2.5 flex items-center justify-between hover:bg-gray-50 transition-all group border-b border-r border-gray-100"
+                                  className="px-3 py-2.5 flex items-center justify-between hover:bg-gray-50 transition-all group border-b border-r border-gray-100 min-w-0 overflow-hidden"
                                 >
                                   <div
                                     onClick={() => setSelectedTopic(design.id)}
-                                    className="flex items-center gap-2.5 flex-1 cursor-pointer"
+                                    className="flex items-center gap-2 flex-1 cursor-pointer min-w-0 overflow-hidden"
                                   >
                                     <div className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0" style={{ background: `${design.color}12` }}>
                                       <Icon name={design.icon} size={11} style={{ color: design.color }} />
@@ -1205,7 +1205,7 @@ export default function DocsPage({ onBack }) {
                                       <span className="text-gray-400 text-xs ml-2 hidden md:inline landing-body">{design.subtitle}</span>
                                     </div>
                                   </div>
-                                  <div className="flex items-center gap-2">
+                                  <div className="flex items-center gap-1.5 flex-shrink-0">
                                     <span className={`text-[10px] landing-mono px-1.5 py-0.5 rounded border font-medium ${diffStyle}`}>
                                       {design.difficulty}
                                     </span>
@@ -1271,7 +1271,7 @@ export default function DocsPage({ onBack }) {
                                       <span className="text-gray-400 text-xs ml-2 hidden md:inline landing-body">{problem.subtitle}</span>
                                     </div>
                                   </div>
-                                  <div className="flex items-center gap-2">
+                                  <div className="flex items-center gap-1.5 flex-shrink-0">
                                     <span className={`text-[10px] landing-mono px-1.5 py-0.5 rounded border font-medium ${diffStyle}`}>
                                       {problem.difficulty}
                                     </span>
@@ -1323,7 +1323,7 @@ export default function DocsPage({ onBack }) {
                                   </div>
                                   <span className="text-gray-900 text-sm landing-body font-medium group-hover:text-emerald-600 transition-colors">{topic.title}</span>
                                 </div>
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-1.5 flex-shrink-0">
                                   <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[#e3e8ee] text-gray-400">
                                     {topic.keyQuestions?.length || 0}Q
                                   </span>
@@ -1374,7 +1374,7 @@ export default function DocsPage({ onBack }) {
                                   </div>
                                   <span className="text-gray-900 text-sm landing-body font-medium group-hover:text-emerald-600 transition-colors">{topic.title}</span>
                                 </div>
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-1.5 flex-shrink-0">
                                   <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[#e3e8ee] text-gray-400">
                                     {topic.keyQuestions?.length || 0}Q
                                   </span>
@@ -1425,7 +1425,7 @@ export default function DocsPage({ onBack }) {
                                   </div>
                                   <span className="text-gray-900 text-sm landing-body font-medium group-hover:text-emerald-600 transition-colors">{topic.title}</span>
                                 </div>
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-1.5 flex-shrink-0">
                                   <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[#e3e8ee] text-gray-400">
                                     {topic.keyQuestions?.length || 0}Q
                                   </span>
@@ -1476,7 +1476,7 @@ export default function DocsPage({ onBack }) {
                                   </div>
                                   <span className="text-gray-900 text-sm landing-body font-medium group-hover:text-emerald-600 transition-colors">{topic.title}</span>
                                 </div>
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-1.5 flex-shrink-0">
                                   <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[#e3e8ee] text-gray-400">
                                     {topic.keyQuestions?.length || 0}Q
                                   </span>
@@ -1515,7 +1515,7 @@ export default function DocsPage({ onBack }) {
                               </div>
                               <span className="text-gray-900 text-sm landing-body font-medium group-hover:text-emerald-600 transition-colors">{topic.title}</span>
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1.5 flex-shrink-0">
                               <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[#e3e8ee] text-gray-400">
                                 {topic.concepts?.length || topic.primitives?.length || topic.problems?.length || 0} items
                               </span>
@@ -1593,12 +1593,12 @@ export default function DocsPage({ onBack }) {
                                   <div className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0" style={{ background: completedTopics[topic.id] ? '#d1fae5' : `${topic.color}12` }}>
                                     {completedTopics[topic.id] ? <Icon name="check" size={11} className="text-emerald-600" /> : <Icon name={topic.icon} size={11} style={{ color: topic.color }} />}
                                   </div>
-                                  <div className="flex items-center gap-2">
+                                  <div className="flex items-center gap-1.5 flex-shrink-0">
                                     <span className={`text-sm landing-body font-medium group-hover:text-emerald-600 transition-colors ${completedTopics[topic.id] ? 'text-gray-400 line-through' : 'text-gray-900'}`}>{topic.title}</span>
                                     {starredTopics[topic.id] && <Icon name="star5" size={10} className="text-yellow-500" />}
                                   </div>
                                 </div>
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-1.5 flex-shrink-0">
                                   <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[#e3e8ee] text-gray-400">
                                     {topic.keyQuestions?.length || topic.questions || 0}Q
                                   </span>
@@ -1654,7 +1654,7 @@ export default function DocsPage({ onBack }) {
                                       {problem.subtitle && <span className="text-gray-400 text-xs ml-2 hidden md:inline landing-body">{problem.subtitle}</span>}
                                     </div>
                                   </div>
-                                  <div className="flex items-center gap-2">
+                                  <div className="flex items-center gap-1.5 flex-shrink-0">
                                     <span className={`text-[10px] landing-mono px-1.5 py-0.5 rounded border font-medium ${diffStyle}`}>{problem.difficulty}</span>
                                     <Icon name="chevronRight" size={12} className="text-gray-300 group-hover:text-emerald-500 group-hover:translate-x-0.5 transition-all" />
                                   </div>
@@ -1811,12 +1811,12 @@ export default function DocsPage({ onBack }) {
                                   <div className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0" style={{ background: completedTopics[topic.id] ? '#d1fae5' : `${topic.color}12` }}>
                                     {completedTopics[topic.id] ? <Icon name="check" size={11} className="text-emerald-600" /> : <Icon name={topic.icon} size={11} style={{ color: topic.color }} />}
                                   </div>
-                                  <div className="flex items-center gap-2">
+                                  <div className="flex items-center gap-1.5 flex-shrink-0">
                                     <span className={`text-sm landing-body font-medium group-hover:text-emerald-600 transition-colors ${completedTopics[topic.id] ? 'text-gray-400 line-through' : 'text-gray-900'}`}>{topic.title}</span>
                                     {starredTopics[topic.id] && <Icon name="star5" size={10} className="text-yellow-500" />}
                                   </div>
                                 </div>
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-1.5 flex-shrink-0">
                                   <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[#e3e8ee] text-gray-400">
                                     {topic.keyQuestions?.length || topic.sampleQuestions?.length || 0}Q
                                   </span>
@@ -1950,12 +1950,12 @@ export default function DocsPage({ onBack }) {
                                   <div className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0" style={{ background: completedTopics[topic.id] ? '#d1fae5' : `${topic.color}12` }}>
                                     {completedTopics[topic.id] ? <Icon name="check" size={11} className="text-emerald-600" /> : <Icon name={topic.icon} size={11} style={{ color: topic.color }} />}
                                   </div>
-                                  <div className="flex items-center gap-2">
+                                  <div className="flex items-center gap-1.5 flex-shrink-0">
                                     <span className={`text-sm landing-body font-medium group-hover:text-emerald-600 transition-colors ${completedTopics[topic.id] ? 'text-gray-400 line-through' : 'text-gray-900'}`}>{topic.title}</span>
                                     {starredTopics[topic.id] && <Icon name="star5" size={10} className="text-yellow-500" />}
                                   </div>
                                 </div>
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-1.5 flex-shrink-0">
                                   <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[#e3e8ee] text-gray-400">
                                     {topic.keyQuestions?.length || 0}Q
                                   </span>
@@ -2004,12 +2004,12 @@ export default function DocsPage({ onBack }) {
                                   <div className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0" style={{ background: completedTopics[topic.id] ? '#d1fae5' : `${topic.color}12` }}>
                                     {completedTopics[topic.id] ? <Icon name="check" size={11} className="text-emerald-600" /> : <Icon name={topic.icon} size={11} style={{ color: topic.color }} />}
                                   </div>
-                                  <div className="flex items-center gap-2">
+                                  <div className="flex items-center gap-1.5 flex-shrink-0">
                                     <span className={`text-sm landing-body font-medium group-hover:text-emerald-600 transition-colors ${completedTopics[topic.id] ? 'text-gray-400 line-through' : 'text-gray-900'}`}>{topic.title}</span>
                                     {starredTopics[topic.id] && <Icon name="star5" size={10} className="text-yellow-500" />}
                                   </div>
                                 </div>
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-1.5 flex-shrink-0">
                                   <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[#e3e8ee] text-gray-400">
                                     {topic.keyQuestions?.length || topic.questions || 0}Q
                                   </span>
@@ -2058,12 +2058,12 @@ export default function DocsPage({ onBack }) {
                                   <div className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0" style={{ background: completedTopics[topic.id] ? '#d1fae5' : `${topic.color}12` }}>
                                     {completedTopics[topic.id] ? <Icon name="check" size={11} className="text-emerald-600" /> : <Icon name={topic.icon} size={11} style={{ color: topic.color }} />}
                                   </div>
-                                  <div className="flex items-center gap-2">
+                                  <div className="flex items-center gap-1.5 flex-shrink-0">
                                     <span className={`text-sm landing-body font-medium group-hover:text-emerald-600 transition-colors ${completedTopics[topic.id] ? 'text-gray-400 line-through' : 'text-gray-900'}`}>{topic.title}</span>
                                     {starredTopics[topic.id] && <Icon name="star5" size={10} className="text-yellow-500" />}
                                   </div>
                                 </div>
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-1.5 flex-shrink-0">
                                   <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[#e3e8ee] text-gray-400">
                                     {topic.keyQuestions?.length || topic.questions || 0}Q
                                   </span>

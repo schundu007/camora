@@ -330,7 +330,7 @@ export default function TopicDetail({
                   <h3 className="text-lg font-bold text-gray-900 mb-1 landing-display">Upgrade to unlock all topics</h3>
                   <p className="text-xs text-gray-500 landing-body">Choose a plan to access {activePage === 'coding' ? '36+' : activePage === 'system-design' ? '300+' : '50+'} topics with full content</p>
                 </div>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                   {[
                     { name: 'Starter', price: '$29', period: '/mo', features: ['Unlimited topics', '10 live sessions/mo', 'AI explanations'] },
                     { name: 'Pro', price: '$49', period: '/mo', features: ['Everything in Starter', 'Unlimited sessions', 'Company-specific prep'], popular: true },

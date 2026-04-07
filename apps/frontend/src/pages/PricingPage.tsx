@@ -261,7 +261,7 @@ export default function PricingPage() {
             <table className="w-full text-[13px]">
               <thead>
                 <tr style={{ borderBottom: '2px solid #e2e8f0', verticalAlign: 'bottom' }}>
-                  <th className="text-left py-3 px-4 text-gray-500 font-mono text-[10px] uppercase tracking-wider min-w-[200px]">Feature</th>
+                  <th className="text-left py-3 px-4 text-gray-500 font-mono text-[10px] uppercase tracking-wider min-w-[120px] sm:min-w-[200px]">Feature</th>
                   {[
                     { name: 'Camora', price: 'FREE', unit: '', highlight: true },
                     { name: 'Final Round', price: '$100', unit: '/mo' },
