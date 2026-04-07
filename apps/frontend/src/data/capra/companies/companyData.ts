@@ -7,7 +7,7 @@ export interface SampleQuestion {
 export interface CompanyData {
   slug: string;
   name: string;
-  logo: string;
+  logo: string; // URL to company logo
   tagline: string;
   description: string;
   difficulty: 'Easy' | 'Medium' | 'Hard';
@@ -22,7 +22,7 @@ export const COMPANY_SEO_DATA: Record<string, CompanyData> = {
   google: {
     slug: 'google',
     name: 'Google',
-    logo: '🔍',
+    logo: 'https://logo.clearbit.com/google.com',
     tagline: 'Prepare for Google technical interviews',
     description: 'Google interviews focus on algorithms, system design, and Googleyness. Expect 5-6 rounds including phone screen, coding, system design, and behavioral.',
     difficulty: 'Hard',
@@ -45,7 +45,7 @@ export const COMPANY_SEO_DATA: Record<string, CompanyData> = {
   amazon: {
     slug: 'amazon',
     name: 'Amazon',
-    logo: '📦',
+    logo: 'https://logo.clearbit.com/amazon.com',
     tagline: 'Ace your Amazon Leadership Principles interview',
     description: 'Amazon interviews revolve around Leadership Principles. Expect behavioral deep-dives using the STAR method alongside coding and system design rounds.',
     difficulty: 'Hard',
@@ -68,7 +68,7 @@ export const COMPANY_SEO_DATA: Record<string, CompanyData> = {
   meta: {
     slug: 'meta',
     name: 'Meta',
-    logo: '♾️',
+    logo: 'https://logo.clearbit.com/meta.com',
     tagline: 'Prepare for Meta (Facebook) engineering interviews',
     description: 'Meta interviews emphasize coding speed, system design at scale, and product sense. Expect 45-minute rounds with quick problem-solving expectations.',
     difficulty: 'Hard',
@@ -91,7 +91,7 @@ export const COMPANY_SEO_DATA: Record<string, CompanyData> = {
   apple: {
     slug: 'apple',
     name: 'Apple',
-    logo: '🍎',
+    logo: 'https://logo.clearbit.com/apple.com',
     tagline: 'Prepare for Apple software engineering interviews',
     description: 'Apple interviews focus on deep technical knowledge, coding fundamentals, and cultural fit. Expect team-specific rounds with emphasis on craft and attention to detail.',
     difficulty: 'Hard',
@@ -114,7 +114,7 @@ export const COMPANY_SEO_DATA: Record<string, CompanyData> = {
   microsoft: {
     slug: 'microsoft',
     name: 'Microsoft',
-    logo: '🪟',
+    logo: 'https://logo.clearbit.com/microsoft.com',
     tagline: 'Prepare for Microsoft technical interviews',
     description: 'Microsoft interviews cover data structures, algorithms, system design, and behavioral questions. The "as-appropriate" round with a senior leader determines the final decision.',
     difficulty: 'Medium',
@@ -137,7 +137,7 @@ export const COMPANY_SEO_DATA: Record<string, CompanyData> = {
   netflix: {
     slug: 'netflix',
     name: 'Netflix',
-    logo: '🎬',
+    logo: 'https://logo.clearbit.com/netflix.com',
     tagline: 'Prepare for Netflix senior engineering interviews',
     description: 'Netflix hires senior-level talent with a high bar. Expect deep system design, culture fit discussions around their Freedom & Responsibility values, and domain expertise.',
     difficulty: 'Hard',
@@ -160,7 +160,7 @@ export const COMPANY_SEO_DATA: Record<string, CompanyData> = {
   uber: {
     slug: 'uber',
     name: 'Uber',
-    logo: '🚗',
+    logo: 'https://logo.clearbit.com/uber.com',
     tagline: 'Prepare for Uber engineering interviews',
     description: 'Uber interviews focus on real-time systems, geospatial algorithms, and high-availability architectures. Expect coding, system design, and behavioral rounds.',
     difficulty: 'Hard',
@@ -183,7 +183,7 @@ export const COMPANY_SEO_DATA: Record<string, CompanyData> = {
   airbnb: {
     slug: 'airbnb',
     name: 'Airbnb',
-    logo: '🏠',
+    logo: 'https://logo.clearbit.com/airbnb.com',
     tagline: 'Prepare for Airbnb engineering interviews',
     description: 'Airbnb interviews test coding, system design, and core values alignment. Their process includes a unique cross-functional "experience" round.',
     difficulty: 'Hard',
@@ -206,7 +206,7 @@ export const COMPANY_SEO_DATA: Record<string, CompanyData> = {
   stripe: {
     slug: 'stripe',
     name: 'Stripe',
-    logo: '💳',
+    logo: 'https://logo.clearbit.com/stripe.com',
     tagline: 'Prepare for Stripe engineering interviews',
     description: 'Stripe interviews emphasize clean code, API design, and real-world debugging. Expect a mix of pair programming, bug-finding, and system design rounds.',
     difficulty: 'Hard',
@@ -229,7 +229,7 @@ export const COMPANY_SEO_DATA: Record<string, CompanyData> = {
   spotify: {
     slug: 'spotify',
     name: 'Spotify',
-    logo: '🎵',
+    logo: 'https://logo.clearbit.com/spotify.com',
     tagline: 'Prepare for Spotify engineering interviews',
     description: 'Spotify interviews focus on coding, system design, and culture fit within their autonomous squad model. Expect questions about real-time data and personalization.',
     difficulty: 'Medium',
@@ -252,7 +252,7 @@ export const COMPANY_SEO_DATA: Record<string, CompanyData> = {
   twitter: {
     slug: 'twitter',
     name: 'Twitter / X',
-    logo: '🐦',
+    logo: 'https://logo.clearbit.com/x.com',
     tagline: 'Prepare for Twitter / X engineering interviews',
     description: 'Twitter interviews focus on real-time systems, feed ranking, and high-throughput data pipelines. Expect coding, system design, and behavioral rounds.',
     difficulty: 'Hard',
@@ -275,7 +275,7 @@ export const COMPANY_SEO_DATA: Record<string, CompanyData> = {
   linkedin: {
     slug: 'linkedin',
     name: 'LinkedIn',
-    logo: '💼',
+    logo: 'https://logo.clearbit.com/linkedin.com',
     tagline: 'Prepare for LinkedIn engineering interviews',
     description: 'LinkedIn interviews test coding, system design, and values alignment. As a Microsoft subsidiary, they blend startup speed with enterprise scale.',
     difficulty: 'Medium',
@@ -298,7 +298,7 @@ export const COMPANY_SEO_DATA: Record<string, CompanyData> = {
   salesforce: {
     slug: 'salesforce',
     name: 'Salesforce',
-    logo: '☁️',
+    logo: 'https://logo.clearbit.com/salesforce.com',
     tagline: 'Prepare for Salesforce engineering interviews',
     description: 'Salesforce interviews cover coding, system design, and alignment with their Ohana (family) culture. Expect questions about multi-tenant architectures.',
     difficulty: 'Medium',
@@ -321,7 +321,7 @@ export const COMPANY_SEO_DATA: Record<string, CompanyData> = {
   adobe: {
     slug: 'adobe',
     name: 'Adobe',
-    logo: '🎨',
+    logo: 'https://logo.clearbit.com/adobe.com',
     tagline: 'Prepare for Adobe engineering interviews',
     description: 'Adobe interviews focus on coding, system design, and creative problem-solving. Expect questions about media processing, real-time collaboration, and AI/ML.',
     difficulty: 'Medium',
@@ -344,7 +344,7 @@ export const COMPANY_SEO_DATA: Record<string, CompanyData> = {
   oracle: {
     slug: 'oracle',
     name: 'Oracle',
-    logo: '🗄️',
+    logo: 'https://logo.clearbit.com/oracle.com',
     tagline: 'Prepare for Oracle engineering interviews',
     description: 'Oracle interviews cover data structures, databases, and cloud infrastructure. Expect deep questions on SQL optimization, distributed systems, and OCI.',
     difficulty: 'Medium',
@@ -367,7 +367,7 @@ export const COMPANY_SEO_DATA: Record<string, CompanyData> = {
   nvidia: {
     slug: 'nvidia',
     name: 'NVIDIA',
-    logo: '🎮',
+    logo: 'https://logo.clearbit.com/nvidia.com',
     tagline: 'Prepare for NVIDIA engineering interviews',
     description: 'NVIDIA interviews emphasize parallel computing, GPU architecture, and systems programming. Expect low-level coding and performance optimization questions.',
     difficulty: 'Hard',
@@ -390,7 +390,7 @@ export const COMPANY_SEO_DATA: Record<string, CompanyData> = {
   tesla: {
     slug: 'tesla',
     name: 'Tesla',
-    logo: '⚡',
+    logo: 'https://logo.clearbit.com/tesla.com',
     tagline: 'Prepare for Tesla engineering interviews',
     description: 'Tesla interviews focus on problem-solving speed, systems thinking, and first-principles reasoning. Expect fast-paced coding and real-world engineering challenges.',
     difficulty: 'Hard',
@@ -413,7 +413,7 @@ export const COMPANY_SEO_DATA: Record<string, CompanyData> = {
   snapchat: {
     slug: 'snapchat',
     name: 'Snap',
-    logo: '👻',
+    logo: 'https://logo.clearbit.com/snapchat.com',
     tagline: 'Prepare for Snap engineering interviews',
     description: 'Snap interviews cover mobile-focused system design, coding, and product intuition. Expect questions about real-time media processing and ephemeral content.',
     difficulty: 'Medium',
@@ -436,7 +436,7 @@ export const COMPANY_SEO_DATA: Record<string, CompanyData> = {
   tiktok: {
     slug: 'tiktok',
     name: 'TikTok / ByteDance',
-    logo: '🎵',
+    logo: 'https://logo.clearbit.com/tiktok.com',
     tagline: 'Prepare for TikTok / ByteDance interviews',
     description: 'TikTok interviews are algorithm-heavy with emphasis on recommendation systems and large-scale data processing. Expect multiple coding rounds.',
     difficulty: 'Hard',
@@ -459,7 +459,7 @@ export const COMPANY_SEO_DATA: Record<string, CompanyData> = {
   databricks: {
     slug: 'databricks',
     name: 'Databricks',
-    logo: '🧱',
+    logo: 'https://logo.clearbit.com/databricks.com',
     tagline: 'Prepare for Databricks engineering interviews',
     description: 'Databricks interviews focus on distributed systems, data engineering, and Spark internals. Expect deep questions about data lakehouse architectures.',
     difficulty: 'Hard',
@@ -482,7 +482,7 @@ export const COMPANY_SEO_DATA: Record<string, CompanyData> = {
   snowflake: {
     slug: 'snowflake',
     name: 'Snowflake',
-    logo: '❄️',
+    logo: 'https://logo.clearbit.com/snowflake.com',
     tagline: 'Prepare for Snowflake engineering interviews',
     description: 'Snowflake interviews focus on database internals, cloud architecture, and distributed systems. Expect deep dives into query processing and storage engines.',
     difficulty: 'Hard',
@@ -505,7 +505,7 @@ export const COMPANY_SEO_DATA: Record<string, CompanyData> = {
   coinbase: {
     slug: 'coinbase',
     name: 'Coinbase',
-    logo: '🪙',
+    logo: 'https://logo.clearbit.com/coinbase.com',
     tagline: 'Prepare for Coinbase engineering interviews',
     description: 'Coinbase interviews focus on security, distributed systems, and fintech engineering. Expect questions about blockchain, trading systems, and regulatory compliance.',
     difficulty: 'Hard',
@@ -528,7 +528,7 @@ export const COMPANY_SEO_DATA: Record<string, CompanyData> = {
   robinhood: {
     slug: 'robinhood',
     name: 'Robinhood',
-    logo: '📈',
+    logo: 'https://logo.clearbit.com/robinhood.com',
     tagline: 'Prepare for Robinhood engineering interviews',
     description: 'Robinhood interviews focus on fintech systems, real-time data processing, and reliability. Expect questions about trading systems and financial regulations.',
     difficulty: 'Hard',
@@ -551,7 +551,7 @@ export const COMPANY_SEO_DATA: Record<string, CompanyData> = {
   doordash: {
     slug: 'doordash',
     name: 'DoorDash',
-    logo: '🚪',
+    logo: 'https://logo.clearbit.com/doordash.com',
     tagline: 'Prepare for DoorDash engineering interviews',
     description: 'DoorDash interviews focus on logistics optimization, real-time systems, and marketplace dynamics. Expect questions about dispatch, delivery, and routing.',
     difficulty: 'Medium',
@@ -574,7 +574,7 @@ export const COMPANY_SEO_DATA: Record<string, CompanyData> = {
   instacart: {
     slug: 'instacart',
     name: 'Instacart',
-    logo: '🛒',
+    logo: 'https://logo.clearbit.com/instacart.com',
     tagline: 'Prepare for Instacart engineering interviews',
     description: 'Instacart interviews focus on marketplace algorithms, logistics, and personalization. Expect questions about search ranking, fulfillment optimization, and ML.',
     difficulty: 'Medium',
@@ -597,7 +597,7 @@ export const COMPANY_SEO_DATA: Record<string, CompanyData> = {
   palantir: {
     slug: 'palantir',
     name: 'Palantir',
-    logo: '🔮',
+    logo: 'https://logo.clearbit.com/palantir.com',
     tagline: 'Prepare for Palantir engineering interviews',
     description: 'Palantir interviews are uniquely rigorous with a focus on problem decomposition, graph algorithms, and mission-driven thinking. Expect a "Decomposition" round.',
     difficulty: 'Hard',
@@ -620,7 +620,7 @@ export const COMPANY_SEO_DATA: Record<string, CompanyData> = {
   bloomberg: {
     slug: 'bloomberg',
     name: 'Bloomberg',
-    logo: '📊',
+    logo: 'https://logo.clearbit.com/bloomberg.com',
     tagline: 'Prepare for Bloomberg engineering interviews',
     description: 'Bloomberg interviews focus on C++ proficiency, data structures, and real-time financial systems. Expect questions about low-latency systems and data processing.',
     difficulty: 'Medium',
@@ -643,7 +643,7 @@ export const COMPANY_SEO_DATA: Record<string, CompanyData> = {
   dropbox: {
     slug: 'dropbox',
     name: 'Dropbox',
-    logo: '📁',
+    logo: 'https://logo.clearbit.com/dropbox.com',
     tagline: 'Prepare for Dropbox engineering interviews',
     description: 'Dropbox interviews cover distributed storage, file sync algorithms, and system design at scale. Expect practical coding problems related to real products.',
     difficulty: 'Medium',
@@ -666,7 +666,7 @@ export const COMPANY_SEO_DATA: Record<string, CompanyData> = {
   pinterest: {
     slug: 'pinterest',
     name: 'Pinterest',
-    logo: '📌',
+    logo: 'https://logo.clearbit.com/pinterest.com',
     tagline: 'Prepare for Pinterest engineering interviews',
     description: 'Pinterest interviews focus on visual search, recommendation systems, and content discovery. Expect questions about ML-powered features and feed systems.',
     difficulty: 'Medium',
@@ -689,7 +689,7 @@ export const COMPANY_SEO_DATA: Record<string, CompanyData> = {
   reddit: {
     slug: 'reddit',
     name: 'Reddit',
-    logo: '🤖',
+    logo: 'https://logo.clearbit.com/reddit.com',
     tagline: 'Prepare for Reddit engineering interviews',
     description: 'Reddit interviews cover community-driven system design, content ranking, and real-time features. Expect questions about feed algorithms, moderation, and scale.',
     difficulty: 'Medium',

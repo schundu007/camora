@@ -71,7 +71,7 @@ export default function InterviewQuestionsPage() {
       {/* ── Hero ─────────────────────────────────────────── */}
       <section className="pt-24 pb-12 px-4" style={{ background: 'linear-gradient(135deg, rgba(178,235,242,0.3) 0%, rgba(179,198,231,0.3) 50%, rgba(197,179,227,0.3) 100%)' }}>
         <div className="max-w-3xl mx-auto text-center">
-          <span className="text-5xl">{company.logo}</span>
+          <img src={company.logo} alt={`${company.name} logo`} className="w-16 h-16 rounded-xl object-contain mx-auto" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
           <h1 className="mt-4 text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">
             {company.name} Interview Questions
           </h1>
@@ -197,7 +197,7 @@ export default function InterviewQuestionsPage() {
                   to={`/interview-questions/${relSlug}`}
                   className="bg-white border border-[#e3e8ee] rounded-xl p-4 text-center hover:border-emerald-300 hover:shadow-sm transition-all"
                 >
-                  <span className="text-2xl">{rel.logo}</span>
+                  <img src={rel.logo} alt={rel.name} className="w-10 h-10 rounded-lg object-contain mx-auto" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                   <p className="mt-1.5 text-sm font-semibold text-gray-900">{rel.name}</p>
                   <p className="text-[11px] text-gray-500 mt-0.5">{rel.difficulty} &middot; {rel.interviewRounds} rounds</p>
                 </Link>
