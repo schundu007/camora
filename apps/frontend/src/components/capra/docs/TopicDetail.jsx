@@ -13,6 +13,40 @@ import {
 } from './TopicVisuals.jsx';
 
 /**
+ * Simple regex-based syntax highlighter for Python code.
+ * Returns an HTML string with colored spans for comments, keywords, strings, and numbers.
+ */
+function highlightCodeLine(line) {
+  // Escape HTML entities first
+  let escaped = line
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+
+  // Comments (# ...) — must come first to avoid coloring inside comments
+  if (escaped.trimStart().startsWith('#') || escaped.match(/\s#[^{]/)) {
+    const commentIdx = escaped.indexOf('#');
+    if (commentIdx >= 0) {
+      const before = escaped.slice(0, commentIdx);
+      const comment = escaped.slice(commentIdx);
+      return highlightNonComment(before) + `<span style="color:#6a737d">${comment}</span>`;
+    }
+  }
+
+  return highlightNonComment(escaped);
+}
+
+function highlightNonComment(text) {
+  // Strings (single and double quoted)
+  text = text.replace(/(["'])(?:(?!\1|\\).|\\.)*\1/g, '<span style="color:#a6e3a1">$&</span>');
+  // Keywords
+  text = text.replace(/\b(def|return|if|elif|else|for|while|class|import|from|in|not|and|or|is|None|True|False|try|except|finally|with|as|yield|raise|pass|break|continue|lambda|self|async|await)\b/g, '<span style="color:#cba6f7">$&</span>');
+  // Numbers
+  text = text.replace(/\b(\d+\.?\d*)\b/g, '<span style="color:#fab387">$&</span>');
+  return text;
+}
+
+/**
  * Table for capacity planning / back-of-envelope estimation.
  * Handles both data formats:
  *  - calculations array: [{ label, value, detail }]
@@ -796,76 +830,98 @@ export default function TopicDetail({
             )}
           </div>
 
-          {/* Practice Problems + Theory Questions — side by side */}
+          {/* 5. Practice Problems + Theory Questions */}
           {(topicDetails.commonProblems || topicDetails.theoryQuestions?.length > 0) && (
-          <div className={`grid gap-2 ${topicDetails.commonProblems && topicDetails.theoryQuestions?.length > 0 ? '' : 'grid-cols-1'}`}>
-          {/* Common Problems - Clickable to solve */}
+          <div className={`grid gap-3 ${topicDetails.commonProblems && topicDetails.theoryQuestions?.length > 0 ? '' : 'grid-cols-1'}`}>
+          {/* Practice Problems — table layout */}
           {topicDetails.commonProblems && (
-            <div id="practice" className="rounded-lg overflow-hidden scroll-mt-24 border border-[#e3e8ee] bg-white">
-              <div className="bg-emerald-50/50 border-b border-[#e3e8ee] px-3 py-2 flex items-center gap-2">
-                <Icon name="star" size={14} className="text-emerald-700" />
-                <h3 className="text-sm font-bold text-emerald-800 landing-display">Practice Problems</h3>
-                <span className="text-[10px] landing-mono text-gray-400 ml-auto">{topicDetails.commonProblems.length}</span>
+            <div id="practice" className="rounded-xl overflow-hidden scroll-mt-24 border border-[#e3e8ee] bg-white shadow-sm">
+              <div className="px-4 py-2.5 border-b border-[#e3e8ee] flex items-center gap-2 bg-white">
+                <Icon name="code" size={14} className="text-emerald-600" />
+                <h3 className="text-sm font-bold text-gray-900 landing-display">Practice Problems</h3>
+                <span className="ml-auto text-[10px] landing-mono text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-full">{topicDetails.commonProblems.length}</span>
               </div>
-              <div className="p-2">
-                <div className="grid grid-cols-1   gap-1">
-                  {topicDetails.commonProblems.map((problem, i) => {
-                    const problemName = typeof problem === 'string' ? problem : problem.name;
-                    const slug = generateSlug(problemName);
-                    const problemData = getProblemBySlug(slug);
-                    const difficulty = typeof problem === 'object' ? problem.difficulty : (problemData?.difficulty || null);
+              <div className="overflow-hidden">
+                {/* Table header */}
+                <div className="grid grid-cols-[32px_1fr_64px_72px] items-center px-3 py-1.5 bg-gray-50 border-b border-[#e3e8ee] text-[10px] font-bold text-gray-400 landing-mono uppercase tracking-wider">
+                  <span>#</span>
+                  <span>Problem</span>
+                  <span className="text-center">Diff.</span>
+                  <span className="text-center">Action</span>
+                </div>
+                {topicDetails.commonProblems.map((problem, i) => {
+                  const problemName = typeof problem === 'string' ? problem : problem.name;
+                  const slug = generateSlug(problemName);
+                  const problemData = getProblemBySlug(slug);
+                  const difficulty = typeof problem === 'object' ? problem.difficulty : (problemData?.difficulty || null);
 
-                    const fullProblem = problemsFull[slug];
-                    const hasDescription = !!(fullProblem?.description || problemData?.description);
-                    const problemText = fullProblem?.description || problemData?.description || `Solve: ${problemName}`;
-                    const href = `/capra?problem=${encodeURIComponent(problemText)}&autosolve=true`;
+                  const fullProblem = problemsFull[slug];
+                  const problemText = fullProblem?.description || problemData?.description || `Solve: ${problemName}`;
+                  const href = `/capra?problem=${encodeURIComponent(problemText)}&autosolve=true`;
 
-                    return (
-                      <a
-                        key={i}
-                        href={href}
-                        className={`flex items-center gap-2 px-2 py-1.5 rounded hover:bg-emerald-50 transition-colors cursor-pointer group ${!hasDescription ? 'border border-[#e3e8ee]' : 'border border-transparent hover:border-emerald-200'}`}
-                      >
-                        <span className="w-5 h-5 rounded flex items-center justify-center text-xs landing-mono bg-emerald-500 text-white flex-shrink-0">{i + 1}</span>
-                        <span className={`text-xs flex-1 truncate group-hover:text-emerald-700 transition-colors landing-body ${hasDescription ? 'text-gray-900' : 'text-gray-900'}`}>{problemName}</span>
-                        {difficulty && (
-                          <span className={`text-[10px] landing-mono px-1.5 py-0.5 rounded border flex-shrink-0 ${
+                  return (
+                    <a
+                      key={i}
+                      href={href}
+                      className={`grid grid-cols-[32px_1fr_64px_72px] items-center px-3 py-2.5 transition-colors cursor-pointer group hover:bg-emerald-50/60 ${i % 2 === 0 ? 'bg-white' : 'bg-gray-50/40'} ${i < topicDetails.commonProblems.length - 1 ? 'border-b border-[#f0f0f0]' : ''}`}
+                    >
+                      <span className="text-xs text-gray-400 landing-mono">{i + 1}</span>
+                      <span className="text-sm text-gray-900 truncate group-hover:text-emerald-700 transition-colors landing-body pr-2">{problemName}</span>
+                      <span className="flex justify-center">
+                        {difficulty ? (
+                          <span className={`text-[10px] landing-mono px-1.5 py-0.5 rounded-full border font-medium ${
                             difficulty === 'Easy' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' :
                             difficulty === 'Medium' ? 'bg-amber-50 text-amber-600 border-amber-200' :
                             'bg-red-50 text-red-600 border-red-200'
-                          }`}>{difficulty.charAt(0)}</span>
-                        )}
-                      </a>
-                    );
-                  })}
-                </div>
+                          }`}>{difficulty}</span>
+                        ) : <span className="text-gray-300 text-xs">--</span>}
+                      </span>
+                      <span className="flex justify-center">
+                        <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-md group-hover:bg-emerald-100 transition-colors landing-mono uppercase tracking-wide">Solve</span>
+                      </span>
+                    </a>
+                  );
+                })}
               </div>
             </div>
           )}
 
-          {/* Theory Questions */}
+          {/* Theory Questions — accordion with Expand All */}
           {topicDetails.theoryQuestions && topicDetails.theoryQuestions.length > 0 && (
-            <div id="theory" className="rounded-lg overflow-hidden scroll-mt-24 border border-[#e3e8ee] bg-white">
-              <div className="px-3 py-1.5 border-b border-[#e3e8ee] flex items-center gap-2 bg-[#f7f8f9]">
-                <Icon name="bookOpen" size={14} className="text-emerald-700" />
-                <h3 className="text-sm font-bold text-blue-800 landing-display">Theory Questions</h3>
-                <span className="text-[10px] landing-mono text-gray-400 ml-auto">{topicDetails.theoryQuestions.length}</span>
+            <div id="theory" className="rounded-xl overflow-hidden scroll-mt-24 border border-[#e3e8ee] bg-white shadow-sm">
+              <div className="px-4 py-2.5 border-b border-[#e3e8ee] flex items-center gap-2 bg-white">
+                <Icon name="bookOpen" size={14} className="text-blue-600" />
+                <h3 className="text-sm font-bold text-gray-900 landing-display">Theory Questions</h3>
+                <span className="text-[10px] landing-mono text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-full">{topicDetails.theoryQuestions.length}</span>
+                <button
+                  className="ml-auto text-[10px] landing-mono text-blue-600 hover:text-blue-800 transition-colors font-medium"
+                  onClick={() => {
+                    const newVal = !codingAllQsExpanded;
+                    setCodingAllQsExpanded(newVal);
+                    const newState = {};
+                    topicDetails.theoryQuestions.forEach((_, idx) => { newState[`${selectedTopic}-${idx}`] = newVal; });
+                    setExpandedTheoryQuestions(prev => ({ ...prev, ...newState }));
+                  }}
+                >
+                  {codingAllQsExpanded ? 'Collapse All' : 'Expand All'}
+                </button>
               </div>
               <div className="p-3">
-                <div className="grid grid-cols-1  gap-2">
+                <div className="grid grid-cols-1 gap-2">
                   {topicDetails.theoryQuestions.map((q, i) => {
                     const questionKey = `${selectedTopic}-${i}`;
                     const isExpanded = expandedTheoryQuestions[questionKey];
+                    const borderColor = q.difficulty === 'Easy' ? 'border-l-emerald-400' : q.difficulty === 'Medium' ? 'border-l-amber-400' : q.difficulty === 'Hard' ? 'border-l-red-400' : 'border-l-blue-400';
                     return (
-                      <div key={i} className="rounded-lg overflow-hidden bg-[#f7f8f9] border border-[#e3e8ee] hover:border-[#d0d5dd]">
+                      <div key={i} className={`rounded-lg overflow-hidden bg-white border border-[#e3e8ee] hover:border-[#d0d5dd] transition-all ${isExpanded ? `border-l-[3px] ${borderColor}` : ''}`}>
                         <button
                           onClick={() => setExpandedTheoryQuestions(prev => ({ ...prev, [questionKey]: !prev[questionKey] }))}
-                          className="w-full flex items-center gap-2 p-3 hover:bg-gray-100 transition-colors text-left"
+                          className="w-full flex items-center gap-2 p-3 hover:bg-gray-50 transition-colors text-left"
                         >
-                          <span className="w-6 h-6 rounded flex items-center justify-center text-sm landing-mono bg-blue-500 text-white flex-shrink-0">{i + 1}</span>
+                          <span className="w-6 h-6 rounded-md flex items-center justify-center text-[11px] landing-mono bg-blue-100 text-blue-700 font-bold flex-shrink-0">{i + 1}</span>
                           <span className="text-gray-900 text-sm font-medium flex-1 landing-body">{q.question}</span>
                           {q.difficulty && (
-                            <span className={`text-[10px] landing-mono px-1.5 py-0.5 rounded border flex-shrink-0 ${
+                            <span className={`text-[10px] landing-mono px-1.5 py-0.5 rounded-full border font-medium flex-shrink-0 ${
                               q.difficulty === 'Easy' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' :
                               q.difficulty === 'Medium' ? 'bg-amber-50 text-amber-600 border-amber-200' :
                               'bg-red-50 text-red-600 border-red-200'
@@ -876,8 +932,8 @@ export default function TopicDetail({
                           </svg>
                         </button>
                         {isExpanded && q.answer && (
-                          <div className="px-3 pb-3 pt-1 border-t border-[#e3e8ee] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-                            <div className="pl-8 text-gray-900 text-sm leading-relaxed bg-[#f7f8f9] p-3 rounded-lg border-l-[3px] border-emerald-400 landing-body">
+                          <div className="px-3 pb-3 pt-1 border-t border-[#e3e8ee] bg-gray-50/50">
+                            <div className="pl-8 text-gray-700 text-sm leading-relaxed bg-white p-3 rounded-lg border border-[#e3e8ee] landing-body">
                               {q.answer}
                             </div>
                           </div>
@@ -892,38 +948,43 @@ export default function TopicDetail({
           </div>
           )}
 
-          {/* Tips + Interview Tips - Side by Side */}
-          <div id="tips" className={`grid gap-2 scroll-mt-24 ${topicDetails.tips && topicDetails.interviewTips ? '' : 'grid-cols-1'}`}>
-            {/* Tips */}
+          {/* 6. Tips + Interview Tips — side by side cards */}
+          <div id="tips" className={`grid gap-3 scroll-mt-24 ${topicDetails.tips && topicDetails.interviewTips ? 'grid-cols-2' : 'grid-cols-1'}`}>
+            {/* Tips — green checkmark mini-cards */}
             {topicDetails.tips && (
-              <div className="rounded-lg overflow-hidden border border-[#e3e8ee] bg-white">
-                <div className="px-3 py-1.5 border-b border-[#e3e8ee] flex items-center gap-2 bg-emerald-50/50">
-                  <Icon name="lightbulb" size={14} className="text-emerald-700" />
-                  <h3 className="text-sm font-bold text-emerald-800 landing-display">Tips & Tricks</h3>
+              <div className="rounded-xl overflow-hidden border border-[#e3e8ee] bg-white shadow-sm">
+                <div className="px-4 py-2.5 border-b border-[#e3e8ee] flex items-center gap-2 bg-white">
+                  <Icon name="lightbulb" size={14} className="text-emerald-600" />
+                  <h3 className="text-sm font-bold text-gray-900 landing-display">Tips & Tricks</h3>
                 </div>
-                <div className="grid grid-cols-1  gap-1 p-2">
+                <div className="p-3 grid grid-cols-1 gap-1.5">
                   {topicDetails.tips.map((tip, i) => (
-                    <div key={i} className="px-2 py-1 flex items-start gap-1.5 rounded">
-                      <span className="text-emerald-600 text-xs mt-0.5 flex-shrink-0">✓</span>
-                      <span className="text-gray-700 text-sm landing-body">{tip}</span>
+                    <div key={i} className="flex items-start gap-2.5 p-2 rounded-lg bg-white border border-[#e3e8ee] hover:shadow-md hover:border-gray-300 transition-all">
+                      <span className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <Icon name="check" size={10} className="text-emerald-600" />
+                      </span>
+                      <span className="text-sm text-gray-700 leading-relaxed landing-body">{tip}</span>
                     </div>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Interview Tips */}
+            {/* Interview Tips — amber-tinted with Pro badge */}
             {topicDetails.interviewTips && (
-              <div className="rounded-lg overflow-hidden bg-[#f7f8f9] border border-[#e3e8ee]">
-                <div className="px-3 py-1.5 border-b border-[#e3e8ee] flex items-center gap-2 bg-[#f7f8f9]">
-                  <Icon name="briefcase" size={14} className="text-gray-900" />
-                  <h3 className="text-sm font-bold text-indigo-800 landing-display">Interview Tips</h3>
+              <div className="rounded-xl overflow-hidden border border-[#e3e8ee] bg-white shadow-sm">
+                <div className="px-4 py-2.5 border-b border-[#e3e8ee] flex items-center gap-2 bg-white">
+                  <Icon name="briefcase" size={14} className="text-amber-600" />
+                  <h3 className="text-sm font-bold text-gray-900 landing-display">Interview Tips</h3>
+                  <span className="text-[10px] font-bold text-amber-700 bg-amber-100 border border-amber-200 px-1.5 py-0.5 rounded-full landing-mono ml-auto">PRO</span>
                 </div>
-                <div className="grid grid-cols-1  gap-1 p-2">
+                <div className="p-3 grid grid-cols-1 gap-1.5">
                   {topicDetails.interviewTips.map((tip, i) => (
-                    <div key={i} className="px-2 py-1 flex items-start gap-1.5 rounded">
-                      <span className="text-gray-400 text-xs mt-0.5 flex-shrink-0">★</span>
-                      <span className="text-gray-700 text-sm landing-body">{tip}</span>
+                    <div key={i} className="flex items-start gap-2.5 p-2 rounded-lg bg-amber-50/40 border border-amber-100 hover:shadow-md hover:border-amber-200 transition-all">
+                      <span className="w-5 h-5 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <Icon name="lightbulb" size={10} className="text-amber-600" />
+                      </span>
+                      <span className="text-sm text-gray-700 leading-relaxed landing-body">{tip}</span>
                     </div>
                   ))}
                 </div>
@@ -931,33 +992,66 @@ export default function TopicDetail({
             )}
           </div>
 
-          {/* Code Example */}
+          {/* 7. Code Examples — dark theme with syntax coloring */}
           {topicDetails.codeExample && (
-            <div className="p-3 rounded-lg bg-[#f7f8f9] border border-[#e3e8ee]">
-              <h3 className="text-gray-900 text-xs font-semibold mb-2 flex items-center gap-2 landing-display">
-                <Icon name="code" size={14} className="text-emerald-700" />
-                Code Example
-              </h3>
-              <pre className="text-sm landing-mono text-emerald-700 overflow-x-auto whitespace-pre-wrap">
-                {topicDetails.codeExample}
-              </pre>
+            <div id="code-examples" className="rounded-xl overflow-hidden border border-[#e3e8ee] shadow-sm scroll-mt-24">
+              <div className="px-4 py-2.5 bg-[#1e1e2e] flex items-center gap-2">
+                <Icon name="code" size={14} className="text-emerald-400" />
+                <h3 className="text-sm font-bold text-[#e2e8f0] landing-display">Code Example</h3>
+                <span className="text-[10px] landing-mono text-blue-300 bg-blue-900/50 px-2 py-0.5 rounded-full border border-blue-700/50 ml-1">Python</span>
+                <button
+                  className="ml-auto text-[10px] landing-mono text-gray-400 hover:text-white transition-colors flex items-center gap-1"
+                  onClick={() => { navigator.clipboard.writeText(topicDetails.codeExample); setCopiedCodeIdx('single'); setTimeout(() => setCopiedCodeIdx(null), 2000); }}
+                >
+                  <Icon name={copiedCodeIdx === 'single' ? 'check' : 'copy'} size={12} className={copiedCodeIdx === 'single' ? 'text-emerald-400' : ''} />
+                  {copiedCodeIdx === 'single' ? 'Copied' : 'Copy'}
+                </button>
+              </div>
+              <div className="bg-[#1e1e2e] overflow-x-auto">
+                <pre className="text-sm landing-mono leading-6 p-4">
+                  {topicDetails.codeExample.split('\n').map((line, idx) => (
+                    <div key={idx} className="flex">
+                      <span className="w-8 text-right pr-4 text-gray-600 select-none text-xs flex-shrink-0">{idx + 1}</span>
+                      <span className="text-[#e2e8f0]" dangerouslySetInnerHTML={{ __html: highlightCodeLine(line) }} />
+                    </div>
+                  ))}
+                </pre>
+              </div>
             </div>
           )}
 
           {/* Multiple Code Examples */}
           {topicDetails.codeExamples && topicDetails.codeExamples.length > 0 && (
-            <div id="code-examples" className="space-y-2 scroll-mt-24">
-              <h3 className="text-sm font-bold text-emerald-800 flex items-center gap-2 landing-display">
-                <Icon name="code" size={14} className="text-emerald-700" />
-                Code Examples
-              </h3>
+            <div className="space-y-3 scroll-mt-24">
               {topicDetails.codeExamples.map((example, i) => (
-                <div key={i} className="p-3 rounded-xl bg-[#f7f8f9] border border-[#e3e8ee]">
-                  <h4 className="text-gray-900 font-semibold mb-2 landing-display">{example.title}</h4>
-                  {example.description && <p className="text-gray-500 text-sm mb-2 landing-body">{example.description}</p>}
-                  <pre className="text-sm landing-mono text-emerald-700 overflow-x-auto whitespace-pre-wrap">
-                    {example.code}
-                  </pre>
+                <div key={i} className="rounded-xl overflow-hidden border border-[#e3e8ee] shadow-sm">
+                  <div className="px-4 py-2.5 bg-[#1e1e2e] flex items-center gap-2">
+                    <Icon name="code" size={14} className="text-emerald-400" />
+                    <h3 className="text-sm font-bold text-[#e2e8f0] landing-display truncate">{example.title}</h3>
+                    <span className="text-[10px] landing-mono text-blue-300 bg-blue-900/50 px-2 py-0.5 rounded-full border border-blue-700/50 ml-1 flex-shrink-0">Python</span>
+                    <button
+                      className="ml-auto text-[10px] landing-mono text-gray-400 hover:text-white transition-colors flex items-center gap-1 flex-shrink-0"
+                      onClick={() => { navigator.clipboard.writeText(example.code); setCopiedCodeIdx(i); setTimeout(() => setCopiedCodeIdx(null), 2000); }}
+                    >
+                      <Icon name={copiedCodeIdx === i ? 'check' : 'copy'} size={12} className={copiedCodeIdx === i ? 'text-emerald-400' : ''} />
+                      {copiedCodeIdx === i ? 'Copied' : 'Copy'}
+                    </button>
+                  </div>
+                  {example.description && (
+                    <div className="px-4 py-2 bg-[#252536] border-t border-[#2e2e44]">
+                      <p className="text-xs text-gray-400 landing-body">{example.description}</p>
+                    </div>
+                  )}
+                  <div className="bg-[#1e1e2e] overflow-x-auto">
+                    <pre className="text-sm landing-mono leading-6 p-4">
+                      {example.code.split('\n').map((line, idx) => (
+                        <div key={idx} className="flex">
+                          <span className="w-8 text-right pr-4 text-gray-600 select-none text-xs flex-shrink-0">{idx + 1}</span>
+                          <span className="text-[#e2e8f0]" dangerouslySetInnerHTML={{ __html: highlightCodeLine(line) }} />
+                        </div>
+                      ))}
+                    </pre>
+                  </div>
                 </div>
               ))}
             </div>
@@ -1618,6 +1712,123 @@ export default function TopicDetail({
                         </div>
                       </div>
                     ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Edge Cases — Critical scenarios to address in interviews */}
+              {topicDetails.edgeCases && (
+                <div className="rounded-2xl overflow-hidden bg-white border border-[#e3e8ee]">
+                  <div className="px-4 py-2 border-b border-[#e3e8ee] flex items-center gap-2 bg-red-50/50">
+                    <Icon name="alertTriangle" size={14} className="text-red-600" />
+                    <h3 className="text-sm font-bold text-red-800 landing-display">Edge Cases</h3>
+                    <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-red-100 text-red-700 landing-mono">{topicDetails.edgeCases.length} cases</span>
+                  </div>
+                  <div className="p-2.5 space-y-2">
+                    {topicDetails.edgeCases.map((ec, i) => (
+                      <div key={i} className="rounded-xl border border-[#e3e8ee] bg-white hover:border-red-200 transition-all overflow-hidden">
+                        <div className="px-4 py-3">
+                          <div className="flex items-center gap-2.5 mb-1.5">
+                            <span className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 bg-red-50 border border-red-100">
+                              <span className="text-[10px] font-bold text-red-600 landing-mono">{i + 1}</span>
+                            </span>
+                            <h4 className="text-gray-900 font-semibold text-sm landing-display">{ec.scenario}</h4>
+                          </div>
+                          <p className="text-gray-600 text-xs leading-relaxed ml-8 landing-body">{ec.impact}</p>
+                          <div className="ml-8 mt-2 px-3 py-2 rounded-lg bg-emerald-50 border border-emerald-100">
+                            <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider landing-mono">Mitigation</span>
+                            <p className="text-emerald-800 text-xs leading-relaxed mt-0.5 landing-body">{ec.mitigation}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Tradeoffs — Key design decisions and their consequences */}
+              {topicDetails.tradeoffs && (
+                <div className="rounded-2xl overflow-hidden bg-white border border-[#e3e8ee]">
+                  <div className="px-4 py-2 border-b border-[#e3e8ee] flex items-center gap-2 bg-amber-50/50">
+                    <Icon name="gitBranch" size={14} className="text-amber-600" />
+                    <h3 className="text-sm font-bold text-amber-800 landing-display">Tradeoffs</h3>
+                    <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 landing-mono">{topicDetails.tradeoffs.length} decisions</span>
+                  </div>
+                  <div className="p-2.5 space-y-2">
+                    {topicDetails.tradeoffs.map((t, i) => (
+                      <div key={i} className="rounded-xl border border-[#e3e8ee] bg-white hover:border-amber-200 transition-all overflow-hidden">
+                        <div className="px-4 py-3">
+                          <div className="flex items-center gap-2.5 mb-2">
+                            <span className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 bg-amber-50 border border-amber-100">
+                              <Icon name="gitBranch" size={12} className="text-amber-600" />
+                            </span>
+                            <h4 className="text-gray-900 font-semibold text-sm landing-display">{t.decision}</h4>
+                          </div>
+                          <div className="ml-8 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <div className="px-3 py-2 rounded-lg bg-emerald-50 border border-emerald-100">
+                              <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider landing-mono">Pros</span>
+                              <p className="text-emerald-800 text-xs leading-relaxed mt-0.5 landing-body">{t.pros}</p>
+                            </div>
+                            <div className="px-3 py-2 rounded-lg bg-rose-50 border border-rose-100">
+                              <span className="text-[10px] font-bold text-rose-700 uppercase tracking-wider landing-mono">Cons</span>
+                              <p className="text-rose-800 text-xs leading-relaxed mt-0.5 landing-body">{t.cons}</p>
+                            </div>
+                          </div>
+                          {t.recommendation && (
+                            <div className="ml-8 mt-2 flex items-start gap-1.5">
+                              <Icon name="arrowRight" size={12} className="text-amber-500 mt-0.5 flex-shrink-0" />
+                              <span className="text-xs text-amber-800 font-medium landing-body">{t.recommendation}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Layered Design — Architectural layer breakdown */}
+              {topicDetails.layeredDesign && (
+                <div className="rounded-2xl overflow-hidden bg-white border border-[#e3e8ee]">
+                  <div className="px-4 py-2 border-b border-[#e3e8ee] flex items-center gap-2 bg-violet-50/50">
+                    <Icon name="layers" size={14} className="text-violet-600" />
+                    <h3 className="text-sm font-bold text-violet-800 landing-display">Layered Design</h3>
+                    <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-violet-100 text-violet-700 landing-mono">{topicDetails.layeredDesign.length} layers</span>
+                  </div>
+                  <div className="p-2.5 space-y-0">
+                    {topicDetails.layeredDesign.map((layer, i) => {
+                      const LAYER_COLORS = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ef4444', '#06b6d4', '#ec4899', '#6366f1'];
+                      const lc = LAYER_COLORS[i % LAYER_COLORS.length];
+                      return (
+                        <div key={i} className="relative">
+                          {i > 0 && (
+                            <div className="flex justify-center -my-1 z-10 relative">
+                              <svg width="16" height="10" viewBox="0 0 16 10" fill="none"><path d="M8 0v10M4 6l4 4 4-4" stroke="#d1d5db" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                            </div>
+                          )}
+                          <div className="rounded-xl border border-[#e3e8ee] bg-white hover:border-violet-200 transition-all overflow-hidden">
+                            <div className="px-4 py-3">
+                              <div className="flex items-center gap-2.5 mb-1.5">
+                                <span className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-white text-xs font-bold" style={{ background: lc }}>
+                                  L{i + 1}
+                                </span>
+                                <h4 className="text-gray-900 font-semibold text-sm landing-display">{layer.name}</h4>
+                              </div>
+                              <p className="text-gray-600 text-xs leading-relaxed ml-9 landing-body">{layer.purpose}</p>
+                              {layer.components && (
+                                <div className="ml-9 mt-2 flex flex-wrap gap-1.5">
+                                  {layer.components.map((comp, j) => (
+                                    <span key={j} className="text-[11px] font-medium px-2 py-0.5 rounded-md landing-mono" style={{ background: `${lc}12`, color: lc, border: `1px solid ${lc}30` }}>
+                                      {comp}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
