@@ -5,6 +5,7 @@ import { useAppShell } from '../layout/AppShellContext';
 import { useAuth } from '../../../contexts/AuthContext';
 import { Icon } from '../../shared/Icons.jsx';
 import CamoraLogo from '../../shared/CamoraLogo';
+import SiteFooter from '../../shared/SiteFooter';
 import { getAuthHeaders } from '../../../utils/authHeaders.js';
 import { useContentAccess } from '../../../hooks/useContentAccess';
 import { codingCategories, codingCategoryMap as _codingCategoryMap, codingTopics as _codingTopics } from '../../../data/capra/topics/codingTopics.js';
@@ -2182,6 +2183,7 @@ export default function DocsPage({ onBack }) {
         ::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
         .group:hover .hover-glow { opacity: 1; }
       `}</style>
+      <SiteFooter />
     </div>
   );
 }

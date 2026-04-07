@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import CamoraLogo from '../components/shared/CamoraLogo';
+import SiteFooter from '../components/shared/SiteFooter';
 
 const API_URL = import.meta.env.VITE_CAMORA_API_URL || import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
 
@@ -511,26 +512,7 @@ export default function PricingPage() {
       </section>
 
 
-      {/* Footer */}
-      <footer className="border-t border-[#e3e8ee] px-6 py-10">
-        <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-          <div className="flex items-center gap-2.5">
-            <CamoraLogo size={32} />
-            <span className="text-sm font-bold text-gray-900" style={{ fontFamily: "'Comfortaa', sans-serif" }}>Camora</span>
-          </div>
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-            {NAV_LINKS.map((link) =>
-              link.external ? (
-                <a key={link.label} href={link.href} target="_blank" rel="noopener noreferrer" className="text-[13px] text-gray-500 hover:text-gray-900 transition-colors">{link.label}</a>
-              ) : (
-                <Link key={link.label} to={link.href} className="text-[13px] text-gray-500 hover:text-gray-900 transition-colors">{link.label}</Link>
-              )
-            )}
-            <a href="mailto:support@cariara.com" className="text-[13px] text-gray-500 hover:text-gray-900 transition-colors">Support</a>
-          </div>
-          <p className="text-[12px] font-mono text-gray-400">&copy; {new Date().getFullYear()} Camora by Cariara</p>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

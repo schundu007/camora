@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { techInterviewTopics, interviewCheatsheet, behavioralQuestions } from '../data/capra/topics/techInterviewHandbook';
 import { SOLUTIONS } from './Blind75PracticePage';
 import CamoraLogo from '../components/shared/CamoraLogo';
+import SiteFooter from '../components/shared/SiteFooter';
 
 /* ──────────────────────────────── Constants ──────────────────────────────── */
 
@@ -1894,60 +1895,7 @@ export default function Blind75Page() {
         </div>
       )}
 
-      {/* ═══════════════════════ Footer ═══════════════════════ */}
-      <footer
-        style={{
-          borderTop: '1px solid #e3e8ee',
-          padding: '32px 0',
-          background: '#ffffff',
-        }}
-      >
-        <div className="max-w-[85%] xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center' }}>
-            <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
-              <CamoraLogo size={22} />
-              <span style={{ fontWeight: 700, fontSize: '14px', color: '#111827', fontFamily: "'Comfortaa', sans-serif" }}>
-                Camora
-              </span>
-            </Link>
-
-            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: '20px' }}>
-              {[
-                { label: 'Apply', href: '/jobs' },
-                { label: 'Prepare', href: '/capra/prepare' },
-                { label: 'Practice', href: '/capra/practice' },
-                { label: 'Attend', href: '/lumora' },
-                { label: 'Pricing', href: '/pricing' },
-                { label: 'Support', href: 'mailto:support@cariara.com' },
-              ].map((link) =>
-                link.href.startsWith('mailto:') ? (
-                  <a
-                    key={link.label}
-                    href={link.href}
-                    className="b75-footer-link"
-                    style={{ fontSize: '13px', color: '#6b7280', textDecoration: 'none', fontWeight: 500, transition: 'color 0.15s' }}
-                  >
-                    {link.label}
-                  </a>
-                ) : (
-                  <Link
-                    key={link.label}
-                    to={link.href}
-                    className="b75-footer-link"
-                    style={{ fontSize: '13px', color: '#6b7280', textDecoration: 'none', fontWeight: 500, transition: 'color 0.15s' }}
-                  >
-                    {link.label}
-                  </Link>
-                )
-              )}
-            </div>
-
-            <p style={{ fontSize: '12px', color: '#9ca3af', margin: 0 }}>
-              &copy; {new Date().getFullYear()} Camora by Cariara
-            </p>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
 
       {/* ═══════════════════════ Scoped Styles ═══════════════════════ */}
       <style>{`
