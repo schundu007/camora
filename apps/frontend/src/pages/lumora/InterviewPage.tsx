@@ -1,10 +1,13 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Header } from '../../components/lumora/interview/Header';
 import { InterviewPanel } from '../../components/lumora/interview/InterviewPanel';
 import { ErrorBoundary } from '../../components/shared/ui/ErrorBoundary';
 import { useStreamingInterview } from '../../hooks/useStreamingInterview';
 import { useInterviewStore } from '../../stores/interview-store';
+import CamoraLogo from '../../components/shared/CamoraLogo';
+import SiteFooter from '../../components/shared/SiteFooter';
+import { useAuth } from '../../contexts/AuthContext';
 
 function MicCheck({ onReady }: { onReady: () => void }) {
   const [micLevel, setMicLevel] = useState(0);
@@ -121,8 +124,17 @@ function MicCheck({ onReady }: { onReady: () => void }) {
   );
 }
 
+const NAV_LINKS = [
+  { label: 'Apply', href: '/jobs' },
+  { label: 'Prepare', href: '/capra/prepare' },
+  { label: 'Practice', href: '/capra/practice' },
+  { label: 'Attend', href: '/lumora' },
+  { label: 'Pricing', href: '/pricing' },
+];
+
 export function InterviewPage() {
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const [inputValue, setInputValue] = useState('');
   const [blanked, setBlanked] = useState(false);
   const [micChecked, setMicChecked] = useState(() => {
@@ -173,17 +185,61 @@ export function InterviewPage() {
     );
   }
 
+  if (isEmptyState) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        {/* Site Nav */}
+        <nav className="sticky top-0 z-50 backdrop-blur-xl" style={{ background: 'linear-gradient(135deg, rgba(178,235,242,0.7) 0%, rgba(179,198,231,0.7) 30%, rgba(197,179,227,0.7) 55%, rgba(212,184,232,0.7) 80%, rgba(225,190,231,0.7) 100%)' }}>
+          <div className="max-w-6xl mx-auto flex items-center justify-between px-6 h-14">
+            <Link to="/" className="flex items-center gap-2.5">
+              <CamoraLogo size={36} />
+              <span className="text-sm font-bold tracking-tight text-gray-900" style={{ fontFamily: "'Comfortaa', sans-serif" }}>Camora</span>
+            </Link>
+            <div className="hidden md:flex items-center gap-1">
+              {NAV_LINKS.map((link) => (
+                <Link key={link.label} to={link.href} className="px-3 py-1.5 text-[13px] text-gray-500 hover:text-gray-900 transition-colors">{link.label}</Link>
+              ))}
+            </div>
+            <div className="hidden md:flex items-center gap-3">
+              <Link to="/capra/prepare" className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-gray-50 transition-colors">
+                {user?.image ? (
+                  <img src={user.image} alt="" className="w-6 h-6 rounded-full" referrerPolicy="no-referrer" />
+                ) : (
+                  <div className="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center text-[10px] font-bold text-emerald-700">{user?.name?.[0] || '?'}</div>
+                )}
+                <span className="text-[13px] text-gray-700 font-medium">{user?.name?.split(' ')[0] || 'Dashboard'}</span>
+              </Link>
+              <button onClick={logout} className="text-[13px] text-gray-400 hover:text-red-500 transition-colors font-medium">Sign out</button>
+            </div>
+          </div>
+        </nav>
+
+        <ErrorBoundary>
+          <InterviewPanel
+            onAskQuestion={handleSubmit}
+            onSwitchToCoding={(problem) => {
+              navigate(problem ? `/lumora/coding?problem=${encodeURIComponent(problem)}` : '/lumora/coding');
+            }}
+            onSwitchToDesign={(problem) => {
+              navigate(problem ? `/lumora/design?problem=${encodeURIComponent(problem)}` : '/lumora/design');
+            }}
+          />
+        </ErrorBoundary>
+
+        <SiteFooter />
+      </div>
+    );
+  }
+
   return (
     <div className="h-screen w-full flex flex-col overflow-hidden lumora-app-bg">
-      {!isEmptyState && (
-        <Header
-          inputValue={inputValue}
-          onInputChange={setInputValue}
-          onSubmit={handleInputSubmit}
-          onTranscription={handleTranscription}
-          showInputBar={true}
-        />
-      )}
+      <Header
+        inputValue={inputValue}
+        onInputChange={setInputValue}
+        onSubmit={handleInputSubmit}
+        onTranscription={handleTranscription}
+        showInputBar={true}
+      />
 
       <ErrorBoundary>
         <InterviewPanel
