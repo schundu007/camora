@@ -1,0 +1,44 @@
+graph LR
+    subgraph clients["Clients"]
+        Mobile["Mobile App"]
+        Web["Web App"]
+    end
+    subgraph edge["Edge Layer"]
+        DNS["Route 53\nGeoDNS"]
+        CDN["CloudFront\nTile Cache"]
+    end
+    subgraph compute["Compute — ECS / EKS"]
+        LB["ALB"]
+        TileSvc["Map Tile\nService"]
+        RouteSvc["Routing Engine\nDijkstra / A*"]
+        TrafficSvc["Real-time\nTraffic"]
+        GeoSvc["Geocoding\nService"]
+        ETASvc["ETA Service\nML Prediction"]
+        POISvc["Places / POI\nSearch"]
+        OfflineSvc["Offline Maps\nDownload"]
+    end
+    subgraph data["Data Layer"]
+        Redis[("ElastiCache\nRedis\nRoute Cache")]
+        PG[("Aurora\nPostgreSQL\nRoad Graph")]
+        ES["OpenSearch\nPOI Search"]
+        NoSQL[("DynamoDB\nGPS Probes")]
+        Stream["Kinesis\nGPS Stream"]
+        ML["SageMaker"]
+    end
+    subgraph storage["Storage"]
+        S3["S3\nVector Tiles\nOffline Packages"]
+    end
+    clients --> DNS --> CDN --> LB
+    LB --> TileSvc & RouteSvc & TrafficSvc & GeoSvc & ETASvc & POISvc & OfflineSvc
+    TileSvc --> CDN & S3
+    RouteSvc --> PG & Redis
+    TrafficSvc --> Stream & NoSQL
+    GeoSvc --> PG & Redis
+    ETASvc --> ML & Redis
+    POISvc --> ES
+    OfflineSvc --> S3
+    style clients fill:#dbeafe,stroke:#2563eb,color:#1e3a5f
+    style edge fill:#fef3c7,stroke:#d97706,color:#78350f
+    style compute fill:#ecfdf5,stroke:#059669,color:#064e3b
+    style data fill:#ede9fe,stroke:#7c3aed,color:#4c1d95
+    style storage fill:#fce7f3,stroke:#db2777,color:#831843

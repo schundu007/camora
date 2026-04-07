@@ -1,0 +1,33 @@
+graph LR
+    subgraph frontier["URL Frontier"]
+        Queue["Priority Queue\nPub/Sub"]
+        Filter["Bloom Filter\n10B URLs"]
+        Polite["Politeness\nrobots.txt Cache"]
+    end
+    subgraph fetch["Fetcher Farm"]
+        DNS["DNS Resolver\nCaching"]
+        Workers["Fetcher Workers\nGKE\nAuto-Scale"]
+    end
+    subgraph process["Processing"]
+        Parser["HTML Parser\nLink Extraction"]
+        Dedup["Content Dedup\nSimHash/MinHash"]
+    end
+    subgraph store["Storage"]
+        Pages["Cloud Storage\nWARC Pages"]
+        Meta[("Firestore\nURL Metadata")]
+        Redis[("Memorystore\nRedis\nDNS + robots.txt")]
+    end
+    subgraph monitor["Monitoring"]
+        Mon["Cloud Monitoring\n1000 pages/sec"]
+    end
+    Queue --> Polite --> DNS --> Workers
+    Workers --> Parser --> Dedup
+    Dedup --> Pages & Meta
+    Parser --> Filter --> Queue
+    Workers --> Redis
+    Workers --> Mon
+    style frontier fill:#fef3c7,stroke:#d97706,color:#78350f
+    style fetch fill:#ecfdf5,stroke:#059669,color:#064e3b
+    style process fill:#dbeafe,stroke:#2563eb,color:#1e3a5f
+    style store fill:#ede9fe,stroke:#7c3aed,color:#4c1d95
+    style monitor fill:#fce7f3,stroke:#db2777,color:#831843

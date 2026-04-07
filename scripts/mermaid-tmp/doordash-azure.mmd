@@ -1,0 +1,46 @@
+graph LR
+    subgraph clients["Clients"]
+        Customer["Customer App"]
+        Dasher["Dasher App"]
+        Restaurant["Restaurant\nDashboard"]
+    end
+    subgraph edge["Edge Layer"]
+        DNS["Azure DNS"]
+        CDN["Azure CDN"]
+        WAF["Azure WAF"]
+    end
+    subgraph compute["Compute — AKS"]
+        LB["App Gateway"]
+        OrderSvc["Order Service\nState Machine"]
+        RestSvc["Restaurant\nService"]
+        MatchSvc["Delivery\nMatching"]
+        TrackSvc["Real-time\nTracking"]
+        PaySvc["Payment\nService"]
+        ETASvc["ETA Prediction\nML"]
+        SurgeSvc["Surge Pricing\nEngine"]
+    end
+    subgraph data["Data Layer"]
+        Redis[("Azure Cache\nfor Redis\nGeospatial")]
+        PG[("Azure SQL\nPostgreSQL\nMulti-AZ")]
+        Kafka["Event Hubs\nOrder Events"]
+        ML["Azure ML"]
+        WS["SignalR\nLive GPS"]
+    end
+    subgraph storage["Storage"]
+        S3["Blob Storage\nMenu Images"]
+    end
+    clients --> DNS --> CDN --> WAF --> LB
+    LB --> OrderSvc & RestSvc & MatchSvc & TrackSvc & PaySvc & ETASvc & SurgeSvc
+    OrderSvc --> PG & Kafka
+    MatchSvc --> Redis & ML
+    TrackSvc --> WS & Redis
+    RestSvc --> PG & S3
+    PaySvc --> PG
+    ETASvc --> ML & Redis
+    SurgeSvc --> Redis & Kafka
+    Kafka --> MatchSvc
+    style clients fill:#dbeafe,stroke:#2563eb,color:#1e3a5f
+    style edge fill:#fef3c7,stroke:#d97706,color:#78350f
+    style compute fill:#ecfdf5,stroke:#059669,color:#064e3b
+    style data fill:#ede9fe,stroke:#7c3aed,color:#4c1d95
+    style storage fill:#fce7f3,stroke:#db2777,color:#831843

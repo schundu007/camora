@@ -1,0 +1,50 @@
+graph TB
+    subgraph clients["👥 Clients"]
+        Mobile["📱 Mobile App"]
+        Web["🌐 Web App"]
+    end
+
+    subgraph edge["🌍 Edge Layer"]
+        DNS["🔗 Route 53<br/>DNS"]
+        CDN["⚡ CloudFront<br/>CDN"]
+        WAF["🛡️ WAF"]
+    end
+
+    subgraph compute["⚙️ Compute Layer"]
+        ALB["⚖️ ALB<br/>Load Balancer"]
+        subgraph services["Microservices (ECS/EKS)"]
+            TS["Tweet<br/>Service"]
+            TLS["Timeline<br/>Service"]
+            FO["Fan-out<br/>Service"]
+            NS["Notification<br/>Service"]
+        end
+    end
+
+    subgraph data["💾 Data Layer"]
+        subgraph cache["Cache"]
+            Redis["🔴 ElastiCache<br/>Redis Cluster"]
+        end
+        subgraph db["Databases"]
+            Aurora["🐘 Aurora<br/>PostgreSQL"]
+            DDB["📊 DynamoDB"]
+        end
+        subgraph search["Search"]
+            ES["🔍 OpenSearch"]
+        end
+        subgraph streaming["Event Streaming"]
+            Kafka["📨 MSK<br/>Kafka"]
+        end
+    end
+
+    subgraph storage["📦 Storage"]
+        S3["☁️ S3<br/>Media Storage"]
+    end
+
+    Mobile & Web --> DNS --> CDN --> WAF --> ALB
+    ALB --> TS & TLS & FO & NS
+    TS --> Aurora & Kafka
+    TLS --> Redis --> Aurora
+    FO --> Kafka --> Redis
+    NS --> DDB
+    TS --> S3
+    TS --> ES

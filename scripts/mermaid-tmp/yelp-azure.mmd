@@ -1,0 +1,41 @@
+graph LR
+    subgraph clients["Clients"]
+        Mobile["Mobile App"]
+        Web["Web App"]
+    end
+    subgraph edge["Edge Layer"]
+        DNS["Azure DNS"]
+        CDN["Azure CDN"]
+        WAF["Azure WAF"]
+    end
+    subgraph compute["Compute — AKS"]
+        LB["App Gateway"]
+        SearchSvc["Search Service\nGeo + Text"]
+        BizSvc["Business\nService"]
+        ReviewSvc["Review\nService"]
+        PhotoSvc["Photo\nService"]
+        RankSvc["ML Ranking\nPersonalization"]
+    end
+    subgraph data["Data Layer"]
+        Redis[("Azure Cache\nfor Redis\nQuery Cache")]
+        PG[("Azure SQL\nPostgreSQL\nBiz, Reviews")]
+        ES["Cognitive\nSearch\nQuadTree/Geohash"]
+        Kafka["Event Hubs"]
+        ML["Azure ML\nSpam Detection"]
+    end
+    subgraph storage["Storage"]
+        S3["Blob Storage\nBiz Photos"]
+    end
+    clients --> DNS --> CDN --> WAF --> LB
+    LB --> SearchSvc & BizSvc & ReviewSvc & PhotoSvc & RankSvc
+    SearchSvc --> ES & Redis
+    BizSvc --> PG
+    ReviewSvc --> PG & Kafka
+    PhotoSvc --> S3
+    RankSvc --> ML & Redis
+    Kafka --> ML
+    style clients fill:#dbeafe,stroke:#2563eb,color:#1e3a5f
+    style edge fill:#fef3c7,stroke:#d97706,color:#78350f
+    style compute fill:#ecfdf5,stroke:#059669,color:#064e3b
+    style data fill:#ede9fe,stroke:#7c3aed,color:#4c1d95
+    style storage fill:#fce7f3,stroke:#db2777,color:#831843

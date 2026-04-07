@@ -1,0 +1,44 @@
+graph LR
+    subgraph clients["Clients"]
+        Mobile["Mobile App"]
+        Web["Web App"]
+    end
+    subgraph edge["Edge Layer"]
+        DNS["Route 53"]
+        CDN["CloudFront"]
+    end
+    subgraph compute["Compute — ECS / EKS"]
+        LB["ALB"]
+        SearchSvc["Search Service\nAvailability+Geo"]
+        BookSvc["Booking Service\nOptimistic Lock"]
+        PaySvc["Payment\nService"]
+        InvSvc["Inventory\nReal-time"]
+        ReviewSvc["Review\nService"]
+        PriceSvc["Price Engine\nDynamic"]
+        NotifSvc["Notification\nService"]
+    end
+    subgraph data["Data Layer"]
+        Redis[("ElastiCache\nRedis\nAvailability Cache")]
+        PG[("Aurora\nPostgreSQL\nHotels, Bookings")]
+        ES["OpenSearch\nGeo Search"]
+        Kafka["MSK Kafka"]
+        NoSQL[("DynamoDB\nReviews")]
+    end
+    subgraph storage["Storage"]
+        S3["S3\nHotel Photos"]
+    end
+    clients --> DNS --> CDN --> LB
+    LB --> SearchSvc & BookSvc & PaySvc & InvSvc & ReviewSvc & PriceSvc & NotifSvc
+    SearchSvc --> ES & Redis
+    BookSvc --> PG & Redis & Kafka
+    PaySvc --> PG
+    InvSvc --> Redis & PG
+    ReviewSvc --> NoSQL
+    PriceSvc --> PG & Redis
+    NotifSvc --> Kafka
+    BookSvc --> S3
+    style clients fill:#dbeafe,stroke:#2563eb,color:#1e3a5f
+    style edge fill:#fef3c7,stroke:#d97706,color:#78350f
+    style compute fill:#ecfdf5,stroke:#059669,color:#064e3b
+    style data fill:#ede9fe,stroke:#7c3aed,color:#4c1d95
+    style storage fill:#fce7f3,stroke:#db2777,color:#831843

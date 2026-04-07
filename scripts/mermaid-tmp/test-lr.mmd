@@ -1,0 +1,50 @@
+graph LR
+    subgraph clients["Clients"]
+        Mobile["Mobile App"]
+        Web["Web App"]
+    end
+
+    subgraph edge["Edge Layer"]
+        DNS["Route 53\nDNS"]
+        CDN["CloudFront\nCDN"]
+        WAF["WAF\nFirewall"]
+    end
+
+    subgraph compute["Compute - ECS/EKS"]
+        ALB["ALB\nLoad Balancer"]
+        TS["Tweet\nService"]
+        TLS["Timeline\nService"]
+        FO["Fan-out\nService"]
+        NS["Notification\nService"]
+        Search["OpenSearch\nCluster"]
+    end
+
+    subgraph data["Data Layer"]
+        Redis[("ElastiCache\nRedis Cluster")]
+        Aurora[("Aurora\nPostgreSQL\nMulti-AZ")]
+        DDB[("DynamoDB\nGlobal Tables")]
+        Kafka["MSK Kafka\nEvent Bus"]
+    end
+
+    subgraph storage["Storage"]
+        S3["S3\nMedia Storage\nCross-Region"]
+    end
+
+    Mobile & Web --> DNS
+    DNS --> CDN --> WAF --> ALB
+    ALB --> TS & TLS & FO & NS
+    TS --> Aurora
+    TS --> Kafka
+    TS --> S3
+    TS --> Search
+    TLS --> Redis
+    Redis --> Aurora
+    FO --> Kafka
+    Kafka --> Redis
+    NS --> DDB
+
+    style clients fill:#dbeafe,stroke:#2563eb,color:#1e3a5f
+    style edge fill:#fef3c7,stroke:#d97706,color:#78350f
+    style compute fill:#ecfdf5,stroke:#059669,color:#064e3b
+    style data fill:#ede9fe,stroke:#7c3aed,color:#4c1d95
+    style storage fill:#fce7f3,stroke:#db2777,color:#831843

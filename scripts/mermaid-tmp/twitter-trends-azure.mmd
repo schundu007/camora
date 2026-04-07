@@ -1,0 +1,31 @@
+graph LR
+    subgraph ingest["Ingestion"]
+        Tweets["Tweet Stream\n100K tweets/sec"]
+        Kafka["Event Hubs\nPartitioned"]
+    end
+    subgraph process["Stream Processing"]
+        Flink["Stream Analytics\nFlink/Beam"]
+        CMS["Count-Min Sketch\nApprox Counting"]
+        Decay["Time-Decay\nExponential"]
+    end
+    subgraph store["Storage"]
+        Redis[("Azure Cache\nfor Redis\nTrend Counters")]
+        DB[("Azure SQL\nPostgreSQL\nTrend History")]
+        NoSQL[("Cosmos DB\nGeo Trends")]
+    end
+    subgraph serve["Serving"]
+        GW["API Management"]
+        Cache["Response Cache\nTop-N per Region"]
+        CDN["Azure CDN"]
+    end
+    Tweets --> Kafka --> Flink
+    Flink --> CMS --> Redis
+    Flink --> Decay --> Redis
+    Redis --> DB
+    Redis --> NoSQL
+    GW --> Cache --> CDN
+    Redis --> GW
+    style ingest fill:#fef3c7,stroke:#d97706,color:#78350f
+    style process fill:#ecfdf5,stroke:#059669,color:#064e3b
+    style store fill:#ede9fe,stroke:#7c3aed,color:#4c1d95
+    style serve fill:#dbeafe,stroke:#2563eb,color:#1e3a5f

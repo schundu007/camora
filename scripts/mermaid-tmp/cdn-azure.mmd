@@ -1,0 +1,41 @@
+graph LR
+    subgraph clients["Clients"]
+        App["Application"]
+    end
+    subgraph edge["Edge"]
+        DNS["Azure DNS"]
+        CDN["Azure CDN"]
+        LB["App Gateway"]
+    end
+    subgraph compute["Compute — AKS"]
+        Svc0["Edge PoPs\n300+ Global"]
+        Svc1["Origin Shield\nMid-tier Cache"]
+        Svc2["Cache Invalidation\nTag Purge"]
+        Svc3["DDoS Mitigation"]
+    end
+    subgraph data["Data Layer"]
+        Store0[("Origin Server")]
+        Store1[("GeoDNS\nLatency Route")]
+        Store2[("TLS Termination\nEdge SSL")]
+    end
+    subgraph storage["Storage"]
+        S3["Blob Storage"]
+    end
+    subgraph infra["Infrastructure"]
+        Kafka["Event Hubs"]
+        Mon["Azure Monitor"]
+    end
+    App --> DNS --> CDN --> LB
+    LB --> Svc0 & Svc1 & Svc2 & Svc3
+    Svc0 --> Store0
+    Svc1 --> Store1
+    Svc2 --> Store2
+    Svc0 --> Kafka
+    Svc0 --> S3
+    Kafka --> Mon
+    style clients fill:#dbeafe,stroke:#2563eb,color:#1e3a5f
+    style edge fill:#fef3c7,stroke:#d97706,color:#78350f
+    style compute fill:#ecfdf5,stroke:#059669,color:#064e3b
+    style data fill:#ede9fe,stroke:#7c3aed,color:#4c1d95
+    style storage fill:#fce7f3,stroke:#db2777,color:#831843
+    style infra fill:#f1f5f9,stroke:#64748b,color:#334155

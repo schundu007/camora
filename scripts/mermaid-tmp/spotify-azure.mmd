@@ -1,0 +1,47 @@
+graph LR
+    subgraph clients["Clients"]
+        Mobile["Mobile App"]
+        Web["Web Player"]
+        Desktop["Desktop App"]
+    end
+    subgraph edge["Edge Layer"]
+        DNS["Azure DNS"]
+        CDN["Azure CDN\nAudio Edge Cache"]
+        WAF["Azure WAF"]
+    end
+    subgraph compute["Compute — AKS"]
+        LB["App Gateway"]
+        AudioSvc["Audio Streaming\nAdaptive Bitrate"]
+        PlaylistSvc["Playlist\nService"]
+        UserSvc["User\nService"]
+        SearchSvc["Search\nService"]
+        RecSvc["Recommendation\nEngine (ML)"]
+        AdsSvc["Ads\nService"]
+        OfflineSvc["Offline Sync\nService"]
+    end
+    subgraph data["Data Layer"]
+        Redis[("Azure Cache\nfor Redis")]
+        PG[("Azure SQL\nPostgreSQL\nMulti-AZ")]
+        ES["Cognitive\nSearch"]
+        Kafka["Event Hubs\nEvent Bus"]
+        ML["Azure ML\nCollab Filtering"]
+    end
+    subgraph storage["Storage"]
+        S3["Blob Storage\nAudio Files\nMulti-bitrate"]
+    end
+    clients --> DNS --> CDN --> WAF --> LB
+    LB --> AudioSvc & PlaylistSvc & UserSvc & SearchSvc & RecSvc & AdsSvc & OfflineSvc
+    AudioSvc --> CDN
+    AudioSvc --> S3
+    PlaylistSvc --> PG
+    UserSvc --> PG & Redis
+    SearchSvc --> ES
+    RecSvc --> ML & Redis & Kafka
+    OfflineSvc --> S3
+    AdsSvc --> Redis
+    Kafka --> RecSvc
+    style clients fill:#dbeafe,stroke:#2563eb,color:#1e3a5f
+    style edge fill:#fef3c7,stroke:#d97706,color:#78350f
+    style compute fill:#ecfdf5,stroke:#059669,color:#064e3b
+    style data fill:#ede9fe,stroke:#7c3aed,color:#4c1d95
+    style storage fill:#fce7f3,stroke:#db2777,color:#831843

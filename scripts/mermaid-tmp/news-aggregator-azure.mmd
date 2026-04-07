@@ -1,0 +1,37 @@
+graph LR
+    subgraph ingest["Content Ingestion"]
+        Crawler["RSS/API\nCrawler"]
+        NLP["NLP Pipeline\nEntity + Dedup"]
+        Cat["Categorizer\nML"]
+    end
+    subgraph compute["Compute — AKS"]
+        LB["App Gateway"]
+        RankSvc["Ranking Service\nFreshness+Relevance"]
+        UserSvc["User Service\nPersonalization"]
+        TrendSvc["Trending\nDetection"]
+    end
+    subgraph data["Data Layer"]
+        Redis[("Azure Cache\nfor Redis\nTrending Cache")]
+        PG[("Azure SQL\nPostgreSQL\nArticles, Users")]
+        ES["Cognitive\nSearch\nFull-text"]
+        Kafka["Event Hubs\nArticle Pipeline"]
+        ML["Azure ML"]
+        NoSQL[("Cosmos DB\nReading History")]
+    end
+    subgraph serve["Serving"]
+        CDN["Azure CDN"]
+        GW["API Management"]
+    end
+    Crawler --> Kafka --> NLP --> Cat --> PG
+    Cat --> ML
+    NLP --> ES
+    LB --> RankSvc & UserSvc & TrendSvc
+    RankSvc --> ML & Redis & PG
+    UserSvc --> NoSQL & PG
+    TrendSvc --> Redis & Kafka
+    GW --> CDN
+    LB --> GW
+    style ingest fill:#fef3c7,stroke:#d97706,color:#78350f
+    style compute fill:#ecfdf5,stroke:#059669,color:#064e3b
+    style data fill:#ede9fe,stroke:#7c3aed,color:#4c1d95
+    style serve fill:#dbeafe,stroke:#2563eb,color:#1e3a5f

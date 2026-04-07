@@ -1,0 +1,46 @@
+graph LR
+    subgraph clients["Clients"]
+        Mobile["Mobile App"]
+        Web["Web App"]
+    end
+    subgraph edge["Edge Layer"]
+        DNS["Cloud DNS"]
+        CDN["Cloud CDN"]
+        WAF["Cloud Armor"]
+    end
+    subgraph compute["Compute — GKE"]
+        LB["Cloud LB"]
+        ProfileSvc["Profile\nService"]
+        ConnSvc["Connection\nService"]
+        FeedSvc["Feed Service\nRanked"]
+        MsgSvc["Messaging\nService"]
+        SearchSvc["Search\nService"]
+        RecSvc["PYMK\nRecommendation"]
+        JobSvc["Job Matching\nService"]
+    end
+    subgraph data["Data Layer"]
+        Redis[("Memorystore\nRedis\nFeed Cache")]
+        PG[("Cloud SQL\nPostgreSQL\nProfiles, Jobs")]
+        Graph[("Neo4j on GKE\nSocial Graph")]
+        ES["Elasticsearch\non GKE\nPeople + Jobs"]
+        Kafka["Pub/Sub\nActivity Events"]
+        ML["Vertex AI"]
+        NoSQL[("Firestore\nMessages")]
+    end
+    subgraph storage["Storage"]
+        S3["Cloud Storage\nPhotos, Resumes"]
+    end
+    clients --> DNS --> CDN --> WAF --> LB
+    LB --> ProfileSvc & ConnSvc & FeedSvc & MsgSvc & SearchSvc & RecSvc & JobSvc
+    ProfileSvc --> PG & S3
+    ConnSvc --> Graph & Kafka
+    FeedSvc --> Redis & Kafka
+    MsgSvc --> NoSQL
+    SearchSvc --> ES
+    RecSvc --> ML & Graph
+    JobSvc --> ML & ES
+    style clients fill:#dbeafe,stroke:#2563eb,color:#1e3a5f
+    style edge fill:#fef3c7,stroke:#d97706,color:#78350f
+    style compute fill:#ecfdf5,stroke:#059669,color:#064e3b
+    style data fill:#ede9fe,stroke:#7c3aed,color:#4c1d95
+    style storage fill:#fce7f3,stroke:#db2777,color:#831843

@@ -1,0 +1,6 @@
+graph LR
+    Client --> LB[Load Balancer]
+    LB --> S1[Server 1]
+    LB --> S2[Server 2]
+    S1 --> DB[(Database)]
+    S2 --> DB

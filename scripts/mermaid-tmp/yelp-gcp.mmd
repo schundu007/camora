@@ -1,0 +1,41 @@
+graph LR
+    subgraph clients["Clients"]
+        Mobile["Mobile App"]
+        Web["Web App"]
+    end
+    subgraph edge["Edge Layer"]
+        DNS["Cloud DNS"]
+        CDN["Cloud CDN"]
+        WAF["Cloud Armor"]
+    end
+    subgraph compute["Compute — GKE"]
+        LB["Cloud LB"]
+        SearchSvc["Search Service\nGeo + Text"]
+        BizSvc["Business\nService"]
+        ReviewSvc["Review\nService"]
+        PhotoSvc["Photo\nService"]
+        RankSvc["ML Ranking\nPersonalization"]
+    end
+    subgraph data["Data Layer"]
+        Redis[("Memorystore\nRedis\nQuery Cache")]
+        PG[("Cloud SQL\nPostgreSQL\nBiz, Reviews")]
+        ES["Elasticsearch\non GKE\nQuadTree/Geohash"]
+        Kafka["Pub/Sub"]
+        ML["Vertex AI\nSpam Detection"]
+    end
+    subgraph storage["Storage"]
+        S3["Cloud Storage\nBiz Photos"]
+    end
+    clients --> DNS --> CDN --> WAF --> LB
+    LB --> SearchSvc & BizSvc & ReviewSvc & PhotoSvc & RankSvc
+    SearchSvc --> ES & Redis
+    BizSvc --> PG
+    ReviewSvc --> PG & Kafka
+    PhotoSvc --> S3
+    RankSvc --> ML & Redis
+    Kafka --> ML
+    style clients fill:#dbeafe,stroke:#2563eb,color:#1e3a5f
+    style edge fill:#fef3c7,stroke:#d97706,color:#78350f
+    style compute fill:#ecfdf5,stroke:#059669,color:#064e3b
+    style data fill:#ede9fe,stroke:#7c3aed,color:#4c1d95
+    style storage fill:#fce7f3,stroke:#db2777,color:#831843
