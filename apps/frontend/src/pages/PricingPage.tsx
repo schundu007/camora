@@ -323,20 +323,21 @@ export default function PricingPage() {
             <h2 className="heading-2 mt-3">Top-Up Packs</h2>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {[
               { name: '20 AI Questions', price: '$5', desc: 'Includes 3 bonus diagrams', packId: 'questions_20' },
               { name: '50 AI Questions', price: '$10', desc: 'Includes 8 bonus diagrams', packId: 'questions_50' },
               { name: '5 Live Sessions', price: '$15', desc: '90 minutes per session', packId: 'sessions_5' },
             ].map((pack) => (
-              <div key={pack.packId} className="rounded-2xl p-px bg-gradient-to-br from-emerald-300 via-blue-300 to-purple-300 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:from-emerald-400 hover:via-blue-400 hover:to-purple-400 transition-all">
-              <div className="bg-white rounded-[15px] p-6">
-                <h3 className="heading-3">{pack.name}</h3>
-                <div className="mt-1 flex items-baseline gap-1">
-                  <span className="text-2xl font-bold text-emerald-600">{pack.price}</span>
-                  <span className="text-small">one-time</span>
+              <div key={pack.packId} className="bg-white rounded-2xl border border-[#e3e8ee] p-4 flex items-center justify-between gap-4" style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-900">{pack.name}</h3>
+                  <div className="flex items-baseline gap-1 mt-0.5">
+                    <span className="text-lg font-bold text-emerald-600">{pack.price}</span>
+                    <span className="text-[11px] text-gray-400">one-time</span>
+                  </div>
+                  <p className="text-[11px] text-gray-400 mt-0.5">{pack.desc}</p>
                 </div>
-                <p className="mt-2 text-body">{pack.desc}</p>
                 <button
                   onClick={async () => {
                     if (!token) { navigate('/login'); return; }
@@ -354,11 +355,10 @@ export default function PricingPage() {
                       if (data.url) window.location.href = data.url;
                     } catch { /* ignore */ }
                   }}
-                  className="mt-4 w-full py-2.5 bg-gray-900 hover:bg-gray-800 text-white text-sm font-semibold rounded-xl transition-colors"
+                  className="shrink-0 px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white text-xs font-semibold rounded-lg transition-colors"
                 >
-                  Buy {pack.name}
+                  Buy
                 </button>
-              </div>
               </div>
             ))}
           </div>
