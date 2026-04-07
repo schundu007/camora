@@ -252,36 +252,25 @@ export default function PricingPage() {
 
       {/* Plans */}
       <section className="w-full lg:max-w-[70%] mx-auto px-6 py-10">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-6">
           {PLANS.map((plan) => (
             <div
               key={plan.name}
-              className="relative p-6 flex flex-col"
-              style={plan.popular ? {
-                background: 'linear-gradient(160deg, rgba(52,211,153,0.12) 0%, rgba(56,189,248,0.08) 25%, white 50%, rgba(129,140,248,0.08) 75%, rgba(192,132,252,0.12) 100%)',
+              className="relative p-6 flex flex-col overflow-visible"
+              style={{
                 borderRadius: '16px',
-                border: '2px solid transparent',
-                backgroundImage: 'linear-gradient(160deg, rgba(52,211,153,0.12), rgba(56,189,248,0.08) 25%, white 50%, rgba(129,140,248,0.08) 75%, rgba(192,132,252,0.12)), linear-gradient(135deg, #34d399, #38bdf8, #818cf8, #c084fc)',
-                backgroundOrigin: 'border-box',
-                backgroundClip: 'padding-box, border-box',
-                boxShadow: '0 4px 20px rgba(99,102,241,0.15)',
-              } : plan.name === 'Annual' ? {
-                background: 'linear-gradient(160deg, rgba(251,191,36,0.12) 0%, rgba(245,158,11,0.08) 25%, white 50%, rgba(217,119,6,0.08) 75%, rgba(251,191,36,0.12) 100%)',
-                borderRadius: '16px',
-                border: '2px solid transparent',
-                backgroundImage: 'linear-gradient(160deg, rgba(251,191,36,0.12), rgba(245,158,11,0.08) 25%, white 50%, rgba(217,119,6,0.08) 75%, rgba(251,191,36,0.12)), linear-gradient(135deg, #fbbf24, #f59e0b, #d97706, #fbbf24)',
-                backgroundOrigin: 'border-box',
-                backgroundClip: 'padding-box, border-box',
-                boxShadow: '0 4px 20px rgba(245,158,11,0.15)',
-              } : { borderRadius: '16px', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', background: 'white', border: '1px solid #e3e8ee' }}
+                background: 'white',
+                border: plan.popular ? '2px solid #10b981' : plan.name === 'Annual' ? '2px solid #f59e0b' : '1px solid #e3e8ee',
+                boxShadow: plan.popular ? '0 4px 16px rgba(16,185,129,0.12)' : plan.name === 'Annual' ? '0 4px 16px rgba(245,158,11,0.12)' : '0 2px 8px rgba(0,0,0,0.04)',
+              }}
             >
               {plan.popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-[10px] font-bold text-white uppercase tracking-wider whitespace-nowrap" style={{ background: 'linear-gradient(135deg, #34d399, #818cf8)' }}>
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-[10px] font-bold text-white uppercase tracking-wider whitespace-nowrap" style={{ background: 'linear-gradient(135deg, #10b981, #06b6d4)' }}>
                   Most Popular
                 </div>
               )}
               {plan.name === 'Annual' && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-[10px] font-bold text-white uppercase tracking-wider whitespace-nowrap" style={{ background: 'linear-gradient(135deg, #fbbf24, #d97706)' }}>
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-[10px] font-bold text-white uppercase tracking-wider whitespace-nowrap" style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}>
                   Best Value
                 </div>
               )}
