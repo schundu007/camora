@@ -596,7 +596,7 @@ export default function PracticePage() {
 
       {/* ═══════════ Nav ═══════════ */}
       <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl" style={{ background: 'linear-gradient(135deg, rgba(178,235,242,0.7) 0%, rgba(179,198,231,0.7) 30%, rgba(197,179,227,0.7) 55%, rgba(212,184,232,0.7) 80%, rgba(225,190,231,0.7) 100%)', height: '56px' }}>
-        <div className="max-w-[85%] xl:max-w-7xl mx-auto h-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+        <div className="max-w-[70%] mx-auto h-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2.5 no-underline">
             <CamoraLogo size={36} />
             <span style={{ fontWeight: 700, fontSize: '16px', color: '#111827', fontFamily: "'Comfortaa', sans-serif" }}>Camora</span>
@@ -636,7 +636,7 @@ export default function PracticePage() {
 
       {/* ═══════════ Main Content ═══════════ */}
       <div style={{ paddingTop: 56 }}>
-        <div className="max-w-[85%] xl:max-w-5xl mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: 32, paddingBottom: 80 }}>
+        <div className="max-w-[70%] mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: 32, paddingBottom: 80 }}>
 
           {/* ── SETUP PHASE ── */}
           {phase === 'setup' && (
@@ -680,7 +680,7 @@ export default function PracticePage() {
                   <RadarChart values={dimValues} labels={DIMENSION_LABELS} size={150} />
 
                   {/* Category bars */}
-                  <div style={{ flex: 1, minWidth: 200 }}>
+                  <div style={{ flex: 1, minWidth: 200, maxWidth: 280 }}>
                     <h2 className="practice-display" style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: '0 0 10px' }}>Interview Readiness</h2>
                     {CATEGORIES.map(cat => {
                       const s = getCategoryScore(stats, cat);
@@ -916,34 +916,97 @@ export default function PracticePage() {
                 </div>
               )}
 
-              {category === 'system-design' && !inlineEval && (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 8 }}>
-                  {['Components', 'Data Flow', 'Scalability', 'Trade-offs'].map((section, si) => {
-                    const parts = (answers[currentIdx] || '').split('---SECTION---');
-                    const val = parts[si] || '';
-                    return (
-                      <div key={section}>
-                        <label style={{ fontSize: 11, fontWeight: 600, color: '#6b7280', marginBottom: 4, display: 'block', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{section}</label>
-                        <textarea
-                          ref={si === 0 ? textareaRef : undefined}
-                          value={val}
-                          onChange={(e) => {
-                            const newParts = (answers[currentIdx] || '').split('---SECTION---');
-                            while (newParts.length < 4) newParts.push('');
-                            newParts[si] = e.target.value;
-                            const newA = [...answers];
-                            newA[currentIdx] = newParts.join('---SECTION---');
-                            setAnswers(newA);
+              {category === 'system-design' && !inlineEval && (() => {
+                const SD_SECTIONS = [
+                  { label: 'Functional Req.', icon: 'clipboardList', color: '#3b82f6', placeholder: 'List core functional requirements...' },
+                  { label: 'Non-Functional Req.', icon: 'shield', color: '#8b5cf6', placeholder: 'Latency, availability, consistency, scale...' },
+                  { label: 'Components', icon: 'layers', color: '#10b981', placeholder: 'Key services, databases, caches...' },
+                  { label: 'Data Flow', icon: 'gitBranch', color: '#06b6d4', placeholder: 'Request path, data pipeline...' },
+                  { label: 'Layered Design', icon: 'server', color: '#f59e0b', placeholder: 'API layer, business logic, storage...' },
+                  { label: 'Scalability', icon: 'trendingUp', color: '#ec4899', placeholder: 'Sharding, replication, CDN, load balancing...' },
+                  { label: 'Trade-offs', icon: 'scale', color: '#ef4444', placeholder: 'CAP, consistency vs availability...' },
+                ];
+                const parts = (answers[currentIdx] || '').split('---SECTION---');
+                return (
+                  <div style={{ marginBottom: 8 }}>
+                    {/* Diagram drawing area */}
+                    <div style={{ marginBottom: 12 }}>
+                      <label style={{ fontSize: 11, fontWeight: 600, color: '#6b7280', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        <Icon name="pen" size={12} style={{ color: '#10b981' }} />
+                        Architecture Diagram
+                      </label>
+                      <div style={{ position: 'relative', width: '100%', height: 200, borderRadius: 10, border: '1px solid #e3e8ee', background: '#fafbfc', overflow: 'hidden' }}>
+                        <canvas
+                          ref={(el) => {
+                            if (el && !el._initialized) {
+                              el._initialized = true;
+                              const ctx = el.getContext('2d');
+                              el.width = el.offsetWidth * 2;
+                              el.height = el.offsetHeight * 2;
+                              ctx.scale(2, 2);
+                              ctx.lineWidth = 2;
+                              ctx.strokeStyle = '#10b981';
+                              ctx.lineCap = 'round';
+                              let drawing = false;
+                              let lastX = 0, lastY = 0;
+                              const getPos = (e) => {
+                                const rect = el.getBoundingClientRect();
+                                const touch = e.touches ? e.touches[0] : e;
+                                return [touch.clientX - rect.left, touch.clientY - rect.top];
+                              };
+                              const start = (e) => { drawing = true; [lastX, lastY] = getPos(e); };
+                              const draw = (e) => { if (!drawing) return; e.preventDefault(); const [x, y] = getPos(e); ctx.beginPath(); ctx.moveTo(lastX, lastY); ctx.lineTo(x, y); ctx.stroke(); lastX = x; lastY = y; };
+                              const stop = () => { drawing = false; };
+                              el.addEventListener('mousedown', start);
+                              el.addEventListener('mousemove', draw);
+                              el.addEventListener('mouseup', stop);
+                              el.addEventListener('mouseleave', stop);
+                              el.addEventListener('touchstart', start, { passive: false });
+                              el.addEventListener('touchmove', draw, { passive: false });
+                              el.addEventListener('touchend', stop);
+                            }
                           }}
-                          placeholder={`Describe ${section.toLowerCase()}...`}
-                          style={{ width: '100%', minHeight: 120, padding: 12, borderRadius: 10, border: '1px solid #e3e8ee', fontSize: 13, resize: 'vertical', outline: 'none', background: '#fafbfc', lineHeight: 1.7 }}
-                          autoFocus={si === 0}
+                          style={{ width: '100%', height: '100%', cursor: 'crosshair' }}
                         />
+                        <div style={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 4 }}>
+                          <button onClick={(e) => { const canvas = e.target.closest('div').parentElement.querySelector('canvas'); const ctx = canvas.getContext('2d'); ctx.clearRect(0, 0, canvas.width, canvas.height); }} style={{ padding: '4px 8px', fontSize: 10, fontWeight: 600, color: '#6b7280', background: '#fff', border: '1px solid #e3e8ee', borderRadius: 6, cursor: 'pointer' }}>Clear</button>
+                        </div>
+                        <p style={{ position: 'absolute', bottom: 6, left: 0, right: 0, textAlign: 'center', fontSize: 10, color: '#c0c5ce', margin: 0, pointerEvents: 'none' }}>Sketch your architecture diagram</p>
                       </div>
-                    );
-                  })}
-                </div>
-              )}
+                    </div>
+
+                    {/* Section text areas — 2 columns */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                      {SD_SECTIONS.map((section, si) => {
+                        const val = parts[si] || '';
+                        return (
+                          <div key={section.label}>
+                            <label style={{ fontSize: 11, fontWeight: 600, color: section.color, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                              <Icon name={section.icon} size={12} style={{ color: section.color }} />
+                              {section.label}
+                            </label>
+                            <textarea
+                              ref={si === 0 ? textareaRef : undefined}
+                              value={val}
+                              onChange={(e) => {
+                                const newParts = (answers[currentIdx] || '').split('---SECTION---');
+                                while (newParts.length < SD_SECTIONS.length) newParts.push('');
+                                newParts[si] = e.target.value;
+                                const newA = [...answers];
+                                newA[currentIdx] = newParts.join('---SECTION---');
+                                setAnswers(newA);
+                              }}
+                              placeholder={section.placeholder}
+                              style={{ width: '100%', minHeight: 80, padding: 10, borderRadius: 10, border: '1px solid #e3e8ee', fontSize: 12, resize: 'vertical', outline: 'none', background: '#fafbfc', lineHeight: 1.6 }}
+                              autoFocus={si === 0}
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
 
               {category === 'behavioral' && !inlineEval && (
                 <div style={{ display: 'grid', gap: 8, marginBottom: 8 }}>
