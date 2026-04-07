@@ -165,8 +165,8 @@ export function App() {
           <Route path="/prepare/*" element={<ProtectedRoute><CapraPrepare /></ProtectedRoute>} />
           <Route path="/practice" element={<ProtectedRoute><CapraPractice /></ProtectedRoute>} />
           <Route path="/handbook" element={<ProtectedRoute><Blind75Page /></ProtectedRoute>} />
-          <Route path="/handbook/:id/practice" element={<Blind75PracticePage />} />
-          <Route path="/handbook/:id/solution" element={<Blind75PracticePage />} />
+          <Route path="/handbook/:id/practice" element={<ProtectedRoute><Blind75PracticePage /></ProtectedRoute>} />
+          <Route path="/handbook/:id/solution" element={<ProtectedRoute><Blind75PracticePage /></ProtectedRoute>} />
           <Route path="/problems/:slug" element={<ProtectedRoute><CapraDashboard /></ProtectedRoute>} />
           <Route path="/onboarding" element={<ProtectedRoute><CapraOnboarding /></ProtectedRoute>} />
 
@@ -174,7 +174,7 @@ export function App() {
           <Route path="/brand" element={<BrandPage />} />
 
           {/* ── Company Interview Questions ─────────────── */}
-          <Route path="/interview-questions/:company" element={<CompanyPrepPage />} />
+          <Route path="/interview-questions/:company" element={<ProtectedRoute><CompanyPrepPage /></ProtectedRoute>} />
 
           {/* ── Catch-all ──────────────────────────────── */}
           <Route path="*" element={<NotFoundPage />} />

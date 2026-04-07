@@ -217,6 +217,7 @@ const CodeDisplay = forwardRef(function CodeDisplay({ code: initialCode, languag
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({ code, language: normalizedLanguage, input }),
       });
+      if (!response.ok) throw new Error('Request failed');
       const data = await response.json();
       setOutput(data);
     } catch (err) {
@@ -246,8 +247,9 @@ const CodeDisplay = forwardRef(function CodeDisplay({ code: initialCode, languag
           provider: 'openai'
         }),
       });
+      if (!response.ok) throw new Error('Request failed');
       const data = await response.json();
-      if (response.ok && data.code) {
+      if (data.code) {
         setCode(data.code);
         setFixAttempts(prev => prev + 1);
         setOutput(null);

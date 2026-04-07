@@ -28,6 +28,7 @@ export default function PremiumPage() {
       const token = authToken;
       if (!token) throw new Error('Please sign in first');
       const pricesRes = await fetch(`${API_URL}/api/billing/prices`);
+      if (!pricesRes.ok) throw new Error('Failed to load prices');
       const prices = await pricesRes.json();
       const priceId = prices[planId]?.priceId;
       if (!priceId) throw new Error('Invalid plan');

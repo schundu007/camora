@@ -63,7 +63,7 @@ export function setSSOCookie(res, token) {
     path: '/',
     httpOnly: false,
     secure: true,
-    sameSite: 'lax',
+    sameSite: 'strict',
     maxAge: 30 * 24 * 60 * 60 * 1000,
   });
 }
@@ -76,6 +76,6 @@ export function clearSSOCookie(res) {
     domain: '.cariara.com',
     path: '/',
     secure: true,
-    sameSite: 'lax',
+    sameSite: 'strict',
   });
 }
