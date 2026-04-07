@@ -19,7 +19,7 @@ const router = Router();
 // Constants
 // ---------------------------------------------------------------------------
 
-const MAX_TOKENS = parseInt(process.env.MAX_TOKENS_CODING || '16384', 10);
+const MAX_TOKENS = parseInt(process.env.MAX_TOKENS_CODING || '8192', 10);
 const FREE_TIER_DAILY_LIMIT = parseInt(process.env.FREE_CODING_DAILY_LIMIT || '2', 10);
 
 /**

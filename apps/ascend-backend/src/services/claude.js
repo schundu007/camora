@@ -391,7 +391,7 @@ export async function solveProblem(problemText, language = 'auto', fast = true, 
 export async function extractText(base64Image, mimeType, model = DEFAULT_MODEL) {
   const response = await getClient().messages.create({
     model,
-    max_tokens: 4096,
+    max_tokens: 2048,
     messages: [
       {
         role: 'user',
@@ -434,7 +434,7 @@ export async function fixCode(code, error, language, problem = '', model = DEFAU
 
   const response = await getClient().messages.create({
     model,
-    max_tokens: 4096,
+    max_tokens: 2048,
     messages: [
       {
         role: 'user',
@@ -807,7 +807,7 @@ export async function* solveProblemStream(problemText, language = 'auto', detail
 
   const stream = await getClient().messages.stream({
     model,
-    max_tokens: ascendMode === 'system-design' ? 8192 : (isBrief ? 1024 : 8192),
+    max_tokens: ascendMode === 'system-design' ? 6144 : (isBrief ? 1024 : 6144),
     messages: [
       {
         role: 'user',
@@ -904,7 +904,7 @@ Do NOT use markdown formatting or code blocks - just plain text.`,
 export async function analyzeImage(base64Image, mimeType, model = DEFAULT_MODEL) {
   const response = await getClient().messages.create({
     model,
-    max_tokens: 4096,
+    max_tokens: 2048,
     messages: [
       {
         role: 'user',

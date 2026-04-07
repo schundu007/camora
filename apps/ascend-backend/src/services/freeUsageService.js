@@ -62,9 +62,9 @@ export async function getFreeUsageStatus(userId) {
 
     if (result.rows.length === 0) {
       return {
-        coding: { used: 0, limit: 2, remaining: 2 },
-        design: { used: 0, limit: 2, remaining: 2 },
-        company_prep: { used: 0, limit: 2, remaining: 2 },
+        coding: { used: 0, limit: 1, remaining: 1 },
+        design: { used: 0, limit: 1, remaining: 1 },
+        company_prep: { used: 0, limit: 1, remaining: 1 },
       };
     }
 
@@ -89,9 +89,9 @@ export async function getFreeUsageStatus(userId) {
   } catch (error) {
     console.error('Error getting free usage status:', error);
     return {
-      coding: { used: 0, limit: 2, remaining: 2 },
-      design: { used: 0, limit: 2, remaining: 2 },
-      company_prep: { used: 0, limit: 2, remaining: 2 },
+      coding: { used: 0, limit: 1, remaining: 1 },
+      design: { used: 0, limit: 1, remaining: 1 },
+      company_prep: { used: 0, limit: 1, remaining: 1 },
     };
   }
 }

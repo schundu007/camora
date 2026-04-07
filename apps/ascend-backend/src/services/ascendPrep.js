@@ -25,8 +25,9 @@ const CLAUDE_SONNET = 'claude-sonnet-4-20250514';
 const CLAUDE_HAIKU = 'claude-haiku-4-5-20251001';
 const DEFAULT_CLAUDE_MODEL = CLAUDE_SONNET;
 const DEFAULT_OPENAI_MODEL = 'gpt-4o';
-const MAX_TOKENS_PER_SECTION = 32000; // High token limit for detailed explanations
-const MAX_TOKENS_CUSTOM_SECTION = 64000; // Much higher for custom sections to extract ALL content from documents
+const MAX_TOKENS_PER_SECTION = 12000; // Thorough section fits in 8-10K tokens
+const MAX_TOKENS_CUSTOM_SECTION = 16000; // Custom sections with document parsing
+const MAX_TOKENS_HAIKU_SECTION = 6000; // Non-technical sections (HR, pitch, behavioral) are shorter
 
 /**
  * Pick the right Claude model for a given section type.
@@ -1140,8 +1141,13 @@ Return ONLY valid JSON - no markdown, no code blocks, no explanations before or 
 
   const userMessage = `${context}\n\n${sectionPrompt}\n\nCRITICAL: Return ONLY the JSON object. Do NOT wrap in \`\`\`json code blocks. Start directly with { and end with }.`;
 
-  // Use higher token limit for custom sections to extract ALL content
-  const maxTokens = section.startsWith('custom') ? MAX_TOKENS_CUSTOM_SECTION : MAX_TOKENS_PER_SECTION;
+  // Token budget: custom sections need more room for document extraction,
+  // Haiku (non-technical) sections are shorter, Sonnet (technical) get standard budget
+  const maxTokens = section.startsWith('custom')
+    ? MAX_TOKENS_CUSTOM_SECTION
+    : model === CLAUDE_HAIKU
+      ? MAX_TOKENS_HAIKU_SECTION
+      : MAX_TOKENS_PER_SECTION;
 
   const stream = await getClaudeClient().messages.stream({
     model,
@@ -1253,8 +1259,16 @@ Return valid JSON.`;
 
   const userMessage = `${context}\n\n${sectionPrompt}`;
 
-  // Use higher token limit for custom sections to capture all content
-  const maxTokens = section.startsWith('custom') ? MAX_TOKENS_CUSTOM_SECTION : MAX_TOKENS_PER_SECTION;
+  // Token budget: custom sections need more room for document extraction,
+  // non-technical sections are shorter (match Haiku budget for parity)
+  const isNonTechnical = !['coding', 'system-design', 'system_design', 'techstack', 'rrk', 'custom'].some(
+    t => section?.toLowerCase().includes(t)
+  );
+  const maxTokens = section.startsWith('custom')
+    ? MAX_TOKENS_CUSTOM_SECTION
+    : isNonTechnical
+      ? MAX_TOKENS_HAIKU_SECTION
+      : MAX_TOKENS_PER_SECTION;
 
   const stream = await getOpenAIClient().chat.completions.create({
     model,

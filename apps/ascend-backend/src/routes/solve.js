@@ -11,6 +11,25 @@ import { logger } from '../middleware/requestLogger.js';
 
 const router = Router();
 
+// Daily solve cap for paid users to prevent abuse
+const PAID_DAILY_LIMIT = 15;
+const dailySolveUsage = new Map();
+
+function checkDailySolveLimit(userId) {
+  const today = new Date().toISOString().slice(0, 10);
+  const key = `${userId}:${today}`;
+  const count = dailySolveUsage.get(key) || 0;
+  if (count >= PAID_DAILY_LIMIT) return false;
+  dailySolveUsage.set(key, count + 1);
+  // Clean old entries daily
+  if (dailySolveUsage.size > 10000) {
+    for (const [k] of dailySolveUsage) {
+      if (!k.endsWith(today)) dailySolveUsage.delete(k);
+    }
+  }
+  return true;
+}
+
 // In-memory cache for coding solutions to avoid repeated Claude API calls
 const solutionCache = new Map();
 const CACHE_MAX = 500;
@@ -34,6 +53,19 @@ router.post('/', validate('solve'), async (req, res, next) => {
       if (!canUse.allowed) {
         return res.status(429).json({ error: canUse.reason || 'Free trial exhausted.', subscriptionRequired: true });
       }
+      // Paid users: daily cap to prevent abuse
+      if (canUse.hasSubscription && !checkDailySolveLimit(userId)) {
+        return res.status(429).json({ error: 'Daily solve limit reached (15/day). Try again tomorrow.', dailyLimitReached: true });
+      }
+    }
+
+    // Select model based on user plan — free users get Haiku, paid users get Sonnet
+    let userModel = model;
+    if (!userModel && userId && provider === 'claude') {
+      const subStatus = await freeUsageService.getSubscriptionStatus(userId);
+      userModel = (subStatus.hasSubscription)
+        ? 'claude-sonnet-4-20250514'
+        : 'claude-haiku-4-5-20251001';
     }
 
     // Check cache for non-streaming solve
@@ -45,7 +77,7 @@ router.post('/', validate('solve'), async (req, res, next) => {
     }
 
     const service = provider === 'openai' ? openai : claude;
-    const result = await service.solveProblem(problem, language, fast, model);
+    const result = await service.solveProblem(problem, language, fast, userModel);
 
     // Cache the result
     if (solutionCache.size >= CACHE_MAX) {
@@ -102,6 +134,18 @@ router.post('/stream', validate('solve'), async (req, res, next) => {
             res.end();
             return;
           }
+          // Paid users: daily cap to prevent abuse
+          if (canUseResult.hasSubscription && !checkDailySolveLimit(webappUserId)) {
+            logger.info({ userId: webappUserId }, 'Daily solve limit reached');
+            res.setHeader('Content-Type', 'text/event-stream');
+            res.write(`data: ${JSON.stringify({
+              error: 'Daily solve limit reached (15/day). Try again tomorrow.',
+              dailyLimitReached: true
+            })}\n\n`);
+            res.end();
+            return;
+          }
+
           logger.debug({
             userId: webappUserId,
             hasSubscription: canUseResult.hasSubscription,
@@ -115,6 +159,19 @@ router.post('/stream', validate('solve'), async (req, res, next) => {
       }
     }
 
+    // Select model based on user plan — free users get Haiku, paid users get Sonnet
+    let userModel = model;
+    if (!userModel && provider === 'claude') {
+      const userId = webappUserId || req.user?.id;
+      if (userId) {
+        const subStatus = await freeUsageService.getSubscriptionStatus(userId);
+        userModel = (subStatus.hasSubscription)
+          ? 'claude-sonnet-4-20250514'
+          : 'claude-haiku-4-5-20251001';
+        logger.debug({ userId, model: userModel, hasSubscription: subStatus.hasSubscription }, 'Model selected based on plan');
+      }
+    }
+
     // Set SSE headers
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
@@ -125,7 +182,7 @@ router.post('/stream', validate('solve'), async (req, res, next) => {
     // Helper to stream from a provider
     async function streamFromProvider(service, providerName) {
       let fullText = '';
-      for await (const chunk of service.solveProblemStream(problem, language, detailLevel, model, ascendMode, designDetailLevel)) {
+      for await (const chunk of service.solveProblemStream(problem, language, detailLevel, userModel, ascendMode, designDetailLevel)) {
         fullText += chunk;
         res.write(`data: ${JSON.stringify({ chunk, partial: true, provider: providerName })}\n\n`);
       }

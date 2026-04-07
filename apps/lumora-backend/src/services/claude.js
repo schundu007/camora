@@ -11,7 +11,7 @@ import { parseAnswer } from './answerParser.js';
 // ---------------------------------------------------------------------------
 const MODEL = process.env.CLAUDE_MODEL || 'claude-haiku-4-5-20251001';
 const MAX_TOKENS_QUICK = parseInt(process.env.MAX_TOKENS_QUICK || '2000', 10);
-const MAX_TOKENS_DESIGN = parseInt(process.env.MAX_TOKENS_DESIGN || '8192', 10);
+const MAX_TOKENS_DESIGN = parseInt(process.env.MAX_TOKENS_DESIGN || '6144', 10);
 const CONTEXT_TURNS = parseInt(process.env.CONTEXT_TURNS || '6', 10);
 
 const client = new Anthropic();  // reads ANTHROPIC_API_KEY from env
