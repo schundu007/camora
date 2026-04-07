@@ -340,13 +340,14 @@ export default function PracticePage() {
   const timerRef = useRef(null);
   const textareaRef = useRef(null);
   const challengeStartRef = useRef(0);
+  const endChallengeRef = useRef(null);
 
-  // Timer
+  // Timer — uses ref to avoid stale closure
   useEffect(() => {
     if (phase === 'active' && timeLeft > 0) {
       timerRef.current = setInterval(() => {
         setTimeLeft(t => {
-          if (t <= 1) { clearInterval(timerRef.current); endChallenge(); return 0; }
+          if (t <= 1) { clearInterval(timerRef.current); if (endChallengeRef.current) endChallengeRef.current(); return 0; }
           return t - 1;
         });
       }, 1000);
@@ -356,10 +357,14 @@ export default function PracticePage() {
 
   useEffect(() => { window.scrollTo(0, 0); }, []);
 
-  const startChallenge = useCallback(() => {
+  const startChallenge = useCallback((overrideCategory, overrideDifficulty) => {
+    const cat = overrideCategory ?? category;
+    const diff = overrideDifficulty ?? difficulty;
     const modeConfig = MODES.find(m => m.id === mode);
-    const qs = pickQuestions(category, difficulty, modeConfig.questions, company);
+    const qs = pickQuestions(cat, diff, modeConfig.questions, company);
     if (qs.length === 0) return;
+    if (overrideCategory) setCategory(overrideCategory);
+    if (overrideDifficulty) setDifficulty(overrideDifficulty);
     setQuestions(qs);
     setCurrentIdx(0);
     setAnswers(new Array(qs.length).fill(''));
@@ -401,6 +406,7 @@ export default function PracticePage() {
         body: JSON.stringify({ problem: evalPrompt, provider: 'claude', language: 'auto', detailLevel: 'basic', ascendMode: 'coding' }),
       });
 
+      if (!resp.ok) throw new Error(`API error ${resp.status}`);
       const reader = resp.body.getReader();
       const decoder = new TextDecoder();
       let buf = '', result = null;
@@ -422,7 +428,7 @@ export default function PracticePage() {
 
       if (result) {
         const text = result.code || result.pitch || '';
-        const jsonMatch = text.match(/\{[\s\S]*"score"[\s\S]*\}/);
+        const jsonMatch = text.match(/\{[\s\S]*?"score"[\s\S]*?\}/);
         if (jsonMatch) {
           try {
             const parsed = JSON.parse(jsonMatch[0]);
@@ -456,6 +462,7 @@ export default function PracticePage() {
   }, [currentIdx, questions, answers, category]);
 
   const moveToNext = useCallback(() => {
+    const lastScore = inlineEval?.score ?? 0;
     setInlineEval(null);
     setShowModelAnswer(null);
     if (currentIdx < questions.length - 1) {
@@ -463,9 +470,10 @@ export default function PracticePage() {
       setQuestionStartTime(Date.now());
       if (textareaRef.current) textareaRef.current.focus();
     } else {
-      endChallenge([...scores]);
+      // scores state may not include the last submitted score yet — append it
+      endChallenge([...scores, lastScore]);
     }
-  }, [currentIdx, questions, scores]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [currentIdx, questions, scores, inlineEval]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const skipQuestion = useCallback(() => {
     setScores(prev => [...prev, 0]);
@@ -490,15 +498,17 @@ export default function PracticePage() {
 
     // Compute per-session radar dimensions from AI dimensions
     const allDims = [...aiDimensions];
+    let computedDimensions = null;
     if (allDims.length > 0) {
       const avg = (key) => Math.round(allDims.reduce((a, d) => a + (d[key] || 0), 0) / allDims.length);
-      setResultDimensions({
+      computedDimensions = {
         problemSolving: avg('approach'),
         systemDesign: avg('complexity'),
         dataStructures: avg('completeness'),
         communication: avg('communication'),
         timeManagement: Math.min(100, Math.round((modeConfig.time > 0 ? (1 - totalTime / modeConfig.time) : 0.5) * 100 + 50)),
-      });
+      };
+      setResultDimensions(computedDimensions);
     }
 
     // Update stats
@@ -545,7 +555,7 @@ export default function PracticePage() {
       score: avgScore,
       timeSpent: totalTime,
       questionCount: questions.length,
-      dimensions: resultDimensions || newStats.dimensions,
+      dimensions: computedDimensions || newStats.dimensions,
       questions: questions.map((q, i) => ({ q: q.q, score: s[i] || 0, feedback: aiFeedback[i] || '' })),
     });
     if (newStats.history.length > 50) newStats.history = newStats.history.slice(0, 50);
@@ -555,6 +565,9 @@ export default function PracticePage() {
     setPhase('results');
     window.scrollTo(0, 0);
   }, [scores, mode, stats, category, difficulty, company, questions, aiDimensions, aiFeedback, resultDimensions]);
+
+  // Keep ref in sync so timer always calls the latest version
+  useEffect(() => { endChallengeRef.current = endChallenge; });
 
   const readiness = getReadiness(stats);
   const modeConfig = MODES.find(m => m.id === mode);
@@ -640,7 +653,7 @@ export default function PracticePage() {
                   </div>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-                  <button onClick={() => { setCategory(dailyCategory); setDifficulty(dailyChallenge.difficulty); startChallenge(); }} style={{ padding: '10px 24px', background: 'linear-gradient(135deg, #10b981, #059669)', color: '#fff', fontSize: 14, fontWeight: 600, borderRadius: 10, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, boxShadow: '0 2px 8px rgba(16,185,129,0.25)' }}>
+                  <button onClick={() => startChallenge(dailyCategory, dailyChallenge.difficulty)} style={{ padding: '10px 24px', background: 'linear-gradient(135deg, #10b981, #059669)', color: '#fff', fontSize: 14, fontWeight: 600, borderRadius: 10, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, boxShadow: '0 2px 8px rgba(16,185,129,0.25)' }}>
                     <Icon name="play" size={14} style={{ color: '#fff' }} />
                     Start
                   </button>
@@ -710,19 +723,6 @@ export default function PracticePage() {
                 </div>
               </div>
 
-              {/* Company-Specific Practice */}
-              <div style={{ background: '#fff', border: '1px solid #e3e8ee', borderRadius: 16, padding: 24, marginBottom: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-                <h2 className="practice-display" style={{ fontSize: 18, fontWeight: 700, color: '#111827', margin: '0 0 16px' }}>Company Focus</h2>
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  {COMPANIES.map(c => (
-                    <button key={c.id} onClick={() => setCompany(c.id)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 16px', borderRadius: 99, border: company === c.id ? `2px solid ${c.color}` : '1px solid #e3e8ee', background: company === c.id ? `${c.color}10` : '#fff', fontSize: 13, fontWeight: 500, cursor: 'pointer', color: company === c.id ? c.color : '#4b5563', transition: 'all 0.15s' }}>
-                      <span style={{ width: 8, height: 8, borderRadius: 99, background: c.color, display: 'inline-block' }} />
-                      {c.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
               {/* Challenge Configuration */}
               <div style={{ background: '#fff', border: '1px solid #e3e8ee', borderRadius: 16, padding: 24, marginBottom: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
                 <h2 className="practice-display" style={{ fontSize: 18, fontWeight: 700, color: '#111827', margin: '0 0 16px' }}>Start a Challenge</h2>
@@ -774,6 +774,19 @@ export default function PracticePage() {
                   <Icon name="play" size={16} style={{ color: '#fff' }} />
                   Start Challenge
                 </button>
+              </div>
+
+              {/* Company-Specific Practice */}
+              <div style={{ background: '#fff', border: '1px solid #e3e8ee', borderRadius: 16, padding: 24, marginBottom: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+                <h2 className="practice-display" style={{ fontSize: 18, fontWeight: 700, color: '#111827', margin: '0 0 16px' }}>Company Focus</h2>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {COMPANIES.map(c => (
+                    <button key={c.id} onClick={() => setCompany(c.id)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 16px', borderRadius: 99, border: company === c.id ? `2px solid ${c.color}` : '1px solid #e3e8ee', background: company === c.id ? `${c.color}10` : '#fff', fontSize: 13, fontWeight: 500, cursor: 'pointer', color: company === c.id ? c.color : '#4b5563', transition: 'all 0.15s' }}>
+                      <span style={{ width: 8, height: 8, borderRadius: 99, background: c.color, display: 'inline-block' }} />
+                      {c.label}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* Challenge History */}
@@ -1029,7 +1042,7 @@ export default function PracticePage() {
                   <button onClick={skipQuestion} disabled={evaluating} style={{ padding: '10px 20px', background: '#f3f4f6', color: '#374151', fontSize: 13, fontWeight: 500, borderRadius: 10, border: '1px solid #e3e8ee', cursor: 'pointer' }}>
                     Skip
                   </button>
-                  <button onClick={() => endChallenge()} style={{ padding: '10px 20px', background: '#fef2f2', color: '#dc2626', fontSize: 13, fontWeight: 500, borderRadius: 10, border: '1px solid #fecaca', cursor: 'pointer', marginLeft: 'auto' }}>
+                  <button onClick={() => endChallenge()} disabled={evaluating} style={{ padding: '10px 20px', background: '#fef2f2', color: '#dc2626', fontSize: 13, fontWeight: 500, borderRadius: 10, border: '1px solid #fecaca', cursor: evaluating ? 'not-allowed' : 'pointer', marginLeft: 'auto', opacity: evaluating ? 0.5 : 1 }}>
                     End Session
                   </button>
                 </div>
