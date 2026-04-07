@@ -627,7 +627,24 @@ const std::string URLShortener::CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLM
         'NoSQL database (Cassandra) for horizontal scaling',
         'Redis cache with LRU eviction for popular URLs',
         '301 Permanent Redirect for SEO and caching benefits'
-      ]
+      ],
+      edgeCases: [
+        { scenario: 'Hash collision on short URL generation', impact: 'Two different long URLs map to same short URL, causing incorrect redirects', mitigation: 'Check for collision before storing, append counter or use base62 of auto-increment ID' },
+        { scenario: 'Expired URL reuse', impact: 'Recycled short URLs may still be cached in browsers or CDNs, serving stale redirects', mitigation: 'Use long TTLs before recycling, include generation counter in URL, purge CDN on recycle' },
+        { scenario: 'Bot abuse creating millions of URLs', impact: 'Storage exhaustion and potential DDoS, wasting ID space', mitigation: 'Rate limit per IP/user, require auth for bulk creation, CAPTCHA for anonymous users' },
+        { scenario: 'Custom alias conflicts', impact: 'Popular vanity URLs contested by multiple users', mitigation: 'First-come-first-served with reservation, trademark checking, paid premium aliases' },
+      ],
+      tradeoffs: [
+        { decision: 'Base62 encoding vs MD5 hash truncation', pros: 'Base62 gives shorter predictable-length URLs; MD5 gives uniform distribution', cons: 'Base62 needs counter coordination; MD5 truncation increases collision probability', recommendation: 'Use base62 of auto-increment ID for simplicity, MD5 only if IDs must be non-sequential' },
+        { decision: 'Read-through cache vs cache-aside', pros: 'Read-through simplifies app logic; cache-aside gives more control', cons: 'Read-through couples cache to DB; cache-aside requires explicit invalidation', recommendation: 'Cache-aside for URL lookups since reads dominate and data rarely changes' },
+        { decision: '301 vs 302 redirect', pros: '301 reduces server load via browser caching; 302 lets you track every click', cons: '301 makes analytics impossible; 302 increases server load', recommendation: '302 if analytics matter, 301 for pure shortening without tracking' },
+      ],
+      layeredDesign: [
+        { name: 'API Gateway Layer', purpose: 'Handle URL creation requests and redirect lookups with rate limiting', components: ['REST API', 'Rate Limiter', 'Auth Middleware'] },
+        { name: 'Application Layer', purpose: 'URL generation, validation, and analytics processing', components: ['URL Generator', 'Custom Alias Handler', 'Analytics Collector'] },
+        { name: 'Cache Layer', purpose: 'Hot URL lookup cache for sub-millisecond redirects', components: ['Redis Cluster', 'Local LRU Cache', 'Cache Warmer'] },
+        { name: 'Storage Layer', purpose: 'Persistent URL mapping and analytics data', components: ['NoSQL Store (DynamoDB)', 'Analytics DB', 'Blob Storage (QR codes)'] },
+      ],
     },
     {
       id: 'twitter',
@@ -851,7 +868,26 @@ Structure:
         'Redis sorted sets for O(log N) timeline operations',
         'Elasticsearch for real-time tweet search',
         'Kafka for async fan-out and search indexing'
-      ]
+      ],
+      edgeCases: [
+        { scenario: 'Celebrity tweet causing fan-out storm', impact: 'User with 100M followers triggers billions of timeline writes, overwhelming fan-out workers', mitigation: 'Hybrid fan-out: pull model for celebrities (>10K followers), push model for regular users' },
+        { scenario: 'Viral retweet cascade', impact: 'Exponential amplification saturates write throughput and notification pipeline', mitigation: 'Batch fan-out with backpressure, rate-limit retweet propagation, defer non-critical writes' },
+        { scenario: 'Timeline read during fan-out lag', impact: 'User sees stale timeline missing recent tweets from followed accounts', mitigation: 'Merge pre-computed timeline with real-time pull of recent tweets from followed users' },
+        { scenario: 'Spam bot armies posting coordinated content', impact: 'Polluted timelines and trending topics, degraded user trust', mitigation: 'ML-based spam detection on post, rate limit per account age, shadow-ban suspected bots' },
+        { scenario: 'Hashtag collision across languages', impact: 'Trending topics mix unrelated conversations from different regions', mitigation: 'Region-aware trending with language detection, separate trending lists per locale' },
+      ],
+      tradeoffs: [
+        { decision: 'Push vs pull model for timeline generation', pros: 'Push gives instant reads with O(1) timeline fetch; pull avoids wasted writes for inactive users', cons: 'Push is expensive for high-follower accounts; pull adds read latency', recommendation: 'Hybrid approach: push for users with <10K followers, pull for celebrities' },
+        { decision: 'SQL vs NoSQL for tweet storage', pros: 'SQL provides ACID and complex queries; NoSQL scales horizontally with better write throughput', cons: 'SQL sharding is complex; NoSQL lacks joins for social graph queries', recommendation: 'NoSQL (Cassandra) for tweets, graph DB or adjacency list in SQL for follow relationships' },
+        { decision: 'Snowflake IDs vs UUID', pros: 'Snowflake IDs are time-sortable enabling efficient range queries; UUIDs are simpler to generate', cons: 'Snowflake requires clock synchronization; UUIDs are not sortable and waste index space', recommendation: 'Snowflake IDs for tweets to enable efficient timeline pagination by time' },
+        { decision: 'Real-time search vs batch indexing', pros: 'Real-time gives instant searchability; batch reduces indexing load', cons: 'Real-time indexing adds write amplification; batch means search lag', recommendation: 'Near-real-time with Kafka consumer writing to Elasticsearch within seconds' },
+      ],
+      layeredDesign: [
+        { name: 'API Gateway Layer', purpose: 'Route tweet creation, timeline reads, and search queries with auth and rate limiting', components: ['REST/GraphQL API', 'OAuth Service', 'Rate Limiter'] },
+        { name: 'Fan-out & Timeline Layer', purpose: 'Distribute tweets to follower timelines and assemble personalized feeds', components: ['Fan-out Service', 'Timeline Cache (Redis)', 'Feed Ranking Service'] },
+        { name: 'Data Processing Layer', purpose: 'Handle search indexing, trending computation, and analytics', components: ['Kafka Streams', 'Elasticsearch', 'Trending Aggregator'] },
+        { name: 'Storage Layer', purpose: 'Persist tweets, user profiles, social graph, and media assets', components: ['Tweet Store (Cassandra)', 'Social Graph DB', 'Media CDN', 'Blob Storage'] },
+      ],
     },
     {
       id: 'uber',
@@ -1094,7 +1130,26 @@ rides {
         'WebSocket for real-time location streaming',
         'Kafka for location event processing',
         'Cell-based architecture for horizontal scaling'
-      ]
+      ],
+      edgeCases: [
+        { scenario: 'GPS drift in urban canyons (tall buildings)', impact: 'Driver appears on wrong street, rider cannot be picked up at correct location', mitigation: 'Snap-to-road algorithm using map data, require driver confirmation of pickup location' },
+        { scenario: 'Simultaneous ride requests in same area during surge', impact: 'Multiple riders matched to same driver before acceptance, causing conflicts', mitigation: 'Optimistic locking on driver assignment, immediate state transition to "matched" with rollback on rejection' },
+        { scenario: 'Driver goes offline mid-ride', impact: 'Lost tracking data, rider stranded with no ETA or route info', mitigation: 'Rider-side GPS as backup, automatic re-assignment if heartbeat lost for >30 seconds, store last known location' },
+        { scenario: 'Surge pricing calculation during rapid demand changes', impact: 'Stale pricing shown to rider differs from actual charge, causing disputes', mitigation: 'Lock surge multiplier at booking time with short TTL, show price estimate before confirmation' },
+        { scenario: 'Network partition between matching service and driver pool', impact: 'Drivers appear available but cannot receive dispatch, rides stuck in matching', mitigation: 'Heartbeat-based driver availability with aggressive timeout, fallback to secondary matching region' },
+      ],
+      tradeoffs: [
+        { decision: 'Geohash vs S2 geometry for spatial indexing', pros: 'Geohash is simpler with string-prefix queries; S2 provides uniform cell areas regardless of latitude', cons: 'Geohash has edge-case issues at cell boundaries; S2 is more complex to implement', recommendation: 'S2 for production accuracy, geohash for rapid prototyping' },
+        { decision: 'WebSocket vs polling for location updates', pros: 'WebSocket gives real-time updates with low overhead; polling is simpler and more fault-tolerant', cons: 'WebSocket requires sticky sessions and connection management; polling wastes bandwidth with empty responses', recommendation: 'WebSocket for active rides, polling for idle driver location updates' },
+        { decision: 'Centralized vs cell-based matching', pros: 'Centralized gives globally optimal matches; cell-based scales horizontally per region', cons: 'Centralized creates a single bottleneck; cell-based may miss better matches across cell boundaries', recommendation: 'Cell-based with cross-cell boundary queries for nearby cells' },
+        { decision: 'Precomputed vs real-time ETA calculation', pros: 'Precomputed ETAs are fast to serve; real-time accounts for current traffic conditions', cons: 'Precomputed becomes stale quickly; real-time adds latency per request', recommendation: 'Hybrid: precomputed base ETA with real-time traffic adjustment factors' },
+      ],
+      layeredDesign: [
+        { name: 'Client & Gateway Layer', purpose: 'Handle rider/driver apps, location streaming, and API routing', components: ['Mobile SDKs', 'WebSocket Gateway', 'REST API', 'Rate Limiter'] },
+        { name: 'Matching & Dispatch Layer', purpose: 'Match riders with optimal nearby drivers using real-time location data', components: ['Matching Engine', 'Surge Pricing Service', 'ETA Calculator'] },
+        { name: 'Location & Geospatial Layer', purpose: 'Index and query driver positions with sub-second freshness', components: ['Redis Geospatial Index', 'S2/Geohash Partitioner', 'Location Stream Processor'] },
+        { name: 'Data & Analytics Layer', purpose: 'Persist ride data, process payments, and power demand forecasting', components: ['Ride Store (PostgreSQL)', 'Payment Service', 'Kafka Event Bus', 'ML Demand Predictor'] },
+      ],
     },
     {
       id: 'youtube',
@@ -1398,7 +1453,27 @@ Quick quality first: 360p available in minutes, 4K later`
         'Adaptive bitrate (HLS/DASH): Client switches quality based on bandwidth',
         'Chunked upload for large files with resume capability',
         'Separate hot/cold storage: S3 Glacier for old videos'
-      ]
+      ],
+      edgeCases: [
+        { scenario: 'Transcoding failure mid-pipeline on a 4K upload', impact: 'Partial resolutions available, original file stuck in processing limbo', mitigation: 'Idempotent retry per resolution, dead-letter queue for failed jobs, notify uploader after 3 retries' },
+        { scenario: 'Copyright content detected post-publish', impact: 'DMCA liability, content already cached on CDN edge nodes worldwide', mitigation: 'Content ID fingerprinting during upload, CDN cache purge API for takedowns, hold period before public listing' },
+        { scenario: 'Thundering herd on viral video release', impact: 'Origin server overwhelmed when CDN cache misses simultaneously across regions', mitigation: 'Request coalescing at CDN, pre-warm popular content, origin shield layer to collapse duplicate fetches' },
+        { scenario: 'Adaptive bitrate stalling on unstable mobile networks', impact: 'Frequent quality switches cause buffering and poor viewer experience', mitigation: 'Buffer-based ABR algorithm with hysteresis to avoid oscillation, predictive bandwidth estimation' },
+        { scenario: 'Live stream latency spikes during high-concurrency events', impact: 'Viewers see delayed content compared to broadcast, spoilers in chat', mitigation: 'Low-latency HLS/WebRTC for live, separate live edge servers from VOD infrastructure' },
+      ],
+      tradeoffs: [
+        { decision: 'Client-side vs server-side transcoding', pros: 'Client-side reduces server costs; server-side ensures consistent quality and format compliance', cons: 'Client-side varies by device capability; server-side requires massive compute fleet', recommendation: 'Server-side transcoding for consistency, accept multiple upload formats to reduce client burden' },
+        { decision: 'Push CDN vs pull CDN for video delivery', pros: 'Push pre-positions content for instant availability; pull only caches on first request saving storage', cons: 'Push wastes CDN storage on unpopular content; pull causes cold-start latency for first viewers', recommendation: 'Hybrid: push for predicted viral content and new releases, pull for long-tail catalog' },
+        { decision: 'Monolithic video table vs separate metadata and blob storage', pros: 'Monolithic simplifies queries; separation allows independent scaling of metadata reads and blob storage', cons: 'Monolithic hits row size limits; separation adds cross-service coordination', recommendation: 'Separate metadata DB (MySQL/Vitess) from blob storage (S3) with CDN in front of blobs' },
+        { decision: 'Real-time vs batch recommendation updates', pros: 'Real-time adapts instantly to user behavior; batch is simpler and cheaper to compute', cons: 'Real-time requires streaming ML infrastructure; batch recommendations can feel stale', recommendation: 'Batch for candidate generation, real-time for ranking and personalization' },
+      ],
+      layeredDesign: [
+        { name: 'Upload & Ingestion Layer', purpose: 'Accept video uploads with resumable chunked transfer and trigger processing', components: ['Upload API', 'Chunk Assembler', 'Job Queue (SQS/Kafka)'] },
+        { name: 'Processing & Transcoding Layer', purpose: 'Convert uploaded videos into multiple resolutions and formats', components: ['Transcoding Workers', 'Thumbnail Generator', 'Content ID Scanner'] },
+        { name: 'Delivery & Streaming Layer', purpose: 'Serve video segments globally with adaptive bitrate streaming', components: ['CDN (CloudFront)', 'Origin Shield', 'HLS/DASH Packager'] },
+        { name: 'Metadata & Discovery Layer', purpose: 'Store video metadata, power search, and serve recommendations', components: ['Metadata DB (Vitess)', 'Search (Elasticsearch)', 'Recommendation Engine'] },
+        { name: 'Analytics Layer', purpose: 'Track view counts, engagement metrics, and creator revenue', components: ['Event Collector', 'Real-time Counter', 'Data Warehouse'] },
+      ],
     },
     {
       id: 'whatsapp',
@@ -1651,7 +1726,25 @@ Sticky sessions ensure reconnection goes to same server.`
         'Message queue with ACK for guaranteed delivery',
         'Signal Protocol for end-to-end encryption',
         'Cassandra for write-heavy message storage'
-      ]
+      ],
+      edgeCases: [
+        { scenario: 'Message delivered but recipient phone is off for days', impact: 'Messages queue indefinitely, consuming server storage and delaying delivery receipts', mitigation: 'Store-and-forward with TTL (30 days), push notification on reconnect, batch delivery of queued messages' },
+        { scenario: 'Group message fan-out to 256 members across regions', impact: 'High write amplification and inconsistent delivery order across participants', mitigation: 'Server-side ordering with sequence IDs per group, regional relay servers, async fan-out with delivery tracking' },
+        { scenario: 'End-to-end encryption key exchange during device switch', impact: 'New device cannot decrypt message history, potential security vulnerability during transition', mitigation: 'Signal Protocol with pre-key bundles, re-encrypt session on device registration, optional encrypted backup restore' },
+        { scenario: 'Media upload fails mid-transfer on slow network', impact: 'Partial upload wastes bandwidth, user must restart from beginning', mitigation: 'Resumable chunked uploads with server-side reassembly, client stores upload progress token' },
+        { scenario: 'Clock skew between sender and recipient devices', impact: 'Messages appear out of order in conversation view', mitigation: 'Server-assigned monotonic sequence numbers per conversation, use server timestamp for ordering' },
+      ],
+      tradeoffs: [
+        { decision: 'WebSocket vs long polling for message delivery', pros: 'WebSocket gives true real-time with lower overhead; long polling works through restrictive firewalls', cons: 'WebSocket requires persistent connection management; long polling adds latency and wastes connections', recommendation: 'WebSocket as primary with long-polling fallback for restrictive networks' },
+        { decision: 'Store messages on server vs device-only', pros: 'Server storage enables multi-device sync; device-only is more private', cons: 'Server storage increases infrastructure cost and attack surface; device-only loses messages on device loss', recommendation: 'Server-side store-and-forward with TTL, optional encrypted cloud backup for history' },
+        { decision: 'Cassandra vs MySQL for message storage', pros: 'Cassandra handles write-heavy workloads and scales horizontally; MySQL provides strong consistency', cons: 'Cassandra has eventual consistency and no cross-partition transactions; MySQL sharding is complex', recommendation: 'Cassandra partitioned by conversation ID for write scalability, MySQL for user metadata' },
+      ],
+      layeredDesign: [
+        { name: 'Connection & Gateway Layer', purpose: 'Maintain persistent WebSocket connections and route messages to correct chat servers', components: ['WebSocket Gateway', 'Connection Manager', 'Load Balancer'] },
+        { name: 'Message Processing Layer', purpose: 'Handle message routing, encryption handshakes, and delivery guarantees', components: ['Chat Service', 'Message Queue (Kafka)', 'Delivery Tracker', 'Encryption Service'] },
+        { name: 'Storage Layer', purpose: 'Persist messages, media, and user profiles with partition-friendly schemas', components: ['Message Store (Cassandra)', 'Media Storage (S3)', 'User DB (MySQL)'] },
+        { name: 'Push & Notification Layer', purpose: 'Deliver notifications to offline users via platform push services', components: ['Push Service (APNs/FCM)', 'Presence Service', 'Offline Queue'] },
+      ],
     },
     {
       id: 'instagram',
@@ -2029,7 +2122,26 @@ Ring buffer pattern: Stories are circular, auto-evict after 24h`
         'Stories: TTL-based storage with Redis',
         'Image processing pipeline: resize, compress, filter',
         'Shard user data by userId for locality'
-      ]
+      ],
+      edgeCases: [
+        { scenario: 'Image processing pipeline backlog during peak upload hours', impact: 'Users see unprocessed images or missing thumbnails, degraded feed experience', mitigation: 'Priority queue for feed-visible images, pre-generate common sizes, async background processing for all variants' },
+        { scenario: 'Story expiration edge at exactly 24 hours across time zones', impact: 'Stories disappear mid-view or linger past intended expiration in different regions', mitigation: 'UTC-based TTL stored at creation, client-side countdown timer, server-side cleanup job with 5-minute granularity' },
+        { scenario: 'Feed ranking model returns empty results for new users', impact: 'Cold start problem where new users see no content, causing immediate churn', mitigation: 'Fall back to popularity-based global feed, use onboarding interests for initial content seeding' },
+        { scenario: 'Influencer post causing fan-out write storm', impact: 'Millions of timeline inserts for a single post, backlog on feed generation', mitigation: 'Hybrid push/pull: pre-compute feeds only for active followers, lazy-load for dormant users on next login' },
+        { scenario: 'Duplicate image upload detection across accounts', impact: 'Wasted storage for identical images, potential copyright issues', mitigation: 'Perceptual hashing (pHash) for near-duplicate detection, content-addressable storage for exact duplicates' },
+      ],
+      tradeoffs: [
+        { decision: 'Pre-computed feed vs on-demand assembly', pros: 'Pre-computed gives instant feed loads; on-demand always shows freshest content', cons: 'Pre-computed wastes resources for inactive users; on-demand adds read latency', recommendation: 'Pre-compute for daily active users, on-demand with caching for infrequent visitors' },
+        { decision: 'Single CDN vs multi-CDN for image delivery', pros: 'Single CDN simplifies operations; multi-CDN improves availability and regional coverage', cons: 'Single CDN creates vendor lock-in; multi-CDN adds routing complexity and cache fragmentation', recommendation: 'Multi-CDN with intelligent routing based on latency and cost per region' },
+        { decision: 'Store original image vs processed variants only', pros: 'Keeping originals allows reprocessing with new filters; variants-only saves storage', cons: 'Originals consume 3-5x more storage; variants-only prevents future format upgrades', recommendation: 'Store originals in cold storage (S3 Glacier), keep active variants in hot storage with CDN' },
+        { decision: 'Chronological vs algorithmic feed ordering', pros: 'Chronological is predictable and simple; algorithmic maximizes engagement and relevance', cons: 'Chronological buries important posts; algorithmic feels manipulative and adds ML complexity', recommendation: 'Algorithmic default with user option to switch to chronological, A/B test engagement metrics' },
+      ],
+      layeredDesign: [
+        { name: 'Upload & Processing Layer', purpose: 'Accept media uploads, apply filters, and generate multiple image sizes', components: ['Upload API', 'Image Processing Pipeline', 'Filter Engine', 'Thumbnail Generator'] },
+        { name: 'Feed & Social Layer', purpose: 'Assemble personalized feeds, manage social graph, and handle interactions', components: ['Feed Service', 'Social Graph DB', 'Like/Comment Service', 'Story Service'] },
+        { name: 'Content Delivery Layer', purpose: 'Serve images and videos globally with minimal latency', components: ['Multi-CDN Router', 'Edge Cache', 'Media Proxy'] },
+        { name: 'Storage Layer', purpose: 'Persist user data, media assets, and social interactions', components: ['User DB (PostgreSQL)', 'Media Store (S3)', 'Feed Cache (Redis)', 'Analytics Store'] },
+      ],
     },
     {
       id: 'dropbox',
@@ -2396,7 +2508,26 @@ Changes are pushed through notification service, client then fetches full delta.
         'Operational Transform or CRDT for real-time collaboration',
         'Long polling or WebSocket for sync notifications',
         'Client-side encryption option for enterprise'
-      ]
+      ],
+      edgeCases: [
+        { scenario: 'Conflicting edits to same file from two devices simultaneously', impact: 'One device overwrites the other, causing silent data loss', mitigation: 'Block-level versioning with vector clocks, detect conflicts and create conflict copies for manual resolution' },
+        { scenario: 'Large file upload interrupted by network failure at 95%', impact: 'Entire upload must restart, wasting bandwidth and frustrating user', mitigation: 'Chunked upload with per-block acknowledgment, resume from last confirmed block on reconnect' },
+        { scenario: 'Storage quota exceeded during background sync', impact: 'Sync silently stops, files on one device diverge from cloud state', mitigation: 'Pre-check available quota before sync, notify user proactively, prioritize syncing smaller critical files first' },
+        { scenario: 'Ransomware encrypts local files triggering mass sync', impact: 'Encrypted files propagate to cloud and all connected devices, destroying backups', mitigation: 'Anomaly detection for bulk file modifications, automatic version retention, 30-day recovery window, admin rollback' },
+        { scenario: 'Rename of deeply nested folder with thousands of children', impact: 'Metadata update cascades to all child paths, blocking sync for minutes', mitigation: 'Store relative paths with parent references instead of full paths, rename only updates parent folder metadata' },
+      ],
+      tradeoffs: [
+        { decision: 'Block-level sync vs file-level sync', pros: 'Block-level transfers only changed portions saving bandwidth; file-level is simpler to implement', cons: 'Block-level requires chunking logic and block index management; file-level wastes bandwidth on large files', recommendation: 'Block-level sync with 4MB blocks for files over a threshold, file-level for small files' },
+        { decision: 'Operational Transform (OT) vs CRDT for collaboration', pros: 'OT is well-proven with centralized server; CRDT works peer-to-peer and offline', cons: 'OT requires central coordination server; CRDT has higher memory overhead and complex garbage collection', recommendation: 'OT for real-time document editing, CRDT for offline-first scenarios' },
+        { decision: 'Client-side deduplication vs server-side', pros: 'Client-side saves upload bandwidth; server-side is simpler and more secure', cons: 'Client-side leaks information about stored content via hash probing; server-side wastes upload bandwidth', recommendation: 'Server-side deduplication for security, client-side only for enterprise single-tenant deployments' },
+        { decision: 'Push notifications vs polling for sync events', pros: 'Push gives instant sync awareness; polling is simpler and works through firewalls', cons: 'Push requires persistent connections per device; polling adds latency and wastes server resources', recommendation: 'Long polling with WebSocket upgrade for active clients, push notifications for mobile' },
+      ],
+      layeredDesign: [
+        { name: 'Client Sync Layer', purpose: 'Monitor local file changes, chunk files into blocks, and manage sync queue', components: ['File Watcher', 'Block Chunker', 'Sync Engine', 'Conflict Resolver'] },
+        { name: 'API & Coordination Layer', purpose: 'Handle upload/download requests and coordinate sync across devices', components: ['REST API', 'Metadata Service', 'Notification Service'] },
+        { name: 'Storage Layer', purpose: 'Store file blocks with deduplication and version history', components: ['Block Store (S3)', 'Metadata DB (MySQL)', 'Dedup Index'] },
+        { name: 'Collaboration Layer', purpose: 'Enable real-time co-editing and sharing with access controls', components: ['OT/CRDT Engine', 'Permission Service', 'Sharing Service'] },
+      ],
     },
     {
       id: 'netflix',
@@ -2796,7 +2927,27 @@ Personalization touches:
         'Pre-position popular content at edge',
         'ML-based recommendations: Collaborative + content-based filtering',
         'A/B testing infrastructure for UI experiments'
-      ]
+      ],
+      edgeCases: [
+        { scenario: 'Regional content licensing restricts availability mid-stream', impact: 'User starts watching a movie that becomes unavailable in their region due to license expiry', mitigation: 'Grace period for active sessions, pre-check license validity at playback start, show unavailability warning before expiry' },
+        { scenario: 'Adaptive bitrate oscillation on congested home network', impact: 'Quality constantly switches between 480p and 1080p causing jarring viewing experience', mitigation: 'Buffer-based ABR with hysteresis band, require sustained bandwidth improvement before quality upgrade' },
+        { scenario: 'Simultaneous streams exceed account device limit', impact: 'Fifth device starts playing while four are active, policy enforcement race condition', mitigation: 'Centralized session registry with heartbeat, terminate oldest idle session on limit exceeded, real-time device count' },
+        { scenario: 'CDN edge node failure during peak hours (Sunday evening)', impact: 'Millions of viewers in a region experience buffering or playback failure', mitigation: 'Multi-CDN failover with real-time health checks, automatic traffic rerouting to backup CDN within seconds' },
+        { scenario: 'New season release causing thundering herd on origin', impact: 'Origin servers overwhelmed by cache misses for never-before-accessed content', mitigation: 'Pre-warm CDN caches hours before release, stagger rollout by region, origin shield to collapse duplicate requests' },
+      ],
+      tradeoffs: [
+        { decision: 'Own CDN (Open Connect) vs third-party CDN', pros: 'Own CDN gives full control and lower marginal cost at scale; third-party CDN deploys faster globally', cons: 'Own CDN requires massive upfront hardware investment; third-party adds per-GB cost', recommendation: 'Own CDN for top markets with high traffic, third-party CDN as fallback for long-tail regions' },
+        { decision: 'Pre-encode all resolutions vs on-demand transcoding', pros: 'Pre-encoding ensures instant playback at all qualities; on-demand saves storage for unpopular content', cons: 'Pre-encoding costs storage for rarely-watched content; on-demand adds first-play latency', recommendation: 'Pre-encode popular content in all resolutions, on-demand for catalog long tail' },
+        { decision: 'Collaborative filtering vs content-based recommendations', pros: 'Collaborative finds unexpected gems from similar users; content-based works without user history', cons: 'Collaborative has cold-start problem for new users; content-based creates filter bubbles', recommendation: 'Hybrid approach: collaborative for core recommendations, content-based for cold start and diversity injection' },
+        { decision: 'Global vs regional content metadata store', pros: 'Global store simplifies architecture; regional stores reduce read latency and respect data residency', cons: 'Global store has cross-region latency; regional stores require synchronization and add operational complexity', recommendation: 'Regional read replicas with global primary, async replication with <1s lag' },
+      ],
+      layeredDesign: [
+        { name: 'Client & Playback Layer', purpose: 'Handle video playback, adaptive bitrate selection, and DRM decryption', components: ['Player SDK', 'ABR Controller', 'DRM Module', 'Offline Download Manager'] },
+        { name: 'API & Business Logic Layer', purpose: 'Manage user profiles, subscriptions, and content catalog', components: ['User Service', 'Subscription Service', 'Content Catalog API', 'A/B Testing Framework'] },
+        { name: 'Content Delivery Layer', purpose: 'Serve video segments globally with sub-second start times', components: ['Open Connect CDN', 'Edge Servers at ISPs', 'Origin Shield', 'Multi-CDN Router'] },
+        { name: 'Content Processing Layer', purpose: 'Ingest, encode, and prepare content for multi-device streaming', components: ['Transcoding Pipeline', 'Quality Analysis', 'DRM Encryption', 'Subtitle Processor'] },
+        { name: 'Recommendation & Data Layer', purpose: 'Power personalized recommendations and store viewing history', components: ['ML Recommendation Engine', 'Viewing History Store', 'A/B Experiment DB', 'Data Warehouse'] },
+      ],
     },
     {
       id: 'amazon',
@@ -3154,7 +3305,26 @@ ML-Enhanced:
         'Distributed transactions: Saga pattern for checkout flow',
         'Search: Elasticsearch with product embeddings',
         'Inventory: Pessimistic locking for popular items during flash sales'
-      ]
+      ],
+      edgeCases: [
+        { scenario: 'Flash sale with 10,000 users buying last 100 units simultaneously', impact: 'Overselling beyond actual inventory, negative stock counts, fulfillment failures', mitigation: 'Pessimistic locking with Redis DECR for atomic inventory, pre-decrement stock with rollback on payment failure' },
+        { scenario: 'Cart items go out of stock during checkout flow', impact: 'User completes payment but order cannot be fulfilled, requiring refund and poor experience', mitigation: 'Soft reservation with TTL on cart add, re-validate inventory at payment time, show real-time stock warnings' },
+        { scenario: 'Distributed transaction failure between order and payment services', impact: 'Payment charged but order not created, or order created but payment not captured', mitigation: 'Saga pattern with compensating transactions, idempotency keys on payment calls, reconciliation job for orphaned records' },
+        { scenario: 'Search index stale after bulk price or inventory update', impact: 'Users see wrong prices or buy items shown as in-stock that are actually sold out', mitigation: 'Near-real-time index updates via change data capture (CDC), show disclaimers on cached results' },
+        { scenario: 'Seller uploads millions of product listings in bulk', impact: 'Ingestion pipeline backlog delays product visibility, search index falls behind', mitigation: 'Rate-limited bulk upload API with async processing, priority queue for paid sellers, background indexing' },
+      ],
+      tradeoffs: [
+        { decision: 'Monolith vs microservices for e-commerce', pros: 'Monolith is simpler to deploy and debug; microservices enable independent scaling per domain', cons: 'Monolith becomes unwieldy at scale; microservices add network latency and operational overhead', recommendation: 'Microservices with domain-driven boundaries (catalog, cart, order, payment, inventory)' },
+        { decision: 'Synchronous vs event-driven order processing', pros: 'Synchronous gives immediate confirmation; event-driven decouples services and handles spikes', cons: 'Synchronous creates tight coupling and cascading failures; event-driven adds complexity and eventual consistency', recommendation: 'Event-driven with Kafka for post-checkout steps, synchronous only for payment capture' },
+        { decision: 'SQL vs NoSQL for product catalog', pros: 'SQL provides rich queries and joins across product attributes; NoSQL scales reads horizontally', cons: 'SQL sharding is complex for diverse product schemas; NoSQL lacks ad-hoc query flexibility', recommendation: 'NoSQL (DynamoDB) for product reads, SQL for seller portal and analytics, Elasticsearch for search' },
+        { decision: 'Pessimistic vs optimistic locking for inventory', pros: 'Pessimistic prevents overselling with certainty; optimistic allows higher throughput with retry', cons: 'Pessimistic creates contention bottlenecks; optimistic can fail under extreme concurrency', recommendation: 'Pessimistic for flash sales and high-demand items, optimistic for regular inventory updates' },
+      ],
+      layeredDesign: [
+        { name: 'Storefront & API Layer', purpose: 'Serve product pages, handle search queries, and manage shopping cart', components: ['Web/Mobile BFF', 'Search API (Elasticsearch)', 'Cart Service', 'Session Store'] },
+        { name: 'Business Logic Layer', purpose: 'Process orders, calculate pricing, and manage seller operations', components: ['Order Service', 'Pricing Engine', 'Promotion Service', 'Seller Portal'] },
+        { name: 'Transaction & Payment Layer', purpose: 'Handle payment processing, inventory reservation, and order fulfillment', components: ['Payment Gateway', 'Inventory Service', 'Fulfillment Orchestrator', 'Refund Service'] },
+        { name: 'Data & Analytics Layer', purpose: 'Store product catalog, user behavior, and power recommendations', components: ['Product DB (DynamoDB)', 'User Store (PostgreSQL)', 'Event Bus (Kafka)', 'Recommendation Engine'] },
+      ],
     },
     {
       id: 'google-docs',
@@ -3534,7 +3704,25 @@ For offline-first/P2P: CRDT`
         'WebSocket for real-time sync',
         'Presence system: Show active cursors/selections',
         'Periodic snapshots + operation log for version history'
-      ]
+      ],
+      edgeCases: [
+        { scenario: 'Two users type at the exact same cursor position simultaneously', impact: 'Character interleaving creates garbled text if operations not properly transformed', mitigation: 'Operational Transformation resolves concurrent inserts deterministically, server assigns canonical operation order' },
+        { scenario: 'User goes offline mid-edit and reconnects with diverged document state', impact: 'Local changes conflict with remote changes made during offline period', mitigation: 'Buffer offline operations, replay and transform against server operations on reconnect, CRDT ensures eventual convergence' },
+        { scenario: 'Document with 100+ simultaneous editors', impact: 'Operation transform server becomes bottleneck, cursor rendering overwhelms client', mitigation: 'Limit visible cursors to nearby editors, batch operation transforms, partition document into independently editable sections' },
+        { scenario: 'Large paste operation (100K+ characters) from clipboard', impact: 'Single massive operation blocks transform pipeline and causes latency spike for all editors', mitigation: 'Split large operations into chunks, process incrementally, show progress indicator to other editors' },
+        { scenario: 'Version history storage grows unbounded for long-lived documents', impact: 'Storage costs escalate, loading version history becomes slow', mitigation: 'Periodic snapshots with operation compaction, store only snapshots after 30 days, archive old versions to cold storage' },
+      ],
+      tradeoffs: [
+        { decision: 'OT vs CRDT for conflict resolution', pros: 'OT is mature with proven implementations (Google Docs uses it); CRDT is mathematically guaranteed conflict-free', cons: 'OT requires central server for operation ordering; CRDT has higher memory overhead and complex garbage collection', recommendation: 'OT for centralized SaaS product, CRDT for peer-to-peer or offline-heavy use cases' },
+        { decision: 'WebSocket vs Server-Sent Events for real-time sync', pros: 'WebSocket is bidirectional with lower overhead; SSE is simpler and works with HTTP/2 multiplexing', cons: 'WebSocket requires connection upgrade and special proxy config; SSE is unidirectional requiring separate POST for edits', recommendation: 'WebSocket for real-time collaboration due to bidirectional need and lower latency' },
+        { decision: 'Operation log vs snapshot-based versioning', pros: 'Operation log enables precise undo and time-travel; snapshots are faster to load and simpler', cons: 'Operation log grows unbounded and is slow to replay; snapshots lose granular change attribution', recommendation: 'Hybrid: operation log for recent edits (last 7 days), periodic snapshots for long-term history' },
+      ],
+      layeredDesign: [
+        { name: 'Client Editor Layer', purpose: 'Render document, capture user operations, and manage local operation buffer', components: ['Rich Text Editor', 'Local Operation Buffer', 'Cursor/Selection Manager'] },
+        { name: 'Collaboration & Sync Layer', purpose: 'Transform and apply concurrent operations in real-time across all clients', components: ['OT/CRDT Engine', 'WebSocket Server', 'Presence Service', 'Operation Sequencer'] },
+        { name: 'Document Storage Layer', purpose: 'Persist document state, operation history, and version snapshots', components: ['Document Store', 'Operation Log', 'Snapshot Service', 'Blob Storage (images)'] },
+        { name: 'Access & Sharing Layer', purpose: 'Manage document permissions, sharing links, and team workspaces', components: ['Permission Service', 'Sharing API', 'Comment Service', 'Notification Service'] },
+      ],
     },
     {
       id: 'payment-system',
@@ -3932,7 +4120,26 @@ Benefits:
         'Saga pattern: Handle distributed transaction failures',
         'PCI-DSS: Tokenize card data, isolate cardholder data environment',
         'Real-time fraud scoring with ML models'
-      ]
+      ],
+      edgeCases: [
+        { scenario: 'Duplicate payment submission due to client retry on timeout', impact: 'Customer charged twice for the same order, requires manual refund and erodes trust', mitigation: 'Idempotency keys on every payment request, server deduplicates within a window, return original result on retry' },
+        { scenario: 'Payment processor returns ambiguous response (network timeout)', impact: 'Unknown payment state: money may or may not have been captured', mitigation: 'Record pending state, query processor status API with exponential backoff, reconciliation job resolves within minutes' },
+        { scenario: 'Currency conversion rate changes between quote and settlement', impact: 'Merchant receives different amount than displayed to customer, potential loss', mitigation: 'Lock exchange rate at quote time with short TTL, include rate in idempotency payload, absorb small differences as cost' },
+        { scenario: 'Partial refund on a split-tender transaction (card + wallet)', impact: 'Refund must be distributed across original payment methods proportionally', mitigation: 'Track payment method breakdown per transaction, refund engine applies proportional split, manual override for exceptions' },
+        { scenario: 'Fraud detection false positive blocks legitimate high-value transaction', impact: 'Customer unable to complete purchase, abandons cart, revenue lost', mitigation: 'Tiered fraud scoring with step-up verification (3DS, OTP) instead of hard block, manual review queue for borderline cases' },
+      ],
+      tradeoffs: [
+        { decision: 'Synchronous vs asynchronous payment processing', pros: 'Synchronous gives instant confirmation to customer; async handles higher throughput and retries gracefully', cons: 'Synchronous blocks the checkout flow on processor latency; async adds complexity and delayed confirmation', recommendation: 'Synchronous for card payments with <3s timeout, async for bank transfers and settlements' },
+        { decision: 'Single ledger vs double-entry bookkeeping', pros: 'Single ledger is simpler; double-entry ensures every debit has a matching credit for auditability', cons: 'Single ledger is error-prone for reconciliation; double-entry doubles write volume', recommendation: 'Double-entry ledger for production payment systems, it is the industry standard for financial accuracy' },
+        { decision: 'Build payment processing vs use Stripe/Adyen', pros: 'Building gives full control and lower per-transaction cost at scale; third-party handles PCI compliance', cons: 'Building requires PCI-DSS certification and years of effort; third-party takes percentage per transaction', recommendation: 'Third-party for startups, build only when processing >$1B/year and have dedicated compliance team' },
+        { decision: 'Strong consistency vs eventual consistency for balances', pros: 'Strong consistency prevents overdrafts; eventual consistency allows higher throughput', cons: 'Strong consistency limits horizontal scaling; eventual consistency risks temporary negative balances', recommendation: 'Strong consistency for account balances and ledger, eventual consistency for analytics and reporting' },
+      ],
+      layeredDesign: [
+        { name: 'API & Gateway Layer', purpose: 'Accept payment requests, validate input, and enforce idempotency', components: ['Payment API', 'Idempotency Store', 'Auth & Rate Limiter', 'Merchant Dashboard'] },
+        { name: 'Payment Orchestration Layer', purpose: 'Route payments to processors, manage transaction state machines', components: ['Payment Router', 'Transaction State Machine', 'Retry Manager', 'Fraud Detection Engine'] },
+        { name: 'Ledger & Accounting Layer', purpose: 'Maintain double-entry bookkeeping and settlement records', components: ['Double-Entry Ledger', 'Settlement Engine', 'Reconciliation Service', 'Currency Converter'] },
+        { name: 'Compliance & Security Layer', purpose: 'Ensure PCI-DSS compliance, tokenize card data, and manage encryption', components: ['Card Tokenizer', 'HSM (Hardware Security Module)', 'Audit Logger', 'PCI Boundary'] },
+      ],
     },
     {
       id: 'search-engine',
@@ -4261,7 +4468,25 @@ PR(A) = (1-d)/N + d × Σ(PR(Ti)/C(Ti))
         'Sharding: Partition index by document or term',
         'Tiered index: Hot/warm/cold based on query frequency',
         'Query understanding: Parse intent, expand synonyms'
-      ]
+      ],
+      edgeCases: [
+        { scenario: 'Web crawler trapped in infinite URL space (calendar pages, session IDs in URLs)', impact: 'Crawler wastes resources indexing duplicate or generated content, never finishes domain', mitigation: 'URL normalization, duplicate content detection via simhash, crawl budget per domain, robots.txt respect' },
+        { scenario: 'Index corruption during partial shard rebuild', impact: 'Search returns incomplete or incorrect results for affected document partition', mitigation: 'Build new index shard in parallel, atomic swap on completion, keep previous shard as rollback backup' },
+        { scenario: 'Query of death that causes expensive full-index scan', impact: 'Single pathological query consumes all resources on serving node, degrading other queries', mitigation: 'Query timeout limits, cost-based query planner rejects expensive queries, circuit breaker per query type' },
+        { scenario: 'Freshness gap for breaking news content', impact: 'Users searching for current events see stale results from hours ago', mitigation: 'Real-time indexing pipeline for news domains, prioritized crawl queue for high-update-frequency sites' },
+        { scenario: 'SEO spam manipulation of PageRank through link farms', impact: 'Low-quality pages rank highly, degrading search result quality', mitigation: 'Link spam detection algorithms, domain authority scoring, demote sites with unnatural link patterns' },
+      ],
+      tradeoffs: [
+        { decision: 'Document-partitioned vs term-partitioned index', pros: 'Document-partitioned keeps all terms for a doc together (simpler updates); term-partitioned keeps all docs for a term together (faster single-term queries)', cons: 'Document-partitioned requires scatter-gather for every query; term-partitioned makes updates expensive', recommendation: 'Document-partitioned for web search due to frequent index updates from crawling' },
+        { decision: 'Real-time indexing vs batch indexing', pros: 'Real-time provides fresh results within seconds; batch is simpler and more resource-efficient', cons: 'Real-time requires streaming infrastructure and incremental index updates; batch means hours of staleness', recommendation: 'Tiered approach: real-time for news/social, hourly batch for general web pages' },
+        { decision: 'PageRank vs ML-based ranking', pros: 'PageRank is interpretable and hard to game at scale; ML captures complex relevance signals', cons: 'PageRank alone misses query-document relevance; ML models are opaque and expensive to train', recommendation: 'PageRank as one feature in an ML ranking model that also considers content relevance, freshness, and user signals' },
+      ],
+      layeredDesign: [
+        { name: 'Crawl & Ingestion Layer', purpose: 'Discover and fetch web pages at scale, respecting politeness policies', components: ['URL Frontier', 'Distributed Crawler', 'DNS Resolver', 'Content Deduplicator'] },
+        { name: 'Indexing Layer', purpose: 'Parse documents, build inverted index, and compute link graph metrics', components: ['Document Parser', 'Inverted Index Builder', 'PageRank Calculator', 'Index Shards'] },
+        { name: 'Query Serving Layer', purpose: 'Parse queries, retrieve candidates, rank results, and serve with low latency', components: ['Query Parser', 'Index Server', 'Ranking Engine', 'Snippet Generator'] },
+        { name: 'Quality & Freshness Layer', purpose: 'Maintain index freshness, fight spam, and personalize results', components: ['Real-time Index Updater', 'Spam Detector', 'Personalization Service', 'A/B Testing'] },
+      ],
     },
     {
       id: 'notification-system',
@@ -4618,7 +4843,26 @@ const userTime = convertToTimezone(now(), user.timezone);
       ],
       staticDiagrams: [
         { id: 'notification-arch', title: 'Notification System Architecture', description: 'Push notification system with Gateway, Distribution, Router, and multi-channel delivery', src: '/diagrams/notification-system/notification-architecture.svg', type: 'architecture' }
-      ]
+      ],
+      edgeCases: [
+        { scenario: 'Push notification token becomes invalid after app reinstall', impact: 'Notifications silently fail to deliver, user misses critical alerts like OTPs', mitigation: 'Token refresh on app startup, track delivery failures per token, fall back to SMS after consecutive push failures' },
+        { scenario: 'Notification storm from cascading system alerts', impact: 'User receives hundreds of notifications in minutes, causing alert fatigue and phone unusable', mitigation: 'Notification deduplication with sliding window, aggregate similar notifications, per-user rate limiting with priority override' },
+        { scenario: 'Email notification lands in spam folder consistently', impact: 'Users never see transactional emails like password resets or order confirmations', mitigation: 'SPF/DKIM/DMARC configuration, dedicated sending IP with warm-up, monitor sender reputation, separate transactional from marketing domains' },
+        { scenario: 'Time zone miscalculation sends marketing notification at 3 AM', impact: 'User disturbed at night, likely unsubscribes or disables notifications entirely', mitigation: 'Store user timezone preference, enforce quiet hours (10 PM - 8 AM local), queue notifications for next delivery window' },
+        { scenario: 'Third-party vendor (Twilio/SendGrid) outage', impact: 'Entire notification channel goes dark, critical messages like 2FA codes undeliverable', mitigation: 'Multi-vendor setup with automatic failover, circuit breaker per vendor, fallback channel escalation (push → SMS → email)' },
+      ],
+      tradeoffs: [
+        { decision: 'Push vs pull notification delivery', pros: 'Push delivers instantly without client polling; pull is simpler and works without persistent connections', cons: 'Push requires device token management and platform-specific integration; pull adds latency and wasted requests', recommendation: 'Push for real-time alerts (messages, OTPs), pull/polling for non-urgent notification feeds' },
+        { decision: 'Single queue vs priority queues for processing', pros: 'Single queue is simple; priority queues ensure critical notifications (OTP, fraud alerts) are not delayed by bulk marketing sends', cons: 'Single queue risks head-of-line blocking; priority queues add routing complexity', recommendation: 'Separate priority queues: critical (OTP), high (transactional), normal (social), low (marketing)' },
+        { decision: 'Template rendering at send time vs pre-rendering', pros: 'Send-time rendering allows dynamic content; pre-rendering reduces send-path latency', cons: 'Send-time rendering adds latency per notification; pre-rendering cannot include real-time data', recommendation: 'Pre-render templates with placeholder substitution at send time for best of both' },
+        { decision: 'Centralized notification service vs per-service sending', pros: 'Centralized enforces consistent preferences and rate limits; per-service is simpler for teams to ship independently', cons: 'Centralized is a single point of failure; per-service leads to inconsistent user experience and preference fragmentation', recommendation: 'Centralized service with per-team notification type registration and self-service templates' },
+      ],
+      layeredDesign: [
+        { name: 'Ingestion & API Layer', purpose: 'Accept notification requests from internal services with validation and deduplication', components: ['Notification API', 'Request Validator', 'Deduplication Store', 'Rate Limiter'] },
+        { name: 'Processing & Routing Layer', purpose: 'Determine delivery channel, render templates, and enforce user preferences', components: ['Channel Router', 'Template Engine', 'Preference Service', 'Priority Queue'] },
+        { name: 'Delivery Layer', purpose: 'Send notifications through platform-specific channels with retry logic', components: ['Push Sender (APNs/FCM)', 'Email Sender (SES/SendGrid)', 'SMS Sender (Twilio)', 'In-App WebSocket'] },
+        { name: 'Analytics & Feedback Layer', purpose: 'Track delivery status, open rates, and handle unsubscribes', components: ['Delivery Tracker', 'Analytics Pipeline', 'Feedback Processor', 'Unsubscribe Handler'] },
+      ],
     },
     {
       id: 'rate-limiter',
@@ -5032,7 +5276,25 @@ return {0, tokens}  -- denied
         'Redis for distributed state with Lua scripts for atomicity',
         'Local cache for hot keys to reduce Redis calls',
         'Return remaining quota and retry-after in headers'
-      ]
+      ],
+      edgeCases: [
+        { scenario: 'Clock skew between distributed rate limiter nodes', impact: 'User gets different rate limit decisions depending on which node handles the request, allowing limit bypass', mitigation: 'Use Redis centralized counter with Lua scripts for atomicity, or NTP sync with tolerance window in sliding window algorithm' },
+        { scenario: 'Redis cluster node failure during high traffic', impact: 'Rate limiting disabled for affected partition, allowing unlimited traffic through to backend', mitigation: 'Local in-memory fallback rate limiter with conservative defaults, circuit breaker pattern, fail-closed policy for critical endpoints' },
+        { scenario: 'Distributed denial-of-service from rotating IP addresses', impact: 'Per-IP rate limiting ineffective as attacker uses thousands of IPs', mitigation: 'Multi-dimensional rate limiting (IP + fingerprint + API key), global rate limit alongside per-client limits, CAPTCHA escalation' },
+        { scenario: 'Legitimate user hits rate limit during critical operation (payment)', impact: 'Payment fails and user sees error, potential lost sale and frustration', mitigation: 'Different rate limit tiers per endpoint criticality, token bucket allows controlled bursts, graceful degradation with retry-after header' },
+        { scenario: 'Rate limit counter overflow on long-running fixed windows', impact: 'Counter wraps around or becomes inaccurate after millions of increments', mitigation: 'Use sliding window with TTL-based expiration, atomic INCR with EXPIRE in Redis, 64-bit counters' },
+      ],
+      tradeoffs: [
+        { decision: 'Token bucket vs sliding window log vs fixed window', pros: 'Token bucket allows bursts while maintaining average rate; sliding window is precise; fixed window is simplest', cons: 'Token bucket needs careful tuning of bucket size; sliding window log uses more memory; fixed window has boundary burst problem', recommendation: 'Token bucket for API rate limiting (allows natural burst patterns), sliding window for strict compliance requirements' },
+        { decision: 'Centralized (Redis) vs local rate limiting', pros: 'Centralized gives accurate global counts; local eliminates network latency and Redis dependency', cons: 'Centralized adds Redis call per request; local allows N times the limit with N servers', recommendation: 'Two-tier: local rate limiter as first check, centralized Redis for accurate global enforcement' },
+        { decision: 'Fail-open vs fail-closed on rate limiter failure', pros: 'Fail-open maintains availability during outages; fail-closed protects backend from overload', cons: 'Fail-open exposes backend during rate limiter outage; fail-closed rejects legitimate traffic', recommendation: 'Fail-open for non-critical endpoints, fail-closed for payment and auth endpoints with aggressive circuit breakers' },
+      ],
+      layeredDesign: [
+        { name: 'Client & Edge Layer', purpose: 'Apply coarse rate limiting at CDN/edge before requests reach origin', components: ['CDN Rate Limiting', 'WAF Rules', 'IP Reputation Service'] },
+        { name: 'API Gateway Layer', purpose: 'Enforce per-client rate limits with token identification and quota management', components: ['API Gateway', 'Rate Limit Middleware', 'Auth/API Key Resolver'] },
+        { name: 'Rate Limit Engine', purpose: 'Execute rate limiting algorithms and maintain counters', components: ['Redis Cluster', 'Lua Rate Limit Scripts', 'Local Cache Limiter', 'Config Service'] },
+        { name: 'Monitoring & Rules Layer', purpose: 'Define rate limit policies, monitor usage patterns, and alert on anomalies', components: ['Rules Engine', 'Usage Analytics', 'Alerting Service', 'Admin Dashboard'] },
+      ],
     },
     {
       id: 'ticketmaster',

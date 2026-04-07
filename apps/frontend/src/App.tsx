@@ -26,6 +26,7 @@ const SignupPage = lazy(() => import('./pages/SignupPage'));
 const ReferralLandingPage = lazy(() => import('./pages/ReferralLandingPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 const BrandPage = lazy(() => import('./pages/BrandPage'));
+const ChallengePage = lazy(() => import('./pages/ChallengePage'));
 const Blind75Page = lazy(() => import('./pages/Blind75Page'));
 const Blind75PracticePage = lazy(() => import('./pages/Blind75PracticePage'));
 
@@ -178,6 +179,9 @@ export function App() {
 
           {/* ── Brand ────────────────────────────────── */}
           <Route path="/brand" element={<BrandPage />} />
+
+          {/* ── Challenge ─────────────────────────────── */}
+          <Route path="/challenge" element={<ChallengePage />} />
 
           {/* ── Company Interview Questions ─────────────── */}
           <Route path="/interview-questions/:company" element={<ProtectedRoute><CompanyPrepPage /></ProtectedRoute>} />

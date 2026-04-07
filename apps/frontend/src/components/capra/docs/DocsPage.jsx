@@ -640,11 +640,6 @@ export default function DocsPage({ onBack }) {
                         </div>
                       </div>
 
-                      {/* Progress Tracker — compact, top of page */}
-                      <div className="mb-8">
-                        <ProgressTracker />
-                      </div>
-
                       {/* Category Cards Grid */}
                       <div className="mb-8">
                         <h2 className="section-label mb-3">Categories</h2>

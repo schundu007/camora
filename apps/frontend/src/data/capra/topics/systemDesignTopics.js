@@ -618,6 +618,26 @@ Traffic Estimates:
             { name: 'Maintainability', description: 'Clear code structure and documentation. SDLC management. Evolvable architecture design.' }
           ]
         }
+      ],
+      edgeCases: [
+        { scenario: 'Split-brain during network partition', impact: 'Two nodes both believe they are the leader, accepting conflicting writes that corrupt data', mitigation: 'Use fencing tokens, quorum-based leader election, and STONITH (Shoot The Other Node In The Head) mechanisms' },
+        { scenario: 'Cascading failure from a single component', impact: 'One slow service causes thread pool exhaustion in callers, propagating failure across the entire system', mitigation: 'Implement circuit breakers, bulkheads to isolate failures, and set aggressive timeouts on all network calls' },
+        { scenario: 'Back-of-envelope estimates wildly off', impact: 'Under-provisioning leads to outages at launch; over-provisioning wastes budget', mitigation: 'Validate estimates with real benchmarks, use auto-scaling from day one, and load test before launch' },
+        { scenario: 'Clock skew across distributed nodes', impact: 'Timestamps become unreliable for ordering events, causing stale reads or lost updates', mitigation: 'Use logical clocks (Lamport, vector clocks) or hybrid logical clocks instead of wall-clock time for ordering' },
+        { scenario: 'Hot partition in a distributed system', impact: 'One node receives disproportionate traffic, creating a bottleneck that limits overall throughput', mitigation: 'Add jitter to partition keys, use consistent hashing with virtual nodes, and implement request shedding' },
+      ],
+      tradeoffs: [
+        { decision: 'Vertical vs Horizontal Scaling', pros: 'Vertical is simpler with no distributed complexity; horizontal provides near-unlimited scale and fault isolation', cons: 'Vertical has hardware ceiling and single point of failure; horizontal adds distributed systems complexity', recommendation: 'Start vertical for simplicity, plan horizontal scaling boundaries from the design phase' },
+        { decision: 'Consistency vs Availability (CAP)', pros: 'Strong consistency simplifies application logic; high availability ensures the system never refuses requests', cons: 'Strong consistency increases latency and reduces availability during partitions; eventual consistency requires conflict resolution', recommendation: 'Choose based on domain: financial systems need consistency, social feeds can tolerate eventual consistency' },
+        { decision: 'Monolith vs Distributed Architecture', pros: 'Monolith is simpler to develop, test, and deploy; distributed provides independent scaling and team autonomy', cons: 'Monolith becomes unwieldy at scale; distributed adds networking, observability, and coordination overhead', recommendation: 'Start monolith, extract services when team size or scale demands it (modular monolith as intermediate step)' },
+        { decision: 'Synchronous vs Asynchronous Communication', pros: 'Synchronous is simpler to reason about and debug; asynchronous decouples services and handles traffic spikes', cons: 'Synchronous creates tight coupling and cascade failure risk; asynchronous adds complexity with eventual consistency', recommendation: 'Use synchronous for real-time user-facing requests, asynchronous for background processing and inter-service events' },
+      ],
+      layeredDesign: [
+        { name: 'Client Layer', purpose: 'Handle user interaction, render UI, and manage client-side state', components: ['Web/Mobile Client', 'CDN for Static Assets', 'Client-side Cache', 'DNS Resolution'] },
+        { name: 'API Gateway / Load Balancer Layer', purpose: 'Route requests, terminate SSL, enforce rate limits, and distribute traffic', components: ['Load Balancer (L4/L7)', 'API Gateway', 'SSL Termination', 'Rate Limiter'] },
+        { name: 'Application Service Layer', purpose: 'Execute business logic, orchestrate workflows, and process requests', components: ['Application Servers', 'Service Discovery', 'Circuit Breakers', 'Message Queues'] },
+        { name: 'Data Layer', purpose: 'Persist, cache, and index data for reliable storage and fast retrieval', components: ['Primary Database (SQL/NoSQL)', 'Cache (Redis/Memcached)', 'Search Index (Elasticsearch)', 'Object Storage (S3)'] },
+        { name: 'Infrastructure / Observability Layer', purpose: 'Monitor system health, collect metrics, and enable debugging across all layers', components: ['Logging (ELK)', 'Metrics (Prometheus/Grafana)', 'Tracing (Jaeger)', 'Alerting (PagerDuty)'] },
       ]
     },
     {
@@ -1014,6 +1034,26 @@ NoSQL Graph:
             { name: 'SQLite', description: 'Lightweight embedded RDBMS. Uses disk files. Perfect for mobile apps, IoT devices, and web browsers.' }
           ]
         }
+      ],
+      edgeCases: [
+        { scenario: 'Write amplification during compaction', impact: 'LSM-tree databases (Cassandra, RocksDB) can experience 10-30x write amplification during compaction, degrading throughput', mitigation: 'Tune compaction strategies (leveled vs size-tiered), use dedicated compaction disks, schedule during low-traffic windows' },
+        { scenario: 'Hot partition in sharded database', impact: 'Celebrity user or viral content concentrates load on single shard, causing timeouts and cascading failures', mitigation: 'Add salt to partition key, split hot shards dynamically, use read replicas for hot partitions' },
+        { scenario: 'Replication lag causes stale reads', impact: 'User writes data then reads from a replica that has not received the write, seeing outdated information', mitigation: 'Read-your-writes consistency via sticky sessions, read from primary after writes, or use synchronous replication for critical paths' },
+        { scenario: 'Schema migration on billion-row table', impact: 'ALTER TABLE locks the table for hours, causing downtime for all queries against that table', mitigation: 'Use online schema change tools (gh-ost, pt-online-schema-change), or create new table and backfill with double-write strategy' },
+        { scenario: 'Connection pool exhaustion under load', impact: 'Application runs out of database connections, returning errors to all users simultaneously', mitigation: 'Use PgBouncer or ProxySQL for connection pooling, implement connection timeouts, and set proper pool size limits per service' },
+      ],
+      tradeoffs: [
+        { decision: 'SQL vs NoSQL', pros: 'SQL offers ACID transactions, rich queries, and mature tooling; NoSQL offers flexible schemas, horizontal scaling, and high write throughput', cons: 'SQL struggles with horizontal scaling; NoSQL lacks joins and strong consistency guarantees', recommendation: 'Use SQL for transactional workloads with complex queries; NoSQL for high-volume writes with simple access patterns' },
+        { decision: 'Normalization vs Denormalization', pros: 'Normalized reduces redundancy and simplifies writes; denormalized reduces JOINs and improves read performance', cons: 'Normalized requires expensive JOINs at read time; denormalized risks data inconsistency and increases storage', recommendation: 'Normalize for OLTP write-heavy systems; denormalize for read-heavy systems or OLAP workloads' },
+        { decision: 'Single-leader vs Multi-leader replication', pros: 'Single-leader is simpler with no write conflicts; multi-leader provides lower write latency for geographically distributed users', cons: 'Single-leader has write bottleneck and higher latency for remote users; multi-leader requires complex conflict resolution', recommendation: 'Single-leader for most applications; multi-leader only when users in multiple regions need low-latency writes' },
+        { decision: 'Sharding vs Read Replicas', pros: 'Sharding distributes both reads and writes; read replicas scale reads without partitioning complexity', cons: 'Sharding adds cross-shard query complexity and rebalancing challenges; replicas only help with read scaling', recommendation: 'Start with read replicas for read-heavy workloads; shard when write throughput exceeds single-node capacity' },
+      ],
+      layeredDesign: [
+        { name: 'Client Layer', purpose: 'Connection pooling, query routing, and load balancing across database instances', components: ['Connection Pool (PgBouncer)', 'Query Router', 'Read/Write Splitter'] },
+        { name: 'Query Processing Layer', purpose: 'Parse, optimize, and execute SQL queries with cost-based optimization', components: ['Query Parser', 'Query Optimizer', 'Execution Engine', 'Prepared Statement Cache'] },
+        { name: 'Storage Engine Layer', purpose: 'Manage data persistence with B-tree or LSM-tree structures', components: ['Buffer Pool', 'WAL (Write-Ahead Log)', 'Page Manager', 'Compaction Engine'] },
+        { name: 'Replication Layer', purpose: 'Synchronize data across replicas for high availability and read scaling', components: ['Binlog/Oplog', 'Leader Election', 'Conflict Resolution', 'Replica Lag Monitor'] },
+        { name: 'Sharding Layer', purpose: 'Distribute data across multiple nodes for horizontal write scaling', components: ['Partition Router', 'Shard Map', 'Rebalancing Engine', 'Cross-Shard Query Coordinator'] },
       ]
     },
     {
@@ -1447,6 +1487,26 @@ Request 100 ─┘
             { name: 'Random Replacement', description: 'Randomly picks a cache entry to evict. Surprisingly effective for uniform access patterns with minimal overhead.' }
           ]
         }
+      ],
+      edgeCases: [
+        { scenario: 'Cache stampede (thundering herd)', impact: 'Popular key expires and hundreds of concurrent requests simultaneously hit the database to rebuild it, causing DB overload', mitigation: 'Use mutex/lock so only one request rebuilds the cache, serve stale data to others, or use probabilistic early expiration' },
+        { scenario: 'Cache penetration from non-existent keys', impact: 'Attackers or bugs query keys that never exist in cache or DB, bypassing cache entirely and hammering the database', mitigation: 'Use Bloom filters to reject impossible keys, cache negative results with short TTL, and validate input before cache lookup' },
+        { scenario: 'Inconsistency between cache and database', impact: 'Cache returns stale data after a database update, causing users to see outdated information or make decisions on wrong data', mitigation: 'Use cache-aside with explicit invalidation on writes, implement change data capture (CDC) for cache invalidation, or use write-through pattern' },
+        { scenario: 'Hot key overwhelming single cache node', impact: 'A viral item or celebrity profile concentrates all requests on one Redis node, exceeding its throughput capacity', mitigation: 'Replicate hot keys across multiple cache nodes, use local in-process cache (L1) for ultra-hot keys, or shard the key with random suffixes' },
+        { scenario: 'Memory exhaustion causing unexpected evictions', impact: 'Cache runs out of memory and evicts important keys, causing cache hit rate to drop dramatically', mitigation: 'Monitor memory usage and eviction rates, set appropriate maxmemory policies, separate hot data into dedicated cache clusters' },
+      ],
+      tradeoffs: [
+        { decision: 'Cache-aside vs Write-through', pros: 'Cache-aside is simpler and only caches data that is actually read; write-through ensures cache is always consistent with DB', cons: 'Cache-aside has a window of inconsistency after writes; write-through has write latency penalty and caches data that may never be read', recommendation: 'Cache-aside for most read-heavy workloads; write-through when consistency is critical and data is frequently read after write' },
+        { decision: 'Redis vs Memcached', pros: 'Redis offers rich data structures, persistence, and replication; Memcached is simpler with multi-threaded performance', cons: 'Redis is single-threaded (per shard) and more complex to operate; Memcached lacks persistence and advanced features', recommendation: 'Redis for most use cases due to flexibility; Memcached only for simple key-value caching with very high throughput needs' },
+        { decision: 'Local (in-process) vs Distributed cache', pros: 'Local cache has zero network latency; distributed cache shares state across all app instances', cons: 'Local cache wastes memory with duplicates and has consistency issues across instances; distributed cache adds network hop latency', recommendation: 'Use two-tier caching: local L1 for ultra-hot keys with short TTL, distributed L2 (Redis) for everything else' },
+        { decision: 'Short TTL vs Long TTL', pros: 'Short TTL keeps data fresh; long TTL maximizes cache hit rate and reduces DB load', cons: 'Short TTL increases cache misses and DB load; long TTL risks serving stale data', recommendation: 'Match TTL to data change frequency: seconds for rate limits, minutes for user profiles, hours for static reference data' },
+      ],
+      layeredDesign: [
+        { name: 'Client-Side Cache', purpose: 'Cache responses in the browser or mobile app to eliminate network requests entirely', components: ['HTTP Cache (Cache-Control)', 'Service Worker Cache', 'Local Storage / IndexedDB'] },
+        { name: 'CDN / Edge Cache', purpose: 'Cache static and semi-static content at edge locations near users', components: ['CDN Edge Servers (CloudFront, Cloudflare)', 'Edge Rules', 'Stale-While-Revalidate'] },
+        { name: 'Application-Level Cache (L1)', purpose: 'In-process cache for ultra-hot data with zero network overhead', components: ['In-Memory HashMap', 'Caffeine/Guava Cache (JVM)', 'Node.js LRU Cache'] },
+        { name: 'Distributed Cache (L2)', purpose: 'Shared cache across application instances for consistent cached data', components: ['Redis Cluster', 'Memcached', 'Cache Proxy (Twemproxy, Envoy)'] },
+        { name: 'Database Query Cache', purpose: 'Cache query results or buffer pool pages within the database engine itself', components: ['Buffer Pool (InnoDB)', 'Query Result Cache', 'Materialized Views'] },
       ]
     },
     {
@@ -1848,6 +1908,25 @@ Messages that fail repeatedly go to separate queue for investigation.
             { name: 'System Migration', description: 'Old and new services both write to Kafka during migration. Compare outputs for reconciliation before full cutover.' }
           ]
         }
+      ],
+      edgeCases: [
+        { scenario: 'Consumer lag causing unbounded queue growth', impact: 'Producers outpace consumers, queue fills disk storage, new messages are rejected or lost, and backpressure propagates to upstream services', mitigation: 'Monitor consumer lag metrics, auto-scale consumer groups, set retention limits with dead-letter queues for overflow' },
+        { scenario: 'Poison message blocking consumer progress', impact: 'A malformed message causes the consumer to crash repeatedly, blocking all subsequent messages in the partition', mitigation: 'Implement retry limits with exponential backoff, route failed messages to dead-letter queue after N retries, use idempotent processing' },
+        { scenario: 'Message ordering violated during rebalancing', impact: 'Kafka consumer group rebalance reassigns partitions, causing temporary duplicate or out-of-order processing', mitigation: 'Use cooperative sticky partition assignment, implement idempotent consumers with deduplication keys, design for at-least-once semantics' },
+        { scenario: 'Duplicate messages from producer retries', impact: 'Network timeout causes producer to retry, resulting in the same message published twice and processed twice (double charge, duplicate notification)', mitigation: 'Enable Kafka idempotent producer (enable.idempotence=true), implement consumer-side deduplication using message IDs' },
+        { scenario: 'Schema evolution breaks consumers', impact: 'Producer changes message format without coordinating, causing all consumers to fail deserialization', mitigation: 'Use a schema registry (Confluent Schema Registry) with compatibility checks, enforce backward/forward compatibility rules' },
+      ],
+      tradeoffs: [
+        { decision: 'Kafka vs RabbitMQ', pros: 'Kafka offers high throughput, replay capability, and log-based durability; RabbitMQ offers flexible routing, lower latency, and simpler operations', cons: 'Kafka has higher operational complexity and higher latency; RabbitMQ does not support message replay and has lower throughput ceiling', recommendation: 'Kafka for event streaming and high-throughput pipelines; RabbitMQ for task queues and complex routing patterns' },
+        { decision: 'At-least-once vs Exactly-once delivery', pros: 'At-least-once is simpler and higher throughput; exactly-once eliminates duplicate processing', cons: 'At-least-once requires idempotent consumers; exactly-once adds latency and throughput overhead from transactional writes', recommendation: 'At-least-once with idempotent consumers for most workloads; exactly-once only for financial transactions where duplication is unacceptable' },
+        { decision: 'Push vs Pull consumption model', pros: 'Push delivers messages immediately with low latency; pull lets consumers control their own pace', cons: 'Push can overwhelm slow consumers; pull adds polling overhead and slight latency', recommendation: 'Pull (Kafka model) for high-throughput event processing; push (RabbitMQ/SQS model) for real-time notifications and task dispatch' },
+        { decision: 'Single large topic vs Many granular topics', pros: 'Single topic is simpler to manage; granular topics enable independent scaling and filtering per consumer', cons: 'Single topic forces all consumers to process irrelevant messages; many topics increase operational overhead', recommendation: 'Use domain-based topics (order-events, user-events) with message type headers for sub-filtering' },
+      ],
+      layeredDesign: [
+        { name: 'Producer Layer', purpose: 'Serialize messages, assign partition keys, and publish to the message broker', components: ['Message Serializer (Avro/Protobuf)', 'Partition Key Router', 'Producer Client (batching, compression)', 'Schema Registry'] },
+        { name: 'Broker / Transport Layer', purpose: 'Durably store messages, manage topics/partitions, and handle replication', components: ['Topic/Queue Manager', 'Partition Log Storage', 'Replication Controller', 'Retention Policy Engine'] },
+        { name: 'Consumer Layer', purpose: 'Subscribe to topics, deserialize messages, and process them with delivery guarantees', components: ['Consumer Group Coordinator', 'Offset Manager', 'Message Deserializer', 'Dead-Letter Queue Handler'] },
+        { name: 'Monitoring & Operations Layer', purpose: 'Track queue health, consumer lag, and throughput metrics', components: ['Lag Monitor (Burrow)', 'Throughput Dashboard', 'Schema Compatibility Checker', 'Alert Manager'] },
       ]
     },
     {
@@ -2303,6 +2382,24 @@ JWT Payload:
           useWhen: 'Payment processing, any non-GET mutation',
           example: 'Idempotency-Key header, store request hash + response'
         }
+      ],
+      edgeCases: [
+        { scenario: 'Breaking API change deployed without versioning', impact: 'All existing clients break simultaneously, causing widespread outages for mobile apps that cannot be instantly updated', mitigation: 'Always version APIs (URL path or header), maintain backward compatibility for at least 2 versions, use deprecation headers and sunset dates' },
+        { scenario: 'N+1 query problem in REST APIs', impact: 'Client fetches a list of resources then makes N additional requests for related data, causing extreme latency and server load', mitigation: 'Support field expansion (?include=author,comments), use GraphQL for flexible nested queries, or provide composite endpoints' },
+        { scenario: 'Pagination cursor becomes invalid', impact: 'Cursor-based pagination breaks when underlying data is deleted or reordered, returning duplicate or missing results', mitigation: 'Use stable cursor encoding (opaque base64 of primary key), handle invalid cursors gracefully with 400 response, never expose raw offsets' },
+        { scenario: 'Rate limiting applied inconsistently across regions', impact: 'Users behind different load balancers get different rate limit counts, allowing abuse by spreading requests across regions', mitigation: 'Use centralized rate limiting with Redis, sync counters across regions, or use API gateway with global rate limit state' },
+        { scenario: 'Large payload causing timeout on mobile networks', impact: 'API returns megabytes of JSON data, causing timeouts on slow connections and excessive memory usage on mobile clients', mitigation: 'Implement pagination, field selection (?fields=id,name), compression (gzip/brotli), and streaming for large responses' },
+      ],
+      tradeoffs: [
+        { decision: 'REST vs GraphQL', pros: 'REST is simple, cacheable, and widely understood; GraphQL eliminates over/under-fetching and gives clients query flexibility', cons: 'REST can over-fetch or require multiple round trips; GraphQL adds query parsing complexity, makes caching harder, and risks expensive queries', recommendation: 'REST for public APIs and simple CRUD; GraphQL for mobile apps and complex UIs needing flexible data fetching' },
+        { decision: 'REST vs gRPC', pros: 'REST uses human-readable JSON and works in browsers; gRPC uses efficient Protobuf, supports streaming, and auto-generates typed clients', cons: 'REST has higher serialization overhead and no built-in streaming; gRPC requires HTTP/2 and is not browser-native without grpc-web', recommendation: 'REST for public-facing APIs; gRPC for internal microservice communication where performance and type safety matter' },
+        { decision: 'URL versioning vs Header versioning', pros: 'URL versioning (/v1/) is simple and visible; header versioning (Accept: application/vnd.api+json;v=2) keeps URLs clean', cons: 'URL versioning clutters the URL space; header versioning is harder to discover and test', recommendation: 'URL versioning for public APIs due to simplicity; header versioning for internal APIs with sophisticated clients' },
+      ],
+      layeredDesign: [
+        { name: 'API Gateway Layer', purpose: 'Single entry point for all API traffic handling cross-cutting concerns', components: ['Request Routing', 'Authentication/Authorization', 'Rate Limiting', 'Request/Response Transformation', 'SSL Termination'] },
+        { name: 'Protocol Layer', purpose: 'Handle serialization, deserialization, and protocol-specific concerns', components: ['JSON/Protobuf Serializer', 'GraphQL Query Parser', 'gRPC Service Definition', 'Schema Validation'] },
+        { name: 'Business Logic Layer', purpose: 'Execute domain-specific operations and enforce business rules', components: ['Request Handlers/Controllers', 'Domain Services', 'Input Validation', 'Authorization Rules'] },
+        { name: 'Data Access Layer', purpose: 'Abstract database operations and manage data retrieval patterns', components: ['Repository Pattern', 'ORM/Query Builder', 'Pagination Engine', 'Field Selection/Projection'] },
       ]
     },
     {
@@ -2791,6 +2888,24 @@ No server-side storage
             { name: 'Least Response Time (Dynamic)', description: 'Routes to the server with the lowest current response time. Accounts for both load AND server performance.' }
           ]
         }
+      ],
+      edgeCases: [
+        { scenario: 'Health check passes but service is degraded', impact: 'Load balancer routes traffic to a server returning 200 on /health but responding to real requests in 10+ seconds, causing user-facing timeouts', mitigation: 'Implement deep health checks that test downstream dependencies, use latency-based health scoring, and remove servers with high p99 latency' },
+        { scenario: 'Thundering herd after backend recovery', impact: 'All queued requests flood a recovered server simultaneously, causing it to crash again in a restart loop', mitigation: 'Use slow-start / warm-up mode that gradually increases traffic to recovered instances, implement connection draining' },
+        { scenario: 'Sticky sessions with server failure', impact: 'Server holding session state crashes, user loses session and must re-authenticate or loses in-progress work', mitigation: 'Store session state externally (Redis), use cookie-based session encoding (JWT), or replicate session data across servers' },
+        { scenario: 'Uneven load distribution with long-lived connections', impact: 'WebSocket or gRPC streaming connections stick to original servers, new servers added via auto-scaling receive no traffic', mitigation: 'Use connection-aware load balancing (least connections), implement periodic connection rebalancing, set maximum connection lifetime' },
+        { scenario: 'Single load balancer becomes a bottleneck', impact: 'All traffic funnels through one load balancer, which becomes the system throughput ceiling and single point of failure', mitigation: 'Deploy active-passive or active-active load balancer pairs, use DNS-based load balancing as the first tier, leverage cloud-native LB (ALB/NLB)' },
+      ],
+      tradeoffs: [
+        { decision: 'Layer 4 vs Layer 7 load balancing', pros: 'L4 is faster with less overhead (operates on TCP); L7 enables content-based routing, SSL termination, and HTTP header inspection', cons: 'L4 cannot inspect HTTP content or route by URL/header; L7 adds latency from full HTTP parsing', recommendation: 'L7 for most web applications; L4 for raw TCP performance needs like gaming or database proxying' },
+        { decision: 'Hardware vs Software load balancer', pros: 'Hardware (F5) provides predictable performance with dedicated ASICs; software (Nginx, HAProxy, Envoy) is flexible, cheap, and cloud-native', cons: 'Hardware is expensive and hard to scale; software has slightly lower raw throughput per instance', recommendation: 'Software load balancers for nearly all modern applications; hardware only for extreme throughput edge cases' },
+        { decision: 'Client-side vs Server-side load balancing', pros: 'Client-side (gRPC, Ribbon) eliminates the LB hop latency; server-side (ALB, Nginx) centralizes routing logic', cons: 'Client-side requires every client to implement LB logic and service discovery; server-side adds a network hop', recommendation: 'Server-side for external traffic; client-side for internal service-to-service calls in a service mesh' },
+      ],
+      layeredDesign: [
+        { name: 'Global / DNS Layer', purpose: 'Route users to the nearest regional data center using DNS-based load balancing', components: ['GeoDNS (Route 53)', 'Anycast', 'Multi-Region Failover', 'Health-Based DNS Routing'] },
+        { name: 'Edge / L4 Layer', purpose: 'Handle TCP-level traffic distribution with minimal latency overhead', components: ['Network Load Balancer (NLB)', 'TCP Connection Routing', 'TLS Passthrough', 'DDoS Protection'] },
+        { name: 'Application / L7 Layer', purpose: 'Route HTTP requests based on content, headers, and URL patterns', components: ['Application Load Balancer (ALB)', 'URL-Based Routing', 'SSL Termination', 'Header Inspection', 'WebSocket Support'] },
+        { name: 'Service Mesh Layer', purpose: 'Handle service-to-service load balancing within the cluster', components: ['Envoy Sidecar Proxy', 'Client-Side LB (gRPC)', 'Service Discovery', 'Circuit Breaking'] },
       ]
     },
     {
@@ -3092,6 +3207,23 @@ return {0, tokens}
           useWhen: 'Multi-server deployments, consistent limits per user',
           example: 'Redis INCR with TTL, or token bucket in Redis Lua script'
         }
+      ],
+      edgeCases: [
+        { scenario: 'Clock drift between rate limiter nodes', impact: 'Fixed window counters reset at different times across servers, allowing users to exceed limits by hitting different servers', mitigation: 'Use sliding window counters, synchronize clocks with NTP, or centralize rate limiting in Redis with atomic Lua scripts' },
+        { scenario: 'Race condition in distributed counter', impact: 'Multiple requests read the same counter value before any increment, allowing burst of requests to exceed the limit', mitigation: 'Use Redis INCR (atomic), Lua scripts for check-and-increment, or use token bucket algorithm which is naturally atomic' },
+        { scenario: 'Legitimate traffic spike blocked during product launch', impact: 'A successful marketing campaign or viral event causes legitimate users to hit rate limits, degrading their experience', mitigation: 'Implement adaptive rate limiting that raises limits based on system health, use tiered limits per user plan, pre-provision capacity for known events' },
+        { scenario: 'Rate limiter itself becomes a bottleneck', impact: 'Every request requires a Redis round-trip for rate check, adding latency and creating a single point of failure', mitigation: 'Use local in-memory rate limiting as first pass, batch Redis updates, implement circuit breaker that allows traffic if rate limiter is down' },
+      ],
+      tradeoffs: [
+        { decision: 'Token bucket vs Sliding window', pros: 'Token bucket allows controlled bursts while maintaining average rate; sliding window provides more precise per-second accuracy', cons: 'Token bucket can allow short bursts that overwhelm backends; sliding window uses more memory to track individual requests', recommendation: 'Token bucket for APIs where bursts are acceptable; sliding window for strict per-second rate enforcement' },
+        { decision: 'Local vs Centralized (Redis) rate limiting', pros: 'Local is zero-latency and has no external dependency; centralized ensures consistent global limits across all servers', cons: 'Local allows N x limit (where N = server count) in aggregate; centralized adds Redis latency and failure risk', recommendation: 'Combine both: local rate limiter as first defense, centralized Redis for authoritative global limit' },
+        { decision: 'Hard rate limit vs Soft rate limit with backpressure', pros: 'Hard limits (429 rejection) are simple and protective; soft limits (queue/slow down) preserve user experience', cons: 'Hard limits can reject legitimate traffic; soft limits can mask real overload if not bounded', recommendation: 'Hard limits for abuse prevention; soft limits (exponential backoff, queue) for legitimate traffic management' },
+      ],
+      layeredDesign: [
+        { name: 'Client Layer', purpose: 'Implement client-side rate limiting to reduce unnecessary requests', components: ['Retry with Exponential Backoff', 'Client-Side Throttling', 'Respect Retry-After Headers'] },
+        { name: 'Edge / Gateway Layer', purpose: 'Apply coarse-grained rate limits at the entry point before requests reach application servers', components: ['API Gateway Rate Limiter', 'IP-Based Throttling', 'DDoS Protection (Cloudflare, AWS Shield)'] },
+        { name: 'Application Layer', purpose: 'Enforce fine-grained per-user or per-endpoint rate limits', components: ['Token Bucket / Sliding Window', 'User/API Key Identification', 'Rate Limit Headers (X-RateLimit-Remaining)'] },
+        { name: 'Distributed State Layer', purpose: 'Maintain consistent rate limit counters across all application instances', components: ['Redis Atomic Counters', 'Lua Script Rate Limiter', 'Rate Limit Synchronization'] },
       ]
     },
     {
@@ -3672,6 +3804,26 @@ Supporting Infrastructure:
             { name: 'Log Aggregation', description: 'Centralized logging via ELK stack (Logstash → Elasticsearch → Kibana). Correlate logs across services with trace IDs.' }
           ]
         }
+      ],
+      edgeCases: [
+        { scenario: 'Distributed transaction spanning multiple services', impact: 'Partial failure leaves data inconsistent: payment charged but order not created, or inventory decremented but shipment not initiated', mitigation: 'Use Saga pattern with compensating transactions, implement outbox pattern for reliable event publishing, design for eventual consistency' },
+        { scenario: 'Service discovery lag during rapid scaling', impact: 'New instances registered but not yet healthy, or terminated instances still receiving traffic, causing request failures', mitigation: 'Use health check grace periods, implement client-side retry with circuit breaker, use readiness probes distinct from liveness probes' },
+        { scenario: 'Cascading failure from one degraded service', impact: 'Service A calls slow Service B, exhausting A\'s thread pool, which causes A\'s callers to also exhaust their pools — entire system collapses', mitigation: 'Implement circuit breakers (Hystrix/Resilience4j), use bulkheads to isolate connection pools, set aggressive timeouts on all inter-service calls' },
+        { scenario: 'Data consistency across service boundaries', impact: 'Each service owns its database but business operations span multiple services, leading to temporarily inconsistent views of data', mitigation: 'Accept eventual consistency for non-critical paths, use event-driven architecture with idempotent consumers, implement CQRS for read/write separation' },
+        { scenario: 'Deployment of incompatible service versions', impact: 'Service A deploys v2 expecting new API from Service B, but Service B is still on v1, causing runtime failures', mitigation: 'Use consumer-driven contract testing (Pact), enforce API versioning, deploy with canary releases and automated rollback' },
+      ],
+      tradeoffs: [
+        { decision: 'Monolith vs Microservices', pros: 'Monolith is simpler to develop, deploy, and debug; microservices enable independent scaling, deployment, and team ownership', cons: 'Monolith becomes a deployment bottleneck with large teams; microservices add network latency, distributed debugging complexity, and operational overhead', recommendation: 'Start with a modular monolith, extract services when team size exceeds 8-10 engineers or specific components need independent scaling' },
+        { decision: 'Orchestration (Saga) vs Choreography (Events)', pros: 'Orchestration provides clear workflow visibility and easier error handling; choreography offers loose coupling and independent service evolution', cons: 'Orchestration creates a central coordinator as a bottleneck; choreography makes it hard to track overall workflow state', recommendation: 'Orchestration for complex multi-step business processes; choreography for simple event-driven reactions between loosely coupled services' },
+        { decision: 'Shared database vs Database-per-service', pros: 'Shared DB simplifies joins and transactions; database-per-service provides true isolation and independent schema evolution', cons: 'Shared DB creates tight coupling and deployment dependencies; database-per-service complicates cross-service queries', recommendation: 'Database-per-service as the default; shared DB only during early migration from monolith with a clear plan to split later' },
+        { decision: 'Synchronous REST vs Asynchronous events between services', pros: 'REST is simpler to implement and debug; async events decouple services and handle failures gracefully', cons: 'REST creates temporal coupling (both services must be up); async adds eventual consistency complexity and debugging difficulty', recommendation: 'REST for queries and real-time user-facing operations; async events for state changes and background processing' },
+      ],
+      layeredDesign: [
+        { name: 'API Gateway Layer', purpose: 'Unified entry point for external clients with cross-cutting concerns', components: ['API Gateway (Kong, AWS)', 'Authentication', 'Rate Limiting', 'Request Routing', 'Response Aggregation'] },
+        { name: 'Service Layer', purpose: 'Individual microservices encapsulating bounded domain contexts', components: ['Domain Services', 'Service-to-Service Communication (REST/gRPC)', 'Circuit Breakers', 'Service Discovery (Consul/K8s DNS)'] },
+        { name: 'Data Layer', purpose: 'Per-service data stores with autonomous schema management', components: ['Database-per-Service', 'Event Store', 'Outbox Table', 'Read Replicas'] },
+        { name: 'Messaging Layer', purpose: 'Asynchronous communication backbone for event-driven architecture', components: ['Message Broker (Kafka/RabbitMQ)', 'Event Bus', 'Dead Letter Queues', 'Schema Registry'] },
+        { name: 'Observability Layer', purpose: 'Cross-service monitoring, tracing, and debugging infrastructure', components: ['Distributed Tracing (Jaeger)', 'Centralized Logging (ELK)', 'Metrics (Prometheus/Grafana)', 'Service Mesh (Istio)'] },
       ]
     },
     {
@@ -4243,6 +4395,26 @@ def verify_token(token, secret):
             { name: 'Step 3: Encrypted Tunnel', description: 'Both client and server now share the same session key. All subsequent data is encrypted/decrypted using this symmetric key. Secure tunnel established.' }
           ]
         }
+      ],
+      edgeCases: [
+        { scenario: 'JWT token stolen from localStorage', impact: 'Attacker gains persistent access to user account until token expires, potentially accessing sensitive data or performing unauthorized actions', mitigation: 'Store tokens in httpOnly secure cookies, use short-lived access tokens (15 min) with refresh token rotation, implement token revocation list' },
+        { scenario: 'SQL injection through unexpected input vector', impact: 'Attacker bypasses input validation on an overlooked field (search, sort parameter, HTTP header), gaining read or write access to the database', mitigation: 'Use parameterized queries everywhere (no exceptions), employ ORM/query builders, implement WAF rules, run regular DAST/SAST scans' },
+        { scenario: 'Certificate expiration in production', impact: 'TLS certificate expires causing all HTTPS connections to fail with browser security warnings, effectively taking the site offline', mitigation: 'Use auto-renewal (Let\'s Encrypt with certbot), monitor certificate expiry dates with alerts 30 days before, use managed TLS (Cloudflare, AWS ACM)' },
+        { scenario: 'Privilege escalation through IDOR', impact: 'User changes resource ID in API request (e.g., /api/orders/123 to /api/orders/456) and accesses another user\'s data', mitigation: 'Always validate resource ownership server-side, use UUIDs instead of sequential IDs, implement row-level security policies' },
+        { scenario: 'Secret leaked in git commit history', impact: 'API key, database password, or JWT secret pushed to repository, even if later deleted it persists in git history', mitigation: 'Use environment variables and secret managers (Vault, AWS Secrets Manager), run git-secrets pre-commit hook, rotate compromised credentials immediately' },
+      ],
+      tradeoffs: [
+        { decision: 'Session-based vs Token-based authentication', pros: 'Sessions are easy to invalidate server-side; tokens (JWT) are stateless and scale horizontally without shared session store', cons: 'Sessions require sticky sessions or shared store (Redis); tokens cannot be easily revoked before expiry', recommendation: 'Token-based (JWT) for APIs and SPAs; session-based for traditional server-rendered apps that need instant revocation' },
+        { decision: 'OAuth 2.0 vs API Keys', pros: 'OAuth provides granular scoped access and delegated authorization; API keys are simple to implement and use', cons: 'OAuth has complex flows and token management; API keys lack scope granularity and are easily leaked', recommendation: 'OAuth for user-facing third-party integrations; API keys for server-to-server internal communication with IP allowlisting' },
+        { decision: 'Encryption at rest vs Performance', pros: 'Encryption protects data if storage is compromised; unencrypted data has faster read/write performance', cons: 'Encryption adds CPU overhead (5-10%) and key management complexity; no encryption is a compliance violation for PII/PCI', recommendation: 'Always encrypt PII and financial data at rest; use hardware-accelerated AES-NI to minimize performance impact' },
+        { decision: 'Zero Trust vs Perimeter Security', pros: 'Zero trust protects against lateral movement after breach; perimeter security is simpler to implement with VPN/firewall', cons: 'Zero trust requires mTLS, identity-aware proxies, and continuous verification; perimeter security is vulnerable once breached', recommendation: 'Zero trust for cloud-native microservices; perimeter security acceptable for small teams with well-defined network boundaries' },
+      ],
+      layeredDesign: [
+        { name: 'Edge Security Layer', purpose: 'Protect against external threats before requests reach application servers', components: ['WAF (Web Application Firewall)', 'DDoS Protection (Cloudflare)', 'Bot Detection', 'TLS Termination'] },
+        { name: 'Authentication Layer', purpose: 'Verify user identity and issue credentials', components: ['OAuth 2.0 / OIDC Provider', 'JWT Issuer', 'MFA (TOTP, WebAuthn)', 'Session Manager'] },
+        { name: 'Authorization Layer', purpose: 'Enforce access control policies on every request', components: ['RBAC / ABAC Engine', 'Policy Enforcement Point', 'Resource Ownership Validation', 'API Scope Checker'] },
+        { name: 'Data Protection Layer', purpose: 'Encrypt and protect sensitive data at rest and in transit', components: ['AES-256 Encryption at Rest', 'TLS 1.3 in Transit', 'Key Management (KMS/Vault)', 'PII Masking/Tokenization'] },
+        { name: 'Audit & Compliance Layer', purpose: 'Log security events and ensure regulatory compliance', components: ['Audit Log (immutable)', 'SIEM Integration', 'Compliance Scanner (SOC2, GDPR)', 'Vulnerability Scanner'] },
       ]
     },
     {
@@ -7962,6 +8134,25 @@ Cache Entry:
           useWhen: 'A/B testing, geo-routing, auth at edge',
           example: 'Cloudflare Workers, Vercel Edge Functions, Lambda@Edge'
         }
+      ],
+      edgeCases: [
+        { scenario: 'Cache stampede after purge or TTL expiry', impact: 'Hundreds of simultaneous cache misses overwhelm the origin server, causing cascading failures', mitigation: 'Use request coalescing at the edge, stale-while-revalidate headers, and lock-based origin fetching' },
+        { scenario: 'Stale content served after emergency update', impact: 'Users see outdated or incorrect content despite origin being updated, damaging trust or causing security issues', mitigation: 'Use instant purge APIs with versioned URLs as primary strategy, short TTLs for critical content' },
+        { scenario: 'CDN provider outage or edge PoP failure', impact: 'All users routed through that PoP experience downtime or high latency', mitigation: 'Implement multi-CDN failover with DNS-based health checks, ensure origin can handle direct traffic temporarily' },
+        { scenario: 'Cache key collision from incorrect Vary headers', impact: 'Users receive content meant for different devices, languages, or auth states', mitigation: 'Carefully design cache keys with appropriate Vary headers, test with multiple user agents and accept-encoding values' },
+        { scenario: 'SSL certificate expiration at edge', impact: 'Users see browser security warnings, blocking access to the entire site', mitigation: 'Use CDN-managed certificates with automatic renewal, monitor certificate expiry with alerts 30 days in advance' }
+      ],
+      tradeoffs: [
+        { decision: 'Push CDN vs Pull CDN', pros: 'Push gives guaranteed freshness and fast first-request; Pull is simpler to operate and auto-caches popular content', cons: 'Push requires upload management and wastes storage on unpopular content; Pull has slow first requests and origin load on cache misses', recommendation: 'Use Pull CDN for most web applications; Push only for large static assets like video that must be pre-positioned' },
+        { decision: 'Short TTL vs Long TTL', pros: 'Short TTLs keep content fresh with minimal staleness; Long TTLs maximize cache hit ratio and reduce origin load', cons: 'Short TTLs increase origin requests; Long TTLs risk serving stale content after updates', recommendation: 'Use long TTLs with versioned filenames for static assets, short TTLs with stale-while-revalidate for dynamic content' },
+        { decision: 'Single CDN vs Multi-CDN', pros: 'Single CDN is simpler and cheaper; Multi-CDN provides redundancy and best-path routing', cons: 'Single CDN is a single point of failure; Multi-CDN adds complexity in cache management and configuration', recommendation: 'Start with single CDN, adopt multi-CDN when availability requirements exceed 99.99% or for global coverage gaps' },
+        { decision: 'Edge computing vs Origin processing', pros: 'Edge computing reduces latency for personalization and auth; Origin processing is simpler to debug and deploy', cons: 'Edge computing has limited runtime and storage; Origin processing adds round-trip latency for every request', recommendation: 'Use edge for A/B testing, geo-routing, and auth token validation; keep complex business logic at the origin' }
+      ],
+      layeredDesign: [
+        { name: 'Client Layer', purpose: 'Browser or application that initiates content requests', components: ['DNS Resolution', 'HTTP Client', 'Browser Cache', 'Service Worker Cache'] },
+        { name: 'Edge Layer', purpose: 'CDN Points of Presence serving cached content closest to users', components: ['Edge Cache', 'TLS Termination', 'Compression', 'Edge Functions', 'DDoS Protection'] },
+        { name: 'Shield/Mid-Tier Layer', purpose: 'Regional cache that aggregates edge misses to protect the origin', components: ['Request Coalescing', 'Regional Cache', 'Miss Aggregation', 'Health Checks'] },
+        { name: 'Origin Layer', purpose: 'Source of truth that generates and serves original content', components: ['Application Server', 'Object Storage', 'Cache-Control Headers', 'Origin Shield Config'] }
       ]
     },
     {
@@ -8469,6 +8660,25 @@ Failover States:
             { name: 'Multi-Site Active-Active (RPO: near zero, RTO: near zero)', description: 'Both sites actively serving traffic simultaneously with data sync. On disaster, load balancer redirects all traffic to surviving site. Most expensive but fastest recovery.' }
           ]
         }
+      ],
+      edgeCases: [
+        { scenario: 'Split-brain during network partition', impact: 'Two leaders accept conflicting writes, causing data divergence that is difficult to reconcile', mitigation: 'Use fencing tokens, implement STONITH, require majority quorum for leader election' },
+        { scenario: 'Replication lag spike under heavy write load', impact: 'Followers fall far behind the leader, causing stale reads and potential failover to an outdated replica', mitigation: 'Monitor replication lag with alerts, throttle writes if lag exceeds threshold, use semi-synchronous replication for critical data' },
+        { scenario: 'Failover promotes a follower with incomplete data', impact: 'Recently committed transactions are lost because the new leader had not yet received them', mitigation: 'Use synchronous replication for at least one follower, verify follower state before promotion, implement write-ahead log shipping' },
+        { scenario: 'Cascading failure when primary and backup fail simultaneously', impact: 'Complete service outage with potential data loss if no tertiary replica exists', mitigation: 'Maintain at least 3 replicas across different failure domains, implement circuit breakers, and have runbook for manual recovery' },
+        { scenario: 'Conflict resolution failure in multi-leader setup', impact: 'Data corruption or silent data loss when concurrent writes to different leaders cannot be automatically merged', mitigation: 'Use CRDTs for mergeable data types, implement application-level conflict resolution, prefer single-leader for write-heavy workloads' }
+      ],
+      tradeoffs: [
+        { decision: 'Synchronous vs Asynchronous replication', pros: 'Synchronous ensures zero data loss on failover; Asynchronous provides lower write latency and higher throughput', cons: 'Synchronous blocks writes on slow followers and reduces availability; Asynchronous risks data loss if leader fails before replication', recommendation: 'Use semi-synchronous replication: one sync follower for durability, rest async for performance' },
+        { decision: 'Active-Passive vs Active-Active', pros: 'Active-Passive is simpler with no conflict resolution; Active-Active uses all capacity and handles regional failures', cons: 'Active-Passive wastes standby resources; Active-Active requires conflict resolution and complex routing', recommendation: 'Use Active-Passive for databases and stateful services; Active-Active for stateless services behind a global load balancer' },
+        { decision: 'Leader-Follower vs Leaderless replication', pros: 'Leader-Follower is simpler with clear write ordering; Leaderless has no single point of failure for writes', cons: 'Leader-Follower bottlenecks on the leader; Leaderless requires quorum coordination and conflict resolution', recommendation: 'Use Leader-Follower for relational workloads needing strong consistency; Leaderless for high-availability key-value stores' },
+        { decision: 'Few replicas (3) vs Many replicas (5+)', pros: 'Fewer replicas mean lower storage cost and faster writes; More replicas improve read throughput and fault tolerance', cons: 'Fewer replicas limit fault tolerance; More replicas increase replication lag, storage, and write amplification', recommendation: 'Use 3 replicas as default, increase to 5 only for read-heavy workloads or when tolerating 2 simultaneous failures is required' }
+      ],
+      layeredDesign: [
+        { name: 'Client Layer', purpose: 'Routes reads and writes to appropriate replicas', components: ['Connection Router', 'Read/Write Splitting', 'Retry Logic', 'Failover Detection'] },
+        { name: 'Replication Layer', purpose: 'Manages data synchronization between leader and followers', components: ['Write-Ahead Log', 'Replication Stream', 'Lag Monitor', 'Conflict Detector'] },
+        { name: 'Consensus Layer', purpose: 'Coordinates leader election and membership changes', components: ['Raft/Paxos Protocol', 'Leader Election', 'Heartbeat Monitor', 'Fencing Token Service'] },
+        { name: 'Storage Layer', purpose: 'Persists data durably on each replica node', components: ['WAL Storage', 'Data Files', 'Snapshot Engine', 'Compaction Process'] }
       ]
     },
     {
@@ -8925,6 +9135,25 @@ TCP was designed in 1974 and is baked into operating systems, routers, and middl
             { name: 'IoT Communications', description: 'IoT devices send small packets of data between devices. UDP\'s low overhead is ideal for resource-constrained devices.' }
           ]
         }
+      ],
+      edgeCases: [
+        { scenario: 'HTTP/2 head-of-line blocking at TCP layer', impact: 'A single lost TCP packet blocks all multiplexed streams, negating HTTP/2 benefits under lossy networks', mitigation: 'Migrate to HTTP/3 (QUIC) which handles packet loss per-stream, or use multiple TCP connections as fallback' },
+        { scenario: 'TLS certificate chain validation failure in mTLS', impact: 'Microservices cannot communicate, causing cascading service failures across the mesh', mitigation: 'Automate certificate rotation with short-lived certs, use a service mesh like Istio for transparent mTLS management' },
+        { scenario: 'Connection pool exhaustion under load', impact: 'New requests queue or fail because all pooled connections are in use, causing timeout errors', mitigation: 'Set appropriate pool size limits, implement connection timeouts, add circuit breakers, and monitor pool utilization metrics' },
+        { scenario: 'gRPC deadline propagation failure across services', impact: 'Downstream services continue processing requests that the caller has already abandoned, wasting resources', mitigation: 'Propagate deadlines through context in every gRPC call chain, set reasonable per-hop timeouts, cancel downstream calls on timeout' },
+        { scenario: 'QUIC UDP traffic blocked by corporate firewalls', impact: 'Users behind restrictive networks cannot connect via HTTP/3, experiencing connection failures', mitigation: 'Implement graceful fallback to HTTP/2 over TCP, use Alt-Svc headers to advertise QUIC availability without requiring it' }
+      ],
+      tradeoffs: [
+        { decision: 'TCP vs UDP for application protocol', pros: 'TCP provides reliable, ordered delivery out of the box; UDP provides minimal latency and overhead', cons: 'TCP has connection setup overhead and head-of-line blocking; UDP requires building reliability at the application layer', recommendation: 'Use TCP (or QUIC) for most applications; UDP only for real-time media, gaming, or DNS where occasional packet loss is acceptable' },
+        { decision: 'HTTP/2 vs HTTP/3 (QUIC)', pros: 'HTTP/2 is universally supported and well-understood; HTTP/3 eliminates transport HOL blocking and has faster connection setup', cons: 'HTTP/2 suffers from TCP HOL blocking on lossy networks; HTTP/3 may be blocked by firewalls and has less mature tooling', recommendation: 'Deploy HTTP/3 with HTTP/2 fallback for user-facing services; HTTP/2 is sufficient for internal service-to-service communication' },
+        { decision: 'REST (JSON) vs gRPC (Protobuf) for inter-service calls', pros: 'REST is human-readable, cacheable, and universally supported; gRPC is 5-10x more efficient with strong typing and streaming', cons: 'REST has verbose payloads and no built-in streaming; gRPC is not browser-native and harder to debug', recommendation: 'Use gRPC for internal microservice communication; REST for public APIs and browser-facing endpoints' },
+        { decision: 'TLS vs mTLS', pros: 'TLS encrypts traffic and authenticates the server; mTLS additionally authenticates clients for zero-trust security', cons: 'TLS alone does not verify client identity; mTLS adds certificate management complexity for every service', recommendation: 'Use mTLS for all internal service-to-service communication in production; TLS-only is sufficient for public-facing endpoints with API keys' }
+      ],
+      layeredDesign: [
+        { name: 'Application Layer', purpose: 'Provides application-level protocols for data exchange', components: ['HTTP/1.1', 'HTTP/2', 'HTTP/3', 'gRPC', 'WebSocket', 'DNS'] },
+        { name: 'Security Layer', purpose: 'Encrypts data in transit and authenticates endpoints', components: ['TLS 1.3', 'mTLS', 'Certificate Authority', 'OCSP Stapling'] },
+        { name: 'Transport Layer', purpose: 'Manages reliable or unreliable data delivery between hosts', components: ['TCP', 'UDP', 'QUIC', 'Connection Pooling', 'Flow Control'] },
+        { name: 'Network Layer', purpose: 'Routes packets between hosts across networks', components: ['IP', 'DNS Resolution', 'BGP Routing', 'Load Balancer VIP'] }
       ]
     },
     {
@@ -9452,6 +9681,25 @@ Server-Sent Events (SSE):
           useWhen: 'WebSocket app behind load balancer',
           example: 'Redis Pub/Sub or Kafka for cross-server message broadcasting'
         }
+      ],
+      edgeCases: [
+        { scenario: 'WebSocket connection dropped by intermediate proxy', impact: 'Clients silently lose real-time updates without knowing the connection is dead, leading to stale UI', mitigation: 'Implement application-level heartbeat/ping-pong, detect missed pongs within 30 seconds, auto-reconnect with exponential backoff' },
+        { scenario: 'Thundering herd on SSE reconnect after server restart', impact: 'All clients reconnect simultaneously, overwhelming the server with connection establishment requests', mitigation: 'Add jittered reconnect delay on the client, use Last-Event-ID header for resumption, implement connection rate limiting' },
+        { scenario: 'Long polling timeout mismatch with load balancer', impact: 'Load balancer terminates the held connection before the server responds, causing repeated empty responses', mitigation: 'Set server hold time shorter than LB timeout (e.g., server 25s, LB 30s), configure LB idle timeout appropriately' },
+        { scenario: 'WebSocket memory leak from abandoned connections', impact: 'Server memory grows unbounded as disconnected clients leave orphaned connection state', mitigation: 'Implement server-side idle timeout, track last message timestamp per connection, periodically sweep and close stale connections' },
+        { scenario: 'Message ordering lost during WebSocket server failover', impact: 'Client receives messages out of order after reconnecting to a different server, corrupting application state', mitigation: 'Include sequence numbers in messages, use Redis Streams or Kafka for ordered message replay on reconnection' }
+      ],
+      tradeoffs: [
+        { decision: 'WebSocket vs Server-Sent Events (SSE)', pros: 'WebSocket enables full-duplex bidirectional communication; SSE is simpler, works over HTTP, and has built-in reconnection', cons: 'WebSocket requires upgrade handling and special proxy config; SSE is server-to-client only and limited to text data', recommendation: 'Use SSE for notifications, live feeds, and dashboards; WebSocket for chat, gaming, and collaborative editing requiring bidirectional flow' },
+        { decision: 'Long polling vs WebSocket', pros: 'Long polling works everywhere HTTP works with no special infrastructure; WebSocket has lower latency and overhead for high-frequency updates', cons: 'Long polling has connection churn overhead and higher latency; WebSocket requires sticky sessions or pub/sub for scaling', recommendation: 'Use WebSocket as primary, long polling as fallback for environments that block WebSocket upgrades' },
+        { decision: 'Single server vs Pub/Sub fanout for WebSocket scaling', pros: 'Single server is simpler with guaranteed ordering; Pub/Sub enables horizontal scaling across many servers', cons: 'Single server limits connection count to one machine; Pub/Sub adds latency and complexity from the message broker', recommendation: 'Start with single server, add Redis Pub/Sub or Kafka fanout when exceeding 50K concurrent connections per server' },
+        { decision: 'Client-side polling vs Server push', pros: 'Polling is stateless and simple to implement; Server push provides real-time updates with minimal latency', cons: 'Polling wastes bandwidth on empty responses and has inherent delay; Push requires connection management and scaling infrastructure', recommendation: 'Use server push (SSE or WebSocket) for any real-time requirement; polling only for batch or infrequent update scenarios' }
+      ],
+      layeredDesign: [
+        { name: 'Client Layer', purpose: 'Manages connection lifecycle and message handling in the browser or app', components: ['EventSource API (SSE)', 'WebSocket API', 'Reconnection Logic', 'Message Buffer', 'Heartbeat Timer'] },
+        { name: 'Protocol Layer', purpose: 'Handles protocol-specific framing and connection upgrades', components: ['HTTP Upgrade Handshake', 'WebSocket Frames', 'SSE Event Stream Parser', 'Ping/Pong Frames'] },
+        { name: 'Routing Layer', purpose: 'Distributes connections across servers and routes messages', components: ['Sticky Session LB', 'Connection Registry', 'Pub/Sub Broker (Redis)', 'Room/Channel Manager'] },
+        { name: 'Application Layer', purpose: 'Business logic for message processing and event generation', components: ['Event Producer', 'Subscription Manager', 'Authorization Middleware', 'Rate Limiter'] }
       ]
     },
     {
