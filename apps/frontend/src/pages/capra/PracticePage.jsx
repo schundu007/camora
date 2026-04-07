@@ -388,29 +388,32 @@ export default function PracticePage() {
   }, [mode, category, difficulty, company]);
 
   // Auto-generate architecture diagram for system design questions
-  useEffect(() => {
-    if (phase !== 'active' || category !== 'system-design' || !questions[currentIdx]) return;
+  const generateDiagram = useCallback((q) => {
     setDiagramUrl(null);
     setDiagramError(null);
     setDiagramLoading(true);
-    const q = questions[currentIdx];
     fetch(`${API_URL}/api/diagram/generate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
       body: JSON.stringify({ question: `${q.q}: ${q.desc}`, cloudProvider: 'aws', detailLevel: 'overview', direction: 'LR' }),
     })
-      .then(r => r.json())
+      .then(r => { if (!r.ok) throw new Error(`${r.status}`); return r.json(); })
       .then(data => {
         if (data.success && data.image_url) {
           const url = data.image_url.startsWith('/') ? `${API_URL}${data.image_url}` : data.image_url;
           setDiagramUrl(url);
         } else {
-          setDiagramError('Could not generate diagram');
+          setDiagramError(data.error || 'Could not generate diagram');
         }
       })
-      .catch(() => setDiagramError('Diagram service unavailable'))
+      .catch((e) => setDiagramError(`Diagram generation failed (${e.message})`))
       .finally(() => setDiagramLoading(false));
-  }, [phase, category, currentIdx, questions]);
+  }, []);
+
+  useEffect(() => {
+    if (phase !== 'active' || category !== 'system-design' || !questions[currentIdx]) return;
+    generateDiagram(questions[currentIdx]);
+  }, [phase, category, currentIdx, questions, generateDiagram]);
 
   const submitAnswer = useCallback(async () => {
     const q = questions[currentIdx];
@@ -627,7 +630,7 @@ export default function PracticePage() {
 
       {/* ═══════════ Nav ═══════════ */}
       <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl" style={{ background: 'linear-gradient(135deg, rgba(178,235,242,0.7) 0%, rgba(179,198,231,0.7) 30%, rgba(197,179,227,0.7) 55%, rgba(212,184,232,0.7) 80%, rgba(225,190,231,0.7) 100%)', height: '56px' }}>
-        <div className="max-w-[70%] mx-auto h-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+        <div className="w-full lg:max-w-[70%] mx-auto h-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2.5 no-underline">
             <CamoraLogo size={36} />
             <span style={{ fontWeight: 700, fontSize: '16px', color: '#111827', fontFamily: "'Comfortaa', sans-serif" }}>Camora</span>
@@ -667,7 +670,7 @@ export default function PracticePage() {
 
       {/* ═══════════ Main Content ═══════════ */}
       <div style={{ paddingTop: 56 }}>
-        <div className="max-w-[70%] mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: 32, paddingBottom: 80 }}>
+        <div className="w-full lg:max-w-[70%] mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: 32, paddingBottom: 80 }}>
 
           {/* ── SETUP PHASE ── */}
           {phase === 'setup' && (
@@ -708,7 +711,7 @@ export default function PracticePage() {
               <div style={{ background: '#fff', border: '1px solid #e3e8ee', borderRadius: 16, padding: 20, marginBottom: 16, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
                 <h2 className="practice-display" style={{ fontSize: 16, fontWeight: 700, color: '#111827', margin: '0 0 14px' }}>Interview Readiness</h2>
                 {/* Top: Readiness score + category bars */}
-                <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr', gap: 24, alignItems: 'center', marginBottom: 14 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', gap: 16, alignItems: 'center', marginBottom: 14 }}>
                   {/* Big readiness number */}
                   <div style={{ textAlign: 'center' }}>
                     <div style={{ position: 'relative', width: 100, height: 100, margin: '0 auto' }}>
@@ -749,7 +752,7 @@ export default function PracticePage() {
                   </div>
                 </div>
                 {/* Bottom: Stats row */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, borderTop: '1px solid #f3f4f6', paddingTop: 12 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: 8, borderTop: '1px solid #f3f4f6', paddingTop: 12 }}>
                   {[
                     { label: 'Completed', value: stats.totalCompleted || 0, color: '#10b981' },
                     { label: 'Day Streak', value: `${stats.streak || 0}`, color: '#f59e0b' },
@@ -771,7 +774,7 @@ export default function PracticePage() {
                 {/* Mode cards */}
                 <div style={{ marginBottom: 20 }}>
                   <label style={{ fontSize: 12, fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8, display: 'block' }}>Mode</label>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10 }}>
                     {MODES.map(m => (
                       <button key={m.id} onClick={() => setMode(m.id)} style={{ padding: '16px', borderRadius: 12, border: mode === m.id ? '2px solid #10b981' : '1px solid #e3e8ee', background: mode === m.id ? '#ecfdf5' : '#fff', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
@@ -786,7 +789,7 @@ export default function PracticePage() {
                 </div>
 
                 {/* Category + Difficulty in same row */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 20 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16, marginBottom: 20 }}>
                   <div style={{ textAlign: 'center' }}>
                     <label style={{ fontSize: 12, fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8, display: 'block' }}>Category</label>
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
@@ -1003,25 +1006,7 @@ export default function PracticePage() {
                           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '30px 20px', gap: 8 }}>
                             <span style={{ fontSize: 12, color: '#9ca3af' }}>{diagramError}</span>
                             <button
-                              onClick={() => {
-                                setDiagramLoading(true);
-                                setDiagramError(null);
-                                const q = questions[currentIdx];
-                                fetch(`${API_URL}/api/diagram/generate`, {
-                                  method: 'POST',
-                                  headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-                                  body: JSON.stringify({ question: `${q.q}: ${q.desc}`, cloudProvider: 'aws', detailLevel: 'overview', direction: 'LR' }),
-                                })
-                                  .then(r => r.json())
-                                  .then(data => {
-                                    if (data.success && data.image_url) {
-                                      const url = data.image_url.startsWith('/') ? `${API_URL}${data.image_url}` : data.image_url;
-                                      setDiagramUrl(url);
-                                    } else setDiagramError('Could not generate diagram');
-                                  })
-                                  .catch(() => setDiagramError('Diagram service unavailable'))
-                                  .finally(() => setDiagramLoading(false));
-                              }}
+                              onClick={() => generateDiagram(questions[currentIdx])}
                               style={{ padding: '6px 16px', fontSize: 11, fontWeight: 600, color: '#10b981', background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: 8, cursor: 'pointer' }}
                             >
                               Retry
@@ -1037,7 +1022,7 @@ export default function PracticePage() {
                     </div>
 
                     {/* Section text areas — 2 columns */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 10 }}>
                       {SD_SECTIONS.map((section, si) => {
                         const val = parts[si] || '';
                         return (
