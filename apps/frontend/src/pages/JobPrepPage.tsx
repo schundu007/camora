@@ -3,6 +3,8 @@ import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { detectRoleFromTitle } from '../data/capra/jobRoleTopicMapping';
 import CamoraLogo from '../components/shared/CamoraLogo';
+import SiteNav from '../components/shared/SiteNav';
+import SiteFooter from '../components/shared/SiteFooter';
 import { useContentAccess } from '../hooks/useContentAccess';
 
 /* ──────────────────────────────── Types ──────────────────────────────── */
@@ -426,21 +428,15 @@ export default function JobPrepPage() {
   /* ── Loading state ── */
   if (loading) {
     return (
-      <div style={{ background: '#f7f8f9', minHeight: '100vh' }}>
-        <nav style={{ background: '#ffffff', borderBottom: '1px solid #e3e8ee', height: '56px' }}>
-          <div className="max-w-4xl mx-auto h-full px-4 sm:px-6 lg:px-8 flex items-center">
-            <Link to="/" className="flex items-center gap-2.5 no-underline">
-              <CamoraLogo size={28} />
-              <span style={{ fontWeight: 700, fontSize: '16px', color: '#111827', fontFamily: "'Comfortaa', sans-serif" }}>Camora</span>
-            </Link>
-          </div>
-        </nav>
-        <div style={{ paddingTop: '56px' }} className="flex items-center justify-center" >
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
+      <div style={{ minHeight: '100vh' }}>
+        <SiteNav />
+        <div style={{ paddingTop: '56px' }} className="flex items-center justify-center">
+          <div className="w-full lg:max-w-[70%] mx-auto px-4 sm:px-6 py-16 text-center">
             <div style={{ width: '48px', height: '48px', border: '4px solid #d1fae5', borderTopColor: '#10b981', borderRadius: '50%', margin: '0 auto 16px' }} className="animate-spin" />
             <p style={{ fontSize: '14px', color: '#6b7280' }}>Loading preparation plan...</p>
           </div>
         </div>
+        <SiteFooter />
       </div>
     );
   }
@@ -448,27 +444,19 @@ export default function JobPrepPage() {
   /* ── Not found state ── */
   if (error === 'not-found') {
     return (
-      <div style={{ background: '#f7f8f9', minHeight: '100vh' }}>
-        <nav style={{ background: '#ffffff', borderBottom: '1px solid #e3e8ee', height: '56px' }}>
-          <div className="max-w-4xl mx-auto h-full px-4 sm:px-6 lg:px-8 flex items-center">
-            <Link to="/" className="flex items-center gap-2.5 no-underline">
-              <CamoraLogo size={28} />
-              <span style={{ fontWeight: 700, fontSize: '16px', color: '#111827', fontFamily: "'Comfortaa', sans-serif" }}>Camora</span>
-            </Link>
-          </div>
-        </nav>
+      <div style={{ minHeight: '100vh' }}>
+        <SiteNav />
         <div style={{ paddingTop: '56px' }}>
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
+          <div className="w-full lg:max-w-[70%] mx-auto px-4 sm:px-6 py-16 text-center">
             <svg width="48" height="48" fill="none" stroke="#9ca3af" viewBox="0 0 24 24" strokeWidth={1.5} style={{ margin: '0 auto 16px' }}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
             </svg>
-            <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#111827', marginBottom: '8px', fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>Job not found</h2>
-            <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '24px' }}>This job listing may have been removed or the link is incorrect.</p>
-            <Link to="/jobs" style={{ fontSize: '14px', fontWeight: 600, color: '#10b981', textDecoration: 'none' }}>
-              Back to Jobs
-            </Link>
+            <h2 className="heading-2" style={{ marginBottom: '8px' }}>Job not found</h2>
+            <p className="text-body" style={{ marginBottom: '24px' }}>This job listing may have been removed or the link is incorrect.</p>
+            <Link to="/jobs" style={{ fontSize: '14px', fontWeight: 600, color: '#10b981', textDecoration: 'none' }}>Back to Jobs</Link>
           </div>
         </div>
+        <SiteFooter />
       </div>
     );
   }
@@ -476,27 +464,19 @@ export default function JobPrepPage() {
   /* ── Error state ── */
   if (error || !job) {
     return (
-      <div style={{ background: '#f7f8f9', minHeight: '100vh' }}>
-        <nav style={{ background: '#ffffff', borderBottom: '1px solid #e3e8ee', height: '56px' }}>
-          <div className="max-w-4xl mx-auto h-full px-4 sm:px-6 lg:px-8 flex items-center">
-            <Link to="/" className="flex items-center gap-2.5 no-underline">
-              <CamoraLogo size={28} />
-              <span style={{ fontWeight: 700, fontSize: '16px', color: '#111827', fontFamily: "'Comfortaa', sans-serif" }}>Camora</span>
-            </Link>
-          </div>
-        </nav>
+      <div style={{ minHeight: '100vh' }}>
+        <SiteNav />
         <div style={{ paddingTop: '56px' }}>
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
+          <div className="w-full lg:max-w-[70%] mx-auto px-4 sm:px-6 py-16 text-center">
             <svg width="48" height="48" fill="none" stroke="#ef4444" viewBox="0 0 24 24" strokeWidth={1.5} style={{ margin: '0 auto 16px' }}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
             </svg>
-            <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#111827', marginBottom: '8px', fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>Something went wrong</h2>
-            <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '24px' }}>{error}</p>
-            <Link to="/jobs" style={{ fontSize: '14px', fontWeight: 600, color: '#10b981', textDecoration: 'none' }}>
-              Back to Jobs
-            </Link>
+            <h2 className="heading-2" style={{ marginBottom: '8px' }}>Something went wrong</h2>
+            <p className="text-body" style={{ marginBottom: '24px' }}>{error}</p>
+            <Link to="/jobs" style={{ fontSize: '14px', fontWeight: 600, color: '#10b981', textDecoration: 'none' }}>Back to Jobs</Link>
           </div>
         </div>
+        <SiteFooter />
       </div>
     );
   }
@@ -506,41 +486,8 @@ export default function JobPrepPage() {
   const studyRounds = buildStudyPath(job);
 
   return (
-    <div style={{ background: '#f7f8f9', minHeight: '100vh' }}>
-
-      {/* ── Navigation ── */}
-      <nav style={{ background: '#ffffff', borderBottom: '1px solid #e3e8ee', height: '56px', position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50 }}>
-        <div className="max-w-4xl mx-auto h-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2.5 no-underline">
-            <CamoraLogo size={28} />
-            <span style={{ fontWeight: 700, fontSize: '16px', color: '#111827', fontFamily: "'Comfortaa', sans-serif" }}>Camora</span>
-          </Link>
-          <div className="hidden sm:flex items-center gap-1">
-            {[
-              { label: 'Apply', href: '/jobs' },
-              { label: 'Prepare', href: '/capra/prepare' },
-              { label: 'Practice', href: '/capra/practice' },
-              { label: 'Attend', href: '/lumora' },
-            ].map((link) => (
-              <Link
-                key={link.label}
-                to={link.href}
-                style={{
-                  fontSize: '14px',
-                  fontWeight: 500,
-                  padding: '6px 12px',
-                  borderRadius: '6px',
-                  textDecoration: 'none',
-                  color: link.label === 'Prepare' ? '#10b981' : '#4b5563',
-                  borderBottom: link.label === 'Prepare' ? '2px solid #10b981' : '2px solid transparent',
-                }}
-              >
-                {link.label}
-              </Link>
-            ))}
-          </div>
-        </div>
-      </nav>
+    <div style={{ minHeight: '100vh' }}>
+      <SiteNav />
 
       {/* ── Page Content ── */}
       <div style={{ paddingTop: '56px' }}>
@@ -1157,6 +1104,7 @@ export default function JobPrepPage() {
           </div>
         </div>
       )}
+      <SiteFooter />
     </div>
   );
 }
