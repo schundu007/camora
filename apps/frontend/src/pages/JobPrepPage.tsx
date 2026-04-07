@@ -1069,18 +1069,19 @@ export default function JobPrepPage() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
               {[
-                { name: 'Starter', price: '$29', period: '/mo', features: ['Unlimited prep & practice', '10 live sessions/mo', 'AI explanations', 'System design diagrams'] },
-                { name: 'Pro', price: '$49', period: '/mo', features: ['Everything in Starter', 'Unlimited live sessions', 'Job matching & auto apply', 'Company-specific prep'], popular: true },
-                { name: 'Annual', price: '$19', period: '/mo', features: ['Everything in Pro', 'Save 61% vs monthly', 'Locked-in pricing', 'Priority support'], best: true },
+                { name: 'Starter', price: '$29', period: '/mo', features: ['Unlimited prep & practice', '10 live sessions/mo', 'AI explanations', 'System design diagrams'], priceId: 'price_1THhzGITUCNxtMxll78umJSX' },
+                { name: 'Pro', price: '$49', period: '/mo', features: ['Everything in Starter', 'Unlimited live sessions', 'Job matching & auto apply', 'Company-specific prep'], popular: true, priceId: 'price_1THhzhITUCNxtMxl1QSxi4Kj' },
+                { name: 'Annual', price: '$19', period: '/mo', features: ['Everything in Pro', 'Save 61% vs monthly', 'Locked-in pricing', 'Priority support'], best: true, priceId: 'price_1THiBUITUCNxtMxlAHUvPut7' },
               ].map(plan => (
-                <div key={plan.name} className="relative rounded-2xl p-4 flex flex-col" style={plan.popular ? {
-                  border: '2px solid transparent', backgroundImage: 'linear-gradient(white, white), linear-gradient(135deg, #34d399, #38bdf8, #818cf8)', backgroundOrigin: 'border-box', backgroundClip: 'padding-box, border-box', boxShadow: '0 4px 16px rgba(99,102,241,0.15)',
-                } : plan.best ? {
-                  border: '2px solid transparent', backgroundImage: 'linear-gradient(white, white), linear-gradient(135deg, #fbbf24, #f59e0b, #d97706)', backgroundOrigin: 'border-box', backgroundClip: 'padding-box, border-box', boxShadow: '0 4px 16px rgba(245,158,11,0.15)',
-                } : { border: '1.5px solid #e3e8ee' }}>
-                  {plan.popular && <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full text-[9px] font-bold text-white uppercase tracking-wider" style={{ background: 'linear-gradient(135deg, #34d399, #818cf8)' }}>Popular</span>}
-                  {plan.best && <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full text-[9px] font-bold text-white uppercase tracking-wider" style={{ background: 'linear-gradient(135deg, #fbbf24, #d97706)' }}>Best Value</span>}
-                  <h4 className="text-sm font-bold text-gray-900">{plan.name}</h4>
+                <div key={plan.name} className="rounded-2xl p-4 flex flex-col" style={{
+                  border: plan.popular ? '2px solid #10b981' : plan.best ? '2px solid #f59e0b' : '1.5px solid #e3e8ee',
+                  background: 'white',
+                }}>
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-bold text-gray-900">{plan.name}</h4>
+                    {plan.popular && <span className="px-2 py-0.5 rounded-full text-[8px] font-bold text-white uppercase" style={{ background: 'linear-gradient(135deg, #10b981, #06b6d4)' }}>Popular</span>}
+                    {plan.best && <span className="px-2 py-0.5 rounded-full text-[8px] font-bold text-white uppercase" style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}>Best Value</span>}
+                  </div>
                   <div className="mt-1 flex items-baseline gap-0.5">
                     <span className="text-2xl font-bold text-gray-900">{plan.price}</span>
                     <span className="text-xs text-gray-500">{plan.period}</span>
@@ -1092,9 +1093,28 @@ export default function JobPrepPage() {
                       </li>
                     ))}
                   </ul>
-                  <Link to="/pricing" className={`mt-3 block text-center py-2 rounded-lg text-xs font-semibold transition-all ${plan.popular ? 'text-white' : plan.best ? 'text-white' : 'text-gray-700 border border-gray-300 hover:border-gray-400'}`} style={plan.popular ? { background: 'linear-gradient(135deg, #10b981, #3b82f6, #8b5cf6)' } : plan.best ? { background: 'linear-gradient(135deg, #fbbf24, #d97706)' } : {}}>
+                  <button
+                    onClick={async () => {
+                      try {
+                        const API = import.meta.env.VITE_CAMORA_API_URL || import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
+                        const authToken = document.cookie.split(';').map(c => c.trim()).find(c => c.startsWith('cariara_sso='))?.split('=')[1];
+                        if (!authToken) { window.location.href = '/login'; return; }
+                        const resp = await fetch(`${API}/api/v1/billing/checkout`, {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+                          body: JSON.stringify({ price_id: plan.priceId, success_url: window.location.href, cancel_url: window.location.href }),
+                        });
+                        if (!resp.ok) { window.location.href = '/pricing'; return; }
+                        const data = await resp.json();
+                        if (data.url) window.location.href = data.url;
+                        else window.location.href = '/pricing';
+                      } catch { window.location.href = '/pricing'; }
+                    }}
+                    className={`mt-3 w-full py-2 rounded-lg text-xs font-semibold cursor-pointer transition-all ${plan.popular ? 'text-white' : plan.best ? 'text-white' : 'text-gray-700 border border-gray-300 hover:border-gray-400'}`}
+                    style={plan.popular ? { background: 'linear-gradient(135deg, #10b981, #06b6d4)' } : plan.best ? { background: 'linear-gradient(135deg, #f59e0b, #d97706)' } : {}}
+                  >
                     Get {plan.name}
-                  </Link>
+                  </button>
                 </div>
               ))}
             </div>

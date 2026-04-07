@@ -333,9 +333,9 @@ export default function TopicDetail({
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                   {[
-                    { name: 'Starter', price: '$29', period: '/mo', features: ['Unlimited topics', '10 live sessions/mo', 'AI explanations'], planId: 'monthly' },
-                    { name: 'Pro', price: '$49', period: '/mo', features: ['Everything in Starter', 'Unlimited sessions', 'Company-specific prep'], popular: true, planId: 'quarterly_pro' },
-                    { name: 'Annual', price: '$19', period: '/mo', features: ['Everything in Pro', 'Save 61%', 'Priority support'], best: true, planId: 'annual' },
+                    { name: 'Starter', price: '$29', period: '/mo', features: ['Unlimited topics', '10 live sessions/mo', 'AI explanations'], priceId: 'price_1THhzGITUCNxtMxll78umJSX' },
+                    { name: 'Pro', price: '$49', period: '/mo', features: ['Everything in Starter', 'Unlimited sessions', 'Company-specific prep'], popular: true, priceId: 'price_1THhzhITUCNxtMxl1QSxi4Kj' },
+                    { name: 'Annual', price: '$19', period: '/mo', features: ['Everything in Pro', 'Save 61%', 'Priority support'], best: true, priceId: 'price_1THiBUITUCNxtMxlAHUvPut7' },
                   ].map(plan => (
                     <div key={plan.name} className="rounded-xl p-3 flex flex-col" style={{
                       border: plan.popular ? '2px solid #10b981' : plan.best ? '2px solid #f59e0b' : '1.5px solid #e3e8ee',
@@ -358,12 +358,13 @@ export default function TopicDetail({
                       <button
                         onClick={async () => {
                           try {
-                            const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
-                            const resp = await fetch(`${API_URL}/api/billing/checkout`, {
+                            const API_URL = import.meta.env.VITE_CAMORA_API_URL || import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
+                            const resp = await fetch(`${API_URL}/api/v1/billing/checkout`, {
                               method: 'POST',
                               headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-                              body: JSON.stringify({ plan: plan.planId, success_url: window.location.href, cancel_url: window.location.href }),
+                              body: JSON.stringify({ price_id: plan.priceId, success_url: window.location.href, cancel_url: window.location.href }),
                             });
+                            if (!resp.ok) { window.location.href = '/pricing'; return; }
                             const data = await resp.json();
                             if (data.url) window.location.href = data.url;
                             else window.location.href = '/pricing';
