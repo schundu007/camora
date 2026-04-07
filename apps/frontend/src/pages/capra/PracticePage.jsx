@@ -758,9 +758,9 @@ export default function PracticePage() {
 
                 {/* Category + Difficulty in same row */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 20 }}>
-                  <div>
+                  <div style={{ textAlign: 'center' }}>
                     <label style={{ fontSize: 12, fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8, display: 'block' }}>Category</label>
-                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
                       {CATEGORIES.map(c => (
                         <button key={c} onClick={() => setCategory(c)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 18px', borderRadius: 20, border: category === c ? '1px solid #10b981' : '1px solid #e3e8ee', background: category === c ? '#ecfdf5' : '#fff', color: category === c ? '#059669' : '#4b5563', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>
                           <Icon name={catIcon(c)} size={14} />
@@ -769,9 +769,9 @@ export default function PracticePage() {
                       ))}
                     </div>
                   </div>
-                  <div>
+                  <div style={{ textAlign: 'center' }}>
                     <label style={{ fontSize: 12, fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8, display: 'block' }}>Difficulty</label>
-                    <div style={{ display: 'flex', gap: 8 }}>
+                    <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
                       {DIFFICULTIES.map(d => {
                         const dc2 = diffColor(d);
                         return (
