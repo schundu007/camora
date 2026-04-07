@@ -717,3 +717,9 @@ main, [role="main"] {
   color: #8b5cf6;
 }
 
+
+/* Mobile: disable pricing card scale to prevent overflow */
+@media (max-width: 640px) {
+  .pricing-card-popular { transform: none !important; }
+  .pricing-card-annual { transform: none !important; }
+}

@@ -438,7 +438,7 @@ export default function LandingPage() {
 
       {/* ── NAV ── */}
       <nav className="fixed top-0 inset-x-0 z-50 backdrop-blur-xl" style={{ background: 'linear-gradient(135deg, rgba(178,235,242,0.7) 0%, rgba(179,198,231,0.7) 30%, rgba(197,179,227,0.7) 55%, rgba(212,184,232,0.7) 80%, rgba(225,190,231,0.7) 100%)' }}>
-        <div className="max-w-[70%] mx-auto flex items-center justify-between px-6 h-16">
+        <div className="w-full lg:max-w-[70%] mx-auto flex items-center justify-between px-4 sm:px-6 h-14 sm:h-16">
           <Link to="/" className="flex items-center gap-2.5">
             <CamoraLogo size={40} />
             <span className="text-lg font-bold tracking-tight" style={{ fontFamily: "'Comfortaa', sans-serif" }}>Camora</span>
@@ -506,7 +506,7 @@ export default function LandingPage() {
 
       {/* ── HERO ── */}
       <section className="relative pt-24 pb-10 md:pt-32 md:pb-14 px-6" style={{ zIndex: 1 }}>
-        <div className="max-w-[70%] mx-auto text-center">
+        <div className="w-full lg:max-w-[70%] mx-auto text-center">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 border border-emerald-200/60 mb-6">
               <span className="relative flex h-2 w-2">
@@ -549,7 +549,7 @@ export default function LandingPage() {
 
       {/* ── PROCESS — Accordion (MetAntz-style) ── */}
       <section id="process" className="px-6 py-12 md:py-16" style={{ zIndex: 1 }}>
-        <div className="max-w-[70%] mx-auto">
+        <div className="w-full lg:max-w-[70%] mx-auto">
           <div className="grid lg:grid-cols-2 gap-16 lg:gap-24 items-stretch">
             <FadeIn>
               <span className="gradient-text text-sm font-bold tracking-[0.2em] uppercase">Our Process</span>
@@ -609,14 +609,14 @@ export default function LandingPage() {
 
       {/* ── DEMO — Videos ── */}
       <section className="px-6 pb-10 md:pb-16" style={{ zIndex: 1 }}>
-        <FadeIn className="max-w-[70%] mx-auto">
+        <FadeIn className="w-full lg:max-w-[70%] mx-auto">
           <BrowserChrome url="camora.cariara.com/lumora">
             <div className="aspect-video bg-gray-100">
               <video src="/demo-lumora.mp4" autoPlay loop muted playsInline title="Lumora live interview demo" className="w-full h-full object-cover" />
             </div>
           </BrowserChrome>
         </FadeIn>
-        <div className="max-w-[70%] mx-auto mt-6 grid md:grid-cols-3 gap-4">
+        <div className="w-full lg:max-w-[70%] mx-auto mt-6 grid md:grid-cols-3 gap-4">
           {[
             { url: 'camora.cariara.com/capra', src: '/demo-capra.mp4', label: 'Dashboard' },
             { url: 'camora.cariara.com/capra/prepare', src: '/demo-capra-topic.mp4', label: 'Study Topics' },
@@ -644,7 +644,7 @@ export default function LandingPage() {
 
       {/* ── JOB URL ANALYSIS — Highlighted Feature ── */}
       <section className="px-6 py-12 md:py-16" style={{ zIndex: 1 }}>
-        <div className="max-w-[70%] mx-auto">
+        <div className="w-full lg:max-w-[70%] mx-auto">
           <FadeIn className="text-center mb-10">
             <span className="inline-flex items-center gap-2 text-sm font-bold tracking-[0.15em] uppercase px-5 py-2 rounded-full border border-emerald-300 bg-white text-emerald-700 shadow-sm">
               <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" /></svg>
@@ -707,7 +707,7 @@ export default function LandingPage() {
 
       {/* ── PREPARATION AT SCALE — Donut + Topic Cards ── */}
       <section className="px-6 py-12 md:py-16" style={{ zIndex: 1 }}>
-        <div className="max-w-[70%] mx-auto">
+        <div className="w-full lg:max-w-[70%] mx-auto">
           <FadeIn className="text-center mb-10">
             <span className="gradient-text text-sm font-bold tracking-[0.2em] uppercase">Preparation at Scale</span>
             <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mt-4">Everything you need to prepare.</h2>
@@ -718,7 +718,7 @@ export default function LandingPage() {
 
       {/* ── WHAT SETS CAMORA APART — Feature Groups ── */}
       <section className="px-6 py-12 md:py-16" style={{ zIndex: 1 }}>
-        <div className="max-w-[70%] mx-auto">
+        <div className="w-full lg:max-w-[70%] mx-auto">
           <FadeIn className="text-center mb-20">
             <span className="inline-block text-sm font-bold tracking-[0.2em] uppercase px-4 py-1.5 rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700">ONLY ON CAMORA</span>
             <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mt-6">What no other interview tool can do.</h2>
@@ -753,7 +753,7 @@ export default function LandingPage() {
 
       {/* ── CAMORA VS COMPETITORS — Bar Chart ── */}
       <section ref={compRef} className="px-6 py-12 md:py-16" style={{ zIndex: 1 }}>
-        <div className="max-w-[70%] mx-auto">
+        <div className="w-full lg:max-w-[70%] mx-auto">
           <FadeIn className="text-center mb-10">
             <span className="gradient-text text-sm font-bold tracking-[0.2em] uppercase">Head-to-Head</span>
             <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mt-4">See why engineers switch to Camora.</h2>
