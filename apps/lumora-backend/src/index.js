@@ -165,9 +165,25 @@ app.use((err, req, res, next) => {
 // Start
 const PORT = config.port;
 runMigrations().then(() => {
-  app.listen(PORT, '0.0.0.0', () => {
+  const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`Lumora backend running on port ${PORT}`);
   });
+
+  // Graceful shutdown
+  const shutdown = async (signal) => {
+    console.log(`${signal} received, shutting down gracefully...`);
+    server.close(() => {
+      console.log('HTTP server closed');
+      process.exit(0);
+    });
+    setTimeout(() => { console.error('Forced shutdown'); process.exit(1); }, 10000);
+  };
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('SIGINT', () => shutdown('SIGINT'));
+});
+
+process.on('unhandledRejection', (reason) => {
+  console.error('Unhandled rejection:', reason);
 });
 
 export default app;

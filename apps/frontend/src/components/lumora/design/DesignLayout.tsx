@@ -69,7 +69,7 @@ function parseTagsToDesign(byType: Record<string, string>): DesignResult | null 
     byType.SCALEMATH.split('\n').filter(l => l.includes(':')).forEach(line => {
       const [key, ...rest] = line.split(':');
       const value = rest.join(':').trim();
-      if (key?.trim() && value) sd.scaleEstimates![key.trim()] = value;
+      if (key?.trim() && value && sd.scaleEstimates) sd.scaleEstimates[key.trim()] = value;
     });
   }
 

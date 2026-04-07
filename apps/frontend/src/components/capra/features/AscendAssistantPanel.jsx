@@ -879,7 +879,7 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
         }
       }, 1000);
 
-      durationIntervalRef.current = { duration: durationInterval };
+      durationIntervalRef.current = durationInterval;
 
       isRecordingRef.current = true;
       isPausedRef.current = false;

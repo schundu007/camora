@@ -19,7 +19,7 @@ export default function SiteFooter() {
         </div>
         <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1">
           {NAV_LINKS.map((link) => (
-            <Link key={link.label} to={link.href} className="text-[12px] text-gray-500 hover:text-gray-900 transition-colors">{link.label}</Link>
+            <Link key={link.label} to={link.href} className="text-[12px] text-gray-500 hover:text-gray-900 transition-colors py-1 px-1">{link.label}</Link>
           ))}
           <a href="mailto:support@cariara.com" className="text-[12px] text-gray-500 hover:text-gray-900 transition-colors">Support</a>
         </div>

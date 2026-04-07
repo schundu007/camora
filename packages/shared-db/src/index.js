@@ -18,11 +18,17 @@ export function getPool() {
 }
 
 export async function query(text, params) {
-  const client = await getPool().connect();
+  let client;
+  try {
+    client = await getPool().connect();
+  } catch (err) {
+    console.error('[shared-db] Connection failed:', err.message);
+    throw err;
+  }
   try {
     return await client.query(text, params);
   } finally {
-    client.release();
+    if (client) client.release();
   }
 }
 
