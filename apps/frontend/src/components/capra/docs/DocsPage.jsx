@@ -54,8 +54,9 @@ const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.co
  */
 export default function DocsPage({ onBack }) {
   const { isMobile } = useIsMobile();
-  const { openSidebar, setActiveSection } = useAppShell();
+  const { setActiveSection } = useAppShell();
   const { user } = useAuth();
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const contentAccess = useContentAccess();
   const routerLocation = useLocation();
   const isElectron = false; // Electron removed in unified frontend
@@ -523,36 +524,21 @@ export default function DocsPage({ onBack }) {
       <div className="relative min-h-screen flex">
           {/* Center Content */}
           <div className={`flex-1 min-w-0 mx-auto w-full lg:max-w-[70%] ${isMobile ? 'px-3' : 'px-10'}`}>
-            {/* Shared Nav — hidden on mobile, breadcrumb bar takes over */}
-            <div className="hidden md:block -mx-[calc((100vw-100%)/2)] px-[calc((100vw-100%)/2)]">
+            {/* Site Nav — same as all other pages */}
+            <div className="-mx-[calc((100vw-100%)/2)] px-[calc((100vw-100%)/2)]">
               <SiteNav />
             </div>
-            {/* Breadcrumb Bar — on mobile this is the primary nav */}
-            <div className="sticky top-0 md:top-14 z-20 px-3 sm:px-4 py-3 sm:py-4 flex items-center justify-between gap-2 safe-top bg-white border-b border-[#e3e8ee]" style={{ backdropFilter: 'blur(12px)', background: 'rgba(255,255,255,0.95)' }}>
-              {/* Mobile: logo + hamburger */}
-              {isMobile && (
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <a href="/" className="flex items-center gap-1.5">
-                    <CamoraLogo size={28} />
-                  </a>
-                  {selectedTopic ? (
-                    <button
-                      onClick={() => setSelectedTopic(null)}
-                      className="flex items-center gap-1 px-2 py-1 rounded-lg text-emerald-700 bg-emerald-50 border border-emerald-200 font-semibold text-xs transition-colors active:bg-emerald-100"
-                    >
-                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
-                      Back
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => openSidebar()}
-                      className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors"
-                      aria-label="Open navigation"
-                    >
-                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg>
-                    </button>
-                  )}
-                </div>
+            {/* Breadcrumb Bar — secondary bar below SiteNav */}
+            <div className="sticky top-14 z-20 px-3 sm:px-4 py-2 sm:py-3 flex items-center justify-between gap-2 bg-white border-b border-[#e3e8ee]">
+              {/* Mobile: back button when viewing a topic */}
+              {isMobile && selectedTopic && (
+                <button
+                  onClick={() => setSelectedTopic(null)}
+                  className="flex-shrink-0 flex items-center gap-1 px-2 py-1 rounded-lg text-emerald-700 bg-emerald-50 border border-emerald-200 font-semibold text-xs transition-colors active:bg-emerald-100"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+                  Back
+                </button>
               )}
               {/* Breadcrumb */}
               <div className="flex items-center gap-2 text-sm min-w-0 flex-1">
@@ -565,7 +551,7 @@ export default function DocsPage({ onBack }) {
                     <span>Back</span>
                   </button>
                 )}
-                <button onClick={() => setSelectedTopic(null)} className="text-gray-400 hover:text-gray-900 transition-colors cursor-pointer landing-body font-medium">Learn</button>
+                <a href="/capra/prepare" className="text-gray-400 hover:text-gray-900 transition-colors cursor-pointer landing-body font-medium no-underline">Prepare</a>
                 <Icon name="chevronRight" size={14} className="text-gray-300" />
                 {selectedTopic && topicDetails ? (
                   <>
