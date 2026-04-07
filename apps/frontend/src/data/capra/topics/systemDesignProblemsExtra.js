@@ -5625,7 +5625,26 @@ GROUP BY user_id, genre
       'Feature Store with tiered freshness (real-time, near-real-time, batch) for optimal latency',
       'Exploration budget (5-10% of slots) with contextual bandits for cold-start items',
       'Offline-online consistency: same feature definitions used in training and serving to prevent skew'
-    ]
+    ],
+    edgeCases: [
+      { scenario: 'New user with no interaction history (cold start)', impact: 'Collaborative filtering produces empty or random recommendations, driving user churn', mitigation: 'Fall back to content-based and popularity-based recommendations, use onboarding preference surveys to bootstrap user profile' },
+      { scenario: 'Popularity bias drowning out long-tail items', impact: 'Popular items dominate all recommendation slots, niche content never surfaces', mitigation: 'Apply inverse propensity scoring, reserve exploration slots (5-10%) for long-tail items using contextual bandits' },
+      { scenario: 'Feedback loop amplifying filter bubbles', impact: 'Users only see content similar to past clicks, reducing diversity and engagement over time', mitigation: 'Inject diversity constraints in re-ranking, track and optimize for long-term engagement metrics not just click-through rate' },
+      { scenario: 'Item catalog update with millions of new products', impact: 'Embedding index becomes stale, new items have no vectors and are invisible to ANN retrieval', mitigation: 'Incremental index updates with real-time embedding generation for new items, use content features as fallback until collaborative signals accumulate' },
+      { scenario: 'Adversarial click farms inflating item signals', impact: 'Fraudulent engagement data corrupts collaborative filtering models', mitigation: 'Anomaly detection on interaction patterns, weight interactions by user trust score, use implicit signals (dwell time) that are harder to fake' },
+    ],
+    tradeoffs: [
+      { decision: 'Collaborative filtering vs content-based filtering', pros: 'Collaborative captures latent preferences; content-based works for cold-start items', cons: 'Collaborative needs large interaction data; content-based misses serendipitous discoveries', recommendation: 'Hybrid approach: collaborative for warm users, content-based for cold-start, blend scores in ranking layer' },
+      { decision: 'Batch model retraining vs online learning', pros: 'Batch is simpler and reproducible; online learning adapts to trends in real time', cons: 'Batch models are stale between retrains; online learning is complex and prone to instability', recommendation: 'Batch retraining daily for base model, real-time feature updates via streaming pipeline for session-aware signals' },
+      { decision: 'Pre-computed recommendations vs real-time inference', pros: 'Pre-computed is fast and cheap to serve; real-time adapts to current context', cons: 'Pre-computed cannot react to session signals; real-time adds serving latency and cost', recommendation: 'Pre-compute candidate sets offline, re-rank in real time using session features for the best balance of freshness and latency' },
+    ],
+    layeredDesign: [
+      { name: 'Client Layer', purpose: 'Display personalized feeds and capture user interaction signals', components: ['Web/Mobile Client', 'Event Tracker (clicks, views, dwell time)', 'A/B Test SDK'] },
+      { name: 'API & Orchestration Layer', purpose: 'Route recommendation requests and blend results from multiple sources', components: ['Recommendation API', 'Experiment Router', 'Result Blender', 'Feature Gateway'] },
+      { name: 'Candidate Generation Layer', purpose: 'Retrieve a broad set of relevant items from multiple retrieval sources', components: ['Collaborative Filtering (ANN/Milvus)', 'Content-Based Retrieval', 'Trending/Popularity Service', 'Two-Tower Embedding Model'] },
+      { name: 'Ranking & Re-Ranking Layer', purpose: 'Score and re-order candidates using ML models and business rules', components: ['Ranking Model (TF Serving)', 'Diversity Re-Ranker', 'Business Rules Engine', 'Exploration/Exploitation Module'] },
+      { name: 'Data & Training Layer', purpose: 'Store features, train models, and process interaction streams', components: ['Feature Store (Redis + DynamoDB)', 'Kafka + Flink (streaming)', 'Spark (batch training)', 'Model Registry'] },
+    ],
   },
 
   // ─── 22. ChatGPT / LLM System ──────────────────────────────────────
@@ -5918,7 +5937,24 @@ GPU Cluster (thousands of GPUs):
       'KV-cache affinity routing for multi-turn conversations avoiding redundant prefill',
       'Separate prefill and decode GPU pools for workload-specific optimization',
       'Priority-based request scheduling with graceful degradation under overload'
-    ]
+    ],
+    edgeCases: [
+      { scenario: 'GPU out-of-memory during long context inference', impact: 'Request fails mid-generation, wasting compute and degrading user experience', mitigation: 'Implement KV-cache offloading to CPU/NVMe, set max context limits, use PagedAttention for memory efficiency' },
+      { scenario: 'Prompt injection bypassing safety filters', impact: 'Model produces harmful or policy-violating content', mitigation: 'Multi-layer filtering (input classifier + output classifier), constitutional AI guardrails, human-in-the-loop for edge cases' },
+      { scenario: 'Thundering herd after model update deployment', impact: 'All cached KV-caches invalidated simultaneously, causing latency spike', mitigation: 'Rolling deployment across GPU fleet, warm up new model instances before routing traffic, keep old model as fallback' },
+      { scenario: 'Token generation stuck in repetition loop', impact: 'Response consumes max tokens with repetitive content, wasting compute', mitigation: 'Implement repetition penalty, frequency penalty, and early termination on repetition detection' },
+    ],
+    tradeoffs: [
+      { decision: 'Larger model vs smaller fine-tuned model', pros: 'Large models handle diverse tasks; small fine-tuned models are cheaper and faster', cons: 'Large models cost 10-100x more per token; small models fail on out-of-distribution queries', recommendation: 'Route simple queries to small models, complex/creative queries to large models using a classifier' },
+      { decision: 'Streaming vs batch response', pros: 'Streaming gives perceived low latency; batch allows full response optimization', cons: 'Streaming complicates error handling; batch has high time-to-first-token', recommendation: 'Stream by default for chat, batch for API integrations needing complete responses' },
+      { decision: 'Shared GPU cluster vs dedicated instances', pros: 'Shared maximizes utilization; dedicated gives predictable latency', cons: 'Shared causes noisy-neighbor issues; dedicated wastes idle capacity', recommendation: 'Shared for batch/async workloads, dedicated for latency-sensitive real-time chat' },
+    ],
+    layeredDesign: [
+      { name: 'Client Layer', purpose: 'Chat interface, streaming display, and conversation management', components: ['Web/Mobile Client', 'SSE/WebSocket Handler', 'Conversation Store'] },
+      { name: 'API & Routing Layer', purpose: 'Request routing, rate limiting, and model selection', components: ['API Gateway', 'Model Router', 'Rate Limiter', 'Safety Classifier'] },
+      { name: 'Inference Layer', purpose: 'Run model inference with optimized serving', components: ['vLLM/TensorRT-LLM', 'KV-Cache Manager', 'Batch Scheduler', 'GPU Fleet'] },
+      { name: 'Data & Feedback Layer', purpose: 'Store conversations, collect feedback, and fine-tune', components: ['Conversation DB', 'Feedback Pipeline', 'RLHF Training', 'Prompt Cache (Redis)'] },
+    ],
   },
 
   // ─── 23. Deployment System ──────────────────────────────────────────
@@ -6236,7 +6272,24 @@ GREEN becomes active, BLUE becomes standby
       'GitOps model: deployment desired state in Git for auditability and reproducibility',
       'Multi-region sequential rollout with bake time for blast radius containment',
       'Feature flags decoupled from deployment for independent release control'
-    ]
+    ],
+    edgeCases: [
+      { scenario: 'Canary deployment passes metrics but causes data corruption in background jobs', impact: 'Silent data integrity issues spread to production before detection', mitigation: 'Include data validation checks in canary analysis, run shadow traffic through data pipelines, add schema compatibility verification pre-deploy' },
+      { scenario: 'Circular dependency between two services deploying simultaneously', impact: 'Service A v2 requires B v2, but B v2 requires A v2, creating a deadlock', mitigation: 'Enforce backward-compatible API contracts, deploy with feature flags disabled, use dependency graph analysis to sequence rollouts' },
+      { scenario: 'Database migration fails mid-deployment and rollback needed', impact: 'New code expects new schema, old code expects old schema, both break during mixed state', mitigation: 'Use expand-contract migration pattern: add new columns first, deploy code that handles both, then remove old columns in a later deploy' },
+      { scenario: 'Region-wide deployment during peak traffic hours', impact: 'Increased error rates and latency during container restarts affect user experience', mitigation: 'Enforce deployment windows per region based on traffic patterns, require manual approval for peak-hour deploys, use traffic draining before instance termination' },
+    ],
+    tradeoffs: [
+      { decision: 'Blue-green vs canary deployment', pros: 'Blue-green gives instant rollback; canary limits blast radius to small traffic percentage', cons: 'Blue-green requires 2x infrastructure; canary rollback is slower since bad code served to some users', recommendation: 'Canary for most services (cost-efficient), blue-green for critical stateless services where instant rollback is essential' },
+      { decision: 'GitOps (pull-based) vs push-based deployment', pros: 'GitOps provides auditability and declarative state; push-based is simpler and faster', cons: 'GitOps adds reconciliation lag; push-based lacks audit trail and drift detection', recommendation: 'GitOps for production environments, push-based for development and staging where speed matters more' },
+      { decision: 'Shared CI build farm vs per-team build infrastructure', pros: 'Shared amortizes cost and standardizes builds; per-team gives autonomy and isolation', cons: 'Shared creates bottlenecks and noisy-neighbor issues; per-team duplicates infrastructure and expertise', recommendation: 'Shared build farm with per-team resource quotas and priority queues to balance efficiency and fairness' },
+    ],
+    layeredDesign: [
+      { name: 'Developer Interface Layer', purpose: 'Git integration, PR triggers, and deployment dashboards', components: ['Git Webhook Handler', 'Deployment Dashboard', 'CLI Tool', 'Slack Notifications'] },
+      { name: 'CI/CD Pipeline Layer', purpose: 'Build artifacts, run tests, and produce deployable images', components: ['Build Farm', 'Test Runner', 'Container Registry', 'Artifact Cache'] },
+      { name: 'Deployment Orchestration Layer', purpose: 'Execute deployment strategies and manage rollout state', components: ['Deployment Controller', 'Canary Analysis Engine', 'Rollback Manager', 'Feature Flag Service'] },
+      { name: 'Infrastructure Layer', purpose: 'Manage compute resources, routing, and health monitoring', components: ['Service Mesh (Envoy/Istio)', 'Container Orchestrator (K8s)', 'Load Balancer', 'Prometheus + Grafana'] },
+    ],
   },
 
   // ─── 24. Distributed Search ─────────────────────────────────────────
@@ -6549,7 +6602,24 @@ Phase 3 (Fetch):
 
     staticDiagrams: [
       { id: 'elasticsearch-use-cases', title: 'ElasticSearch Use Cases', description: 'Full-text search, real-time analytics, log analysis, ML, geo-data, and SIEM', src: '/diagrams/distributed-search/elasticsearch-use-cases.svg', type: 'architecture' }
-    ]
+    ],
+    edgeCases: [
+      { scenario: 'Hot shard receiving disproportionate query traffic', impact: 'Single data node becomes bottleneck, causing query timeouts and cluster-wide latency increase', mitigation: 'Use routing-aware shard allocation, add replicas for hot shards, implement adaptive replica selection to spread read load' },
+      { scenario: 'Segment merge storm during heavy indexing', impact: 'Merge I/O saturates disk, competing with search queries for resources', mitigation: 'Throttle merge bandwidth, schedule large merges during off-peak hours, use separate I/O threads for merging vs searching' },
+      { scenario: 'Mapping explosion from dynamic field creation', impact: 'Cluster state grows unbounded, master node OOM, new index creation fails', mitigation: 'Set strict mapping limits, disable dynamic mapping for untrusted input, use flattened field type for arbitrary key-value data' },
+      { scenario: 'Split-brain during network partition between master-eligible nodes', impact: 'Two masters accept conflicting writes, causing data divergence and corruption', mitigation: 'Configure minimum_master_nodes to quorum (N/2+1), use dedicated master nodes, implement fencing to isolate partitioned masters' },
+    ],
+    tradeoffs: [
+      { decision: 'Real-time indexing vs batch indexing', pros: 'Real-time makes documents searchable in seconds; batch gives higher throughput and fewer segment merges', cons: 'Real-time creates many small segments degrading search performance; batch adds latency before documents are searchable', recommendation: 'Real-time with 1-second refresh interval for user-facing search, batch bulk API for log ingestion and analytics workloads' },
+      { decision: 'More shards (fine-grained) vs fewer shards (coarse-grained)', pros: 'More shards enable parallelism and granular scaling; fewer shards reduce coordination overhead', cons: 'More shards increase cluster state size and per-query fan-out cost; fewer shards limit write throughput', recommendation: 'Target 20-40GB per shard, shard count based on data volume, use time-based indices with rollover for growing datasets' },
+      { decision: 'Denormalized documents vs parent-child relationships', pros: 'Denormalized gives fast single-query retrieval; parent-child supports independent updates', cons: 'Denormalized requires reindexing on any field change; parent-child adds join overhead and requires co-located shards', recommendation: 'Denormalize for read-heavy search workloads, use parent-child only when update frequency of nested data is very high' },
+    ],
+    layeredDesign: [
+      { name: 'Client Layer', purpose: 'Accept search and indexing requests via REST API', components: ['REST API (HTTP)', 'Query DSL Parser', 'Bulk Indexing API', 'Client Libraries'] },
+      { name: 'Coordination Layer', purpose: 'Route queries to shards and merge results', components: ['Coordinating Nodes', 'Scatter-Gather Engine', 'Query Cache', 'Cluster State Manager'] },
+      { name: 'Data Node Layer', purpose: 'Store index shards and execute local search operations', components: ['Inverted Index (Lucene)', 'Translog (WAL)', 'Segment Merger', 'Field Data Cache'] },
+      { name: 'Cluster Management Layer', purpose: 'Maintain cluster health, rebalance shards, and manage masters', components: ['Master Nodes', 'Shard Allocation Service', 'ZooKeeper/etcd', 'Snapshot & Restore'] },
+    ],
   },
 
   // ─── 25. Blob Store ─────────────────────────────────────────────────
@@ -6868,7 +6938,25 @@ Client with 1Gbps connection uploading 1TB file:
       'Rack and AZ-aware fragment placement for correlated failure protection',
       'Strong consistency via Raft for metadata, background scrubbing for data integrity',
       'Separate prefix index for LIST operations since hash-sharded metadata is unordered'
-    ]
+    ],
+    edgeCases: [
+      { scenario: 'Erasure-coded fragment on failed disk passes checksum but returns corrupted data', impact: 'Silent data corruption served to client, potentially undetected for months', mitigation: 'End-to-end checksums verified on every read, background scrubber continuously validates all fragments, store checksums in metadata service separate from data path' },
+      { scenario: 'Multipart upload abandoned after partial completion', impact: 'Orphaned chunks consume storage indefinitely with no owning object', mitigation: 'Track incomplete uploads in metadata with expiration TTL, garbage collector reclaims orphaned parts after configurable timeout (default 7 days)' },
+      { scenario: 'Hot object accessed by millions of concurrent readers', impact: 'Single storage node serving popular object becomes overwhelmed, causing timeouts', mitigation: 'Automatic replication of hot objects to additional nodes, CDN integration for public objects, read-through cache layer for frequently accessed metadata' },
+      { scenario: 'Rack failure losing multiple erasure-coded fragments simultaneously', impact: 'Object becomes temporarily unreadable if too many fragments are co-located in failed rack', mitigation: 'Rack-aware and AZ-aware placement policy ensuring no two fragments of same object share a rack, automatic re-replication when fragment count drops below threshold' },
+      { scenario: 'LIST operation on prefix with millions of keys', impact: 'Query takes minutes, times out, or causes metadata service memory pressure', mitigation: 'Paginated listing with cursor-based iteration, dedicated prefix index partitioned by common prefixes, streaming response to avoid buffering entire result set' },
+    ],
+    tradeoffs: [
+      { decision: 'Erasure coding vs triple replication', pros: 'Erasure coding achieves 11-nines durability at 1.4x overhead; replication is simpler at 3x overhead', cons: 'Erasure coding has higher CPU cost for encode/decode and slower recovery; replication wastes 2x more storage', recommendation: 'Erasure coding for bulk storage and cost efficiency, triple replication for metadata and small hot objects where latency matters' },
+      { decision: 'Strong consistency vs eventual consistency for reads', pros: 'Strong consistency eliminates stale reads; eventual consistency reduces latency and increases availability', cons: 'Strong consistency requires coordination on every read; eventual consistency can serve stale data after overwrites', recommendation: 'Strong read-after-write consistency via metadata service (Raft), eventual consistency acceptable for LIST operations with short propagation delay' },
+      { decision: 'Fixed-size chunks vs variable-size content-defined chunks', pros: 'Fixed-size is simple and predictable; variable-size enables deduplication across similar files', cons: 'Fixed-size misses dedup opportunities; variable-size adds complexity in chunk boundary detection and indexing', recommendation: 'Fixed-size chunks (64-128MB) for general blob storage, content-defined chunking as optional optimization for backup and archival workloads' },
+    ],
+    layeredDesign: [
+      { name: 'API Layer', purpose: 'Handle client requests for object CRUD and multipart uploads', components: ['REST API Gateway', 'Authentication & Authorization', 'Multipart Upload Manager', 'Presigned URL Generator'] },
+      { name: 'Metadata Layer', purpose: 'Map object keys to chunk locations with strong consistency', components: ['Raft-Based Metadata Store', 'Namespace Manager', 'Prefix Index', 'Versioning Engine'] },
+      { name: 'Storage Engine Layer', purpose: 'Store and retrieve erasure-coded data chunks across nodes', components: ['Chunk Storage Nodes', 'Erasure Coding Engine (Reed-Solomon)', 'Placement Service', 'Replication Manager'] },
+      { name: 'Background Services Layer', purpose: 'Maintain data integrity, reclaim space, and manage lifecycle', components: ['Background Scrubber', 'Garbage Collector', 'Lifecycle Policy Engine', 'Storage Tier Migration'] },
+    ],
   },
 
   // ─── 26. Distributed Task Scheduler ─────────────────────────────────

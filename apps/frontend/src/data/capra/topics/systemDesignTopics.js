@@ -5043,6 +5043,24 @@ http_requests_total{endpoint="/api/orders", status="200"}
           useWhen: 'Kubernetes, load balancers, orchestration',
           example: '/health → 200 (alive), /ready → 503 (not ready to serve traffic)'
         }
+      ],
+      edgeCases: [
+        { scenario: 'Alert fatigue from noisy monitors', impact: 'Engineers ignore alerts because 90% are false positives, causing real incidents to go unnoticed for hours', mitigation: 'Alert on symptoms not causes (error rate, not CPU), tune thresholds with burn rate alerts, implement alert deduplication and grouping' },
+        { scenario: 'Cardinality explosion in metrics', impact: 'High-cardinality labels (user_id, request_id) cause Prometheus to consume excessive memory and slow down queries', mitigation: 'Never use unbounded values as metric labels, use histograms instead of per-request metrics, pre-aggregate high-cardinality dimensions' },
+        { scenario: 'Log volume overwhelms storage during incident', impact: 'Error spike generates millions of log lines per minute, filling disk and causing log ingestion pipeline to drop logs', mitigation: 'Implement log sampling for high-volume events, use rate-limited logging per error type, separate error logs to a priority pipeline' },
+        { scenario: 'Distributed trace context lost across async boundaries', impact: 'Trace breaks when request crosses message queue or async job boundary, making it impossible to debug end-to-end latency', mitigation: 'Propagate trace context in message headers, use OpenTelemetry context propagation for async consumers, link parent/child spans manually' },
+        { scenario: 'Monitoring system itself goes down during outage', impact: 'The exact time you need monitoring most is during an outage, but the monitoring stack may be affected by the same infrastructure failure', mitigation: 'Run monitoring in a separate failure domain, use multi-region monitoring, maintain basic uptime checks from external providers (Pingdom, UptimeRobot)' },
+      ],
+      tradeoffs: [
+        { decision: 'Metrics vs Logs vs Traces', pros: 'Metrics are cheap and fast for dashboards; logs provide rich context for debugging; traces show request flow across services', cons: 'Metrics lose detail; logs are expensive to store and query at scale; traces add instrumentation overhead', recommendation: 'Use all three: metrics for alerting and dashboards, structured logs for debugging, traces for cross-service request analysis' },
+        { decision: 'Push-based vs Pull-based metrics collection', pros: 'Push (StatsD/Datadog) works behind firewalls and for short-lived jobs; pull (Prometheus) is simpler with service discovery', cons: 'Push can overwhelm the collector; pull requires network access to targets and misses short-lived processes', recommendation: 'Pull (Prometheus) for long-running services in Kubernetes; push for serverless functions, batch jobs, and network-restricted environments' },
+        { decision: 'Self-hosted vs SaaS observability', pros: 'Self-hosted (Prometheus/Grafana/Jaeger) has no per-seat cost and full control; SaaS (Datadog, New Relic) requires zero maintenance', cons: 'Self-hosted requires significant operational expertise and infrastructure; SaaS costs scale rapidly with data volume', recommendation: 'SaaS for small-to-medium teams; self-hosted when data volume makes SaaS prohibitively expensive or data sovereignty is required' },
+      ],
+      layeredDesign: [
+        { name: 'Instrumentation Layer', purpose: 'Emit telemetry data from application code and infrastructure', components: ['OpenTelemetry SDK', 'Application Metrics (counters, histograms)', 'Structured Logger', 'Health Check Endpoints'] },
+        { name: 'Collection Layer', purpose: 'Gather, buffer, and route telemetry data to storage backends', components: ['Prometheus Scraper', 'Fluentd/Vector Log Shipper', 'OpenTelemetry Collector', 'StatsD Aggregator'] },
+        { name: 'Storage Layer', purpose: 'Persist metrics, logs, and traces for querying and analysis', components: ['Prometheus TSDB (metrics)', 'Elasticsearch/Loki (logs)', 'Jaeger/Tempo (traces)', 'Long-Term Archive (S3)'] },
+        { name: 'Visualization & Alerting Layer', purpose: 'Display dashboards and trigger alerts based on defined thresholds', components: ['Grafana Dashboards', 'AlertManager / PagerDuty', 'SLO Burn Rate Alerts', 'Runbook Automation'] },
       ]
     },
     {
@@ -5507,6 +5525,23 @@ Step 4: Remove from ring metadata
           useWhen: 'Node additions/removals, capacity changes',
           example: 'Add node → only keys between new node and predecessor move'
         }
+      ],
+      edgeCases: [
+        { scenario: 'Massive data skew with few physical nodes', impact: 'Without virtual nodes, 3 servers on a hash ring can result in one server holding 60%+ of the data', mitigation: 'Use 100-200 virtual nodes per physical server, monitor partition sizes, implement weighted virtual node assignment for heterogeneous hardware' },
+        { scenario: 'Hot key concentrates traffic on single node', impact: 'A viral key (trending hashtag, celebrity profile) overwhelms the single node responsible for that hash range', mitigation: 'Use bounded-load consistent hashing (Google paper), replicate hot keys to multiple nodes, add application-level caching layer for hot keys' },
+        { scenario: 'Rapid node additions cause cascading rebalancing', impact: 'Adding multiple nodes simultaneously triggers massive data movement, consuming network bandwidth and degrading service', mitigation: 'Add nodes one at a time with stabilization period, throttle data migration bandwidth, use background rebalancing with priority scheduling' },
+        { scenario: 'Hash function collision causes uneven distribution', impact: 'Poor hash function maps many keys to the same region of the ring, defeating the purpose of consistent hashing', mitigation: 'Use cryptographic hash functions (SHA-256, MD5) for uniform distribution, test distribution with production key patterns before deployment' },
+      ],
+      tradeoffs: [
+        { decision: 'Virtual nodes: few vs many per server', pros: 'More virtual nodes give better distribution uniformity; fewer virtual nodes simplify the ring structure and reduce memory', cons: 'More virtual nodes increase memory for the ring map and complicate rebalancing; fewer virtual nodes cause data skew', recommendation: '100-200 virtual nodes per physical server is the sweet spot for most systems; adjust based on cluster size' },
+        { decision: 'Consistent hashing vs Range-based partitioning', pros: 'Consistent hashing minimizes data movement on node changes; range-based supports efficient range queries', cons: 'Consistent hashing cannot do range queries efficiently; range-based requires full rebalancing when adding nodes', recommendation: 'Consistent hashing for key-value stores and caches; range-based for time-series data or systems with frequent range scans' },
+        { decision: 'Jump hash vs Ring-based hash', pros: 'Jump hash is O(ln n) with perfect uniformity and zero memory; ring-based is more flexible with node removal support', cons: 'Jump hash only supports appending nodes (no removal); ring-based uses more memory and is slightly less uniform', recommendation: 'Ring-based for production systems where nodes can fail; jump hash for append-only clusters like sharded batch processing' },
+      ],
+      layeredDesign: [
+        { name: 'Hash Function Layer', purpose: 'Map keys and nodes to positions on a consistent hash space', components: ['Cryptographic Hash (SHA-256)', 'Hash Space (0 to 2^32)', 'Virtual Node Mapper'] },
+        { name: 'Ring Management Layer', purpose: 'Maintain the hash ring structure and node membership', components: ['Ring Data Structure', 'Node Registry', 'Virtual Node Assignment', 'Health Monitor'] },
+        { name: 'Routing Layer', purpose: 'Determine which node owns a given key by walking the ring clockwise', components: ['Key Router', 'Replication Strategy (N successors)', 'Request Forwarding'] },
+        { name: 'Rebalancing Layer', purpose: 'Migrate data when nodes join or leave with minimal disruption', components: ['Data Migration Scheduler', 'Bandwidth Throttler', 'Anti-Entropy Repair', 'Handoff Queue'] },
       ]
     },
     {
@@ -5897,6 +5932,23 @@ Optimal parameters:
           src: '/diagrams/bloom-filters/bloom-filter-how-it-works.svg',
           type: 'architecture'
         }
+      ],
+      edgeCases: [
+        { scenario: 'False positive rate exceeds acceptable threshold', impact: 'Too many false positives cause the Bloom filter to be useless as a pre-filter, with most queries still hitting the database', mitigation: 'Size the bit array properly (10 bits per element for 1% FP rate), use optimal number of hash functions (k = m/n * ln2), monitor FP rate in production' },
+        { scenario: 'Bloom filter becomes full as dataset grows', impact: 'Adding elements beyond design capacity causes false positive rate to increase exponentially, degrading performance for all lookups', mitigation: 'Use scalable Bloom filters that chain multiple filters as capacity grows, or implement dynamic resizing with periodic rebuilds' },
+        { scenario: 'Need to delete elements from a standard Bloom filter', impact: 'Standard Bloom filters do not support deletion because clearing bits may affect other elements that share those bit positions', mitigation: 'Use counting Bloom filters (counters instead of bits), Cuckoo filters (support deletion natively), or rebuild the filter periodically from source data' },
+        { scenario: 'Hash function collision skews bit distribution', impact: 'Poor hash functions map elements to the same bit positions, increasing false positives far beyond theoretical expectations', mitigation: 'Use independent, well-distributed hash functions (MurmurHash3, xxHash), or use double hashing technique: h(i) = h1 + i*h2' },
+      ],
+      tradeoffs: [
+        { decision: 'Bloom filter vs Hash set', pros: 'Bloom filter uses 10x less memory with constant-time operations; hash set provides exact membership with no false positives', cons: 'Bloom filter has false positives and cannot enumerate elements; hash set requires storing actual elements consuming more memory', recommendation: 'Bloom filter when memory is constrained and false positives are tolerable; hash set when exact membership testing is required' },
+        { decision: 'Bloom filter vs Cuckoo filter', pros: 'Bloom filter is simpler and well-understood; Cuckoo filter supports deletion and has better locality for cache performance', cons: 'Bloom filter cannot delete elements; Cuckoo filter has a maximum load factor and can fail inserts when nearly full', recommendation: 'Cuckoo filter when deletion is needed or memory efficiency matters at low FP rates; Bloom filter for append-only sets with well-known capacity' },
+        { decision: 'Large bit array with few hash functions vs Small array with many functions', pros: 'Larger array reduces collisions and false positives; more hash functions are better at distinguishing elements', cons: 'Larger array uses more memory; more hash functions slow down insert and query operations', recommendation: 'Use the optimal ratio: k = (m/n) * ln(2) where m = bit array size, n = expected elements, k = number of hash functions' },
+      ],
+      layeredDesign: [
+        { name: 'Hash Function Layer', purpose: 'Generate multiple independent hash values for each element', components: ['MurmurHash3 / xxHash', 'Double Hashing (h1 + i*h2)', 'Hash Function Pool'] },
+        { name: 'Bit Array Layer', purpose: 'Store the probabilistic membership data in a compact bit vector', components: ['Bit Vector (mmap for large filters)', 'Atomic Bit Operations', 'Memory-Mapped File (persistence)'] },
+        { name: 'Filter Management Layer', purpose: 'Handle capacity planning, scaling, and filter lifecycle', components: ['Capacity Monitor', 'Scalable Filter Chain', 'Periodic Rebuild Scheduler', 'FP Rate Tracker'] },
+        { name: 'Application Integration Layer', purpose: 'Provide pre-filter functionality for database and cache lookups', components: ['Query Pre-Filter', 'Negative Cache (definitely-not-in-set)', 'Bloom Filter Client Library'] },
       ]
     },
     {
@@ -6337,6 +6389,24 @@ Directory-Based Partitioning:
             { name: 'Virtual Bucket Hashing', description: 'Two-level mapping: data → virtual buckets → physical shards. Allows flexible rebalancing without significant data movement. More complex to maintain but highly flexible.' }
           ]
         }
+      ],
+      edgeCases: [
+        { scenario: 'Cross-partition query spanning all shards', impact: 'A query that cannot be routed to a single partition must scatter to all shards and gather results, causing latency proportional to shard count', mitigation: 'Design partition key around most common query patterns, maintain denormalized secondary indexes, use CQRS with materialized views for cross-partition reads' },
+        { scenario: 'Hot partition from skewed partition key', impact: 'One shard receives disproportionate traffic (celebrity user, popular product), becoming a bottleneck while other shards are idle', mitigation: 'Add salt or jitter to partition keys, split hot partitions dynamically, use write-behind cache for hot partitions' },
+        { scenario: 'Rebalancing during peak traffic', impact: 'Moving data between partitions consumes network bandwidth and disk I/O, degrading performance for user-facing queries during the migration', mitigation: 'Schedule rebalancing during low-traffic windows, throttle migration bandwidth, use background streaming with priority queuing' },
+        { scenario: 'Transaction spanning multiple partitions', impact: 'ACID transactions across partitions require two-phase commit, adding latency and risk of distributed deadlocks', mitigation: 'Design data model to avoid cross-partition transactions, use saga pattern for eventual consistency, or accept single-partition transaction scope' },
+        { scenario: 'Partition key chosen poorly at inception', impact: 'Changing partition key requires migrating all existing data, which can take days for large datasets and requires application downtime', mitigation: 'Invest time in partition key selection upfront, prototype with production-like data distribution, use directory-based partitioning for future flexibility' },
+      ],
+      tradeoffs: [
+        { decision: 'Hash partitioning vs Range partitioning', pros: 'Hash gives uniform distribution across partitions; range supports efficient range queries and sequential scans', cons: 'Hash cannot do range queries efficiently (must scatter to all shards); range can create hot partitions with sequential keys', recommendation: 'Hash partitioning for key-value workloads; range partitioning for time-series data or workloads with frequent range scans' },
+        { decision: 'Horizontal vs Vertical partitioning', pros: 'Horizontal distributes rows across nodes for write scaling; vertical separates columns to optimize for different access patterns', cons: 'Horizontal adds cross-partition join complexity; vertical requires reassembling full records from multiple stores', recommendation: 'Horizontal for scaling total data volume and write throughput; vertical when different columns have vastly different access patterns (e.g., profile vs activity)' },
+        { decision: 'Fixed number of partitions vs Dynamic partitioning', pros: 'Fixed is simpler to reason about and implement; dynamic adjusts to data growth and prevents individual partitions from growing too large', cons: 'Fixed can lead to uneven partition sizes over time; dynamic adds complexity for splitting and merging partitions', recommendation: 'Dynamic partitioning for growing datasets (like HBase region splitting); fixed for stable datasets with predictable distribution' },
+      ],
+      layeredDesign: [
+        { name: 'Partition Router Layer', purpose: 'Determine which partition holds the requested data based on partition key', components: ['Partition Function (hash/range)', 'Partition Map', 'Directory Lookup Service', 'Client-Side Partition Aware Driver'] },
+        { name: 'Partition Manager Layer', purpose: 'Manage partition lifecycle including splitting, merging, and rebalancing', components: ['Split/Merge Controller', 'Rebalancing Scheduler', 'Partition Size Monitor', 'Migration Coordinator'] },
+        { name: 'Data Storage Layer', purpose: 'Store and index data within individual partitions', components: ['Local Storage Engine', 'Local Indexes', 'Write-Ahead Log', 'Compaction Engine'] },
+        { name: 'Cross-Partition Query Layer', purpose: 'Handle queries that span multiple partitions with scatter-gather pattern', components: ['Query Coordinator', 'Scatter-Gather Engine', 'Result Merger', 'Global Secondary Index'] },
       ]
     },
     {
@@ -6775,6 +6845,24 @@ Composite Index:
           src: '/diagrams/database-indexes/index-data-structures.svg',
           type: 'architecture'
         }
+      ],
+      edgeCases: [
+        { scenario: 'Over-indexing a write-heavy table', impact: 'Every INSERT/UPDATE must update all indexes, causing write amplification that degrades throughput by 5-10x compared to unindexed writes', mitigation: 'Audit indexes quarterly, drop unused indexes (pg_stat_user_indexes), limit to 5-7 indexes per table, use partial indexes for filtered queries' },
+        { scenario: 'Composite index column order mismatch', impact: 'Index on (a, b, c) is useless for queries filtering only on b or c due to leftmost prefix rule, query falls back to full table scan', mitigation: 'Order composite index columns by selectivity and query patterns, create separate indexes for non-prefix queries, use EXPLAIN ANALYZE to verify index usage' },
+        { scenario: 'Index bloat from frequent updates and deletes', impact: 'Dead tuples accumulate in B-tree indexes, wasting disk space and slowing index scans as pages become sparse', mitigation: 'Run REINDEX or pg_repack periodically, tune autovacuum settings for high-churn tables, monitor index size vs table size ratio' },
+        { scenario: 'Full-text search index out of sync with data', impact: 'Inverted index returns stale or missing results because it was not updated after recent data changes', mitigation: 'Use database-native full-text indexing (PostgreSQL GIN/GiST) that updates synchronously, or implement near-real-time sync for external search engines (Elasticsearch)' },
+        { scenario: 'Index corruption after crash or disk failure', impact: 'Corrupted index returns wrong results or causes query errors, potentially leading to data integrity issues in the application', mitigation: 'Enable WAL for crash recovery, run amcheck periodically to detect corruption early, maintain replicas that can serve reads during index rebuild' },
+      ],
+      tradeoffs: [
+        { decision: 'B-Tree vs Hash index', pros: 'B-Tree supports range queries, sorting, and prefix matching; hash index provides O(1) exact lookups', cons: 'B-Tree is O(log N) for exact lookups; hash index cannot do range queries, sorting, or partial matches', recommendation: 'B-Tree as the default for most columns; hash index only for exact-match-only columns with very high cardinality (PostgreSQL rarely benefits from hash)' },
+        { decision: 'More indexes vs Fewer indexes', pros: 'More indexes speed up diverse read queries; fewer indexes reduce write overhead and storage', cons: 'More indexes slow writes and increase storage; fewer indexes force full table scans for some queries', recommendation: 'Index columns that appear in WHERE, JOIN, and ORDER BY clauses of frequent queries; use EXPLAIN to verify each index is actually used' },
+        { decision: 'Covering index vs Standard index with table lookup', pros: 'Covering index satisfies query entirely from the index (index-only scan) with zero table I/O; standard index is smaller', cons: 'Covering index is larger and slower to maintain; standard index requires heap lookup for non-indexed columns', recommendation: 'Use covering indexes for high-frequency queries reading specific column sets; avoid for wide tables or infrequently run queries' },
+      ],
+      layeredDesign: [
+        { name: 'Query Optimizer Layer', purpose: 'Decide which indexes to use based on cost estimation and statistics', components: ['Cost-Based Optimizer', 'Statistics Collector (ANALYZE)', 'Index Selection Heuristics', 'EXPLAIN Plan Generator'] },
+        { name: 'Index Structure Layer', purpose: 'Maintain the index data structures that enable fast lookups', components: ['B+ Tree Index', 'Hash Index', 'GIN/GiST (full-text, JSON)', 'BRIN (block range)'] },
+        { name: 'Buffer / Cache Layer', purpose: 'Keep hot index pages in memory to avoid disk I/O', components: ['Buffer Pool (shared_buffers)', 'OS Page Cache', 'Index Page Prefetching'] },
+        { name: 'Maintenance Layer', purpose: 'Keep indexes healthy and efficient over time', components: ['Autovacuum (dead tuple cleanup)', 'REINDEX / pg_repack', 'Index Usage Statistics', 'Bloat Monitor'] },
       ]
     },
     {
@@ -7224,6 +7312,24 @@ Layer 7 (Application) Proxy:
             { name: 'Load Balancer', description: 'Distributes traffic to multiple instances of the same service. Purely focused on traffic distribution and health. Can be L4 (TCP) or L7 (HTTP). Example: ALB, HAProxy.' }
           ]
         }
+      ],
+      edgeCases: [
+        { scenario: 'Proxy connection pool exhaustion', impact: 'All available connections to backend servers are in use, new requests queue or fail with 502/503 errors even though backends have capacity', mitigation: 'Tune keepalive settings and connection pool sizes, implement connection timeouts, monitor active connections vs pool limits' },
+        { scenario: 'SSL certificate mismatch after proxy termination', impact: 'Proxy terminates SSL but backend expects HTTPS, or certificate CN does not match the proxied domain, causing handshake failures', mitigation: 'Configure proper SSL passthrough or re-encryption, ensure certificates cover all proxied domains, use wildcard or SAN certificates' },
+        { scenario: 'Request body too large for proxy buffer', impact: 'File upload or large POST request exceeds proxy buffer size, causing 413 errors or request truncation', mitigation: 'Configure client_max_body_size (Nginx), use streaming proxy mode for large uploads, implement chunked transfer encoding' },
+        { scenario: 'Proxy adds latency to time-sensitive WebSocket connections', impact: 'Proxy timeout settings close idle WebSocket connections, breaking real-time features like chat or live updates', mitigation: 'Configure proxy_read_timeout and proxy_send_timeout for WebSocket paths, implement heartbeat/ping frames, use Connection: Upgrade headers' },
+        { scenario: 'Single proxy failure takes down entire system', impact: 'Proxy is a single point of failure; if it crashes, all traffic is blocked regardless of backend health', mitigation: 'Deploy proxy pairs with active-passive failover (keepalived/VRRP), use cloud-native load balancers with built-in redundancy' },
+      ],
+      tradeoffs: [
+        { decision: 'Forward proxy vs Reverse proxy', pros: 'Forward proxy protects clients and controls outbound traffic; reverse proxy protects servers and distributes inbound traffic', cons: 'Forward proxy requires client configuration; reverse proxy adds a network hop for all inbound requests', recommendation: 'Reverse proxy for nearly all web architectures; forward proxy for corporate egress control and client anonymization' },
+        { decision: 'Nginx vs HAProxy vs Envoy', pros: 'Nginx is versatile (static files + proxy); HAProxy excels at pure load balancing; Envoy is built for service mesh with rich observability', cons: 'Nginx configuration is complex for advanced routing; HAProxy lacks static file serving; Envoy has higher resource usage', recommendation: 'Nginx for web servers and simple reverse proxying; Envoy for service mesh and microservice networking; HAProxy for dedicated high-performance TCP/HTTP load balancing' },
+        { decision: 'SSL termination at proxy vs End-to-end encryption', pros: 'SSL termination simplifies backend config and reduces CPU load; end-to-end encryption protects data within the internal network', cons: 'SSL termination exposes plaintext traffic internally; end-to-end encryption adds CPU overhead to every backend server', recommendation: 'SSL termination at proxy for most applications; end-to-end (mTLS) for zero-trust environments handling sensitive data' },
+      ],
+      layeredDesign: [
+        { name: 'Client-Facing Layer', purpose: 'Accept incoming connections, terminate SSL, and handle protocol negotiation', components: ['SSL/TLS Termination', 'HTTP/2 Negotiation', 'Connection Pooling', 'Request Buffering'] },
+        { name: 'Routing / Decision Layer', purpose: 'Determine how to route each request based on rules, headers, and URL patterns', components: ['URL Path Router', 'Header-Based Routing', 'Load Balancing Algorithm', 'Health Check Manager'] },
+        { name: 'Transformation Layer', purpose: 'Modify requests and responses as they pass through the proxy', components: ['Request Rewriting', 'Response Header Injection', 'Compression (gzip/brotli)', 'Rate Limiting'] },
+        { name: 'Backend Connection Layer', purpose: 'Manage connections to upstream backend servers', components: ['Connection Pool to Backends', 'Keepalive Management', 'Circuit Breaker', 'Retry Logic'] },
       ]
     },
     {
@@ -7661,6 +7767,24 @@ TTL Values (seconds):
           useWhen: 'Always — fundamental to DNS performance',
           example: 'TTL=300 (5 min) for dynamic, TTL=86400 (1 day) for static'
         }
+      ],
+      edgeCases: [
+        { scenario: 'DNS cache poisoning attack', impact: 'Attacker injects false DNS records into resolver cache, redirecting users to malicious servers for phishing or data theft', mitigation: 'Enable DNSSEC to cryptographically validate responses, use DNS over HTTPS (DoH) or DNS over TLS (DoT), randomize source ports and transaction IDs' },
+        { scenario: 'Long TTL prevents failover during outage', impact: 'DNS record TTL is 24 hours, so changing the IP during an outage takes up to 24 hours to propagate, leaving users unable to reach the service', mitigation: 'Use short TTLs (60-300s) for records that need fast failover, pre-lower TTL before planned migrations, use DNS health check-based failover (Route 53)' },
+        { scenario: 'DNS resolution adds 100ms+ to first request', impact: 'Cold DNS lookup traverses root, TLD, and authoritative servers, adding significant latency to the first request from a new client', mitigation: 'Use dns-prefetch and preconnect link hints in HTML, leverage Anycast DNS for lower latency to resolvers, keep TTLs reasonable to maintain cache hits' },
+        { scenario: 'DNS provider outage takes down entire service', impact: 'Single DNS provider failure means no one can resolve your domain, effectively taking your entire service offline regardless of backend health', mitigation: 'Use multi-provider DNS (e.g., Route 53 + Cloudflare as secondary), configure NS records for both providers, test failover regularly' },
+        { scenario: 'DNS rebinding attack bypasses same-origin policy', impact: 'Attacker changes DNS response to point to internal IP after initial page load, allowing malicious JavaScript to access internal services', mitigation: 'Validate Host header on all internal services, implement DNS pinning, block private IP ranges in DNS responses from public resolvers' },
+      ],
+      tradeoffs: [
+        { decision: 'Low TTL vs High TTL', pros: 'Low TTL enables fast failover and IP changes; high TTL reduces DNS query volume and resolution latency', cons: 'Low TTL increases DNS query load and slightly increases latency for uncached lookups; high TTL means slow failover during incidents', recommendation: 'Low TTL (60-300s) for services requiring fast failover; high TTL (3600-86400s) for stable services where IP rarely changes' },
+        { decision: 'Anycast vs Unicast DNS', pros: 'Anycast routes to nearest DNS server for low latency; unicast provides deterministic routing to specific servers', cons: 'Anycast can cause routing instability during BGP changes; unicast may route users to distant servers', recommendation: 'Anycast for public-facing DNS (Cloudflare, Google DNS model); unicast for internal DNS within a single data center' },
+        { decision: 'GeoDNS vs Global load balancer', pros: 'GeoDNS is simple and handled entirely at DNS layer; global LB provides more precise routing with health-aware decisions', cons: 'GeoDNS has coarse geographic granularity and no real-time health awareness; global LB adds infrastructure complexity', recommendation: 'GeoDNS for basic regional routing; global LB (AWS Global Accelerator, Cloudflare) when health-aware routing is critical' },
+      ],
+      layeredDesign: [
+        { name: 'Client Resolver Layer', purpose: 'Initial DNS lookup from the client-side with local caching', components: ['Browser DNS Cache', 'OS Resolver Cache (/etc/hosts)', 'Stub Resolver'] },
+        { name: 'Recursive Resolver Layer', purpose: 'Traverse the DNS hierarchy on behalf of clients to find authoritative answers', components: ['ISP Resolver / Public DNS (8.8.8.8, 1.1.1.1)', 'Resolver Cache', 'DNSSEC Validator'] },
+        { name: 'Authoritative DNS Layer', purpose: 'Serve definitive DNS records for owned domains', components: ['Authoritative Nameservers (Route 53, Cloudflare)', 'Zone Files', 'DNS Record Management (A, CNAME, MX, TXT)'] },
+        { name: 'Traffic Management Layer', purpose: 'Use DNS for intelligent traffic routing and failover', components: ['GeoDNS Routing', 'Health Check-Based Failover', 'Weighted Routing', 'Latency-Based Routing'] },
       ]
     },
     {
@@ -10243,6 +10367,24 @@ Consistency Spectrum:
           useWhen: 'Multi-master or leaderless replication',
           example: 'Last-Write-Wins (LWW), or merge via vector clocks'
         }
+      ],
+      edgeCases: [
+        { scenario: 'Network partition in a CP system during peak traffic', impact: 'System rejects all writes to the minority partition, causing user-facing errors and potential revenue loss', mitigation: 'Implement graceful degradation with read-only mode on minority side, queue writes for replay after partition heals' },
+        { scenario: 'Clock skew causes Last-Write-Wins conflicts in AP system', impact: 'A write with a later wall-clock timestamp overwrites a causally later write, silently losing data', mitigation: 'Use logical clocks (Lamport or vector clocks) instead of wall-clock timestamps for conflict resolution ordering' },
+        { scenario: 'Tunable consistency misconfigured with W+R <= N', impact: 'Reads return stale data because there is no overlap between write and read quorums, violating consistency expectations', mitigation: 'Validate quorum settings in application config, add monitoring for stale-read detection, default to W=majority R=majority' },
+        { scenario: 'Partition heals but nodes have diverged significantly', impact: 'Anti-entropy repair process generates massive network traffic and CPU load, degrading cluster performance during reconciliation', mitigation: 'Use Merkle trees for efficient diff detection, throttle repair bandwidth, schedule repairs during low-traffic windows' },
+        { scenario: 'Application assumes strong consistency but database provides eventual', impact: 'Race conditions in business logic cause double-spending, overselling inventory, or duplicate operations', mitigation: 'Document consistency guarantees per operation, use compare-and-swap for critical operations, test with chaos engineering' }
+      ],
+      tradeoffs: [
+        { decision: 'CP vs AP system classification', pros: 'CP guarantees correctness during partitions; AP guarantees availability and responsiveness during partitions', cons: 'CP rejects requests during partitions causing downtime; AP serves potentially stale data leading to application-level inconsistencies', recommendation: 'Use CP for financial transactions, inventory, and voting systems; AP for social feeds, analytics, and content serving' },
+        { decision: 'Strong consistency vs Eventual consistency during normal operation (PACELC E)', pros: 'Strong consistency simplifies application logic; Eventual consistency provides lower latency and higher throughput', cons: 'Strong consistency requires coordination overhead on every operation; Eventual consistency pushes complexity to the application layer', recommendation: 'Default to eventual consistency, upgrade to strong only for operations where correctness is non-negotiable' },
+        { decision: 'Single database vs Polyglot persistence', pros: 'Single database is simpler to operate and provides consistent guarantees; Polyglot lets each service use the optimal data store', cons: 'Single database may not fit all access patterns; Polyglot persistence adds operational complexity and cross-store consistency challenges', recommendation: 'Start with single database, adopt polyglot persistence as specific services outgrow the default store capabilities' }
+      ],
+      layeredDesign: [
+        { name: 'Application Layer', purpose: 'Chooses consistency level per operation based on business requirements', components: ['Consistency Policy Engine', 'Read/Write Path Selector', 'Conflict Resolution Logic'] },
+        { name: 'Coordination Layer', purpose: 'Manages consensus and quorum protocols for distributed operations', components: ['Quorum Manager', 'Partition Detector', 'Clock Synchronization', 'Anti-Entropy Service'] },
+        { name: 'Replication Layer', purpose: 'Propagates writes across replicas with configurable guarantees', components: ['Sync/Async Replicator', 'Write-Ahead Log', 'Gossip Protocol', 'Merkle Tree Comparator'] },
+        { name: 'Storage Layer', purpose: 'Persists data locally on each node with crash recovery', components: ['LSM Tree / B-Tree', 'WAL Manager', 'Compaction Engine', 'Snapshot Service'] }
       ]
     },
     {
@@ -10663,6 +10805,24 @@ Step 8: Primary responds to client
           useWhen: 'Cold/archive storage where space efficiency matters',
           example: 'HDFS Erasure Coding, Azure LRS, S3 Glacier'
         }
+      ],
+      edgeCases: [
+        { scenario: 'NameNode/Master single point of failure', impact: 'Entire file system becomes unavailable if the metadata server crashes, blocking all reads and writes', mitigation: 'Run standby NameNode with shared edit log (HDFS HA), use ZooKeeper for automatic failover, persist metadata to multiple disks' },
+        { scenario: 'Data node failure during multi-block write', impact: 'Partial file write leaves corrupted or incomplete data that clients may read', mitigation: 'Use write pipeline with acknowledgments per chunk, re-replicate failed blocks automatically, maintain write-ahead log for recovery' },
+        { scenario: 'Rack failure takes out multiple replicas of same block', impact: 'Data becomes unavailable or permanently lost if all replicas were on the same rack', mitigation: 'Enforce rack-aware placement policy ensuring replicas span at least 2 racks, monitor rack diversity compliance' },
+        { scenario: 'Hot spots from skewed file access patterns', impact: 'A few data nodes serving popular files become overloaded while others sit idle', mitigation: 'Increase replication factor for hot files, implement client-side caching, use short-circuit local reads, add read balancing across replicas' },
+        { scenario: 'Metadata memory exhaustion from billions of small files', impact: 'NameNode runs out of heap memory since each file and block consumes metadata RAM, causing cluster instability', mitigation: 'Merge small files into SequenceFiles or HAR archives, use HDFS Federation to split namespace across multiple NameNodes' }
+      ],
+      tradeoffs: [
+        { decision: 'Large chunk size (128MB+) vs Small chunk size (16-64MB)', pros: 'Large chunks reduce metadata overhead and improve sequential throughput; Small chunks reduce wasted space and improve parallelism for small files', cons: 'Large chunks waste storage for small files and limit parallelism; Small chunks increase NameNode memory and network overhead', recommendation: 'Use 128MB chunks as default for batch analytics workloads; consider smaller chunks only for workloads with many small files' },
+        { decision: 'Replication vs Erasure Coding', pros: 'Replication is simple and provides fast reads from any replica; Erasure Coding reduces storage overhead by 50% with equivalent fault tolerance', cons: 'Replication uses 3x storage; Erasure Coding has higher CPU overhead for encoding/decoding and slower recovery', recommendation: 'Use 3x replication for hot data needing fast access; Erasure Coding for warm/cold data where storage cost matters more than read speed' },
+        { decision: 'Centralized metadata (single NameNode) vs Distributed metadata', pros: 'Centralized is simpler with consistent namespace view; Distributed eliminates the metadata SPOF and scales to more files', cons: 'Centralized is a single point of failure and memory bottleneck; Distributed adds complexity for cross-namespace operations', recommendation: 'Use centralized with HA standby for most clusters; adopt HDFS Federation or distributed metadata when exceeding 500M files' }
+      ],
+      layeredDesign: [
+        { name: 'Client Layer', purpose: 'Application interface for reading and writing files to the distributed file system', components: ['DFS Client SDK', 'Block Location Cache', 'Write Pipeline Manager', 'Checksum Verifier'] },
+        { name: 'Metadata Layer', purpose: 'Manages file namespace, block mapping, and replication policies', components: ['NameNode', 'Edit Log', 'Namespace Tree', 'Block Report Processor', 'Standby NameNode'] },
+        { name: 'Data Layer', purpose: 'Stores and serves actual file data blocks across the cluster', components: ['DataNode', 'Block Storage', 'Pipeline Replication', 'Heartbeat Reporter', 'Disk Scanner'] },
+        { name: 'Infrastructure Layer', purpose: 'Provides coordination and fault tolerance services', components: ['ZooKeeper', 'Rack Topology Service', 'Network Topology', 'Monitoring Agent'] }
       ]
     },
     {
@@ -11106,6 +11266,25 @@ Requires coordination between producer and consumer:
           useWhen: 'Multiple producers/consumers, schema evolution',
           example: 'Confluent Schema Registry with Avro/Protobuf'
         }
+      ],
+      edgeCases: [
+        { scenario: 'Consumer group rebalance during high throughput', impact: 'Partitions are reassigned causing processing pauses, duplicate messages, and temporary throughput drop', mitigation: 'Use cooperative sticky assignor to minimize partition movement, implement idempotent consumers, tune session timeout and heartbeat interval' },
+        { scenario: 'Kafka broker disk failure with acks=1', impact: 'Acknowledged messages are lost because they were only written to the failed broker before replication completed', mitigation: 'Use acks=all (or acks=-1) with min.insync.replicas=2 for critical topics to ensure messages survive broker failures' },
+        { scenario: 'Poison message blocks consumer progress', impact: 'A malformed message causes consumer deserialization to fail repeatedly, blocking all subsequent messages in that partition', mitigation: 'Implement dead letter queue (DLQ) pattern, skip and log poison messages after N retries, use schema validation at producer' },
+        { scenario: 'Unbounded consumer lag during traffic spike', impact: 'Consumers fall behind producers, causing message processing delays of hours or days, stale data in downstream systems', mitigation: 'Auto-scale consumer instances, increase partition count for parallelism, implement backpressure signaling, monitor lag with alerts' },
+        { scenario: 'Topic compaction deletes record needed for replay', impact: 'Event sourcing consumers that replay from offset 0 miss deleted intermediate states, producing incorrect aggregations', mitigation: 'Use snapshot + event pattern, keep compaction window longer than replay needs, separate compacted topics from event log topics' }
+      ],
+      tradeoffs: [
+        { decision: 'Kafka (log-based) vs RabbitMQ (broker-based)', pros: 'Kafka provides replay, high throughput, and durable event streams; RabbitMQ provides flexible routing, per-message acknowledgment, and priority queues', cons: 'Kafka is complex to operate and has no per-message routing; RabbitMQ has lower throughput and messages are deleted after consumption', recommendation: 'Use Kafka for event streaming, analytics pipelines, and audit logs; RabbitMQ for task queues, RPC patterns, and complex routing needs' },
+        { decision: 'At-least-once vs Exactly-once delivery', pros: 'At-least-once is simpler and faster; Exactly-once eliminates duplicate processing', cons: 'At-least-once requires idempotent consumers; Exactly-once has higher latency from transactional overhead', recommendation: 'Default to at-least-once with idempotent consumers; use exactly-once only for financial transactions or when deduplication is impossible' },
+        { decision: 'Few partitions vs Many partitions per topic', pros: 'Few partitions are simpler to manage with lower overhead; Many partitions enable higher parallelism and throughput', cons: 'Few partitions limit consumer parallelism; Many partitions increase metadata overhead, leader election time, and end-to-end latency', recommendation: 'Start with partitions equal to expected peak consumer count, increase when throughput per partition exceeds broker capacity' },
+        { decision: 'Push-based vs Pull-based consumption', pros: 'Push delivers messages immediately for lowest latency; Pull lets consumers control their own rate and batch size', cons: 'Push can overwhelm slow consumers; Pull adds polling overhead and slight latency increase', recommendation: 'Use pull-based (Kafka style) for high-throughput data pipelines; push-based (RabbitMQ style) for low-latency task processing' }
+      ],
+      layeredDesign: [
+        { name: 'Producer Layer', purpose: 'Publishes messages to topics with delivery guarantees', components: ['Serializer', 'Partitioner', 'Batch Accumulator', 'Ack Handler', 'Schema Registry Client'] },
+        { name: 'Broker Layer', purpose: 'Stores and replicates messages across the cluster', components: ['Log Segment Storage', 'ISR Manager', 'Replication Protocol', 'Controller', 'Group Coordinator'] },
+        { name: 'Consumer Layer', purpose: 'Reads and processes messages with offset tracking', components: ['Deserializer', 'Consumer Group Manager', 'Offset Committer', 'Rebalance Listener', 'DLQ Handler'] },
+        { name: 'Infrastructure Layer', purpose: 'Provides cluster coordination and observability', components: ['ZooKeeper/KRaft', 'Monitoring (JMX)', 'Schema Registry', 'Connect Framework'] }
       ]
     },
     {
@@ -11517,6 +11696,23 @@ Solution: DataLoader (batching + caching)
           useWhen: 'Different clients need very different API shapes',
           example: 'Mobile BFF aggregates 3 microservices into 1 call'
         }
+      ],
+      edgeCases: [
+        { scenario: 'REST API over-fetching causing mobile performance issues', impact: 'Mobile clients download large JSON payloads with unnecessary fields, consuming bandwidth and battery on slow networks', mitigation: 'Implement sparse fieldsets (fields=name,email), use GraphQL for flexible queries, or build a Backend for Frontend (BFF) layer' },
+        { scenario: 'gRPC service behind a non-HTTP/2 proxy', impact: 'gRPC calls fail silently or hang because the proxy does not support HTTP/2 trailers required by the protocol', mitigation: 'Use gRPC-Web with an Envoy proxy for browser clients, ensure all infrastructure supports HTTP/2 end-to-end, or fall back to REST' },
+        { scenario: 'GraphQL query complexity explosion (N+1 and deeply nested)', impact: 'A single GraphQL query triggers thousands of database queries, causing server overload and slow response times', mitigation: 'Implement query depth limiting, cost analysis, and DataLoader for batching; set maximum query complexity score' },
+        { scenario: 'Breaking API change in a gRPC .proto file', impact: 'Removing or renumbering fields breaks all existing clients that have not been updated', mitigation: 'Follow Protobuf evolution rules: never reuse field numbers, use reserved keyword for removed fields, add new fields with new numbers' }
+      ],
+      tradeoffs: [
+        { decision: 'REST vs gRPC for API design', pros: 'REST is universally understood, cacheable, and works in browsers; gRPC is 5-10x faster with strong typing and bidirectional streaming', cons: 'REST has verbose JSON payloads and no built-in streaming; gRPC requires code generation and is not browser-native without gRPC-Web', recommendation: 'Use REST for public-facing and browser APIs; gRPC for internal microservice-to-microservice communication' },
+        { decision: 'REST vs GraphQL for client APIs', pros: 'REST is simple with HTTP caching; GraphQL eliminates over/under-fetching and reduces round trips', cons: 'REST requires multiple endpoints and may over-fetch; GraphQL adds complexity with query parsing, security, and caching challenges', recommendation: 'Use GraphQL when multiple clients need different data shapes; REST when data access patterns are simple and predictable' },
+        { decision: 'Single unified API vs Backend for Frontend (BFF)', pros: 'Single API is simpler to maintain; BFF optimizes data shape and latency for each client type', cons: 'Single API forces compromises across client needs; BFF duplicates logic and adds maintenance burden per client', recommendation: 'Start with single REST API, introduce BFF only when mobile and web clients diverge significantly in data needs' }
+      ],
+      layeredDesign: [
+        { name: 'Client Layer', purpose: 'Consumes APIs and handles serialization/deserialization', components: ['REST Client (fetch/axios)', 'gRPC Stub', 'GraphQL Client (Apollo)', 'Retry Logic'] },
+        { name: 'API Gateway Layer', purpose: 'Routes, authenticates, and rate-limits incoming API requests', components: ['Route Matching', 'Auth Middleware', 'Rate Limiter', 'Protocol Translation (REST<->gRPC)'] },
+        { name: 'Service Layer', purpose: 'Implements business logic exposed through API endpoints', components: ['REST Controllers', 'gRPC Service Handlers', 'GraphQL Resolvers', 'Input Validation'] },
+        { name: 'Data Access Layer', purpose: 'Fetches and persists data for API operations', components: ['Repository Pattern', 'DataLoader (batching)', 'Cache Layer', 'Database Client'] }
       ]
     },
     {
@@ -11937,6 +12133,25 @@ Common Async Patterns:
             { name: 'Sync vs Async Processing', description: 'Sync: client waits for response (simple, higher latency). Async: client gets immediate ack, result delivered later via callback/queue.' }
           ]
         }
+      ],
+      edgeCases: [
+        { scenario: 'Async message lost between producer and queue', impact: 'Client receives success acknowledgment but the work is never processed, causing silent data loss', mitigation: 'Use persistent queues with publisher confirms, implement outbox pattern for transactional message publishing' },
+        { scenario: 'Dead letter queue grows unbounded from poison messages', impact: 'Failed messages accumulate in DLQ consuming storage, and operators lose track of which failures need attention', mitigation: 'Set DLQ retention policies, implement DLQ monitoring with alerts, build automated retry and manual review workflows' },
+        { scenario: 'Synchronous call chain creates cascading timeout failures', impact: 'One slow downstream service causes all upstream callers to block and exhaust their thread pools, bringing down the entire call chain', mitigation: 'Set aggressive per-service timeouts, implement circuit breakers at each hop, use bulkhead isolation for critical dependencies' },
+        { scenario: 'Async processing completes but callback delivery fails', impact: 'Work is done but the client never learns the result, leading to retries that duplicate the work', mitigation: 'Make callbacks idempotent, implement correlation IDs for deduplication, provide a polling fallback for callback delivery failures' },
+        { scenario: 'Message ordering violated in async pipeline', impact: 'Events processed out of order produce incorrect state, such as processing a delete before its corresponding create', mitigation: 'Use ordered partitions (Kafka partition key), sequence numbers with reordering buffers, or design operations to be commutative' }
+      ],
+      tradeoffs: [
+        { decision: 'Synchronous vs Asynchronous communication', pros: 'Synchronous is simpler to implement and debug with immediate feedback; Asynchronous decouples services, handles load spikes, and improves resilience', cons: 'Synchronous creates tight coupling and cascading failures; Asynchronous adds complexity with eventual consistency and harder debugging', recommendation: 'Use synchronous for user-facing request-response flows; asynchronous for background processing, notifications, and inter-service events' },
+        { decision: 'Message queue vs Event stream', pros: 'Message queues provide point-to-point delivery with acknowledgments; Event streams provide durable pub/sub with replay capability', cons: 'Message queues delete messages after consumption; Event streams require consumers to manage their own offsets and are harder to operate', recommendation: 'Use message queues (RabbitMQ, SQS) for task distribution; event streams (Kafka) for event-driven architectures needing audit and replay' },
+        { decision: 'Fire-and-forget vs Request-reply async', pros: 'Fire-and-forget is the simplest async pattern with lowest latency; Request-reply async provides result delivery without blocking', cons: 'Fire-and-forget gives no confirmation of completion; Request-reply async adds correlation complexity and timeout management', recommendation: 'Use fire-and-forget for logging, analytics, and notifications; request-reply async for operations where the client needs the result' },
+        { decision: 'Webhook callbacks vs Client polling for async results', pros: 'Webhooks deliver results immediately with no wasted requests; Polling is simpler for clients and works behind firewalls', cons: 'Webhooks require the client to expose an endpoint and handle retries; Polling wastes bandwidth and has inherent delay', recommendation: 'Offer both: webhooks as primary delivery mechanism, polling endpoint as fallback for clients that cannot receive callbacks' }
+      ],
+      layeredDesign: [
+        { name: 'Client Layer', purpose: 'Initiates requests and handles responses synchronously or asynchronously', components: ['HTTP Client', 'Message Publisher', 'Callback Handler', 'Polling Client'] },
+        { name: 'Gateway Layer', purpose: 'Routes requests to sync or async processing paths', components: ['Request Router', 'Async Job Submitter', 'Correlation ID Generator', 'Response Cache'] },
+        { name: 'Processing Layer', purpose: 'Executes business logic either immediately or via queue consumption', components: ['Sync Request Handler', 'Queue Consumer', 'Worker Pool', 'Retry Engine'] },
+        { name: 'Messaging Layer', purpose: 'Provides reliable message transport between services', components: ['Message Queue (RabbitMQ/SQS)', 'Event Stream (Kafka)', 'Dead Letter Queue', 'Outbox Table'] }
       ]
     },
     {
@@ -12413,6 +12628,23 @@ Two clients write different values to the same key concurrently:
           src: '/diagrams/quorum/quorum-formula.svg',
           type: 'architecture'
         }
+      ],
+      edgeCases: [
+        { scenario: 'Sloppy quorum writes land on non-canonical nodes', impact: 'Hinted handoff nodes hold data temporarily but if they fail before handoff, writes are permanently lost', mitigation: 'Monitor hinted handoff queue size, set handoff timeout limits, use strict quorum for critical data paths' },
+        { scenario: 'Read repair race condition with concurrent writes', impact: 'Read repair propagates an older value to a node that has already received a newer write, overwriting correct data', mitigation: 'Use vector clocks or timestamps for version comparison during read repair, implement last-write-wins with causal ordering' },
+        { scenario: 'Quorum achieved but data is stale due to uncommitted writes', impact: 'Client reads from a quorum of nodes that all have stale data because the latest write has not yet propagated', mitigation: 'Use read-your-writes consistency for session-bound operations, implement linearizable reads via leader-based quorum reads' },
+        { scenario: 'Network partition splits cluster into two groups each with minority', impact: 'Neither group can achieve quorum, making the entire system unavailable for both reads and writes', mitigation: 'Use sloppy quorum with hinted handoff for availability, or implement witness nodes in a third availability zone' }
+      ],
+      tradeoffs: [
+        { decision: 'Strict quorum vs Sloppy quorum', pros: 'Strict quorum guarantees consistency with W+R>N; Sloppy quorum maintains availability during node failures', cons: 'Strict quorum reduces availability when nodes are down; Sloppy quorum may serve stale data and requires hinted handoff', recommendation: 'Use strict quorum for data requiring strong consistency; sloppy quorum for high-availability use cases where temporary staleness is acceptable' },
+        { decision: 'High W, Low R vs Low W, High R', pros: 'High W ensures data is durable on many nodes, fast reads; Low W enables fast writes with broader read verification', cons: 'High W increases write latency; High R increases read latency', recommendation: 'Use W=majority, R=majority as default; shift to W=N, R=1 for read-heavy workloads or W=1, R=N for write-heavy workloads' },
+        { decision: 'Quorum-based vs Leader-based consistency', pros: 'Quorum-based has no single point of failure for writes; Leader-based provides simpler strong consistency', cons: 'Quorum-based requires coordination on every operation; Leader-based bottlenecks on one node and needs failover', recommendation: 'Use quorum for highly available key-value stores (Cassandra, DynamoDB); leader-based for relational workloads needing transactions' }
+      ],
+      layeredDesign: [
+        { name: 'Client Layer', purpose: 'Sends requests to multiple nodes and waits for quorum responses', components: ['Request Fanout', 'Quorum Collector', 'Version Resolver', 'Retry Logic'] },
+        { name: 'Coordinator Layer', purpose: 'Routes operations to the correct replica set and manages quorum', components: ['Partition Router', 'Quorum Counter', 'Timeout Manager', 'Hinted Handoff Queue'] },
+        { name: 'Replica Layer', purpose: 'Stores data and participates in read/write quorum operations', components: ['Local Storage Engine', 'Read Repair Handler', 'Anti-Entropy Service', 'Merkle Tree'] },
+        { name: 'Gossip Layer', purpose: 'Maintains cluster membership and node health information', components: ['Gossip Protocol', 'Failure Detector', 'Membership List', 'Seed Nodes'] }
       ]
     },
     {
@@ -12901,6 +13133,24 @@ In system design interviews, leader-follower replication appears in every databa
           src: '/diagrams/leader-follower/replication-patterns.svg',
           type: 'architecture'
         }
+      ],
+      edgeCases: [
+        { scenario: 'Split-brain after network partition heals', impact: 'Both the old and new leader believe they are the rightful leader, accepting conflicting writes simultaneously', mitigation: 'Use fencing tokens (monotonically increasing epoch numbers), implement STONITH to shut down the old leader' },
+        { scenario: 'Replication lag causes read-after-write inconsistency', impact: 'User writes to leader then reads from a follower that has not yet received the update, seeing stale data', mitigation: 'Route read-after-write to the leader, track replication position per client, or use monotonic read sessions' },
+        { scenario: 'Leader election takes too long under heavy load', impact: 'Extended write unavailability while followers negotiate who becomes the new leader', mitigation: 'Pre-elect a designated successor, use fast Raft election with randomized timeouts, keep election timeout under 10 seconds' },
+        { scenario: 'Follower falls too far behind and cannot catch up', impact: 'Follower needs full snapshot transfer instead of incremental replication, consuming significant network and disk I/O', mitigation: 'Monitor replication lag, trigger re-snapshot before gap becomes too large, throttle leader write rate if followers cannot keep up' },
+        { scenario: 'Automated failover triggers during transient network blip', impact: 'Unnecessary leader change causes brief write outage and potential data conflicts when old leader rejoins', mitigation: 'Require multiple missed heartbeats before triggering failover, use phi accrual failure detector for adaptive thresholds' }
+      ],
+      tradeoffs: [
+        { decision: 'Single-Leader vs Multi-Leader replication', pros: 'Single-Leader is simple with no write conflicts; Multi-Leader enables writes in multiple regions for lower latency', cons: 'Single-Leader has higher write latency for remote clients; Multi-Leader requires conflict resolution and is harder to reason about', recommendation: 'Use Single-Leader for most applications; Multi-Leader only for multi-region deployments where local write latency is critical' },
+        { decision: 'Synchronous vs Asynchronous follower replication', pros: 'Synchronous guarantees follower has data before write is acknowledged; Asynchronous provides lower write latency', cons: 'Synchronous blocks on slow followers; Asynchronous risks data loss if leader fails before replication', recommendation: 'Use semi-synchronous: one synchronous follower for durability, remaining followers async for performance' },
+        { decision: 'Automatic vs Manual failover', pros: 'Automatic failover minimizes downtime; Manual failover allows human verification before promoting a follower', cons: 'Automatic may trigger falsely on network blips; Manual failover is slower and requires on-call availability', recommendation: 'Use automatic failover with conservative thresholds for production; manual for critical databases where data loss risk outweighs downtime' }
+      ],
+      layeredDesign: [
+        { name: 'Client Layer', purpose: 'Directs reads and writes to the correct node in the replica set', components: ['Leader Discovery', 'Read/Write Splitter', 'Failover Detector', 'Connection Pool'] },
+        { name: 'Consensus Layer', purpose: 'Manages leader election and term/epoch tracking', components: ['Raft/Paxos Protocol', 'Vote Manager', 'Term Counter', 'Fencing Token Generator'] },
+        { name: 'Replication Layer', purpose: 'Streams changes from leader to followers in real time', components: ['WAL Shipper', 'Replication Slot', 'Lag Monitor', 'Catch-up Mechanism'] },
+        { name: 'Storage Layer', purpose: 'Persists data with crash recovery on each node', components: ['Write-Ahead Log', 'B-Tree/LSM Storage', 'Checkpoint Manager', 'Snapshot Service'] }
       ]
     },
     {
@@ -13360,6 +13610,24 @@ Receiving node merges: keep highest heartbeat count per node
           src: '/diagrams/heartbeat-mechanism/failure-detection.svg',
           type: 'architecture'
         }
+      ],
+      edgeCases: [
+        { scenario: 'False positive failure detection from GC pause', impact: 'A healthy node is marked dead because a long garbage collection pause prevented it from sending heartbeats on time', mitigation: 'Use phi accrual failure detector that adapts to observed latency patterns, increase timeout to account for worst-case GC pauses' },
+        { scenario: 'Network asymmetry where heartbeats fail in one direction only', impact: 'Node A thinks Node B is dead while Node B thinks Node A is alive, creating inconsistent cluster state', mitigation: 'Implement bidirectional heartbeat verification, use gossip protocol for cross-validation of node status from multiple perspectives' },
+        { scenario: 'Heartbeat storm after mass restart', impact: 'All nodes send heartbeats simultaneously after cluster restart, causing network congestion and CPU spikes on monitors', mitigation: 'Stagger node startup times, add jitter to initial heartbeat timing, implement backoff on heartbeat responses' },
+        { scenario: 'Cascading failure from aggressive failure detection', impact: 'Marking one overloaded node as dead shifts its traffic to remaining nodes, overloading them and triggering more failures', mitigation: 'Implement graduated health states (healthy, degraded, unhealthy), shed traffic gradually, use circuit breakers before marking dead' },
+        { scenario: 'Monitoring system itself becomes a single point of failure', impact: 'If the central health checker crashes, no failures are detected and dead nodes continue receiving traffic', mitigation: 'Use decentralized gossip-based failure detection, deploy redundant monitors, implement peer-to-peer health checking' }
+      ],
+      tradeoffs: [
+        { decision: 'Short heartbeat interval vs Long heartbeat interval', pros: 'Short intervals detect failures faster (seconds); Long intervals reduce network overhead and false positives', cons: 'Short intervals generate more network traffic and increase false positive rate; Long intervals delay failure detection', recommendation: 'Use 1-5 second intervals for latency-sensitive systems; 10-30 seconds for large clusters where false positives are costly' },
+        { decision: 'Push-based heartbeat vs Pull-based health check', pros: 'Push-based scales better as each node sends its own heartbeat; Pull-based gives the monitor full control over timing', cons: 'Push-based requires every node to know the monitor; Pull-based creates centralized bottleneck and single point of failure', recommendation: 'Use push-based heartbeats for peer-to-peer systems; pull-based health checks from load balancers for routing decisions' },
+        { decision: 'Binary alive/dead vs Suspicion-level detection', pros: 'Binary is simple to implement and reason about; Suspicion-level (phi accrual) adapts to network conditions and reduces false positives', cons: 'Binary may trigger false positives on slow networks; Suspicion-level is harder to implement and tune', recommendation: 'Use phi accrual or suspicion-level detection for distributed databases; simple binary timeout for load balancer health checks' }
+      ],
+      layeredDesign: [
+        { name: 'Application Layer', purpose: 'Exposes health status and readiness endpoints for external consumers', components: ['Liveness Probe', 'Readiness Probe', 'Health Aggregator', 'Dependency Checker'] },
+        { name: 'Detection Layer', purpose: 'Determines node health from heartbeat signals and timeout thresholds', components: ['Phi Accrual Detector', 'Fixed Timeout Detector', 'Suspicion Level Calculator', 'Failure Threshold Config'] },
+        { name: 'Communication Layer', purpose: 'Sends and receives heartbeat messages between nodes', components: ['Heartbeat Sender', 'Heartbeat Receiver', 'Gossip Disseminator', 'UDP/TCP Transport'] },
+        { name: 'Action Layer', purpose: 'Takes corrective action when failures are detected', components: ['Failover Trigger', 'Traffic Rerouter', 'Alert Publisher', 'Auto-Recovery Initiator'] }
       ]
     },
     {

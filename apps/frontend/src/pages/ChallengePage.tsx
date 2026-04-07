@@ -5,21 +5,34 @@ import SiteFooter from '../components/shared/SiteFooter';
 import { useAuth } from '../contexts/AuthContext';
 
 /* ── Constants ────────────────────────────────────────────── */
-const CHALLENGE_START = new Date('2026-04-14T00:00:00Z');
-const CHALLENGE_END = new Date('2026-05-14T23:59:59Z');
+const CHALLENGE_START = new Date('2026-05-07T00:00:00Z');
+const CHALLENGE_END = new Date('2026-10-07T23:59:59Z');
 
 const PRIZES = [
-  { place: '1st Place', emoji: '\u{1F947}', title: 'Grand Champion', amount: '$11,116', gradient: 'linear-gradient(135deg, #fbbf24, #f59e0b)', border: '#fbbf24', desc: 'Best overall contributor across all categories. Exceptional bug reports, code quality, and documentation.' },
-  { place: '2nd Place', emoji: '\u{1F948}', title: 'Runner Up', amount: '$5,116', gradient: 'linear-gradient(135deg, #94a3b8, #64748b)', border: '#94a3b8', desc: 'Outstanding contributions with significant impact. High-quality findings and feature implementations.' },
-  { place: '3rd-7th Place', emoji: '\u{1F949}', title: 'Top Contributor', amount: '$1,116 each', gradient: 'linear-gradient(135deg, #d97706, #b45309)', border: '#d97706', desc: '5 winners recognized for meaningful contributions. Strong findings across any category.', winners: 5 },
+  { place: '1st Place', logo: '/logos/github.png', title: 'Grand Champion', amount: '$11,116', gradient: 'linear-gradient(135deg, #fbbf24, #f59e0b)', border: '#fbbf24', desc: 'Best overall contributor. Exceptional bug reports, code quality, and documentation.' },
+  { place: '2nd Place', logo: '/logos/react.png', title: 'Runner Up', amount: '$5,116', gradient: 'linear-gradient(135deg, #94a3b8, #64748b)', border: '#94a3b8', desc: 'Outstanding contributions with significant impact. High-quality findings.' },
+  { place: '3rd-7th Place', logo: '/logos/nodejs.png', title: 'Top Contributor', amount: '$1,116 each', gradient: 'linear-gradient(135deg, #d97706, #b45309)', border: '#d97706', desc: '5 winners for meaningful contributions across any category.', winners: 5 },
 ];
 
 const CATEGORIES = [
-  { icon: '\u{1F41B}', title: 'Bug Hunting', color: '#ef4444', desc: 'Find runtime crashes, logic errors, edge cases, and security vulnerabilities across the full stack.', examples: ['Unhandled promise rejections in API routes', 'Auth bypass or token validation gaps', 'Race conditions in concurrent operations'] },
-  { icon: '\u{1F3A8}', title: 'UX / Design', color: '#8b5cf6', desc: 'Improve mobile responsiveness, accessibility, design consistency, and user experience flows.', examples: ['Broken layouts on mobile or tablet viewports', 'Missing ARIA labels and keyboard navigation', 'Inconsistent spacing, colors, or typography'] },
-  { icon: '\u26A1', title: 'Performance', color: '#f59e0b', desc: 'Optimize slow database queries, reduce memory usage, improve bundle size, and fix bottlenecks.', examples: ['N+1 query patterns in API endpoints', 'Unnecessary re-renders in React components', 'Large unoptimized assets or bundle chunks'] },
-  { icon: '\u{1F527}', title: 'Infrastructure', color: '#06b6d4', desc: 'Improve deployment pipelines, add monitoring, enhance CI/CD, and address scaling concerns.', examples: ['Missing health checks or graceful shutdown', 'Environment variable misconfigurations', 'Docker optimization opportunities'] },
-  { icon: '\u2728', title: 'New Features', color: '#10b981', desc: 'Propose and implement innovative features with a clear plan, tests, and documentation.', examples: ['Spaced repetition for prep topics', 'Interview recording and playback', 'Team collaboration features'] },
+  { logo: '/logos/sentry.png', title: 'Bug Hunting', color: '#ef4444', desc: 'Runtime crashes, logic errors, security vulnerabilities across the full stack.', examples: ['Unhandled promise rejections', 'Auth bypass gaps', 'Race conditions'] },
+  { logo: '/logos/figma.png', title: 'UX / Design', color: '#8b5cf6', desc: 'Mobile responsiveness, accessibility, design consistency, UX flows.', examples: ['Broken mobile layouts', 'Missing ARIA labels', 'Inconsistent typography'] },
+  { logo: '/logos/react.png', title: 'Performance', color: '#f59e0b', desc: 'Slow queries, memory leaks, bundle size optimization, bottlenecks.', examples: ['N+1 query patterns', 'Unnecessary re-renders', 'Large unoptimized assets'] },
+  { logo: '/logos/docker.png', title: 'Infrastructure', color: '#06b6d4', desc: 'Deployment, CI/CD, monitoring, scaling, and DevOps improvements.', examples: ['Missing health checks', 'Env var misconfigs', 'Docker optimization'] },
+  { logo: '/logos/typescript.png', title: 'New Features', color: '#10b981', desc: 'Innovative feature proposals with implementation plan, tests, and docs.', examples: ['Spaced repetition', 'Interview recording', 'Team collaboration'] },
+];
+
+const TECH_STACK = [
+  { name: 'React 19', logo: '/logos/react.png' },
+  { name: 'TypeScript', logo: '/logos/typescript.png' },
+  { name: 'Node.js', logo: '/logos/nodejs.png' },
+  { name: 'PostgreSQL', logo: '/logos/postgresql.png' },
+  { name: 'Python', logo: '/logos/python.png' },
+  { name: 'Docker', logo: '/logos/docker.png' },
+  { name: 'Vercel', logo: '/logos/vercel.png' },
+  { name: 'Railway', logo: '/logos/railway.png' },
+  { name: 'Claude AI', logo: '/logos/anthropic.png' },
+  { name: 'OpenAI', logo: '/logos/openai.png' },
 ];
 
 const STEPS = [
@@ -44,7 +57,7 @@ const FAQS = [
   { q: 'Do I need to be a full-time developer?', a: 'No. The challenge is open to developers of all experience levels — students, bootcamp grads, career changers, and senior engineers alike.' },
   { q: 'Can I participate from any country?', a: 'Yes. Camora is remote-first and the challenge is open to developers worldwide. Prizes are distributed globally.' },
   { q: 'What tech stack does Camora use?', a: 'React 19, Express 5, PostgreSQL, Python (FastAPI), deployed on Vercel + Railway. TypeScript frontend, JavaScript backends.' },
-  { q: 'Will I get GitHub access immediately?', a: 'You will receive GitHub access after creating your account and once the challenge officially starts on April 14, 2026.' },
+  { q: 'Will I get GitHub access immediately?', a: 'You will receive GitHub access after creating your account and once the challenge officially starts on May 7, 2026.' },
   { q: 'Can I work on multiple categories?', a: 'Absolutely. You are encouraged to contribute across all categories. More high-quality findings and features mean a higher total score.' },
   { q: 'How are ties broken?', a: 'In the event of a tie, documentation quality, code quality, and breadth of contributions are used as tiebreakers.' },
   { q: 'Is destructive testing allowed?', a: 'No. All testing must be non-destructive. Do not attempt DDoS, data deletion, or any action that could harm the production platform.' },
@@ -220,7 +233,7 @@ export default function ChallengePage() {
                 style={{ background: p.gradient }}
               >
                 <div className="bg-white rounded-2xl p-7 h-full flex flex-col items-center text-center">
-                  <span className="text-4xl mb-3">{p.emoji}</span>
+                  <img src={p.logo} alt={p.title} width={48} height={48} style={{ objectFit: 'contain', marginBottom: 12 }} />
                   <p className="text-xs font-bold uppercase tracking-wider mb-1" style={{ color: p.border }}>{p.place}</p>
                   <p className="text-3xl font-extrabold text-gray-900 mb-1">{p.amount}</p>
                   <p className="text-sm font-bold text-gray-700 mb-3">{p.title}</p>
@@ -322,8 +335,8 @@ export default function ChallengePage() {
             {CATEGORIES.map((c) => (
               <div key={c.title} className="bg-white rounded-2xl border border-gray-200 p-6 transition-all hover:shadow-md hover:-translate-y-0.5">
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl" style={{ background: `${c.color}15` }}>
-                    {c.icon}
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: `${c.color}15` }}>
+                    <img src={c.logo} alt={c.title} width={24} height={24} style={{ objectFit: 'contain' }} />
                   </div>
                   <h3 className="text-base font-bold text-gray-900">{c.title}</h3>
                 </div>
@@ -391,6 +404,26 @@ export default function ChallengePage() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════
+          TECH STACK
+          ═══════════════════════════════════════════════════════ */}
+      <section className="py-16 px-4 sm:px-6">
+        <div className="w-full lg:max-w-[70%] mx-auto text-center">
+          <p className="text-xs font-bold text-emerald-600 uppercase tracking-wider mb-2">Built With</p>
+          <h2 className="text-2xl font-extrabold text-gray-900 tracking-tight mb-8">Our Tech Stack</h2>
+          <div className="flex flex-wrap justify-center gap-6">
+            {TECH_STACK.map((t) => (
+              <div key={t.name} className="flex flex-col items-center gap-2 w-20">
+                <div className="w-14 h-14 rounded-2xl bg-white border border-gray-200 flex items-center justify-center shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all">
+                  <img src={t.logo} alt={t.name} width={32} height={32} style={{ objectFit: 'contain' }} />
+                </div>
+                <span className="text-[11px] font-medium text-gray-500">{t.name}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════
           LEADERBOARD (PLACEHOLDER)
           ═══════════════════════════════════════════════════════ */}
       <section className="py-20 sm:py-28 px-4 sm:px-6" style={{ background: '#fafafa' }}>
@@ -401,7 +434,7 @@ export default function ChallengePage() {
             <p className="mt-3 text-gray-500 max-w-xl mx-auto">
               {challengeActive
                 ? 'Live standings updated as submissions are reviewed.'
-                : 'Rankings will appear once the challenge begins on April 14, 2026.'}
+                : 'Rankings will appear once the challenge begins on May 7, 2026.'}
             </p>
           </div>
 
@@ -484,8 +517,8 @@ export default function ChallengePage() {
                 Timeline
               </h3>
               <ul className="space-y-2 text-sm text-gray-600">
-                <li><span className="font-semibold text-gray-900">Start:</span> April 14, 2026</li>
-                <li><span className="font-semibold text-gray-900">End:</span> May 14, 2026</li>
+                <li><span className="font-semibold text-gray-900">Start:</span> May 7, 2026</li>
+                <li><span className="font-semibold text-gray-900">End:</span> October 7, 2026</li>
                 <li><span className="font-semibold text-gray-900">Review period:</span> May 15 - May 21, 2026</li>
                 <li><span className="font-semibold text-gray-900">Winners announced:</span> May 22, 2026</li>
               </ul>
