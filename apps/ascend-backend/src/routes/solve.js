@@ -8,6 +8,7 @@ import { verifyJWT } from '../middleware/jwtAuth.js';
 import { query } from '../lib/shared-db.js';
 import * as freeUsageService from '../services/freeUsageService.js';
 import { logger } from '../middleware/requestLogger.js';
+import { awardXP } from '../services/gamificationService.js';
 
 const router = Router();
 
@@ -85,6 +86,8 @@ router.post('/', validate('solve'), async (req, res, next) => {
       solutionCache.delete(firstKey);
     }
     solutionCache.set(cacheKey, { data: result, timestamp: Date.now() });
+
+    if (userId) awardXP(userId, 'coding_solve').catch(() => {});
 
     res.json(result);
   } catch (error) {
@@ -341,6 +344,8 @@ router.post('/stream', validate('solve'), async (req, res, next) => {
           // Don't fail the request, just log the error
         }
       }
+
+      if (webappUserId) awardXP(webappUserId, 'coding_solve').catch(() => {});
 
       res.write(`data: ${JSON.stringify({ done: true, result })}\n\n`);
     } catch (parseErr) {

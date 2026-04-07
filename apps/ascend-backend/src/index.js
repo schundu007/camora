@@ -36,6 +36,7 @@ import jobAnalyzeRouter from './routes/jobAnalyze.js';
 import topicReadsRouter from './routes/topicReads.js';
 import referralRouter from './routes/referral.js';
 import interviewCountdownRouter from './routes/interviewCountdown.js';
+import gamificationRouter from './routes/gamification.js';
 
 import { authenticate } from './middleware/authenticate.js';
 
@@ -135,6 +136,33 @@ async function runMigrations() {
     )`);
 
     console.log('[Migrations] Referral + Interview countdown tables ensured');
+
+    // Gamification: badges
+    await query(`CREATE TABLE IF NOT EXISTS ascend_badges (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL,
+      badge_key VARCHAR(50) NOT NULL,
+      earned_at TIMESTAMPTZ DEFAULT NOW(),
+      UNIQUE(user_id, badge_key)
+    )`);
+    await query('CREATE INDEX IF NOT EXISTS idx_badges_user ON ascend_badges(user_id)');
+
+    // Gamification: XP + level on user_profiles
+    await query('ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS xp_points INTEGER DEFAULT 0');
+    await query('ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS level INTEGER DEFAULT 1');
+
+    // Gamification: weekly leaderboard
+    await query(`CREATE TABLE IF NOT EXISTS ascend_weekly_leaderboard (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL,
+      week_start DATE NOT NULL,
+      xp_earned INTEGER DEFAULT 0,
+      problems_solved INTEGER DEFAULT 0,
+      UNIQUE(user_id, week_start)
+    )`);
+    await query('CREATE INDEX IF NOT EXISTS idx_leaderboard_week ON ascend_weekly_leaderboard(week_start, xp_earned DESC)');
+
+    console.log('[Migrations] Gamification tables ensured');
   } catch (err) {
     console.warn('[Migrations] Failed to run onboarding migration:', err.message);
   }
@@ -461,6 +489,9 @@ app.use('/api/referral', apiLimiter, referralRouter);
 
 // Interview countdown routes (all require auth)
 app.use('/api/interview', authenticate, apiLimiter, interviewCountdownRouter);
+
+// Gamification routes (XP, badges, leaderboard — uses jwtAuth internally)
+app.use('/api/gamification', apiLimiter, gamificationRouter);
 
 // Job URL analysis (scrape + AI analysis) — auth required, AI rate limit
 app.use('/api/job-analyze', authenticate, aiLimiter, jobAnalyzeRouter);
