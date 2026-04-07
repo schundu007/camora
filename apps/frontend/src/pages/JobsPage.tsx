@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import CamoraLogo from '../components/shared/CamoraLogo';
+import SiteFooter from '../components/shared/SiteFooter';
 
 /* ──────────────────────────────── Constants ──────────────────────────────── */
 
@@ -997,63 +998,7 @@ export default function JobsPage() {
         </div>
       </div>
 
-      {/* ═══════════════════════ Footer ═══════════════════════ */}
-      <footer
-        style={{
-          background: '#ffffff',
-          borderTop: '1px solid #e3e8ee',
-          padding: '24px 0',
-        }}
-      >
-        <div className="max-w-[85%] xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center' }}>
-            {/* Logo */}
-            <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
-              <CamoraLogo size={28} />
-              <span style={{ fontWeight: 700, fontSize: '14px', color: '#111827', fontFamily: "'Comfortaa', sans-serif" }}>
-                Camora
-              </span>
-            </Link>
-
-            {/* Nav links */}
-            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: '20px' }}>
-              {[
-                { label: 'Apply', href: '/jobs' },
-                { label: 'Prepare', href: '/capra/prepare' },
-                { label: 'Practice', href: '/capra/practice' },
-                { label: 'Attend', href: '/lumora' },
-                { label: 'Pricing', href: '/pricing' },
-                { label: 'Support', href: 'mailto:support@cariara.com' },
-              ].map((link) => (
-                link.href.startsWith('mailto:') ? (
-                  <a
-                    key={link.label}
-                    href={link.href}
-                    className="jobs-footer-link"
-                    style={{ fontSize: '13px', color: '#6b7280', textDecoration: 'none', fontWeight: 500, transition: 'color 0.15s' }}
-                  >
-                    {link.label}
-                  </a>
-                ) : (
-                  <Link
-                    key={link.label}
-                    to={link.href}
-                    className="jobs-footer-link"
-                    style={{ fontSize: '13px', color: '#6b7280', textDecoration: 'none', fontWeight: 500, transition: 'color 0.15s' }}
-                  >
-                    {link.label}
-                  </Link>
-                )
-              ))}
-            </div>
-
-            {/* Copyright */}
-            <p style={{ fontSize: '12px', color: '#9ca3af', margin: 0 }}>
-              &copy; {new Date().getFullYear()} Camora by Cariara
-            </p>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
 
       {/* ═══════════════════════ Scoped Styles ═══════════════════════ */}
       <style>{`

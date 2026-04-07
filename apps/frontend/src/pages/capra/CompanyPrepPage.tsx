@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Icon } from '../../components/shared/Icons.jsx';
 import CamoraLogo from '../../components/shared/CamoraLogo';
+import SiteFooter from '../../components/shared/SiteFooter';
 
 /* ──────────────────────────────── Types ──────────────────────────────── */
 
@@ -931,42 +932,7 @@ export default function CompanyPrepPage() {
         </div>
       </main>
 
-      {/* ═══════════════════════ Footer ═══════════════════════ */}
-      <footer style={{ background: '#ffffff', borderTop: '1px solid #e3e8ee', padding: '24px 0' }}>
-        <div className="max-w-[85%] xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16, alignItems: 'center' }}>
-            {/* Logo */}
-            <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
-              <CamoraLogo size={22} />
-              <span style={{ fontWeight: 700, fontSize: 14, color: '#111827', fontFamily: "'Comfortaa', sans-serif" }}>
-                Camora
-              </span>
-            </Link>
-
-            {/* Nav links */}
-            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 20 }}>
-              {footerLinks.map((link) =>
-                link.href.startsWith('http') || link.href.startsWith('mailto:') ? (
-                  <a key={link.label} href={link.href} target="_blank" rel="noopener noreferrer" className="practice-body footer-link"
-                    style={{ fontSize: 13, color: '#6b7280', textDecoration: 'none', fontWeight: 500, transition: 'color 0.15s' }}>
-                    {link.label}
-                  </a>
-                ) : (
-                  <Link key={link.label} to={link.href} className="practice-body footer-link"
-                    style={{ fontSize: 13, color: '#6b7280', textDecoration: 'none', fontWeight: 500, transition: 'color 0.15s' }}>
-                    {link.label}
-                  </Link>
-                )
-              )}
-            </div>
-
-            {/* Copyright */}
-            <p className="practice-body" style={{ fontSize: 12, color: '#9ca3af', margin: 0 }}>
-              &copy; {new Date().getFullYear()} Camora by Cariara
-            </p>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
 
       {/* ═══════════════════════ Scoped Styles ═══════════════════════ */}
       <style>{`

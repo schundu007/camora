@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence, useInView } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import CamoraLogo from '../components/shared/CamoraLogo';
+import SiteFooter from '../components/shared/SiteFooter';
 
 /* ── Nav links ─────────────────────────────────────────── */
 const NAV_LINKS = [
@@ -790,29 +791,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── FOOTER ── */}
-      <footer className="border-t border-gray-100 px-6 py-16" style={{ zIndex: 1 }}>
-        <div className="max-w-6xl mx-auto">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
-            <div className="flex items-center gap-3">
-              <CamoraLogo size={36} />
-              <div>
-                <span className="text-base font-bold" style={{ fontFamily: "'Comfortaa', sans-serif" }}>Camora</span>
-                <span className="block text-xs text-gray-400 mt-0.5">Apply · Prepare · Practice · Attend</span>
-              </div>
-            </div>
-            <div className="flex flex-wrap items-center gap-6">
-              {NAV_LINKS.map(link => (
-                <Link key={link.label} to={link.href} className="text-sm text-gray-400 hover:text-gray-600 transition-colors font-medium">{link.label}</Link>
-              ))}
-              <a href="mailto:support@cariara.com" className="text-sm text-gray-400 hover:text-gray-600 transition-colors font-medium">Support</a>
-            </div>
-          </div>
-          <div className="mt-10 pt-8 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="text-sm text-gray-300">&copy; {new Date().getFullYear()} Camora by Cariara</p>
-            <p className="text-sm text-gray-300">Built for engineers, by engineers.</p>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

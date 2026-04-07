@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Icon } from '../../components/shared/Icons.jsx';
 import CamoraLogo from '../../components/shared/CamoraLogo';
+import SiteFooter from '../../components/shared/SiteFooter';
 import { getAuthHeaders } from '../../utils/authHeaders.js';
 
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
@@ -590,31 +591,7 @@ export default function PracticePage() {
         </div>
       </div>
 
-      {/* ═══════════ Footer ═══════════ */}
-      <footer style={{ background: '#ffffff', borderTop: '1px solid #e3e8ee', padding: '24px 0' }}>
-        <div className="max-w-[85%] xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16, alignItems: 'center' }}>
-            <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
-              <div style={{ width: 22, height: 22, background: '#10b981', borderRadius: 5, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Icon name="ascend" size={11} style={{ color: '#fff' }} />
-              </div>
-              <span className="practice-display" style={{ fontWeight: 700, fontSize: 14, color: '#111827' }}>Camora</span>
-            </Link>
-            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 20 }}>
-              {[
-                { label: 'Apply', href: '/jobs' },
-                { label: 'Prepare', href: '/capra/prepare' },
-                { label: 'Practice', href: '/capra/practice' },
-                { label: 'Attend', href: '/lumora' },
-                { label: 'Pricing', href: '/pricing' },
-              ].map(link => (
-                <Link key={link.label} to={link.href} style={{ fontSize: 13, color: '#6b7280', textDecoration: 'none', fontWeight: 500 }}>{link.label}</Link>
-              ))}
-            </div>
-            <p style={{ fontSize: 12, color: '#9ca3af', margin: 0 }}>&copy; {new Date().getFullYear()} Camora by Cariara</p>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
 
       {/* ═══════════ Styles ═══════════ */}
       <style>{`
