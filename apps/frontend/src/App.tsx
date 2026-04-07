@@ -1,7 +1,7 @@
 import { Routes, Route, Navigate, useLocation, Link } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { lazy, Suspense, useEffect } from 'react';
-import CamoraLogo from './components/shared/CamoraLogo';
+import SiteNav from './components/shared/SiteNav';
 
 // ── Shared pages ────────────────────────────────────────
 const LandingPage = lazy(() => import('./pages/LandingPage'));
@@ -53,30 +53,10 @@ function LoginPage() {
 
   return (
     <div className="min-h-screen" style={{ background: 'transparent' }}>
-      {/* ── Nav ──────────────────────────────────────── */}
-      <nav className="sticky top-0 z-50 backdrop-blur-xl" style={{ background: 'linear-gradient(135deg, rgba(178,235,242,0.7) 0%, rgba(179,198,231,0.7) 30%, rgba(197,179,227,0.7) 55%, rgba(212,184,232,0.7) 80%, rgba(225,190,231,0.7) 100%)' }}>
-        <div className="max-w-[85%] xl:max-w-7xl mx-auto h-14 flex items-center justify-between px-4">
-          <Link to="/" className="flex items-center gap-2.5">
-            <CamoraLogo size={36} />
-            <span className="text-sm font-bold text-gray-900" style={{ fontFamily: "'Comfortaa', sans-serif" }}>Camora</span>
-          </Link>
-          <div className="hidden md:flex items-center gap-1">
-            {[
-              { label: 'Apply', href: '/jobs' },
-              { label: 'Prepare', href: '/capra/prepare' },
-              { label: 'Practice', href: '/capra/practice' },
-              { label: 'Attend', href: '/lumora' },
-              { label: 'Pricing', href: '/pricing' },
-            ].map((tab) => (
-              <Link key={tab.label} to={tab.href} className="px-3 py-1.5 text-sm text-gray-500 hover:text-gray-900 font-medium transition-colors">{tab.label}</Link>
-            ))}
-          </div>
-          <Link to="/signup" className="text-sm text-emerald-600 hover:text-emerald-700 font-semibold">Create account</Link>
-        </div>
-      </nav>
+      <SiteNav />
 
       {/* ── Centered card ─────────────────────────────── */}
-      <div className="flex items-center justify-center py-12 px-4" style={{ minHeight: 'calc(100vh - 56px)' }}>
+      <div className="flex items-center justify-center py-12 px-4" style={{ minHeight: 'calc(100vh - 56px)', paddingTop: '56px' }}>
         <div className="w-full max-w-sm bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.04)] border border-[#e3e8ee] p-8">
 
           {/* Header */}

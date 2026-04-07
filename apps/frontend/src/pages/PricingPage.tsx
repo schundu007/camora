@@ -147,7 +147,7 @@ export default function PricingPage() {
 
       {/* Header */}
       <section className="pt-20 pb-0 px-6 text-center">
-        <span className="text-[11px] font-mono text-gray-500 uppercase tracking-wider">Pricing</span>
+        <span className="section-label">Pricing</span>
         <h1 className="mt-1 text-3xl md:text-4xl font-semibold tracking-tight text-gray-900">
           The APPA platform. All-in-one.
         </h1>
@@ -344,8 +344,8 @@ export default function PricingPage() {
       <section className="px-6 py-16">
         <div className="w-full lg:max-w-[70%] mx-auto">
           <div className="mb-10 text-center">
-            <span className="text-[11px] font-mono text-emerald-600 uppercase tracking-wider">Need More Credits?</span>
-            <h2 className="mt-3 text-2xl font-semibold tracking-tight text-gray-900">Top-Up Packs</h2>
+            <span className="section-label">Need More Credits?</span>
+            <h2 className="heading-2 mt-3">Top-Up Packs</h2>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
@@ -356,12 +356,12 @@ export default function PricingPage() {
             ].map((pack) => (
               <div key={pack.packId} className="rounded-2xl p-px bg-gradient-to-br from-emerald-300 via-blue-300 to-purple-300 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:from-emerald-400 hover:via-blue-400 hover:to-purple-400 transition-all">
               <div className="bg-white rounded-[15px] p-6">
-                <h3 className="text-lg font-bold text-gray-900">{pack.name}</h3>
+                <h3 className="heading-3">{pack.name}</h3>
                 <div className="mt-1 flex items-baseline gap-1">
                   <span className="text-2xl font-bold text-emerald-600">{pack.price}</span>
-                  <span className="text-sm text-gray-400">one-time</span>
+                  <span className="text-small">one-time</span>
                 </div>
-                <p className="mt-2 text-sm text-gray-500">{pack.desc}</p>
+                <p className="mt-2 text-body">{pack.desc}</p>
                 <button
                   onClick={async () => {
                     if (!token) { navigate('/login'); return; }
@@ -399,10 +399,10 @@ export default function PricingPage() {
       {/* CTA buttons */}
       <section className="px-6 py-10 text-center">
         <div className="flex items-center justify-center gap-4">
-          <Link to="/lumora" className="px-6 py-2.5 text-sm font-semibold rounded-xl text-white transition-all hover:opacity-90" style={{ background: 'linear-gradient(135deg, #10b981, #3b82f6, #8b5cf6)', boxShadow: '0 4px 14px rgba(99,102,241,0.25)' }}>
+          <Link to="/lumora" className="btn-primary">
             Start Free
           </Link>
-          <Link to="/capra/prepare" className="px-6 py-2.5 text-sm font-semibold rounded-xl text-gray-700 border-2 border-[#c7cfe0] hover:border-indigo-400 hover:text-indigo-600 transition-all">
+          <Link to="/capra/prepare" className="btn-secondary">
             Browse Topics
           </Link>
         </div>
@@ -412,8 +412,8 @@ export default function PricingPage() {
       <section className="px-6 py-16">
         <div className="w-full lg:max-w-[70%] mx-auto">
           <div className="mb-10 text-center">
-            <span className="text-[11px] font-mono text-gray-500 uppercase tracking-wider">FAQ</span>
-            <h2 className="mt-3 text-2xl font-semibold tracking-tight text-gray-900">Common questions</h2>
+            <span className="section-label">FAQ</span>
+            <h2 className="heading-2 mt-3">Common questions</h2>
           </div>
 
           <div className="grid md:grid-cols-2 gap-px bg-white/[0.04]">
@@ -425,9 +425,9 @@ export default function PricingPage() {
               { q: 'What makes Camora different?', a: 'We are the only platform that combines job discovery, preparation, practice, and live interview AI in one tool. Competitors offer only 1-2 of these.' },
               { q: 'Can I cancel anytime?', a: 'Yes. No contracts, no cancellation fees. Your access continues through the end of the billing period.' },
             ].map((faq, i) => (
-              <div key={i} className="bg-white p-6 border border-[#e3e8ee] shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-                <h4 className="text-sm font-semibold text-gray-900 mb-2">{faq.q}</h4>
-                <p className="text-[13px] text-gray-500 leading-relaxed">{faq.a}</p>
+              <div key={i} className="card">
+                <h4 className="heading-3 mb-2">{faq.q}</h4>
+                <p className="text-body">{faq.a}</p>
               </div>
             ))}
           </div>

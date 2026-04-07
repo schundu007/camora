@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Icon } from '../../shared/Icons.jsx';
 import CamoraLogo from '../../shared/CamoraLogo';
+import SiteNav from '../../shared/SiteNav';
 import { useAuth } from '../../../contexts/AuthContext';
 
 function useInView(threshold = 0.2) {
@@ -19,67 +20,12 @@ function useInView(threshold = 0.2) {
 export default function OAuthLogin() {
   const { user, isLoading: loading } = useAuth();
   const [mounted, setMounted] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => { setMounted(true); window.scrollTo(0, 0); }, []);
 
-  const navLinks = [
-    { label: 'Apply', href: '/jobs' },
-    { label: 'Prepare', href: '/capra/prepare' },
-    { label: 'Practice', href: '/capra/practice' },
-    { label: 'Attend', href: '/lumora' },
-    { label: 'Pricing', href: '/pricing' },
-  ];
-
   return (
-    <div className="min-h-screen text-gray-900 overflow-hidden landing-root" style={{ background: 'linear-gradient(180deg, #fdf2f8 0%, #ede9fe 50%, #e0e7ff 100%)', paddingTop: '64px', paddingBottom: '52px' }}>
-
-      {/* Nav */}
-      <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-12 py-4" style={{ background: '#111827' }}>
-        <a href="/" className="flex items-center gap-3">
-          <CamoraLogo size={32} />
-          <div>
-            <span className="landing-display font-bold text-lg tracking-tight text-white" style={{ fontFamily: "'Comfortaa', sans-serif" }}>Camora</span>
-            <span className="block text-[10px] landing-mono uppercase tracking-[0.2em] text-emerald-400 -mt-0.5">Interview AI</span>
-          </div>
-        </a>
-
-        <div className="hidden md:flex items-center gap-6">
-          {navLinks.map((link) => {
-            const isHighlighted = ['Apply', 'Prepare', 'Practice'].includes(link.label);
-            return (
-              <a key={link.label} href={link.href} className={`text-sm font-semibold transition-colors landing-body ${isHighlighted ? '' : 'text-gray-400 hover:text-white'}`} style={isHighlighted ? { background: 'linear-gradient(90deg, #34d399, #22d3ee)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' } : undefined}>
-                {link.label}
-              </a>
-            );
-          })}
-        </div>
-
-        <div className="flex items-center gap-4">
-          {user ? (
-            <a href="/capra/prepare" className="text-sm text-gray-300 hover:text-white transition-colors landing-body font-medium">Dashboard</a>
-          ) : !loading ? (
-            <a href="/login" className="text-sm text-gray-300 hover:text-white transition-colors landing-body font-medium">Sign in</a>
-          ) : null}
-          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden p-2 text-gray-400 hover:text-white transition-colors">
-            <Icon name={mobileMenuOpen ? 'close' : 'menu'} size={22} />
-          </button>
-        </div>
-      </nav>
-
-      {/* Mobile menu */}
-      {mobileMenuOpen && (
-        <div className="fixed top-16 left-0 right-0 z-40 md:hidden border-b border-gray-100 bg-white px-6 py-4 space-y-1">
-          {navLinks.map((link) => (
-            <a key={link.label} href={link.href} className="block px-4 py-2.5 text-sm font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-50 rounded transition-colors landing-body">{link.label}</a>
-          ))}
-          {user ? (
-            <a href="/capra/prepare" className="block px-4 py-2.5 text-sm font-medium text-emerald-600 hover:bg-emerald-50 rounded transition-colors landing-body">Dashboard</a>
-          ) : !loading ? (
-            <a href="/login" className="block w-full mt-2 px-4 py-2.5 text-sm font-medium text-emerald-600 hover:bg-emerald-50 rounded transition-colors landing-body text-left">Sign in</a>
-          ) : null}
-        </div>
-      )}
+    <div className="min-h-screen text-gray-900 overflow-hidden landing-root" style={{ background: 'linear-gradient(180deg, #fdf2f8 0%, #ede9fe 50%, #e0e7ff 100%)', paddingTop: '56px', paddingBottom: '52px' }}>
+      <SiteNav />
 
       {/* Hero */}
       <section className="flex flex-col items-center justify-center text-center px-6 pt-12 pb-12 md:pt-16 md:pb-16">

@@ -1,35 +1,12 @@
 import { Link } from 'react-router-dom';
-import CamoraLogo from '../components/shared/CamoraLogo';
+import SiteNav from '../components/shared/SiteNav';
 
 export default function SignupPage() {
   const googleAuthUrl = `${import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com'}/api/auth/google/login`;
 
-  const navLinks = [
-    { label: 'Apply', href: '/jobs' },
-    { label: 'Prepare', href: '/capra/prepare' },
-    { label: 'Practice', href: '/capra/practice' },
-    { label: 'Attend', href: '/lumora' },
-    { label: 'Pricing', href: '/pricing' },
-  ];
-
   return (
     <div className="min-h-screen" style={{ background: 'transparent' }}>
-
-      {/* Nav */}
-      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-[#e3e8ee] bg-white/90 backdrop-blur-xl">
-        <div className="max-w-6xl mx-auto flex items-center justify-between px-6 h-14">
-          <Link to="/" className="flex items-center gap-2.5">
-            <CamoraLogo size={36} />
-            <span className="text-sm font-bold tracking-tight text-gray-900" style={{ fontFamily: "'Comfortaa', sans-serif" }}>Camora</span>
-          </Link>
-          <div className="hidden md:flex items-center gap-1">
-            {navLinks.map((link) => (
-              <Link key={link.label} to={link.href} className="px-3 py-1.5 text-[13px] text-gray-500 hover:text-gray-900 transition-colors">{link.label}</Link>
-            ))}
-          </div>
-          <Link to="/login" className="text-[13px] text-gray-500 hover:text-gray-900 transition-colors font-medium">Sign in</Link>
-        </div>
-      </nav>
+      <SiteNav />
 
       <div className="flex items-center justify-center px-4" style={{ minHeight: '100vh', paddingTop: '80px' }}>
         <div className="w-full max-w-sm bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.04)] border border-[#e3e8ee] p-8">
