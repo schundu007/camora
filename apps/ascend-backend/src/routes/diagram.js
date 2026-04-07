@@ -114,16 +114,7 @@ router.post('/generate', async (req, res, next) => {
       throw new AppError('Question is required', ErrorCode.VALIDATION_ERROR);
     }
 
-    // 1. Check free usage FIRST (before cache — prevent bypass)
-    const userId = req.user?.id;
-    if (userId) {
-      const canUse = await freeUsageService.canUseFeature(userId, 'design');
-      if (!canUse.allowed) {
-        return res.status(429).json({ error: canUse.reason || 'Free trial exhausted.', subscriptionRequired: true });
-      }
-    }
-
-    // 2. Check DB cache (hash includes all dimensions)
+    // 1. Check DB cache first — cached diagrams cost nothing to serve
     const problemHash = hashProblem(`${cacheKey || question}::${provider}::${direction}::${detailLevel}`);
     try {
       const cached = await query(
@@ -140,6 +131,15 @@ router.post('/generate', async (req, res, next) => {
         });
       }
     } catch { /* table might not exist yet */ }
+
+    // 2. Check free usage — only for cache misses (actual generation costs money)
+    const userId = req.user?.id;
+    if (userId) {
+      const canUse = await freeUsageService.canUseFeature(userId, 'design');
+      if (!canUse.allowed) {
+        return res.status(429).json({ error: canUse.reason || 'Free trial exhausted.', subscriptionRequired: true });
+      }
+    }
 
     // 3. Check if configured
     if (!pythonDiagrams.isConfigured()) {

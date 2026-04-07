@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import hljs from 'highlight.js';
 import type { ParsedBlock } from '@/types';
+import { MermaidDiagram } from './MermaidDiagram';
 
 interface AnswerBlocksProps {
   blocks: ParsedBlock[];
@@ -87,7 +88,7 @@ function Block({ block, delay }: { block: ParsedBlock; delay: number }) {
             <svg className="w-4 h-4 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6z" /></svg>
             <h4 className="text-[11px] font-mono font-bold text-cyan-700 uppercase tracking-wider">Flow</h4>
           </div>
-          <pre className="p-4 text-xs text-cyan-700 leading-snug whitespace-pre overflow-x-auto font-mono">{block.content.trim()}</pre>
+          <MermaidDiagram content={block.content} />
         </div>
       );
 
@@ -376,9 +377,7 @@ function SystemDesignView({ blocks }: { blocks: ParsedBlock[] }) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-start">
         <GridCard title="ARCHITECTURE" titleColor="text-cyan-light" className="border-cyan/15 bg-cyan/[0.02]">
           {byType.DIAGRAM && byType.DIAGRAM.content.trim() && !/^skip/i.test(byType.DIAGRAM.content.trim()) ? (
-            <pre className="font-mono text-[11px] text-cyan-light leading-[1.4] whitespace-pre overflow-x-auto">
-              {byType.DIAGRAM.content.trim()}
-            </pre>
+            <MermaidDiagram content={byType.DIAGRAM.content} />
           ) : (
             <div className="flex flex-col items-center justify-center py-6 text-center">
               <svg className="w-8 h-8 text-cyan-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

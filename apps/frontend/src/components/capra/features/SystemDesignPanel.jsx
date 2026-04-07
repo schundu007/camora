@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 import { getAuthHeaders } from '../../../utils/authHeaders.js';
+import { MermaidDiagram } from '../../lumora/interview/MermaidDiagram';
 
 
 /**
@@ -797,7 +798,9 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
             {hasDiagram && (
               <div className="col-span-full rounded-lg p-3 bg-gray-200/30 border border-gray-200">
                 <h4 className="text-xs font-semibold uppercase tracking-wide mb-2 text-gray-500">System Flow Diagram</h4>
-                <pre className="text-xs text-gray-800 bg-gray-100 rounded p-3 overflow-x-auto font-mono whitespace-pre leading-relaxed border border-gray-200">{systemDesign.diagram.replace(/\\n/g, '\n')}</pre>
+                {systemDesign.diagram && (
+                  <MermaidDiagram content={systemDesign.diagram.replace(/\\n/g, '\n')} />
+                )}
               </div>
             )}
 
