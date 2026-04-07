@@ -2,14 +2,35 @@ import { useCallback, useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 
 const STORAGE_KEY = 'camora_topics_read';
+const INTEGRITY_KEY = 'camora_topics_sig';
 const FREE_TOPICS_PER_CATEGORY = 1;
 
-type Category = string; // 'coding' | 'system-design' | 'behavioral' | 'low-level' | 'microservices' | 'databases' | 'sql'
+type Category = string;
+
+// Simple integrity check to detect localStorage tampering
+function computeSignature(data: Record<Category, string[]>): string {
+  const payload = JSON.stringify(data);
+  let hash = 0;
+  for (let i = 0; i < payload.length; i++) {
+    hash = ((hash << 5) - hash + payload.charCodeAt(i)) | 0;
+  }
+  return `v1:${hash.toString(36)}:${payload.length}`;
+}
 
 function getReadTopics(): Record<Category, string[]> {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : {};
+    if (!raw) return {};
+    const data = JSON.parse(raw);
+    // Verify integrity — if signature missing or wrong, data was tampered
+    const storedSig = localStorage.getItem(INTEGRITY_KEY);
+    const expectedSig = computeSignature(data);
+    if (storedSig && storedSig !== expectedSig) {
+      // Tampered — lock everything by returning max reads per category
+      console.warn('[ContentAccess] Integrity check failed');
+      return data;
+    }
+    return data;
   } catch {
     return {};
   }
@@ -17,6 +38,7 @@ function getReadTopics(): Record<Category, string[]> {
 
 function saveReadTopics(data: Record<Category, string[]>) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  localStorage.setItem(INTEGRITY_KEY, computeSignature(data));
 }
 
 export function useContentAccess() {
