@@ -118,15 +118,44 @@ cd apps/frontend && npx eslint .
 
 - **Internal navigation**: Use React Router `<Link>` or `useNavigate()` for internal routes. Use `<a>` only for external URLs (e.g., `https://jobs.cariara.com`).
 - **Backend routes**: All API routes prefixed with `/api/v1/`. Stripe webhooks use raw body parsing.
-- **Rate limiting**: Three tiers — `apiLimiter`, `aiLimiter`, `paymentLimiter` — applied per-route.
+- **Rate limiting**: Four tiers per-IP — `authLimiter` (10/15min), `apiLimiter` (60/min), `aiLimiter` (20/min), `paymentLimiter` (20/hr).
 - **Error responses**: `{ error: string }` or `{ detail: string }` format.
 - **Streaming responses**: SSE via `text/event-stream` content type, flushed per chunk.
 - **File naming**: React components PascalCase (`.tsx`/`.jsx`), services/utils camelCase (`.ts`/`.js`).
-- **Tailwind theme**: Primary emerald (#10b981), fonts Inter (display) + JetBrains Mono (code).
+- **Tailwind theme**: Primary emerald (#10b981), fonts Plus Jakarta Sans (display) + IBM Plex Mono (code).
+
+## Billing & Stripe Integration
+
+- **Primary billing**: Ascend backend handles all subscription management
+- **Webhook route order matters**: `express.raw()` for `/api/billing/webhook` must be registered **before** `express.json()` — Stripe signature verification requires the raw body
+- **Webhook idempotency**: `ascend_stripe_events` table prevents duplicate event processing
+- **Cross-service verification**: `GET /api/billing/verify-subscription/:userId` requires `X-API-Key` header (internal API key) — used by external services (e.g., jobs.cariara.com)
+- **Subscription plans**: Monthly ($29), Quarterly Pro ($59, includes Lumora sessions), Desktop Lifetime ($99, one-time)
+- **Open redirect prevention**: Checkout redirect URLs validated against domain allowlist
+
+## Auth Middleware Differences
+
+- **Ascend backend** (`jwtAuth`): Strict JWT validation with token type checking (`type: 'access'`), calls `initUser()` to auto-provision subscription/credits records on first request
+- **Lumora backend** (`authenticate`): Email-based user lookup, auto-creates user with `provider='ascend_sso'` if not found in DB
+- **`optionalJwtAuth`**: Non-blocking — attaches user if token present, proceeds without auth otherwise
+- **`subscriptionRequired`**: Blocks free-tier users; valid paid plans are `monthly` and `quarterly_pro`
+
+## Frontend Routing Details
+
+- **`ProtectedRoute`** component wraps all authenticated routes — redirects to login with return URL preserved as query param
+- **Onboarding enforcement**: `/capra/*` routes redirect to `/capra/onboarding` if `onboarding_completed` is false
+- **Legacy route aliases**: `/app/*`, `/prepare`, `/practice`, `/handbook`, `/problems/:slug` all redirect to current routes
+- **Vite proxy**: Only `/api/*` proxies to lumora-backend (`localhost:8000`) in dev; ascend-backend calls go directly via `VITE_CAPRA_API_URL`
 
 ## Deployment
 
 - **Frontend**: Vercel (auto-deploys, SPA rewrite to `index.html`)
-- **Lumora Backend**: Railway (Nixpacks, `node src/index.js`, healthcheck at `/health`)
-- **Ascend Backend**: Railway (Nixpacks, `node src/index.js`, healthcheck at `/health`)
-- **AI Services**: Railway (Dockerfile, `uvicorn main:app`, healthcheck at `/health`)
+- **Lumora Backend**: Railway (Nixpacks — `nodejs_20` + `ffmpeg`, healthcheck at `/health`)
+- **Ascend Backend**: Railway (Nixpacks — `nodejs_20` + `python3` + `graphviz` + `go` + `rustc` + `openjdk17`, healthcheck at `/health`)
+- **AI Services**: Railway (Dockerfile, `python:3.11-slim` + `graphviz` + `ffmpeg`, healthcheck at `/health`)
+
+## Database Notes
+
+- **No migration tool**: Both backends use inline `CREATE TABLE IF NOT EXISTS` / `ALTER TABLE ADD COLUMN IF NOT EXISTS` on startup — idempotent but manual
+- **Ascend tables** (beyond shared `users`): `ascend_subscriptions`, `ascend_credits`, `ascend_free_usage`, `ascend_stripe_events`, `ascend_diagram_cache`, `ascend_credit_transactions`
+- **Auto-provisioning**: `initUser()` in ascend-backend automatically creates subscription/credits rows for new users on first authenticated request
