@@ -388,17 +388,22 @@ export default function PracticePage() {
   }, [mode, category, difficulty, company]);
 
   // Auto-generate architecture diagram for system design questions
-  const generateDiagram = useCallback((q) => {
+  const generateDiagram = useCallback((q, isRetry = false) => {
     setDiagramUrl(null);
     setDiagramError(null);
     setDiagramLoading(true);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 90000);
+    const body = { question: `${q.q}: ${q.desc}`, cloudProvider: 'aws', detailLevel: 'overview', direction: 'LR' };
     fetch(`${API_URL}/api/diagram/generate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-      body: JSON.stringify({ question: `${q.q}: ${q.desc}`, cloudProvider: 'aws', detailLevel: 'overview', direction: 'LR' }),
+      body: JSON.stringify(body),
+      signal: controller.signal,
     })
       .then(r => { if (!r.ok) throw new Error(`${r.status}`); return r.json(); })
       .then(data => {
+        clearTimeout(timeout);
         if (data.success && data.image_url) {
           const url = data.image_url.startsWith('/') ? `${API_URL}${data.image_url}` : data.image_url;
           setDiagramUrl(url);
@@ -406,8 +411,16 @@ export default function PracticePage() {
           setDiagramError(data.error || 'Could not generate diagram');
         }
       })
-      .catch((e) => setDiagramError(`Diagram generation failed (${e.message})`))
-      .finally(() => setDiagramLoading(false));
+      .catch((e) => {
+        clearTimeout(timeout);
+        // On 502/timeout, auto-retry once — the first request may have completed and cached the result
+        if (!isRetry && (e.message === '502' || e.name === 'AbortError')) {
+          setTimeout(() => generateDiagram(q, true), 3000);
+          return;
+        }
+        setDiagramError(e.name === 'AbortError' ? 'Diagram generation timed out' : `Diagram failed (${e.message})`);
+        setDiagramLoading(false);
+      });
   }, []);
 
   useEffect(() => {
