@@ -9,7 +9,7 @@ export default function ReferralLandingPage() {
     if (code) {
       localStorage.setItem('camora_referral_code', code);
     }
-    navigate('/signup', { replace: true });
+    navigate('/login?redirect=/capra/prepare', { replace: true });
   }, [code, navigate]);
 
   return (
