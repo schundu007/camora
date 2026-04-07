@@ -194,3 +194,66 @@ export function cleanupOldDiagrams() {
 
 // Run cleanup every 30 minutes
 setInterval(cleanupOldDiagrams, 30 * 60 * 1000);
+
+/**
+ * Mermaid fallback — generate Mermaid flowchart code via a single Claude call.
+ * Much faster (~3s) than the full Python diagrams pipeline (60-150s).
+ * Used as a fallback when generateDiagram() fails or times out.
+ *
+ * @param {Object} options
+ * @param {string} options.question - The system design question
+ * @param {string} [options.cloudProvider='aws'] - Cloud provider hint
+ * @param {string} [options.detailLevel='overview'] - Detail level
+ * @returns {Promise<Object>} - { success, type: 'mermaid', mermaid_code }
+ */
+export async function generateMermaidFallback({ question, cloudProvider = 'aws', detailLevel = 'overview' }) {
+  const apiKey = getApiKey();
+  if (!apiKey) throw new Error('ANTHROPIC_API_KEY not configured');
+
+  const Anthropic = (await import('@anthropic-ai/sdk')).default;
+  const client = new Anthropic({ apiKey });
+
+  const resp = await client.messages.create({
+    model: 'claude-sonnet-4-20250514',
+    max_tokens: 2048,
+    messages: [{
+      role: 'user',
+      content: `Generate a Mermaid flowchart diagram for this system design: "${question}"
+
+Cloud provider: ${cloudProvider}
+Detail level: ${detailLevel}
+
+Return ONLY the Mermaid code (flowchart LR or flowchart TB format). Include:
+- Client/users at the start
+- Load balancers, API gateways
+- Application servers/microservices
+- Databases, caches, message queues
+- Use descriptive node labels
+- Use proper Mermaid syntax with subgraphs for logical grouping
+- Add edge labels for data flow descriptions
+
+Example format:
+flowchart LR
+  subgraph Client
+    A[Web Client]
+    B[Mobile Client]
+  end
+  A & B --> C[Load Balancer]
+  C --> D[API Gateway]
+  subgraph Services
+    D --> E[Auth Service]
+    D --> F[Core Service]
+  end
+  F --> G[(PostgreSQL)]
+  F --> H[(Redis Cache)]
+
+Return ONLY the mermaid code, no markdown fences, no explanation.`
+    }]
+  });
+
+  let code = resp.content[0].text.trim();
+  // Strip markdown fences if present
+  code = code.replace(/^```(?:mermaid)?\n?/g, '').replace(/\n?```$/g, '').trim();
+
+  return { success: true, type: 'mermaid', mermaid_code: code };
+}
