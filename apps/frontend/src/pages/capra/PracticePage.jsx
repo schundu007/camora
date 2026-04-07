@@ -673,55 +673,52 @@ export default function PracticePage() {
                 </div>
               </div>
 
-              {/* Readiness Dashboard */}
-              <div style={{ background: '#fff', border: '1px solid #e3e8ee', borderRadius: 16, padding: 24, marginBottom: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-                <h2 className="practice-display" style={{ fontSize: 18, fontWeight: 700, color: '#111827', margin: '0 0 20px' }}>Interview Readiness</h2>
-                <div style={{ display: 'flex', gap: 32, alignItems: 'flex-start', flexWrap: 'wrap' }}>
-                  {/* Radar chart */}
-                  <div style={{ display: 'flex', justifyContent: 'center', minWidth: 200 }}>
-                    <RadarChart values={dimValues} labels={DIMENSION_LABELS} size={200} />
-                  </div>
+              {/* Readiness Dashboard — compact */}
+              <div style={{ background: '#fff', border: '1px solid #e3e8ee', borderRadius: 16, padding: '16px 20px', marginBottom: 16, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+                <div style={{ display: 'flex', gap: 20, alignItems: 'center', flexWrap: 'wrap' }}>
+                  {/* Radar chart — smaller */}
+                  <RadarChart values={dimValues} labels={DIMENSION_LABELS} size={150} />
 
-                  {/* Category progress + Stats */}
-                  <div style={{ flex: 1, minWidth: 260 }}>
-                    {/* Category bars */}
+                  {/* Category bars */}
+                  <div style={{ flex: 1, minWidth: 200 }}>
+                    <h2 className="practice-display" style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: '0 0 10px' }}>Interview Readiness</h2>
                     {CATEGORIES.map(cat => {
                       const s = getCategoryScore(stats, cat);
                       const completed = stats.categories?.[cat]?.completed || 0;
                       return (
-                        <div key={cat} style={{ marginBottom: 14 }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                              <Icon name={catIcon(cat)} size={14} style={{ color: '#6b7280' }} />
-                              <span style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>{catLabel(cat)}</span>
+                        <div key={cat} style={{ marginBottom: 8 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                              <Icon name={catIcon(cat)} size={12} style={{ color: '#6b7280' }} />
+                              <span style={{ fontSize: 12, fontWeight: 600, color: '#374151' }}>{catLabel(cat)}</span>
                             </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                              <span style={{ fontSize: 11, color: '#9ca3af' }}>{completed} completed</span>
-                              <span style={{ fontSize: 13, fontWeight: 700, color: scoreColor(s) }}>{s}%</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                              <span style={{ fontSize: 10, color: '#9ca3af' }}>{completed}</span>
+                              <span style={{ fontSize: 12, fontWeight: 700, color: scoreColor(s) }}>{s}%</span>
                             </div>
                           </div>
-                          <div style={{ height: 6, borderRadius: 99, background: '#f3f4f6', overflow: 'hidden' }}>
+                          <div style={{ height: 4, borderRadius: 99, background: '#f3f4f6', overflow: 'hidden' }}>
                             <div style={{ height: '100%', borderRadius: 99, background: s >= 70 ? '#10b981' : s >= 40 ? '#f59e0b' : '#ef4444', width: `${s}%`, transition: 'width 0.4s' }} />
                           </div>
                         </div>
                       );
                     })}
+                  </div>
 
-                    {/* Stats cards */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginTop: 16 }}>
-                      {[
-                        { label: 'Completed', value: stats.totalCompleted || 0, icon: 'check' },
-                        { label: 'Streak', value: `${stats.streak || 0}d`, icon: 'streak' },
-                        { label: 'Best Score', value: `${stats.bestScore || 0}%`, icon: 'trophy' },
-                        { label: 'Avg Time', value: formatTime(Math.round(CATEGORIES.reduce((a, c) => a + (stats.categories?.[c]?.avgTime || 0), 0) / 3)), icon: 'timer' },
-                      ].map(s => (
-                        <div key={s.label} style={{ textAlign: 'center', padding: '10px 8px', background: '#fafbfc', border: '1px solid #f0f1f3', borderRadius: 10 }}>
-                          <Icon name={s.icon} size={14} style={{ color: '#9ca3af', marginBottom: 4, display: 'inline-block' }} />
-                          <div style={{ fontSize: 18, fontWeight: 700, color: '#111827' }}>{s.value}</div>
-                          <div style={{ fontSize: 10, color: '#9ca3af', fontWeight: 500 }}>{s.label}</div>
-                        </div>
-                      ))}
-                    </div>
+                  {/* Stats — inline row */}
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    {[
+                      { label: 'Done', value: stats.totalCompleted || 0, icon: 'check' },
+                      { label: 'Streak', value: `${stats.streak || 0}d`, icon: 'streak' },
+                      { label: 'Best', value: `${stats.bestScore || 0}%`, icon: 'trophy' },
+                      { label: 'Avg', value: formatTime(Math.round(CATEGORIES.reduce((a, c) => a + (stats.categories?.[c]?.avgTime || 0), 0) / 3)), icon: 'timer' },
+                    ].map(s => (
+                      <div key={s.label} style={{ textAlign: 'center', padding: '6px 10px', background: '#fafbfc', border: '1px solid #f0f1f3', borderRadius: 8, minWidth: 56 }}>
+                        <Icon name={s.icon} size={12} style={{ color: '#9ca3af', marginBottom: 2, display: 'inline-block' }} />
+                        <div style={{ fontSize: 15, fontWeight: 700, color: '#111827' }}>{s.value}</div>
+                        <div style={{ fontSize: 9, color: '#9ca3af', fontWeight: 500 }}>{s.label}</div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -773,8 +770,8 @@ export default function PracticePage() {
                   </div>
                 </div>
 
-                <div style={{ textAlign: 'center' }}>
-                  <button onClick={startChallenge} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 32px', background: 'linear-gradient(135deg, #10b981, #059669)', color: '#fff', fontSize: 15, fontWeight: 600, borderRadius: 10, border: 'none', cursor: 'pointer', boxShadow: '0 2px 8px rgba(16,185,129,0.25)', transition: 'transform 0.1s' }}>
+                <div style={{ textAlign: 'center', position: 'relative', zIndex: 10 }}>
+                  <button onClick={() => startChallenge()} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 32px', background: 'linear-gradient(135deg, #10b981, #059669)', color: '#fff', fontSize: 15, fontWeight: 600, borderRadius: 10, border: 'none', cursor: 'pointer', boxShadow: '0 2px 8px rgba(16,185,129,0.25)', transition: 'transform 0.1s', position: 'relative', zIndex: 10 }}>
                     <Icon name="play" size={16} style={{ color: '#fff' }} />
                     Start Challenge
                   </button>
