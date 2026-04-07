@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
 import { Icon } from '../../components/shared/Icons.jsx';
-import CamoraLogo from '../../components/shared/CamoraLogo';
+import SiteNav from '../../components/shared/SiteNav';
 import SiteFooter from '../../components/shared/SiteFooter';
 import { getAuthHeaders } from '../../utils/authHeaders.js';
 import { ArchitectureDiagram } from '../../components/lumora/interview/ArchitectureDiagram';
@@ -86,13 +85,6 @@ const COMPANIES = [
 const DIMENSION_LABELS = ['Solving', 'Design', 'DSA', 'Comms', 'Time'];
 const DIMENSION_KEYS = ['problemSolving', 'systemDesign', 'dataStructures', 'communication', 'timeManagement'];
 
-const navLinks = [
-  { label: 'Apply', href: '/jobs' },
-  { label: 'Prepare', href: '/capra/prepare' },
-  { label: 'Practice', href: '/capra/practice' },
-  { label: 'Attend', href: '/lumora' },
-  { label: 'Pricing', href: '/pricing' },
-];
 
 /* ══════════════════════════════ Helpers ══════════════════════════════ */
 
@@ -311,9 +303,6 @@ function DimensionBars({ dimensions, compact = false }) {
 /* ══════════════════════════════ Component ══════════════════════════════ */
 
 export default function PracticePage() {
-  const { user, loading, logout } = useAuth();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
   // Stats
   const [stats, setStats] = useState(getStats);
 
@@ -597,45 +586,7 @@ export default function PracticePage() {
   return (
     <div className="practice-root" style={{ background: 'transparent', minHeight: '100vh' }}>
 
-      {/* ═══════════ Nav ═══════════ */}
-      <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl" style={{ background: 'linear-gradient(135deg, rgba(178,235,242,0.7) 0%, rgba(179,198,231,0.7) 30%, rgba(197,179,227,0.7) 55%, rgba(212,184,232,0.7) 80%, rgba(225,190,231,0.7) 100%)', height: '56px' }}>
-        <div className="w-full lg:max-w-[70%] mx-auto h-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2.5 no-underline">
-            <CamoraLogo size={36} />
-            <span style={{ fontWeight: 700, fontSize: '16px', color: '#111827', fontFamily: "'Comfortaa', sans-serif" }}>Camora</span>
-          </Link>
-          <div className="hidden md:flex items-center gap-1">
-            {navLinks.map((link) => (
-              <Link key={link.label} to={link.href} className="nav-link" style={{ fontSize: '14px', fontWeight: 500, padding: '6px 12px', borderRadius: '6px', textDecoration: 'none', color: link.label === 'Practice' ? '#10b981' : '#4b5563', borderBottom: link.label === 'Practice' ? '2px solid #10b981' : '2px solid transparent' }}>{link.label}</Link>
-            ))}
-          </div>
-          <div className="flex items-center gap-3">
-            {user ? (
-              <>
-                <Link to="/capra/prepare" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', padding: '4px 8px', borderRadius: 8 }}>
-                  {user.image ? <img src={user.image} alt="" style={{ width: 28, height: 28, borderRadius: '50%' }} referrerPolicy="no-referrer" /> : <div style={{ width: 28, height: 28, borderRadius: '50%', background: '#d1fae5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#047857' }}>{user.name?.[0] || '?'}</div>}
-                  <span style={{ fontSize: 14, fontWeight: 500, color: '#374151' }}>{user.name?.split(' ')[0] || 'Dashboard'}</span>
-                </Link>
-                <button onClick={logout} style={{ fontSize: 13, fontWeight: 500, color: '#9ca3af', background: 'none', border: 'none', cursor: 'pointer' }}>Sign out</button>
-              </>
-            ) : !loading && (
-              <Link to="/login?redirect=/capra/practice" style={{ fontSize: 14, fontWeight: 500, color: '#4b5563', textDecoration: 'none' }}>Sign in</Link>
-            )}
-            <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden p-1.5" style={{ color: '#6b7280', background: 'none', border: 'none', cursor: 'pointer' }}>
-              <Icon name={mobileMenuOpen ? 'close' : 'menu'} size={20} />
-            </button>
-          </div>
-        </div>
-      </nav>
-
-      {/* Mobile menu */}
-      {mobileMenuOpen && (
-        <div className="md:hidden fixed top-14 left-0 right-0 z-40" style={{ background: '#fff', borderBottom: '1px solid #e3e8ee', padding: '8px 16px' }}>
-          {navLinks.map((link) => (
-            <Link key={link.label} to={link.href} onClick={() => setMobileMenuOpen(false)} style={{ display: 'block', padding: '10px 12px', fontSize: 14, fontWeight: 500, color: link.label === 'Practice' ? '#10b981' : '#4b5563', textDecoration: 'none', borderRadius: 8 }}>{link.label}</Link>
-          ))}
-        </div>
-      )}
+      <SiteNav />
 
       {/* ═══════════ Main Content ═══════════ */}
       <div style={{ paddingTop: 56 }}>

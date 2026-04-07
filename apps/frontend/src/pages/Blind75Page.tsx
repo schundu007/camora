@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { techInterviewTopics, interviewCheatsheet, behavioralQuestions } from '../data/capra/topics/techInterviewHandbook';
 import { SOLUTIONS } from './Blind75PracticePage';
-import CamoraLogo from '../components/shared/CamoraLogo';
+import SiteNav from '../components/shared/SiteNav';
 import SiteFooter from '../components/shared/SiteFooter';
 
 /* ──────────────────────────────── Constants ──────────────────────────────── */
@@ -12,13 +12,6 @@ const CAPRA_API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cari
 
 const STORAGE_KEY = 'blind75_completed';
 
-const navLinks = [
-  { label: 'Apply', href: '/jobs' },
-  { label: 'Prepare', href: '/capra/prepare' },
-  { label: 'Practice', href: '/capra/practice' },
-  { label: 'Attend', href: '/lumora' },
-  { label: 'Pricing', href: '/pricing' },
-];
 
 /* ──────────────────────────────── Types ──────────────────────────────── */
 
@@ -317,11 +310,10 @@ function saveCompleted(ids: Set<number>) {
 /* ──────────────────────────────── Component ──────────────────────────────── */
 
 export default function Blind75Page() {
-  const { user, token, isLoading: authLoading, logout } = useAuth();
+  const { token } = useAuth();
 
   /* ── Shared state ── */
   const [activeTab, setActiveTab] = useState<TabKey>(() => { const p = new URLSearchParams(window.location.search); const t = p.get('tab'); return (t === 'algorithms' || t === 'behavioral' || t === 'cheatsheet') ? t : 'blind75'; });
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   /* ── Blind 75 state ── */
   const [completed, setCompleted] = useState<Set<number>>(() => loadCompleted());
@@ -481,103 +473,7 @@ export default function Blind75Page() {
   return (
     <div style={{ background: '#f7f8f9', minHeight: '100vh', fontFamily: "'Plus Jakarta Sans', 'Work Sans', system-ui, sans-serif" }}>
 
-      {/* ═══════════════════════ Top Navigation ═══════════════════════ */}
-      <nav
-        className="fixed top-0 left-0 right-0 z-50"
-        style={{ background: '#ffffff', borderBottom: '1px solid #e3e8ee', height: '56px' }}
-      >
-        <div className="max-w-[85%] xl:max-w-7xl mx-auto h-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2.5 no-underline">
-            <CamoraLogo size={28} />
-            <span style={{ fontWeight: 700, fontSize: '16px', color: '#111827', letterSpacing: '-0.01em', fontFamily: "'Comfortaa', sans-serif" }}>
-              Camora
-            </span>
-          </Link>
-
-          <div className="hidden md:flex items-center gap-1">
-            {navLinks.map((link) => (
-              <Link
-                key={link.label}
-                to={link.href}
-                className="b75-nav-link"
-                style={{
-                  fontSize: '14px',
-                  fontWeight: 500,
-                  padding: '6px 12px',
-                  borderRadius: '6px',
-                  transition: 'color 0.15s, background 0.15s',
-                  textDecoration: 'none',
-                  color: '#4b5563',
-                  borderBottom: '2px solid transparent',
-                  marginBottom: '-1px',
-                }}
-              >
-                {link.label}
-              </Link>
-            ))}
-          </div>
-
-          <div className="flex items-center gap-3">
-            {user ? (
-              <>
-                <Link to="/capra/prepare" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none', padding: '4px 8px', borderRadius: '8px' }}>
-                  {user.image ? (
-                    <img src={user.image} alt="" style={{ width: 28, height: 28, borderRadius: '50%' }} referrerPolicy="no-referrer" />
-                  ) : (
-                    <div style={{ width: 28, height: 28, borderRadius: '50%', background: '#d1fae5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#047857' }}>
-                      {user.name?.[0] || '?'}
-                    </div>
-                  )}
-                  <span style={{ fontSize: 14, fontWeight: 500, color: '#374151' }}>{user.name?.split(' ')[0] || 'Dashboard'}</span>
-                </Link>
-                <button
-                  onClick={logout}
-                  style={{ fontSize: 13, fontWeight: 500, color: '#9ca3af', background: 'none', border: 'none', cursor: 'pointer' }}
-                >
-                  Sign out
-                </button>
-              </>
-            ) : !authLoading ? (
-              <Link to="/login" style={{ fontSize: '14px', fontWeight: 500, color: '#4b5563', textDecoration: 'none' }}>
-                Sign in
-              </Link>
-            ) : null}
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-1.5"
-              style={{ color: '#6b7280', background: 'none', border: 'none', cursor: 'pointer' }}
-              aria-label="Toggle menu"
-            >
-              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                {mobileMenuOpen ? (
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                ) : (
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-                )}
-              </svg>
-            </button>
-          </div>
-        </div>
-      </nav>
-
-      {/* ═══════════════════════ Mobile Menu ═══════════════════════ */}
-      {mobileMenuOpen && (
-        <div
-          className="fixed top-14 left-0 right-0 z-40 md:hidden"
-          style={{ background: '#ffffff', borderBottom: '1px solid #e3e8ee', padding: '8px 16px' }}
-        >
-          {navLinks.map((link) => (
-            <Link
-              key={link.label}
-              to={link.href}
-              onClick={() => setMobileMenuOpen(false)}
-              style={{ display: 'block', padding: '10px 0', fontSize: '14px', fontWeight: 500, color: '#374151', textDecoration: 'none', borderBottom: '1px solid #f3f4f6' }}
-            >
-              {link.label}
-            </Link>
-          ))}
-        </div>
-      )}
+      <SiteNav />
 
       {/* ═══════════════════════ Hero Section ═══════════════════════ */}
       <section style={{ paddingTop: '56px' }}>
