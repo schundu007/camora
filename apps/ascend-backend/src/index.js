@@ -38,6 +38,7 @@ import referralRouter from './routes/referral.js';
 import interviewCountdownRouter from './routes/interviewCountdown.js';
 import gamificationRouter from './routes/gamification.js';
 import scoreCardsRouter from './routes/scoreCards.js';
+import challengeRouter from './routes/challenge.js';
 
 import { authenticate } from './middleware/authenticate.js';
 
@@ -197,6 +198,21 @@ async function runMigrations() {
     await query('CREATE INDEX IF NOT EXISTS idx_users_username ON users(username)');
 
     console.log('[Migrations] Score cards + certificates tables ensured');
+
+    // Challenger qualification system
+    await query('ALTER TABLE ascend_subscriptions ADD COLUMN IF NOT EXISTS is_challenger BOOLEAN DEFAULT false');
+    await query('ALTER TABLE ascend_subscriptions ADD COLUMN IF NOT EXISTS challenger_qualified_at TIMESTAMPTZ');
+    await query('ALTER TABLE ascend_subscriptions ADD COLUMN IF NOT EXISTS challenger_quiz_score INTEGER');
+    await query('ALTER TABLE ascend_subscriptions ADD COLUMN IF NOT EXISTS challenger_credits_remaining INTEGER DEFAULT 0');
+    await query(`CREATE TABLE IF NOT EXISTS ascend_challenger_activity (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL,
+      action VARCHAR(50) NOT NULL,
+      details JSONB,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )`);
+    await query('CREATE INDEX IF NOT EXISTS idx_challenger_activity_user ON ascend_challenger_activity(user_id)');
+    console.log('[Migrations] Challenger tables ensured');
   } catch (err) {
     console.warn('[Migrations] Failed to run onboarding migration:', err.message);
   }
@@ -529,6 +545,7 @@ app.use('/api/gamification', apiLimiter, gamificationRouter);
 
 // Score cards, certificates, public profiles
 app.use('/api/score-cards', apiLimiter, scoreCardsRouter);
+app.use('/api/challenge', apiLimiter, challengeRouter);
 
 // Job URL analysis (scrape + AI analysis) — auth required, AI rate limit
 app.use('/api/job-analyze', authenticate, aiLimiter, jobAnalyzeRouter);
