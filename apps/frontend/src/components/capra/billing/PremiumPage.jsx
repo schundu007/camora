@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { Icon } from '../../shared/Icons.jsx';
 import CamoraLogo from '../../shared/CamoraLogo';
+import SiteNav from '../../shared/SiteNav';
 import CompetitorComparison from './CompetitorComparison.jsx';
 
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
@@ -12,7 +13,6 @@ export default function PremiumPage() {
   const [error, setError] = useState('');
   const [expandedFaq, setExpandedFaq] = useState(null);
   const [showComparison, setShowComparison] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => { window.scrollTo(0, 0); }, []);
 
@@ -71,38 +71,8 @@ export default function PremiumPage() {
   const hasActiveSubscription = false; // TODO: wire up subscription status from backend
 
   return (
-    <div className="min-h-screen text-gray-900 overflow-hidden landing-root" style={{ background: 'linear-gradient(180deg, #fdf2f8 0%, #ede9fe 50%, #e0e7ff 100%)', paddingTop: '64px', paddingBottom: '52px' }}>
-      <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-12 py-4" style={{ background: '#111827' }}>
-        <a href="/" className="flex items-center gap-3">
-          <CamoraLogo size={32} />
-          <div><span className="landing-display font-bold text-lg tracking-tight text-white" style={{ fontFamily: "'Comfortaa', sans-serif" }}>Camora</span><span className="block text-[10px] landing-mono uppercase tracking-[0.2em] text-emerald-400 -mt-0.5">Interview AI</span></div>
-        </a>
-        <div className="hidden md:flex items-center gap-6">
-          <button onClick={() => scrollTo('plans')} className="text-sm text-gray-400 hover:text-white transition-colors font-medium landing-body">Plans</button>
-          <button onClick={() => scrollTo('features')} className="text-sm text-gray-400 hover:text-white transition-colors font-medium landing-body">Features</button>
-          <button onClick={() => setShowComparison(true)} className="text-sm text-red-400 hover:text-red-300 transition-colors font-medium landing-body">Compare Us</button>
-          <button onClick={() => scrollTo('faq')} className="text-sm text-gray-400 hover:text-white transition-colors font-medium landing-body">FAQ</button>
-          {isAuthenticated ? (
-            <a href="/capra/practice" className="px-5 py-2 bg-emerald-500 text-white font-semibold text-sm rounded-lg hover:bg-emerald-400 transition-colors landing-body">Go to App</a>
-          ) : (
-            <button onClick={() => window.location.href = '/login'} className="px-5 py-2 bg-emerald-500 text-white font-semibold text-sm rounded-lg hover:bg-emerald-400 transition-colors landing-body">Sign In</button>
-          )}
-        </div>
-        <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden p-2 text-gray-400 hover:text-white transition-colors"><Icon name={mobileMenuOpen ? 'close' : 'menu'} size={22} /></button>
-      </nav>
-
-      {mobileMenuOpen && (
-        <div className="fixed top-16 left-0 right-0 z-40 md:hidden border-b border-gray-100 bg-white px-6 py-4 space-y-1">
-          <button onClick={() => { scrollTo('plans'); setMobileMenuOpen(false); }} className="block w-full text-left px-4 py-2.5 text-sm font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-50 rounded transition-colors landing-body">Plans</button>
-          <button onClick={() => { scrollTo('features'); setMobileMenuOpen(false); }} className="block w-full text-left px-4 py-2.5 text-sm font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-50 rounded transition-colors landing-body">Features</button>
-          <a href="/" className="block px-4 py-2.5 text-sm font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-50 rounded transition-colors landing-body">Home</a>
-          {isAuthenticated ? (
-            <a href="/capra/practice" className="block w-full mt-2 px-4 py-2.5 bg-emerald-500 text-white font-semibold text-sm text-center rounded-lg hover:bg-emerald-600 transition-colors landing-body">Go to App</a>
-          ) : (
-            <button onClick={() => window.location.href = '/login'} className="block w-full mt-2 px-4 py-2.5 bg-emerald-500 text-white font-semibold text-sm text-center rounded-lg hover:bg-emerald-600 transition-colors landing-body">Sign In with Google</button>
-          )}
-        </div>
-      )}
+    <div className="min-h-screen text-gray-900 overflow-hidden landing-root" style={{ background: 'linear-gradient(180deg, #fdf2f8 0%, #ede9fe 50%, #e0e7ff 100%)', paddingTop: '56px', paddingBottom: '52px' }}>
+      <SiteNav />
 
       <section className="flex flex-col items-center justify-center text-center px-6 pt-10 pb-8 md:pt-14 md:pb-10">
         <div className="inline-flex items-center gap-2 px-4 py-1.5 border border-emerald-200 bg-emerald-50 rounded-full mb-4"><span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" /><span className="text-xs landing-mono text-emerald-700 tracking-wide">Premium Plans</span></div>
