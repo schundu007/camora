@@ -622,9 +622,11 @@ export default function DashboardPage() {
         if (systemDesignStorage.currentSessionId) {
           systemDesignStorage.updateEraserDiagram(systemDesignStorage.currentSessionId, data);
         }
+      } else {
+        console.warn('[EraserDiagram] API error:', response.status);
       }
     } catch (err) {
-      // Eraser diagram generation failed silently
+      console.warn('[EraserDiagram] Generation failed:', err.message);
     }
   }, [systemDesignStorage, currentProblem]);
 
