@@ -190,7 +190,7 @@ function CategoryIcon({ category, size = 28 }: { category: string; size?: number
 /* ──────────────────────────────── Component ──────────────────────────────── */
 
 export default function JobsPage() {
-  const { token, user, isLoading: authLoading, logout } = useAuth();
+  const { token, user, isLoading: authLoading } = useAuth();
 
   // Map user's onboarding role to job filter category
   const getUserCategory = (): string => {
@@ -229,8 +229,6 @@ export default function JobsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Mobile
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
 
   // Job URL analysis state
@@ -355,138 +353,7 @@ export default function JobsPage() {
   return (
     <div style={{ background: 'transparent', minHeight: '100vh', fontFamily: "'Plus Jakarta Sans', 'Work Sans', system-ui, sans-serif" }}>
 
-      {/* ═══════════════════════ Top Navigation ═══════════════════════ */}
-      <nav
-        className="fixed top-0 left-0 right-0 z-50"
-        style={{
-          background: 'linear-gradient(135deg, rgba(178,235,242,0.7) 0%, rgba(179,198,231,0.7) 30%, rgba(197,179,227,0.7) 55%, rgba(212,184,232,0.7) 80%, rgba(225,190,231,0.7) 100%)',
-          backdropFilter: 'blur(16px)',
-          WebkitBackdropFilter: 'blur(16px)',
-          height: '56px',
-        }}
-      >
-        <div className="w-full lg:max-w-[70%] mx-auto h-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-          {/* Left: Logo */}
-          <Link to="/" className="flex items-center gap-2.5 no-underline">
-            <CamoraLogo size={36} />
-            <span style={{ fontWeight: 700, fontSize: '16px', color: '#111827', fontFamily: "'Comfortaa', sans-serif" }}>
-              Camora
-            </span>
-          </Link>
-
-          {/* Center: Nav links */}
-          <div className="hidden md:flex items-center gap-1">
-            {navLinks.map((link) => {
-              const isActive = link.label === 'Apply';
-              return (
-                <Link
-                  key={link.label}
-                  to={link.href}
-                  className="jobs-nav-link"
-                  style={{
-                    fontSize: '14px',
-                    fontWeight: 500,
-                    padding: '6px 12px',
-                    borderRadius: '6px',
-                    transition: 'color 0.15s, background 0.15s',
-                    textDecoration: 'none',
-                    color: isActive ? '#10b981' : '#4b5563',
-                    borderBottom: isActive ? '2px solid #10b981' : '2px solid transparent',
-                    marginBottom: '-1px',
-                  }}
-                >
-                  {link.label}
-                </Link>
-              );
-            })}
-          </div>
-
-          {/* Right: User / Sign in + mobile toggle */}
-          <div className="flex items-center gap-3">
-            {user ? (
-              <>
-                <Link to="/capra/prepare" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none', padding: '4px 8px', borderRadius: '8px' }}>
-                  {user.image ? (
-                    <img src={user.image} alt="" style={{ width: 28, height: 28, borderRadius: '50%' }} referrerPolicy="no-referrer" />
-                  ) : (
-                    <div style={{ width: 28, height: 28, borderRadius: '50%', background: '#d1fae5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#047857' }}>
-                      {user.name?.[0] || '?'}
-                    </div>
-                  )}
-                  <span style={{ fontSize: 14, fontWeight: 500, color: '#374151' }}>{user.name?.split(' ')[0] || 'Dashboard'}</span>
-                </Link>
-                <button
-                  onClick={logout}
-                  style={{ fontSize: 13, fontWeight: 500, color: '#9ca3af', background: 'none', border: 'none', cursor: 'pointer' }}
-                >
-                  Sign out
-                </button>
-              </>
-            ) : !authLoading ? (
-              <Link
-                to="/login?redirect=/jobs"
-                style={{
-                  fontSize: '14px',
-                  fontWeight: 500,
-                  color: '#4b5563',
-                  textDecoration: 'none',
-                }}
-              >
-                Sign in
-              </Link>
-            ) : null}
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-1.5"
-              style={{ color: '#6b7280', background: 'none', border: 'none', cursor: 'pointer' }}
-              aria-label="Toggle menu"
-            >
-              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                {mobileMenuOpen ? (
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                ) : (
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-                )}
-              </svg>
-            </button>
-          </div>
-        </div>
-      </nav>
-
-      {/* ═══════════════════════ Mobile Menu ═══════════════════════ */}
-      {mobileMenuOpen && (
-        <div
-          className="fixed top-14 left-0 right-0 z-50 md:hidden"
-          style={{
-            background: 'rgba(255,255,255,0.95)',
-            backdropFilter: 'blur(12px)',
-            borderBottom: '1px solid #e3e8ee',
-            padding: '8px 16px',
-          }}
-        >
-          {navLinks.map((link) => {
-            const isActive = link.label === 'Apply';
-            return (
-              <Link
-                key={link.label}
-                to={link.href}
-                onClick={() => setMobileMenuOpen(false)}
-                style={{
-                  display: 'block',
-                  padding: '10px 12px',
-                  fontSize: '14px',
-                  fontWeight: isActive ? 600 : 500,
-                  color: isActive ? '#10b981' : '#4b5563',
-                  textDecoration: 'none',
-                  borderRadius: '6px',
-                }}
-              >
-                {link.label}
-              </Link>
-            );
-          })}
-        </div>
-      )}
+      <SiteNav />
 
       {/* ═══════════════════════ Page Content ═══════════════════════ */}
       <div style={{ paddingTop: '56px' }}>

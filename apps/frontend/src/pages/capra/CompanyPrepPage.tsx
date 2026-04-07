@@ -1,8 +1,6 @@
-import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
 import { Icon } from '../../components/shared/Icons.jsx';
-import CamoraLogo from '../../components/shared/CamoraLogo';
+import SiteNav from '../../components/shared/SiteNav';
 import SiteFooter from '../../components/shared/SiteFooter';
 
 /* ──────────────────────────────── Types ──────────────────────────────── */
@@ -270,20 +268,6 @@ const COMPANIES: Record<string, CompanyData> = {
   },
 };
 
-/* ──────────────────────────────── Nav / Footer data ──────────────────── */
-
-const navLinks = [
-  { label: 'Apply', href: '/jobs' },
-  { label: 'Prepare', href: '/capra/prepare' },
-  { label: 'Practice', href: '/capra/practice' },
-  { label: 'Attend', href: '/lumora' },
-  { label: 'Pricing', href: '/pricing' },
-];
-
-const footerLinks = [
-  ...navLinks,
-  { label: 'Support', href: 'mailto:support@cariara.com' },
-];
 
 /* ──────────────────────────────── Helpers ────────────────────────────── */
 
@@ -371,8 +355,6 @@ function StatIcon({ type }: { type: string }) {
 
 export default function CompanyPrepPage() {
   const { company } = useParams<{ company: string }>();
-  const { user, isLoading: loading, logout } = useAuth();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const companyData = company ? COMPANIES[company.toLowerCase()] : undefined;
 
@@ -420,22 +402,7 @@ export default function CompanyPrepPage() {
 
     return (
       <div style={{ background: '#f7f8f9', minHeight: '100vh' }}>
-        {/* Nav */}
-        <nav className="fixed top-0 left-0 right-0 z-50" style={{ background: '#ffffff', borderBottom: '1px solid #e3e8ee', height: 56 }}>
-          <div className="max-w-4xl mx-auto h-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-            <Link to="/" className="flex items-center gap-2.5 no-underline">
-              <CamoraLogo size={28} />
-              <span style={{ fontWeight: 700, fontSize: 16, color: '#111827', fontFamily: "'Comfortaa', sans-serif" }}>Camora</span>
-            </Link>
-            <div className="hidden sm:flex items-center gap-1">
-              {navLinks.map((link) => (
-                <Link key={link.label} to={link.href} style={{ fontSize: 14, fontWeight: 500, padding: '6px 12px', borderRadius: 6, textDecoration: 'none', color: '#4b5563' }}>
-                  {link.label}
-                </Link>
-              ))}
-            </div>
-          </div>
-        </nav>
+        <SiteNav />
 
         <div style={{ paddingTop: 56 }}>
           {/* Header */}
@@ -561,91 +528,7 @@ export default function CompanyPrepPage() {
   return (
     <div className="company-prep-root" style={{ background: '#f7f8f9', minHeight: '100vh' }}>
 
-      {/* ═══════════════════════ Top Navigation ═══════════════════════ */}
-      <nav
-        className="fixed top-0 left-0 right-0 z-50"
-        style={{ background: '#ffffff', borderBottom: '1px solid #e3e8ee', height: 56 }}
-      >
-        <div className="max-w-[85%] xl:max-w-7xl mx-auto h-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-2.5 no-underline">
-            <CamoraLogo size={28} />
-            <span style={{ fontWeight: 700, fontSize: 16, color: '#111827', letterSpacing: '-0.01em', fontFamily: "'Comfortaa', sans-serif" }}>
-              Camora
-            </span>
-          </Link>
-
-          {/* Center nav */}
-          <div className="hidden md:flex items-center gap-1">
-            {navLinks.map((link) => {
-              const linkStyle: React.CSSProperties = {
-                fontSize: 14,
-                fontWeight: 500,
-                padding: '6px 12px',
-                borderRadius: 6,
-                transition: 'color 0.15s, background 0.15s',
-                textDecoration: 'none',
-                color: '#4b5563',
-                borderBottom: '2px solid transparent',
-                marginBottom: -1,
-              };
-              return link.href.startsWith('http') ? (
-                <a key={link.label} href={link.href} target="_blank" rel="noopener noreferrer" className="practice-body nav-link" style={linkStyle}>
-                  {link.label}
-                </a>
-              ) : (
-                <Link key={link.label} to={link.href} className="practice-body nav-link" style={linkStyle}>
-                  {link.label}
-                </Link>
-              );
-            })}
-          </div>
-
-          {/* Right: user / sign in + mobile toggle */}
-          <div className="flex items-center gap-3">
-            {user ? (
-              <>
-                <Link to="/capra/prepare" className="practice-body" style={{ fontSize: 14, fontWeight: 500, color: '#10b981', textDecoration: 'none' }}>
-                  Dashboard
-                </Link>
-                <button onClick={logout} className="practice-body" style={{ fontSize: 14, fontWeight: 500, color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer' }}>
-                  Sign out
-                </button>
-              </>
-            ) : !loading ? (
-              <Link to="/login" className="practice-body" style={{ fontSize: 14, fontWeight: 500, color: '#4b5563', textDecoration: 'none' }}>
-                Sign in
-              </Link>
-            ) : null}
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-1.5"
-              style={{ color: '#6b7280', background: 'none', border: 'none', cursor: 'pointer' }}
-            >
-              <Icon name={mobileMenuOpen ? 'close' : 'menu'} size={20} />
-            </button>
-          </div>
-        </div>
-      </nav>
-
-      {/* ═══════════════════════ Mobile Menu ═══════════════════════ */}
-      {mobileMenuOpen && (
-        <div className="fixed top-14 left-0 right-0 z-40 md:hidden" style={{ background: '#ffffff', borderBottom: '1px solid #e3e8ee', padding: '8px 16px' }}>
-          {navLinks.map((link) =>
-            link.href.startsWith('http') ? (
-              <a key={link.label} href={link.href} target="_blank" rel="noopener noreferrer" className="practice-body"
-                style={{ display: 'block', padding: '10px 12px', fontSize: 14, fontWeight: 500, color: '#4b5563', textDecoration: 'none', borderRadius: 6 }}>
-                {link.label}
-              </a>
-            ) : (
-              <Link key={link.label} to={link.href} onClick={() => setMobileMenuOpen(false)} className="practice-body"
-                style={{ display: 'block', padding: '10px 12px', fontSize: 14, fontWeight: 500, color: '#4b5563', textDecoration: 'none', borderRadius: 6 }}>
-                {link.label}
-              </Link>
-            )
-          )}
-        </div>
-      )}
+      <SiteNav />
 
       {/* ═══════════════════════ Main Content ═══════════════════════ */}
       <main style={{ paddingTop: 56 }}>
