@@ -304,7 +304,7 @@ const TOKEN_EXPIRY = 4 * 60 * 60 * 1000; // 4 hours
  * Store platform authentication
  * POST /api/auth/platform
  */
-router.post('/platform', (req, res) => {
+router.post('/platform', authenticate, (req, res) => {
   try {
     const { platform, cookies, timestamp } = req.body;
 
@@ -354,7 +354,7 @@ router.post('/platform', (req, res) => {
  * Get authentication status for all platforms
  * GET /api/auth/status
  */
-router.get('/status', (req, res) => {
+router.get('/status', authenticate, (req, res) => {
   const status = {};
   const now = Date.now();
   const validPlatforms = ['glider', 'lark', 'hackerrank', 'leetcode', 'codesignal', 'codility', 'coderpad'];
@@ -401,7 +401,7 @@ export function getPlatformCookies(platform, req = null) {
  * Clear authentication for a platform
  * DELETE /api/auth/platform/:platform
  */
-router.delete('/platform/:platform', (req, res) => {
+router.delete('/platform/:platform', authenticate, (req, res) => {
   const { platform } = req.params;
   const storageKey = getPlatformAuthKey(req, platform);
 
@@ -422,7 +422,7 @@ router.delete('/platform/:platform', (req, res) => {
  * Clear all authentication for this user
  * DELETE /api/auth/all
  */
-router.delete('/all', (req, res) => {
+router.delete('/all', authenticate, (req, res) => {
   const validPlatforms = ['glider', 'lark', 'hackerrank', 'leetcode', 'codesignal', 'codility', 'coderpad'];
   let cleared = 0;
 

@@ -95,6 +95,12 @@ async function runMigrations() {
         latency_ms INTEGER DEFAULT 0,
         created_at TIMESTAMPTZ DEFAULT NOW()
       )`,
+      `CREATE TABLE IF NOT EXISTS lumora_stripe_events (
+        id SERIAL PRIMARY KEY,
+        event_id VARCHAR(255) UNIQUE NOT NULL,
+        type VARCHAR(100),
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      )`,
       // Indexes
       'CREATE INDEX IF NOT EXISTS idx_coding_usage_user_date ON coding_usage(user_id, created_at)',
       'CREATE INDEX IF NOT EXISTS idx_lumora_conversations_user ON lumora_conversations(user_id)',
@@ -153,7 +159,7 @@ app.use('/api/v1/jobs', jobsRouter);
 // Global error handler
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err);
-  res.status(500).json({ detail: 'Internal server error' });
+  res.status(500).json({ error: 'Internal server error' });
 });
 
 // Start

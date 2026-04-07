@@ -253,8 +253,9 @@ export default function JobsPage() {
         headers,
         body: JSON.stringify({ url: jobUrl.trim() }),
       });
+      if (!res.ok) throw new Error('Request failed');
       const data = await res.json();
-      if (!res.ok || !data.success) {
+      if (!data.success) {
         if (data.partial) {
           setShowTextFallback(true);
           setAnalyzeError(data.error || 'Could not scrape this URL.');
@@ -286,8 +287,9 @@ export default function JobsPage() {
         headers,
         body: JSON.stringify({ text: jdText.trim() }),
       });
+      if (!res.ok) throw new Error('Request failed');
       const data = await res.json();
-      if (!res.ok || !data.success) {
+      if (!data.success) {
         setAnalyzeError(data.error || 'Failed to analyze job description');
         return;
       }

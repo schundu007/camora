@@ -26,6 +26,7 @@ export function PaywallGate({ children, requiredPlan = 'any_paid', feature = 'th
         const resp = await fetch(`${API_URL}/api/v1/billing/subscription`, {
           headers: { 'Authorization': `Bearer ${token}` },
         });
+        if (!resp.ok) throw new Error('Request failed');
         const data = await resp.json();
         setPlan(data.plan || 'free');
       } catch {

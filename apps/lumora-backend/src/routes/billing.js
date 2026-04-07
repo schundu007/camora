@@ -18,6 +18,31 @@ import { addTopup } from '../services/usage.js';
 const router = Router();
 
 // ---------------------------------------------------------------------------
+// SECURITY: Validate redirect URLs against allowed domains (open redirect prevention)
+// ---------------------------------------------------------------------------
+
+const ALLOWED_REDIRECT_DOMAINS = [
+  'capra.cariara.com',
+  'www.capra.cariara.com',
+  'camora.cariara.com',
+  'cariara.com',
+  'www.cariara.com',
+  'localhost',
+  '127.0.0.1',
+];
+
+function isAllowedRedirectUrl(url) {
+  try {
+    const parsed = new URL(url);
+    return ALLOWED_REDIRECT_DOMAINS.some(domain =>
+      parsed.hostname === domain || parsed.hostname.endsWith('.' + domain)
+    );
+  } catch {
+    return false;
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Stripe initialisation (lazy — returns null when key is absent)
 // ---------------------------------------------------------------------------
 
@@ -98,8 +123,13 @@ router.post('/checkout', authenticate, async (req, res) => {
     return res.status(400).json({ error: 'price_id, success_url, and cancel_url are required' });
   }
 
+  // SECURITY: Validate redirect URLs to prevent open redirects
+  if (!isAllowedRedirectUrl(success_url) || !isAllowedRedirectUrl(cancel_url)) {
+    return res.status(400).json({ error: 'Invalid redirect URL domain' });
+  }
+
   const validPrices = [PRICE_MONTHLY(), PRICE_LIFETIME(), process.env.STRIPE_PRICE_STARTER, process.env.STRIPE_PRICE_YEARLY].filter(Boolean);
-  if (validPrices.length > 0 && !validPrices.includes(price_id)) {
+  if (!validPrices.includes(price_id)) {
     return res.status(400).json({ error: 'Invalid price ID' });
   }
 
@@ -172,6 +202,11 @@ router.post('/portal', authenticate, async (req, res) => {
   const { return_url } = req.body;
   if (!return_url) {
     return res.status(400).json({ error: 'return_url is required' });
+  }
+
+  // SECURITY: Validate redirect URL to prevent open redirects
+  if (!isAllowedRedirectUrl(return_url)) {
+    return res.status(400).json({ error: 'Invalid redirect URL domain' });
   }
 
   try {
@@ -251,6 +286,16 @@ router.post(
       return res.status(400).json({ error: 'Webhook signature verification failed' });
     }
 
+    // Idempotency: skip already-processed events
+    try {
+      const dup = await query('SELECT 1 FROM lumora_stripe_events WHERE event_id = $1', [event.id]);
+      if (dup.rows.length > 0) {
+        return res.json({ received: true });
+      }
+    } catch (_err) {
+      // Table may not exist yet — continue processing
+    }
+
     const data = event.data.object;
 
     try {
@@ -322,6 +367,24 @@ router.post(
           break;
         }
 
+        // ---- Invoice paid (reactivate subscription) ----------------------
+        case 'invoice.paid': {
+          const customerId = data.customer;
+          // Find user and ensure subscription is active
+          const userResult = await query(
+            'SELECT id FROM users WHERE stripe_customer_id = $1',
+            [customerId]
+          );
+          if (userResult.rows.length > 0) {
+            await query(
+              "UPDATE users SET subscription_status = 'active' WHERE id = $1",
+              [userResult.rows[0].id]
+            );
+            console.log(`[Billing] Invoice paid for user ${userResult.rows[0].id}`);
+          }
+          break;
+        }
+
         // ---- Invoice payment failed --------------------------------------
         case 'invoice.payment_failed': {
           const customerId = data.customer;
@@ -338,6 +401,16 @@ router.post(
         default:
           // Unhandled event type — acknowledge receipt
           break;
+      }
+
+      // Record processed event for idempotency
+      try {
+        await query(
+          'INSERT INTO lumora_stripe_events (event_id, type, created_at) VALUES ($1, $2, NOW()) ON CONFLICT DO NOTHING',
+          [event.id, event.type],
+        );
+      } catch (_err) {
+        // Table may not exist yet — non-fatal
       }
 
       return res.json({ received: true });

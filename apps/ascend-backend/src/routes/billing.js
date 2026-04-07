@@ -419,6 +419,25 @@ router.post('/webhook', async (req, res) => {
         break;
       }
 
+      case 'invoice.payment_failed': {
+        const invoice = event.data.object;
+        const customerId = invoice.customer;
+        // Find user by stripe_customer_id
+        const userResult = await query(
+          'SELECT user_id FROM ascend_subscriptions WHERE stripe_customer_id = $1',
+          [customerId]
+        );
+        if (userResult.rows.length > 0) {
+          const userId = userResult.rows[0].user_id;
+          await query(
+            "UPDATE ascend_subscriptions SET status = 'past_due' WHERE user_id = $1",
+            [userId]
+          );
+          logger.info({ userId, customerId }, 'Subscription marked past_due due to failed payment');
+        }
+        break;
+      }
+
       default:
         logger.info({ type: event.type }, 'Unhandled webhook event');
     }
