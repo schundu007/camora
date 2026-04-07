@@ -5,6 +5,7 @@ import { Icon } from '../../components/shared/Icons.jsx';
 import CamoraLogo from '../../components/shared/CamoraLogo';
 import SiteFooter from '../../components/shared/SiteFooter';
 import { getAuthHeaders } from '../../utils/authHeaders.js';
+import { ArchitectureDiagram } from '../../components/lumora/interview/ArchitectureDiagram';
 
 
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
@@ -338,9 +339,6 @@ export default function PracticePage() {
   const [inlineEval, setInlineEval] = useState(null); // current question's eval before moving on
   const [expandedHistory, setExpandedHistory] = useState(null);
   const [resultDimensions, setResultDimensions] = useState(null);
-  const [diagramUrl, setDiagramUrl] = useState(null);
-  const [diagramLoading, setDiagramLoading] = useState(false);
-  const [diagramError, setDiagramError] = useState(null);
   const timerRef = useRef(null);
   const textareaRef = useRef(null);
   const challengeStartRef = useRef(0);
@@ -382,51 +380,9 @@ export default function PracticePage() {
     setQuestionStartTime(Date.now());
     challengeStartRef.current = Date.now();
     setDiagramUrl(null);
-    setDiagramError(null);
     setPhase('active');
     window.scrollTo(0, 0);
   }, [mode, category, difficulty, company]);
-
-  // Auto-generate architecture diagram for system design questions
-  const generateDiagram = useCallback((q, isRetry = false) => {
-    setDiagramUrl(null);
-    setDiagramError(null);
-    setDiagramLoading(true);
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 90000);
-    const body = { question: `${q.q}: ${q.desc}`, cloudProvider: 'aws', detailLevel: 'overview', direction: 'LR' };
-    fetch(`${API_URL}/api/diagram/generate`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-      body: JSON.stringify(body),
-      signal: controller.signal,
-    })
-      .then(r => { if (!r.ok) throw new Error(`${r.status}`); return r.json(); })
-      .then(data => {
-        clearTimeout(timeout);
-        if (data.success && data.image_url) {
-          const url = data.image_url.startsWith('/') ? `${API_URL}${data.image_url}` : data.image_url;
-          setDiagramUrl(url);
-        } else {
-          setDiagramError(data.error || 'Could not generate diagram');
-        }
-      })
-      .catch((e) => {
-        clearTimeout(timeout);
-        // On 502/timeout, auto-retry once — the first request may have completed and cached the result
-        if (!isRetry && (e.message === '502' || e.name === 'AbortError')) {
-          setTimeout(() => generateDiagram(q, true), 3000);
-          return;
-        }
-        setDiagramError(e.name === 'AbortError' ? 'Diagram generation timed out' : `Diagram failed (${e.message})`);
-        setDiagramLoading(false);
-      });
-  }, []);
-
-  useEffect(() => {
-    if (phase !== 'active' || category !== 'system-design' || !questions[currentIdx]) return;
-    generateDiagram(questions[currentIdx]);
-  }, [phase, category, currentIdx, questions, generateDiagram]);
 
   const submitAnswer = useCallback(async () => {
     const q = questions[currentIdx];
@@ -999,39 +955,16 @@ export default function PracticePage() {
                 const parts = (answers[currentIdx] || '').split('---SECTION---');
                 return (
                   <div style={{ marginBottom: 8 }}>
-                    {/* Architecture Diagram — Auto-generated */}
+                    {/* Architecture Diagram — shared component via Lumora backend */}
                     <div style={{ marginBottom: 12 }}>
                       <label style={{ fontSize: 11, fontWeight: 600, color: '#6b7280', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                         <Icon name="layers" size={12} style={{ color: '#10b981' }} />
                         Reference Architecture
                       </label>
-                      <div style={{ width: '100%', minHeight: 120, borderRadius: 10, border: '1px solid #e3e8ee', background: '#fafbfc', overflow: 'hidden', position: 'relative' }}>
-                        {diagramLoading && (
-                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 20px', gap: 10 }}>
-                            <div style={{ width: 28, height: 28, border: '3px solid #e3e8ee', borderTopColor: '#10b981', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-                            <span style={{ fontSize: 12, color: '#9ca3af' }}>Generating architecture diagram...</span>
-                          </div>
-                        )}
-                        {diagramUrl && (
-                          <img src={diagramUrl} alt="Architecture diagram" style={{ width: '100%', display: 'block', padding: 8 }} />
-                        )}
-                        {diagramError && (
-                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '30px 20px', gap: 8 }}>
-                            <span style={{ fontSize: 12, color: '#9ca3af' }}>{diagramError}</span>
-                            <button
-                              onClick={() => generateDiagram(questions[currentIdx])}
-                              style={{ padding: '6px 16px', fontSize: 11, fontWeight: 600, color: '#10b981', background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: 8, cursor: 'pointer' }}
-                            >
-                              Retry
-                            </button>
-                          </div>
-                        )}
-                        {!diagramLoading && !diagramUrl && !diagramError && (
-                          <div style={{ padding: '30px 20px', textAlign: 'center', color: '#c0c5ce', fontSize: 12 }}>
-                            Diagram will appear here
-                          </div>
-                        )}
-                      </div>
+                      <ArchitectureDiagram
+                        question={`${questions[currentIdx].q}: ${questions[currentIdx].desc}`}
+                        className="rounded-lg border border-[#e3e8ee] overflow-hidden"
+                      />
                     </div>
 
                     {/* Section text areas — 2 columns */}

@@ -157,7 +157,7 @@ export function EvolutionTimeline({ steps }) {
             </div>
 
             {/* Pros / Cons */}
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <div>
                 <span className="text-[10px] landing-mono font-bold text-emerald-600 uppercase tracking-wider">Pros</span>
                 <ul className="mt-1 space-y-0.5">

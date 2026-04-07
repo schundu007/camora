@@ -1120,7 +1120,7 @@ export default function JobPrepPage() {
               <h3 className="text-xl font-bold text-gray-900 mb-1">Upgrade to Generate Prep Material</h3>
               <p className="text-sm text-gray-500">AI-powered interview prep tailored to this specific job</p>
             </div>
-            <div className="grid grid-cols-3 gap-3 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
               {[
                 { name: 'Starter', price: '$29', period: '/mo', features: ['Unlimited prep & practice', '10 live sessions/mo', 'AI explanations', 'System design diagrams'] },
                 { name: 'Pro', price: '$49', period: '/mo', features: ['Everything in Starter', 'Unlimited live sessions', 'Job matching & auto apply', 'Company-specific prep'], popular: true },
