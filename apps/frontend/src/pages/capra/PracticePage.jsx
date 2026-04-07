@@ -149,8 +149,7 @@ function formatTime(s) {
 
 function getDailyChallenge() {
   const allProblems = [...CHALLENGES.coding, ...CHALLENGES['system-design'], ...CHALLENGES.behavioral];
-  const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
-  return allProblems[dayOfYear % allProblems.length];
+  return allProblems[Math.floor(Math.random() * allProblems.length)];
 }
 
 function getDailyCategory(challenge) {
