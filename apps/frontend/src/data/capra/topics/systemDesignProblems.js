@@ -11757,6 +11757,78 @@ Shard by leaderboard key:
         'Large leaderboards: Approximate ranking for players outside top 1000',
         'Periodic snapshots to persistent storage',
         'Batch updates for very high write volume'
+      ],
+
+      edgeCases: [
+        {
+          scenario: 'Two players submit score updates at the exact same millisecond with identical scores.',
+          impact: 'Rank ordering between tied players is undefined, causing inconsistent rankings across requests.',
+          mitigation: 'Use a composite sort key (score + timestamp) so that the earlier submission ranks higher; document the tiebreaker policy.'
+        },
+        {
+          scenario: 'A cheater submits an impossibly high score that pushes legitimate players off the top rankings.',
+          impact: 'Legitimate players lose motivation and trust in the leaderboard, damaging game engagement.',
+          mitigation: 'Validate scores server-side against game state; flag statistical anomalies (e.g., 10x average score) for review before posting.'
+        },
+        {
+          scenario: 'Redis master fails during a leaderboard season reset, and the replica has stale data.',
+          impact: 'Players see outdated rankings or lose recent score updates, causing complaints and support tickets.',
+          mitigation: 'Use Redis Sentinel for automatic failover; persist snapshots to PostgreSQL so leaderboards can be rebuilt from durable storage.'
+        },
+        {
+          scenario: 'A viral game event causes millions of concurrent score updates, exceeding single Redis instance throughput.',
+          impact: 'Score update latency spikes and some updates may be dropped, showing incorrect player rankings.',
+          mitigation: 'Buffer updates in Kafka and apply them in micro-batches; shard by leaderboard ID to distribute write load across Redis instances.'
+        },
+        {
+          scenario: 'A player requests their rank on a leaderboard with 100 million entries, causing a slow ZRANK operation.',
+          impact: 'The O(log N) lookup on a very large sorted set takes noticeable time and blocks the Redis event loop.',
+          mitigation: 'For players outside top 10K, return approximate rank using bucket-based estimation rather than exact ZRANK.'
+        }
+      ],
+
+      tradeoffs: [
+        {
+          decision: 'Redis sorted sets vs a relational database with indexed score column.',
+          pros: 'Redis sorted sets provide O(log N) rank lookups and updates in memory with purpose-built commands (ZADD, ZRANK).',
+          cons: 'Redis is limited by memory capacity and lacks built-in durability; a database crash without persistence loses all rankings.',
+          recommendation: 'Use Redis as the primary ranking engine with periodic snapshots to a relational database for durability and historical queries.'
+        },
+        {
+          decision: 'Global leaderboard vs sharded per-region leaderboards.',
+          pros: 'A global leaderboard gives every player a single definitive rank, which is simpler to understand and more competitive.',
+          cons: 'Cross-region writes introduce latency; a single sorted set becomes a scaling bottleneck at hundreds of millions of players.',
+          recommendation: 'Maintain regional leaderboards for low-latency reads; merge the top N from each region into a global leaderboard asynchronously.'
+        },
+        {
+          decision: 'Real-time rank updates vs periodic batch recalculation.',
+          pros: 'Real-time updates give players instant feedback on their ranking position after each game.',
+          cons: 'High write amplification under load; every score change triggers a re-sort that may not be visible to other players.',
+          recommendation: 'Update scores in real-time but allow rank queries to be slightly stale (1-2 seconds) by caching rank results briefly.'
+        }
+      ],
+
+      layeredDesign: [
+        {
+          name: 'API Layer',
+          purpose: 'Exposes endpoints for submitting scores, querying ranks, and fetching top-N leaderboards.',
+          components: ['Score submission API', 'Rank query API', 'Leaderboard listing API', 'Rate limiter']
+        },
+        {
+          name: 'Score Processing Layer',
+          purpose: 'Validates, deduplicates, and applies anti-cheat checks before writing scores to the ranking engine.',
+          components: ['Score validator', 'Anti-cheat service', 'Dedup filter', 'Score event queue (Kafka)']
+        },
+        {
+          name: 'Ranking Engine Layer',
+          purpose: 'Maintains sorted player rankings in memory for fast rank lookups and top-N queries.',
+          components: ['Redis sorted sets', 'Shard router', 'Approximate rank estimator', 'TTL manager for seasonal resets']
+        },
+        {
+          name: 'Persistence Layer',
+          purpose: 'Stores historical leaderboard snapshots and provides recovery data if the in-memory layer fails.',
+          components: ['PostgreSQL snapshot store', 'Periodic snapshot job', 'Historical leaderboard query service']
+        }
       ]
     },
     {
@@ -12182,6 +12254,84 @@ Search results: Cache by query hash
         'Overbooking prevention: Pessimistic locking during checkout',
         'Caching: Cache hotel details, compute availability on-demand',
         'Rate parity: Ensure consistent pricing across channels'
+      ],
+
+      edgeCases: [
+        {
+          scenario: 'Two users attempt to book the last available room at the same time from different channels.',
+          impact: 'Without proper locking, both bookings succeed and the hotel is double-booked for that date.',
+          mitigation: 'Use pessimistic locking (SELECT FOR UPDATE) during checkout; hold a short-lived reservation token that expires if payment is not completed within 10 minutes.'
+        },
+        {
+          scenario: 'A user books a room, then the hotel marks it unavailable on their channel manager before sync completes.',
+          impact: 'The booking confirmation is sent but the room no longer exists in the hotel inventory, requiring manual resolution.',
+          mitigation: 'Implement two-phase confirmation: tentatively reserve via the channel manager API, then confirm only after the hotel system acknowledges availability.'
+        },
+        {
+          scenario: 'Dynamic pricing algorithm raises the rate between when the user views search results and when they click book.',
+          impact: 'The displayed price differs from the checkout price, frustrating users and potentially violating consumer protection laws.',
+          mitigation: 'Lock the displayed price for a configurable TTL (e.g., 15 minutes) using a price quote token; honor the quoted price at checkout.'
+        },
+        {
+          scenario: 'A large group cancels 50 rooms simultaneously, flooding the inventory system with availability updates.',
+          impact: 'The inventory service becomes overwhelmed, temporarily showing stale availability to new searchers.',
+          mitigation: 'Process bulk cancellations asynchronously through a queue; update search cache in batches rather than one room at a time.'
+        },
+        {
+          scenario: 'A hotel in a different timezone has a check-in date boundary that differs from the user search timezone.',
+          impact: 'Users see rooms as available when they are actually booked for the requested local date, causing check-in conflicts.',
+          mitigation: 'Store all availability in UTC and convert based on the hotel property timezone; display dates in the hotel local time.'
+        }
+      ],
+
+      tradeoffs: [
+        {
+          decision: 'Pessimistic locking vs optimistic locking for inventory reservation.',
+          pros: 'Pessimistic locking guarantees no double-booking by holding exclusive locks during the checkout flow.',
+          cons: 'Locks block concurrent users trying to book the same room type, reducing throughput during high-demand periods.',
+          recommendation: 'Use pessimistic locking for the final booking step but optimistic locking for the search/browse phase to keep search fast.'
+        },
+        {
+          decision: 'Pre-computed availability index vs real-time availability calculation.',
+          pros: 'Pre-computed indexes make search queries fast since availability is already joined with hotel data.',
+          cons: 'Indexes become stale quickly as bookings and cancellations happen, showing phantom availability.',
+          recommendation: 'Pre-compute availability for search results with a short TTL cache; verify real-time availability only when the user initiates booking.'
+        },
+        {
+          decision: 'Allowing overbooking vs strict inventory enforcement.',
+          pros: 'Overbooking (like airlines) maximizes revenue by accounting for expected cancellations and no-shows.',
+          cons: 'When all guests show up, the hotel must walk guests to another property, causing poor customer experience.',
+          recommendation: 'Allow configurable overbooking percentage per hotel (typically 5-10%); ensure a partner hotel network for walk scenarios.'
+        },
+        {
+          decision: 'Centralized inventory service vs distributed per-channel inventory.',
+          pros: 'A centralized service provides a single source of truth, eliminating cross-channel sync issues.',
+          cons: 'Creates a single point of failure; all channels depend on one service for every availability check.',
+          recommendation: 'Use a centralized inventory service with local read replicas per channel; writes go to the primary, reads can be slightly stale.'
+        }
+      ],
+
+      layeredDesign: [
+        {
+          name: 'Search Layer',
+          purpose: 'Handles hotel discovery with geo-filtering, date-range availability, and faceted search results.',
+          components: ['Elasticsearch cluster', 'Geo-index', 'Availability cache', 'Search ranking service']
+        },
+        {
+          name: 'Inventory Layer',
+          purpose: 'Manages room availability, pricing, and reservation locks across all distribution channels.',
+          components: ['Inventory service', 'Price engine', 'Channel manager sync', 'Reservation lock manager']
+        },
+        {
+          name: 'Booking Layer',
+          purpose: 'Orchestrates the checkout flow including payment processing, confirmation, and post-booking notifications.',
+          components: ['Booking orchestrator', 'Payment gateway', 'Confirmation service', 'Email/SMS notifier']
+        },
+        {
+          name: 'Data Layer',
+          purpose: 'Stores hotel metadata, reviews, photos, and historical booking data for analytics.',
+          components: ['PostgreSQL (bookings)', 'Redis (session/cache)', 'S3 (photos)', 'Analytics warehouse']
+        }
       ]
     },
     {
@@ -12603,6 +12753,83 @@ Confidence interval:
         'Traffic: Aggregate anonymized location data, update edge weights',
         'ETA: Historical patterns + real-time traffic',
         'Offline: Download bounded region tiles + graph'
+      ],
+
+      edgeCases: [
+        {
+          scenario: 'A road closure or accident occurs mid-navigation, invalidating the current route.',
+          impact: 'The user follows an outdated route into a closed road, wasting time and eroding trust in navigation.',
+          mitigation: 'Subscribe to real-time traffic event streams; trigger automatic rerouting when edge weights change significantly along the active path.'
+        },
+        {
+          scenario: 'GPS signal is lost in a tunnel or dense urban canyon for an extended period.',
+          impact: 'The navigation loses track of the user position and cannot provide turn-by-turn directions.',
+          mitigation: 'Use dead reckoning with accelerometer and gyroscope data; snap to the most likely road segment when GPS signal returns.'
+        },
+        {
+          scenario: 'Map tile requests spike when millions of users open the app simultaneously during a major event.',
+          impact: 'CDN cache misses for less-popular zoom levels cause origin overload and slow map rendering for all users.',
+          mitigation: 'Pre-warm CDN caches for event locations; use progressive tile loading with low-res placeholders while high-res tiles load.'
+        },
+        {
+          scenario: 'A routing request spans two graph partitions stored on different servers.',
+          impact: 'Cross-partition routing requires network hops between servers, significantly increasing route calculation latency.',
+          mitigation: 'Use hierarchical routing: pre-compute routes between partition boundaries, then stitch local routes at query time.'
+        },
+        {
+          scenario: 'Offline map data becomes outdated because the user has not connected to update in weeks.',
+          impact: 'Navigation follows roads that no longer exist or misses newly opened routes.',
+          mitigation: 'Show a staleness warning when offline data exceeds a threshold age; prompt for differential updates when connectivity is available.'
+        }
+      ],
+
+      tradeoffs: [
+        {
+          decision: 'Pre-rendered map tiles vs vector tiles rendered on the client.',
+          pros: 'Pre-rendered tiles are simple to serve from a CDN and require zero client-side processing.',
+          cons: 'Massive storage for all zoom levels across the globe; cannot dynamically style or rotate labels.',
+          recommendation: 'Use vector tiles for mobile clients (smaller downloads, client-side styling) and pre-rendered raster tiles as a fallback for low-power devices.'
+        },
+        {
+          decision: 'Dijkstra/A* on the full graph vs contraction hierarchies for routing.',
+          pros: 'Contraction hierarchies pre-compute shortcuts that reduce query time from seconds to milliseconds for long routes.',
+          cons: 'Pre-computation takes hours and must be rerun when the road graph changes; not suitable for real-time traffic integration.',
+          recommendation: 'Use contraction hierarchies for static routes; overlay real-time traffic by adjusting edge weights on the original graph for short segments near the driver.'
+        },
+        {
+          decision: 'Crowdsourced traffic data vs dedicated sensor infrastructure.',
+          pros: 'Crowdsourcing from phone GPS provides global coverage at near-zero infrastructure cost.',
+          cons: 'Coverage gaps in low-adoption areas; privacy concerns with continuous location tracking.',
+          recommendation: 'Primarily use crowdsourced data with anonymization (differential privacy); supplement with municipal sensor feeds in cities that provide them.'
+        }
+      ],
+
+      layeredDesign: [
+        {
+          name: 'Map Rendering Layer',
+          purpose: 'Serves map tiles at multiple zoom levels and handles client-side rendering of vector data.',
+          components: ['Tile server', 'CDN', 'Vector tile encoder', 'Label placement engine']
+        },
+        {
+          name: 'Routing Layer',
+          purpose: 'Computes optimal paths between origin and destination using weighted road graphs.',
+          components: ['Graph partitioner', 'Contraction hierarchy builder', 'A* query engine', 'Rerouting service']
+        },
+        {
+          name: 'Traffic Layer',
+          purpose: 'Aggregates real-time location data to compute live traffic conditions and update edge weights.',
+          components: ['Location ingestion pipeline', 'Traffic flow calculator', 'Incident detector', 'Edge weight updater']
+        },
+        {
+          name: 'Search and Geocoding Layer',
+          purpose: 'Resolves place names and addresses to coordinates and provides point-of-interest search.',
+          components: ['Geocoder', 'Reverse geocoder', 'Place search index', 'Autocomplete service']
+        },
+        {
+          name: 'Offline Layer',
+          purpose: 'Packages map tiles and routing graphs for download so navigation works without connectivity.',
+          components: ['Region packager', 'Differential update generator', 'On-device routing engine', 'Staleness tracker']
+        }
       ]
     },
     {
@@ -13998,7 +14225,26 @@ messages {
         'Per-user message queue for reliable offline delivery',
         'Fan-out on write for small groups, lazy delivery for large groups',
         'Lamport timestamps for distributed message ordering'
-      ]
+      ],
+      edgeCases: [
+        { scenario: 'User sends a message while temporarily offline and reconnects', impact: 'Message appears sent on the sender device but never reaches the server or recipient', mitigation: 'Queue messages locally with a pending state and sync to the server on reconnect, using idempotent message IDs to prevent duplicates' },
+        { scenario: 'WebSocket server crashes with thousands of active connections', impact: 'All connected users are disconnected and miss incoming messages until they reconnect', mitigation: 'Run multiple gateway instances behind a load balancer, persist undelivered messages in per-user queues, and auto-reconnect clients with exponential backoff' },
+        { scenario: 'Group message fan-out to a 256-member group creates a write amplification spike', impact: 'Delivery latency increases and downstream queues back up during peak hours', mitigation: 'Use lazy delivery for large groups where members pull unread messages on connect rather than pushing to each individually' },
+        { scenario: 'Clock skew between distributed servers causes message ordering issues', impact: 'Messages appear out of order in the conversation, confusing participants', mitigation: 'Use per-conversation monotonically increasing sequence IDs assigned by a single coordinator rather than relying on wall-clock timestamps' },
+        { scenario: 'End-to-end encryption key rotation while messages are in transit', impact: 'Recipient cannot decrypt messages encrypted with the old key', mitigation: 'Include key version in message metadata and keep previous key versions cached on client for a grace period' },
+      ],
+      tradeoffs: [
+        { decision: 'WebSocket vs long polling for real-time delivery', pros: 'WebSocket provides true bidirectional real-time communication with low overhead', cons: 'WebSocket connections are stateful and harder to load balance across servers', recommendation: 'WebSocket for primary delivery with long-polling fallback for restrictive network environments' },
+        { decision: 'Fan-out on write vs fan-out on read for group messages', pros: 'Fan-out on write gives instant delivery; fan-out on read reduces write amplification', cons: 'Fan-out on write is expensive for large groups; fan-out on read adds read latency', recommendation: 'Fan-out on write for groups under 50 members, lazy pull-based delivery for larger groups' },
+        { decision: 'Cassandra vs PostgreSQL for message storage', pros: 'Cassandra handles write-heavy workloads and scales horizontally; PostgreSQL offers stronger consistency', cons: 'Cassandra has eventual consistency and limited query flexibility; PostgreSQL has scaling limits', recommendation: 'Cassandra partitioned by conversation ID for message storage at billion-message scale' },
+      ],
+      layeredDesign: [
+        { name: 'Client Layer', purpose: 'Manage local message queue, encryption, and WebSocket connection lifecycle', components: ['Message Queue (Local)', 'E2E Encryption Engine', 'WebSocket Client'] },
+        { name: 'Gateway Layer', purpose: 'Maintain persistent connections and route messages to the correct recipients', components: ['WebSocket Gateway', 'Connection Registry', 'Load Balancer'] },
+        { name: 'Message Layer', purpose: 'Process, validate, and persist messages while managing delivery state', components: ['Message Service', 'Delivery Tracker', 'Presence Service'] },
+        { name: 'Queue Layer', purpose: 'Buffer messages for offline users and decouple real-time delivery from storage', components: ['Kafka', 'Per-User Offline Queue', 'Push Notification Service'] },
+        { name: 'Storage Layer', purpose: 'Persist message history and media with efficient partitioning', components: ['Cassandra (Messages)', 'S3 (Media)', 'Redis (Sessions/Presence)'] },
+      ],
     },
     {
       id: 'metrics-monitoring',
