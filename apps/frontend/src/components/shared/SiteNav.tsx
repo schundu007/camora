@@ -29,6 +29,9 @@ export default function SiteNav() {
 
   const isActive = (href: string) => location.pathname === href || location.pathname.startsWith(href + '/');
 
+  const showTicker = new Date() < CHALLENGE_END;
+  const navHeight = showTicker ? 56 + TICKER_HEIGHT : 56;
+
   const nav = (
     <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl" style={{ background: 'linear-gradient(135deg, rgba(178,235,242,0.7) 0%, rgba(179,198,231,0.7) 30%, rgba(197,179,227,0.7) 55%, rgba(212,184,232,0.7) 80%, rgba(225,190,231,0.7) 100%)' }}>
       <div className="w-full lg:max-w-[70%] mx-auto flex items-center justify-between px-4 sm:px-6 h-14">
@@ -107,37 +110,31 @@ export default function SiteNav() {
           </div>
         </div>
       )}
-    </nav>
-  );
-
-  const showTicker = new Date() < CHALLENGE_END && location.pathname !== '/challenge';
-
-  return (
-    <>
-      {nav}
-      {showTicker && (
-        <>
-          <div className="fixed left-0 right-0 z-40 overflow-hidden" style={{ top: 56, height: TICKER_HEIGHT }}>
-            <Link to="/challenge" className="block h-full" style={{ background: 'linear-gradient(90deg, #10b981, #6366f1, #0ea5e9, #f59e0b)' }}>
-              <div className="challenge-ticker flex items-center h-full whitespace-nowrap">
-                {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, i) => (
-                  <span key={i} className="inline-flex items-center px-6 text-[10px] font-bold text-white tracking-wide">
-                    {item}
-                    <span className="mx-5 w-1 h-1 rounded-full bg-white/40" />
-                  </span>
-                ))}
-              </div>
-            </Link>
+      {/* Challenge Campaign Ticker — all pages including /challenge */}
+      {new Date() < CHALLENGE_END && (
+        <Link to="/challenge" className="block overflow-hidden" style={{ background: 'linear-gradient(90deg, #10b981, #6366f1, #0ea5e9, #f59e0b)', height: TICKER_HEIGHT }}>
+          <div className="challenge-ticker flex items-center h-full whitespace-nowrap">
+            {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, i) => (
+              <span key={i} className="inline-flex items-center px-6 text-[10px] font-bold text-white tracking-wide">
+                {item}
+                <span className="mx-5 w-1 h-1 rounded-full bg-white/40" />
+              </span>
+            ))}
           </div>
-          {/* Spacer so page content isn't hidden behind the ticker */}
-          <div style={{ height: TICKER_HEIGHT }} />
           <style>{`
             .challenge-ticker { animation: ticker-scroll 28s linear infinite; }
             .challenge-ticker:hover { animation-play-state: paused; }
             @keyframes ticker-scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
           `}</style>
-        </>
+        </Link>
       )}
-    </>
+    </nav>
   );
+
+  // Set CSS variable for nav height so sticky elements can reference it
+  if (typeof document !== 'undefined') {
+    document.documentElement.style.setProperty('--nav-h', `${navHeight}px`);
+  }
+
+  return nav;
 }

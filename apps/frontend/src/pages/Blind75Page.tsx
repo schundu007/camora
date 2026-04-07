@@ -529,7 +529,7 @@ export default function Blind75Page() {
       </div>
 
       {/* ═══════════════════════ Tab Navigation (sticky) ═══════════════════════ */}
-      <div style={{ background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderBottom: '1px solid #e3e8ee', position: 'sticky', top: '56px', zIndex: 30 }}>
+      <div style={{ background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderBottom: '1px solid #e3e8ee', position: 'sticky', top: 'var(--nav-h, 56px)', zIndex: 30 }}>
         <div className="max-w-[85%] xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div style={{ display: 'flex', gap: '4px', overflowX: 'auto', scrollbarWidth: 'none', padding: '8px 0' }} className="b75-pills-scroll">
             {TABS.map((tab) => {

@@ -1,8 +1,22 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import SiteNav from '../components/shared/SiteNav';
 import SiteFooter from '../components/shared/SiteFooter';
 import { useAuth } from '../contexts/AuthContext';
+import { getAuthHeaders } from '../utils/authHeaders.js';
+
+const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
+
+const QUIZ_QUESTIONS = [
+  { q: 'Reverse a String', desc: 'Write a function that reverses a string in-place.' },
+  { q: 'Two Sum', desc: 'Given an array and target, return indices of two numbers that add up to target.' },
+  { q: 'Valid Parentheses', desc: 'Check if a string of brackets is balanced.' },
+  { q: 'Fibonacci', desc: 'Return the nth Fibonacci number efficiently.' },
+  { q: 'Palindrome Check', desc: 'Check if a string is a palindrome, ignoring non-alphanumeric characters.' },
+  { q: 'Find Maximum', desc: 'Find the maximum element in an unsorted array.' },
+  { q: 'Merge Sorted Arrays', desc: 'Merge two sorted arrays into one sorted array.' },
+  { q: 'Binary Search', desc: 'Implement binary search on a sorted array.' },
+];
 
 /* ── Constants ────────────────────────────────────────────── */
 const CHALLENGE_START = new Date('2026-05-07T00:00:00Z');
@@ -115,6 +129,126 @@ export default function ChallengePage() {
   const challengeActive = now >= CHALLENGE_START && now <= CHALLENGE_END;
   const challengeEnded = now > CHALLENGE_END;
 
+  // Challenger state
+  const [challengeStatus, setChallengeStatus] = useState<any>(null);
+  const [quizPhase, setQuizPhase] = useState<'idle' | 'taking' | 'evaluating' | 'passed' | 'failed'>('idle');
+  const [quizQuestions, setQuizQuestions] = useState<any[]>([]);
+  const [quizAnswers, setQuizAnswers] = useState<string[]>([]);
+  const [quizIdx, setQuizIdx] = useState(0);
+  const [quizTimeLeft, setQuizTimeLeft] = useState(600);
+  const [quizScores, setQuizScores] = useState<number[]>([]);
+  const [quizEvaluating, setQuizEvaluating] = useState(false);
+  const [submitForm, setSubmitForm] = useState({ title: '', category: 'Bug Hunting', severity: 'Medium', description: '', steps: '', fix: '' });
+  const [submitStatus, setSubmitStatus] = useState<string | null>(null);
+  const timerRef = useRef<any>(null);
+
+  // Fetch challenge status
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    fetch(`${API_URL}/api/challenge/status`, { headers: { ...getAuthHeaders() } })
+      .then(r => r.ok ? r.json() : null).then(d => d && setChallengeStatus(d)).catch(() => {});
+  }, [isAuthenticated]);
+
+  // Quiz timer
+  useEffect(() => {
+    if (quizPhase === 'taking' && quizTimeLeft > 0) {
+      timerRef.current = setInterval(() => setQuizTimeLeft(t => t <= 1 ? (clearInterval(timerRef.current), finishQuiz(), 0) : t - 1), 1000);
+      return () => clearInterval(timerRef.current);
+    }
+  }, [quizPhase]);
+
+  const startQuiz = () => {
+    const shuffled = [...QUIZ_QUESTIONS].sort(() => Math.random() - 0.5).slice(0, 5);
+    setQuizQuestions(shuffled);
+    setQuizAnswers(new Array(5).fill(''));
+    setQuizIdx(0);
+    setQuizScores([]);
+    setQuizTimeLeft(600);
+    setQuizPhase('taking');
+  };
+
+  const submitQuizAnswer = useCallback(async () => {
+    const q = quizQuestions[quizIdx];
+    const answer = quizAnswers[quizIdx];
+    setQuizEvaluating(true);
+    let score = 0;
+    try {
+      const evalPrompt = `Coding: ${q.q} — ${q.desc}\n\nAnswer:\n${answer}\n\nScore 0-100. Return ONLY: {"score": number}`;
+      const resp = await fetch(API_URL + '/api/solve/stream', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify({ problem: evalPrompt, provider: 'claude', language: 'auto', detailLevel: 'basic', ascendMode: 'coding' }),
+      });
+      if (resp.ok) {
+        const reader = resp.body!.getReader();
+        const decoder = new TextDecoder();
+        let buf = '', result: any = null;
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buf += decoder.decode(value, { stream: true });
+          const lines = buf.split('\n'); buf = lines.pop()!;
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try { const d = JSON.parse(line.slice(6)); if (d.done && d.result) result = d.result; } catch {}
+            }
+          }
+        }
+        if (result) {
+          const text = result.code || result.pitch || '';
+          const m = text.match(/\{[\s\S]*?"score"[\s\S]*?\}/);
+          if (m) { try { score = Math.min(100, Math.max(0, JSON.parse(m[0]).score || 0)); } catch {} }
+        }
+      }
+      if (!score && answer.trim().length > 20) score = 30;
+    } catch { score = answer.trim().length > 20 ? 25 : 0; }
+
+    setQuizEvaluating(false);
+    const newScores = [...quizScores, score];
+    setQuizScores(newScores);
+
+    if (quizIdx < quizQuestions.length - 1) {
+      setQuizIdx(quizIdx + 1);
+    } else {
+      finishQuiz(newScores);
+    }
+  }, [quizIdx, quizQuestions, quizAnswers, quizScores]);
+
+  const finishQuiz = async (scores?: number[]) => {
+    clearInterval(timerRef.current);
+    const s = scores || quizScores;
+    const avg = s.length > 0 ? Math.round(s.reduce((a, b) => a + b, 0) / s.length) : 0;
+    setQuizPhase('evaluating');
+    try {
+      const resp = await fetch(`${API_URL}/api/challenge/qualify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify({ answers: s.map((sc, i) => ({ question: quizQuestions[i]?.q, score: sc })), totalScore: avg }),
+      });
+      const data = await resp.json();
+      if (data.qualified) {
+        setQuizPhase('passed');
+        setChallengeStatus({ ...challengeStatus, isChallenger: true, quizScore: avg, creditsRemaining: data.creditsGranted || 100 });
+      } else {
+        setQuizPhase('failed');
+      }
+    } catch { setQuizPhase('failed'); }
+  };
+
+  const handleSubmitFinding = async () => {
+    if (!submitForm.title || !submitForm.description) return;
+    setSubmitStatus('submitting');
+    try {
+      const resp = await fetch(`${API_URL}/api/challenge/submit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify({ title: submitForm.title, category: submitForm.category, severity: submitForm.severity, description: submitForm.description, stepsToReproduce: submitForm.steps, suggestedFix: submitForm.fix }),
+      });
+      if (resp.ok) { setSubmitStatus('success'); setSubmitForm({ title: '', category: 'Bug Hunting', severity: 'Medium', description: '', steps: '', fix: '' }); }
+      else setSubmitStatus('error');
+    } catch { setSubmitStatus('error'); }
+  };
+
   return (
     <div className="min-h-screen" style={{ background: 'transparent' }}>
       <SiteNav />
@@ -174,6 +308,128 @@ export default function ChallengePage() {
             <span className="text-xs text-gray-500">Prize Pool</span>
             <span className="text-lg font-extrabold text-gray-900">$21,812</span>
           </div>
+        </div>
+      </section>
+
+      {/* ═══ QUALIFICATION ═══ */}
+      <section className="py-12 px-4 sm:px-6">
+        <div className="w-full lg:max-w-[65%] mx-auto">
+          {!isAuthenticated ? (
+            <div className="card text-center py-10">
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Ready to participate?</h3>
+              <p className="text-sm text-gray-500 mb-4">Create a free account to take the qualification quiz and start the challenge.</p>
+              <Link to="/login?redirect=/challenge" className="btn-primary" style={{ textDecoration: 'none' }}>Sign Up Free</Link>
+            </div>
+          ) : challengeStatus?.isChallenger ? (
+            <div className="card">
+              <div className="flex items-center justify-between flex-wrap gap-4 mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
+                    <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  </div>
+                  <div>
+                    <span className="text-sm font-bold text-emerald-700">Qualified Challenger</span>
+                    <span className="text-xs text-gray-400 ml-2">Score: {challengeStatus.quizScore}%</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-500">Credits:</span>
+                  <div className="w-32 h-2 rounded-full bg-gray-200 overflow-hidden">
+                    <div className="h-full rounded-full transition-all" style={{ width: `${(challengeStatus.creditsRemaining / 100) * 100}%`, background: challengeStatus.creditsRemaining > 50 ? '#10b981' : challengeStatus.creditsRemaining > 20 ? '#f59e0b' : '#ef4444' }} />
+                  </div>
+                  <span className="text-xs font-bold" style={{ color: challengeStatus.creditsRemaining > 50 ? '#059669' : challengeStatus.creditsRemaining > 20 ? '#d97706' : '#dc2626' }}>{challengeStatus.creditsRemaining}/100</span>
+                </div>
+              </div>
+              {/* Submission Form */}
+              <div className="border-t border-gray-100 pt-4">
+                <h4 className="text-sm font-bold text-gray-900 mb-3">Submit a Finding</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
+                  <input value={submitForm.title} onChange={e => setSubmitForm(f => ({ ...f, title: e.target.value }))} placeholder="Title" className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:border-emerald-500 outline-none" />
+                  <select value={submitForm.category} onChange={e => setSubmitForm(f => ({ ...f, category: e.target.value }))} className="px-3 py-2 text-sm border border-gray-200 rounded-lg">
+                    {['Bug Hunting', 'UX / Design', 'Performance', 'Infrastructure', 'New Features'].map(c => <option key={c}>{c}</option>)}
+                  </select>
+                  <select value={submitForm.severity} onChange={e => setSubmitForm(f => ({ ...f, severity: e.target.value }))} className="px-3 py-2 text-sm border border-gray-200 rounded-lg">
+                    {['Critical', 'High', 'Medium', 'Low'].map(s => <option key={s}>{s}</option>)}
+                  </select>
+                </div>
+                <textarea value={submitForm.description} onChange={e => setSubmitForm(f => ({ ...f, description: e.target.value }))} placeholder="Describe the issue or feature..." rows={3} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg mb-3 focus:border-emerald-500 outline-none" />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                  <textarea value={submitForm.steps} onChange={e => setSubmitForm(f => ({ ...f, steps: e.target.value }))} placeholder="Steps to reproduce..." rows={2} className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:border-emerald-500 outline-none" />
+                  <textarea value={submitForm.fix} onChange={e => setSubmitForm(f => ({ ...f, fix: e.target.value }))} placeholder="Suggested fix..." rows={2} className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:border-emerald-500 outline-none" />
+                </div>
+                <div className="flex items-center gap-3">
+                  <button onClick={handleSubmitFinding} disabled={submitStatus === 'submitting'} className="btn-primary" style={{ padding: '8px 20px', fontSize: 13 }}>
+                    {submitStatus === 'submitting' ? 'Submitting...' : 'Submit Finding'}
+                  </button>
+                  {submitStatus === 'success' && <span className="text-xs text-emerald-600 font-medium">Submitted successfully!</span>}
+                  {submitStatus === 'error' && <span className="text-xs text-red-500 font-medium">Failed to submit. Try again.</span>}
+                </div>
+              </div>
+            </div>
+          ) : quizPhase === 'taking' ? (
+            <div className="card">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  {quizQuestions.map((_, i) => (
+                    <div key={i} style={{ width: i === quizIdx ? 20 : 8, height: 8, borderRadius: 99, background: i < quizIdx ? '#10b981' : i === quizIdx ? '#10b981' : '#e5e7eb', transition: 'all 0.3s' }} />
+                  ))}
+                </div>
+                <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 20, fontWeight: 700, color: quizTimeLeft > 300 ? '#10b981' : quizTimeLeft > 120 ? '#f59e0b' : '#ef4444' }}>
+                  {Math.floor(quizTimeLeft / 60)}:{(quizTimeLeft % 60).toString().padStart(2, '0')}
+                </span>
+              </div>
+              <div className="p-4 bg-gray-50 rounded-xl mb-4">
+                <span className="text-xs font-bold text-emerald-600 uppercase">Question {quizIdx + 1} of {quizQuestions.length}</span>
+                <h3 className="text-base font-bold text-gray-900 mt-1">{quizQuestions[quizIdx]?.q}</h3>
+                <p className="text-sm text-gray-500 mt-1">{quizQuestions[quizIdx]?.desc}</p>
+              </div>
+              <textarea
+                value={quizAnswers[quizIdx]}
+                onChange={e => { const a = [...quizAnswers]; a[quizIdx] = e.target.value; setQuizAnswers(a); }}
+                placeholder="Write your solution..."
+                style={{ width: '100%', minHeight: 160, padding: 14, borderRadius: 12, border: '1px solid #e3e8ee', fontSize: 13, fontFamily: "'IBM Plex Mono', monospace", background: '#1e1e2e', color: '#e2e8f0', resize: 'vertical', outline: 'none' }}
+                autoFocus
+                disabled={quizEvaluating}
+              />
+              <div className="flex items-center gap-3 mt-3">
+                <button onClick={submitQuizAnswer} disabled={quizEvaluating} className="btn-primary" style={{ padding: '10px 24px', opacity: quizEvaluating ? 0.6 : 1 }}>
+                  {quizEvaluating ? 'Evaluating...' : quizIdx < quizQuestions.length - 1 ? 'Submit & Next' : 'Submit & Finish'}
+                </button>
+              </div>
+            </div>
+          ) : quizPhase === 'passed' ? (
+            <div className="card text-center py-8">
+              <div className="w-14 h-14 rounded-2xl bg-emerald-100 flex items-center justify-center mx-auto mb-3">
+                <svg className="w-7 h-7 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-1">You're Qualified!</h3>
+              <p className="text-sm text-gray-500 mb-4">100 credits granted. Start finding bugs and building features.</p>
+              <button onClick={() => setChallengeStatus({ ...challengeStatus, isChallenger: true, creditsRemaining: 100 })} className="btn-primary">Start Submitting</button>
+            </div>
+          ) : quizPhase === 'failed' ? (
+            <div className="card text-center py-8">
+              <div className="w-14 h-14 rounded-2xl bg-red-100 flex items-center justify-center mx-auto mb-3">
+                <svg className="w-7 h-7 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-1">Not Quite Yet</h3>
+              <p className="text-sm text-gray-500 mb-4">Score was below 60%. You can retry in 24 hours.</p>
+              <button onClick={() => setQuizPhase('idle')} className="btn-secondary">Back to Challenge</button>
+            </div>
+          ) : quizPhase === 'evaluating' ? (
+            <div className="card text-center py-8">
+              <div className="w-10 h-10 border-4 border-emerald-200 border-t-emerald-500 rounded-full animate-spin mx-auto mb-4" />
+              <p className="text-sm text-gray-500">Evaluating your answers...</p>
+            </div>
+          ) : (
+            <div className="card text-center py-8">
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Qualification Quiz</h3>
+              <p className="text-sm text-gray-500 mb-4">5 coding questions, 10 minutes. Score 60%+ to unlock the challenge.</p>
+              {challengeStatus?.lastAttempt && new Date(challengeStatus.lastAttempt).getTime() > Date.now() - 86400000 && (
+                <p className="text-xs text-amber-600 mb-4">You can retry after 24 hours from your last attempt.</p>
+              )}
+              <button onClick={startQuiz} className="btn-primary" disabled={challengeStatus?.lastAttempt && new Date(challengeStatus.lastAttempt).getTime() > Date.now() - 86400000}>Take the Quiz</button>
+            </div>
+          )}
         </div>
       </section>
 

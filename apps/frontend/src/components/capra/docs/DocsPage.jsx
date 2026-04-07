@@ -533,7 +533,7 @@ export default function DocsPage({ onBack }) {
               <SiteNav />
             </div>
             {/* Breadcrumb Bar — secondary bar below SiteNav */}
-            <div className="sticky top-14 z-20 px-3 sm:px-4 py-2 sm:py-3 flex items-center justify-between gap-2 bg-white border-b border-[#e3e8ee]">
+            <div className="sticky z-20 px-3 sm:px-4 py-2 sm:py-3 flex items-center justify-between gap-2 bg-white border-b border-[#e3e8ee]" style={{ top: 'var(--nav-h, 56px)' }}>
               {/* Mobile: back button when viewing a topic */}
               {isMobile && selectedTopic && (
                 <button
