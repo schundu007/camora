@@ -15,11 +15,11 @@ const PRIZES = [
 ];
 
 const CATEGORIES = [
-  { title: 'Bug Hunting', color: '#ef4444', icon: '🐛', examples: ['Runtime crashes', 'Auth bypass', 'Race conditions'] },
-  { title: 'UX / Design', color: '#8b5cf6', icon: '🎨', examples: ['Broken mobile layouts', 'Missing ARIA', 'Inconsistent UI'] },
-  { title: 'Performance', color: '#f59e0b', icon: '⚡', examples: ['N+1 queries', 'Re-renders', 'Large assets'] },
-  { title: 'Infrastructure', color: '#06b6d4', icon: '🏗️', examples: ['Health checks', 'Env misconfigs', 'Docker'] },
-  { title: 'New Features', color: '#10b981', icon: '✨', examples: ['Spaced repetition', 'Recording', 'Collaboration'] },
+  { title: 'Bug Hunting', color: '#ef4444', logo: '/logos/sentry.png', examples: ['Runtime crashes', 'Auth bypass', 'Race conditions'] },
+  { title: 'UX / Design', color: '#8b5cf6', logo: '/logos/figma.png', examples: ['Broken mobile layouts', 'Missing ARIA', 'Inconsistent UI'] },
+  { title: 'Performance', color: '#f59e0b', logo: '/logos/react.png', examples: ['N+1 queries', 'Re-renders', 'Large assets'] },
+  { title: 'Infrastructure', color: '#06b6d4', logo: '/logos/docker.png', examples: ['Health checks', 'Env misconfigs', 'Docker'] },
+  { title: 'New Features', color: '#10b981', logo: '/logos/typescript.png', examples: ['Spaced repetition', 'Recording', 'Collaboration'] },
 ];
 
 const TECH_STACK = [
@@ -206,7 +206,9 @@ export default function ChallengePage() {
             <div className="rounded-xl p-[1px]" style={{ background: 'linear-gradient(135deg, #10b981, #6366f1)' }}>
               <div className="bg-white rounded-xl p-5 h-full">
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs" style={{ background: 'rgba(16,185,129,0.1)' }}>⭐</div>
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'rgba(16,185,129,0.1)' }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>
+                  </div>
                   <div>
                     <h3 className="text-sm font-bold text-gray-900">Founding Engineers</h3>
                     <p className="text-[10px] text-emerald-600 font-semibold">5 positions</p>
@@ -221,7 +223,9 @@ export default function ChallengePage() {
             </div>
             <div className="rounded-xl border border-gray-200 p-5 h-full">
               <div className="flex items-center gap-2 mb-3">
-                <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs" style={{ background: 'rgba(99,102,241,0.1)' }}>👥</div>
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'rgba(99,102,241,0.1)' }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+                </div>
                 <div>
                   <h3 className="text-sm font-bold text-gray-900">Core Engineers</h3>
                   <p className="text-[10px] text-indigo-600 font-semibold">10 positions</p>
@@ -257,7 +261,9 @@ export default function ChallengePage() {
             {CATEGORIES.map((c) => (
               <div key={c.title} className="bg-white rounded-xl border border-gray-200 p-4 hover:shadow-sm transition-all">
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="text-base">{c.icon}</span>
+                  <div className="w-6 h-6 rounded flex items-center justify-center" style={{ background: `${c.color}12` }}>
+                    <img src={c.logo} alt={c.title} width={16} height={16} style={{ objectFit: 'contain' }} />
+                  </div>
                   <h3 className="text-sm font-bold text-gray-900">{c.title}</h3>
                 </div>
                 <div className="space-y-1">
@@ -272,7 +278,10 @@ export default function ChallengePage() {
 
             {/* Scoring */}
             <div className="bg-white rounded-xl border border-gray-200 p-4">
-              <h3 className="text-sm font-bold text-gray-900 mb-2 flex items-center gap-1.5">📊 Scoring</h3>
+              <h3 className="text-sm font-bold text-gray-900 mb-2 flex items-center gap-1.5">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M12 20V10" /><path d="M18 20V4" /><path d="M6 20v-4" /></svg>
+                Scoring
+              </h3>
               <div className="space-y-1.5">
                 {SCORING.map((s) => (
                   <div key={s.category} className="flex items-center justify-between">

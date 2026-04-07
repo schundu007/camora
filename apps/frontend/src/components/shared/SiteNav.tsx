@@ -12,6 +12,15 @@ const NAV_LINKS = [
   { label: 'Challenge', href: '/challenge' },
 ];
 
+const CHALLENGE_END = new Date('2026-10-07T23:59:59Z');
+const TICKER_ITEMS = [
+  'The Camora Challenge — $21,812 in prizes',
+  'Find bugs, build features, join the founding team',
+  '5 Founding Engineer + 10 Core Engineer positions',
+  'Bug Bounty: Critical bugs = 10 pts, Security = 8 pts',
+  'Open to all developers worldwide — remote-first',
+];
+
 export default function SiteNav() {
   const { isAuthenticated, user, logout } = useAuth();
   const location = useLocation();
@@ -98,5 +107,36 @@ export default function SiteNav() {
         </div>
       )}
     </nav>
+  );
+}
+
+/* ── Challenge Campaign Ticker (renders below nav on every page) ── */
+const TICKER_HEIGHT = 26;
+
+export function ChallengeTicker() {
+  const location = useLocation();
+  const show = new Date() < CHALLENGE_END && location.pathname !== '/challenge';
+  if (!show) return null;
+
+  return (
+    <Link
+      to="/challenge"
+      className="fixed left-0 right-0 z-40 block overflow-hidden cursor-pointer"
+      style={{ top: 56, height: TICKER_HEIGHT, background: 'linear-gradient(90deg, #10b981, #6366f1, #0ea5e9, #f59e0b)' }}
+    >
+      <div className="challenge-ticker flex items-center h-full whitespace-nowrap">
+        {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, i) => (
+          <span key={i} className="inline-flex items-center px-6 text-[10px] font-bold text-white tracking-wide">
+            {item}
+            <span className="mx-5 w-1 h-1 rounded-full bg-white/40" />
+          </span>
+        ))}
+      </div>
+      <style>{`
+        .challenge-ticker { animation: ticker-scroll 28s linear infinite; }
+        .challenge-ticker:hover { animation-play-state: paused; }
+        @keyframes ticker-scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+      `}</style>
+    </Link>
   );
 }
