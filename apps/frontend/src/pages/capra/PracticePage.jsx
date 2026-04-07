@@ -357,11 +357,11 @@ export default function PracticePage() {
 
   useEffect(() => { window.scrollTo(0, 0); }, []);
 
-  const startChallenge = useCallback((overrideCategory, overrideDifficulty) => {
+  const startChallenge = useCallback((overrideCategory, overrideDifficulty, forceQuestions) => {
     const cat = overrideCategory ?? category;
     const diff = overrideDifficulty ?? difficulty;
     const modeConfig = MODES.find(m => m.id === mode);
-    const qs = pickQuestions(cat, diff, modeConfig.questions, company);
+    const qs = forceQuestions || pickQuestions(cat, diff, modeConfig.questions, company);
     if (qs.length === 0) return;
     if (overrideCategory) setCategory(overrideCategory);
     if (overrideDifficulty) setDifficulty(overrideDifficulty);
@@ -656,7 +656,7 @@ export default function PracticePage() {
                   </div>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-                  <button onClick={() => startChallenge(dailyCategory, dailyChallenge.difficulty)} style={{ padding: '10px 24px', background: 'linear-gradient(135deg, #10b981, #059669)', color: '#fff', fontSize: 14, fontWeight: 600, borderRadius: 10, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, boxShadow: '0 2px 8px rgba(16,185,129,0.25)' }}>
+                  <button onClick={() => startChallenge(dailyCategory, dailyChallenge.difficulty, [dailyChallenge])} style={{ padding: '10px 24px', background: 'linear-gradient(135deg, #10b981, #059669)', color: '#fff', fontSize: 14, fontWeight: 600, borderRadius: 10, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, boxShadow: '0 2px 8px rgba(16,185,129,0.25)' }}>
                     <Icon name="play" size={14} style={{ color: '#fff' }} />
                     Start
                   </button>
