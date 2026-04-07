@@ -1,10 +1,12 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Icon } from '../../components/shared/Icons.jsx';
 import CamoraLogo from '../../components/shared/CamoraLogo';
 import SiteFooter from '../../components/shared/SiteFooter';
 import { getAuthHeaders } from '../../utils/authHeaders.js';
+
+const Excalidraw = lazy(() => import('@excalidraw/excalidraw').then(mod => ({ default: mod.Excalidraw })));
 
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
@@ -929,49 +931,19 @@ export default function PracticePage() {
                 const parts = (answers[currentIdx] || '').split('---SECTION---');
                 return (
                   <div style={{ marginBottom: 8 }}>
-                    {/* Diagram drawing area */}
+                    {/* Architecture Diagram — Excalidraw */}
                     <div style={{ marginBottom: 12 }}>
                       <label style={{ fontSize: 11, fontWeight: 600, color: '#6b7280', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                         <Icon name="pen" size={12} style={{ color: '#10b981' }} />
                         Architecture Diagram
                       </label>
-                      <div style={{ position: 'relative', width: '100%', height: 200, borderRadius: 10, border: '1px solid #e3e8ee', background: '#fafbfc', overflow: 'hidden' }}>
-                        <canvas
-                          ref={(el) => {
-                            if (el && !el._initialized) {
-                              el._initialized = true;
-                              const ctx = el.getContext('2d');
-                              el.width = el.offsetWidth * 2;
-                              el.height = el.offsetHeight * 2;
-                              ctx.scale(2, 2);
-                              ctx.lineWidth = 2;
-                              ctx.strokeStyle = '#10b981';
-                              ctx.lineCap = 'round';
-                              let drawing = false;
-                              let lastX = 0, lastY = 0;
-                              const getPos = (e) => {
-                                const rect = el.getBoundingClientRect();
-                                const touch = e.touches ? e.touches[0] : e;
-                                return [touch.clientX - rect.left, touch.clientY - rect.top];
-                              };
-                              const start = (e) => { drawing = true; [lastX, lastY] = getPos(e); };
-                              const draw = (e) => { if (!drawing) return; e.preventDefault(); const [x, y] = getPos(e); ctx.beginPath(); ctx.moveTo(lastX, lastY); ctx.lineTo(x, y); ctx.stroke(); lastX = x; lastY = y; };
-                              const stop = () => { drawing = false; };
-                              el.addEventListener('mousedown', start);
-                              el.addEventListener('mousemove', draw);
-                              el.addEventListener('mouseup', stop);
-                              el.addEventListener('mouseleave', stop);
-                              el.addEventListener('touchstart', start, { passive: false });
-                              el.addEventListener('touchmove', draw, { passive: false });
-                              el.addEventListener('touchend', stop);
-                            }
-                          }}
-                          style={{ width: '100%', height: '100%', cursor: 'crosshair' }}
-                        />
-                        <div style={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 4 }}>
-                          <button onClick={(e) => { const canvas = e.target.closest('div').parentElement.querySelector('canvas'); const ctx = canvas.getContext('2d'); ctx.clearRect(0, 0, canvas.width, canvas.height); }} style={{ padding: '4px 8px', fontSize: 10, fontWeight: 600, color: '#6b7280', background: '#fff', border: '1px solid #e3e8ee', borderRadius: 6, cursor: 'pointer' }}>Clear</button>
-                        </div>
-                        <p style={{ position: 'absolute', bottom: 6, left: 0, right: 0, textAlign: 'center', fontSize: 10, color: '#c0c5ce', margin: 0, pointerEvents: 'none' }}>Sketch your architecture diagram</p>
+                      <div style={{ width: '100%', height: 400, borderRadius: 10, border: '1px solid #e3e8ee', overflow: 'hidden' }}>
+                        <Suspense fallback={<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#9ca3af', fontSize: 13 }}>Loading diagram tool...</div>}>
+                          <Excalidraw
+                            theme="light"
+                            UIOptions={{ canvasActions: { saveToActiveFile: false, loadScene: false, export: false } }}
+                          />
+                        </Suspense>
                       </div>
                     </div>
 
