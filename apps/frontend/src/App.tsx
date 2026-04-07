@@ -25,6 +25,8 @@ const JobPrepPage = lazy(() => import('./pages/JobPrepPage'));
 const SignupPage = lazy(() => import('./pages/SignupPage'));
 const ReferralLandingPage = lazy(() => import('./pages/ReferralLandingPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
+const PublicScoreCardPage = lazy(() => import('./pages/PublicScoreCardPage'));
+const PublicProfilePage = lazy(() => import('./pages/PublicProfilePage'));
 const BrandPage = lazy(() => import('./pages/BrandPage'));
 const ChallengePage = lazy(() => import('./pages/ChallengePage'));
 const Blind75Page = lazy(() => import('./pages/Blind75Page'));
@@ -185,6 +187,10 @@ export function App() {
 
           {/* ── Company Interview Questions ─────────────── */}
           <Route path="/interview-questions/:company" element={<ProtectedRoute><CompanyPrepPage /></ProtectedRoute>} />
+
+          {/* ── Public Score Cards & Profiles ────────────── */}
+          <Route path="/share/:token" element={<PublicScoreCardPage />} />
+          <Route path="/u/:username" element={<PublicProfilePage />} />
 
           {/* ── Catch-all ──────────────────────────────── */}
           <Route path="*" element={<NotFoundPage />} />

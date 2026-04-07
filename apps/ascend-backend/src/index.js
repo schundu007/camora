@@ -37,6 +37,7 @@ import topicReadsRouter from './routes/topicReads.js';
 import referralRouter from './routes/referral.js';
 import interviewCountdownRouter from './routes/interviewCountdown.js';
 import gamificationRouter from './routes/gamification.js';
+import scoreCardsRouter from './routes/scoreCards.js';
 
 import { authenticate } from './middleware/authenticate.js';
 
@@ -163,6 +164,39 @@ async function runMigrations() {
     await query('CREATE INDEX IF NOT EXISTS idx_leaderboard_week ON ascend_weekly_leaderboard(week_start, xp_earned DESC)');
 
     console.log('[Migrations] Gamification tables ensured');
+
+    // Score cards
+    await query(`CREATE TABLE IF NOT EXISTS ascend_score_cards (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL,
+      type VARCHAR(30) NOT NULL,
+      title VARCHAR(200) NOT NULL,
+      score INTEGER,
+      category VARCHAR(50),
+      metadata JSONB,
+      share_token VARCHAR(16) UNIQUE NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )`);
+    await query('CREATE INDEX IF NOT EXISTS idx_score_cards_user ON ascend_score_cards(user_id)');
+    await query('CREATE INDEX IF NOT EXISTS idx_score_cards_share ON ascend_score_cards(share_token)');
+
+    // Certificates
+    await query(`CREATE TABLE IF NOT EXISTS ascend_certificates (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL,
+      track VARCHAR(50) NOT NULL,
+      title VARCHAR(200) NOT NULL,
+      share_token VARCHAR(16) UNIQUE NOT NULL,
+      issued_at TIMESTAMPTZ DEFAULT NOW(),
+      UNIQUE(user_id, track)
+    )`);
+    await query('CREATE INDEX IF NOT EXISTS idx_certificates_share ON ascend_certificates(share_token)');
+
+    // Public username
+    await query('ALTER TABLE users ADD COLUMN IF NOT EXISTS username VARCHAR(30) UNIQUE');
+    await query('CREATE INDEX IF NOT EXISTS idx_users_username ON users(username)');
+
+    console.log('[Migrations] Score cards + certificates tables ensured');
   } catch (err) {
     console.warn('[Migrations] Failed to run onboarding migration:', err.message);
   }
@@ -492,6 +526,9 @@ app.use('/api/interview', authenticate, apiLimiter, interviewCountdownRouter);
 
 // Gamification routes (XP, badges, leaderboard — uses jwtAuth internally)
 app.use('/api/gamification', apiLimiter, gamificationRouter);
+
+// Score cards, certificates, public profiles
+app.use('/api/score-cards', apiLimiter, scoreCardsRouter);
 
 // Job URL analysis (scrape + AI analysis) — auth required, AI rate limit
 app.use('/api/job-analyze', authenticate, aiLimiter, jobAnalyzeRouter);
