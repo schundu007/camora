@@ -462,7 +462,6 @@ export default function PracticePage() {
   }, [currentIdx, questions, answers, category]);
 
   const moveToNext = useCallback(() => {
-    const lastScore = inlineEval?.score ?? 0;
     setInlineEval(null);
     setShowModelAnswer(null);
     if (currentIdx < questions.length - 1) {
@@ -470,10 +469,10 @@ export default function PracticePage() {
       setQuestionStartTime(Date.now());
       if (textareaRef.current) textareaRef.current.focus();
     } else {
-      // scores state may not include the last submitted score yet — append it
-      endChallenge([...scores, lastScore]);
+      // scores state is already updated by submitAnswer's setScores before user can click
+      endChallenge([...scores]);
     }
-  }, [currentIdx, questions, scores, inlineEval]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [currentIdx, questions, scores]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const skipQuestion = useCallback(() => {
     setScores(prev => [...prev, 0]);
@@ -519,8 +518,10 @@ export default function PracticePage() {
     const today = new Date().toISOString().split('T')[0];
     const lastDate = newStats.lastChallengeDate;
     if (lastDate) {
-      const diff = (new Date(today) - new Date(lastDate)) / 86400000;
-      newStats.streak = diff <= 1 ? (newStats.streak || 0) + 1 : 1;
+      const diff = Math.round((new Date(today) - new Date(lastDate)) / 86400000);
+      if (diff === 0) { /* same day — keep streak unchanged */ }
+      else if (diff === 1) { newStats.streak = (newStats.streak || 0) + 1; }
+      else { newStats.streak = 1; }
     } else {
       newStats.streak = 1;
     }
@@ -569,13 +570,15 @@ export default function PracticePage() {
   // Keep ref in sync so timer always calls the latest version
   useEffect(() => { endChallengeRef.current = endChallenge; });
 
+  // Daily challenge — stable across re-renders (computed once per mount)
+  const [dailyChallenge] = useState(() => getDailyChallenge());
+  const dailyCategory = getDailyCategory(dailyChallenge);
+  const dc = diffColor(dailyChallenge.difficulty);
+
   const readiness = getReadiness(stats);
   const modeConfig = MODES.find(m => m.id === mode);
   const timerPercent = modeConfig ? (timeLeft / modeConfig.time) * 100 : 100;
   const timerColor = timerPercent > 50 ? '#10b981' : timerPercent > 20 ? '#f59e0b' : '#ef4444';
-  const dailyChallenge = getDailyChallenge();
-  const dailyCategory = getDailyCategory(dailyChallenge);
-  const dc = diffColor(dailyChallenge.difficulty);
 
   // Social proof (simulated)
   const socialCount = 1247 + Math.floor((new Date().getHours() * 37 + new Date().getMinutes()) % 300);
