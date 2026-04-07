@@ -632,7 +632,7 @@ export default function JobsPage() {
         <div
           className="sticky z-30"
           style={{
-            top: '56px',
+            top: 'var(--nav-h, 56px)',
             background: '#ffffff',
             borderBottom: '1px solid #e3e8ee',
           }}
