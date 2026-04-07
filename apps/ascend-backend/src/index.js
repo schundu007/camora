@@ -33,6 +33,7 @@ import usageRouter from './routes/usage.js';
 import companyPrepsRouter from './routes/companyPreps.js';
 import extensionRouter from './routes/extension.js';
 import jobAnalyzeRouter from './routes/jobAnalyze.js';
+import topicReadsRouter from './routes/topicReads.js';
 
 import { authenticate } from './middleware/authenticate.js';
 
@@ -70,6 +71,18 @@ async function runMigrations() {
     await query('DROP INDEX IF EXISTS idx_diagram_cache_hash');
     await query('CREATE UNIQUE INDEX IF NOT EXISTS idx_diagram_cache_hash ON ascend_diagram_cache(problem_hash)');
     console.log('[Migrations] Diagram cache table ensured');
+
+    // Topic reads table — server-side tracking of which free topics a user has read
+    await query(`CREATE TABLE IF NOT EXISTS ascend_topic_reads (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL,
+      category VARCHAR(50) NOT NULL,
+      topic_id VARCHAR(100) NOT NULL,
+      read_at TIMESTAMPTZ DEFAULT NOW(),
+      UNIQUE(user_id, category, topic_id)
+    )`);
+    await query('CREATE INDEX IF NOT EXISTS idx_topic_reads_user_cat ON ascend_topic_reads(user_id, category)');
+    console.log('[Migrations] Topic reads table ensured');
   } catch (err) {
     console.warn('[Migrations] Failed to run onboarding migration:', err.message);
   }
@@ -389,6 +402,7 @@ app.use('/api/billing', paymentLimiter, billingRouter);
 app.use('/api/credits', apiLimiter, creditsRouter);
 app.use('/api/company-preps', apiLimiter, companyPrepsRouter);
 app.use('/api/usage', apiLimiter, usageRouter);
+app.use('/api/topic-reads', apiLimiter, topicReadsRouter);
 
 // Job URL analysis (scrape + AI analysis) — auth required, AI rate limit
 app.use('/api/job-analyze', authenticate, aiLimiter, jobAnalyzeRouter);
