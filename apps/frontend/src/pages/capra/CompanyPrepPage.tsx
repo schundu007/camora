@@ -516,7 +516,7 @@ export default function CompanyPrepPage() {
           @import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
           body { margin: 0; }
           .practice-display { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
-          .practice-body { font-family: 'Work Sans', 'Plus Jakarta Sans', system-ui, sans-serif; }
+          .practice-body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
         `}</style>
       </div>
     );
@@ -825,7 +825,7 @@ export default function CompanyPrepPage() {
           margin: 0;
           -webkit-font-smoothing: antialiased;
           -moz-osx-font-smoothing: grayscale;
-          font-family: 'Work Sans', 'Plus Jakarta Sans', system-ui, sans-serif;
+          font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
         }
 
         .practice-display {
@@ -833,11 +833,11 @@ export default function CompanyPrepPage() {
         }
 
         .practice-body {
-          font-family: 'Work Sans', 'Plus Jakarta Sans', system-ui, sans-serif;
+          font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
         }
 
         .practice-mono {
-          font-family: 'IBM Plex Mono', 'Menlo', monospace;
+          font-family: 'IBM Plex Mono', monospace;
         }
 
         html { scroll-behavior: smooth; }

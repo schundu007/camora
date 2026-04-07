@@ -471,7 +471,7 @@ export default function Blind75Page() {
   /* ────────────────────────────────────────────────────────────────────────── */
 
   return (
-    <div style={{ background: '#f7f8f9', minHeight: '100vh', fontFamily: "'Plus Jakarta Sans', 'Work Sans', system-ui, sans-serif" }}>
+    <div style={{ background: '#f7f8f9', minHeight: '100vh', fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
 
       <SiteNav />
 

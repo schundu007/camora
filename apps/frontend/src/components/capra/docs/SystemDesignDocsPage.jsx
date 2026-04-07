@@ -1104,7 +1104,7 @@ export default function SystemDesignDocsPage() {
         .landing-root {
           -webkit-font-smoothing: antialiased;
           -moz-osx-font-smoothing: grayscale;
-          font-family: 'Work Sans', 'Plus Jakarta Sans', system-ui, sans-serif;
+          font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
         }
 
         .landing-display {
@@ -1112,7 +1112,7 @@ export default function SystemDesignDocsPage() {
         }
 
         .landing-body {
-          font-family: 'Work Sans', 'Plus Jakarta Sans', system-ui, sans-serif;
+          font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
         }
 
         .landing-mono {
