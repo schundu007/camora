@@ -10,6 +10,25 @@ import { query } from '../lib/shared-db.js';
 
 const router = Router();
 
+// Daily diagram cap for paid users to prevent abuse
+const PAID_DIAGRAM_DAILY_LIMIT = 5;
+const dailyDiagramUsage = new Map();
+
+function checkDailyDiagramLimit(userId) {
+  const today = new Date().toISOString().slice(0, 10);
+  const key = `${userId}:${today}`;
+  const count = dailyDiagramUsage.get(key) || 0;
+  if (count >= PAID_DIAGRAM_DAILY_LIMIT) return false;
+  dailyDiagramUsage.set(key, count + 1);
+  // Clean old entries daily
+  if (dailyDiagramUsage.size > 10000) {
+    for (const [k] of dailyDiagramUsage) {
+      if (!k.endsWith(today)) dailyDiagramUsage.delete(k);
+    }
+  }
+  return true;
+}
+
 /** Hash a problem description into a stable cache key */
 function hashProblem(text) {
   return crypto.createHash('sha256').update(text.trim().toLowerCase()).digest('hex').slice(0, 32);
@@ -58,6 +77,10 @@ router.post('/eraser', async (req, res, next) => {
       const canUse = await freeUsageService.canUseFeature(userId, 'design');
       if (!canUse.allowed) {
         return res.status(429).json({ error: canUse.reason || 'Free trial exhausted.', subscriptionRequired: true });
+      }
+      // Paid users: daily cap to prevent abuse
+      if (canUse.hasSubscription && !checkDailyDiagramLimit(userId)) {
+        return res.status(429).json({ error: 'Daily diagram limit reached (5/day). Try again tomorrow.', dailyLimitReached: true });
       }
     }
 
@@ -148,6 +171,10 @@ router.post('/generate', async (req, res, next) => {
       const canUse = await freeUsageService.canUseFeature(userId, 'design');
       if (!canUse.allowed) {
         return res.status(429).json({ error: canUse.reason || 'Free trial exhausted.', subscriptionRequired: true });
+      }
+      // Paid users: daily cap to prevent abuse
+      if (canUse.hasSubscription && !checkDailyDiagramLimit(userId)) {
+        return res.status(429).json({ error: 'Daily diagram limit reached (5/day). Try again tomorrow.', dailyLimitReached: true });
       }
     }
 

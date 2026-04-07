@@ -469,7 +469,7 @@ export async function* solveProblemStream(problemText, language = 'auto', detail
         content: userMessage,
       },
     ],
-    max_tokens: ascendMode === 'system-design' ? 8192 : (isBrief ? 1024 : 8192),
+    max_tokens: ascendMode === 'system-design' ? 6144 : (isBrief ? 1024 : 6144),
     response_format: { type: 'json_object' },
     stream: true,
   });
@@ -513,7 +513,7 @@ Return ONLY the formatted problem text, nothing else.`,
         ],
       },
     ],
-    max_completion_tokens: 4096,
+    max_completion_tokens: 2048,
   });
 
   return { text: response.choices[0].message.content };
@@ -555,7 +555,7 @@ IMPORTANT:
 - Keep explanations concise`,
       },
     ],
-    max_completion_tokens: 4096,
+    max_completion_tokens: 2048,
     response_format: { type: 'json_object' },
   });
 
@@ -675,7 +675,7 @@ export async function analyzeImage(base64Image, mimeType, model = DEFAULT_MODEL)
         ],
       },
     ],
-    max_completion_tokens: 4096,
+    max_completion_tokens: 2048,
   });
 
   const content = response.choices[0].message.content;
