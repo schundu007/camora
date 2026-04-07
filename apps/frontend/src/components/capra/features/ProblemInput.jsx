@@ -18,7 +18,7 @@ const LANGUAGES = [
 ];
 
 export default function ProblemInput({ onSubmit, onFetchUrl, onScreenshot, onClear, isLoading, extractedText, onExtractedTextClear, shouldClear, hasSolution, expanded, onToggleExpand, ascendMode, loadedProblem, detailLevel = 'basic', language = 'auto' }) {
-  const [problemText, setProblemText] = useState('');
+  const [problemText, setProblemText] = useState(loadedProblem || '');
   const [url, setUrl] = useState('');
   const [activeTab, setActiveTab] = useState('text');
   const [isDragging, setIsDragging] = useState(false);

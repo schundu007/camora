@@ -60,7 +60,15 @@ async function runMigrations() {
       created_at TIMESTAMPTZ DEFAULT NOW(),
       UNIQUE(problem_hash, detail_level)
     )`);
-    await query('CREATE INDEX IF NOT EXISTS idx_diagram_cache_hash ON ascend_diagram_cache(problem_hash, detail_level)');
+    // Add persistent image storage columns (cache survives /tmp cleanup + redeploys)
+    await query('ALTER TABLE ascend_diagram_cache ADD COLUMN IF NOT EXISTS image_data BYTEA');
+    await query('ALTER TABLE ascend_diagram_cache ADD COLUMN IF NOT EXISTS cloud_provider VARCHAR(10) DEFAULT \'auto\'');
+    await query('ALTER TABLE ascend_diagram_cache ADD COLUMN IF NOT EXISTS direction VARCHAR(5) DEFAULT \'LR\'');
+    // Purge old cache entries — they point to deleted /tmp files and use old hash keys
+    await query(`DELETE FROM ascend_diagram_cache WHERE image_data IS NULL AND image_url LIKE '/static/%'`);
+    // New unique constraint: hash now encodes all dimensions (question+provider+direction+detailLevel)
+    await query('DROP INDEX IF EXISTS idx_diagram_cache_hash');
+    await query('CREATE UNIQUE INDEX IF NOT EXISTS idx_diagram_cache_hash ON ascend_diagram_cache(problem_hash)');
     console.log('[Migrations] Diagram cache table ensured');
   } catch (err) {
     console.warn('[Migrations] Failed to run onboarding migration:', err.message);
@@ -170,6 +178,26 @@ app.use('/static/diagrams', express.static(DIAGRAM_OUTPUT_DIR, {
     }
   }
 }));
+
+// Serve cached diagram images from DB (public — <img> tags can't send auth headers)
+app.get('/api/diagram/image/:hash', async (req, res) => {
+  try {
+    const result = await query(
+      'SELECT image_data FROM ascend_diagram_cache WHERE problem_hash = $1',
+      [req.params.hash]
+    );
+    if (!result.rows.length || !result.rows[0].image_data) {
+      return res.status(404).json({ error: 'Diagram not found' });
+    }
+    res.set('Content-Type', 'image/png');
+    res.set('Cache-Control', 'public, max-age=31536000, immutable');
+    res.set('ETag', req.params.hash);
+    res.send(result.rows[0].image_data);
+  } catch (err) {
+    console.error('[DiagramImage] Error:', err.message);
+    res.status(500).json({ error: 'Failed to load diagram' });
+  }
+});
 
 // Health check
 app.get('/health', (req, res) => {

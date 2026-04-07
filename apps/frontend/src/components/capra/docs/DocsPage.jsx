@@ -24,6 +24,7 @@ import { databaseCategories, databaseCategoryMap, databaseTopics } from '../../.
 import { sqlCategories, sqlCategoryMap, sqlTopics } from '../../../data/capra/topics/sqlTopics.js';
 import { behavioralCategories, topicCategoryMap, behavioralTopics } from '../../../data/capra/topics/behavioralTopics.js';
 import { companyPrep } from '../../../data/capra/topics/companyPrep.js';
+import { interviewCheatsheet, behavioralQuestions } from '../../../data/capra/topics/techInterviewHandbook';
 import { ROLE_TOPIC_MAP } from '../../../data/capra/jobRoleTopicMapping';
 
 // Merge extra topics into base arrays
@@ -761,6 +762,54 @@ export default function DocsPage({ onBack }) {
                             </div>
                             <Icon name="chevronRight" size={12} className="text-gray-300 group-hover:text-emerald-500 transition-all" />
                           </a>
+                        </div>
+                      </div>
+
+                      {/* Interview Cheatsheet — Before / During / After */}
+                      <div className="mb-6">
+                        <h2 className="landing-display font-bold text-lg tracking-tight text-gray-900 mb-3">Interview Cheatsheet</h2>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                          {[
+                            { title: 'Before the Interview', items: interviewCheatsheet.before, icon: 'clipboard', color: '#06b6d4' },
+                            { title: 'During the Interview', items: interviewCheatsheet.during, icon: 'play', color: '#10b981' },
+                            { title: 'After the Interview', items: interviewCheatsheet.after, icon: 'check', color: '#8b5cf6' },
+                          ].map((card) => (
+                            <div key={card.title} className="rounded-xl border border-[#e3e8ee] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+                              <div className="flex items-center gap-2 mb-3">
+                                <Icon name={card.icon} size={14} style={{ color: card.color }} />
+                                <h3 className="landing-display text-sm font-bold text-gray-900">{card.title}</h3>
+                              </div>
+                              <div className="flex flex-col gap-2">
+                                {card.items.map((item, idx) => (
+                                  <label key={idx} className="flex items-start gap-2 text-xs text-gray-600 landing-body cursor-pointer">
+                                    <input type="checkbox" className="mt-0.5 shrink-0" style={{ accentColor: card.color }} />
+                                    <span>{item}</span>
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Top Behavioral Questions */}
+                      <div className="mb-6">
+                        <h2 className="landing-display font-bold text-lg tracking-tight text-gray-900 mb-3">Top Behavioral Questions</h2>
+                        <div className="rounded-xl border border-[#e3e8ee] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+                          <div className="flex flex-col gap-2">
+                            {behavioralQuestions.general.slice(0, 10).map((q, idx) => (
+                              <div key={idx} className={`flex items-start gap-2.5 text-sm text-gray-700 landing-body px-3 py-2 rounded-lg ${idx % 2 === 0 ? 'bg-gray-50' : ''}`}>
+                                <span className="text-xs font-bold text-amber-500 shrink-0 min-w-[20px]">{idx + 1}.</span>
+                                <span>{typeof q === 'string' ? q : q.q || ''}</span>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="mt-4 text-center">
+                            <a href="/capra/prepare?page=behavioral" className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-500 px-4 py-2 rounded-lg border border-amber-200 bg-amber-50 hover:bg-amber-100 transition-colors no-underline">
+                              View all {behavioralQuestions.general.length} questions
+                              <Icon name="chevronRight" size={12} />
+                            </a>
+                          </div>
                         </div>
                       </div>
 

@@ -222,18 +222,18 @@ export default function PricingPage() {
       </nav>
 
       {/* Header */}
-      <section className="pt-28 pb-6 px-6 text-center">
+      <section className="pt-20 pb-0 px-6 text-center">
         <span className="text-[11px] font-mono text-gray-500 uppercase tracking-wider">Pricing</span>
-        <h1 className="mt-3 text-3xl md:text-4xl font-semibold tracking-tight text-gray-900">
+        <h1 className="mt-1 text-3xl md:text-4xl font-semibold tracking-tight text-gray-900">
           The APPA platform. All-in-one.
         </h1>
-        <p className="mt-3 text-sm text-gray-500 max-w-md mx-auto">
+        <p className="mt-1 text-sm text-gray-500 max-w-md mx-auto">
           The complete interview pipeline — from job search to live AI. Starting free.
         </p>
       </section>
 
       {/* Competitor comparison */}
-      <section className="px-6 py-16">
+      <section className="px-6 pt-4 pb-16">
         <div className="max-w-[95%] xl:max-w-7xl mx-auto">
           <div className="mb-10 text-center">
             <span className="text-xs font-bold uppercase tracking-[0.2em]" style={{ background: 'linear-gradient(135deg, #34d399, #38bdf8, #818cf8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Why Camora Wins</span>
@@ -333,40 +333,42 @@ export default function PricingPage() {
 
       {/* Plans */}
       <section className="max-w-[85%] xl:max-w-7xl mx-auto px-6 py-10">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5" style={{ alignItems: 'stretch' }}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-1" style={{ alignItems: 'center' }}>
           {PLANS.map((plan) => (
             <div
               key={plan.name}
-              className={`relative p-6 flex flex-col ${plan.popular ? '' : plan.name === 'Annual' ? '' : 'bg-white border border-[#e3e8ee]'}`}
+              className="relative p-6 flex flex-col"
               style={plan.popular ? {
-                background: 'white',
+                background: 'linear-gradient(160deg, rgba(52,211,153,0.18) 0%, rgba(56,189,248,0.14) 25%, white 50%, rgba(129,140,248,0.14) 75%, rgba(192,132,252,0.18) 100%)',
                 borderRadius: '24px',
                 border: '2.5px solid transparent',
-                backgroundImage: 'linear-gradient(white, white), linear-gradient(135deg, #34d399, #38bdf8, #818cf8, #c084fc)',
+                backgroundImage: 'linear-gradient(160deg, rgba(52,211,153,0.18), rgba(56,189,248,0.14) 25%, white 50%, rgba(129,140,248,0.14) 75%, rgba(192,132,252,0.18)), linear-gradient(135deg, #34d399, #38bdf8, #818cf8, #c084fc)',
                 backgroundOrigin: 'border-box',
                 backgroundClip: 'padding-box, border-box',
                 boxShadow: '0 8px 32px rgba(99,102,241,0.2), 0 2px 8px rgba(99,102,241,0.1)',
                 zIndex: 2,
+                transform: 'scale(1.04)',
               } : plan.name === 'Annual' ? {
-                background: 'linear-gradient(180deg, #fffbeb 0%, #ffffff 100%)',
+                background: 'linear-gradient(160deg, rgba(251,191,36,0.2) 0%, rgba(245,158,11,0.14) 25%, white 50%, rgba(217,119,6,0.14) 75%, rgba(251,191,36,0.2) 100%)',
                 borderRadius: '28px',
                 border: '3.5px solid transparent',
-                backgroundImage: 'linear-gradient(180deg, #fffbeb, #ffffff), linear-gradient(135deg, #fbbf24, #f59e0b, #d97706, #fbbf24)',
+                backgroundImage: 'linear-gradient(160deg, rgba(251,191,36,0.2), rgba(245,158,11,0.14) 25%, white 50%, rgba(217,119,6,0.14) 75%, rgba(251,191,36,0.2)), linear-gradient(135deg, #fbbf24, #f59e0b, #d97706, #fbbf24)',
                 backgroundOrigin: 'border-box',
                 backgroundClip: 'padding-box, border-box',
                 backgroundSize: '100% 100%, 300% 300%',
                 animation: 'gradient-border 4s ease-in-out infinite',
                 boxShadow: '0 16px 50px rgba(245,158,11,0.3), 0 6px 20px rgba(245,158,11,0.2), 0 0 0 4px rgba(251,191,36,0.1)',
                 zIndex: 3,
-              } : { borderRadius: '24px', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}
+                transform: 'scale(1.07)',
+              } : { borderRadius: '24px', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', background: 'white', border: '1px solid #e3e8ee' }}
             >
               {plan.popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-[10px] font-bold text-white uppercase tracking-wider" style={{ background: 'linear-gradient(135deg, #34d399, #818cf8)' }}>
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-[10px] font-bold text-white uppercase tracking-wider" style={{ background: 'linear-gradient(135deg, #34d399, #818cf8)', zIndex: 10 }}>
                   Most Popular
                 </div>
               )}
               {plan.name === 'Annual' && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-[10px] font-bold text-white uppercase tracking-wider" style={{ background: 'linear-gradient(135deg, #fbbf24, #d97706)' }}>
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-[10px] font-bold text-white uppercase tracking-wider" style={{ background: 'linear-gradient(135deg, #fbbf24, #d97706)', zIndex: 10 }}>
                   Best Value
                 </div>
               )}
@@ -428,7 +430,8 @@ export default function PricingPage() {
               { name: '50 AI Questions', price: '$10', desc: 'Includes 8 bonus diagrams', packId: 'questions_50' },
               { name: '5 Live Sessions', price: '$15', desc: '90 minutes per session', packId: 'sessions_5' },
             ].map((pack) => (
-              <div key={pack.packId} className="bg-white rounded-2xl border border-[#e3e8ee] p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:border-emerald-300 transition-all">
+              <div key={pack.packId} className="rounded-2xl p-px bg-gradient-to-br from-emerald-300 via-blue-300 to-purple-300 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:from-emerald-400 hover:via-blue-400 hover:to-purple-400 transition-all">
+              <div className="bg-white rounded-[15px] p-6">
                 <h3 className="text-lg font-bold text-gray-900">{pack.name}</h3>
                 <div className="mt-1 flex items-baseline gap-1">
                   <span className="text-2xl font-bold text-emerald-600">{pack.price}</span>
@@ -456,6 +459,7 @@ export default function PricingPage() {
                 >
                   Buy {pack.name}
                 </button>
+              </div>
               </div>
             ))}
           </div>

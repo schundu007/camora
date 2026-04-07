@@ -250,16 +250,49 @@ def _build_class_to_import(provider):
     for module, classes in modules.items():
         for cls in classes:
             mapping[cls] = f"from {prefix}.{module} import {cls}"
-    # Add common onprem classes
+    # Common onprem classes Claude frequently uses
     mapping["Kafka"] = "from diagrams.onprem.queue import Kafka"
     mapping["RabbitMQ"] = "from diagrams.onprem.queue import RabbitMQ"
+    mapping["Celery"] = "from diagrams.onprem.queue import Celery"
     mapping["Grafana"] = "from diagrams.onprem.monitoring import Grafana"
     mapping["Prometheus"] = "from diagrams.onprem.monitoring import Prometheus"
+    mapping["Datadog"] = "from diagrams.onprem.monitoring import Datadog"
+    mapping["Splunk"] = "from diagrams.onprem.monitoring import Splunk"
     mapping["Nginx"] = "from diagrams.onprem.network import Nginx"
+    mapping["HAProxy"] = "from diagrams.onprem.network import HAProxy"
+    mapping["Traefik"] = "from diagrams.onprem.network import Traefik"
+    mapping["Consul"] = "from diagrams.onprem.network import Consul"
+    mapping["Envoy"] = "from diagrams.onprem.network import Envoy"
     mapping["Redis"] = "from diagrams.onprem.inmemory import Redis"
+    mapping["Memcached"] = "from diagrams.onprem.inmemory import Memcached"
     mapping["PostgreSQL"] = "from diagrams.onprem.database import PostgreSQL"
     mapping["MySQL"] = "from diagrams.onprem.database import MySQL"
     mapping["MongoDB"] = "from diagrams.onprem.database import MongoDB"
+    mapping["Cassandra"] = "from diagrams.onprem.database import Cassandra"
+    mapping["HBase"] = "from diagrams.onprem.database import HBase"
+    mapping["ClickHouse"] = "from diagrams.onprem.database import ClickHouse"
+    mapping["Neo4J"] = "from diagrams.onprem.database import Neo4J"
+    mapping["Spark"] = "from diagrams.onprem.analytics import Spark"
+    mapping["Flink"] = "from diagrams.onprem.analytics import Flink"
+    mapping["Docker"] = "from diagrams.onprem.container import Docker"
+    mapping["FluentBit"] = "from diagrams.onprem.logging import FluentBit"
+    mapping["Fluentd"] = "from diagrams.onprem.logging import Fluentd"
+    mapping["Loki"] = "from diagrams.onprem.logging import Loki"
+    mapping["Jenkins"] = "from diagrams.onprem.ci import Jenkins"
+    mapping["Vault"] = "from diagrams.onprem.security import Vault"
+    mapping["Users"] = "from diagrams.onprem.client import Users"
+    # Generic / programming
+    mapping["Rust"] = "from diagrams.programming.language import Rust"
+    mapping["Go"] = "from diagrams.programming.language import Go"
+    mapping["NodeJS"] = "from diagrams.programming.language import NodeJS"
+    mapping["Python"] = "from diagrams.programming.language import Python"
+    # K8s classes
+    mapping["Pod"] = "from diagrams.k8s.compute import Pod"
+    mapping["Deployment"] = "from diagrams.k8s.compute import Deployment"
+    mapping["STS"] = "from diagrams.k8s.compute import STS"
+    mapping["Service"] = "from diagrams.k8s.network import Service"
+    mapping["Ingress"] = "from diagrams.k8s.network import Ingress"
+    mapping["HPA"] = "from diagrams.k8s.compute import HPA"
     return mapping
 
 
@@ -335,6 +368,47 @@ def sanitize(code):
     return code
 
 
+def validate_imports(code):
+    """Pre-check that all import lines resolve. Returns list of bad import lines."""
+    bad = []
+    for line in code.split("\n"):
+        stripped = line.strip()
+        if stripped.startswith("from diagrams") and "import" in stripped:
+            try:
+                # Test import in a subprocess to avoid polluting this process
+                result = subprocess.run(
+                    [sys.executable, "-c", stripped],
+                    capture_output=True, text=True, timeout=10,
+                )
+                if result.returncode != 0:
+                    bad.append(stripped)
+            except Exception:
+                bad.append(stripped)
+    return bad
+
+
+def fix_bad_imports(code, bad_imports, provider):
+    """Remove bad import lines and replace with onprem equivalents where possible."""
+    class_map = _build_class_to_import(provider)
+    lines = code.split("\n")
+    fixed = []
+    added = set()
+    for line in lines:
+        stripped = line.strip()
+        if stripped in bad_imports:
+            # Extract class names from the bad import and try to find alternatives
+            match = re.search(r'import\s+(.+)$', stripped)
+            if match:
+                for cls in match.group(1).split(','):
+                    cls = cls.strip()
+                    if cls in class_map and class_map[cls] not in added:
+                        fixed.append(class_map[cls])
+                        added.add(class_map[cls])
+            continue
+        fixed.append(line)
+    return "\n".join(fixed)
+
+
 def execute_code(code, output_path, output_dir):
     code_file = os.path.join(tempfile.gettempdir(), f"diag_{uuid.uuid4().hex[:8]}.py")
     try:
@@ -390,21 +464,65 @@ def generate_diagram(question, provider, detail_level, direction, output_dir, ap
     except ValueError as e:
         return {"success": False, "error": str(e)}
 
+    # Pre-validate imports and fix bad ones before execution
+    bad_imports = validate_imports(full_code)
+    if bad_imports:
+        sys.stderr.write(f"[DiagramEngine] Fixing {len(bad_imports)} bad imports: {bad_imports}\n")
+        full_code = fix_bad_imports(full_code, bad_imports, provider)
+
     result = execute_code(full_code, output_path, output_dir)
 
-    # Attempt 2 — fix
+    # Attempt 2 — fix with full context
     if not result["ok"]:
         sys.stderr.write(f"[DiagramEngine] Attempt 1 failed: {result['stderr'][:200]}\n")
+
+        error_text = result["stderr"][:800]
+        # Extract the offending import if it's an ImportError
+        import_err = re.search(r"cannot import name '(\w+)' from '([^']+)'", error_text)
+        import_hint = ""
+        if import_err:
+            bad_class, bad_module = import_err.group(1), import_err.group(2)
+            import_hint = f"\nThe class '{bad_class}' does NOT exist in '{bad_module}'. Remove it and use a diagrams.onprem equivalent instead (e.g. from diagrams.onprem.database, diagrams.onprem.inmemory, diagrams.onprem.queue, etc)."
 
         fix_resp = client.messages.create(
             model="claude-sonnet-4-20250514", max_tokens=4096,
             messages=[
                 {"role": "user", "content": prompt},
                 {"role": "assistant", "content": body},
-                {"role": "user", "content": f"ERROR:\n{result['stderr'][:800]}\n\nFix the body code. If ImportError, use a different class or diagrams.onprem/generic equivalent. Return ONLY the fixed body code (indented, no imports, no Diagram)."},
+                {"role": "user", "content": f"ERROR:\n{error_text}{import_hint}\n\nFix the code. Return the COMPLETE output in the SAME format: imports first, then indented body. Do NOT include `import os`, `from diagrams import Diagram, Cluster, Edge`, or the Diagram() constructor."},
             ],
         )
         body = extract_code(fix_resp.content[0].text)
+        full_code = assemble_code(body, provider, direction)
+        try:
+            full_code = sanitize(full_code)
+        except ValueError as e:
+            return {"success": False, "error": str(e)}
+
+        diagram_id = uuid.uuid4().hex[:8]
+        output_path = os.path.join(output_dir, f"diagram-{diagram_id}")
+        result = execute_code(full_code, output_path, output_dir)
+
+    # Attempt 3 — last resort with minimal safe imports
+    if not result["ok"]:
+        sys.stderr.write(f"[DiagramEngine] Attempt 2 failed: {result['stderr'][:200]}\n")
+
+        available = build_import_list(provider)
+        fallback_resp = client.messages.create(
+            model="claude-sonnet-4-20250514", max_tokens=4096,
+            messages=[
+                {"role": "user", "content": f"""Generate a simple cloud architecture diagram for: {question}
+
+Use ONLY these verified imports:
+{available}
+
+Return imports + indented body (4 spaces). Keep it simple: 6-10 nodes, 2-3 clusters.
+Do NOT include `import os`, `from diagrams import Diagram, Cluster, Edge`, or Diagram() call.
+EVERY connection must use Edge(label="...", color="...", penwidth="2.0").
+Start body with: users = Users("Clients")"""},
+            ],
+        )
+        body = extract_code(fallback_resp.content[0].text)
         full_code = assemble_code(body, provider, direction)
         try:
             full_code = sanitize(full_code)
