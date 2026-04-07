@@ -11,6 +11,7 @@ import { Router } from 'express';
 import Anthropic from '@anthropic-ai/sdk';
 import { query } from '../lib/shared-db.js';
 import { authenticate } from '../middleware/authenticate.js';
+import { checkUsage } from '../middleware/usageLimits.js';
 
 const router = Router();
 
@@ -300,12 +301,12 @@ async function recordCodingUsage(userId, language, inputTokens, outputTokens, la
 // ---------------------------------------------------------------------------
 
 // /stream alias for backwards compatibility with frontend
-router.post('/stream', authenticate, async (req, res, next) => {
+router.post('/stream', authenticate, checkUsage('questions'), async (req, res, next) => {
   req.url = '/solve';
   next();
 });
 
-router.post('/solve', authenticate, async (req, res) => {
+router.post('/solve', authenticate, checkUsage('questions'), async (req, res) => {
   const { problem, language, conversationHistory } = req.body;
 
   // ── Validate ────────────────────────────────────────────────────────────
