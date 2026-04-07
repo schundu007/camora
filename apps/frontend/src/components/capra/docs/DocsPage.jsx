@@ -1726,42 +1726,40 @@ export default function DocsPage({ onBack }) {
                     );
                   })()}
 
-                  {/* STAR Method — Interactive Timeline Design */}
+                  {/* STAR Method — Compact */}
                   <div className="rounded-lg overflow-hidden mb-6 border border-[#e3e8ee] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-                    <div className="px-5 py-4">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Icon name="star" size={16} className="text-emerald-600" />
-                        <span className="landing-mono text-xs text-emerald-600 tracking-widest uppercase">Framework</span>
+                    <div className="px-5 py-3">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Icon name="star" size={14} className="text-emerald-600" />
+                        <h2 className="landing-display font-bold text-base tracking-tight text-gray-900">The STAR Method</h2>
+                        <span className="text-xs text-gray-400 landing-body ml-1">— structure every behavioral answer</span>
                       </div>
-                      <h2 className="landing-display font-bold text-xl tracking-tight text-gray-900 mb-1">The STAR Method</h2>
-                      <p className="text-sm text-gray-500 landing-body mb-5">Structure every behavioral answer with this proven four-step framework</p>
 
-                      {/* STAR Flow — Connected steps */}
-                      <div className="relative">
-                        {/* Connection line */}
-                        <div className="hidden md:block absolute top-1/2 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-300 via-amber-300 via-emerald-300 to-red-300 -translate-y-1/2 z-0 mx-12" />
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 relative z-10">
-                          {[
-                            { letter: 'S', title: 'Situation', desc: 'Set the scene — when, where, what was at stake.', color: '#3b82f6', timing: '15%' },
-                            { letter: 'T', title: 'Task', desc: 'Your responsibility. What was expected of you?', color: '#f59e0b', timing: '10%' },
-                            { letter: 'A', title: 'Action', desc: 'Steps you took. Use "I" — own your contribution.', color: '#10b981', timing: '60%' },
-                            { letter: 'R', title: 'Result', desc: 'Measurable outcomes. Numbers and impact.', color: '#ef4444', timing: '15%' },
-                          ].map((step, i) => (
-                            <div key={i} className="group bg-white rounded-lg p-4 border border-gray-100 hover:shadow-md hover:-translate-y-0.5 transition-all">
-                              <div className="flex items-center justify-between mb-3">
-                                <span className="w-9 h-9 rounded-lg flex items-center justify-center text-sm landing-mono font-extrabold text-white" style={{ background: step.color }}>{step.letter}</span>
-                                <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded-full border font-medium" style={{ color: step.color, borderColor: `${step.color}30`, background: `${step.color}08` }}>{step.timing} of time</span>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2">
+                        {[
+                          { icon: 'mapPin', title: 'Situation', desc: 'Set the scene — when, where, stakes', color: '#3b82f6', timing: '15%' },
+                          { icon: 'clipboardList', title: 'Task', desc: 'Your responsibility & expectations', color: '#f59e0b', timing: '10%' },
+                          { icon: 'zap', title: 'Action', desc: 'Steps you took — use "I", own it', color: '#10b981', timing: '60%' },
+                          { icon: 'trendingUp', title: 'Result', desc: 'Measurable outcomes & impact', color: '#ef4444', timing: '15%' },
+                        ].map((step, i) => (
+                          <div key={i} className="flex items-center gap-2.5 rounded-lg px-3 py-2 border border-gray-100 hover:shadow-sm transition-all">
+                            <span className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0" style={{ background: `${step.color}12` }}>
+                              <Icon name={step.icon} size={14} style={{ color: step.color }} />
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-xs font-bold landing-display" style={{ color: step.color }}>{step.title}</span>
+                                <span className="text-[9px] landing-mono px-1 py-px rounded-full font-medium" style={{ color: step.color, background: `${step.color}10` }}>{step.timing}</span>
                               </div>
-                              <h3 className="text-sm font-bold landing-display mb-1" style={{ color: step.color }}>{step.title}</h3>
-                              <p className="text-xs text-gray-500 leading-relaxed landing-body">{step.desc}</p>
+                              <p className="text-[11px] text-gray-400 landing-body leading-tight truncate">{step.desc}</p>
                             </div>
-                          ))}
-                        </div>
+                          </div>
+                        ))}
                       </div>
 
-                      <div className="mt-4 px-4 py-2.5 rounded-lg bg-white/60 border border-emerald-100 flex items-start gap-2">
-                        <Icon name="lightbulb" size={13} className="text-emerald-500 mt-0.5 flex-shrink-0" />
-                        <p className="text-xs text-gray-600 landing-body"><span className="font-semibold text-emerald-700 landing-mono">Pro Tip:</span> Spend 60% of your answer on the <strong>Action</strong> — that's what interviewers care about most. Always quantify your <strong>Result</strong>.</p>
+                      <div className="mt-2 px-3 py-1.5 rounded-md bg-emerald-50/50 border border-emerald-100 flex items-center gap-2">
+                        <Icon name="lightbulb" size={11} className="text-emerald-500 flex-shrink-0" />
+                        <p className="text-[11px] text-gray-500 landing-body"><span className="font-semibold text-emerald-700 landing-mono">Tip:</span> Spend 60% on <strong>Action</strong>, always quantify <strong>Result</strong>.</p>
                       </div>
                     </div>
                   </div>
