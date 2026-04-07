@@ -744,36 +744,38 @@ export default function PracticePage() {
                   </div>
                 </div>
 
-                {/* Category */}
-                <div style={{ marginBottom: 16 }}>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8, display: 'block' }}>Category</label>
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                    {CATEGORIES.map(c => (
-                      <button key={c} onClick={() => setCategory(c)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 18px', borderRadius: 20, border: category === c ? '1px solid #10b981' : '1px solid #e3e8ee', background: category === c ? '#ecfdf5' : '#fff', color: category === c ? '#059669' : '#4b5563', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>
-                        <Icon name={catIcon(c)} size={14} />
-                        {catLabel(c)}
-                      </button>
-                    ))}
+                {/* Category + Difficulty in same row */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 20 }}>
+                  <div>
+                    <label style={{ fontSize: 12, fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8, display: 'block' }}>Category</label>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                      {CATEGORIES.map(c => (
+                        <button key={c} onClick={() => setCategory(c)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 18px', borderRadius: 20, border: category === c ? '1px solid #10b981' : '1px solid #e3e8ee', background: category === c ? '#ecfdf5' : '#fff', color: category === c ? '#059669' : '#4b5563', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>
+                          <Icon name={catIcon(c)} size={14} />
+                          {catLabel(c)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 12, fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8, display: 'block' }}>Difficulty</label>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      {DIFFICULTIES.map(d => {
+                        const dc2 = diffColor(d);
+                        return (
+                          <button key={d} onClick={() => setDifficulty(d)} style={{ padding: '8px 18px', borderRadius: 20, border: difficulty === d ? `1px solid ${dc2.text}` : '1px solid #e3e8ee', background: difficulty === d ? dc2.bg : '#fff', color: difficulty === d ? dc2.text : '#4b5563', fontSize: 13, fontWeight: 500, cursor: 'pointer', textTransform: 'capitalize' }}>{d}</button>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
 
-                {/* Difficulty */}
-                <div style={{ marginBottom: 20 }}>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8, display: 'block' }}>Difficulty</label>
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    {DIFFICULTIES.map(d => {
-                      const dc2 = diffColor(d);
-                      return (
-                        <button key={d} onClick={() => setDifficulty(d)} style={{ padding: '8px 18px', borderRadius: 20, border: difficulty === d ? `1px solid ${dc2.text}` : '1px solid #e3e8ee', background: difficulty === d ? dc2.bg : '#fff', color: difficulty === d ? dc2.text : '#4b5563', fontSize: 13, fontWeight: 500, cursor: 'pointer', textTransform: 'capitalize' }}>{d}</button>
-                      );
-                    })}
-                  </div>
+                <div style={{ textAlign: 'center' }}>
+                  <button onClick={startChallenge} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 32px', background: 'linear-gradient(135deg, #10b981, #059669)', color: '#fff', fontSize: 15, fontWeight: 600, borderRadius: 10, border: 'none', cursor: 'pointer', boxShadow: '0 2px 8px rgba(16,185,129,0.25)', transition: 'transform 0.1s' }}>
+                    <Icon name="play" size={16} style={{ color: '#fff' }} />
+                    Start Challenge
+                  </button>
                 </div>
-
-                <button onClick={startChallenge} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 32px', background: 'linear-gradient(135deg, #10b981, #059669)', color: '#fff', fontSize: 15, fontWeight: 600, borderRadius: 10, border: 'none', cursor: 'pointer', boxShadow: '0 2px 8px rgba(16,185,129,0.25)', transition: 'transform 0.1s' }}>
-                  <Icon name="play" size={16} style={{ color: '#fff' }} />
-                  Start Challenge
-                </button>
               </div>
 
               {/* Company-Specific Practice */}
