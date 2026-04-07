@@ -1,7 +1,15 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 
-const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
+// Use ascend-backend which has DB caching (ascend_diagram_cache table)
+const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
+
+// In-memory cache: survives re-renders and navigation within same session
+const diagramMemoryCache: Record<string, string> = {};
+
+function getCacheKey(question: string, provider: string, detail: string, dir: string) {
+  return `${question}::${provider}::${dir}::${detail}`;
+}
 
 interface ArchitectureDiagramProps {
   question: string;
@@ -58,13 +66,25 @@ export function ArchitectureDiagram({ question, className = '' }: ArchitectureDi
   useEffect(() => {
     if (!question || !token) return;
 
+    const key = getCacheKey(question, cloudProvider, detailLevel, direction);
+
+    // 1. Check in-memory cache first (instant, no API call)
+    if (diagramMemoryCache[key]) {
+      setImageUrl(diagramMemoryCache[key]);
+      setLoading(false);
+      setError(null);
+      resetView();
+      return;
+    }
+
     let cancelled = false;
     setLoading(true);
     setError(null);
 
     (async () => {
       try {
-        const response = await fetch(`${API_URL}/api/v1/diagram/generate`, {
+        // 2. Call ascend-backend which checks DB cache before generating
+        const response = await fetch(`${API_URL}/api/diagram/generate`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -72,16 +92,23 @@ export function ArchitectureDiagram({ question, className = '' }: ArchitectureDi
           },
           body: JSON.stringify({
             question,
-            cloud_provider: cloudProvider,
-            detail_level: detailLevel,
+            cloudProvider,
+            detailLevel,
+            direction,
           }),
         });
 
+        if (!response.ok) throw new Error(`${response.status}`);
         const data = await response.json();
 
         if (!cancelled) {
           if (data.success && data.image_url) {
-            setImageUrl(data.image_url);
+            // Resolve relative URLs to absolute
+            const url = data.image_url.startsWith('/')
+              ? `${API_URL}${data.image_url}`
+              : data.image_url;
+            setImageUrl(url);
+            diagramMemoryCache[key] = url; // cache for session
             resetView();
           } else {
             setError(data.error || 'Failed to generate diagram');
@@ -97,7 +124,7 @@ export function ArchitectureDiagram({ question, className = '' }: ArchitectureDi
     })();
 
     return () => { cancelled = true; };
-  }, [question, token, detailLevel, cloudProvider, resetView]);
+  }, [question, token, detailLevel, cloudProvider, direction, resetView]);
 
   return (
     <div className={`${className}`}>
@@ -107,25 +134,24 @@ export function ArchitectureDiagram({ question, className = '' }: ArchitectureDi
           <select
             value={cloudProvider}
             onChange={(e) => setCloudProvider(e.target.value)}
-            className="text-xs font-mono bg-transparent border border-border rounded px-1 py-0.5 text-text-dim"
+            className="text-xs font-mono bg-transparent border border-[#e3e8ee] rounded px-1 py-0.5 text-gray-500"
           >
             <option value="auto">Auto</option>
             <option value="aws">AWS</option>
             <option value="azure">Azure</option>
             <option value="gcp">GCP</option>
-            <option value="oci">OCI</option>
           </select>
           <div className="flex items-center border border-gray-200 rounded overflow-hidden">
             <button
               onClick={() => setDirection('LR')}
               className={`px-1.5 py-0.5 text-xs font-mono transition-colors ${
-                direction === 'LR' ? 'bg-primary text-white' : 'text-gray-500 hover:text-primary'
+                direction === 'LR' ? 'bg-emerald-500 text-white' : 'text-gray-500 hover:text-emerald-600'
               }`}
             >LR</button>
             <button
               onClick={() => setDirection('TB')}
               className={`px-1.5 py-0.5 text-xs font-mono border-l border-gray-200 transition-colors ${
-                direction === 'TB' ? 'bg-primary text-white' : 'text-gray-500 hover:text-primary'
+                direction === 'TB' ? 'bg-emerald-500 text-white' : 'text-gray-500 hover:text-emerald-600'
               }`}
             >TB</button>
           </div>
@@ -133,47 +159,39 @@ export function ArchitectureDiagram({ question, className = '' }: ArchitectureDi
             <button
               onClick={() => setDetailLevel('overview')}
               className={`px-2 py-0.5 text-xs font-mono transition-colors ${
-                detailLevel === 'overview'
-                  ? 'bg-primary text-white'
-                  : 'text-gray-500 hover:text-primary'
+                detailLevel === 'overview' ? 'bg-emerald-500 text-white' : 'text-gray-500 hover:text-emerald-600'
               }`}
-            >
-              Overview
-            </button>
+            >Overview</button>
             <button
               onClick={() => setDetailLevel('detailed')}
               className={`px-2 py-0.5 text-xs font-mono border-l border-gray-200 transition-colors ${
-                detailLevel === 'detailed'
-                  ? 'bg-primary text-white'
-                  : 'text-gray-500 hover:text-primary'
+                detailLevel === 'detailed' ? 'bg-emerald-500 text-white' : 'text-gray-500 hover:text-emerald-600'
               }`}
-            >
-              Detailed
-            </button>
+            >Detailed</button>
           </div>
         </div>
         {imageUrl && !loading && (
           <div className="flex items-center gap-1">
-            <button onClick={() => setScale(s => Math.min(s + 0.25, 4))} className="px-1.5 py-0.5 text-xs font-mono border border-border rounded hover:bg-surface2 text-text-dim">+</button>
-            <span className="text-xs font-mono text-text-dim min-w-[3ch] text-center">{Math.round(scale * 100)}%</span>
-            <button onClick={() => setScale(s => Math.max(s - 0.25, 0.5))} className="px-1.5 py-0.5 text-xs font-mono border border-border rounded hover:bg-surface2 text-text-dim">-</button>
-            <button onClick={resetView} className="px-1.5 py-0.5 text-xs font-mono border border-border rounded hover:bg-surface2 text-text-dim ml-1">Fit</button>
+            <button onClick={() => setScale(s => Math.min(s + 0.25, 4))} className="px-1.5 py-0.5 text-xs font-mono border border-gray-200 rounded hover:bg-gray-50 text-gray-500">+</button>
+            <span className="text-xs font-mono text-gray-400 min-w-[3ch] text-center">{Math.round(scale * 100)}%</span>
+            <button onClick={() => setScale(s => Math.max(s - 0.25, 0.5))} className="px-1.5 py-0.5 text-xs font-mono border border-gray-200 rounded hover:bg-gray-50 text-gray-500">-</button>
+            <button onClick={resetView} className="px-1.5 py-0.5 text-xs font-mono border border-gray-200 rounded hover:bg-gray-50 text-gray-500 ml-1">Fit</button>
           </div>
         )}
       </div>
 
       {/* Diagram */}
       {loading && (
-        <div className="flex items-center justify-center p-8 border border-border rounded-md bg-bg2">
+        <div className="flex items-center justify-center p-8 border border-[#e3e8ee] rounded-lg bg-white">
           <div className="flex items-center gap-3">
-            <div className="w-5 h-5 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
-            <span className="text-sm text-text-dim font-mono">Generating {detailLevel} diagram...</span>
+            <div className="w-5 h-5 border-2 border-emerald-200 border-t-emerald-500 rounded-full animate-spin" />
+            <span className="text-sm text-gray-400 font-mono">Generating {detailLevel} diagram...</span>
           </div>
         </div>
       )}
 
       {error && !loading && (
-        <div className="p-4 border border-rose/20 rounded-md bg-rose/5 text-sm text-rose-light">
+        <div className="p-4 border border-red-200 rounded-lg bg-red-50 text-sm text-red-600">
           {error}
         </div>
       )}
@@ -181,7 +199,7 @@ export function ArchitectureDiagram({ question, className = '' }: ArchitectureDi
       {imageUrl && !loading && (
         <div
           ref={containerRef}
-          className="border border-border rounded-md bg-white select-none"
+          className="border border-[#e3e8ee] rounded-lg bg-white select-none"
           style={{ cursor: isDragging ? 'grabbing' : 'grab', overflow: 'hidden', height: '100%', minHeight: '300px' }}
           onWheel={handleWheel}
           onMouseDown={handleMouseDown}
