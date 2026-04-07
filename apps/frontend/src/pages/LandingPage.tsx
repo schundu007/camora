@@ -2,17 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence, useInView } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
-import CamoraLogo from '../components/shared/CamoraLogo';
+import SiteNav from '../components/shared/SiteNav';
 import SiteFooter from '../components/shared/SiteFooter';
-
-/* ── Nav links ─────────────────────────────────────────── */
-const NAV_LINKS = [
-  { label: 'Apply', href: '/jobs' },
-  { label: 'Prepare', href: '/capra/prepare' },
-  { label: 'Practice', href: '/capra/practice' },
-  { label: 'Attend', href: '/lumora' },
-  { label: 'Pricing', href: '/pricing' },
-];
 
 /* ── APPA steps data ───────────────────────────────────── */
 const APPA = [
@@ -389,8 +380,7 @@ function useVisitorCount() {
 }
 
 export default function LandingPage() {
-  const { isAuthenticated, logout, user } = useAuth();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { isAuthenticated } = useAuth();
   const compRef = useRef<HTMLDivElement>(null);
   const compInView = useInView(compRef, { once: true, margin: '-80px' });
   const visitorCount = useVisitorCount();
@@ -437,72 +427,7 @@ export default function LandingPage() {
       </div>
 
       {/* ── NAV ── */}
-      <nav className="fixed top-0 inset-x-0 z-50 backdrop-blur-xl" style={{ background: 'linear-gradient(135deg, rgba(178,235,242,0.7) 0%, rgba(179,198,231,0.7) 30%, rgba(197,179,227,0.7) 55%, rgba(212,184,232,0.7) 80%, rgba(225,190,231,0.7) 100%)' }}>
-        <div className="w-full lg:max-w-[70%] mx-auto flex items-center justify-between px-4 sm:px-6 h-14 sm:h-16">
-          <Link to="/" className="flex items-center gap-2.5">
-            <CamoraLogo size={40} />
-            <span className="text-lg font-bold tracking-tight" style={{ fontFamily: "'Comfortaa', sans-serif" }}>Camora</span>
-          </Link>
-          <div className="hidden lg:flex items-center gap-1">
-            {NAV_LINKS.map(link => (
-              <Link key={link.label} to={link.href}
-                    className="px-4 py-2 text-[15px] text-gray-500 hover:text-gray-900 transition-colors font-medium rounded-lg hover:bg-gray-50">
-                {link.label}
-              </Link>
-            ))}
-          </div>
-          <div className="hidden lg:flex items-center gap-3">
-            {isAuthenticated ? (
-              <>
-                <Link to="/capra/prepare" className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors">
-                  {user?.image ? (
-                    <img src={user.image} alt="" className="w-7 h-7 rounded-full" referrerPolicy="no-referrer" />
-                  ) : (
-                    <div className="w-7 h-7 rounded-full bg-emerald-100 flex items-center justify-center text-xs font-bold text-emerald-700">
-                      {user?.name?.[0] || '?'}
-                    </div>
-                  )}
-                  <span className="text-sm text-gray-700 font-medium">{user?.name?.split(' ')[0] || 'Dashboard'}</span>
-                </Link>
-                <button onClick={logout} className="text-sm text-gray-400 hover:text-red-500 transition-colors">Sign out</button>
-              </>
-            ) : (
-              <Link to="/login" className="text-[15px] text-gray-500 hover:text-gray-900 transition-colors font-medium">Sign in</Link>
-            )}
-            <Link to="/lumora" className="shimmer-btn px-5 py-2.5 text-[15px] font-semibold text-white bg-gray-900 rounded-xl hover:bg-gray-800 transition-colors">
-              Launch App
-            </Link>
-          </div>
-          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="lg:hidden p-2 text-gray-500 hover:text-gray-900">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-              {mobileMenuOpen
-                ? <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                : <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 9h16.5m-16.5 6.75h16.5" />}
-            </svg>
-          </button>
-        </div>
-        <AnimatePresence>
-          {mobileMenuOpen && (
-            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.2 }} className="lg:hidden border-t border-gray-100 bg-white overflow-hidden">
-              <div className="px-6 py-4 space-y-1">
-                {NAV_LINKS.map(link => (
-                  <Link key={link.label} to={link.href} className="block py-2.5 text-base text-gray-600 font-medium hover:text-gray-900"
-                        onClick={() => setMobileMenuOpen(false)}>{link.label}</Link>
-                ))}
-                {isAuthenticated ? (
-                  <>
-                    <Link to="/capra/prepare" className="block py-2.5 text-base text-gray-600 font-medium" onClick={() => setMobileMenuOpen(false)}>Dashboard</Link>
-                    <button onClick={() => { setMobileMenuOpen(false); logout(); }} className="block py-2.5 text-base text-red-500 font-medium w-full text-left">Sign out</button>
-                  </>
-                ) : (
-                  <Link to="/login" className="block py-2.5 text-base text-gray-600 font-medium" onClick={() => setMobileMenuOpen(false)}>Sign in</Link>
-                )}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </nav>
+      <SiteNav />
 
       {/* ── HERO ── */}
       <section className="relative pt-24 pb-10 md:pt-32 md:pb-14 px-6" style={{ zIndex: 1 }}>
