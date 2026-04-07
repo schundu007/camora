@@ -1,0 +1,46 @@
+graph LR
+    subgraph clients["Clients"]
+        Guest["Guest App"]
+        Host["Host App"]
+    end
+    subgraph edge["Edge Layer"]
+        DNS["Azure DNS"]
+        CDN["Azure CDN"]
+        WAF["Azure WAF"]
+    end
+    subgraph compute["Compute — AKS"]
+        LB["App Gateway"]
+        SearchSvc["Search Service\nGeo + Availability"]
+        BookingSvc["Booking Service\nDistributed Locks"]
+        PaymentSvc["Payment Service\nEscrow Model"]
+        MsgSvc["Messaging\nService"]
+        ReviewSvc["Review\nService"]
+        PricingSvc["Smart Pricing\nML Engine"]
+        TrustSvc["Trust & Safety\nFraud Detection"]
+    end
+    subgraph data["Data Layer"]
+        Redis[("Azure Cache\nfor Redis")]
+        PG[("Azure SQL\nPostgreSQL\nMulti-AZ")]
+        ES["Cognitive\nSearch\nGeo Index"]
+        Kafka["Event Hubs"]
+        ML["Azure ML"]
+        NoSQL[("Cosmos DB")]
+    end
+    subgraph storage["Storage"]
+        S3["Blob Storage\nListing Photos"]
+    end
+    clients --> DNS --> CDN --> WAF --> LB
+    LB --> SearchSvc & BookingSvc & PaymentSvc & MsgSvc & ReviewSvc & PricingSvc & TrustSvc
+    SearchSvc --> ES & Redis
+    BookingSvc --> PG & Redis & Kafka
+    PaymentSvc --> PG
+    MsgSvc --> NoSQL
+    ReviewSvc --> PG
+    PricingSvc --> ML & PG
+    TrustSvc --> ML & Kafka
+    SearchSvc --> S3
+    style clients fill:#dbeafe,stroke:#2563eb,color:#1e3a5f
+    style edge fill:#fef3c7,stroke:#d97706,color:#78350f
+    style compute fill:#ecfdf5,stroke:#059669,color:#064e3b
+    style data fill:#ede9fe,stroke:#7c3aed,color:#4c1d95
+    style storage fill:#fce7f3,stroke:#db2777,color:#831843

@@ -372,7 +372,7 @@ export default function JobsPage() {
           height: '56px',
         }}
       >
-        <div className="max-w-[85%] xl:max-w-7xl mx-auto h-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+        <div className="max-w-[70%] mx-auto h-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
           {/* Left: Logo */}
           <Link to="/" className="flex items-center gap-2.5 no-underline">
             <CamoraLogo size={36} />
@@ -504,7 +504,7 @@ export default function JobsPage() {
             background: 'transparent',
           }}
         >
-          <div className="max-w-[85%] xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: '24px', paddingBottom: '20px', textAlign: 'center' }}>
+          <div className="max-w-[70%] mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: '24px', paddingBottom: '20px', textAlign: 'center' }}>
             {/* Main heading — compact */}
             <h1 style={{
               fontSize: 'clamp(22px, 3vw, 32px)',
@@ -599,7 +599,7 @@ export default function JobsPage() {
 
         {/* ── Job URL Analysis Section ── */}
         <div style={{ background: 'transparent' }}>
-          <div className="max-w-[85%] xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: '8px', paddingBottom: '8px' }}>
+          <div className="max-w-[70%] mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: '8px', paddingBottom: '8px' }}>
             {!showUrlInput ? (
               <button
                 onClick={() => setShowUrlInput(true)}
@@ -784,7 +784,7 @@ export default function JobsPage() {
             borderBottom: '1px solid #e3e8ee',
           }}
         >
-          <div className="max-w-[85%] xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-[70%] mx-auto px-4 sm:px-6 lg:px-8">
             <div
               className="jobs-pills-scroll"
               style={{
@@ -828,7 +828,7 @@ export default function JobsPage() {
         </div>
 
         {/* ── Job Cards Grid ── */}
-        <div className="max-w-[85%] xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+        <div className="max-w-[70%] mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
           {loading ? (
             /* Loading skeleton */
             <div

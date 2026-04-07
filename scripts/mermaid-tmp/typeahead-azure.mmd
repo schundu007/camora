@@ -1,0 +1,27 @@
+graph LR
+    subgraph clients["Clients"]
+        App["User Types\nQuery Prefix"]
+    end
+    subgraph serve["Serving Layer"]
+        CDN["Azure CDN\nTop-1000 Prefixes"]
+        LB["App Gateway"]
+        TrieSvc["Trie Service\nIn-Memory\nO(prefix) Lookup"]
+    end
+    subgraph data["Data Layer"]
+        Redis[("Azure Cache\nfor Redis\nPrefix → Top-10")]
+        ZK["ZooKeeper\nShard Coord"]
+    end
+    subgraph pipeline["Offline Pipeline"]
+        Logs["Search Logs\nBlob Storage"]
+        MR["MapReduce\nAggregator"]
+        Warm["Cache Warmer\nAzure Functions"]
+    end
+    App --> CDN --> LB --> TrieSvc
+    TrieSvc --> Redis
+    ZK --> TrieSvc
+    Logs --> MR --> Redis
+    MR --> Warm --> TrieSvc
+    style clients fill:#dbeafe,stroke:#2563eb,color:#1e3a5f
+    style serve fill:#ecfdf5,stroke:#059669,color:#064e3b
+    style data fill:#ede9fe,stroke:#7c3aed,color:#4c1d95
+    style pipeline fill:#fef3c7,stroke:#d97706,color:#78350f

@@ -1,0 +1,29 @@
+graph LR
+    subgraph clients["Clients"]
+        User["User / API"]
+    end
+    subgraph edge["Edge"]
+        CDN["Cloud CDN\nHot Pastes"]
+        LB["Cloud LB"]
+    end
+    subgraph compute["Compute — GKE"]
+        WebSvc["Web Server\nCRUD"]
+        KeyGen["Key Generation\nPre-generated IDs"]
+        Cleanup["Cleanup Worker\nExpiry TTL"]
+    end
+    subgraph data["Data Layer"]
+        Redis[("Memorystore\nRedis\nHot Pastes")]
+        PG[("Cloud SQL\nPostgreSQL\nMetadata")]
+    end
+    subgraph storage["Storage"]
+        S3["Cloud Storage\nPaste Content"]
+    end
+    User --> CDN --> LB --> WebSvc
+    WebSvc --> KeyGen
+    WebSvc --> PG & S3 & Redis
+    Cleanup --> PG & S3
+    style clients fill:#dbeafe,stroke:#2563eb,color:#1e3a5f
+    style edge fill:#fef3c7,stroke:#d97706,color:#78350f
+    style compute fill:#ecfdf5,stroke:#059669,color:#064e3b
+    style data fill:#ede9fe,stroke:#7c3aed,color:#4c1d95
+    style storage fill:#fce7f3,stroke:#db2777,color:#831843

@@ -1,0 +1,42 @@
+graph LR
+    subgraph clients["Clients"]
+        App["Application"]
+    end
+    subgraph edge["Edge"]
+        DNS["Route 53"]
+        CDN["CloudFront"]
+        LB["ALB"]
+    end
+    subgraph compute["Compute — ECS / EKS"]
+        Svc0["Click Ingest\n100K/sec"]
+        Svc1["Stream Processor\nFlink Windows"]
+        Svc2["Aggregation Svc\nCampaign Level"]
+        Svc3["Dashboard API"]
+        Svc4["Fraud Detection\nBot Filter"]
+    end
+    subgraph data["Data Layer"]
+        Store0[("Kafka\nClick Stream")]
+        Store1[("ClickHouse\nOLAP")]
+        Store2[("Cache\nRecent Aggs")]
+    end
+    subgraph storage["Storage"]
+        S3["S3"]
+    end
+    subgraph infra["Infrastructure"]
+        Kafka["MSK Kafka"]
+        Mon["CloudWatch"]
+    end
+    App --> DNS --> CDN --> LB
+    LB --> Svc0 & Svc1 & Svc2 & Svc3 & Svc4
+    Svc0 --> Store0
+    Svc1 --> Store1
+    Svc2 --> Store2
+    Svc0 --> Kafka
+    Svc0 --> S3
+    Kafka --> Mon
+    style clients fill:#dbeafe,stroke:#2563eb,color:#1e3a5f
+    style edge fill:#fef3c7,stroke:#d97706,color:#78350f
+    style compute fill:#ecfdf5,stroke:#059669,color:#064e3b
+    style data fill:#ede9fe,stroke:#7c3aed,color:#4c1d95
+    style storage fill:#fce7f3,stroke:#db2777,color:#831843
+    style infra fill:#f1f5f9,stroke:#64748b,color:#334155

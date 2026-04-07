@@ -154,7 +154,7 @@ export default function PricingPage() {
 
       {/* Nav */}
       <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl" style={{ background: 'linear-gradient(135deg, rgba(178,235,242,0.7) 0%, rgba(179,198,231,0.7) 30%, rgba(197,179,227,0.7) 55%, rgba(212,184,232,0.7) 80%, rgba(225,190,231,0.7) 100%)' }}>
-        <div className="max-w-6xl mx-auto flex items-center justify-between px-6 h-14">
+        <div className="max-w-[70%] mx-auto flex items-center justify-between px-6 h-14">
           <Link to="/" className="flex items-center gap-2.5">
             <CamoraLogo size={36} />
             <span className="text-sm font-bold tracking-tight text-gray-900" style={{ fontFamily: "'Comfortaa', sans-serif" }}>Camora</span>
@@ -235,7 +235,7 @@ export default function PricingPage() {
 
       {/* Competitor comparison */}
       <section className="px-6 pt-4 pb-16">
-        <div className="max-w-[95%] xl:max-w-7xl mx-auto">
+        <div className="max-w-[70%] mx-auto">
           <div className="mb-10 text-center">
             <span className="text-xs font-bold uppercase tracking-[0.2em]" style={{ background: 'linear-gradient(135deg, #34d399, #38bdf8, #818cf8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Why Camora Wins</span>
             <h2 className="mt-3 text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900">
@@ -328,12 +328,12 @@ export default function PricingPage() {
       </section>
 
       {/* Divider */}
-      <div className="max-w-6xl mx-auto px-6">
+      <div className="max-w-[70%] mx-auto px-6">
         <div className="h-px bg-[#e3e8ee]" />
       </div>
 
       {/* Plans */}
-      <section className="max-w-[85%] xl:max-w-7xl mx-auto px-6 py-10">
+      <section className="max-w-[70%] mx-auto px-6 py-10">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-1" style={{ alignItems: 'stretch' }}>
           {PLANS.map((plan) => (
             <div
@@ -419,7 +419,7 @@ export default function PricingPage() {
 
       {/* Top-Up Packs */}
       <section className="px-6 py-16">
-        <div className="max-w-[85%] xl:max-w-5xl mx-auto">
+        <div className="max-w-[70%] mx-auto">
           <div className="mb-10 text-center">
             <span className="text-[11px] font-mono text-emerald-600 uppercase tracking-wider">Need More Credits?</span>
             <h2 className="mt-3 text-2xl font-semibold tracking-tight text-gray-900">Top-Up Packs</h2>
@@ -468,7 +468,7 @@ export default function PricingPage() {
       </section>
 
       {/* Divider */}
-      <div className="max-w-6xl mx-auto px-6">
+      <div className="max-w-[70%] mx-auto px-6">
         <div className="h-px bg-[#e3e8ee]" />
       </div>
 
@@ -487,7 +487,7 @@ export default function PricingPage() {
 
       {/* FAQ */}
       <section className="px-6 py-16">
-        <div className="max-w-[85%] xl:max-w-5xl mx-auto">
+        <div className="max-w-[70%] mx-auto">
           <div className="mb-10 text-center">
             <span className="text-[11px] font-mono text-gray-500 uppercase tracking-wider">FAQ</span>
             <h2 className="mt-3 text-2xl font-semibold tracking-tight text-gray-900">Common questions</h2>

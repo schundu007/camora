@@ -1,0 +1,32 @@
+graph LR
+    subgraph clients["Internal Services"]
+        Svc1["Tweet Service"]
+        Svc2["Order Service"]
+        Svc3["Message Service"]
+    end
+    subgraph coord["Coordination"]
+        ZK["ZooKeeper\nWorker Registry"]
+        NTP["NTP Server\nClock Sync"]
+    end
+    subgraph compute["ID Generator — GKE"]
+        LB["Cloud LB\nInternal"]
+        W1["Snowflake Worker 1\nDC:01 Machine:01"]
+        W2["Snowflake Worker 2\nDC:01 Machine:02"]
+        W3["Snowflake Worker 3\nDC:01 Machine:03"]
+    end
+    subgraph idformat["64-bit Snowflake ID"]
+        Bits["| 1 sign | 41 timestamp | 10 machine | 12 sequence |\n| 0 | ms since epoch | DC+Worker | counter/ms |"]
+    end
+    subgraph monitor["Monitoring"]
+        Mon["Cloud Monitoring\nClock Drift Alert"]
+    end
+    clients --> LB
+    LB --> W1 & W2 & W3
+    ZK --> W1 & W2 & W3
+    NTP --> W1 & W2 & W3
+    W1 & W2 & W3 --> Mon
+    style clients fill:#dbeafe,stroke:#2563eb,color:#1e3a5f
+    style coord fill:#fef3c7,stroke:#d97706,color:#78350f
+    style compute fill:#ecfdf5,stroke:#059669,color:#064e3b
+    style idformat fill:#f0fdf4,stroke:#059669,color:#064e3b
+    style monitor fill:#fce7f3,stroke:#db2777,color:#831843

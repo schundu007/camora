@@ -1,0 +1,37 @@
+graph LR
+    subgraph client["Client"]
+        SDK["Client SDK\nConsistent Hash"]
+    end
+    subgraph coord["Coordinator"]
+        Coord["Coordinator Node\nRoute to Partition"]
+    end
+    subgraph ring["Storage Ring"]
+        N1["Node 1\nLSM Tree"]
+        N2["Node 2\nLSM Tree"]
+        N3["Node 3\nLSM Tree"]
+    end
+    subgraph internal["Node Internals"]
+        WAL["Write-Ahead\nLog"]
+        Mem["MemTable\nIn-Memory"]
+        SST["SSTable\nOn Disk"]
+        Bloom["Bloom Filter\nAvoid Disk Read"]
+        Compact["Compaction\nMerge SSTables"]
+    end
+    subgraph protocol["Protocols"]
+        Gossip["Gossip Protocol\nFailure Detection"]
+        Merkle["Merkle Trees\nAnti-Entropy"]
+        Quorum["Quorum\nW+R > N"]
+    end
+    SDK --> Coord --> N1 & N2 & N3
+    N1 --> WAL --> Mem --> SST
+    SST --> Bloom
+    SST --> Compact
+    N1 <--> Gossip
+    N2 <--> Gossip
+    N3 <--> Gossip
+    N1 <--> Merkle
+    style client fill:#dbeafe,stroke:#2563eb,color:#1e3a5f
+    style coord fill:#fef3c7,stroke:#d97706,color:#78350f
+    style ring fill:#ecfdf5,stroke:#059669,color:#064e3b
+    style internal fill:#ede9fe,stroke:#7c3aed,color:#4c1d95
+    style protocol fill:#fce7f3,stroke:#db2777,color:#831843

@@ -1,0 +1,44 @@
+graph LR
+    subgraph clients["Clients"]
+        Desktop["Desktop App"]
+        Mobile["Mobile App"]
+        Browser["Web Client"]
+    end
+    subgraph edge["Edge Layer"]
+        DNS["Route 53\nLatency-based"]
+        CDN["CloudFront\nRecordings"]
+        TURN["TURN/STUN\nNAT Traversal"]
+    end
+    subgraph compute["Compute — ECS / EKS"]
+        LB["ALB\nUDP+TCP"]
+        Signal["Signaling Server\nWebRTC SDP"]
+        SFU["Media Server\nSFU"]
+        RecordSvc["Recording\nService"]
+        ChatSvc["Chat\nService"]
+        ScreenSvc["Screen Share\nService"]
+        BreakoutSvc["Breakout\nRooms"]
+    end
+    subgraph data["Data Layer"]
+        Redis[("ElastiCache\nRedis\nSession + Rooms")]
+        PG[("Aurora\nPostgreSQL\nMetadata")]
+        NoSQL[("DynamoDB\nChat Messages")]
+        Kafka["MSK Kafka\nMeeting Events"]
+    end
+    subgraph storage["Storage"]
+        S3["S3\nRecordings"]
+    end
+    clients --> DNS
+    DNS --> TURN --> SFU
+    DNS --> CDN --> LB
+    LB --> Signal & ChatSvc & RecordSvc & ScreenSvc & BreakoutSvc
+    Signal --> SFU & Redis
+    SFU --> RecordSvc & TURN
+    RecordSvc --> S3 & Kafka
+    ChatSvc --> NoSQL & Redis
+    BreakoutSvc --> Redis
+    Signal --> PG
+    style clients fill:#dbeafe,stroke:#2563eb,color:#1e3a5f
+    style edge fill:#fef3c7,stroke:#d97706,color:#78350f
+    style compute fill:#ecfdf5,stroke:#059669,color:#064e3b
+    style data fill:#ede9fe,stroke:#7c3aed,color:#4c1d95
+    style storage fill:#fce7f3,stroke:#db2777,color:#831843

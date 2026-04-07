@@ -1,0 +1,43 @@
+graph LR
+    subgraph clients["Clients"]
+        iOS["iOS App"]
+        Android["Android App"]
+    end
+    subgraph edge["Edge Layer"]
+        DNS["Cloud DNS"]
+        CDN["Cloud CDN\nProfile Photos"]
+        WAF["Cloud Armor"]
+    end
+    subgraph compute["Compute — GKE"]
+        LB["Cloud LB"]
+        MatchSvc["Matching\nService"]
+        RecSvc["Recommendation\nML Scoring"]
+        ProfileSvc["Profile\nService"]
+        ChatSvc["Chat Service\nWebSocket"]
+        ModSvc["Photo Moderation\nML"]
+        BoostSvc["Boost/Premium\nService"]
+    end
+    subgraph data["Data Layer"]
+        Redis[("Memorystore\nRedis\nGEORADIUS\nSwipe Queue")]
+        PG[("Cloud SQL\nPostgreSQL\nProfiles, Matches")]
+        NoSQL[("Firestore\nSwipe History\nChat Messages")]
+        ML["Vertex AI"]
+        Vision["Vision AI\nNSFW Detection"]
+        Push["FCM"]
+    end
+    subgraph storage["Storage"]
+        S3["Cloud Storage\nPhotos"]
+    end
+    clients --> DNS --> CDN --> WAF --> LB
+    LB --> MatchSvc & RecSvc & ProfileSvc & ChatSvc & ModSvc & BoostSvc
+    MatchSvc --> Redis & PG
+    RecSvc --> ML & Redis
+    ProfileSvc --> PG & S3
+    ChatSvc --> NoSQL & Redis
+    ModSvc --> Vision & S3
+    BoostSvc --> PG & Push
+    style clients fill:#dbeafe,stroke:#2563eb,color:#1e3a5f
+    style edge fill:#fef3c7,stroke:#d97706,color:#78350f
+    style compute fill:#ecfdf5,stroke:#059669,color:#064e3b
+    style data fill:#ede9fe,stroke:#7c3aed,color:#4c1d95
+    style storage fill:#fce7f3,stroke:#db2777,color:#831843

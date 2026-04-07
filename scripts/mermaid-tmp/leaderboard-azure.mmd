@@ -1,0 +1,28 @@
+graph LR
+    subgraph clients["Clients"]
+        Game["Game Client"]
+    end
+    subgraph compute["Compute — AKS"]
+        GW["API Management"]
+        ScoreSvc["Score Service\nSubmit/Update"]
+        WS["SignalR\nLive Updates"]
+    end
+    subgraph data["Data Layer"]
+        Redis[("Azure Cache\nfor Redis\nSorted Sets\nZADD/ZRANGE")]
+        PG[("Azure SQL\nPostgreSQL\nHistorical Scores")]
+        Cache["Cache\nTop-N per Region"]
+    end
+    subgraph scale["Scaling"]
+        Shard1["Shard: Game A"]
+        Shard2["Shard: Game B"]
+        Agg["Aggregator\nAzure Functions"]
+    end
+    Game --> GW --> ScoreSvc
+    ScoreSvc --> Redis --> PG
+    Redis --> WS --> Game
+    Redis --> Cache
+    Shard1 & Shard2 --> Agg --> Cache
+    style clients fill:#dbeafe,stroke:#2563eb,color:#1e3a5f
+    style compute fill:#ecfdf5,stroke:#059669,color:#064e3b
+    style data fill:#ede9fe,stroke:#7c3aed,color:#4c1d95
+    style scale fill:#fef3c7,stroke:#d97706,color:#78350f

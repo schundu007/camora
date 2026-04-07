@@ -1,0 +1,37 @@
+graph LR
+    subgraph ingest["Content Ingestion"]
+        Crawler["RSS/API\nCrawler"]
+        NLP["NLP Pipeline\nEntity + Dedup"]
+        Cat["Categorizer\nML"]
+    end
+    subgraph compute["Compute — GKE"]
+        LB["Cloud LB"]
+        RankSvc["Ranking Service\nFreshness+Relevance"]
+        UserSvc["User Service\nPersonalization"]
+        TrendSvc["Trending\nDetection"]
+    end
+    subgraph data["Data Layer"]
+        Redis[("Memorystore\nRedis\nTrending Cache")]
+        PG[("Cloud SQL\nPostgreSQL\nArticles, Users")]
+        ES["Elasticsearch\non GKE\nFull-text"]
+        Kafka["Pub/Sub\nArticle Pipeline"]
+        ML["Vertex AI"]
+        NoSQL[("Firestore\nReading History")]
+    end
+    subgraph serve["Serving"]
+        CDN["Cloud CDN"]
+        GW["Cloud Endpoints"]
+    end
+    Crawler --> Kafka --> NLP --> Cat --> PG
+    Cat --> ML
+    NLP --> ES
+    LB --> RankSvc & UserSvc & TrendSvc
+    RankSvc --> ML & Redis & PG
+    UserSvc --> NoSQL & PG
+    TrendSvc --> Redis & Kafka
+    GW --> CDN
+    LB --> GW
+    style ingest fill:#fef3c7,stroke:#d97706,color:#78350f
+    style compute fill:#ecfdf5,stroke:#059669,color:#064e3b
+    style data fill:#ede9fe,stroke:#7c3aed,color:#4c1d95
+    style serve fill:#dbeafe,stroke:#2563eb,color:#1e3a5f
