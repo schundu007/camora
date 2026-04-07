@@ -861,9 +861,12 @@ section, main, .practice-root, [class*="max-w-"] {
   overflow-x: hidden;
 }
 
-/* Ensure grid items never overflow their cells */
+/* Prevent grid items from pushing columns wider than their container */
 .grid > * {
   min-width: 0;
+}
+/* Clip overflow only on topic/card grids (not answer grids in Lumora) */
+.grid.overflow-hidden > * {
   overflow: hidden;
 }
 
