@@ -13239,6 +13239,78 @@ For very large meetings (webinars):
         'Adaptive bitrate: Adjust quality based on bandwidth',
         'Large meetings: Tile-based view, only render visible participants',
         'Recording: Server-side capture and transcoding'
+      ],
+
+      edgeCases: [
+        {
+          scenario: 'A participant with very low bandwidth joins a meeting with 50 high-definition video streams.',
+          impact: 'The SFU forwards all streams to the low-bandwidth client, causing severe packet loss and a frozen experience.',
+          mitigation: 'Implement simulcast so senders publish multiple quality layers; the SFU forwards only the lowest layer to bandwidth-constrained participants.'
+        },
+        {
+          scenario: 'The active speaker switches rapidly between participants in a heated discussion.',
+          impact: 'Frequent layout changes and stream priority switches cause visual jitter and increased CPU usage on clients.',
+          mitigation: 'Apply a debounce window (e.g., 2 seconds) for speaker detection before switching the active speaker layout; pre-buffer adjacent streams.'
+        },
+        {
+          scenario: 'A corporate firewall blocks UDP traffic, preventing WebRTC peer connections from being established.',
+          impact: 'The participant cannot send or receive any media, effectively unable to join the meeting.',
+          mitigation: 'Fall back to TURN relay over TCP/443; as a last resort, use a WebSocket-based media bridge that tunnels through HTTPS.'
+        },
+        {
+          scenario: 'A meeting with 1000 participants exhausts the SFU server memory from maintaining connection state for each stream.',
+          impact: 'The SFU crashes or becomes unresponsive, dropping all participants from the meeting simultaneously.',
+          mitigation: 'Use a cascaded SFU architecture where multiple SFUs share the load; limit active video senders to a configurable cap (e.g., 49).'
+        },
+        {
+          scenario: 'Clock drift between the recording service and the live meeting causes audio/video desync in the recording.',
+          impact: 'The recorded meeting has misaligned audio and video tracks, making it difficult to review.',
+          mitigation: 'Embed NTP-synchronized timestamps in each media packet; re-align tracks during post-processing based on packet timestamps.'
+        }
+      ],
+
+      tradeoffs: [
+        {
+          decision: 'SFU (Selective Forwarding Unit) vs MCU (Multipoint Control Unit) architecture.',
+          pros: 'SFU uses far less server CPU because it forwards streams without decoding/re-encoding, scaling to more participants.',
+          cons: 'Each client must decode multiple streams independently, increasing client-side CPU; bandwidth grows linearly with participants.',
+          recommendation: 'Use SFU for most meetings; offer MCU mode for very large meetings (100+) where clients cannot handle many streams.'
+        },
+        {
+          decision: 'WebRTC vs custom media protocol.',
+          pros: 'WebRTC is browser-native, battle-tested, and handles NAT traversal, encryption, and codec negotiation out of the box.',
+          cons: 'Less control over congestion control algorithms and codec selection; harder to implement custom features like server-side noise cancellation.',
+          recommendation: 'Use WebRTC as the foundation; extend with custom signaling and SFU logic where fine-grained control is needed.'
+        },
+        {
+          decision: 'Peer-to-peer for small meetings vs always routing through an SFU.',
+          pros: 'P2P eliminates server infrastructure costs and reduces latency for 1:1 or small (2-3 person) calls.',
+          cons: 'P2P cannot support features like server-side recording, and quality degrades as participant count increases.',
+          recommendation: 'Use P2P for 1:1 calls; route through the SFU for 3+ participants or when recording/transcription is enabled.'
+        }
+      ],
+
+      layeredDesign: [
+        {
+          name: 'Signaling Layer',
+          purpose: 'Handles meeting setup, participant discovery, and SDP offer/answer exchange for WebRTC connection establishment.',
+          components: ['Signaling server (WebSocket)', 'Room manager', 'ICE candidate broker', 'Authentication service']
+        },
+        {
+          name: 'Media Transport Layer',
+          purpose: 'Routes audio and video streams between participants via the SFU with adaptive quality selection.',
+          components: ['SFU cluster', 'TURN relay servers', 'Simulcast layer selector', 'Bandwidth estimator']
+        },
+        {
+          name: 'Media Processing Layer',
+          purpose: 'Applies real-time transformations like noise suppression, virtual backgrounds, and recording capture.',
+          components: ['Noise suppression engine', 'Background segmentation ML model', 'Recording service', 'Transcription pipeline']
+        },
+        {
+          name: 'Application Layer',
+          purpose: 'Provides meeting features beyond audio/video including chat, reactions, screen sharing, and breakout rooms.',
+          components: ['Chat service', 'Screen share handler', 'Breakout room manager', 'Polling/reactions service']
+        }
       ]
     },
     {
@@ -13696,6 +13768,78 @@ Privacy: Option to view anonymously (hides viewer)
         'Job matching: ML model on skills, experience, preferences',
         'Search: People + jobs + companies + content',
         '"Who viewed your profile": Async processing of view events'
+      ],
+
+      edgeCases: [
+        {
+          scenario: 'A user with 30,000 first-degree connections posts an update, triggering massive fan-out to all connection feeds.',
+          impact: 'The feed service experiences a write amplification spike, slowing down feed generation for other users.',
+          mitigation: 'Use a hybrid fan-out model: fan-out on write for users with fewer than 5,000 connections, fan-out on read for power users and influencers.'
+        },
+        {
+          scenario: 'A recruiter searches for candidates with a very common skill set (e.g., "Python developer in San Francisco").',
+          impact: 'The search query returns millions of results, causing slow response times and an overwhelming results page.',
+          mitigation: 'Apply progressive filtering with facets; cap result sets and rank by relevance score combining profile completeness, activity recency, and connection proximity.'
+        },
+        {
+          scenario: 'A user sets their profile to anonymous viewing mode and browses thousands of profiles programmatically.',
+          impact: 'The scraping activity goes undetected because anonymous mode hides the viewer, enabling data harvesting at scale.',
+          mitigation: 'Rate-limit profile view events per user regardless of anonymity mode; detect bot-like patterns (e.g., 100+ views per minute) and challenge with CAPTCHA.'
+        },
+        {
+          scenario: 'Two users send connection requests to each other simultaneously before either request is processed.',
+          impact: 'The system may create duplicate connection records or fail to recognize the mutual request.',
+          mitigation: 'Use an idempotent upsert on the connection table with a canonical ordering of user IDs; treat simultaneous requests as a single accepted connection.'
+        }
+      ],
+
+      tradeoffs: [
+        {
+          decision: 'Graph database vs relational database for the social connection graph.',
+          pros: 'Graph databases excel at multi-hop traversals (2nd/3rd degree connections) with constant-time neighbor lookups.',
+          cons: 'Graph databases are harder to scale horizontally and have less mature tooling for analytics and reporting.',
+          recommendation: 'Use a graph database (or adjacency list in memory) for real-time connection traversals; replicate to a relational warehouse for analytics.'
+        },
+        {
+          decision: 'Pre-computed feed vs real-time feed assembly on request.',
+          pros: 'Pre-computed feeds provide instant page loads without expensive real-time aggregation at read time.',
+          cons: 'Expensive write amplification when popular users post; feeds can become stale between updates.',
+          recommendation: 'Pre-compute feeds for active users and store in Redis; assemble on-demand for inactive users who rarely check their feed.'
+        },
+        {
+          decision: 'Full-text search vs structured attribute search for people and jobs.',
+          pros: 'Full-text search handles natural language queries like "senior engineer at FAANG in NYC" naturally.',
+          cons: 'Less precise for structured filters (exact company, degree, years of experience); harder to apply strict boolean logic.',
+          recommendation: 'Combine both: use Elasticsearch with structured fields for faceted filtering and full-text scoring for relevance ranking.'
+        }
+      ],
+
+      layeredDesign: [
+        {
+          name: 'Profile and Identity Layer',
+          purpose: 'Manages user profiles, authentication, privacy settings, and professional identity data.',
+          components: ['Profile service', 'Auth service', 'Privacy manager', 'Profile completeness scorer']
+        },
+        {
+          name: 'Social Graph Layer',
+          purpose: 'Stores and traverses the connection graph for degree calculations, recommendations, and mutual connections.',
+          components: ['Graph service', 'Connection manager', 'PYMK recommendation engine', 'Degree calculator']
+        },
+        {
+          name: 'Feed and Content Layer',
+          purpose: 'Aggregates, ranks, and delivers the personalized news feed combining organic posts and sponsored content.',
+          components: ['Feed generator', 'Ranking service', 'Sponsored content mixer', 'Feed cache (Redis)']
+        },
+        {
+          name: 'Jobs and Matching Layer',
+          purpose: 'Powers job search, candidate matching, and recruiter tools using ML-based relevance scoring.',
+          components: ['Job search index', 'Candidate matcher', 'Recruiter dashboard', 'Job alert service']
+        },
+        {
+          name: 'Messaging Layer',
+          purpose: 'Provides real-time messaging including InMail, connection messages, and group conversations.',
+          components: ['Message service', 'WebSocket gateway', 'InMail quota manager', 'Notification dispatcher']
+        }
       ]
     },
     {
@@ -13810,6 +13954,84 @@ aggregated_clicks (OLAP store) {
         'ClickHouse for fast OLAP aggregation queries',
         'HyperLogLog for approximate unique user counts',
         'Two-stage fraud detection: rules (inline) + ML (async)'
+      ],
+
+      edgeCases: [
+        {
+          scenario: 'A click fraud bot generates millions of fake clicks from rotating IP addresses within seconds.',
+          impact: 'Advertisers are billed for fraudulent clicks, eroding trust and potentially costing millions in invalid charges.',
+          mitigation: 'Apply real-time rule-based filters (click velocity, device fingerprint) inline; run async ML models to detect sophisticated patterns and issue retroactive refunds.'
+        },
+        {
+          scenario: 'Late-arriving click events arrive after the aggregation window has already closed and been billed.',
+          impact: 'These clicks are either lost (undercounting revenue) or double-counted if naively reprocessed.',
+          mitigation: 'Use watermarks with allowed lateness in the stream processor; maintain a reconciliation pipeline that adjusts aggregates for late events within a grace period.'
+        },
+        {
+          scenario: 'A Kafka partition becomes temporarily unavailable, causing a gap in the click event stream.',
+          impact: 'Aggregation results for the affected time window are incomplete, leading to inaccurate billing and reporting.',
+          mitigation: 'Use Kafka replication factor of 3 with ISR-based writes; implement exactly-once semantics in Flink with checkpointing to replay from the last consistent offset.'
+        },
+        {
+          scenario: 'An advertiser queries real-time dashboard during a massive click spike (e.g., Super Bowl ad).',
+          impact: 'The OLAP database is overwhelmed by both write ingestion and read queries simultaneously, causing dashboard timeouts.',
+          mitigation: 'Separate read and write paths: buffer writes through a staging layer and serve reads from pre-aggregated materialized views updated on a slight delay.'
+        },
+        {
+          scenario: 'Time zone differences between global data centers cause the same click to be counted in different daily aggregation windows.',
+          impact: 'Daily reports show inconsistent totals depending on which datacenter processed the event.',
+          mitigation: 'Normalize all event timestamps to UTC at ingestion time; partition aggregation windows by UTC boundaries regardless of datacenter location.'
+        }
+      ],
+
+      tradeoffs: [
+        {
+          decision: 'Exactly-once processing vs at-least-once with deduplication.',
+          pros: 'Exactly-once guarantees in Flink eliminate the need for a separate dedup layer, simplifying the pipeline.',
+          cons: 'Exactly-once requires frequent checkpointing which reduces throughput; adds complexity with two-phase commits to sinks.',
+          recommendation: 'Use exactly-once for the billing pipeline where accuracy is critical; use at-least-once with idempotent writes for the analytics pipeline where slight overcounting is acceptable.'
+        },
+        {
+          decision: 'Real-time stream aggregation vs micro-batch processing.',
+          pros: 'True streaming provides sub-second latency for fraud detection and live dashboards.',
+          cons: 'Streaming systems are harder to debug, test, and recover from failures compared to batch jobs.',
+          recommendation: 'Use streaming (Flink) for real-time fraud detection and dashboard updates; run a parallel batch reconciliation job hourly to correct any stream processing errors.'
+        },
+        {
+          decision: 'ClickHouse (column store) vs Druid for the OLAP aggregation layer.',
+          pros: 'ClickHouse offers simpler operations, SQL compatibility, and excellent compression for time-series click data.',
+          cons: 'Druid has better real-time ingestion and native support for approximate queries (HyperLogLog, sketches).',
+          recommendation: 'Use ClickHouse for its SQL interface and operational simplicity; implement HyperLogLog as a custom aggregation function for unique user counts.'
+        },
+        {
+          decision: 'Inline fraud filtering vs post-hoc fraud detection.',
+          pros: 'Inline filtering prevents fraudulent clicks from ever being counted, protecting advertisers in real-time.',
+          cons: 'Inline detection must be fast (< 10ms) so it can only use simple rules, missing sophisticated fraud patterns.',
+          recommendation: 'Apply fast rule-based filters inline to catch obvious fraud; run ML-based detection asynchronously and issue billing adjustments for detected fraud within 24 hours.'
+        }
+      ],
+
+      layeredDesign: [
+        {
+          name: 'Ingestion Layer',
+          purpose: 'Captures billions of raw click events from ad servers and delivers them reliably to the processing pipeline.',
+          components: ['Click event collector', 'Kafka topics (partitioned by ad_id)', 'Schema registry', 'Dead letter queue']
+        },
+        {
+          name: 'Stream Processing Layer',
+          purpose: 'Aggregates click events in real-time windows, deduplicates, and applies inline fraud detection rules.',
+          components: ['Flink job cluster', 'Windowed aggregator', 'Dedup filter (Redis)', 'Rule-based fraud detector']
+        },
+        {
+          name: 'Storage and Query Layer',
+          purpose: 'Stores aggregated click data for fast analytical queries and advertiser-facing dashboards.',
+          components: ['ClickHouse cluster', 'Materialized views', 'Query cache', 'Dashboard API']
+        },
+        {
+          name: 'Reconciliation Layer',
+          purpose: 'Runs periodic batch jobs to verify stream processing accuracy and apply retroactive fraud adjustments.',
+          components: ['Batch reconciliation job (Spark)', 'ML fraud detection model', 'Billing adjustment service', 'Audit log']
+        }
       ]
     },
     {
