@@ -243,7 +243,25 @@ messages_search_index {
       'Elasticsearch for workspace-scoped full-text search with near-real-time indexing',
       'Redis heartbeat + TTL pattern for scalable presence tracking',
       'Fan-out optimization: push to online viewers, pull for offline users on reconnect'
-    ]
+    ],
+
+    edgeCases: [
+      { scenario: 'Message ordering across distributed nodes', impact: 'Users in same channel see messages in different order, causing confusion', mitigation: 'Use Lamport timestamps or hybrid logical clocks, order by server-assigned sequence numbers per channel' },
+      { scenario: 'Thundering herd on workspace login', impact: 'Monday morning login spike overwhelms auth and channel-load services', mitigation: 'Stagger channel data loading, lazy-load message history, use connection queuing with backoff' },
+      { scenario: 'Large file upload during real-time messaging', impact: 'File upload blocks WebSocket connection, causing message delivery delays', mitigation: 'Use separate HTTP connection for file uploads, stream files to object storage independently' },
+      { scenario: 'Channel with 100K+ members', impact: 'Typing indicators and presence updates create O(N) fan-out per event', mitigation: 'Sample presence updates, batch typing indicators, limit real-time features for large channels' },
+    ],
+    tradeoffs: [
+      { decision: 'WebSocket vs long polling for real-time', pros: 'WebSocket gives true bidirectional low-latency; long polling is simpler and firewall-friendly', cons: 'WebSocket requires sticky sessions and connection management; long polling wastes bandwidth', recommendation: 'WebSocket with long-polling fallback for corporate firewalls' },
+      { decision: 'Fan-out on write vs fan-out on read', pros: 'Write fan-out gives instant delivery; read fan-out saves storage', cons: 'Write fan-out expensive for large channels; read fan-out adds read latency', recommendation: 'Fan-out on write for channels <10K members, fan-out on read for larger channels' },
+      { decision: 'Full-text search index per workspace vs global', pros: 'Per-workspace ensures data isolation; global enables cross-workspace search', cons: 'Per-workspace wastes resources for small workspaces; global complicates access control', recommendation: 'Per-workspace sharding with shared infrastructure to balance isolation and efficiency' },
+    ],
+    layeredDesign: [
+      { name: 'Client Layer', purpose: 'Desktop/mobile/web apps maintaining persistent connections', components: ['Electron App', 'React Web Client', 'Mobile SDK', 'WebSocket Manager'] },
+      { name: 'Real-Time Gateway', purpose: 'Manage millions of persistent WebSocket connections', components: ['WebSocket Server', 'Connection Registry', 'Presence Service'] },
+      { name: 'Application Layer', purpose: 'Business logic for messaging, channels, and search', components: ['Message Service', 'Channel Service', 'Search Service', 'File Service'] },
+      { name: 'Data Layer', purpose: 'Persistent storage for messages, files, and metadata', components: ['MySQL (messages)', 'Elasticsearch (search)', 'S3 (files)', 'Redis (presence/cache)'] },
+    ],
   },
 
   // ─── 2. TikTok ──────────────────────────────────────────────────────
@@ -469,7 +487,27 @@ video_embeddings (ML feature store) {
       'Multi-tier CDN with predictive pre-caching for popular and trending videos',
       'Parallel content moderation pipeline to minimize time-to-publish',
       'Vector embeddings for both users and videos enabling similarity-based retrieval'
-    ]
+    ],
+
+    edgeCases: [
+      { scenario: 'Creator uploads a video that is nearly identical to copyrighted content', impact: 'Platform faces DMCA liability if not detected, or false positive blocks legitimate fair-use content', mitigation: 'Audio/video fingerprinting against content ID database, appeals process for false positives, graduated enforcement' },
+      { scenario: 'Viral video causes sudden 1000x traffic spike in one region', impact: 'CDN cache misses in that region, origin overwhelmed', mitigation: 'Predictive pre-warming of CDN caches for trending content, origin shielding, request coalescing for same video' },
+      { scenario: 'User scrolls For You Page for hours generating infinite recommendations', impact: 'Recommendation model runs out of diverse content, starts repeating or showing low-quality videos', mitigation: 'Diversity injection in recommendation batches, explore/exploit balance, session-length-aware quality boosting' },
+      { scenario: 'Coordinated inauthentic behavior inflates view counts and engagement', impact: 'Fake engagement skews recommendations and misleads advertisers', mitigation: 'Real-time view deduplication by device/IP fingerprint, engagement velocity anomaly detection, delayed count finalization' },
+      { scenario: 'New user with no watch history opens the app for the first time', impact: 'Cold start problem: no signal for personalized recommendations', mitigation: 'Popularity-based initial feed, rapid interest detection from first few interactions, demographic-based cohort seeding' },
+    ],
+    tradeoffs: [
+      { decision: 'Pre-computed recommendations vs real-time recommendation', pros: 'Pre-computed is fast to serve; real-time adapts to current session context', cons: 'Pre-computed goes stale quickly; real-time adds latency and compute cost', recommendation: 'Hybrid: pre-compute candidate pool offline, re-rank in real-time based on session signals' },
+      { decision: 'Single global feed algorithm vs per-user personalized model', pros: 'Global is simpler and consistent; per-user maximizes engagement', cons: 'Global ignores user preferences; per-user creates filter bubbles and is expensive', recommendation: 'Per-user personalization with diversity constraints and trending content injection' },
+      { decision: 'On-device video processing vs server-side processing', pros: 'On-device reduces upload size and server cost; server-side ensures consistent quality', cons: 'On-device depends on phone capability; server-side requires massive compute', recommendation: 'Client-side light processing (trim, basic filters), server-side transcoding and advanced effects' },
+      { decision: 'Chronological feed vs algorithm-driven feed', pros: 'Chronological is transparent and fair; algorithmic maximizes engagement and watch time', cons: 'Chronological surfaces mediocre content from followed creators; algorithmic is opaque', recommendation: 'Algorithm-driven by default (For You), with Following tab as chronological option' },
+    ],
+    layeredDesign: [
+      { name: 'Client Layer', purpose: 'Video capture, editing, and immersive playback experience', components: ['Camera/Editor SDK', 'Video Player (preload/buffer)', 'Infinite Scroll Feed', 'Engagement UI (likes, comments, shares)'] },
+      { name: 'Content Pipeline Layer', purpose: 'Process uploads through moderation, transcoding, and indexing', components: ['Upload Service', 'Transcoder (multi-bitrate)', 'Content Moderation (ML)', 'Content ID (fingerprinting)'] },
+      { name: 'Recommendation Layer', purpose: 'Generate personalized video feeds using ML models', components: ['Candidate Generator', 'Ranking Model', 'Diversity Injector', 'A/B Test Framework'] },
+      { name: 'Data & Distribution Layer', purpose: 'Store content and deliver to users globally', components: ['Object Storage (videos)', 'CDN (global delivery)', 'Redis (user signals)', 'Feature Store (ML features)'] },
+    ],
   },
 
   // ─── 3. Reddit ──────────────────────────────────────────────────────
@@ -692,7 +730,27 @@ hot_score = log10(max(|score|, 1)) + sign(score) * (created_epoch / 45000)
       'Progressive comment loading: top-level first, lazy-load branches on demand',
       'CQRS-like separation: writes to primary DB, reads from Redis + read replicas',
       'Wilson score interval for statistically sound comment ranking'
-    ]
+    ],
+
+    edgeCases: [
+      { scenario: 'Vote manipulation ring using coordinated accounts', impact: 'Fake content reaches front page, undermining trust in ranking algorithm', mitigation: 'Graph-based bot detection (account clusters), velocity checks on voting patterns, shadow-banning suspicious accounts' },
+      { scenario: 'Post goes viral: 100K comments in minutes', impact: 'Comment tree rendering becomes slow, database write contention on hot post', mitigation: 'Shard comment storage by post_id, lazy-load comment branches, cache top-level comments aggressively' },
+      { scenario: 'Brigading: external community mass-downvotes a post/subreddit', impact: 'Legitimate content suppressed, community morale damaged', mitigation: 'Detect abnormal voting velocity from non-subscribers, weight votes by community participation history, temporary vote fuzzing' },
+      { scenario: 'User deletes account but has thousands of comments across subreddits', impact: 'Orphaned comments break thread context, or deletion takes very long', mitigation: 'Soft delete user profile, anonymize comments (replace username with [deleted]), async background processing for full purge' },
+      { scenario: 'Subreddit with millions of subscribers creates massive hot page computation', impact: 'Hot ranking algorithm recalculation overwhelms CPU for mega-subreddits', mitigation: 'Pre-compute hot rankings in background workers on schedule (every 2-5 min), serve from cache, not real-time' },
+    ],
+    tradeoffs: [
+      { decision: 'Real-time vote counts vs eventually consistent counts', pros: 'Real-time is satisfying for users; eventual consistency scales better', cons: 'Real-time requires atomic counters under heavy contention; eventual consistency shows stale numbers', recommendation: 'Eventually consistent with vote fuzzing (Reddit already fuzzes counts), update every few seconds' },
+      { decision: 'Flat comment list vs nested/threaded comments', pros: 'Flat is simple to render and paginate; nested shows conversation structure', cons: 'Flat loses context; nested trees are expensive to query and render deeply', recommendation: 'Nested with depth limit (10 levels), collapse deep threads with "continue this thread" link' },
+      { decision: 'Hot ranking (time-decayed) vs top ranking (pure votes)', pros: 'Hot promotes fresh content; top surfaces best content regardless of age', cons: 'Hot penalizes slow-burn quality posts; top stagnates without new content', recommendation: 'Hot as default feed (like Reddit), with top/new/controversial as user-selectable sort options' },
+      { decision: 'Centralized feed generation vs per-user personalized feed', pros: 'Centralized is simpler; personalized increases engagement', cons: 'Centralized ignores user preferences; personalized requires ML infrastructure', recommendation: 'Start with centralized hot/top per subreddit, add lightweight personalization (subscribed subreddits blend) for home feed' },
+    ],
+    layeredDesign: [
+      { name: 'Client Layer', purpose: 'Web and mobile interfaces for browsing, posting, and voting', components: ['Web App (React)', 'Mobile App', 'Rich Text Editor (Markdown)', 'Media Uploader'] },
+      { name: 'API & Feed Layer', purpose: 'Content serving, feed generation, and ranking', components: ['Feed Generator', 'Ranking Engine (Hot/Top/New)', 'Search Service', 'Recommendation Engine'] },
+      { name: 'Content & Moderation Layer', purpose: 'Post/comment management and community moderation', components: ['Post Service', 'Comment Service', 'Vote Service', 'Moderation Tools (AutoMod)'] },
+      { name: 'Data Layer', purpose: 'Persistent storage for content, votes, and user data', components: ['PostgreSQL (posts, users)', 'Redis (vote counts, hot rankings)', 'Cassandra (comments)', 'Elasticsearch (search)'] },
+    ],
   },
 
   // ─── 4. Twitch ──────────────────────────────────────────────────────
@@ -927,7 +985,27 @@ follows {
       'Clustered WebSocket gateways with Redis Pub/Sub for chat fan-out',
       'Message batching and server-side sampling for ultra-high-volume chat rooms',
       'Dynamic resource allocation based on real-time viewer count changes'
-    ]
+    ],
+
+    edgeCases: [
+      { scenario: 'Streamer with 500K viewers suddenly ends stream', impact: 'Mass WebSocket disconnection spike overwhelms connection cleanup and redirect systems', mitigation: 'Graceful stream-end notification with staggered client reconnection, redirect viewers to raid target in batches' },
+      { scenario: 'Chat moves at 50K messages/second during hype moments', impact: 'Clients cannot render all messages, server fan-out overwhelmed', mitigation: 'Server-side chat sampling (show 1 in N messages), client-side throttled rendering, batch messages in 100ms windows' },
+      { scenario: 'Streamer broadcasts copyrighted content (DMCA)', impact: 'Legal liability, need to take down live stream and stored VOD quickly', mitigation: 'Real-time audio fingerprinting (like Audible Magic), automatic mute or stream termination, DMCA takedown workflow for VODs' },
+      { scenario: 'Transcoding pipeline fails mid-stream for a popular channel', impact: 'Viewers on lower quality settings lose the stream, viewer count drops', mitigation: 'Redundant transcoding pipelines, automatic failover to backup encoder, serve source quality as fallback' },
+      { scenario: 'Viewer in region with poor connectivity buffers constantly', impact: 'Poor viewing experience, viewer leaves', mitigation: 'Adaptive bitrate streaming (ABR) with aggressive downshift, regional edge caching, low-latency mode with reduced buffer' },
+    ],
+    tradeoffs: [
+      { decision: 'Low-latency streaming (WebRTC/LL-HLS) vs standard HLS', pros: 'Low-latency gives <2s delay (better interaction); standard HLS is reliable with large buffer', cons: 'Low-latency sacrifices buffer resilience; standard HLS has 10-30s delay', recommendation: 'Low-latency HLS by default with fallback to standard HLS on poor connections' },
+      { decision: 'Server-side transcoding vs client-side adaptive bitrate', pros: 'Server transcoding serves all clients; client-side ABR adapts to each viewer', cons: 'Server transcoding is expensive per-stream; ABR requires smart client logic', recommendation: 'Server-side transcoding to multiple quality levels combined with client-side ABR switching between them' },
+      { decision: 'Chat as part of video stream vs separate WebSocket', pros: 'Embedded chat is simpler; separate WebSocket enables rich chat features', cons: 'Embedded chat has video delay; separate WebSocket requires additional connection management', recommendation: 'Separate WebSocket for chat (enables emotes, moderation, polls) with video stream independent' },
+      { decision: 'Store all VODs vs expire after retention period', pros: 'Store all enables content library; expiring saves massive storage costs', cons: 'Store all is expensive for small streamers; expiring loses content value', recommendation: 'Tiered retention: 7 days for free, 60 days for partners, indefinite for highlights/clips' },
+    ],
+    layeredDesign: [
+      { name: 'Ingest Layer', purpose: 'Receive live video from streamers and prepare for distribution', components: ['RTMP Ingest Server', 'Transcoder (multi-bitrate)', 'Stream Health Monitor', 'Thumbnail Generator'] },
+      { name: 'Distribution Layer', purpose: 'Deliver video segments to viewers worldwide with low latency', components: ['CDN Edge Servers', 'HLS/LL-HLS Packager', 'Origin Shield', 'ABR Controller'] },
+      { name: 'Interactive Layer', purpose: 'Real-time chat, subscriptions, and viewer engagement', components: ['Chat Service (WebSocket)', 'Chat Moderation', 'Subscription/Bits Service', 'Polls & Predictions'] },
+      { name: 'Data & Storage Layer', purpose: 'VOD storage, analytics, and user data', components: ['Object Storage (VODs)', 'PostgreSQL (users, streams)', 'Redis (live state, chat)', 'Analytics Pipeline (Kafka)'] },
+    ],
   },
 
   // ─── 5. Gmail ───────────────────────────────────────────────────────
@@ -1165,7 +1243,27 @@ email_search_index {
       'Per-user Elasticsearch shard routing for fast mailbox-scoped search',
       'SMTP-level rejection for high-confidence spam to save storage and processing',
       'Kafka-based processing pipeline with exactly-once delivery semantics'
-    ]
+    ],
+
+    edgeCases: [
+      { scenario: 'Email loop: auto-reply rule triggers another auto-reply indefinitely', impact: 'Exponential message generation, fills mailboxes, wastes server resources', mitigation: 'Loop detection via X-Auto-Reply and message ID tracking, limit auto-replies to 1 per sender per hour, cap chain depth' },
+      { scenario: 'Large attachment (25MB) sent to a mailing list with 10K recipients', impact: 'Storage multiplied 10K times, delivery queue blocked by slow recipients', mitigation: 'Single-instance storage with reference counting, attachment deduplication by hash, progressive delivery with priority queuing' },
+      { scenario: 'Spam campaign mimics legitimate sender domain (spoofing)', impact: 'Users receive phishing emails that appear to come from trusted contacts', mitigation: 'Enforce SPF, DKIM, and DMARC validation, display warning banners for failed authentication, ML-based content analysis' },
+      { scenario: 'User accidentally deletes emails then empties trash', impact: 'Permanent data loss of potentially critical business correspondence', mitigation: 'Soft delete with 30-day trash retention, legal hold capability, admin-level recovery from backup within retention window' },
+      { scenario: 'Recipient mail server is down for extended period', impact: 'Outgoing messages queue up, memory pressure on sending servers', mitigation: 'Exponential backoff retry (up to 5 days per RFC), dead-letter after max retries, bounce notification to sender' },
+    ],
+    tradeoffs: [
+      { decision: 'Push (IMAP IDLE) vs pull (polling) for new mail notification', pros: 'Push gives instant notification; pull is simpler and works through all firewalls', cons: 'Push requires persistent connections per mailbox; pull wastes bandwidth and has latency', recommendation: 'IMAP IDLE for desktop clients, push notifications for mobile, polling as fallback' },
+      { decision: 'Store emails as individual files vs in a database', pros: 'Files are simple and leverage filesystem caching; database enables complex queries', cons: 'Files are hard to search and index; database has overhead for large attachments', recommendation: 'Metadata and body in database (Bigtable/Cassandra), large attachments in object storage with references' },
+      { decision: 'Spam filtering at SMTP level vs after delivery', pros: 'SMTP-level saves storage and processing; post-delivery allows user review', cons: 'SMTP-level may reject legitimate email; post-delivery wastes resources on spam', recommendation: 'Multi-stage: reject obvious spam at SMTP level, classify borderline at delivery, allow user review in spam folder' },
+      { decision: 'Single global search index vs per-user search index', pros: 'Global index shares infrastructure; per-user index ensures isolation', cons: 'Global index complicates access control; per-user index wastes resources for light users', recommendation: 'Per-user index partitions within shared Elasticsearch cluster for balance of isolation and efficiency' },
+    ],
+    layeredDesign: [
+      { name: 'Client Layer', purpose: 'Web, mobile, and desktop email clients with rich compose and search', components: ['Web Client (React)', 'Mobile App', 'Desktop Client (IMAP)', 'Push Notification Handler'] },
+      { name: 'Email Gateway Layer', purpose: 'Handle SMTP inbound/outbound and spam filtering', components: ['SMTP Receiver', 'SMTP Sender', 'Spam/Phishing Filter', 'SPF/DKIM/DMARC Validator'] },
+      { name: 'Application Layer', purpose: 'Email business logic, labeling, threading, and search', components: ['Mailbox Service', 'Thread Composer', 'Label/Filter Engine', 'Search Service'] },
+      { name: 'Data Layer', purpose: 'Persistent storage for messages, attachments, and indices', components: ['Bigtable (email bodies)', 'Blob Storage (attachments)', 'Elasticsearch (search index)', 'Redis (session cache)'] },
+    ],
   },
 
   // ─── 6. Google Drive ────────────────────────────────────────────────
@@ -1411,7 +1509,27 @@ blobs {
       'Long-poll notifications for real-time change detection across devices',
       'Permission inheritance with Redis-cached materialized permission maps',
       'Resumable chunked uploads with server-side assembly for reliability'
-    ]
+    ],
+
+    edgeCases: [
+      { scenario: 'Two users edit the same document simultaneously in different applications', impact: 'One user overwrites the other, last-writer-wins causes data loss', mitigation: 'Operational Transform (OT) or CRDT for real-time co-editing, conflict detection with merge UI for async edits' },
+      { scenario: 'User uploads a 10GB file on an unstable mobile connection', impact: 'Upload fails repeatedly, wasting bandwidth and frustrating user', mitigation: 'Resumable chunked uploads (tus protocol), upload progress persisted server-side, resume from last successful chunk' },
+      { scenario: 'Deeply nested folder with thousands of files is shared with new permission', impact: 'Permission propagation takes minutes, inconsistent access during propagation', mitigation: 'Lazy permission evaluation at access time using inheritance chain, cache materialized permissions with async background refresh' },
+      { scenario: 'User deletes a shared folder that others are actively working in', impact: 'Collaborators lose access mid-work, unsaved changes lost', mitigation: 'Soft delete with 30-day recovery, notify active collaborators before permanent deletion, lock files with active editors' },
+      { scenario: 'Storage quota exceeded during a sync operation with many pending uploads', impact: 'Partial sync leaves desktop folder and cloud out of sync', mitigation: 'Pre-check quota before sync batch, prioritize by file modification time, clear notification of which files failed' },
+    ],
+    tradeoffs: [
+      { decision: 'Block-level deduplication vs file-level deduplication', pros: 'Block-level saves more storage (shared blocks across files); file-level is simpler', cons: 'Block-level adds computational overhead for chunking/hashing; file-level misses partial-overlap savings', recommendation: 'Block-level dedup for storage efficiency (like Dropbox), with content-defined chunking (Rabin fingerprint)' },
+      { decision: 'Sync-on-write vs sync-on-demand for desktop client', pros: 'Sync-on-write keeps everything current; sync-on-demand saves bandwidth and disk', cons: 'Sync-on-write wastes bandwidth on rarely accessed files; sync-on-demand has latency on first access', recommendation: 'Smart sync: sync recent/frequent files eagerly, placeholder files for rest with on-demand download' },
+      { decision: 'Full file versioning vs delta/diff versioning', pros: 'Full versioning is simple; delta saves storage dramatically', cons: 'Full versioning wastes storage on large files; delta adds complexity for version reconstruction', recommendation: 'Delta versioning (store binary diffs between versions) with periodic full snapshots for fast reconstruction' },
+      { decision: 'Centralized metadata vs distributed metadata', pros: 'Centralized is consistent and simple to query; distributed scales better', cons: 'Centralized is a bottleneck at scale; distributed complicates operations like search and listing', recommendation: 'Centralized metadata (sharded by user/org) with caching, since metadata operations are much smaller than data operations' },
+    ],
+    layeredDesign: [
+      { name: 'Client Layer', purpose: 'Desktop sync agent, web UI, and mobile apps for file access', components: ['Desktop Sync Engine', 'Web Application', 'Mobile App', 'Chunked Upload Client'] },
+      { name: 'API & Collaboration Layer', purpose: 'File CRUD, sharing, and real-time collaboration', components: ['File API', 'Sharing & Permission Service', 'Real-Time Collab (OT/CRDT)', 'Notification Service'] },
+      { name: 'Storage & Processing Layer', purpose: 'Chunk management, deduplication, and file processing', components: ['Chunk Store', 'Deduplication Engine', 'Thumbnail Generator', 'Virus Scanner'] },
+      { name: 'Data Layer', purpose: 'Metadata storage, search indexing, and object storage', components: ['PostgreSQL (metadata)', 'Elasticsearch (file search)', 'S3/GCS (file chunks)', 'Redis (permission cache)'] },
+    ],
   },
 
   // ─── 7. Shopify ─────────────────────────────────────────────────────
@@ -1660,7 +1778,27 @@ inventory_levels {
       'CDN-first storefront strategy: edge-cached pages with instant purge on changes',
       'Separate checkout service with independent scaling and higher reliability target',
       'Webhook-based app ecosystem with per-store rate limiting to prevent noisy neighbor'
-    ]
+    ],
+
+    edgeCases: [
+      { scenario: 'Merchant installs a buggy app that makes excessive API calls', impact: 'Noisy neighbor degrades platform performance for other merchants', mitigation: 'Per-app and per-store rate limiting, circuit breaker on webhook delivery, app suspension after repeated violations' },
+      { scenario: 'Flash sale by a single large merchant spikes traffic 100x their normal', impact: 'Shared infrastructure overwhelmed, affecting unrelated merchants', mitigation: 'Tenant-aware autoscaling, request queuing with per-merchant fair scheduling, dedicated pools for enterprise merchants' },
+      { scenario: 'Cart abandoned with inventory reserved across multiple warehouse locations', impact: 'Inventory locked in multiple locations, reducing availability for other customers', mitigation: 'Soft reservations with short TTL (10 min), nearest-warehouse-first allocation, release on cart expiry' },
+      { scenario: 'Payment processor returns ambiguous response (timeout)', impact: 'Order status unknown, risk of double-charging or lost payment', mitigation: 'Idempotent payment requests, pending order state with async reconciliation, payment processor query for status resolution' },
+      { scenario: 'Theme/storefront customization causes performance regression', impact: 'Merchant store page load time increases, conversion rate drops', mitigation: 'Sandboxed Liquid template rendering with CPU/memory limits, performance budget warnings in theme editor' },
+    ],
+    tradeoffs: [
+      { decision: 'Multi-tenant shared database vs database-per-tenant', pros: 'Shared DB is cost-efficient; per-tenant gives isolation and independent scaling', cons: 'Shared DB risks noisy neighbors and complicates migrations; per-tenant is expensive and complex to manage', recommendation: 'Shared database with tenant_id partitioning for small/medium stores, dedicated shards for enterprise' },
+      { decision: 'Monolithic storefront vs headless commerce API', pros: 'Monolithic is simpler for merchants; headless enables custom frontends', cons: 'Monolithic limits customization; headless requires technical expertise', recommendation: 'Support both: managed storefront for simplicity, headless API (Storefront API) for advanced merchants' },
+      { decision: 'Synchronous webhook delivery vs event streaming', pros: 'Webhooks are simple and familiar; streaming is reliable and replayable', cons: 'Webhooks fail silently and require retry logic; streaming adds infrastructure complexity', recommendation: 'Webhooks with retry and dead-letter queue, plus event streaming API for apps needing guaranteed delivery' },
+      { decision: 'Server-side rendering vs static generation for storefronts', pros: 'SSR shows real-time data; static generation gives fastest page loads', cons: 'SSR requires compute per request; static generation shows stale data', recommendation: 'Static generation for product pages with ISR (incremental static regeneration) for inventory updates' },
+    ],
+    layeredDesign: [
+      { name: 'Storefront Layer', purpose: 'Customer-facing shopping experience for each merchant', components: ['Storefront Renderer (Liquid)', 'Theme Engine', 'CDN (static assets)', 'Headless Storefront API'] },
+      { name: 'Commerce Logic Layer', purpose: 'Core e-commerce business logic shared across merchants', components: ['Product Service', 'Cart & Checkout Service', 'Order Management', 'Discount Engine'] },
+      { name: 'Platform Services Layer', purpose: 'Cross-cutting services supporting the merchant ecosystem', components: ['Payment Processing', 'Shipping & Fulfillment', 'App/Webhook Platform', 'Analytics Service'] },
+      { name: 'Data & Infrastructure Layer', purpose: 'Multi-tenant data storage and platform infrastructure', components: ['Sharded MySQL (per-tenant)', 'Redis (sessions, caching)', 'Kafka (events)', 'Elasticsearch (product search)'] },
+    ],
   },
 
   // ─── 8. Flash Sale ──────────────────────────────────────────────────
@@ -1895,7 +2033,27 @@ elif remaining < 0:
       'Queue-based admission control to shape traffic into manageable throughput',
       'Multi-layer bot defense: CAPTCHA + rate limiting + behavioral analysis',
       'Expired reservation restock via background worker to prevent inventory loss'
-    ]
+    ],
+
+    edgeCases: [
+      { scenario: 'Inventory count goes negative due to race condition under extreme load', impact: 'More items sold than available, requiring order cancellation and angry customers', mitigation: 'Atomic decrement with check (Redis DECR + Lua script that rejects if below zero), or database row-level locking' },
+      { scenario: 'User holds item in cart but never completes checkout', impact: 'Inventory reserved indefinitely, other users cannot purchase available stock', mitigation: 'Time-limited reservations (5-10 minutes) with background worker releasing expired holds back to available inventory' },
+      { scenario: 'Payment succeeds but order confirmation fails to persist', impact: 'Money charged but no order record, customer support nightmare', mitigation: 'Outbox pattern: write order to DB in same transaction as payment intent, async confirmation via event processor' },
+      { scenario: 'Bot army buys all inventory in milliseconds before real users', impact: 'Legitimate customers never see inventory available, brand reputation damaged', mitigation: 'CAPTCHA at checkout, progressive rate limiting, queue-based access (virtual waiting room), device fingerprinting' },
+      { scenario: 'CDN serves stale page showing items still available after sellout', impact: 'Users attempt purchase of sold-out items, poor experience and wasted server load', mitigation: 'Real-time inventory status via API (not cached page), WebSocket push for stock updates, short TTL on product pages during sales' },
+    ],
+    tradeoffs: [
+      { decision: 'Optimistic vs pessimistic inventory locking', pros: 'Optimistic allows higher concurrency; pessimistic guarantees no oversell', cons: 'Optimistic requires conflict resolution and retries; pessimistic creates bottleneck under load', recommendation: 'Pessimistic locking via Redis atomic operations for flash sales (correctness > throughput)' },
+      { decision: 'Queue-based (waiting room) vs direct access', pros: 'Queue provides fairness and controls load; direct access is simpler', cons: 'Queue adds wait time and complexity; direct access causes thundering herd', recommendation: 'Virtual waiting room for flash sales with randomized queue position to prevent gaming' },
+      { decision: 'Pre-warm inventory in Redis vs read-through from database', pros: 'Pre-warm eliminates cold start; read-through is simpler', cons: 'Pre-warm requires cache invalidation strategy; read-through has first-request latency spike', recommendation: 'Pre-warm Redis with inventory counts before sale starts, use as authoritative counter during sale' },
+      { decision: 'Synchronous payment vs async payment with reservation', pros: 'Sync gives instant confirmation; async reduces checkout latency', cons: 'Sync payment timeout blocks inventory; async requires reservation management', recommendation: 'Reserve inventory first (sync), process payment async with timeout-based release on failure' },
+    ],
+    layeredDesign: [
+      { name: 'Traffic Control Layer', purpose: 'Manage incoming traffic surge and prevent system overload', components: ['Virtual Waiting Room', 'Rate Limiter', 'Bot Detection', 'CDN (static assets)'] },
+      { name: 'Application Layer', purpose: 'Handle product browsing, cart, and checkout logic', components: ['Product Service', 'Cart Service', 'Checkout Orchestrator', 'Session Manager'] },
+      { name: 'Inventory & Payment Layer', purpose: 'Atomic inventory management and payment processing', components: ['Redis Inventory Counter', 'Reservation Manager', 'Payment Gateway Integration', 'Order Writer'] },
+      { name: 'Data & Messaging Layer', purpose: 'Persistent storage and async event processing', components: ['PostgreSQL (orders)', 'Kafka (order events)', 'Notification Service', 'Analytics Pipeline'] },
+    ],
   },
 
   // ─── 9. Digital Wallet ──────────────────────────────────────────────
