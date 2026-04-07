@@ -471,53 +471,47 @@ export default function Blind75Page() {
   /* ────────────────────────────────────────────────────────────────────────── */
 
   return (
-    <div style={{ background: '#f7f8f9', minHeight: '100vh', fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
+    <div style={{ background: 'transparent', minHeight: '100vh' }}>
 
       <SiteNav />
 
-      {/* ═══════════════════════ Hero Section ═══════════════════════ */}
-      <section style={{ paddingTop: '56px' }}>
-        <div
-          style={{
-            background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
-            padding: '64px 0 48px',
-          }}
-        >
-          <div className="max-w-[85%] xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div style={{ maxWidth: '700px' }}>
-              <h1 style={{ fontSize: '42px', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.03em', lineHeight: 1.1, margin: 0 }}>
-                Interview Handbook
-              </h1>
-              <p style={{ fontSize: '17px', color: '#94a3b8', lineHeight: 1.6, marginTop: '16px', marginBottom: 0 }}>
-                75 essential coding problems, {techInterviewTopics.length} algorithm guides, {totalBehavioralQuestions} behavioral questions, and a complete interview cheatsheet — all in one place.
-              </p>
-              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '12px', marginTop: '20px' }}>
-                {[
-                  '75 Problems',
-                  `${techInterviewTopics.length} Algorithms`,
-                  `${totalBehavioralQuestions} Behavioral`,
-                  'Complete Cheatsheet',
-                ].map((stat) => (
-                  <span
-                    key={stat}
-                    style={{ fontSize: '13px', fontWeight: 600, color: '#64748b', background: '#1e293b', border: '1px solid #334155', borderRadius: '20px', padding: '4px 12px' }}
-                  >
-                    {stat}
-                  </span>
-                ))}
+      {/* ═══════════════════════ Header Section ═══════════════════════ */}
+      <div style={{ paddingTop: 56 }}>
+        <div className="max-w-[85%] xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: 32 }}>
+          <div style={{ background: '#ffffff', border: '1px solid #e3e8ee', borderRadius: 16, padding: '24px 28px', marginBottom: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
+              <div>
+                <h1 style={{ fontSize: '28px', fontWeight: 800, color: '#111827', letterSpacing: '-0.02em', lineHeight: 1.2, margin: 0 }}>
+                  Interview Handbook
+                </h1>
+                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px', marginTop: '12px' }}>
+                  {[
+                    { label: '75 Problems', color: '#10b981', bg: '#ecfdf5', border: '#a7f3d0' },
+                    { label: `${techInterviewTopics.length} Algorithms`, color: '#2563eb', bg: '#eff6ff', border: '#bfdbfe' },
+                    { label: `${totalBehavioralQuestions} Behavioral`, color: '#7c3aed', bg: '#faf5ff', border: '#e9d5ff' },
+                    { label: 'Cheatsheet', color: '#d97706', bg: '#fffbeb', border: '#fde68a' },
+                  ].map((stat) => (
+                    <span
+                      key={stat.label}
+                      style={{ fontSize: '12px', fontWeight: 600, color: stat.color, background: stat.bg, border: `1px solid ${stat.border}`, borderRadius: '20px', padding: '3px 10px' }}
+                    >
+                      {stat.label}
+                    </span>
+                  ))}
+                </div>
               </div>
 
-              {/* Progress bar (Blind 75) */}
-              <div style={{ marginTop: '28px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                  <span style={{ fontSize: '14px', fontWeight: 600, color: '#cbd5e1' }}>
-                    {completedCount} / {TOTAL} problems completed
+              {/* Progress */}
+              <div style={{ minWidth: 200, flex: '0 1 260px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                  <span style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>
+                    {completedCount} / {TOTAL} completed
                   </span>
-                  <span style={{ fontSize: '14px', fontWeight: 700, color: '#10b981' }}>
+                  <span style={{ fontSize: '13px', fontWeight: 700, color: '#10b981' }}>
                     {progressPercent}%
                   </span>
                 </div>
-                <div style={{ height: '8px', borderRadius: '4px', background: '#334155', overflow: 'hidden' }}>
+                <div style={{ height: '8px', borderRadius: '4px', background: '#f3f4f6', overflow: 'hidden' }}>
                   <div
                     style={{
                       height: '100%',
@@ -532,12 +526,12 @@ export default function Blind75Page() {
             </div>
           </div>
         </div>
-      </section>
+      </div>
 
       {/* ═══════════════════════ Tab Navigation (sticky) ═══════════════════════ */}
-      <div style={{ background: '#ffffff', borderBottom: '1px solid #e3e8ee', position: 'sticky', top: '56px', zIndex: 30 }}>
+      <div style={{ background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderBottom: '1px solid #e3e8ee', position: 'sticky', top: '56px', zIndex: 30 }}>
         <div className="max-w-[85%] xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div style={{ display: 'flex', gap: '0', overflowX: 'auto', scrollbarWidth: 'none' }} className="b75-pills-scroll">
+          <div style={{ display: 'flex', gap: '4px', overflowX: 'auto', scrollbarWidth: 'none', padding: '8px 0' }} className="b75-pills-scroll">
             {TABS.map((tab) => {
               const isActive = activeTab === tab.key;
               return (
@@ -545,13 +539,13 @@ export default function Blind75Page() {
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key)}
                   style={{
-                    fontSize: '14px',
+                    fontSize: '13px',
                     fontWeight: 600,
-                    padding: '14px 20px',
-                    background: 'transparent',
-                    border: 'none',
-                    borderBottom: isActive ? '2px solid #10b981' : '2px solid transparent',
-                    color: isActive ? '#111827' : '#6b7280',
+                    padding: '7px 16px',
+                    background: isActive ? '#10b981' : 'transparent',
+                    border: isActive ? 'none' : '1px solid transparent',
+                    borderRadius: '20px',
+                    color: isActive ? '#ffffff' : '#6b7280',
                     cursor: 'pointer',
                     transition: 'all 0.15s',
                     whiteSpace: 'nowrap',
@@ -572,7 +566,7 @@ export default function Blind75Page() {
       {activeTab === 'blind75' && (
         <>
           {/* Filter Bar */}
-          <div style={{ background: '#ffffff', borderBottom: '1px solid #e3e8ee' }}>
+          <div style={{ background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', borderBottom: '1px solid #e3e8ee' }}>
             <div className="max-w-[85%] xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" style={{ padding: '12px 0' }}>
               {/* Category pills */}
               <div className="b75-pills-scroll" style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '8px', scrollbarWidth: 'none' }}>
@@ -1795,8 +1789,6 @@ export default function Blind75Page() {
 
       {/* ═══════════════════════ Scoped Styles ═══════════════════════ */}
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Work+Sans:wght@400;500;600;700&display=swap');
-
         .b75-pills-scroll::-webkit-scrollbar {
           display: none;
         }
