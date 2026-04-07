@@ -18,6 +18,7 @@ const PREPARE_ITEMS = [
 
 const PRACTICE_ITEMS = [
   { id: 'practice', label: 'Practice', icon: 'code', href: '/capra/practice' },
+  { id: 'plan', label: 'My Plan', icon: 'calendar', href: '/capra/plan' },
 ];
 
 /**

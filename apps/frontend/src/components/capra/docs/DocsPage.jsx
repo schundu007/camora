@@ -611,143 +611,173 @@ export default function DocsPage({ onBack }) {
                   {activePage === 'overview' && (
                     <>
                       {/* Welcome + Stats */}
-                      <div className="mb-6">
+                      <div className="mb-8">
                         <h1 className="landing-display font-extrabold text-2xl md:text-3xl tracking-tight text-gray-900 mb-2">
                           Welcome back{user?.name ? `, ${user.name.split(' ')[0]}` : ''}
                         </h1>
-                        <p className="text-sm text-gray-500 landing-body">
+                        <p className="text-sm text-gray-500 landing-body mb-5">
                           Your interview preparation dashboard. {overviewTotalTopics}+ topics across {overviewCategories.length} categories.
                         </p>
+
+                        {/* Overall progress stats row */}
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                          {[
+                            { label: 'Total Topics', value: overviewTotalTopics, icon: 'bookOpen', color: '#3b82f6' },
+                            { label: 'Completed', value: overviewTotalCompleted, icon: 'check', color: '#10b981' },
+                            { label: 'Categories', value: overviewCategories.length, icon: 'grid', color: '#8b5cf6' },
+                            { label: 'Progress', value: `${overviewTotalTopics > 0 ? Math.round((overviewTotalCompleted / overviewTotalTopics) * 100) : 0}%`, icon: 'trendingUp', color: '#f59e0b' },
+                          ].map(stat => (
+                            <div key={stat.label} className="rounded-xl border border-[#e3e8ee] bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+                              <div className="flex items-center gap-2 mb-2">
+                                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: `${stat.color}12` }}>
+                                  <Icon name={stat.icon} size={16} style={{ color: stat.color }} />
+                                </div>
+                              </div>
+                              <div className="text-xl font-bold text-gray-900 landing-display">{stat.value}</div>
+                              <div className="text-[11px] text-gray-400 landing-body mt-0.5">{stat.label}</div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
 
                       {/* Progress Tracker — compact, top of page */}
-                      <div className="mb-6">
+                      <div className="mb-8">
                         <ProgressTracker />
                       </div>
 
-                      {/* Stats merged into ProgressTracker above */}
-
                       {/* Category Cards Grid */}
-                      <div className="mb-6">
-                        <h2 className="landing-display font-bold text-lg tracking-tight text-gray-900 mb-3">Categories</h2>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      <div className="mb-8">
+                        <h2 className="section-label mb-3">Categories</h2>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                           {overviewCategories.map(cat => (
-                            <a key={cat.id} href={`/capra/prepare/${cat.href}`} className="group rounded-xl border border-[#e3e8ee] bg-white p-5 hover:border-[#d0d5dd] shadow-[0_1px_3px_rgba(0,0,0,0.04)] transition-all" style={{ borderLeft: `4px solid ${cat.color}` }}>
-                              <div className="flex items-center gap-3 mb-3">
-                                <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-white">
-                                  <Icon name={cat.icon} size={20} style={{ color: cat.color }} />
+                            <a
+                              key={cat.id}
+                              href={`/capra/prepare/${cat.href}`}
+                              className="group relative rounded-xl border border-[#e3e8ee] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] transition-all duration-200 hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] hover:border-[#d0d5dd] hover:-translate-y-0.5"
+                              style={{ borderLeft: `4px solid ${cat.color}` }}
+                            >
+                              <div className="flex items-start justify-between mb-4">
+                                <div className="w-11 h-11 rounded-xl flex items-center justify-center" style={{ background: `${cat.color}14` }}>
+                                  <Icon name={cat.icon} size={22} style={{ color: cat.color }} />
                                 </div>
-                                <div>
-                                  <h3 className="text-sm font-semibold text-gray-900 landing-display group-hover:text-emerald-600 transition-colors">{cat.title}</h3>
-                                  <span className="text-[10px] text-gray-400 landing-mono">{cat.count} topics</span>
-                                </div>
+                                <span
+                                  className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold landing-mono"
+                                  style={{ background: `${cat.color}14`, color: cat.color }}
+                                >
+                                  {cat.count} topics
+                                </span>
                               </div>
+                              <h3 className="text-[15px] font-bold text-gray-900 landing-display mb-3 group-hover:text-emerald-600 transition-colors">{cat.title}</h3>
                               {/* Progress bar */}
-                              <div className="w-full h-1.5 rounded-full bg-gray-100 overflow-hidden">
-                                <div className="h-full rounded-full transition-all" style={{ width: `${cat.progress}%`, background: cat.color }} />
+                              <div className="w-full h-2 rounded-full bg-gray-100 overflow-hidden">
+                                <div
+                                  className="h-full rounded-full transition-all duration-500"
+                                  style={{ width: `${cat.progress}%`, background: `linear-gradient(90deg, ${cat.color}, ${cat.color}cc)` }}
+                                />
                               </div>
-                              <div className="flex justify-between mt-1.5">
-                                <span className="text-[10px] text-gray-400 landing-mono">{cat.completed}/{cat.count} done</span>
-                                <span className="text-[10px] font-medium landing-mono" style={{ color: cat.color }}>{cat.progress}%</span>
+                              <div className="flex justify-between mt-2">
+                                <span className="text-[11px] text-gray-500 landing-body font-medium">{cat.completed}/{cat.count} done</span>
+                                <span className="text-[11px] font-semibold landing-mono" style={{ color: cat.color }}>{cat.progress}%</span>
                               </div>
                             </a>
                           ))}
                         </div>
                       </div>
 
-                      {/* Progress Tracker — moved here, after categories */}
-
-                      {/* Recommended Learning Path */}
-                      <div className="mb-6">
-                        <h2 className="landing-display font-bold text-lg tracking-tight text-gray-900 mb-3">Recommended Path</h2>
-                        <div className="rounded-xl border border-[#e3e8ee] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-                            {[
-                              { step: '01', title: 'DSA Fundamentals', desc: 'Arrays, strings, trees, graphs', href: '/capra/prepare/coding', accent: 'emerald' },
-                              { step: '02', title: 'System Design', desc: 'Scalability, databases, caching', href: '/capra/prepare/system-design', accent: 'blue' },
-                              { step: '03', title: 'Low-Level Design', desc: 'OOP, SOLID, design patterns', href: '/capra/prepare/low-level-design', accent: 'purple' },
-                              { step: '04', title: 'Behavioral', desc: 'STAR method, leadership stories', href: '/capra/prepare/behavioral', accent: 'amber' },
-                            ].map((phase) => (
-                              <a key={phase.step} href={phase.href} className="group p-3 rounded-lg border border-white/60 bg-white/70 hover:bg-white hover:shadow-sm transition-all">
-                                <span className="landing-mono text-2xl font-black text-gray-200 group-hover:text-emerald-300 transition-colors">{phase.step}</span>
-                                <div className="text-gray-900 font-semibold text-sm landing-display mt-1 mb-0.5">{phase.title}</div>
-                                <div className="text-gray-500 text-xs landing-body">{phase.desc}</div>
-                              </a>
-                            ))}
-                          </div>
+                      {/* Recommended Learning Path — horizontal timeline */}
+                      <div className="mb-8">
+                        <h2 className="section-label mb-3">Recommended Path</h2>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-0">
+                          {[
+                            { step: 1, title: 'DSA Fundamentals', desc: 'Arrays, strings, trees, graphs', href: '/capra/prepare/coding', icon: 'cpu', color: '#10b981' },
+                            { step: 2, title: 'System Design', desc: 'Scalability, databases, caching', href: '/capra/prepare/system-design', icon: 'systemDesign', color: '#3b82f6' },
+                            { step: 3, title: 'Low-Level Design', desc: 'OOP, SOLID, design patterns', href: '/capra/prepare/low-level-design', icon: 'layers', color: '#8b5cf6' },
+                            { step: 4, title: 'Behavioral', desc: 'STAR method, leadership stories', href: '/capra/prepare/behavioral', icon: 'users', color: '#f59e0b' },
+                          ].map((phase, idx) => (
+                            <a key={phase.step} href={phase.href} className="group relative">
+                              {/* Connector line between steps (hidden on mobile, hidden for last item) */}
+                              {idx < 3 && (
+                                <div className="hidden md:block absolute top-6 left-[calc(50%+20px)] w-[calc(100%-40px)] h-0.5 bg-gray-200 z-0" />
+                              )}
+                              <div className="relative z-10 flex flex-col items-center text-center p-4 rounded-xl transition-all duration-200 hover:-translate-y-0.5 hover:bg-white hover:shadow-[0_4px_16px_rgba(0,0,0,0.06)]">
+                                {/* Step number circle */}
+                                <div
+                                  className="w-12 h-12 rounded-full flex items-center justify-center mb-3 border-2 transition-colors duration-200"
+                                  style={{ borderColor: phase.color, background: `${phase.color}10` }}
+                                >
+                                  <span className="text-sm font-bold landing-mono" style={{ color: phase.color }}>{phase.step}</span>
+                                </div>
+                                <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-2" style={{ background: `${phase.color}14` }}>
+                                  <Icon name={phase.icon} size={16} style={{ color: phase.color }} />
+                                </div>
+                                <div className="text-sm font-bold text-gray-900 landing-display mb-1 group-hover:text-emerald-600 transition-colors">{phase.title}</div>
+                                <div className="text-xs text-gray-500 landing-body leading-relaxed">{phase.desc}</div>
+                              </div>
+                            </a>
+                          ))}
                         </div>
                       </div>
 
                       {/* Interview Resources */}
-                      <div className="mb-6">
-                        <h2 className="landing-display font-bold text-lg tracking-tight text-gray-900 mb-3">Interview Resources</h2>
-                        <div className="rounded-xl border border-[#e3e8ee] bg-white overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-                          <a
-                            href="/capra/prepare?page=coding"
-                            className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-all border-b border-gray-100 group"
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-cyan-50">
-                                <Icon name="checklist" size={13} style={{ color: '#06b6d4' }} />
+                      <div className="mb-8">
+                        <h2 className="section-label mb-3">Interview Resources</h2>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                          {[
+                            { href: '/capra/prepare?page=coding', icon: 'checklist', color: '#06b6d4', bg: 'bg-cyan-50', title: 'Interview Cheatsheet', desc: '17 topics covering 117 curated questions from top tech companies', badge: '117 Q' },
+                            { href: '/handbook', icon: 'code', color: '#10b981', bg: 'bg-emerald-50', title: 'Blind 75', desc: 'The 75 essential LeetCode problems every engineer should master', badge: '75 problems' },
+                            { href: '/capra/practice', icon: 'behavioral', color: '#f59e0b', bg: 'bg-amber-50', title: 'Behavioral Questions', desc: 'Practice STAR-method answers for behavioral and leadership interviews', badge: 'Practice' },
+                          ].map(resource => (
+                            <a
+                              key={resource.title}
+                              href={resource.href}
+                              className="group rounded-xl border border-[#e3e8ee] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] transition-all duration-200 hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] hover:border-[#d0d5dd] hover:-translate-y-0.5"
+                            >
+                              <div className="flex items-start justify-between mb-3">
+                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${resource.bg}`}>
+                                  <Icon name={resource.icon} size={20} style={{ color: resource.color }} />
+                                </div>
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold landing-mono" style={{ background: `${resource.color}14`, color: resource.color }}>
+                                  {resource.badge}
+                                </span>
                               </div>
-                              <div>
-                                <span className="text-sm font-medium text-gray-900 landing-body group-hover:text-emerald-600 transition-colors">Interview Cheatsheet</span>
-                                <span className="text-xs text-gray-400 landing-body ml-2">17 topics, 117 questions</span>
+                              <h3 className="text-sm font-bold text-gray-900 landing-display mb-1 group-hover:text-emerald-600 transition-colors">{resource.title}</h3>
+                              <p className="text-xs text-gray-500 landing-body leading-relaxed mb-3">{resource.desc}</p>
+                              <div className="flex items-center gap-1 text-xs font-medium text-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity landing-body">
+                                <span>Explore</span>
+                                <Icon name="arrowRight" size={12} />
                               </div>
-                            </div>
-                            <Icon name="chevronRight" size={12} className="text-gray-300 group-hover:text-emerald-500 transition-all" />
-                          </a>
-                          <a
-                            href="/handbook"
-                            className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-all border-b border-gray-100 group"
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-emerald-50">
-                                <Icon name="code" size={13} style={{ color: '#10b981' }} />
-                              </div>
-                              <div>
-                                <span className="text-sm font-medium text-gray-900 landing-body group-hover:text-emerald-600 transition-colors">Blind 75</span>
-                                <span className="text-xs text-gray-400 landing-body ml-2">75 essential coding problems</span>
-                              </div>
-                            </div>
-                            <Icon name="chevronRight" size={12} className="text-gray-300 group-hover:text-emerald-500 transition-all" />
-                          </a>
-                          <a
-                            href="/capra/practice"
-                            className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-all group"
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-amber-50">
-                                <Icon name="behavioral" size={13} style={{ color: '#f59e0b' }} />
-                              </div>
-                              <div>
-                                <span className="text-sm font-medium text-gray-900 landing-body group-hover:text-emerald-600 transition-colors">Behavioral Questions</span>
-                                <span className="text-xs text-gray-400 landing-body ml-2">Practice for behavioral interviews</span>
-                              </div>
-                            </div>
-                            <Icon name="chevronRight" size={12} className="text-gray-300 group-hover:text-emerald-500 transition-all" />
-                          </a>
+                            </a>
+                          ))}
                         </div>
                       </div>
 
                       {/* Interview Cheatsheet — Before / During / After */}
-                      <div className="mb-6">
-                        <h2 className="landing-display font-bold text-lg tracking-tight text-gray-900 mb-3">Interview Cheatsheet</h2>
+                      <div className="mb-8">
+                        <h2 className="section-label mb-3">Interview Cheatsheet</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                           {[
-                            { title: 'Before the Interview', items: interviewCheatsheet.before, icon: 'clipboard', color: '#06b6d4' },
-                            { title: 'During the Interview', items: interviewCheatsheet.during, icon: 'play', color: '#10b981' },
-                            { title: 'After the Interview', items: interviewCheatsheet.after, icon: 'check', color: '#8b5cf6' },
+                            { title: 'Before the Interview', items: interviewCheatsheet.before, icon: 'clipboard', color: '#06b6d4', step: 'Prep' },
+                            { title: 'During the Interview', items: interviewCheatsheet.during, icon: 'play', color: '#10b981', step: 'Execute' },
+                            { title: 'After the Interview', items: interviewCheatsheet.after, icon: 'check', color: '#8b5cf6', step: 'Follow up' },
                           ].map((card) => (
-                            <div key={card.title} className="rounded-xl border border-[#e3e8ee] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-                              <div className="flex items-center gap-2 mb-3">
-                                <Icon name={card.icon} size={14} style={{ color: card.color }} />
-                                <h3 className="landing-display text-sm font-bold text-gray-900">{card.title}</h3>
+                            <div
+                              key={card.title}
+                              className="rounded-xl border border-[#e3e8ee] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] transition-all duration-200 hover:shadow-[0_4px_16px_rgba(0,0,0,0.06)]"
+                              style={{ borderTop: `3px solid ${card.color}` }}
+                            >
+                              <div className="flex items-center gap-3 mb-4">
+                                <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: `${card.color}14` }}>
+                                  <Icon name={card.icon} size={18} style={{ color: card.color }} />
+                                </div>
+                                <div>
+                                  <h3 className="landing-display text-sm font-bold text-gray-900">{card.title}</h3>
+                                  <span className="text-[10px] font-semibold landing-mono" style={{ color: card.color }}>{card.step}</span>
+                                </div>
                               </div>
-                              <div className="flex flex-col gap-2">
+                              <div className="flex flex-col gap-2.5">
                                 {card.items.map((item, idx) => (
-                                  <label key={idx} className="flex items-start gap-2 text-xs text-gray-600 landing-body cursor-pointer">
-                                    <input type="checkbox" className="mt-0.5 shrink-0" style={{ accentColor: card.color }} />
+                                  <label key={idx} className="flex items-start gap-2.5 text-xs text-gray-600 landing-body cursor-pointer group/item hover:text-gray-900 transition-colors">
+                                    <input type="checkbox" className="mt-0.5 shrink-0 w-3.5 h-3.5 rounded" style={{ accentColor: card.color }} />
                                     <span>{item}</span>
                                   </label>
                                 ))}
@@ -767,25 +797,33 @@ export default function DocsPage({ onBack }) {
                           .filter(Boolean);
                         if (recentItems.length === 0) return null;
                         return (
-                          <div className="mb-6">
-                            <h2 className="landing-display font-bold text-lg tracking-tight text-gray-900 mb-3">Continue Where You Left Off</h2>
+                          <div className="mb-8">
+                            <h2 className="section-label mb-3">Continue Where You Left Off</h2>
                             <div className="rounded-xl border border-[#e3e8ee] bg-white overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
                               {recentItems.map((topic) => (
                                 <a
                                   key={topic.id}
                                   href={`/capra/prepare?topic=${topic.id}`}
-                                  className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-all border-b border-gray-100 last:border-0 group"
+                                  className="flex items-center justify-between px-5 py-3.5 hover:bg-gray-50/80 transition-all border-b border-gray-100 last:border-0 group"
                                 >
                                   <div className="flex items-center gap-3">
-                                    <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `${topic.color}12` }}>
-                                      <Icon name={topic.icon} size={13} style={{ color: topic.color }} />
+                                    <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `${topic.color}14` }}>
+                                      <Icon name={topic.icon} size={16} style={{ color: topic.color }} />
                                     </div>
-                                    <span className="text-sm font-medium text-gray-900 landing-body group-hover:text-emerald-600 transition-colors">{topic.title}</span>
+                                    <span className="text-sm font-semibold text-gray-900 landing-body group-hover:text-emerald-600 transition-colors">{topic.title}</span>
                                   </div>
-                                  <div className="flex items-center gap-1.5 flex-shrink-0">
-                                    {starredTopics[topic.id] && <Icon name="star5" size={10} className="text-yellow-500" />}
-                                    {completedTopics[topic.id] && <Icon name="check" size={10} className="text-emerald-500" />}
-                                    <Icon name="chevronRight" size={12} className="text-gray-300 group-hover:text-emerald-500 transition-all" />
+                                  <div className="flex items-center gap-2 flex-shrink-0">
+                                    {starredTopics[topic.id] && (
+                                      <span className="w-5 h-5 rounded-full bg-yellow-50 flex items-center justify-center">
+                                        <Icon name="star5" size={10} className="text-yellow-500" />
+                                      </span>
+                                    )}
+                                    {completedTopics[topic.id] && (
+                                      <span className="w-5 h-5 rounded-full bg-emerald-50 flex items-center justify-center">
+                                        <Icon name="check" size={10} className="text-emerald-500" />
+                                      </span>
+                                    )}
+                                    <Icon name="chevronRight" size={14} className="text-gray-300 group-hover:text-emerald-500 group-hover:translate-x-0.5 transition-all" />
                                   </div>
                                 </a>
                               ))}

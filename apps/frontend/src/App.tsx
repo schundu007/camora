@@ -19,9 +19,11 @@ const CapraPrepare = lazy(() => import('./pages/capra/PreparePage'));
 const CapraOnboarding = lazy(() => import('./pages/capra/OnboardingPage'));
 const CapraLanding = lazy(() => import('./pages/capra/CapraLandingPage'));
 const CompanyPrepPage = lazy(() => import('./pages/capra/CompanyPrepPage'));
+const PrepPlanPage = lazy(() => import('./pages/capra/PrepPlanPage'));
 const JobsPage = lazy(() => import('./pages/JobsPage'));
 const JobPrepPage = lazy(() => import('./pages/JobPrepPage'));
 const SignupPage = lazy(() => import('./pages/SignupPage'));
+const ReferralLandingPage = lazy(() => import('./pages/ReferralLandingPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 const BrandPage = lazy(() => import('./pages/BrandPage'));
 const Blind75Page = lazy(() => import('./pages/Blind75Page'));
@@ -158,6 +160,7 @@ export function App() {
           <Route path="/capra/prep" element={<ProtectedRoute><CapraDashboard /></ProtectedRoute>} />
           <Route path="/capra/practice" element={<ProtectedRoute><CapraPractice /></ProtectedRoute>} />
           <Route path="/capra/prepare/*" element={<ProtectedRoute><CapraPrepare /></ProtectedRoute>} />
+          <Route path="/capra/plan" element={<ProtectedRoute><PrepPlanPage /></ProtectedRoute>} />
           <Route path="/capra/onboarding" element={<ProtectedRoute><CapraOnboarding /></ProtectedRoute>} />
           <Route path="/capra/landing" element={<CapraLanding />} />
 
@@ -169,6 +172,9 @@ export function App() {
           <Route path="/handbook/:id/solution" element={<ProtectedRoute><Blind75PracticePage /></ProtectedRoute>} />
           <Route path="/problems/:slug" element={<ProtectedRoute><CapraDashboard /></ProtectedRoute>} />
           <Route path="/onboarding" element={<ProtectedRoute><CapraOnboarding /></ProtectedRoute>} />
+
+          {/* ── Referral ────────────────────────────── */}
+          <Route path="/r/:code" element={<ReferralLandingPage />} />
 
           {/* ── Brand ────────────────────────────────── */}
           <Route path="/brand" element={<BrandPage />} />

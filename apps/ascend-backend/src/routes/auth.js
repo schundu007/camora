@@ -104,6 +104,10 @@ router.get('/google/callback', async (req, res) => {
         [gUser.email, gUser.name || gUser.email, gUser.picture || null, 'google']
       );
       userId = insertResult.rows[0].id;
+
+      // Generate referral code for new user
+      const refCode = Math.random().toString(36).substring(2, 10);
+      await query('UPDATE users SET referral_code = $1 WHERE id = $2', [refCode, userId]);
     } else {
       userId = userResult.rows[0].id;
       onboardingCompleted = userResult.rows[0].onboarding_completed || false;

@@ -34,6 +34,8 @@ import companyPrepsRouter from './routes/companyPreps.js';
 import extensionRouter from './routes/extension.js';
 import jobAnalyzeRouter from './routes/jobAnalyze.js';
 import topicReadsRouter from './routes/topicReads.js';
+import referralRouter from './routes/referral.js';
+import interviewCountdownRouter from './routes/interviewCountdown.js';
 
 import { authenticate } from './middleware/authenticate.js';
 
@@ -84,6 +86,55 @@ async function runMigrations() {
     )`);
     await query('CREATE INDEX IF NOT EXISTS idx_topic_reads_user_cat ON ascend_topic_reads(user_id, category)');
     console.log('[Migrations] Topic reads table ensured');
+
+    // Sprint 1: Referral system
+    await query('ALTER TABLE users ADD COLUMN IF NOT EXISTS referral_code VARCHAR(8) UNIQUE');
+    await query('ALTER TABLE users ADD COLUMN IF NOT EXISTS referred_by INTEGER');
+    await query('CREATE INDEX IF NOT EXISTS idx_users_referral_code ON users(referral_code)');
+
+    await query(`CREATE TABLE IF NOT EXISTS ascend_referrals (
+      id SERIAL PRIMARY KEY,
+      referrer_id INTEGER NOT NULL,
+      referred_id INTEGER NOT NULL,
+      status VARCHAR(20) NOT NULL DEFAULT 'pending',
+      reward_type VARCHAR(20) DEFAULT 'credits',
+      reward_amount INTEGER DEFAULT 50,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      UNIQUE(referrer_id, referred_id)
+    )`);
+
+    // Backfill referral codes for existing users
+    await query(`UPDATE users SET referral_code = SUBSTR(MD5(RANDOM()::TEXT || id::TEXT), 1, 8) WHERE referral_code IS NULL`);
+
+    // Sprint 2: Interview countdown
+    await query('ALTER TABLE users ADD COLUMN IF NOT EXISTS interview_date DATE');
+    await query('ALTER TABLE users ADD COLUMN IF NOT EXISTS target_company VARCHAR(100)');
+    await query('ALTER TABLE users ADD COLUMN IF NOT EXISTS target_role VARCHAR(100)');
+
+    await query(`CREATE TABLE IF NOT EXISTS ascend_prep_plans (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL,
+      interview_date DATE NOT NULL,
+      target_company VARCHAR(100),
+      target_role VARCHAR(100),
+      plan_data JSONB NOT NULL,
+      total_days INTEGER NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      updated_at TIMESTAMPTZ DEFAULT NOW(),
+      UNIQUE(user_id)
+    )`);
+
+    await query(`CREATE TABLE IF NOT EXISTS ascend_prep_progress (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL,
+      plan_id INTEGER NOT NULL,
+      task_id VARCHAR(100) NOT NULL,
+      completed BOOLEAN DEFAULT false,
+      completed_at TIMESTAMPTZ,
+      UNIQUE(user_id, plan_id, task_id)
+    )`);
+
+    console.log('[Migrations] Referral + Interview countdown tables ensured');
   } catch (err) {
     console.warn('[Migrations] Failed to run onboarding migration:', err.message);
   }
@@ -404,6 +455,12 @@ app.use('/api/credits', apiLimiter, creditsRouter);
 app.use('/api/company-preps', apiLimiter, companyPrepsRouter);
 app.use('/api/usage', apiLimiter, usageRouter);
 app.use('/api/topic-reads', apiLimiter, topicReadsRouter);
+
+// Referral routes (some public, some jwtAuth — handled internally)
+app.use('/api/referral', apiLimiter, referralRouter);
+
+// Interview countdown routes (all require auth)
+app.use('/api/interview', authenticate, apiLimiter, interviewCountdownRouter);
 
 // Job URL analysis (scrape + AI analysis) — auth required, AI rate limit
 app.use('/api/job-analyze', authenticate, aiLimiter, jobAnalyzeRouter);
