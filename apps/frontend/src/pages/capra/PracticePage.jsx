@@ -83,7 +83,7 @@ const COMPANIES = [
   { id: 'netflix', label: 'Netflix', color: '#E50914' },
 ];
 
-const DIMENSION_LABELS = ['Problem Solving', 'System Design', 'Data Structures', 'Communication', 'Time Mgmt'];
+const DIMENSION_LABELS = ['Solving', 'Design', 'DSA', 'Comms', 'Time'];
 const DIMENSION_KEYS = ['problemSolving', 'systemDesign', 'dataStructures', 'communication', 'timeManagement'];
 
 const navLinks = [
@@ -675,53 +675,63 @@ export default function PracticePage() {
                 </div>
               </div>
 
-              {/* Readiness Dashboard — compact */}
-              <div style={{ background: '#fff', border: '1px solid #e3e8ee', borderRadius: 16, padding: '16px 20px', marginBottom: 16, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-                <div style={{ display: 'flex', gap: 20, alignItems: 'center', flexWrap: 'wrap' }}>
-                  {/* Radar chart — smaller */}
-                  <RadarChart values={dimValues} labels={DIMENSION_LABELS} size={150} />
-
+              {/* Readiness Dashboard */}
+              <div style={{ background: '#fff', border: '1px solid #e3e8ee', borderRadius: 16, padding: 20, marginBottom: 16, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+                <h2 className="practice-display" style={{ fontSize: 16, fontWeight: 700, color: '#111827', margin: '0 0 14px' }}>Interview Readiness</h2>
+                {/* Top: Readiness score + category bars */}
+                <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr', gap: 24, alignItems: 'center', marginBottom: 14 }}>
+                  {/* Big readiness number */}
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ position: 'relative', width: 100, height: 100, margin: '0 auto' }}>
+                      <svg width={100} height={100} style={{ transform: 'rotate(-90deg)' }}>
+                        <circle cx={50} cy={50} r={42} fill="none" stroke="#f3f4f6" strokeWidth={8} />
+                        <circle cx={50} cy={50} r={42} fill="none" stroke={readiness >= 70 ? '#10b981' : readiness >= 40 ? '#f59e0b' : '#ef4444'} strokeWidth={8} strokeDasharray={264} strokeDashoffset={264 - (readiness / 100) * 264} strokeLinecap="round" style={{ transition: 'stroke-dashoffset 0.8s ease' }} />
+                      </svg>
+                      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                        <span className="practice-display" style={{ fontSize: 26, fontWeight: 800, color: '#111827', lineHeight: 1 }}>{readiness}</span>
+                        <span style={{ fontSize: 10, color: '#9ca3af', fontWeight: 500 }}>/ 100</span>
+                      </div>
+                    </div>
+                  </div>
                   {/* Category bars */}
-                  <div style={{ flex: 1, minWidth: 200, maxWidth: 280 }}>
-                    <h2 className="practice-display" style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: '0 0 10px' }}>Interview Readiness</h2>
+                  <div>
                     {CATEGORIES.map(cat => {
                       const s = getCategoryScore(stats, cat);
                       const completed = stats.categories?.[cat]?.completed || 0;
+                      const colors = { coding: '#8b5cf6', 'system-design': '#06b6d4', behavioral: '#f59e0b' };
                       return (
-                        <div key={cat} style={{ marginBottom: 8 }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                              <Icon name={catIcon(cat)} size={12} style={{ color: '#6b7280' }} />
-                              <span style={{ fontSize: 12, fontWeight: 600, color: '#374151' }}>{catLabel(cat)}</span>
-                            </div>
+                        <div key={cat} style={{ marginBottom: 10 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 3 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                              <span style={{ fontSize: 10, color: '#9ca3af' }}>{completed}</span>
-                              <span style={{ fontSize: 12, fontWeight: 700, color: scoreColor(s) }}>{s}%</span>
+                              <div style={{ width: 6, height: 6, borderRadius: 99, background: colors[cat] }} />
+                              <span style={{ fontSize: 13, fontWeight: 600, color: '#111827' }}>{catLabel(cat)}</span>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <span style={{ fontSize: 11, color: '#9ca3af' }}>{completed} done</span>
+                              <span className="practice-mono" style={{ fontSize: 13, fontWeight: 700, color: scoreColor(s), minWidth: 32, textAlign: 'right' }}>{s}%</span>
                             </div>
                           </div>
-                          <div style={{ height: 4, borderRadius: 99, background: '#f3f4f6', overflow: 'hidden' }}>
-                            <div style={{ height: '100%', borderRadius: 99, background: s >= 70 ? '#10b981' : s >= 40 ? '#f59e0b' : '#ef4444', width: `${s}%`, transition: 'width 0.4s' }} />
+                          <div style={{ height: 6, borderRadius: 99, background: '#f3f4f6', overflow: 'hidden' }}>
+                            <div style={{ height: '100%', borderRadius: 99, background: colors[cat], width: `${Math.max(s, 2)}%`, transition: 'width 0.6s ease', opacity: s > 0 ? 1 : 0.3 }} />
                           </div>
                         </div>
                       );
                     })}
                   </div>
-
-                  {/* Stats — inline row */}
-                  <div style={{ display: 'flex', gap: 6 }}>
-                    {[
-                      { label: 'Done', value: stats.totalCompleted || 0, icon: 'check' },
-                      { label: 'Streak', value: `${stats.streak || 0}d`, icon: 'streak' },
-                      { label: 'Best', value: `${stats.bestScore || 0}%`, icon: 'trophy' },
-                      { label: 'Avg', value: formatTime(Math.round(CATEGORIES.reduce((a, c) => a + (stats.categories?.[c]?.avgTime || 0), 0) / 3)), icon: 'timer' },
-                    ].map(s => (
-                      <div key={s.label} style={{ textAlign: 'center', padding: '6px 10px', background: '#fafbfc', border: '1px solid #f0f1f3', borderRadius: 8, minWidth: 56 }}>
-                        <Icon name={s.icon} size={12} style={{ color: '#9ca3af', marginBottom: 2, display: 'inline-block' }} />
-                        <div style={{ fontSize: 15, fontWeight: 700, color: '#111827' }}>{s.value}</div>
-                        <div style={{ fontSize: 9, color: '#9ca3af', fontWeight: 500 }}>{s.label}</div>
-                      </div>
-                    ))}
-                  </div>
+                </div>
+                {/* Bottom: Stats row */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, borderTop: '1px solid #f3f4f6', paddingTop: 12 }}>
+                  {[
+                    { label: 'Completed', value: stats.totalCompleted || 0, color: '#10b981' },
+                    { label: 'Day Streak', value: `${stats.streak || 0}`, color: '#f59e0b' },
+                    { label: 'Best Score', value: `${stats.bestScore || 0}%`, color: '#8b5cf6' },
+                    { label: 'Avg Time', value: formatTime(Math.round(CATEGORIES.reduce((a, c) => a + (stats.categories?.[c]?.avgTime || 0), 0) / 3)), color: '#06b6d4' },
+                  ].map(s => (
+                    <div key={s.label} style={{ textAlign: 'center' }}>
+                      <div className="practice-mono" style={{ fontSize: 20, fontWeight: 700, color: '#111827' }}>{s.value}</div>
+                      <div style={{ fontSize: 10, color: '#9ca3af', fontWeight: 500, marginTop: 1 }}>{s.label}</div>
+                    </div>
+                  ))}
                 </div>
               </div>
 
