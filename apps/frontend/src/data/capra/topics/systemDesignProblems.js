@@ -5712,7 +5712,26 @@ queue_positions {
         'Seat hold with TTL: Release unpurchased seats after timeout',
         'Distributed locks: Redis SETNX for seat reservation',
         'Eventual consistency for sold counts, strong consistency for bookings'
-      ]
+      ],
+      edgeCases: [
+        { scenario: 'Two users select and pay for the same seat simultaneously', impact: 'Double-booking of a single seat, one customer must be refunded and relocated', mitigation: 'Pessimistic lock on seat selection with SETNX in Redis, 10-minute hold TTL, only one checkout can proceed per seat' },
+        { scenario: 'Millions of users entering virtual queue for popular concert', impact: 'Queue service overwhelmed, users see errors or get unfair positions', mitigation: 'Pre-assign random queue positions via lottery, CDN-cached waiting room page, reveal queue position only when close to front' },
+        { scenario: 'Payment timeout during seat checkout hold window', impact: 'Seat held but payment never completes, blocking seat from other buyers until TTL expires', mitigation: 'Short hold TTL (5-10 minutes), async payment with webhook confirmation, release seat immediately on payment failure' },
+        { scenario: 'Scalper bots automating bulk seat purchases', impact: 'Genuine fans unable to purchase tickets, seats resold at inflated prices', mitigation: 'CAPTCHA at checkout, device fingerprinting, purchase limits per account, verified fan presale queues' },
+        { scenario: 'Event cancellation requiring mass refund of 50K+ tickets', impact: 'Refund processing overwhelms payment system, customer support flooded', mitigation: 'Batch refund processing with async queue, proactive email notification, self-service refund portal, stagger refund batches' },
+      ],
+      tradeoffs: [
+        { decision: 'Pessimistic locking vs optimistic concurrency for seat booking', pros: 'Pessimistic prevents any double-booking; optimistic allows higher throughput with retry', cons: 'Pessimistic creates lock contention during high-demand events; optimistic increases failed checkout attempts', recommendation: 'Pessimistic locking for seat-specific booking with short TTL, optimistic for general admission' },
+        { decision: 'Virtual queue vs first-come-first-served', pros: 'Virtual queue provides fair access and controlled load; FCFS is simpler to implement', cons: 'Virtual queue adds waiting time and complexity; FCFS crashes under traffic spikes', recommendation: 'Virtual queue for high-demand events (>10x capacity), FCFS for regular events' },
+        { decision: 'Real-time seat map vs cached availability', pros: 'Real-time shows exact available seats; cached reduces DB load significantly', cons: 'Real-time creates read hot spots on popular events; cached may show phantom availability', recommendation: 'Cached availability for browsing with real-time validation at selection and checkout' },
+        { decision: 'Centralized vs distributed inventory management', pros: 'Centralized guarantees no overselling; distributed scales across regions', cons: 'Centralized is a single point of failure; distributed risks inventory inconsistency', recommendation: 'Centralized with Redis for hot events, partitioned by venue/section for parallelism' },
+      ],
+      layeredDesign: [
+        { name: 'User-Facing Layer', purpose: 'Serve event discovery, seat maps, and manage virtual waiting room', components: ['Event Catalog API', 'Seat Map Renderer', 'Virtual Queue Service', 'CDN'] },
+        { name: 'Booking & Inventory Layer', purpose: 'Handle seat reservation, hold management, and inventory consistency', components: ['Booking Service', 'Seat Lock Manager (Redis)', 'Inventory Service', 'Hold TTL Manager'] },
+        { name: 'Payment & Fulfillment Layer', purpose: 'Process payments, issue tickets, and handle refunds', components: ['Payment Gateway', 'Ticket Issuer', 'QR Code Generator', 'Refund Service'] },
+        { name: 'Data & Analytics Layer', purpose: 'Store event data, monitor sales velocity, and detect fraud', components: ['Event DB (PostgreSQL)', 'Sales Analytics', 'Fraud Detection', 'Notification Service'] },
+      ],
     },
     {
       id: 'typeahead',
@@ -6024,7 +6043,25 @@ Search Logs → Kafka → Flink → Aggregator → Trie Updater
         'Rank by: frequency, recency, personalization',
         'Edge caching for common prefixes',
         'Update suggestions from search analytics pipeline'
-      ]
+      ],
+      edgeCases: [
+        { scenario: 'User types faster than suggestion API can respond', impact: 'Stale suggestions appear for previous prefix, flickering UI as results arrive out of order', mitigation: 'Debounce requests (100-200ms), cancel in-flight requests when new keystroke arrives, sequence number to discard stale responses' },
+        { scenario: 'Trie grows beyond single server memory for large corpus', impact: 'Cannot fit entire suggestion index in memory, service crashes or degrades', mitigation: 'Partition trie by prefix ranges across shards, top-K aggregation from multiple shards, keep only popular prefixes in memory' },
+        { scenario: 'Trending query spike causes stale precomputed suggestions', impact: 'Breaking news topic not appearing in suggestions despite millions searching for it', mitigation: 'Real-time trending overlay on precomputed suggestions, blend batch trie with streaming hot queries updated every minute' },
+        { scenario: 'Offensive or harmful content appearing in suggestions', impact: 'Brand reputation damage, legal liability, user trust erosion', mitigation: 'Blocklist filtering on suggestion output, ML content classifier in ranking pipeline, human review queue for new trending terms' },
+        { scenario: 'Personalized suggestions leaking private search history', impact: 'Shared device shows previous user private searches as suggestions', mitigation: 'Tie personalization to authenticated session only, clear personalized cache on logout, incognito mode disables personalization' },
+      ],
+      tradeoffs: [
+        { decision: 'Trie vs inverted index for prefix matching', pros: 'Trie provides O(k) prefix lookup where k is key length; inverted index leverages existing search infrastructure', cons: 'Trie requires custom implementation and more memory; inverted index prefix queries are slower and less natural', recommendation: 'Trie for dedicated typeahead service, inverted index only if piggy-backing on existing search cluster' },
+        { decision: 'Precomputed top-K per prefix vs on-demand ranking', pros: 'Precomputed gives constant-time lookup; on-demand can incorporate real-time signals', cons: 'Precomputed becomes stale and uses more storage; on-demand adds latency per keystroke', recommendation: 'Precomputed top-K with periodic batch updates, overlay real-time trending for freshness' },
+        { decision: 'Client-side caching vs server-only', pros: 'Client caching eliminates network round-trip for repeated prefixes; server-only ensures fresh results', cons: 'Client cache consumes device memory and may serve stale results; server-only adds latency', recommendation: 'Aggressive client-side caching with short TTL (5 minutes), prefetch suggestions for common next characters' },
+      ],
+      layeredDesign: [
+        { name: 'Client Layer', purpose: 'Capture keystrokes, debounce requests, cache results, and render suggestion dropdown', components: ['Input Handler', 'Request Debouncer', 'Local Cache', 'Suggestion Renderer'] },
+        { name: 'API & Routing Layer', purpose: 'Route prefix queries to correct trie shard with low latency', components: ['API Gateway', 'Shard Router', 'Edge Cache (CDN)'] },
+        { name: 'Suggestion Engine Layer', purpose: 'Store and query prefix-to-suggestion mappings with ranking', components: ['Distributed Trie', 'Ranking Service', 'Personalization Engine', 'Content Filter'] },
+        { name: 'Data Pipeline Layer', purpose: 'Update suggestion corpus from search analytics and trending signals', components: ['Search Log Collector', 'Batch Trie Builder', 'Trending Aggregator', 'Blocklist Manager'] },
+      ],
     },
     {
       id: 'chat-system',
@@ -6376,7 +6413,26 @@ WHERE channel_id = ? AND id > last_read_message_id
         'Search: Index messages in Elasticsearch with channel ACL',
         'Threads: Parent-child message relationship',
         'Read position tracking per user per channel'
-      ]
+      ],
+      edgeCases: [
+        { scenario: 'User is a member of 500+ channels with active conversations', impact: 'Initial load fetches massive amounts of unread state and message previews, causing slow startup', mitigation: 'Lazy-load channels on scroll, only fetch unread counts initially, load full messages on channel open' },
+        { scenario: 'File shared in channel exceeds storage quota during upload', impact: 'Upload fails mid-transfer, partial file left in storage, confusing error for user', mitigation: 'Pre-check quota before upload starts, chunked upload with early abort, cleanup orphaned chunks on failure' },
+        { scenario: 'WebSocket connection drops during message send', impact: 'User unsure if message was delivered, may resend causing duplicates', mitigation: 'Client-side message ID for deduplication, optimistic UI with retry on reconnect, server acknowledges with message ID' },
+        { scenario: 'Bot integration sending thousands of messages per second to a channel', impact: 'Channel becomes unusable for humans, notification storm for all members', mitigation: 'Per-bot rate limiting, message batching for bot outputs, separate bot message feed with opt-in notifications' },
+        { scenario: 'Search across encrypted private channels', impact: 'Server-side search index cannot read encrypted messages, search returns incomplete results', mitigation: 'Client-side search for encrypted channels, encrypted search index with searchable encryption scheme, or disable search for E2E channels' },
+      ],
+      tradeoffs: [
+        { decision: 'WebSocket per channel vs multiplexed WebSocket', pros: 'Per-channel gives isolated connections; multiplexed uses a single connection for all channels', cons: 'Per-channel wastes connections for users in many channels; multiplexed requires message routing logic', recommendation: 'Single multiplexed WebSocket per user with channel subscription management' },
+        { decision: 'Store all message history vs time-limited retention', pros: 'Full history enables unlimited search; time-limited reduces storage costs significantly', cons: 'Full history is expensive at scale; time-limited frustrates users looking for old messages', recommendation: 'Free tier: 90-day retention, paid tier: unlimited history with cold storage archival for old messages' },
+        { decision: 'Fan-out on write vs fan-out on read for channel messages', pros: 'Write fan-out gives instant delivery to all members; read fan-out reduces write amplification', cons: 'Write fan-out is expensive for large channels (10K+ members); read fan-out adds read latency', recommendation: 'Write fan-out for channels under 1K members, read fan-out for large public channels' },
+        { decision: 'Elasticsearch vs custom search for message search', pros: 'Elasticsearch is battle-tested with rich query support; custom search can be optimized for chat-specific patterns', cons: 'Elasticsearch adds operational complexity; custom search requires significant engineering investment', recommendation: 'Elasticsearch for message search with channel-level access control filters' },
+      ],
+      layeredDesign: [
+        { name: 'Client & Connection Layer', purpose: 'Manage WebSocket connections, local message cache, and real-time UI updates', components: ['WebSocket Client', 'Message Cache (IndexedDB)', 'Notification Manager', 'Presence Tracker'] },
+        { name: 'Gateway & Routing Layer', purpose: 'Route messages to correct channels and manage user sessions', components: ['WebSocket Gateway', 'Message Router', 'Session Manager', 'Load Balancer'] },
+        { name: 'Application Layer', purpose: 'Handle channel management, permissions, threading, and integrations', components: ['Channel Service', 'Thread Service', 'Permission Service', 'Bot Platform', 'File Service'] },
+        { name: 'Storage & Search Layer', purpose: 'Persist messages, files, and power full-text search', components: ['Message Store (Cassandra)', 'File Store (S3)', 'Search Index (Elasticsearch)', 'User/Channel DB (PostgreSQL)'] },
+      ],
     },
     {
       id: 'yelp',
@@ -6734,7 +6790,26 @@ Return aggregations for filters:
         'Pre-compute aggregate ratings (avoid counting on read)',
         'CDN for business photos',
         'Fraud detection for fake reviews'
-      ]
+      ],
+      edgeCases: [
+        { scenario: 'Business with same name and address registered by different owners', impact: 'Duplicate listings cause review fragmentation and confuse customers', mitigation: 'Fuzzy matching on name + geocoordinates during registration, manual merge workflow, business owner verification process' },
+        { scenario: 'Coordinated fake review campaign from competitor', impact: 'Artificial negative reviews tank a legitimate business rating, unfair competitive advantage', mitigation: 'ML-based review fraud detection (account age, review velocity, linguistic patterns), temporary review hold for suspicious accounts' },
+        { scenario: 'GPS inaccuracy places user in wrong geohash cell', impact: 'Nearby businesses not shown in search results, poor search relevance', mitigation: 'Query adjacent geohash cells (8 neighbors), use radius-based filtering as secondary check, allow manual location correction' },
+        { scenario: 'Business updates hours or menu but cache serves stale data', impact: 'Customer arrives at closed business or expects menu items no longer available', mitigation: 'Owner-initiated cache invalidation via dashboard, short TTL for business profile cache (1 hour), show last-updated timestamp' },
+        { scenario: 'Search query matches thousands of restaurants in dense urban area', impact: 'Pagination through results is slow, ranking by relevance becomes critical', mitigation: 'Geo-bounded search with distance decay scoring, personalized ranking by past behavior, limit results to 50-mile radius default' },
+      ],
+      tradeoffs: [
+        { decision: 'Geohash vs QuadTree for proximity search', pros: 'Geohash enables simple string-prefix queries and Redis integration; QuadTree provides adaptive resolution for varying business density', cons: 'Geohash has boundary issues where nearby points fall in different cells; QuadTree is harder to distribute', recommendation: 'Geohash for primary index with neighbor-cell queries to handle boundaries, QuadTree for in-memory secondary filtering' },
+        { decision: 'Pre-aggregated ratings vs compute-on-read', pros: 'Pre-aggregated gives instant display; compute-on-read always shows exact current value', cons: 'Pre-aggregated can briefly show stale rating after new review; compute-on-read is expensive with many reviews', recommendation: 'Pre-aggregated with async update on new review, refresh within seconds via CDC event' },
+        { decision: 'Elasticsearch vs PostgreSQL PostGIS for geospatial search', pros: 'Elasticsearch combines full-text and geo queries natively; PostGIS is simpler with existing PostgreSQL stack', cons: 'Elasticsearch adds operational overhead; PostGIS does not scale horizontally as easily', recommendation: 'Elasticsearch for search (combines text relevance + geo distance), PostGIS for precise spatial operations in backend' },
+        { decision: 'Single global search index vs regional sharding', pros: 'Global index simplifies queries for traveling users; regional sharding reduces index size per shard', cons: 'Global index grows very large; regional sharding complicates cross-region searches', recommendation: 'Regional sharding by metro area with global routing layer, cross-region fallback for travel searches' },
+      ],
+      layeredDesign: [
+        { name: 'Client & API Layer', purpose: 'Handle search queries, business profile views, and review submissions', components: ['Search API', 'Business Profile API', 'Review API', 'Photo Upload Service'] },
+        { name: 'Search & Discovery Layer', purpose: 'Provide geospatial and full-text search with personalized ranking', components: ['Elasticsearch Cluster', 'Geospatial Index', 'Ranking Service', 'Personalization Engine'] },
+        { name: 'Business & Review Layer', purpose: 'Manage business listings, reviews, ratings, and fraud detection', components: ['Business Service', 'Review Service', 'Rating Aggregator', 'Fraud Detection ML'] },
+        { name: 'Storage & Delivery Layer', purpose: 'Persist data and serve media assets globally', components: ['Business DB (PostgreSQL)', 'Review Store', 'Photo CDN', 'Cache (Redis)'] },
+      ],
     },
     {
       id: 'tinder',
