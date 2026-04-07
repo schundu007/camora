@@ -589,7 +589,7 @@ export default function PracticePage() {
       <SiteNav />
 
       {/* ═══════════ Main Content ═══════════ */}
-      <div style={{ paddingTop: 56 }}>
+      <div>
         <div className="w-full lg:max-w-[70%] mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: 32, paddingBottom: 80 }}>
 
           {/* ── SETUP PHASE ── */}

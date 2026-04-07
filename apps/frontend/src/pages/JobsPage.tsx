@@ -358,7 +358,7 @@ export default function JobsPage() {
       <SiteNav />
 
       {/* ═══════════════════════ Page Content ═══════════════════════ */}
-      <div style={{ paddingTop: '56px' }}>
+      <div>
 
         {/* ── Hero Section (MetAntz-inspired) ── */}
         <div
