@@ -19,9 +19,18 @@ const router = Router();
 // Constants
 // ---------------------------------------------------------------------------
 
-const CLAUDE_MODEL = process.env.CLAUDE_MODEL || 'claude-sonnet-4-20250514';
 const MAX_TOKENS = parseInt(process.env.MAX_TOKENS_CODING || '16384', 10);
-const FREE_TIER_DAILY_LIMIT = parseInt(process.env.FREE_CODING_DAILY_LIMIT || '5', 10);
+const FREE_TIER_DAILY_LIMIT = parseInt(process.env.FREE_CODING_DAILY_LIMIT || '2', 10);
+
+/**
+ * Select the Claude model based on the user's subscription plan.
+ * Free users get Haiku (cheaper), paid users get Sonnet (more capable).
+ */
+function getModelForUser(req) {
+  const plan = req.user?.plan_type || 'free';
+  if (plan === 'free' || !plan) return 'claude-haiku-4-5-20251001';
+  return process.env.CLAUDE_MODEL || 'claude-sonnet-4-20250514';
+}
 
 /**
  * All 51 supported languages.
@@ -333,6 +342,27 @@ router.post('/solve', authenticate, checkUsage('questions'), async (req, res) =>
     }
   }
 
+  // ── Paid users: soft daily cap to prevent abuse ─────────────────────────
+  if (planType !== 'free' && planType) {
+    const today = new Date().toISOString().slice(0, 10);
+    const PAID_DAILY_LIMIT = 20;
+    try {
+      const usageResult = await query(
+        `SELECT COUNT(*) as cnt FROM coding_usage
+         WHERE user_id = $1 AND DATE(created_at) = $2`,
+        [req.user.id, today],
+      );
+      const used = parseInt(usageResult.rows[0]?.cnt || '0', 10);
+      if (used >= PAID_DAILY_LIMIT) {
+        return res.status(429).json({
+          error: `Daily coding limit reached (${PAID_DAILY_LIMIT}/day). Resets at midnight UTC.`,
+          daily_limit: PAID_DAILY_LIMIT,
+          used,
+        });
+      }
+    } catch { /* coding_usage table may not exist yet */ }
+  }
+
   // ── SSE headers ─────────────────────────────────────────────────────────
   res.writeHead(200, {
     'Content-Type': 'text/event-stream',
@@ -395,7 +425,7 @@ router.post('/solve', authenticate, checkUsage('questions'), async (req, res) =>
 
   try {
     const stream = await client.messages.stream({
-      model: CLAUDE_MODEL,
+      model: getModelForUser(req),
       max_tokens: MAX_TOKENS,
       system: buildCodingSystemPrompt(lang),
       messages,

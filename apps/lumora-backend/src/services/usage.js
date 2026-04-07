@@ -9,10 +9,10 @@ import { query } from '../lib/shared-db.js';
 // ---------------------------------------------------------------------------
 
 const PLANS = {
-  free: { sessions: 3, questions: 10, diagrams: 2, devices: 1, isLifetime: true },
-  starter: { sessions: 10, questions: 100, diagrams: 10, devices: 1 },
-  pro: { sessions: 30, questions: 250, diagrams: 30, devices: 2 },
-  annual: { sessions: 20, questions: 80, diagrams: 10, devices: 1 },
+  free:    { sessions: 3,  questions: 5,   diagrams: 1,  devices: 1, isLifetime: true },
+  starter: { sessions: 10, questions: 50,  diagrams: 5,  devices: 1 },
+  pro:     { sessions: 20, questions: 150, diagrams: 15, devices: 2 },
+  annual:  { sessions: 15, questions: 100, diagrams: 10, devices: 1 },
 };
 
 // ---------------------------------------------------------------------------

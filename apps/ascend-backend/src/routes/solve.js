@@ -11,6 +11,18 @@ import { logger } from '../middleware/requestLogger.js';
 
 const router = Router();
 
+// In-memory cache for coding solutions to avoid repeated Claude API calls
+const solutionCache = new Map();
+const CACHE_MAX = 500;
+const CACHE_TTL = 7 * 24 * 60 * 60 * 1000; // 7 days
+
+function getSolutionCacheKey(problem, language) {
+  const str = `${problem}::${language || 'python'}`;
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0;
+  return hash.toString(36);
+}
+
 router.post('/', validate('solve'), async (req, res, next) => {
   try {
     const { problem, provider = 'claude', language = 'auto', fast = true, model } = req.body;
@@ -24,8 +36,23 @@ router.post('/', validate('solve'), async (req, res, next) => {
       }
     }
 
+    // Check cache for non-streaming solve
+    const cacheKey = getSolutionCacheKey(problem, language);
+    const cached = solutionCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      logger.debug({ cacheKey }, 'Returning cached solution');
+      return res.json(cached.data);
+    }
+
     const service = provider === 'openai' ? openai : claude;
     const result = await service.solveProblem(problem, language, fast, model);
+
+    // Cache the result
+    if (solutionCache.size >= CACHE_MAX) {
+      const firstKey = solutionCache.keys().next().value;
+      solutionCache.delete(firstKey);
+    }
+    solutionCache.set(cacheKey, { data: result, timestamp: Date.now() });
 
     res.json(result);
   } catch (error) {

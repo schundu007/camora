@@ -21,10 +21,26 @@ function getOpenAIClient() {
   return new OpenAI({ apiKey });
 }
 
-const DEFAULT_CLAUDE_MODEL = 'claude-sonnet-4-20250514';
+const CLAUDE_SONNET = 'claude-sonnet-4-20250514';
+const CLAUDE_HAIKU = 'claude-haiku-4-5-20251001';
+const DEFAULT_CLAUDE_MODEL = CLAUDE_SONNET;
 const DEFAULT_OPENAI_MODEL = 'gpt-4o';
 const MAX_TOKENS_PER_SECTION = 32000; // High token limit for detailed explanations
 const MAX_TOKENS_CUSTOM_SECTION = 64000; // Much higher for custom sections to extract ALL content from documents
+
+/**
+ * Pick the right Claude model for a given section type.
+ * Technical sections (coding, system design, techstack, rrk) need Sonnet quality.
+ * Non-technical sections (pitch, hr, behavioral, hiring-manager) use Haiku to cut costs ~50%.
+ */
+function getModelForSection(sectionType) {
+  const technicalSections = ['coding', 'system-design', 'system_design', 'techstack', 'rrk', 'custom'];
+  if (technicalSections.some(t => sectionType?.toLowerCase().includes(t))) {
+    return CLAUDE_SONNET;
+  }
+  // Non-technical: pitch, hr, hiring-manager, behavioral, etc.
+  return CLAUDE_HAIKU;
+}
 
 /**
  * Search for real interview questions from the internet
@@ -1289,7 +1305,10 @@ export async function* generateSection(section, inputs, provider = 'claude', mod
   if (provider === 'openai') {
     yield* generateSectionOpenAI(section, inputs, model || DEFAULT_OPENAI_MODEL);
   } else {
-    yield* generateSectionClaude(section, inputs, model || DEFAULT_CLAUDE_MODEL);
+    // Use smart model selection: Sonnet for technical sections, Haiku for non-technical
+    const selectedModel = model || getModelForSection(section);
+    console.log(`[AscendPrep] Section "${section}" → model: ${selectedModel}`);
+    yield* generateSectionClaude(section, inputs, selectedModel);
   }
 }
 
