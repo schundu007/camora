@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import CamoraLogo from '../components/shared/CamoraLogo';
+import SiteNav from '../components/shared/SiteNav';
 import SiteFooter from '../components/shared/SiteFooter';
 
 /* ──────────────────────────────── Constants ──────────────────────────────── */
@@ -9,13 +9,6 @@ import SiteFooter from '../components/shared/SiteFooter';
 const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
 const CAPRA_API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
-const navLinks = [
-  { label: 'Apply', href: '/jobs' },
-  { label: 'Prepare', href: '/capra/prepare' },
-  { label: 'Practice', href: '/capra/practice' },
-  { label: 'Attend', href: '/lumora' },
-  { label: 'Pricing', href: '/pricing' },
-];
 
 const CATEGORIES = [
   { value: 'all', label: 'All' },

@@ -736,3 +736,19 @@ main, [role="main"] {
   .pricing-card-popular { transform: none !important; }
   .pricing-card-annual { transform: none !important; }
 }
+
+/* Prevent any section from causing horizontal overflow during breakpoint transitions */
+section, main, .practice-root, [class*="max-w-"] {
+  overflow-x: hidden;
+}
+
+/* Ensure grid items never overflow their cells */
+.grid > * {
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* Tables inside scrollable containers */
+table {
+  max-width: 100%;
+}
