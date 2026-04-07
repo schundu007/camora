@@ -31,6 +31,7 @@ const BrandPage = lazy(() => import('./pages/BrandPage'));
 const ChallengePage = lazy(() => import('./pages/ChallengePage'));
 const Blind75Page = lazy(() => import('./pages/Blind75Page'));
 const Blind75PracticePage = lazy(() => import('./pages/Blind75PracticePage'));
+const InterviewQuestionsPage = lazy(() => import('./pages/InterviewQuestionsPage'));
 
 function Loading() {
   return (
@@ -186,7 +187,7 @@ export function App() {
           <Route path="/challenge" element={<ChallengePage />} />
 
           {/* ── Company Interview Questions ─────────────── */}
-          <Route path="/interview-questions/:company" element={<ProtectedRoute><CompanyPrepPage /></ProtectedRoute>} />
+          <Route path="/interview-questions/:company" element={<InterviewQuestionsPage />} />
 
           {/* ── Public Score Cards & Profiles ────────────── */}
           <Route path="/share/:token" element={<PublicScoreCardPage />} />

@@ -7223,7 +7223,27 @@ Optimization:
         'Store swipe decisions for bidirectional match detection',
         'Elo-like scoring for recommendation ranking',
         'CDN with image resizing for photos'
-      ]
+      ],
+      edgeCases: [
+        { scenario: 'Both users swipe right simultaneously from different regions', impact: 'Race condition may create duplicate matches or miss the match entirely', mitigation: 'Use atomic compare-and-swap on a centralized match store keyed by sorted user ID pair' },
+        { scenario: 'User exhausts all nearby candidates in a small town', impact: 'Empty recommendation stack leads to poor engagement and churn', mitigation: 'Gradually expand search radius, resurface previously passed profiles after cooldown, and suggest travel mode' },
+        { scenario: 'Fake profiles and catfishing at scale', impact: 'Degrades trust, increases reports, and drives away genuine users', mitigation: 'Photo verification with liveness check, ML-based profile authenticity scoring, and human review queue' },
+        { scenario: 'Celebrity or viral user gets millions of right-swipes', impact: 'Their like queue becomes unmanageable and skews the matching algorithm', mitigation: 'Cap visible likes with smart sampling, use separate high-follower pipeline, and prioritize mutual-interest signals' },
+        { scenario: 'GPS spoofing to appear in a different location', impact: 'Users game the system to match in desirable cities they are not actually in', mitigation: 'Cross-reference IP geolocation with GPS, flag large jumps, and require periodic location re-verification' },
+      ],
+      tradeoffs: [
+        { decision: 'Pre-computed recommendation stacks vs on-demand scoring', pros: 'Pre-computed gives instant swipe experience with no loading delay', cons: 'Stacks go stale if user preferences or location change frequently', recommendation: 'Pre-compute stacks every few hours and supplement with a real-time re-ranker for freshness' },
+        { decision: 'Geohash grid vs radius-based proximity search', pros: 'Geohash enables fast index lookups and easy sharding by region', cons: 'Grid boundaries cause edge effects where nearby users fall into different cells', recommendation: 'Use geohash with multi-cell overlap queries to eliminate boundary blind spots' },
+        { decision: 'Elo-based ranking vs pure preference matching', pros: 'Elo balances attractiveness tiers so users see realistic matches', cons: 'Can create echo chambers and reduce diversity of shown profiles', recommendation: 'Blend Elo with exploratory slots that surface profiles outside the predicted tier' },
+        { decision: 'Symmetric swipe data (store both directions) vs asymmetric', pros: 'Symmetric makes match detection a simple lookup on one key', cons: 'Doubles write volume and storage for every swipe action', recommendation: 'Store asymmetric swipes and check for reciprocal on each new swipe using a bloom filter pre-check' },
+      ],
+      layeredDesign: [
+        { name: 'Client Layer', purpose: 'Swipe UI, photo display, and local swipe queue buffering for offline resilience', components: ['Swipe Gesture Handler', 'Photo Preloader', 'Local Swipe Queue'] },
+        { name: 'API Gateway Layer', purpose: 'Rate limiting, authentication, and routing swipe and match requests', components: ['Auth Middleware', 'Rate Limiter', 'WebSocket Gateway'] },
+        { name: 'Matching Engine Layer', purpose: 'Process swipes, detect mutual matches, and trigger match notifications', components: ['Swipe Processor', 'Match Detector', 'Notification Dispatcher'] },
+        { name: 'Recommendation Layer', purpose: 'Build and serve personalized candidate stacks using location and preferences', components: ['Geospatial Index', 'Scoring Engine', 'Stack Builder'] },
+        { name: 'Data Layer', purpose: 'Persist profiles, swipe history, matches, and chat messages', components: ['Profile Store (PostgreSQL)', 'Swipe Log (Cassandra)', 'Match Cache (Redis)', 'Media CDN'] },
+      ],
     },
     {
       id: 'spotify',
@@ -13333,7 +13353,26 @@ trending_queries (real-time) {
         'Shard trie by prefix for horizontal scaling',
         'Separate read path (trie) from write path (log aggregation)',
         'Periodic trie rebuild with incremental trending updates'
-      ]
+      ],
+      edgeCases: [
+        { scenario: 'User types faster than suggestion round-trips complete', impact: 'Stale suggestions flash on screen for earlier prefixes, causing visual jitter', mitigation: 'Debounce requests by 50-100ms and discard responses whose prefix no longer matches the input field' },
+        { scenario: 'Trending query spikes overwhelm trie rebuild pipeline', impact: 'New trending terms take minutes to surface, degrading perceived freshness', mitigation: 'Maintain a hot-path trending overlay that merges real-time Flink output with the static trie at query time' },
+        { scenario: 'Offensive or harmful query surfaces in autocomplete', impact: 'Brand reputation damage and potential legal liability', mitigation: 'Maintain a blocklist filter applied at serving time, with an async ML classifier flagging new terms for review' },
+        { scenario: 'High-cardinality prefix space exhausts in-memory trie capacity', impact: 'Out-of-memory crashes on trie servers or eviction of valid prefixes', mitigation: 'Only materialize trie nodes for prefixes exceeding a minimum frequency threshold and prune stale nodes periodically' },
+        { scenario: 'Geographically biased suggestions due to global aggregation', impact: 'Users in one region see irrelevant trending topics from another region', mitigation: 'Shard trie data by region and blend local and global suggestion lists with configurable weight ratios' },
+      ],
+      tradeoffs: [
+        { decision: 'Trie with cached top-K vs inverted index lookup', pros: 'Trie offers O(prefix_length) lookups; inverted index leverages existing search infra', cons: 'Trie requires significant memory; inverted index has higher latency for prefix matching', recommendation: 'Trie with cached top-K at each node for latency-critical autocomplete, backed by inverted index for long-tail queries' },
+        { decision: 'Real-time trie updates vs periodic batch rebuild', pros: 'Real-time keeps suggestions fresh; batch rebuild is simpler and less error-prone', cons: 'Real-time adds complexity and risk of inconsistency; batch has minutes of staleness', recommendation: 'Periodic batch rebuild every few minutes with a real-time trending overlay for breaking queries' },
+        { decision: 'Personalized vs global suggestions', pros: 'Personalization improves relevance; global is simpler and more cacheable', cons: 'Personalization requires per-user state and reduces cache hit rates', recommendation: 'Serve global suggestions by default with a lightweight personalization layer that re-ranks the top results per user' },
+      ],
+      layeredDesign: [
+        { name: 'Client Layer', purpose: 'Debounce keystrokes and manage suggestion display lifecycle', components: ['Input Debouncer', 'Suggestion Renderer', 'Local Cache'] },
+        { name: 'API Gateway', purpose: 'Route prefix queries and enforce rate limiting', components: ['Load Balancer', 'Rate Limiter', 'Request Router'] },
+        { name: 'Serving Layer', purpose: 'Traverse in-memory trie to return cached top-K suggestions', components: ['Distributed Trie', 'Trending Overlay', 'Personalization Re-ranker'] },
+        { name: 'Aggregation Layer', purpose: 'Compute query frequencies and detect trending terms from search logs', components: ['Kafka', 'Flink Aggregator', 'Trending Detector'] },
+        { name: 'Storage Layer', purpose: 'Persist raw query logs and aggregated frequency data for trie rebuilds', components: ['Query Frequency Store', 'S3 (Raw Logs)', 'ZooKeeper (Shard Config)'] },
+      ],
     },
     {
       id: 'ecommerce-platform',
@@ -13723,7 +13762,24 @@ alert_rules {
         'Partitioning by metric name + time range for query locality',
         'Downsampling pipeline for cost-effective long-term retention',
         'Leader-elected alert evaluators for exactly-once notifications'
-      ]
+      ],
+      edgeCases: [
+        { scenario: 'Metric ingestion spike during incident (monitoring itself)', impact: 'The monitoring system becomes overloaded exactly when it is needed most', mitigation: 'Separate ingestion and alerting pipelines, shed low-priority metrics under load, reserve capacity for alerts' },
+        { scenario: 'Clock skew across reporting hosts', impact: 'Out-of-order timestamps create gaps or duplicates in time-series data', mitigation: 'Use server-receive timestamp as fallback, allow configurable late-arrival windows for reprocessing' },
+        { scenario: 'Alert storm from cascading failures', impact: 'Thousands of alerts fire simultaneously, overwhelming on-call engineers', mitigation: 'Alert grouping by dependency graph, implement alert suppression for downstream effects of known root causes' },
+        { scenario: 'High-cardinality labels explode storage', impact: 'Unique label combinations create millions of time series, exhausting storage', mitigation: 'Enforce cardinality limits per metric name, drop or aggregate high-cardinality labels automatically' },
+      ],
+      tradeoffs: [
+        { decision: 'Push vs pull metric collection model', pros: 'Push handles ephemeral jobs; pull gives central control of scrape targets', cons: 'Push risks overwhelming the collector; pull requires service discovery', recommendation: 'Pull-based (Prometheus-style) for long-lived services, push gateway for short-lived batch jobs' },
+        { decision: 'Lossy compression vs raw storage', pros: 'Compression gives 10x savings; raw preserves exact values', cons: 'Compression introduces quantization error; raw is expensive at scale', recommendation: 'Lossy downsampling for data older than 7 days, raw retention for recent data and alerting' },
+        { decision: 'Single time-series DB vs federated instances', pros: 'Single instance simplifies queries; federated scales horizontally', cons: 'Single instance has throughput limits; federated complicates cross-instance queries', recommendation: 'Federated instances sharded by metric namespace with a query fanout layer for global views' },
+      ],
+      layeredDesign: [
+        { name: 'Collection Layer', purpose: 'Gather metrics from diverse sources at scale', components: ['Collection Agents', 'Push Gateway', 'Service Discovery'] },
+        { name: 'Ingestion Layer', purpose: 'Buffer and route incoming metric streams', components: ['Kafka (Ingestion Buffer)', 'Metric Router', 'Cardinality Enforcer'] },
+        { name: 'Storage Layer', purpose: 'Persist time-series data with efficient compression', components: ['Time-Series DB', 'Downsampling Pipeline', 'Cold Storage Archive'] },
+        { name: 'Query & Alert Layer', purpose: 'Execute dashboard queries and evaluate alert rules', components: ['Query Engine', 'Alert Evaluator', 'Notification Dispatcher', 'Dashboard API'] },
+      ],
     },
     {
       id: 'payment-gateway',
@@ -13861,7 +13917,25 @@ Every payment creates balanced debit + credit entries:
         'Card tokenization for PCI-DSS compliance',
         'Two-phase auth/capture flow matching card network protocols',
         'Batch settlement with T+2 disbursement cycle'
-      ]
+      ],
+      edgeCases: [
+        { scenario: 'Duplicate payment submission from client retry', impact: 'Customer charged twice for the same transaction', mitigation: 'Enforce idempotency keys on every payment request, reject duplicate keys within a TTL window' },
+        { scenario: 'Network timeout between gateway and card network', impact: 'Uncertain payment state where charge may or may not have occurred', mitigation: 'Implement payment status reconciliation with card network, query transaction status before retrying' },
+        { scenario: 'Currency conversion rate changes mid-transaction', impact: 'Settled amount differs from authorized amount, causing merchant disputes', mitigation: 'Lock exchange rate at authorization time, use rate buffers for multi-currency transactions' },
+        { scenario: 'Partial refund on a multi-item order', impact: 'Ledger entries become complex and reconciliation is error-prone', mitigation: 'Track refunds as separate ledger entries linked to original transaction, reconcile line-item level' },
+        { scenario: 'Fraud detection blocks legitimate transaction', impact: 'Customer frustration and abandoned purchase', mitigation: 'Multi-factor step-up authentication for borderline fraud scores, allow manual override with verification' },
+      ],
+      tradeoffs: [
+        { decision: 'Synchronous vs asynchronous payment processing', pros: 'Synchronous gives immediate confirmation; async handles high volume', cons: 'Synchronous blocks user; async complicates status communication', recommendation: 'Synchronous for authorization, asynchronous for settlement and reconciliation' },
+        { decision: 'Build vs integrate card network connectivity', pros: 'Direct integration gives full control; third-party processors are faster to market', cons: 'Direct integration requires PCI Level 1; processors take a revenue cut', recommendation: 'Use processor (Stripe/Adyen) initially, build direct integration at scale for cost savings' },
+        { decision: 'Single ledger vs double-entry bookkeeping', pros: 'Single is simpler to implement; double-entry ensures financial correctness', cons: 'Single ledger makes auditing difficult; double-entry doubles write volume', recommendation: 'Double-entry ledger is non-negotiable for financial systems, ensures every debit has a credit' },
+      ],
+      layeredDesign: [
+        { name: 'API Layer', purpose: 'Accept payment requests with authentication and idempotency', components: ['Payment API', 'Idempotency Service', 'Auth Middleware', 'Rate Limiter'] },
+        { name: 'Processing Layer', purpose: 'Orchestrate payment flow through authorization, capture, and settlement', components: ['Payment Orchestrator', 'Fraud Detection Engine', 'Currency Converter'] },
+        { name: 'Integration Layer', purpose: 'Interface with card networks and banking systems', components: ['Card Network Gateway', 'Bank API Adapter', 'Tokenization Vault'] },
+        { name: 'Ledger Layer', purpose: 'Record all financial transactions for reconciliation and auditing', components: ['Double-Entry Ledger', 'Settlement Engine', 'Reconciliation Service', 'Webhook Dispatcher'] },
+      ],
     },
     {
       id: 'proximity-service',
@@ -13980,7 +14054,23 @@ quadtree_node {
         'PostgreSQL with PostGIS for geospatial queries and indexing',
         'Redis cache for popular area queries',
         'Pre-computed geohash stored on business records for fast lookups'
-      ]
+      ],
+      edgeCases: [
+        { scenario: 'Geohash boundary splits nearby businesses into different cells', impact: 'Search misses businesses just across the boundary, giving incomplete results', mitigation: 'Query the target cell plus all 8 neighboring cells to cover boundary cases' },
+        { scenario: 'Dense urban area with thousands of businesses per cell', impact: 'Single geohash cell returns too many results, slowing response', mitigation: 'Use finer-grained geohash precision in dense areas, apply distance-based filtering and pagination' },
+        { scenario: 'Business location data is stale or incorrect', impact: 'Users are directed to wrong locations, eroding trust', mitigation: 'Cross-reference with map data providers, allow user-reported corrections, periodic data validation' },
+        { scenario: 'Polar or equatorial region distortions', impact: 'Geohash cells vary in physical size at different latitudes, skewing radius searches', mitigation: 'Adjust geohash precision dynamically based on latitude, or use S2 geometry cells for uniform coverage' },
+      ],
+      tradeoffs: [
+        { decision: 'Geohash vs Quadtree vs R-tree indexing', pros: 'Geohash is simple and database-friendly; Quadtree adapts to density; R-tree handles arbitrary shapes', cons: 'Geohash has boundary issues; Quadtree is harder to distribute; R-tree has complex rebalancing', recommendation: 'Geohash for most cases due to simplicity, Quadtree for variable-density datasets' },
+        { decision: 'Pre-computed index vs real-time spatial queries', pros: 'Pre-computed gives instant lookups; real-time handles dynamic data', cons: 'Pre-computed requires rebuild on changes; real-time adds query latency', recommendation: 'Pre-computed geohash index with incremental updates on business location changes' },
+        { decision: 'PostgreSQL PostGIS vs dedicated spatial database', pros: 'PostGIS leverages existing Postgres infrastructure; dedicated DB is optimized for spatial', cons: 'PostGIS has scaling limits for massive datasets; dedicated DB adds operational complexity', recommendation: 'PostGIS for moderate scale, consider dedicated spatial index (Elasticsearch geo) at large scale' },
+      ],
+      layeredDesign: [
+        { name: 'API Layer', purpose: 'Accept search queries with location and filters', components: ['REST API', 'Rate Limiter', 'Geo Validator'] },
+        { name: 'Search Layer', purpose: 'Execute spatial queries and rank results by distance', components: ['Geohash Index', 'Distance Calculator', 'Category Filter', 'Result Ranker'] },
+        { name: 'Data Layer', purpose: 'Store and manage business location data', components: ['PostgreSQL + PostGIS', 'Redis (Hot Areas Cache)', 'Business CRUD Service'] },
+      ],
     },
     {
       id: 'tiny-url',
@@ -14078,7 +14168,24 @@ Two main approaches exist: counter-based (using a distributed counter like ZooKe
         'NoSQL (Cassandra) for horizontal scaling of URL mappings',
         'Redis cache with LRU for popular URL redirects',
         '302 redirect for analytics tracking capability'
-      ]
+      ],
+      edgeCases: [
+        { scenario: 'Hash collision on short code generation', impact: 'Two long URLs map to the same short code, causing incorrect redirects', mitigation: 'Check for collision before storing, retry with next counter value or append salt' },
+        { scenario: 'ZooKeeper range exhaustion under high load', impact: 'ID allocation blocks new URL creation until a fresh range is obtained', mitigation: 'Pre-fetch next range before current range is 80% consumed, maintain local buffer' },
+        { scenario: 'Malicious URLs flagged after creation', impact: 'Short links redirect users to phishing or malware sites', mitigation: 'Async URL scanning with Google Safe Browsing API, interstitial warning page for flagged links' },
+        { scenario: 'Expired URL recycled but cached in CDN', impact: 'Users still reach old destination from stale CDN entries', mitigation: 'Short TTL on redirect cache headers, purge CDN on expiration, include generation counter in key' },
+      ],
+      tradeoffs: [
+        { decision: 'Counter-based vs hash-based short codes', pros: 'Counters are sequential and collision-free; hashes are stateless', cons: 'Counters need coordination (ZooKeeper); hashes risk collisions', recommendation: 'Counter-based with ZooKeeper range allocation for guaranteed uniqueness at scale' },
+        { decision: '301 permanent vs 302 temporary redirect', pros: '301 reduces server load via browser caching; 302 tracks every click', cons: '301 makes analytics impossible; 302 increases server traffic', recommendation: '302 redirect when click analytics are needed, 301 for pure shortening use cases' },
+        { decision: 'SQL vs NoSQL for URL mappings', pros: 'SQL gives ACID and easy querying; NoSQL provides horizontal scaling', cons: 'SQL has scaling limits; NoSQL complicates analytics queries', recommendation: 'NoSQL (Cassandra) for URL storage with a separate analytics database for reporting' },
+      ],
+      layeredDesign: [
+        { name: 'API Layer', purpose: 'Handle URL creation, redirect, and analytics requests', components: ['REST API', 'Rate Limiter', 'Auth Middleware'] },
+        { name: 'Application Layer', purpose: 'Generate short codes, validate URLs, and track clicks', components: ['URL Generator', 'Custom Alias Handler', 'Click Tracker'] },
+        { name: 'Cache Layer', purpose: 'Serve popular redirects with sub-millisecond latency', components: ['Redis Cluster', 'Local LRU Cache', 'CDN'] },
+        { name: 'Storage Layer', purpose: 'Persist URL mappings and analytics data', components: ['Cassandra (URL Store)', 'Analytics DB', 'ZooKeeper (ID Ranges)'] },
+      ],
     },
     {
       id: 'top-k-leaderboard',
@@ -14204,7 +14311,24 @@ topk:songs:hourly:2024-06-05-14  -- expires after 48 hours
         'Count-Min Sketch for approximate streaming top-K at massive scale',
         'Kafka for buffering score events during traffic spikes',
         'Periodic snapshots to PostgreSQL for historical analytics'
-      ]
+      ],
+      edgeCases: [
+        { scenario: 'Score ties among millions of players', impact: 'Ambiguous ranking causes user complaints and inconsistent display', mitigation: 'Use composite score with timestamp as tiebreaker, ensuring deterministic ordering' },
+        { scenario: 'Flash event causes massive score update burst', impact: 'Redis sorted set becomes bottleneck, write latency spikes', mitigation: 'Buffer score events in Kafka, batch-apply updates to Redis with micro-batching' },
+        { scenario: 'Time window rotation during active queries', impact: 'Users see inconsistent rankings during window boundary', mitigation: 'Maintain overlapping windows and atomically swap active pointer after new window is populated' },
+        { scenario: 'Approximate counts diverge from exact counts', impact: 'Count-Min Sketch over-counts lead to incorrect top-K ordering', mitigation: 'Periodically reconcile approximate with exact counts, use conservative update for better accuracy' },
+      ],
+      tradeoffs: [
+        { decision: 'Redis Sorted Sets vs Count-Min Sketch', pros: 'Sorted sets give exact ranking; CMS uses constant memory', cons: 'Sorted sets use O(N) memory; CMS has approximation errors', recommendation: 'Redis for exact top-K under 10M items, CMS for approximate streaming top-K at billions scale' },
+        { decision: 'Per-window sorted sets vs single set with timestamps', pros: 'Per-window allows clean rotation; single set is simpler', cons: 'Per-window doubles memory during rotation; single set needs expensive range deletes', recommendation: 'Per-window sorted sets with overlapping lifecycle for clean time-bounded rankings' },
+        { decision: 'Synchronous vs asynchronous score updates', pros: 'Synchronous gives immediate rank accuracy; async handles burst traffic', cons: 'Synchronous limits throughput; async introduces ranking lag', recommendation: 'Async via Kafka for ingestion with sub-second batching to keep rankings near-real-time' },
+      ],
+      layeredDesign: [
+        { name: 'Ingestion Layer', purpose: 'Accept and buffer high-throughput score events', components: ['API Gateway', 'Kafka Topics', 'Score Validators'] },
+        { name: 'Processing Layer', purpose: 'Aggregate and deduplicate score updates', components: ['Score Aggregator', 'Deduplication Filter', 'Window Manager'] },
+        { name: 'Ranking Layer', purpose: 'Maintain sorted rankings and serve top-K queries', components: ['Redis Sorted Sets', 'CMS Approximator', 'Rank Query API'] },
+        { name: 'Persistence Layer', purpose: 'Store historical snapshots and serve analytics', components: ['PostgreSQL (Snapshots)', 'Analytics Query Engine', 'Export Service'] },
+      ],
     },
   ];
 
