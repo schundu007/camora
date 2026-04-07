@@ -221,7 +221,7 @@ function Wordmark3({ dark = true }: { dark?: boolean }) {
   const subColor = dark ? 'text-gray-500' : 'text-gray-400';
   return (
     <div>
-      <div className="leading-none" style={{ fontFamily: "'Work Sans', sans-serif", fontSize: 32, fontWeight: 600, color: textColor, letterSpacing: '-0.02em' }}>
+      <div className="leading-none" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 32, fontWeight: 600, color: textColor, letterSpacing: '-0.02em' }}>
         <span style={{ fontSize: 38, color: C.emerald, fontWeight: 700 }}>c</span>amora
       </div>
       <div className={`${subColor} mt-1.5`}

@@ -49,7 +49,7 @@ export default function DownloadPage() {
     return (
       <div className="min-h-screen flex items-center justify-center landing-root">
         <div className="text-center"><Icon name="loader" size={48} className="animate-spin text-emerald-500 mx-auto mb-4" /><p className="text-gray-500 landing-body">Checking download access...</p></div>
-        <style>{`.landing-root { -webkit-font-smoothing: antialiased; font-family: 'Work Sans', system-ui, sans-serif; } .landing-body { font-family: 'Work Sans', system-ui, sans-serif; }`}</style>
+        <style>{`.landing-root { -webkit-font-smoothing: antialiased; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; } .landing-body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }`}</style>
       </div>
     );
   }
@@ -63,7 +63,7 @@ export default function DownloadPage() {
           <p className="text-gray-500 landing-body mb-4">{error}</p>
           <button onClick={() => window.location.href = '/capra/prepare'} className="px-6 py-2 rounded-lg bg-emerald-500 text-white font-semibold text-sm hover:bg-emerald-600 transition-colors landing-body">Go Home</button>
         </div>
-        <style>{`.landing-root { -webkit-font-smoothing: antialiased; font-family: 'Work Sans', system-ui, sans-serif; } .landing-display { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; } .landing-body { font-family: 'Work Sans', system-ui, sans-serif; }`}</style>
+        <style>{`.landing-root { -webkit-font-smoothing: antialiased; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; } .landing-display { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; } .landing-body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }`}</style>
       </div>
     );
   }
@@ -77,7 +77,7 @@ export default function DownloadPage() {
           <p className="text-gray-500 landing-body mb-6">You need an Elite subscription to download the desktop app.</p>
           <button onClick={() => window.location.href = '/?pricing=true'} className="px-6 py-3 rounded-lg bg-emerald-500 text-white font-semibold text-sm hover:bg-emerald-600 transition-all hover:scale-105 landing-body">View Pricing</button>
         </div>
-        <style>{`.landing-root { -webkit-font-smoothing: antialiased; font-family: 'Work Sans', system-ui, sans-serif; } .landing-display { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; } .landing-body { font-family: 'Work Sans', system-ui, sans-serif; }`}</style>
+        <style>{`.landing-root { -webkit-font-smoothing: antialiased; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; } .landing-display { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; } .landing-body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }`}</style>
       </div>
     );
   }
@@ -157,9 +157,9 @@ export default function DownloadPage() {
 
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap');
-        .landing-root { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; font-family: 'Work Sans', 'Plus Jakarta Sans', system-ui, sans-serif; }
+        .landing-root { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
         .landing-display { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
-        .landing-body { font-family: 'Work Sans', 'Plus Jakarta Sans', system-ui, sans-serif; }
+        .landing-body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
         .landing-mono { font-family: 'IBM Plex Mono', monospace; }
       `}</style>
     </div>

@@ -225,7 +225,7 @@ function RadarChart({ values, labels, size = 200 }) {
       {labels.map((label, i) => {
         const [x, y] = point(i, 1.18);
         return (
-          <text key={i} x={x} y={y} textAnchor="middle" dominantBaseline="central" style={{ fontSize: 9, fontWeight: 600, fill: '#6b7280', fontFamily: "'Work Sans', sans-serif" }}>
+          <text key={i} x={x} y={y} textAnchor="middle" dominantBaseline="central" style={{ fontSize: 9, fontWeight: 600, fill: '#6b7280', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
             {label}
           </text>
         );
@@ -234,7 +234,7 @@ function RadarChart({ values, labels, size = 200 }) {
       <text x={cx} y={cy - 6} textAnchor="middle" dominantBaseline="central" style={{ fontSize: 22, fontWeight: 800, fill: '#111827', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
         {avg}%
       </text>
-      <text x={cx} y={cy + 12} textAnchor="middle" dominantBaseline="central" style={{ fontSize: 9, fontWeight: 500, fill: '#9ca3af', fontFamily: "'Work Sans', sans-serif" }}>
+      <text x={cx} y={cy + 12} textAnchor="middle" dominantBaseline="central" style={{ fontSize: 9, fontWeight: 500, fill: '#9ca3af', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
         readiness
       </text>
     </svg>
@@ -1171,10 +1171,9 @@ export default function PracticePage() {
 
       {/* ═══════════ Styles ═══════════ */}
       <style>{`
-        .practice-root { -webkit-font-smoothing: antialiased; font-family: 'Work Sans', 'Plus Jakarta Sans', system-ui, sans-serif; }
+        .practice-root { -webkit-font-smoothing: antialiased; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
         .practice-display { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
-        .practice-mono { font-family: 'IBM Plex Mono', 'Menlo', monospace; }
-        .nav-link:hover { color: #111827 !important; background: #f3f4f6; }
+        .practice-mono { font-family: 'IBM Plex Mono', monospace; }
         textarea:focus { border-color: #10b981 !important; box-shadow: 0 0 0 3px rgba(16,185,129,0.1); }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
       `}</style>

@@ -279,7 +279,7 @@ function PrepShowcase() {
           { name: 'STAR Method', category: 'Behavioral', difficulty: 'Easy', topics: 8, color: '#fb923c', img: '/images/categories/behavioral.svg' },
         ].map((item, i) => (
           <div key={item.name}
-            className="rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg hover:shadow-gray-100/50 hover:border-gray-300 transition-all duration-300"
+            className="card rounded-xl overflow-hidden hover:shadow-lg hover:shadow-gray-100/50 hover:border-gray-300 transition-all duration-300"
             style={{ opacity: inView ? 1 : 0, transform: inView ? 'translateY(0)' : 'translateY(16px)',
               transition: 'opacity 0.6s ease, transform 0.6s ease, border-color 0.3s ease, box-shadow 0.3s ease',
               transitionDelay: `${i * 80 + 500}ms` }}>
@@ -450,7 +450,7 @@ export default function LandingPage() {
             <Link to={isAuthenticated ? "/capra/prepare" : "/signup"} className="shimmer-btn px-6 py-3 text-base font-semibold rounded-xl text-white transition-colors" style={{ background: 'linear-gradient(135deg, #10b981, #3b82f6, #8b5cf6)' }}>
               {isAuthenticated ? 'Go to Dashboard' : 'Get Started Free'}
             </Link>
-            <a href="#process" className="px-6 py-3 text-base font-semibold text-gray-600 rounded-xl hover:bg-white/50 transition-colors border border-gray-300">
+            <a href="#process" className="btn-secondary px-6 py-3 text-base rounded-xl hover:bg-white/50 transition-colors">
               See How It Works
             </a>
           </motion.div>
@@ -477,9 +477,9 @@ export default function LandingPage() {
         <div className="w-full lg:max-w-[70%] mx-auto">
           <div className="grid lg:grid-cols-2 gap-16 lg:gap-24 items-stretch">
             <FadeIn>
-              <span className="gradient-text text-sm font-bold tracking-[0.2em] uppercase">Our Process</span>
-              <h2 className="font-display text-4xl md:text-5xl font-bold tracking-tight mt-4 leading-[1.1]">Your path to the offer</h2>
-              <p className="text-lg text-gray-400 mt-5 leading-relaxed">A streamlined process designed for engineers who want to land their dream role.</p>
+              <span className="section-label gradient-text text-sm font-bold tracking-[0.2em]">Our Process</span>
+              <h2 className="heading-1 font-display text-4xl md:text-5xl font-bold tracking-tight mt-4 leading-[1.1]">Your path to the offer</h2>
+              <p className="text-body text-lg text-gray-400 mt-5 leading-relaxed">A streamlined process designed for engineers who want to land their dream role.</p>
               <ProcessAccordion />
             </FadeIn>
             <FadeIn delay={0.2} className="hidden lg:flex">
@@ -571,14 +571,14 @@ export default function LandingPage() {
       <section className="px-6 py-12 md:py-16" style={{ zIndex: 1 }}>
         <div className="w-full lg:max-w-[70%] mx-auto">
           <FadeIn className="text-center mb-10">
-            <span className="inline-flex items-center gap-2 text-sm font-bold tracking-[0.15em] uppercase px-5 py-2 rounded-full border border-emerald-300 bg-white text-emerald-700 shadow-sm">
+            <span className="section-label inline-flex items-center gap-2 text-sm font-bold tracking-[0.15em] px-5 py-2 rounded-full border border-emerald-300 bg-white text-emerald-700 shadow-sm">
               <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" /></svg>
               NEW FEATURE
             </span>
-            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mt-6">
+            <h2 className="heading-1 font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mt-6">
               Confused where to start preparing?
             </h2>
-            <p className="mt-4 text-lg md:text-xl text-gray-500 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-body mt-4 text-lg md:text-xl text-gray-500 max-w-2xl mx-auto leading-relaxed">
               Paste any job URL. Get an AI-powered prep plan with coding, system design, and behavioral questions tailored to <em>that exact role</em>.
             </p>
           </FadeIn>
@@ -619,11 +619,11 @@ export default function LandingPage() {
 
           <FadeIn delay={0.25} className="text-center mt-10">
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link to="/jobs" className="shimmer-btn px-8 py-3.5 text-base font-semibold rounded-xl transition-colors" style={{ background: 'linear-gradient(135deg, #10b981, #3b82f6, #8b5cf6)', color: '#ffffff' }}>
+              <Link to="/jobs" className="btn-primary shimmer-btn px-8 py-3.5 text-base rounded-xl">
                 Try It Now — Paste a Job URL
               </Link>
             </div>
-            <p className="mt-4 text-sm text-gray-400">
+            <p className="text-small mt-4">
               Supports Workday, Greenhouse, Lever, Ashby, SmartRecruiters, LinkedIn &amp; more
             </p>
           </FadeIn>
@@ -634,8 +634,8 @@ export default function LandingPage() {
       <section className="px-6 py-12 md:py-16" style={{ zIndex: 1 }}>
         <div className="w-full lg:max-w-[70%] mx-auto">
           <FadeIn className="text-center mb-10">
-            <span className="gradient-text text-sm font-bold tracking-[0.2em] uppercase">Preparation at Scale</span>
-            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mt-4">Everything you need to prepare.</h2>
+            <span className="section-label gradient-text text-sm font-bold tracking-[0.2em]">Preparation at Scale</span>
+            <h2 className="heading-1 font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mt-4">Everything you need to prepare.</h2>
           </FadeIn>
           <PrepShowcase />
         </div>
@@ -645,17 +645,17 @@ export default function LandingPage() {
       <section className="px-6 py-12 md:py-16" style={{ zIndex: 1 }}>
         <div className="w-full lg:max-w-[70%] mx-auto">
           <FadeIn className="text-center mb-20">
-            <span className="inline-block text-sm font-bold tracking-[0.2em] uppercase px-4 py-1.5 rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700">ONLY ON CAMORA</span>
-            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mt-6">What no other interview tool can do.</h2>
+            <span className="section-label inline-block text-sm font-bold tracking-[0.2em] px-4 py-1.5 rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700">ONLY ON CAMORA</span>
+            <h2 className="heading-1 font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mt-6">What no other interview tool can do.</h2>
           </FadeIn>
           <div className="grid md:grid-cols-2 gap-6">
             {FEATURE_GROUPS.map((group, gi) => (
               <FadeIn key={group.groupTitle} delay={gi * 0.1}>
-                <div className="rounded-2xl border border-gray-200 overflow-hidden hover:shadow-lg hover:shadow-gray-100/50 transition-all duration-300">
+                <div className="card rounded-2xl overflow-hidden hover:shadow-lg hover:shadow-gray-100/50 transition-all duration-300">
                   <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between" style={{ background: `${group.accent}06` }}>
                     <div className="flex items-center gap-3">
                       <span className="w-2.5 h-2.5 rounded-full" style={{ background: group.accent }} />
-                      <h3 className="text-base font-bold text-gray-900 font-display">{group.groupTitle}</h3>
+                      <h3 className="heading-2 text-base font-display">{group.groupTitle}</h3>
                     </div>
                     <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ color: group.accent, background: `${group.accent}12` }}>{group.features.length} features</span>
                   </div>
@@ -680,8 +680,8 @@ export default function LandingPage() {
       <section ref={compRef} className="px-6 py-12 md:py-16" style={{ zIndex: 1 }}>
         <div className="w-full lg:max-w-[70%] mx-auto">
           <FadeIn className="text-center mb-10">
-            <span className="gradient-text text-sm font-bold tracking-[0.2em] uppercase">Head-to-Head</span>
-            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mt-4">See why engineers switch to Camora.</h2>
+            <span className="section-label gradient-text text-sm font-bold tracking-[0.2em]">Head-to-Head</span>
+            <h2 className="heading-1 font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mt-4">See why engineers switch to Camora.</h2>
           </FadeIn>
           <FadeIn className="max-w-2xl mx-auto">
             {COMP_BARS.map((bar, i) => (
@@ -696,7 +696,7 @@ export default function LandingPage() {
                 </div>
               </div>
             ))}
-            <p className="text-center text-xs text-gray-400 mt-4 font-code tracking-wide">FEATURES COMPARISON</p>
+            <p className="section-label text-center mt-4 font-code tracking-wide">FEATURES COMPARISON</p>
           </FadeIn>
         </div>
       </section>
@@ -704,13 +704,13 @@ export default function LandingPage() {
       {/* ── CTA ── */}
       <section className="px-6 py-28 md:py-36" style={{ zIndex: 1 }}>
         <FadeIn className="max-w-3xl mx-auto text-center">
-          <h2 className="font-display text-3xl md:text-4xl lg:text-[42px] font-bold tracking-tight whitespace-nowrap">
+          <h2 className="heading-1 font-display text-3xl md:text-4xl lg:text-[42px] font-bold tracking-tight whitespace-nowrap">
             Your next interview <span className="gradient-text">starts here.</span>
           </h2>
-          <p className="mt-6 text-base md:text-lg text-gray-400 whitespace-nowrap">Apply, Prepare, Practice, Attend.</p>
+          <p className="text-body mt-6 text-base md:text-lg text-gray-400 whitespace-nowrap">Apply, Prepare, Practice, Attend.</p>
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link to="/lumora" className="shimmer-btn px-8 py-4 text-lg font-semibold text-white bg-gray-900 rounded-2xl hover:bg-gray-800 transition-colors">Start Free — No Credit Card</Link>
-            <Link to="/pricing" className="px-8 py-4 text-lg font-semibold text-gray-600 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors border border-gray-200">View Pricing</Link>
+            <Link to="/lumora" className="btn-primary shimmer-btn px-8 py-4 text-lg rounded-2xl">Start Free — No Credit Card</Link>
+            <Link to="/pricing" className="btn-secondary px-8 py-4 text-lg rounded-2xl hover:bg-gray-100 transition-colors">View Pricing</Link>
           </div>
         </FadeIn>
       </section>

@@ -351,7 +351,7 @@ export default function JobsPage() {
     : jobs.filter((job) => detectCategory(job.title) === role);
 
   return (
-    <div style={{ background: 'transparent', minHeight: '100vh', fontFamily: "'Plus Jakarta Sans', 'Work Sans', system-ui, sans-serif" }}>
+    <div style={{ background: 'transparent', minHeight: '100vh' }}>
 
       <SiteNav />
 
@@ -366,14 +366,11 @@ export default function JobsPage() {
         >
           <div className="w-full lg:max-w-[70%] mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: '24px', paddingBottom: '20px', textAlign: 'center' }}>
             {/* Main heading — compact */}
-            <h1 style={{
+            <h1 className="heading-1" style={{
               fontSize: 'clamp(22px, 3vw, 32px)',
               fontWeight: 800,
-              color: '#111827',
               letterSpacing: '-0.02em',
-              lineHeight: 1.2,
               margin: '0 auto 12px auto',
-              fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
             }}>
               Find the right job — without searching
             </h1>
@@ -414,7 +411,6 @@ export default function JobsPage() {
                     border: 'none',
                     outline: 'none',
                     padding: '12px 0',
-                    fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
                   }}
                 />
                 <button
@@ -477,7 +473,6 @@ export default function JobsPage() {
                   borderRadius: '10px',
                   cursor: 'pointer',
                   transition: 'all 0.15s',
-                  fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
                 }}
                 onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#10b981'; e.currentTarget.style.color = '#10b981'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#d1d5db'; e.currentTarget.style.color = '#374151'; }}
@@ -490,7 +485,7 @@ export default function JobsPage() {
             ) : (
               <div style={{ maxWidth: '720px', margin: '0 auto' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-                  <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#111827', margin: 0, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
+                  <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#111827', margin: 0 }}>
                     Paste a Job URL
                   </h3>
                   <button
@@ -522,7 +517,6 @@ export default function JobsPage() {
                       borderRadius: '8px',
                       outline: 'none',
                       background: analyzing ? '#f9fafb' : '#ffffff',
-                      fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
                       transition: 'border-color 0.15s',
                     }}
                     onFocus={(e) => { e.currentTarget.style.borderColor = '#10b981'; }}
@@ -544,7 +538,6 @@ export default function JobsPage() {
                       borderRadius: '8px',
                       cursor: analyzing || !jobUrl.trim() ? 'not-allowed' : 'pointer',
                       transition: 'background 0.15s',
-                      fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
                       flexShrink: 0,
                     }}
                     onMouseEnter={(e) => { if (!analyzing && jobUrl.trim()) e.currentTarget.style.background = '#059669'; }}
@@ -594,7 +587,6 @@ export default function JobsPage() {
                         borderRadius: '8px',
                         outline: 'none',
                         resize: 'vertical',
-                        fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
                         lineHeight: 1.5,
                         marginBottom: '8px',
                       }}
@@ -614,7 +606,6 @@ export default function JobsPage() {
                         border: 'none',
                         borderRadius: '8px',
                         cursor: analyzing || jdText.trim().length < 50 ? 'not-allowed' : 'pointer',
-                        fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
                       }}
                     >
                       {analyzing ? 'Analyzing...' : 'Analyze Job Description'}
@@ -676,7 +667,6 @@ export default function JobsPage() {
                       cursor: 'pointer',
                       whiteSpace: 'nowrap',
                       transition: 'color 0.15s, border-color 0.15s',
-                      fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
                     }}
                   >
                     {cat.label}
@@ -731,7 +721,7 @@ export default function JobsPage() {
               <svg width="48" height="48" fill="none" stroke="#ef4444" viewBox="0 0 24 24" strokeWidth={1.5} style={{ margin: '0 auto 16px' }}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
               </svg>
-              <p style={{ fontSize: '18px', fontWeight: 700, color: '#111827', marginBottom: '8px', fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
+              <p className="heading-2" style={{ marginBottom: '8px' }}>
                 Something went wrong
               </p>
               <p style={{ fontSize: '15px', color: '#6b7280', marginBottom: '24px' }}>
@@ -768,7 +758,7 @@ export default function JobsPage() {
               <svg width="48" height="48" fill="none" stroke="#9ca3af" viewBox="0 0 24 24" strokeWidth={1.5} style={{ margin: '0 auto 16px' }}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m7.5 0V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.894m7.5 0a48.667 48.667 0 00-7.5 0" />
               </svg>
-              <p style={{ fontSize: '18px', fontWeight: 700, color: '#111827', marginBottom: '8px', fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
+              <p className="heading-2" style={{ marginBottom: '8px' }}>
                 No jobs match your filters
               </p>
               <p style={{ fontSize: '15px', color: '#6b7280' }}>
@@ -807,7 +797,7 @@ export default function JobsPage() {
                         <CategoryIcon category={category} size={20} />
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#111827', margin: 0, lineHeight: 1.3, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#111827', margin: 0, lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {job.title}
                         </h3>
                         <div style={{ fontSize: '12px', color: '#4b5563', fontWeight: 500, marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{job.company_name}</div>
@@ -862,8 +852,6 @@ export default function JobsPage() {
 
       {/* ═══════════════════════ Scoped Styles ═══════════════════════ */}
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Work+Sans:wght@400;500;600;700&display=swap');
-
         @keyframes jobs-pulse {
           0%, 100% { opacity: 1; }
           50% { opacity: 0.4; }

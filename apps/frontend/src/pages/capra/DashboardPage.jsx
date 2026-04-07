@@ -1329,9 +1329,9 @@ function CodingLayout({
 
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap');
-        .landing-root { -webkit-font-smoothing: antialiased; font-family: 'Work Sans', 'Plus Jakarta Sans', system-ui, sans-serif; }
+        .landing-root { -webkit-font-smoothing: antialiased; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
         .landing-display { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
-        .landing-body { font-family: 'Work Sans', 'Plus Jakarta Sans', system-ui, sans-serif; }
+        .landing-body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
         .landing-mono { font-family: 'IBM Plex Mono', monospace; }
       `}</style>
     </div>
