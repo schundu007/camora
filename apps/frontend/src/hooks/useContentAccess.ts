@@ -1,92 +1,105 @@
-import { useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 
+const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 const STORAGE_KEY = 'camora_topics_read';
-const INTEGRITY_KEY = 'camora_topics_sig';
 const FREE_TOPICS_PER_CATEGORY = 1;
 
 type Category = string;
 
-// Simple integrity check to detect localStorage tampering
-function computeSignature(data: Record<Category, string[]>): string {
-  const payload = JSON.stringify(data);
-  let hash = 0;
-  for (let i = 0; i < payload.length; i++) {
-    hash = ((hash << 5) - hash + payload.charCodeAt(i)) | 0;
-  }
-  return `v1:${hash.toString(36)}:${payload.length}`;
-}
-
-function getReadTopics(): Record<Category, string[]> {
+/** localStorage as a fast cache — server is source of truth */
+function getCachedTopics(): Record<Category, string[]> {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return {};
-    const data = JSON.parse(raw);
-    // Verify integrity — if signature missing or wrong, data was tampered
-    const storedSig = localStorage.getItem(INTEGRITY_KEY);
-    const expectedSig = computeSignature(data);
-    if (storedSig && storedSig !== expectedSig) {
-      // Tampered — lock everything by returning max reads per category
-      console.warn('[ContentAccess] Integrity check failed');
-      return data;
-    }
-    return data;
+    return raw ? JSON.parse(raw) : {};
   } catch {
     return {};
   }
 }
 
-function saveReadTopics(data: Record<Category, string[]>) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  localStorage.setItem(INTEGRITY_KEY, computeSignature(data));
+function saveCachedTopics(data: Record<Category, string[]>) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch {}
 }
 
 export function useContentAccess() {
-  const { subscription, subscriptionLoading } = useAuth();
+  const { token, subscription, subscriptionLoading } = useAuth();
+  const [topicsMap, setTopicsMap] = useState<Record<Category, string[]>>(getCachedTopics);
+  const fetchedRef = useRef<Set<string>>(new Set());
 
   const isPaidUser = useMemo(() => {
-    if (subscriptionLoading) return false; // default-locked while loading
+    if (subscriptionLoading) return false;
     if (!subscription) return false;
     const plan = subscription.plan;
     return plan !== 'free' && plan !== null && plan !== undefined && plan !== '';
   }, [subscription, subscriptionLoading]);
 
-  const getReadCount = useCallback((category: Category): number => {
-    const data = getReadTopics();
-    return (data[category] || []).length;
-  }, []);
+  /** Lazy-fetch read topics for a category from server (once per category per session) */
+  const ensureLoaded = useCallback((category: Category) => {
+    if (!token || isPaidUser || fetchedRef.current.has(category)) return;
+    fetchedRef.current.add(category);
+    fetch(`${API_URL}/api/topic-reads?category=${encodeURIComponent(category)}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.readTopics) {
+          setTopicsMap(prev => {
+            const updated = { ...prev, [category]: data.readTopics };
+            saveCachedTopics(updated);
+            return updated;
+          });
+        }
+      })
+      .catch(() => {}); // network error — use cache
+  }, [token, isPaidUser]);
 
   const getReadTopicIds = useCallback((category: Category): string[] => {
-    const data = getReadTopics();
-    return data[category] || [];
-  }, []);
+    ensureLoaded(category);
+    return topicsMap[category] || [];
+  }, [topicsMap, ensureLoaded]);
+
+  const getReadCount = useCallback((category: Category): number => {
+    return getReadTopicIds(category).length;
+  }, [getReadTopicIds]);
 
   const isTopicRead = useCallback((category: Category, topicId: string): boolean => {
-    const data = getReadTopics();
-    return (data[category] || []).includes(topicId);
-  }, []);
+    return getReadTopicIds(category).includes(topicId);
+  }, [getReadTopicIds]);
 
   const canReadTopic = useCallback((category: Category, topicId: string): boolean => {
     if (isPaidUser) return true;
-    const data = getReadTopics();
-    const readList = data[category] || [];
+    ensureLoaded(category);
+    const readList = topicsMap[category] || [];
     if (readList.includes(topicId)) return true;
     return readList.length < FREE_TOPICS_PER_CATEGORY;
-  }, [isPaidUser]);
+  }, [isPaidUser, topicsMap, ensureLoaded]);
 
   const isTopicLocked = useCallback((category: Category, topicId: string): boolean => {
     return !canReadTopic(category, topicId);
   }, [canReadTopic]);
 
   const markTopicRead = useCallback((category: Category, topicId: string) => {
-    if (isPaidUser) return; // don't track for paid users
-    const data = getReadTopics();
-    const readList = data[category] || [];
-    if (!readList.includes(topicId)) {
-      data[category] = [...readList, topicId];
-      saveReadTopics(data);
+    if (isPaidUser) return;
+
+    // Optimistic local update
+    setTopicsMap(prev => {
+      const list = prev[category] || [];
+      if (list.includes(topicId)) return prev;
+      if (list.length >= FREE_TOPICS_PER_CATEGORY) return prev; // at limit
+      const updated = { ...prev, [category]: [...list, topicId] };
+      saveCachedTopics(updated);
+      return updated;
+    });
+
+    // Persist to server
+    if (token) {
+      fetch(`${API_URL}/api/topic-reads`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ category, topicId }),
+      }).catch(() => {}); // fire-and-forget
     }
-  }, [isPaidUser]);
+  }, [token, isPaidUser]);
 
   return {
     isPaidUser,
