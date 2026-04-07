@@ -136,5 +136,11 @@ export default function SiteNav() {
     document.documentElement.style.setProperty('--nav-h', `${navHeight}px`);
   }
 
-  return nav;
+  return (
+    <>
+      {nav}
+      {/* Spacer to push page content below the fixed nav + ticker */}
+      <div style={{ height: navHeight }} />
+    </>
+  );
 }

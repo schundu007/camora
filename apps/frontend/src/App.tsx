@@ -63,7 +63,7 @@ function LoginPage() {
       <SiteNav />
 
       {/* ── Centered card ─────────────────────────────── */}
-      <div className="flex items-center justify-center py-12 px-4" style={{ minHeight: 'calc(100vh - 56px)', paddingTop: '56px' }}>
+      <div className="flex items-center justify-center py-12 px-4" style={{ minHeight: 'calc(100vh - 82px)' }}>
         <div className="w-full max-w-sm bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.04)] border border-[#e3e8ee] p-8">
 
           {/* Header */}
