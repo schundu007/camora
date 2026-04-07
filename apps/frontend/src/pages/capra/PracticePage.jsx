@@ -81,7 +81,7 @@ const COMPANIES = [
   { id: 'netflix', label: 'Netflix', color: '#E50914' },
 ];
 
-const DIMENSION_LABELS = ['Problem Solving', 'System Design', 'Data Structures', 'Communication', 'Time Management'];
+const DIMENSION_LABELS = ['Problem Solving', 'System Design', 'Data Structures', 'Communication', 'Time Mgmt'];
 const DIMENSION_KEYS = ['problemSolving', 'systemDesign', 'dataStructures', 'communication', 'timeManagement'];
 
 const navLinks = [
@@ -229,9 +229,9 @@ function RadarChart({ values, labels, size = 200 }) {
       ))}
       {/* Labels */}
       {labels.map((label, i) => {
-        const [x, y] = point(i, 1.22);
+        const [x, y] = point(i, 1.18);
         return (
-          <text key={i} x={x} y={y} textAnchor="middle" dominantBaseline="central" style={{ fontSize: 10, fontWeight: 600, fill: '#6b7280', fontFamily: "'Work Sans', sans-serif" }}>
+          <text key={i} x={x} y={y} textAnchor="middle" dominantBaseline="central" style={{ fontSize: 9, fontWeight: 600, fill: '#6b7280', fontFamily: "'Work Sans', sans-serif" }}>
             {label}
           </text>
         );
