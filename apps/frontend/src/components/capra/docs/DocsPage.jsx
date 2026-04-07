@@ -380,7 +380,7 @@ export default function DocsPage({ onBack }) {
   // Get page title and color
   const getPageConfig = () => {
     switch (activePage) {
-      case 'overview': return { title: 'Prepare', color: '#10b981' };
+      case 'overview': return { title: 'Overview', color: '#10b981' };
       case 'coding': return { title: 'Data Structures & Algorithms', color: '#10b981' };
       case 'system-design': return { title: 'System Design', color: '#3b82f6' };
       case 'low-level': return { title: 'Low-Level Design', color: '#8b5cf6' };
