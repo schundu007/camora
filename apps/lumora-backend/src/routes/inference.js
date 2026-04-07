@@ -207,6 +207,9 @@ router.post('/stream', authenticate, checkUsage('questions'), async (req, res) =
   if (!question || typeof question !== 'string') {
     return res.status(400).json({ error: 'question is required' });
   }
+  if (question.length > 50000) {
+    return res.status(400).json({ error: 'Question too long. Max 50,000 characters.' });
+  }
 
   try {
     // Check daily free limit for free-tier users

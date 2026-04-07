@@ -376,22 +376,15 @@ router.post('/webhook', async (req, res) => {
     }
     event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
 
-    // Check for idempotency
-    const existingResult = await query(
-      'SELECT id FROM ascend_stripe_events WHERE id = $1',
-      [event.id]
+    // Atomic idempotency check — INSERT OR SKIP if already processed
+    const idempotencyResult = await query(
+      'INSERT INTO ascend_stripe_events (id, type) VALUES ($1, $2) ON CONFLICT (id) DO NOTHING RETURNING id',
+      [event.id, event.type]
     );
-
-    if (existingResult.rows.length > 0) {
+    if (idempotencyResult.rows.length === 0) {
       logger.info({ eventId: event.id }, 'Duplicate webhook event, skipping');
       return res.json({ received: true });
     }
-
-    // Record event for idempotency
-    await query(
-      'INSERT INTO ascend_stripe_events (id, type) VALUES ($1, $2)',
-      [event.id, event.type]
-    );
 
     // Handle event
     switch (event.type) {

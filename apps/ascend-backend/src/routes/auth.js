@@ -53,7 +53,9 @@ router.get('/google/login', (req, res) => {
  */
 router.get('/google/callback', async (req, res) => {
   const { code, state } = req.query;
-  const returnTo = (typeof state === 'string' && state.startsWith('/')) ? state : '/';
+  let returnTo = (typeof state === 'string' && state.startsWith('/')) ? state : '/';
+  // Prevent open redirect (e.g., //../evil.com or //evil.com)
+  if (returnTo.includes('://') || returnTo.startsWith('//') || returnTo.includes('\\')) returnTo = '/';
   if (!code) return res.redirect(`${FRONTEND_URL}?error=no_code`);
 
   // SECURITY: Validate code parameter

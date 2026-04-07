@@ -176,6 +176,7 @@ export function VoiceEnrollment({ disabled }: VoiceEnrollmentProps) {
         }
         if (progressRef.current) {
           clearInterval(progressRef.current);
+          progressRef.current = null;
         }
       }, RECORDING_DURATION);
 

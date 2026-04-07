@@ -61,8 +61,8 @@ export default function SiteNav() {
           )}
         </div>
 
-        {/* Mobile burger */}
-        <button onClick={() => setOpen(!open)} className="md:hidden p-2 text-gray-600 hover:text-gray-900">
+        {/* Mobile burger — 44px touch target */}
+        <button onClick={() => setOpen(!open)} className="md:hidden p-3 -mr-2 text-gray-600 hover:text-gray-900" aria-label={open ? 'Close menu' : 'Open menu'} aria-expanded={open}>
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
             {open
               ? <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -73,7 +73,7 @@ export default function SiteNav() {
 
       {/* Mobile menu */}
       {open && (
-        <div className="md:hidden border-t border-white/30 px-6 py-3 space-y-1" style={{ background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(12px)' }}>
+        <div className="md:hidden border-t border-white/30 px-6 py-3 space-y-1" style={{ background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)', zIndex: 50 }} role="menu">
           {NAV_LINKS.map((link) => (
             <Link
               key={link.label}

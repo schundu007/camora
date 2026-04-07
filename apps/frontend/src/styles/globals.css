@@ -140,6 +140,9 @@ body::after {
 }
 body::before { top: 0; }
 body::after { bottom: 0; }
+@media (max-width: 640px) {
+  body::before, body::after { height: 2px; }
+}
 
 /* Hide scrollbar but keep scrolling */
 .no-scrollbar::-webkit-scrollbar { display: none; }

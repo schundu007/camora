@@ -51,11 +51,9 @@ export function UsageBar() {
         setOpen(false);
       }
     }
-    if (open) {
-      document.addEventListener('mousedown', handleClick);
-      return () => document.removeEventListener('mousedown', handleClick);
-    }
-  }, [open]);
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
 
   if (loading || !usage) {
     return (
