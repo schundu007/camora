@@ -368,7 +368,6 @@ export default function PracticePage() {
     setTimeLeft(modeConfig.time);
     setQuestionStartTime(Date.now());
     challengeStartRef.current = Date.now();
-    setDiagramUrl(null);
     setPhase('active');
     window.scrollTo(0, 0);
   }, [mode, category, difficulty, company]);
