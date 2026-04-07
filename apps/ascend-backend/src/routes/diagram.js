@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import crypto from 'crypto';
+import fs from 'fs';
+import path from 'path';
 import * as eraser from '../services/eraser.js';
 import * as pythonDiagrams from '../services/pythonDiagrams.js';
 import { AppError, ErrorCode } from '../middleware/errorHandler.js';
@@ -29,17 +31,17 @@ router.post('/eraser', async (req, res, next) => {
       );
     }
 
-    // Hash on stable cacheKey (question text) not the full description
-    // which includes AI-generated components that vary per solve
-    const problemHash = hashProblem(cacheKey || description);
+    // Hash on stable cacheKey with eraser-specific dimensions
+    const problemHash = hashProblem(`${cacheKey || description}::eraser::default::${detailLevel}`);
 
     // 1. Check cache first
     try {
       const cached = await query(
-        'SELECT image_url, edit_url FROM ascend_diagram_cache WHERE problem_hash = $1 AND detail_level = $2',
-        [problemHash, detailLevel]
+        'SELECT image_url, edit_url FROM ascend_diagram_cache WHERE problem_hash = $1',
+        [problemHash]
       );
       if (cached.rows.length > 0) {
+        console.log('[DiagramCache] Eraser cache hit for hash:', problemHash);
         return res.json({
           imageUrl: cached.rows[0].image_url,
           editUrl: cached.rows[0].edit_url,
@@ -76,7 +78,7 @@ router.post('/eraser', async (req, res, next) => {
       await query(
         `INSERT INTO ascend_diagram_cache (problem_hash, detail_level, image_url, edit_url, description)
          VALUES ($1, $2, $3, $4, $5)
-         ON CONFLICT (problem_hash, detail_level) DO UPDATE SET image_url = $3, edit_url = $4`,
+         ON CONFLICT (problem_hash) DO UPDATE SET image_url = $3, edit_url = $4`,
         [problemHash, detailLevel, result.imageUrl, result.editUrl || null, description.slice(0, 500)]
       );
     } catch (err) {
@@ -106,23 +108,25 @@ router.post('/generate', async (req, res, next) => {
   res.setTimeout(120000);
   try {
     const { question, cloudProvider, difficulty, category, format, detailLevel = 'overview', direction = 'LR', cacheKey } = req.body;
+    const provider = cloudProvider || 'auto';
 
     if (!question) {
       throw new AppError('Question is required', ErrorCode.VALIDATION_ERROR);
     }
 
-    // 1. Check DB cache first
-    const problemHash = hashProblem(cacheKey || question);
+    // 1. Check DB cache first (hash includes all dimensions)
+    const problemHash = hashProblem(`${cacheKey || question}::${provider}::${direction}::${detailLevel}`);
     try {
       const cached = await query(
-        'SELECT image_url, edit_url FROM ascend_diagram_cache WHERE problem_hash = $1 AND detail_level = $2',
-        [problemHash, detailLevel]
+        'SELECT image_url FROM ascend_diagram_cache WHERE problem_hash = $1 AND image_data IS NOT NULL',
+        [problemHash]
       );
       if (cached.rows.length > 0) {
+        console.log('[DiagramCache] Cache hit for hash:', problemHash);
         return res.json({
           success: true,
           image_url: cached.rows[0].image_url,
-          cloud_provider: cloudProvider || 'auto',
+          cloud_provider: provider,
           cached: true,
         });
       }
@@ -145,7 +149,7 @@ router.post('/generate', async (req, res, next) => {
     // 4. Generate
     const result = await pythonDiagrams.generateDiagram({
       question,
-      cloudProvider: cloudProvider || 'auto',
+      cloudProvider: provider,
       difficulty: difficulty || 'medium',
       category: category || 'System Design',
       format: format || 'png',
@@ -157,19 +161,27 @@ router.post('/generate', async (req, res, next) => {
       throw new AppError(result.error || 'Diagram generation failed', ErrorCode.EXTERNAL_API_ERROR);
     }
 
-    // 5. Save to DB cache
+    // 5. Read PNG into buffer and persist in DB
+    const imageUrl = `/api/diagram/image/${problemHash}`;
     try {
+      const filePath = path.join(pythonDiagrams.getOutputDir(), path.basename(result.image_url));
+      const imageBuffer = fs.readFileSync(filePath);
       await query(
-        `INSERT INTO ascend_diagram_cache (problem_hash, detail_level, image_url, edit_url, description)
-         VALUES ($1, $2, $3, $4, $5)
-         ON CONFLICT (problem_hash, detail_level) DO UPDATE SET image_url = $3, edit_url = $4`,
-        [problemHash, detailLevel, result.image_url, null, (cacheKey || question).slice(0, 500)]
+        `INSERT INTO ascend_diagram_cache (problem_hash, detail_level, cloud_provider, direction, image_url, image_data, description)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
+         ON CONFLICT (problem_hash) DO UPDATE SET image_url = $5, image_data = $6`,
+        [problemHash, detailLevel, provider, direction, imageUrl, imageBuffer, (cacheKey || question).slice(0, 500)]
       );
+      // Clean up temp file — image is now in DB
+      try { fs.unlinkSync(filePath); } catch { /* ignore */ }
+      console.log('[DiagramCache] Stored in DB, hash:', problemHash, 'size:', imageBuffer.length);
     } catch (err) {
-      console.warn('[DiagramCache] Failed to save:', err.message);
+      console.warn('[DiagramCache] Failed to persist image:', err.message);
+      // Fall back to temp file URL if DB storage fails
+      return res.json({ ...result, cloud_provider: provider });
     }
 
-    res.json(result);
+    res.json({ success: true, image_url: imageUrl, cloud_provider: provider, cached: false });
   } catch (error) {
     if (error instanceof AppError) {
       next(error);

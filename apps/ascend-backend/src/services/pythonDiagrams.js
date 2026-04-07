@@ -154,11 +154,11 @@ export async function generateDiagram({
       reject(new Error(`Failed to spawn Python process: ${err.message}`));
     });
 
-    // Timeout after 90 seconds
+    // Timeout after 150 seconds (3 Claude attempts + import validation)
     setTimeout(() => {
       pythonProcess.kill();
-      reject(new Error('Diagram generation timed out after 90 seconds'));
-    }, 90000);
+      reject(new Error('Diagram generation timed out after 150 seconds'));
+    }, 150000);
   });
 }
 
@@ -173,7 +173,7 @@ export function getOutputDir() {
  * Clean up old diagram files (older than 1 hour)
  */
 export function cleanupOldDiagrams() {
-  const maxAge = 60 * 60 * 1000; // 1 hour
+  const maxAge = 10 * 60 * 1000; // 10 minutes (staging area only — images persist in DB)
   const now = Date.now();
 
   try {

@@ -428,6 +428,20 @@ select option:checked {
   100% { background-position: 0% 50%; }
 }
 
+/* Floating pricing shards */
+.pricing-shard {
+  position: absolute;
+  pointer-events: none;
+  z-index: 20;
+  animation: shard-float 5s ease-in-out infinite;
+}
+@keyframes shard-float {
+  0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.6; }
+  25% { transform: translateY(-10px) rotate(15deg); opacity: 1; }
+  50% { transform: translateY(-4px) rotate(-8deg); opacity: 0.7; }
+  75% { transform: translateY(-10px) rotate(8deg); opacity: 0.85; }
+}
+
 /* Highlight.js */
 .hljs {
   background: transparent !important;

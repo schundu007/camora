@@ -312,6 +312,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
   const [diagramTranslate, setDiagramTranslate] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [diagramImgLoaded, setDiagramImgLoaded] = useState(false);
 
   const diagramKey = `${diagramDetailLevel}_${diagramDirection}`;
   const diagramData = diagramCache[diagramKey] || null;
@@ -353,6 +354,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
 
     setGeneratingDiagram(true);
     setDiagramError(null);
+    setDiagramImgLoaded(false);
     setDiagramDetailLevel(detailLevel);
     setDiagramDirection(direction);
     setDiagramScale(1);
@@ -476,8 +478,16 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
           onMouseUp={() => setIsDragging(false)}
           onMouseLeave={() => setIsDragging(false)}
         >
-          {diagramData ? (
-            <img src={diagramData.imageUrl} alt="Cloud Architecture" className="select-none" draggable={false} style={{ transform: `translate(${diagramTranslate.x}px, ${diagramTranslate.y}px) scale(${diagramScale})`, transformOrigin: '0 0', maxWidth: 'none' }} onError={() => setDiagramError('Image failed to load')} />
+          {diagramData && !diagramError ? (
+            <>
+              {!diagramImgLoaded && (
+                <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                  <svg className="w-6 h-6 animate-spin text-emerald-500 mb-2" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" /></svg>
+                  <span className="text-xs">Loading diagram...</span>
+                </div>
+              )}
+              <img src={diagramData.imageUrl} alt="Cloud Architecture" className="select-none" draggable={false} style={{ transform: `translate(${diagramTranslate.x}px, ${diagramTranslate.y}px) scale(${diagramScale})`, transformOrigin: '0 0', maxWidth: 'none', display: diagramImgLoaded ? 'block' : 'none' }} onLoad={() => setDiagramImgLoaded(true)} onError={() => { setDiagramImgLoaded(false); setDiagramError({ message: 'Image failed to load. Click Retry to regenerate.', subscriptionRequired: false }); }} />
+            </>
           ) : generatingDiagram ? (
             <div className="flex flex-col items-center justify-center h-full text-gray-500">
               <svg className="w-6 h-6 animate-spin text-emerald-500 mb-2" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" /></svg>

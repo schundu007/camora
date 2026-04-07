@@ -917,8 +917,8 @@ export default function JobsPage() {
           ) : (
             /* Job cards grid */
             <div
-              className="grid gap-5"
-              style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', alignItems: 'start' }}
+              style={{ columnCount: 4, columnGap: '20px' }}
+              className="jobs-grid"
             >
               {filteredJobs.map((job) => {
                 const category = detectCategory(job.title);
@@ -935,7 +935,6 @@ export default function JobsPage() {
                       background: '#ffffff',
                       border: '1px solid #e3e8ee',
                       borderRadius: '16px',
-                      overflow: 'hidden',
                       display: 'flex',
                       flexDirection: 'column',
                       cursor: 'default',
@@ -957,7 +956,7 @@ export default function JobsPage() {
                       </div>
                     </div>
 
-                    {/* Expandable details — hidden by default, shown on hover */}
+                    {/* Expandable details — pushes only cards below in same column */}
                     <div className="jobs-card-details" style={{ maxHeight: '0', overflow: 'hidden', transition: 'max-height 0.35s ease, padding 0.35s ease', padding: '0 16px' }}>
                       {/* Location + Work Type */}
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '12px', fontSize: '13px', color: '#4b5563' }}>
@@ -1075,6 +1074,8 @@ export default function JobsPage() {
           transition: box-shadow 0.3s, border-color 0.3s;
           position: relative;
           z-index: 1;
+          break-inside: avoid;
+          margin-bottom: 20px;
         }
         .jobs-card:hover {
           box-shadow: 0 12px 40px rgba(0,0,0,0.15) !important;
@@ -1084,6 +1085,15 @@ export default function JobsPage() {
         .jobs-card:hover .jobs-card-details {
           max-height: 200px !important;
           padding: 0 16px !important;
+        }
+        @media (max-width: 1280px) {
+          .jobs-grid { column-count: 3 !important; }
+        }
+        @media (max-width: 960px) {
+          .jobs-grid { column-count: 2 !important; }
+        }
+        @media (max-width: 640px) {
+          .jobs-grid { column-count: 1 !important; }
         }
 
         /* Search bar focus-within */

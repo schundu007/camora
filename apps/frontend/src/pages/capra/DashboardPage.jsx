@@ -47,6 +47,10 @@ const STORAGE_KEYS = {
   autoSwitch: 'chundu_auto_switch',
   sidebarCollapsed: 'chundu_sidebar_collapsed',
   editorSettings: 'chundu_editor_settings',
+  currentProblem: 'chundu_current_problem',
+  loadedProblem: 'chundu_loaded_problem',
+  solution: 'chundu_current_solution',
+  eraserDiagram: 'chundu_eraser_diagram',
 };
 
 // ============================================================================
@@ -169,8 +173,8 @@ export default function DashboardPage() {
   // Problem State
   // ---------------------------------------------------------------------------
   const [extractedText, setExtractedText] = useLocalState('');
-  const [currentProblem, setCurrentProblem] = useLocalState('');
-  const [loadedProblem, setLoadedProblem] = useLocalState('');
+  const [currentProblem, setCurrentProblem] = useLocalStorage(STORAGE_KEYS.currentProblem, '');
+  const [loadedProblem, setLoadedProblem] = useLocalStorage(STORAGE_KEYS.loadedProblem, '');
   const [currentLanguage, setCurrentLanguage] = useLocalState('auto');
   const [problemExpanded, setProblemExpanded] = useLocalState(true);
   const [clearScreenshot, setClearScreenshot] = useLocalState(0);
@@ -178,9 +182,9 @@ export default function DashboardPage() {
   // ---------------------------------------------------------------------------
   // Solution State
   // ---------------------------------------------------------------------------
-  const [solution, setSolution] = useLocalState(null);
+  const [solution, setSolution] = useLocalStorage(STORAGE_KEYS.solution, null);
   const [autoRunOutput, setAutoRunOutput] = useLocalState(null);
-  const [eraserDiagram, setEraserDiagram] = useLocalState(null);
+  const [eraserDiagram, setEraserDiagram] = useLocalStorage(STORAGE_KEYS.eraserDiagram, null);
   const [highlightedLine, setHighlightedLine] = useLocalState(null);
 
   // ---------------------------------------------------------------------------
