@@ -8,6 +8,25 @@ import * as freeUsageService from '../services/freeUsageService.js';
 
 const router = Router();
 
+// Daily prep cap: 1/day free, 3/day paid
+const PREP_DAILY_LIMIT_FREE = 1;
+const PREP_DAILY_LIMIT_PAID = 3;
+
+const prepDailyUsage = new Map();
+
+function checkPrepDailyLimit(userId, isPaid) {
+  const today = new Date().toISOString().slice(0, 10);
+  const limit = isPaid ? PREP_DAILY_LIMIT_PAID : PREP_DAILY_LIMIT_FREE;
+  const entry = prepDailyUsage.get(userId);
+  if (!entry || entry.date !== today) {
+    prepDailyUsage.set(userId, { count: 1, date: today });
+    return true;
+  }
+  if (entry.count >= limit) return false;
+  entry.count++;
+  return true;
+}
+
 /**
  * Check subscription OR free usage for webapp users (freemium model)
  * Returns true if allowed (Electron or subscription or free allowance remaining)
@@ -129,6 +148,20 @@ router.post('/stream', async (req, res) => {
   // Check subscription OR free usage first
   if (!await checkFeatureAccess(req, res, 'design')) return;
 
+  // Check daily prep limit
+  const isPaid = req.featureAccess?.hasSubscription || false;
+  if (!checkPrepDailyLimit(req.userId, isPaid)) {
+    const limit = isPaid ? PREP_DAILY_LIMIT_PAID : PREP_DAILY_LIMIT_FREE;
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.write(`data: ${JSON.stringify({
+      error: `Daily prep limit reached (${limit}/day). ${isPaid ? 'Try again tomorrow.' : 'Upgrade for more daily preps.'}`,
+      dailyLimitReached: true,
+      upgradeUrl: isPaid ? null : '/pricing'
+    })}\n\n`);
+    res.end();
+    return;
+  }
+
   const { jobDescription, resume, coverLetter, prepMaterials, documentation, sections, provider = 'claude', model } = req.body;
 
   if (!jobDescription || !resume) {
@@ -178,6 +211,20 @@ router.post('/stream', async (req, res) => {
 router.post('/section', async (req, res) => {
   // Check subscription OR free usage first
   if (!await checkFeatureAccess(req, res, 'design')) return;
+
+  // Check daily prep limit
+  const isPaidSection = req.featureAccess?.hasSubscription || false;
+  if (!checkPrepDailyLimit(req.userId, isPaidSection)) {
+    const limit = isPaidSection ? PREP_DAILY_LIMIT_PAID : PREP_DAILY_LIMIT_FREE;
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.write(`data: ${JSON.stringify({
+      error: `Daily prep limit reached (${limit}/day). ${isPaidSection ? 'Try again tomorrow.' : 'Upgrade for more daily preps.'}`,
+      dailyLimitReached: true,
+      upgradeUrl: isPaidSection ? null : '/pricing'
+    })}\n\n`);
+    res.end();
+    return;
+  }
 
   const { jobDescription, resume, coverLetter, prepMaterials, documentation, section, customDocumentContent, customDocumentName, companyName, provider = 'claude', model } = req.body;
 
