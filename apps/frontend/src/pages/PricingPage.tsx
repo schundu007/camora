@@ -334,7 +334,7 @@ export default function PricingPage() {
 
       {/* Plans */}
       <section className="max-w-[85%] xl:max-w-7xl mx-auto px-6 py-10">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-1" style={{ alignItems: 'center' }}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-1" style={{ alignItems: 'stretch' }}>
           {PLANS.map((plan) => (
             <div
               key={plan.name}
