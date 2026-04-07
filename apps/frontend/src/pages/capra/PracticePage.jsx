@@ -5,6 +5,7 @@ import SiteNav from '../../components/shared/SiteNav';
 import SiteFooter from '../../components/shared/SiteFooter';
 import { getAuthHeaders } from '../../utils/authHeaders.js';
 import { ArchitectureDiagram } from '../../components/lumora/interview/ArchitectureDiagram';
+import GamificationWidget from '../../components/capra/features/GamificationWidget';
 
 
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
@@ -594,6 +595,11 @@ export default function PracticePage() {
           {/* ── SETUP PHASE ── */}
           {phase === 'setup' && (
             <>
+              {/* Gamification overview */}
+              <div className="mb-6">
+                <GamificationWidget />
+              </div>
+
               {/* Daily Challenge Banner */}
               <div style={{ background: 'linear-gradient(135deg, #ecfdf5 0%, #e0f2fe 100%)', border: '1px solid #a7f3d0', borderRadius: 16, padding: '20px 24px', marginBottom: 24, display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
                 <div style={{ flex: 1, minWidth: 200 }}>
