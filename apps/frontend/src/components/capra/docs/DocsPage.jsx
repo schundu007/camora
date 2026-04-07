@@ -4,6 +4,7 @@ import { useIsMobile } from '../../../hooks/capra/useIsMobile';
 import { useAppShell } from '../layout/AppShellContext';
 import { useAuth } from '../../../contexts/AuthContext';
 import { Icon } from '../../shared/Icons.jsx';
+import { CompanyLogo, getCompanyLogoSrc } from '../../shared/CompanyLogo.tsx';
 import CamoraLogo from '../../shared/CamoraLogo';
 import SiteFooter from '../../shared/SiteFooter';
 import SiteNav from '../../shared/SiteNav';
@@ -1159,9 +1160,13 @@ export default function DocsPage({ onBack }) {
                                     onClick={() => setSelectedTopic(design.id)}
                                     className="flex items-center gap-2 flex-1 cursor-pointer min-w-0 overflow-hidden"
                                   >
-                                    <div className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0" style={{ background: `${design.color}12` }}>
-                                      <Icon name={design.icon} size={11} style={{ color: design.color }} />
-                                    </div>
+                                    {getCompanyLogoSrc(design.id) ? (
+                                      <CompanyLogo topicId={design.id} size={24} />
+                                    ) : (
+                                      <div className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0" style={{ background: `${design.color}12` }}>
+                                        <Icon name={design.icon} size={11} style={{ color: design.color }} />
+                                      </div>
+                                    )}
                                     <div>
                                       <span className="text-sm landing-body font-medium text-gray-900 group-hover:text-emerald-600 transition-colors">{design.title}</span>
                                       {design.isNew && <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 ml-2 font-bold">NEW</span>}
@@ -1225,9 +1230,13 @@ export default function DocsPage({ onBack }) {
                                   className="px-4 py-2.5 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-all group border-b border-r border-gray-100"
                                 >
                                   <div className="flex items-center gap-2.5">
-                                    <div className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0" style={{ background: `${problem.color}12` }}>
-                                      <Icon name={problem.icon} size={11} style={{ color: problem.color }} />
-                                    </div>
+                                    {getCompanyLogoSrc(problem.id) ? (
+                                      <CompanyLogo topicId={problem.id} size={24} />
+                                    ) : (
+                                      <div className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0" style={{ background: `${problem.color}12` }}>
+                                        <Icon name={problem.icon} size={11} style={{ color: problem.color }} />
+                                      </div>
+                                    )}
                                     <div>
                                       <span className="text-gray-900 text-sm landing-body font-medium group-hover:text-emerald-600 transition-colors">{problem.title}</span>
                                       {problem.isNew && <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 ml-2 font-bold">NEW</span>}
@@ -1609,9 +1618,13 @@ export default function DocsPage({ onBack }) {
                                   className="px-4 py-2.5 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-all group border-b border-r border-gray-100"
                                 >
                                   <div className="flex items-center gap-2.5">
-                                    <div className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0" style={{ background: `${problem.color}12` }}>
-                                      <Icon name={problem.icon} size={11} style={{ color: problem.color }} />
-                                    </div>
+                                    {getCompanyLogoSrc(problem.id) ? (
+                                      <CompanyLogo topicId={problem.id} size={24} />
+                                    ) : (
+                                      <div className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0" style={{ background: `${problem.color}12` }}>
+                                        <Icon name={problem.icon} size={11} style={{ color: problem.color }} />
+                                      </div>
+                                    )}
                                     <div>
                                       <span className="text-gray-900 text-sm landing-body font-medium group-hover:text-emerald-600 transition-colors">{problem.title}</span>
                                       {problem.subtitle && <span className="text-gray-400 text-xs ml-2 hidden md:inline landing-body">{problem.subtitle}</span>}
