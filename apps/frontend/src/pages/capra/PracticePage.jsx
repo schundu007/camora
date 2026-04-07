@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Icon } from '../../components/shared/Icons.jsx';
@@ -6,7 +6,6 @@ import CamoraLogo from '../../components/shared/CamoraLogo';
 import SiteFooter from '../../components/shared/SiteFooter';
 import { getAuthHeaders } from '../../utils/authHeaders.js';
 
-const Excalidraw = lazy(() => import('@excalidraw/excalidraw').then(mod => ({ default: mod.Excalidraw })));
 
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
@@ -339,6 +338,9 @@ export default function PracticePage() {
   const [inlineEval, setInlineEval] = useState(null); // current question's eval before moving on
   const [expandedHistory, setExpandedHistory] = useState(null);
   const [resultDimensions, setResultDimensions] = useState(null);
+  const [diagramUrl, setDiagramUrl] = useState(null);
+  const [diagramLoading, setDiagramLoading] = useState(false);
+  const [diagramError, setDiagramError] = useState(null);
   const timerRef = useRef(null);
   const textareaRef = useRef(null);
   const challengeStartRef = useRef(0);
@@ -379,9 +381,36 @@ export default function PracticePage() {
     setTimeLeft(modeConfig.time);
     setQuestionStartTime(Date.now());
     challengeStartRef.current = Date.now();
+    setDiagramUrl(null);
+    setDiagramError(null);
     setPhase('active');
     window.scrollTo(0, 0);
   }, [mode, category, difficulty, company]);
+
+  // Auto-generate architecture diagram for system design questions
+  useEffect(() => {
+    if (phase !== 'active' || category !== 'system-design' || !questions[currentIdx]) return;
+    setDiagramUrl(null);
+    setDiagramError(null);
+    setDiagramLoading(true);
+    const q = questions[currentIdx];
+    fetch(`${API_URL}/api/diagram/generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      body: JSON.stringify({ question: `${q.q}: ${q.desc}`, cloudProvider: 'aws', detailLevel: 'overview', direction: 'LR' }),
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success && data.image_url) {
+          const url = data.image_url.startsWith('/') ? `${API_URL}${data.image_url}` : data.image_url;
+          setDiagramUrl(url);
+        } else {
+          setDiagramError('Could not generate diagram');
+        }
+      })
+      .catch(() => setDiagramError('Diagram service unavailable'))
+      .finally(() => setDiagramLoading(false));
+  }, [phase, category, currentIdx, questions]);
 
   const submitAnswer = useCallback(async () => {
     const q = questions[currentIdx];
@@ -782,24 +811,24 @@ export default function PracticePage() {
                   </div>
                 </div>
 
+                {/* Company Focus — inside challenge card */}
+                <div style={{ marginBottom: 20 }}>
+                  <label style={{ fontSize: 12, fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8, display: 'block', textAlign: 'center' }}>Company</label>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
+                    {COMPANIES.map(c => (
+                      <button key={c.id} onClick={() => setCompany(c.id)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 16px', borderRadius: 99, border: company === c.id ? `2px solid ${c.color}` : '1px solid #e3e8ee', background: company === c.id ? `${c.color}10` : '#fff', fontSize: 13, fontWeight: 500, cursor: 'pointer', color: company === c.id ? c.color : '#4b5563', transition: 'all 0.15s' }}>
+                        <span style={{ width: 8, height: 8, borderRadius: 99, background: c.color, display: 'inline-block' }} />
+                        {c.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 <div style={{ textAlign: 'center', position: 'relative', zIndex: 10 }}>
                   <button onClick={() => startChallenge()} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 32px', background: 'linear-gradient(135deg, #10b981, #059669)', color: '#fff', fontSize: 15, fontWeight: 600, borderRadius: 10, border: 'none', cursor: 'pointer', boxShadow: '0 2px 8px rgba(16,185,129,0.25)', transition: 'transform 0.1s', position: 'relative', zIndex: 10 }}>
                     <Icon name="play" size={16} style={{ color: '#fff' }} />
                     Start Challenge
                   </button>
-                </div>
-              </div>
-
-              {/* Company-Specific Practice */}
-              <div style={{ background: '#fff', border: '1px solid #e3e8ee', borderRadius: 16, padding: 24, marginBottom: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-                <h2 className="practice-display" style={{ fontSize: 18, fontWeight: 700, color: '#111827', margin: '0 0 16px' }}>Company Focus</h2>
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  {COMPANIES.map(c => (
-                    <button key={c.id} onClick={() => setCompany(c.id)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 16px', borderRadius: 99, border: company === c.id ? `2px solid ${c.color}` : '1px solid #e3e8ee', background: company === c.id ? `${c.color}10` : '#fff', fontSize: 13, fontWeight: 500, cursor: 'pointer', color: company === c.id ? c.color : '#4b5563', transition: 'all 0.15s' }}>
-                      <span style={{ width: 8, height: 8, borderRadius: 99, background: c.color, display: 'inline-block' }} />
-                      {c.label}
-                    </button>
-                  ))}
                 </div>
               </div>
 
@@ -954,19 +983,56 @@ export default function PracticePage() {
                 const parts = (answers[currentIdx] || '').split('---SECTION---');
                 return (
                   <div style={{ marginBottom: 8 }}>
-                    {/* Architecture Diagram — Excalidraw */}
+                    {/* Architecture Diagram — Auto-generated */}
                     <div style={{ marginBottom: 12 }}>
                       <label style={{ fontSize: 11, fontWeight: 600, color: '#6b7280', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                        <Icon name="pen" size={12} style={{ color: '#10b981' }} />
-                        Architecture Diagram
+                        <Icon name="layers" size={12} style={{ color: '#10b981' }} />
+                        Reference Architecture
                       </label>
-                      <div style={{ width: '100%', height: 400, borderRadius: 10, border: '1px solid #e3e8ee', overflow: 'hidden' }}>
-                        <Suspense fallback={<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#9ca3af', fontSize: 13 }}>Loading diagram tool...</div>}>
-                          <Excalidraw
-                            theme="light"
-                            UIOptions={{ canvasActions: { saveToActiveFile: false, loadScene: false, export: false } }}
-                          />
-                        </Suspense>
+                      <div style={{ width: '100%', minHeight: 120, borderRadius: 10, border: '1px solid #e3e8ee', background: '#fafbfc', overflow: 'hidden', position: 'relative' }}>
+                        {diagramLoading && (
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 20px', gap: 10 }}>
+                            <div style={{ width: 28, height: 28, border: '3px solid #e3e8ee', borderTopColor: '#10b981', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+                            <span style={{ fontSize: 12, color: '#9ca3af' }}>Generating architecture diagram...</span>
+                          </div>
+                        )}
+                        {diagramUrl && (
+                          <img src={diagramUrl} alt="Architecture diagram" style={{ width: '100%', display: 'block', padding: 8 }} />
+                        )}
+                        {diagramError && (
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '30px 20px', gap: 8 }}>
+                            <span style={{ fontSize: 12, color: '#9ca3af' }}>{diagramError}</span>
+                            <button
+                              onClick={() => {
+                                setDiagramLoading(true);
+                                setDiagramError(null);
+                                const q = questions[currentIdx];
+                                fetch(`${API_URL}/api/diagram/generate`, {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+                                  body: JSON.stringify({ question: `${q.q}: ${q.desc}`, cloudProvider: 'aws', detailLevel: 'overview', direction: 'LR' }),
+                                })
+                                  .then(r => r.json())
+                                  .then(data => {
+                                    if (data.success && data.image_url) {
+                                      const url = data.image_url.startsWith('/') ? `${API_URL}${data.image_url}` : data.image_url;
+                                      setDiagramUrl(url);
+                                    } else setDiagramError('Could not generate diagram');
+                                  })
+                                  .catch(() => setDiagramError('Diagram service unavailable'))
+                                  .finally(() => setDiagramLoading(false));
+                              }}
+                              style={{ padding: '6px 16px', fontSize: 11, fontWeight: 600, color: '#10b981', background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: 8, cursor: 'pointer' }}
+                            >
+                              Retry
+                            </button>
+                          </div>
+                        )}
+                        {!diagramLoading && !diagramUrl && !diagramError && (
+                          <div style={{ padding: '30px 20px', textAlign: 'center', color: '#c0c5ce', fontSize: 12 }}>
+                            Diagram will appear here
+                          </div>
+                        )}
                       </div>
                     </div>
 
