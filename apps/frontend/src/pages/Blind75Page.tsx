@@ -476,7 +476,7 @@ export default function Blind75Page() {
       <SiteNav />
 
       {/* ═══════════════════════ Header Section ═══════════════════════ */}
-      <div style={{ paddingTop: 56 }}>
+      <div>
         <div className="max-w-[85%] xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: 32 }}>
           <div style={{ background: '#ffffff', border: '1px solid #e3e8ee', borderRadius: 16, padding: '24px 28px', marginBottom: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>

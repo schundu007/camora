@@ -8,7 +8,7 @@ export default function NotFoundPage() {
       <SiteNav />
 
       {/* Content */}
-      <div className="flex flex-col items-center justify-center min-h-screen px-6 pt-14">
+      <div className="flex flex-col items-center justify-center min-h-screen px-6">
         {/* Subtle grid background */}
         <div className="fixed inset-0 opacity-[0.03]"
              style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)', backgroundSize: '64px 64px' }} />

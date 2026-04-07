@@ -404,7 +404,7 @@ export default function CompanyPrepPage() {
       <div style={{ background: '#f7f8f9', minHeight: '100vh' }}>
         <SiteNav />
 
-        <div style={{ paddingTop: 56 }}>
+        <div>
           {/* Header */}
           <div style={{ background: '#ffffff', borderBottom: '1px solid #e3e8ee' }}>
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
@@ -531,7 +531,7 @@ export default function CompanyPrepPage() {
       <SiteNav />
 
       {/* ═══════════════════════ Main Content ═══════════════════════ */}
-      <main style={{ paddingTop: 56 }}>
+      <main>
         <div className="max-w-[85%] xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
           {/* ── Breadcrumb ── */}

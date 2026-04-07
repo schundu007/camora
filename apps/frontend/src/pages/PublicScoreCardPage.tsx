@@ -89,7 +89,7 @@ export default function PublicScoreCardPage() {
     return (
       <div className="min-h-screen bg-white">
         <SiteNav />
-        <div className="flex items-center justify-center min-h-screen pt-14">
+        <div className="flex items-center justify-center min-h-screen">
           <div className="w-12 h-12 border-4 border-emerald-200 border-t-emerald-500 rounded-full animate-spin" />
         </div>
       </div>
@@ -100,7 +100,7 @@ export default function PublicScoreCardPage() {
     return (
       <div className="min-h-screen bg-white flex flex-col">
         <SiteNav />
-        <div className="flex-1 flex flex-col items-center justify-center px-6 pt-14">
+        <div className="flex-1 flex flex-col items-center justify-center px-6">
           <CamoraLogo size={48} />
           <h1 className="mt-6 text-2xl font-bold text-gray-900 tracking-tight">Score Card Not Found</h1>
           <p className="mt-2 text-sm text-gray-500 text-center max-w-sm">

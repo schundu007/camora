@@ -430,7 +430,7 @@ export default function JobPrepPage() {
     return (
       <div style={{ minHeight: '100vh' }}>
         <SiteNav />
-        <div style={{ paddingTop: '56px' }} className="flex items-center justify-center">
+        <div className="flex items-center justify-center">
           <div className="w-full lg:max-w-[70%] mx-auto px-4 sm:px-6 py-16 text-center">
             <div style={{ width: '48px', height: '48px', border: '4px solid #d1fae5', borderTopColor: '#10b981', borderRadius: '50%', margin: '0 auto 16px' }} className="animate-spin" />
             <p style={{ fontSize: '14px', color: '#6b7280' }}>Loading preparation plan...</p>
@@ -446,7 +446,7 @@ export default function JobPrepPage() {
     return (
       <div style={{ minHeight: '100vh' }}>
         <SiteNav />
-        <div style={{ paddingTop: '56px' }}>
+        <div>
           <div className="w-full lg:max-w-[70%] mx-auto px-4 sm:px-6 py-16 text-center">
             <svg width="48" height="48" fill="none" stroke="#9ca3af" viewBox="0 0 24 24" strokeWidth={1.5} style={{ margin: '0 auto 16px' }}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
@@ -466,7 +466,7 @@ export default function JobPrepPage() {
     return (
       <div style={{ minHeight: '100vh' }}>
         <SiteNav />
-        <div style={{ paddingTop: '56px' }}>
+        <div>
           <div className="w-full lg:max-w-[70%] mx-auto px-4 sm:px-6 py-16 text-center">
             <svg width="48" height="48" fill="none" stroke="#ef4444" viewBox="0 0 24 24" strokeWidth={1.5} style={{ margin: '0 auto 16px' }}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
@@ -490,7 +490,7 @@ export default function JobPrepPage() {
       <SiteNav />
 
       {/* ── Page Content ── */}
-      <div style={{ paddingTop: '56px' }}>
+      <div>
 
         {/* ── Header ── */}
         <div style={{ background: '#ffffff', borderBottom: '1px solid #e3e8ee' }}>
