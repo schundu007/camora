@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Icon } from '../../shared/Icons.jsx';
-import { CompanyLogo } from '../../shared/CompanyLogo.tsx';
+import { CompanyLogo, getCompanyLogoSrc } from '../../shared/CompanyLogo.tsx';
 import FormattedContent from './FormattedContent.jsx';
 import CloudArchitectureDiagram from './CloudArchitectureDiagram.jsx';
 import DiagramSVG from '../features/DiagramSVG.jsx';
@@ -356,13 +356,16 @@ export default function TopicDetail({
       {/* Topic Header - Clean minimal design */}
       <div className="rounded-xl p-3 mb-3 border border-[#e3e8ee] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
         <div className="flex items-start gap-2">
-          <CompanyLogo topicId={selectedTopic} size={48} className="" />
-          <div
-            className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{ background: `${topicDetails.color}10` }}
-          >
-            <Icon name={topicDetails.icon} size={28} style={{ color: topicDetails.color }} />
-          </div>
+          {getCompanyLogoSrc(selectedTopic) ? (
+            <CompanyLogo topicId={selectedTopic} size={48} />
+          ) : (
+            <div
+              className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0"
+              style={{ background: `${topicDetails.color}10` }}
+            >
+              <Icon name={topicDetails.icon} size={28} style={{ color: topicDetails.color }} />
+            </div>
+          )}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-2 flex-wrap">
               <h1 className="text-lg font-bold text-gray-900 landing-display">{topicDetails.title}</h1>
