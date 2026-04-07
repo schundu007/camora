@@ -9,14 +9,18 @@ import ReferralDashboard from '../components/capra/features/ReferralDashboard';
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
 const QUIZ_QUESTIONS = [
-  { q: 'Reverse a String', desc: 'Write a function that reverses a string in-place.' },
-  { q: 'Two Sum', desc: 'Given an array and target, return indices of two numbers that add up to target.' },
-  { q: 'Valid Parentheses', desc: 'Check if a string of brackets is balanced.' },
-  { q: 'Fibonacci', desc: 'Return the nth Fibonacci number efficiently.' },
-  { q: 'Palindrome Check', desc: 'Check if a string is a palindrome, ignoring non-alphanumeric characters.' },
-  { q: 'Find Maximum', desc: 'Find the maximum element in an unsorted array.' },
-  { q: 'Merge Sorted Arrays', desc: 'Merge two sorted arrays into one sorted array.' },
-  { q: 'Binary Search', desc: 'Implement binary search on a sorted array.' },
+  { q: 'Distributed Rate Limiter', desc: 'Design and implement a token-bucket rate limiter that works across multiple server instances using Redis. Handle clock skew, race conditions on token refill, and burst allowance. Provide the core algorithm with atomic operations.' },
+  { q: 'CRDT-Based Collaborative Counter', desc: 'Implement a conflict-free replicated data type (CRDT) for a distributed counter that supports increment/decrement across nodes with eventual consistency. Handle network partitions and merges without coordination.' },
+  { q: 'LRU Cache with TTL & Write-Behind', desc: 'Build an LRU cache that supports per-key TTL expiration and write-behind (lazy persistence). Handle concurrent reads/writes, eviction under memory pressure, and guarantee no data loss on crash for pending writes.' },
+  { q: 'Event Sourcing Snapshot System', desc: 'Design an event sourcing system with periodic snapshots. Implement the snapshot creation, event replay from snapshot, and compaction strategy. Handle schema evolution of events across versions.' },
+  { q: 'Consistent Hashing with Virtual Nodes', desc: 'Implement consistent hashing with virtual nodes for a distributed cache. Support node addition/removal with minimal key redistribution. Handle hotspot detection and automatic rebalancing when a node is overloaded.' },
+  { q: 'Merkle Tree Sync Protocol', desc: 'Implement a Merkle tree-based anti-entropy protocol for detecting and repairing data inconsistencies between database replicas. Minimize network bandwidth by only transferring divergent subtrees.' },
+  { q: 'Circuit Breaker with Adaptive Thresholds', desc: 'Implement a circuit breaker pattern with adaptive failure thresholds using exponential moving averages. Support half-open state with gradual traffic restoration, per-endpoint isolation, and fallback cascading.' },
+  { q: 'Raft Leader Election', desc: 'Implement the leader election portion of the Raft consensus protocol. Handle term management, vote requests/responses, split-brain prevention, and leader heartbeats with proper timeout randomization.' },
+  { q: 'Lock-Free Concurrent Queue', desc: 'Implement a lock-free multi-producer multi-consumer bounded queue using compare-and-swap operations. Handle the ABA problem, memory ordering, and back-pressure when the queue is full.' },
+  { q: 'Bloom Filter with Counting Deletes', desc: 'Implement a counting Bloom filter that supports both insertions and deletions with configurable false-positive rate. Provide the optimal hash function count calculation and handle counter overflow gracefully.' },
+  { q: 'Write-Ahead Log with Checksums', desc: 'Implement a write-ahead log (WAL) with CRC32 checksums for crash recovery. Handle partial writes, log compaction, and replay with corruption detection. Support concurrent appenders with proper ordering.' },
+  { q: 'Sharded Job Scheduler', desc: 'Design a distributed job scheduler where jobs are sharded across workers using consistent hashing. Handle worker failures with job reassignment, exactly-once execution guarantees, and priority-based scheduling with starvation prevention.' },
 ];
 
 /* ── Constants ────────────────────────────────────────────── */
