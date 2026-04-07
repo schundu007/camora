@@ -252,11 +252,11 @@ export default function PricingPage() {
 
       {/* Plans */}
       <section className="w-full lg:max-w-[70%] mx-auto px-6 py-10">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {PLANS.map((plan) => (
             <div
               key={plan.name}
-              className="relative p-6 flex flex-col overflow-visible"
+              className="relative p-6 flex flex-col"
               style={{
                 borderRadius: '16px',
                 background: 'white',
@@ -264,19 +264,16 @@ export default function PricingPage() {
                 boxShadow: plan.popular ? '0 4px 16px rgba(16,185,129,0.12)' : plan.name === 'Annual' ? '0 4px 16px rgba(245,158,11,0.12)' : '0 2px 8px rgba(0,0,0,0.04)',
               }}
             >
-              {plan.popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-[10px] font-bold text-white uppercase tracking-wider whitespace-nowrap" style={{ background: 'linear-gradient(135deg, #10b981, #06b6d4)' }}>
-                  Most Popular
-                </div>
-              )}
-              {plan.name === 'Annual' && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-[10px] font-bold text-white uppercase tracking-wider whitespace-nowrap" style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}>
-                  Best Value
-                </div>
-              )}
-
               <div className="mb-4">
-                <h3 className="text-sm font-semibold text-gray-900">{plan.name}</h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-gray-900">{plan.name}</h3>
+                  {plan.popular && (
+                    <span className="px-3 py-0.5 rounded-full text-[9px] font-bold text-white uppercase tracking-wider" style={{ background: 'linear-gradient(135deg, #10b981, #06b6d4)' }}>Popular</span>
+                  )}
+                  {plan.name === 'Annual' && (
+                    <span className="px-3 py-0.5 rounded-full text-[9px] font-bold text-white uppercase tracking-wider" style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}>Best Value</span>
+                  )}
+                </div>
                 <div className="mt-2 flex items-baseline gap-0.5">
                   <span className="text-3xl font-semibold text-gray-900">{plan.price}</span>
                   <span className="text-sm text-gray-500">{plan.period}</span>
