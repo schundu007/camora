@@ -13,6 +13,7 @@ const NAV_LINKS = [
 ];
 
 const CHALLENGE_END = new Date('2026-10-07T23:59:59Z');
+const TICKER_HEIGHT = 26;
 const TICKER_ITEMS = [
   'The Camora Challenge — $21,812 in prizes',
   'Find bugs, build features, join the founding team',
@@ -28,7 +29,7 @@ export default function SiteNav() {
 
   const isActive = (href: string) => location.pathname === href || location.pathname.startsWith(href + '/');
 
-  return (
+  const nav = (
     <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl" style={{ background: 'linear-gradient(135deg, rgba(178,235,242,0.7) 0%, rgba(179,198,231,0.7) 30%, rgba(197,179,227,0.7) 55%, rgba(212,184,232,0.7) 80%, rgba(225,190,231,0.7) 100%)' }}>
       <div className="w-full lg:max-w-[70%] mx-auto flex items-center justify-between px-4 sm:px-6 h-14">
         {/* Logo */}
@@ -108,35 +109,35 @@ export default function SiteNav() {
       )}
     </nav>
   );
-}
 
-/* ── Challenge Campaign Ticker (renders below nav on every page) ── */
-const TICKER_HEIGHT = 26;
-
-export function ChallengeTicker() {
-  const location = useLocation();
-  const show = new Date() < CHALLENGE_END && location.pathname !== '/challenge';
-  if (!show) return null;
+  const showTicker = new Date() < CHALLENGE_END && location.pathname !== '/challenge';
 
   return (
-    <Link
-      to="/challenge"
-      className="fixed left-0 right-0 z-40 block overflow-hidden cursor-pointer"
-      style={{ top: 56, height: TICKER_HEIGHT, background: 'linear-gradient(90deg, #10b981, #6366f1, #0ea5e9, #f59e0b)' }}
-    >
-      <div className="challenge-ticker flex items-center h-full whitespace-nowrap">
-        {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, i) => (
-          <span key={i} className="inline-flex items-center px-6 text-[10px] font-bold text-white tracking-wide">
-            {item}
-            <span className="mx-5 w-1 h-1 rounded-full bg-white/40" />
-          </span>
-        ))}
-      </div>
-      <style>{`
-        .challenge-ticker { animation: ticker-scroll 28s linear infinite; }
-        .challenge-ticker:hover { animation-play-state: paused; }
-        @keyframes ticker-scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-      `}</style>
-    </Link>
+    <>
+      {nav}
+      {showTicker && (
+        <>
+          <div className="fixed left-0 right-0 z-40 overflow-hidden" style={{ top: 56, height: TICKER_HEIGHT }}>
+            <Link to="/challenge" className="block h-full" style={{ background: 'linear-gradient(90deg, #10b981, #6366f1, #0ea5e9, #f59e0b)' }}>
+              <div className="challenge-ticker flex items-center h-full whitespace-nowrap">
+                {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, i) => (
+                  <span key={i} className="inline-flex items-center px-6 text-[10px] font-bold text-white tracking-wide">
+                    {item}
+                    <span className="mx-5 w-1 h-1 rounded-full bg-white/40" />
+                  </span>
+                ))}
+              </div>
+            </Link>
+          </div>
+          {/* Spacer so page content isn't hidden behind the ticker */}
+          <div style={{ height: TICKER_HEIGHT }} />
+          <style>{`
+            .challenge-ticker { animation: ticker-scroll 28s linear infinite; }
+            .challenge-ticker:hover { animation-play-state: paused; }
+            @keyframes ticker-scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+          `}</style>
+        </>
+      )}
+    </>
   );
 }
