@@ -169,15 +169,10 @@ export default function PricingPage() {
           <div
             className="overflow-x-auto"
             style={{
-              background: 'linear-gradient(135deg, #ffffff 0%, #f8faff 50%, #faf8ff 100%)',
-              border: '3px solid transparent',
-              borderRadius: '24px',
-              backgroundImage: 'linear-gradient(135deg, #ffffff, #f8faff, #faf8ff), linear-gradient(135deg, #34d399, #06b6d4, #6366f1, #a855f7, #ec4899, #34d399)',
-              backgroundOrigin: 'border-box',
-              backgroundClip: 'padding-box, border-box',
-              backgroundSize: '100% 100%, 300% 300%',
-              animation: 'gradient-border 6s ease-in-out infinite',
-              boxShadow: '0 20px 60px rgba(99,102,241,0.18), 0 8px 24px rgba(52,211,153,0.1), 0 0 0 1px rgba(99,102,241,0.05)',
+              background: 'white',
+              border: '1px solid #e3e8ee',
+              borderRadius: '16px',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
               padding: '12px 16px',
             }}
           >
@@ -257,42 +252,36 @@ export default function PricingPage() {
 
       {/* Plans */}
       <section className="w-full lg:max-w-[70%] mx-auto px-6 py-10">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-1" style={{ alignItems: 'stretch' }}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-5">
           {PLANS.map((plan) => (
             <div
               key={plan.name}
               className="relative p-6 flex flex-col"
               style={plan.popular ? {
-                background: 'linear-gradient(160deg, rgba(52,211,153,0.18) 0%, rgba(56,189,248,0.14) 25%, white 50%, rgba(129,140,248,0.14) 75%, rgba(192,132,252,0.18) 100%)',
-                borderRadius: '24px',
-                border: '2.5px solid transparent',
-                backgroundImage: 'linear-gradient(160deg, rgba(52,211,153,0.18), rgba(56,189,248,0.14) 25%, white 50%, rgba(129,140,248,0.14) 75%, rgba(192,132,252,0.18)), linear-gradient(135deg, #34d399, #38bdf8, #818cf8, #c084fc)',
+                background: 'linear-gradient(160deg, rgba(52,211,153,0.12) 0%, rgba(56,189,248,0.08) 25%, white 50%, rgba(129,140,248,0.08) 75%, rgba(192,132,252,0.12) 100%)',
+                borderRadius: '16px',
+                border: '2px solid transparent',
+                backgroundImage: 'linear-gradient(160deg, rgba(52,211,153,0.12), rgba(56,189,248,0.08) 25%, white 50%, rgba(129,140,248,0.08) 75%, rgba(192,132,252,0.12)), linear-gradient(135deg, #34d399, #38bdf8, #818cf8, #c084fc)',
                 backgroundOrigin: 'border-box',
                 backgroundClip: 'padding-box, border-box',
-                boxShadow: '0 8px 32px rgba(99,102,241,0.2), 0 2px 8px rgba(99,102,241,0.1)',
-                zIndex: 2,
-                transform: 'scale(1.04)',
+                boxShadow: '0 4px 20px rgba(99,102,241,0.15)',
               } : plan.name === 'Annual' ? {
-                background: 'linear-gradient(160deg, rgba(251,191,36,0.2) 0%, rgba(245,158,11,0.14) 25%, white 50%, rgba(217,119,6,0.14) 75%, rgba(251,191,36,0.2) 100%)',
-                borderRadius: '28px',
-                border: '3.5px solid transparent',
-                backgroundImage: 'linear-gradient(160deg, rgba(251,191,36,0.2), rgba(245,158,11,0.14) 25%, white 50%, rgba(217,119,6,0.14) 75%, rgba(251,191,36,0.2)), linear-gradient(135deg, #fbbf24, #f59e0b, #d97706, #fbbf24)',
+                background: 'linear-gradient(160deg, rgba(251,191,36,0.12) 0%, rgba(245,158,11,0.08) 25%, white 50%, rgba(217,119,6,0.08) 75%, rgba(251,191,36,0.12) 100%)',
+                borderRadius: '16px',
+                border: '2px solid transparent',
+                backgroundImage: 'linear-gradient(160deg, rgba(251,191,36,0.12), rgba(245,158,11,0.08) 25%, white 50%, rgba(217,119,6,0.08) 75%, rgba(251,191,36,0.12)), linear-gradient(135deg, #fbbf24, #f59e0b, #d97706, #fbbf24)',
                 backgroundOrigin: 'border-box',
                 backgroundClip: 'padding-box, border-box',
-                backgroundSize: '100% 100%, 300% 300%',
-                animation: 'gradient-border 4s ease-in-out infinite',
-                boxShadow: '0 16px 50px rgba(245,158,11,0.3), 0 6px 20px rgba(245,158,11,0.2), 0 0 0 4px rgba(251,191,36,0.1)',
-                zIndex: 3,
-                transform: 'scale(1.07)',
-              } : { borderRadius: '24px', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', background: 'white', border: '1px solid #e3e8ee' }}
+                boxShadow: '0 4px 20px rgba(245,158,11,0.15)',
+              } : { borderRadius: '16px', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', background: 'white', border: '1px solid #e3e8ee' }}
             >
               {plan.popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-[10px] font-bold text-white uppercase tracking-wider" style={{ background: 'linear-gradient(135deg, #34d399, #818cf8)', zIndex: 10 }}>
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-[10px] font-bold text-white uppercase tracking-wider whitespace-nowrap" style={{ background: 'linear-gradient(135deg, #34d399, #818cf8)' }}>
                   Most Popular
                 </div>
               )}
               {plan.name === 'Annual' && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-[10px] font-bold text-white uppercase tracking-wider" style={{ background: 'linear-gradient(135deg, #fbbf24, #d97706)', zIndex: 10 }}>
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-[10px] font-bold text-white uppercase tracking-wider whitespace-nowrap" style={{ background: 'linear-gradient(135deg, #fbbf24, #d97706)' }}>
                   Best Value
                 </div>
               )}
