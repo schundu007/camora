@@ -7330,6 +7330,25 @@ Auto-adjustment:
       'Redis sorted sets for efficient delayed and cron task scheduling',
       'Dead letter queue with full error history for diagnosable failure handling',
       'Per-task-type rate limiting with token buckets to protect downstream services'
-    ]
+    ],
+    edgeCases: [
+      { scenario: 'Worker crashes after processing task but before acknowledging completion', impact: 'Task is re-executed after visibility timeout, causing duplicate side effects (double email, double charge)', mitigation: 'Require all task handlers to be idempotent using unique idempotency keys, store completion records in database before acknowledging' },
+      { scenario: 'Poison pill task that crashes every worker it is assigned to', impact: 'Task cycles through retries, consuming worker capacity and blocking the queue', mitigation: 'Track consecutive failure count per task, move to dead letter queue after max retries, alert on DLQ growth rate' },
+      { scenario: 'Cron-scheduled task takes longer than its scheduling interval', impact: 'Multiple instances of the same cron job run concurrently, causing resource contention and duplicate work', mitigation: 'Use distributed locks with the cron job ID, skip execution if previous run still active, alert if overlap exceeds threshold' },
+      { scenario: 'Downstream service rate limit hit during batch task processing', impact: 'All tasks for that service fail simultaneously, filling the retry queue', mitigation: 'Per-task-type rate limiting with token buckets, exponential backoff on 429 responses, circuit breaker to pause task type when downstream is overwhelmed' },
+      { scenario: 'Priority inversion starving low-priority tasks indefinitely', impact: 'Low-priority tasks never execute during sustained high-priority load, violating SLAs', mitigation: 'Age-based priority promotion (tasks waiting beyond threshold get boosted), reserve minimum worker capacity for each priority tier' },
+    ],
+    tradeoffs: [
+      { decision: 'At-least-once vs exactly-once delivery', pros: 'At-least-once is simpler and more available; exactly-once prevents duplicate processing', cons: 'At-least-once requires idempotent handlers; exactly-once adds coordination overhead and reduces throughput', recommendation: 'At-least-once delivery with idempotency keys at the application level for practical exactly-once semantics without distributed transaction cost' },
+      { decision: 'Pull-based (workers poll) vs push-based (broker dispatches) task assignment', pros: 'Pull gives workers backpressure control; push enables faster dispatch and better load balancing', cons: 'Pull adds polling latency and wasted requests; push can overwhelm slow workers', recommendation: 'Pull-based with long-polling for most workloads, push-based for ultra-low-latency tasks where milliseconds matter' },
+      { decision: 'Redis-based queue vs Kafka-based queue', pros: 'Redis gives sub-millisecond latency and simple ops; Kafka provides durability, replay, and massive throughput', cons: 'Redis risks data loss on failure and limited persistence; Kafka has higher latency and operational complexity', recommendation: 'Redis for low-latency interactive tasks with small payloads, Kafka for high-throughput durable workloads like event processing and ETL' },
+      { decision: 'Central scheduler vs distributed scheduling', pros: 'Central is simpler to reason about ordering and priorities; distributed eliminates single point of failure', cons: 'Central becomes a bottleneck at scale; distributed complicates global priority ordering and deduplication', recommendation: 'Partitioned central scheduler (shard by task type or tenant) for the balance of simplicity and scalability' },
+    ],
+    layeredDesign: [
+      { name: 'Client SDK Layer', purpose: 'Submit tasks, query status, and define task handlers', components: ['Task Submission SDK', 'Status Query API', 'Cron Expression Parser', 'Task Handler Framework'] },
+      { name: 'Scheduling Layer', purpose: 'Queue tasks, manage priorities, and handle delayed execution', components: ['Priority Queue Manager', 'Delayed Task Scheduler (Redis ZSET)', 'Cron Trigger Service', 'Rate Limiter'] },
+      { name: 'Execution Layer', purpose: 'Dispatch tasks to workers and manage lifecycle', components: ['Worker Fleet', 'Task Dispatcher', 'Heartbeat Monitor', 'Retry Engine'] },
+      { name: 'Reliability Layer', purpose: 'Ensure delivery guarantees and handle failures', components: ['Dead Letter Queue', 'Idempotency Store', 'Distributed Lock Manager', 'Audit Log (PostgreSQL)'] },
+    ],
   },
 ];
