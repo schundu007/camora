@@ -6,6 +6,7 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { Icon } from '../../shared/Icons.jsx';
 import CamoraLogo from '../../shared/CamoraLogo';
 import SiteFooter from '../../shared/SiteFooter';
+import SiteNav from '../../shared/SiteNav';
 import { getAuthHeaders } from '../../../utils/authHeaders.js';
 import { useContentAccess } from '../../../hooks/useContentAccess';
 import { codingCategories, codingCategoryMap as _codingCategoryMap, codingTopics as _codingTopics } from '../../../data/capra/topics/codingTopics.js';
@@ -522,41 +523,12 @@ export default function DocsPage({ onBack }) {
       <div className="relative min-h-screen flex">
           {/* Center Content */}
           <div className={`flex-1 min-w-0 mx-auto w-full lg:max-w-[70%] ${isMobile ? 'px-3' : 'px-10'}`}>
-            {/* APPA Nav Bar — break out of centered container to span full width */}
-            <div className="sticky top-0 z-30 backdrop-blur-xl -mx-[calc((100vw-100%)/2)] px-[calc((100vw-100%)/2)]" style={{ background: 'linear-gradient(135deg, rgba(178,235,242,0.7) 0%, rgba(179,198,231,0.7) 30%, rgba(197,179,227,0.7) 55%, rgba(212,184,232,0.7) 80%, rgba(225,190,231,0.7) 100%)' }}>
-              <div className="w-full lg:max-w-[70%] mx-auto flex items-center justify-between px-3 sm:px-4 h-12">
-                <a href="/" className="flex items-center gap-1.5 flex-shrink-0">
-                  <CamoraLogo size={36} />
-                  <span className="text-sm font-bold text-gray-900 hidden sm:inline" style={{ fontFamily: "'Comfortaa', sans-serif" }}>Camora</span>
-                </a>
-                <div className="hidden md:flex items-center gap-1">
-                  {[
-                    { label: 'Apply', href: '/jobs' },
-                    { label: 'Prepare', href: '/capra/prepare', active: true },
-                    { label: 'Practice', href: '/capra/practice' },
-                    { label: 'Attend', href: '/lumora' },
-                    { label: 'Pricing', href: '/pricing' },
-                  ].map((tab) => (
-                    <a key={tab.label} href={tab.href} className={`px-3 py-1.5 text-sm font-medium transition-colors ${tab.active ? 'text-emerald-600 border-b-2 border-emerald-500' : 'text-gray-400 hover:text-gray-700'}`}>
-                      {tab.label}
-                    </a>
-                  ))}
-                </div>
-                <div className="hidden sm:flex items-center gap-2">
-                  <a href="/capra/prepare" className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-gray-50 transition-colors">
-                    {user?.image ? (
-                      <img src={user.image} alt="" className="w-6 h-6 rounded-full" referrerPolicy="no-referrer" />
-                    ) : (
-                      <div className="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center text-[10px] font-bold text-emerald-700">{user?.name?.[0] || '?'}</div>
-                    )}
-                    <span className="text-sm text-gray-700 font-medium">{user?.name?.split(' ')[0] || 'Dashboard'}</span>
-                  </a>
-                  <button onClick={() => { document.cookie = 'cariara_sso=; domain=.cariara.com; path=/; max-age=0'; window.location.href = '/'; }} className="text-sm text-gray-400 hover:text-red-500 font-medium">Sign out</button>
-                </div>
-              </div>
+            {/* Shared Nav */}
+            <div className="-mx-[calc((100vw-100%)/2)] px-[calc((100vw-100%)/2)]">
+              <SiteNav />
             </div>
             {/* Breadcrumb Bar */}
-            <div className="sticky top-12 z-20 px-3 sm:px-4 py-3 sm:py-4 flex items-center justify-between gap-2 safe-top bg-white border-b border-[#e3e8ee]">
+            <div className="sticky top-14 z-20 px-3 sm:px-4 py-3 sm:py-4 flex items-center justify-between gap-2 safe-top bg-white border-b border-[#e3e8ee]">
               {/* Mobile: back button when topic selected, hamburger otherwise */}
               {isMobile && (
                 selectedTopic ? (

@@ -34,6 +34,8 @@ router.get('/google/login', (req, res) => {
     return res.status(503).json({ error: 'Google OAuth not configured' });
   }
 
+  // Preserve the redirect URL through OAuth flow via state param
+  const returnTo = req.query.redirect || '/';
   const params = new URLSearchParams({
     client_id: GOOGLE_CLIENT_ID,
     redirect_uri: GOOGLE_REDIRECT_URI,
@@ -41,6 +43,7 @@ router.get('/google/login', (req, res) => {
     scope: 'openid email profile',
     access_type: 'offline',
     prompt: 'consent',
+    state: returnTo,
   });
   res.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${params}`);
 });
@@ -49,7 +52,8 @@ router.get('/google/login', (req, res) => {
  * GET /api/auth/google/callback — Handle Google OAuth callback
  */
 router.get('/google/callback', async (req, res) => {
-  const { code } = req.query;
+  const { code, state } = req.query;
+  const returnTo = (typeof state === 'string' && state.startsWith('/')) ? state : '/';
   if (!code) return res.redirect(`${FRONTEND_URL}?error=no_code`);
 
   // SECURITY: Validate code parameter
@@ -122,7 +126,7 @@ router.get('/google/callback', async (req, res) => {
 
     // Redirect to frontend with token in URL hash
     // IMPORTANT: param names must match what AuthContext.parseAuthFromHash() expects
-    res.redirect(`${FRONTEND_URL}/#access_token=${accessToken}&user_id=${userId}&user_email=${encodeURIComponent(gUser.email)}&user_name=${encodeURIComponent(gUser.name || '')}&user_avatar=${encodeURIComponent(gUser.picture || '')}&user_role=user&onboarding_completed=${onboardingCompleted}`);
+    res.redirect(`${FRONTEND_URL}${returnTo}#access_token=${accessToken}&user_id=${userId}&user_email=${encodeURIComponent(gUser.email)}&user_name=${encodeURIComponent(gUser.name || '')}&user_avatar=${encodeURIComponent(gUser.picture || '')}&user_role=user&onboarding_completed=${onboardingCompleted}`);
   } catch (err) {
     logger.error({ error: err.message }, 'Google OAuth failed');
     res.redirect(`${FRONTEND_URL}/#error=oauth_failed`);
