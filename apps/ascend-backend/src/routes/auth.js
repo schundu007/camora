@@ -113,6 +113,9 @@ router.get('/google/callback', async (req, res) => {
       onboardingCompleted = userResult.rows[0].onboarding_completed || false;
     }
 
+    // Update last login time
+    await query('UPDATE users SET last_login_at = NOW() WHERE id = $1', [userId]);
+
     // Initialize Ascend data (subscription, credits, free usage)
     try {
       await initUser(userId);

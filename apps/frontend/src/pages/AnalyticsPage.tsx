@@ -29,6 +29,7 @@ interface User {
   target_company: string | null;
   target_role: string | null;
   location: string | null;
+  last_login_at: string | null;
   sub_plan: string | null;
   is_challenger: boolean | null;
 }
@@ -200,6 +201,7 @@ export default function AnalyticsPage() {
                         <th className="px-4 py-3">Plan</th>
                         <th className="px-4 py-3">Location</th>
                         <th className="px-4 py-3">Target</th>
+                        <th className="px-4 py-3">Last Login</th>
                         <th className="px-4 py-3">Joined</th>
                       </tr>
                     </thead>
@@ -238,6 +240,9 @@ export default function AnalyticsPage() {
                             {u.target_company || u.target_role
                               ? `${u.target_role || ''} ${u.target_company ? `@ ${u.target_company}` : ''}`.trim()
                               : '—'}
+                          </td>
+                          <td className="px-4 py-3 text-gray-400 text-xs">
+                            {u.last_login_at ? new Date(u.last_login_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '—'}
                           </td>
                           <td className="px-4 py-3 text-gray-400 text-xs">
                             {new Date(u.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
