@@ -35,7 +35,16 @@ interface User {
   is_challenger: boolean | null;
 }
 
-type Tab = 'analytics' | 'users';
+interface Email {
+  id: string;
+  to: string[];
+  from: string;
+  subject: string;
+  created_at: string;
+  last_event: string;
+}
+
+type Tab = 'analytics' | 'users' | 'emails';
 
 export default function AnalyticsPage() {
   const { token } = useAuth();
@@ -47,6 +56,9 @@ export default function AnalyticsPage() {
   const [usersLoading, setUsersLoading] = useState(false);
   const [usersError, setUsersError] = useState('');
   const [granting, setGranting] = useState<number | null>(null);
+  const [emails, setEmails] = useState<Email[]>([]);
+  const [emailsLoading, setEmailsLoading] = useState(false);
+  const [emailsError, setEmailsError] = useState('');
 
   async function grantTrial(userId: number, trialDays: number) {
     setGranting(userId);
@@ -92,6 +104,22 @@ export default function AnalyticsPage() {
       .catch(err => { setUsersError(err.message); setUsersLoading(false); });
   }, [tab, token, users.length]);
 
+  // Fetch emails
+  useEffect(() => {
+    if (tab !== 'emails' || emails.length > 0) return;
+    setEmailsLoading(true);
+    setEmailsError('');
+    fetch(`${API}/api/admin/emails?limit=100`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(r => {
+        if (!r.ok) throw new Error(r.status === 403 ? 'Admin access required' : 'Failed to load');
+        return r.json();
+      })
+      .then(d => { setEmails(d.emails); setEmailsLoading(false); })
+      .catch(err => { setEmailsError(err.message); setEmailsLoading(false); });
+  }, [tab, token, emails.length]);
+
   return (
     <div className="min-h-screen bg-gray-950 text-white" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
       <SiteNav />
@@ -101,7 +129,7 @@ export default function AnalyticsPage() {
 
         {/* Tabs */}
         <div className="flex gap-1 mb-8 bg-gray-900 rounded-lg p-1 w-fit">
-          {(['analytics', 'users'] as Tab[]).map(t => (
+          {(['analytics', 'users', 'emails'] as Tab[]).map(t => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -297,6 +325,61 @@ export default function AnalyticsPage() {
                           </td>
                         </tr>
                       ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
+          </>
+        )}
+
+        {/* ── Emails Tab ── */}
+        {tab === 'emails' && (
+          <>
+            {emailsLoading ? (
+              <div className="flex justify-center py-20">
+                <div className="w-8 h-8 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : emailsError ? (
+              <p className="text-red-400">{emailsError}</p>
+            ) : (
+              <>
+                <p className="text-gray-400 mb-4">{emails.length} emails sent</p>
+                <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-x-auto">
+                  <table className="w-full text-left text-sm">
+                    <thead>
+                      <tr className="border-b border-gray-800 text-gray-400">
+                        <th className="px-4 py-3">To</th>
+                        <th className="px-4 py-3">Subject</th>
+                        <th className="px-4 py-3">Status</th>
+                        <th className="px-4 py-3">Sent</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {emails.map(e => (
+                        <tr key={e.id} className="border-b border-gray-800/50 hover:bg-gray-800/30">
+                          <td className="px-4 py-3 text-gray-300">{e.to.join(', ')}</td>
+                          <td className="px-4 py-3 text-white font-medium">{e.subject}</td>
+                          <td className="px-4 py-3">
+                            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                              e.last_event === 'delivered' ? 'bg-emerald-500/20 text-emerald-400'
+                                : e.last_event === 'opened' ? 'bg-blue-500/20 text-blue-400'
+                                : e.last_event === 'clicked' ? 'bg-purple-500/20 text-purple-400'
+                                : e.last_event === 'bounced' ? 'bg-red-500/20 text-red-400'
+                                : e.last_event === 'complained' ? 'bg-orange-500/20 text-orange-400'
+                                : 'bg-gray-700 text-gray-400'
+                            }`}>
+                              {e.last_event || 'sent'}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-gray-400 text-xs">
+                            {new Date(e.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+                          </td>
+                        </tr>
+                      ))}
+                      {emails.length === 0 && (
+                        <tr><td colSpan={4} className="px-4 py-8 text-center text-gray-500">No emails sent yet</td></tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
