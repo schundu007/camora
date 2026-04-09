@@ -30,6 +30,7 @@ interface User {
   target_role: string | null;
   location: string | null;
   last_login_at: string | null;
+  trial_ends_at: string | null;
   sub_plan: string | null;
   is_challenger: boolean | null;
 }
@@ -45,6 +46,23 @@ export default function AnalyticsPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [usersLoading, setUsersLoading] = useState(false);
   const [usersError, setUsersError] = useState('');
+  const [granting, setGranting] = useState<number | null>(null);
+
+  async function grantTrial(userId: number, trialDays: number) {
+    setGranting(userId);
+    try {
+      const r = await fetch(`${API}/api/admin/grant-trial`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ userId, days: trialDays }),
+      });
+      const d = await r.json();
+      if (d.ok) {
+        setUsers(prev => prev.map(u => u.id === userId ? { ...u, trial_ends_at: d.trial_ends_at } : u));
+      }
+    } catch {}
+    setGranting(null);
+  }
 
   // Fetch analytics
   useEffect(() => {
@@ -203,6 +221,7 @@ export default function AnalyticsPage() {
                         <th className="px-4 py-3">Target</th>
                         <th className="px-4 py-3">Last Login</th>
                         <th className="px-4 py-3">Joined</th>
+                        <th className="px-4 py-3">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -225,15 +244,30 @@ export default function AnalyticsPage() {
                           </td>
                           <td className="px-4 py-3 text-gray-300">{u.email}</td>
                           <td className="px-4 py-3">
-                            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                              u.sub_plan === 'quarterly_pro' || u.sub_plan === 'monthly'
-                                ? 'bg-emerald-500/20 text-emerald-400'
-                                : u.is_challenger
-                                  ? 'bg-purple-500/20 text-purple-400'
-                                  : 'bg-gray-700 text-gray-400'
-                            }`}>
-                              {u.is_challenger ? 'Challenger' : u.sub_plan || u.plan_type || 'free'}
-                            </span>
+                            {(() => {
+                              const hasActiveTrial = u.trial_ends_at && new Date(u.trial_ends_at) > new Date();
+                              const isPaid = u.sub_plan === 'quarterly_pro' || u.sub_plan === 'monthly';
+                              return (
+                                <div className="flex flex-col gap-1">
+                                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium w-fit ${
+                                    isPaid
+                                      ? 'bg-emerald-500/20 text-emerald-400'
+                                      : u.is_challenger
+                                        ? 'bg-purple-500/20 text-purple-400'
+                                        : hasActiveTrial
+                                          ? 'bg-blue-500/20 text-blue-400'
+                                          : 'bg-gray-700 text-gray-400'
+                                  }`}>
+                                    {isPaid ? u.sub_plan : u.is_challenger ? 'Challenger' : hasActiveTrial ? 'Trial' : 'free'}
+                                  </span>
+                                  {hasActiveTrial && (
+                                    <span className="text-[10px] text-blue-400">
+                                      ends {new Date(u.trial_ends_at!).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                    </span>
+                                  )}
+                                </div>
+                              );
+                            })()}
                           </td>
                           <td className="px-4 py-3 text-gray-400 text-xs">{u.location || '—'}</td>
                           <td className="px-4 py-3 text-gray-400 text-xs">
@@ -246,6 +280,20 @@ export default function AnalyticsPage() {
                           </td>
                           <td className="px-4 py-3 text-gray-400 text-xs">
                             {new Date(u.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex gap-1">
+                              {[3, 7, 14].map(d => (
+                                <button
+                                  key={d}
+                                  onClick={() => grantTrial(u.id, d)}
+                                  disabled={granting === u.id}
+                                  className="px-2 py-1 rounded text-[11px] font-medium bg-blue-600/20 text-blue-400 hover:bg-blue-600/40 transition-all disabled:opacity-50"
+                                >
+                                  {granting === u.id ? '...' : `${d}d`}
+                                </button>
+                              ))}
+                            </div>
                           </td>
                         </tr>
                       ))}

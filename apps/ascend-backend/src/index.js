@@ -55,6 +55,7 @@ async function runMigrations() {
     await query('ALTER TABLE users ADD COLUMN IF NOT EXISTS technical_context TEXT DEFAULT NULL');
     await query('ALTER TABLE users ADD COLUMN IF NOT EXISTS location VARCHAR(255)');
     await query('ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMPTZ');
+    await query('ALTER TABLE ascend_subscriptions ADD COLUMN IF NOT EXISTS trial_ends_at TIMESTAMPTZ');
     console.log('[Migrations] Onboarding columns ensured');
 
     // Diagram cache table — store generated diagrams to avoid re-generating
@@ -491,7 +492,7 @@ app.get('/api/admin/users', authenticate, async (req, res) => {
       SELECT u.id, u.email, u.name, u.avatar, u.provider, u.is_active,
              u.onboarding_completed, u.plan_type, u.plan_status, u.created_at,
              u.username, u.referral_code, u.target_company, u.target_role, u.interview_date,
-             u.location, u.last_login_at, s.plan_type as sub_plan, s.is_challenger
+             u.location, u.last_login_at, s.plan_type as sub_plan, s.is_challenger, s.trial_ends_at
       FROM users u
       LEFT JOIN ascend_subscriptions s ON s.user_id = u.id
       ORDER BY u.created_at DESC
@@ -500,6 +501,31 @@ app.get('/api/admin/users', authenticate, async (req, res) => {
   } catch (err) {
     console.error('[Admin Users] Error:', err.message);
     res.status(500).json({ error: 'Failed to fetch users' });
+  }
+});
+
+// Admin: grant free trial to a user
+app.post('/api/admin/grant-trial', authenticate, async (req, res) => {
+  try {
+    const admin = await query('SELECT is_admin FROM users WHERE id = $1', [req.user.id]);
+    if (!admin.rows[0]?.is_admin) return res.status(403).json({ error: 'Admin access required' });
+
+    const { userId, days } = req.body;
+    if (!userId || !days) return res.status(400).json({ error: 'userId and days required' });
+
+    const trialEnd = new Date();
+    trialEnd.setDate(trialEnd.getDate() + parseInt(days));
+
+    await query(
+      'UPDATE ascend_subscriptions SET trial_ends_at = $1 WHERE user_id = $2',
+      [trialEnd.toISOString(), userId]
+    );
+
+    const user = await query('SELECT email, name FROM users WHERE id = $1', [userId]);
+    res.json({ ok: true, email: user.rows[0]?.email, trial_ends_at: trialEnd.toISOString() });
+  } catch (err) {
+    console.error('[Admin GrantTrial] Error:', err.message);
+    res.status(500).json({ error: 'Failed to grant trial' });
   }
 });
 

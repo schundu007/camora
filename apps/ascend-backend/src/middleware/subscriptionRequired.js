@@ -19,18 +19,19 @@ export async function subscriptionRequired(req, res, next) {
 
   try {
     const result = await query(
-      'SELECT plan_type, status FROM ascend_subscriptions WHERE user_id = $1',
+      'SELECT plan_type, status, trial_ends_at FROM ascend_subscriptions WHERE user_id = $1',
       [req.user.id]
     );
 
     const subscription = result.rows[0];
 
-    // Check if user has active paid subscription
+    // Check if user has active paid subscription OR active trial
     const isPaidPlan = subscription?.plan_type === 'monthly' ||
                        subscription?.plan_type === 'quarterly_pro';
     const isActive = subscription?.status === 'active';
+    const hasActiveTrial = subscription?.trial_ends_at && new Date(subscription.trial_ends_at) > new Date();
 
-    if (!isPaidPlan || !isActive) {
+    if (!(isPaidPlan && isActive) && !hasActiveTrial) {
       logger.info({
         userId: req.user.id,
         planType: subscription?.plan_type || 'none',
@@ -69,7 +70,7 @@ export async function checkSubscription(req, res, next) {
 
   try {
     const result = await query(
-      'SELECT plan_type, status FROM ascend_subscriptions WHERE user_id = $1',
+      'SELECT plan_type, status, trial_ends_at FROM ascend_subscriptions WHERE user_id = $1',
       [req.user.id]
     );
 
@@ -77,9 +78,10 @@ export async function checkSubscription(req, res, next) {
     const isPaidPlan = subscription?.plan_type === 'monthly' ||
                        subscription?.plan_type === 'quarterly_pro';
     const isActive = subscription?.status === 'active';
+    const hasActiveTrial = subscription?.trial_ends_at && new Date(subscription.trial_ends_at) > new Date();
 
     req.subscription = subscription;
-    req.hasSubscription = isPaidPlan && isActive;
+    req.hasSubscription = (isPaidPlan && isActive) || hasActiveTrial;
   } catch (error) {
     logger.warn({ error: error.message }, 'Optional subscription check failed');
     req.hasSubscription = false;
