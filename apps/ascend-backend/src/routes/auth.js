@@ -121,6 +121,22 @@ router.get('/google/callback', async (req, res) => {
       logger.warn({ error: initErr.message, userId }, 'Failed to init Ascend user data');
     }
 
+    // Capture user location from IP (non-blocking)
+    try {
+      const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip;
+      if (ip && ip !== '127.0.0.1' && ip !== '::1') {
+        fetch(`http://ip-api.com/json/${ip}?fields=city,regionName,country`)
+          .then(r => r.json())
+          .then(geo => {
+            if (geo.city || geo.country) {
+              const loc = [geo.city, geo.regionName, geo.country].filter(Boolean).join(', ');
+              query('UPDATE users SET location = $1 WHERE id = $2', [loc, userId]);
+            }
+          })
+          .catch(() => {});
+      }
+    } catch {}
+
     // Issue JWT via shared-auth
     const accessToken = createToken(
       { sub: userId, email: gUser.email, name: gUser.name || '', picture: gUser.picture || '', type: 'access' },
