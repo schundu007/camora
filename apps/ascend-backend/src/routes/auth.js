@@ -122,20 +122,56 @@ router.get('/google/callback', async (req, res) => {
     }
 
     // Capture user location from IP (non-blocking)
-    try {
-      const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip;
-      if (ip && ip !== '127.0.0.1' && ip !== '::1') {
-        fetch(`http://ip-api.com/json/${ip}?fields=city,regionName,country`)
-          .then(r => r.json())
-          .then(geo => {
-            if (geo.city || geo.country) {
-              const loc = [geo.city, geo.regionName, geo.country].filter(Boolean).join(', ');
-              query('UPDATE users SET location = $1 WHERE id = $2', [loc, userId]);
+    (async () => {
+      try {
+        const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim()
+          || req.headers['x-real-ip']
+          || req.headers['cf-connecting-ip']
+          || req.ip;
+        console.log(`[GeoIP] User ${gUser.email} login IP: ${ip}, headers: x-forwarded-for=${req.headers['x-forwarded-for']}, x-real-ip=${req.headers['x-real-ip']}`);
+
+        if (!ip || ip === '127.0.0.1' || ip === '::1' || ip.startsWith('10.') || ip.startsWith('172.') || ip.startsWith('192.168.')) {
+          console.log('[GeoIP] Private/local IP, skipping');
+          return;
+        }
+
+        // Try ip-api.com first (HTTP only for free tier)
+        let loc = null;
+        try {
+          const r = await fetch(`http://ip-api.com/json/${ip}?fields=status,city,regionName,country`);
+          const geo = await r.json();
+          console.log('[GeoIP] ip-api response:', JSON.stringify(geo));
+          if (geo.status === 'success' && (geo.city || geo.country)) {
+            loc = [geo.city, geo.regionName, geo.country].filter(Boolean).join(', ');
+          }
+        } catch (e) {
+          console.log('[GeoIP] ip-api failed:', e.message);
+        }
+
+        // Fallback to ipapi.co (HTTPS)
+        if (!loc) {
+          try {
+            const r = await fetch(`https://ipapi.co/${ip}/json/`);
+            const geo = await r.json();
+            console.log('[GeoIP] ipapi.co response:', JSON.stringify(geo));
+            if (geo.city || geo.country_name) {
+              loc = [geo.city, geo.region, geo.country_name].filter(Boolean).join(', ');
             }
-          })
-          .catch(() => {});
+          } catch (e) {
+            console.log('[GeoIP] ipapi.co failed:', e.message);
+          }
+        }
+
+        if (loc) {
+          await query('UPDATE users SET location = $1 WHERE id = $2', [loc, userId]);
+          console.log(`[GeoIP] Updated location for ${gUser.email}: ${loc}`);
+        } else {
+          console.log(`[GeoIP] Could not determine location for IP: ${ip}`);
+        }
+      } catch (e) {
+        console.error('[GeoIP] Error:', e.message);
       }
-    } catch {}
+    })();
 
     // Issue JWT via shared-auth
     const accessToken = createToken(
