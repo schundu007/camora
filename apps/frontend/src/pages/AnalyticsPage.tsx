@@ -171,21 +171,38 @@ export default function AnalyticsPage() {
     setGranting(null);
   }
 
-  // Filter users by search
-  const filteredUsers = search
-    ? users.filter(u =>
-        (u.name || '').toLowerCase().includes(search.toLowerCase()) ||
-        u.email.toLowerCase().includes(search.toLowerCase()) ||
-        (u.location || '').toLowerCase().includes(search.toLowerCase()) ||
-        (u.target_company || '').toLowerCase().includes(search.toLowerCase())
-      )
-    : users;
+  // Plan filter from summary cards
+  const [planFilter, setPlanFilter] = useState<string>('');
+
+  // Helper: determine user's effective plan category
+  function getUserPlanCategory(u: User) {
+    const isPaid = u.sub_plan === 'monthly' || u.sub_plan === 'quarterly_pro';
+    if (isPaid) return 'paid';
+    if (u.is_challenger) return 'challenger';
+    if (u.trial_ends_at && new Date(u.trial_ends_at) > new Date()) return 'trial';
+    return 'free';
+  }
+
+  // Filter users by search + plan filter
+  let filteredUsers = users;
+  if (planFilter) {
+    filteredUsers = filteredUsers.filter(u => getUserPlanCategory(u) === planFilter);
+  }
+  if (search) {
+    filteredUsers = filteredUsers.filter(u =>
+      (u.name || '').toLowerCase().includes(search.toLowerCase()) ||
+      u.email.toLowerCase().includes(search.toLowerCase()) ||
+      (u.location || '').toLowerCase().includes(search.toLowerCase()) ||
+      (u.target_company || '').toLowerCase().includes(search.toLowerCase())
+    );
+  }
 
   // User summary stats
   const totalUsers = users.length;
-  const paidUsers = users.filter(u => u.sub_plan === 'monthly' || u.sub_plan === 'quarterly_pro').length;
-  const trialUsers = users.filter(u => u.trial_ends_at && new Date(u.trial_ends_at) > new Date()).length;
-  const challengerUsers = users.filter(u => u.is_challenger).length;
+  const paidUsers = users.filter(u => getUserPlanCategory(u) === 'paid').length;
+  const trialUsers = users.filter(u => getUserPlanCategory(u) === 'trial').length;
+  const challengerUsers = users.filter(u => getUserPlanCategory(u) === 'challenger').length;
+  const freeUsers = users.filter(u => getUserPlanCategory(u) === 'free').length;
 
   // Loading admin check
   if (isAdmin === null) {
@@ -334,17 +351,21 @@ export default function AnalyticsPage() {
           <>
             {/* Summary cards */}
             {usersLoaded && (
-              <div className="grid grid-cols-4 gap-3 mb-6">
+              <div className="grid grid-cols-5 gap-3 mb-6">
                 {[
-                  { label: 'Total Users', value: totalUsers, color: 'text-white' },
-                  { label: 'Paid', value: paidUsers, color: 'text-emerald-400' },
-                  { label: 'Trial', value: trialUsers, color: 'text-blue-400' },
-                  { label: 'Challenger', value: challengerUsers, color: 'text-purple-400' },
+                  { label: 'Total Users', value: totalUsers, color: 'text-white', filter: '' },
+                  { label: 'Paid', value: paidUsers, color: 'text-emerald-400', filter: 'paid' },
+                  { label: 'Trial', value: trialUsers, color: 'text-blue-400', filter: 'trial' },
+                  { label: 'Challenger', value: challengerUsers, color: 'text-purple-400', filter: 'challenger' },
+                  { label: 'Free', value: freeUsers, color: 'text-gray-400', filter: 'free' },
                 ].map(c => (
-                  <div key={c.label} className="bg-gray-900 border border-gray-800 rounded-xl p-4">
+                  <button key={c.label} onClick={() => setPlanFilter(planFilter === c.filter ? '' : c.filter)}
+                    className={`bg-gray-900 border rounded-xl p-4 text-left transition-all ${
+                      planFilter === c.filter ? 'border-emerald-500 ring-1 ring-emerald-500/30' : 'border-gray-800 hover:border-gray-700'
+                    }`}>
                     <p className="text-gray-400 text-xs">{c.label}</p>
                     <p className={`text-2xl font-bold mt-1 ${c.color}`}>{c.value}</p>
-                  </div>
+                  </button>
                 ))}
               </div>
             )}
@@ -414,22 +435,18 @@ export default function AnalyticsPage() {
                           <td className="px-4 py-3 text-gray-300">{u.email}</td>
                           <td className="px-4 py-3">
                             {(() => {
-                              const hasActiveTrial = u.trial_ends_at && new Date(u.trial_ends_at) > new Date();
-                              const isPaid = u.sub_plan === 'quarterly_pro' || u.sub_plan === 'monthly';
+                              const cat = getUserPlanCategory(u);
                               return (
                                 <div className="flex flex-col gap-1">
                                   <span className={`px-2 py-0.5 rounded-full text-xs font-medium w-fit ${
-                                    isPaid
-                                      ? 'bg-emerald-500/20 text-emerald-400'
-                                      : u.is_challenger
-                                        ? 'bg-purple-500/20 text-purple-400'
-                                        : hasActiveTrial
-                                          ? 'bg-blue-500/20 text-blue-400'
-                                          : 'bg-gray-700 text-gray-400'
+                                    cat === 'paid' ? 'bg-emerald-500/20 text-emerald-400'
+                                      : cat === 'challenger' ? 'bg-purple-500/20 text-purple-400'
+                                      : cat === 'trial' ? 'bg-blue-500/20 text-blue-400'
+                                      : 'bg-gray-700 text-gray-400'
                                   }`}>
-                                    {isPaid ? u.sub_plan : u.is_challenger ? 'Challenger' : hasActiveTrial ? 'Trial' : 'free'}
+                                    {cat === 'paid' ? u.sub_plan : cat}
                                   </span>
-                                  {hasActiveTrial && (
+                                  {cat === 'trial' && (
                                     <span className="text-[10px] text-blue-400">
                                       ends {new Date(u.trial_ends_at!).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                                     </span>
