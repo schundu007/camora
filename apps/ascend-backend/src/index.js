@@ -12,6 +12,7 @@ import { setupGracefulShutdown, trackConnection } from './utils/shutdown.js';
 import { query } from './config/database.js';
 import { isStripeConfigured } from './config/stripe.js';
 import { initRedis } from './services/redis.js';
+import { sendTrialEmail } from './services/emailService.js';
 
 // Route imports
 import authRouter from './routes/auth.js';
@@ -522,7 +523,15 @@ app.post('/api/admin/grant-trial', authenticate, async (req, res) => {
     );
 
     const user = await query('SELECT email, name FROM users WHERE id = $1', [userId]);
-    res.json({ ok: true, email: user.rows[0]?.email, trial_ends_at: trialEnd.toISOString() });
+    const { email, name } = user.rows[0] || {};
+
+    // Send trial notification email (non-blocking)
+    if (email) {
+      sendTrialEmail({ to: email, name, days: parseInt(days), trialEndsAt: trialEnd.toISOString() })
+        .catch(err => console.error('[Admin GrantTrial] Email error:', err.message));
+    }
+
+    res.json({ ok: true, email, trial_ends_at: trialEnd.toISOString() });
   } catch (err) {
     console.error('[Admin GrantTrial] Error:', err.message);
     res.status(500).json({ error: 'Failed to grant trial' });
