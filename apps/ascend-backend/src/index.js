@@ -476,6 +476,28 @@ app.get('/api/visitors/pageview-stats', async (req, res) => {
   }
 });
 
+// Admin: list all users (protected, admin-only)
+app.get('/api/admin/users', authenticate, async (req, res) => {
+  try {
+    const admin = await query('SELECT is_admin FROM users WHERE id = $1', [req.user.id]);
+    if (!admin.rows[0]?.is_admin) return res.status(403).json({ error: 'Admin access required' });
+
+    const result = await query(`
+      SELECT u.id, u.email, u.name, u.avatar, u.provider, u.is_active,
+             u.onboarding_completed, u.plan_type, u.plan_status, u.created_at,
+             u.username, u.referral_code, u.target_company, u.target_role, u.interview_date,
+             s.plan_type as sub_plan, s.is_challenger
+      FROM users u
+      LEFT JOIN ascend_subscriptions s ON s.user_id = u.id
+      ORDER BY u.created_at DESC
+    `);
+    res.json({ users: result.rows, total: result.rows.length });
+  } catch (err) {
+    console.error('[Admin Users] Error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch users' });
+  }
+});
+
 app.use('/api/auth', authRouter);
 app.use('/api/extension', extensionRouter);
 
