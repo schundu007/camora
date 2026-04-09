@@ -437,9 +437,20 @@ app.post('/api/visitors/pageview', async (req, res) => {
   }
 });
 
-// Page-view stats — supports ?path=&exclude_emails=email1,email2&days=30
-app.get('/api/visitors/pageview-stats', async (req, res) => {
+// Public visitor count (unique IPs only, no details)
+app.get('/api/visitors/unique-count', async (req, res) => {
   try {
+    const result = await query('SELECT COUNT(DISTINCT ip) as count FROM page_views');
+    res.json({ total: parseInt(result.rows[0].count) });
+  } catch { res.json({ total: 0 }); }
+});
+
+// Page-view stats — admin-only, supports ?path=&exclude_emails=email1,email2&days=30
+app.get('/api/visitors/pageview-stats', authenticate, async (req, res) => {
+  try {
+    const admin = await query('SELECT is_admin FROM users WHERE id = $1', [req.user.id]);
+    if (!admin.rows[0]?.is_admin) return res.status(403).json({ error: 'Admin access required' });
+
     const { path, exclude_emails, days } = req.query;
     const params = [];
     const conditions = [];
@@ -455,10 +466,15 @@ app.get('/api/visitors/pageview-stats', async (req, res) => {
       params.push(...emails);
     }
     if (days) {
-      conditions.push(`created_at >= NOW() - INTERVAL '${parseInt(days)} days'`);
+      const daysInt = parseInt(days, 10);
+      if (Number.isFinite(daysInt) && daysInt > 0) {
+        conditions.push(`created_at >= NOW() - ($${idx++} * INTERVAL '1 day')`);
+        params.push(daysInt);
+      }
     }
 
     const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+    const dayLimit = days ? Math.min(parseInt(days, 10) || 30, 365) : 90;
 
     const total = await query(`SELECT COUNT(*) as count FROM page_views ${where}`, params);
     const uniqueIps = await query(`SELECT COUNT(DISTINCT ip) as count FROM page_views ${where}`, params);
@@ -467,7 +483,7 @@ app.get('/api/visitors/pageview-stats', async (req, res) => {
       params
     );
     const byDay = await query(
-      `SELECT DATE(created_at) as date, COUNT(*) as views, COUNT(DISTINCT ip) as unique_visitors FROM page_views ${where} GROUP BY DATE(created_at) ORDER BY date DESC LIMIT 30`,
+      `SELECT DATE(created_at) as date, COUNT(*) as views, COUNT(DISTINCT ip) as unique_visitors FROM page_views ${where} GROUP BY DATE(created_at) ORDER BY date DESC LIMIT ${dayLimit}`,
       params
     );
 

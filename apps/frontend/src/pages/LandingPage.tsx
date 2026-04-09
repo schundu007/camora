@@ -371,9 +371,9 @@ function useVisitorCount() {
   useEffect(() => {
     const API = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
     // Get unique visitors (deduplicated by IP)
-    fetch(`${API}/api/visitors/pageview-stats`)
+    fetch(`${API}/api/visitors/unique-count`)
       .then(r => r.json())
-      .then(d => setCount(d.unique_visitors))
+      .then(d => setCount(d.total))
       .catch(() => {});
   }, []);
   return count;

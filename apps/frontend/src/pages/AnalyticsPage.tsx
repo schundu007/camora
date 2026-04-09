@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import SiteNav from '../components/shared/SiteNav';
 
@@ -46,22 +46,114 @@ interface Email {
 
 type Tab = 'analytics' | 'users' | 'emails';
 
+function RefreshBtn({ onClick, loading }: { onClick: () => void; loading: boolean }) {
+  return (
+    <button onClick={onClick} disabled={loading}
+      className="ml-auto px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-800 text-gray-300 hover:bg-gray-700 transition-all disabled:opacity-50 flex items-center gap-1.5">
+      <svg className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+      </svg>
+      Refresh
+    </button>
+  );
+}
+
 export default function AnalyticsPage() {
-  const { token } = useAuth();
+  const { token, user: authUser } = useAuth();
   const [tab, setTab] = useState<Tab>('analytics');
+
+  // Analytics state
   const [stats, setStats] = useState<Stats | null>(null);
   const [days, setDays] = useState('');
   const [loading, setLoading] = useState(true);
+  const abortRef = useRef<AbortController | null>(null);
+
+  // Users state
   const [users, setUsers] = useState<User[]>([]);
+  const [usersLoaded, setUsersLoaded] = useState(false);
   const [usersLoading, setUsersLoading] = useState(false);
   const [usersError, setUsersError] = useState('');
+  const [search, setSearch] = useState('');
   const [granting, setGranting] = useState<number | null>(null);
+  const [trialError, setTrialError] = useState('');
+
+  // Emails state
   const [emails, setEmails] = useState<Email[]>([]);
+  const [emailsLoaded, setEmailsLoaded] = useState(false);
   const [emailsLoading, setEmailsLoading] = useState(false);
   const [emailsError, setEmailsError] = useState('');
 
+  // Admin check — hide page for non-admins
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (!token) return;
+    fetch(`${API}/api/admin/users`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => { setIsAdmin(r.ok); return r.ok ? r.json() : null; })
+      .then(d => { if (d) { setUsers(d.users); setUsersLoaded(true); } })
+      .catch(() => setIsAdmin(false));
+  }, [token]);
+
+  // Fetch analytics with abort controller to prevent race conditions
+  const fetchAnalytics = useCallback(() => {
+    if (!token) return;
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+    setLoading(true);
+    const params = new URLSearchParams({ exclude_emails: EXCLUDE });
+    if (days) params.set('days', days);
+    fetch(`${API}/api/visitors/pageview-stats?${params}`, {
+      signal: controller.signal,
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(r => r.json())
+      .then(d => { if (!controller.signal.aborted) { setStats(d); setLoading(false); } })
+      .catch(err => { if (err.name !== 'AbortError') setLoading(false); });
+  }, [days, token]);
+
+  useEffect(() => {
+    if (tab === 'analytics') fetchAnalytics();
+    return () => abortRef.current?.abort();
+  }, [tab, fetchAnalytics]);
+
+  // Fetch users
+  const fetchUsers = useCallback(() => {
+    if (!token) return;
+    setUsersLoading(true);
+    setUsersError('');
+    fetch(`${API}/api/admin/users`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => { if (!r.ok) throw new Error('Failed to load'); return r.json(); })
+      .then(d => { setUsers(d.users); setUsersLoaded(true); setUsersLoading(false); })
+      .catch(err => { setUsersError(err.message); setUsersLoading(false); });
+  }, [token]);
+
+  useEffect(() => {
+    if (tab === 'users' && !usersLoaded) fetchUsers();
+  }, [tab, usersLoaded, fetchUsers]);
+
+  // Fetch emails
+  const fetchEmails = useCallback(() => {
+    if (!token) return;
+    setEmailsLoading(true);
+    setEmailsError('');
+    fetch(`${API}/api/admin/emails?limit=100`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => { if (!r.ok) throw new Error('Failed to load'); return r.json(); })
+      .then(d => { setEmails(d.emails); setEmailsLoaded(true); setEmailsLoading(false); })
+      .catch(err => { setEmailsError(err.message); setEmailsLoading(false); });
+  }, [token]);
+
+  useEffect(() => {
+    if (tab === 'emails' && !emailsLoaded) fetchEmails();
+  }, [tab, emailsLoaded, fetchEmails]);
+
+  // Grant trial with confirmation + error handling
   async function grantTrial(userId: number, trialDays: number) {
+    const user = users.find(u => u.id === userId);
+    if (!confirm(`Grant ${trialDays}-day trial to ${user?.name || user?.email}?`)) return;
+
     setGranting(userId);
+    setTrialError('');
     try {
       const r = await fetch(`${API}/api/admin/grant-trial`, {
         method: 'POST',
@@ -69,63 +161,57 @@ export default function AnalyticsPage() {
         body: JSON.stringify({ userId, days: trialDays }),
       });
       const d = await r.json();
+      if (!r.ok) throw new Error(d.error || 'Failed to grant trial');
       if (d.ok) {
         setUsers(prev => prev.map(u => u.id === userId ? { ...u, trial_ends_at: d.trial_ends_at } : u));
       }
-    } catch {}
+    } catch (err: any) {
+      setTrialError(`Failed for ${user?.email}: ${err.message}`);
+    }
     setGranting(null);
   }
 
-  // Fetch analytics
-  useEffect(() => {
-    if (tab !== 'analytics') return;
-    setLoading(true);
-    const params = new URLSearchParams({ exclude_emails: EXCLUDE });
-    if (days) params.set('days', days);
-    fetch(`${API}/api/visitors/pageview-stats?${params}`)
-      .then(r => r.json())
-      .then(d => { setStats(d); setLoading(false); })
-      .catch(() => setLoading(false));
-  }, [days, tab]);
+  // Filter users by search
+  const filteredUsers = search
+    ? users.filter(u =>
+        (u.name || '').toLowerCase().includes(search.toLowerCase()) ||
+        u.email.toLowerCase().includes(search.toLowerCase()) ||
+        (u.location || '').toLowerCase().includes(search.toLowerCase()) ||
+        (u.target_company || '').toLowerCase().includes(search.toLowerCase())
+      )
+    : users;
 
-  // Fetch users
-  useEffect(() => {
-    if (tab !== 'users' || users.length > 0) return;
-    setUsersLoading(true);
-    setUsersError('');
-    fetch(`${API}/api/admin/users`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then(r => {
-        if (!r.ok) throw new Error(r.status === 403 ? 'Admin access required' : 'Failed to load');
-        return r.json();
-      })
-      .then(d => { setUsers(d.users); setUsersLoading(false); })
-      .catch(err => { setUsersError(err.message); setUsersLoading(false); });
-  }, [tab, token, users.length]);
+  // User summary stats
+  const totalUsers = users.length;
+  const paidUsers = users.filter(u => u.sub_plan === 'monthly' || u.sub_plan === 'quarterly_pro').length;
+  const trialUsers = users.filter(u => u.trial_ends_at && new Date(u.trial_ends_at) > new Date()).length;
+  const challengerUsers = users.filter(u => u.is_challenger).length;
 
-  // Fetch emails
-  useEffect(() => {
-    if (tab !== 'emails' || emails.length > 0) return;
-    setEmailsLoading(true);
-    setEmailsError('');
-    fetch(`${API}/api/admin/emails?limit=100`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then(r => {
-        if (!r.ok) throw new Error(r.status === 403 ? 'Admin access required' : 'Failed to load');
-        return r.json();
-      })
-      .then(d => { setEmails(d.emails); setEmailsLoading(false); })
-      .catch(err => { setEmailsError(err.message); setEmailsLoading(false); });
-  }, [tab, token, emails.length]);
+  // Loading admin check
+  if (isAdmin === null) {
+    return (
+      <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+  if (isAdmin === false) {
+    return (
+      <div className="min-h-screen bg-gray-950 text-white" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
+        <SiteNav />
+        <div className="flex items-center justify-center py-32">
+          <p className="text-gray-400 text-lg">You don't have access to this page.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-950 text-white" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
       <SiteNav />
       <div className="max-w-6xl mx-auto px-4 py-12">
         <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
-        <p className="text-gray-400 mb-6">Analytics & user management</p>
+        <p className="text-gray-400 mb-6">Analytics, user management & emails</p>
 
         {/* Tabs */}
         <div className="flex gap-1 mb-8 bg-gray-900 rounded-lg p-1 w-fit">
@@ -137,7 +223,7 @@ export default function AnalyticsPage() {
                 tab === t ? 'bg-emerald-500 text-white' : 'text-gray-400 hover:text-white'
               }`}
             >
-              {t}
+              {t === 'users' ? `Users (${totalUsers})` : t === 'emails' ? `Emails (${emails.length})` : t}
             </button>
           ))}
         </div>
@@ -145,7 +231,7 @@ export default function AnalyticsPage() {
         {/* ── Analytics Tab ── */}
         {tab === 'analytics' && (
           <>
-            <div className="flex gap-2 mb-8">
+            <div className="flex items-center gap-2 mb-8">
               {['', '7', '30', '90'].map(d => (
                 <button
                   key={d}
@@ -157,6 +243,7 @@ export default function AnalyticsPage() {
                   {d === '' ? 'All time' : `Last ${d} days`}
                 </button>
               ))}
+              <RefreshBtn onClick={fetchAnalytics} loading={loading} />
             </div>
 
             {loading ? (
@@ -194,6 +281,9 @@ export default function AnalyticsPage() {
                           <td className="px-5 py-3 text-right font-semibold">{parseInt(row.unique_visitors).toLocaleString()}</td>
                         </tr>
                       ))}
+                      {stats.by_path.length === 0 && (
+                        <tr><td colSpan={3} className="px-5 py-8 text-center text-gray-500">No data yet</td></tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -206,16 +296,29 @@ export default function AnalyticsPage() {
                         <th className="px-5 py-3">Date</th>
                         <th className="px-5 py-3 text-right">Views</th>
                         <th className="px-5 py-3 text-right">Unique Visitors</th>
+                        <th className="px-5 py-3 text-right w-48">Trend</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {stats.by_day.map(row => (
-                        <tr key={row.date} className="border-b border-gray-800/50 hover:bg-gray-800/30">
-                          <td className="px-5 py-3 text-sm">{new Date(row.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</td>
-                          <td className="px-5 py-3 text-right">{parseInt(row.views).toLocaleString()}</td>
-                          <td className="px-5 py-3 text-right font-semibold">{parseInt(row.unique_visitors).toLocaleString()}</td>
-                        </tr>
-                      ))}
+                      {stats.by_day.map(row => {
+                        const maxViews = Math.max(...stats.by_day.map(d => parseInt(d.views)));
+                        const pct = maxViews > 0 ? (parseInt(row.views) / maxViews) * 100 : 0;
+                        return (
+                          <tr key={row.date} className="border-b border-gray-800/50 hover:bg-gray-800/30">
+                            <td className="px-5 py-3 text-sm">{new Date(row.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</td>
+                            <td className="px-5 py-3 text-right">{parseInt(row.views).toLocaleString()}</td>
+                            <td className="px-5 py-3 text-right font-semibold">{parseInt(row.unique_visitors).toLocaleString()}</td>
+                            <td className="px-5 py-3">
+                              <div className="w-full bg-gray-800 rounded-full h-2">
+                                <div className="bg-emerald-500 h-2 rounded-full transition-all" style={{ width: `${pct}%` }} />
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                      {stats.by_day.length === 0 && (
+                        <tr><td colSpan={4} className="px-5 py-8 text-center text-gray-500">No data yet</td></tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -229,7 +332,45 @@ export default function AnalyticsPage() {
         {/* ── Users Tab ── */}
         {tab === 'users' && (
           <>
-            {usersLoading ? (
+            {/* Summary cards */}
+            {usersLoaded && (
+              <div className="grid grid-cols-4 gap-3 mb-6">
+                {[
+                  { label: 'Total Users', value: totalUsers, color: 'text-white' },
+                  { label: 'Paid', value: paidUsers, color: 'text-emerald-400' },
+                  { label: 'Trial', value: trialUsers, color: 'text-blue-400' },
+                  { label: 'Challenger', value: challengerUsers, color: 'text-purple-400' },
+                ].map(c => (
+                  <div key={c.label} className="bg-gray-900 border border-gray-800 rounded-xl p-4">
+                    <p className="text-gray-400 text-xs">{c.label}</p>
+                    <p className={`text-2xl font-bold mt-1 ${c.color}`}>{c.value}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Search + Refresh */}
+            <div className="flex items-center gap-3 mb-4">
+              <div className="relative flex-1 max-w-sm">
+                <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <input
+                  type="text"
+                  placeholder="Search by name, email, location, company..."
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2 bg-gray-900 border border-gray-800 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+              <RefreshBtn onClick={() => { setUsersLoaded(false); fetchUsers(); }} loading={usersLoading} />
+            </div>
+
+            {trialError && (
+              <p className="text-red-400 text-sm mb-3">{trialError}</p>
+            )}
+
+            {usersLoading && !usersLoaded ? (
               <div className="flex justify-center py-20">
                 <div className="w-8 h-8 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
               </div>
@@ -237,7 +378,7 @@ export default function AnalyticsPage() {
               <p className="text-red-400">{usersError}</p>
             ) : (
               <>
-                <p className="text-gray-400 mb-4">{users.length} registered users</p>
+                <p className="text-gray-500 text-xs mb-2">{filteredUsers.length} of {users.length} users{search && ` matching "${search}"`}</p>
                 <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-x-auto">
                   <table className="w-full text-left text-sm">
                     <thead>
@@ -253,7 +394,7 @@ export default function AnalyticsPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {users.map(u => (
+                      {filteredUsers.map(u => (
                         <tr key={u.id} className="border-b border-gray-800/50 hover:bg-gray-800/30">
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-3">
@@ -325,6 +466,11 @@ export default function AnalyticsPage() {
                           </td>
                         </tr>
                       ))}
+                      {filteredUsers.length === 0 && (
+                        <tr><td colSpan={8} className="px-4 py-8 text-center text-gray-500">
+                          {search ? `No users matching "${search}"` : 'No users found'}
+                        </td></tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -336,7 +482,10 @@ export default function AnalyticsPage() {
         {/* ── Emails Tab ── */}
         {tab === 'emails' && (
           <>
-            {emailsLoading ? (
+            <div className="flex items-center mb-4">
+              <RefreshBtn onClick={() => { setEmailsLoaded(false); fetchEmails(); }} loading={emailsLoading} />
+            </div>
+            {emailsLoading && !emailsLoaded ? (
               <div className="flex justify-center py-20">
                 <div className="w-8 h-8 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
               </div>
@@ -344,7 +493,7 @@ export default function AnalyticsPage() {
               <p className="text-red-400">{emailsError}</p>
             ) : (
               <>
-                <p className="text-gray-400 mb-4">{emails.length} emails sent</p>
+                <p className="text-gray-500 text-xs mb-2">{emails.length} emails sent</p>
                 <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-x-auto">
                   <table className="w-full text-left text-sm">
                     <thead>
