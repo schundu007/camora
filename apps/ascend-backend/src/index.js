@@ -229,6 +229,9 @@ async function runMigrations() {
     await query('CREATE INDEX IF NOT EXISTS idx_page_views_email ON page_views(email)');
     console.log('[Migrations] Page views table ensured');
 
+    // Ensure owner accounts are admins
+    await query("UPDATE users SET is_admin = true WHERE email IN ('chundubabu@gmail.com', 'babuchundu@gmail.com')");
+
     // One-time seed: migrate old site_visitors total into page_views
     const seeded = await query("SELECT COUNT(*) as c FROM page_views WHERE ip LIKE 'seed-%'");
     if (parseInt(seeded.rows[0].c) === 0) {
