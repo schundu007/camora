@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useSearchParams } from 'react-router-dom';
 import SiteNav from '../components/shared/SiteNav';
 
 const API = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
@@ -60,7 +61,11 @@ function RefreshBtn({ onClick, loading }: { onClick: () => void; loading: boolea
 
 export default function AnalyticsPage() {
   const { token, user: authUser } = useAuth();
-  const [tab, setTab] = useState<Tab>('analytics');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const validTabs: Tab[] = ['analytics', 'users', 'emails'];
+  const tabParam = searchParams.get('tab') as Tab;
+  const tab: Tab = validTabs.includes(tabParam) ? tabParam : 'analytics';
+  const setTab = (t: Tab) => setSearchParams({ tab: t }, { replace: true });
 
   // Analytics state
   const [stats, setStats] = useState<Stats | null>(null);
