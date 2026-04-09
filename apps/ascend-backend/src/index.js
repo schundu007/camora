@@ -505,6 +505,29 @@ app.get('/api/admin/users', authenticate, async (req, res) => {
   }
 });
 
+// Admin: list sent emails from Resend
+app.get('/api/admin/emails', authenticate, async (req, res) => {
+  try {
+    const admin = await query('SELECT is_admin FROM users WHERE id = $1', [req.user.id]);
+    if (!admin.rows[0]?.is_admin) return res.status(403).json({ error: 'Admin access required' });
+
+    if (!process.env.RESEND_API_KEY) return res.json({ emails: [], has_more: false });
+
+    const limit = req.query.limit || 50;
+    const params = new URLSearchParams({ limit: String(limit) });
+    if (req.query.after) params.set('after', req.query.after);
+
+    const r = await fetch(`https://api.resend.com/emails?${params}`, {
+      headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}` },
+    });
+    const data = await r.json();
+    res.json({ emails: data.data || [], has_more: data.has_more || false });
+  } catch (err) {
+    console.error('[Admin Emails] Error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch emails' });
+  }
+});
+
 // Admin: grant free trial to a user
 app.post('/api/admin/grant-trial', authenticate, async (req, res) => {
   try {
