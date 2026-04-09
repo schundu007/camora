@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { query } from '../lib/shared-db.js';
-import { jwtAuth } from '../middleware/auth.js';
+import { jwtAuth } from '../middleware/jwtAuth.js';
 
 const router = Router();
 
