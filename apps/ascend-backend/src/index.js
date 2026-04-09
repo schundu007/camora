@@ -54,6 +54,7 @@ async function runMigrations() {
     await query('ALTER TABLE users ADD COLUMN IF NOT EXISTS resume_text TEXT DEFAULT NULL');
     await query('ALTER TABLE users ADD COLUMN IF NOT EXISTS technical_context TEXT DEFAULT NULL');
     await query('ALTER TABLE users ADD COLUMN IF NOT EXISTS location VARCHAR(255)');
+    await query('ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMPTZ');
     console.log('[Migrations] Onboarding columns ensured');
 
     // Diagram cache table — store generated diagrams to avoid re-generating
@@ -490,7 +491,7 @@ app.get('/api/admin/users', authenticate, async (req, res) => {
       SELECT u.id, u.email, u.name, u.avatar, u.provider, u.is_active,
              u.onboarding_completed, u.plan_type, u.plan_status, u.created_at,
              u.username, u.referral_code, u.target_company, u.target_role, u.interview_date,
-             u.location, s.plan_type as sub_plan, s.is_challenger
+             u.location, u.last_login_at, s.plan_type as sub_plan, s.is_challenger
       FROM users u
       LEFT JOIN ascend_subscriptions s ON s.user_id = u.id
       ORDER BY u.created_at DESC
