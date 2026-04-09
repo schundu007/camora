@@ -28,6 +28,7 @@ interface User {
   username: string | null;
   target_company: string | null;
   target_role: string | null;
+  location: string | null;
   sub_plan: string | null;
   is_challenger: boolean | null;
 }
@@ -197,6 +198,7 @@ export default function AnalyticsPage() {
                         <th className="px-4 py-3">User</th>
                         <th className="px-4 py-3">Email</th>
                         <th className="px-4 py-3">Plan</th>
+                        <th className="px-4 py-3">Location</th>
                         <th className="px-4 py-3">Target</th>
                         <th className="px-4 py-3">Joined</th>
                       </tr>
@@ -231,6 +233,7 @@ export default function AnalyticsPage() {
                               {u.is_challenger ? 'Challenger' : u.sub_plan || u.plan_type || 'free'}
                             </span>
                           </td>
+                          <td className="px-4 py-3 text-gray-400 text-xs">{u.location || '—'}</td>
                           <td className="px-4 py-3 text-gray-400 text-xs">
                             {u.target_company || u.target_role
                               ? `${u.target_role || ''} ${u.target_company ? `@ ${u.target_company}` : ''}`.trim()
