@@ -370,10 +370,10 @@ function useVisitorCount() {
   const [count, setCount] = useState<number | null>(null);
   useEffect(() => {
     const API = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
-    // Track visit + get count
-    fetch(`${API}/api/visitors/track`, { method: 'POST' })
+    // Get unique visitors (deduplicated by IP)
+    fetch(`${API}/api/visitors/pageview-stats`)
       .then(r => r.json())
-      .then(d => setCount(d.total))
+      .then(d => setCount(d.unique_visitors))
       .catch(() => {});
   }, []);
   return count;
