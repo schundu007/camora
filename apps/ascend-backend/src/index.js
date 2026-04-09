@@ -228,6 +228,25 @@ async function runMigrations() {
     await query('CREATE INDEX IF NOT EXISTS idx_page_views_created ON page_views(created_at)');
     await query('CREATE INDEX IF NOT EXISTS idx_page_views_email ON page_views(email)');
     console.log('[Migrations] Page views table ensured');
+
+    // One-time seed: migrate old site_visitors total into page_views
+    const seeded = await query("SELECT COUNT(*) as c FROM page_views WHERE ip LIKE 'seed-%'");
+    if (parseInt(seeded.rows[0].c) === 0) {
+      const old = await query('SELECT COALESCE(SUM(count), 0) as total FROM site_visitors');
+      const oldTotal = parseInt(old.rows[0].total);
+      if (oldTotal > 0) {
+        // Batch insert with unique synthetic IPs so COUNT(DISTINCT ip) preserves the old total
+        const batchSize = 500;
+        for (let i = 0; i < oldTotal; i += batchSize) {
+          const count = Math.min(batchSize, oldTotal - i);
+          const values = Array.from({ length: count }, (_, j) =>
+            `('/', 'seed-${i + j}', NOW())`
+          ).join(',');
+          await query(`INSERT INTO page_views (path, ip, created_at) VALUES ${values}`);
+        }
+        console.log(`[Migrations] Seeded page_views with ${oldTotal} legacy visitors`);
+      }
+    }
   } catch (err) {
     console.warn('[Migrations] Failed to run onboarding migration:', err.message);
   }
