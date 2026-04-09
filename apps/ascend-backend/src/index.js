@@ -213,6 +213,21 @@ async function runMigrations() {
     )`);
     await query('CREATE INDEX IF NOT EXISTS idx_challenger_activity_user ON ascend_challenger_activity(user_id)');
     console.log('[Migrations] Challenger tables ensured');
+
+    // Universal page-view tracking
+    await query(`CREATE TABLE IF NOT EXISTS page_views (
+      id SERIAL PRIMARY KEY,
+      path VARCHAR(500) NOT NULL,
+      email VARCHAR(255),
+      ip VARCHAR(45),
+      user_agent TEXT,
+      referrer TEXT,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )`);
+    await query('CREATE INDEX IF NOT EXISTS idx_page_views_path ON page_views(path)');
+    await query('CREATE INDEX IF NOT EXISTS idx_page_views_created ON page_views(created_at)');
+    await query('CREATE INDEX IF NOT EXISTS idx_page_views_email ON page_views(email)');
+    console.log('[Migrations] Page views table ensured');
   } catch (err) {
     console.warn('[Migrations] Failed to run onboarding migration:', err.message);
   }
@@ -376,6 +391,70 @@ app.get('/api/visitors/count', async (req, res) => {
     const today = await query('SELECT COALESCE(count, 0) as today FROM site_visitors WHERE visit_date = CURRENT_DATE');
     res.json({ total: parseInt(result.rows[0].total), today: parseInt(today.rows[0]?.today || 0) });
   } catch { res.json({ total: 0, today: 0 }); }
+});
+
+// Universal page-view tracker — no auth required
+app.post('/api/visitors/pageview', async (req, res) => {
+  try {
+    const { path, email, referrer } = req.body || {};
+    if (!path) return res.status(400).json({ error: 'path required' });
+    const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip;
+    const userAgent = req.headers['user-agent'] || null;
+    await query(
+      'INSERT INTO page_views (path, email, ip, user_agent, referrer) VALUES ($1, $2, $3, $4, $5)',
+      [path, email || null, ip, userAgent, referrer || null]
+    );
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[PageView] Error:', err.message);
+    res.json({ ok: false });
+  }
+});
+
+// Page-view stats — supports ?path=&exclude_emails=email1,email2&days=30
+app.get('/api/visitors/pageview-stats', async (req, res) => {
+  try {
+    const { path, exclude_emails, days } = req.query;
+    const params = [];
+    const conditions = [];
+    let idx = 1;
+
+    if (path) {
+      conditions.push(`path = $${idx++}`);
+      params.push(path);
+    }
+    if (exclude_emails) {
+      const emails = exclude_emails.split(',').map(e => e.trim().toLowerCase());
+      conditions.push(`(email IS NULL OR LOWER(email) NOT IN (${emails.map(() => `$${idx++}`).join(',')}))`);
+      params.push(...emails);
+    }
+    if (days) {
+      conditions.push(`created_at >= NOW() - INTERVAL '${parseInt(days)} days'`);
+    }
+
+    const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+
+    const total = await query(`SELECT COUNT(*) as count FROM page_views ${where}`, params);
+    const uniqueIps = await query(`SELECT COUNT(DISTINCT ip) as count FROM page_views ${where}`, params);
+    const byPath = await query(
+      `SELECT path, COUNT(*) as views, COUNT(DISTINCT ip) as unique_visitors FROM page_views ${where} GROUP BY path ORDER BY views DESC LIMIT 50`,
+      params
+    );
+    const byDay = await query(
+      `SELECT DATE(created_at) as date, COUNT(*) as views, COUNT(DISTINCT ip) as unique_visitors FROM page_views ${where} GROUP BY DATE(created_at) ORDER BY date DESC LIMIT 30`,
+      params
+    );
+
+    res.json({
+      total_views: parseInt(total.rows[0].count),
+      unique_visitors: parseInt(uniqueIps.rows[0].count),
+      by_path: byPath.rows,
+      by_day: byDay.rows
+    });
+  } catch (err) {
+    console.error('[PageViewStats] Error:', err.message);
+    res.json({ total_views: 0, unique_visitors: 0, by_path: [], by_day: [] });
+  }
 });
 
 app.use('/api/auth', authRouter);

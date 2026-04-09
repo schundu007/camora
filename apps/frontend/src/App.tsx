@@ -2,6 +2,7 @@ import { Routes, Route, Navigate, useLocation, Link } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { lazy, Suspense, useEffect } from 'react';
 import SiteNav from './components/shared/SiteNav';
+import { usePageTracker } from './hooks/usePageTracker';
 
 // ── Shared pages ────────────────────────────────────────
 const LandingPage = lazy(() => import('./pages/LandingPage'));
@@ -130,11 +131,17 @@ function ScrollToTop() {
   return null;
 }
 
+function PageTracker() {
+  usePageTracker();
+  return null;
+}
+
 export function App() {
   return (
     <AuthProvider>
       <Suspense fallback={<Loading />}>
         <ScrollToTop />
+        <PageTracker />
         <Routes>
           {/* ── Public ─────────────────────────────────── */}
           <Route path="/" element={<LandingPage />} />
