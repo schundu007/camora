@@ -34,6 +34,7 @@ const ChallengePage = lazy(() => import('./pages/ChallengePage'));
 const Blind75Page = lazy(() => import('./pages/Blind75Page'));
 const Blind75PracticePage = lazy(() => import('./pages/Blind75PracticePage'));
 const InterviewQuestionsPage = lazy(() => import('./pages/InterviewQuestionsPage'));
+const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage'));
 
 function Loading() {
   return (
@@ -194,6 +195,9 @@ export function App() {
 
           {/* ── Challenge ─────────────────────────────── */}
           <Route path="/challenge" element={<ChallengePage />} />
+
+          {/* ── Analytics ─────────────────────────────── */}
+          <Route path="/analytics" element={<ProtectedRoute><AnalyticsPage /></ProtectedRoute>} />
 
           {/* ── Company Interview Questions ─────────────── */}
           <Route path="/interview-questions/:company" element={<InterviewQuestionsPage />} />
