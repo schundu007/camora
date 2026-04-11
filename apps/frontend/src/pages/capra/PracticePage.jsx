@@ -601,159 +601,163 @@ export default function PracticePage() {
               </div>
 
               {/* Daily Challenge Banner */}
-              <div style={{ background: 'linear-gradient(135deg, #ecfdf5 0%, #e0f2fe 100%)', border: '1px solid #a7f3d0', borderRadius: 16, padding: '20px 24px', marginBottom: 24, display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
-                <div style={{ flex: 1, minWidth: 200 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                    <Icon name="streak" size={18} style={{ color: '#f59e0b' }} />
-                    <span className="practice-display" style={{ fontSize: 13, fontWeight: 700, color: '#059669', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Daily Challenge</span>
+              <div style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', borderRadius: 16, padding: '22px 26px', marginBottom: 20, position: 'relative', overflow: 'hidden' }}>
+                <div style={{ position: 'absolute', inset: 0, opacity: 0.03, backgroundImage: 'linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px)', backgroundSize: '32px 32px', pointerEvents: 'none' }} />
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 24, flexWrap: 'wrap' }}>
+                  <div style={{ flex: 1, minWidth: 200 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                      <span style={{ fontSize: 16 }}>⚡</span>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: '#34d399', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Daily Challenge</span>
+                    </div>
+                    <h2 className="practice-display" style={{ fontSize: 19, fontWeight: 700, color: '#f1f5f9', margin: '0 0 6px' }}>{dailyChallenge.q}</h2>
+                    <p style={{ fontSize: 13, color: '#94a3b8', margin: '0 0 10px', lineHeight: 1.5 }}>{dailyChallenge.desc}</p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', padding: '3px 10px', borderRadius: 6, background: `${dc.text}18`, color: dc.text }}>{dailyChallenge.difficulty}</span>
+                      <span style={{ fontSize: 11, color: '#64748b' }}>{catLabel(dailyCategory)}</span>
+                    </div>
                   </div>
-                  <h2 className="practice-display" style={{ fontSize: 18, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>{dailyChallenge.q}</h2>
-                  <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 8px' }}>{dailyChallenge.desc}</p>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', padding: '2px 8px', borderRadius: 99, background: dc.bg, color: dc.text }}>{dailyChallenge.difficulty}</span>
-                    <span style={{ fontSize: 11, color: '#9ca3af' }}>{catLabel(dailyCategory)}</span>
-                  </div>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-                  <button onClick={() => startChallenge(dailyCategory, dailyChallenge.difficulty, [dailyChallenge])} style={{ padding: '10px 24px', background: 'linear-gradient(135deg, #10b981, #059669)', color: '#fff', fontSize: 14, fontWeight: 600, borderRadius: 10, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, boxShadow: '0 2px 8px rgba(16,185,129,0.25)' }}>
-                    <Icon name="play" size={14} style={{ color: '#fff' }} />
-                    Start
-                  </button>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 11, color: '#6b7280' }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                      <Icon name="streak" size={12} style={{ color: '#f59e0b' }} />
-                      {stats.streak || 0} day streak
-                    </span>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                      <Icon name="users" size={12} style={{ color: '#9ca3af' }} />
-                      {socialCount.toLocaleString()} today
-                    </span>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+                    <button onClick={() => startChallenge(dailyCategory, dailyChallenge.difficulty, [dailyChallenge])} style={{ padding: '12px 28px', background: 'linear-gradient(135deg, #10b981, #059669)', color: '#fff', fontSize: 14, fontWeight: 700, borderRadius: 12, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, boxShadow: '0 4px 14px rgba(16,185,129,0.3)', transition: 'transform 0.15s' }}>
+                      <Icon name="play" size={15} style={{ color: '#fff' }} />
+                      Start
+                    </button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 14, fontSize: 11, color: '#64748b' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>🔥 {stats.streak || 0} day streak</span>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>👥 {socialCount.toLocaleString()} today</span>
+                    </div>
                   </div>
                 </div>
               </div>
 
               {/* Readiness Dashboard */}
-              <div style={{ background: '#fff', border: '1px solid #e3e8ee', borderRadius: 16, padding: 20, marginBottom: 16, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-                <h2 className="practice-display" style={{ fontSize: 16, fontWeight: 700, color: '#111827', margin: '0 0 14px' }}>Interview Readiness</h2>
-                {/* Top: Readiness score + category bars */}
-                <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', gap: 16, alignItems: 'center', marginBottom: 14 }}>
-                  {/* Big readiness number */}
-                  <div style={{ textAlign: 'center' }}>
-                    <div style={{ position: 'relative', width: 100, height: 100, margin: '0 auto' }}>
-                      <svg width={100} height={100} style={{ transform: 'rotate(-90deg)' }}>
-                        <circle cx={50} cy={50} r={42} fill="none" stroke="#f3f4f6" strokeWidth={8} />
-                        <circle cx={50} cy={50} r={42} fill="none" stroke={readiness >= 70 ? '#10b981' : readiness >= 40 ? '#f59e0b' : '#ef4444'} strokeWidth={8} strokeDasharray={264} strokeDashoffset={264 - (readiness / 100) * 264} strokeLinecap="round" style={{ transition: 'stroke-dashoffset 0.8s ease' }} />
-                      </svg>
-                      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                        <span className="practice-display" style={{ fontSize: 26, fontWeight: 800, color: '#111827', lineHeight: 1 }}>{readiness}</span>
-                        <span style={{ fontSize: 10, color: '#9ca3af', fontWeight: 500 }}>/ 100</span>
-                      </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 16, marginBottom: 20 }}>
+                {/* Readiness score card */}
+                <div style={{ background: '#fff', border: '1px solid #e3e8ee', borderRadius: 16, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ position: 'relative', width: 110, height: 110 }}>
+                    <svg width={110} height={110} style={{ transform: 'rotate(-90deg)' }}>
+                      <circle cx={55} cy={55} r={46} fill="none" stroke="#f1f5f9" strokeWidth={10} />
+                      <circle cx={55} cy={55} r={46} fill="none" stroke={readiness >= 70 ? '#10b981' : readiness >= 40 ? '#f59e0b' : '#ef4444'} strokeWidth={10} strokeDasharray={289} strokeDashoffset={289 - (readiness / 100) * 289} strokeLinecap="round" style={{ transition: 'stroke-dashoffset 0.8s ease' }} />
+                    </svg>
+                    <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                      <span className="practice-display" style={{ fontSize: 30, fontWeight: 800, color: '#0f172a', lineHeight: 1 }}>{readiness}</span>
+                      <span style={{ fontSize: 10, color: '#94a3b8', fontWeight: 600 }}>/ 100</span>
                     </div>
                   </div>
-                  {/* Category bars */}
-                  <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#334155', marginTop: 10 }}>Interview Ready</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, width: '100%', marginTop: 14 }}>
+                    {[
+                      { label: 'Done', value: stats.totalCompleted || 0 },
+                      { label: 'Streak', value: `${stats.streak || 0}d` },
+                      { label: 'Best', value: `${stats.bestScore || 0}%` },
+                      { label: 'Avg', value: formatTime(Math.round(CATEGORIES.reduce((a, c) => a + (stats.categories?.[c]?.avgTime || 0), 0) / 3)) },
+                    ].map(s => (
+                      <div key={s.label} style={{ textAlign: 'center', padding: '8px 0', background: '#f8fafc', borderRadius: 10 }}>
+                        <div className="practice-mono" style={{ fontSize: 16, fontWeight: 800, color: '#0f172a' }}>{s.value}</div>
+                        <div style={{ fontSize: 9, color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{s.label}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Category breakdown */}
+                <div style={{ background: '#fff', border: '1px solid #e3e8ee', borderRadius: 16, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+                  <h2 className="practice-display" style={{ fontSize: 15, fontWeight: 700, color: '#0f172a', margin: '0 0 18px' }}>Category Progress</h2>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                     {CATEGORIES.map(cat => {
                       const s = getCategoryScore(stats, cat);
                       const completed = stats.categories?.[cat]?.completed || 0;
                       const colors = { coding: '#8b5cf6', 'system-design': '#06b6d4', behavioral: '#f59e0b' };
                       return (
-                        <div key={cat} style={{ marginBottom: 10 }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 3 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                              <div style={{ width: 6, height: 6, borderRadius: 99, background: colors[cat] }} />
-                              <span style={{ fontSize: 13, fontWeight: 600, color: '#111827' }}>{catLabel(cat)}</span>
-                            </div>
+                        <div key={cat}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                              <span style={{ fontSize: 11, color: '#9ca3af' }}>{completed} done</span>
-                              <span className="practice-mono" style={{ fontSize: 13, fontWeight: 700, color: scoreColor(s), minWidth: 32, textAlign: 'right' }}>{s}%</span>
+                              <div style={{ width: 8, height: 8, borderRadius: 3, background: colors[cat] }} />
+                              <span style={{ fontSize: 14, fontWeight: 600, color: '#1e293b' }}>{catLabel(cat)}</span>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                              <span style={{ fontSize: 12, color: '#94a3b8', fontWeight: 500 }}>{completed} done</span>
+                              <span className="practice-mono" style={{ fontSize: 14, fontWeight: 800, color: s >= 70 ? '#10b981' : s >= 40 ? '#f59e0b' : '#94a3b8', minWidth: 36, textAlign: 'right' }}>{s}%</span>
                             </div>
                           </div>
-                          <div style={{ height: 6, borderRadius: 99, background: '#f3f4f6', overflow: 'hidden' }}>
-                            <div style={{ height: '100%', borderRadius: 99, background: colors[cat], width: `${Math.max(s, 2)}%`, transition: 'width 0.6s ease', opacity: s > 0 ? 1 : 0.3 }} />
+                          <div style={{ height: 8, borderRadius: 99, background: '#f1f5f9', overflow: 'hidden' }}>
+                            <div style={{ height: '100%', borderRadius: 99, background: `linear-gradient(90deg, ${colors[cat]}, ${colors[cat]}cc)`, width: `${Math.max(s, 2)}%`, transition: 'width 0.6s ease', opacity: s > 0 ? 1 : 0.2 }} />
                           </div>
                         </div>
                       );
                     })}
                   </div>
                 </div>
-                {/* Bottom: Stats row */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: 8, borderTop: '1px solid #f3f4f6', paddingTop: 12 }}>
-                  {[
-                    { label: 'Completed', value: stats.totalCompleted || 0, color: '#10b981' },
-                    { label: 'Day Streak', value: `${stats.streak || 0}`, color: '#f59e0b' },
-                    { label: 'Best Score', value: `${stats.bestScore || 0}%`, color: '#8b5cf6' },
-                    { label: 'Avg Time', value: formatTime(Math.round(CATEGORIES.reduce((a, c) => a + (stats.categories?.[c]?.avgTime || 0), 0) / 3)), color: '#06b6d4' },
-                  ].map(s => (
-                    <div key={s.label} style={{ textAlign: 'center' }}>
-                      <div className="practice-mono" style={{ fontSize: 20, fontWeight: 700, color: '#111827' }}>{s.value}</div>
-                      <div style={{ fontSize: 10, color: '#9ca3af', fontWeight: 500, marginTop: 1 }}>{s.label}</div>
-                    </div>
-                  ))}
-                </div>
               </div>
 
               {/* Challenge Configuration */}
-              <div style={{ background: '#fff', border: '1px solid #e3e8ee', borderRadius: 16, padding: 24, marginBottom: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-                <h2 className="practice-display" style={{ fontSize: 18, fontWeight: 700, color: '#111827', margin: '0 0 16px' }}>Start a Challenge</h2>
-
-                {/* Mode cards */}
-                <div style={{ marginBottom: 20 }}>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8, display: 'block' }}>Mode</label>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10 }}>
-                    {MODES.map(m => (
-                      <button key={m.id} onClick={() => setMode(m.id)} style={{ padding: '16px', borderRadius: 12, border: mode === m.id ? '2px solid #10b981' : '1px solid #e3e8ee', background: mode === m.id ? '#ecfdf5' : '#fff', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                          <Icon name={m.icon} size={16} style={{ color: mode === m.id ? '#059669' : '#9ca3af' }} />
-                          <span style={{ fontSize: 14, fontWeight: 600, color: mode === m.id ? '#059669' : '#111827' }}>{m.label}</span>
-                        </div>
-                        <p style={{ fontSize: 11, color: '#9ca3af', margin: '0 0 4px', lineHeight: 1.4 }}>{m.desc}</p>
-                        <span className="practice-mono" style={{ fontSize: 11, color: '#6b7280' }}>{formatTime(m.time)} / {m.questions}q</span>
-                      </button>
-                    ))}
-                  </div>
+              <div style={{ background: '#fff', border: '1px solid #e3e8ee', borderRadius: 16, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', marginBottom: 24 }}>
+                <div style={{ padding: '20px 24px', borderBottom: '1px solid #f1f5f9' }}>
+                  <h2 className="practice-display" style={{ fontSize: 17, fontWeight: 700, color: '#0f172a', margin: 0 }}>Start a Challenge</h2>
                 </div>
 
-                {/* Category + Difficulty in same row */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16, marginBottom: 20 }}>
-                  <div style={{ textAlign: 'center' }}>
-                    <label style={{ fontSize: 12, fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8, display: 'block' }}>Category</label>
-                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
-                      {CATEGORIES.map(c => (
-                        <button key={c} onClick={() => setCategory(c)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 18px', borderRadius: 20, border: category === c ? '1px solid #10b981' : '1px solid #e3e8ee', background: category === c ? '#ecfdf5' : '#fff', color: category === c ? '#059669' : '#4b5563', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>
-                          <Icon name={catIcon(c)} size={14} />
-                          {catLabel(c)}
+                <div style={{ padding: '20px 24px' }}>
+                  {/* Mode cards */}
+                  <div style={{ marginBottom: 22 }}>
+                    <label style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10, display: 'block' }}>Mode</label>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10 }}>
+                      {MODES.map(m => (
+                        <button key={m.id} onClick={() => setMode(m.id)} style={{ padding: '16px 18px', borderRadius: 14, border: mode === m.id ? '2px solid #10b981' : '1px solid #e2e8f0', background: mode === m.id ? 'linear-gradient(135deg, #ecfdf5, #f0fdf9)' : '#fafbfc', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                            <div style={{ width: 28, height: 28, borderRadius: 8, background: mode === m.id ? '#10b981' : '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <Icon name={m.icon} size={14} style={{ color: mode === m.id ? '#fff' : '#94a3b8' }} />
+                            </div>
+                            <span style={{ fontSize: 14, fontWeight: 700, color: mode === m.id ? '#059669' : '#1e293b' }}>{m.label}</span>
+                          </div>
+                          <p style={{ fontSize: 12, color: '#94a3b8', margin: '0 0 6px', lineHeight: 1.5 }}>{m.desc}</p>
+                          <span className="practice-mono" style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>{formatTime(m.time)} / {m.questions}q</span>
                         </button>
                       ))}
                     </div>
                   </div>
-                  <div style={{ textAlign: 'center' }}>
-                    <label style={{ fontSize: 12, fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8, display: 'block' }}>Difficulty</label>
-                    <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
-                      {DIFFICULTIES.map(d => {
-                        const dc2 = diffColor(d);
-                        return (
-                          <button key={d} onClick={() => setDifficulty(d)} style={{ padding: '8px 18px', borderRadius: 20, border: difficulty === d ? `1px solid ${dc2.text}` : '1px solid #e3e8ee', background: difficulty === d ? dc2.bg : '#fff', color: difficulty === d ? dc2.text : '#4b5563', fontSize: 13, fontWeight: 500, cursor: 'pointer', textTransform: 'capitalize' }}>{d}</button>
-                        );
-                      })}
+
+                  {/* Category + Difficulty */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 22 }}>
+                    <div>
+                      <label style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10, display: 'block' }}>Category</label>
+                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                        {CATEGORIES.map(c => (
+                          <button key={c} onClick={() => setCategory(c)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 18px', borderRadius: 10, border: category === c ? '2px solid #10b981' : '1px solid #e2e8f0', background: category === c ? '#ecfdf5' : '#fafbfc', color: category === c ? '#059669' : '#475569', fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s' }}>
+                            <Icon name={catIcon(c)} size={14} />
+                            {catLabel(c)}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <label style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10, display: 'block' }}>Difficulty</label>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        {DIFFICULTIES.map(d => {
+                          const dc2 = diffColor(d);
+                          return (
+                            <button key={d} onClick={() => setDifficulty(d)} style={{ padding: '9px 20px', borderRadius: 10, border: difficulty === d ? `2px solid ${dc2.text}` : '1px solid #e2e8f0', background: difficulty === d ? dc2.bg : '#fafbfc', color: difficulty === d ? dc2.text : '#475569', fontSize: 13, fontWeight: 600, cursor: 'pointer', textTransform: 'capitalize', transition: 'all 0.15s' }}>{d}</button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Company Focus */}
+                  <div style={{ marginBottom: 24 }}>
+                    <label style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10, display: 'block' }}>Company Focus</label>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                      {COMPANIES.map(c => (
+                        <button key={c.id} onClick={() => setCompany(c.id)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 10, border: company === c.id ? `2px solid ${c.color}` : '1px solid #e2e8f0', background: company === c.id ? `${c.color}0d` : '#fafbfc', fontSize: 13, fontWeight: 600, cursor: 'pointer', color: company === c.id ? c.color : '#475569', transition: 'all 0.15s' }}>
+                          <span style={{ width: 8, height: 8, borderRadius: 3, background: c.color, display: 'inline-block' }} />
+                          {c.label}
+                        </button>
+                      ))}
                     </div>
                   </div>
                 </div>
 
-                {/* Company Focus — inside challenge card */}
-                <div style={{ marginBottom: 20 }}>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8, display: 'block', textAlign: 'center' }}>Company</label>
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
-                    {COMPANIES.map(c => (
-                      <button key={c.id} onClick={() => setCompany(c.id)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 16px', borderRadius: 99, border: company === c.id ? `2px solid ${c.color}` : '1px solid #e3e8ee', background: company === c.id ? `${c.color}10` : '#fff', fontSize: 13, fontWeight: 500, cursor: 'pointer', color: company === c.id ? c.color : '#4b5563', transition: 'all 0.15s' }}>
-                        <span style={{ width: 8, height: 8, borderRadius: 99, background: c.color, display: 'inline-block' }} />
-                        {c.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div style={{ textAlign: 'center', position: 'relative', zIndex: 10 }}>
-                  <button onClick={() => startChallenge()} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 32px', background: 'linear-gradient(135deg, #10b981, #059669)', color: '#fff', fontSize: 15, fontWeight: 600, borderRadius: 10, border: 'none', cursor: 'pointer', boxShadow: '0 2px 8px rgba(16,185,129,0.25)', transition: 'transform 0.1s', position: 'relative', zIndex: 10 }}>
+                {/* CTA Footer */}
+                <div style={{ padding: '16px 24px', background: '#f8fafc', borderTop: '1px solid #f1f5f9', textAlign: 'center' }}>
+                  <button onClick={() => startChallenge()} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '13px 36px', background: 'linear-gradient(135deg, #10b981, #059669)', color: '#fff', fontSize: 15, fontWeight: 700, borderRadius: 12, border: 'none', cursor: 'pointer', boxShadow: '0 4px 14px rgba(16,185,129,0.3)', transition: 'transform 0.15s, box-shadow 0.15s' }}>
                     <Icon name="play" size={16} style={{ color: '#fff' }} />
                     Start Challenge
                   </button>
