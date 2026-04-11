@@ -264,10 +264,9 @@ export default function ChallengePage() {
           </div>
 
           <h1 className="ch-hero-title">
-            The Camora<br />
-            <span className="ch-hero-gradient-text">Challenge</span>
+            The Camora <span className="ch-hero-gradient-text">Challenge</span>
           </h1>
-          <p className="mt-5 text-lg text-white/50" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>
+          <p className="mt-5 text-xl text-white/50" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>
             Find bugs. Build features. Win prizes. Join the founding team.
           </p>
 
@@ -279,7 +278,7 @@ export default function ChallengePage() {
               <p className="text-base font-bold text-emerald-400">Challenge is LIVE. Submit findings now.</p>
             ) : (
               <>
-                <span className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em] mr-2">Starts in</span>
+                <span className="text-xs font-bold text-white/30 uppercase tracking-[0.15em] mr-3">Starts in</span>
                 {[
                   { val: countdown.days, label: 'DAYS' },
                   { val: countdown.hours, label: 'HRS' },
@@ -297,7 +296,7 @@ export default function ChallengePage() {
 
           {/* Prize pool — glowing */}
           <div className="ch-prize-pool-badge">
-            <span className="text-xs text-white/40 uppercase tracking-widest font-bold">Total Prize Pool</span>
+            <span className="text-sm text-white/40 uppercase tracking-widest font-bold">Total Prize Pool</span>
             <span className="ch-prize-amount">$21,812</span>
           </div>
 
@@ -381,7 +380,7 @@ export default function ChallengePage() {
                 </span>
               </div>
               <div className="p-5 rounded-xl mb-5" style={{ background: 'rgba(16,185,129,0.05)', border: '1px solid rgba(16,185,129,0.15)' }}>
-                <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">Question {quizIdx + 1} of {quizQuestions.length}</span>
+                <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Question {quizIdx + 1} of {quizQuestions.length}</span>
                 <h3 className="text-lg font-bold text-white mt-1">{quizQuestions[quizIdx]?.q}</h3>
                 <p className="text-sm text-white/40 mt-1">{quizQuestions[quizIdx]?.desc}</p>
               </div>
@@ -453,7 +452,7 @@ export default function ChallengePage() {
                   <div className="ch-prize-rank" style={{ background: p.gradient }}>{p.place}</div>
                   <div className="ch-prize-amount-card">{p.amount}</div>
                   <div className="text-sm font-bold text-white/70 mb-1">{p.title}</div>
-                  {p.winners && <div className="text-[10px] text-white/30">({p.winners} winners)</div>}
+                  {p.winners && <div className="text-xs text-white/30">({p.winners} winners)</div>}
                   <div className="text-xs text-white/40 mt-2">{p.desc}</div>
                 </div>
               </div>
@@ -479,7 +478,7 @@ export default function ChallengePage() {
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-white">Founding Engineers</h3>
-                  <span className="text-[10px] text-emerald-400 font-bold">5 positions</span>
+                  <span className="text-xs text-emerald-400 font-bold">5 positions</span>
                 </div>
               </div>
               <ul className="space-y-2">
@@ -495,7 +494,7 @@ export default function ChallengePage() {
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-white">Core Engineers</h3>
-                  <span className="text-[10px] text-indigo-400 font-bold">10 positions</span>
+                  <span className="text-xs text-indigo-400 font-bold">10 positions</span>
                 </div>
               </div>
               <ul className="space-y-2">
@@ -555,7 +554,7 @@ export default function ChallengePage() {
                 {SCORING.map((s) => (
                   <div key={s.category} className="flex items-center justify-between">
                     <span className="text-xs text-white/50">{s.category}</span>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded" style={{ background: `${s.color}18`, color: s.color, boxShadow: `0 0 6px ${s.color}30` }}>{s.points}</span>
+                    <span className="text-xs font-bold px-2 py-0.5 rounded" style={{ background: `${s.color}18`, color: s.color, boxShadow: `0 0 6px ${s.color}30` }}>{s.points}</span>
                   </div>
                 ))}
               </div>
@@ -579,7 +578,7 @@ export default function ChallengePage() {
                 </div>
                 {i < STEPS.length - 1 && <div className="ch-timeline-line" style={{ background: `linear-gradient(to right, ${s.color}40, ${STEPS[i+1].color}40)` }} />}
                 <h3 className="text-xs font-bold text-white mt-3 mb-0.5">{s.title}</h3>
-                <p className="text-[10px] text-white/30 leading-snug">{s.desc}</p>
+                <p className="text-xs text-white/30 leading-snug">{s.desc}</p>
               </div>
             ))}
           </div>
@@ -594,7 +593,7 @@ export default function ChallengePage() {
             {TECH_STACK.map((t) => (
               <div key={t.name} className="ch-tech-pill">
                 <img src={t.logo} alt={t.name} width={20} height={20} style={{ objectFit: 'contain' }} />
-                <span className="text-[10px] font-medium text-white/40">{t.name}</span>
+                <span className="text-xs font-medium text-white/40">{t.name}</span>
               </div>
             ))}
           </div>
@@ -610,7 +609,7 @@ export default function ChallengePage() {
             <p className="ch-section-sub">{challengeActive ? 'Live standings.' : 'Rankings appear May 7, 2026.'}</p>
           </div>
           <div className="ch-glass-card overflow-hidden p-0">
-            <div className="grid grid-cols-12 gap-2 px-5 py-3 text-[10px] font-bold text-white/20 uppercase tracking-wider border-b border-white/5">
+            <div className="grid grid-cols-12 gap-2 px-5 py-3 text-xs font-bold text-white/20 uppercase tracking-wider border-b border-white/5">
               <div className="col-span-1">#</div>
               <div className="col-span-5">Challenger</div>
               <div className="col-span-3 text-center">Findings</div>
@@ -623,7 +622,7 @@ export default function ChallengePage() {
                 </div>
                 <div className="col-span-5"><div className="h-2 rounded-full w-24" style={{ background: 'rgba(255,255,255,0.04)' }} /></div>
                 <div className="col-span-3 text-center"><div className="h-2 rounded-full w-8 mx-auto" style={{ background: 'rgba(255,255,255,0.04)' }} /></div>
-                <div className="col-span-3 flex justify-end"><span className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full" style={{ background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.2)' }}>Pending</span></div>
+                <div className="col-span-3 flex justify-end"><span className="text-xs font-semibold px-2.5 py-0.5 rounded-full" style={{ background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.2)' }}>Pending</span></div>
               </div>
             ))}
           </div>
@@ -699,7 +698,7 @@ export default function ChallengePage() {
             </Link>
           </div>
           <div className="mt-6 flex items-center justify-center gap-3">
-            <span className="text-[10px] text-white/20">Share:</span>
+            <span className="text-xs text-white/20">Share:</span>
             <a href={`https://twitter.com/intent/tweet?text=${encodeURIComponent('The Camora Challenge — $21,812 in prizes + founding team offers!')}&url=${encodeURIComponent('https://camora.cariara.com/challenge')}`} target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-lg flex items-center justify-center text-white/20 hover:text-white/60 hover:bg-white/5 transition-colors" aria-label="Share on Twitter">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
             </a>
@@ -762,8 +761,8 @@ export default function ChallengePage() {
 
         .ch-badge {
           display: inline-flex; align-items: center; gap: 8px;
-          padding: 6px 16px; border-radius: 999px;
-          font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+          padding: 8px 20px; border-radius: 999px;
+          font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
           color: #10b981;
           background: rgba(16,185,129,0.08);
           border: 1px solid rgba(16,185,129,0.15);
@@ -805,11 +804,11 @@ export default function ChallengePage() {
           display: flex; flex-direction: column; align-items: center;
         }
         .ch-countdown-num {
-          width: 56px; height: 56px;
+          width: 64px; height: 64px;
           display: flex; align-items: center; justify-content: center;
-          border-radius: 12px;
+          border-radius: 14px;
           font-family: 'Space Mono', monospace;
-          font-size: 24px; font-weight: 700;
+          font-size: 28px; font-weight: 700;
           color: #fff;
           background: rgba(255,255,255,0.04);
           border: 1px solid rgba(255,255,255,0.08);
@@ -817,22 +816,22 @@ export default function ChallengePage() {
           box-shadow: 0 0 20px rgba(16,185,129,0.08), inset 0 1px 0 rgba(255,255,255,0.05);
         }
         .ch-countdown-label {
-          margin-top: 4px; font-size: 9px; font-weight: 700;
-          color: rgba(255,255,255,0.2); letter-spacing: 0.15em;
+          margin-top: 6px; font-size: 11px; font-weight: 700;
+          color: rgba(255,255,255,0.3); letter-spacing: 0.12em;
         }
 
         /* ── Prize pool badge ── */
         .ch-prize-pool-badge {
           margin-top: 32px;
-          display: flex; flex-direction: column; align-items: center; gap: 4px;
-          padding: 16px 32px; border-radius: 16px;
+          display: flex; flex-direction: column; align-items: center; gap: 6px;
+          padding: 20px 40px; border-radius: 16px;
           background: rgba(255,255,255,0.03);
           border: 1px solid rgba(255,255,255,0.06);
           backdrop-filter: blur(12px);
         }
         .ch-prize-amount {
           font-family: 'Space Mono', monospace;
-          font-size: 36px; font-weight: 700;
+          font-size: 42px; font-weight: 700;
           background: linear-gradient(135deg, #fbbf24, #f59e0b, #10b981);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
@@ -843,8 +842,8 @@ export default function ChallengePage() {
         /* ── CTAs ── */
         .ch-cta-primary {
           display: inline-flex; align-items: center; justify-content: center;
-          padding: 12px 28px; border-radius: 12px;
-          font-size: 14px; font-weight: 700; color: #fff;
+          padding: 14px 32px; border-radius: 12px;
+          font-size: 16px; font-weight: 700; color: #fff;
           background: linear-gradient(135deg, #10b981, #059669);
           border: none; cursor: pointer;
           box-shadow: 0 0 24px rgba(16,185,129,0.25), 0 4px 12px rgba(0,0,0,0.3);
@@ -857,8 +856,8 @@ export default function ChallengePage() {
         }
         .ch-cta-secondary {
           display: inline-flex; align-items: center; justify-content: center;
-          padding: 12px 28px; border-radius: 12px;
-          font-size: 14px; font-weight: 700;
+          padding: 14px 32px; border-radius: 12px;
+          font-size: 16px; font-weight: 700;
           color: rgba(255,255,255,0.6);
           background: rgba(255,255,255,0.04);
           border: 1px solid rgba(255,255,255,0.08);
@@ -872,11 +871,11 @@ export default function ChallengePage() {
         }
 
         /* ── Sections ── */
-        .ch-section { padding: 48px 0; position: relative; }
-        .ch-section-head { text-align: center; margin-bottom: 32px; }
-        .ch-section-tag { font-size: 10px; font-weight: 700; color: #10b981; text-transform: uppercase; letter-spacing: 0.2em; }
-        .ch-section-title { font-size: clamp(1.25rem, 3vw, 1.75rem); font-weight: 800; color: #fff; letter-spacing: -0.02em; margin-top: 4px; }
-        .ch-section-sub { font-size: 13px; color: rgba(255,255,255,0.3); margin-top: 6px; }
+        .ch-section { padding: 56px 0; position: relative; }
+        .ch-section-head { text-align: center; margin-bottom: 40px; }
+        .ch-section-tag { font-size: 13px; font-weight: 700; color: #10b981; text-transform: uppercase; letter-spacing: 0.15em; }
+        .ch-section-title { font-size: clamp(1.5rem, 3.5vw, 2.25rem); font-weight: 800; color: #fff; letter-spacing: -0.02em; margin-top: 6px; }
+        .ch-section-sub { font-size: 15px; color: rgba(255,255,255,0.4); margin-top: 8px; line-height: 1.6; }
 
         /* ── Glass card ── */
         .ch-glass-card {
@@ -890,8 +889,8 @@ export default function ChallengePage() {
 
         /* ── Inputs ── */
         .ch-input {
-          padding: 10px 14px; border-radius: 10px;
-          font-size: 13px; color: #fff;
+          padding: 12px 16px; border-radius: 10px;
+          font-size: 15px; color: #fff;
           background: rgba(255,255,255,0.04);
           border: 1px solid rgba(255,255,255,0.08);
           outline: none; transition: border-color 0.2s;
@@ -910,7 +909,7 @@ export default function ChallengePage() {
 
         /* ── Glow icon ── */
         .ch-glow-icon {
-          width: 40px; height: 40px;
+          width: 44px; height: 44px;
           border-radius: 12px;
           display: flex; align-items: center; justify-content: center;
           background: color-mix(in srgb, var(--glow, #10b981) 8%, transparent);
@@ -939,14 +938,14 @@ export default function ChallengePage() {
         }
         .ch-prize-rank {
           display: inline-block;
-          padding: 4px 14px; border-radius: 8px;
-          font-size: 11px; font-weight: 800; color: #0a0a0f;
+          padding: 5px 16px; border-radius: 8px;
+          font-size: 13px; font-weight: 800; color: #0a0a0f;
           text-transform: uppercase; letter-spacing: 0.08em;
           margin-bottom: 12px;
         }
         .ch-prize-amount-card {
           font-family: 'Space Mono', monospace;
-          font-size: 32px; font-weight: 700; color: #fff;
+          font-size: 36px; font-weight: 700; color: #fff;
           margin-bottom: 4px;
         }
 
