@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { useInterviewStore } from '@/stores/interview-store';
 import { DESIGN_BLOCK_TYPES, CODING_BLOCK_TYPES } from '@/lib/constants';
 import { AnswerBlocks } from './AnswerBlocks';
@@ -234,78 +234,23 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
 }
 
 function EmptyState({ onAskQuestion }: { onAskQuestion?: (question: string) => void; onSwitchToCoding?: (problem?: string) => void; onSwitchToDesign?: (problem?: string) => void }) {
-  const [micOk, setMicOk] = useState(false);
-  const [backendOk, setBackendOk] = useState(false);
-  const [micLevel, setMicLevel] = useState(0);
-  const streamRef = useRef<MediaStream | null>(null);
-  const rafRef = useRef<number>(0);
-
-  useEffect(() => {
-    let active = true;
-    fetch(`${import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com'}/health`)
-      .then(r => { if (r.ok && active) setBackendOk(true); })
-      .catch(() => {});
-    (async () => {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        if (!active) { stream.getTracks().forEach(t => t.stop()); return; }
-        streamRef.current = stream;
-        const ctx = new AudioContext();
-        const src = ctx.createMediaStreamSource(stream);
-        const analyser = ctx.createAnalyser();
-        analyser.fftSize = 256;
-        src.connect(analyser);
-        const data = new Uint8Array(analyser.frequencyBinCount);
-        const tick = () => {
-          if (!active) return;
-          analyser.getByteFrequencyData(data);
-          const avg = data.reduce((a, b) => a + b, 0) / data.length / 255;
-          setMicLevel(avg);
-          if (avg > 0.05) setMicOk(true);
-          rafRef.current = requestAnimationFrame(tick);
-        };
-        tick();
-      } catch {}
-    })();
-    return () => { active = false; cancelAnimationFrame(rafRef.current); streamRef.current?.getTracks().forEach(t => t.stop()); };
-  }, []);
+  const { status } = useInterviewStore();
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center py-8">
-      <div className="text-center max-w-xl w-full">
-        <h2 className="font-display text-2xl font-bold text-gray-900 mb-6">Ready for your interview</h2>
-
-        {/* Inline system check */}
-        <div className="flex items-center justify-center gap-6 mb-8 py-4 px-6 rounded-2xl bg-gray-50 border border-gray-100 mx-auto max-w-md">
-          {/* Mic level */}
-          <div className="flex-1">
-            <div className="flex items-center justify-between text-xs text-gray-400 mb-1.5">
-              <span className="font-medium">Mic</span>
-              <span className={micOk ? 'text-emerald-500 font-semibold' : ''}>{micOk ? 'Ready' : 'Speak...'}</span>
-            </div>
-            <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-              <div className={`h-full rounded-full transition-all duration-75 ${micOk ? 'bg-emerald-500' : 'bg-amber-400'}`}
-                style={{ width: `${Math.min(micLevel * 300, 100)}%` }} />
-            </div>
-          </div>
-          {/* Status dots */}
-          <div className="flex items-center gap-3">
-            {[
-              { ok: micOk, label: 'Mic' },
-              { ok: backendOk, label: 'AI' },
-              { ok: backendOk, label: 'Stream' },
-            ].map(c => (
-              <div key={c.label} className="flex flex-col items-center gap-1">
-                <div className={`w-3 h-3 rounded-full ${c.ok ? 'bg-emerald-500' : 'bg-gray-300'}`}
-                  style={c.ok ? { boxShadow: '0 0 6px rgba(16,185,129,0.4)' } : {}} />
-                <span className="text-[10px] text-gray-400 font-medium">{c.label}</span>
-              </div>
-            ))}
-          </div>
+    <div className="flex-1 flex flex-col items-center justify-center py-12">
+      <div className="text-center max-w-lg">
+        <div className="w-16 h-16 mx-auto mb-5 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #10b981, #06b6d4)', boxShadow: '0 4px 20px rgba(16,185,129,0.2)' }}>
+          <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+          </svg>
         </div>
+        <h2 className="font-display text-2xl font-bold text-gray-900 mb-2">Ready for your interview</h2>
+        <p className="text-sm text-gray-400 mb-2">
+          {status.state === 'listen' ? 'Listening... speak your question or let the interviewer ask.' : 'Click Live above to auto-transcribe, or type/paste a question.'}
+        </p>
+        <p className="text-xs text-emerald-500 font-medium mb-8">{status.message}</p>
 
-        <p className="text-sm text-gray-400 mb-6">Type a question above, speak into the mic, or try one of these:</p>
-
+        <p className="text-xs text-gray-400 mb-3">Try asking one of these:</p>
         <div className="flex flex-wrap justify-center gap-2 mb-6">
           {[
             'Design a URL shortener like TinyURL',
