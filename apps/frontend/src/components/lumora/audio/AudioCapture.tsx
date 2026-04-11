@@ -426,7 +426,7 @@ function SystemAudioButton({ onTranscription, disabled }: { onTranscription?: (t
     <button
       onClick={toggleSystemAudio}
       disabled={disabled}
-      className={`hidden sm:flex items-center gap-1 px-2 py-1 text-xs font-bold rounded border transition-colors ${
+      className={`hidden sm:flex items-center gap-1 px-2 py-1 text-xs font-bold rounded border transition-colors shrink-0 ${
         capturing
           ? 'bg-red-500 text-white border-red-600 animate-pulse'
           : 'text-white hover:text-white border-gray-600 hover:bg-gray-800'

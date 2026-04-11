@@ -35,7 +35,7 @@ import { useSolve, useAutoTestFix } from '../../hooks/capra/useSolve';
 // Context & Utils
 import { useAuth } from '../../contexts/AuthContext';
 import { getAuthHeaders } from '../../utils/authHeaders.js';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
@@ -762,6 +762,22 @@ export default function DashboardPage() {
           showAscendAssistant={showAscendAssistant}
           user={user}
         />
+
+        {/* Quick Nav Pills — mobile only */}
+        {isMobile && (
+          <div className="flex items-center gap-2 px-3 py-2 overflow-x-auto no-scrollbar border-b border-gray-100" style={{ WebkitOverflowScrolling: 'touch' }}>
+            {[
+              { label: 'Apply', to: '/jobs' },
+              { label: 'Practice', to: '/capra/practice' },
+              { label: 'Attend', to: '/lumora' },
+              { label: 'Challenge', to: '/challenge' },
+            ].map(pill => (
+              <Link key={pill.label} to={pill.to} className="shrink-0 px-3 py-1.5 text-xs font-semibold rounded-full bg-gray-100 text-gray-600 hover:bg-emerald-50 hover:text-emerald-700 transition-colors whitespace-nowrap">
+                {pill.label}
+              </Link>
+            ))}
+          </div>
+        )}
 
         {/* Error Banner */}
         {error && <ErrorBanner error={error} onDismiss={() => setError(null)} />}

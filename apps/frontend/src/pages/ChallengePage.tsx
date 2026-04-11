@@ -361,7 +361,7 @@ export default function ChallengePage() {
                   <textarea value={submitForm.fix} onChange={e => setSubmitForm(f => ({ ...f, fix: e.target.value }))} placeholder="Suggested fix..." rows={2} className="ch-input" />
                 </div>
                 <div className="flex items-center gap-3">
-                  <button onClick={handleSubmitFinding} disabled={submitStatus === 'submitting'} className="ch-cta-primary" style={{ padding: '10px 24px', fontSize: 13 }}>
+                  <button onClick={handleSubmitFinding} disabled={submitStatus === 'submitting'} className="ch-cta-primary" style={{ padding: '12px 28px', fontSize: 16 }}>
                     {submitStatus === 'submitting' ? 'Submitting...' : 'Submit Finding'}
                   </button>
                   {submitStatus === 'success' && <span className="text-base text-emerald-400 font-medium">Submitted!</span>}
@@ -764,7 +764,7 @@ export default function ChallengePage() {
         .ch-badge {
           display: inline-flex; align-items: center; gap: 8px;
           padding: 8px 20px; border-radius: 999px;
-          font-size: 14px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+          font-size: 16px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
           color: #10b981;
           background: rgba(16,185,129,0.08);
           border: 1px solid rgba(16,185,129,0.15);
@@ -819,7 +819,7 @@ export default function ChallengePage() {
           box-shadow: 0 0 20px rgba(16,185,129,0.08), inset 0 1px 0 rgba(255,255,255,0.05);
         }
         .ch-countdown-label {
-          margin-top: 6px; font-size: 14px; font-weight: 700;
+          margin-top: 6px; font-size: 16px; font-weight: 700;
           color: rgba(255,255,255,0.3); letter-spacing: 0.12em;
         }
 
@@ -878,7 +878,7 @@ export default function ChallengePage() {
         .ch-section-head { text-align: center; margin-bottom: 40px; }
         .ch-section-tag { font-size: 16px; font-weight: 700; color: #10b981; text-transform: uppercase; letter-spacing: 0.15em; }
         .ch-section-title { font-size: clamp(1.5rem, 3.5vw, 2.25rem); font-weight: 800; color: #fff; letter-spacing: -0.02em; margin-top: 6px; }
-        .ch-section-sub { font-size: 15px; color: rgba(255,255,255,0.4); margin-top: 8px; line-height: 1.6; }
+        .ch-section-sub { font-size: 16px; color: rgba(255,255,255,0.4); margin-top: 8px; line-height: 1.6; }
 
         /* ── Glass card ── */
         .ch-glass-card {
@@ -893,7 +893,7 @@ export default function ChallengePage() {
         /* ── Inputs ── */
         .ch-input {
           padding: 12px 16px; border-radius: 10px;
-          font-size: 15px; color: #fff;
+          font-size: 16px; color: #fff;
           background: rgba(255,255,255,0.04);
           border: 1px solid rgba(255,255,255,0.08);
           outline: none; transition: border-color 0.2s;
