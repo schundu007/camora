@@ -140,15 +140,14 @@ export function VoiceEnrollment({ disabled }: VoiceEnrollmentProps) {
         } catch (err: any) {
           const status = err?.status;
           let userMsg: string;
-          if (status === 404 || status === 502 || status === 503) {
-            userMsg = 'Voice service unavailable. The AI service may not be running.';
+          if (status === 404 || status === 500 || status === 502 || status === 503) {
+            userMsg = 'Voice service unavailable. Try again later.';
           } else if (err?.name === 'AbortError' || status === 408) {
-            userMsg = err.message || 'Voice enrollment timed out. Please try again.';
+            userMsg = 'Voice enrollment timed out. Try again.';
           } else {
             userMsg = err.message || 'Enrollment failed';
           }
-          // Only log unexpected errors to console (not expected service-down scenarios)
-          if (status !== 404 && status !== 502 && status !== 503) {
+          if (status !== 404 && status !== 500 && status !== 502 && status !== 503) {
             console.error('Voice enrollment error:', err.message || err);
           }
           setError(userMsg);
