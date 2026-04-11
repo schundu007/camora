@@ -195,6 +195,9 @@ export function InterviewPage() {
 
   return (
     <div className="h-screen w-full flex flex-col overflow-hidden lumora-app-bg">
+      {/* Subtle grid texture */}
+      <div className="lumora-grid-overlay" />
+
       <Header
         inputValue={inputValue}
         onInputChange={setInputValue}
@@ -216,7 +219,7 @@ export function InterviewPage() {
       </ErrorBoundary>
 
       {/* Enterprise Status Bar */}
-      <div className="hidden sm:flex items-center justify-between h-7 px-3 bg-gray-900/80 backdrop-blur-xl border-t border-gray-800/50 shrink-0">
+      <div className="hidden sm:flex items-center justify-between h-7 px-3 backdrop-blur-xl shrink-0 lumora-status-bar">
         <div className="flex items-center gap-2">
           <span className={`w-2 h-2 rounded-full ${isStreaming ? 'bg-emerald-400 animate-pulse' : 'bg-emerald-400'}`} style={!isStreaming ? { boxShadow: '0 0 6px rgba(52, 211, 153, 0.4)' } : {}} />
           <span className="text-[10px] font-code text-gray-200">
