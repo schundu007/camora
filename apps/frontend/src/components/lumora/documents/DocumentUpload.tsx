@@ -39,11 +39,7 @@ export function DocumentUpload() {
     }
   }, [token]);
 
-  // Load documents on mount and when dropdown opens
-  useEffect(() => {
-    loadDocuments();
-  }, [loadDocuments]);
-
+  // Load documents when dropdown opens
   useEffect(() => {
     if (isOpen) {
       loadDocuments();
