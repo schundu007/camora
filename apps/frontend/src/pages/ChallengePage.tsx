@@ -267,7 +267,7 @@ export default function ChallengePage() {
             The Camora<br />
             <span className="ch-hero-gradient-text">Challenge</span>
           </h1>
-          <p className="mt-5 text-lg text-white/50 max-w-xl" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>
+          <p className="mt-5 text-lg text-white/50" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>
             Find bugs. Build features. Win prizes. Join the founding team.
           </p>
 
