@@ -129,8 +129,8 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
 
   return (
     <header className="z-50 shrink-0" style={{ background: 'linear-gradient(180deg, rgba(15,23,42,0.95) 0%, rgba(10,10,15,0.98) 100%)', borderBottom: '1px solid rgba(16,185,129,0.08)', boxShadow: '0 1px 12px rgba(0,0,0,0.3), 0 1px 0 rgba(16,185,129,0.05)' }}>
-      {/* Row 1: Nav + Audio + Controls */}
-      <div className="flex items-center h-[42px]">
+      {/* Row 1: Nav + Audio + Controls — horizontally scrollable */}
+      <div className="flex items-center h-[42px] overflow-x-auto no-scrollbar">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-1.5 px-3 h-full shrink-0" style={{ borderRight: '1px solid rgba(255,255,255,0.06)' }}>
           <CamoraLogo size={22} />
@@ -184,7 +184,7 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
         </div>
 
         {/* Audio + Docs */}
-        <div data-tour="audio" className="flex items-center gap-1 px-1.5 h-full flex-1 min-w-0 overflow-x-auto no-scrollbar">
+        <div data-tour="audio" className="flex items-center gap-1 px-1.5 h-full shrink-0">
           <AudioCapture onTranscription={onTranscription} />
           <DocumentUpload />
         </div>

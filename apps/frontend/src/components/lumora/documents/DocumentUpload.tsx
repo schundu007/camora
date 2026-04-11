@@ -92,26 +92,26 @@ export function DocumentUpload() {
       </button>
 
       {isOpen && (
-        <div className="absolute top-full right-0 mt-1 w-72 bg-white border border-gray-200 shadow-lg z-50 rounded">
-          <div className="p-2 border-b border-gray-200">
+        <div className="fixed mt-1 w-72 bg-gray-900 border border-white/10 shadow-2xl z-[100] rounded-xl" style={{ top: containerRef.current ? containerRef.current.getBoundingClientRect().bottom + 4 : 50, right: 16 }}>
+          <div className="p-3 border-b border-white/10">
             <div className="flex items-center justify-between mb-2">
-              <span className="font-mono text-sm font-bold text-gray-700">
+              <span className="font-mono text-sm font-bold text-white">
                 PREPARATION DOCS
               </span>
               <button
                 onClick={() => setIsOpen(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-white/40 hover:text-white"
               >
                 <CloseIcon />
               </button>
             </div>
-            <p className="text-sm text-gray-500">
-              Upload your interview prep guides. Answers will come from these first.
+            <p className="text-sm text-white/40">
+              Upload prep guides. Answers will use these for context.
             </p>
           </div>
 
           {/* Upload button */}
-          <div className="p-2 border-b border-gray-200">
+          <div className="p-3 border-b border-white/10">
             <input
               ref={fileInputRef}
               type="file"
