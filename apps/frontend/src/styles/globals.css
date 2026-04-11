@@ -665,11 +665,70 @@ main, [role="main"] {
   50% { opacity: 0.6; transform: scale(1.3); }
 }
 
-/* Lumora app background */
+/* Lumora app background — dark slate with subtle AI glow */
 .lumora-app-bg {
   background:
-    radial-gradient(ellipse 70% 50% at 50% 0%, rgba(16,185,129,0.05) 0%, transparent 70%),
-    linear-gradient(180deg, #ffffff 0%, #f0fdf4 40%, #f8fafc 100%);
+    radial-gradient(ellipse 80% 50% at 10% 0%, rgba(16,185,129,0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 90% 100%, rgba(6,182,212,0.05) 0%, transparent 60%),
+    linear-gradient(180deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+  color: #e2e8f0;
+}
+
+/* Lumora subtle grid overlay */
+.lumora-grid-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.025;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px);
+  background-size: 48px 48px;
+  z-index: 0;
+}
+
+/* Lumora status bar with emerald glow */
+.lumora-status-bar {
+  background: linear-gradient(90deg, rgba(15,23,42,0.95) 0%, rgba(16,185,129,0.06) 50%, rgba(15,23,42,0.95) 100%);
+  border-top: 1px solid rgba(16,185,129,0.15);
+  box-shadow: 0 -1px 12px rgba(16,185,129,0.06);
+}
+
+/* Lumora empty state mesh gradient */
+.lumora-empty-mesh {
+  position: relative;
+}
+.lumora-empty-mesh::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 1.5rem;
+  background:
+    radial-gradient(ellipse 50% 40% at 20% 20%, rgba(16,185,129,0.06) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 50% at 80% 80%, rgba(6,182,212,0.05) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 30% at 50% 50%, rgba(129,140,248,0.04) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Lumora icon glow ring */
+.lumora-icon-glow {
+  position: relative;
+}
+.lumora-icon-glow::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 1.25rem;
+  background: conic-gradient(from 0deg, rgba(16,185,129,0.2), rgba(6,182,212,0.15), rgba(129,140,248,0.1), rgba(16,185,129,0.2));
+  filter: blur(10px);
+  opacity: 0.6;
+  z-index: -1;
+  animation: lumora-glow-rotate 8s linear infinite;
+}
+@keyframes lumora-glow-rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 /* Enterprise status bar */
@@ -714,19 +773,19 @@ main, [role="main"] {
 
 .q-pill:hover {
   transform: translateY(-1px);
-  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  box-shadow: 0 2px 8px rgba(16,185,129,0.15);
 }
 
 /* Interview history card */
 .history-question-card {
   @apply flex items-start gap-2.5 p-3 rounded-2xl border transition-all duration-150;
-  border-color: var(--border);
-  background: var(--surface);
+  border-color: rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.03);
 }
 
 .history-question-card:hover {
-  border-color: rgba(5, 150, 105, 0.25);
-  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.08);
+  border-color: rgba(16, 185, 129, 0.25);
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.1);
 }
 
 /* Timer ring animation */
