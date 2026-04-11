@@ -222,27 +222,27 @@ export function InterviewPage() {
       <div className="hidden sm:flex items-center justify-between h-7 px-3 backdrop-blur-xl shrink-0 lumora-status-bar">
         <div className="flex items-center gap-2">
           <span className={`w-2 h-2 rounded-full ${isStreaming ? 'bg-emerald-400 animate-pulse' : 'bg-emerald-400'}`} style={!isStreaming ? { boxShadow: '0 0 6px rgba(52, 211, 153, 0.4)' } : {}} />
-          <span className="text-[10px] font-code text-gray-200">
+          <span className="text-[11px] font-code text-white/60">
             {isStreaming ? 'Generating...' : 'Ready'}
           </span>
           {history.length > 0 && (
-            <span className="text-[10px] font-code text-gray-300 border-l border-gray-700/50 pl-2">
+            <span className="text-[11px] font-code text-white/40 border-l border-white/10 pl-2">
               {history.length} Q&A{history.length !== 1 ? 's' : ''}
             </span>
           )}
         </div>
-        <div className="flex items-center gap-3 text-[10px] font-code text-gray-300">
+        <div className="flex items-center gap-3 text-[11px] font-code text-white/40">
           <span>
-            <kbd className="px-1 py-0.5 rounded-md border border-gray-700/50 text-gray-200 text-[9px] bg-white/5">Cmd+M</kbd> mic
+            <kbd className="px-1 py-0.5 rounded-md border border-white/10 text-white/50 text-[10px] bg-white/5">Cmd+M</kbd> mic
           </span>
           <span>
-            <kbd className="px-1 py-0.5 rounded-md border border-gray-700/50 text-gray-200 text-[9px] bg-white/5">Cmd+K</kbd> focus
+            <kbd className="px-1 py-0.5 rounded-md border border-white/10 text-white/50 text-[10px] bg-white/5">Cmd+K</kbd> focus
           </span>
           <span>
-            <kbd className="px-1 py-0.5 rounded-md border border-gray-700/50 text-gray-200 text-[9px] bg-white/5">Cmd+S</kbd> search
+            <kbd className="px-1 py-0.5 rounded-md border border-white/10 text-white/50 text-[10px] bg-white/5">Cmd+S</kbd> search
           </span>
           <span>
-            <kbd className="px-1 py-0.5 rounded-md border border-gray-700/50 text-gray-200 text-[9px] bg-white/5">Cmd+B</kbd> blank
+            <kbd className="px-1 py-0.5 rounded-md border border-white/10 text-white/50 text-[10px] bg-white/5">Cmd+B</kbd> blank
           </span>
         </div>
       </div>

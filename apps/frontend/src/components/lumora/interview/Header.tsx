@@ -325,15 +325,15 @@ function UserBadge() {
       {showMenu && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
-          <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-2xl shadow-xl border border-gray-200 z-50 py-1 overflow-hidden">
-            <div className="px-3 py-2 border-b border-gray-100">
-              <p className="font-display text-sm font-semibold text-gray-900 truncate">{user.name || 'User'}</p>
-              <p className="font-code text-xs text-gray-500 truncate">{user.email}</p>
+          <div className="absolute right-0 top-full mt-1 w-48 bg-gray-900 rounded-2xl shadow-xl border border-white/10 z-50 py-1 overflow-hidden">
+            <div className="px-3 py-2 border-b border-white/10">
+              <p className="font-display text-sm font-semibold text-white truncate">{user.name || 'User'}</p>
+              <p className="font-code text-xs text-white/50 truncate">{user.email}</p>
             </div>
-            <a href="/pricing" className="block px-3 py-2 text-sm font-display text-gray-700 hover:bg-gray-50">Pricing</a>
+            <Link to="/pricing" className="block px-3 py-2 text-sm font-display text-white/70 hover:bg-white/5">Pricing</Link>
             <button
               onClick={() => logout()}
-              className="w-full text-left px-3 py-2 text-sm font-display text-red-600 hover:bg-red-50"
+              className="w-full text-left px-3 py-2 text-sm font-display text-red-400 hover:bg-red-500/10"
             >
               Sign Out
             </button>

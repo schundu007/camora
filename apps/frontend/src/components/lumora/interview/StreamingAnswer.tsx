@@ -402,7 +402,7 @@ function StreamingGridCard({
   }
 
   return (
-    <div className={`border border-border bg-bg2 overflow-hidden min-w-0 ${className}`}>
+    <div className={`border border-border bg-bg2 overflow-hidden min-w-0 rounded-lg ${className}`}>
       <div className={`font-mono text-[10px] font-bold tracking-widest uppercase px-4 pt-4 pb-2 border-b border-border ${titleColor}`}>
         {title}
       </div>

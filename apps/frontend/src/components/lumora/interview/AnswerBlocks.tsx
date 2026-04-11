@@ -462,7 +462,7 @@ function GridCard({
 }) {
   const hasFullHeight = className.includes('h-full');
   return (
-    <div className={`border border-border bg-bg2/50 overflow-hidden min-w-0 flex flex-col ${className}`}>
+    <div className={`border border-border bg-bg2/50 overflow-hidden min-w-0 flex flex-col rounded-lg ${className}`}>
       <div className={`font-mono text-[10px] font-bold tracking-widest uppercase px-4 pt-4 pb-2 mb-0 border-b border-border shrink-0 ${titleColor}`}>
         {title}
       </div>
