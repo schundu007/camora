@@ -57,13 +57,20 @@ const AI_SERVICES_URL = process.env.AI_SERVICES_URL || 'http://localhost:8001';
  */
 async function verifySpeaker(userId, audioBuffer, filename) {
   try {
-    const formData = new FormData();
-    formData.append('user_id', userId);
-    formData.append('file', new Blob([audioBuffer]), filename);
+    // Build raw multipart — most reliable for Node.js → Python FastAPI
+    const boundary = '----FormBoundary' + Math.random().toString(36).slice(2);
+    const mime = filename.endsWith('.wav') ? 'audio/wav' : 'audio/webm';
+    const parts = [];
+    parts.push(Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="${filename}"\r\nContent-Type: ${mime}\r\n\r\n`));
+    parts.push(Buffer.isBuffer(audioBuffer) ? audioBuffer : Buffer.from(audioBuffer));
+    parts.push(Buffer.from('\r\n'));
+    parts.push(Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="user_id"\r\n\r\n${userId}\r\n`));
+    parts.push(Buffer.from(`--${boundary}--\r\n`));
 
     const res = await fetch(`${AI_SERVICES_URL}/api/v1/speaker/verify`, {
       method: 'POST',
-      body: formData,
+      headers: { 'Content-Type': `multipart/form-data; boundary=${boundary}` },
+      body: Buffer.concat(parts),
       signal: AbortSignal.timeout(5000),
     });
 

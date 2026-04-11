@@ -32,17 +32,28 @@ router.post('/enroll', upload.single('audio'), async (req, res) => {
     const { AI_SERVICES_URL } = await import('../services/aiServiceProxy.js');
     const url = `${AI_SERVICES_URL}/speaker/enroll`;
 
-    // Use undici or node-fetch style: pipe the raw file as multipart
-    // The key: use File (not Blob) so filename and content-type are preserved
-    const file = new File([req.file.buffer], req.file.originalname || 'audio.webm', {
-      type: req.file.mimetype || 'audio/webm',
+    // Build raw multipart body manually — most reliable cross-platform approach
+    const boundary = '----FormBoundary' + Math.random().toString(36).slice(2);
+    const filename = req.file.originalname || 'audio.webm';
+    const mime = req.file.mimetype || 'audio/webm';
+
+    const parts = [];
+    // Audio file part
+    parts.push(Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="audio"; filename="${filename}"\r\nContent-Type: ${mime}\r\n\r\n`));
+    parts.push(req.file.buffer);
+    parts.push(Buffer.from('\r\n'));
+    // user_id part
+    parts.push(Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="user_id"\r\n\r\n${req.user.id}\r\n`));
+    // End boundary
+    parts.push(Buffer.from(`--${boundary}--\r\n`));
+
+    const body = Buffer.concat(parts);
+
+    const upstream = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': `multipart/form-data; boundary=${boundary}` },
+      body,
     });
-
-    const formData = new FormData();
-    formData.append('audio', file);
-    formData.append('user_id', String(req.user.id));
-
-    const upstream = await fetch(url, { method: 'POST', body: formData });
     const data = await upstream.json();
     return res.status(upstream.status).json(data);
   } catch (err) {
