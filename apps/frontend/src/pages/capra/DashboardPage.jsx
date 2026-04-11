@@ -15,7 +15,6 @@ import { ErrorBoundary } from '../../components/shared/ui/ErrorBoundary';
 import CamoraLogo from '../../components/shared/CamoraLogo';
 
 // Lazy-loaded components (modals, panels rendered on demand)
-const OnboardingModal = lazy(() => import('../../components/capra/onboarding/OnboardingModal'));
 const AdminPanel = lazy(() => import('../../components/capra/AdminPanel'));
 const SettingsPanel = lazy(() => import('../../components/capra/settings/SettingsPanel'));
 const SetupWizard = lazy(() => import('../../components/capra/settings/SetupWizard'));
@@ -127,10 +126,7 @@ export default function DashboardPage() {
   // Auth
   // ---------------------------------------------------------------------------
   const auth = useAuth();
-  const isAuthenticated = true;
   const user = auth.user;
-  // OAuth disabled — allow all users to access without auth
-  const authRequired = false;
   const isAdmin = user?.role === 'admin' || user?.roles?.includes?.('admin');
 
   // ---------------------------------------------------------------------------
@@ -196,8 +192,6 @@ export default function DashboardPage() {
   const [showPrepTab, setShowPrepTab] = useState(false);
   const [showSavedDesigns, setShowSavedDesigns] = useState(false);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
-  const [showPricingPlans, setShowPricingPlans] = useState(false);
-  const [showOnboarding, setShowOnboarding] = useState(false);
 
   // ---------------------------------------------------------------------------
   // Sidebar State
@@ -249,7 +243,6 @@ export default function DashboardPage() {
   // Refs
   // ---------------------------------------------------------------------------
   const codeDisplayRef = useRef(null);
-  const abortControllerRef = useRef(null);
 
   // ---------------------------------------------------------------------------
   // Apply theme to document
@@ -746,7 +739,6 @@ export default function DashboardPage() {
           isLoading={isLoading}
           isMobile={isMobile}
           onSettingsClick={() => setShowSettings(true)}
-          onPricingClick={() => setShowPricingPlans(true)}
           onAssistantClick={() => setShowAscendAssistant(!showAscendAssistant)}
           showAscendAssistant={showAscendAssistant}
           user={user}
@@ -856,7 +848,6 @@ export default function DashboardPage() {
       {/* Modals (lazy-loaded) */}
       <Suspense fallback={null}>
         {showAdminPanel && <AdminPanel token={getToken()} onClose={() => setShowAdminPanel(false)} />}
-        {showOnboarding && <OnboardingModal isOpen={showOnboarding} onComplete={() => setShowOnboarding(false)} onOpenPricing={() => setShowPricingPlans(true)} />}
         {showSettings && (
           <SettingsPanel
             onClose={() => setShowSettings(false)}

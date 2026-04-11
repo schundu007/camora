@@ -57,8 +57,7 @@ function LoginPage() {
     return <Loading />;
   }
 
-  const redirectParam = new URLSearchParams(window.location.search).get('redirect') || '/';
-  const googleAuthUrl = `${import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com'}/api/auth/google/login?redirect=${encodeURIComponent(redirectParam)}`;
+  const googleAuthUrl = `${import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com'}/api/auth/google/login?redirect=${encodeURIComponent(redirectTo)}`;
 
   return (
     <div className="min-h-screen" style={{ background: 'transparent' }}>
