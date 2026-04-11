@@ -234,55 +234,56 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
 }
 
 function EmptyState({ onAskQuestion }: { onAskQuestion?: (question: string) => void; onSwitchToCoding?: (problem?: string) => void; onSwitchToDesign?: (problem?: string) => void }) {
-  const { status } = useInterviewStore();
+  const CARDS = [
+    { category: 'System Design', color: '#06b6d4', glow: 'rgba(6,182,212,0.15)', icon: 'M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10', prompts: [
+      'Design a URL shortener like TinyURL',
+      'Design a distributed message queue',
+      'Design Instagram news feed',
+    ]},
+    { category: 'Coding', color: '#8b5cf6', glow: 'rgba(139,92,246,0.15)', icon: 'M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4', prompts: [
+      'Implement LRU Cache in Python',
+      'Find median of two sorted arrays',
+      'Serialize and deserialize binary tree',
+    ]},
+    { category: 'Behavioral', color: '#f59e0b', glow: 'rgba(245,158,11,0.15)', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z', prompts: [
+      'Tell me about a time you dealt with conflict',
+      'Describe a project you led from start to finish',
+      'How do you handle tight deadlines?',
+    ]},
+    { category: 'Concepts', color: '#10b981', glow: 'rgba(16,185,129,0.15)', icon: 'M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z', prompts: [
+      'What is the CAP theorem?',
+      'Explain consistent hashing',
+      'How does a load balancer work?',
+    ]},
+  ];
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center py-12 lumora-empty-mesh">
-      <div className="relative text-center max-w-lg z-10">
-        <div className="lumora-icon-glow w-16 h-16 mx-auto mb-5 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #10b981, #06b6d4)', boxShadow: '0 4px 24px rgba(16,185,129,0.3), 0 0 48px rgba(6,182,212,0.15)' }}>
-          <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-          </svg>
-        </div>
-        <h2 className="font-display text-2xl font-bold text-white mb-2">Ready for your interview</h2>
-        <p className="text-sm text-white/40 mb-2">
-          {status.state === 'listen' ? 'Listening... speak your question or let the interviewer ask.' : 'Click Live above to auto-transcribe, or type/paste a question.'}
-        </p>
-        <p className="text-xs text-emerald-400 font-medium mb-8">{status.message}</p>
-
-        <p className="text-xs text-white/30 mb-3">Try asking one of these:</p>
-        <div className="flex flex-wrap justify-center gap-2 mb-6">
-          {[
-            'Design a URL shortener like TinyURL',
-            'Implement LRU Cache in Python',
-            'Tell me about a time you dealt with conflict',
-            'What is the CAP theorem?',
-          ].map((prompt) => (
-            <button
-              key={prompt}
-              onClick={() => onAskQuestion?.(prompt)}
-              className="px-4 py-2 rounded-xl border text-sm font-display transition-all"
-              style={{ background: 'rgba(255,255,255,0.03)', borderColor: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.5)' }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = 'rgba(16,185,129,0.4)';
-                e.currentTarget.style.color = 'rgba(52,211,153,0.9)';
-                e.currentTarget.style.background = 'rgba(16,185,129,0.08)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
-                e.currentTarget.style.color = 'rgba(255,255,255,0.5)';
-                e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
-              }}
-            >
-              {prompt}
-            </button>
+    <div className="flex-1 flex flex-col items-center justify-center py-8 lumora-empty-mesh">
+      <div className="relative z-10 w-full max-w-3xl px-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {CARDS.map(card => (
+            <div key={card.category}
+              className="rounded-xl overflow-hidden transition-all hover:scale-[1.02]"
+              style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${card.color}20` }}>
+              {/* Card header */}
+              <div className="flex items-center gap-2.5 px-4 py-3" style={{ borderBottom: `1px solid ${card.color}15` }}>
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: `${card.color}15` }}>
+                  <svg className="w-4 h-4" fill="none" stroke={card.color} viewBox="0 0 24 24" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                    <path d={card.icon} />
+                  </svg>
+                </div>
+                <span className="text-sm font-bold" style={{ color: card.color }}>{card.category}</span>
+              </div>
+              {/* Prompts */}
+              <div className="p-2">
+                {card.prompts.map(prompt => (
+                  <button key={prompt} onClick={() => onAskQuestion?.(prompt)}
+                    className="w-full text-left px-3 py-2 rounded-lg text-sm text-white/60 hover:text-white hover:bg-white/5 transition-all truncate"
+                  >{prompt}</button>
+                ))}
+              </div>
+            </div>
           ))}
-        </div>
-
-        <div className="flex justify-center gap-4 text-xs text-white/20 font-mono">
-          <span>Cmd+M mic</span>
-          <span>Cmd+B blank</span>
-          <span>Cmd+K focus</span>
         </div>
       </div>
     </div>
