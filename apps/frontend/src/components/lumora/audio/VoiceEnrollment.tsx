@@ -223,17 +223,17 @@ export function VoiceEnrollment({ disabled }: VoiceEnrollmentProps) {
           {isRecording ? (
             <>
               <RecordingIcon />
-              <span className="hidden lg:inline">{Math.round(recordingProgress)}%</span>
+              <span className="hidden xl:inline">{Math.round(recordingProgress)}%</span>
             </>
           ) : isEnrolling ? (
             <>
               <Spinner />
-              <span className="hidden lg:inline">Processing...</span>
+              <span className="hidden xl:inline">Processing...</span>
             </>
           ) : (
             <>
               <VoiceIcon />
-              <span className="hidden lg:inline">My Voice</span>
+              <span className="hidden xl:inline">My Voice</span>
             </>
           )}
         </button>
@@ -251,7 +251,7 @@ export function VoiceEnrollment({ disabled }: VoiceEnrollmentProps) {
         title={voiceFilterEnabled ? 'Voice filter active - only interviewer is transcribed' : 'Voice filter disabled'}
       >
         <VoiceIcon filled={voiceFilterEnabled} />
-        <span className="hidden lg:inline">{voiceFilterEnabled ? 'Filter On' : 'Filter Off'}</span>
+        <span className="hidden xl:inline">{voiceFilterEnabled ? 'Filter On' : 'Filter Off'}</span>
       </button>
       <button
         onClick={handleUnenroll}

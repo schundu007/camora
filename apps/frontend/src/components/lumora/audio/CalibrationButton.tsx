@@ -36,7 +36,7 @@ export function CalibrationButton({ deviceId, disabled }: CalibrationButtonProps
           <span className="hidden lg:inline">Calibrating...</span>
         </>
       ) : (
-        <span>Calibrate</span>
+        <span className="hidden xl:inline">Calibrate</span>
       )}
       {error && <span className="text-rose-light ml-1">!</span>}
     </button>

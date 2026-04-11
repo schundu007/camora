@@ -88,7 +88,7 @@ export function DocumentUpload() {
         title={`Prep docs (${documents.length})`}
       >
         <DocIcon />
-        <span className="hidden sm:inline">{documents.length > 0 ? documents.length : 'Docs'}</span>
+        <span className="hidden xl:inline">{documents.length > 0 ? documents.length : 'Docs'}</span>
       </button>
 
       {isOpen && (
