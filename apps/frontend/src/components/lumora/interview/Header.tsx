@@ -223,10 +223,7 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
 
       {/* Row 2: Input bar with subtle emerald accent */}
       <div className="flex items-center h-[36px]" style={{ borderTop: '1px solid rgba(16,185,129,0.06)', background: 'rgba(16,185,129,0.02)' }}>
-        <div className="flex-1 flex items-center px-3 min-w-0">
-          <svg className="w-3.5 h-3.5 text-emerald-500/40 shrink-0 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-          </svg>
+        <div className="flex-1 flex items-center justify-center px-3 min-w-0">
           <input
             ref={inputRef}
             type="text"
@@ -234,7 +231,7 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
             onChange={(e) => onInputChange(e.target.value)}
             onKeyDown={handleInputKeyDown}
             placeholder="Type or paste question... (⌘K)"
-            className="font-display flex-1 bg-transparent border-none outline-none text-sm text-white placeholder:text-white/25 min-w-0"
+            className="font-display w-full max-w-2xl bg-transparent border-none outline-none text-sm text-white text-center placeholder:text-white/25 min-w-0"
           />
           <button
             onClick={toggleExpand}
