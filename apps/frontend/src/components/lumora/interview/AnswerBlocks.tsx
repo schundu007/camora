@@ -1,7 +1,8 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import hljs from 'highlight.js';
 import type { ParsedBlock } from '@/types';
 import { MermaidDiagram } from './MermaidDiagram';
+import { ArchitectureDiagram } from './ArchitectureDiagram';
 
 interface AnswerBlocksProps {
   blocks: ParsedBlock[];
@@ -344,11 +345,10 @@ function SystemDesignView({ blocks }: { blocks: ParsedBlock[] }) {
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-2">
         {/* LEFT: Architecture diagram — sticky, fills height */}
         <div className="lg:col-span-2 lg:sticky lg:top-0 lg:self-start">
-          <GridCard title="ARCHITECTURE" titleColor="text-cyan-light" className="border-cyan/15 bg-cyan/[0.02] h-full">
-            {byType.DIAGRAM && byType.DIAGRAM.content.trim() && !/^skip/i.test(byType.DIAGRAM.content.trim()) ? (
-              <MermaidDiagram content={byType.DIAGRAM.content} />
-            ) : <EmptyBlock />}
-          </GridCard>
+          <ArchitectureCard
+            mermaidContent={byType.DIAGRAM?.content}
+            question={byType.HEADLINE ? cleanText(byType.HEADLINE.content) : ''}
+          />
         </div>
 
         {/* RIGHT: All info cards stacked */}
@@ -468,6 +468,45 @@ function GridCard({
       </div>
       <div className={`p-4 overflow-y-auto overflow-x-auto flex-1 ${hasFullHeight ? '' : 'max-h-[420px]'}`}>
         {children}
+      </div>
+    </div>
+  );
+}
+
+function ArchitectureCard({ mermaidContent, question }: { mermaidContent?: string; question: string }) {
+  const [tab, setTab] = useState<'mermaid' | 'cloud'>('mermaid');
+  const hasMermaid = mermaidContent && mermaidContent.trim() && !/^skip/i.test(mermaidContent.trim());
+
+  return (
+    <div className="border border-cyan/15 bg-cyan/[0.02] overflow-hidden min-w-0 flex flex-col h-full">
+      {/* Header with tabs */}
+      <div className="flex items-center justify-between px-4 pt-3 pb-2 border-b border-border shrink-0">
+        <span className="font-mono text-[10px] font-bold tracking-widest uppercase text-cyan-light">Architecture</span>
+        <div className="flex items-center gap-0.5 bg-bg2 rounded-lg p-0.5">
+          <button
+            onClick={() => setTab('mermaid')}
+            className={`px-2.5 py-1 text-[10px] font-mono font-bold rounded-md transition-all ${
+              tab === 'mermaid' ? 'bg-cyan-500/20 text-cyan-light' : 'text-gray-500 hover:text-gray-300'
+            }`}
+          >Mermaid</button>
+          <button
+            onClick={() => setTab('cloud')}
+            className={`px-2.5 py-1 text-[10px] font-mono font-bold rounded-md transition-all ${
+              tab === 'cloud' ? 'bg-cyan-500/20 text-cyan-light' : 'text-gray-500 hover:text-gray-300'
+            }`}
+          >Cloud</button>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="p-4 overflow-y-auto overflow-x-auto flex-1">
+        {tab === 'mermaid' ? (
+          hasMermaid ? <MermaidDiagram content={mermaidContent!} /> : <EmptyBlock />
+        ) : (
+          question ? (
+            <ArchitectureDiagram question={question} />
+          ) : <EmptyBlock />
+        )}
       </div>
     </div>
   );
