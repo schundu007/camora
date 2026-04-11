@@ -5,7 +5,7 @@ import SiteNav from '../components/shared/SiteNav';
 import SEO from '../components/shared/SEO';
 import SiteFooter from '../components/shared/SiteFooter';
 
-const API_URL = import.meta.env.VITE_CAMORA_API_URL || import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
+const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
 
 const PLANS = [
   {
