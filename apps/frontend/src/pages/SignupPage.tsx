@@ -1,11 +1,13 @@
 import { Link } from 'react-router-dom';
 import SiteNav from '../components/shared/SiteNav';
+import SEO from '../components/shared/SEO';
 
 export default function SignupPage() {
   const googleAuthUrl = `${import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com'}/api/auth/google/login`;
 
   return (
     <div className="min-h-screen" style={{ background: 'transparent' }}>
+      <SEO title="Sign Up" description="Create your free Camora account. Start preparing for technical interviews with AI." path="/signup" />
       <SiteNav />
 
       <div className="flex items-center justify-center px-4" style={{ minHeight: '100vh', paddingTop: '80px' }}>

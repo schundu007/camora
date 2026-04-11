@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import SiteNav from '../components/shared/SiteNav';
+import SEO from '../components/shared/SEO';
 import SiteFooter from '../components/shared/SiteFooter';
 
 const API_URL = import.meta.env.VITE_CAMORA_API_URL || import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
@@ -143,6 +144,7 @@ export default function PricingPage() {
   return (
     <div className="min-h-screen text-gray-900">
 
+      <SEO title="Pricing" description="Interview prep plans starting free. Monthly, Quarterly Pro, and Desktop Lifetime options." path="/pricing" />
       <SiteNav />
 
       {/* Header */}

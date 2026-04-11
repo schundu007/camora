@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { techInterviewTopics, interviewCheatsheet, behavioralQuestions } from '../data/capra/topics/techInterviewHandbook';
 import { SOLUTIONS } from './Blind75PracticePage';
 import SiteNav from '../components/shared/SiteNav';
+import SEO from '../components/shared/SEO';
 import SiteFooter from '../components/shared/SiteFooter';
 
 /* ──────────────────────────────── Constants ──────────────────────────────── */
