@@ -1,5 +1,7 @@
+import { useId } from 'react';
+
 export default function CamoraLogo({ size = 36 }: { size?: number }) {
-  const id = `cl-${Math.random().toString(36).slice(2, 6)}`;
+  const id = `cl-${useId().replace(/:/g, '')}`;
   return (
     <svg width={size} height={size} viewBox="0 0 48 48" fill="none">
       <defs>

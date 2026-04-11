@@ -11,7 +11,7 @@ import AscendModeSelector from '../../components/capra/features/AscendModeSelect
 import { useAppShell } from '../../components/capra/layout/AppShellContext';
 import MobileBottomNav from '../../components/capra/layout/MobileBottomNav';
 import MobileTabView from '../../components/capra/layout/MobileTabView';
-import ErrorBoundary from '../../components/shared/ErrorBoundaryCapra';
+import { ErrorBoundary } from '../../components/shared/ui/ErrorBoundary';
 import CamoraLogo from '../../components/shared/CamoraLogo';
 
 // Lazy-loaded components (modals, panels rendered on demand)
@@ -34,7 +34,7 @@ import { useSolve, useAutoTestFix } from '../../hooks/capra/useSolve';
 
 // Context & Utils
 import { useAuth } from '../../contexts/AuthContext';
-import { getAuthHeaders } from '../../utils/authHeaders.js';
+import { getAuthHeaders, getToken } from '../../utils/authHeaders.js';
 import { useLocation, Link } from 'react-router-dom';
 
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
@@ -56,11 +56,6 @@ const STORAGE_KEYS = {
 // ============================================================================
 // Helper Hooks
 // ============================================================================
-
-function useLocalState(initialValue) {
-  const [state, setState] = useState(initialValue);
-  return [state, setState];
-}
 
 function useLocalStorage(key, initialValue) {
   const [state, setState] = useState(() => {
@@ -89,12 +84,6 @@ function useLocalStorage(key, initialValue) {
 // ============================================================================
 // Helpers
 // ============================================================================
-
-function getToken() {
-  // Read from SSO cookie (same source as AuthContext)
-  const match = document.cookie.match(/(^| )cariara_sso=([^;]+)/);
-  return match ? decodeURIComponent(match[2]) : null;
-}
 
 function buildEraserDescription(sd) {
   const techStack = sd.techJustifications?.map(t => `${t.tech}: ${t.why}`).join('\n') || '';
@@ -164,51 +153,51 @@ export default function DashboardPage() {
   // Mode State — URL is source of truth, no localStorage persistence
   // ---------------------------------------------------------------------------
   const [ascendMode, setAscendMode] = useState(appModeFromPath || 'coding');
-  const [designDetailLevel, setDesignDetailLevel] = useLocalState('basic');
-  const [codingDetailLevel, setCodingDetailLevel] = useLocalState('basic');
-  const [codingLanguage, setCodingLanguage] = useLocalState('auto');
-  const [autoGenerateEraser, setAutoGenerateEraser] = useLocalState(false);
+  const [designDetailLevel, setDesignDetailLevel] = useState('basic');
+  const [codingDetailLevel, setCodingDetailLevel] = useState('basic');
+  const [codingLanguage, setCodingLanguage] = useState('auto');
+  const [autoGenerateEraser, setAutoGenerateEraser] = useState(false);
 
   // ---------------------------------------------------------------------------
   // Problem State
   // ---------------------------------------------------------------------------
-  const [extractedText, setExtractedText] = useLocalState('');
+  const [extractedText, setExtractedText] = useState('');
   const [currentProblem, setCurrentProblem] = useLocalStorage(STORAGE_KEYS.currentProblem, '');
   const [loadedProblem, setLoadedProblem] = useLocalStorage(STORAGE_KEYS.loadedProblem, '');
-  const [currentLanguage, setCurrentLanguage] = useLocalState('auto');
-  const [problemExpanded, setProblemExpanded] = useLocalState(true);
-  const [clearScreenshot, setClearScreenshot] = useLocalState(0);
+  const [currentLanguage, setCurrentLanguage] = useState('auto');
+  const [problemExpanded, setProblemExpanded] = useState(true);
+  const [clearScreenshot, setClearScreenshot] = useState(0);
 
   // ---------------------------------------------------------------------------
   // Solution State
   // ---------------------------------------------------------------------------
   const [solution, setSolution] = useLocalStorage(STORAGE_KEYS.solution, null);
-  const [autoRunOutput, setAutoRunOutput] = useLocalState(null);
+  const [autoRunOutput, setAutoRunOutput] = useState(null);
   const [eraserDiagram, setEraserDiagram] = useLocalStorage(STORAGE_KEYS.eraserDiagram, null);
-  const [highlightedLine, setHighlightedLine] = useLocalState(null);
+  const [highlightedLine, setHighlightedLine] = useState(null);
 
   // ---------------------------------------------------------------------------
   // UI State
   // ---------------------------------------------------------------------------
-  const [authChecked, setAuthChecked] = useLocalState(false);
-  const [error, setError] = useLocalState(null);
-  const [errorType, setErrorType] = useLocalState('default');
-  const [switchNotification, setSwitchNotification] = useLocalState(null);
-  const [copyToast, setCopyToast] = useLocalState(false);
-  const [isProcessingFollowUp, setIsProcessingFollowUp] = useLocalState(false);
-  const [platformStatus, setPlatformStatus] = useLocalState({});
+  const [authChecked, setAuthChecked] = useState(false);
+  const [error, setError] = useState(null);
+  const [errorType, setErrorType] = useState('default');
+  const [switchNotification, setSwitchNotification] = useState(null);
+  const [copyToast, setCopyToast] = useState(false);
+  const [isProcessingFollowUp, setIsProcessingFollowUp] = useState(false);
+  const [platformStatus, setPlatformStatus] = useState({});
 
   // ---------------------------------------------------------------------------
   // Modal State
   // ---------------------------------------------------------------------------
-  const [showSettings, setShowSettings] = useLocalState(false);
-  const [showSetupWizard, setShowSetupWizard] = useLocalState(false);
-  const [showAscendAssistant, setShowAscendAssistant] = useLocalState(false);
-  const [showPrepTab, setShowPrepTab] = useLocalState(false);
-  const [showSavedDesigns, setShowSavedDesigns] = useLocalState(false);
-  const [showAdminPanel, setShowAdminPanel] = useLocalState(false);
-  const [showPricingPlans, setShowPricingPlans] = useLocalState(false);
-  const [showOnboarding, setShowOnboarding] = useLocalState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [showSetupWizard, setShowSetupWizard] = useState(false);
+  const [showAscendAssistant, setShowAscendAssistant] = useState(false);
+  const [showPrepTab, setShowPrepTab] = useState(false);
+  const [showSavedDesigns, setShowSavedDesigns] = useState(false);
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [showPricingPlans, setShowPricingPlans] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   // ---------------------------------------------------------------------------
   // Sidebar State
