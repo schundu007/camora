@@ -273,6 +273,36 @@ router.post('/generate', async (req, res, next) => {
 });
 
 /**
+ * POST /api/diagram/lookup
+ * Cache-only lookup — never generates. Returns cached diagram or 404.
+ * Used by frontend during interviews to avoid expensive generation.
+ */
+router.post('/lookup', async (req, res) => {
+  try {
+    const { question, cloudProvider = 'auto', detailLevel = 'overview', direction = 'LR' } = req.body;
+    if (!question) return res.status(400).json({ error: 'Question required' });
+
+    const problemHash = hashProblem(`${question}::${cloudProvider}::${direction}::${detailLevel}`);
+    const cached = await query(
+      'SELECT image_url, mermaid_code FROM ascend_diagram_cache WHERE problem_hash = $1 AND (image_data IS NOT NULL OR mermaid_code IS NOT NULL)',
+      [problemHash]
+    );
+
+    if (cached.rows.length > 0) {
+      if (cached.rows[0].mermaid_code) {
+        return res.json({ success: true, type: 'mermaid', mermaid_code: cached.rows[0].mermaid_code, cached: true });
+      }
+      return res.json({ success: true, image_url: cached.rows[0].image_url, cached: true });
+    }
+
+    // No cache — return not found, DON'T generate
+    res.json({ success: false, cached: false, message: 'No cached diagram. Use the Design tab to generate one.' });
+  } catch (err) {
+    res.json({ success: false, error: err.message });
+  }
+});
+
+/**
  * GET /api/diagram/status
  * Check if diagram services are configured
  */
