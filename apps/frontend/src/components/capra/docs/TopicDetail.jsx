@@ -670,6 +670,138 @@ export default function TopicDetail({
         </div>
       )}
 
+      {/* Project Detail */}
+      {!isLocked && activePage === 'projects' && (
+        <div className="space-y-3">
+          {/* Header: Difficulty + Tech Stack + Time */}
+          <div id="overview" className="rounded-xl overflow-hidden scroll-mt-24 border border-[#e3e8ee]" style={{ background: `linear-gradient(180deg, ${topicDetails.color || '#8b5cf6'}12 0%, #ffffff 100%)` }}>
+            <div className="px-4 py-2.5 border-b border-[#e3e8ee] bg-white/80 flex items-center gap-2">
+              <Icon name="code" size={14} style={{ color: topicDetails.color || '#8b5cf6' }} />
+              <h3 className="text-sm font-bold text-gray-900 landing-display">Project Overview</h3>
+            </div>
+            <div className="p-4">
+              {/* Difficulty + Time badges */}
+              <div className="flex items-center gap-2 flex-wrap mb-3">
+                <span className={`text-xs landing-mono px-2 py-1 rounded-full font-bold ${
+                  topicDetails.difficulty === 'beginner' ? 'bg-emerald-100 text-emerald-700' :
+                  topicDetails.difficulty === 'intermediate' ? 'bg-amber-100 text-amber-700' :
+                  'bg-red-100 text-red-700'
+                }`}>{topicDetails.difficulty}</span>
+                {topicDetails.estimatedTime && (
+                  <span className="text-xs landing-mono text-gray-500 flex items-center gap-1">
+                    <Icon name="clock" size={12} />
+                    {topicDetails.estimatedTime}
+                  </span>
+                )}
+              </div>
+              {/* Tech Stack */}
+              {topicDetails.techStack && (
+                <div className="flex items-center gap-1.5 flex-wrap mb-4">
+                  {topicDetails.techStack.map(tech => (
+                    <span key={tech} className="text-xs landing-mono px-2 py-1 rounded-lg bg-gray-100 text-gray-600 border border-gray-200">{tech}</span>
+                  ))}
+                </div>
+              )}
+              {/* Introduction */}
+              <div className="text-[15px] leading-relaxed text-gray-600 landing-body">
+                <FormattedContent content={topicDetails.introduction || topicDetails.description} color="purple" />
+              </div>
+            </div>
+          </div>
+
+          {/* Learning Objectives */}
+          {topicDetails.learningObjectives && topicDetails.learningObjectives.length > 0 && (
+            <div id="learning-objectives" className="rounded-xl overflow-hidden scroll-mt-24 border border-[#e3e8ee]">
+              <div className="px-4 py-2.5 border-b border-[#e3e8ee] bg-white/80 flex items-center gap-2">
+                <Icon name="check" size={14} className="text-emerald-600" />
+                <h3 className="text-sm font-bold text-gray-900 landing-display">What You'll Learn</h3>
+              </div>
+              <div className="p-4">
+                <ul className="space-y-2.5">
+                  {topicDetails.learningObjectives.map((obj, i) => (
+                    <li key={i} className="flex items-start gap-3">
+                      <span className="w-5 h-5 rounded-md bg-emerald-50 border border-emerald-200 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <Icon name="check" size={10} className="text-emerald-600" />
+                      </span>
+                      <span className="text-sm text-gray-700 landing-body leading-relaxed">{obj}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
+
+          {/* Interview Relevance */}
+          {topicDetails.interviewRelevance && (
+            <div id="interview-relevance" className="rounded-xl overflow-hidden scroll-mt-24 border border-purple-200 bg-purple-50/50">
+              <div className="px-4 py-2.5 border-b border-purple-200 bg-purple-50/80 flex items-center gap-2">
+                <Icon name="briefcase" size={14} className="text-purple-600" />
+                <h3 className="text-sm font-bold text-gray-900 landing-display">Interview Relevance</h3>
+              </div>
+              <div className="p-4">
+                <p className="text-sm text-gray-700 landing-body leading-relaxed">{topicDetails.interviewRelevance}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Key Questions */}
+          {topicDetails.keyQuestions && topicDetails.keyQuestions.length > 0 && (
+            <div id="key-questions" className="rounded-xl overflow-hidden scroll-mt-24 border border-[#e3e8ee]">
+              <div className="px-4 py-2.5 border-b border-[#e3e8ee] bg-white/80 flex items-center gap-2">
+                <Icon name="messageSquare" size={14} className="text-blue-600" />
+                <h3 className="text-sm font-bold text-gray-900 landing-display">Key Questions</h3>
+                <span className="text-[10px] landing-mono text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">{topicDetails.keyQuestions.length}</span>
+              </div>
+              <div className="divide-y divide-[#e3e8ee]">
+                {topicDetails.keyQuestions.map((qa, i) => (
+                  <div key={i} className="px-4 py-3">
+                    <button
+                      onClick={() => setExpandedTheoryQuestions(prev => ({ ...prev, [i]: !prev[i] }))}
+                      className="w-full flex items-start gap-3 text-left group"
+                    >
+                      <span className="w-6 h-6 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center flex-shrink-0 mt-0.5 text-xs font-bold text-blue-600 landing-mono">
+                        {i + 1}
+                      </span>
+                      <span className="flex-1 text-sm font-semibold text-gray-900 landing-display">{qa.question}</span>
+                      <Icon name={expandedTheoryQuestions[i] ? 'chevronUp' : 'chevronDown'} size={14} className="text-gray-400 mt-1 shrink-0" />
+                    </button>
+                    {expandedTheoryQuestions[i] && (
+                      <div className="mt-2 ml-9 text-sm text-gray-600 landing-body leading-relaxed">
+                        <FormattedContent content={qa.answer} color="blue" />
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Generate Tutorial CTA */}
+          <div id="generate-tutorial" className="rounded-xl overflow-hidden scroll-mt-24 border border-emerald-200 bg-gradient-to-br from-emerald-50 to-cyan-50">
+            <div className="p-6 text-center">
+              <div className="w-12 h-12 rounded-xl bg-emerald-100 border border-emerald-200 flex items-center justify-center mx-auto mb-3">
+                <Icon name="zap" size={20} className="text-emerald-600" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 landing-display mb-1">Generate Step-by-Step Tutorial</h3>
+              <p className="text-sm text-gray-500 landing-body mb-4">Get an AI-generated complete tutorial with code, architecture, and deployment steps.</p>
+              <button
+                onClick={() => {
+                  const prompt = `Generate a complete step-by-step tutorial for building: ${topicDetails.title}\n\nTech stack: ${(topicDetails.techStack || []).join(', ')}\nDifficulty: ${topicDetails.difficulty}\nDescription: ${topicDetails.description}\n\nProvide:\n1. Project setup and file structure\n2. Each implementation step with complete code snippets\n3. Key architectural decisions and why\n4. Testing guidance\n5. Deployment instructions\n\nMake it practical and implementation-focused.`;
+                  setAiQuestion(prompt);
+                  setShowAskAI(true);
+                  handleAskAI(prompt);
+                }}
+                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold text-white landing-display transition-all hover:opacity-90"
+                style={{ background: 'linear-gradient(135deg, #10b981, #059669)', boxShadow: '0 2px 8px rgba(16,185,129,0.3)' }}
+              >
+                <Icon name="zap" size={14} />
+                Generate Tutorial
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* DSA Topic Detail */}
       {!isLocked && isCodingStyle && topicDetails.keyPatterns && (
         <div className="space-y-3">
