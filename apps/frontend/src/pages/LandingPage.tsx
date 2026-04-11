@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence, useInView } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import SiteNav from '../components/shared/SiteNav';
+import SEO from '../components/shared/SEO';
 import SiteFooter from '../components/shared/SiteFooter';
 
 /* ── APPA steps data ───────────────────────────────────── */
@@ -389,6 +390,7 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen text-gray-900 overflow-hidden" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
+      <SEO path="/" />
 
       {/* ── Styles ── */}
       <style>{`

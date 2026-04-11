@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import SiteNav from '../components/shared/SiteNav';
+import SEO from '../components/shared/SEO';
 import SiteFooter from '../components/shared/SiteFooter';
 import { useAuth } from '../contexts/AuthContext';
 import { getAuthHeaders } from '../utils/authHeaders.js';
@@ -246,6 +247,7 @@ export default function ChallengePage() {
      ══════════════════════════════════════════════════════════════════ */
   return (
     <div className="ch-root">
+      <SEO title="The Camora Challenge" description="Find bugs, build features, win $21,812 in prizes. Join the founding engineering team." path="/challenge" />
       <SiteNav />
 
       {/* ═══ HERO — Dark gradient mesh with floating orbs ═══ */}

@@ -1,6 +1,7 @@
 import { useParams, Link } from 'react-router-dom';
 import { useEffect, useMemo } from 'react';
 import SiteNav from '@/components/shared/SiteNav';
+import SEO from '@/components/shared/SEO';
 import SiteFooter from '@/components/shared/SiteFooter';
 import { COMPANY_SEO_DATA, COMPANY_SLUGS } from '@/data/capra/companies/companyData';
 
