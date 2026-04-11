@@ -134,7 +134,7 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
         {/* Logo */}
         <Link to="/" className="flex items-center gap-1.5 px-3 h-full shrink-0" style={{ borderRight: '1px solid rgba(255,255,255,0.06)' }}>
           <CamoraLogo size={22} />
-          <span className="hidden sm:block font-display font-bold text-sm tracking-tight" style={{ fontFamily: "'Comfortaa', sans-serif", background: 'linear-gradient(135deg, #fff, #94a3b8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Camora</span>
+          <span className="hidden lg:block font-display font-bold text-sm tracking-tight" style={{ fontFamily: "'Comfortaa', sans-serif", background: 'linear-gradient(135deg, #fff, #94a3b8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Camora</span>
         </Link>
 
         {/* Tabs */}

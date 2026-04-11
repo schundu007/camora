@@ -285,34 +285,34 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
 
   return (
     <div className="flex items-center gap-1.5 flex-nowrap whitespace-nowrap">
-      {/* Mode Selector — 3 modes */}
-      <div className="flex items-center rounded-lg overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.1)' }}>
+      {/* Mode Selector */}
+      <div className="flex items-center rounded-lg overflow-hidden shrink-0" style={{ border: '1px solid rgba(255,255,255,0.1)' }}>
         <button
           onClick={() => { if (!continuousMode) handleModeToggle(); }}
-          className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold transition-all"
+          className="flex items-center gap-1 px-2 py-1 text-[11px] font-bold transition-all"
           style={continuousMode
             ? { background: 'linear-gradient(135deg, #ef4444, #dc2626)', color: '#fff', boxShadow: '0 2px 8px rgba(239,68,68,0.3)' }
             : { color: 'rgba(255,255,255,0.5)' }}
-          title="Live: always listening, auto-restarts after each question"
+          title="Live: always listening, auto-restarts"
         >
           <LiveIcon isActive={continuousMode} />
-          <span className="hidden sm:inline">Live</span>
+          <span className="hidden xl:inline">Live</span>
         </button>
         <button
           onClick={() => { if (continuousMode) handleModeToggle(); }}
-          className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold transition-all"
+          className="flex items-center gap-1 px-2 py-1 text-[11px] font-bold transition-all"
           style={!continuousMode
             ? { background: 'linear-gradient(135deg, #10b981, #059669)', color: '#fff', boxShadow: '0 2px 8px rgba(16,185,129,0.3)' }
             : { color: 'rgba(255,255,255,0.5)', borderLeft: '1px solid rgba(255,255,255,0.06)' }}
           title="Manual: press Cmd+M to start/stop"
         >
           <MicIcon isActive={!continuousMode && storeIsRecording} />
-          <span className="hidden sm:inline">Manual</span>
+          <span className="hidden xl:inline">Manual</span>
         </button>
       </div>
 
-      {/* Audio level bars — Live & Manual only */}
-      <div className="flex items-center gap-0.5 px-0.5">
+      {/* Audio level bars */}
+      <div className="flex items-center gap-0.5 shrink-0">
         {[0, 1, 2, 3, 4].map((i) => (
           <div key={i} className={`w-0.5 rounded-full transition-all duration-75 ${audioLevel > i * 0.15 ? 'bg-emerald-400' : 'bg-white/10'}`}
             style={{ height: `${6 + i * 2}px` }} />
@@ -322,11 +322,11 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
       {/* Mic selector */}
       <MicrophoneSelector disabled={storeIsRecording} />
 
-      {/* Record/Pause — Manual mode only */}
+      {/* Record/Pause — Manual only */}
       {!continuousMode && (
         <button
           onClick={handleToggle}
-          className="flex items-center gap-1 px-2 py-1 text-[11px] font-bold rounded-lg transition-all"
+          className="flex items-center gap-1 px-2 py-1 text-[11px] font-bold rounded-lg transition-all shrink-0"
           style={storeIsRecording
             ? { background: 'rgba(239,68,68,0.15)', color: '#f87171', border: '1px solid rgba(239,68,68,0.2)' }
             : { background: 'rgba(16,185,129,0.1)', color: '#34d399', border: '1px solid rgba(16,185,129,0.15)' }}
@@ -337,18 +337,16 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
           ) : (
             <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg>
           )}
-          <span className="hidden md:inline">{storeIsRecording ? 'Pause' : 'Record'}</span>
+          <span className="hidden xl:inline">{storeIsRecording ? 'Pause' : 'Record'}</span>
         </button>
       )}
 
-      {/* Voice filter — Live & Manual */}
+      {/* Voice filter */}
       <VoiceEnrollment disabled={storeIsRecording} />
 
-      {/* Calibrate — Manual mode only */}
+      {/* Calibrate — Manual only */}
       {!continuousMode && (
-        <div className="hidden lg:block">
-          <CalibrationButton deviceId={selectedDeviceId} disabled={storeIsRecording} />
-        </div>
+        <CalibrationButton deviceId={selectedDeviceId} disabled={storeIsRecording} />
       )}
 
       {/* System Audio (Interviewer) */}
@@ -438,7 +436,7 @@ function SystemAudioButton({ onTranscription, disabled }: { onTranscription?: (t
       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15.536a5 5 0 010-7.072m-2.828 9.9a9 9 0 010-12.728" />
       </svg>
-      <span className="hidden lg:inline">{capturing ? 'Listening' : 'Interviewer'}</span>
+      <span className="hidden xl:inline">{capturing ? 'Listening' : 'Interviewer'}</span>
     </button>
   );
 }
