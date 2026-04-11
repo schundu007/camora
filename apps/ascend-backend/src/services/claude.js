@@ -1,33 +1,16 @@
 import Anthropic from '@anthropic-ai/sdk';
 
-// Safe logging that ignores EPIPE errors (happens in Electron when pipe closes)
-function safeLog(...args) {
-  try {
-    console.log(...args);
-  } catch {
-    // Ignore EPIPE and other write errors
-  }
-}
-
-// Support for runtime API keys (used by Electron app)
-let runtimeApiKey = null;
-
-export function setApiKey(key) {
-  runtimeApiKey = key;
-}
-
 export function getApiKey() {
-  return runtimeApiKey || process.env.ANTHROPIC_API_KEY;
+  return process.env.ANTHROPIC_API_KEY;
 }
 
 function getClient() {
   const apiKey = getApiKey();
-  safeLog('[Claude] Creating client, has API key:', !!apiKey);
   if (!apiKey) {
-    throw new Error('Anthropic API key not configured. Please add your API key in Settings (Cmd+,)');
+    throw new Error('ANTHROPIC_API_KEY not configured');
   }
   return new Anthropic({
-    apiKey: apiKey,
+    apiKey,
   });
 }
 

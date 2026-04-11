@@ -1,18 +1,7 @@
 import { verifyToken } from '../lib/shared-auth.js';
 import { query } from '../lib/shared-db.js';
 import { logger } from './requestLogger.js';
-
-/**
- * Initialize Ascend-specific user data (subscription, credits, free usage)
- */
-async function initAscendUser(userId) {
-  try {
-    await query('SELECT ascend_init_user($1)', [userId]);
-  } catch (err) {
-    // Non-fatal — user can still proceed
-    logger.warn({ error: err.message, userId }, 'Failed to init Ascend user data');
-  }
-}
+import { initUser } from '../config/database.js';
 
 /**
  * Try to verify JWT token and look up Ascend user
@@ -24,7 +13,7 @@ async function tryJwtAuth(token) {
     if (payload.type === 'access' && payload.sub) {
       const userId = parseInt(payload.sub, 10);
       if (userId) {
-        await initAscendUser(userId);
+        await initUser(userId);
 
         return {
           id: userId,
