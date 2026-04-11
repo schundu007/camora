@@ -155,14 +155,8 @@ export function InterviewPage() {
   const navigate = useNavigate();
   const [inputValue, setInputValue] = useState('');
   const [blanked, setBlanked] = useState(false);
-  const [micChecked, setMicChecked] = useState(() => {
-    return sessionStorage.getItem('lumora_mic_checked') === '1';
-  });
   const { handleSubmit, resetState } = useStreamingInterview();
   const { clearStreamChunks, setParsedBlocks, setQuestion, setError, setIsStreaming, setStatus, isStreaming, history, question, parsedBlocks } = useInterviewStore();
-
-  // Hide the full tool header on the empty/landing state
-  const isEmptyState = !question && !isStreaming && parsedBlocks.length === 0 && history.length === 0;
 
   // Emergency blank: Cmd+B or Ctrl+B to hide/show everything
   useEffect(() => {
@@ -191,36 +185,10 @@ export function InterviewPage() {
     }
   }, [handleSubmit]);
 
-  if (!micChecked) {
-    return <MicCheck onReady={() => { setMicChecked(true); sessionStorage.setItem('lumora_mic_checked', '1'); }} />;
-  }
-
   if (blanked) {
     return (
       <div className="h-screen w-full bg-white flex items-center justify-center cursor-pointer" onClick={() => setBlanked(false)}>
         <p className="text-gray-300 text-sm font-mono">Press <kbd className="px-1.5 py-0.5 bg-gray-100 rounded border border-gray-200 text-gray-400">Cmd+B</kbd> to resume</p>
-      </div>
-    );
-  }
-
-  if (isEmptyState) {
-    return (
-      <div className="min-h-screen flex flex-col">
-        <SiteNav />
-
-        <ErrorBoundary>
-          <InterviewPanel
-            onAskQuestion={handleSubmit}
-            onSwitchToCoding={(problem) => {
-              navigate(problem ? `/lumora/coding?problem=${encodeURIComponent(problem)}` : '/lumora/coding');
-            }}
-            onSwitchToDesign={(problem) => {
-              navigate(problem ? `/lumora/design?problem=${encodeURIComponent(problem)}` : '/lumora/design');
-            }}
-          />
-        </ErrorBoundary>
-
-        <SiteFooter />
       </div>
     );
   }
