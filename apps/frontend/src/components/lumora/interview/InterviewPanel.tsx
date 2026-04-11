@@ -233,113 +233,41 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
   );
 }
 
-function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: { onAskQuestion?: (question: string) => void; onSwitchToCoding?: (problem?: string) => void; onSwitchToDesign?: (problem?: string) => void }) {
+function EmptyState({ onAskQuestion }: { onAskQuestion?: (question: string) => void; onSwitchToCoding?: (problem?: string) => void; onSwitchToDesign?: (problem?: string) => void }) {
   return (
-      <div className="flex-1 flex flex-col items-center justify-center overflow-auto py-8 md:py-12" style={{ background: 'radial-gradient(ellipse 80% 60% at 50% 0%, rgba(16,185,129,0.06) 0%, transparent 60%), linear-gradient(180deg, #ffffff 0%, #ecfdf5 35%, #e0f2fe 60%, #f5f3ff 85%, #ffffff 100%)' }}>
-        <div className="max-w-4xl w-full px-6 md:px-12 text-center">
+    <div className="flex-1 flex flex-col items-center justify-center py-12">
+      <div className="text-center max-w-lg">
+        <div className="w-16 h-16 mx-auto mb-5 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #10b981, #06b6d4)', boxShadow: '0 4px 20px rgba(16,185,129,0.2)' }}>
+          <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+        </div>
+        <h2 className="font-display text-2xl font-bold text-gray-900 mb-2">Ready for your interview</h2>
+        <p className="text-base text-gray-400 mb-8">Type a question in the bar above, speak into the mic, or try one of these:</p>
 
-          {/* Hero */}
-          <h1 className="font-display text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight leading-tight">
-            Your AI co-pilot for <span className="bg-clip-text text-transparent" style={{ backgroundImage: 'linear-gradient(135deg, #34d399, #06b6d4, #818cf8)' }}>live interviews</span>
-          </h1>
+        <div className="flex flex-wrap justify-center gap-2 mb-6">
+          {[
+            'Design a URL shortener like TinyURL',
+            'Implement LRU Cache in Python',
+            'Tell me about a time you dealt with conflict',
+            'What is the CAP theorem?',
+          ].map((prompt) => (
+            <button
+              key={prompt}
+              onClick={() => onAskQuestion?.(prompt)}
+              className="px-4 py-2 rounded-xl bg-gray-50 border border-gray-200 text-sm font-display text-gray-600 hover:border-emerald-300 hover:text-emerald-700 hover:bg-emerald-50/50 transition-all"
+            >
+              {prompt}
+            </button>
+          ))}
+        </div>
 
-          {/* Demo Walkthrough */}
-          <div className="mt-12 text-left max-w-2xl mx-auto">
-            <div className="text-center mb-6">
-              <span className="font-code text-[10px] text-emerald-600 tracking-widest uppercase">How It Works</span>
-              <h2 className="font-display font-bold text-xl md:text-2xl tracking-tight text-gray-900 mt-1">
-                Get answers in <span className="bg-clip-text text-transparent" style={{ backgroundImage: 'linear-gradient(135deg, #34d399, #06b6d4)' }}>3 seconds flat</span>
-              </h2>
-            </div>
-
-            <div className="space-y-3">
-              {/* Step 1 */}
-              <div className="flex gap-4 p-4 rounded-2xl bg-white/80 border border-gray-100 shadow-sm hover:shadow-md transition-all group">
-                <div className="shrink-0 w-10 h-10 rounded-xl flex items-center justify-center text-white font-display font-bold text-sm" style={{ background: 'linear-gradient(135deg, #34d399, #10b981)' }}>1</div>
-                <div>
-                  <p className="font-display font-semibold text-gray-900 text-sm">Open Camora alongside your interview</p>
-                  <p className="font-display text-xs text-gray-500 mt-1">Join Zoom, Google Meet, or MS Teams on one screen. Open <span className="font-code text-emerald-600">camora.cariara.com/lumora</span> on the other. Works in any browser.</p>
-                </div>
-              </div>
-
-              {/* Step 2 */}
-              <div className="flex gap-4 p-4 rounded-2xl bg-white/80 border border-gray-100 shadow-sm hover:shadow-md transition-all group">
-                <div className="shrink-0 w-10 h-10 rounded-xl flex items-center justify-center text-white font-display font-bold text-sm" style={{ background: 'linear-gradient(135deg, #06b6d4, #0891b2)' }}>2</div>
-                <div>
-                  <p className="font-display font-semibold text-gray-900 text-sm">Ask your question — type, paste, or speak</p>
-                  <p className="font-display text-xs text-gray-500 mt-1">Type a question in the top bar, paste a problem from your coding platform, or click the <span className="font-code text-emerald-600">mic button</span> to transcribe the interviewer's question automatically.</p>
-                </div>
-              </div>
-
-              {/* Step 3 */}
-              <div className="flex gap-4 p-4 rounded-2xl bg-white/80 border border-gray-100 shadow-sm hover:shadow-md transition-all group">
-                <div className="shrink-0 w-10 h-10 rounded-xl flex items-center justify-center text-white font-display font-bold text-sm" style={{ background: 'linear-gradient(135deg, #818cf8, #7c3aed)' }}>3</div>
-                <div>
-                  <p className="font-display font-semibold text-gray-900 text-sm">Get instant AI answers — structured & interview-ready</p>
-                  <p className="font-display text-xs text-gray-500 mt-1">Behavioral questions get STAR format. System design gets architecture diagrams. Coding gets 3-approach solutions with complexity analysis. All in seconds.</p>
-                </div>
-              </div>
-
-              {/* Step 4 */}
-              <div className="flex gap-4 p-4 rounded-2xl bg-white/80 border border-gray-100 shadow-sm hover:shadow-md transition-all group">
-                <div className="shrink-0 w-10 h-10 rounded-xl flex items-center justify-center text-white font-display font-bold text-sm" style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}>4</div>
-                <div>
-                  <p className="font-display font-semibold text-gray-900 text-sm">Switch modes for specialized problems</p>
-                  <p className="font-display text-xs text-gray-500 mt-1">Use the <span className="font-code text-emerald-600">Coding</span> tab for a full code editor with 50+ languages. Use <span className="font-code text-emerald-600">Design</span> tab for system design with auto-generated architecture diagrams.</p>
-                </div>
-              </div>
-
-              {/* Step 5 */}
-              <div className="flex gap-4 p-4 rounded-2xl bg-white/80 border border-gray-100 shadow-sm hover:shadow-md transition-all group">
-                <div className="shrink-0 w-10 h-10 rounded-xl flex items-center justify-center text-white font-display font-bold text-sm" style={{ background: 'linear-gradient(135deg, #f43f5e, #e11d48)' }}>5</div>
-                <div>
-                  <p className="font-display font-semibold text-gray-900 text-sm">Stay safe with hotkeys</p>
-                  <p className="font-display text-xs text-gray-500 mt-1">
-                    Press <kbd className="px-1.5 py-0.5 bg-gray-100 rounded-md text-gray-700 font-code text-[10px] border border-gray-200">Cmd+B</kbd> to instantly blank the screen.
-                    <kbd className="ml-1 px-1.5 py-0.5 bg-gray-100 rounded-md text-gray-700 font-code text-[10px] border border-gray-200">Cmd+M</kbd> toggles mic.
-                    <kbd className="ml-1 px-1.5 py-0.5 bg-gray-100 rounded-md text-gray-700 font-code text-[10px] border border-gray-200">Cmd+K</kbd> focuses the input bar.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Quick try prompts */}
-            <div className="mt-8 text-center">
-              <p className="font-display text-xs text-gray-400 mb-3">Try asking one of these:</p>
-              <div className="flex flex-wrap justify-center gap-2">
-                {[
-                  'Design a URL shortener like TinyURL',
-                  'Implement LRU Cache in Python',
-                  'Tell me about a time you dealt with conflict',
-                  'What is the CAP theorem?',
-                ].map((prompt) => (
-                  <button
-                    key={prompt}
-                    onClick={() => onAskQuestion?.(prompt)}
-                    className="px-3 py-1.5 rounded-xl bg-white/80 border border-gray-200 text-xs font-display text-gray-600 hover:border-emerald-300 hover:text-emerald-700 hover:bg-emerald-50/50 transition-all"
-                  >
-                    {prompt}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Primary CTA */}
-          <div className="mt-10">
-            <div className="flex justify-center">
-              <button
-                onClick={() => onAskQuestion?.('Help me with my interview — I just joined the call')}
-                className="group font-display px-10 py-4 text-white font-bold text-lg rounded-2xl transition-all shadow-xl shadow-emerald-500/30 hover:-translate-y-1 hover:opacity-90 flex items-center justify-center gap-2"
-                style={{ background: 'linear-gradient(135deg, #10b981, #06b6d4)' }}
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                Start Live Interview
-              </button>
-            </div>
-          </div>
-
+        <div className="flex justify-center gap-4 text-xs text-gray-300 font-mono">
+          <span>Cmd+M mic</span>
+          <span>Cmd+B blank</span>
+          <span>Cmd+K focus</span>
         </div>
       </div>
-    );
+    </div>
+  );
 }
