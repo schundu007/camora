@@ -107,10 +107,10 @@ function FaqItem({ q, a }: { q: string; a: string }) {
   return (
     <div className="ch-glass-card" style={{ borderColor: open ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.06)' }}>
       <button onClick={() => setOpen(!open)} className="w-full flex items-center justify-between px-5 py-4 text-left" aria-expanded={open}>
-        <span className="text-sm font-semibold text-white/90">{q}</span>
+        <span className="text-base font-semibold text-white/90">{q}</span>
         <svg className={`w-4 h-4 text-emerald-400/60 shrink-0 transition-transform duration-300 ${open ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
       </button>
-      {open && <div className="px-5 pb-4 text-sm text-white/50 leading-relaxed">{a}</div>}
+      {open && <div className="px-5 pb-4 text-base text-white/50 leading-relaxed">{a}</div>}
     </div>
   );
 }
@@ -278,7 +278,7 @@ export default function ChallengePage() {
               <p className="text-base font-bold text-emerald-400">Challenge is LIVE. Submit findings now.</p>
             ) : (
               <>
-                <span className="text-xs font-bold text-white/30 uppercase tracking-[0.15em] mr-3">Starts in</span>
+                <span className="text-base font-bold text-white/30 uppercase tracking-[0.15em] mr-3">Starts in</span>
                 {[
                   { val: countdown.days, label: 'DAYS' },
                   { val: countdown.hours, label: 'HRS' },
@@ -296,7 +296,7 @@ export default function ChallengePage() {
 
           {/* Prize pool — glowing */}
           <div className="ch-prize-pool-badge">
-            <span className="text-sm text-white/40 uppercase tracking-widest font-bold">Total Prize Pool</span>
+            <span className="text-base text-white/40 uppercase tracking-widest font-bold">Total Prize Pool</span>
             <span className="ch-prize-amount">$21,812</span>
           </div>
 
@@ -319,7 +319,7 @@ export default function ChallengePage() {
                 <svg className="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0" /></svg>
               </div>
               <h3 className="text-xl font-bold text-white mb-2">Ready to participate?</h3>
-              <p className="text-sm text-white/40 mb-6">Create a free account to take the qualification quiz.</p>
+              <p className="text-base text-white/40 mb-6">Create a free account to take the qualification quiz.</p>
               <Link to="/login?redirect=/challenge" className="ch-cta-primary inline-block" style={{ textDecoration: 'none' }}>Sign Up Free</Link>
             </div>
           ) : challengeStatus?.isChallenger ? (
@@ -330,20 +330,20 @@ export default function ChallengePage() {
                     <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                   </div>
                   <div>
-                    <span className="text-sm font-bold text-emerald-400">Qualified Challenger</span>
-                    <span className="text-xs text-white/30 ml-2">Score: {challengeStatus.quizScore}%</span>
+                    <span className="text-base font-bold text-emerald-400">Qualified Challenger</span>
+                    <span className="text-base text-white/30 ml-2">Score: {challengeStatus.quizScore}%</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-white/30">Credits:</span>
+                  <span className="text-base text-white/30">Credits:</span>
                   <div className="w-32 h-2 rounded-full bg-white/5 overflow-hidden">
                     <div className="h-full rounded-full transition-all" style={{ width: `${(challengeStatus.creditsRemaining / 100) * 100}%`, background: challengeStatus.creditsRemaining > 50 ? '#10b981' : challengeStatus.creditsRemaining > 20 ? '#f59e0b' : '#ef4444', boxShadow: `0 0 8px ${challengeStatus.creditsRemaining > 50 ? '#10b981' : challengeStatus.creditsRemaining > 20 ? '#f59e0b' : '#ef4444'}` }} />
                   </div>
-                  <span className="text-xs font-bold" style={{ color: challengeStatus.creditsRemaining > 50 ? '#10b981' : challengeStatus.creditsRemaining > 20 ? '#f59e0b' : '#ef4444' }}>{challengeStatus.creditsRemaining}/100</span>
+                  <span className="text-base font-bold" style={{ color: challengeStatus.creditsRemaining > 50 ? '#10b981' : challengeStatus.creditsRemaining > 20 ? '#f59e0b' : '#ef4444' }}>{challengeStatus.creditsRemaining}/100</span>
                 </div>
               </div>
               <div className="border-t border-white/5 pt-5">
-                <h4 className="text-sm font-bold text-white/80 mb-3">Submit a Finding</h4>
+                <h4 className="text-base font-bold text-white/80 mb-3">Submit a Finding</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
                   <input value={submitForm.title} onChange={e => setSubmitForm(f => ({ ...f, title: e.target.value }))} placeholder="Title" className="ch-input" />
                   <select value={submitForm.category} onChange={e => setSubmitForm(f => ({ ...f, category: e.target.value }))} className="ch-input">
@@ -362,8 +362,8 @@ export default function ChallengePage() {
                   <button onClick={handleSubmitFinding} disabled={submitStatus === 'submitting'} className="ch-cta-primary" style={{ padding: '10px 24px', fontSize: 13 }}>
                     {submitStatus === 'submitting' ? 'Submitting...' : 'Submit Finding'}
                   </button>
-                  {submitStatus === 'success' && <span className="text-xs text-emerald-400 font-medium">Submitted!</span>}
-                  {submitStatus === 'error' && <span className="text-xs text-red-400 font-medium">Failed. Try again.</span>}
+                  {submitStatus === 'success' && <span className="text-base text-emerald-400 font-medium">Submitted!</span>}
+                  {submitStatus === 'error' && <span className="text-base text-red-400 font-medium">Failed. Try again.</span>}
                 </div>
               </div>
             </div>
@@ -380,9 +380,9 @@ export default function ChallengePage() {
                 </span>
               </div>
               <div className="p-5 rounded-xl mb-5" style={{ background: 'rgba(16,185,129,0.05)', border: '1px solid rgba(16,185,129,0.15)' }}>
-                <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Question {quizIdx + 1} of {quizQuestions.length}</span>
+                <span className="text-base font-bold text-emerald-400 uppercase tracking-wider">Question {quizIdx + 1} of {quizQuestions.length}</span>
                 <h3 className="text-lg font-bold text-white mt-1">{quizQuestions[quizIdx]?.q}</h3>
-                <p className="text-sm text-white/40 mt-1">{quizQuestions[quizIdx]?.desc}</p>
+                <p className="text-base text-white/40 mt-1">{quizQuestions[quizIdx]?.desc}</p>
               </div>
               <textarea
                 value={quizAnswers[quizIdx]}
@@ -404,7 +404,7 @@ export default function ChallengePage() {
                 <svg className="w-7 h-7 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
               </div>
               <h3 className="text-xl font-bold text-white mb-2">You're Qualified!</h3>
-              <p className="text-sm text-white/40 mb-6">100 credits granted. Start submitting.</p>
+              <p className="text-base text-white/40 mb-6">100 credits granted. Start submitting.</p>
               <button onClick={() => setChallengeStatus({ ...challengeStatus, isChallenger: true, creditsRemaining: 100 })} className="ch-cta-primary">Start Submitting</button>
             </div>
           ) : quizPhase === 'failed' ? (
@@ -413,13 +413,13 @@ export default function ChallengePage() {
                 <svg className="w-7 h-7 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
               </div>
               <h3 className="text-xl font-bold text-white mb-2">Not Quite Yet</h3>
-              <p className="text-sm text-white/40 mb-6">Below 60%. Retry in 24 hours.</p>
+              <p className="text-base text-white/40 mb-6">Below 60%. Retry in 24 hours.</p>
               <button onClick={() => setQuizPhase('idle')} className="ch-cta-secondary">Back to Challenge</button>
             </div>
           ) : quizPhase === 'evaluating' ? (
             <div className="ch-glass-card text-center py-12">
               <div className="w-12 h-12 border-3 border-emerald-500/20 border-t-emerald-400 rounded-full animate-spin mx-auto mb-4" style={{ borderWidth: 3 }} />
-              <p className="text-sm text-white/40">Evaluating your answers...</p>
+              <p className="text-base text-white/40">Evaluating your answers...</p>
             </div>
           ) : (
             <div className="ch-glass-card text-center py-12 px-6">
@@ -427,9 +427,9 @@ export default function ChallengePage() {
                 <svg className="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342" /></svg>
               </div>
               <h3 className="text-xl font-bold text-white mb-2">Qualification Quiz</h3>
-              <p className="text-sm text-white/40 mb-6">5 coding questions, 10 minutes. Score 60%+ to unlock.</p>
+              <p className="text-base text-white/40 mb-6">5 coding questions, 10 minutes. Score 60%+ to unlock.</p>
               {challengeStatus?.lastAttempt && new Date(challengeStatus.lastAttempt).getTime() > Date.now() - 86400000 && (
-                <p className="text-xs text-amber-400/80 mb-4">Retry available after 24 hours.</p>
+                <p className="text-base text-amber-400/80 mb-4">Retry available after 24 hours.</p>
               )}
               <button onClick={startQuiz} className="ch-cta-primary" disabled={challengeStatus?.lastAttempt && new Date(challengeStatus.lastAttempt).getTime() > Date.now() - 86400000}>Take the Quiz</button>
             </div>
@@ -451,9 +451,9 @@ export default function ChallengePage() {
                 <div className="ch-prize-card-inner">
                   <div className="ch-prize-rank" style={{ background: p.gradient }}>{p.place}</div>
                   <div className="ch-prize-amount-card">{p.amount}</div>
-                  <div className="text-sm font-bold text-white/70 mb-1">{p.title}</div>
-                  {p.winners && <div className="text-xs text-white/30">({p.winners} winners)</div>}
-                  <div className="text-xs text-white/40 mt-2">{p.desc}</div>
+                  <div className="text-base font-bold text-white/70 mb-1">{p.title}</div>
+                  {p.winners && <div className="text-base text-white/30">({p.winners} winners)</div>}
+                  <div className="text-base text-white/40 mt-2">{p.desc}</div>
                 </div>
               </div>
             ))}
@@ -477,13 +477,13 @@ export default function ChallengePage() {
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-white">Founding Engineers</h3>
-                  <span className="text-xs text-emerald-400 font-bold">5 positions</span>
+                  <h3 className="text-base font-bold text-white">Founding Engineers</h3>
+                  <span className="text-base text-emerald-400 font-bold">5 positions</span>
                 </div>
               </div>
               <ul className="space-y-2">
                 {['Competitive salary + significant equity', 'Remote-first, async culture', 'Build core platform from day one', 'Direct product influence', 'Full AI/ML stack'].map(b => (
-                  <li key={b} className="flex items-start gap-2 text-xs text-white/50"><span className="text-emerald-400 mt-px">&#10003;</span>{b}</li>
+                  <li key={b} className="flex items-start gap-2 text-base text-white/50"><span className="text-emerald-400 mt-px">&#10003;</span>{b}</li>
                 ))}
               </ul>
             </div>
@@ -493,23 +493,23 @@ export default function ChallengePage() {
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-white">Core Engineers</h3>
-                  <span className="text-xs text-indigo-400 font-bold">10 positions</span>
+                  <h3 className="text-base font-bold text-white">Core Engineers</h3>
+                  <span className="text-base text-indigo-400 font-bold">10 positions</span>
                 </div>
               </div>
               <ul className="space-y-2">
                 {['Competitive salary + stock options', 'Mentorship from founding team', 'Clear growth trajectory', 'Remote-first, flexible hours', 'Growth potential'].map(b => (
-                  <li key={b} className="flex items-start gap-2 text-xs text-white/50"><span className="text-indigo-400 mt-px">&#10003;</span>{b}</li>
+                  <li key={b} className="flex items-start gap-2 text-base text-white/50"><span className="text-indigo-400 mt-px">&#10003;</span>{b}</li>
                 ))}
               </ul>
             </div>
           </div>
 
           <div className="ch-glass-card p-5">
-            <h3 className="text-xs font-bold text-white/60 mb-3 uppercase tracking-wider">Benefits</h3>
+            <h3 className="text-base font-bold text-white/60 mb-3 uppercase tracking-wider">Benefits</h3>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {BENEFITS.map((b) => (
-                <div key={b} className="flex items-center gap-2 text-xs text-white/40">
+                <div key={b} className="flex items-center gap-2 text-base text-white/40">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" style={{ boxShadow: '0 0 4px #10b981' }} />{b}
                 </div>
               ))}
@@ -532,7 +532,7 @@ export default function ChallengePage() {
                   <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: `${c.color}15`, border: `1px solid ${c.color}30` }}>
                     <img src={c.logo} alt={c.title} width={20} height={20} style={{ objectFit: 'contain' }} />
                   </div>
-                  <h3 className="text-sm font-bold text-white">{c.title}</h3>
+                  <h3 className="text-base font-bold text-white">{c.title}</h3>
                 </div>
                 <div className="space-y-1.5">
                   {c.examples.map((e) => (
@@ -546,15 +546,15 @@ export default function ChallengePage() {
 
             {/* Scoring */}
             <div className="ch-glass-card p-5">
-              <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
+              <h3 className="text-base font-bold text-white mb-3 flex items-center gap-2">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M12 20V10" /><path d="M18 20V4" /><path d="M6 20v-4" /></svg>
                 Scoring
               </h3>
               <div className="space-y-2.5">
                 {SCORING.map((s) => (
                   <div key={s.category} className="flex items-center justify-between">
-                    <span className="text-xs text-white/50">{s.category}</span>
-                    <span className="text-xs font-bold px-2 py-0.5 rounded" style={{ background: `${s.color}18`, color: s.color, boxShadow: `0 0 6px ${s.color}30` }}>{s.points}</span>
+                    <span className="text-base text-white/50">{s.category}</span>
+                    <span className="text-base font-bold px-2 py-0.5 rounded" style={{ background: `${s.color}18`, color: s.color, boxShadow: `0 0 6px ${s.color}30` }}>{s.points}</span>
                   </div>
                 ))}
               </div>
@@ -577,8 +577,8 @@ export default function ChallengePage() {
                   <span>{s.num}</span>
                 </div>
                 {i < STEPS.length - 1 && <div className="ch-timeline-line" style={{ background: `linear-gradient(to right, ${s.color}40, ${STEPS[i+1].color}40)` }} />}
-                <h3 className="text-xs font-bold text-white mt-3 mb-0.5">{s.title}</h3>
-                <p className="text-xs text-white/30 leading-snug">{s.desc}</p>
+                <h3 className="text-base font-bold text-white mt-3 mb-0.5">{s.title}</h3>
+                <p className="text-base text-white/30 leading-snug">{s.desc}</p>
               </div>
             ))}
           </div>
@@ -593,7 +593,7 @@ export default function ChallengePage() {
             {TECH_STACK.map((t) => (
               <div key={t.name} className="ch-tech-pill">
                 <img src={t.logo} alt={t.name} width={20} height={20} style={{ objectFit: 'contain' }} />
-                <span className="text-xs font-medium text-white/40">{t.name}</span>
+                <span className="text-base font-medium text-white/40">{t.name}</span>
               </div>
             ))}
           </div>
@@ -609,7 +609,7 @@ export default function ChallengePage() {
             <p className="ch-section-sub">{challengeActive ? 'Live standings.' : 'Rankings appear May 7, 2026.'}</p>
           </div>
           <div className="ch-glass-card overflow-hidden p-0">
-            <div className="grid grid-cols-12 gap-2 px-5 py-3 text-xs font-bold text-white/20 uppercase tracking-wider border-b border-white/5">
+            <div className="grid grid-cols-12 gap-2 px-5 py-3 text-base font-bold text-white/20 uppercase tracking-wider border-b border-white/5">
               <div className="col-span-1">#</div>
               <div className="col-span-5">Challenger</div>
               <div className="col-span-3 text-center">Findings</div>
@@ -618,11 +618,11 @@ export default function ChallengePage() {
             {[1, 2, 3, 4, 5].map((rank) => (
               <div key={rank} className="grid grid-cols-12 gap-2 px-5 py-3 items-center border-b border-white/[0.03] last:border-0 hover:bg-white/[0.02] transition-colors">
                 <div className="col-span-1">
-                  <span className="text-xs font-bold" style={{ color: rank === 1 ? '#fbbf24' : rank === 2 ? '#94a3b8' : rank === 3 ? '#d97706' : 'rgba(255,255,255,0.15)' }}>{rank}</span>
+                  <span className="text-base font-bold" style={{ color: rank === 1 ? '#fbbf24' : rank === 2 ? '#94a3b8' : rank === 3 ? '#d97706' : 'rgba(255,255,255,0.15)' }}>{rank}</span>
                 </div>
                 <div className="col-span-5"><div className="h-2 rounded-full w-24" style={{ background: 'rgba(255,255,255,0.04)' }} /></div>
                 <div className="col-span-3 text-center"><div className="h-2 rounded-full w-8 mx-auto" style={{ background: 'rgba(255,255,255,0.04)' }} /></div>
-                <div className="col-span-3 flex justify-end"><span className="text-xs font-semibold px-2.5 py-0.5 rounded-full" style={{ background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.2)' }}>Pending</span></div>
+                <div className="col-span-3 flex justify-end"><span className="text-base font-semibold px-2.5 py-0.5 rounded-full" style={{ background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.2)' }}>Pending</span></div>
               </div>
             ))}
           </div>
@@ -644,11 +644,11 @@ export default function ChallengePage() {
               { title: 'Judging', color: '#ef4444', items: ['Founding team review', 'Code quality + docs are key', 'Original work only', 'Responsible disclosure'] },
             ].map((r) => (
               <div key={r.title} className="ch-glass-card p-5">
-                <h3 className="text-xs font-bold text-white/80 mb-3 flex items-center gap-2">
+                <h3 className="text-base font-bold text-white/80 mb-3 flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full" style={{ background: r.color, boxShadow: `0 0 6px ${r.color}` }} />{r.title}
                 </h3>
                 <ul className="space-y-1.5">
-                  {r.items.map((item) => <li key={item} className="text-xs text-white/40">{item}</li>)}
+                  {r.items.map((item) => <li key={item} className="text-base text-white/40">{item}</li>)}
                 </ul>
               </div>
             ))}
@@ -691,14 +691,14 @@ export default function ChallengePage() {
         <div className="ch-hero-orb ch-orb-2" style={{ opacity: 0.2 }} />
         <div className="relative z-10 w-full lg:max-w-[60%] mx-auto px-4 sm:px-6 text-center">
           <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Ready to take the challenge?</h2>
-          <p className="mt-3 text-sm text-white/30">$21,812 in prizes + founding team spots.</p>
+          <p className="mt-3 text-base text-white/30">$21,812 in prizes + founding team spots.</p>
           <div className="mt-8 flex items-center justify-center gap-4">
             <Link to={isAuthenticated ? '/capra/prepare' : '/signup'} className="ch-cta-primary text-base px-8 py-3.5">
               {isAuthenticated ? 'Go to Dashboard' : 'Create Free Account'}
             </Link>
           </div>
           <div className="mt-6 flex items-center justify-center gap-3">
-            <span className="text-xs text-white/20">Share:</span>
+            <span className="text-base text-white/20">Share:</span>
             <a href={`https://twitter.com/intent/tweet?text=${encodeURIComponent('The Camora Challenge — $21,812 in prizes + founding team offers!')}&url=${encodeURIComponent('https://camora.cariara.com/challenge')}`} target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-lg flex items-center justify-center text-white/20 hover:text-white/60 hover:bg-white/5 transition-colors" aria-label="Share on Twitter">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
             </a>
@@ -1020,7 +1020,7 @@ export default function ChallengePage() {
         .ch-referral-wrapper .text-gray-900 { color: #fff !important; }
         .ch-referral-wrapper .text-gray-500,
         .ch-referral-wrapper .text-gray-400 { color: rgba(255,255,255,0.35) !important; }
-        .ch-referral-wrapper .text-sm.text-gray-700 { color: rgba(255,255,255,0.6) !important; }
+        .ch-referral-wrapper .text-base.text-gray-700 { color: rgba(255,255,255,0.6) !important; }
         .ch-referral-wrapper .bg-gray-50,
         .ch-referral-wrapper .bg-gray-100 { background: rgba(255,255,255,0.04) !important; }
         .ch-referral-wrapper .bg-emerald-50 { background: rgba(16,185,129,0.1) !important; }
