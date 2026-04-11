@@ -536,10 +536,10 @@ function RequirementsList({ content, type }: { content: string; type: 'functiona
   });
 
   return (
-    <ul className="space-y-1">
+    <ul className="space-y-2.5">
       {items.map((item, i) => (
-        <li key={i} className="flex items-start gap-2 text-[13px] text-text-muted leading-snug">
-          <span className={`w-1.5 h-1.5 rounded-full shrink-0 mt-1.5 ${type === 'functional' ? 'bg-indigo' : 'bg-violet'}`} />
+        <li key={i} className="flex items-start gap-3 text-sm text-text-muted leading-relaxed">
+          <span className={`w-2.5 h-2.5 rounded-full shrink-0 mt-1 ${type === 'functional' ? 'bg-emerald-400' : 'bg-emerald-500/70'}`} />
           {item}
         </li>
       ))}
@@ -549,20 +549,35 @@ function RequirementsList({ content, type }: { content: string; type: 'functiona
 
 function ScaleMathList({ content }: { content: string }) {
   const lines = content.split('\n').map(l => cleanText(l).replace(/^[-*]\s*/, '')).filter(Boolean);
+  const metrics: { label: string; value: string }[] = [];
+  const other: string[] = [];
+
+  lines.forEach(line => {
+    const colonIdx = line.indexOf(':');
+    if (colonIdx > 0) {
+      metrics.push({ label: line.slice(0, colonIdx).trim(), value: line.slice(colonIdx + 1).trim() });
+    } else {
+      other.push(line);
+    }
+  });
+
   return (
-    <div className="space-y-1">
-      {lines.map((line, i) => {
-        const colonIdx = line.indexOf(':');
-        if (colonIdx > 0) {
-          return (
-            <div key={i} className="flex items-baseline px-1.5 py-1 rounded bg-white/[0.02]">
-              <span className="font-mono text-[13px] text-text-dim shrink-0">{line.slice(0, colonIdx)}</span>
-              <span className="font-mono text-[13px] font-semibold text-emerald-light text-right flex-1 ml-2">{line.slice(colonIdx + 1).trim()}</span>
+    <div className="space-y-3">
+      <div className="grid grid-cols-2 gap-2">
+        {metrics.map((m, i) => (
+          <div key={i} className="rounded-lg border border-emerald-500/15 bg-emerald-500/[0.04] p-3">
+            <div className="font-mono text-[10px] font-bold text-text-dim uppercase tracking-wider mb-1.5">
+              {m.label}
             </div>
-          );
-        }
-        return <div key={i} className="font-mono text-[13px] text-text-subtle px-1.5">{line}</div>;
-      })}
+            <div className="font-mono text-sm font-semibold text-emerald-light leading-snug">
+              {m.value}
+            </div>
+          </div>
+        ))}
+      </div>
+      {other.map((line, i) => (
+        <div key={`o-${i}`} className="font-mono text-[13px] text-text-subtle px-1">{line}</div>
+      ))}
     </div>
   );
 }
@@ -572,40 +587,49 @@ function DeepDesignList({ content }: { content: string }) {
 
   if (lines.length === 0) return <div className="text-[13px] text-text-muted italic">No layer design data</div>;
 
-  let itemNum = 0;
+  // Group lines into layers: each layer starts with a numbered line or a non-sub-bullet line
+  type Layer = { num: number; title: string; bullets: string[] };
+  const layers: Layer[] = [];
+  let layerNum = 0;
+
+  lines.forEach(line => {
+    const match = line.match(/^(\d+)[.)]\s*(.*)/);
+    if (match) {
+      layerNum = parseInt(match[1]);
+      layers.push({ num: layerNum, title: match[2], bullets: [] });
+    } else {
+      const subLine = line.replace(/^[-*]\s*/, '');
+      if (layers.length > 0 && subLine) {
+        layers[layers.length - 1].bullets.push(subLine);
+      } else {
+        layerNum++;
+        layers.push({ num: layerNum, title: line, bullets: [] });
+      }
+    }
+  });
+
   return (
-    <div className="space-y-1">
-      {lines.map((line, i) => {
-        // Try numbered format: "1. Something" or "1) Something"
-        const match = line.match(/^(\d+)[.)]\s*(.*)/);
-        if (match) {
-          itemNum = parseInt(match[1]);
-          return (
-            <div key={i} className="flex items-start gap-2 py-0.5">
-              <span className="font-mono text-xs font-bold text-violet-light w-4 text-right shrink-0">{match[1]}</span>
-              <span className="text-[13px] text-text-muted leading-snug">{match[2]}</span>
-            </div>
-          );
-        }
-        // Sub-bullet under a numbered item
-        const subLine = line.replace(/^[-*]\s*/, '');
-        if (subLine && itemNum > 0) {
-          return (
-            <div key={i} className="flex items-start gap-2 py-0.5 pl-6">
-              <span className="w-1.5 h-1.5 rounded-full bg-violet/40 shrink-0 mt-1.5" />
-              <span className="text-[13px] text-text-muted leading-snug">{subLine}</span>
-            </div>
-          );
-        }
-        // Fallback: treat as a layer heading or plain line
-        itemNum++;
-        return (
-          <div key={i} className="flex items-start gap-2 py-0.5">
-            <span className="font-mono text-xs font-bold text-violet-light w-4 text-right shrink-0">{itemNum}</span>
-            <span className="text-[13px] text-text-muted leading-snug">{line}</span>
+    <div className="space-y-4">
+      {layers.map((layer, i) => (
+        <div key={i}>
+          <div className="flex items-center gap-2.5 mb-1.5">
+            <span className="font-mono text-[11px] font-bold text-violet-light bg-violet/10 w-6 h-6 flex items-center justify-center rounded shrink-0">
+              {layer.num}
+            </span>
+            <span className="text-sm font-bold text-text leading-snug">{layer.title}</span>
           </div>
-        );
-      })}
+          {layer.bullets.length > 0 && (
+            <div className="space-y-1 pl-8">
+              {layer.bullets.map((bullet, j) => (
+                <div key={j} className="flex items-start gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-violet/40 shrink-0 mt-1.5" />
+                  <span className="text-[13px] text-text-muted leading-relaxed">{bullet}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      ))}
     </div>
   );
 }
@@ -613,20 +637,20 @@ function DeepDesignList({ content }: { content: string }) {
 function EdgeCasesList({ content }: { content: string }) {
   const lines = content.split('\n').map(l => cleanText(l).replace(/^[-*]\s*/, '')).filter(Boolean);
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-2.5">
       {lines.map((line, i) => {
         const colonIdx = line.indexOf(':');
         if (colonIdx > 0 && colonIdx < 40) {
+          const caseName = line.slice(0, colonIdx).trim();
+          const explanation = line.slice(colonIdx + 1).trim();
           return (
-            <div key={i} className="flex items-start gap-2">
-              <span className="font-mono text-xs font-semibold text-amber-light bg-amber/10 px-2 py-0.5 rounded shrink-0">
-                {line.slice(0, colonIdx)}
-              </span>
-              <span className="text-[13px] text-text-muted leading-snug">{line.slice(colonIdx + 1).trim()}</span>
+            <div key={i} className="space-y-0.5">
+              <span className="font-mono text-xs font-bold text-amber-light">{caseName}</span>
+              <div className="text-[13px] text-text-dim leading-relaxed pl-0.5">{explanation}</div>
             </div>
           );
         }
-        return <div key={i} className="text-[13px] text-text-muted leading-snug">{line}</div>;
+        return <div key={i} className="text-[13px] text-text-muted leading-relaxed">{line}</div>;
       })}
     </div>
   );
@@ -638,7 +662,7 @@ function TradeoffsList({ content }: { content: string }) {
   if (lines.length === 0) return <div className="text-[13px] text-text-muted italic">No trade-offs data</div>;
 
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-3">
       {lines.map((line, i) => {
         // Try pipe format: "Decision: X | vs: Y | because: Z"
         const parts = line.split('|').map(p => p.trim());
@@ -684,17 +708,17 @@ function TradeoffsList({ content }: { content: string }) {
         if (!pick) return <div key={i} className="text-[13px] text-text-muted leading-snug">{line}</div>;
 
         return (
-          <div key={i} className="py-1 border-b border-white/[0.03] last:border-b-0">
+          <div key={i} className="pb-2.5 border-b border-white/[0.05] last:border-b-0 last:pb-0">
             <div className="flex items-baseline gap-2 flex-wrap">
-              <span className="font-mono text-[13px] font-semibold text-cyan-light">{pick}</span>
+              <span className="font-mono text-sm font-bold text-cyan-light">{pick}</span>
               {alt && (
                 <>
                   <span className="font-mono text-xs text-text-dim">vs</span>
-                  <span className="font-mono text-[13px] text-text-subtle">{alt}</span>
+                  <span className="font-mono text-sm text-text-subtle line-through decoration-white/20">{alt}</span>
                 </>
               )}
             </div>
-            {reason && <div className="text-[13px] text-text-muted mt-1 leading-snug">{reason}</div>}
+            {reason && <div className="text-[13px] text-text-dim mt-1.5 leading-relaxed pl-0.5">{reason}</div>}
           </div>
         );
       })}
@@ -707,15 +731,17 @@ function FollowupList({ content }: { content: string }) {
   if (pairs.length === 0) return <Shimmer />;
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {pairs.map((pair, i) => (
-        <div key={i} className="py-2 border-b border-border last:border-b-0">
-          <div className="flex items-start gap-3 text-[13px]">
-            <span className="font-mono font-bold text-primary border border-primary/30 px-2 py-0.5 shrink-0">Q{i + 1}</span>
-            <span className="text-text-muted leading-snug">{pair.question}</span>
+        <div key={i}>
+          <div className="flex items-start gap-3 mb-2">
+            <span className="font-mono text-[11px] font-bold text-emerald-900 bg-emerald-400/90 px-2 py-0.5 rounded shrink-0">
+              Q{i + 1}
+            </span>
+            <span className="text-sm font-semibold text-text leading-relaxed">{pair.question}</span>
           </div>
-          <div className="flex items-start gap-3 text-[13px] mt-2 pl-10">
-            <span className="text-text-subtle leading-snug">{pair.answer}</span>
+          <div className="ml-9 border-l-2 border-emerald-500/30 pl-4 py-1">
+            <span className="text-[13px] text-text-muted leading-relaxed">{pair.answer}</span>
           </div>
         </div>
       ))}
