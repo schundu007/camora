@@ -785,12 +785,7 @@ export default function TopicDetail({
               <h3 className="text-lg font-bold text-gray-900 landing-display mb-1">Generate Step-by-Step Tutorial</h3>
               <p className="text-sm text-gray-500 landing-body mb-4">Get an AI-generated complete tutorial with code, architecture, and deployment steps.</p>
               <button
-                onClick={() => {
-                  const prompt = `Generate a complete step-by-step tutorial for building: ${topicDetails.title}\n\nTech stack: ${(topicDetails.techStack || []).join(', ')}\nDifficulty: ${topicDetails.difficulty}\nDescription: ${topicDetails.description}\n\nProvide:\n1. Project setup and file structure\n2. Each implementation step with complete code snippets\n3. Key architectural decisions and why\n4. Testing guidance\n5. Deployment instructions\n\nMake it practical and implementation-focused.`;
-                  setAiQuestion(prompt);
-                  setShowAskAI(true);
-                  handleAskAI(prompt);
-                }}
+                onClick={() => handleAskAI(`Generate a complete step-by-step tutorial for building: ${topicDetails.title}\n\nTech stack: ${(topicDetails.techStack || []).join(', ')}\nDifficulty: ${topicDetails.difficulty}\nDescription: ${topicDetails.description}\n\nProvide:\n1. Project setup and file structure\n2. Each implementation step with complete code snippets\n3. Key architectural decisions and why\n4. Testing guidance\n5. Deployment instructions\n\nMake it practical and implementation-focused.`)}
                 className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold text-white landing-display transition-all hover:opacity-90"
                 style={{ background: 'linear-gradient(135deg, #10b981, #059669)', boxShadow: '0 2px 8px rgba(16,185,129,0.3)' }}
               >
