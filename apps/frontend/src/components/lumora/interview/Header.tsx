@@ -186,14 +186,14 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
           </span>
         </div>
 
-        {/* Audio controls — always in row 1, scrollable if needed */}
-        <div className="flex items-center px-1 h-full flex-1 min-w-0 overflow-x-auto no-scrollbar">
+        {/* Audio controls + Docs — always in row 1, scrollable if needed */}
+        <div className="flex items-center gap-1 px-1 h-full flex-1 min-w-0 overflow-x-auto no-scrollbar">
           <AudioCapture onTranscription={onTranscription} />
+          <DocumentUpload />
         </div>
 
-        {/* Controls — Docs, Search, Reset */}
+        {/* Controls — Search, Reset */}
         <div className="flex items-center gap-0.5 px-1.5 md:px-2 border-l border-gray-800/50 h-full shrink-0">
-          <DocumentUpload />
           <button
             onClick={() => setUseSearch(!useSearch)}
             className={`p-1.5 rounded-lg transition-all duration-150 ${
