@@ -186,13 +186,10 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
           </span>
         </div>
 
-        {/* Audio controls — always in row 1 */}
-        <div className="flex items-center px-1.5 border-r border-gray-800/50 h-full shrink-0 overflow-x-auto no-scrollbar">
+        {/* Audio controls — always in row 1, scrollable if needed */}
+        <div className="flex items-center px-1 h-full flex-1 min-w-0 overflow-x-auto no-scrollbar">
           <AudioCapture onTranscription={onTranscription} />
         </div>
-
-        {/* Spacer */}
-        <div className="flex-1 min-w-0" />
 
         {/* Controls — Docs, Search, Reset */}
         <div className="flex items-center gap-0.5 px-1.5 md:px-2 border-l border-gray-800/50 h-full shrink-0">

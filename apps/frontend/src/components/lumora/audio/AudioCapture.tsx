@@ -284,9 +284,9 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
   }
 
   return (
-    <div className="flex items-center gap-1">
-      {/* Audio Level Indicator - audioLevel is 0-1 normalized */}
-      <div className="flex items-center gap-0.5 px-1">
+    <div className="flex items-center gap-1 flex-nowrap whitespace-nowrap">
+      {/* Audio Level Indicator */}
+      <div className="flex items-center gap-0.5 px-0.5">
         {[0, 1, 2, 3, 4].map((i) => (
           <div
             key={i}
