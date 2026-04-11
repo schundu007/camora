@@ -314,53 +314,63 @@ function StreamingDesignView({ blocks }: { blocks: Record<string, ParsedBlock> }
         )}
       </div>
 
-      {/* Row 1: FUNCTIONAL | NON-FUNCTIONAL | SCALE MATH */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-        <StreamingGridCard title="FUNCTIONAL" titleColor="text-indigo-light" block={blocks.REQUIREMENTS} type="functional" />
-        <StreamingGridCard title="NON-FUNCTIONAL" titleColor="text-violet-light" block={blocks.REQUIREMENTS} type="nonfunctional" />
-        <StreamingGridCard title="SCALE MATH" titleColor="text-emerald-light" block={blocks.SCALEMATH} type="scalemath" className="sm:col-span-2 lg:col-span-1" />
-      </div>
-
-      {/* Row 2: TRADE-OFFS | EDGE CASES */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        <StreamingGridCard title="TRADE-OFFS" titleColor="text-rose-light" block={blocks.TRADEOFFS} type="tradeoffs" />
-        <StreamingGridCard title="EDGE CASES" titleColor="text-amber-light" block={blocks.EDGECASES} type="edgecases" />
-      </div>
-
-      {/* Row 3: ARCHITECTURE — full width */}
-      <div className="border border-cyan/15 bg-cyan/[0.02] overflow-hidden min-w-0">
-        <div className="font-mono text-[10px] font-bold tracking-widest uppercase px-4 pt-4 pb-2 border-b border-border text-cyan-light">
-          ARCHITECTURE
-        </div>
-        <div className="p-4 overflow-y-auto overflow-x-auto max-h-[420px]">
-          {blocks.DIAGRAM && blocks.DIAGRAM.content.trim() && !/^skip/i.test(blocks.DIAGRAM.content.trim()) ? (
-            blocks.DIAGRAM.isComplete ? (
-              <MermaidDiagram content={blocks.DIAGRAM.content} />
-            ) : (
-              <pre className="font-mono text-sm text-cyan-light leading-snug whitespace-pre overflow-x-auto">
-                {blocks.DIAGRAM.content}
-                <Cursor />
-              </pre>
-            )
-          ) : (
-            <ShimmerBlock lines={4} />
-          )}
-        </div>
-      </div>
-
-      {/* Row 4: LAYER DESIGN (3/5) | FOLLOW-UP Q&A (2/5) */}
+      {/* Main 2-column layout: Architecture left, cards right */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-2">
-        <StreamingGridCard title="LAYER DESIGN" titleColor="text-violet-light" block={blocks.DEEPDESIGN} type="deepdesign" className="lg:col-span-3" />
-        <div className="border border-amber/15 bg-amber/[0.02] overflow-hidden min-w-0 lg:col-span-2">
-          <div className="font-mono text-[10px] font-bold tracking-widest uppercase px-4 pt-4 pb-2 border-b border-border text-amber-light">
-            FOLLOW-UP Q&A
+        {/* LEFT: Architecture diagram */}
+        <div className="lg:col-span-2 lg:sticky lg:top-0 lg:self-start">
+          <div className="border border-cyan/15 bg-cyan/[0.02] overflow-hidden min-w-0 flex flex-col h-full">
+            <div className="font-mono text-[10px] font-bold tracking-widest uppercase px-4 pt-4 pb-2 border-b border-border text-cyan-light shrink-0">
+              ARCHITECTURE
+            </div>
+            <div className="p-4 overflow-y-auto overflow-x-auto flex-1">
+              {blocks.DIAGRAM && blocks.DIAGRAM.content.trim() && !/^skip/i.test(blocks.DIAGRAM.content.trim()) ? (
+                blocks.DIAGRAM.isComplete ? (
+                  <MermaidDiagram content={blocks.DIAGRAM.content} />
+                ) : (
+                  <pre className="font-mono text-sm text-cyan-light leading-snug whitespace-pre overflow-x-auto">
+                    {blocks.DIAGRAM.content}
+                    <Cursor />
+                  </pre>
+                )
+              ) : (
+                <ShimmerBlock lines={6} />
+              )}
+            </div>
           </div>
-          <div className="p-4 overflow-y-auto max-h-[420px]">
-            {blocks.FOLLOWUP ? (
-              <StreamingFollowupList content={blocks.FOLLOWUP.content} isComplete={blocks.FOLLOWUP.isComplete} />
-            ) : (
-              <ShimmerBlock lines={4} />
-            )}
+        </div>
+
+        {/* RIGHT: All info cards stacked */}
+        <div className="lg:col-span-3 flex flex-col gap-2">
+          {/* FUNCTIONAL | NON-FUNCTIONAL */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <StreamingGridCard title="FUNCTIONAL" titleColor="text-indigo-light" block={blocks.REQUIREMENTS} type="functional" />
+            <StreamingGridCard title="NON-FUNCTIONAL" titleColor="text-violet-light" block={blocks.REQUIREMENTS} type="nonfunctional" />
+          </div>
+
+          {/* SCALE MATH */}
+          <StreamingGridCard title="SCALE MATH" titleColor="text-emerald-light" block={blocks.SCALEMATH} type="scalemath" />
+
+          {/* TRADE-OFFS | EDGE CASES */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <StreamingGridCard title="TRADE-OFFS" titleColor="text-rose-light" block={blocks.TRADEOFFS} type="tradeoffs" />
+            <StreamingGridCard title="EDGE CASES" titleColor="text-amber-light" block={blocks.EDGECASES} type="edgecases" />
+          </div>
+
+          {/* LAYER DESIGN */}
+          <StreamingGridCard title="LAYER DESIGN" titleColor="text-violet-light" block={blocks.DEEPDESIGN} type="deepdesign" />
+
+          {/* FOLLOW-UP Q&A */}
+          <div className="border border-amber/15 bg-amber/[0.02] overflow-hidden min-w-0">
+            <div className="font-mono text-[10px] font-bold tracking-widest uppercase px-4 pt-4 pb-2 border-b border-border text-amber-light shrink-0">
+              FOLLOW-UP Q&A
+            </div>
+            <div className="p-4 overflow-y-auto max-h-[420px]">
+              {blocks.FOLLOWUP ? (
+                <StreamingFollowupList content={blocks.FOLLOWUP.content} isComplete={blocks.FOLLOWUP.isComplete} />
+              ) : (
+                <ShimmerBlock lines={4} />
+              )}
+            </div>
           </div>
         </div>
       </div>

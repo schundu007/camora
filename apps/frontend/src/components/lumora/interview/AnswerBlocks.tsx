@@ -340,58 +340,68 @@ function SystemDesignView({ blocks }: { blocks: ParsedBlock[] }) {
         </div>
       )}
 
-      {/* Row 1: FUNCTIONAL | NON-FUNCTIONAL | SCALE MATH */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-        <GridCard title="FUNCTIONAL" titleColor="text-indigo-light">
-          {byType.REQUIREMENTS ? (
-            <RequirementsList content={byType.REQUIREMENTS.content} type="functional" />
-          ) : <EmptyBlock />}
-        </GridCard>
-        <GridCard title="NON-FUNCTIONAL" titleColor="text-violet-light">
-          {byType.REQUIREMENTS ? (
-            <RequirementsList content={byType.REQUIREMENTS.content} type="nonfunctional" />
-          ) : <EmptyBlock />}
-        </GridCard>
-        <GridCard title="SCALE MATH" titleColor="text-emerald-light" className="sm:col-span-2 lg:col-span-1">
-          {byType.SCALEMATH ? (
-            <ScaleMathList content={byType.SCALEMATH.content} />
-          ) : <EmptyBlock />}
-        </GridCard>
-      </div>
-
-      {/* Row 2: TRADE-OFFS | EDGE CASES */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        <GridCard title="TRADE-OFFS" titleColor="text-rose-light">
-          {byType.TRADEOFFS ? (
-            <TradeoffsList content={byType.TRADEOFFS.content} />
-          ) : <EmptyBlock />}
-        </GridCard>
-        <GridCard title="EDGE CASES" titleColor="text-amber-light">
-          {byType.EDGECASES ? (
-            <EdgeCasesList content={byType.EDGECASES.content} />
-          ) : <EmptyBlock />}
-        </GridCard>
-      </div>
-
-      {/* Row 3: ARCHITECTURE — full width */}
-      <GridCard title="ARCHITECTURE" titleColor="text-cyan-light" className="border-cyan/15 bg-cyan/[0.02]">
-        {byType.DIAGRAM && byType.DIAGRAM.content.trim() && !/^skip/i.test(byType.DIAGRAM.content.trim()) ? (
-          <MermaidDiagram content={byType.DIAGRAM.content} />
-        ) : <EmptyBlock />}
-      </GridCard>
-
-      {/* Row 4: LAYER DESIGN (2/3) | FOLLOW-UP Q&A (1/3) */}
+      {/* Main 2-column layout: Architecture left, cards right */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-2">
-        <GridCard title="LAYER DESIGN" titleColor="text-violet-light" className="lg:col-span-3">
-          {byType.DEEPDESIGN ? (
-            <DeepDesignList content={byType.DEEPDESIGN.content} />
-          ) : <EmptyBlock />}
-        </GridCard>
-        <GridCard title="FOLLOW-UP Q&A" titleColor="text-amber-light" className="lg:col-span-2 border-amber/15 bg-amber/[0.02]">
-          {byType.FOLLOWUP ? (
-            <FollowupList content={byType.FOLLOWUP.content} />
-          ) : <EmptyBlock />}
-        </GridCard>
+        {/* LEFT: Architecture diagram — sticky, fills height */}
+        <div className="lg:col-span-2 lg:sticky lg:top-0 lg:self-start">
+          <GridCard title="ARCHITECTURE" titleColor="text-cyan-light" className="border-cyan/15 bg-cyan/[0.02] h-full">
+            {byType.DIAGRAM && byType.DIAGRAM.content.trim() && !/^skip/i.test(byType.DIAGRAM.content.trim()) ? (
+              <MermaidDiagram content={byType.DIAGRAM.content} />
+            ) : <EmptyBlock />}
+          </GridCard>
+        </div>
+
+        {/* RIGHT: All info cards stacked */}
+        <div className="lg:col-span-3 flex flex-col gap-2">
+          {/* FUNCTIONAL | NON-FUNCTIONAL */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <GridCard title="FUNCTIONAL" titleColor="text-indigo-light">
+              {byType.REQUIREMENTS ? (
+                <RequirementsList content={byType.REQUIREMENTS.content} type="functional" />
+              ) : <EmptyBlock />}
+            </GridCard>
+            <GridCard title="NON-FUNCTIONAL" titleColor="text-violet-light">
+              {byType.REQUIREMENTS ? (
+                <RequirementsList content={byType.REQUIREMENTS.content} type="nonfunctional" />
+              ) : <EmptyBlock />}
+            </GridCard>
+          </div>
+
+          {/* SCALE MATH */}
+          <GridCard title="SCALE MATH" titleColor="text-emerald-light">
+            {byType.SCALEMATH ? (
+              <ScaleMathList content={byType.SCALEMATH.content} />
+            ) : <EmptyBlock />}
+          </GridCard>
+
+          {/* TRADE-OFFS | EDGE CASES */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <GridCard title="TRADE-OFFS" titleColor="text-rose-light">
+              {byType.TRADEOFFS ? (
+                <TradeoffsList content={byType.TRADEOFFS.content} />
+              ) : <EmptyBlock />}
+            </GridCard>
+            <GridCard title="EDGE CASES" titleColor="text-amber-light">
+              {byType.EDGECASES ? (
+                <EdgeCasesList content={byType.EDGECASES.content} />
+              ) : <EmptyBlock />}
+            </GridCard>
+          </div>
+
+          {/* LAYER DESIGN */}
+          <GridCard title="LAYER DESIGN" titleColor="text-violet-light">
+            {byType.DEEPDESIGN ? (
+              <DeepDesignList content={byType.DEEPDESIGN.content} />
+            ) : <EmptyBlock />}
+          </GridCard>
+
+          {/* FOLLOW-UP Q&A */}
+          <GridCard title="FOLLOW-UP Q&A" titleColor="text-amber-light" className="border-amber/15 bg-amber/[0.02]">
+            {byType.FOLLOWUP ? (
+              <FollowupList content={byType.FOLLOWUP.content} />
+            ) : <EmptyBlock />}
+          </GridCard>
+        </div>
       </div>
     </div>
   );
@@ -450,12 +460,13 @@ function GridCard({
   children: React.ReactNode;
   className?: string;
 }) {
+  const hasFullHeight = className.includes('h-full');
   return (
-    <div className={`border border-border bg-bg2/50 overflow-hidden min-w-0 ${className}`}>
-      <div className={`font-mono text-[10px] font-bold tracking-widest uppercase px-4 pt-4 pb-2 mb-0 border-b border-border ${titleColor}`}>
+    <div className={`border border-border bg-bg2/50 overflow-hidden min-w-0 flex flex-col ${className}`}>
+      <div className={`font-mono text-[10px] font-bold tracking-widest uppercase px-4 pt-4 pb-2 mb-0 border-b border-border shrink-0 ${titleColor}`}>
         {title}
       </div>
-      <div className="p-4 overflow-y-auto overflow-x-auto max-h-[420px]">
+      <div className={`p-4 overflow-y-auto overflow-x-auto flex-1 ${hasFullHeight ? '' : 'max-h-[420px]'}`}>
         {children}
       </div>
     </div>
