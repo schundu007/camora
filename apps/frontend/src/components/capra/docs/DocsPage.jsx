@@ -209,16 +209,19 @@ export default function DocsPage({ onBack }) {
     });
   };
 
-  const handleAskAI = async () => {
-    if (!aiQuestion.trim()) return;
+  const handleAskAI = async (promptOverride) => {
+    const question = promptOverride || aiQuestion;
+    if (!question.trim()) return;
+    if (promptOverride) setAiQuestion(promptOverride);
     setAiLoading(true);
     setAiAnswer('');
+    setShowAskAI(true);
     try {
       const res = await fetch(`${API_URL}/api/solve/followup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({
-          question: aiQuestion,
+          question,
           context: topicDetails ? `Topic: ${topicDetails.title}. ${topicDetails.description || ''} ${topicDetails.introduction || ''}` : '',
           problem: '',
           code: '',
