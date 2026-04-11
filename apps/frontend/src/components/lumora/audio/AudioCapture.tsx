@@ -138,7 +138,7 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
         setIsRecording(true);
         startListenTimer();
         setStatus('listen', 'Live - listening...');
-      }, 500);
+      }, 200);
     }
   }, [setIsRecording, stopListenTimer, startListenTimer, setStatus]);
 
@@ -153,9 +153,9 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
     onAudioLevel: handleAudioLevel,
     onRecordingStop: handleRecordingStop,
     silenceThreshold: threshold,
-    silenceDuration: 2000, // 2s of silence before stopping
-    minSpeechDuration: 500,
-    maxRecordingDuration: 90000, // 90s max for lengthy questions
+    silenceDuration: 800, // 800ms of silence before stopping (was 2000ms — too slow)
+    minSpeechDuration: 300,
+    maxRecordingDuration: 60000, // 60s max
     deviceId: selectedDeviceId,
   });
 
@@ -179,7 +179,7 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
         setIsRecording(true);
         startListenTimer();
         setStatus('listen', 'Live - listening...');
-      }, 500);
+      }, 200);
       return () => clearTimeout(timer);
     }
   }, [autoStart, token, hasAutoStarted, storeIsRecording, continuousMode, setIsRecording, startListenTimer, setStatus]);
@@ -195,7 +195,7 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
         setIsRecording(true);
         startListenTimer();
         setStatus('listen', 'Live - listening...');
-      }, 500);
+      }, 200);
       return () => clearTimeout(timer);
     }
   }, [shouldRestart, continuousMode, setIsRecording, startListenTimer, setStatus]);

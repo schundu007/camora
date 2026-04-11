@@ -137,6 +137,7 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
                 blocks={safeBlocks(history[expandedIdx].blocks)}
                 isDesign={isDesignBlocks(history[expandedIdx].blocks)}
                 isCoding={isCodingBlocks(history[expandedIdx].blocks)}
+                question={history[expandedIdx].question}
               />
             </div>
           )}
@@ -188,6 +189,7 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
                     blocks={safeBlocks(history[history.length - 1].blocks)}
                     isDesign={isDesignBlocks(history[history.length - 1].blocks)}
                     isCoding={isCodingBlocks(history[history.length - 1].blocks)}
+                    question={history[history.length - 1].question}
                   />
                 </div>
               )}

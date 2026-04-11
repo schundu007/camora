@@ -8,11 +8,12 @@ interface AnswerBlocksProps {
   blocks: ParsedBlock[];
   isDesign: boolean;
   isCoding?: boolean;
+  question?: string;
 }
 
-export function AnswerBlocks({ blocks, isDesign, isCoding }: AnswerBlocksProps) {
+export function AnswerBlocks({ blocks, isDesign, isCoding, question }: AnswerBlocksProps) {
   if (isDesign) {
-    return <SystemDesignView blocks={blocks} />;
+    return <SystemDesignView blocks={blocks} question={question} />;
   }
 
   if (isCoding) {
@@ -323,7 +324,7 @@ function TestCasesList({ content }: { content: string }) {
   );
 }
 
-function SystemDesignView({ blocks }: { blocks: ParsedBlock[] }) {
+function SystemDesignView({ blocks, question }: { blocks: ParsedBlock[]; question?: string }) {
   const byType: Record<string, ParsedBlock> = {};
   blocks.forEach(b => { byType[b.type] = b; });
 
@@ -347,7 +348,7 @@ function SystemDesignView({ blocks }: { blocks: ParsedBlock[] }) {
         <div className="lg:col-span-2 lg:sticky lg:top-0 lg:self-start">
           <ArchitectureCard
             mermaidContent={byType.DIAGRAM?.content}
-            question={byType.HEADLINE ? cleanText(byType.HEADLINE.content) : ''}
+            question={question || (byType.HEADLINE ? cleanText(byType.HEADLINE.content) : '')}
           />
         </div>
 
