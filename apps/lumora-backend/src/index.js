@@ -143,7 +143,8 @@ import jobsRouter from './routes/jobs.js';
 // Register routes
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/inference', inferenceRouter);
-app.use('/api/v1', inferenceRouter); // Also mount at /api/v1/stream for backwards compat
+// Backwards compat: /api/v1/stream → forward to inference router's /stream handler
+app.post('/api/v1/stream', (req, res, next) => { req.url = '/stream'; inferenceRouter(req, res, next); });
 app.use('/api/v1/coding', codingRouter);
 app.use('/api/v1/billing', billingRouter);
 app.use('/api/v1/conversations', conversationsRouter);
