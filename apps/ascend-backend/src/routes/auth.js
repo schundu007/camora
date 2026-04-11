@@ -5,6 +5,7 @@ import { createToken, setSSOCookie, clearSSOCookie } from '../lib/shared-auth.js
 import { logger } from '../middleware/requestLogger.js';
 import { authLimiter } from '../middleware/rateLimiter.js';
 import { authenticate, requireAdmin } from '../middleware/authenticate.js';
+import { initUser } from '../config/database.js';
 
 const router = Router();
 
@@ -18,13 +19,6 @@ const FRONTEND_URL = process.env.FRONTEND_URL
   || (process.env.NODE_ENV === 'production'
     ? 'https://capra.cariara.com'
     : 'http://localhost:5173');
-
-/**
- * Initialize Ascend-specific user data (subscription, credits, free usage)
- */
-async function initUser(userId) {
-  await query('SELECT ascend_init_user($1)', [userId]);
-}
 
 /**
  * GET /api/auth/google/login — Redirect to Google OAuth

@@ -233,6 +233,12 @@ async function runMigrations() {
     await query('CREATE INDEX IF NOT EXISTS idx_page_views_email ON page_views(email)');
     console.log('[Migrations] Page views table ensured');
 
+    // Ensure site_visitors table exists (legacy visitor counter)
+    await query(`CREATE TABLE IF NOT EXISTS site_visitors (
+      visit_date DATE PRIMARY KEY,
+      count INTEGER DEFAULT 0
+    )`);
+
     // Ensure owner accounts are admins
     await query("UPDATE users SET is_admin = true WHERE email IN ('chundubabu@gmail.com', 'babuchundu@gmail.com')");
 
@@ -393,12 +399,6 @@ app.get('/health', (req, res) => {
 // Visitor counter — lightweight, no auth required
 app.post('/api/visitors/track', async (req, res) => {
   try {
-    await query(`CREATE TABLE IF NOT EXISTS site_visitors (
-      id SERIAL PRIMARY KEY,
-      visit_date DATE NOT NULL DEFAULT CURRENT_DATE,
-      count INTEGER NOT NULL DEFAULT 0,
-      UNIQUE(visit_date)
-    )`);
     await query(`INSERT INTO site_visitors (visit_date, count) VALUES (CURRENT_DATE, 1)
       ON CONFLICT (visit_date) DO UPDATE SET count = site_visitors.count + 1`);
     const result = await query('SELECT COALESCE(SUM(count), 0) as total FROM site_visitors');
@@ -407,12 +407,6 @@ app.post('/api/visitors/track', async (req, res) => {
 });
 app.get('/api/visitors/count', async (req, res) => {
   try {
-    await query(`CREATE TABLE IF NOT EXISTS site_visitors (
-      id SERIAL PRIMARY KEY,
-      visit_date DATE NOT NULL DEFAULT CURRENT_DATE,
-      count INTEGER NOT NULL DEFAULT 0,
-      UNIQUE(visit_date)
-    )`);
     const result = await query('SELECT COALESCE(SUM(count), 0) as total FROM site_visitors');
     const today = await query('SELECT COALESCE(count, 0) as today FROM site_visitors WHERE visit_date = CURRENT_DATE');
     res.json({ total: parseInt(result.rows[0].total), today: parseInt(today.rows[0]?.today || 0) });
