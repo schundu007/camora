@@ -11,7 +11,7 @@ import { parseAnswer } from './answerParser.js';
 // ---------------------------------------------------------------------------
 const MODEL = process.env.CLAUDE_MODEL || 'claude-haiku-4-5-20251001';
 const MAX_TOKENS_QUICK = parseInt(process.env.MAX_TOKENS_QUICK || '2000', 10);
-const MAX_TOKENS_DESIGN = parseInt(process.env.MAX_TOKENS_DESIGN || '8192', 10);
+const MAX_TOKENS_DESIGN = parseInt(process.env.MAX_TOKENS_DESIGN || '12000', 10);
 const CONTEXT_TURNS = parseInt(process.env.CONTEXT_TURNS || '6', 10);
 
 const client = new Anthropic();  // reads ANTHROPIC_API_KEY from env
@@ -104,6 +104,7 @@ RULES:
 
 function buildInterviewDesignPrompt(resume, technical) {
   return `You are answering a SYSTEM DESIGN interview question.
+CRITICAL: You MUST include ALL sections below. Keep each section concise (3-5 bullets max per section). Do NOT spend all tokens on early sections — distribute content evenly across ALL sections including TRADEOFFS, EDGECASES, and FOLLOWUP.
 
 === MY BACKGROUND ===
 ${resume}

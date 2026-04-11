@@ -138,7 +138,7 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
         </Link>
 
         {/* Tabs */}
-        <div className="flex items-center gap-1 px-2 h-full shrink-0" style={{ borderRight: '1px solid rgba(255,255,255,0.06)' }}>
+        <div data-tour="tabs" className="flex items-center gap-1 px-2 h-full shrink-0" style={{ borderRight: '1px solid rgba(255,255,255,0.06)' }}>
           {TABS.map((tab) => (
             <button
               key={tab.id}
@@ -157,7 +157,7 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
         </div>
 
         {/* Platform */}
-        <div className="hidden lg:flex items-center px-2 h-full shrink-0" style={{ borderRight: '1px solid rgba(255,255,255,0.06)' }}>
+        <div data-tour="platform" className="hidden lg:flex items-center px-2 h-full shrink-0" style={{ borderRight: '1px solid rgba(255,255,255,0.06)' }}>
           <select className="font-display bg-white/5 text-white/70 font-semibold text-[11px] border border-white/10 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-emerald-500/50 cursor-pointer" defaultValue="general">
             <option value="general">General</option>
             <option value="zoom">Zoom</option>
@@ -184,7 +184,7 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
         </div>
 
         {/* Audio + Docs */}
-        <div className="flex items-center gap-1 px-1.5 h-full flex-1 min-w-0 overflow-x-auto no-scrollbar">
+        <div data-tour="audio" className="flex items-center gap-1 px-1.5 h-full flex-1 min-w-0 overflow-x-auto no-scrollbar">
           <AudioCapture onTranscription={onTranscription} />
           <DocumentUpload />
         </div>
@@ -222,7 +222,7 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
       </div>
 
       {/* Row 2: Input bar with subtle emerald accent */}
-      <div className="flex items-center h-[36px]" style={{ borderTop: '1px solid rgba(16,185,129,0.06)', background: 'rgba(16,185,129,0.02)' }}>
+      <div data-tour="input" className="flex items-center h-[36px]" style={{ borderTop: '1px solid rgba(16,185,129,0.06)', background: 'rgba(16,185,129,0.02)' }}>
         <div className="flex-1 flex items-center justify-center px-3 min-w-0">
           <input
             ref={inputRef}

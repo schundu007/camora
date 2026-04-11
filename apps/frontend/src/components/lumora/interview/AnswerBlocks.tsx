@@ -3,6 +3,7 @@ import hljs from 'highlight.js';
 import type { ParsedBlock } from '@/types';
 import { MermaidDiagram } from './MermaidDiagram';
 import { ArchitectureDiagram } from './ArchitectureDiagram';
+import { cleanText } from '@/lib/text-utils';
 
 interface AnswerBlocksProps {
   blocks: ParsedBlock[];
@@ -347,7 +348,6 @@ function SystemDesignView({ blocks, question }: { blocks: ParsedBlock[]; questio
         {/* LEFT: Architecture diagram — sticky, fills height */}
         <div className="lg:col-span-2 lg:sticky lg:top-0 lg:self-start">
           <ArchitectureCard
-            mermaidContent={byType.DIAGRAM?.content}
             question={question || (byType.HEADLINE ? cleanText(byType.HEADLINE.content) : '')}
           />
         </div>
@@ -408,48 +408,6 @@ function SystemDesignView({ blocks, question }: { blocks: ParsedBlock[]; questio
   );
 }
 
-function SDCard({
-  title,
-  titleColor,
-  children,
-  className = '',
-}: {
-  title: string;
-  titleColor: string;
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <div className={`rounded-md border border-border bg-surface p-2 ${className}`}>
-      <div className={`font-display text-[10px] font-bold tracking-[0.1em] uppercase mb-1 pb-1 border-b border-border ${titleColor}`}>
-        {title}
-      </div>
-      {children}
-    </div>
-  );
-}
-
-function FitCard({
-  title,
-  titleColor,
-  children,
-  className = '',
-}: {
-  title: string;
-  titleColor: string;
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <div className={`rounded-md border border-border bg-surface p-3 w-fit shrink-0 ${className}`}>
-      <div className={`font-display text-xs font-bold tracking-[0.1em] uppercase mb-2 pb-1 border-b border-border ${titleColor}`}>
-        {title}
-      </div>
-      {children}
-    </div>
-  );
-}
-
 function GridCard({
   title,
   titleColor,
@@ -474,7 +432,7 @@ function GridCard({
   );
 }
 
-function ArchitectureCard({ question }: { mermaidContent?: string; question: string }) {
+function ArchitectureCard({ question }: { question: string }) {
   return (
     <div className="border border-cyan/15 bg-cyan/[0.02] overflow-hidden min-w-0 flex flex-col h-full">
       <div className="font-mono text-[10px] font-bold tracking-widest uppercase px-4 pt-4 pb-2 border-b border-border text-cyan-light shrink-0">
@@ -599,7 +557,9 @@ function DeepDesignList({ content }: { content: string }) {
             <div className="space-y-0.5 pl-7">
               {layer.bullets.map((bullet, j) => (
                 <div key={j} className="flex items-start gap-1.5">
-                  <span className="w-1 h-1 rounded-full bg-violet/40 shrink-0 mt-1.5" />
+                  <svg className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
                   <span className="text-[12px] text-text-muted leading-relaxed">{bullet}</span>
                 </div>
               ))}
@@ -737,15 +697,6 @@ function Shimmer() {
 }
 
 // Helpers
-function cleanText(s: string): string {
-  return (s || '')
-    .replace(/^#{1,4}\s+.*$/gm, '')
-    .replace(/^\s*[-*]{3,}\s*$/gm, '')
-    .replace(/\*\*/g, '')
-    .replace(/\*/g, '')
-    .trim();
-}
-
 function parseFollowups(content: string): { question: string; answer: string }[] {
   const lines = content.split('\n').map(l => l.trim()).filter(Boolean);
   const pairs: { question: string; answer: string }[] = [];

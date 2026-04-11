@@ -57,3 +57,16 @@ export const INPUT_LIMITS = {
   MAX_QUESTION_LENGTH: 10000,
   MIN_QUESTION_LENGTH: 3,
 } as const;
+
+/** Shared navigation links used by SiteNav and SiteFooter */
+export const NAV_LINKS = [
+  { label: 'Apply', href: '/jobs' },
+  { label: 'Prepare', href: '/capra/prepare' },
+  { label: 'Practice', href: '/capra/practice' },
+  { label: 'Attend', href: '/lumora' },
+  { label: 'Pricing', href: '/pricing' },
+  { label: 'Challenge', href: '/challenge' },
+];
+
+/** Challenge campaign dates */
+export const CHALLENGE_END = new Date('2026-10-07T23:59:59Z');
