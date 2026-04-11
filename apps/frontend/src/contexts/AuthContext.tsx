@@ -173,26 +173,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     init();
   }, []);
 
-  // Fetch subscription status when token becomes available
-  useEffect(() => {
-    if (!token) { setSubscriptionLoading(false); setSubscription({ plan: 'free' }); return; }
-    (async () => {
-      try {
-        const res = await fetch(`${LUMORA_API_URL}/api/v1/billing/subscription`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (res.ok) {
-          const data = await res.json();
-          setSubscription({ plan: data.plan || data.plan_type || 'free', status: data.status });
-        } else {
-          setSubscription({ plan: 'free' });
-        }
-      } catch {
+  // Fetch subscription status
+  const fetchSubscription = useCallback(async (authToken: string) => {
+    try {
+      const res = await fetch(`${LUMORA_API_URL}/api/v1/billing/subscription`, {
+        headers: { Authorization: `Bearer ${authToken}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSubscription({ plan: data.plan || data.plan_type || 'free', status: data.status });
+      } else {
         setSubscription({ plan: 'free' });
       }
-      setSubscriptionLoading(false);
-    })();
-  }, [token]);
+    } catch {
+      setSubscription({ plan: 'free' });
+    }
+    setSubscriptionLoading(false);
+  }, []);
+
+  // Fetch on token availability
+  useEffect(() => {
+    if (!token) { setSubscriptionLoading(false); setSubscription({ plan: 'free' }); return; }
+    fetchSubscription(token);
+  }, [token, fetchSubscription]);
+
+  // Refresh subscription after Stripe checkout return (URL contains session_id)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('session_id') && token) {
+      // Delay to allow webhook to process
+      const timer = setTimeout(() => fetchSubscription(token), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [token, fetchSubscription]);
+
+  // Public method to force subscription refresh (e.g., after payment)
+  const refreshSubscription = useCallback(() => {
+    if (token) fetchSubscription(token);
+  }, [token, fetchSubscription]);
 
   const logout = useCallback(() => {
     setToken(null);
@@ -204,7 +222,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ token, isAuthenticated: !!token, isLoading, user, onboardingCompleted, subscription, subscriptionLoading, logout }}>
+    <AuthContext.Provider value={{ token, isAuthenticated: !!token, isLoading, user, onboardingCompleted, subscription, subscriptionLoading, logout, refreshSubscription }}>
       {children}
     </AuthContext.Provider>
   );

@@ -157,9 +157,21 @@ router.post('/stream', validate('solve'), async (req, res, next) => {
           }, 'Feature access granted');
         }
       } catch (jwtError) {
-        // JWT verification failed - might be Electron user, continue
-        logger.debug({ error: jwtError.message }, 'JWT verification skipped (likely Electron)');
+        // JWT verification failed — reject request (Electron support removed)
+        logger.warn({ error: jwtError.message }, 'JWT verification failed in solve stream');
+        res.setHeader('Content-Type', 'text/event-stream');
+        res.write(`data: ${JSON.stringify({ error: 'Authentication failed. Please log in again.' })}\n\n`);
+        res.end();
+        return;
       }
+    }
+
+    // Reject unauthenticated requests that somehow passed middleware
+    if (!webappUserId) {
+      res.setHeader('Content-Type', 'text/event-stream');
+      res.write(`data: ${JSON.stringify({ error: 'Authentication required.' })}\n\n`);
+      res.end();
+      return;
     }
 
     // Select model based on user plan — free users get Haiku, paid users get Sonnet

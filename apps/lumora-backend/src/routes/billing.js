@@ -281,14 +281,18 @@ router.post(
       return res.status(400).json({ error: 'Webhook signature verification failed' });
     }
 
-    // Idempotency: skip already-processed events
+    // Idempotency: atomic insert — only proceed if this is a new event
     try {
-      const dup = await query('SELECT 1 FROM lumora_stripe_events WHERE event_id = $1', [event.id]);
-      if (dup.rows.length > 0) {
+      const inserted = await query(
+        'INSERT INTO lumora_stripe_events (event_id, type, created_at) VALUES ($1, $2, NOW()) ON CONFLICT (event_id) DO NOTHING RETURNING event_id',
+        [event.id, event.type],
+      );
+      if (inserted.rows.length === 0) {
+        // Already processed — skip
         return res.json({ received: true });
       }
     } catch (_err) {
-      // Table may not exist yet — continue processing
+      // Table may not exist yet — continue processing (migrations may not have run)
     }
 
     const data = event.data.object;
@@ -339,12 +343,26 @@ router.post(
         case 'customer.subscription.updated': {
           const customerId = data.customer;
           const status = data.status; // active | past_due | canceled | unpaid
+          // Derive plan_type from the subscription's price
+          const subPriceId = data.items?.data?.[0]?.price?.id;
+          const PRICE_M = process.env.STRIPE_PRICE_MONTHLY;
+          const PRICE_L = process.env.STRIPE_PRICE_LIFETIME;
+          let planType = null;
+          if (subPriceId === PRICE_M) planType = 'monthly';
+          else if (subPriceId === PRICE_L) planType = 'lifetime';
           if (customerId) {
-            await query(
-              'UPDATE users SET plan_status = $1 WHERE stripe_customer_id = $2',
-              [status, customerId],
-            );
-            console.log(`Subscription updated to ${status} for customer ${customerId}`);
+            if (planType) {
+              await query(
+                'UPDATE users SET plan_status = $1, plan_type = $2 WHERE stripe_customer_id = $3',
+                [status, planType, customerId],
+              );
+            } else {
+              await query(
+                'UPDATE users SET plan_status = $1 WHERE stripe_customer_id = $2',
+                [status, customerId],
+              );
+            }
+            console.log(`Subscription updated to ${status}${planType ? ` (${planType})` : ''} for customer ${customerId}`);
           }
           break;
         }
@@ -396,16 +414,6 @@ router.post(
         default:
           // Unhandled event type — acknowledge receipt
           break;
-      }
-
-      // Record processed event for idempotency
-      try {
-        await query(
-          'INSERT INTO lumora_stripe_events (event_id, type, created_at) VALUES ($1, $2, NOW()) ON CONFLICT DO NOTHING',
-          [event.id, event.type],
-        );
-      } catch (_err) {
-        // Table may not exist yet — non-fatal
       }
 
       return res.json({ received: true });

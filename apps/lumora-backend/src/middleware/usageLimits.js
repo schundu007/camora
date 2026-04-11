@@ -30,7 +30,10 @@ export function checkUsage(type) {
       next();
     } catch (err) {
       console.error('Usage check error:', err.message);
-      next(); // Don't block on usage check errors
+      // Fail closed — deny access when usage system is unavailable
+      return res.status(503).json({
+        error: 'Usage system temporarily unavailable. Please try again.',
+      });
     }
   };
 }
