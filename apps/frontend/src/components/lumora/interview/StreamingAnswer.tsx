@@ -322,19 +322,13 @@ function StreamingDesignView({ blocks }: { blocks: Record<string, ParsedBlock> }
             <div className="font-mono text-[10px] font-bold tracking-widest uppercase px-4 pt-4 pb-2 border-b border-border text-cyan-light shrink-0">
               ARCHITECTURE
             </div>
-            <div className="p-4 overflow-y-auto overflow-x-auto flex-1">
-              {blocks.DIAGRAM && blocks.DIAGRAM.content.trim() && !/^skip/i.test(blocks.DIAGRAM.content.trim()) ? (
-                blocks.DIAGRAM.isComplete ? (
-                  <MermaidDiagram content={blocks.DIAGRAM.content} />
-                ) : (
-                  <pre className="font-mono text-sm text-cyan-light leading-snug whitespace-pre overflow-x-auto">
-                    {blocks.DIAGRAM.content}
-                    <Cursor />
-                  </pre>
-                )
-              ) : (
-                <ShimmerBlock lines={6} />
-              )}
+            <div className="p-4 overflow-y-auto overflow-x-auto flex-1 flex flex-col items-center justify-center">
+              <div className="text-center py-6">
+                <svg className="w-10 h-10 text-cyan-300/30 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+                <p className="text-xs text-gray-400 font-mono">Diagram generates after answer completes</p>
+              </div>
             </div>
           </div>
         </div>
