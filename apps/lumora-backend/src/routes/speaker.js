@@ -31,19 +31,26 @@ router.post('/enroll', upload.single('audio'), async (req, res) => {
 
     // Reconstruct multipart form data for the upstream service
     const formData = new FormData();
-    formData.append('audio', new Blob([req.file.buffer], { type: req.file.mimetype }), req.file.originalname);
-    formData.append('user_id', req.user.id);
+    const blob = new Blob([req.file.buffer], { type: req.file.mimetype || 'audio/webm' });
+    formData.append('audio', blob, req.file.originalname || 'enrollment.webm');
+    formData.append('user_id', String(req.user.id));
 
-    const upstream = await proxyToAIService('/speaker/enroll', {
-      method: 'POST',
-      body: formData,
-    });
+    let upstream;
+    try {
+      upstream = await proxyToAIService('/speaker/enroll', {
+        method: 'POST',
+        body: formData,
+      });
+    } catch (proxyErr) {
+      console.error('speaker enroll proxy connection error:', proxyErr.message);
+      return res.status(502).json({ error: 'AI services unreachable. Speaker verification service may not be running.' });
+    }
 
     const data = await upstream.json();
     return res.status(upstream.status).json(data);
   } catch (err) {
-    console.error('speaker enroll proxy error:', err);
-    return res.status(502).json({ error: 'Failed to reach ai-services' });
+    console.error('speaker enroll error:', err.message || err);
+    return res.status(500).json({ error: 'Speaker enrollment failed: ' + (err.message || 'unknown error') });
   }
 });
 
