@@ -129,17 +129,16 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
 
   return (
     <header className="bg-gray-900/80 backdrop-blur-xl border-b border-gray-800/50 z-50 shrink-0">
-      <div className="flex flex-wrap items-center h-auto md:h-[44px]">
+      {/* Row 1: Nav + Audio + Controls — single row */}
+      <div className="flex items-center h-[44px]">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-1.5 px-3 border-r border-gray-800/50 h-[44px] shrink-0">
+        <Link to="/" className="flex items-center gap-1.5 px-3 border-r border-gray-800/50 h-full shrink-0">
           <CamoraLogo size={24} />
-          <div className="hidden sm:block">
-            <span className="font-display font-bold text-xs md:text-sm tracking-tight text-white" style={{ fontFamily: "'Comfortaa', sans-serif" }}>Camora</span>
-          </div>
+          <span className="hidden sm:block font-display font-bold text-xs md:text-sm tracking-tight text-white" style={{ fontFamily: "'Comfortaa', sans-serif" }}>Camora</span>
         </Link>
 
         {/* Tabs */}
-        <div className="flex items-center gap-0.5 px-1.5 md:px-2 h-[44px] shrink-0 border-r border-gray-800/50 overflow-x-auto no-scrollbar">
+        <div className="flex items-center gap-0.5 px-1.5 md:px-2 h-full shrink-0 border-r border-gray-800/50">
           {TABS.map((tab) => (
             <button
               key={tab.id}
@@ -158,7 +157,7 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
         </div>
 
         {/* Platform Selector */}
-        <div className="hidden lg:flex items-center px-1.5 border-r border-gray-800/50 h-[44px] shrink-0">
+        <div className="hidden lg:flex items-center px-1.5 border-r border-gray-800/50 h-full shrink-0">
           <select
             className="font-display bg-white/10 text-white font-bold text-[10px] border border-gray-700/50 rounded-lg px-1.5 py-1 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer backdrop-blur-sm"
             defaultValue="general"
@@ -174,7 +173,7 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
         </div>
 
         {/* Status */}
-        <div className="hidden lg:flex items-center gap-1.5 px-2 border-r border-gray-800/50 h-[44px] shrink-0 max-w-[120px]">
+        <div className="hidden lg:flex items-center gap-1.5 px-2 border-r border-gray-800/50 h-full shrink-0 max-w-[120px]">
           <div className={`w-2 h-2 rounded-full shrink-0 transition-all duration-300 ${
             status.state === 'ready' ? 'bg-emerald-400' :
             status.state === 'error' ? 'bg-red-500' :
@@ -187,47 +186,16 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
           </span>
         </div>
 
-        {/* Audio + Input — inline on desktop, wraps to row 2 on mobile */}
-        <div className="flex items-center order-last w-full md:order-none md:w-auto md:flex-1 h-[38px] md:h-[44px] border-t md:border-t-0 border-gray-800/50 min-w-0">
-          <div className="flex items-center px-1.5 border-r border-gray-800/50 h-full shrink-0 overflow-x-auto no-scrollbar">
-            <AudioCapture onTranscription={onTranscription} />
-          </div>
-          <div className="flex-1 flex items-center px-2 md:px-3 min-w-0">
-            <input
-              ref={inputRef}
-              type="text"
-              value={inputValue}
-              onChange={(e) => onInputChange(e.target.value)}
-              onKeyDown={handleInputKeyDown}
-              placeholder="Type or paste question... (⌘K)"
-              className="font-display flex-1 bg-transparent border-none outline-none text-xs md:text-sm text-white placeholder:text-gray-400 min-w-0"
-            />
-            <button
-              onClick={toggleExpand}
-              className={`p-1.5 rounded-lg transition-all duration-150 ml-1 shrink-0 ${
-                isExpanded ? 'text-emerald-400 bg-emerald-500/10' : 'text-gray-400 hover:text-white hover:bg-white/10'
-              }`}
-              title={isExpanded ? 'Collapse textarea' : 'Expand for multi-line input'}
-            >
-              <ExpandIcon expanded={isExpanded} />
-            </button>
-            {inputValue && (
-              <button
-                onClick={onSubmit}
-                className="font-display flex items-center gap-1.5 px-3 py-1 text-white text-xs font-bold rounded-xl hover:opacity-90 transition-all ml-2"
-                style={{ background: 'linear-gradient(135deg, #10b981, #059669)', boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)' }}
-              >
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
-                Ask
-              </button>
-            )}
-          </div>
+        {/* Audio controls — always in row 1 */}
+        <div className="flex items-center px-1.5 border-r border-gray-800/50 h-full shrink-0 overflow-x-auto no-scrollbar">
+          <AudioCapture onTranscription={onTranscription} />
         </div>
 
-        {/* Controls */}
-        <div className="flex items-center gap-0.5 px-1.5 md:px-2 border-l border-gray-800/50 h-[44px] shrink-0">
+        {/* Spacer */}
+        <div className="flex-1 min-w-0" />
+
+        {/* Controls — Docs, Search, Reset */}
+        <div className="flex items-center gap-0.5 px-1.5 md:px-2 border-l border-gray-800/50 h-full shrink-0">
           <DocumentUpload />
           <button
             onClick={() => setUseSearch(!useSearch)}
@@ -251,8 +219,44 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
         </div>
 
         {/* User info */}
-        <div className="flex items-center gap-1.5 px-2 border-l border-gray-800/50 h-[44px] shrink-0">
+        <div className="flex items-center gap-1.5 px-2 border-l border-gray-800/50 h-full shrink-0">
           <UserBadge />
+        </div>
+      </div>
+
+      {/* Row 2: Input bar — always its own row */}
+      <div className="flex items-center h-[36px] border-t border-gray-800/50">
+        <div className="flex-1 flex items-center px-3 min-w-0">
+          <input
+            ref={inputRef}
+            type="text"
+            value={inputValue}
+            onChange={(e) => onInputChange(e.target.value)}
+            onKeyDown={handleInputKeyDown}
+            placeholder="Type or paste question... (⌘K)"
+            className="font-display flex-1 bg-transparent border-none outline-none text-sm text-white placeholder:text-gray-500 min-w-0"
+          />
+          <button
+            onClick={toggleExpand}
+            className={`p-1.5 rounded-lg transition-all duration-150 ml-1 shrink-0 ${
+              isExpanded ? 'text-emerald-400 bg-emerald-500/10' : 'text-gray-400 hover:text-white hover:bg-white/10'
+            }`}
+            title={isExpanded ? 'Collapse textarea' : 'Expand for multi-line input'}
+          >
+            <ExpandIcon expanded={isExpanded} />
+          </button>
+          {inputValue && (
+            <button
+              onClick={onSubmit}
+              className="font-display flex items-center gap-1.5 px-3 py-1 text-white text-xs font-bold rounded-xl hover:opacity-90 transition-all ml-2"
+              style={{ background: 'linear-gradient(135deg, #10b981, #059669)', boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)' }}
+            >
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+              Ask
+            </button>
+          )}
         </div>
       </div>
 

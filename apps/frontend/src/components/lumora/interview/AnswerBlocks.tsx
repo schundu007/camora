@@ -585,21 +585,21 @@ function DeepDesignList({ content }: { content: string }) {
   });
 
   return (
-    <div className="space-y-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
       {layers.map((layer, i) => (
         <div key={i}>
-          <div className="flex items-center gap-2.5 mb-1.5">
-            <span className="font-mono text-[11px] font-bold text-violet-light bg-violet/10 w-6 h-6 flex items-center justify-center rounded shrink-0">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="font-mono text-[11px] font-bold text-violet-light bg-violet/10 w-5 h-5 flex items-center justify-center rounded shrink-0">
               {layer.num}
             </span>
             <span className="text-sm font-bold text-text leading-snug">{layer.title}</span>
           </div>
           {layer.bullets.length > 0 && (
-            <div className="space-y-1 pl-8">
+            <div className="space-y-0.5 pl-7">
               {layer.bullets.map((bullet, j) => (
-                <div key={j} className="flex items-start gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-violet/40 shrink-0 mt-1.5" />
-                  <span className="text-[13px] text-text-muted leading-relaxed">{bullet}</span>
+                <div key={j} className="flex items-start gap-1.5">
+                  <span className="w-1 h-1 rounded-full bg-violet/40 shrink-0 mt-1.5" />
+                  <span className="text-[12px] text-text-muted leading-relaxed">{bullet}</span>
                 </div>
               ))}
             </div>
