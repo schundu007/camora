@@ -37,7 +37,7 @@ router.get('/usage', async (req, res, next) => {
          COALESCE(SUM(total_tokens), 0)        AS total_tokens,
          COALESCE(SUM(cost_usd), 0)            AS total_cost_usd,
          COALESCE(AVG(latency_ms), 0)          AS avg_latency_ms
-       FROM usage_logs
+       FROM lumora_usage_logs
        WHERE user_id = $1
          AND created_at >= NOW() - ($2 || ' days')::INTERVAL
          AND success = true`,
@@ -54,7 +54,7 @@ router.get('/usage', async (req, res, next) => {
          COALESCE(SUM(total_tokens), 0)        AS tokens,
          COALESCE(SUM(cost_usd), 0)            AS cost_usd,
          COALESCE(AVG(latency_ms), 0)          AS avg_latency_ms
-       FROM usage_logs
+       FROM lumora_usage_logs
        WHERE user_id = $1
          AND created_at >= NOW() - ($2 || ' days')::INTERVAL
          AND success = true
@@ -75,7 +75,7 @@ router.get('/usage', async (req, res, next) => {
          COUNT(*) FILTER (
            WHERE created_at >= DATE_TRUNC('month', NOW())
          ) AS this_month
-       FROM usage_logs
+       FROM lumora_usage_logs
        WHERE user_id = $1
          AND success = true`,
       [userId],
@@ -117,7 +117,7 @@ router.get('/quota', async (req, res, next) => {
 
     // Try the quotas table first
     const quotaResult = await query(
-      'SELECT * FROM quotas WHERE user_id = $1 LIMIT 1',
+      'SELECT * FROM lumora_quotas WHERE user_id = $1 LIMIT 1',
       [userId],
     );
 
@@ -150,7 +150,7 @@ router.get('/quota', async (req, res, next) => {
     const FREE_DAILY_LIMIT = 10;
     const dailyResult = await query(
       `SELECT COUNT(*) AS cnt
-       FROM usage_logs
+       FROM lumora_usage_logs
        WHERE user_id = $1
          AND created_at >= (CURRENT_DATE AT TIME ZONE 'UTC')
          AND success = true`,

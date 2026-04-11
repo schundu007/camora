@@ -226,11 +226,11 @@ router.get('/profile/stats', authenticate, async (req, res) => {
     const profile = await getOrCreateProfile(req.user.id);
 
     const bmResult = await query(
-      'SELECT COUNT(*) AS count FROM bookmarks WHERE user_id = $1',
+      'SELECT COUNT(*) AS count FROM lumora_bookmarks WHERE user_id = $1',
       [req.user.id],
     );
     const cmResult = await query(
-      'SELECT COUNT(*) AS count FROM completion_marks WHERE user_id = $1',
+      'SELECT COUNT(*) AS count FROM lumora_completion_marks WHERE user_id = $1',
       [req.user.id],
     );
 

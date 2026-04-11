@@ -413,21 +413,36 @@ function GridCard({
   titleColor,
   children,
   className = '',
+  collapsible = true,
 }: {
   title: string;
   titleColor: string;
   children: React.ReactNode;
   className?: string;
+  collapsible?: boolean;
 }) {
+  const [collapsed, setCollapsed] = useState(false);
   const hasFullHeight = className.includes('h-full');
   return (
     <div className={`border border-border bg-bg2/50 overflow-hidden min-w-0 flex flex-col rounded-lg ${className}`}>
-      <div className={`font-mono text-[10px] font-bold tracking-widest uppercase px-4 pt-4 pb-2 mb-0 border-b border-border shrink-0 ${titleColor}`}>
-        {title}
-      </div>
-      <div className={`p-4 overflow-y-auto overflow-x-auto flex-1 ${hasFullHeight ? '' : 'max-h-[420px]'}`}>
-        {children}
-      </div>
+      <button
+        onClick={() => collapsible && setCollapsed(!collapsed)}
+        className={`flex items-center justify-between px-4 pt-3 pb-2 border-b border-border shrink-0 w-full text-left ${collapsible ? 'cursor-pointer hover:bg-white/[0.02]' : 'cursor-default'}`}
+      >
+        <span className={`font-mono text-[10px] font-bold tracking-widest uppercase ${titleColor}`}>
+          {title}
+        </span>
+        {collapsible && (
+          <svg className={`w-3.5 h-3.5 transition-transform duration-200 ${collapsed ? '' : 'rotate-180'}`} style={{ color: 'rgba(255,255,255,0.25)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
+        )}
+      </button>
+      {!collapsed && (
+        <div className={`p-4 overflow-y-auto overflow-x-auto flex-1 ${hasFullHeight ? '' : 'max-h-[420px]'}`}>
+          {children}
+        </div>
+      )}
     </div>
   );
 }
@@ -471,10 +486,18 @@ function RequirementsList({ content, type }: { content: string; type: 'functiona
   });
 
   return (
-    <ul className="space-y-2.5">
+    <ul className="space-y-2">
       {items.map((item, i) => (
-        <li key={i} className="flex items-start gap-3 text-sm text-text-muted leading-relaxed">
-          <span className={`w-2.5 h-2.5 rounded-full shrink-0 mt-1 ${type === 'functional' ? 'bg-emerald-400' : 'bg-emerald-500/70'}`} />
+        <li key={i} className="flex items-start gap-2.5 text-sm text-text-muted leading-relaxed">
+          {type === 'functional' ? (
+            <svg className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+              <circle cx="10" cy="10" r="4" />
+            </svg>
+          ) : (
+            <svg className="w-4 h-4 text-violet-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 20 20" strokeWidth={2}>
+              <rect x="5" y="5" width="10" height="10" rx="2" />
+            </svg>
+          )}
           {item}
         </li>
       ))}

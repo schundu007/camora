@@ -7,6 +7,28 @@ import { logger } from '../middleware/requestLogger.js';
 
 const router = Router();
 
+// SECURITY: Allowed redirect domains for Stripe checkout/portal callbacks
+const ALLOWED_REDIRECT_DOMAINS = [
+  'capra.cariara.com',
+  'www.capra.cariara.com',
+  'camora.cariara.com',
+  'cariara.com',
+  'www.cariara.com',
+  'localhost',
+  '127.0.0.1',
+];
+
+function isAllowedRedirectUrl(url) {
+  try {
+    const parsed = new URL(url);
+    return ALLOWED_REDIRECT_DOMAINS.some(domain =>
+      parsed.hostname === domain || parsed.hostname.endsWith('.' + domain)
+    );
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Get pricing information
  * GET /api/billing/prices
@@ -61,27 +83,7 @@ router.post('/checkout', jwtAuth, async (req, res) => {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    // SECURITY: Validate redirect URLs against allowed domains to prevent open redirects
-    const ALLOWED_REDIRECT_DOMAINS = [
-      'capra.cariara.com',
-      'www.capra.cariara.com',
-      'cariara.com',
-      'www.cariara.com',
-      'localhost',
-      '127.0.0.1',
-    ];
-
-    function isAllowedRedirectUrl(url) {
-      try {
-        const parsed = new URL(url);
-        return ALLOWED_REDIRECT_DOMAINS.some(domain =>
-          parsed.hostname === domain || parsed.hostname.endsWith('.' + domain)
-        );
-      } catch {
-        return false;
-      }
-    }
-
+    // SECURITY: Validate redirect URLs against allowed domains
     if (!isAllowedRedirectUrl(successUrl) || !isAllowedRedirectUrl(cancelUrl)) {
       return res.status(400).json({ error: 'Invalid redirect URL domain' });
     }
@@ -199,15 +201,8 @@ router.post('/portal', jwtAuth, async (req, res) => {
     }
 
     // SECURITY: Validate returnUrl against allowed domains
-    try {
-      const parsed = new URL(returnUrl);
-      const allowedDomains = ['capra.cariara.com', 'www.capra.cariara.com', 'cariara.com', 'www.cariara.com', 'localhost', '127.0.0.1'];
-      const isAllowed = allowedDomains.some(d => parsed.hostname === d || parsed.hostname.endsWith('.' + d));
-      if (!isAllowed) {
-        return res.status(400).json({ error: 'Invalid return URL domain' });
-      }
-    } catch {
-      return res.status(400).json({ error: 'Invalid return URL' });
+    if (!isAllowedRedirectUrl(returnUrl)) {
+      return res.status(400).json({ error: 'Invalid return URL domain' });
     }
 
     // Get Stripe customer ID
