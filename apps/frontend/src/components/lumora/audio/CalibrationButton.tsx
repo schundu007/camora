@@ -27,7 +27,7 @@ export function CalibrationButton({ deviceId, disabled }: CalibrationButtonProps
     <button
       onClick={handleCalibrate}
       disabled={isCalibrating || disabled}
-      className="flex items-center gap-1 px-2 py-1 text-xs font-bold text-white hover:text-white border border-gray-500 rounded transition-colors"
+      className="flex items-center gap-1 px-2 py-1 text-xs font-bold text-white hover:text-white border border-gray-500 rounded transition-colors shrink-0"
       title="Calibrate VAD threshold based on ambient noise"
     >
       {isCalibrating ? (
@@ -36,7 +36,12 @@ export function CalibrationButton({ deviceId, disabled }: CalibrationButtonProps
           <span className="hidden lg:inline">Calibrating...</span>
         </>
       ) : (
-        <span className="hidden xl:inline">Calibrate</span>
+        <>
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75" />
+          </svg>
+          <span className="hidden xl:inline">Calibrate</span>
+        </>
       )}
       {error && <span className="text-rose-light ml-1">!</span>}
     </button>

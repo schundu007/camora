@@ -84,7 +84,7 @@ export function DocumentUpload() {
     <div className="relative" ref={containerRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center gap-1 px-2 py-1 text-sm font-bold rounded border transition-colors ${documents.length > 0 ? 'bg-emerald-500 text-white border-emerald-600' : 'text-white hover:text-white border-gray-600'}`}
+        className={`flex items-center gap-1 px-2 py-1 text-sm font-bold rounded border transition-colors shrink-0 ${documents.length > 0 ? 'bg-emerald-500 text-white border-emerald-600' : 'text-white hover:text-white border-gray-600'}`}
         title={`Prep docs (${documents.length})`}
       >
         <DocIcon />
