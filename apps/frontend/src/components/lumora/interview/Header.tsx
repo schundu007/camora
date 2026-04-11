@@ -35,6 +35,8 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
   const location = useLocation();
   const { status, useSearch, setUseSearch, isRecording, history, clearHistory } = useInterviewStore();
   const inputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   // Derive active tab from URL if not explicitly provided
   const currentTab: TabType = activeTab ?? (
@@ -83,6 +85,27 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
   const handleInputKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       onSubmit();
+    }
+  };
+
+  const handleTextareaKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+      onSubmit();
+      setIsExpanded(false);
+    }
+  };
+
+  const handleTextareaSubmit = () => {
+    onSubmit();
+    setIsExpanded(false);
+  };
+
+  const toggleExpand = () => {
+    const next = !isExpanded;
+    setIsExpanded(next);
+    if (next) {
+      // Focus textarea after expansion renders
+      requestAnimationFrame(() => textareaRef.current?.focus());
     }
   };
 
@@ -179,6 +202,15 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
               placeholder="Type or paste question... (⌘K)"
               className="font-display flex-1 bg-transparent border-none outline-none text-xs md:text-sm text-white placeholder:text-gray-400 min-w-0"
             />
+            <button
+              onClick={toggleExpand}
+              className={`p-1.5 rounded-lg transition-all duration-150 ml-1 shrink-0 ${
+                isExpanded ? 'text-emerald-400 bg-emerald-500/10' : 'text-gray-400 hover:text-white hover:bg-white/10'
+              }`}
+              title={isExpanded ? 'Collapse textarea' : 'Expand for multi-line input'}
+            >
+              <ExpandIcon expanded={isExpanded} />
+            </button>
             {inputValue && (
               <button
                 onClick={onSubmit}
@@ -223,6 +255,42 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
           <UserBadge />
         </div>
       </div>
+
+      {/* Expandable textarea for multi-line problem input */}
+      {isExpanded && (
+        <div className="border-t border-gray-700/50 bg-gray-950/90 backdrop-blur-xl px-4 py-3">
+          <div className="flex gap-2 items-end max-w-full">
+            <textarea
+              ref={textareaRef}
+              value={inputValue}
+              onChange={(e) => onInputChange(e.target.value)}
+              onKeyDown={handleTextareaKeyDown}
+              placeholder="Paste a coding problem or system design prompt... (Cmd+Enter to send)"
+              rows={4}
+              className="font-code flex-1 bg-gray-900/80 border border-gray-700/50 rounded-lg px-3 py-2 text-sm text-white placeholder:text-gray-500 resize-y outline-none focus:ring-1 focus:ring-emerald-500/50 focus:border-emerald-500/50 min-h-[80px] max-h-[300px]"
+            />
+            <div className="flex flex-col gap-1.5 shrink-0">
+              <button
+                onClick={handleTextareaSubmit}
+                disabled={!inputValue}
+                className="font-display flex items-center gap-1.5 px-4 py-2 text-white text-xs font-bold rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90"
+                style={{ background: 'linear-gradient(135deg, #10b981, #059669)', boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)' }}
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+                Send
+              </button>
+              <button
+                onClick={() => setIsExpanded(false)}
+                className="font-display flex items-center justify-center px-4 py-2 text-gray-400 text-xs font-medium rounded-xl hover:bg-white/5 hover:text-white transition-all"
+              >
+                Collapse
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 }
@@ -288,6 +356,18 @@ function ResetIcon() {
   return (
     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+    </svg>
+  );
+}
+
+function ExpandIcon({ expanded }: { expanded: boolean }) {
+  return expanded ? (
+    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M4 14h6v6M20 10h-6V4M4 14l6-6M20 10l-6 6" />
+    </svg>
+  ) : (
+    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7" />
     </svg>
   );
 }
