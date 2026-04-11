@@ -128,27 +128,27 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
   };
 
   return (
-    <header className="bg-gray-900/80 backdrop-blur-xl border-b border-gray-800/50 z-50 shrink-0">
-      {/* Row 1: Nav + Audio + Controls — single row */}
-      <div className="flex items-center h-[44px]">
+    <header className="z-50 shrink-0" style={{ background: 'linear-gradient(180deg, rgba(15,23,42,0.95) 0%, rgba(10,10,15,0.98) 100%)', borderBottom: '1px solid rgba(16,185,129,0.08)', boxShadow: '0 1px 12px rgba(0,0,0,0.3), 0 1px 0 rgba(16,185,129,0.05)' }}>
+      {/* Row 1: Nav + Audio + Controls */}
+      <div className="flex items-center h-[42px]">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-1.5 px-3 border-r border-gray-800/50 h-full shrink-0">
-          <CamoraLogo size={24} />
-          <span className="hidden sm:block font-display font-bold text-xs md:text-sm tracking-tight text-white" style={{ fontFamily: "'Comfortaa', sans-serif" }}>Camora</span>
+        <Link to="/" className="flex items-center gap-1.5 px-3 h-full shrink-0" style={{ borderRight: '1px solid rgba(255,255,255,0.06)' }}>
+          <CamoraLogo size={22} />
+          <span className="hidden sm:block font-display font-bold text-sm tracking-tight" style={{ fontFamily: "'Comfortaa', sans-serif", background: 'linear-gradient(135deg, #fff, #94a3b8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Camora</span>
         </Link>
 
         {/* Tabs */}
-        <div className="flex items-center gap-0.5 px-1.5 md:px-2 h-full shrink-0 border-r border-gray-800/50">
+        <div className="flex items-center gap-1 px-2 h-full shrink-0" style={{ borderRight: '1px solid rgba(255,255,255,0.06)' }}>
           {TABS.map((tab) => (
             <button
               key={tab.id}
               onClick={() => handleTabClick(tab.id)}
-              className={`font-display flex items-center gap-1.5 px-2 md:px-3 py-1 text-xs font-bold rounded-xl transition-all duration-150 ${
-                currentTab === tab.id
-                  ? 'text-white shadow-sm'
-                  : 'text-white hover:bg-white/10'
-              }`}
-              style={currentTab === tab.id ? { background: 'linear-gradient(135deg, #10b981, #059669)', boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)' } : {}}
+              className="font-display flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all duration-200"
+              style={currentTab === tab.id
+                ? { background: 'linear-gradient(135deg, #10b981, #059669)', color: '#fff', boxShadow: '0 2px 12px rgba(16,185,129,0.35), inset 0 1px 0 rgba(255,255,255,0.1)' }
+                : { color: 'rgba(255,255,255,0.5)' }}
+              onMouseEnter={(e) => { if (currentTab !== tab.id) e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}
+              onMouseLeave={(e) => { if (currentTab !== tab.id) { e.currentTarget.style.color = 'rgba(255,255,255,0.5)'; e.currentTarget.style.background = 'transparent'; }}}
             >
               <span className="hidden md:inline">{TAB_ICONS[tab.id]}</span>
               <span>{tab.label}</span>
@@ -156,12 +156,9 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
           ))}
         </div>
 
-        {/* Platform Selector */}
-        <div className="hidden lg:flex items-center px-1.5 border-r border-gray-800/50 h-full shrink-0">
-          <select
-            className="font-display bg-white/10 text-white font-bold text-[10px] border border-gray-700/50 rounded-lg px-1.5 py-1 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer backdrop-blur-sm"
-            defaultValue="general"
-          >
+        {/* Platform */}
+        <div className="hidden lg:flex items-center px-2 h-full shrink-0" style={{ borderRight: '1px solid rgba(255,255,255,0.06)' }}>
+          <select className="font-display bg-white/5 text-white/70 font-semibold text-[11px] border border-white/10 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-emerald-500/50 cursor-pointer" defaultValue="general">
             <option value="general">General</option>
             <option value="zoom">Zoom</option>
             <option value="meet">Google Meet</option>
@@ -172,42 +169,45 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
           </select>
         </div>
 
-        {/* Status */}
-        <div className="hidden lg:flex items-center gap-1.5 px-2 border-r border-gray-800/50 h-full shrink-0 max-w-[120px]">
-          <div className={`w-2 h-2 rounded-full shrink-0 transition-all duration-300 ${
+        {/* Status pill */}
+        <div className="hidden lg:flex items-center gap-1.5 px-2 h-full shrink-0" style={{ borderRight: '1px solid rgba(255,255,255,0.06)' }}>
+          <div className={`w-2 h-2 rounded-full shrink-0 ${
             status.state === 'ready' ? 'bg-emerald-400' :
             status.state === 'error' ? 'bg-red-500' :
             status.state === 'warn' ? 'bg-amber-500' :
             status.state === 'listen' || status.state === 'write' ? 'bg-emerald-400 animate-pulse' :
             'bg-gray-500'
-          }`} style={status.state === 'ready' ? { boxShadow: '0 0 8px rgba(52, 211, 153, 0.5)' } : {}} />
-          <span className="font-code text-[10px] text-white font-medium truncate whitespace-nowrap">
+          }`} style={status.state === 'ready' ? { boxShadow: '0 0 8px rgba(52,211,153,0.6)' } : {}} />
+          <span className="font-code text-[10px] text-white/50 font-medium truncate whitespace-nowrap max-w-[100px]">
             {status.message}
           </span>
         </div>
 
-        {/* Audio controls + Docs — always in row 1, scrollable if needed */}
-        <div className="flex items-center gap-1 px-1 h-full flex-1 min-w-0 overflow-x-auto no-scrollbar">
+        {/* Audio + Docs */}
+        <div className="flex items-center gap-1 px-1.5 h-full flex-1 min-w-0 overflow-x-auto no-scrollbar">
           <AudioCapture onTranscription={onTranscription} />
           <DocumentUpload />
         </div>
 
-        {/* Controls — Search, Reset */}
-        <div className="flex items-center gap-0.5 px-1.5 md:px-2 border-l border-gray-800/50 h-full shrink-0">
+        {/* Search + Reset */}
+        <div className="flex items-center gap-1 px-1.5 h-full shrink-0" style={{ borderLeft: '1px solid rgba(255,255,255,0.06)' }}>
           <button
             onClick={() => setUseSearch(!useSearch)}
-            className={`p-1.5 rounded-lg transition-all duration-150 ${
-              useSearch
-                ? 'text-white shadow-sm'
-                : 'text-white hover:bg-white/10'
-            }`}
-            style={useSearch ? { background: 'linear-gradient(135deg, #10b981, #059669)', boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)' } : {}}
+            className="p-1.5 rounded-lg transition-all duration-200"
+            style={useSearch
+              ? { background: 'linear-gradient(135deg, #10b981, #059669)', color: '#fff', boxShadow: '0 2px 8px rgba(16,185,129,0.3)' }
+              : { color: 'rgba(255,255,255,0.4)' }}
+            onMouseEnter={(e) => { if (!useSearch) { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}}
+            onMouseLeave={(e) => { if (!useSearch) { e.currentTarget.style.color = 'rgba(255,255,255,0.4)'; e.currentTarget.style.background = 'transparent'; }}}
             title="Toggle web search (⌘S)"
           >
             <SearchIcon />
           </button>
           <button
-            className="p-1.5 rounded-lg text-white hover:bg-white/10 transition-all duration-150"
+            className="p-1.5 rounded-lg transition-all duration-200"
+            style={{ color: 'rgba(255,255,255,0.4)' }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.4)'; e.currentTarget.style.background = 'transparent'; }}
             onClick={() => clearHistory()}
             title="Reset (⌘⌫)"
           >
@@ -215,15 +215,18 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
           </button>
         </div>
 
-        {/* User info */}
-        <div className="flex items-center gap-1.5 px-2 border-l border-gray-800/50 h-full shrink-0">
+        {/* User */}
+        <div className="flex items-center gap-1.5 px-2 h-full shrink-0" style={{ borderLeft: '1px solid rgba(255,255,255,0.06)' }}>
           <UserBadge />
         </div>
       </div>
 
-      {/* Row 2: Input bar — always its own row */}
-      <div className="flex items-center h-[36px] border-t border-gray-800/50">
+      {/* Row 2: Input bar with subtle emerald accent */}
+      <div className="flex items-center h-[36px]" style={{ borderTop: '1px solid rgba(16,185,129,0.06)', background: 'rgba(16,185,129,0.02)' }}>
         <div className="flex-1 flex items-center px-3 min-w-0">
+          <svg className="w-3.5 h-3.5 text-emerald-500/40 shrink-0 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+          </svg>
           <input
             ref={inputRef}
             type="text"
@@ -231,13 +234,14 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
             onChange={(e) => onInputChange(e.target.value)}
             onKeyDown={handleInputKeyDown}
             placeholder="Type or paste question... (⌘K)"
-            className="font-display flex-1 bg-transparent border-none outline-none text-sm text-white placeholder:text-gray-500 min-w-0"
+            className="font-display flex-1 bg-transparent border-none outline-none text-sm text-white placeholder:text-white/25 min-w-0"
           />
           <button
             onClick={toggleExpand}
-            className={`p-1.5 rounded-lg transition-all duration-150 ml-1 shrink-0 ${
-              isExpanded ? 'text-emerald-400 bg-emerald-500/10' : 'text-gray-400 hover:text-white hover:bg-white/10'
-            }`}
+            className="p-1.5 rounded-lg transition-all duration-200 ml-1 shrink-0"
+            style={isExpanded ? { color: '#34d399', background: 'rgba(16,185,129,0.1)' } : { color: 'rgba(255,255,255,0.25)' }}
+            onMouseEnter={(e) => { if (!isExpanded) { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}}
+            onMouseLeave={(e) => { if (!isExpanded) { e.currentTarget.style.color = 'rgba(255,255,255,0.25)'; e.currentTarget.style.background = 'transparent'; }}}
             title={isExpanded ? 'Collapse textarea' : 'Expand for multi-line input'}
           >
             <ExpandIcon expanded={isExpanded} />
@@ -245,8 +249,8 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
           {inputValue && (
             <button
               onClick={onSubmit}
-              className="font-display flex items-center gap-1.5 px-3 py-1 text-white text-xs font-bold rounded-xl hover:opacity-90 transition-all ml-2"
-              style={{ background: 'linear-gradient(135deg, #10b981, #059669)', boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)' }}
+              className="font-display flex items-center gap-1.5 px-4 py-1.5 text-white text-xs font-bold rounded-lg hover:opacity-90 transition-all ml-2"
+              style={{ background: 'linear-gradient(135deg, #10b981, #059669)', boxShadow: '0 2px 12px rgba(16,185,129,0.35), inset 0 1px 0 rgba(255,255,255,0.1)' }}
             >
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
