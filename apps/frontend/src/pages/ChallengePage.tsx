@@ -780,11 +780,12 @@ export default function ChallengePage() {
         }
 
         .ch-hero-title {
-          font-size: clamp(2.5rem, 6vw, 4.5rem);
+          font-size: clamp(2rem, 5vw, 3.5rem);
           font-weight: 900;
           letter-spacing: -0.04em;
-          line-height: 1.05;
+          line-height: 1.1;
           color: #fff;
+          white-space: nowrap;
         }
         .ch-hero-gradient-text {
           background: linear-gradient(135deg, #34d399, #818cf8, #38bdf8, #fbbf24);
