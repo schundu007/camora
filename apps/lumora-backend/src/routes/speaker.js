@@ -29,27 +29,41 @@ router.post('/enroll', upload.single('audio'), async (req, res) => {
       return res.status(400).json({ error: 'Audio file is required (field name: "audio")' });
     }
 
-    // Reconstruct multipart form data for the upstream service
-    const formData = new FormData();
-    const blob = new Blob([req.file.buffer], { type: req.file.mimetype || 'audio/webm' });
-    formData.append('audio', blob, req.file.originalname || 'enrollment.webm');
-    formData.append('user_id', String(req.user.id));
+    console.log(`[Speaker] Enrolling user ${req.user.id}, file: ${req.file.originalname}, size: ${req.file.size}, mime: ${req.file.mimetype}`);
 
-    let upstream;
+    // Write audio to temp file for reliable multipart upload
+    const fs = await import('fs');
+    const os = await import('os');
+    const path = await import('path');
+    const { randomUUID } = await import('crypto');
+
+    const tmpPath = path.default.join(os.default.tmpdir(), `enroll-${randomUUID()}.webm`);
+    fs.default.writeFileSync(tmpPath, req.file.buffer);
+
     try {
-      upstream = await proxyToAIService('/speaker/enroll', {
+      // Use FormData with file from disk
+      const formData = new FormData();
+      const fileBlob = new Blob([req.file.buffer], { type: req.file.mimetype || 'audio/webm' });
+      formData.append('audio', fileBlob, req.file.originalname || 'enrollment.webm');
+      formData.append('user_id', String(req.user.id));
+
+      const { AI_SERVICES_URL } = await import('../services/aiServiceProxy.js');
+      const url = `${AI_SERVICES_URL}/speaker/enroll`;
+      console.log(`[Speaker] Proxying to: ${url}`);
+
+      const upstream = await fetch(url, {
         method: 'POST',
         body: formData,
       });
-    } catch (proxyErr) {
-      console.error('speaker enroll proxy connection error:', proxyErr.message);
-      return res.status(502).json({ error: 'AI services unreachable. Speaker verification service may not be running.' });
-    }
 
-    const data = await upstream.json();
-    return res.status(upstream.status).json(data);
+      const data = await upstream.json();
+      console.log(`[Speaker] Upstream response: ${upstream.status}`, JSON.stringify(data));
+      return res.status(upstream.status).json(data);
+    } finally {
+      try { fs.default.unlinkSync(tmpPath); } catch {}
+    }
   } catch (err) {
-    console.error('speaker enroll error:', err.message || err);
+    console.error('[Speaker] Enroll error:', err.message || err, err.stack);
     return res.status(500).json({ error: 'Speaker enrollment failed: ' + (err.message || 'unknown error') });
   }
 });
