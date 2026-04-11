@@ -1064,48 +1064,98 @@ export default function PracticePage() {
           )}
 
           {/* ── RESULTS PHASE ── */}
-          {phase === 'results' && (
+          {phase === 'results' && (() => {
+            const passed = scores.filter(s => s >= 60).length;
+            const total = scores.length;
+            const grade = finalAvgScore >= 90 ? 'A+' : finalAvgScore >= 80 ? 'A' : finalAvgScore >= 70 ? 'B' : finalAvgScore >= 60 ? 'C' : finalAvgScore >= 40 ? 'D' : 'F';
+            const gradeColor = finalAvgScore >= 70 ? '#10b981' : finalAvgScore >= 50 ? '#f59e0b' : '#ef4444';
+            return (
             <div>
-              {/* Big score + radar */}
-              <div style={{ background: '#fff', border: '1px solid #e3e8ee', borderRadius: 16, padding: 32, marginBottom: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 32, flexWrap: 'wrap', justifyContent: 'center' }}>
+              {/* ── Hero Result Card ── */}
+              <div style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)', borderRadius: 20, padding: '40px 32px', marginBottom: 20, position: 'relative', overflow: 'hidden' }}>
+                {/* Decorative grid */}
+                <div style={{ position: 'absolute', inset: 0, opacity: 0.04, backgroundImage: 'linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 40, flexWrap: 'wrap', justifyContent: 'center' }}>
+                  {/* Score ring + grade */}
                   <div style={{ textAlign: 'center' }}>
-                    <ScoreRing value={finalAvgScore} size={140} strokeW={10} animated />
-                    <p style={{ fontSize: 14, color: '#6b7280', marginTop: 8 }}>
-                      {scores.filter(s => s >= 60).length}/{scores.length} passed / {catLabel(category)} / {difficulty}
-                    </p>
+                    <div style={{ position: 'relative', display: 'inline-block' }}>
+                      <ScoreRing value={finalAvgScore} size={160} strokeW={12} animated />
+                      <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        <span style={{ fontSize: 36, fontWeight: 800, color: '#fff', lineHeight: 1 }}>{finalAvgScore}%</span>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: gradeColor, marginTop: 2 }}>Grade {grade}</span>
+                      </div>
+                    </div>
+                    <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: 20, fontWeight: 800, color: '#fff' }}>{passed}/{total}</div>
+                        <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 500 }}>Passed</div>
+                      </div>
+                      <div style={{ width: 1, height: 28, background: '#334155' }} />
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: '#94a3b8', textTransform: 'capitalize' }}>{catLabel(category)}</div>
+                        <div style={{ fontSize: 11, color: '#64748b', fontWeight: 500, textTransform: 'capitalize' }}>{difficulty}</div>
+                      </div>
+                    </div>
                   </div>
+
+                  {/* Radar */}
                   {resultDimensions && (
-                    <RadarChart
-                      values={DIMENSION_KEYS.map(k => resultDimensions[k] || 0)}
-                      labels={DIMENSION_LABELS}
-                      size={180}
-                    />
+                    <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 16, padding: 20, border: '1px solid rgba(255,255,255,0.06)' }}>
+                      <RadarChart
+                        values={DIMENSION_KEYS.map(k => resultDimensions[k] || 0)}
+                        labels={DIMENSION_LABELS}
+                        size={200}
+                      />
+                    </div>
                   )}
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginTop: 20 }}>
-                  <button onClick={() => { setPhase('setup'); setStats(getStats()); setInlineEval(null); }} style={{ padding: '10px 24px', background: '#f3f4f6', color: '#374151', fontSize: 13, fontWeight: 600, borderRadius: 10, border: '1px solid #e3e8ee', cursor: 'pointer' }}>
+
+                {/* Actions */}
+                <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginTop: 28, position: 'relative' }}>
+                  <button onClick={() => { setPhase('setup'); setStats(getStats()); setInlineEval(null); }} style={{ padding: '11px 22px', background: 'rgba(255,255,255,0.06)', color: '#e2e8f0', fontSize: 13, fontWeight: 600, borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', backdropFilter: 'blur(8px)', transition: 'all 0.2s' }}>
                     Back to Dashboard
                   </button>
-                  <button onClick={startChallenge} style={{ padding: '10px 24px', background: 'linear-gradient(135deg, #10b981, #059669)', color: '#fff', fontSize: 13, fontWeight: 600, borderRadius: 10, border: 'none', cursor: 'pointer' }}>
+                  <button onClick={startChallenge} style={{ padding: '11px 22px', background: 'linear-gradient(135deg, #10b981, #059669)', color: '#fff', fontSize: 13, fontWeight: 600, borderRadius: 10, border: 'none', cursor: 'pointer', boxShadow: '0 4px 14px rgba(16,185,129,0.3)', transition: 'all 0.2s' }}>
                     Try Again
                   </button>
-                  <button onClick={() => { setDifficulty('medium'); setPhase('setup'); setStats(getStats()); }} style={{ padding: '10px 24px', background: '#ede9fe', color: '#7c3aed', fontSize: 13, fontWeight: 600, borderRadius: 10, border: 'none', cursor: 'pointer' }}>
+                  <button onClick={() => { setDifficulty('medium'); setPhase('setup'); setStats(getStats()); }} style={{ padding: '11px 22px', background: 'rgba(139,92,246,0.15)', color: '#c4b5fd', fontSize: 13, fontWeight: 600, borderRadius: 10, border: '1px solid rgba(139,92,246,0.2)', cursor: 'pointer', transition: 'all 0.2s' }}>
                     Practice Weak Areas
                   </button>
                 </div>
               </div>
 
-              {/* Improvement Tips */}
+              {/* ── Quick Dimension Stats ── */}
+              {resultDimensions && (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12, marginBottom: 20 }}>
+                  {DIMENSION_KEYS.map((k, i) => {
+                    const val = resultDimensions[k] || 0;
+                    const dimColor = val >= 70 ? '#10b981' : val >= 50 ? '#f59e0b' : '#ef4444';
+                    return (
+                      <div key={k} style={{ background: '#fff', border: '1px solid #e3e8ee', borderRadius: 14, padding: '16px 18px', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
+                        <div style={{ fontSize: 11, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>{DIMENSION_LABELS[i]}</div>
+                        <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+                          <span style={{ fontSize: 22, fontWeight: 800, color: dimColor }}>{val}</span>
+                          <span style={{ fontSize: 12, color: '#9ca3af' }}>/ 100</span>
+                        </div>
+                        <div style={{ height: 4, borderRadius: 99, background: '#f3f4f6', marginTop: 8, overflow: 'hidden' }}>
+                          <div style={{ height: '100%', borderRadius: 99, background: dimColor, width: `${val}%`, transition: 'width 0.8s ease' }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* ── Improvement Tips ── */}
               {aiModelAnswers.some(a => a.improvementTips && a.improvementTips.length > 0) && (
-                <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 16, padding: 20, marginBottom: 24 }}>
-                  <h3 className="practice-display" style={{ fontSize: 14, fontWeight: 700, color: '#92400e', margin: '0 0 10px', display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <Icon name="lightbulb" size={16} style={{ color: '#f59e0b' }} />
-                    Focus Areas to Improve
+                <div style={{ background: 'linear-gradient(135deg, #fefce8, #fffbeb)', border: '1px solid #fde68a', borderRadius: 16, padding: '18px 22px', marginBottom: 20 }}>
+                  <h3 className="practice-display" style={{ fontSize: 13, fontWeight: 700, color: '#92400e', margin: '0 0 10px', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Icon name="lightbulb" size={15} style={{ color: '#f59e0b' }} />
+                    Focus Areas
                   </h3>
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                     {[...new Set(aiModelAnswers.flatMap(a => a.improvementTips || []))].slice(0, 5).map((tip, i) => (
-                      <span key={i} style={{ fontSize: 12, color: '#92400e', padding: '4px 10px', borderRadius: 99, background: '#fef3c7' }}>
+                      <span key={i} style={{ fontSize: 12, color: '#78350f', padding: '5px 12px', borderRadius: 99, background: 'rgba(253,224,71,0.3)', fontWeight: 500 }}>
                         {tip}
                       </span>
                     ))}
@@ -1113,48 +1163,55 @@ export default function PracticePage() {
                 </div>
               )}
 
-              {/* Per-question accordion */}
-              <div style={{ background: '#fff', border: '1px solid #e3e8ee', borderRadius: 16, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-                <h3 className="practice-display" style={{ fontSize: 16, fontWeight: 700, color: '#111827', margin: '0 0 16px' }}>Question Breakdown</h3>
+              {/* ── Question Breakdown ── */}
+              <div style={{ background: '#fff', border: '1px solid #e3e8ee', borderRadius: 16, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+                <div style={{ padding: '18px 24px', borderBottom: '1px solid #f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <h3 className="practice-display" style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: 0 }}>Question Breakdown</h3>
+                  <span style={{ fontSize: 12, color: '#9ca3af', fontWeight: 500 }}>{passed} of {total} passed</span>
+                </div>
                 {questions.map((q, i) => {
                   const isExpanded = expandedHistory === `result-${i}`;
                   const dims = aiDimensions[i] || {};
                   const ma = aiModelAnswers[i] || {};
+                  const sc = scores[i] || 0;
+                  const pass = sc >= 60;
                   return (
                     <div key={i} style={{ borderBottom: i < questions.length - 1 ? '1px solid #f3f4f6' : 'none' }}>
-                      <button onClick={() => setExpandedHistory(isExpanded ? null : `result-${i}`)} style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <span style={{ width: 22, height: 22, borderRadius: 99, background: (scores[i] || 0) >= 60 ? '#ecfdf5' : '#fef2f2', color: (scores[i] || 0) >= 60 ? '#059669' : '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700 }}>{i + 1}</span>
-                          <span style={{ fontSize: 14, fontWeight: 600, color: '#111827' }}>{q.q}</span>
+                      <button onClick={() => setExpandedHistory(isExpanded ? null : `result-${i}`)} style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 24px', background: isExpanded ? '#fafbfc' : 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left', transition: 'background 0.15s' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <div style={{ width: 26, height: 26, borderRadius: 8, background: pass ? '#ecfdf5' : '#fef2f2', color: pass ? '#059669' : '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, flexShrink: 0 }}>{i + 1}</div>
+                          <div>
+                            <span style={{ fontSize: 14, fontWeight: 600, color: '#111827' }}>{q.q}</span>
+                            {q.difficulty && <span style={{ fontSize: 10, fontWeight: 600, color: '#9ca3af', marginLeft: 8, textTransform: 'capitalize' }}>{q.difficulty}</span>}
+                          </div>
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <span style={{ padding: '2px 10px', borderRadius: 99, fontSize: 12, fontWeight: 600, background: scoreBg(scores[i] || 0), color: scoreColor(scores[i] || 0) }}>
-                            {scores[i] || 0}%
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <div style={{ width: 60, height: 5, borderRadius: 99, background: '#f3f4f6', overflow: 'hidden' }}>
+                            <div style={{ height: '100%', borderRadius: 99, background: scoreColor(sc), width: `${sc}%`, transition: 'width 0.6s ease' }} />
+                          </div>
+                          <span style={{ padding: '3px 10px', borderRadius: 8, fontSize: 12, fontWeight: 700, background: scoreBg(sc), color: scoreColor(sc), minWidth: 42, textAlign: 'center' }}>
+                            {sc}%
                           </span>
-                          <Icon name={isExpanded ? 'chevronUp' : 'chevronDown'} size={14} style={{ color: '#9ca3af' }} />
+                          <Icon name={isExpanded ? 'chevronUp' : 'chevronDown'} size={14} style={{ color: '#cbd5e1' }} />
                         </div>
                       </button>
                       {isExpanded && (
-                        <div style={{ paddingBottom: 16, paddingLeft: 30 }}>
-                          {/* User's answer */}
+                        <div style={{ padding: '0 24px 20px 60px' }}>
                           {answers[i] && (
-                            <div style={{ marginBottom: 12, padding: 12, background: '#f9fafb', borderRadius: 10, fontSize: 12, color: '#374151', lineHeight: 1.6, fontFamily: category === 'coding' ? "'IBM Plex Mono', monospace" : 'inherit', whiteSpace: 'pre-wrap', maxHeight: 120, overflow: 'auto' }}>
+                            <div style={{ marginBottom: 14, padding: 14, background: '#f8fafc', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 12, color: '#374151', lineHeight: 1.7, fontFamily: category === 'coding' ? "'IBM Plex Mono', monospace" : 'inherit', whiteSpace: 'pre-wrap', maxHeight: 140, overflow: 'auto' }}>
                               {answers[i].replace(/---SECTION---/g, '\n\n').replace(/---STAR---/g, '\n\n')}
                             </div>
                           )}
-                          {/* Feedback */}
-                          {aiFeedback[i] && <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 12px', lineHeight: 1.5 }}>{aiFeedback[i]}</p>}
-                          {/* Dimension bars */}
+                          {aiFeedback[i] && <p style={{ fontSize: 13, color: '#64748b', margin: '0 0 14px', lineHeight: 1.6 }}>{aiFeedback[i]}</p>}
                           {Object.keys(dims).length > 0 && <DimensionBars dimensions={dims} compact />}
-                          {/* Model answer */}
                           {ma.modelAnswer && (
-                            <div style={{ marginTop: 10 }}>
+                            <div style={{ marginTop: 12 }}>
                               <button onClick={() => setShowModelAnswer(showModelAnswer === `r-${i}` ? null : `r-${i}`)} style={{ fontSize: 12, fontWeight: 600, color: '#059669', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
                                 <Icon name={showModelAnswer === `r-${i}` ? 'chevronUp' : 'chevronDown'} size={12} style={{ color: '#059669' }} />
                                 {showModelAnswer === `r-${i}` ? 'Hide' : 'Show'} Model Answer
                               </button>
                               {showModelAnswer === `r-${i}` && (
-                                <div style={{ marginTop: 6, padding: 12, background: '#ecfdf5', borderRadius: 10, fontSize: 12, color: '#065f46', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>
+                                <div style={{ marginTop: 8, padding: 14, background: '#ecfdf5', borderRadius: 10, border: '1px solid #a7f3d0', fontSize: 12, color: '#065f46', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
                                   {ma.modelAnswer}
                                 </div>
                               )}
@@ -1167,7 +1224,8 @@ export default function PracticePage() {
                 })}
               </div>
             </div>
-          )}
+            );
+          })()}
 
         </div>
       </div>
