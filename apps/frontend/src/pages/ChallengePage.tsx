@@ -536,7 +536,7 @@ export default function ChallengePage() {
                 </div>
                 <div className="space-y-1.5">
                   {c.examples.map((e) => (
-                    <p key={e} className="text-[11px] text-white/40 flex items-center gap-2">
+                    <p key={e} className="text-base text-white/40 flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: c.color, boxShadow: `0 0 4px ${c.color}` }} />{e}
                     </p>
                   ))}
@@ -762,7 +762,7 @@ export default function ChallengePage() {
         .ch-badge {
           display: inline-flex; align-items: center; gap: 8px;
           padding: 8px 20px; border-radius: 999px;
-          font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+          font-size: 14px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
           color: #10b981;
           background: rgba(16,185,129,0.08);
           border: 1px solid rgba(16,185,129,0.15);
@@ -817,7 +817,7 @@ export default function ChallengePage() {
           box-shadow: 0 0 20px rgba(16,185,129,0.08), inset 0 1px 0 rgba(255,255,255,0.05);
         }
         .ch-countdown-label {
-          margin-top: 6px; font-size: 11px; font-weight: 700;
+          margin-top: 6px; font-size: 14px; font-weight: 700;
           color: rgba(255,255,255,0.3); letter-spacing: 0.12em;
         }
 
@@ -874,7 +874,7 @@ export default function ChallengePage() {
         /* ── Sections ── */
         .ch-section { padding: 56px 0; position: relative; }
         .ch-section-head { text-align: center; margin-bottom: 40px; }
-        .ch-section-tag { font-size: 13px; font-weight: 700; color: #10b981; text-transform: uppercase; letter-spacing: 0.15em; }
+        .ch-section-tag { font-size: 16px; font-weight: 700; color: #10b981; text-transform: uppercase; letter-spacing: 0.15em; }
         .ch-section-title { font-size: clamp(1.5rem, 3.5vw, 2.25rem); font-weight: 800; color: #fff; letter-spacing: -0.02em; margin-top: 6px; }
         .ch-section-sub { font-size: 15px; color: rgba(255,255,255,0.4); margin-top: 8px; line-height: 1.6; }
 
@@ -902,7 +902,7 @@ export default function ChallengePage() {
         .ch-code-editor {
           min-height: 180px; padding: 16px; border-radius: 12px;
           font-family: 'Space Mono', 'IBM Plex Mono', monospace;
-          font-size: 13px; line-height: 1.6;
+          font-size: 16px; line-height: 1.6;
           background: rgba(0,0,0,0.4);
           border: 1px solid rgba(255,255,255,0.06);
           color: #e2e8f0; outline: none; resize: vertical;
@@ -940,7 +940,7 @@ export default function ChallengePage() {
         .ch-prize-rank {
           display: inline-block;
           padding: 5px 16px; border-radius: 8px;
-          font-size: 13px; font-weight: 800; color: #0a0a0f;
+          font-size: 16px; font-weight: 800; color: #0a0a0f;
           text-transform: uppercase; letter-spacing: 0.08em;
           margin-bottom: 12px;
         }
@@ -982,7 +982,7 @@ export default function ChallengePage() {
           width: 36px; height: 36px; border-radius: 50%;
           display: flex; align-items: center; justify-content: center;
           font-family: 'Space Mono', monospace;
-          font-size: 10px; font-weight: 700; color: #0a0a0f;
+          font-size: 16px; font-weight: 700; color: #0a0a0f;
           background: var(--node-color, #10b981);
           box-shadow: 0 0 16px color-mix(in srgb, var(--node-color, #10b981) 40%, transparent);
           position: relative; z-index: 2;
