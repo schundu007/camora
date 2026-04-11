@@ -341,21 +341,21 @@ function SystemDesignView({ blocks }: { blocks: ParsedBlock[] }) {
       )}
 
       {/* Row 1: FUNCTIONAL | NON-FUNCTIONAL | SCALE MATH */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
         <GridCard title="FUNCTIONAL" titleColor="text-indigo-light">
           {byType.REQUIREMENTS ? (
             <RequirementsList content={byType.REQUIREMENTS.content} type="functional" />
-          ) : <Shimmer />}
+          ) : <EmptyBlock />}
         </GridCard>
         <GridCard title="NON-FUNCTIONAL" titleColor="text-violet-light">
           {byType.REQUIREMENTS ? (
             <RequirementsList content={byType.REQUIREMENTS.content} type="nonfunctional" />
-          ) : <Shimmer />}
+          ) : <EmptyBlock />}
         </GridCard>
-        <GridCard title="SCALE MATH" titleColor="text-emerald-light">
+        <GridCard title="SCALE MATH" titleColor="text-emerald-light" className="sm:col-span-2 lg:col-span-1">
           {byType.SCALEMATH ? (
             <ScaleMathList content={byType.SCALEMATH.content} />
-          ) : <Shimmer />}
+          ) : <EmptyBlock />}
         </GridCard>
       </div>
 
@@ -364,38 +364,33 @@ function SystemDesignView({ blocks }: { blocks: ParsedBlock[] }) {
         <GridCard title="TRADE-OFFS" titleColor="text-rose-light">
           {byType.TRADEOFFS ? (
             <TradeoffsList content={byType.TRADEOFFS.content} />
-          ) : <Shimmer />}
+          ) : <EmptyBlock />}
         </GridCard>
         <GridCard title="EDGE CASES" titleColor="text-amber-light">
           {byType.EDGECASES ? (
             <EdgeCasesList content={byType.EDGECASES.content} />
-          ) : <Shimmer />}
+          ) : <EmptyBlock />}
         </GridCard>
       </div>
 
-      {/* Row 3: ARCHITECTURE | LAYER DESIGN | FOLLOW-UP Q&A */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-start">
-        <GridCard title="ARCHITECTURE" titleColor="text-cyan-light" className="border-cyan/15 bg-cyan/[0.02]">
-          {byType.DIAGRAM && byType.DIAGRAM.content.trim() && !/^skip/i.test(byType.DIAGRAM.content.trim()) ? (
-            <MermaidDiagram content={byType.DIAGRAM.content} />
-          ) : (
-            <div className="flex flex-col items-center justify-center py-6 text-center">
-              <svg className="w-8 h-8 text-cyan-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-              </svg>
-              <p className="text-xs text-gray-400 font-mono">Use the Design tab for full architecture diagrams</p>
-            </div>
-          )}
-        </GridCard>
-        <GridCard title="LAYER DESIGN" titleColor="text-violet-light">
+      {/* Row 3: ARCHITECTURE — full width */}
+      <GridCard title="ARCHITECTURE" titleColor="text-cyan-light" className="border-cyan/15 bg-cyan/[0.02]">
+        {byType.DIAGRAM && byType.DIAGRAM.content.trim() && !/^skip/i.test(byType.DIAGRAM.content.trim()) ? (
+          <MermaidDiagram content={byType.DIAGRAM.content} />
+        ) : <EmptyBlock />}
+      </GridCard>
+
+      {/* Row 4: LAYER DESIGN (2/3) | FOLLOW-UP Q&A (1/3) */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-2">
+        <GridCard title="LAYER DESIGN" titleColor="text-violet-light" className="lg:col-span-3">
           {byType.DEEPDESIGN ? (
             <DeepDesignList content={byType.DEEPDESIGN.content} />
-          ) : <Shimmer />}
+          ) : <EmptyBlock />}
         </GridCard>
-        <GridCard title="FOLLOW-UP Q&A" titleColor="text-amber-light" className="border-amber/15 bg-amber/[0.02]">
+        <GridCard title="FOLLOW-UP Q&A" titleColor="text-amber-light" className="lg:col-span-2 border-amber/15 bg-amber/[0.02]">
           {byType.FOLLOWUP ? (
             <FollowupList content={byType.FOLLOWUP.content} />
-          ) : <Shimmer />}
+          ) : <EmptyBlock />}
         </GridCard>
       </div>
     </div>
@@ -456,11 +451,24 @@ function GridCard({
   className?: string;
 }) {
   return (
-    <div className={`border border-border bg-bg2/50 p-4 ${className}`}>
-      <div className={`font-mono text-[10px] font-bold tracking-widest uppercase mb-3 pb-2 border-b border-border ${titleColor}`}>
+    <div className={`border border-border bg-bg2/50 overflow-hidden min-w-0 ${className}`}>
+      <div className={`font-mono text-[10px] font-bold tracking-widest uppercase px-4 pt-4 pb-2 mb-0 border-b border-border ${titleColor}`}>
         {title}
       </div>
-      {children}
+      <div className="p-4 overflow-y-auto overflow-x-auto max-h-[420px]">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function EmptyBlock() {
+  return (
+    <div className="flex items-center gap-2 py-3 text-gray-500">
+      <svg className="w-4 h-4 shrink-0 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <span className="font-mono text-[11px]">Not included in this response</span>
     </div>
   );
 }

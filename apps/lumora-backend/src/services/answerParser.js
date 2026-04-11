@@ -95,6 +95,22 @@ export function parseAnswer(raw) {
     }
   }
 
+  // Strategy 1.5: Recover truncated blocks (opening [TAG] without closing [/TAG])
+  if (blocks.length > 0) {
+    const foundTags = new Set(blocks.map(b => b.type));
+    for (const tag of KNOWN_TAGS) {
+      if (foundTags.has(tag)) continue;
+      const openRe = new RegExp(`\\[${tag}(?:\\s+lang=\\w+)?\\](.*)$`, 's');
+      const openMatch = openRe.exec(cleaned);
+      if (openMatch) {
+        const body = openMatch[1].trim();
+        if (body) {
+          blocks.push({ type: tag, content: body, lang: null });
+        }
+      }
+    }
+  }
+
   // Strategy 2: Bare headings (TAG on its own line)
   if (blocks.length === 0) {
     const fallbackBlocks = parseBareHeadings(cleaned);

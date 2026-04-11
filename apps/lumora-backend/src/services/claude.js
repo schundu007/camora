@@ -11,7 +11,7 @@ import { parseAnswer } from './answerParser.js';
 // ---------------------------------------------------------------------------
 const MODEL = process.env.CLAUDE_MODEL || 'claude-haiku-4-5-20251001';
 const MAX_TOKENS_QUICK = parseInt(process.env.MAX_TOKENS_QUICK || '2000', 10);
-const MAX_TOKENS_DESIGN = parseInt(process.env.MAX_TOKENS_DESIGN || '6144', 10);
+const MAX_TOKENS_DESIGN = parseInt(process.env.MAX_TOKENS_DESIGN || '8192', 10);
 const CONTEXT_TURNS = parseInt(process.env.CONTEXT_TURNS || '6', 10);
 
 const client = new Anthropic();  // reads ANTHROPIC_API_KEY from env
@@ -137,16 +137,21 @@ Bandwidth: network bandwidth estimate
 [/SCALEMATH]
 
 [DIAGRAM]
-Draw an ASCII architecture diagram showing the main components and data flow.
-Use box-drawing characters and arrows to show:
-- Client/CDN layer
-- Load balancer
-- Application servers
-- Cache layer
-- Database (primary + replicas)
-- Message queues / async workers
-- Any other relevant services
-Keep it clean and readable, max ~20 lines.
+Generate a Mermaid flowchart (flowchart TB) showing the system architecture.
+Use subgraphs to group components logically (Client, Application, Data, Async).
+Include all major components with labeled arrows showing data flow direction.
+Example format:
+flowchart TB
+  subgraph Client
+    U[Users/Browsers]
+    CDN[CDN]
+  end
+  U --> CDN --> LB[Load Balancer]
+  LB --> API[API Servers]
+  API --> Cache[Redis Cache]
+  API --> DB[(Primary DB)]
+  DB --> Replica[(Read Replicas)]
+Keep it concise — max 25 nodes.
 [/DIAGRAM]
 
 [DEEPDESIGN]
