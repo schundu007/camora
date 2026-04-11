@@ -327,15 +327,17 @@ router.get('/verify-subscription/:userId', async (req, res) => {
 
   try {
     const result = await query(
-      'SELECT plan_type, status, current_period_end FROM ascend_subscriptions WHERE user_id = $1',
+      'SELECT plan_type, status, current_period_end, trial_ends_at FROM ascend_subscriptions WHERE user_id = $1',
       [userId]
     );
 
     const subscription = result.rows[0];
 
-    // Check if user has active quarterly_pro subscription
-    const hasAccess = subscription?.plan_type === 'quarterly_pro' &&
-                      subscription?.status === 'active';
+    // Check if user has active paid subscription OR active trial
+    const isPaidActive = (subscription?.plan_type === 'monthly' || subscription?.plan_type === 'quarterly_pro') &&
+                         subscription?.status === 'active';
+    const hasActiveTrial = subscription?.trial_ends_at && new Date(subscription.trial_ends_at) > new Date();
+    const hasAccess = isPaidActive || hasActiveTrial;
 
     res.json({
       hasAccess,
