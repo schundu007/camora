@@ -13,6 +13,7 @@ const PREPARE_ITEMS = [
   { id: 'databases', label: 'Database Internals', icon: 'database', href: '/capra/prepare/databases' },
   { id: 'sql', label: 'SQL for Interviews', icon: 'database', href: '/capra/prepare/sql' },
   { id: 'low-level', label: 'Low-Level Design', icon: 'layers', href: '/capra/prepare/low-level-design' },
+  { id: 'projects', label: 'Projects', icon: 'code', href: '/capra/prepare/projects' },
   { id: 'behavioral', label: 'Behavioral', icon: 'users', href: '/capra/prepare/behavioral' },
 ];
 
