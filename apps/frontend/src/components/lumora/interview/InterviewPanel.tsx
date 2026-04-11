@@ -233,7 +233,62 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
   );
 }
 
+function OnboardingTour({ onDismiss }: { onDismiss: () => void }) {
+  const [step, setStep] = useState(0);
+  const STEPS = [
+    { title: 'Interview Modes', color: '#10b981', icon: 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z',
+      desc: 'Use Interview tab for system design, behavioral, and general questions. Switch to Coding for a full code editor or Design for architecture diagrams.' },
+    { title: 'Audio Capture', color: '#06b6d4', icon: 'M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z',
+      desc: 'Live: always listening, auto-transcribes. Manual: press Cmd+M to record. Interviewer: captures audio from Zoom/Meet screen share.' },
+    { title: 'Voice & Calibrate', color: '#8b5cf6', icon: 'M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z',
+      desc: 'My Voice: enroll your voice so only the interviewer is transcribed. Calibrate: adjust mic sensitivity for your environment.' },
+    { title: 'Docs & Search', color: '#f59e0b', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
+      desc: 'Upload prep docs (resume, job description) for context-aware answers. Toggle web search for real-time information.' },
+  ];
+  const s = STEPS[step];
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}>
+      <div className="max-w-md w-full mx-4 rounded-2xl overflow-hidden" style={{ background: '#0f172a', border: '1px solid rgba(255,255,255,0.08)' }}>
+        {/* Card content */}
+        <div className="p-8 text-center">
+          <div className="w-14 h-14 mx-auto mb-4 rounded-xl flex items-center justify-center" style={{ background: `${s.color}15`, border: `1px solid ${s.color}25` }}>
+            <svg className="w-7 h-7" fill="none" stroke={s.color} viewBox="0 0 24 24" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+              <path d={s.icon} />
+            </svg>
+          </div>
+          <h3 className="text-lg font-bold text-white mb-2">{s.title}</h3>
+          <p className="text-sm text-white/50 leading-relaxed">{s.desc}</p>
+        </div>
+
+        {/* Dots + buttons */}
+        <div className="flex items-center justify-between px-6 pb-6">
+          <div className="flex gap-1.5">
+            {STEPS.map((_, i) => (
+              <div key={i} className="w-2 h-2 rounded-full transition-all" style={{ background: i === step ? s.color : 'rgba(255,255,255,0.1)' }} />
+            ))}
+          </div>
+          <div className="flex gap-2">
+            {step < STEPS.length - 1 ? (
+              <>
+                <button onClick={onDismiss} className="px-3 py-1.5 text-xs font-medium text-white/40 hover:text-white/70 transition-colors">Skip</button>
+                <button onClick={() => setStep(step + 1)} className="px-4 py-1.5 text-xs font-bold text-white rounded-lg transition-all"
+                  style={{ background: `linear-gradient(135deg, ${s.color}, ${s.color}cc)` }}>Next</button>
+              </>
+            ) : (
+              <button onClick={onDismiss} className="px-5 py-1.5 text-xs font-bold text-white rounded-lg transition-all"
+                style={{ background: 'linear-gradient(135deg, #10b981, #059669)', boxShadow: '0 2px 12px rgba(16,185,129,0.3)' }}>Got it</button>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function EmptyState({ onAskQuestion }: { onAskQuestion?: (question: string) => void; onSwitchToCoding?: (problem?: string) => void; onSwitchToDesign?: (problem?: string) => void }) {
+  const [showTour, setShowTour] = useState(() => !localStorage.getItem('lumora_onboarded'));
+
   const CARDS = [
     { category: 'System Design', color: '#06b6d4', glow: 'rgba(6,182,212,0.15)', icon: 'M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10', prompts: [
       'Design a URL shortener like TinyURL',
@@ -259,6 +314,7 @@ function EmptyState({ onAskQuestion }: { onAskQuestion?: (question: string) => v
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center py-8 lumora-empty-mesh">
+      {showTour && <OnboardingTour onDismiss={() => { setShowTour(false); localStorage.setItem('lumora_onboarded', '1'); }} />}
       <div className="relative z-10 w-full max-w-3xl px-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {CARDS.map(card => (

@@ -284,75 +284,74 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
   }
 
   return (
-    <div className="flex items-center gap-1 flex-nowrap whitespace-nowrap">
-      {/* Audio Level Indicator */}
-      <div className="flex items-center gap-0.5 px-0.5">
-        {[0, 1, 2, 3, 4].map((i) => (
-          <div
-            key={i}
-            className={`w-0.5 transition-all duration-75 ${
-              audioLevel > i * 0.15
-                ? 'bg-primary'
-                : 'bg-gray-600'
-            }`}
-            style={{ height: `${6 + i * 2}px` }}
-          />
-        ))}
-      </div>
-
-      <MicrophoneSelector disabled={storeIsRecording} />
-
-      {/* Live / Manual Mode Tabs */}
-      <div className="flex items-center h-full border border-gray-500 rounded overflow-hidden">
+    <div className="flex items-center gap-1.5 flex-nowrap whitespace-nowrap">
+      {/* Mode Selector — 3 modes */}
+      <div className="flex items-center rounded-lg overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.1)' }}>
         <button
           onClick={() => { if (!continuousMode) handleModeToggle(); }}
-          className={`px-2.5 py-1 text-sm font-mono font-semibold transition-colors ${
-            continuousMode
-              ? 'bg-red-500 text-white'
-              : 'bg-transparent text-white hover:text-white'
-          }`}
-          title="Live mode - always listening, auto-restarts after each question"
+          className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold transition-all"
+          style={continuousMode
+            ? { background: 'linear-gradient(135deg, #ef4444, #dc2626)', color: '#fff', boxShadow: '0 2px 8px rgba(239,68,68,0.3)' }
+            : { color: 'rgba(255,255,255,0.5)' }}
+          title="Live: always listening, auto-restarts after each question"
         >
-          <span className="flex items-center gap-1">
-            <LiveIcon isActive={continuousMode} />
-            Live
-          </span>
+          <LiveIcon isActive={continuousMode} />
+          <span className="hidden sm:inline">Live</span>
         </button>
         <button
           onClick={() => { if (continuousMode) handleModeToggle(); }}
-          className={`px-2.5 py-1 text-sm font-mono font-semibold transition-colors border-l border-gray-600 ${
-            !continuousMode
-              ? 'bg-emerald-500 text-white'
-              : 'bg-transparent text-white hover:text-white'
-          }`}
-          title="Manual mode - press Cmd+M to start/stop recording"
+          className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold transition-all"
+          style={!continuousMode
+            ? { background: 'linear-gradient(135deg, #10b981, #059669)', color: '#fff', boxShadow: '0 2px 8px rgba(16,185,129,0.3)' }
+            : { color: 'rgba(255,255,255,0.5)', borderLeft: '1px solid rgba(255,255,255,0.06)' }}
+          title="Manual: press Cmd+M to start/stop"
         >
-          Manual
+          <MicIcon isActive={!continuousMode && storeIsRecording} />
+          <span className="hidden sm:inline">Manual</span>
         </button>
       </div>
 
-      {/* Only show Pause/Resume in manual mode */}
+      {/* Audio level bars — Live & Manual only */}
+      <div className="flex items-center gap-0.5 px-0.5">
+        {[0, 1, 2, 3, 4].map((i) => (
+          <div key={i} className={`w-0.5 rounded-full transition-all duration-75 ${audioLevel > i * 0.15 ? 'bg-emerald-400' : 'bg-white/10'}`}
+            style={{ height: `${6 + i * 2}px` }} />
+        ))}
+      </div>
+
+      {/* Mic selector */}
+      <MicrophoneSelector disabled={storeIsRecording} />
+
+      {/* Record/Pause — Manual mode only */}
       {!continuousMode && (
         <button
           onClick={handleToggle}
-          className={`px-3 py-1 text-sm font-semibold rounded transition-colors ${storeIsRecording ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-emerald-500 text-white hover:bg-emerald-600'}`}
-          title={storeIsRecording ? 'Pause (⌘M)' : 'Resume (⌘M)'}
+          className="flex items-center gap-1 px-2 py-1 text-[11px] font-bold rounded-lg transition-all"
+          style={storeIsRecording
+            ? { background: 'rgba(239,68,68,0.15)', color: '#f87171', border: '1px solid rgba(239,68,68,0.2)' }
+            : { background: 'rgba(16,185,129,0.1)', color: '#34d399', border: '1px solid rgba(16,185,129,0.15)' }}
+          title={storeIsRecording ? 'Pause (⌘M)' : 'Record (⌘M)'}
         >
-          <span className="flex items-center gap-1">
-            <MicIcon isActive={storeIsRecording} />
-            <span className="hidden sm:inline">{storeIsRecording ? 'Pause' : 'Resume'}</span>
-          </span>
+          {storeIsRecording ? (
+            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+          ) : (
+            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg>
+          )}
+          <span className="hidden md:inline">{storeIsRecording ? 'Pause' : 'Record'}</span>
         </button>
       )}
 
-      {/* Voice Enrollment & Filter - handles both enrollment and toggle */}
+      {/* Voice filter — Live & Manual */}
       <VoiceEnrollment disabled={storeIsRecording} />
 
-      <div className="hidden xl:block">
-        <CalibrationButton deviceId={selectedDeviceId} disabled={storeIsRecording} />
-      </div>
+      {/* Calibrate — Manual mode only */}
+      {!continuousMode && (
+        <div className="hidden lg:block">
+          <CalibrationButton deviceId={selectedDeviceId} disabled={storeIsRecording} />
+        </div>
+      )}
 
-      {/* System Audio Capture - captures interviewer voice from Zoom/Meet */}
+      {/* System Audio (Interviewer) */}
       <SystemAudioButton onTranscription={onTranscription} disabled={storeIsRecording} />
     </div>
   );
