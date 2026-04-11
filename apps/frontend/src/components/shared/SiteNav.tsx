@@ -47,8 +47,8 @@ export default function SiteNav() {
             <Link
               key={link.label}
               to={link.href}
-              className={`px-3 py-1.5 text-[13px] transition-colors ${
-                isActive(link.href) ? 'text-emerald-600 font-semibold' : 'text-gray-500 hover:text-gray-900'
+              className={`px-3 py-1.5 text-[13px] rounded-lg transition-all ${
+                isActive(link.href) ? 'text-emerald-700 font-bold bg-white/50' : 'text-gray-500 hover:text-gray-900'
               }`}
             >
               {link.label}
