@@ -18,7 +18,6 @@ function MicCheck({ onReady }: { onReady: () => void }) {
 
   useEffect(() => {
     let active = true;
-    // Test backend connectivity
     fetch(`${import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com'}/health`)
       .then(r => { if (r.ok && active) setBackendOk(true); })
       .catch(() => {});
@@ -33,7 +32,6 @@ function MicCheck({ onReady }: { onReady: () => void }) {
         analyser.fftSize = 256;
         src.connect(analyser);
         const data = new Uint8Array(analyser.frequencyBinCount);
-
         const tick = () => {
           if (!active) return;
           analyser.getByteFrequencyData(data);
@@ -54,70 +52,100 @@ function MicCheck({ onReady }: { onReady: () => void }) {
     };
   }, []);
 
+  const allReady = micOk && backendOk;
+
   return (
-    <div className="h-screen w-full flex items-center justify-center lumora-app-bg">
-      <div className="max-w-md w-full mx-4 bg-white rounded-2xl shadow-xl border border-gray-200 p-8 text-center">
-        <div className="w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #10b981, #06b6d4)' }}>
-          <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-          </svg>
+    <div className="h-screen w-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)' }}>
+      {/* Subtle grid */}
+      <div className="fixed inset-0 pointer-events-none" style={{ opacity: 0.03, backgroundImage: 'linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px)', backgroundSize: '48px 48px' }} />
+
+      <div className="relative max-w-5xl w-full mx-6 grid grid-cols-1 lg:grid-cols-2 gap-0 lg:gap-0 overflow-hidden rounded-2xl" style={{ border: '1px solid rgba(255,255,255,0.06)' }}>
+
+        {/* Left — What is Lumora */}
+        <div className="p-10 lg:p-12 flex flex-col justify-center" style={{ background: 'rgba(255,255,255,0.02)' }}>
+          <h1 className="text-3xl lg:text-4xl font-extrabold text-white tracking-tight leading-tight mb-3" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
+            Your AI co-pilot for{' '}
+            <span className="bg-clip-text text-transparent" style={{ backgroundImage: 'linear-gradient(135deg, #34d399, #06b6d4, #818cf8)' }}>live interviews</span>
+          </h1>
+          <p className="text-base text-white/40 mb-8">Get structured answers in 3 seconds. System design, coding, behavioral — all formats.</p>
+
+          <div className="space-y-4">
+            {[
+              { num: '1', label: 'Speak, type, or paste', desc: 'Mic transcribes your interviewer. Or paste the question directly.', color: '#10b981' },
+              { num: '2', label: 'Get instant answers', desc: 'Architecture diagrams, STAR format, multi-approach code solutions.', color: '#06b6d4' },
+              { num: '3', label: 'Switch modes', desc: 'Interview, Coding (50+ langs), and Design tabs for every question type.', color: '#818cf8' },
+            ].map(s => (
+              <div key={s.num} className="flex items-start gap-4">
+                <div className="shrink-0 w-9 h-9 rounded-lg flex items-center justify-center text-white font-bold text-sm" style={{ background: s.color }}>
+                  {s.num}
+                </div>
+                <div>
+                  <p className="text-base font-semibold text-white">{s.label}</p>
+                  <p className="text-sm text-white/40 mt-0.5">{s.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-8 flex flex-wrap gap-3">
+            <kbd className="px-2.5 py-1 bg-white/5 border border-white/10 rounded-lg text-white/30 text-xs font-mono">Cmd+M mic</kbd>
+            <kbd className="px-2.5 py-1 bg-white/5 border border-white/10 rounded-lg text-white/30 text-xs font-mono">Cmd+B blank</kbd>
+            <kbd className="px-2.5 py-1 bg-white/5 border border-white/10 rounded-lg text-white/30 text-xs font-mono">Cmd+K focus</kbd>
+          </div>
         </div>
-        <h2 className="text-xl font-display font-bold text-gray-900 mb-2">Pre-Interview Check</h2>
-        <p className="text-sm font-display text-gray-500 mb-6">Make sure your microphone is working before the interview starts.</p>
 
-        {error ? (
-          <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm mb-4">{error}</div>
-        ) : (
-          <>
-            {/* Audio level bar */}
-            <div className="mb-4">
-              <div className="flex items-center justify-between text-xs text-gray-400 mb-1">
-                <span>Mic Level</span>
-                <span>{micOk ? 'Detected' : 'Speak to test...'}</span>
-              </div>
-              <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
-                <div
-                  className={`h-full rounded-full transition-all duration-75 ${micOk ? 'bg-emerald-500' : 'bg-amber-400'}`}
-                  style={{ width: `${Math.min(micLevel * 300, 100)}%` }}
-                />
-              </div>
+        {/* Right — System Check + Start */}
+        <div className="p-10 lg:p-12 flex flex-col justify-center" style={{ background: 'rgba(16,185,129,0.03)', borderLeft: '1px solid rgba(255,255,255,0.04)' }}>
+          <div className="text-center mb-8">
+            <div className="w-14 h-14 mx-auto mb-4 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #10b981, #06b6d4)', boxShadow: '0 4px 20px rgba(16,185,129,0.3)' }}>
+              <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+              </svg>
             </div>
+            <h2 className="text-xl font-bold text-white mb-1" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>System Check</h2>
+            <p className="text-sm text-white/30">Everything checks out automatically</p>
+          </div>
 
-            {/* Checklist */}
-            <div className="text-left space-y-2 mb-6">
-              <div className="flex items-center gap-2 text-sm">
-                <span className={`w-5 h-5 rounded-full flex items-center justify-center text-white text-xs ${micOk ? 'bg-emerald-500' : 'bg-gray-300'}`}>
-                  {micOk ? '\u2713' : '\u00b7'}
-                </span>
-                <span className={micOk ? 'text-gray-900' : 'text-gray-400'}>Microphone detected</span>
+          {error ? (
+            <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm mb-6">{error}</div>
+          ) : (
+            <>
+              {/* Mic level */}
+              <div className="mb-6">
+                <div className="flex items-center justify-between text-sm text-white/30 mb-2">
+                  <span>Mic Level</span>
+                  <span className={micOk ? 'text-emerald-400 font-semibold' : ''}>{micOk ? 'Detected' : 'Speak to test...'}</span>
+                </div>
+                <div className="h-2.5 bg-white/5 rounded-full overflow-hidden">
+                  <div className={`h-full rounded-full transition-all duration-75 ${micOk ? 'bg-emerald-500' : 'bg-amber-400'}`}
+                    style={{ width: `${Math.min(micLevel * 300, 100)}%`, boxShadow: micOk ? '0 0 12px rgba(16,185,129,0.4)' : '' }} />
+                </div>
               </div>
-              <div className="flex items-center gap-2 text-sm">
-                <span className={`w-5 h-5 rounded-full flex items-center justify-center text-white text-xs ${backendOk ? 'bg-emerald-500' : 'bg-gray-300'}`}>
-                  {backendOk ? '\u2713' : '\u00b7'}
-                </span>
-                <span className={backendOk ? 'text-gray-900' : 'text-gray-400'}>AI engine ready</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <span className={`w-5 h-5 rounded-full flex items-center justify-center text-white text-xs ${backendOk ? 'bg-emerald-500' : 'bg-gray-300'}`}>
-                  {backendOk ? '\u2713' : '\u00b7'}
-                </span>
-                <span className="text-gray-900">Streaming connected</span>
-              </div>
-            </div>
-          </>
-        )}
 
-        <div className="flex gap-3">
-          <button onClick={onReady} className="font-display flex-1 py-3 text-white font-bold text-sm rounded-xl transition-all shadow-lg shadow-emerald-500/25 hover:opacity-90" style={{ background: 'linear-gradient(135deg, #10b981, #06b6d4)' }}>
-            {micOk ? "I'm Ready" : 'Skip Check'}
+              {/* Checklist */}
+              <div className="space-y-3 mb-8">
+                {[
+                  { ok: micOk, label: 'Microphone detected' },
+                  { ok: backendOk, label: 'AI engine ready' },
+                  { ok: backendOk, label: 'Streaming connected' },
+                ].map(c => (
+                  <div key={c.label} className="flex items-center gap-3">
+                    <div className={`w-6 h-6 rounded-lg flex items-center justify-center text-xs font-bold ${c.ok ? 'bg-emerald-500/20 text-emerald-400' : 'bg-white/5 text-white/20'}`}>
+                      {c.ok ? '\u2713' : '\u00b7'}
+                    </div>
+                    <span className={`text-base ${c.ok ? 'text-white' : 'text-white/30'}`}>{c.label}</span>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          <button onClick={onReady}
+            className="w-full py-4 text-white font-bold text-lg rounded-xl transition-all hover:-translate-y-0.5"
+            style={{ background: allReady ? 'linear-gradient(135deg, #10b981, #06b6d4)' : 'rgba(255,255,255,0.06)', boxShadow: allReady ? '0 4px 20px rgba(16,185,129,0.3)' : 'none' }}>
+            {allReady ? "Start Interview" : 'Skip Check & Start'}
           </button>
         </div>
-
-        <p className="mt-3 text-xs font-code text-gray-400">
-          Hotkeys: <kbd className="px-1 py-0.5 bg-gray-100 rounded-md text-gray-500 font-code">Cmd+M</kbd> mic &nbsp;
-          <kbd className="px-1 py-0.5 bg-gray-100 rounded-md text-gray-500 font-code">Cmd+B</kbd> blank &nbsp;
-          <kbd className="px-1 py-0.5 bg-gray-100 rounded-md text-gray-500 font-code">Cmd+K</kbd> focus
-        </p>
       </div>
     </div>
   );
