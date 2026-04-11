@@ -473,40 +473,16 @@ function GridCard({
   );
 }
 
-function ArchitectureCard({ mermaidContent, question }: { mermaidContent?: string; question: string }) {
-  const [tab, setTab] = useState<'mermaid' | 'cloud'>('mermaid');
-  const hasMermaid = mermaidContent && mermaidContent.trim() && !/^skip/i.test(mermaidContent.trim());
-
+function ArchitectureCard({ question }: { mermaidContent?: string; question: string }) {
   return (
     <div className="border border-cyan/15 bg-cyan/[0.02] overflow-hidden min-w-0 flex flex-col h-full">
-      {/* Header with tabs */}
-      <div className="flex items-center justify-between px-4 pt-3 pb-2 border-b border-border shrink-0">
-        <span className="font-mono text-[10px] font-bold tracking-widest uppercase text-cyan-light">Architecture</span>
-        <div className="flex items-center gap-0.5 bg-bg2 rounded-lg p-0.5">
-          <button
-            onClick={() => setTab('mermaid')}
-            className={`px-2.5 py-1 text-[10px] font-mono font-bold rounded-md transition-all ${
-              tab === 'mermaid' ? 'bg-cyan-500/20 text-cyan-light' : 'text-gray-500 hover:text-gray-300'
-            }`}
-          >Mermaid</button>
-          <button
-            onClick={() => setTab('cloud')}
-            className={`px-2.5 py-1 text-[10px] font-mono font-bold rounded-md transition-all ${
-              tab === 'cloud' ? 'bg-cyan-500/20 text-cyan-light' : 'text-gray-500 hover:text-gray-300'
-            }`}
-          >Cloud</button>
-        </div>
+      <div className="font-mono text-[10px] font-bold tracking-widest uppercase px-4 pt-4 pb-2 border-b border-border text-cyan-light shrink-0">
+        Architecture
       </div>
-
-      {/* Content */}
       <div className="p-4 overflow-y-auto overflow-x-auto flex-1">
-        {tab === 'mermaid' ? (
-          hasMermaid ? <MermaidDiagram content={mermaidContent!} /> : <EmptyBlock />
-        ) : (
-          question ? (
-            <ArchitectureDiagram question={question} />
-          ) : <EmptyBlock />
-        )}
+        {question ? (
+          <ArchitectureDiagram question={question} />
+        ) : <EmptyBlock />}
       </div>
     </div>
   );

@@ -137,21 +137,7 @@ Bandwidth: network bandwidth estimate
 [/SCALEMATH]
 
 [DIAGRAM]
-Generate a Mermaid flowchart (flowchart TB) showing the system architecture.
-Use subgraphs to group components logically (Client, Application, Data, Async).
-Include all major components with labeled arrows showing data flow direction.
-Example format:
-flowchart TB
-  subgraph Client
-    U[Users/Browsers]
-    CDN[CDN]
-  end
-  U --> CDN --> LB[Load Balancer]
-  LB --> API[API Servers]
-  API --> Cache[Redis Cache]
-  API --> DB[(Primary DB)]
-  DB --> Replica[(Read Replicas)]
-Keep it concise — max 25 nodes.
+skip
 [/DIAGRAM]
 
 [DEEPDESIGN]
