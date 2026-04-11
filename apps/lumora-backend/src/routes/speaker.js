@@ -29,45 +29,22 @@ router.post('/enroll', upload.single('audio'), async (req, res) => {
       return res.status(400).json({ error: 'Audio file is required (field name: "audio")' });
     }
 
-    console.log(`[Speaker] Enrolling user ${req.user.id}, file: ${req.file.originalname}, size: ${req.file.size}, mime: ${req.file.mimetype}`);
+    const { AI_SERVICES_URL } = await import('../services/aiServiceProxy.js');
+    const url = `${AI_SERVICES_URL}/speaker/enroll`;
 
-    // Convert to WAV first using ffmpeg (same as transcription service)
-    const fs = await import('fs');
-    const os = await import('os');
-    const path = await import('path');
-    const { randomUUID } = await import('crypto');
-    const { execFile } = await import('child_process');
-    const { promisify } = await import('util');
-    const execFileAsync = promisify(execFile);
+    // Use undici or node-fetch style: pipe the raw file as multipart
+    // The key: use File (not Blob) so filename and content-type are preserved
+    const file = new File([req.file.buffer], req.file.originalname || 'audio.webm', {
+      type: req.file.mimetype || 'audio/webm',
+    });
 
-    const id = randomUUID();
-    const tmpDir = os.default.tmpdir();
-    const inputPath = path.default.join(tmpDir, `enroll-${id}.webm`);
-    const wavPath = path.default.join(tmpDir, `enroll-${id}.wav`);
+    const formData = new FormData();
+    formData.append('audio', file);
+    formData.append('user_id', String(req.user.id));
 
-    fs.default.writeFileSync(inputPath, req.file.buffer);
-
-    try {
-      // Convert to WAV (16kHz mono) for reliable processing
-      await execFileAsync('ffmpeg', ['-y', '-i', inputPath, '-ar', '16000', '-ac', '1', '-f', 'wav', wavPath]);
-
-      const wavBuffer = fs.default.readFileSync(wavPath);
-      const formData = new FormData();
-      formData.append('audio', new Blob([wavBuffer], { type: 'audio/wav' }), 'enrollment.wav');
-      formData.append('user_id', String(req.user.id));
-
-      const { AI_SERVICES_URL } = await import('../services/aiServiceProxy.js');
-      const url = `${AI_SERVICES_URL}/speaker/enroll`;
-      console.log(`[Speaker] Proxying WAV (${wavBuffer.length} bytes) to: ${url}`);
-
-      const upstream = await fetch(url, { method: 'POST', body: formData });
-      const data = await upstream.json();
-      console.log(`[Speaker] Response: ${upstream.status}`, JSON.stringify(data));
-      return res.status(upstream.status).json(data);
-    } finally {
-      try { fs.default.unlinkSync(inputPath); } catch {}
-      try { fs.default.unlinkSync(wavPath); } catch {}
-    }
+    const upstream = await fetch(url, { method: 'POST', body: formData });
+    const data = await upstream.json();
+    return res.status(upstream.status).json(data);
   } catch (err) {
     console.error('[Speaker] Enroll error:', err.message || err);
     return res.status(500).json({ error: 'Speaker enrollment failed: ' + (err.message || 'unknown error') });
