@@ -518,23 +518,37 @@ function RequirementsList({ content, reqType, isComplete }: { content: string; r
 
 function ScaleMathList({ content, isComplete }: { content: string; isComplete: boolean }) {
   const lines = content.split('\n').map(l => cleanText(l).replace(/^[-*]\s*/, '')).filter(Boolean);
+  const metrics: { label: string; value: string }[] = [];
+  const other: string[] = [];
 
-  if (lines.length === 0) return <ShimmerBlock lines={3} />;
+  lines.forEach(line => {
+    const colonIdx = line.indexOf(':');
+    if (colonIdx > 0) {
+      metrics.push({ label: line.slice(0, colonIdx).trim(), value: line.slice(colonIdx + 1).trim() });
+    } else {
+      other.push(line);
+    }
+  });
+
+  if (metrics.length === 0 && other.length === 0) return <ShimmerBlock lines={3} />;
 
   return (
-    <div className="space-y-1">
-      {lines.map((line, i) => {
-        const colonIdx = line.indexOf(':');
-        if (colonIdx > 0) {
-          return (
-            <div key={i} className="flex items-baseline px-1.5 py-1 rounded bg-gray-50">
-              <span className="font-mono text-base text-text-dim shrink-0">{line.slice(0, colonIdx)}</span>
-              <span className="font-mono text-base font-semibold text-emerald-light text-right flex-1 ml-2">{line.slice(colonIdx + 1).trim()}</span>
+    <div className="space-y-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        {metrics.map((m, i) => (
+          <div key={i} className="rounded-lg border border-emerald-500/15 bg-emerald-500/[0.04] p-3">
+            <div className="font-mono text-[10px] font-bold text-text-dim uppercase tracking-wider mb-1.5">
+              {m.label}
             </div>
-          );
-        }
-        return <div key={i} className="font-mono text-base text-text-subtle px-1.5">{line}</div>;
-      })}
+            <div className="font-mono text-sm font-semibold text-emerald-light leading-snug break-words">
+              {m.value}
+            </div>
+          </div>
+        ))}
+      </div>
+      {other.map((line, i) => (
+        <div key={`o-${i}`} className="font-mono text-[13px] text-text-subtle px-1">{line}</div>
+      ))}
       {!isComplete && <Cursor />}
     </div>
   );
