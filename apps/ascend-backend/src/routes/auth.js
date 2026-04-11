@@ -200,7 +200,7 @@ router.post('/refresh', async (req, res) => {
   }
 
   const token = authHeader.split(' ')[1];
-  const jwtSecret = process.env.JWT_SECRET_KEY || process.env.JWT_SECRET;
+  const jwtSecret = process.env.JWT_SECRET || process.env.JWT_SECRET_KEY;
   if (!jwtSecret) {
     return res.status(500).json({ error: 'Auth not configured' });
   }

@@ -31,7 +31,4 @@ export const config = {
 
   // Quota
   dailyFreeLimit: parseInt(process.env.DAILY_FREE_LIMIT || '10'),
-
-  // Redis
-  redisUrl: process.env.REDIS_URL,
 };

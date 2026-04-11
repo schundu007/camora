@@ -372,7 +372,7 @@ router.post(
           );
           if (userResult.rows.length > 0) {
             await query(
-              "UPDATE users SET subscription_status = 'active' WHERE id = $1",
+              "UPDATE users SET plan_status = 'active' WHERE id = $1",
               [userResult.rows[0].id]
             );
             console.log(`[Billing] Invoice paid for user ${userResult.rows[0].id}`);
