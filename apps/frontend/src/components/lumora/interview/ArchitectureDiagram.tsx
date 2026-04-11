@@ -176,17 +176,12 @@ export function ArchitectureDiagram({ question, className = '' }: ArchitectureDi
 
       {/* No cached diagram — show generate button */}
       {noCache && !loading && !generating && (
-        <div className="flex flex-col items-center justify-center p-8 border border-[#e3e8ee] rounded-lg bg-white text-center">
-          <svg className="w-10 h-10 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-          </svg>
-          <p className="text-sm text-gray-500 mb-3">No cached diagram for this question</p>
+        <div className="flex flex-col items-center justify-center p-6 rounded-lg text-center" style={{ border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
           <button onClick={handleGenerate}
-            className="px-4 py-2 text-sm font-semibold text-white rounded-lg transition-all hover:opacity-90"
-            style={{ background: 'linear-gradient(135deg, #10b981, #059669)', boxShadow: '0 2px 8px rgba(16,185,129,0.25)' }}>
-            Generate Diagram (takes ~60s)
+            className="px-5 py-2.5 text-sm font-bold text-white rounded-lg transition-all hover:opacity-90"
+            style={{ background: 'linear-gradient(135deg, #10b981, #059669)', boxShadow: '0 2px 12px rgba(16,185,129,0.3)' }}>
+            Generate Architecture Diagram
           </button>
-          <p className="text-xs text-gray-400 mt-2">Will be cached for future use</p>
         </div>
       )}
 

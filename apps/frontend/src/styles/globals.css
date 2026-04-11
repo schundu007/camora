@@ -1,6 +1,22 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Comfortaa:wght@700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Comfortaa:wght@700&family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 @config "../../tailwind.config.ts";
+
+/* Shepherd.js tour — dark theme matching Lumora */
+.shepherd-element { max-width: 340px !important; }
+.shepherd-content { background: #0f172a !important; border: 1px solid rgba(16,185,129,0.15) !important; border-radius: 12px !important; box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 24px rgba(16,185,129,0.08) !important; }
+.shepherd-text { color: rgba(255,255,255,0.7) !important; font-size: 13px !important; line-height: 1.6 !important; padding: 16px 20px !important; font-family: 'Plus Jakarta Sans', system-ui, sans-serif !important; }
+.shepherd-text strong { color: #34d399 !important; font-weight: 700 !important; }
+.shepherd-footer { padding: 8px 16px 16px !important; border-top: none !important; }
+.shepherd-button { background: linear-gradient(135deg, #10b981, #059669) !important; color: #fff !important; border: none !important; border-radius: 8px !important; font-size: 12px !important; font-weight: 700 !important; padding: 6px 16px !important; }
+.shepherd-button:hover { box-shadow: 0 2px 12px rgba(16,185,129,0.4) !important; }
+.shepherd-button-secondary { background: transparent !important; color: rgba(255,255,255,0.4) !important; border: 1px solid rgba(255,255,255,0.1) !important; }
+.shepherd-button-secondary:hover { color: rgba(255,255,255,0.8) !important; box-shadow: none !important; }
+.shepherd-cancel-icon span { color: rgba(255,255,255,0.3) !important; font-size: 20px !important; }
+.shepherd-cancel-icon:hover span { color: rgba(255,255,255,0.7) !important; }
+.shepherd-arrow::before { background: #0f172a !important; border: 1px solid rgba(16,185,129,0.15) !important; }
+.shepherd-modal-overlay-container { opacity: 0.6 !important; }
+.shepherd-has-title .shepherd-content .shepherd-header { display: none !important; }
 
 body {
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
@@ -401,41 +417,6 @@ body::after { bottom: 0; }
     outline-offset: 2px;
   }
 
-  .btn-primary {
-    @apply bg-transparent;
-    color: var(--primary);
-    border-color: var(--primary);
-  }
-
-  .btn-primary:hover {
-    @apply text-white;
-    background-color: var(--primary);
-    box-shadow: 0 0 12px rgba(16, 185, 129, 0.2);
-  }
-
-  .btn-danger {
-    @apply bg-transparent;
-    color: #f43f5e;
-    border-color: #f43f5e;
-  }
-
-  .btn-danger:hover {
-    @apply text-white;
-    background-color: #f43f5e;
-    box-shadow: 0 0 12px rgba(239, 68, 68, 0.2);
-  }
-
-  .btn-ghost {
-    @apply bg-transparent;
-    color: var(--text-subtle);
-    border-color: var(--border);
-  }
-
-  .btn-ghost:hover {
-    color: var(--text);
-    border-color: var(--text-subtle);
-  }
-
   /* Input styles */
   .input {
     @apply w-full bg-transparent border-2 px-4 py-2.5 text-sm outline-none;
@@ -610,20 +591,6 @@ body:not(:has(.lumora-app-bg)) .text-gray-900,
   100% { background-position: 0% 50%; }
 }
 
-/* Floating pricing shards */
-.pricing-shard {
-  position: absolute;
-  pointer-events: none;
-  z-index: 20;
-  animation: shard-float 5s ease-in-out infinite;
-}
-@keyframes shard-float {
-  0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.6; }
-  25% { transform: translateY(-10px) rotate(15deg); opacity: 1; }
-  50% { transform: translateY(-4px) rotate(-8deg); opacity: 0.7; }
-  75% { transform: translateY(-10px) rotate(8deg); opacity: 0.85; }
-}
-
 /* Highlight.js */
 .hljs {
   background: transparent !important;
@@ -639,15 +606,6 @@ body:not(:has(.lumora-app-bg)) .text-gray-900,
 /* Smooth page transition */
 main, [role="main"] {
   animation: fadeUp 0.2s ease-out;
-}
-
-/* Glow effect for important elements */
-.glow-green {
-  box-shadow: 0 0 20px rgba(74, 222, 128, 0.2);
-}
-
-.glow-green:hover {
-  box-shadow: 0 0 30px rgba(74, 222, 128, 0.3);
 }
 
 /* Coding page: left panel responsive width */

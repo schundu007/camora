@@ -2,17 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import CamoraLogo from './CamoraLogo';
-
-const NAV_LINKS = [
-  { label: 'Apply', href: '/jobs' },
-  { label: 'Prepare', href: '/capra/prepare' },
-  { label: 'Practice', href: '/capra/practice' },
-  { label: 'Attend', href: '/lumora' },
-  { label: 'Pricing', href: '/pricing' },
-  { label: 'Challenge', href: '/challenge' },
-];
-
-const CHALLENGE_END = new Date('2026-10-07T23:59:59Z');
+import { NAV_LINKS, CHALLENGE_END } from '../../lib/constants';
 const TICKER_HEIGHT = 26;
 const TICKER_ITEMS = [
   'The Camora Challenge — $21,812 in prizes',

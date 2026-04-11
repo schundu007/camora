@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { MermaidDiagram } from './MermaidDiagram';
+import { cleanText } from '@/lib/text-utils';
 
 interface StreamingAnswerProps {
   chunks: string[];
@@ -413,80 +413,6 @@ function StreamingGridCard({
   );
 }
 
-function StreamingFitCard({
-  title,
-  titleColor,
-  block,
-  type,
-}: {
-  title: string;
-  titleColor: string;
-  block?: ParsedBlock;
-  type: string;
-}) {
-  let content = null;
-
-  if (block) {
-    if (type === 'functional' || type === 'nonfunctional') {
-      content = <RequirementsList content={block.content} reqType={type} isComplete={block.isComplete} />;
-    } else if (type === 'scalemath') {
-      content = <ScaleMathList content={block.content} isComplete={block.isComplete} />;
-    } else if (type === 'deepdesign') {
-      content = <DeepDesignList content={block.content} isComplete={block.isComplete} />;
-    } else if (type === 'edgecases') {
-      content = <EdgeCasesList content={block.content} isComplete={block.isComplete} />;
-    } else if (type === 'tradeoffs') {
-      content = <TradeoffsList content={block.content} isComplete={block.isComplete} />;
-    }
-  }
-
-  return (
-    <div className="rounded-lg border border-border bg-bg2 p-4 w-fit shrink-0">
-      <div className={`font-display text-base font-bold tracking-[0.1em] uppercase mb-2 pb-1 border-b border-border ${titleColor}`}>
-        {title}
-      </div>
-      {content || <ShimmerBlock lines={4} />}
-    </div>
-  );
-}
-
-function StreamingCard({
-  title,
-  titleColor,
-  block,
-  type,
-}: {
-  title: string;
-  titleColor: string;
-  block?: ParsedBlock;
-  type: string;
-}) {
-  let content = null;
-
-  if (block) {
-    if (type === 'functional' || type === 'nonfunctional') {
-      content = <RequirementsList content={block.content} reqType={type} isComplete={block.isComplete} />;
-    } else if (type === 'scalemath') {
-      content = <ScaleMathList content={block.content} isComplete={block.isComplete} />;
-    } else if (type === 'deepdesign') {
-      content = <DeepDesignList content={block.content} isComplete={block.isComplete} />;
-    } else if (type === 'edgecases') {
-      content = <EdgeCasesList content={block.content} isComplete={block.isComplete} />;
-    } else if (type === 'tradeoffs') {
-      content = <TradeoffsList content={block.content} isComplete={block.isComplete} />;
-    }
-  }
-
-  return (
-    <div className="rounded-lg border border-border bg-bg2 p-4">
-      <div className={`font-display text-base font-bold tracking-[0.1em] uppercase mb-2 pb-1 border-b border-border ${titleColor}`}>
-        {title}
-      </div>
-      {content || <ShimmerBlock lines={4} />}
-    </div>
-  );
-}
-
 function RequirementsList({ content, reqType, isComplete }: { content: string; reqType: string; isComplete: boolean }) {
   const lines = content.split('\n').map(l => cleanText(l).replace(/^[-*]\s*/, '')).filter(Boolean);
   const items: string[] = [];
@@ -768,11 +694,3 @@ function Cursor() {
   return <span className="inline-block w-1.5 h-3 bg-indigo-light/60 ml-0.5 animate-pulse" />;
 }
 
-function cleanText(s: string): string {
-  return (s || '')
-    .replace(/^#{1,4}\s+.*$/gm, '')
-    .replace(/^\s*[-*]{3,}\s*$/gm, '')
-    .replace(/\*\*/g, '')
-    .replace(/\*/g, '')
-    .trim();
-}

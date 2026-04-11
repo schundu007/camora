@@ -7,6 +7,7 @@ import { useStreamingInterview } from '../../hooks/useStreamingInterview';
 import { useInterviewStore } from '../../stores/interview-store';
 import SiteNav from '../../components/shared/SiteNav';
 import SiteFooter from '../../components/shared/SiteFooter';
+import { useLumoraTour } from '../../hooks/useLumoraTour';
 
 function MicCheck({ onReady }: { onReady: () => void }) {
   const [micLevel, setMicLevel] = useState(0);
@@ -157,6 +158,9 @@ export function InterviewPage() {
   const [blanked, setBlanked] = useState(false);
   const { handleSubmit, resetState } = useStreamingInterview();
   const { clearStreamChunks, setParsedBlocks, setQuestion, setError, setIsStreaming, setStatus, isStreaming, history, question, parsedBlocks } = useInterviewStore();
+
+  // Guided tour on fresh session
+  useLumoraTour();
 
   // Emergency blank: Cmd+B or Ctrl+B to hide/show everything
   useEffect(() => {
