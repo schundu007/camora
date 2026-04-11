@@ -86,6 +86,34 @@ export default function ShellSidebar() {
       </div>
 
       <nav className={`flex-1 py-3 overflow-y-auto ${isCollapsed ? 'px-1.5' : 'px-3'}`}>
+        {/* Quick Nav — mobile only */}
+        {isMobile && (
+          <>
+            <div className="flex flex-wrap gap-1.5 px-2 mb-3">
+              {[
+                { label: 'Apply', href: '/jobs', icon: 'briefcase' },
+                { label: 'Practice', href: '/capra/practice', icon: 'code' },
+                { label: 'Attend', href: '/lumora', icon: 'microphone' },
+                { label: 'Challenge', href: '/challenge', icon: 'trophy' },
+              ].map(link => (
+                <Link
+                  key={link.label}
+                  to={link.href}
+                  onClick={closeSidebar}
+                  className={`px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-all ${
+                    location.pathname.startsWith(link.href)
+                      ? 'bg-emerald-50 text-emerald-700'
+                      : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+            <div className="h-px bg-gray-100 mx-4 mb-3" />
+          </>
+        )}
+
         {/* Prepare */}
         {!isCollapsed && <div className="text-[10px] font-semibold text-gray-400 tracking-widest uppercase px-3 mb-2">Prepare</div>}
         {PREPARE_ITEMS.map((item) => {
