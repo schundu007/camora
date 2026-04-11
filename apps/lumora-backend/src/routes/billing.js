@@ -10,8 +10,8 @@
  *   STRIPE_PRICE_LIFETIME   — Price ID for the 8-Pack (one-time)
  */
 import { Router } from 'express';
-import Stripe from 'stripe';
 import { query } from '../lib/shared-db.js';
+import { getStripe } from '../config/stripe.js';
 import { authenticate } from '../middleware/authenticate.js';
 import { addTopup } from '../services/usage.js';
 
@@ -45,11 +45,6 @@ function isAllowedRedirectUrl(url) {
 // ---------------------------------------------------------------------------
 // Stripe initialisation (lazy — returns null when key is absent)
 // ---------------------------------------------------------------------------
-
-function getStripe() {
-  if (!process.env.STRIPE_SECRET_KEY) return null;
-  return new Stripe(process.env.STRIPE_SECRET_KEY);
-}
 
 const PRICE_MONTHLY  = () => process.env.STRIPE_PRICE_MONTHLY;
 const PRICE_LIFETIME = () => process.env.STRIPE_PRICE_LIFETIME;

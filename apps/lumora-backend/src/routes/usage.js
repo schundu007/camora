@@ -2,8 +2,8 @@
  * Usage routes — current usage stats and topup checkout.
  */
 import { Router } from 'express';
-import Stripe from 'stripe';
 import { authenticate } from '../middleware/authenticate.js';
+import { getStripe } from '../config/stripe.js';
 import { getUsage } from '../services/usage.js';
 
 const router = Router();
@@ -17,15 +17,6 @@ const TOPUP_PACKS = [
   { id: 'questions_50', name: '50 AI Questions', price: 1000, stripePrice: process.env.STRIPE_TOPUP_50Q, type: 'questions', amount: 50, extras: { diagrams: 8 } },
   { id: 'sessions_5', name: '5 Live Sessions', price: 1500, stripePrice: process.env.STRIPE_TOPUP_5S, type: 'sessions', amount: 5 },
 ];
-
-// ---------------------------------------------------------------------------
-// Stripe helper (lazy init)
-// ---------------------------------------------------------------------------
-
-function getStripe() {
-  if (!process.env.STRIPE_SECRET_KEY) return null;
-  return new Stripe(process.env.STRIPE_SECRET_KEY);
-}
 
 // ---------------------------------------------------------------------------
 // GET / — current usage stats
