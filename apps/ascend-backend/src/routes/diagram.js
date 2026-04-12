@@ -11,7 +11,7 @@ import { query } from '../lib/shared-db.js';
 const router = Router();
 
 // Daily diagram cap for paid users to prevent abuse
-const PAID_DIAGRAM_DAILY_LIMIT = 20;
+const PAID_DIAGRAM_DAILY_LIMIT = 50;
 const dailyDiagramUsage = new Map();
 
 function checkDailyDiagramLimit(userId) {
@@ -73,14 +73,14 @@ router.post('/eraser', async (req, res, next) => {
 
     // 2. Check free usage
     const userId = req.user?.id;
-    if (userId) {
+    const isAdmin = req.user?.is_admin;
+    if (userId && !isAdmin) {
       const canUse = await freeUsageService.canUseFeature(userId, 'design');
       if (!canUse.allowed) {
         return res.status(429).json({ error: canUse.reason || 'Free trial exhausted.', subscriptionRequired: true });
       }
-      // Paid users: daily cap to prevent abuse
       if (canUse.hasSubscription && !checkDailyDiagramLimit(userId)) {
-        return res.status(429).json({ error: 'Daily diagram limit reached (5/day). Try again tomorrow.', dailyLimitReached: true });
+        return res.status(429).json({ error: `Daily diagram limit reached (${PAID_DIAGRAM_DAILY_LIMIT}/day). Try again tomorrow.`, dailyLimitReached: true });
       }
     }
 
@@ -167,14 +167,14 @@ router.post('/generate', async (req, res, next) => {
 
     // 2. Check free usage — only for cache misses (actual generation costs money)
     const userId = req.user?.id;
-    if (userId) {
+    const isAdmin = req.user?.is_admin;
+    if (userId && !isAdmin) {
       const canUse = await freeUsageService.canUseFeature(userId, 'design');
       if (!canUse.allowed) {
         return res.status(429).json({ error: canUse.reason || 'Free trial exhausted.', subscriptionRequired: true });
       }
-      // Paid users: daily cap to prevent abuse
       if (canUse.hasSubscription && !checkDailyDiagramLimit(userId)) {
-        return res.status(429).json({ error: 'Daily diagram limit reached (5/day). Try again tomorrow.', dailyLimitReached: true });
+        return res.status(429).json({ error: `Daily diagram limit reached (${PAID_DIAGRAM_DAILY_LIMIT}/day). Try again tomorrow.`, dailyLimitReached: true });
       }
     }
 
