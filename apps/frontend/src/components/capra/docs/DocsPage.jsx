@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { useIsMobile } from '../../../hooks/capra/useIsMobile';
 import { useAppShell } from '../layout/AppShellContext';
@@ -126,12 +126,12 @@ export default function DocsPage({ onBack }) {
     }
   }, [routerLocation.pathname, routerLocation.search]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Sync URL with component state (for in-page topic clicks, not sidebar navigation)
+  // Sync URL with component state — use pushState for topic selection so browser back works
+  const prevTopicRef = useRef(selectedTopic);
   useEffect(() => {
     const params = new URLSearchParams();
     if (activePage && activePage !== 'overview') params.set('page', activePage);
     if (selectedTopic) params.set('topic', selectedTopic);
-    // Preserve job context in URL
     if (jobContext) {
       if (jobContext.role) params.set('role', jobContext.role);
       if (jobContext.focus) params.set('focus', jobContext.focus);
@@ -142,9 +142,34 @@ export default function DocsPage({ onBack }) {
     const newURL = queryString ? `/capra/prepare?${queryString}` : '/capra/prepare';
     const currentURL = window.location.pathname + window.location.search;
     if (currentURL !== newURL) {
-      window.history.replaceState({}, '', newURL);
+      // Use pushState when selecting a topic (creates history entry for browser back)
+      // Use replaceState for other changes (tab switch, filter)
+      const topicChanged = prevTopicRef.current !== selectedTopic;
+      if (topicChanged && (selectedTopic || prevTopicRef.current)) {
+        window.history.pushState({}, '', newURL);
+      } else {
+        window.history.replaceState({}, '', newURL);
+      }
     }
+    prevTopicRef.current = selectedTopic;
   }, [activePage, selectedTopic, jobContext]);
+
+  // Handle browser back/forward button
+  useEffect(() => {
+    const handlePopState = () => {
+      const params = new URLSearchParams(window.location.search);
+      const topic = params.get('topic') || null;
+      const rawPage = params.get('page') || window.location.pathname.replace('/capra/prepare', '').replace(/^\//, '') || 'overview';
+      const pageAliases = { dsa: 'coding', 'low-level-design': 'low-level' };
+      const page = pageAliases[rawPage] || rawPage;
+      setActivePageState(page);
+      setSelectedTopicState(topic);
+      setActiveSection(page);
+      if (topic) window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   // Wrapped setters
   const setActivePage = (page) => {
