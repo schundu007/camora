@@ -282,35 +282,20 @@ router.post('/lookup', async (req, res) => {
     const { question, cloudProvider = 'auto', detailLevel = 'overview', direction = 'TB' } = req.body;
     if (!question) return res.status(400).json({ error: 'Question required' });
 
-    // Try exact match first, then try alternate direction
-    const hash1 = hashProblem(`${question}::${cloudProvider}::${direction}::${detailLevel}`);
-    const altDirection = direction === 'TB' ? 'LR' : 'TB';
-    const hash2 = hashProblem(`${question}::${cloudProvider}::${altDirection}::${detailLevel}`);
+    // Exact match: same question + provider + direction + detailLevel
+    const exactHash = hashProblem(`${question}::${cloudProvider}::${direction}::${detailLevel}`);
 
-    const cached = await query(
-      'SELECT image_url, mermaid_code FROM ascend_diagram_cache WHERE problem_hash IN ($1, $2) AND (image_url IS NOT NULL OR image_data IS NOT NULL OR mermaid_code IS NOT NULL) LIMIT 1',
-      [hash1, hash2]
+    const exact = await query(
+      'SELECT image_url, mermaid_code FROM ascend_diagram_cache WHERE problem_hash = $1 AND (image_url IS NOT NULL OR image_data IS NOT NULL OR mermaid_code IS NOT NULL) LIMIT 1',
+      [exactHash]
     );
 
-    if (cached.rows.length > 0) {
-      console.log(`[DiagramLookup] Cache hit for question: ${question.slice(0, 50)}`);
-      if (cached.rows[0].mermaid_code) {
-        return res.json({ success: true, type: 'mermaid', mermaid_code: cached.rows[0].mermaid_code, cached: true });
+    if (exact.rows.length > 0) {
+      console.log(`[DiagramLookup] Exact cache hit for: ${question.slice(0, 50)} (${direction}/${detailLevel})`);
+      if (exact.rows[0].mermaid_code) {
+        return res.json({ success: true, type: 'mermaid', mermaid_code: exact.rows[0].mermaid_code, cached: true });
       }
-      return res.json({ success: true, image_url: cached.rows[0].image_url, cached: true });
-    }
-
-    // Broad fallback: search by description LIKE match
-    const broadSearch = await query(
-      `SELECT image_url, mermaid_code FROM ascend_diagram_cache WHERE LOWER(description) LIKE $1 AND (image_url IS NOT NULL OR image_data IS NOT NULL OR mermaid_code IS NOT NULL) LIMIT 1`,
-      [`%${question.trim().toLowerCase().slice(0, 60)}%`]
-    );
-    if (broadSearch.rows.length > 0) {
-      console.log(`[DiagramLookup] Broad match for: ${question.slice(0, 50)}`);
-      if (broadSearch.rows[0].mermaid_code) {
-        return res.json({ success: true, type: 'mermaid', mermaid_code: broadSearch.rows[0].mermaid_code, cached: true });
-      }
-      return res.json({ success: true, image_url: broadSearch.rows[0].image_url, cached: true });
+      return res.json({ success: true, image_url: exact.rows[0].image_url, cached: true });
     }
 
     console.log(`[DiagramLookup] No cache for: ${question.slice(0, 50)}`);
