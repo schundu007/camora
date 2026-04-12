@@ -30,9 +30,6 @@ import { projectCategories, projectCategoryMap, projectTopics } from '../../../d
 import { companyPrep } from '../../../data/capra/topics/companyPrep.js';
 import { interviewCheatsheet } from '../../../data/capra/topics/techInterviewHandbook';
 import { ROLE_TOPIC_MAP } from '../../../data/capra/jobRoleTopicMapping';
-import InterviewCountdown from '../features/InterviewCountdown';
-import ReferralDashboard from '../features/ReferralDashboard';
-import GamificationWidget from '../features/GamificationWidget';
 
 // Merge extra topics into base arrays
 const codingCategoryMap = { ..._codingCategoryMap, ...extraCodingCategoryMap };
@@ -628,13 +625,6 @@ export default function DocsPage({ onBack }) {
                   {/* ── Overview Dashboard ── */}
                   {activePage === 'overview' && (
                     <>
-                      {/* Growth widgets */}
-                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
-                        <InterviewCountdown />
-                        <GamificationWidget />
-                        <ReferralDashboard />
-                      </div>
-
                       {/* Welcome + Stats */}
                       <div className="mb-8">
                         <h1 className="landing-display font-extrabold text-2xl md:text-3xl tracking-tight text-gray-900 mb-2">
