@@ -826,8 +826,8 @@ export function DesignLayout({ onBack, initialProblem }: DesignLayoutProps) {
           <div className="w-0.5 h-8 bg-gray-300 group-hover:bg-emerald-500 rounded-full transition-colors" />
         </div>
 
-        {/* Right: Design Result */}
-        <div className="flex-1 min-h-0 min-w-0 overflow-auto bg-white">
+        {/* Right: Design Result — light panel, exempt from dark overrides */}
+        <div className="flex-1 min-h-0 min-w-0 overflow-auto lumora-light-panel">
 
           {!result && !isLoading && !streamingText && !errorMsg && (
             <div className="flex flex-col items-center justify-center h-full text-gray-400">
@@ -933,14 +933,14 @@ export function DesignLayout({ onBack, initialProblem }: DesignLayoutProps) {
                     <h2 className="text-sm font-bold text-violet-800">Scale Estimates</h2>
                   </div>
                   <div className="px-4 py-3">
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                       {Object.entries(sd.scaleEstimates).filter(([, v]) => v && v.trim()).map(([key, val]) => {
                         const highlight = parseMetricHighlight(val);
                         return (
-                          <div key={key} className="text-center rounded-lg bg-violet-50/50 border border-violet-100 px-2 py-2">
+                          <div key={key} className="rounded-lg bg-violet-50/50 border border-violet-100 px-3 py-3">
                             <div className="font-bold text-violet-600 font-mono text-sm">{highlight ? highlight.number : val}</div>
-                            <div className="text-xs text-gray-700 font-medium">{key}</div>
-                            {highlight?.rest && <div className="text-xs text-gray-400 hidden lg:block">{highlight.rest}</div>}
+                            <div className="text-sm text-gray-700 font-medium mt-1">{key}</div>
+                            {highlight?.rest && <div className="text-xs text-gray-500 mt-1">{highlight.rest}</div>}
                           </div>
                         );
                       })}
@@ -957,7 +957,7 @@ export function DesignLayout({ onBack, initialProblem }: DesignLayoutProps) {
                     <h2 className="text-sm font-bold text-teal-800">Scalability Tiers</h2>
                   </div>
                   <div className="px-4 py-3">
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                       {sd.techJustifications.map((tier, i) => {
                         const color = tierColors[i % tierColors.length];
                         return (
@@ -968,8 +968,8 @@ export function DesignLayout({ onBack, initialProblem }: DesignLayoutProps) {
                                'from-indigo-500 to-blue-500', 'from-teal-500 to-emerald-500'][i % 8]
                             } rounded px-2 py-1 mb-1`}>{tier.tech}</div>
                             {tier.details.length > 0 && (
-                              <div className="text-xs text-gray-500 leading-snug text-left">
-                                {tier.details.map((d, j) => <div key={j} className="truncate" title={d}>- {d}</div>)}
+                              <div className="text-xs text-gray-600 leading-relaxed text-left mt-1">
+                                {tier.details.map((d, j) => <div key={j} title={d}>- {d}</div>)}
                               </div>
                             )}
                           </div>
