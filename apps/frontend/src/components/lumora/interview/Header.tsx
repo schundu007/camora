@@ -16,6 +16,8 @@ interface HeaderProps {
   showInputBar?: boolean;
   activeTab?: TabType;
   onTabChange?: (tab: TabType) => void;
+  onToggleSidebar?: () => void;
+  sidebarOpen?: boolean;
 }
 
 const TAB_ROUTES: Record<TabType, string> = {
@@ -30,7 +32,7 @@ const TABS: { id: TabType; label: string }[] = [
   { id: 'design', label: 'Design' },
 ];
 
-export function Header({ inputValue, onInputChange, onSubmit, onTranscription, showInputBar = true, activeTab, onTabChange }: HeaderProps) {
+export function Header({ inputValue, onInputChange, onSubmit, onTranscription, showInputBar = true, activeTab, onTabChange, onToggleSidebar, sidebarOpen }: HeaderProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { status, useSearch, setUseSearch, isRecording, history, clearHistory } = useInterviewStore();
@@ -131,6 +133,26 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
     <header className="z-50 shrink-0" style={{ background: 'linear-gradient(180deg, rgba(15,23,42,0.95) 0%, rgba(10,10,15,0.98) 100%)', borderBottom: '1px solid rgba(16,185,129,0.08)', boxShadow: '0 1px 12px rgba(0,0,0,0.3), 0 1px 0 rgba(16,185,129,0.05)' }}>
       {/* Row 1: Nav + Audio + Controls — horizontally scrollable */}
       <div className="flex items-center h-[42px] overflow-x-auto no-scrollbar">
+        {/* Sidebar toggle */}
+        {onToggleSidebar && (
+          <button
+            onClick={onToggleSidebar}
+            className="flex items-center justify-center w-10 h-full shrink-0 transition-colors"
+            style={{ color: sidebarOpen ? '#10b981' : 'rgba(255,255,255,0.35)', borderRight: '1px solid rgba(255,255,255,0.06)' }}
+            onMouseEnter={(e) => { if (!sidebarOpen) e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; }}
+            onMouseLeave={(e) => { if (!sidebarOpen) e.currentTarget.style.color = 'rgba(255,255,255,0.35)'; }}
+            title={sidebarOpen ? 'Close history' : 'Open history'}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {sidebarOpen ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              )}
+            </svg>
+          </button>
+        )}
+
         {/* Logo */}
         <Link to="/" className="flex items-center gap-1.5 px-3 h-full shrink-0" style={{ borderRight: '1px solid rgba(255,255,255,0.06)' }}>
           <CamoraLogo size={22} />
