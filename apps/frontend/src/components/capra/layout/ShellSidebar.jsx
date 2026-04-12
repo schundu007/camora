@@ -76,7 +76,7 @@ export default function ShellSidebar() {
             </div>
             <div>
               <span className="font-bold text-base tracking-tight text-gray-900" style={{ fontFamily: "'Comfortaa', sans-serif" }}>Camora</span>
-              <span className="block text-[9px] font-mono uppercase tracking-[0.2em] text-emerald-600 -mt-0.5">Interview AI</span>
+              <span className="block text-[9px] font-mono uppercase tracking-[0.2em] text-emerald-600 -mt-0.5">Apply · Prepare · Practice · Attend</span>
             </div>
           </Link>
         )}

@@ -9,7 +9,7 @@ interface SEOProps {
 }
 
 const DEFAULTS = {
-  title: 'Camora – AI Interview Prep for DevOps and Cloud Engineers',
+  title: 'Camora – Apply, Prepare, Practice & Attend | Your AI Interview Companion',
   description: 'Ace every technical interview with AI-powered prep. System design, coding, behavioral — all formats. Real-time interview assistance with Lumora.',
   image: 'https://camora.cariara.com/images/og-cover.png',
   url: 'https://camora.cariara.com',

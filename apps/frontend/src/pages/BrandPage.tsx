@@ -192,7 +192,7 @@ function Wordmark1({ dark = true }: { dark?: boolean }) {
       </div>
       <div className={`${subColor} mt-1.5`}
            style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, fontWeight: 500, letterSpacing: '0.2em', textTransform: 'uppercase' }}>
-        Interview AI
+        Apply · Prepare · Practice · Attend
       </div>
     </div>
   );

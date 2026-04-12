@@ -5,7 +5,7 @@ interface ShareButtonsProps {
   text?: string;
 }
 
-export default function ShareButtons({ link, text = 'Check out Camora — AI-powered interview prep that actually works!' }: ShareButtonsProps) {
+export default function ShareButtons({ link, text = 'Check out Camora — Apply, Prepare, Practice & Attend. Your AI Interview Companion!' }: ShareButtonsProps) {
   const [copied, setCopied] = useState(false);
 
   const encodedText = encodeURIComponent(`${text} ${link}`);
