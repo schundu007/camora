@@ -29,25 +29,55 @@ router.post('/enroll', upload.single('audio'), async (req, res) => {
       return res.status(400).json({ error: 'Audio file is required (field name: "audio")' });
     }
 
+    const fs = await import('fs');
+    const os = await import('os');
+    const path = await import('path');
+    const { randomUUID } = await import('crypto');
+    const { execFile } = await import('child_process');
+    const { promisify } = await import('util');
+    const execFileAsync = promisify(execFile);
+
+    const id = randomUUID();
+    const tmpDir = os.default.tmpdir();
+    const inputPath = path.default.join(tmpDir, `enroll-${id}.webm`);
+    const wavPath = path.default.join(tmpDir, `enroll-${id}.wav`);
+
+    // Write browser audio to temp file
+    fs.default.writeFileSync(inputPath, req.file.buffer);
+
+    let audioBuffer;
+    let filename;
+    let mime;
+
+    try {
+      // Convert WebM → WAV (16kHz mono) — AI service processes WAV reliably
+      await execFileAsync('ffmpeg', ['-y', '-i', inputPath, '-ar', '16000', '-ac', '1', '-f', 'wav', wavPath]);
+      audioBuffer = fs.default.readFileSync(wavPath);
+      filename = 'enrollment.wav';
+      mime = 'audio/wav';
+      console.log(`[Speaker] Converted to WAV: ${audioBuffer.length} bytes`);
+    } catch (ffmpegErr) {
+      // ffmpeg failed — send original
+      console.warn(`[Speaker] ffmpeg conversion failed, sending original: ${ffmpegErr.message}`);
+      audioBuffer = req.file.buffer;
+      filename = req.file.originalname || 'audio.webm';
+      mime = req.file.mimetype || 'audio/webm';
+    }
+
+    // Build raw multipart
     const { AI_SERVICES_URL } = await import('../services/aiServiceProxy.js');
     const url = `${AI_SERVICES_URL}/speaker/enroll`;
-
-    // Build raw multipart body manually — most reliable cross-platform approach
-    const boundary = '----FormBoundary' + Math.random().toString(36).slice(2);
-    const filename = req.file.originalname || 'audio.webm';
-    const mime = req.file.mimetype || 'audio/webm';
+    const boundary = '----FormBoundary' + randomUUID().replace(/-/g, '');
 
     const parts = [];
-    // Audio file part
     parts.push(Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="audio"; filename="${filename}"\r\nContent-Type: ${mime}\r\n\r\n`));
-    parts.push(req.file.buffer);
+    parts.push(audioBuffer);
     parts.push(Buffer.from('\r\n'));
-    // user_id part
     parts.push(Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="user_id"\r\n\r\n${req.user.id}\r\n`));
-    // End boundary
     parts.push(Buffer.from(`--${boundary}--\r\n`));
 
     const body = Buffer.concat(parts);
+    console.log(`[Speaker] Sending ${body.length} bytes to ${url}`);
 
     const upstream = await fetch(url, {
       method: 'POST',
@@ -55,10 +85,24 @@ router.post('/enroll', upload.single('audio'), async (req, res) => {
       body,
     });
     const data = await upstream.json();
+    console.log(`[Speaker] Response: ${upstream.status}`, JSON.stringify(data));
     return res.status(upstream.status).json(data);
   } catch (err) {
     console.error('[Speaker] Enroll error:', err.message || err);
     return res.status(500).json({ error: 'Speaker enrollment failed: ' + (err.message || 'unknown error') });
+  } finally {
+    // Cleanup temp files
+    try {
+      const fs = await import('fs');
+      const os = await import('os');
+      const path = await import('path');
+      const tmpDir = os.default.tmpdir();
+      for (const f of fs.default.readdirSync(tmpDir)) {
+        if (f.startsWith('enroll-') && (f.endsWith('.webm') || f.endsWith('.wav'))) {
+          try { fs.default.unlinkSync(path.default.join(tmpDir, f)); } catch {}
+        }
+      }
+    } catch {}
   }
 });
 
