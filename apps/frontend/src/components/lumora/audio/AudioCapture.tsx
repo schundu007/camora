@@ -84,11 +84,15 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
 
     if (isLiveMode) {
       // LIVE MODE: accumulate chunks, detect question completion
-      setStatus('transcribe', 'Transcribing chunk...');
+      setStatus('transcribe', shouldFilterVoice ? 'Analyzing speakers...' : 'Transcribing...');
       try {
         const result = await transcriptionAPI.transcribe(token, blob, 'audio.webm', shouldFilterVoice);
         if (result.skipped) {
-          setStatus('listen', 'Your voice detected - waiting for interviewer...');
+          const ratio = result.interviewer_ratio;
+          const msg = ratio !== undefined
+            ? `Your voice (${Math.round((1 - ratio) * 100)}%) - filtering...`
+            : 'Your voice detected - filtering...';
+          setStatus('listen', msg);
           setShouldRestart(true);
           return;
         }
@@ -106,11 +110,15 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
       }
     } else {
       // MANUAL MODE: send entire recording as one question
-      setStatus('transcribe', shouldFilterVoice ? 'Checking speaker...' : 'Transcribing...');
+      setStatus('transcribe', shouldFilterVoice ? 'Analyzing speakers...' : 'Transcribing...');
       try {
         const result = await transcriptionAPI.transcribe(token, blob, 'audio.webm', shouldFilterVoice);
         if (result.skipped) {
-          setStatus('listen', 'Your voice detected - waiting for interviewer...');
+          const ratio = result.interviewer_ratio;
+          const msg = ratio !== undefined
+            ? `Your voice (${Math.round((1 - ratio) * 100)}%) - filtering...`
+            : 'Your voice detected - filtering...';
+          setStatus('listen', msg);
           setShouldRestart(true);
           return;
         }
@@ -412,8 +420,10 @@ function SystemAudioButton({ onTranscription, disabled }: { onTranscription?: (t
         if (e.data.size > 0 && token) {
           try {
             const blob = new Blob([e.data], { type: 'audio/webm' });
-            const result = await transcriptionAPI.transcribe(token, blob, 'system-audio.webm');
-            if (result.text?.trim()) {
+            // Apply voice filter to system audio too (filters out candidate echo/crosstalk)
+            const shouldFilter = voiceEnrolled && voiceFilterEnabled;
+            const result = await transcriptionAPI.transcribe(token, blob, 'system-audio.webm', shouldFilter);
+            if (result.text?.trim() && !result.skipped) {
               onTranscription?.(result.text.trim());
             }
           } catch { /* transcription failed, skip chunk */ }
