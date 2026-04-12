@@ -106,7 +106,7 @@ export function InterviewPage() {
           <div className="shrink-0 relative z-20">
             <div className="absolute -top-8 left-0 right-0 h-8 pointer-events-none" style={{ background: 'linear-gradient(to top, #0a0a0f, transparent)' }} />
             <div className="px-3 sm:px-4 pb-3 pt-1">
-              <div className="max-w-3xl mx-auto">
+              <div className="mx-auto" style={{ maxWidth: '90%' }}>
                 {isExpanded ? (
                   <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)' }}>
                     <textarea
