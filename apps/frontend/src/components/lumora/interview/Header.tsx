@@ -206,8 +206,17 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
           </select>
         </div>
 
-        {/* Status pill */}
-        <div className="hidden lg:flex items-center gap-1.5 px-2 h-full shrink-0" style={{ borderRight: '1px solid rgba(255,255,255,0.06)' }}>
+        {/* Audio + Docs */}
+        <div data-tour="audio" className="flex items-center gap-1 px-1.5 h-full shrink-0">
+          <AudioCapture onTranscription={onTranscription} />
+          <DocumentUpload />
+        </div>
+
+        {/* Spacer pushes right controls to the end */}
+        <div className="flex-1 min-w-0" />
+
+        {/* Status pill — right side */}
+        <div className="hidden lg:flex items-center gap-1.5 px-2 h-full shrink-0" style={{ borderLeft: '1px solid rgba(255,255,255,0.06)' }}>
           <div className={`w-2 h-2 rounded-full shrink-0 ${
             status.state === 'ready' ? 'bg-emerald-400' :
             status.state === 'error' ? 'bg-red-500' :
@@ -218,12 +227,6 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
           <span className="font-code text-[10px] text-white/50 font-medium truncate whitespace-nowrap max-w-[100px]">
             {status.message}
           </span>
-        </div>
-
-        {/* Audio + Docs */}
-        <div data-tour="audio" className="flex items-center gap-1 px-1.5 h-full shrink-0">
-          <AudioCapture onTranscription={onTranscription} />
-          <DocumentUpload />
         </div>
 
         {/* Search + Reset */}
