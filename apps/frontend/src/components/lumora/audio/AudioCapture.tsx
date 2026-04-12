@@ -377,9 +377,11 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
 
 function SystemAudioButton({ onTranscription, disabled }: { onTranscription?: (text: string) => void; disabled?: boolean }) {
   const [capturing, setCapturing] = useState(false);
+  const [statusMsg, setStatusMsg] = useState('');
   const streamRef = useRef<MediaStream | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const { token } = useAuth();
+  const { voiceEnrolled, voiceFilterEnabled, setStatus } = useInterviewStore();
 
   const toggleSystemAudio = useCallback(async () => {
     if (capturing) {
@@ -387,20 +389,33 @@ function SystemAudioButton({ onTranscription, disabled }: { onTranscription?: (t
       streamRef.current?.getTracks().forEach(t => t.stop());
       streamRef.current = null;
       setCapturing(false);
+      setStatusMsg('');
       return;
     }
 
     try {
+      setStatusMsg('Select a browser tab and check "Share tab audio"');
+
       const stream = await navigator.mediaDevices.getDisplayMedia({
         video: true,
-        audio: true,
+        audio: {
+          echoCancellation: false,
+          noiseSuppression: false,
+          autoGainControl: false,
+        },
+        // @ts-ignore — Chrome: auto-check "Share system audio"
+        systemAudio: 'include',
+        // @ts-ignore — Chrome: exclude self tab from picker
+        selfBrowserSurface: 'exclude',
       });
 
       // Check if audio track exists
       const audioTracks = stream.getAudioTracks();
       if (audioTracks.length === 0) {
         stream.getTracks().forEach(t => t.stop());
-        alert('No audio detected. Make sure to check "Share audio" when sharing your screen.');
+        setStatusMsg('No audio — select a tab (not window) and check "Share tab audio"');
+        setStatus('error', 'No audio detected. Share a browser tab with audio enabled.');
+        setTimeout(() => setStatusMsg(''), 5000);
         return;
       }
 
@@ -411,6 +426,8 @@ function SystemAudioButton({ onTranscription, disabled }: { onTranscription?: (t
       const audioStream = new MediaStream(audioTracks);
       streamRef.current = audioStream;
       setCapturing(true);
+      setStatusMsg('');
+      setStatus('listening', 'Capturing interviewer audio...');
 
       // Record in 5-second chunks and transcribe
       const recorder = new MediaRecorder(audioStream, { mimeType: 'audio/webm;codecs=opus' });
@@ -420,7 +437,6 @@ function SystemAudioButton({ onTranscription, disabled }: { onTranscription?: (t
         if (e.data.size > 0 && token) {
           try {
             const blob = new Blob([e.data], { type: 'audio/webm' });
-            // Apply voice filter to system audio too (filters out candidate echo/crosstalk)
             const shouldFilter = voiceEnrolled && voiceFilterEnabled;
             const result = await transcriptionAPI.transcribe(token, blob, 'system-audio.webm', shouldFilter);
             if (result.text?.trim() && !result.skipped) {
@@ -435,31 +451,42 @@ function SystemAudioButton({ onTranscription, disabled }: { onTranscription?: (t
       // Auto-stop when stream ends (user stops sharing)
       audioTracks[0].onended = () => {
         setCapturing(false);
+        setStatusMsg('');
         streamRef.current = null;
+        setStatus('ready', 'Interviewer audio stopped');
       };
     } catch (err: any) {
+      setStatusMsg('');
       if (err.name !== 'NotAllowedError') {
         console.error('System audio capture failed:', err);
+        setStatus('error', 'System audio capture failed');
       }
     }
-  }, [capturing, token, onTranscription]);
+  }, [capturing, token, onTranscription, voiceEnrolled, voiceFilterEnabled, setStatus]);
 
   return (
-    <button
-      onClick={toggleSystemAudio}
-      disabled={disabled}
-      className={`hidden sm:flex items-center gap-1 px-2 py-1 text-xs font-bold rounded border transition-colors shrink-0 ${
-        capturing
-          ? 'bg-red-500 text-white border-red-600 animate-pulse'
-          : 'text-white hover:text-white border-gray-600 hover:bg-gray-800'
-      } disabled:opacity-50`}
-      title={capturing ? 'Stop capturing interviewer audio' : 'Capture interviewer audio from Zoom/Meet (screen share)'}
-    >
-      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15.536a5 5 0 010-7.072m-2.828 9.9a9 9 0 010-12.728" />
-      </svg>
-      <span className="hidden xl:inline">{capturing ? 'Listening' : 'Interviewer'}</span>
-    </button>
+    <div className="relative">
+      <button
+        onClick={toggleSystemAudio}
+        disabled={disabled}
+        className={`hidden sm:flex items-center gap-1 px-2 py-1 text-xs font-bold rounded border transition-colors shrink-0 ${
+          capturing
+            ? 'bg-red-500 text-white border-red-600 animate-pulse'
+            : 'text-white hover:text-white border-gray-600 hover:bg-gray-800'
+        } disabled:opacity-50`}
+        title={capturing ? 'Stop capturing interviewer audio' : 'Capture interviewer audio — share a browser tab with Zoom/Meet'}
+      >
+        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15.536a5 5 0 010-7.072m-2.828 9.9a9 9 0 010-12.728" />
+        </svg>
+        <span className="hidden xl:inline">{capturing ? 'Listening' : 'Interviewer'}</span>
+      </button>
+      {statusMsg && (
+        <div className="absolute top-full right-0 mt-1 px-2 py-1 bg-gray-900 text-amber-300 text-[10px] rounded shadow-lg whitespace-nowrap z-50 border border-gray-700">
+          {statusMsg}
+        </div>
+      )}
+    </div>
   );
 }
 
