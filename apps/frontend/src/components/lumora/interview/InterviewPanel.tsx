@@ -77,70 +77,44 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
         <EmptyState onAskQuestion={onAskQuestion} onSwitchToCoding={onSwitchToCoding} onSwitchToDesign={onSwitchToDesign} />
       ) : (
         <div className="flex-1 flex flex-col gap-2 min-h-0 overflow-auto">
-          {/* All Q&As from history - compact pill navigation */}
-          {history.length > 0 && (
-            <div className="flex items-center gap-1.5 pb-2 border-b border-white/10 shrink-0 overflow-x-auto">
-              <span className="text-[10px] font-code font-semibold text-white/40 uppercase tracking-wider shrink-0 mr-1">History</span>
-              {history.map((entry, idx) => (
-                <div key={idx} className="group relative flex items-center shrink-0">
-                  <button
-                    onClick={() => setExpandedIdx(expandedIdx === idx ? null : idx)}
-                    className={`q-pill ${
-                      expandedIdx === idx
-                        ? 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30'
-                        : idx === history.length - 1 && !isStreaming
-                          ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
-                          : 'bg-white/5 text-white/50 border-white/10 hover:bg-indigo-500/15 hover:text-indigo-300 hover:border-indigo-500/30'
-                    }`}
-                    title={entry.question}
-                  >
-                    Q{idx + 1}
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (expandedIdx === idx) setExpandedIdx(null);
-                      removeHistoryEntry(idx);
-                    }}
-                    className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-white/10 text-white/40 hover:bg-red-500/20 hover:text-red-400 flex items-center justify-center text-[10px] leading-none transition-all opacity-0 group-hover:opacity-100 z-10"
-                    title="Remove question"
-                  >
-                    <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-              ))}
-              {isStreaming && (
-                <div className="q-pill bg-emerald-500/15 text-emerald-300 border-emerald-500/30">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  Q{history.length + 1}
+          {/* Vertical Q&A list — all questions visible, click to expand/collapse answers */}
+          {history.length > 0 && history.map((entry, idx) => (
+            <div key={idx} className="shrink-0">
+              {/* Question header — always visible, click to toggle answer */}
+              <button
+                onClick={() => setExpandedIdx(expandedIdx === idx ? null : idx)}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all ${
+                  expandedIdx === idx
+                    ? 'bg-indigo-500/10 border border-indigo-500/20'
+                    : 'hover:bg-white/[0.03] border border-transparent'
+                }`}
+              >
+                <span className={`flex items-center justify-center w-7 h-7 rounded-lg text-xs font-bold font-code shrink-0 ${
+                  expandedIdx === idx ? 'bg-indigo-500/20 text-indigo-300' : 'bg-emerald-500/15 text-emerald-300'
+                }`}>
+                  Q{idx + 1}
+                </span>
+                <span className="font-display text-sm font-medium text-white/80 leading-snug flex-1 truncate">
+                  {entry.question}
+                </span>
+                <svg className={`w-4 h-4 shrink-0 transition-transform duration-200 ${expandedIdx === idx ? 'rotate-180' : ''}`} style={{ color: 'rgba(255,255,255,0.2)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {/* Answer — shown when expanded */}
+              {expandedIdx === idx && (
+                <div className="mt-2 ml-10">
+                  <AnswerBlocks
+                    blocks={safeBlocks(entry.blocks)}
+                    isDesign={isDesignBlocks(entry.blocks)}
+                    isCoding={isCodingBlocks(entry.blocks)}
+                    question={entry.question}
+                  />
                 </div>
               )}
             </div>
-          )}
-
-          {/* Expanded history item */}
-          {expandedIdx !== null && history[expandedIdx] && (
-            <div className="flex-1 flex flex-col gap-2 overflow-auto">
-              <div className="history-question-card shrink-0 border-indigo-500/20 bg-indigo-500/5">
-                <span className="flex items-center justify-center w-7 h-7 rounded-xl bg-indigo-500/15 text-indigo-300 text-xs font-bold font-code shrink-0">
-                  Q{expandedIdx + 1}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <span className="font-display text-sm font-semibold text-white/90 leading-snug">
-                    {history[expandedIdx].question}
-                  </span>
-                </div>
-              </div>
-              <AnswerBlocks
-                blocks={safeBlocks(history[expandedIdx].blocks)}
-                isDesign={isDesignBlocks(history[expandedIdx].blocks)}
-                isCoding={isCodingBlocks(history[expandedIdx].blocks)}
-                question={history[expandedIdx].question}
-              />
-            </div>
-          )}
+          ))}
 
           {/* Current question - only show if not viewing history */}
           {expandedIdx === null && (
