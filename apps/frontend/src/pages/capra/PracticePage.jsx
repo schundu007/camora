@@ -4,7 +4,7 @@ import { Icon } from '../../components/shared/Icons.jsx';
 import SiteNav from '../../components/shared/SiteNav';
 import SiteFooter from '../../components/shared/SiteFooter';
 import { getAuthHeaders } from '../../utils/authHeaders.js';
-import { ArchitectureDiagram } from '../../components/lumora/interview/ArchitectureDiagram';
+import SharedDiagram from '../../components/shared/diagrams/SharedDiagram';
 import GamificationWidget from '../../components/capra/features/GamificationWidget';
 
 
@@ -916,7 +916,7 @@ export default function PracticePage() {
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 12 }}>
                       {/* Left: Architecture Diagram */}
                       <div>
-                        <ArchitectureDiagram
+                        <SharedDiagram
                           question={`${questions[currentIdx].q}: ${questions[currentIdx].desc}`}
                           className="rounded-lg border border-[#e3e8ee] overflow-hidden"
                         />

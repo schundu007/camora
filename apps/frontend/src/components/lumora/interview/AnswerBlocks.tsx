@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import hljs from 'highlight.js';
 import type { ParsedBlock } from '@/types';
 import { MermaidDiagram } from './MermaidDiagram';
-import { ArchitectureDiagram } from './ArchitectureDiagram';
+import SharedDiagram from '@/components/shared/diagrams/SharedDiagram';
 import { cleanText } from '@/lib/text-utils';
 
 interface AnswerBlocksProps {
@@ -453,7 +453,7 @@ function ArchitectureCard({ question }: { question: string }) {
       </div>
       <div className="p-2 overflow-y-auto overflow-x-auto flex-1">
         {question ? (
-          <ArchitectureDiagram question={question} className="w-full h-full min-h-[360px]" />
+          <SharedDiagram question={question} className="w-full h-full min-h-[360px]" />
         ) : <EmptyBlock />}
       </div>
     </div>
