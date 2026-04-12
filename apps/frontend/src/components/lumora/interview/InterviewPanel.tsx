@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useInterviewStore } from '@/stores/interview-store';
 import { DESIGN_BLOCK_TYPES, CODING_BLOCK_TYPES } from '@/lib/constants';
 import { AnswerBlocks } from './AnswerBlocks';
@@ -180,9 +181,9 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
                 <p className="text-sm font-display font-semibold text-amber-300">Want deeper preparation?</p>
                 <p className="text-xs font-display text-amber-400/70">Ascend has 300+ DSA topics, system design problems, and mock interviews.</p>
               </div>
-              <a href="/capra/prepare" className="shrink-0 px-3 py-1.5 text-white text-xs font-display font-bold rounded-xl hover:opacity-90 transition-all" style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}>
+              <Link to="/capra/prepare" className="shrink-0 px-3 py-1.5 text-white text-xs font-display font-bold rounded-xl hover:opacity-90 transition-all" style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}>
                 Prepare →
-              </a>
+              </Link>
             </div>
           )}
 
