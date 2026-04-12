@@ -220,13 +220,40 @@ export default function DocsPage({ onBack }) {
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({
           question,
-          context: topicDetails ? `Topic: ${topicDetails.title}. ${topicDetails.description || ''} ${topicDetails.introduction || ''}` : '',
-          problem: '',
+          problem: topicDetails ? `Topic: ${topicDetails.title}. ${topicDetails.description || ''} ${topicDetails.introduction || ''}` : question,
           code: '',
         }),
       });
-      const data = await res.json();
-      setAiAnswer(data.answer || data.result || 'No answer available.');
+      const contentType = res.headers.get('content-type') || '';
+      if (contentType.includes('text/event-stream')) {
+        // SSE streaming response
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let fullText = '';
+        let buf = '';
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buf += decoder.decode(value, { stream: true });
+          const lines = buf.split('\n');
+          buf = lines.pop();
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const d = JSON.parse(line.slice(6));
+                if (d.chunk) { fullText += d.chunk; setAiAnswer(fullText); }
+                if (d.done && d.result?.answer) setAiAnswer(d.result.answer);
+                if (d.error) setAiAnswer(d.error);
+              } catch {}
+            }
+          }
+        }
+        if (!fullText) setAiAnswer('No answer available.');
+      } else {
+        // JSON response (error or simple)
+        const data = await res.json();
+        setAiAnswer(data.answer || data.result || data.error || 'No answer available.');
+      }
     } catch (err) {
       setAiAnswer('Failed to get AI response. Please try again.');
     } finally {
