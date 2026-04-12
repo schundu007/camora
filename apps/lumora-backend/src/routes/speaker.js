@@ -31,7 +31,9 @@ router.use(authenticate);
  * POST /enroll
  * Forward the uploaded audio file to ai-services for voice enrollment.
  */
-router.post('/enroll', upload.single('audio'), async (req, res) => {
+router.post('/enroll', upload.any(), async (req, res) => {
+  // Accept both 'audio' and 'file' field names
+  if (req.files?.length > 0) req.file = req.files[0];
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'Audio file is required (field name: "audio")' });
