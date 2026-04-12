@@ -595,11 +595,6 @@ export default function PracticePage() {
           {/* ── SETUP PHASE ── */}
           {phase === 'setup' && (
             <>
-              {/* Gamification + Readiness */}
-              <div className="mb-4">
-                <GamificationWidget />
-              </div>
-
               {/* Readiness — compact inline */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16, padding: '12px 20px', background: '#fff', border: '1px solid #e3e8ee', borderRadius: 12 }}>
                 {/* Readiness score */}
@@ -866,18 +861,69 @@ export default function PracticePage() {
                   { label: 'Trade-offs', icon: 'scale', color: '#ef4444', placeholder: 'CAP, consistency vs availability...' },
                 ];
                 const parts = (answers[currentIdx] || '').split('---SECTION---');
+
+                const autoGenerate = async () => {
+                  const q = questions[currentIdx];
+                  try {
+                    const res = await fetch(`${API_URL}/api/v1/solve`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+                      body: JSON.stringify({
+                        problem: `System Design: ${q.q}. ${q.desc}`,
+                        type: 'system-design-sections',
+                        sections: SD_SECTIONS.map(s => s.label),
+                      }),
+                    });
+                    if (!res.ok) throw new Error('Failed');
+                    const reader = res.body?.getReader();
+                    if (!reader) return;
+                    const decoder = new TextDecoder();
+                    let fullText = '';
+                    while (true) {
+                      const { done, value } = await reader.read();
+                      if (done) break;
+                      const chunk = decoder.decode(value, { stream: true });
+                      for (const line of chunk.split('\n')) {
+                        if (line.startsWith('data: ') && line !== 'data: [DONE]') {
+                          try { const d = JSON.parse(line.slice(6)); if (d.t) fullText += d.t; } catch {}
+                        }
+                      }
+                    }
+                    // Parse sections from AI response
+                    const sectionTexts = SD_SECTIONS.map(s => {
+                      const regex = new RegExp(`(?:${s.label}|${s.label.replace('.', '')})[:\\n]([\\s\\S]*?)(?=(?:${SD_SECTIONS.map(x => x.label.replace('.', '')).join('|')})[:\\n]|$)`, 'i');
+                      const match = fullText.match(regex);
+                      return match ? match[1].trim() : '';
+                    });
+                    const newA = [...answers];
+                    newA[currentIdx] = sectionTexts.join('---SECTION---');
+                    setAnswers(newA);
+                  } catch (err) {
+                    console.error('Auto-generate failed:', err);
+                  }
+                };
+
                 return (
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 12, marginBottom: 8 }}>
-                    {/* Left: Architecture Diagram — compact */}
-                    <div>
-                      <ArchitectureDiagram
-                        question={`${questions[currentIdx].q}: ${questions[currentIdx].desc}`}
-                        className="rounded-lg border border-[#e3e8ee] overflow-hidden"
-                      />
+                  <div style={{ marginBottom: 8 }}>
+                    {/* Auto-generate button */}
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
+                      <button onClick={autoGenerate} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', fontSize: 12, fontWeight: 600, color: '#8b5cf6', background: '#f5f3ff', border: '1px solid #ddd6fe', borderRadius: 8, cursor: 'pointer' }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/></svg>
+                        Auto Generate Answers
+                      </button>
                     </div>
 
-                    {/* Right: Section text areas — 2-col grid */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 12 }}>
+                      {/* Left: Architecture Diagram */}
+                      <div>
+                        <ArchitectureDiagram
+                          question={`${questions[currentIdx].q}: ${questions[currentIdx].desc}`}
+                          className="rounded-lg border border-[#e3e8ee] overflow-hidden"
+                        />
+                      </div>
+
+                      {/* Right: Section text areas — 2-col grid */}
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                       {SD_SECTIONS.map((section, si) => {
                         const val = parts[si] || '';
                         return (
