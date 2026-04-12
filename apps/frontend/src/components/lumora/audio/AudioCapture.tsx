@@ -156,10 +156,10 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
     onAudioData: handleAudioData,
     onAudioLevel: handleAudioLevel,
     onRecordingStop: handleRecordingStop,
-    silenceThreshold: Math.max(threshold, 0.008), // minimum 0.008 to ensure VAD triggers
-    silenceDuration: 1200, // 1.2s of silence before stopping
-    minSpeechDuration: 300,
-    maxRecordingDuration: 30000, // 30s max — forces transcription even if VAD doesn't trigger
+    silenceThreshold: Math.max(threshold, 0.003), // very low threshold to ensure VAD triggers
+    silenceDuration: 1500, // 1.5s of silence before stopping
+    minSpeechDuration: 500,
+    maxRecordingDuration: 15000, // 15s safety fallback
     deviceId: selectedDeviceId,
   });
 
