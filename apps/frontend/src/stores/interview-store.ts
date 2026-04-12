@@ -204,6 +204,7 @@ export const useInterviewStore = create<InterviewState>()(
         useSearch: state.useSearch,
         threshold: state.threshold,
         conversationId: state.conversationId,
+        history: state.history,
       }),
       migrate: () => ({ useSearch: false, threshold: 0.015 }), // fresh start
       skipHydration: true,
