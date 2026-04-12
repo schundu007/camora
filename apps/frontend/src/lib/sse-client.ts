@@ -85,6 +85,14 @@ export async function streamResponse(options: StreamOptions): Promise<AbortContr
       const { done, value } = await reader.read();
 
       if (done) {
+        // Flush remaining buffer content before completing
+        if (buffer.trim()) {
+          if (buffer.startsWith('event:')) {
+            currentEvent = buffer.slice(6).trim();
+          } else if (buffer.startsWith('data:')) {
+            currentData += (currentData ? '\n' : '') + buffer.slice(5).trim();
+          }
+        }
         if (currentEvent && currentData) {
           try {
             const data = JSON.parse(currentData);
@@ -232,6 +240,14 @@ export async function streamCodingResponse(options: CodingStreamOptions): Promis
       const { done, value } = await reader.read();
 
       if (done) {
+        // Flush remaining buffer content before completing
+        if (buffer.trim()) {
+          if (buffer.startsWith('event:')) {
+            currentEvent = buffer.slice(6).trim();
+          } else if (buffer.startsWith('data:')) {
+            currentData += (currentData ? '\n' : '') + buffer.slice(5).trim();
+          }
+        }
         if (currentEvent && currentData) {
           try {
             const data = JSON.parse(currentData);

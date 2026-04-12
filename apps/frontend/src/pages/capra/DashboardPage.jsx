@@ -34,7 +34,7 @@ import { useSolve, useAutoTestFix } from '../../hooks/capra/useSolve';
 // Context & Utils
 import { useAuth } from '../../contexts/AuthContext';
 import { getAuthHeaders, getToken } from '../../utils/authHeaders.js';
-import { useLocation, Link } from 'react-router-dom';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
 
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
@@ -133,6 +133,7 @@ export default function DashboardPage() {
   // URL-based mode detection (reactive to React Router navigation)
   // ---------------------------------------------------------------------------
   const routerLocation = useLocation();
+  const navigate = useNavigate();
   const currentPath = routerLocation.pathname;
   const appModeFromPath = currentPath === '/capra/design' ? 'system-design'
     : currentPath === '/capra/prep' ? 'behavioral'
@@ -455,7 +456,7 @@ export default function DashboardPage() {
     } catch (err) {
       if (err.name === 'AbortError') return;
       if (err.needCredits || err.freeTrialExhausted || err.subscriptionRequired) {
-        window.location.href = '/pricing';
+        navigate('/pricing');
         return;
       } else {
         setError(err.message);

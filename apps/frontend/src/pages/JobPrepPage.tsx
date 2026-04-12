@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { detectRoleFromTitle } from '../data/capra/jobRoleTopicMapping';
 import CamoraLogo from '../components/shared/CamoraLogo';
@@ -265,6 +265,7 @@ function getCategoryStyle(category: string) {
 
 export default function JobPrepPage() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { token } = useAuth();
   const { isPaidUser } = useContentAccess();
   const [showPaywall, setShowPaywall] = useState(false);
@@ -332,11 +333,11 @@ export default function JobPrepPage() {
               // Check for auth/subscription errors in stream
               if (event.error) {
                 if (event.subscriptionRequired || event.freeTrialExhausted) {
-                  window.location.href = '/pricing';
+                  navigate('/pricing');
                   return;
                 }
                 if (event.authRequired) {
-                  window.location.href = '/login';
+                  navigate('/login');
                   return;
                 }
                 throw new Error(event.error);
@@ -1098,17 +1099,17 @@ export default function JobPrepPage() {
                       try {
                         const API = import.meta.env.VITE_CAMORA_API_URL || import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
                         const authToken = document.cookie.split(';').map(c => c.trim()).find(c => c.startsWith('cariara_sso='))?.split('=')[1];
-                        if (!authToken) { window.location.href = '/login'; return; }
+                        if (!authToken) { navigate('/login'); return; }
                         const resp = await fetch(`${API}/api/v1/billing/checkout`, {
                           method: 'POST',
                           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
                           body: JSON.stringify({ price_id: plan.priceId, success_url: window.location.href, cancel_url: window.location.href }),
                         });
-                        if (!resp.ok) { window.location.href = '/pricing'; return; }
+                        if (!resp.ok) { navigate('/pricing'); return; }
                         const data = await resp.json();
                         if (data.url) window.location.href = data.url;
-                        else window.location.href = '/pricing';
-                      } catch { window.location.href = '/pricing'; }
+                        else navigate('/pricing');
+                      } catch { navigate('/pricing'); }
                     }}
                     className={`mt-3 w-full py-2 rounded-lg text-xs font-semibold cursor-pointer transition-all ${plan.popular ? 'text-white' : plan.best ? 'text-white' : 'text-gray-700 border border-gray-300 hover:border-gray-400'}`}
                     style={plan.popular ? { background: 'linear-gradient(135deg, #10b981, #06b6d4)' } : plan.best ? { background: 'linear-gradient(135deg, #f59e0b, #d97706)' } : {}}

@@ -695,7 +695,7 @@ export default function ExplanationPanel({ explanations, highlightedLine, pitch,
                 </select>
                 <p className="text-xs text-gray-500 mt-2 leading-relaxed">
                   <strong>Tip:</strong> For best results capturing interviewer voice from Zoom/Meet/Teams:
-                  <br />• Install <a href="https://existential.audio/blackhole/" target="_blank" rel="noopener" className="text-brand-400 hover:underline">BlackHole</a> (free virtual audio device)
+                  <br />• Install <a href="https://existential.audio/blackhole/" target="_blank" rel="noopener noreferrer" className="text-brand-400 hover:underline">BlackHole</a> (free virtual audio device)
                   <br />• Create Multi-Output Device in Audio MIDI Setup
                   <br />• Route system audio through BlackHole
                   <br />• Select BlackHole here as input

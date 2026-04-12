@@ -763,7 +763,7 @@ export default function DocsPage({ onBack }) {
                             { step: 3, title: 'Low-Level Design', desc: 'OOP, SOLID, design patterns', href: '/capra/prepare/low-level-design', icon: 'layers', color: '#8b5cf6' },
                             { step: 4, title: 'Behavioral', desc: 'STAR method, leadership stories', href: '/capra/prepare/behavioral', icon: 'users', color: '#f59e0b' },
                           ].map((phase, idx) => (
-                            <a key={phase.step} href={phase.href} className="group relative">
+                            <Link key={phase.step} to={phase.href} className="group relative">
                               {/* Connector line between steps (hidden on mobile, hidden for last item) */}
                               {idx < 3 && (
                                 <div className="hidden md:block absolute top-6 left-[calc(50%+20px)] w-[calc(100%-40px)] h-0.5 bg-gray-200 z-0" />
@@ -782,7 +782,7 @@ export default function DocsPage({ onBack }) {
                                 <div className="text-sm font-bold text-gray-900 landing-display mb-1 group-hover:text-emerald-600 transition-colors">{phase.title}</div>
                                 <div className="text-xs text-gray-500 landing-body leading-relaxed">{phase.desc}</div>
                               </div>
-                            </a>
+                            </Link>
                           ))}
                         </div>
                       </div>

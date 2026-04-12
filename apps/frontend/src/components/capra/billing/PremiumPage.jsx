@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
 import { Icon } from '../../shared/Icons.jsx';
 import CamoraLogo from '../../shared/CamoraLogo';
@@ -9,6 +10,7 @@ const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.co
 
 export default function PremiumPage() {
   const { token: authToken, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(null);
   const [error, setError] = useState('');
   const [expandedFaq, setExpandedFaq] = useState(null);
@@ -22,7 +24,7 @@ export default function PremiumPage() {
     try {
       if (!isAuthenticated) {
         localStorage.setItem('capra_pending_plan', planId);
-        window.location.href = '/login';
+        navigate('/login');
         return;
       }
       const token = authToken;
@@ -151,10 +153,10 @@ export default function PremiumPage() {
 
       <footer className="fixed bottom-0 left-0 right-0 z-50 px-6 md:px-12 py-3" style={{ background: '#111827' }}>
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
-          <a href="/" className="flex items-center gap-2"><CamoraLogo size={24} /><span className="landing-display font-bold text-sm text-white" style={{ fontFamily: "'Comfortaa', sans-serif" }}>Camora</span></a>
+          <Link to="/" className="flex items-center gap-2"><CamoraLogo size={24} /><span className="landing-display font-bold text-sm text-white" style={{ fontFamily: "'Comfortaa', sans-serif" }}>Camora</span></Link>
           <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
             {[{ label: 'Apply', href: '/jobs' }, { label: 'Prepare', href: '/capra/prepare' }, { label: 'Practice', href: '/capra/practice' }, { label: 'Attend', href: '/lumora' }, { label: 'Pricing', href: '/pricing' }, { label: 'Support', href: 'mailto:support@cariara.com' }].map((link) => (
-              <a key={link.label} href={link.href} className="text-xs text-gray-400 hover:text-emerald-400 transition-colors landing-body font-medium">{link.label}</a>
+              link.href.startsWith('/') ? <Link key={link.label} to={link.href} className="text-xs text-gray-400 hover:text-emerald-400 transition-colors landing-body font-medium">{link.label}</Link> : <a key={link.label} href={link.href} className="text-xs text-gray-400 hover:text-emerald-400 transition-colors landing-body font-medium">{link.label}</a>
             ))}
           </div>
           <p className="text-xs text-gray-500 landing-mono">&copy; {new Date().getFullYear()} Ascend by Cariara</p>
