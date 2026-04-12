@@ -46,83 +46,91 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
   // Get selected audio device
   const { selectedDeviceId } = useAudioDevices();
 
+  // Accumulated transcription text for Live mode (chunks build up a full question)
+  const accumulatedTextRef = useRef('');
+  const lastChunkTimeRef = useRef(0);
+  const questionCheckTimerRef = useRef<number | null>(null);
+
+  const flushAccumulatedText = useCallback(() => {
+    const text = accumulatedTextRef.current.trim();
+    if (text.length > 5) {
+      console.log('[Live] Flushing accumulated question:', text.slice(0, 100));
+      onTranscription?.(text);
+      setStatus('ready', 'Question sent');
+    }
+    accumulatedTextRef.current = '';
+    if (questionCheckTimerRef.current) {
+      clearTimeout(questionCheckTimerRef.current);
+      questionCheckTimerRef.current = null;
+    }
+  }, [onTranscription, setStatus]);
+
+  const scheduleQuestionCheck = useCallback(() => {
+    // After receiving a chunk, wait 2 seconds of no new chunks → question is complete
+    if (questionCheckTimerRef.current) clearTimeout(questionCheckTimerRef.current);
+    questionCheckTimerRef.current = window.setTimeout(() => {
+      if (accumulatedTextRef.current.trim().length > 5) {
+        flushAccumulatedText();
+        setShouldRestart(true);
+      }
+    }, 2000);
+  }, [flushAccumulatedText]);
+
   const handleAudioData = useCallback(async (blob: Blob) => {
-    console.log(`[Live] Audio captured: ${blob.size} bytes, type: ${blob.type}`);
-    if (!token) {
-      setError('Not authenticated');
-      return;
-    }
+    if (!token) { setError('Not authenticated'); return; }
 
-    // Use voice filtering if enrolled and enabled
     const shouldFilterVoice = voiceEnrolled && voiceFilterEnabled;
+    const isLiveMode = continuousModeRef.current;
 
-    setStatus('transcribe', shouldFilterVoice ? 'Checking speaker...' : 'Transcribing...');
-
-    try {
-      console.log('[Live] Sending to transcription API...');
-      const result = await transcriptionAPI.transcribe(
-        token,
-        blob,
-        'audio.webm',
-        shouldFilterVoice
-      );
-      console.log('[Live] Transcription result:', JSON.stringify(result));
-
-      // Check if transcription was skipped (user voice detected)
-      if (result.skipped) {
-        setStatus('listen', 'Your voice detected - waiting for interviewer...');
+    if (isLiveMode) {
+      // LIVE MODE: accumulate chunks, detect question completion
+      setStatus('transcribe', 'Transcribing chunk...');
+      try {
+        const result = await transcriptionAPI.transcribe(token, blob, 'audio.webm', shouldFilterVoice);
+        if (result.skipped) {
+          setStatus('listen', 'Your voice detected - waiting for interviewer...');
+          setShouldRestart(true);
+          return;
+        }
+        if (result.text) {
+          accumulatedTextRef.current += ' ' + result.text;
+          lastChunkTimeRef.current = Date.now();
+          setStatus('listen', `Heard: "${accumulatedTextRef.current.trim().slice(-60)}..."`);
+          scheduleQuestionCheck();
+        }
         setShouldRestart(true);
-        return;
-      }
-
-      if (result.text) {
-        console.log('[Live] Got text, calling onTranscription:', result.text.slice(0, 100));
-        onTranscription?.(result.text);
-        setStatus('ready', 'Transcription complete');
-        // Auto-restart listening after successful transcription
-        setShouldRestart(true);
-      } else {
-        setStatus('ready', "Didn't catch that - try again");
-        // Auto-restart even if no text detected
+      } catch (err: any) {
+        console.error('[Live] Transcription error:', err.message);
+        setStatus('warn', 'Transcription error - retrying');
         setShouldRestart(true);
       }
-    } catch (error: any) {
-      // Provide user-friendly messages based on error type
-      const status = error?.status;
-      let userMessage: string;
-      let statusMessage: string;
-
-      if (status === 500 || status === 506) {
-        // Backend transcription service error
-        userMessage = 'Transcription service temporarily unavailable. Recording will auto-retry.';
-        statusMessage = 'Service unavailable - retrying';
-      } else if (status === 404) {
-        userMessage = 'Transcription endpoint not found. Check that the AI service is running.';
-        statusMessage = 'Service not found';
-      } else if (status === 401 || status === 403) {
-        userMessage = 'Authentication expired. Please refresh the page.';
-        statusMessage = 'Auth error';
-      } else if (error?.name === 'TypeError' || error?.message?.includes('fetch')) {
-        // Network error - backend is completely unreachable
-        userMessage = 'Cannot reach transcription service. Check your connection.';
-        statusMessage = 'Network error';
-      } else {
-        userMessage = error.message || 'Transcription failed. Will retry on next recording.';
-        statusMessage = 'Transcription error';
+    } else {
+      // MANUAL MODE: send entire recording as one question
+      setStatus('transcribe', shouldFilterVoice ? 'Checking speaker...' : 'Transcribing...');
+      try {
+        const result = await transcriptionAPI.transcribe(token, blob, 'audio.webm', shouldFilterVoice);
+        if (result.skipped) {
+          setStatus('listen', 'Your voice detected - waiting for interviewer...');
+          setShouldRestart(true);
+          return;
+        }
+        if (result.text) {
+          onTranscription?.(result.text);
+          setStatus('ready', 'Transcription complete');
+        } else {
+          setStatus('ready', "Didn't catch that - try again");
+        }
+      } catch (error: any) {
+        const status = error?.status;
+        if (status === 500 || status === 506) {
+          setStatus('warn', 'Service unavailable - retrying');
+        } else {
+          setError(error.message || 'Transcription failed');
+          setStatus('error', 'Transcription error');
+        }
       }
-
-      // For transient service errors (500/506), use status bar only - don't show
-      // a persistent error banner that clutters the UI during auto-retry
-      if (status === 500 || status === 506) {
-        setStatus('warn', statusMessage);
-      } else {
-        setError(userMessage);
-        setStatus('error', statusMessage);
-      }
-      // Auto-restart in live mode even after errors
-      setShouldRestart(true);
     }
-  }, [token, setStatus, setError, onTranscription, voiceEnrolled, voiceFilterEnabled]);
+  }, [token, setStatus, setError, onTranscription, voiceEnrolled, voiceFilterEnabled, scheduleQuestionCheck]);
 
   const handleAudioLevel = useCallback((level: number) => {
     setAudioLevel(level);
@@ -156,10 +164,10 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
     onAudioData: handleAudioData,
     onAudioLevel: handleAudioLevel,
     onRecordingStop: handleRecordingStop,
-    silenceThreshold: Math.max(threshold, 0.003), // very low threshold to ensure VAD triggers
-    silenceDuration: 1500, // 1.5s of silence before stopping
-    minSpeechDuration: 500,
-    maxRecordingDuration: 15000, // 15s safety fallback
+    silenceThreshold: Math.max(threshold, 0.003),
+    silenceDuration: 1500,
+    minSpeechDuration: 300,
+    maxRecordingDuration: continuousMode ? 5000 : 30000, // Live: 5s chunks, Manual: 30s max
     deviceId: selectedDeviceId,
   });
 
