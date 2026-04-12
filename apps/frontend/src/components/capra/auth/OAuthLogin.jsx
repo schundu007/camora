@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { Icon } from '../../shared/Icons.jsx';
 import CamoraLogo from '../../shared/CamoraLogo';
 import SiteNav from '../../shared/SiteNav';
@@ -46,23 +47,23 @@ export default function OAuthLogin() {
         <div className={`mt-7 flex flex-col sm:flex-row items-center gap-3 transition-all duration-700 delay-300 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
           {user ? (
             <>
-              <a href="/capra/prepare" className="px-8 py-3 bg-emerald-500 text-white font-semibold text-sm rounded-lg hover:bg-emerald-600 transition-colors shadow-sm landing-body flex items-center gap-2">
+              <Link to="/capra/prepare" className="px-8 py-3 bg-emerald-500 text-white font-semibold text-sm rounded-lg hover:bg-emerald-600 transition-colors shadow-sm landing-body flex items-center gap-2">
                 Go to Dashboard
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
-              </a>
-              <a href="/pricing" className="px-8 py-3 text-gray-600 font-semibold text-sm rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors landing-body">
+              </Link>
+              <Link to="/pricing" className="px-8 py-3 text-gray-600 font-semibold text-sm rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors landing-body">
                 View Plans
-              </a>
+              </Link>
             </>
           ) : (
             <>
-              <a href="/login" className="px-8 py-3 bg-emerald-500 text-white font-semibold text-sm rounded-lg hover:bg-emerald-600 transition-colors shadow-sm landing-body flex items-center gap-2">
+              <Link to="/login" className="px-8 py-3 bg-emerald-500 text-white font-semibold text-sm rounded-lg hover:bg-emerald-600 transition-colors shadow-sm landing-body flex items-center gap-2">
                 Start Free
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
-              </a>
-              <a href="/pricing" className="px-8 py-3 text-gray-600 font-semibold text-sm rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors landing-body">
+              </Link>
+              <Link to="/pricing" className="px-8 py-3 text-gray-600 font-semibold text-sm rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors landing-body">
                 View Plans
-              </a>
+              </Link>
             </>
           )}
         </div>
@@ -82,7 +83,7 @@ export default function OAuthLogin() {
               { label: 'Practice', href: '/capra/practice', icon: 'code', desc: 'Solve problems', bg: '#f5f3ff', bgEnd: '#ede9fe', border: '#c4b5fd', borderEnd: '#a78bfa', badge: '#7c3aed', iconColor: '#7c3aed', glowColor: '124,58,237', slideFrom: 'bottom' },
               { label: 'Attend', href: '/lumora', icon: 'microphone', desc: 'Ace the interview', bg: '#fffbeb', bgEnd: '#fef3c7', border: '#fcd34d', borderEnd: '#fbbf24', badge: '#d97706', iconColor: '#d97706', glowColor: '217,119,6', slideFrom: 'right' },
             ].map((item, i) => (
-              <a key={item.label} href={item.href} className={`journey-card journey-card-${i} group relative flex flex-col items-center gap-3 p-6 rounded-2xl text-center`} style={{ '--card-bg': item.bg, '--card-bg-end': item.bgEnd, '--card-border': item.border, '--card-border-end': item.borderEnd, '--card-glow': item.glowColor, animationDelay: `${i * 0.2}s` }}>
+              <Link key={item.label} to={item.href} className={`journey-card journey-card-${i} group relative flex flex-col items-center gap-3 p-6 rounded-2xl text-center`} style={{ '--card-bg': item.bg, '--card-bg-end': item.bgEnd, '--card-border': item.border, '--card-border-end': item.borderEnd, '--card-glow': item.glowColor, animationDelay: `${i * 0.2}s` }}>
                 <div className="journey-border-glow absolute inset-0 rounded-2xl pointer-events-none" style={{ animationDelay: `${i * 0.5}s` }} />
                 <div className="journey-badge absolute -top-5 -right-3 w-10 h-10 rounded-full flex items-center justify-center text-base font-black landing-mono text-white z-10" style={{ background: `linear-gradient(135deg, ${item.border}, ${item.badge})`, boxShadow: `0 4px 14px rgba(${item.glowColor},0.4), inset 0 1px 2px rgba(255,255,255,0.3)`, animationDelay: `${i * 0.2 + 0.6}s` }}>{i + 1}</div>
                 <div className="journey-icon w-14 h-14 rounded-xl flex items-center justify-center transition-all duration-500 group-hover:scale-115 group-hover:rotate-6" style={{ background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(8px)', boxShadow: `0 4px 16px rgba(${item.glowColor},0.2)`, animationDelay: `${i * 0.25}s` }}>
@@ -91,7 +92,7 @@ export default function OAuthLogin() {
                 <span className="text-base font-bold text-gray-900 landing-display">{item.label}</span>
                 <span className="text-xs text-gray-500 landing-body">{item.desc}</span>
                 <div className="journey-shimmer absolute inset-0 rounded-2xl overflow-hidden pointer-events-none" style={{ animationDelay: `${i * 0.8}s` }} />
-              </a>
+              </Link>
             ))}
           </div>
         </div>
@@ -113,7 +114,7 @@ export default function OAuthLogin() {
               { icon: 'code', title: 'Coding Engine', desc: '20+ languages with explanations, auto-fix, and complexity analysis.', tags: ['Multi-Language', 'Auto-Fix', 'Complexity'], color: 'cyan', href: '/capra/prepare/coding' },
               { icon: 'systemDesign', title: 'System Design', desc: 'Architecture diagrams, scalability analysis, and tech justifications.', tags: ['Diagrams', 'Scale Math', 'Tradeoffs'], color: 'violet', href: '/capra/design' },
             ].map((f) => (
-              <a key={f.title} href={f.href} className="block p-4 border border-gray-200 rounded-lg bg-white hover:border-gray-300 hover:shadow-sm transition-all">
+              <Link key={f.title} to={f.href} className="block p-4 border border-gray-200 rounded-lg bg-white hover:border-gray-300 hover:shadow-sm transition-all">
                 <div className={`w-9 h-9 border border-${f.color}-200 bg-${f.color}-50 rounded flex items-center justify-center mb-3`}>
                   <Icon name={f.icon} size={18} className={`text-${f.color}-500`} />
                 </div>
@@ -124,7 +125,7 @@ export default function OAuthLogin() {
                     <span key={t} className="text-[10px] landing-mono px-2 py-1 border border-gray-200 text-gray-400 rounded">{t}</span>
                   ))}
                 </div>
-              </a>
+              </Link>
             ))}
           </div>
 
@@ -134,7 +135,7 @@ export default function OAuthLogin() {
               { icon: 'resume', title: 'Resume Builder', desc: 'ATS-optimized with PDF and DOCX export.', color: 'cyan', href: '/capra/prepare/coding' },
               { icon: 'eyeOff', title: 'Stealth Mode', desc: 'Hidden from screen share, dock, and task manager.', color: 'rose', href: '/download' },
             ].map((f) => (
-              <a key={f.title} href={f.href} className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg bg-white hover:border-gray-300 hover:shadow-sm transition-all">
+              <Link key={f.title} to={f.href} className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg bg-white hover:border-gray-300 hover:shadow-sm transition-all">
                 <div className={`w-9 h-9 border border-${f.color}-200 bg-${f.color}-50 rounded flex items-center justify-center flex-shrink-0`}>
                   <Icon name={f.icon} size={16} className={`text-${f.color}-500`} />
                 </div>
@@ -142,7 +143,7 @@ export default function OAuthLogin() {
                   <div className="text-sm font-semibold text-gray-900 landing-display">{f.title}</div>
                   <div className="text-sm text-gray-500 landing-body">{f.desc}</div>
                 </div>
-              </a>
+              </Link>
             ))}
           </div>
         </div>
@@ -185,18 +186,18 @@ export default function OAuthLogin() {
         <p className="mt-2 text-sm text-gray-500 max-w-lg mx-auto landing-body">
           Stop memorizing. Start understanding. Practice with AI that thinks like a senior engineer.
         </p>
-        <a href="/capra/practice" className="inline-block mt-4 px-8 py-3 bg-emerald-500 text-white font-semibold text-sm rounded-lg hover:bg-emerald-600 transition-colors shadow-sm landing-body">
+        <Link to="/capra/practice" className="inline-block mt-4 px-8 py-3 bg-emerald-500 text-white font-semibold text-sm rounded-lg hover:bg-emerald-600 transition-colors shadow-sm landing-body">
           Start Practicing
-        </a>
+        </Link>
       </section>
 
       {/* Footer */}
       <footer className="fixed bottom-0 left-0 right-0 z-50 px-6 md:px-12 py-3" style={{ background: '#111827' }}>
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
-          <a href="/" className="flex items-center gap-2">
+          <Link to="/" className="flex items-center gap-2">
             <CamoraLogo size={24} />
             <span className="landing-display font-bold text-sm text-white" style={{ fontFamily: "'Comfortaa', sans-serif" }}>Camora</span>
-          </a>
+          </Link>
           <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
             {[
               { label: 'Apply', href: '/jobs' },
@@ -206,7 +207,11 @@ export default function OAuthLogin() {
               { label: 'Pricing', href: '/pricing' },
               { label: 'Support', href: 'mailto:support@cariara.com' },
             ].map((link) => (
-              <a key={link.label} href={link.href} className="text-xs text-gray-400 hover:text-emerald-400 transition-colors landing-body font-medium">{link.label}</a>
+              link.href.startsWith('mailto:') ? (
+                <a key={link.label} href={link.href} className="text-xs text-gray-400 hover:text-emerald-400 transition-colors landing-body font-medium">{link.label}</a>
+              ) : (
+                <Link key={link.label} to={link.href} className="text-xs text-gray-400 hover:text-emerald-400 transition-colors landing-body font-medium">{link.label}</Link>
+              )
             ))}
           </div>
           <p className="text-xs text-gray-500 landing-mono">

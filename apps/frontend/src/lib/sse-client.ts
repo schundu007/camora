@@ -66,7 +66,7 @@ export async function streamResponse(options: StreamOptions): Promise<AbortContr
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({ detail: 'Stream failed' }));
-      onError?.({ msg: error.detail || `HTTP error ${response.status}` });
+      onError?.({ msg: error.error || error.detail || error.message || `HTTP error ${response.status}` });
       return abortController;
     }
 
@@ -213,7 +213,7 @@ export async function streamCodingResponse(options: CodingStreamOptions): Promis
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({ detail: 'Stream failed' }));
-      onError?.({ msg: error.detail || `HTTP error ${response.status}` });
+      onError?.({ msg: error.error || error.detail || error.message || `HTTP error ${response.status}` });
       return abortController;
     }
 

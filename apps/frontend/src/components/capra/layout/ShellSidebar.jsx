@@ -66,11 +66,11 @@ export default function ShellSidebar() {
       {/* Logo */}
       <div className={`border-b border-gray-100 flex items-center ${isCollapsed ? 'justify-center px-2 py-4' : 'justify-between px-5 py-4'}`}>
         {isCollapsed ? (
-          <a href="/" className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center hover:scale-105 transition-transform">
+          <Link to="/" className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center hover:scale-105 transition-transform">
             <Icon name="ascend" size={16} className="text-white" />
-          </a>
+          </Link>
         ) : (
-          <a href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+          <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
             <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
               <Icon name="ascend" size={16} className="text-white" />
             </div>
@@ -78,7 +78,7 @@ export default function ShellSidebar() {
               <span className="font-bold text-base tracking-tight text-gray-900" style={{ fontFamily: "'Comfortaa', sans-serif" }}>Camora</span>
               <span className="block text-[9px] font-mono uppercase tracking-[0.2em] text-emerald-600 -mt-0.5">Interview AI</span>
             </div>
-          </a>
+          </Link>
         )}
         {isMobile && (
           <button onClick={closeSidebar} className="p-2 text-gray-400 hover:text-gray-900 transition-colors">

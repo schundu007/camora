@@ -270,8 +270,7 @@ export default function OnboardingPage() {
         throw new Error(data.error || 'Failed to complete onboarding');
       }
 
-      // Hard redirect to refresh auth state
-      window.location.href = '/capra/prepare';
+      navigate('/capra/prepare');
     } catch (err) {
       setError(err.message || 'Something went wrong');
       setSubmitting(false);

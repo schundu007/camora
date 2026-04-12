@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { Icon } from '../../shared/Icons.jsx';
 // DocsSidebar removed — navigation handled by AppShell
 
@@ -387,14 +388,14 @@ export default function SystemDesignDocsPage() {
         <div className="sticky top-0 z-20 bg-white/90 backdrop-blur-md border-b border-gray-100">
           <div className="px-8 py-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <a href="/capra/prepare" className="text-sm text-gray-400 hover:text-gray-900 transition-colors landing-body font-medium">Preparation</a>
+              <Link to="/capra/prepare" className="text-sm text-gray-400 hover:text-gray-900 transition-colors landing-body font-medium">Preparation</Link>
               <span className="text-gray-300">/</span>
               <span className="text-sm text-gray-900 landing-body font-semibold">System Design</span>
             </div>
             <div className="flex items-center gap-3">
-              <a href="/capra/design" className="px-4 py-2 bg-emerald-500 text-white font-semibold text-sm rounded hover:bg-emerald-600 transition-colors landing-body">
+              <Link to="/capra/design" className="px-4 py-2 bg-emerald-500 text-white font-semibold text-sm rounded hover:bg-emerald-600 transition-colors landing-body">
                 Practice Now
-              </a>
+              </Link>
             </div>
           </div>
         </div>
@@ -565,7 +566,7 @@ export default function SystemDesignDocsPage() {
           </div>
 
           {/* Featured Banner */}
-          <a href="#" className="group block mb-10 p-5 rounded-lg border border-emerald-200 bg-emerald-50/50 hover:bg-emerald-50 hover:border-emerald-300 hover:shadow-sm transition-all">
+          <div className="group block mb-10 p-5 rounded-lg border border-emerald-200 bg-emerald-50/50 cursor-default">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center shadow-sm">
@@ -576,9 +577,9 @@ export default function SystemDesignDocsPage() {
                   <span className="block text-xs text-gray-500 landing-body mt-0.5">Complete framework, tips, and strategies from FAANG engineers</span>
                 </div>
               </div>
-              <Icon name="chevronRight" size={18} className="text-gray-400 group-hover:text-emerald-500 group-hover:translate-x-0.5 transition-all" />
+              <Icon name="chevronRight" size={18} className="text-gray-400" />
             </div>
-          </a>
+          </div>
 
           {/* ════════════════════════════════════════════════════════════════════
               CORE CONCEPTS (existing)
@@ -1091,9 +1092,9 @@ export default function SystemDesignDocsPage() {
             <p className="text-sm text-gray-500 max-w-md mx-auto landing-body mb-4">
               Practice with AI that thinks like a principal engineer. Get real-time feedback on your architecture decisions.
             </p>
-            <a href="/capra/design" className="inline-block px-8 py-3 bg-emerald-500 text-white font-semibold text-sm rounded hover:bg-emerald-600 transition-colors shadow-sm landing-body">
+            <Link to="/capra/design" className="inline-block px-8 py-3 bg-emerald-500 text-white font-semibold text-sm rounded hover:bg-emerald-600 transition-colors shadow-sm landing-body">
               Start Designing
-            </a>
+            </Link>
           </section>
         </div>
       </div>
