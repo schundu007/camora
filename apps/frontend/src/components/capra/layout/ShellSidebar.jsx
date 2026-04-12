@@ -165,6 +165,35 @@ export default function ShellSidebar() {
         })}
       </nav>
 
+      {/* Reading Progress */}
+      {!isCollapsed && (
+        <div className="mx-3 mb-2 p-3 rounded-lg bg-gray-50 border border-gray-100">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[10px] font-semibold text-gray-400 tracking-widest uppercase">Progress</span>
+            <span className="text-[11px] font-bold text-emerald-600">{(() => {
+              try {
+                const stored = localStorage.getItem('camora_completed_topics');
+                const completed = stored ? Object.keys(JSON.parse(stored)).length : 0;
+                return completed;
+              } catch { return 0; }
+            })()} topics</span>
+          </div>
+          <div className="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-emerald-500 rounded-full transition-all duration-500"
+              style={{ width: `${(() => {
+                try {
+                  const stored = localStorage.getItem('camora_completed_topics');
+                  const completed = stored ? Object.keys(JSON.parse(stored)).length : 0;
+                  const total = 415;
+                  return Math.min(100, Math.round((completed / total) * 100));
+                } catch { return 0; }
+              })()}%` }}
+            />
+          </div>
+        </div>
+      )}
+
       {/* Bottom utility */}
       <div className={`border-t border-gray-100 ${isCollapsed ? 'px-1.5 py-2' : 'px-3 py-3'}`}>
         {/* User info */}
