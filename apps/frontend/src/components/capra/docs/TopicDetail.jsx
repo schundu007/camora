@@ -782,59 +782,52 @@ export default function TopicDetail({
 
           {/* Visual Roadmap — dark spine with branching topics */}
           {topicDetails.phases && topicDetails.phases.length > 0 && (
-            <div id="roadmap-phases" className="rounded-xl overflow-hidden scroll-mt-24 border border-gray-800" style={{ background: '#0f1221' }}>
-              <div className="px-5 py-3 border-b border-gray-700/50 flex items-center gap-2">
-                <Icon name="layers" size={14} className="text-indigo-400" />
-                <h3 className="text-sm font-bold text-white landing-display">{topicDetails.title} Roadmap</h3>
-                <span className="text-[10px] landing-mono text-gray-500">{topicDetails.phases.length} phases, {topicDetails.phases.reduce((a, p) => a + p.topics.length, 0)} topics</span>
+            <div id="roadmap-phases" className="rounded-xl overflow-hidden scroll-mt-24 border border-[#e3e8ee]">
+              <div className="px-4 py-2.5 border-b border-[#e3e8ee] bg-white/80 flex items-center gap-2">
+                <Icon name="layers" size={14} className="text-amber-600" />
+                <h3 className="text-sm font-bold text-gray-900 landing-display">{topicDetails.title} Roadmap</h3>
+                <span className="text-[10px] landing-mono text-gray-400">{topicDetails.phases.length} phases, {topicDetails.phases.reduce((a, p) => a + p.topics.length, 0)} topics</span>
               </div>
-              <div className="relative px-4 py-8">
-                {/* Central vertical spine */}
-                <div className="absolute left-1/2 top-0 bottom-0 w-0.5 -translate-x-1/2" style={{ background: 'linear-gradient(180deg, #6366f1, #10b981, #f59e0b, #ef4444, #6366f1)' }} />
 
-                {topicDetails.phases.map((phase, phaseIdx) => {
-                  const topics = phase.topics;
-                  const leftTopics = topics.slice(0, Math.ceil(topics.length / 2));
-                  const rightTopics = topics.slice(Math.ceil(topics.length / 2));
-                  return (
-                    <div key={phaseIdx} className="relative mb-2">
-                      {/* Phase title — centered on spine */}
-                      <div className="flex justify-center relative z-10 mb-4">
-                        <div className="px-5 py-2 rounded-lg text-sm font-bold text-white shadow-lg landing-display" style={{ background: phase.color, boxShadow: `0 0 20px ${phase.color}40` }}>
-                          {phase.title}
-                        </div>
-                      </div>
-
-                      {/* Topics branching left and right */}
-                      <div className="grid grid-cols-2 gap-x-12 relative">
-                        {/* Left column */}
-                        <div className="flex flex-col items-end gap-2 pr-4">
-                          {leftTopics.map((topic, tIdx) => (
-                            <div key={tIdx} className="relative flex items-center">
-                              <div className="px-3 py-2 rounded-lg text-xs font-medium text-gray-200 border landing-body max-w-[260px] text-right" style={{ background: 'rgba(255,255,255,0.04)', borderColor: `${phase.color}40` }}>
-                                {topic}
-                              </div>
-                              {/* Connector to spine */}
-                              <div className="w-4 h-px ml-2 shrink-0" style={{ background: `${phase.color}60` }} />
-                            </div>
-                          ))}
-                        </div>
-                        {/* Right column */}
-                        <div className="flex flex-col items-start gap-2 pl-4">
-                          {rightTopics.map((topic, tIdx) => (
-                            <div key={tIdx} className="relative flex items-center">
-                              {/* Connector to spine */}
-                              <div className="w-4 h-px mr-2 shrink-0" style={{ background: `${phase.color}60` }} />
-                              <div className="px-3 py-2 rounded-lg text-xs font-medium text-gray-200 border landing-body max-w-[260px]" style={{ background: 'rgba(255,255,255,0.04)', borderColor: `${phase.color}40` }}>
-                                {topic}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
+              {/* Horizontal flow — phase badges connected by arrows */}
+              <div className="px-4 py-4 border-b border-[#e3e8ee] overflow-x-auto">
+                <div className="flex items-center gap-1 min-w-max">
+                  {topicDetails.phases.map((phase, i) => (
+                    <div key={i} className="flex items-center gap-1">
+                      <a href={`#phase-${i}`} className="px-3 py-1.5 rounded-lg text-[11px] font-bold text-white whitespace-nowrap landing-display hover:opacity-90 transition-opacity" style={{ background: phase.color }}>
+                        {phase.title}
+                      </a>
+                      {i < topicDetails.phases.length - 1 && (
+                        <svg className="w-4 h-4 text-gray-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                        </svg>
+                      )}
                     </div>
-                  );
-                })}
+                  ))}
+                </div>
+              </div>
+
+              {/* Phase detail cards */}
+              <div className="p-4 space-y-3">
+                {topicDetails.phases.map((phase, phaseIdx) => (
+                  <div key={phaseIdx} id={`phase-${phaseIdx}`} className="rounded-xl border-2 overflow-hidden scroll-mt-24" style={{ borderColor: `${phase.color}30` }}>
+                    <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: `${phase.color}10` }}>
+                      <div className="w-7 h-7 rounded-lg flex items-center justify-center text-white text-xs font-bold" style={{ background: phase.color }}>
+                        {phaseIdx + 1}
+                      </div>
+                      <h4 className="text-sm font-bold text-gray-900 landing-display flex-1">{phase.title}</h4>
+                      <span className="text-[10px] landing-mono text-gray-400">{phase.topics.length} topics</span>
+                    </div>
+                    <div className="px-4 py-3 bg-white flex flex-wrap gap-2">
+                      {phase.topics.map((topic, tIdx) => (
+                        <span key={tIdx} className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border font-medium landing-body" style={{ borderColor: `${phase.color}25`, background: `${phase.color}06` }}>
+                          <span className="w-1.5 h-1.5 rounded-full" style={{ background: phase.color }} />
+                          {topic}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}
