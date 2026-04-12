@@ -5,164 +5,21 @@ import { InterviewPanel } from '../../components/lumora/interview/InterviewPanel
 import { ErrorBoundary } from '../../components/shared/ui/ErrorBoundary';
 import { useStreamingInterview } from '../../hooks/useStreamingInterview';
 import { useInterviewStore } from '../../stores/interview-store';
-import SiteNav from '../../components/shared/SiteNav';
-import SiteFooter from '../../components/shared/SiteFooter';
 import { useLumoraTour } from '../../hooks/useLumoraTour';
-
-function MicCheck({ onReady }: { onReady: () => void }) {
-  const [micLevel, setMicLevel] = useState(0);
-  const [micOk, setMicOk] = useState(false);
-  const [backendOk, setBackendOk] = useState(false);
-  const [error, setError] = useState('');
-  const streamRef = useRef<MediaStream | null>(null);
-  const rafRef = useRef<number>(0);
-
-  useEffect(() => {
-    let active = true;
-    fetch(`${import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com'}/health`)
-      .then(r => { if (r.ok && active) setBackendOk(true); })
-      .catch(() => {});
-    (async () => {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        if (!active) { stream.getTracks().forEach(t => t.stop()); return; }
-        streamRef.current = stream;
-        const ctx = new AudioContext();
-        const src = ctx.createMediaStreamSource(stream);
-        const analyser = ctx.createAnalyser();
-        analyser.fftSize = 256;
-        src.connect(analyser);
-        const data = new Uint8Array(analyser.frequencyBinCount);
-        const tick = () => {
-          if (!active) return;
-          analyser.getByteFrequencyData(data);
-          const avg = data.reduce((a, b) => a + b, 0) / data.length / 255;
-          setMicLevel(avg);
-          if (avg > 0.05) setMicOk(true);
-          rafRef.current = requestAnimationFrame(tick);
-        };
-        tick();
-      } catch {
-        setError('Microphone not accessible. Check browser permissions.');
-      }
-    })();
-    return () => {
-      active = false;
-      cancelAnimationFrame(rafRef.current);
-      streamRef.current?.getTracks().forEach(t => t.stop());
-    };
-  }, []);
-
-  const allReady = micOk && backendOk;
-
-  return (
-    <div className="h-screen w-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)' }}>
-      {/* Subtle grid */}
-      <div className="fixed inset-0 pointer-events-none" style={{ opacity: 0.03, backgroundImage: 'linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px)', backgroundSize: '48px 48px' }} />
-
-      <div className="relative max-w-5xl w-full mx-6 grid grid-cols-1 lg:grid-cols-2 gap-0 lg:gap-0 overflow-hidden rounded-2xl" style={{ border: '1px solid rgba(255,255,255,0.06)' }}>
-
-        {/* Left — What is Lumora */}
-        <div className="p-10 lg:p-12 flex flex-col justify-center" style={{ background: 'rgba(255,255,255,0.02)' }}>
-          <h1 className="text-3xl lg:text-4xl font-extrabold text-white tracking-tight leading-tight mb-3" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
-            Your AI co-pilot for{' '}
-            <span className="bg-clip-text text-transparent" style={{ backgroundImage: 'linear-gradient(135deg, #34d399, #06b6d4, #818cf8)' }}>live interviews</span>
-          </h1>
-          <p className="text-base text-white/40 mb-8">Get structured answers in 3 seconds. System design, coding, behavioral — all formats.</p>
-
-          <div className="space-y-4">
-            {[
-              { num: '1', label: 'Speak, type, or paste', desc: 'Mic transcribes your interviewer. Or paste the question directly.', color: '#10b981' },
-              { num: '2', label: 'Get instant answers', desc: 'Architecture diagrams, STAR format, multi-approach code solutions.', color: '#06b6d4' },
-              { num: '3', label: 'Switch modes', desc: 'Interview, Coding (50+ langs), and Design tabs for every question type.', color: '#818cf8' },
-            ].map(s => (
-              <div key={s.num} className="flex items-start gap-4">
-                <div className="shrink-0 w-9 h-9 rounded-lg flex items-center justify-center text-white font-bold text-sm" style={{ background: s.color }}>
-                  {s.num}
-                </div>
-                <div>
-                  <p className="text-base font-semibold text-white">{s.label}</p>
-                  <p className="text-sm text-white/40 mt-0.5">{s.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-8 flex flex-wrap gap-3">
-            <kbd className="px-2.5 py-1 bg-white/5 border border-white/10 rounded-lg text-white/30 text-xs font-mono">Cmd+M mic</kbd>
-            <kbd className="px-2.5 py-1 bg-white/5 border border-white/10 rounded-lg text-white/30 text-xs font-mono">Cmd+B blank</kbd>
-            <kbd className="px-2.5 py-1 bg-white/5 border border-white/10 rounded-lg text-white/30 text-xs font-mono">Cmd+K focus</kbd>
-          </div>
-        </div>
-
-        {/* Right — System Check + Start */}
-        <div className="p-10 lg:p-12 flex flex-col justify-center" style={{ background: 'rgba(16,185,129,0.03)', borderLeft: '1px solid rgba(255,255,255,0.04)' }}>
-          <div className="text-center mb-8">
-            <div className="w-14 h-14 mx-auto mb-4 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #10b981, #06b6d4)', boxShadow: '0 4px 20px rgba(16,185,129,0.3)' }}>
-              <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-              </svg>
-            </div>
-            <h2 className="text-xl font-bold text-white mb-1" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>System Check</h2>
-            <p className="text-sm text-white/30">Everything checks out automatically</p>
-          </div>
-
-          {error ? (
-            <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm mb-6">{error}</div>
-          ) : (
-            <>
-              {/* Mic level */}
-              <div className="mb-6">
-                <div className="flex items-center justify-between text-sm text-white/30 mb-2">
-                  <span>Mic Level</span>
-                  <span className={micOk ? 'text-emerald-400 font-semibold' : ''}>{micOk ? 'Detected' : 'Speak to test...'}</span>
-                </div>
-                <div className="h-2.5 bg-white/5 rounded-full overflow-hidden">
-                  <div className={`h-full rounded-full transition-all duration-75 ${micOk ? 'bg-emerald-500' : 'bg-amber-400'}`}
-                    style={{ width: `${Math.min(micLevel * 300, 100)}%`, boxShadow: micOk ? '0 0 12px rgba(16,185,129,0.4)' : '' }} />
-                </div>
-              </div>
-
-              {/* Checklist */}
-              <div className="space-y-3 mb-8">
-                {[
-                  { ok: micOk, label: 'Microphone detected' },
-                  { ok: backendOk, label: 'AI engine ready' },
-                  { ok: backendOk, label: 'Streaming connected' },
-                ].map(c => (
-                  <div key={c.label} className="flex items-center gap-3">
-                    <div className={`w-6 h-6 rounded-lg flex items-center justify-center text-xs font-bold ${c.ok ? 'bg-emerald-500/20 text-emerald-400' : 'bg-white/5 text-white/20'}`}>
-                      {c.ok ? '\u2713' : '\u00b7'}
-                    </div>
-                    <span className={`text-base ${c.ok ? 'text-white' : 'text-white/30'}`}>{c.label}</span>
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
-
-          <button onClick={onReady}
-            className="w-full py-4 text-white font-bold text-lg rounded-xl transition-all hover:-translate-y-0.5"
-            style={{ background: allReady ? 'linear-gradient(135deg, #10b981, #06b6d4)' : 'rgba(255,255,255,0.06)', boxShadow: allReady ? '0 4px 20px rgba(16,185,129,0.3)' : 'none' }}>
-            {allReady ? "Start Interview" : 'Skip Check & Start'}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 export function InterviewPage() {
   const navigate = useNavigate();
   const [inputValue, setInputValue] = useState('');
   const [blanked, setBlanked] = useState(false);
-  const { handleSubmit, resetState } = useStreamingInterview();
-  const { clearStreamChunks, setParsedBlocks, setQuestion, setError, setIsStreaming, setStatus, isStreaming, history, question, parsedBlocks } = useInterviewStore();
+  const [isExpanded, setIsExpanded] = useState(false);
+  const { handleSubmit } = useStreamingInterview();
+  const { isStreaming, history, question, parsedBlocks } = useInterviewStore();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Guided tour on fresh session
   useLumoraTour();
 
-  // Emergency blank: Cmd+B or Ctrl+B to hide/show everything
+  // Emergency blank: Cmd+B
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'b') {
@@ -171,22 +28,27 @@ export function InterviewPage() {
         e.preventDefault();
         setBlanked(prev => !prev);
       }
+      // Cmd+K to focus composer
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        if (isExpanded) textareaRef.current?.focus();
+        else inputRef.current?.focus();
+      }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, []);
+  }, [isExpanded]);
 
   const handleInputSubmit = useCallback(() => {
     if (inputValue.trim()) {
       handleSubmit(inputValue);
       setInputValue('');
+      setIsExpanded(false);
     }
   }, [inputValue, handleSubmit]);
 
   const handleTranscription = useCallback((text: string) => {
-    if (text.trim()) {
-      handleSubmit(text);
-    }
+    if (text.trim()) handleSubmit(text);
   }, [handleSubmit]);
 
   if (blanked) {
@@ -197,19 +59,22 @@ export function InterviewPage() {
     );
   }
 
+  const showEmptyState = !question && !isStreaming && parsedBlocks.length === 0 && history.length === 0;
+
   return (
     <div className="h-screen w-full flex flex-col overflow-hidden lumora-app-bg">
-      {/* Subtle grid texture */}
       <div className="lumora-grid-overlay" />
 
+      {/* Compact header — nav only, no input bar */}
       <Header
-        inputValue={inputValue}
-        onInputChange={setInputValue}
-        onSubmit={handleInputSubmit}
+        inputValue=""
+        onInputChange={() => {}}
+        onSubmit={() => {}}
         onTranscription={handleTranscription}
-        showInputBar={true}
+        showInputBar={false}
       />
 
+      {/* Main content area */}
       <ErrorBoundary>
         <InterviewPanel
           onAskQuestion={handleSubmit}
@@ -222,32 +87,99 @@ export function InterviewPage() {
         />
       </ErrorBoundary>
 
-      {/* Enterprise Status Bar */}
-      <div className="hidden sm:flex items-center justify-between h-7 px-3 backdrop-blur-xl shrink-0 lumora-status-bar">
-        <div className="flex items-center gap-2">
-          <span className={`w-2 h-2 rounded-full ${isStreaming ? 'bg-emerald-400 animate-pulse' : 'bg-emerald-400'}`} style={!isStreaming ? { boxShadow: '0 0 6px rgba(52, 211, 153, 0.4)' } : {}} />
-          <span className="text-[11px] font-code text-white/60">
-            {isStreaming ? 'Generating...' : 'Ready'}
-          </span>
-          {history.length > 0 && (
-            <span className="text-[11px] font-code text-white/40 border-l border-white/10 pl-2">
-              {history.length} Q&A{history.length !== 1 ? 's' : ''}
-            </span>
-          )}
+      {/* ═══ BOTTOM COMPOSER ═══ */}
+      <div className="shrink-0 relative z-20">
+        {/* Gradient fade above composer */}
+        <div className="absolute -top-8 left-0 right-0 h-8 pointer-events-none" style={{ background: 'linear-gradient(to top, #0a0a0f, transparent)' }} />
+
+        <div className="px-3 sm:px-4 pb-3 pt-1">
+          <div className="max-w-3xl mx-auto">
+            {/* Expanded textarea mode */}
+            {isExpanded ? (
+              <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)' }}>
+                <textarea
+                  ref={textareaRef}
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleInputSubmit(); }}
+                  placeholder="Paste a coding problem, system design question, or multi-line prompt..."
+                  className="w-full bg-transparent text-white/90 text-sm placeholder:text-white/25 px-4 py-3 resize-none focus:outline-none font-code"
+                  rows={4}
+                  style={{ minHeight: 80, maxHeight: 240 }}
+                  autoFocus
+                />
+                <div className="flex items-center justify-between px-3 py-2 border-t border-white/5">
+                  <span className="text-[10px] font-code text-white/25">{inputValue.length > 0 ? `${inputValue.length} chars` : 'Cmd+Enter to send'}</span>
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => setIsExpanded(false)} className="text-xs text-white/40 hover:text-white/70 transition-colors px-2 py-1">Collapse</button>
+                    <button onClick={handleInputSubmit} disabled={!inputValue.trim() || isStreaming}
+                      className="px-4 py-1.5 rounded-lg text-xs font-bold text-white disabled:opacity-30 transition-all"
+                      style={{ background: inputValue.trim() ? 'linear-gradient(135deg, #10b981, #059669)' : 'rgba(255,255,255,0.06)' }}>
+                      Send
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* Compact single-line composer */
+              <div className="flex items-center gap-2 rounded-2xl px-4 h-12 transition-all"
+                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)', boxShadow: '0 -4px 24px rgba(0,0,0,0.2)' }}>
+                {/* Streaming indicator */}
+                {isStreaming && (
+                  <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" style={{ boxShadow: '0 0 8px rgba(16,185,129,0.5)' }} />
+                )}
+                <input
+                  ref={inputRef}
+                  data-tour="input"
+                  type="text"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') handleInputSubmit(); }}
+                  placeholder={isStreaming ? 'AI is generating...' : showEmptyState ? 'Ask an interview question...' : 'Ask a follow-up question...'}
+                  className="flex-1 bg-transparent text-white/90 text-sm placeholder:text-white/25 focus:outline-none min-w-0"
+                  disabled={isStreaming}
+                />
+                {/* Expand button */}
+                <button onClick={() => { setIsExpanded(true); setTimeout(() => textareaRef.current?.focus(), 50); }}
+                  className="p-1.5 rounded-lg text-white/30 hover:text-white/60 hover:bg-white/5 transition-colors shrink-0"
+                  title="Expand for multi-line input">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                  </svg>
+                </button>
+                {/* Send button */}
+                {inputValue.trim() && !isStreaming && (
+                  <button onClick={handleInputSubmit}
+                    className="p-1.5 rounded-lg transition-all shrink-0"
+                    style={{ background: 'linear-gradient(135deg, #10b981, #059669)', boxShadow: '0 2px 8px rgba(16,185,129,0.3)' }}>
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M12 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                )}
+                {/* Keyboard shortcut hint */}
+                {!inputValue && !isStreaming && (
+                  <kbd className="hidden sm:inline text-[10px] font-code text-white/20 border border-white/10 rounded px-1.5 py-0.5 shrink-0">Cmd+K</kbd>
+                )}
+              </div>
+            )}
+          </div>
         </div>
-        <div className="flex items-center gap-3 text-[11px] font-code text-white/40">
-          <span>
-            <kbd className="px-1 py-0.5 rounded-md border border-white/10 text-white/50 text-[10px] bg-white/5">Cmd+M</kbd> mic
-          </span>
-          <span>
-            <kbd className="px-1 py-0.5 rounded-md border border-white/10 text-white/50 text-[10px] bg-white/5">Cmd+K</kbd> focus
-          </span>
-          <span>
-            <kbd className="px-1 py-0.5 rounded-md border border-white/10 text-white/50 text-[10px] bg-white/5">Cmd+S</kbd> search
-          </span>
-          <span>
-            <kbd className="px-1 py-0.5 rounded-md border border-white/10 text-white/50 text-[10px] bg-white/5">Cmd+B</kbd> blank
-          </span>
+
+        {/* Status bar */}
+        <div className="hidden sm:flex items-center justify-between h-6 px-3 lumora-status-bar">
+          <div className="flex items-center gap-2">
+            <span className={`w-1.5 h-1.5 rounded-full ${isStreaming ? 'bg-emerald-400 animate-pulse' : 'bg-emerald-400'}`} style={!isStreaming ? { boxShadow: '0 0 4px rgba(52,211,153,0.4)' } : {}} />
+            <span className="text-[10px] font-code text-white/40">{isStreaming ? 'Generating...' : 'Ready'}</span>
+            {history.length > 0 && (
+              <span className="text-[10px] font-code text-white/30 border-l border-white/10 pl-2">{history.length} Q&A</span>
+            )}
+          </div>
+          <div className="flex items-center gap-3 text-[10px] font-code text-white/30">
+            <span><kbd className="px-1 py-0.5 rounded border border-white/8 text-white/40 bg-white/3">⌘M</kbd> mic</span>
+            <span><kbd className="px-1 py-0.5 rounded border border-white/8 text-white/40 bg-white/3">⌘K</kbd> focus</span>
+            <span><kbd className="px-1 py-0.5 rounded border border-white/8 text-white/40 bg-white/3">⌘B</kbd> blank</span>
+          </div>
         </div>
       </div>
     </div>
