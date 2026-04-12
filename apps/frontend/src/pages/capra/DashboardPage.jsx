@@ -1120,7 +1120,7 @@ function CodingLayout({
   const activeExplanations = currentApproachData?.explanations || solution?.explanations;
   const activeComplexity = currentApproachData?.complexity || solution?.complexity || streamingContent.complexity;
 
-  const ProblemPane = () => (
+  const problemPane = (
     <div className="h-full flex flex-col overflow-y-auto" style={{ background: '#f7f8f9' }}>
       <div className="flex-shrink-0">
         <div className="flex items-center justify-between px-4 sm:px-5 py-3 border-b border-[#e3e8ee] gap-2 min-h-[48px] flex-wrap" style={{ background: '#ffffff' }}>
@@ -1148,7 +1148,7 @@ function CodingLayout({
     </div>
   );
 
-  const DesignPane = () => (
+  const designPane = (
     <div className="h-full overflow-auto p-4" style={{ background: '#f7f8f9' }}>
       {hasSystemDesign ? (
         <SystemDesignPanel systemDesign={systemDesign} eraserDiagram={eraserDiagram} autoGenerateEraser={autoGenerateEraser} onGenerateEraserDiagram={onGenerateEraserDiagram} question={currentProblem || loadedProblem} cloudProvider="auto" qaHistory={qaHistory || []} onFollowUpQuestion={onFollowUpQuestion} isProcessingFollowUp={isProcessingFollowUp} />
@@ -1173,13 +1173,13 @@ function CodingLayout({
     </div>
   );
 
-  const CodePane = () => (
+  const codePane = (
     <div className="h-full" style={{ background: '#f7f8f9' }}>
       <CodeDisplay ref={codeDisplayRef} code={activeCode} language={solution?.language || streamingContent.language} complexity={activeComplexity} onLineHover={onLineHover} examples={solution?.examples} isStreaming={isLoading && loadingType === 'solve' && !solution} autoRunOutput={autoRunOutput} onExplanationsUpdate={onExplanationsUpdate} ascendMode={ascendMode} codingLanguage={codingLanguage} onLanguageChange={ascendMode === 'coding' ? onLanguageChange : undefined} detailLevel={codingDetailLevel} onDetailLevelChange={ascendMode === 'coding' ? onCodingDetailLevelChange : undefined} editorSettings={editorSettings} systemDesign={solution?.systemDesign || streamingContent.systemDesign} eraserDiagram={eraserDiagram} autoGenerateEraser={autoGenerateEraser} question={currentProblem || loadedProblem} cloudProvider="auto" onGenerateEraserDiagram={onGenerateEraserDiagram} approaches={approaches} activeApproach={activeApproach} onApproachChange={setActiveApproach} />
     </div>
   );
 
-  const ExplainPane = () => (
+  const explainPane = (
     <div className="h-full overflow-hidden bg-white">
       <ExplanationPanel explanations={activeExplanations} highlightedLine={highlightedLine} pitch={activePitch} systemDesign={solution?.systemDesign || streamingContent.systemDesign} isStreaming={isLoading && loadingType === 'solve' && !solution} onExpandSystemDesign={onExpandSystemDesign} canExpandSystemDesign={!!currentProblem && !isLoading} onFollowUpQuestion={onFollowUpQuestion} isProcessingFollowUp={isProcessingFollowUp} />
     </div>
@@ -1198,10 +1198,10 @@ function CodingLayout({
         <MobileTabView tabs={tabs} activeTab={mobileTab} onTabChange={setMobileTab} loadingTabId={isLoading ? (ascendMode === 'system-design' ? 'design' : 'code') : null}>
           {(activeId) => (
             <>
-              {activeId === 'problem' && <ProblemPane />}
-              {activeId === 'code' && <CodePane />}
-              {activeId === 'explain' && <ExplainPane />}
-              {activeId === 'design' && <DesignPane />}
+              {activeId === 'problem' && {problemPane}}
+              {activeId === 'code' && {codePane}}
+              {activeId === 'explain' && {explainPane}}
+              {activeId === 'design' && {designPane}}
             </>
           )}
         </MobileTabView>
@@ -1293,14 +1293,14 @@ function CodingLayout({
             {showAscendAssistant ? (
               <Allotment defaultSizes={[60, 40]}>
                 <Allotment.Pane minSize={220}>
-                  <DesignPane />
+                  {designPane}
                 </Allotment.Pane>
                 <Allotment.Pane minSize={220}>
                   <AscendAssistantPanel onClose={onCloseAscendAssistant} provider={provider} model={model} />
                 </Allotment.Pane>
               </Allotment>
             ) : (
-              <DesignPane />
+              {designPane}
             )}
           </Allotment.Pane>
         </Allotment>
@@ -1312,11 +1312,11 @@ function CodingLayout({
     <div className="h-full bg-white">
       <Allotment defaultSizes={showAscendAssistant ? [30, 40, 30] : [30, 70]}>
         <Allotment.Pane minSize={220}>
-          <ProblemPane />
+          {problemPane}
         </Allotment.Pane>
         <Allotment.Pane minSize={300}>
           <div className="h-full bg-[#f7f8f9] border-l border-[#e3e8ee]">
-            <CodePane />
+            {codePane}
           </div>
         </Allotment.Pane>
         {showAscendAssistant && (

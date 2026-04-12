@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Icon } from '../../shared/Icons.jsx';
 import { CompanyLogo, getCompanyLogoSrc } from '../../shared/CompanyLogo.tsx';
 import FormattedContent from './FormattedContent.jsx';
@@ -1186,9 +1186,9 @@ export default function TopicDetail({
                   const href = `/capra?problem=${encodeURIComponent(problemText)}&autosolve=true`;
 
                   return (
-                    <a
+                    <Link
                       key={i}
-                      href={href}
+                      to={href}
                       className={`grid grid-cols-[32px_1fr_64px_72px] items-center px-3 py-2.5 transition-colors cursor-pointer group hover:bg-emerald-50/60 ${i % 2 === 0 ? 'bg-white' : 'bg-gray-50/40'} ${i < topicDetails.commonProblems.length - 1 ? 'border-b border-[#f0f0f0]' : ''}`}
                     >
                       <span className="text-xs text-gray-400 landing-mono">{i + 1}</span>
@@ -1205,7 +1205,7 @@ export default function TopicDetail({
                       <span className="flex justify-center">
                         <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-md group-hover:bg-emerald-100 transition-colors landing-mono uppercase tracking-wide">Solve</span>
                       </span>
-                    </a>
+                    </Link>
                   );
                 })}
               </div>
