@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Icon } from '../../shared/Icons.jsx';
 import { CompanyLogo, getCompanyLogoSrc } from '../../shared/CompanyLogo.tsx';
 import FormattedContent from './FormattedContent.jsx';
@@ -350,6 +351,8 @@ export default function TopicDetail({
   generateDiagram, codingTopics, systemDesignTopics, systemDesigns, behavioralTopics, filteredTopics,
   progressInfo, isLocked = false, contentAccess,
 }) {
+  const navigate = useNavigate();
+
   if (!topicDetails) return null;
 
   // Mark topic as read when viewing (only if not locked)
@@ -595,11 +598,11 @@ export default function TopicDetail({
                               headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
                               body: JSON.stringify({ price_id: plan.priceId, success_url: window.location.href, cancel_url: window.location.href }),
                             });
-                            if (!resp.ok) { window.location.href = '/pricing'; return; }
+                            if (!resp.ok) { navigate('/pricing'); return; }
                             const data = await resp.json();
                             if (data.url) window.location.href = data.url;
-                            else window.location.href = '/pricing';
-                          } catch { window.location.href = '/pricing'; }
+                            else navigate('/pricing');
+                          } catch { navigate('/pricing'); }
                         }}
                         className={`mt-2 w-full py-1.5 rounded-lg text-[10px] font-semibold cursor-pointer transition-all ${plan.popular ? 'text-white' : plan.best ? 'text-white' : 'text-gray-700 border border-gray-300 hover:border-gray-400'}`}
                         style={plan.popular ? { background: 'linear-gradient(135deg, #10b981, #06b6d4)' } : plan.best ? { background: 'linear-gradient(135deg, #f59e0b, #d97706)' } : {}}

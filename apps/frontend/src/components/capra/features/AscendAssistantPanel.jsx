@@ -80,6 +80,7 @@ function renderMarkdown(text) {
 
   const renderTable = (tableIdx) => {
     const tableText = tables[tableIdx];
+    if (!tableText) return null;
     const tableLines = tableText.split('\n');
     const table = parseTable(tableLines);
     if (!table) return null;
@@ -138,13 +139,15 @@ function renderMarkdown(text) {
     if (asciiMatch) {
       flushTables();
       const ascii = asciiBlocks[parseInt(asciiMatch[1])];
-      elements.push(
-        <div key={elementKey++} className="my-1 rounded-lg overflow-hidden border border-brand-400/30">
-          <pre className="p-2 bg-gray-100/80 overflow-x-auto">
-            <code className="text-xs leading-tight text-brand-300 font-mono whitespace-pre">{ascii}</code>
-          </pre>
-        </div>
-      );
+      if (ascii) {
+        elements.push(
+          <div key={elementKey++} className="my-1 rounded-lg overflow-hidden border border-brand-400/30">
+            <pre className="p-2 bg-gray-100/80 overflow-x-auto">
+              <code className="text-xs leading-tight text-brand-300 font-mono whitespace-pre">{ascii}</code>
+            </pre>
+          </div>
+        );
+      }
       return;
     }
 
@@ -153,13 +156,15 @@ function renderMarkdown(text) {
     if (codeMatch) {
       flushTables();
       const block = codeBlocks[parseInt(codeMatch[1])];
-      elements.push(
-        <div key={elementKey++} className="my-1 rounded-lg overflow-hidden border border-gray-200/40">
-          <pre className="p-2 bg-gray-50/80 overflow-x-auto">
-            <code className="text-xs text-gray-800 font-mono whitespace-pre">{block.content}</code>
-          </pre>
-        </div>
-      );
+      if (block) {
+        elements.push(
+          <div key={elementKey++} className="my-1 rounded-lg overflow-hidden border border-gray-200/40">
+            <pre className="p-2 bg-gray-50/80 overflow-x-auto">
+              <code className="text-xs text-gray-800 font-mono whitespace-pre">{block.content}</code>
+            </pre>
+          </div>
+        );
+      }
       return;
     }
 
