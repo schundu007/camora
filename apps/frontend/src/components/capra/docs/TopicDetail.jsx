@@ -385,16 +385,43 @@ export default function TopicDetail({
     setSdExpandedDPs({});
   }, [selectedTopic]);
 
+  // Prev/Next topic navigation
+  const currentIndex = filteredTopics?.findIndex(t => t.id === selectedTopic) ?? -1;
+  const prevTopic = currentIndex > 0 ? filteredTopics[currentIndex - 1] : null;
+  const nextTopic = currentIndex >= 0 && currentIndex < (filteredTopics?.length || 0) - 1 ? filteredTopics[currentIndex + 1] : null;
+
   return (
     <div className="landing-root animate-fade-in">
-      {/* Back button */}
-      <button
-        onClick={() => setSelectedTopic(null)}
-        className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-2 transition-all hover:gap-2 group landing-body"
-      >
-        <Icon name="chevronLeft" size={18} className="transition-transform group-hover:-translate-x-0.5" />
-        <span>Back to {pageConfig.title}</span>
-      </button>
+      {/* Breadcrumb navigation */}
+      <div className="flex items-center gap-1.5 mb-3 text-sm landing-body flex-wrap">
+        <button onClick={() => setSelectedTopic(null)} className="text-emerald-600 hover:text-emerald-700 font-medium transition-colors">
+          {pageConfig.title}
+        </button>
+        <Icon name="chevronRight" size={12} className="text-gray-300" />
+        <span className="text-gray-900 font-semibold truncate max-w-[300px]">{topicDetails.title}</span>
+        {currentIndex >= 0 && filteredTopics && (
+          <span className="text-gray-400 text-xs ml-1">({currentIndex + 1} of {filteredTopics.length})</span>
+        )}
+        {/* Quick prev/next in breadcrumb */}
+        <div className="ml-auto flex items-center gap-1">
+          <button
+            onClick={() => prevTopic && setSelectedTopic(prevTopic.id)}
+            disabled={!prevTopic}
+            className="p-1 rounded hover:bg-gray-100 text-gray-500 hover:text-gray-900 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            title={prevTopic ? `Previous: ${prevTopic.title}` : 'No previous topic'}
+          >
+            <Icon name="chevronLeft" size={16} />
+          </button>
+          <button
+            onClick={() => nextTopic && setSelectedTopic(nextTopic.id)}
+            disabled={!nextTopic}
+            className="p-1 rounded hover:bg-gray-100 text-gray-500 hover:text-gray-900 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            title={nextTopic ? `Next: ${nextTopic.title}` : 'No next topic'}
+          >
+            <Icon name="chevronRight" size={16} />
+          </button>
+        </div>
+      </div>
 
       {/* Topic Header - Clean minimal design */}
       <div className="rounded-xl p-3 mb-3 border border-[#e3e8ee] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
@@ -429,13 +456,13 @@ export default function TopicDetail({
               )}
               {/* Design in App button for system design topics */}
               {isSDStyle && (
-                <a
-                  href={`/capra?problem=${encodeURIComponent(`Design ${topicDetails.title}. ${topicDetails.description || topicDetails.subtitle || ''}`)}&mode=system-design&autosolve=true`}
+                <Link
+                  to={`/capra?problem=${encodeURIComponent(`Design ${topicDetails.title}. ${topicDetails.description || topicDetails.subtitle || ''}`)}&mode=system-design&autosolve=true`}
                   className="ml-auto px-3 py-1.5 rounded-lg text-sm font-medium bg-emerald-500 text-white hover:bg-emerald-600 transition-colors flex items-center gap-2 flex-shrink-0 landing-body"
                 >
                   <Icon name="zap" size={14} />
                   Design
-                </a>
+                </Link>
               )}
             </div>
             <p className="text-gray-700 text-sm leading-relaxed landing-body">{topicDetails.description}</p>
@@ -2744,6 +2771,43 @@ export default function TopicDetail({
 
             </div>
           )}
+        </div>
+      )}
+
+      {/* Bottom prev/next topic navigation */}
+      {filteredTopics && filteredTopics.length > 1 && (
+        <div className="mt-6 pt-4 border-t border-gray-200 flex items-stretch gap-3">
+          {prevTopic ? (
+            <button
+              onClick={() => setSelectedTopic(prevTopic.id)}
+              className="flex-1 flex items-center gap-3 px-4 py-3 rounded-xl border border-gray-200 bg-white hover:border-emerald-300 hover:bg-emerald-50/30 transition-all group text-left"
+            >
+              <Icon name="chevronLeft" size={16} className="text-gray-400 group-hover:text-emerald-600 transition-colors flex-shrink-0" />
+              <div className="min-w-0">
+                <span className="text-[10px] uppercase tracking-wider text-gray-400 landing-mono block">Previous</span>
+                <span className="text-sm font-medium text-gray-900 truncate block landing-body">{prevTopic.title}</span>
+              </div>
+            </button>
+          ) : <div className="flex-1" />}
+          <button
+            onClick={() => setSelectedTopic(null)}
+            className="px-4 py-3 rounded-xl border border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50 transition-all text-xs font-medium text-gray-500 hover:text-gray-700 landing-body flex items-center gap-1.5 flex-shrink-0"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg>
+            All Topics
+          </button>
+          {nextTopic ? (
+            <button
+              onClick={() => setSelectedTopic(nextTopic.id)}
+              className="flex-1 flex items-center justify-end gap-3 px-4 py-3 rounded-xl border border-gray-200 bg-white hover:border-emerald-300 hover:bg-emerald-50/30 transition-all group text-right"
+            >
+              <div className="min-w-0">
+                <span className="text-[10px] uppercase tracking-wider text-gray-400 landing-mono block">Next</span>
+                <span className="text-sm font-medium text-gray-900 truncate block landing-body">{nextTopic.title}</span>
+              </div>
+              <Icon name="chevronRight" size={16} className="text-gray-400 group-hover:text-emerald-600 transition-colors flex-shrink-0" />
+            </button>
+          ) : <div className="flex-1" />}
         </div>
       )}
     </div>
