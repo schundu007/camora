@@ -141,7 +141,7 @@ router.post('/generate', async (req, res, next) => {
     const problemHash = hashProblem(`${cacheKey || question}::${provider}::${direction}::${detailLevel}`);
     try {
       const cached = await query(
-        'SELECT image_url, mermaid_code FROM ascend_diagram_cache WHERE problem_hash = $1 AND (image_data IS NOT NULL OR mermaid_code IS NOT NULL)',
+        'SELECT image_url, mermaid_code FROM ascend_diagram_cache WHERE problem_hash = $1 AND (image_url IS NOT NULL OR image_data IS NOT NULL OR mermaid_code IS NOT NULL)',
         [problemHash]
       );
       if (cached.rows.length > 0) {
@@ -288,7 +288,7 @@ router.post('/lookup', async (req, res) => {
     const hash2 = hashProblem(`${question}::${cloudProvider}::${altDirection}::${detailLevel}`);
 
     const cached = await query(
-      'SELECT image_url, mermaid_code FROM ascend_diagram_cache WHERE problem_hash IN ($1, $2) AND (image_data IS NOT NULL OR mermaid_code IS NOT NULL) LIMIT 1',
+      'SELECT image_url, mermaid_code FROM ascend_diagram_cache WHERE problem_hash IN ($1, $2) AND (image_url IS NOT NULL OR image_data IS NOT NULL OR mermaid_code IS NOT NULL) LIMIT 1',
       [hash1, hash2]
     );
 
@@ -302,7 +302,7 @@ router.post('/lookup', async (req, res) => {
 
     // Broad fallback: search by description LIKE match
     const broadSearch = await query(
-      `SELECT image_url, mermaid_code FROM ascend_diagram_cache WHERE LOWER(description) LIKE $1 AND (image_data IS NOT NULL OR mermaid_code IS NOT NULL) LIMIT 1`,
+      `SELECT image_url, mermaid_code FROM ascend_diagram_cache WHERE LOWER(description) LIKE $1 AND (image_url IS NOT NULL OR image_data IS NOT NULL OR mermaid_code IS NOT NULL) LIMIT 1`,
       [`%${question.trim().toLowerCase().slice(0, 60)}%`]
     );
     if (broadSearch.rows.length > 0) {
@@ -317,6 +317,27 @@ router.post('/lookup', async (req, res) => {
     res.json({ success: false, cached: false });
   } catch (err) {
     res.json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * GET /api/diagram/cache-stats
+ * Debug: show what's in the diagram cache
+ */
+router.get('/cache-stats', async (req, res) => {
+  try {
+    const stats = await query(`
+      SELECT problem_hash, description, detail_level, cloud_provider, direction,
+             image_url IS NOT NULL as has_url,
+             image_data IS NOT NULL as has_data,
+             mermaid_code IS NOT NULL as has_mermaid
+      FROM ascend_diagram_cache
+      ORDER BY problem_hash
+      LIMIT 50
+    `);
+    res.json({ count: stats.rows.length, diagrams: stats.rows });
+  } catch (err) {
+    res.json({ error: err.message });
   }
 });
 
