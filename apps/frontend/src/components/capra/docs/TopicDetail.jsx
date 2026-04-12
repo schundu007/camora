@@ -81,29 +81,29 @@ function CapacityPlanningGrid({ estimation }) {
 
   return (
     <div className="rounded-lg overflow-hidden border border-[#e3e8ee] bg-white">
-      <div className="px-3 py-2 border-b border-[#e3e8ee] flex items-center gap-2 bg-violet-50">
-        <Icon name="hash" size={16} className="text-violet-700" />
-        <h3 className="text-sm font-bold text-violet-900 landing-display">{estimation.title || 'Capacity Planning'}</h3>
+      <div className="px-3 py-2 border-b border-[#e3e8ee] flex items-center gap-2 bg-gray-50">
+        <Icon name="hash" size={16} className="text-gray-700" />
+        <h3 className="text-sm font-bold text-gray-900 landing-display">{estimation.title || 'Capacity Planning'}</h3>
       </div>
       {estimation.assumptions && (
-        <div className="px-3 py-1.5 text-xs text-gray-500 bg-violet-50/30 border-b border-[#e3e8ee]">
-          <span className="font-semibold text-violet-700">Assumptions:</span> {estimation.assumptions}
+        <div className="px-3 py-1.5 text-xs text-gray-500 bg-gray-50/30 border-b border-[#e3e8ee]">
+          <span className="font-semibold text-gray-700">Assumptions:</span> {estimation.assumptions}
         </div>
       )}
       <div className="p-3">
         <table className="w-full border-collapse text-sm">
           <thead>
-            <tr className="bg-violet-50/70">
-              <th className="text-left px-3 py-2 text-xs font-semibold text-violet-900 border-b border-violet-200 landing-display">Metric</th>
-              <th className="text-left px-3 py-2 text-xs font-semibold text-violet-900 border-b border-violet-200 landing-display">Value</th>
-              <th className="text-left px-3 py-2 text-xs font-semibold text-violet-900 border-b border-violet-200 landing-display hidden lg:table-cell">Calculation</th>
+            <tr className="bg-gray-50/70">
+              <th className="text-left px-3 py-2 text-xs font-semibold text-gray-900 border-b border-gray-200 landing-display">Metric</th>
+              <th className="text-left px-3 py-2 text-xs font-semibold text-gray-900 border-b border-gray-200 landing-display">Value</th>
+              <th className="text-left px-3 py-2 text-xs font-semibold text-gray-900 border-b border-gray-200 landing-display hidden lg:table-cell">Calculation</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((row, i) => (
-              <tr key={i} className="hover:bg-violet-50/30 transition-colors">
+              <tr key={i} className="hover:bg-gray-50/30 transition-colors">
                 <td className="px-3 py-2.5 font-semibold text-gray-700 border-b border-gray-100">{row.metric}</td>
-                <td className="px-3 py-2.5 font-bold text-violet-700 landing-mono border-b border-gray-100">{row.value}</td>
+                <td className="px-3 py-2.5 font-bold text-gray-700 landing-mono border-b border-gray-100">{row.value}</td>
                 <td className="px-3 py-2.5 text-gray-500 text-xs border-b border-gray-100 hidden lg:table-cell">{row.detail}</td>
               </tr>
             ))}
@@ -177,12 +177,12 @@ function DataModelSection({ schema }) {
 
   const typeColor = (type) => {
     const t = type.toLowerCase();
-    if (t.includes('uuid')) return 'text-violet-600 bg-violet-50';
-    if (t.includes('varchar') || t.includes('text') || t.includes('string') || t.includes('char')) return 'text-blue-600 bg-blue-50';
-    if (t.includes('int') || t.includes('bigint') || t.includes('serial') || t.includes('float') || t.includes('decimal') || t.includes('numeric')) return 'text-amber-600 bg-amber-50';
+    if (t.includes('uuid')) return 'text-gray-600 bg-gray-50';
+    if (t.includes('varchar') || t.includes('text') || t.includes('string') || t.includes('char')) return 'text-gray-600 bg-gray-100';
+    if (t.includes('int') || t.includes('bigint') || t.includes('serial') || t.includes('float') || t.includes('decimal') || t.includes('numeric')) return 'text-gray-600 bg-gray-100';
     if (t.includes('bool')) return 'text-emerald-600 bg-emerald-50';
-    if (t.includes('timestamp') || t.includes('date') || t.includes('time')) return 'text-rose-600 bg-rose-50';
-    if (t.includes('json') || t.includes('jsonb') || t.includes('array')) return 'text-indigo-600 bg-indigo-50';
+    if (t.includes('timestamp') || t.includes('date') || t.includes('time')) return 'text-gray-600 bg-gray-100';
+    if (t.includes('json') || t.includes('jsonb') || t.includes('array')) return 'text-gray-600 bg-gray-100';
     return 'text-gray-600 bg-gray-50';
   };
 
@@ -190,16 +190,16 @@ function DataModelSection({ schema }) {
   if (tables.length > 0) {
     return (
       <div id="data-model" className="rounded-2xl overflow-hidden scroll-mt-24 border border-[#e3e8ee] bg-white">
-        <div className="bg-violet-50/50 border-b border-[#e3e8ee] px-4 py-2 flex items-center gap-2">
-          <Icon name="database" size={14} className="text-violet-600" />
-          <h3 className="text-sm font-bold text-violet-800 landing-display">Data Model</h3>
-          <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-violet-100 text-violet-700 landing-mono">{tables.length} tables</span>
+        <div className="bg-gray-50/50 border-b border-[#e3e8ee] px-4 py-2 flex items-center gap-2">
+          <Icon name="database" size={14} className="text-gray-600" />
+          <h3 className="text-sm font-bold text-gray-800 landing-display">Data Model</h3>
+          <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 landing-mono">{tables.length} tables</span>
         </div>
         <div className="p-3 grid grid-cols-1 gap-3">
           {tables.map((table, ti) => (
             <div key={ti} className="rounded-xl border border-[#e3e8ee] overflow-hidden">
               <div className="px-3 py-2 bg-[#f7f8f9] border-b border-[#e3e8ee] flex items-center gap-2">
-                <Icon name="database" size={12} className="text-violet-500" />
+                <Icon name="database" size={12} className="text-gray-500" />
                 <span className="text-sm font-bold text-gray-900 landing-mono">{table.name}</span>
                 <span className="text-[10px] text-gray-400 landing-mono ml-auto">{table.fields.length} fields</span>
               </div>
@@ -214,7 +214,7 @@ function DataModelSection({ schema }) {
                   </thead>
                   <tbody>
                     {table.fields.map((field, fi) => (
-                      <tr key={fi} className="hover:bg-violet-50/30 transition-colors border-b border-[#e3e8ee] last:border-b-0">
+                      <tr key={fi} className="hover:bg-gray-50/30 transition-colors border-b border-[#e3e8ee] last:border-b-0">
                         <td className="px-3 py-2 font-medium text-gray-900 landing-mono text-xs">{field.name}</td>
                         <td className="px-3 py-2">
                           <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded landing-mono ${typeColor(field.type)}`}>{field.type}</span>
@@ -222,8 +222,8 @@ function DataModelSection({ schema }) {
                         <td className="px-3 py-2 text-xs text-gray-500 landing-body">
                           {field.notes && (
                             <>
-                              {field.notes.match(/PK|PRIMARY/i) && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 mr-1 landing-mono">PK</span>}
-                              {field.notes.match(/FK|FOREIGN|REFERENCES/i) && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 mr-1 landing-mono">FK</span>}
+                              {field.notes.match(/PK|PRIMARY/i) && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-gray-100 text-gray-700 mr-1 landing-mono">PK</span>}
+                              {field.notes.match(/FK|FOREIGN|REFERENCES/i) && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-gray-100 text-gray-700 mr-1 landing-mono">FK</span>}
                               {field.notes.match(/NOT NULL/i) && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 mr-1 landing-mono">NOT NULL</span>}
                               <span>{field.notes.replace(/(PK|PRIMARY KEY|FK|FOREIGN KEY|NOT NULL|REFERENCES\s+\w+)/gi, '').replace(/,/g, '').trim()}</span>
                             </>
@@ -245,10 +245,10 @@ function DataModelSection({ schema }) {
   const schemaLines = (schema || '').split('\n');
   return (
     <div id="data-model" className="rounded-2xl overflow-hidden scroll-mt-24 border border-[#e3e8ee] bg-white">
-      <div className="bg-violet-50/50 border-b border-[#e3e8ee] px-4 py-2 flex items-center justify-between">
+      <div className="bg-gray-50/50 border-b border-[#e3e8ee] px-4 py-2 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Icon name="database" size={14} className="text-violet-600" />
-          <h3 className="text-sm font-bold text-violet-800 landing-display">Data Model</h3>
+          <Icon name="database" size={14} className="text-gray-600" />
+          <h3 className="text-sm font-bold text-gray-800 landing-display">Data Model</h3>
         </div>
         <button
           onClick={handleCopy}
@@ -265,13 +265,13 @@ function DataModelSection({ schema }) {
         <table className="w-full">
           <tbody>
             {schemaLines.map((line, i) => (
-              <tr key={i} className="hover:bg-violet-50/30">
+              <tr key={i} className="hover:bg-gray-50/30">
                 <td className="text-right pr-3 pl-3 py-0 select-none text-[10px] text-gray-400 landing-mono" style={{ minWidth: '2.5rem', lineHeight: '1.375rem' }}>{i + 1}</td>
                 <td className="pr-4 py-0 landing-mono text-xs whitespace-pre" style={{ lineHeight: '1.375rem' }}>
                   {(() => {
                     // Simple syntax coloring
-                    if (line.trim().match(/^(Table|CREATE|ALTER|DROP|INSERT|SELECT|INDEX)/i)) return <span className="text-violet-700 font-semibold">{line}</span>;
-                    if (line.trim().match(/^(id|uuid|varchar|int|bigint|text|boolean|timestamp|serial|jsonb?|float|decimal|numeric)\b/i)) return <span className="text-blue-600">{line}</span>;
+                    if (line.trim().match(/^(Table|CREATE|ALTER|DROP|INSERT|SELECT|INDEX)/i)) return <span className="text-gray-700 font-semibold">{line}</span>;
+                    if (line.trim().match(/^(id|uuid|varchar|int|bigint|text|boolean|timestamp|serial|jsonb?|float|decimal|numeric)\b/i)) return <span className="text-gray-600">{line}</span>;
                     if (line.trim().startsWith('--') || line.trim().startsWith('//')) return <span className="text-gray-400 italic">{line}</span>;
                     if (line.trim() === '}' || line.trim() === ')' || line.trim() === ');') return <span className="text-gray-500">{line}</span>;
                     return <span className="text-emerald-700">{line}</span>;
@@ -327,7 +327,7 @@ function StaticCloudDiagram({ topicId, provider, staticSrc, diagramData, generat
         <div className="flex items-center gap-3">
           <button
             onClick={onGenerate}
-            className="text-xs text-violet-500 hover:text-violet-400 transition-colors"
+            className="text-xs text-gray-500 hover:text-emerald-500 transition-colors"
             title="Generate a fresh diagram using AI"
           >
             Regenerate →
@@ -443,7 +443,7 @@ export default function TopicDetail({
               {topicDetails.difficulty && (
                 <span className={`text-[10px] landing-mono px-1.5 py-0.5 rounded border ${
                   topicDetails.difficulty === 'Easy' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' :
-                  topicDetails.difficulty === 'Medium' ? 'bg-amber-50 text-amber-600 border-amber-200' :
+                  topicDetails.difficulty === 'Medium' ? 'bg-gray-100 text-gray-600 border-gray-200' :
                   'bg-red-50 text-red-600 border-red-200'
                 }`}>
                   {topicDetails.difficulty}
@@ -563,7 +563,7 @@ export default function TopicDetail({
             <div className="rounded-lg overflow-hidden border border-[#e3e8ee] bg-white mb-3">
               <div className="px-3 py-1.5 border-b border-[#e3e8ee] bg-[#f7f8f9] flex items-center gap-2">
                 <Icon name="book" size={14} className="text-emerald-700" />
-                <h2 className="text-sm font-bold text-blue-800 landing-display">Introduction</h2>
+                <h2 className="text-sm font-bold text-gray-800 landing-display">Introduction</h2>
               </div>
               <div className="p-3">
                 <p className="text-gray-700 text-sm landing-body leading-relaxed">
@@ -718,7 +718,7 @@ export default function TopicDetail({
                   <FormattedContent content={topicDetails.introduction} color="red" />
                 </div>
                 {topicDetails.blogUrl && (
-                  <a href={topicDetails.blogUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 mt-3 text-sm font-medium text-blue-600 hover:underline landing-body">
+                  <a href={topicDetails.blogUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 mt-3 text-sm font-medium text-gray-600 hover:underline landing-body">
                     <Icon name="externalLink" size={12} />
                     Visit Engineering Blog
                   </a>
@@ -748,9 +748,9 @@ export default function TopicDetail({
                       {i + 1}
                     </span>
                     <div className="flex-1 min-w-0">
-                      <span className="text-sm font-medium text-gray-900 group-hover:text-blue-600 transition-colors landing-display line-clamp-2">{article.title}</span>
+                      <span className="text-sm font-medium text-gray-900 group-hover:text-gray-600 transition-colors landing-display line-clamp-2">{article.title}</span>
                     </div>
-                    <Icon name="externalLink" size={12} className="text-gray-300 group-hover:text-blue-500 shrink-0 mt-1" />
+                    <Icon name="externalLink" size={12} className="text-gray-300 group-hover:text-emerald-500 shrink-0 mt-1" />
                   </a>
                 ))}
               </div>
@@ -761,7 +761,7 @@ export default function TopicDetail({
           {topicDetails.keyQuestions && topicDetails.keyQuestions.length > 0 && (
             <div id="key-questions" className="rounded-xl overflow-hidden scroll-mt-24 border border-[#e3e8ee]">
               <div className="px-4 py-2.5 border-b border-[#e3e8ee] bg-white/80 flex items-center gap-2">
-                <Icon name="lightbulb" size={14} className="text-amber-600" />
+                <Icon name="lightbulb" size={14} className="text-gray-600" />
                 <h3 className="text-sm font-bold text-gray-900 landing-display">Key Takeaways</h3>
               </div>
               <div className="divide-y divide-[#e3e8ee]">
@@ -771,7 +771,7 @@ export default function TopicDetail({
                       onClick={() => setExpandedTheoryQuestions(prev => ({ ...prev, [`eb-${i}`]: !prev[`eb-${i}`] }))}
                       className="w-full flex items-start gap-3 text-left group"
                     >
-                      <span className="w-6 h-6 rounded-lg bg-amber-50 border border-amber-200 flex items-center justify-center flex-shrink-0 mt-0.5 text-xs font-bold text-amber-600 landing-mono">
+                      <span className="w-6 h-6 rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center flex-shrink-0 mt-0.5 text-xs font-bold text-gray-600 landing-mono">
                         {i + 1}
                       </span>
                       <span className="flex-1 text-sm font-semibold text-gray-900 landing-display">{qa.question}</span>
@@ -814,7 +814,7 @@ export default function TopicDetail({
           {topicDetails.phases && topicDetails.phases.length > 0 && (
             <div id="roadmap-phases" className="rounded-xl overflow-hidden scroll-mt-24 border border-[#e3e8ee]">
               <div className="px-4 py-2.5 border-b border-[#e3e8ee] bg-white/80 flex items-center gap-2">
-                <Icon name="layers" size={14} className="text-amber-600" />
+                <Icon name="layers" size={14} className="text-gray-600" />
                 <h3 className="text-sm font-bold text-gray-900 landing-display">{topicDetails.title} Roadmap</h3>
                 <span className="text-[10px] landing-mono text-gray-400">{topicDetails.phases.length} phases, {topicDetails.phases.reduce((a, p) => a + p.topics.length, 0)} topics</span>
               </div>
@@ -866,7 +866,7 @@ export default function TopicDetail({
           {topicDetails.keyQuestions && topicDetails.keyQuestions.length > 0 && (
             <div id="key-questions" className="rounded-xl overflow-hidden scroll-mt-24 border border-[#e3e8ee]">
               <div className="px-4 py-2.5 border-b border-[#e3e8ee] bg-white/80 flex items-center gap-2">
-                <Icon name="messageSquare" size={14} className="text-blue-600" />
+                <Icon name="messageSquare" size={14} className="text-gray-600" />
                 <h3 className="text-sm font-bold text-gray-900 landing-display">FAQ</h3>
               </div>
               <div className="divide-y divide-[#e3e8ee]">
@@ -876,7 +876,7 @@ export default function TopicDetail({
                       onClick={() => setExpandedTheoryQuestions(prev => ({ ...prev, [`rm-${i}`]: !prev[`rm-${i}`] }))}
                       className="w-full flex items-start gap-3 text-left group"
                     >
-                      <span className="w-6 h-6 rounded-lg bg-amber-50 border border-amber-200 flex items-center justify-center flex-shrink-0 mt-0.5 text-xs font-bold text-amber-600 landing-mono">
+                      <span className="w-6 h-6 rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center flex-shrink-0 mt-0.5 text-xs font-bold text-gray-600 landing-mono">
                         Q
                       </span>
                       <span className="flex-1 text-sm font-semibold text-gray-900 landing-display">{qa.question}</span>
@@ -910,7 +910,7 @@ export default function TopicDetail({
               <div className="flex items-center gap-2 flex-wrap mb-3">
                 <span className={`text-xs landing-mono px-2 py-1 rounded-full font-bold ${
                   topicDetails.difficulty === 'beginner' ? 'bg-emerald-100 text-emerald-700' :
-                  topicDetails.difficulty === 'intermediate' ? 'bg-amber-100 text-amber-700' :
+                  topicDetails.difficulty === 'intermediate' ? 'bg-gray-100 text-gray-700' :
                   'bg-red-100 text-red-700'
                 }`}>{topicDetails.difficulty}</span>
                 {topicDetails.estimatedTime && (
@@ -959,9 +959,9 @@ export default function TopicDetail({
 
           {/* Interview Relevance */}
           {topicDetails.interviewRelevance && (
-            <div id="interview-relevance" className="rounded-xl overflow-hidden scroll-mt-24 border border-purple-200 bg-purple-50/50">
-              <div className="px-4 py-2.5 border-b border-purple-200 bg-purple-50/80 flex items-center gap-2">
-                <Icon name="briefcase" size={14} className="text-purple-600" />
+            <div id="interview-relevance" className="rounded-xl overflow-hidden scroll-mt-24 border border-emerald-200 bg-emerald-50/50">
+              <div className="px-4 py-2.5 border-b border-emerald-200 bg-emerald-50/50 flex items-center gap-2">
+                <Icon name="briefcase" size={14} className="text-emerald-700" />
                 <h3 className="text-sm font-bold text-gray-900 landing-display">Interview Relevance</h3>
               </div>
               <div className="p-4">
@@ -974,7 +974,7 @@ export default function TopicDetail({
           {topicDetails.keyQuestions && topicDetails.keyQuestions.length > 0 && (
             <div id="key-questions" className="rounded-xl overflow-hidden scroll-mt-24 border border-[#e3e8ee]">
               <div className="px-4 py-2.5 border-b border-[#e3e8ee] bg-white/80 flex items-center gap-2">
-                <Icon name="messageSquare" size={14} className="text-blue-600" />
+                <Icon name="messageSquare" size={14} className="text-gray-600" />
                 <h3 className="text-sm font-bold text-gray-900 landing-display">Key Questions</h3>
                 <span className="text-[10px] landing-mono text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">{topicDetails.keyQuestions.length}</span>
               </div>
@@ -985,7 +985,7 @@ export default function TopicDetail({
                       onClick={() => setExpandedTheoryQuestions(prev => ({ ...prev, [i]: !prev[i] }))}
                       className="w-full flex items-start gap-3 text-left group"
                     >
-                      <span className="w-6 h-6 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center flex-shrink-0 mt-0.5 text-xs font-bold text-blue-600 landing-mono">
+                      <span className="w-6 h-6 rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center flex-shrink-0 mt-0.5 text-xs font-bold text-gray-600 landing-mono">
                         {i + 1}
                       </span>
                       <span className="flex-1 text-sm font-semibold text-gray-900 landing-display">{qa.question}</span>
@@ -1037,11 +1037,11 @@ export default function TopicDetail({
                   const insightMatch = intro.match(/\*\*Key Insight[:\s]*\*\*\s*(.+?)(?:\n|$)/i) || intro.match(/Key Insight:\s*(.+?)(?:\n|$)/i);
                   if (!insightMatch) return null;
                   return (
-                    <div className="mt-4 flex items-start gap-3 rounded-lg bg-amber-50 border border-amber-200 p-3">
-                      <Icon name="lightbulb" size={16} className="text-amber-600 flex-shrink-0 mt-0.5" />
+                    <div className="mt-4 flex items-start gap-3 rounded-lg bg-gray-100 border border-gray-200 p-3">
+                      <Icon name="lightbulb" size={16} className="text-gray-600 flex-shrink-0 mt-0.5" />
                       <div>
-                        <div className="text-xs font-bold text-amber-800 landing-display mb-0.5">Key Insight</div>
-                        <div className="text-sm text-amber-900 leading-relaxed landing-body">{insightMatch[1].trim()}</div>
+                        <div className="text-xs font-bold text-gray-800 landing-display mb-0.5">Key Insight</div>
+                        <div className="text-sm text-gray-900 leading-relaxed landing-body">{insightMatch[1].trim()}</div>
                       </div>
                     </div>
                   );
@@ -1055,13 +1055,13 @@ export default function TopicDetail({
             <div className="grid grid-cols-2 gap-3">
               {topicDetails.timeComplexity && (
                 <div className="rounded-xl overflow-hidden bg-white border border-[#e3e8ee] shadow-sm flex">
-                  <div className="w-1 bg-cyan-400 flex-shrink-0" />
+                  <div className="w-1 bg-emerald-400 flex-shrink-0" />
                   <div className="p-3 flex items-start gap-3 flex-1">
-                    <div className="w-8 h-8 rounded-lg bg-cyan-50 flex items-center justify-center flex-shrink-0">
-                      <Icon name="clock" size={16} className="text-cyan-600" />
+                    <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center flex-shrink-0">
+                      <Icon name="clock" size={16} className="text-emerald-600" />
                     </div>
                     <div>
-                      <div className="text-[10px] font-bold text-cyan-700 landing-mono tracking-widest uppercase mb-1">Time</div>
+                      <div className="text-[10px] font-bold text-emerald-700 landing-mono tracking-widest uppercase mb-1">Time</div>
                       <div className="text-[16px] font-bold text-gray-900 font-mono landing-mono">{topicDetails.timeComplexity}</div>
                     </div>
                   </div>
@@ -1069,13 +1069,13 @@ export default function TopicDetail({
               )}
               {topicDetails.spaceComplexity && (
                 <div className="rounded-xl overflow-hidden bg-white border border-[#e3e8ee] shadow-sm flex">
-                  <div className="w-1 bg-violet-400 flex-shrink-0" />
+                  <div className="w-1 bg-emerald-400 flex-shrink-0" />
                   <div className="p-3 flex items-start gap-3 flex-1">
-                    <div className="w-8 h-8 rounded-lg bg-violet-50 flex items-center justify-center flex-shrink-0">
-                      <Icon name="layers" size={16} className="text-violet-600" />
+                    <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center flex-shrink-0">
+                      <Icon name="layers" size={16} className="text-gray-600" />
                     </div>
                     <div>
-                      <div className="text-[10px] font-bold text-violet-700 landing-mono tracking-widest uppercase mb-1">Space</div>
+                      <div className="text-[10px] font-bold text-gray-700 landing-mono tracking-widest uppercase mb-1">Space</div>
                       <div className="text-[16px] font-bold text-gray-900 font-mono landing-mono">{topicDetails.spaceComplexity}</div>
                     </div>
                   </div>
@@ -1111,7 +1111,7 @@ export default function TopicDetail({
             {topicDetails.keyPatterns && (
               <div className="rounded-xl overflow-hidden border border-[#e3e8ee] bg-white shadow-sm">
                 <div className="px-4 py-2.5 border-b border-[#e3e8ee] flex items-center gap-2 bg-white">
-                  <Icon name="puzzle" size={14} className="text-blue-600" />
+                  <Icon name="puzzle" size={14} className="text-gray-600" />
                   <h3 className="text-sm font-bold text-gray-900 landing-display">Key Patterns</h3>
                   <span className="ml-auto text-[10px] landing-mono text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-full">{topicDetails.keyPatterns.length}</span>
                 </div>
@@ -1217,7 +1217,7 @@ export default function TopicDetail({
                         {difficulty ? (
                           <span className={`text-[10px] landing-mono px-1.5 py-0.5 rounded-full border font-medium ${
                             difficulty === 'Easy' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' :
-                            difficulty === 'Medium' ? 'bg-amber-50 text-amber-600 border-amber-200' :
+                            difficulty === 'Medium' ? 'bg-gray-100 text-gray-600 border-gray-200' :
                             'bg-red-50 text-red-600 border-red-200'
                           }`}>{difficulty}</span>
                         ) : <span className="text-gray-300 text-xs">--</span>}
@@ -1236,11 +1236,11 @@ export default function TopicDetail({
           {topicDetails.theoryQuestions && topicDetails.theoryQuestions.length > 0 && (
             <div id="theory" className="rounded-xl overflow-hidden scroll-mt-24 border border-[#e3e8ee] bg-white shadow-sm">
               <div className="px-4 py-2.5 border-b border-[#e3e8ee] flex items-center gap-2 bg-white">
-                <Icon name="bookOpen" size={14} className="text-blue-600" />
+                <Icon name="bookOpen" size={14} className="text-gray-600" />
                 <h3 className="text-sm font-bold text-gray-900 landing-display">Theory Questions</h3>
                 <span className="text-[10px] landing-mono text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-full">{topicDetails.theoryQuestions.length}</span>
                 <button
-                  className="ml-auto text-[10px] landing-mono text-blue-600 hover:text-blue-800 transition-colors font-medium"
+                  className="ml-auto text-[10px] landing-mono text-gray-600 hover:text-gray-800 transition-colors font-medium"
                   onClick={() => {
                     const newVal = !codingAllQsExpanded;
                     setCodingAllQsExpanded(newVal);
@@ -1264,12 +1264,12 @@ export default function TopicDetail({
                           onClick={() => setExpandedTheoryQuestions(prev => ({ ...prev, [questionKey]: !prev[questionKey] }))}
                           className="w-full flex items-center gap-2 p-3 hover:bg-gray-50 transition-colors text-left"
                         >
-                          <span className="w-6 h-6 rounded-md flex items-center justify-center text-[11px] landing-mono bg-blue-100 text-blue-700 font-bold flex-shrink-0">{i + 1}</span>
+                          <span className="w-6 h-6 rounded-md flex items-center justify-center text-[11px] landing-mono bg-gray-100 text-gray-700 font-bold flex-shrink-0">{i + 1}</span>
                           <span className="text-gray-900 text-sm font-medium flex-1 landing-body">{q.question}</span>
                           {q.difficulty && (
                             <span className={`text-[10px] landing-mono px-1.5 py-0.5 rounded-full border font-medium flex-shrink-0 ${
                               q.difficulty === 'Easy' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' :
-                              q.difficulty === 'Medium' ? 'bg-amber-50 text-amber-600 border-amber-200' :
+                              q.difficulty === 'Medium' ? 'bg-gray-100 text-gray-600 border-gray-200' :
                               'bg-red-50 text-red-600 border-red-200'
                             }`}>{q.difficulty}</span>
                           )}
@@ -1320,15 +1320,15 @@ export default function TopicDetail({
             {topicDetails.interviewTips && (
               <div className="rounded-xl overflow-hidden border border-[#e3e8ee] bg-white shadow-sm">
                 <div className="px-4 py-2.5 border-b border-[#e3e8ee] flex items-center gap-2 bg-white">
-                  <Icon name="briefcase" size={14} className="text-amber-600" />
+                  <Icon name="briefcase" size={14} className="text-gray-600" />
                   <h3 className="text-sm font-bold text-gray-900 landing-display">Interview Tips</h3>
-                  <span className="text-[10px] font-bold text-amber-700 bg-amber-100 border border-amber-200 px-1.5 py-0.5 rounded-full landing-mono ml-auto">PRO</span>
+                  <span className="text-[10px] font-bold text-gray-700 bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded-full landing-mono ml-auto">PRO</span>
                 </div>
                 <div className="p-3 grid grid-cols-1 gap-1.5">
                   {topicDetails.interviewTips.map((tip, i) => (
-                    <div key={i} className="flex items-start gap-2.5 p-2 rounded-lg bg-amber-50/40 border border-amber-100 hover:shadow-md hover:border-amber-200 transition-all">
-                      <span className="w-5 h-5 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <Icon name="lightbulb" size={10} className="text-amber-600" />
+                    <div key={i} className="flex items-start gap-2.5 p-2 rounded-lg bg-gray-100/40 border border-amber-100 hover:shadow-md hover:border-gray-200 transition-all">
+                      <span className="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <Icon name="lightbulb" size={10} className="text-gray-600" />
                       </span>
                       <span className="text-sm text-gray-700 leading-relaxed landing-body">{tip}</span>
                     </div>
@@ -1426,13 +1426,13 @@ export default function TopicDetail({
                         </div>
                         {/* Key challenge callout */}
                         {topicDetails.introduction && (
-                          <div className="mt-4 flex items-start gap-3 p-3.5 rounded-xl bg-amber-50/70 border border-amber-200/60">
-                            <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                              <Icon name="lightbulb" size={16} className="text-amber-600" />
+                          <div className="mt-4 flex items-start gap-3 p-3.5 rounded-xl bg-gray-100/70 border border-gray-200/60">
+                            <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                              <Icon name="lightbulb" size={16} className="text-gray-600" />
                             </div>
                             <div>
-                              <span className="text-xs font-bold text-amber-800 landing-display uppercase tracking-wider">Key Challenge</span>
-                              <p className="text-sm text-amber-900/80 mt-0.5 leading-relaxed landing-body">
+                              <span className="text-xs font-bold text-gray-800 landing-display uppercase tracking-wider">Key Challenge</span>
+                              <p className="text-sm text-gray-900/80 mt-0.5 leading-relaxed landing-body">
                                 {topicDetails.introduction.split('.').filter(s => s.trim().length > 20).slice(-2, -1)[0]?.trim() || topicDetails.introduction.split('.').slice(0, 1)[0]?.trim()}.
                               </p>
                             </div>
@@ -1445,7 +1445,7 @@ export default function TopicDetail({
                     <div className="rounded-2xl overflow-hidden border border-[#e3e8ee] bg-white">
                       <div className="px-4 py-2 border-b border-[#e3e8ee] bg-[#f7f8f9] flex items-center gap-2">
                         <Icon name="puzzle" size={14} style={{ color: topicDetails.color }} />
-                        <h2 className="text-sm font-bold text-violet-800 landing-display">Key Concepts</h2>
+                        <h2 className="text-sm font-bold text-gray-800 landing-display">Key Concepts</h2>
                       </div>
                       <div className="p-3 flex flex-wrap gap-1.5">
                         {topicDetails.concepts.map((concept, i) => (
@@ -1488,10 +1488,10 @@ export default function TopicDetail({
                 {/* Non-Functional Requirements */}
                 {topicDetails.nonFunctionalRequirements && (
                   <div className="rounded-2xl overflow-hidden border border-[#e3e8ee] bg-white">
-                    <div className="px-4 py-2 border-b border-[#e3e8ee] flex items-center gap-2 bg-amber-50/50">
-                      <Icon name="zap" size={14} className="text-amber-600" />
-                      <h3 className="text-sm font-bold text-amber-800 landing-display">Non-Functional Requirements</h3>
-                      <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 landing-mono">{topicDetails.nonFunctionalRequirements.length} requirements</span>
+                    <div className="px-4 py-2 border-b border-[#e3e8ee] flex items-center gap-2 bg-gray-100/50">
+                      <Icon name="zap" size={14} className="text-gray-600" />
+                      <h3 className="text-sm font-bold text-gray-800 landing-display">Non-Functional Requirements</h3>
+                      <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 landing-mono">{topicDetails.nonFunctionalRequirements.length} requirements</span>
                     </div>
                     <div className="p-2.5">
                       <div className="grid grid-cols-1 gap-1.5">
@@ -1499,15 +1499,15 @@ export default function TopicDetail({
                           // Extract metric-like values from the requirement text (e.g., "<3s", "99.9%", "1M")
                           const metricMatch = req.match(/([<>~]?\d+\.?\d*\s*(?:ms|s|%|M|K|GB|TB|MB|req\/s|QPS|RPS|rpm|tps)?)/i);
                           return (
-                            <div key={i} className="flex items-start gap-2.5 px-3 py-2.5 rounded-xl border border-transparent bg-[#f7f8f9] hover:border-amber-200 hover:bg-amber-50/40 hover:shadow-sm transition-all cursor-default">
+                            <div key={i} className="flex items-start gap-2.5 px-3 py-2.5 rounded-xl border border-transparent bg-[#f7f8f9] hover:border-gray-200 hover:bg-gray-100/40 hover:shadow-sm transition-all cursor-default">
                               <div className="flex items-center gap-2 flex-1 min-w-0">
-                                <span className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 bg-amber-100 text-amber-700 mt-0.5">
-                                  <Icon name="zap" size={10} className="text-amber-600" />
+                                <span className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 bg-gray-100 text-gray-700 mt-0.5">
+                                  <Icon name="zap" size={10} className="text-gray-600" />
                                 </span>
                                 <span className="text-gray-700 text-sm landing-body leading-relaxed flex-1">{req}</span>
                               </div>
                               {metricMatch && (
-                                <span className="flex-shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 landing-mono border border-amber-200/60">
+                                <span className="flex-shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-md bg-gray-100 text-gray-800 landing-mono border border-gray-200/60">
                                   {metricMatch[1].trim()}
                                 </span>
                               )}
@@ -1527,10 +1527,10 @@ export default function TopicDetail({
                   {/* API Design — Stripe-style endpoint cards */}
                   {topicDetails.apiDesign && topicDetails.apiDesign.endpoints && (
                     <div id="api-design" className="rounded-2xl overflow-hidden scroll-mt-24 border border-[#e3e8ee] bg-white">
-                      <div className="bg-blue-50/50 border-b border-[#e3e8ee] px-4 py-2 flex items-center gap-2">
-                        <Icon name="code" size={14} className="text-blue-600" />
-                        <h3 className="text-sm font-bold text-blue-800 landing-display">API Design</h3>
-                        <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 landing-mono">{topicDetails.apiDesign.endpoints.length} endpoints</span>
+                      <div className="bg-gray-100/50 border-b border-[#e3e8ee] px-4 py-2 flex items-center gap-2">
+                        <Icon name="code" size={14} className="text-gray-600" />
+                        <h3 className="text-sm font-bold text-gray-800 landing-display">API Design</h3>
+                        <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 landing-mono">{topicDetails.apiDesign.endpoints.length} endpoints</span>
                       </div>
                       <div className="p-3">
                         <div className="grid grid-cols-1 gap-2">
@@ -1539,8 +1539,8 @@ export default function TopicDetail({
                               <div className="flex items-center gap-2.5 mb-2">
                                 <span className={`text-[11px] landing-mono px-2.5 py-1 rounded-full font-bold uppercase tracking-wide ${
                                   endpoint.method === 'GET' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' :
-                                  endpoint.method === 'POST' || endpoint.method === 'INSERT' ? 'bg-amber-100 text-amber-700 border border-amber-200' :
-                                  endpoint.method === 'PUT' || endpoint.method === 'UPDATE' ? 'bg-blue-100 text-blue-700 border border-blue-200' :
+                                  endpoint.method === 'POST' || endpoint.method === 'INSERT' ? 'bg-gray-100 text-gray-700 border border-gray-200' :
+                                  endpoint.method === 'PUT' || endpoint.method === 'UPDATE' ? 'bg-gray-100 text-gray-700 border border-gray-200' :
                                   'bg-red-100 text-red-700 border border-red-200'
                                 }`}>{endpoint.method}</span>
                                 <code className="text-gray-900 landing-mono text-sm font-medium">{endpoint.path}</code>
@@ -1567,10 +1567,10 @@ export default function TopicDetail({
               {/* Key Questions — Accordion style */}
               {topicDetails.keyQuestions && (
                 <div id="key-questions" className="rounded-2xl overflow-hidden scroll-mt-24 border border-[#e3e8ee] bg-white">
-                  <div className="bg-indigo-50/50 border-b border-[#e3e8ee] px-4 py-2 flex items-center gap-2">
-                    <Icon name="messageSquare" size={14} className="text-indigo-600" />
-                    <h3 className="text-sm font-bold text-indigo-800 landing-display">Key Questions</h3>
-                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 landing-mono">{topicDetails.keyQuestions.length} topics</span>
+                  <div className="bg-gray-50/50 border-b border-[#e3e8ee] px-4 py-2 flex items-center gap-2">
+                    <Icon name="messageSquare" size={14} className="text-emerald-700" />
+                    <h3 className="text-sm font-bold text-gray-800 landing-display">Key Questions</h3>
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 landing-mono">{topicDetails.keyQuestions.length} topics</span>
                     <button
                       onClick={() => {
                         if (sdAllQsExpanded) {
@@ -1582,7 +1582,7 @@ export default function TopicDetail({
                         }
                         setSdAllQsExpanded(!sdAllQsExpanded);
                       }}
-                      className="ml-auto text-[11px] font-medium text-indigo-600 hover:text-indigo-800 transition-colors landing-mono flex items-center gap-1"
+                      className="ml-auto text-[11px] font-medium text-emerald-700 hover:text-gray-800 transition-colors landing-mono flex items-center gap-1"
                     >
                       {sdAllQsExpanded ? 'Collapse all' : 'Expand all'}
                       <svg className={`w-3 h-3 transition-transform ${sdAllQsExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
@@ -1597,7 +1597,7 @@ export default function TopicDetail({
                             onClick={() => setSdExpandedQs(prev => ({ ...prev, [i]: !prev[i] }))}
                             className="w-full flex items-center gap-2.5 px-3.5 py-3 bg-white hover:bg-[#f7f8f9] transition-colors text-left"
                           >
-                            <span className="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-bold flex-shrink-0 landing-mono">{i + 1}</span>
+                            <span className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center text-xs font-bold flex-shrink-0 landing-mono">{i + 1}</span>
                             <h4 className="text-gray-900 font-semibold text-sm flex-1 landing-display leading-snug">{q.question}</h4>
                             <svg className={`w-4 h-4 text-gray-400 transition-transform flex-shrink-0 ${isOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
                           </button>
@@ -1798,7 +1798,7 @@ export default function TopicDetail({
                     <div className="bg-emerald-50/50 border-b border-[#e3e8ee] px-3 py-2 flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Icon name="layers" size={14} className="text-emerald-700" />
-                        <h3 className="text-sm font-bold text-blue-800 landing-display">Architecture Diagram</h3>
+                        <h3 className="text-sm font-bold text-gray-800 landing-display">Architecture Diagram</h3>
                       </div>
                       <div className="flex items-center gap-2">
                         {/* Cloud Provider Selector */}
@@ -1852,7 +1852,7 @@ export default function TopicDetail({
                   <div className="rounded-lg overflow-hidden border border-[#e3e8ee] bg-white">
                     <div className="px-3 py-2 border-b border-[#e3e8ee] flex items-center gap-2 bg-emerald-50/50">
                       <Icon name="star" size={16} className="text-emerald-700" />
-                      <h3 className="text-sm font-bold text-indigo-800 landing-display">Interview Tips</h3>
+                      <h3 className="text-sm font-bold text-gray-800 landing-display">Interview Tips</h3>
                     </div>
                     <div className="grid  gap-1 p-3">
                       {topicDetails.tips.map((tip, i) => (
@@ -1920,10 +1920,10 @@ export default function TopicDetail({
                 const TOPIC_COLORS = ['#10b981', '#6366f1', '#f59e0b', '#3b82f6', '#ef4444', '#8b5cf6', '#14b8a6', '#ec4899'];
                 return (
                 <div className="rounded-2xl overflow-hidden bg-white border border-[#e3e8ee]">
-                  <div className="px-4 py-2 border-b border-[#e3e8ee] flex items-center gap-2 bg-indigo-50/50">
-                    <Icon name="messageCircle" size={14} className="text-indigo-600" />
-                    <h3 className="text-sm font-bold text-indigo-800 landing-display">Discussion Points</h3>
-                    <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 landing-mono">{topicDetails.discussionPoints.length} topics</span>
+                  <div className="px-4 py-2 border-b border-[#e3e8ee] flex items-center gap-2 bg-gray-50/50">
+                    <Icon name="messageCircle" size={14} className="text-emerald-700" />
+                    <h3 className="text-sm font-bold text-gray-800 landing-display">Discussion Points</h3>
+                    <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 landing-mono">{topicDetails.discussionPoints.length} topics</span>
                   </div>
                   <div className="p-2.5 space-y-2">
                     {topicDetails.discussionPoints.map((point, i) => {
@@ -1951,7 +1951,7 @@ export default function TopicDetail({
                             {hasMore && (
                               <button
                                 onClick={() => setSdExpandedDPs(prev => ({ ...prev, [i]: !prev[i] }))}
-                                className="ml-8 mt-2 text-[11px] font-medium text-indigo-600 hover:text-indigo-800 transition-colors landing-mono flex items-center gap-1"
+                                className="ml-8 mt-2 text-[11px] font-medium text-emerald-700 hover:text-gray-800 transition-colors landing-mono flex items-center gap-1"
                               >
                                 {isExpanded ? 'Show less' : `Show ${point.points.length - 2} more`}
                                 <svg className={`w-3 h-3 transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
@@ -1974,20 +1974,20 @@ export default function TopicDetail({
               {/* Algorithm Approaches */}
               {topicDetails.algorithmApproaches && (
                 <div className="rounded-lg overflow-hidden border border-[#e3e8ee] bg-white">
-                  <div className="px-3 py-2 border-b border-[#e3e8ee] flex items-center gap-2 bg-amber-50">
-                    <Icon name="zap" size={16} className="text-amber-700" />
-                    <h3 className="text-sm font-bold text-amber-900 landing-display">Algorithm Approaches</h3>
+                  <div className="px-3 py-2 border-b border-[#e3e8ee] flex items-center gap-2 bg-gray-100">
+                    <Icon name="zap" size={16} className="text-gray-700" />
+                    <h3 className="text-sm font-bold text-gray-900 landing-display">Algorithm Approaches</h3>
                   </div>
                   <div className="p-3 grid grid-cols-1 gap-2">
                     {topicDetails.algorithmApproaches.map((app, i) => (
                       <div key={i} className="p-3 rounded-lg border border-[#e3e8ee] bg-[#f7f8f9]">
-                        <h4 className="text-sm font-bold text-amber-800 mb-1 landing-display">{i + 1}. {app.name}</h4>
+                        <h4 className="text-sm font-bold text-gray-800 mb-1 landing-display">{i + 1}. {app.name}</h4>
                         <div className="text-gray-700 text-xs mb-2 landing-body leading-relaxed">
                           <FormattedContent content={app.description} color="amber" />
                         </div>
                         <div className="space-y-0.5">
                           {app.pros.map((p, j) => <div key={`p${j}`} className="text-xs text-gray-700 landing-body"><span className="text-emerald-600 font-bold mr-1">+</span>{p}</div>)}
-                          {app.cons.map((c, j) => <div key={`c${j}`} className="text-xs text-gray-700 landing-body"><span className="text-rose-600 font-bold mr-1">-</span>{c}</div>)}
+                          {app.cons.map((c, j) => <div key={`c${j}`} className="text-xs text-gray-700 landing-body"><span className="text-gray-500 font-bold mr-1">-</span>{c}</div>)}
                         </div>
                       </div>
                     ))}
@@ -2041,15 +2041,15 @@ export default function TopicDetail({
               {/* Trade-off Decisions */}
               {topicDetails.tradeoffDecisions && (
                 <div className="rounded-lg overflow-hidden border border-[#e3e8ee] bg-white">
-                  <div className="px-3 py-2 border-b border-[#e3e8ee] flex items-center gap-2 bg-rose-50">
-                    <Icon name="gitBranch" size={16} className="text-rose-700" />
-                    <h3 className="text-sm font-bold text-rose-900 landing-display">Trade-off Decisions</h3>
+                  <div className="px-3 py-2 border-b border-[#e3e8ee] flex items-center gap-2 bg-gray-50">
+                    <Icon name="gitBranch" size={16} className="text-gray-700" />
+                    <h3 className="text-sm font-bold text-gray-900 landing-display">Trade-off Decisions</h3>
                   </div>
                   <div className="p-3 grid grid-cols-1  gap-2">
                     {topicDetails.tradeoffDecisions.map((d, i) => (
                       <div key={i} className="p-3 rounded-lg bg-[#f7f8f9] border border-[#e3e8ee]">
                         <div className="flex items-center gap-1.5 mb-1 flex-wrap">
-                          <span className="text-xs font-bold text-amber-700 landing-mono">{d.choice}</span>
+                          <span className="text-xs font-bold text-gray-700 landing-mono">{d.choice}</span>
                           <span className="text-gray-300">→</span>
                           <span className="text-xs font-bold text-emerald-700 landing-mono">{d.picked}</span>
                         </div>
@@ -2095,18 +2095,18 @@ export default function TopicDetail({
               {/* Tradeoffs — Key design decisions and their consequences */}
               {topicDetails.tradeoffs && (
                 <div className="rounded-2xl overflow-hidden bg-white border border-[#e3e8ee]">
-                  <div className="px-4 py-2 border-b border-[#e3e8ee] flex items-center gap-2 bg-amber-50/50">
-                    <Icon name="gitBranch" size={14} className="text-amber-600" />
-                    <h3 className="text-sm font-bold text-amber-800 landing-display">Tradeoffs</h3>
-                    <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 landing-mono">{topicDetails.tradeoffs.length} decisions</span>
+                  <div className="px-4 py-2 border-b border-[#e3e8ee] flex items-center gap-2 bg-gray-100/50">
+                    <Icon name="gitBranch" size={14} className="text-gray-600" />
+                    <h3 className="text-sm font-bold text-gray-800 landing-display">Tradeoffs</h3>
+                    <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 landing-mono">{topicDetails.tradeoffs.length} decisions</span>
                   </div>
                   <div className="p-2.5 space-y-2">
                     {topicDetails.tradeoffs.map((t, i) => (
-                      <div key={i} className="rounded-xl border border-[#e3e8ee] bg-white hover:border-amber-200 transition-all overflow-hidden">
+                      <div key={i} className="rounded-xl border border-[#e3e8ee] bg-white hover:border-gray-200 transition-all overflow-hidden">
                         <div className="px-4 py-3">
                           <div className="flex items-center gap-2.5 mb-2">
-                            <span className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 bg-amber-50 border border-amber-100">
-                              <Icon name="gitBranch" size={12} className="text-amber-600" />
+                            <span className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 bg-gray-100 border border-amber-100">
+                              <Icon name="gitBranch" size={12} className="text-gray-600" />
                             </span>
                             <h4 className="text-gray-900 font-semibold text-sm landing-display">{t.decision}</h4>
                           </div>
@@ -2115,15 +2115,15 @@ export default function TopicDetail({
                               <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider landing-mono">Pros</span>
                               <p className="text-emerald-800 text-xs leading-relaxed mt-0.5 landing-body">{t.pros}</p>
                             </div>
-                            <div className="px-3 py-2 rounded-lg bg-rose-50 border border-rose-100">
-                              <span className="text-[10px] font-bold text-rose-700 uppercase tracking-wider landing-mono">Cons</span>
-                              <p className="text-rose-800 text-xs leading-relaxed mt-0.5 landing-body">{t.cons}</p>
+                            <div className="px-3 py-2 rounded-lg bg-gray-50 border border-gray-200">
+                              <span className="text-[10px] font-bold text-gray-700 uppercase tracking-wider landing-mono">Cons</span>
+                              <p className="text-gray-800 text-xs leading-relaxed mt-0.5 landing-body">{t.cons}</p>
                             </div>
                           </div>
                           {t.recommendation && (
                             <div className="ml-8 mt-2 flex items-start gap-1.5">
-                              <Icon name="arrowRight" size={12} className="text-amber-500 mt-0.5 flex-shrink-0" />
-                              <span className="text-xs text-amber-800 font-medium landing-body">{t.recommendation}</span>
+                              <Icon name="arrowRight" size={12} className="text-gray-500 mt-0.5 flex-shrink-0" />
+                              <span className="text-xs text-gray-800 font-medium landing-body">{t.recommendation}</span>
                             </div>
                           )}
                         </div>
@@ -2136,10 +2136,10 @@ export default function TopicDetail({
               {/* Layered Design — Architectural layer breakdown */}
               {topicDetails.layeredDesign && (
                 <div className="rounded-2xl overflow-hidden bg-white border border-[#e3e8ee]">
-                  <div className="px-4 py-2 border-b border-[#e3e8ee] flex items-center gap-2 bg-violet-50/50">
-                    <Icon name="layers" size={14} className="text-violet-600" />
-                    <h3 className="text-sm font-bold text-violet-800 landing-display">Layered Design</h3>
-                    <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-violet-100 text-violet-700 landing-mono">{topicDetails.layeredDesign.length} layers</span>
+                  <div className="px-4 py-2 border-b border-[#e3e8ee] flex items-center gap-2 bg-gray-50/50">
+                    <Icon name="layers" size={14} className="text-gray-600" />
+                    <h3 className="text-sm font-bold text-gray-800 landing-display">Layered Design</h3>
+                    <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 landing-mono">{topicDetails.layeredDesign.length} layers</span>
                   </div>
                   <div className="p-2.5 space-y-0">
                     {topicDetails.layeredDesign.map((layer, i) => {
@@ -2152,7 +2152,7 @@ export default function TopicDetail({
                               <svg width="16" height="10" viewBox="0 0 16 10" fill="none"><path d="M8 0v10M4 6l4 4 4-4" stroke="#d1d5db" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
                             </div>
                           )}
-                          <div className="rounded-xl border border-[#e3e8ee] bg-white hover:border-violet-200 transition-all overflow-hidden">
+                          <div className="rounded-xl border border-[#e3e8ee] bg-white hover:border-gray-200 transition-all overflow-hidden">
                             <div className="px-4 py-3">
                               <div className="flex items-center gap-2.5 mb-1.5">
                                 <span className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-white text-xs font-bold" style={{ background: lc }}>
@@ -2234,7 +2234,7 @@ export default function TopicDetail({
                     <div className="rounded-2xl overflow-hidden border border-[#e3e8ee] bg-white">
                       <div className="px-4 py-2 border-b border-[#e3e8ee] flex items-center gap-2 bg-[#f7f8f9]">
                         <Icon name="layers" size={14} className="text-emerald-700" />
-                        <h3 className="text-sm font-bold text-blue-800 landing-display">System Components</h3>
+                        <h3 className="text-sm font-bold text-gray-800 landing-display">System Components</h3>
                       </div>
                       <div className="p-3">
                         <div className="flex flex-wrap gap-2">
@@ -2281,7 +2281,7 @@ export default function TopicDetail({
                 <div className="rounded-lg overflow-hidden border border-[#e3e8ee] bg-white">
                   <div className="px-3 py-2 border-b border-[#e3e8ee] flex items-center gap-2 bg-[#f7f8f9]">
                     <Icon name="box" size={16} className="text-gray-900" />
-                    <h3 className="text-sm font-bold text-blue-800 landing-display">Core Entities</h3>
+                    <h3 className="text-sm font-bold text-gray-800 landing-display">Core Entities</h3>
                   </div>
                   <div className="p-3">
                     <div className="grid grid-cols-1 gap-2">
@@ -2301,7 +2301,7 @@ export default function TopicDetail({
                 <div className="rounded-lg overflow-hidden border border-[#e3e8ee] bg-white">
                   <div className="px-3 py-2 border-b border-[#e3e8ee] flex items-center gap-2 bg-[#f7f8f9]">
                     <Icon name="puzzle" size={16} className="text-gray-900" />
-                    <h3 className="text-sm font-bold text-violet-800 landing-display">Design Patterns</h3>
+                    <h3 className="text-sm font-bold text-gray-800 landing-display">Design Patterns</h3>
                   </div>
                   <div className="p-4">
                     <ul className="grid grid-cols-1 gap-1">
@@ -2343,7 +2343,7 @@ export default function TopicDetail({
                 <div className="rounded-lg overflow-hidden border border-[#e3e8ee] bg-white">
                   <div className="px-3 py-2 border-b border-[#e3e8ee] flex items-center gap-2 bg-[#f7f8f9]">
                     <Icon name="cpu" size={16} className="text-gray-900" />
-                    <h3 className="text-sm font-bold text-blue-800 landing-display">Core Concepts</h3>
+                    <h3 className="text-sm font-bold text-gray-800 landing-display">Core Concepts</h3>
                   </div>
                   <div className="p-4 grid  gap-2">
                     {topicDetails.concepts.map((concept, i) => (
@@ -2361,7 +2361,7 @@ export default function TopicDetail({
                 <div className="rounded-lg overflow-hidden border border-[#e3e8ee] bg-white">
                   <div className="px-3 py-2 border-b border-[#e3e8ee] flex items-center gap-2 bg-[#f7f8f9]">
                     <Icon name="lock" size={16} className="text-emerald-700" />
-                    <h3 className="text-sm font-bold text-violet-800 landing-display">Synchronization Primitives</h3>
+                    <h3 className="text-sm font-bold text-gray-800 landing-display">Synchronization Primitives</h3>
                   </div>
                   <div className="p-4 grid  gap-2">
                     {topicDetails.primitives.map((prim, i) => (
@@ -2382,7 +2382,7 @@ export default function TopicDetail({
                 <div className="rounded-lg overflow-hidden border border-[#e3e8ee] bg-white">
                   <div className="px-3 py-2 border-b border-[#e3e8ee] flex items-center gap-2 bg-[#f7f8f9]">
                     <Icon name="alertTriangle" size={16} className="text-gray-900" />
-                    <h3 className="text-sm font-bold text-amber-800 landing-display">Classic Problems</h3>
+                    <h3 className="text-sm font-bold text-gray-800 landing-display">Classic Problems</h3>
                   </div>
                   <div className="grid  gap-2 p-3">
                     {topicDetails.problems.map((problem, i) => (
@@ -2404,7 +2404,7 @@ export default function TopicDetail({
                 <div className="rounded-lg overflow-hidden bg-[#f7f8f9] border border-[#e3e8ee]">
                   <div className="px-3 py-2 border-b border-[#e3e8ee] flex items-center gap-2 bg-[#f7f8f9]">
                     <Icon name="database" size={16} className="text-gray-900" />
-                    <h3 className="text-sm font-bold text-blue-800 landing-display">Concurrent Data Structures</h3>
+                    <h3 className="text-sm font-bold text-gray-800 landing-display">Concurrent Data Structures</h3>
                   </div>
                   <div className="p-4 grid  gap-2">
                     {topicDetails.structures.map((struct, i) => (
@@ -2450,13 +2450,13 @@ export default function TopicDetail({
                       )}
                       {/* Key insight callout */}
                       {topicDetails.introduction && (
-                        <div className="mt-4 flex items-start gap-3 p-3.5 rounded-xl bg-amber-50/70 border border-amber-200/60">
-                          <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                            <Icon name="lightbulb" size={16} className="text-amber-600" />
+                        <div className="mt-4 flex items-start gap-3 p-3.5 rounded-xl bg-gray-100/70 border border-gray-200/60">
+                          <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <Icon name="lightbulb" size={16} className="text-gray-600" />
                           </div>
                           <div>
-                            <span className="text-xs font-bold text-amber-800 landing-display uppercase tracking-wider">Key Insight</span>
-                            <p className="text-sm text-amber-900/80 mt-0.5 leading-relaxed landing-body">
+                            <span className="text-xs font-bold text-gray-800 landing-display uppercase tracking-wider">Key Insight</span>
+                            <p className="text-sm text-gray-900/80 mt-0.5 leading-relaxed landing-body">
                               {topicDetails.introduction.split('.').filter(s => s.trim().length > 20).slice(-2, -1)[0]?.trim() || topicDetails.introduction.split('.').slice(0, 1)[0]?.trim()}.
                             </p>
                           </div>
@@ -2472,7 +2472,7 @@ export default function TopicDetail({
                 <div className="scroll-mt-24 rounded-2xl border border-[#e3e8ee] bg-white overflow-hidden">
                   <div className="px-4 py-2 border-b border-[#e3e8ee] bg-[#f7f8f9] flex items-center gap-2">
                     <Icon name="award" size={14} style={{ color: topicDetails.color }} />
-                    <h2 className="text-sm font-bold text-violet-800 landing-display">Key Principles</h2>
+                    <h2 className="text-sm font-bold text-gray-800 landing-display">Key Principles</h2>
                     <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full landing-mono" style={{ background: `${topicDetails.color}12`, color: topicDetails.color }}>{topicDetails.principles.length} principles</span>
                   </div>
                   <div className="p-3 flex flex-wrap gap-1.5">
@@ -2490,12 +2490,12 @@ export default function TopicDetail({
           {/* Key Questions — Expandable single-column cards */}
           {topicDetails.keyQuestions && topicDetails.keyQuestions.length > 0 && (
             <div id="key-questions" className="rounded-2xl overflow-hidden scroll-mt-24 border border-[#e3e8ee] bg-white">
-              <div className="px-4 py-2 border-b border-[#e3e8ee] flex items-center gap-2 bg-violet-50/50">
+              <div className="px-4 py-2 border-b border-[#e3e8ee] flex items-center gap-2 bg-gray-50/50">
                 <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: topicDetails.color }}>
                   <Icon name="messageSquare" size={12} className="text-white" />
                 </div>
-                <h3 className="text-sm font-bold text-violet-900 landing-display">Questions & Answers</h3>
-                <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-violet-100 text-violet-700 landing-mono">{topicDetails.keyQuestions.length} questions</span>
+                <h3 className="text-sm font-bold text-gray-900 landing-display">Questions & Answers</h3>
+                <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 landing-mono">{topicDetails.keyQuestions.length} questions</span>
               </div>
               <div className="p-2.5 space-y-2">
                 {topicDetails.keyQuestions.map((item, index) => {
@@ -2730,7 +2730,7 @@ export default function TopicDetail({
                 <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: `${topicDetails.color}15` }}>
                   <Icon name="helpCircle" size={12} style={{ color: topicDetails.color }} />
                 </div>
-                <h3 className="text-sm font-bold text-violet-800 landing-display">Practice Questions</h3>
+                <h3 className="text-sm font-bold text-gray-800 landing-display">Practice Questions</h3>
                 <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full landing-mono" style={{ background: `${topicDetails.color}12`, color: topicDetails.color }}>{topicDetails.sampleQuestions.length} questions</span>
               </div>
               <div className="p-2.5 space-y-1.5">
