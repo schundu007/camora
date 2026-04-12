@@ -84,21 +84,22 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
               {/* Question header — always visible, click to toggle answer */}
               <button
                 onClick={() => setExpandedIdx(expandedIdx === idx ? null : idx)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all ${
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${
                   expandedIdx === idx
-                    ? 'bg-indigo-500/10 border border-indigo-500/20'
+                    ? 'border border-emerald-500/20'
                     : 'hover:bg-white/[0.03] border border-transparent'
                 }`}
+                style={expandedIdx === idx ? { background: 'rgba(16,185,129,0.06)', backdropFilter: 'blur(4px)' } : {}}
               >
-                <span className={`flex items-center justify-center w-7 h-7 rounded-lg text-xs font-bold font-code shrink-0 ${
-                  expandedIdx === idx ? 'bg-indigo-500/20 text-indigo-300' : 'bg-emerald-500/15 text-emerald-300'
+                <span className={`flex items-center justify-center w-6 h-6 rounded-md text-[10px] font-bold font-mono shrink-0 ${
+                  expandedIdx === idx ? 'bg-emerald-500/20 text-emerald-300' : 'bg-white/5 text-white/40'
                 }`}>
-                  Q{idx + 1}
+                  {idx + 1}
                 </span>
-                <span className="font-display text-sm font-medium text-white/80 leading-snug flex-1 truncate">
+                <span className="text-sm font-medium text-white/80 leading-snug flex-1 truncate" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
                   {entry.question}
                 </span>
-                <svg className={`w-4 h-4 shrink-0 transition-transform duration-200 ${expandedIdx === idx ? 'rotate-180' : ''}`} style={{ color: 'rgba(255,255,255,0.2)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                <svg className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 ${expandedIdx === idx ? 'rotate-180' : ''}`} style={{ color: 'rgba(255,255,255,0.15)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
@@ -122,19 +123,17 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
             <>
               {/* Current streaming question header */}
               {isStreaming && question && (
-                <div className="history-question-card shrink-0 border-emerald-500/20 bg-emerald-500/5">
-                  <div className="relative flex items-center justify-center w-7 h-7 shrink-0">
-                    <span className="flex items-center justify-center w-7 h-7 rounded-xl bg-emerald-500/15 text-emerald-300 text-xs font-bold font-code">
-                      Q{history.length + 1}
+                <div className="flex items-center gap-3 px-4 py-3 rounded-xl shrink-0" style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.15)' }}>
+                  <div className="relative flex items-center justify-center w-6 h-6 shrink-0">
+                    <span className="flex items-center justify-center w-6 h-6 rounded-md bg-emerald-500/20 text-emerald-300 text-[10px] font-bold font-mono">
+                      {history.length + 1}
                     </span>
-                    <div className="absolute inset-0 border-2 border-transparent border-t-emerald-500 rounded-xl animate-spin" />
+                    <div className="absolute inset-0 border-2 border-transparent border-t-emerald-400 rounded-md animate-spin" />
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <span className="font-display text-sm font-semibold text-white/90 leading-snug">
-                      {question}
-                    </span>
-                    <span className="ml-2 text-[10px] font-code text-emerald-400">Analyzing...</span>
-                  </div>
+                  <span className="text-sm font-medium text-white/90 leading-snug flex-1" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
+                    {question}
+                  </span>
+                  <span className="text-[10px] font-mono text-emerald-400 shrink-0 animate-pulse">analyzing</span>
                 </div>
               )}
 
@@ -150,15 +149,13 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
               {/* Show latest history entry when not streaming */}
               {!isStreaming && history.length > 0 && (
                 <div className="flex-1 flex flex-col gap-2 overflow-auto">
-                  <div className="history-question-card shrink-0 border-emerald-500/20 bg-emerald-500/5">
-                    <span className="flex items-center justify-center w-7 h-7 rounded-xl bg-emerald-500/15 text-emerald-300 text-xs font-bold font-code shrink-0">
-                      Q{history.length}
+                  <div className="flex items-center gap-3 px-4 py-3 rounded-xl shrink-0" style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.15)' }}>
+                    <span className="flex items-center justify-center w-6 h-6 rounded-md bg-emerald-500/20 text-emerald-300 text-[10px] font-bold font-mono shrink-0">
+                      {history.length}
                     </span>
-                    <div className="min-w-0 flex-1">
-                      <span className="font-display text-sm font-semibold text-white/90 leading-snug">
-                        {history[history.length - 1].question}
-                      </span>
-                    </div>
+                    <span className="text-sm font-medium text-white/90 leading-snug flex-1" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
+                      {history[history.length - 1].question}
+                    </span>
                   </div>
                   <AnswerBlocks
                     blocks={safeBlocks(history[history.length - 1].blocks)}
