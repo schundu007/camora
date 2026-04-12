@@ -4,6 +4,7 @@ import { CompanyLogo, getCompanyLogoSrc } from '../../shared/CompanyLogo.tsx';
 import FormattedContent from './FormattedContent.jsx';
 import CloudArchitectureDiagram from './CloudArchitectureDiagram.jsx';
 import DiagramSVG from '../features/DiagramSVG.jsx';
+import { MermaidDiagram } from '../../lumora/interview/MermaidDiagram';
 import { getAuthHeaders } from '../../../utils/authHeaders.js';
 import { generateSlug, getProblemBySlug } from '../../../data/capra/problems.js';
 import problemsFull from '../../../data/capra/problems-full.json';
@@ -780,64 +781,64 @@ export default function TopicDetail({
             </div>
           )}
 
-          {/* Visual Roadmap Diagram */}
-          {topicDetails.phases && topicDetails.phases.length > 0 && (
-            <div id="roadmap-phases" className="rounded-xl overflow-hidden scroll-mt-24 border border-[#e3e8ee]">
-              <div className="px-4 py-2.5 border-b border-[#e3e8ee] bg-white/80 flex items-center gap-2">
-                <Icon name="layers" size={14} className="text-amber-600" />
-                <h3 className="text-sm font-bold text-gray-900 landing-display">Roadmap Diagram</h3>
-                <span className="text-[10px] landing-mono text-gray-400">{topicDetails.phases.length} phases</span>
-              </div>
-              <div className="p-4 overflow-x-auto">
-                {/* Flow diagram */}
-                <div className="space-y-1">
-                  {topicDetails.phases.map((phase, phaseIdx) => (
-                    <div key={phaseIdx}>
-                      {/* Phase box */}
-                      <div className="rounded-xl border-2 overflow-hidden" style={{ borderColor: `${phase.color}40` }}>
-                        {/* Phase header */}
-                        <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: `${phase.color}12` }}>
-                          <div className="w-7 h-7 rounded-lg flex items-center justify-center text-white text-xs font-bold shadow-sm" style={{ background: phase.color }}>
+          {/* Mermaid Roadmap Diagram */}
+          {topicDetails.phases && topicDetails.phases.length > 0 && (() => {
+            // Generate mermaid flowchart from phases
+            const sanitize = (s) => s.replace(/[()&/]/g, ' ').replace(/["""'']/g, "'").replace(/\s+/g, ' ').trim();
+            let mermaid = 'graph TD\n';
+            const phaseIds = topicDetails.phases.map((_, i) => `P${i}`);
+            topicDetails.phases.forEach((phase, i) => {
+              const label = sanitize(phase.title);
+              const topicStr = phase.topics.slice(0, 4).map(t => sanitize(t)).join('\\n');
+              const extra = phase.topics.length > 4 ? `\\n+${phase.topics.length - 4} more` : '';
+              mermaid += `  ${phaseIds[i]}["<b>${label}</b>\\n${topicStr}${extra}"]\n`;
+              if (i > 0) mermaid += `  ${phaseIds[i - 1]} --> ${phaseIds[i]}\n`;
+            });
+            // Style nodes
+            topicDetails.phases.forEach((phase, i) => {
+              mermaid += `  style ${phaseIds[i]} fill:${phase.color}18,stroke:${phase.color},stroke-width:2px,color:#1f2937\n`;
+            });
+            return (
+              <div id="roadmap-phases" className="rounded-xl overflow-hidden scroll-mt-24 border border-[#e3e8ee]">
+                <div className="px-4 py-2.5 border-b border-[#e3e8ee] bg-white/80 flex items-center gap-2">
+                  <Icon name="layers" size={14} className="text-amber-600" />
+                  <h3 className="text-sm font-bold text-gray-900 landing-display">Roadmap Diagram</h3>
+                  <span className="text-[10px] landing-mono text-gray-400">{topicDetails.phases.length} phases</span>
+                </div>
+                <div className="p-4 overflow-x-auto">
+                  <MermaidDiagram content={mermaid} className="w-full min-h-[300px]" />
+                </div>
+                {/* Detailed phase breakdown below the diagram */}
+                <div className="border-t border-[#e3e8ee] p-4">
+                  <div className="text-[10px] landing-mono text-gray-400 uppercase tracking-widest mb-3">Phase Details</div>
+                  <div className="space-y-2">
+                    {topicDetails.phases.map((phase, phaseIdx) => (
+                      <details key={phaseIdx} className="group rounded-lg border border-gray-200 overflow-hidden">
+                        <summary className="flex items-center gap-2.5 px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors">
+                          <div className="w-6 h-6 rounded-md flex items-center justify-center text-white text-[10px] font-bold" style={{ background: phase.color }}>
                             {phaseIdx + 1}
                           </div>
-                          <h4 className="text-sm font-bold text-gray-900 landing-display flex-1">{phase.title}</h4>
-                          <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded-full font-semibold" style={{ background: `${phase.color}20`, color: phase.color }}>
-                            {phase.topics.length}
-                          </span>
-                        </div>
-                        {/* Topics as connected nodes */}
-                        <div className="px-4 py-3 bg-white">
-                          <div className="flex flex-wrap gap-2">
-                            {phase.topics.map((topic, topicIdx) => (
-                              <div key={topicIdx} className="relative flex items-center">
-                                <span className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border font-medium landing-body transition-colors hover:shadow-sm" style={{ borderColor: `${phase.color}30`, background: `${phase.color}06`, color: '#374151' }}>
-                                  <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: phase.color }} />
-                                  {topic}
-                                </span>
-                                {topicIdx < phase.topics.length - 1 && (
-                                  <svg className="w-4 h-4 text-gray-300 mx-0.5 shrink-0 hidden sm:block" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                                  </svg>
-                                )}
-                              </div>
+                          <span className="text-sm font-semibold text-gray-900 landing-display flex-1">{phase.title}</span>
+                          <span className="text-[10px] landing-mono text-gray-400">{phase.topics.length} topics</span>
+                          <Icon name="chevronDown" size={12} className="text-gray-400 group-open:rotate-180 transition-transform" />
+                        </summary>
+                        <div className="px-3 pb-3 pt-1">
+                          <div className="flex flex-wrap gap-1.5">
+                            {phase.topics.map((topic, tIdx) => (
+                              <span key={tIdx} className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-md border font-medium landing-body" style={{ borderColor: `${phase.color}30`, background: `${phase.color}08` }}>
+                                <span className="w-1.5 h-1.5 rounded-full" style={{ background: phase.color }} />
+                                {topic}
+                              </span>
                             ))}
                           </div>
                         </div>
-                      </div>
-                      {/* Arrow between phases */}
-                      {phaseIdx < topicDetails.phases.length - 1 && (
-                        <div className="flex justify-center py-1">
-                          <svg className="w-5 h-5" viewBox="0 0 20 20" fill="none">
-                            <path d="M10 4 L10 14 M6 10 L10 14 L14 10" stroke={topicDetails.phases[phaseIdx + 1]?.color || phase.color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.5" />
-                          </svg>
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                      </details>
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* Key Questions / FAQ */}
           {topicDetails.keyQuestions && topicDetails.keyQuestions.length > 0 && (
