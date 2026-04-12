@@ -365,7 +365,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem }: Co
 
       if (!response.ok) {
         const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.detail || `Execution failed: ${response.status}`);
+        throw new Error(errData.error || errData.detail || `Execution failed: ${response.status}`);
       }
 
       const data = await response.json();
@@ -732,7 +732,13 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem }: Co
           )}
 
           <AudioCapture
-            onTranscription={(text) => { if (text.trim()) setProblemText(text.trim()); }}
+            onTranscription={(text) => {
+              if (text.trim()) {
+                setProblemText(text.trim());
+                // Auto-submit after voice input
+                setTimeout(() => onSubmit(text.trim(), language), 500);
+              }
+            }}
             autoStart={false}
           />
         </div>
