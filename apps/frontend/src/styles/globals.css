@@ -23,13 +23,13 @@ body {
 }
 
 /* Subtle dot grid background on all pages */
-body::before {
+#root::after {
   content: '';
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: 0;
-  background-image: radial-gradient(circle, rgba(148,163,184,0.15) 1px, transparent 1px);
+  background-image: radial-gradient(circle, rgba(148,163,184,0.12) 1px, transparent 1px);
   background-size: 24px 24px;
 }
 
