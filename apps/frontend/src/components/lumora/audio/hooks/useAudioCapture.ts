@@ -190,13 +190,14 @@ export function useAudioCapture(options: AudioCaptureOptions = {}) {
         if (rms > silenceThreshold) {
           if (!speechStartTimeRef.current) {
             speechStartTimeRef.current = Date.now();
-            console.log(`[VAD] Speech started, rms=${rms.toFixed(4)}, threshold=${silenceThreshold}`);
+            console.log(`[VAD] Speech detected, rms=${rms.toFixed(4)}, threshold=${silenceThreshold}`);
           }
           if (silenceTimerRef.current) {
             clearTimeout(silenceTimerRef.current);
             silenceTimerRef.current = null;
           }
         } else if (speechStartTimeRef.current && !silenceTimerRef.current) {
+          console.log(`[VAD] Silence detected after speech, starting ${silenceDuration}ms countdown`);
           silenceTimerRef.current = window.setTimeout(() => {
             if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
               mediaRecorderRef.current.stop();
