@@ -137,6 +137,21 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
           <span className="hidden lg:block font-display font-bold text-sm tracking-tight" style={{ fontFamily: "'Comfortaa', sans-serif", background: 'linear-gradient(135deg, #fff, #94a3b8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Camora</span>
         </Link>
 
+        {/* Back to Prepare */}
+        <Link
+          to="/capra/prepare"
+          className="flex items-center gap-1 px-2.5 h-full shrink-0 text-xs font-medium transition-colors"
+          style={{ color: 'rgba(255,255,255,0.45)', borderRight: '1px solid rgba(255,255,255,0.06)' }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = '#10b981'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.45)'; }}
+          title="Back to Prepare"
+        >
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+          </svg>
+          <span className="hidden xl:inline">Prepare</span>
+        </Link>
+
         {/* Tabs */}
         <div data-tour="tabs" className="flex items-center gap-1 px-2 h-full shrink-0" style={{ borderRight: '1px solid rgba(255,255,255,0.06)' }}>
           {TABS.map((tab) => (
