@@ -512,14 +512,16 @@ export default function TopicDetail({
             <Icon name="sparkles" size={16} />
             <span className="hidden sm:inline">Ask AI</span>
           </button>
-          {/* Course Roadmap */}
-          <button
-            onClick={() => setShowRoadmap(!showRoadmap)}
-            className="flex items-center gap-2 px-2 sm:px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-[#f7f8f9] border border-[#e3e8ee] transition-all landing-body"
-          >
-            <Icon name="compass" size={16} />
-            <span className="hidden sm:inline">Roadmap</span>
-          </button>
+          {/* Course Roadmap — hide on tabs that ARE roadmaps/projects/blogs */}
+          {activePage !== 'roadmaps' && activePage !== 'projects' && activePage !== 'eng-blogs' && (
+            <button
+              onClick={() => setShowRoadmap(!showRoadmap)}
+              className="flex items-center gap-2 px-2 sm:px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-[#f7f8f9] border border-[#e3e8ee] transition-all landing-body"
+            >
+              <Icon name="compass" size={16} />
+              <span className="hidden sm:inline">Roadmap</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -670,6 +672,94 @@ export default function TopicDetail({
         </div>
       )}
 
+      {/* Engineering Blog Detail */}
+      {!isLocked && activePage === 'eng-blogs' && (
+        <div className="space-y-3">
+          {/* Overview */}
+          {topicDetails.introduction && (
+            <div id="overview" className="rounded-xl overflow-hidden scroll-mt-24 border border-[#e3e8ee]" style={{ background: `linear-gradient(180deg, ${topicDetails.color || '#ef4444'}12 0%, #ffffff 100%)` }}>
+              <div className="px-4 py-2.5 border-b border-[#e3e8ee] bg-white/80 flex items-center gap-2">
+                <Icon name="bookOpen" size={14} style={{ color: topicDetails.color || '#ef4444' }} />
+                <h3 className="text-sm font-bold text-gray-900 landing-display">{topicDetails.title}</h3>
+                <span className="text-[10px] landing-mono text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">{topicDetails.articles?.length || topicDetails.questions} articles</span>
+              </div>
+              <div className="p-4">
+                <div className="text-[15px] leading-relaxed text-gray-600 landing-body">
+                  <FormattedContent content={topicDetails.introduction} color="red" />
+                </div>
+                {topicDetails.blogUrl && (
+                  <a href={topicDetails.blogUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 mt-3 text-sm font-medium text-blue-600 hover:underline landing-body">
+                    <Icon name="externalLink" size={12} />
+                    Visit Engineering Blog
+                  </a>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Articles List */}
+          {topicDetails.articles && topicDetails.articles.length > 0 && (
+            <div id="articles" className="rounded-xl overflow-hidden scroll-mt-24 border border-[#e3e8ee]">
+              <div className="px-4 py-2.5 border-b border-[#e3e8ee] bg-white/80 flex items-center gap-2">
+                <Icon name="list" size={14} className="text-red-600" />
+                <h3 className="text-sm font-bold text-gray-900 landing-display">Articles</h3>
+                <span className="text-[10px] landing-mono text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">{topicDetails.articles.length}</span>
+              </div>
+              <div className="divide-y divide-[#e3e8ee]">
+                {topicDetails.articles.map((article, i) => (
+                  <a
+                    key={i}
+                    href={article.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-start gap-3 px-4 py-3 hover:bg-gray-50/80 transition-colors group"
+                  >
+                    <span className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 mt-0.5 text-[10px] font-bold landing-mono" style={{ background: `${topicDetails.color || '#ef4444'}15`, color: topicDetails.color || '#ef4444' }}>
+                      {i + 1}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <span className="text-sm font-medium text-gray-900 group-hover:text-blue-600 transition-colors landing-display line-clamp-2">{article.title}</span>
+                    </div>
+                    <Icon name="externalLink" size={12} className="text-gray-300 group-hover:text-blue-500 shrink-0 mt-1" />
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Key Takeaways */}
+          {topicDetails.keyQuestions && topicDetails.keyQuestions.length > 0 && (
+            <div id="key-questions" className="rounded-xl overflow-hidden scroll-mt-24 border border-[#e3e8ee]">
+              <div className="px-4 py-2.5 border-b border-[#e3e8ee] bg-white/80 flex items-center gap-2">
+                <Icon name="lightbulb" size={14} className="text-amber-600" />
+                <h3 className="text-sm font-bold text-gray-900 landing-display">Key Takeaways</h3>
+              </div>
+              <div className="divide-y divide-[#e3e8ee]">
+                {topicDetails.keyQuestions.map((qa, i) => (
+                  <div key={i} className="px-4 py-3">
+                    <button
+                      onClick={() => setExpandedTheoryQuestions(prev => ({ ...prev, [`eb-${i}`]: !prev[`eb-${i}`] }))}
+                      className="w-full flex items-start gap-3 text-left group"
+                    >
+                      <span className="w-6 h-6 rounded-lg bg-amber-50 border border-amber-200 flex items-center justify-center flex-shrink-0 mt-0.5 text-xs font-bold text-amber-600 landing-mono">
+                        {i + 1}
+                      </span>
+                      <span className="flex-1 text-sm font-semibold text-gray-900 landing-display">{qa.question}</span>
+                      <Icon name={expandedTheoryQuestions[`eb-${i}`] ? 'chevronUp' : 'chevronDown'} size={14} className="text-gray-400 mt-1 shrink-0" />
+                    </button>
+                    {expandedTheoryQuestions[`eb-${i}`] && (
+                      <div className="mt-2 ml-9 text-sm text-gray-600 landing-body leading-relaxed">
+                        <FormattedContent content={qa.answer} color="amber" />
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Roadmap Detail */}
       {!isLocked && activePage === 'roadmaps' && (
         <div className="space-y-3">
@@ -690,42 +780,58 @@ export default function TopicDetail({
             </div>
           )}
 
-          {/* Visual Roadmap Phases */}
+          {/* Visual Roadmap Diagram */}
           {topicDetails.phases && topicDetails.phases.length > 0 && (
             <div id="roadmap-phases" className="rounded-xl overflow-hidden scroll-mt-24 border border-[#e3e8ee]">
               <div className="px-4 py-2.5 border-b border-[#e3e8ee] bg-white/80 flex items-center gap-2">
                 <Icon name="layers" size={14} className="text-amber-600" />
-                <h3 className="text-sm font-bold text-gray-900 landing-display">Roadmap</h3>
+                <h3 className="text-sm font-bold text-gray-900 landing-display">Roadmap Diagram</h3>
+                <span className="text-[10px] landing-mono text-gray-400">{topicDetails.phases.length} phases</span>
               </div>
-              <div className="p-4">
-                <div className="relative">
+              <div className="p-4 overflow-x-auto">
+                {/* Flow diagram */}
+                <div className="space-y-1">
                   {topicDetails.phases.map((phase, phaseIdx) => (
-                    <div key={phaseIdx} className="relative flex gap-4 pb-6 last:pb-0">
-                      {/* Vertical connector line */}
-                      {phaseIdx < topicDetails.phases.length - 1 && (
-                        <div className="absolute left-[15px] top-[32px] bottom-0 w-0.5" style={{ background: `linear-gradient(180deg, ${phase.color}60, ${topicDetails.phases[phaseIdx + 1]?.color || phase.color}60)` }} />
-                      )}
-                      {/* Phase number circle */}
-                      <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 z-10 shadow-sm" style={{ background: phase.color }}>
-                        {phaseIdx + 1}
-                      </div>
-                      {/* Phase content */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h4 className="text-sm font-bold text-gray-900 landing-display">{phase.title}</h4>
-                          <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded font-semibold" style={{ background: `${phase.color}15`, color: phase.color, border: `1px solid ${phase.color}30` }}>
-                            {phase.topics.length} topics
+                    <div key={phaseIdx}>
+                      {/* Phase box */}
+                      <div className="rounded-xl border-2 overflow-hidden" style={{ borderColor: `${phase.color}40` }}>
+                        {/* Phase header */}
+                        <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: `${phase.color}12` }}>
+                          <div className="w-7 h-7 rounded-lg flex items-center justify-center text-white text-xs font-bold shadow-sm" style={{ background: phase.color }}>
+                            {phaseIdx + 1}
+                          </div>
+                          <h4 className="text-sm font-bold text-gray-900 landing-display flex-1">{phase.title}</h4>
+                          <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded-full font-semibold" style={{ background: `${phase.color}20`, color: phase.color }}>
+                            {phase.topics.length}
                           </span>
                         </div>
-                        <div className="flex flex-wrap gap-1.5">
-                          {phase.topics.map((topic, topicIdx) => (
-                            <span key={topicIdx} className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-md bg-gray-50 border border-gray-200 text-gray-600 landing-body">
-                              <span className="w-1 h-1 rounded-full shrink-0" style={{ background: phase.color }} />
-                              {topic}
-                            </span>
-                          ))}
+                        {/* Topics as connected nodes */}
+                        <div className="px-4 py-3 bg-white">
+                          <div className="flex flex-wrap gap-2">
+                            {phase.topics.map((topic, topicIdx) => (
+                              <div key={topicIdx} className="relative flex items-center">
+                                <span className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border font-medium landing-body transition-colors hover:shadow-sm" style={{ borderColor: `${phase.color}30`, background: `${phase.color}06`, color: '#374151' }}>
+                                  <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: phase.color }} />
+                                  {topic}
+                                </span>
+                                {topicIdx < phase.topics.length - 1 && (
+                                  <svg className="w-4 h-4 text-gray-300 mx-0.5 shrink-0 hidden sm:block" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                                  </svg>
+                                )}
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       </div>
+                      {/* Arrow between phases */}
+                      {phaseIdx < topicDetails.phases.length - 1 && (
+                        <div className="flex justify-center py-1">
+                          <svg className="w-5 h-5" viewBox="0 0 20 20" fill="none">
+                            <path d="M10 4 L10 14 M6 10 L10 14 L14 10" stroke={topicDetails.phases[phaseIdx + 1]?.color || phase.color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.5" />
+                          </svg>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>

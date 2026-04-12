@@ -28,6 +28,7 @@ import { sqlCategories, sqlCategoryMap, sqlTopics } from '../../../data/capra/to
 import { behavioralCategories, topicCategoryMap, behavioralTopics } from '../../../data/capra/topics/behavioralTopics.js';
 import { projectCategories, projectCategoryMap, projectTopics } from '../../../data/capra/topics/projectTopics.js';
 import { roadmapCategories, roadmapCategoryMap, roadmapTopics } from '../../../data/capra/topics/roadmapTopics.js';
+import { engBlogCategories, engBlogCategoryMap, engBlogTopics } from '../../../data/capra/topics/engBlogsTopics.js';
 import { companyPrep } from '../../../data/capra/topics/companyPrep.js';
 import { interviewCheatsheet } from '../../../data/capra/topics/techInterviewHandbook';
 import { ROLE_TOPIC_MAP } from '../../../data/capra/jobRoleTopicMapping';
@@ -271,6 +272,7 @@ export default function DocsPage({ onBack }) {
       activePage === 'sql' ? sqlTopics :
       activePage === 'projects' ? projectTopics :
       activePage === 'roadmaps' ? roadmapTopics :
+      activePage === 'eng-blogs' ? engBlogTopics :
       [...behavioralTopics, ...companyPrep];
     const total = topics.length;
     const completed = topics.filter(t => completedTopics[t.id]).length;
@@ -387,6 +389,7 @@ export default function DocsPage({ onBack }) {
     else if (activePage === 'sql') topics = sqlTopics;
     else if (activePage === 'projects') topics = projectTopics;
     else if (activePage === 'roadmaps') topics = roadmapTopics;
+    else if (activePage === 'eng-blogs') topics = engBlogTopics;
     else return [];
 
     // Apply role-based filtering when navigating from a job prep page
@@ -427,6 +430,7 @@ export default function DocsPage({ onBack }) {
       case 'sql': return { title: 'SQL for Interviews', color: '#06b6d4' };
       case 'projects': return { title: 'Projects', color: '#8b5cf6' };
       case 'roadmaps': return { title: 'Roadmaps', color: '#f59e0b' };
+      case 'eng-blogs': return { title: 'Engineering Blogs', color: '#ef4444' };
       default: return { title: 'Documentation', color: '#10b981' };
     }
   };
@@ -459,6 +463,7 @@ export default function DocsPage({ onBack }) {
     if (activePage === 'sql') return sqlTopics.find(t => t.id === selectedTopic);
     if (activePage === 'projects') return projectTopics.find(t => t.id === selectedTopic);
     if (activePage === 'roadmaps') return roadmapTopics.find(t => t.id === selectedTopic);
+    if (activePage === 'eng-blogs') return engBlogTopics.find(t => t.id === selectedTopic);
     return null;
   };
 
@@ -487,6 +492,7 @@ export default function DocsPage({ onBack }) {
       { id: 'low-level', href: 'low-level-design', title: 'Low-Level Design', icon: 'layers', color: '#8b5cf6', topics: [...lldTopics, ...lldProblems] },
       { id: 'projects', href: 'projects', title: 'Projects', icon: 'code', color: '#8b5cf6', topics: projectTopics },
       { id: 'roadmaps', href: 'roadmaps', title: 'Roadmaps', icon: 'trendingUp', color: '#f59e0b', topics: roadmapTopics },
+      { id: 'eng-blogs', href: 'eng-blogs', title: 'Eng Blogs', icon: 'bookOpen', color: '#ef4444', topics: engBlogTopics },
       { id: 'behavioral', href: 'behavioral', title: 'Behavioral', icon: 'users', color: '#a855f7', topics: [...behavioralTopics, ...companyPrep] },
     ];
     return cats.map(c => {
@@ -558,6 +564,10 @@ export default function DocsPage({ onBack }) {
       if (topicDetails.introduction) toc.push({ id: 'overview', label: 'Overview' });
       if (topicDetails.phases) toc.push({ id: 'roadmap-phases', label: 'Roadmap Phases' });
       if (topicDetails.keyQuestions) toc.push({ id: 'key-questions', label: 'FAQ' });
+    } else if (activePage === 'eng-blogs') {
+      if (topicDetails.introduction) toc.push({ id: 'overview', label: 'Overview' });
+      if (topicDetails.articles) toc.push({ id: 'articles', label: 'Articles' });
+      if (topicDetails.keyQuestions) toc.push({ id: 'key-questions', label: 'Key Takeaways' });
     }
     return toc;
   };
@@ -887,7 +897,7 @@ export default function DocsPage({ onBack }) {
                     <div className="inline-flex items-center gap-2 px-4 py-1.5 border border-emerald-200 bg-emerald-50 rounded-full mb-4">
                       <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
                       <span className="text-xs landing-mono text-emerald-700 tracking-wide">
-                        {activePage === 'coding' ? 'Algorithms' : activePage === 'system-design' ? 'Architecture' : activePage === 'low-level' ? 'OOP & Patterns' : activePage === 'microservices' ? 'Microservices' : activePage === 'databases' ? 'Database Internals' : activePage === 'sql' ? 'SQL Mastery' : activePage === 'projects' ? 'Hands-On' : activePage === 'roadmaps' ? 'Learning Paths' : 'Soft Skills'}
+                        {activePage === 'coding' ? 'Algorithms' : activePage === 'system-design' ? 'Architecture' : activePage === 'low-level' ? 'OOP & Patterns' : activePage === 'microservices' ? 'Microservices' : activePage === 'databases' ? 'Database Internals' : activePage === 'sql' ? 'SQL Mastery' : activePage === 'projects' ? 'Hands-On' : activePage === 'roadmaps' ? 'Learning Paths' : activePage === 'eng-blogs' ? 'Real-World' : 'Soft Skills'}
                       </span>
                     </div>
                     <h1 className="landing-display font-extrabold text-3xl md:text-4xl lg:text-5xl tracking-tight text-gray-900 mb-2">
@@ -900,6 +910,7 @@ export default function DocsPage({ onBack }) {
                       {activePage === 'sql' && <>SQL for{' '}<span className="bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent">Interviews</span></>}
                       {activePage === 'projects' && <>Build Real{' '}<span className="bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent">Projects</span></>}
                       {activePage === 'roadmaps' && <>Follow the{' '}<span className="bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">Roadmap</span></>}
+                      {activePage === 'eng-blogs' && <>Engineering{' '}<span className="bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent">Blogs</span></>}
                     </h1>
                     <p className="text-base md:text-lg text-gray-500 max-w-2xl leading-relaxed landing-body">
                       {activePage === 'coding' && 'Master the fundamental data structures and algorithms needed to ace technical interviews at top tech companies.'}
@@ -911,6 +922,7 @@ export default function DocsPage({ onBack }) {
                       {activePage === 'sql' && 'From fundamentals to window functions. Master SQL queries, joins, subqueries, and complex interview problems.'}
                       {activePage === 'projects' && 'Portfolio projects, take-home assignments, and full-stack builds. Get AI-generated step-by-step tutorials for each project.'}
                       {activePage === 'roadmaps' && 'Structured learning paths from beginner to advanced. Each roadmap shows the optimal order to learn topics with visual flow diagrams.'}
+                      {activePage === 'eng-blogs' && 'Curated engineering articles from 35 top tech companies. Learn how real systems are built at scale — from search and recommendations to distributed infrastructure.'}
                     </p>
                   </div>
                   )}
@@ -2266,6 +2278,74 @@ export default function DocsPage({ onBack }) {
                                     <div className="flex items-center gap-1.5 shrink-0 mt-1">
                                       {isStarred && <Icon name="star" size={12} className="text-amber-400" />}
                                       <Icon name="chevronRight" size={12} className="text-gray-300 group-hover:text-amber-500 group-hover:translate-x-0.5 transition-all" />
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Engineering Blogs Content */}
+              {activePage === 'eng-blogs' && (
+                <>
+                  <div className="mb-6">
+                    <div className="mb-4">
+                      <span className="landing-mono text-xs text-red-600 tracking-widest uppercase">Learn from the Best</span>
+                      <h2 className="landing-display font-bold text-xl mt-1 tracking-tight text-gray-900">Engineering Blogs</h2>
+                      <p className="text-sm text-gray-500 mt-1">300+ curated articles from 35 top tech companies. Learn how real systems are built at scale.</p>
+                    </div>
+                    <div className="space-y-3">
+                    {engBlogCategories.map((category) => {
+                      const categoryTopics = filteredTopics.filter(t => engBlogCategoryMap[t.id] === category.id);
+                      if (categoryTopics.length === 0) return null;
+                      return (
+                        <div key={category.id} className="rounded-lg overflow-hidden border border-[#e3e8ee]">
+                          <div className="px-4 py-2.5 flex items-center gap-2.5 bg-gray-50/80 border-b border-[#e3e8ee]">
+                            <Icon name={category.icon} size={14} style={{ color: category.color }} />
+                            <h3 className="landing-display font-semibold text-sm text-gray-900">{category.name}</h3>
+                            <span className="text-[10px] landing-mono text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">{categoryTopics.length}</span>
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                            {categoryTopics.map((topic) => {
+                              const isCompleted = completedTopics[topic.id];
+                              const isStarred = starredTopics[topic.id];
+                              const isLocked = contentAccess.isTopicLocked('eng-blogs', topic.id);
+                              return (
+                                <div
+                                  key={topic.id}
+                                  onClick={() => !isLocked && setSelectedTopic(topic.id)}
+                                  className={`group relative px-4 py-3 border-b border-r border-[#e3e8ee] cursor-pointer transition-all duration-150 hover:bg-red-50/30 ${isLocked ? 'opacity-60' : ''}`}
+                                >
+                                  <div className="flex items-start justify-between gap-2">
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <span className="w-2 h-2 rounded-full shrink-0" style={{ background: topic.color }} />
+                                        <span className="landing-display font-semibold text-sm text-gray-900 truncate">{topic.title}</span>
+                                        {isCompleted && <Icon name="check" size={12} className="text-emerald-500 shrink-0" />}
+                                        {isLocked && <Icon name="lock" size={12} className="text-gray-400 shrink-0" />}
+                                      </div>
+                                      <p className="text-xs text-gray-500 line-clamp-2 mb-2">{topic.description}</p>
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-[10px] landing-mono text-red-600 bg-red-50 px-1.5 py-0.5 rounded border border-red-200 font-semibold">
+                                          {topic.articles?.length || topic.questions} articles
+                                        </span>
+                                        {topic.blogUrl && (
+                                          <a href={topic.blogUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} className="text-[10px] landing-mono text-blue-500 hover:underline">
+                                            blog
+                                          </a>
+                                        )}
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center gap-1.5 shrink-0 mt-1">
+                                      {isStarred && <Icon name="star" size={12} className="text-amber-400" />}
+                                      <Icon name="chevronRight" size={12} className="text-gray-300 group-hover:text-red-500 group-hover:translate-x-0.5 transition-all" />
                                     </div>
                                   </div>
                                 </div>
