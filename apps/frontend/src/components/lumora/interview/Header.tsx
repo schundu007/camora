@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useInterviewStore } from '@/stores/interview-store';
 import { useAuth } from '@/contexts/AuthContext';
-import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
+import { AudioCapture, SystemAudioButton } from '@/components/lumora/audio/AudioCapture';
 import { MicrophoneSelector } from '@/components/lumora/audio/MicrophoneSelector';
 import { DocumentUpload } from '@/components/lumora/documents/DocumentUpload';
 import CamoraLogo from '../../shared/CamoraLogo';
@@ -195,6 +195,11 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
             <option value="coderpad">CoderPad</option>
             <option value="codility">Codility</option>
           </select>
+        </div>
+
+        {/* Interviewer — between General and Audio */}
+        <div className="flex items-center px-1.5 h-full shrink-0" style={{ borderRight: '1px solid rgba(255,255,255,0.04)' }}>
+          <SystemAudioButton onTranscription={onTranscription} disabled={false} />
         </div>
 
         {/* Audio Controls — grouped with subtle frosted bg */}

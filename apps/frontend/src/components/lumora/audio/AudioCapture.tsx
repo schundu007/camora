@@ -368,13 +368,12 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
         <CalibrationButton deviceId={selectedDeviceId} disabled={storeIsRecording} />
       )}
 
-      {/* System Audio (Interviewer) */}
-      <SystemAudioButton onTranscription={onTranscription} disabled={storeIsRecording} />
+      {/* Interviewer moved to Header */}
     </div>
   );
 }
 
-function SystemAudioButton({ onTranscription, disabled }: { onTranscription?: (text: string) => void; disabled?: boolean }) {
+export function SystemAudioButton({ onTranscription, disabled }: { onTranscription?: (text: string) => void; disabled?: boolean }) {
   const [capturing, setCapturing] = useState(false);
   const [statusMsg, setStatusMsg] = useState('');
   const streamRef = useRef<MediaStream | null>(null);
