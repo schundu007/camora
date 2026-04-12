@@ -106,7 +106,7 @@ export const transcriptionAPI = {
 export const speakerAPI = {
   enroll: async (token: string, audioBlob: Blob, filename: string): Promise<{ success: boolean; message: string }> => {
     const formData = new FormData();
-    formData.append('file', audioBlob, filename);
+    formData.append('audio', audioBlob, filename);
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 60000); // 60s timeout
