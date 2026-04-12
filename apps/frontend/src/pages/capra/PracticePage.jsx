@@ -952,6 +952,7 @@ export default function PracticePage() {
                       })}
                     </div>
                   </div>
+                  </div>
                 );
               })()}
 
