@@ -943,10 +943,10 @@ function Header({ ascendMode, onModeChange, showSidebar, onToggleSidebar, isLoad
     >
       {/* Left: Camora logo + brand */}
       <div className="flex items-center gap-3">
-        <a href="/" className="flex items-center gap-2">
+        <Link to="/" className="flex items-center gap-2">
           <CamoraLogo size={36} />
           <span className="text-sm font-bold text-gray-900 hidden sm:inline" style={{ fontFamily: "'Comfortaa', sans-serif" }}>Camora</span>
-        </a>
+        </Link>
         <div className="w-px h-5 bg-gray-200 hidden sm:block" />
         <div className="flex items-center gap-1.5">
           <div className="w-2 h-2 rounded-full" style={{ background: currentMode.color }} />
@@ -957,9 +957,9 @@ function Header({ ascendMode, onModeChange, showSidebar, onToggleSidebar, isLoad
       {/* Center: APPA tabs */}
       <div className="hidden md:flex items-center gap-1">
         {APPA_TABS.map((tab) => (
-          <a
+          <Link
             key={tab.label}
-            href={tab.href}
+            to={tab.href}
             className={`px-3 py-1.5 text-sm font-medium transition-colors ${
               tab.label === activeAppaTab
                 ? 'text-emerald-600 border-b-2 border-emerald-500'
@@ -967,7 +967,7 @@ function Header({ ascendMode, onModeChange, showSidebar, onToggleSidebar, isLoad
             }`}
           >
             {tab.label}
-          </a>
+          </Link>
         ))}
       </div>
 
@@ -977,14 +977,14 @@ function Header({ ascendMode, onModeChange, showSidebar, onToggleSidebar, isLoad
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
           <span className="hidden sm:inline">Assistant</span>
         </button>
-        <a href="/capra/prepare" className="hidden sm:flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-gray-50 transition-colors">
+        <Link to="/capra/prepare" className="hidden sm:flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-gray-50 transition-colors">
           {user?.image ? (
             <img src={user.image} alt="" className="w-6 h-6 rounded-full" referrerPolicy="no-referrer" />
           ) : (
             <div className="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center text-[10px] font-bold text-emerald-700">{user?.name?.[0] || '?'}</div>
           )}
           <span className="text-sm text-gray-700 font-medium">{user?.name?.split(' ')[0] || 'Dashboard'}</span>
-        </a>
+        </Link>
       </div>
     </header>
   );

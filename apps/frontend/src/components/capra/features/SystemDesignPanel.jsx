@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
+import { Link } from 'react-router-dom';
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 import { getAuthHeaders } from '../../../utils/authHeaders.js';
 import { MermaidDiagram } from '../../lumora/interview/MermaidDiagram';
@@ -503,7 +504,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
                   </div>
                   <p className="text-sm font-semibold text-gray-900 mb-1">Free diagrams used up</p>
                   <p className="text-xs text-gray-500 mb-4 text-center max-w-xs">Upgrade to Premium for unlimited architecture diagram generation.</p>
-                  <a href="/pricing" className="px-4 py-2 bg-emerald-500 text-white text-xs font-bold rounded-lg hover:bg-emerald-600 transition-colors">View Plans</a>
+                  <Link to="/pricing" className="px-4 py-2 bg-emerald-500 text-white text-xs font-bold rounded-lg hover:bg-emerald-600 transition-colors">View Plans</Link>
                 </>
               ) : (
                 <>
