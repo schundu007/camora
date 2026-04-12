@@ -343,60 +343,62 @@ function SystemDesignView({ blocks, question }: { blocks: ParsedBlock[]; questio
         </div>
       )}
 
-      {/* Row 1: Architecture (wide) + Requirements (side) */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-2">
-        {/* Architecture — takes 2/3 width, readable size */}
-        <div className="xl:col-span-2">
+      {/* Main layout: Architecture LEFT (sticky) + ALL cards RIGHT */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+        {/* LEFT: Architecture diagram — sticky, full height */}
+        <div className="lg:sticky lg:top-0 lg:self-start">
           <ArchitectureCard
             question={question || (byType.HEADLINE ? cleanText(byType.HEADLINE.content) : '')}
           />
         </div>
-        {/* Requirements stacked on the side */}
+
+        {/* RIGHT: All info cards — dense stack */}
         <div className="flex flex-col gap-2">
-          <GridCard title="FUNCTIONAL" titleColor="text-indigo-light" defaultCollapsed={false} compact>
-            {byType.REQUIREMENTS ? (
-              <RequirementsList content={byType.REQUIREMENTS.content} type="functional" />
+          {/* Functional + Non-Functional */}
+          <div className="grid grid-cols-2 gap-2">
+            <GridCard title="FUNCTIONAL" titleColor="text-indigo-light" compact>
+              {byType.REQUIREMENTS ? (
+                <RequirementsList content={byType.REQUIREMENTS.content} type="functional" />
+              ) : <EmptyBlock />}
+            </GridCard>
+            <GridCard title="NON-FUNCTIONAL" titleColor="text-violet-light" compact>
+              {byType.REQUIREMENTS ? (
+                <RequirementsList content={byType.REQUIREMENTS.content} type="nonfunctional" />
+              ) : <EmptyBlock />}
+            </GridCard>
+          </div>
+          {/* Scale Math */}
+          <GridCard title="SCALE MATH" titleColor="text-emerald-light" compact>
+            {byType.SCALEMATH ? (
+              <ScaleMathList content={byType.SCALEMATH.content} />
             ) : <EmptyBlock />}
           </GridCard>
-          <GridCard title="NON-FUNCTIONAL" titleColor="text-violet-light" defaultCollapsed={false} compact>
-            {byType.REQUIREMENTS ? (
-              <RequirementsList content={byType.REQUIREMENTS.content} type="nonfunctional" />
-            ) : <EmptyBlock />}
-          </GridCard>
+          {/* Trade-offs + Edge Cases */}
+          <div className="grid grid-cols-2 gap-2">
+            <GridCard title="TRADE-OFFS" titleColor="text-rose-light" compact>
+              {byType.TRADEOFFS ? (
+                <TradeoffsList content={byType.TRADEOFFS.content} />
+              ) : <EmptyBlock />}
+            </GridCard>
+            <GridCard title="EDGE CASES" titleColor="text-amber-light" compact>
+              {byType.EDGECASES ? (
+                <EdgeCasesList content={byType.EDGECASES.content} />
+              ) : <EmptyBlock />}
+            </GridCard>
+          </div>
+          {/* Layer Design */}
+          {byType.DEEPDESIGN && (
+            <GridCard title="LAYER DESIGN" titleColor="text-violet-light" compact>
+              <DeepDesignList content={byType.DEEPDESIGN.content} />
+            </GridCard>
+          )}
+          {/* Follow-up Q&A */}
+          {byType.FOLLOWUP && (
+            <GridCard title="FOLLOW-UP Q&A" titleColor="text-amber-light" className="border-amber/15 bg-amber/[0.02]" compact>
+              <FollowupList content={byType.FOLLOWUP.content} />
+            </GridCard>
+          )}
         </div>
-      </div>
-
-      {/* Row 2: Scale Math + Trade-offs + Edge Cases — all on one line */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-        <GridCard title="SCALE MATH" titleColor="text-emerald-light" compact>
-          {byType.SCALEMATH ? (
-            <ScaleMathList content={byType.SCALEMATH.content} />
-          ) : <EmptyBlock />}
-        </GridCard>
-        <GridCard title="TRADE-OFFS" titleColor="text-rose-light" compact>
-          {byType.TRADEOFFS ? (
-            <TradeoffsList content={byType.TRADEOFFS.content} />
-          ) : <EmptyBlock />}
-        </GridCard>
-        <GridCard title="EDGE CASES" titleColor="text-amber-light" compact>
-          {byType.EDGECASES ? (
-            <EdgeCasesList content={byType.EDGECASES.content} />
-          ) : <EmptyBlock />}
-        </GridCard>
-      </div>
-
-      {/* Row 3: Layer Design + Follow-up — side by side */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        {byType.DEEPDESIGN && (
-          <GridCard title="LAYER DESIGN" titleColor="text-violet-light" compact>
-            <DeepDesignList content={byType.DEEPDESIGN.content} />
-          </GridCard>
-        )}
-        {byType.FOLLOWUP && (
-          <GridCard title="FOLLOW-UP Q&A" titleColor="text-amber-light" className="border-amber/15 bg-amber/[0.02]" compact>
-            <FollowupList content={byType.FOLLOWUP.content} />
-          </GridCard>
-        )}
       </div>
     </div>
   );

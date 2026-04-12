@@ -1,71 +1,11 @@
-import { useState, useRef, useCallback, useEffect, useMemo, lazy, Suspense } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useInterviewStore } from '@/stores/interview-store';
 import { useAuth } from '@/contexts/AuthContext';
 import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
-
-// Lazy-load Monaco
-const MonacoEditor = lazy(() => import('@monaco-editor/react'));
+import SharedCodeEditor from '@/components/shared/code/SharedCodeEditor';
+import { LANGUAGES, getLanguageById } from '@/data/languages';
 
 const API_BASE_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
-
-const LANGUAGES = [
-  // ── Languages ──
-  { value: 'python', label: 'Python 3', mono: 'python' },
-  { value: 'python2', label: 'Python 2', mono: 'python' },
-  { value: 'javascript', label: 'JavaScript', mono: 'javascript' },
-  { value: 'typescript', label: 'TypeScript', mono: 'typescript' },
-  { value: 'java', label: 'Java', mono: 'java' },
-  { value: 'c', label: 'C', mono: 'c' },
-  { value: 'cpp', label: 'C++', mono: 'cpp' },
-  { value: 'csharp', label: 'C#', mono: 'csharp' },
-  { value: 'go', label: 'Go', mono: 'go' },
-  { value: 'rust', label: 'Rust', mono: 'rust' },
-  { value: 'ruby', label: 'Ruby', mono: 'ruby' },
-  { value: 'php', label: 'PHP', mono: 'php' },
-  { value: 'swift', label: 'Swift 5', mono: 'swift' },
-  { value: 'kotlin', label: 'Kotlin', mono: 'kotlin' },
-  { value: 'scala', label: 'Scala', mono: 'scala' },
-  { value: 'bash', label: 'Bash', mono: 'shell' },
-  { value: 'perl', label: 'Perl', mono: 'perl' },
-  { value: 'lua', label: 'Lua', mono: 'lua' },
-  { value: 'r', label: 'R', mono: 'r' },
-  { value: 'haskell', label: 'Haskell', mono: 'haskell' },
-  { value: 'clojure', label: 'Clojure', mono: 'clojure' },
-  { value: 'elixir', label: 'Elixir', mono: 'elixir' },
-  { value: 'erlang', label: 'Erlang', mono: 'erlang' },
-  { value: 'fsharp', label: 'F#', mono: 'fsharp' },
-  { value: 'ocaml', label: 'OCaml', mono: 'ocaml' },
-  { value: 'dart', label: 'Dart', mono: 'dart' },
-  { value: 'julia', label: 'Julia', mono: 'julia' },
-  { value: 'objectivec', label: 'Objective-C', mono: 'objective-c' },
-  { value: 'coffeescript', label: 'CoffeeScript', mono: 'coffeescript' },
-  { value: 'vb', label: 'Visual Basic', mono: 'vb' },
-  { value: 'tcl', label: 'Tcl', mono: 'tcl' },
-  // ── Databases ──
-  { value: 'sql', label: 'SQL', mono: 'sql' },
-  { value: 'mysql', label: 'MySQL', mono: 'sql' },
-  { value: 'postgresql', label: 'PostgreSQL', mono: 'sql' },
-  // ── Frameworks ──
-  { value: 'react', label: 'React', mono: 'typescript' },
-  { value: 'vue', label: 'Vue', mono: 'html' },
-  { value: 'angular', label: 'Angular', mono: 'typescript' },
-  { value: 'svelte', label: 'Svelte', mono: 'html' },
-  { value: 'nextjs', label: 'Next.js', mono: 'typescript' },
-  { value: 'html', label: 'HTML', mono: 'html' },
-  { value: 'nodejs', label: 'NodeJS', mono: 'javascript' },
-  { value: 'django', label: 'Django', mono: 'python' },
-  { value: 'rails', label: 'Rails', mono: 'ruby' },
-  { value: 'spring', label: 'Spring', mono: 'java' },
-  // ── DevOps ──
-  { value: 'terraform', label: 'Terraform', mono: 'hcl' },
-  { value: 'kubernetes', label: 'Kubernetes', mono: 'yaml' },
-  { value: 'docker', label: 'Docker', mono: 'dockerfile' },
-  // ── ML / Data ──
-  { value: 'pyspark', label: 'PySpark', mono: 'python' },
-  { value: 'pytorch', label: 'PyTorch', mono: 'python' },
-  { value: 'tensorflow', label: 'TensorFlow', mono: 'python' },
-  { value: 'scipy', label: 'SciPy', mono: 'python' },
-] as const;
 
 type ProblemTab = 'description' | 'solution';
 type OutputTab = 'testcases' | 'output';
@@ -122,60 +62,11 @@ function extractTestCases(content: string): Array<{ input: string; expected: str
 }
 
 function getDefaultCode(lang: string): string {
-  const templates: Record<string, string> = {
-    python: `class Solution:\n    def solve(self, nums, target):\n        pass`,
-    python2: `class Solution:\n    def solve(self, nums, target):\n        pass`,
-    javascript: `function solve(nums, target) {\n    return [];\n}`,
-    typescript: `function solve(nums: number[], target: number): number[] {\n    return [];\n}`,
-    java: `class Solution {\n    public int[] solve(int[] nums, int target) {\n        return new int[]{};\n    }\n}`,
-    c: `#include <stdio.h>\n#include <stdlib.h>\n\nint* solve(int* nums, int numsSize, int target, int* returnSize) {\n    *returnSize = 0;\n    return NULL;\n}`,
-    cpp: `#include <vector>\nusing namespace std;\n\nclass Solution {\npublic:\n    vector<int> solve(vector<int>& nums, int target) {\n        return {};\n    }\n};`,
-    csharp: `public class Solution {\n    public int[] Solve(int[] nums, int target) {\n        return new int[]{};\n    }\n}`,
-    go: `package main\n\nfunc solve(nums []int, target int) []int {\n    return nil\n}`,
-    rust: `impl Solution {\n    pub fn solve(nums: Vec<i32>, target: i32) -> Vec<i32> {\n        vec![]\n    }\n}`,
-    ruby: `def solve(nums, target)\n  []\nend`,
-    php: `<?php\nfunction solve($nums, $target) {\n    return [];\n}`,
-    swift: `class Solution {\n    func solve(_ nums: [Int], _ target: Int) -> [Int] {\n        return []\n    }\n}`,
-    kotlin: `class Solution {\n    fun solve(nums: IntArray, target: Int): IntArray {\n        return intArrayOf()\n    }\n}`,
-    scala: `object Solution {\n    def solve(nums: Array[Int], target: Int): Array[Int] = {\n        Array()\n    }\n}`,
-    bash: `#!/bin/bash\n\n# Solution\n`,
-    perl: `sub solve {\n    my ($nums, $target) = @_;\n    return ();\n}`,
-    lua: `function solve(nums, target)\n    return {}\nend`,
-    r: `solve <- function(nums, target) {\n  return(c())\n}`,
-    haskell: `solve :: [Int] -> Int -> [Int]\nsolve nums target = []`,
-    clojure: `(defn solve [nums target]\n  [])`,
-    elixir: `defmodule Solution do\n  def solve(nums, target) do\n    []\n  end\nend`,
-    erlang: `-module(solution).\n-export([solve/2]).\n\nsolve(Nums, Target) ->\n    [].`,
-    fsharp: `let solve (nums: int list) (target: int) : int list =\n    []`,
-    ocaml: `let solve nums target =\n  []`,
-    dart: `class Solution {\n  List<int> solve(List<int> nums, int target) {\n    return [];\n  }\n}`,
-    julia: `function solve(nums::Vector{Int}, target::Int)::Vector{Int}\n    return Int[]\nend`,
-    objectivec: `@implementation Solution\n\n- (NSArray *)solve:(NSArray *)nums target:(NSNumber *)target {\n    return @[];\n}\n\n@end`,
-    coffeescript: `solve = (nums, target) ->\n  []`,
-    vb: `Public Function Solve(nums As Integer(), target As Integer) As Integer()\n    Return New Integer(){}\nEnd Function`,
-    tcl: `proc solve {nums target} {\n    return [list]\n}`,
-    sql: `-- Write your SQL query below\nSELECT * FROM table_name\nWHERE condition;`,
-    mysql: `-- Write your MySQL query below\nSELECT * FROM table_name\nWHERE condition;`,
-    postgresql: `-- Write your PostgreSQL query below\nSELECT * FROM table_name\nWHERE condition;`,
-    react: `import React from 'react';\n\nexport default function Component() {\n  return <div></div>;\n}`,
-    vue: `<template>\n  <div></div>\n</template>\n\n<script setup>\n</script>`,
-    angular: `import { Component } from '@angular/core';\n\n@Component({ selector: 'app-root', template: '<div></div>' })\nexport class AppComponent {}`,
-    svelte: `<script>\n</script>\n\n<div></div>`,
-    nextjs: `export default function Page() {\n  return <div></div>;\n}`,
-    html: `<!DOCTYPE html>\n<html>\n<head><title>Solution</title></head>\n<body>\n</body>\n</html>`,
-    nodejs: `function solve(nums, target) {\n    return [];\n}\n\nmodule.exports = { solve };`,
-    django: `from django.http import JsonResponse\n\ndef solve(request):\n    pass`,
-    rails: `class SolutionController < ApplicationController\n  def solve\n  end\nend`,
-    spring: `@RestController\npublic class SolutionController {\n    @GetMapping("/solve")\n    public String solve() {\n        return "";\n    }\n}`,
-    terraform: `resource "aws_instance" "example" {\n  ami           = "ami-0c55b159cbfafe1f0"\n  instance_type = "t2.micro"\n}`,
-    kubernetes: `apiVersion: v1\nkind: Pod\nmetadata:\n  name: solution\nspec:\n  containers:\n  - name: app\n    image: nginx`,
-    docker: `FROM node:18-alpine\nWORKDIR /app\nCOPY package*.json ./\nRUN npm ci --only=production\nCOPY . .\nEXPOSE 3000\nCMD ["node", "server.js"]`,
-    pyspark: `from pyspark.sql import SparkSession\n\nspark = SparkSession.builder.appName("solution").getOrCreate()\n`,
-    pytorch: `import torch\nimport torch.nn as nn\n\nclass Model(nn.Module):\n    def __init__(self):\n        super().__init__()\n\n    def forward(self, x):\n        return x`,
-    tensorflow: `import tensorflow as tf\n\nmodel = tf.keras.Sequential([\n])\n`,
-    scipy: `import numpy as np\nfrom scipy import optimize\n\ndef solve():\n    pass`,
-  };
-  return templates[lang] || templates.python;
+  const found = getLanguageById(lang);
+  if (found?.template) return found.template;
+  // Fallback to python template
+  const python = getLanguageById('python');
+  return python?.template || `class Solution:\n    def solve(self, nums, target):\n        pass`;
 }
 
 /** Format seconds as MM:SS */
@@ -1141,7 +1032,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem }: Co
             <div className="flex items-center gap-2">
               <select value={language} onChange={(e) => handleLanguageChange(e.target.value)}
                 className="bg-white border border-gray-200 rounded-md px-2 py-1 text-gray-900 text-xs font-mono focus:border-emerald-400 focus:outline-none cursor-pointer">
-                {LANGUAGES.map(l => <option key={l.value} value={l.value}>{l.label}</option>)}
+                {LANGUAGES.map(l => <option key={l.id} value={l.id}>{l.label}</option>)}
               </select>
             </div>
             <div className="flex items-center gap-1">
@@ -1160,37 +1051,16 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem }: Co
             </div>
           </div>
 
-          {/* ── Monaco Code Editor ── */}
+          {/* ── Code Editor ── */}
           <div className="flex-1 overflow-hidden min-h-0">
-            <Suspense fallback={<div className="flex items-center justify-center h-full text-gray-400 text-sm">Loading editor...</div>}>
-              <MonacoEditor
-                height="100%"
-                language={LANGUAGES.find(l => l.value === language)?.mono || 'python'}
-                value={code}
-                onChange={(val) => setCode(val || '')}
-                theme="vs-light"
-                options={{
-                  fontSize: 13,
-                  lineHeight: 20,
-                  minimap: { enabled: false },
-                  scrollBeyondLastLine: false,
-                  padding: { top: 8, bottom: 8 },
-                  renderLineHighlight: 'line',
-                  lineNumbers: 'on',
-                  tabSize: language === 'python' ? 4 : 2,
-                  wordWrap: 'off',
-                  automaticLayout: true,
-                  bracketPairColorization: { enabled: true },
-                  guides: { bracketPairs: true, indentation: true },
-                  folding: true,
-                  suggest: { showWords: false },
-                  quickSuggestions: false,
-                  overviewRulerBorder: false,
-                  hideCursorInOverviewRuler: true,
-                  scrollbar: { verticalSliderSize: 6, horizontalSliderSize: 6 },
-                }}
-              />
-            </Suspense>
+            <SharedCodeEditor
+              height="100%"
+              language={getLanguageById(language)?.monaco || 'python'}
+              code={code}
+              onChange={setCode}
+              theme="light"
+              fontSize={13}
+            />
           </div>
 
           {/* ── Vertical Resize Handle ── */}

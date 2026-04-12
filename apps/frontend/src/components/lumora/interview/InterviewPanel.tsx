@@ -87,7 +87,7 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
       {showEmptyState ? (
         <EmptyState onAskQuestion={onAskQuestion} onSwitchToCoding={onSwitchToCoding} onSwitchToDesign={onSwitchToDesign} />
       ) : (
-        <div className="flex-1 flex flex-col gap-2 min-h-0 overflow-auto max-w-4xl w-full mx-auto">
+        <div className="flex-1 flex flex-col gap-2 min-h-0 overflow-auto w-full mx-auto" style={{ maxWidth: '90%' }}>
           {/* Vertical Q&A list — all questions visible, click to expand/collapse answers */}
           {history.length > 0 && history.map((entry, idx) => (
             <div key={idx} className="shrink-0">
