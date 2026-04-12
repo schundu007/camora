@@ -27,6 +27,7 @@ import { databaseCategories, databaseCategoryMap, databaseTopics } from '../../.
 import { sqlCategories, sqlCategoryMap, sqlTopics } from '../../../data/capra/topics/sqlTopics.js';
 import { behavioralCategories, topicCategoryMap, behavioralTopics } from '../../../data/capra/topics/behavioralTopics.js';
 import { projectCategories, projectCategoryMap, projectTopics } from '../../../data/capra/topics/projectTopics.js';
+import { roadmapCategories, roadmapCategoryMap, roadmapTopics } from '../../../data/capra/topics/roadmapTopics.js';
 import { companyPrep } from '../../../data/capra/topics/companyPrep.js';
 import { interviewCheatsheet } from '../../../data/capra/topics/techInterviewHandbook';
 import { ROLE_TOPIC_MAP } from '../../../data/capra/jobRoleTopicMapping';
@@ -242,6 +243,7 @@ export default function DocsPage({ onBack }) {
       activePage === 'databases' ? databaseTopics :
       activePage === 'sql' ? sqlTopics :
       activePage === 'projects' ? projectTopics :
+      activePage === 'roadmaps' ? roadmapTopics :
       [...behavioralTopics, ...companyPrep];
     const total = topics.length;
     const completed = topics.filter(t => completedTopics[t.id]).length;
@@ -357,6 +359,7 @@ export default function DocsPage({ onBack }) {
     else if (activePage === 'databases') topics = databaseTopics;
     else if (activePage === 'sql') topics = sqlTopics;
     else if (activePage === 'projects') topics = projectTopics;
+    else if (activePage === 'roadmaps') topics = roadmapTopics;
     else return [];
 
     // Apply role-based filtering when navigating from a job prep page
@@ -396,6 +399,7 @@ export default function DocsPage({ onBack }) {
       case 'databases': return { title: 'Database Internals', color: '#f59e0b' };
       case 'sql': return { title: 'SQL for Interviews', color: '#06b6d4' };
       case 'projects': return { title: 'Projects', color: '#8b5cf6' };
+      case 'roadmaps': return { title: 'Roadmaps', color: '#f59e0b' };
       default: return { title: 'Documentation', color: '#10b981' };
     }
   };
@@ -427,6 +431,7 @@ export default function DocsPage({ onBack }) {
     if (activePage === 'databases') return databaseTopics.find(t => t.id === selectedTopic);
     if (activePage === 'sql') return sqlTopics.find(t => t.id === selectedTopic);
     if (activePage === 'projects') return projectTopics.find(t => t.id === selectedTopic);
+    if (activePage === 'roadmaps') return roadmapTopics.find(t => t.id === selectedTopic);
     return null;
   };
 
@@ -454,6 +459,7 @@ export default function DocsPage({ onBack }) {
       { id: 'sql', href: 'sql', title: 'SQL for Interviews', icon: 'database', color: '#06b6d4', topics: sqlTopics },
       { id: 'low-level', href: 'low-level-design', title: 'Low-Level Design', icon: 'layers', color: '#8b5cf6', topics: [...lldTopics, ...lldProblems] },
       { id: 'projects', href: 'projects', title: 'Projects', icon: 'code', color: '#8b5cf6', topics: projectTopics },
+      { id: 'roadmaps', href: 'roadmaps', title: 'Roadmaps', icon: 'trendingUp', color: '#f59e0b', topics: roadmapTopics },
       { id: 'behavioral', href: 'behavioral', title: 'Behavioral', icon: 'users', color: '#a855f7', topics: [...behavioralTopics, ...companyPrep] },
     ];
     return cats.map(c => {
@@ -850,7 +856,7 @@ export default function DocsPage({ onBack }) {
                     <div className="inline-flex items-center gap-2 px-4 py-1.5 border border-emerald-200 bg-emerald-50 rounded-full mb-4">
                       <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
                       <span className="text-xs landing-mono text-emerald-700 tracking-wide">
-                        {activePage === 'coding' ? 'Algorithms' : activePage === 'system-design' ? 'Architecture' : activePage === 'low-level' ? 'OOP & Patterns' : activePage === 'microservices' ? 'Microservices' : activePage === 'databases' ? 'Database Internals' : activePage === 'sql' ? 'SQL Mastery' : activePage === 'projects' ? 'Hands-On' : 'Soft Skills'}
+                        {activePage === 'coding' ? 'Algorithms' : activePage === 'system-design' ? 'Architecture' : activePage === 'low-level' ? 'OOP & Patterns' : activePage === 'microservices' ? 'Microservices' : activePage === 'databases' ? 'Database Internals' : activePage === 'sql' ? 'SQL Mastery' : activePage === 'projects' ? 'Hands-On' : activePage === 'roadmaps' ? 'Learning Paths' : 'Soft Skills'}
                       </span>
                     </div>
                     <h1 className="landing-display font-extrabold text-3xl md:text-4xl lg:text-5xl tracking-tight text-gray-900 mb-2">
@@ -862,6 +868,7 @@ export default function DocsPage({ onBack }) {
                       {activePage === 'databases' && <>Database{' '}<span className="bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">Internals</span></>}
                       {activePage === 'sql' && <>SQL for{' '}<span className="bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent">Interviews</span></>}
                       {activePage === 'projects' && <>Build Real{' '}<span className="bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent">Projects</span></>}
+                      {activePage === 'roadmaps' && <>Follow the{' '}<span className="bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">Roadmap</span></>}
                     </h1>
                     <p className="text-base md:text-lg text-gray-500 max-w-2xl leading-relaxed landing-body">
                       {activePage === 'coding' && 'Master the fundamental data structures and algorithms needed to ace technical interviews at top tech companies.'}
@@ -872,6 +879,7 @@ export default function DocsPage({ onBack }) {
                       {activePage === 'databases' && 'Storage engines, indexing, transactions, replication, sharding, and consensus algorithms. Deep dive into how databases really work.'}
                       {activePage === 'sql' && 'From fundamentals to window functions. Master SQL queries, joins, subqueries, and complex interview problems.'}
                       {activePage === 'projects' && 'Portfolio projects, take-home assignments, and full-stack builds. Get AI-generated step-by-step tutorials for each project.'}
+                      {activePage === 'roadmaps' && 'Structured learning paths from beginner to advanced. Each roadmap shows the optimal order to learn topics with visual flow diagrams.'}
                     </p>
                   </div>
                   )}

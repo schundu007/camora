@@ -74,23 +74,16 @@ def _embed_audio(audio_bytes: bytes, suffix: str = ".webm") -> np.ndarray:
     try:
         wav = preprocess_wav(wav_path)
         if len(wav) == 0:
-            # Fallback: load raw WAV without VAD preprocessing
-            import soundfile as sf
-            try:
-                wav_raw, sr = sf.read(wav_path)
-                if sr != 16000:
-                    import librosa
-                    wav_raw = librosa.resample(wav_raw, orig_sr=sr, target_sr=16000)
-                wav = wav_raw
-            except Exception:
-                # Last resort: numpy from raw bytes
-                import wave
-                with wave.open(wav_path, 'rb') as wf:
-                    frames = wf.readframes(wf.getnframes())
-                    wav = np.frombuffer(frames, dtype=np.int16).astype(np.float32) / 32768.0
+            # Fallback: load raw WAV without VAD preprocessing (stdlib only)
+            import wave as wave_mod
+            print(f"[Speaker] preprocess_wav returned empty, falling back to raw WAV load")
+            with wave_mod.open(wav_path, 'rb') as wf:
+                frames = wf.readframes(wf.getnframes())
+                wav = np.frombuffer(frames, dtype=np.int16).astype(np.float32) / 32768.0
+                print(f"[Speaker] Raw WAV loaded: {len(wav)} samples, {wf.getnchannels()}ch, {wf.getframerate()}Hz")
 
             if len(wav) == 0:
-                raise ValueError("Audio file produced empty waveform after all preprocessing attempts")
+                raise ValueError("Audio file produced empty waveform")
 
         encoder = _get_encoder()
         embedding = encoder.embed_utterance(wav)
