@@ -670,6 +670,121 @@ export default function TopicDetail({
         </div>
       )}
 
+      {/* Roadmap Detail */}
+      {!isLocked && activePage === 'roadmaps' && (
+        <div className="space-y-3">
+          {/* Overview */}
+          {topicDetails.introduction && (
+            <div id="overview" className="rounded-xl overflow-hidden scroll-mt-24 border border-[#e3e8ee]" style={{ background: `linear-gradient(180deg, ${topicDetails.color || '#f59e0b'}12 0%, #ffffff 100%)` }}>
+              <div className="px-4 py-2.5 border-b border-[#e3e8ee] bg-white/80 flex items-center gap-2">
+                <Icon name="trendingUp" size={14} style={{ color: topicDetails.color || '#f59e0b' }} />
+                <h3 className="text-sm font-bold text-gray-900 landing-display">Overview</h3>
+                <span className="text-[10px] landing-mono text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">{topicDetails.phases?.length || 0} phases</span>
+                <span className="text-[10px] landing-mono text-gray-400">{topicDetails.phases?.reduce((a, p) => a + p.topics.length, 0) || 0} topics total</span>
+              </div>
+              <div className="p-4">
+                <div className="text-[15px] leading-relaxed text-gray-600 landing-body">
+                  <FormattedContent content={topicDetails.introduction} color="amber" />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Visual Roadmap Phases */}
+          {topicDetails.phases && topicDetails.phases.length > 0 && (
+            <div id="roadmap-phases" className="rounded-xl overflow-hidden scroll-mt-24 border border-[#e3e8ee]">
+              <div className="px-4 py-2.5 border-b border-[#e3e8ee] bg-white/80 flex items-center gap-2">
+                <Icon name="layers" size={14} className="text-amber-600" />
+                <h3 className="text-sm font-bold text-gray-900 landing-display">Roadmap</h3>
+              </div>
+              <div className="p-4">
+                <div className="relative">
+                  {topicDetails.phases.map((phase, phaseIdx) => (
+                    <div key={phaseIdx} className="relative flex gap-4 pb-6 last:pb-0">
+                      {/* Vertical connector line */}
+                      {phaseIdx < topicDetails.phases.length - 1 && (
+                        <div className="absolute left-[15px] top-[32px] bottom-0 w-0.5" style={{ background: `linear-gradient(180deg, ${phase.color}60, ${topicDetails.phases[phaseIdx + 1]?.color || phase.color}60)` }} />
+                      )}
+                      {/* Phase number circle */}
+                      <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 z-10 shadow-sm" style={{ background: phase.color }}>
+                        {phaseIdx + 1}
+                      </div>
+                      {/* Phase content */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-2">
+                          <h4 className="text-sm font-bold text-gray-900 landing-display">{phase.title}</h4>
+                          <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded font-semibold" style={{ background: `${phase.color}15`, color: phase.color, border: `1px solid ${phase.color}30` }}>
+                            {phase.topics.length} topics
+                          </span>
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {phase.topics.map((topic, topicIdx) => (
+                            <span key={topicIdx} className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-md bg-gray-50 border border-gray-200 text-gray-600 landing-body">
+                              <span className="w-1 h-1 rounded-full shrink-0" style={{ background: phase.color }} />
+                              {topic}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Key Questions / FAQ */}
+          {topicDetails.keyQuestions && topicDetails.keyQuestions.length > 0 && (
+            <div id="key-questions" className="rounded-xl overflow-hidden scroll-mt-24 border border-[#e3e8ee]">
+              <div className="px-4 py-2.5 border-b border-[#e3e8ee] bg-white/80 flex items-center gap-2">
+                <Icon name="messageSquare" size={14} className="text-blue-600" />
+                <h3 className="text-sm font-bold text-gray-900 landing-display">FAQ</h3>
+              </div>
+              <div className="divide-y divide-[#e3e8ee]">
+                {topicDetails.keyQuestions.map((qa, i) => (
+                  <div key={i} className="px-4 py-3">
+                    <button
+                      onClick={() => setExpandedTheoryQuestions(prev => ({ ...prev, [`rm-${i}`]: !prev[`rm-${i}`] }))}
+                      className="w-full flex items-start gap-3 text-left group"
+                    >
+                      <span className="w-6 h-6 rounded-lg bg-amber-50 border border-amber-200 flex items-center justify-center flex-shrink-0 mt-0.5 text-xs font-bold text-amber-600 landing-mono">
+                        Q
+                      </span>
+                      <span className="flex-1 text-sm font-semibold text-gray-900 landing-display">{qa.question}</span>
+                      <Icon name={expandedTheoryQuestions[`rm-${i}`] ? 'chevronUp' : 'chevronDown'} size={14} className="text-gray-400 mt-1 shrink-0" />
+                    </button>
+                    {expandedTheoryQuestions[`rm-${i}`] && (
+                      <div className="mt-2 ml-9 text-sm text-gray-600 landing-body leading-relaxed">
+                        <FormattedContent content={qa.answer} color="amber" />
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Generate Roadmap Diagram CTA */}
+          <div className="rounded-xl overflow-hidden scroll-mt-24 border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50">
+            <div className="p-6 text-center">
+              <div className="w-12 h-12 rounded-xl bg-amber-100 border border-amber-200 flex items-center justify-center mx-auto mb-3">
+                <Icon name="trendingUp" size={20} className="text-amber-600" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 landing-display mb-1">Generate Visual Diagram</h3>
+              <p className="text-sm text-gray-500 landing-body mb-4">Get an AI-generated architecture-style visual roadmap diagram.</p>
+              <button
+                onClick={() => handleAskAI(`Generate a detailed visual learning roadmap for: ${topicDetails.title}\n\nPhases:\n${(topicDetails.phases || []).map((p, i) => `${i + 1}. ${p.title}: ${p.topics.join(', ')}`).join('\n')}\n\nCreate a comprehensive study plan with:\n1. Recommended time allocation per phase\n2. Key resources and projects for each phase\n3. Milestones to measure progress\n4. Common mistakes to avoid\n5. How to know when you're ready to move to the next phase`)}
+                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold text-white landing-display transition-all hover:opacity-90"
+                style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)', boxShadow: '0 2px 8px rgba(245,158,11,0.3)' }}
+              >
+                <Icon name="zap" size={14} />
+                Generate Study Plan
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Project Detail */}
       {!isLocked && activePage === 'projects' && (
         <div className="space-y-3">
