@@ -126,7 +126,7 @@ export default function DashboardPage() {
   // Auth
   // ---------------------------------------------------------------------------
   const auth = useAuth();
-  const user = auth.user;
+  const { user, isAuthenticated } = auth;
   const isAdmin = user?.role === 'admin' || user?.roles?.includes?.('admin');
 
   // ---------------------------------------------------------------------------
