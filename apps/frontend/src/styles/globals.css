@@ -20,42 +20,6 @@
 
 body {
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-  background: #0a0a0f;
-  color: #e2e8f0;
-  position: relative;
-}
-
-/* Global animated mesh gradient background */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  background:
-    radial-gradient(ellipse 80% 60% at 20% 30%, rgba(16,185,129,0.10) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 50% at 80% 20%, rgba(99,102,241,0.08) 0%, transparent 60%),
-    radial-gradient(ellipse 50% 40% at 50% 80%, rgba(6,182,212,0.06) 0%, transparent 60%),
-    radial-gradient(ellipse 40% 30% at 90% 70%, rgba(245,158,11,0.04) 0%, transparent 60%);
-  animation: lumora-mesh-shift 12s ease-in-out infinite alternate;
-}
-
-/* Global grid overlay */
-body::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
-  background-size: 48px 48px;
-  mask-image: radial-gradient(ellipse 60% 50% at 50% 40%, black 20%, transparent 70%);
-}
-
-/* Ensure all content sits above the background */
-#root {
-  position: relative;
-  z-index: 1;
 }
 
 /* ══════════════════════════════════════════════════════════════
