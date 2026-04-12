@@ -147,9 +147,7 @@ export function VoiceEnrollment({ disabled }: VoiceEnrollmentProps) {
           } else {
             userMsg = err.message || 'Enrollment failed';
           }
-          if (status !== 404 && status !== 500 && status !== 502 && status !== 503) {
-            console.error('Voice enrollment error:', err.message || err);
-          }
+          console.error('Voice enrollment error:', err.message || err, 'status:', status);
           setError(userMsg);
           setStatus('error', userMsg);
         }

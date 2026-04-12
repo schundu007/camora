@@ -28,6 +28,7 @@ router.post('/enroll', upload.single('audio'), async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ error: 'Audio file is required (field name: "audio")' });
     }
+    console.log(`[Speaker] Received file: name=${req.file.originalname}, size=${req.file.size}, mime=${req.file.mimetype}, bufferLen=${req.file.buffer?.length}`);
 
     const fs = await import('fs');
     const os = await import('os');
