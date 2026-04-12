@@ -47,6 +47,7 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
   const { selectedDeviceId } = useAudioDevices();
 
   const handleAudioData = useCallback(async (blob: Blob) => {
+    console.log(`[Live] Audio captured: ${blob.size} bytes, type: ${blob.type}`);
     if (!token) {
       setError('Not authenticated');
       return;
@@ -58,12 +59,14 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
     setStatus('transcribe', shouldFilterVoice ? 'Checking speaker...' : 'Transcribing...');
 
     try {
+      console.log('[Live] Sending to transcription API...');
       const result = await transcriptionAPI.transcribe(
         token,
         blob,
         'audio.webm',
         shouldFilterVoice
       );
+      console.log('[Live] Transcription result:', JSON.stringify(result));
 
       // Check if transcription was skipped (user voice detected)
       if (result.skipped) {
@@ -73,6 +76,7 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
       }
 
       if (result.text) {
+        console.log('[Live] Got text, calling onTranscription:', result.text.slice(0, 100));
         onTranscription?.(result.text);
         setStatus('ready', 'Transcription complete');
         // Auto-restart listening after successful transcription
@@ -152,10 +156,10 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
     onAudioData: handleAudioData,
     onAudioLevel: handleAudioLevel,
     onRecordingStop: handleRecordingStop,
-    silenceThreshold: threshold,
-    silenceDuration: 800, // 800ms of silence before stopping (was 2000ms — too slow)
+    silenceThreshold: Math.max(threshold, 0.008), // minimum 0.008 to ensure VAD triggers
+    silenceDuration: 1200, // 1.2s of silence before stopping
     minSpeechDuration: 300,
-    maxRecordingDuration: 60000, // 60s max
+    maxRecordingDuration: 30000, // 30s max — forces transcription even if VAD doesn't trigger
     deviceId: selectedDeviceId,
   });
 

@@ -190,6 +190,7 @@ export function useAudioCapture(options: AudioCaptureOptions = {}) {
         if (rms > silenceThreshold) {
           if (!speechStartTimeRef.current) {
             speechStartTimeRef.current = Date.now();
+            console.log(`[VAD] Speech started, rms=${rms.toFixed(4)}, threshold=${silenceThreshold}`);
           }
           if (silenceTimerRef.current) {
             clearTimeout(silenceTimerRef.current);
