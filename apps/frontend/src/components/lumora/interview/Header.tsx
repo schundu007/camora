@@ -236,8 +236,8 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
         </div>
       </div>
 
-      {/* Row 2: Input bar with subtle emerald accent */}
-      <div data-tour="input" className="flex items-center h-[36px]" style={{ borderTop: '1px solid rgba(16,185,129,0.06)', background: 'rgba(16,185,129,0.02)' }}>
+      {/* Row 2: Input bar with subtle emerald accent — hidden when showInputBar=false (composer moved to page bottom) */}
+      {showInputBar && <div data-tour="input" className="flex items-center h-[36px]" style={{ borderTop: '1px solid rgba(16,185,129,0.06)', background: 'rgba(16,185,129,0.02)' }}>
         <div className="flex-1 flex items-center justify-center px-3 min-w-0">
           <input
             ref={inputRef}
@@ -273,8 +273,10 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
         </div>
       </div>
 
+      }
+
       {/* Expandable textarea for multi-line problem input */}
-      {isExpanded && (
+      {showInputBar && isExpanded && (
         <div className="border-t border-gray-700/50 bg-gray-950/90 backdrop-blur-xl px-4 py-3">
           <div className="flex gap-2 items-end max-w-full">
             <textarea

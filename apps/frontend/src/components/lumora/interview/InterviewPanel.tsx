@@ -73,11 +73,11 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
   const showEmptyState = !question && !isStreaming && parsedBlocks.length === 0 && history.length === 0;
 
   return (
-    <main className="flex-1 min-h-0 overflow-auto flex flex-col p-2 md:p-3 gap-2">
+    <main className="flex-1 min-h-0 overflow-auto flex flex-col p-2 md:p-4 gap-2">
       {showEmptyState ? (
         <EmptyState onAskQuestion={onAskQuestion} onSwitchToCoding={onSwitchToCoding} onSwitchToDesign={onSwitchToDesign} />
       ) : (
-        <div className="flex-1 flex flex-col gap-2 min-h-0 overflow-auto">
+        <div className="flex-1 flex flex-col gap-2 min-h-0 overflow-auto max-w-4xl w-full mx-auto">
           {/* Vertical Q&A list — all questions visible, click to expand/collapse answers */}
           {history.length > 0 && history.map((entry, idx) => (
             <div key={idx} className="shrink-0">
@@ -212,57 +212,58 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
 
 function EmptyState({ onAskQuestion }: { onAskQuestion?: (question: string) => void; onSwitchToCoding?: (problem?: string) => void; onSwitchToDesign?: (problem?: string) => void }) {
 
-  const CARDS = [
-    { category: 'System Design', color: '#06b6d4', icon: 'M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10', prompts: [
-      'Design a URL shortener like TinyURL',
-      'Design a distributed message queue',
-      'Design Instagram news feed',
-    ]},
-    { category: 'Coding', color: '#8b5cf6', icon: 'M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4', prompts: [
-      'Implement LRU Cache in Python',
-      'Find median of two sorted arrays',
-      'Serialize and deserialize binary tree',
-    ]},
-    { category: 'Behavioral', color: '#f59e0b', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z', prompts: [
-      'Tell me about a time you dealt with conflict',
-      'Describe a project you led from start to finish',
-      'How do you handle tight deadlines?',
-    ]},
-    { category: 'Concepts', color: '#10b981', icon: 'M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z', prompts: [
-      'What is the CAP theorem?',
-      'Explain consistent hashing',
-      'How does a load balancer work?',
-    ]},
+  const PROMPTS = [
+    { text: 'Design a URL shortener like TinyURL', category: 'System Design', color: '#06b6d4' },
+    { text: 'Implement LRU Cache in Python', category: 'Coding', color: '#8b5cf6' },
+    { text: 'Tell me about a time you led a failing project', category: 'Behavioral', color: '#f59e0b' },
+    { text: 'Explain consistent hashing', category: 'Concepts', color: '#10b981' },
+    { text: 'Design Instagram news feed at scale', category: 'System Design', color: '#06b6d4' },
+    { text: 'Find median of two sorted arrays', category: 'Coding', color: '#8b5cf6' },
   ];
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center py-8 lumora-empty-mesh">
-      {/* Tour is now handled by Shepherd.js in InterviewPage */}
-      <div className="relative z-10 w-full max-w-3xl px-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {CARDS.map(card => (
-            <div key={card.category}
-              className="rounded-xl overflow-hidden transition-all hover:scale-[1.02]"
-              style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${card.color}20` }}>
-              {/* Card header */}
-              <div className="flex items-center gap-2.5 px-4 py-3" style={{ borderBottom: `1px solid ${card.color}15` }}>
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: `${card.color}15` }}>
-                  <svg className="w-4 h-4" fill="none" stroke={card.color} viewBox="0 0 24 24" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                    <path d={card.icon} />
-                  </svg>
-                </div>
-                <span className="text-sm font-bold" style={{ color: card.color }}>{card.category}</span>
-              </div>
-              {/* Prompts */}
-              <div className="p-2">
-                {card.prompts.map(prompt => (
-                  <button key={prompt} onClick={() => onAskQuestion?.(prompt)}
-                    className="w-full text-left px-3 py-2 rounded-lg text-sm text-white/60 hover:text-white hover:bg-white/5 transition-all truncate"
-                  >{prompt}</button>
-                ))}
-              </div>
-            </div>
+      <div className="relative z-10 w-full max-w-2xl px-4 text-center">
+        {/* Animated logo mark */}
+        <div className="relative w-16 h-16 mx-auto mb-6">
+          <div className="absolute inset-0 rounded-2xl animate-pulse" style={{ background: 'linear-gradient(135deg, rgba(16,185,129,0.15), rgba(6,182,212,0.1))', filter: 'blur(12px)' }} />
+          <div className="relative w-16 h-16 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #10b981, #06b6d4)', boxShadow: '0 4px 24px rgba(16,185,129,0.25)' }}>
+            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+          </div>
+        </div>
+
+        {/* Headline */}
+        <h1 className="text-2xl font-bold text-white mb-2 tracking-tight" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
+          What are you preparing for?
+        </h1>
+        <p className="text-sm text-white/35 mb-8 max-w-md mx-auto">
+          Ask any interview question — system design, coding, behavioral. Get structured answers in seconds.
+        </p>
+
+        {/* Prompt pills */}
+        <div className="flex flex-wrap justify-center gap-2 max-w-xl mx-auto">
+          {PROMPTS.map(prompt => (
+            <button
+              key={prompt.text}
+              onClick={() => onAskQuestion?.(prompt.text)}
+              className="group flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm text-white/60 transition-all duration-200 hover:text-white hover:scale-[1.02]"
+              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = `${prompt.color}40`; e.currentTarget.style.background = `${prompt.color}08`; }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'; e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
+            >
+              <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: prompt.color }} />
+              <span className="truncate">{prompt.text}</span>
+            </button>
           ))}
+        </div>
+
+        {/* Keyboard hints */}
+        <div className="mt-8 flex items-center justify-center gap-4 text-[11px] font-code text-white/20">
+          <span><kbd className="px-1.5 py-0.5 rounded border border-white/10 bg-white/3 text-white/35">⌘K</kbd> focus input</span>
+          <span><kbd className="px-1.5 py-0.5 rounded border border-white/10 bg-white/3 text-white/35">⌘M</kbd> mic toggle</span>
+          <span><kbd className="px-1.5 py-0.5 rounded border border-white/10 bg-white/3 text-white/35">⌘S</kbd> web search</span>
         </div>
       </div>
     </div>
