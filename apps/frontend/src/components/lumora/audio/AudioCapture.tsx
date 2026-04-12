@@ -339,8 +339,7 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
         ))}
       </div>
 
-      {/* Mic selector */}
-      <MicrophoneSelector disabled={storeIsRecording} />
+      {/* Mic selector moved to Header — no longer rendered here */}
 
       {/* Record/Pause — Manual only */}
       {!continuousMode && (
