@@ -4,7 +4,6 @@ import { CompanyLogo, getCompanyLogoSrc } from '../../shared/CompanyLogo.tsx';
 import FormattedContent from './FormattedContent.jsx';
 import CloudArchitectureDiagram from './CloudArchitectureDiagram.jsx';
 import DiagramSVG from '../features/DiagramSVG.jsx';
-import { MermaidDiagram } from '../../lumora/interview/MermaidDiagram';
 import { getAuthHeaders } from '../../../utils/authHeaders.js';
 import { generateSlug, getProblemBySlug } from '../../../data/capra/problems.js';
 import problemsFull from '../../../data/capra/problems-full.json';
@@ -781,64 +780,64 @@ export default function TopicDetail({
             </div>
           )}
 
-          {/* Mermaid Roadmap Diagram */}
-          {topicDetails.phases && topicDetails.phases.length > 0 && (() => {
-            // Generate mermaid flowchart from phases
-            const sanitize = (s) => s.replace(/[()&/]/g, ' ').replace(/["""'']/g, "'").replace(/\s+/g, ' ').trim();
-            let mermaid = 'graph TD\n';
-            const phaseIds = topicDetails.phases.map((_, i) => `P${i}`);
-            topicDetails.phases.forEach((phase, i) => {
-              const label = sanitize(phase.title);
-              const topicStr = phase.topics.slice(0, 4).map(t => sanitize(t)).join('\\n');
-              const extra = phase.topics.length > 4 ? `\\n+${phase.topics.length - 4} more` : '';
-              mermaid += `  ${phaseIds[i]}["<b>${label}</b>\\n${topicStr}${extra}"]\n`;
-              if (i > 0) mermaid += `  ${phaseIds[i - 1]} --> ${phaseIds[i]}\n`;
-            });
-            // Style nodes
-            topicDetails.phases.forEach((phase, i) => {
-              mermaid += `  style ${phaseIds[i]} fill:${phase.color}18,stroke:${phase.color},stroke-width:2px,color:#1f2937\n`;
-            });
-            return (
-              <div id="roadmap-phases" className="rounded-xl overflow-hidden scroll-mt-24 border border-[#e3e8ee]">
-                <div className="px-4 py-2.5 border-b border-[#e3e8ee] bg-white/80 flex items-center gap-2">
-                  <Icon name="layers" size={14} className="text-amber-600" />
-                  <h3 className="text-sm font-bold text-gray-900 landing-display">Roadmap Diagram</h3>
-                  <span className="text-[10px] landing-mono text-gray-400">{topicDetails.phases.length} phases</span>
-                </div>
-                <div className="p-4 overflow-x-auto">
-                  <MermaidDiagram content={mermaid} className="w-full min-h-[300px]" />
-                </div>
-                {/* Detailed phase breakdown below the diagram */}
-                <div className="border-t border-[#e3e8ee] p-4">
-                  <div className="text-[10px] landing-mono text-gray-400 uppercase tracking-widest mb-3">Phase Details</div>
-                  <div className="space-y-2">
-                    {topicDetails.phases.map((phase, phaseIdx) => (
-                      <details key={phaseIdx} className="group rounded-lg border border-gray-200 overflow-hidden">
-                        <summary className="flex items-center gap-2.5 px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors">
-                          <div className="w-6 h-6 rounded-md flex items-center justify-center text-white text-[10px] font-bold" style={{ background: phase.color }}>
-                            {phaseIdx + 1}
-                          </div>
-                          <span className="text-sm font-semibold text-gray-900 landing-display flex-1">{phase.title}</span>
-                          <span className="text-[10px] landing-mono text-gray-400">{phase.topics.length} topics</span>
-                          <Icon name="chevronDown" size={12} className="text-gray-400 group-open:rotate-180 transition-transform" />
-                        </summary>
-                        <div className="px-3 pb-3 pt-1">
-                          <div className="flex flex-wrap gap-1.5">
-                            {phase.topics.map((topic, tIdx) => (
-                              <span key={tIdx} className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-md border font-medium landing-body" style={{ borderColor: `${phase.color}30`, background: `${phase.color}08` }}>
-                                <span className="w-1.5 h-1.5 rounded-full" style={{ background: phase.color }} />
-                                {topic}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      </details>
-                    ))}
-                  </div>
-                </div>
+          {/* Visual Roadmap — dark spine with branching topics */}
+          {topicDetails.phases && topicDetails.phases.length > 0 && (
+            <div id="roadmap-phases" className="rounded-xl overflow-hidden scroll-mt-24 border border-gray-800" style={{ background: '#0f1221' }}>
+              <div className="px-5 py-3 border-b border-gray-700/50 flex items-center gap-2">
+                <Icon name="layers" size={14} className="text-indigo-400" />
+                <h3 className="text-sm font-bold text-white landing-display">{topicDetails.title} Roadmap</h3>
+                <span className="text-[10px] landing-mono text-gray-500">{topicDetails.phases.length} phases, {topicDetails.phases.reduce((a, p) => a + p.topics.length, 0)} topics</span>
               </div>
-            );
-          })()}
+              <div className="relative px-4 py-8">
+                {/* Central vertical spine */}
+                <div className="absolute left-1/2 top-0 bottom-0 w-0.5 -translate-x-1/2" style={{ background: 'linear-gradient(180deg, #6366f1, #10b981, #f59e0b, #ef4444, #6366f1)' }} />
+
+                {topicDetails.phases.map((phase, phaseIdx) => {
+                  const topics = phase.topics;
+                  const leftTopics = topics.slice(0, Math.ceil(topics.length / 2));
+                  const rightTopics = topics.slice(Math.ceil(topics.length / 2));
+                  return (
+                    <div key={phaseIdx} className="relative mb-2">
+                      {/* Phase title — centered on spine */}
+                      <div className="flex justify-center relative z-10 mb-4">
+                        <div className="px-5 py-2 rounded-lg text-sm font-bold text-white shadow-lg landing-display" style={{ background: phase.color, boxShadow: `0 0 20px ${phase.color}40` }}>
+                          {phase.title}
+                        </div>
+                      </div>
+
+                      {/* Topics branching left and right */}
+                      <div className="grid grid-cols-2 gap-x-12 relative">
+                        {/* Left column */}
+                        <div className="flex flex-col items-end gap-2 pr-4">
+                          {leftTopics.map((topic, tIdx) => (
+                            <div key={tIdx} className="relative flex items-center">
+                              <div className="px-3 py-2 rounded-lg text-xs font-medium text-gray-200 border landing-body max-w-[260px] text-right" style={{ background: 'rgba(255,255,255,0.04)', borderColor: `${phase.color}40` }}>
+                                {topic}
+                              </div>
+                              {/* Connector to spine */}
+                              <div className="w-4 h-px ml-2 shrink-0" style={{ background: `${phase.color}60` }} />
+                            </div>
+                          ))}
+                        </div>
+                        {/* Right column */}
+                        <div className="flex flex-col items-start gap-2 pl-4">
+                          {rightTopics.map((topic, tIdx) => (
+                            <div key={tIdx} className="relative flex items-center">
+                              {/* Connector to spine */}
+                              <div className="w-4 h-px mr-2 shrink-0" style={{ background: `${phase.color}60` }} />
+                              <div className="px-3 py-2 rounded-lg text-xs font-medium text-gray-200 border landing-body max-w-[260px]" style={{ background: 'rgba(255,255,255,0.04)', borderColor: `${phase.color}40` }}>
+                                {topic}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Key Questions / FAQ */}
           {topicDetails.keyQuestions && topicDetails.keyQuestions.length > 0 && (
