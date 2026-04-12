@@ -395,18 +395,16 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
 
       const result = await response.json();
 
-      if (result.success && result.image_url) {
-        const imageUrl = result.image_url.startsWith('http') ? result.image_url : `${API_URL}${result.image_url}`;
-        setDiagramCache(prev => ({
-          ...prev,
-          [cacheKey]: {
-            imageUrl,
-            cloudProvider: result.cloud_provider,
-            pythonCode: result.python_code,
-            detailLevel,
-            direction,
-          }
-        }));
+      if (result.success && (result.image_url || result.mermaid_code)) {
+        const entry = { cloudProvider: result.cloud_provider, detailLevel, direction };
+        if (result.image_url) {
+          entry.imageUrl = result.image_url.startsWith('http') ? result.image_url : `${API_URL}${result.image_url}`;
+          entry.pythonCode = result.python_code;
+        }
+        if (result.mermaid_code) {
+          entry.mermaidCode = result.mermaid_code;
+        }
+        setDiagramCache(prev => ({ ...prev, [cacheKey]: entry }));
       } else {
         throw new Error(result.error || 'Diagram generation failed');
       }
@@ -481,15 +479,21 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
           onMouseLeave={() => setIsDragging(false)}
         >
           {diagramData && !diagramError ? (
-            <>
-              {!diagramImgLoaded && (
-                <div className="flex flex-col items-center justify-center h-full text-gray-400">
-                  <svg className="w-6 h-6 animate-spin text-emerald-500 mb-2" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" /></svg>
-                  <span className="text-xs">Loading diagram...</span>
-                </div>
-              )}
-              <img src={diagramData.imageUrl} alt="Cloud Architecture" className="select-none" draggable={false} style={{ transform: `translate(${diagramTranslate.x}px, ${diagramTranslate.y}px) scale(${diagramScale})`, transformOrigin: '0 0', maxWidth: 'none', display: diagramImgLoaded ? 'block' : 'none' }} onLoad={() => setDiagramImgLoaded(true)} onError={() => { setDiagramImgLoaded(false); setDiagramError({ message: 'Image failed to load. Click Retry to regenerate.', subscriptionRequired: false }); }} />
-            </>
+            diagramData.imageUrl ? (
+              <>
+                {!diagramImgLoaded && (
+                  <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                    <svg className="w-6 h-6 animate-spin text-emerald-500 mb-2" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" /></svg>
+                    <span className="text-xs">Loading diagram...</span>
+                  </div>
+                )}
+                <img src={diagramData.imageUrl} alt="Cloud Architecture" className="select-none" draggable={false} style={{ transform: `translate(${diagramTranslate.x}px, ${diagramTranslate.y}px) scale(${diagramScale})`, transformOrigin: '0 0', maxWidth: 'none', display: diagramImgLoaded ? 'block' : 'none' }} onLoad={() => setDiagramImgLoaded(true)} onError={() => { setDiagramImgLoaded(false); setDiagramError({ message: 'Image failed to load. Click Retry to regenerate.', subscriptionRequired: false }); }} />
+              </>
+            ) : diagramData.mermaidCode ? (
+              <div className="p-2 bg-white rounded" style={{ transform: `scale(${diagramScale})`, transformOrigin: '0 0' }}>
+                <MermaidDiagram content={diagramData.mermaidCode} />
+              </div>
+            ) : null
           ) : generatingDiagram ? (
             <div className="flex flex-col items-center justify-center h-full text-gray-500">
               <svg className="w-6 h-6 animate-spin text-emerald-500 mb-2" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" /></svg>
@@ -525,7 +529,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
           )}
         </div>
         <DiagramModal isOpen={diagramModal} onClose={() => setDiagramModal(false)} title={`Architecture Diagram${diagramData?.cloudProvider ? ` (${diagramData.cloudProvider.toUpperCase()})` : ''}`}>
-          {diagramData && <div className="max-w-full max-h-full"><img src={diagramData.imageUrl} alt="Cloud Architecture" className="max-w-full max-h-[80vh] object-contain" /></div>}
+          {diagramData && <div className="max-w-full max-h-full">{diagramData.imageUrl ? <img src={diagramData.imageUrl} alt="Cloud Architecture" className="max-w-full max-h-[80vh] object-contain" /> : diagramData.mermaidCode ? <MermaidDiagram content={diagramData.mermaidCode} /> : null}</div>}
         </DiagramModal>
       </div>
     );
@@ -981,11 +985,15 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
         >
           {diagramData && (
             <div className="max-w-full max-h-full">
-              <CloudArchitectureDiagram
-                imageUrl={diagramData.imageUrl}
-                expanded={true}
-                cloudProvider={diagramData.cloudProvider}
-              />
+              {diagramData.imageUrl ? (
+                <CloudArchitectureDiagram
+                  imageUrl={diagramData.imageUrl}
+                  expanded={true}
+                  cloudProvider={diagramData.cloudProvider}
+                />
+              ) : diagramData.mermaidCode ? (
+                <MermaidDiagram content={diagramData.mermaidCode} />
+              ) : null}
             </div>
           )}
         </DiagramModal>
