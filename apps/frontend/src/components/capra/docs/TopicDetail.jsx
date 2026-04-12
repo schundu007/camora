@@ -764,24 +764,6 @@ export default function TopicDetail({
             </div>
           )}
 
-          {/* Generate Roadmap Diagram CTA */}
-          <div className="rounded-xl overflow-hidden scroll-mt-24 border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50">
-            <div className="p-6 text-center">
-              <div className="w-12 h-12 rounded-xl bg-amber-100 border border-amber-200 flex items-center justify-center mx-auto mb-3">
-                <Icon name="trendingUp" size={20} className="text-amber-600" />
-              </div>
-              <h3 className="text-lg font-bold text-gray-900 landing-display mb-1">Generate Visual Diagram</h3>
-              <p className="text-sm text-gray-500 landing-body mb-4">Get an AI-generated architecture-style visual roadmap diagram.</p>
-              <button
-                onClick={() => handleAskAI(`Generate a detailed visual learning roadmap for: ${topicDetails.title}\n\nPhases:\n${(topicDetails.phases || []).map((p, i) => `${i + 1}. ${p.title}: ${p.topics.join(', ')}`).join('\n')}\n\nCreate a comprehensive study plan with:\n1. Recommended time allocation per phase\n2. Key resources and projects for each phase\n3. Milestones to measure progress\n4. Common mistakes to avoid\n5. How to know when you're ready to move to the next phase`)}
-                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold text-white landing-display transition-all hover:opacity-90"
-                style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)', boxShadow: '0 2px 8px rgba(245,158,11,0.3)' }}
-              >
-                <Icon name="zap" size={14} />
-                Generate Study Plan
-              </button>
-            </div>
-          </div>
         </div>
       )}
 
