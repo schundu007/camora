@@ -632,7 +632,7 @@ export default function TopicDetail({
               className="flex-1 px-3 py-2.5 rounded-lg text-sm text-gray-900 placeholder-gray-500 focus:outline-none border border-[#e3e8ee] bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-300 landing-body"
             />
             <button
-              onClick={handleAskAI}
+              onClick={() => handleAskAI()}
               disabled={aiLoading || !aiQuestion.trim()}
               className="px-3 py-2.5 rounded-lg text-sm font-semibold bg-emerald-500 text-white hover:bg-emerald-600 disabled:opacity-50 transition-all landing-body"
             >
