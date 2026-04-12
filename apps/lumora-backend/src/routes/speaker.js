@@ -10,8 +10,16 @@
  */
 import { Router } from 'express';
 import multer from 'multer';
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
+import { randomUUID } from 'crypto';
+import { execFile } from 'child_process';
+import { promisify } from 'util';
 import { authenticate } from '../middleware/authenticate.js';
-import { proxyToAIService } from '../services/aiServiceProxy.js';
+import { proxyToAIService, AI_SERVICES_URL } from '../services/aiServiceProxy.js';
+
+const execFileAsync = promisify(execFile);
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } }); // 10 MB
@@ -28,47 +36,32 @@ router.post('/enroll', upload.single('audio'), async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ error: 'Audio file is required (field name: "audio")' });
     }
-    console.log(`[Speaker] Received file: name=${req.file.originalname}, size=${req.file.size}, mime=${req.file.mimetype}, bufferLen=${req.file.buffer?.length}`);
-
-    const fs = await import('fs');
-    const os = await import('os');
-    const path = await import('path');
-    const { randomUUID } = await import('crypto');
-    const { execFile } = await import('child_process');
-    const { promisify } = await import('util');
-    const execFileAsync = promisify(execFile);
+    console.log(`[Speaker] Received: name=${req.file.originalname}, size=${req.file.size}, mime=${req.file.mimetype}`);
 
     const id = randomUUID();
-    const tmpDir = os.default.tmpdir();
-    const inputPath = path.default.join(tmpDir, `enroll-${id}.webm`);
-    const wavPath = path.default.join(tmpDir, `enroll-${id}.wav`);
+    const tmpDir = os.tmpdir();
+    const inputPath = path.join(tmpDir, `enroll-${id}.webm`);
+    const wavPath = path.join(tmpDir, `enroll-${id}.wav`);
 
-    // Write browser audio to temp file
-    fs.default.writeFileSync(inputPath, req.file.buffer);
+    fs.writeFileSync(inputPath, req.file.buffer);
 
-    let audioBuffer;
-    let filename;
-    let mime;
+    let audioBuffer, filename, mime;
 
     try {
-      // Convert WebM → WAV (16kHz mono) — AI service processes WAV reliably
       await execFileAsync('ffmpeg', ['-y', '-i', inputPath, '-ar', '16000', '-ac', '1', '-f', 'wav', wavPath]);
-      audioBuffer = fs.default.readFileSync(wavPath);
+      audioBuffer = fs.readFileSync(wavPath);
       filename = 'enrollment.wav';
       mime = 'audio/wav';
       console.log(`[Speaker] Converted to WAV: ${audioBuffer.length} bytes`);
     } catch (ffmpegErr) {
-      // ffmpeg failed — send original
-      console.warn(`[Speaker] ffmpeg conversion failed, sending original: ${ffmpegErr.message}`);
+      console.warn(`[Speaker] ffmpeg failed, sending original: ${ffmpegErr.message}`);
       audioBuffer = req.file.buffer;
       filename = req.file.originalname || 'audio.webm';
       mime = req.file.mimetype || 'audio/webm';
     }
 
-    // Build raw multipart
-    const { AI_SERVICES_URL } = await import('../services/aiServiceProxy.js');
     const url = `${AI_SERVICES_URL}/speaker/enroll`;
-    const boundary = '----FormBoundary' + randomUUID().replace(/-/g, '');
+    const boundary = '----FormBoundary' + id.replace(/-/g, '');
 
     const parts = [];
     parts.push(Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="audio"; filename="${filename}"\r\nContent-Type: ${mime}\r\n\r\n`));
@@ -92,15 +85,11 @@ router.post('/enroll', upload.single('audio'), async (req, res) => {
     console.error('[Speaker] Enroll error:', err.message || err);
     return res.status(500).json({ error: 'Speaker enrollment failed: ' + (err.message || 'unknown error') });
   } finally {
-    // Cleanup temp files
     try {
-      const fs = await import('fs');
-      const os = await import('os');
-      const path = await import('path');
-      const tmpDir = os.default.tmpdir();
-      for (const f of fs.default.readdirSync(tmpDir)) {
+      const tmpDir = os.tmpdir();
+      for (const f of fs.readdirSync(tmpDir)) {
         if (f.startsWith('enroll-') && (f.endsWith('.webm') || f.endsWith('.wav'))) {
-          try { fs.default.unlinkSync(path.default.join(tmpDir, f)); } catch {}
+          try { fs.unlinkSync(path.join(tmpDir, f)); } catch {}
         }
       }
     } catch {}

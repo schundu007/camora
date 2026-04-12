@@ -28,6 +28,7 @@ import ascendPrepRouter from './routes/ascendPrep.js';
 import diagramRouter from './routes/diagram.js';
 import transcribeRouter from './routes/transcribe.js';
 import voiceRouter from './routes/voice.js';
+import resumeRouter from './routes/resume.js';
 import billingRouter from './routes/billing.js';
 import creditsRouter from './routes/credits.js';
 import usageRouter from './routes/usage.js';
@@ -746,6 +747,7 @@ app.use('/api/job-analyze', authenticate, aiLimiter, jobAnalyzeRouter);
 // Voice assistant routes (SSE + REST)
 // No rate limiter on /events endpoint for real-time streaming
 app.use('/api/voice', authenticate, voiceRouter);
+app.use('/api/v1/resume', aiLimiter, resumeRouter);
 
 // Enhanced health check
 app.get('/api/health', (req, res) => {

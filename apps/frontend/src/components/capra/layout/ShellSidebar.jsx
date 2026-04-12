@@ -17,6 +17,7 @@ const PREPARE_ITEMS = [
   { id: 'roadmaps', label: 'Roadmaps', icon: 'trendingUp', href: '/capra/prepare/roadmaps' },
   { id: 'eng-blogs', label: 'Eng Blogs', icon: 'bookOpen', href: '/capra/prepare/eng-blogs' },
   { id: 'behavioral', label: 'Behavioral', icon: 'users', href: '/capra/prepare/behavioral' },
+  { id: 'resume', label: 'Resume & CL', icon: 'fileText', href: '/capra/prepare/resume' },
 ];
 
 const PRACTICE_ITEMS = [
