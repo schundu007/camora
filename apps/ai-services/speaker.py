@@ -68,13 +68,30 @@ def _convert_to_wav(input_bytes: bytes, suffix: str = ".webm") -> str:
         os.unlink(tmp_in.name)
 
 
-def _embed_audio(audio_bytes: bytes) -> np.ndarray:
+def _embed_audio(audio_bytes: bytes, suffix: str = ".webm") -> np.ndarray:
     """Convert raw audio bytes to a 256-dim voice embedding."""
-    wav_path = _convert_to_wav(audio_bytes)
+    wav_path = _convert_to_wav(audio_bytes, suffix=suffix)
     try:
         wav = preprocess_wav(wav_path)
         if len(wav) == 0:
-            raise ValueError("Audio file produced empty waveform after preprocessing")
+            # Fallback: load raw WAV without VAD preprocessing
+            import soundfile as sf
+            try:
+                wav_raw, sr = sf.read(wav_path)
+                if sr != 16000:
+                    import librosa
+                    wav_raw = librosa.resample(wav_raw, orig_sr=sr, target_sr=16000)
+                wav = wav_raw
+            except Exception:
+                # Last resort: numpy from raw bytes
+                import wave
+                with wave.open(wav_path, 'rb') as wf:
+                    frames = wf.readframes(wf.getnframes())
+                    wav = np.frombuffer(frames, dtype=np.int16).astype(np.float32) / 32768.0
+
+            if len(wav) == 0:
+                raise ValueError("Audio file produced empty waveform after all preprocessing attempts")
+
         encoder = _get_encoder()
         embedding = encoder.embed_utterance(wav)
         return embedding
@@ -118,12 +135,19 @@ async def speaker_enroll(
         if not audio_bytes:
             raise HTTPException(status_code=400, detail="Empty audio file")
 
-        embedding = _embed_audio(audio_bytes)
+        # Detect suffix from filename
+        fname = audio.filename or "audio.webm"
+        suffix = "." + fname.rsplit(".", 1)[-1] if "." in fname else ".webm"
+        print(f"[Speaker] Enrolling user {user_id}, file={fname}, size={len(audio_bytes)}, suffix={suffix}")
+
+        embedding = _embed_audio(audio_bytes, suffix=suffix)
         np.save(str(_embedding_path(user_id)), embedding)
         return {"success": True, "message": "Voice enrolled successfully"}
     except HTTPException:
         raise
     except Exception as exc:
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(exc))
 
 
@@ -180,7 +204,9 @@ async def speaker_verify(
             raise HTTPException(status_code=400, detail="Empty audio file")
 
         stored_embedding = np.load(str(path))
-        current_embedding = _embed_audio(audio_bytes)
+        fname = file.filename or "audio.webm"
+        suffix = "." + fname.rsplit(".", 1)[-1] if "." in fname else ".webm"
+        current_embedding = _embed_audio(audio_bytes, suffix=suffix)
         similarity = _cosine_similarity(stored_embedding, current_embedding)
 
         return {
