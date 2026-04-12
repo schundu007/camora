@@ -87,6 +87,41 @@ async function verifySpeaker(userId, audioBuffer, filename) {
   }
 }
 
+/**
+ * Call the ai-services diarize endpoint for two-speaker segmentation.
+ * Returns { should_transcribe, segments, interviewer_ratio }.
+ * Falls back to simple verify on error.
+ */
+async function diarizeSpeaker(userId, audioBuffer, filename) {
+  try {
+    const boundary = '----FormBoundary' + Math.random().toString(36).slice(2);
+    const mime = filename.endsWith('.wav') ? 'audio/wav' : 'audio/webm';
+    const parts = [];
+    parts.push(Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="audio"; filename="${filename}"\r\nContent-Type: ${mime}\r\n\r\n`));
+    parts.push(Buffer.isBuffer(audioBuffer) ? audioBuffer : Buffer.from(audioBuffer));
+    parts.push(Buffer.from('\r\n'));
+    parts.push(Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="user_id"\r\n\r\n${userId}\r\n`));
+    parts.push(Buffer.from(`--${boundary}--\r\n`));
+
+    const res = await fetch(`${AI_SERVICES_URL}/speaker/diarize`, {
+      method: 'POST',
+      headers: { 'Content-Type': `multipart/form-data; boundary=${boundary}` },
+      body: Buffer.concat(parts),
+      signal: AbortSignal.timeout(10000), // diarization takes longer
+    });
+
+    if (!res.ok) {
+      console.warn(`Diarization failed (${res.status}), falling back to verify`);
+      return verifySpeaker(userId, audioBuffer, filename);
+    }
+
+    return res.json();
+  } catch (err) {
+    console.warn(`Diarization unreachable: ${err.message}, falling back to verify`);
+    return verifySpeaker(userId, audioBuffer, filename);
+  }
+}
+
 // ── POST / (mounted at /api/v1/transcribe) ──────────────────────────────────
 router.post(
   '/',
@@ -113,26 +148,35 @@ router.post(
       const filterUserVoice =
         req.body.filter_user_voice === 'true' || req.body.filter_user_voice === true;
 
-      // ── Speaker verification (optional) ──────────────────────────────
+      // ── Speaker diarization / verification (optional) ─────────────────
       if (filterUserVoice) {
-        const verification = await verifySpeaker(
+        const diarization = await diarizeSpeaker(
           String(req.user.id),
           file.buffer,
           file.originalname || 'audio.webm',
         );
 
-        if (!verification.should_transcribe) {
+        if (!diarization.should_transcribe) {
+          const ratio = diarization.interviewer_ratio ?? diarization.similarity ?? 0;
           console.info(
             `Skipped transcription for user ${req.user.email}: ` +
-            `user voice detected (similarity=${verification.similarity.toFixed(3)})`,
+            `candidate voice detected (interviewer_ratio=${(ratio).toFixed(3)})`,
           );
           return res.json({
             text: '',
             latency_ms: 0,
             skipped: true,
             reason: 'user_voice_detected',
-            similarity: verification.similarity,
+            similarity: diarization.similarity || 0,
+            segments: diarization.segments,
+            interviewer_ratio: diarization.interviewer_ratio,
           });
+        }
+
+        // Log diarization results for debugging
+        if (diarization.segments) {
+          const speakers = diarization.segments.map(s => s.speaker);
+          console.info(`Diarization: ${speakers.join(' → ')} (interviewer=${(diarization.interviewer_ratio * 100).toFixed(0)}%)`);
         }
       }
 
