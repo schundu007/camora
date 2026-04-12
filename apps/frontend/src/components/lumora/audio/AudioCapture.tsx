@@ -305,14 +305,14 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
 
   return (
     <div className="flex items-center gap-1.5 flex-nowrap whitespace-nowrap">
-      {/* Mode Selector */}
-      <div className="flex items-center rounded-lg overflow-hidden shrink-0" style={{ border: '1px solid rgba(255,255,255,0.1)' }}>
+      {/* Mode Selector — unified monochrome */}
+      <div className="flex items-center rounded-lg overflow-hidden shrink-0" style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
         <button
           onClick={() => { if (!continuousMode) handleModeToggle(); }}
-          className="flex items-center gap-1 px-2 py-1 text-[11px] font-bold transition-all"
+          className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold transition-all"
           style={continuousMode
-            ? { background: 'linear-gradient(135deg, #ef4444, #dc2626)', color: '#fff', boxShadow: '0 2px 8px rgba(239,68,68,0.3)' }
-            : { color: 'rgba(255,255,255,0.5)' }}
+            ? { background: 'rgba(255,255,255,0.1)', color: '#fff' }
+            : { color: 'rgba(255,255,255,0.35)' }}
           title="Live: always listening, auto-restarts"
         >
           <LiveIcon isActive={continuousMode} />
@@ -320,10 +320,10 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
         </button>
         <button
           onClick={() => { if (continuousMode) handleModeToggle(); }}
-          className="flex items-center gap-1 px-2 py-1 text-[11px] font-bold transition-all"
+          className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold transition-all"
           style={!continuousMode
-            ? { background: 'linear-gradient(135deg, #10b981, #059669)', color: '#fff', boxShadow: '0 2px 8px rgba(16,185,129,0.3)' }
-            : { color: 'rgba(255,255,255,0.5)', borderLeft: '1px solid rgba(255,255,255,0.06)' }}
+            ? { background: 'rgba(255,255,255,0.1)', color: '#fff', borderLeft: '1px solid rgba(255,255,255,0.06)' }
+            : { color: 'rgba(255,255,255,0.35)', borderLeft: '1px solid rgba(255,255,255,0.06)' }}
           title="Manual: press Cmd+M to start/stop"
         >
           <MicIcon isActive={!continuousMode && storeIsRecording} />
@@ -348,8 +348,8 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
           onClick={handleToggle}
           className="flex items-center gap-1 px-2 py-1 text-[11px] font-bold rounded-lg transition-all shrink-0"
           style={storeIsRecording
-            ? { background: 'rgba(239,68,68,0.15)', color: '#f87171', border: '1px solid rgba(239,68,68,0.2)' }
-            : { background: 'rgba(16,185,129,0.1)', color: '#34d399', border: '1px solid rgba(16,185,129,0.15)' }}
+            ? { background: 'rgba(255,255,255,0.08)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)' }
+            : { background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.08)' }}
           title={storeIsRecording ? 'Pause (⌘M)' : 'Record (⌘M)'}
         >
           {storeIsRecording ? (
@@ -469,11 +469,10 @@ function SystemAudioButton({ onTranscription, disabled }: { onTranscription?: (t
       <button
         onClick={toggleSystemAudio}
         disabled={disabled}
-        className={`hidden sm:flex items-center gap-1 px-2 py-1 text-xs font-bold rounded border transition-colors shrink-0 ${
-          capturing
-            ? 'bg-red-500 text-white border-red-600 animate-pulse'
-            : 'text-white hover:text-white border-gray-600 hover:bg-gray-800'
-        } disabled:opacity-50`}
+        className="hidden sm:flex items-center gap-1 px-2 py-1 text-[11px] font-bold rounded-lg transition-all shrink-0 disabled:opacity-50"
+        style={capturing
+          ? { background: 'rgba(255,255,255,0.1)', color: '#fff', border: '1px solid rgba(255,255,255,0.15)' }
+          : { color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.08)' }}
         title={capturing ? 'Stop capturing interviewer audio' : 'Capture interviewer audio — share a browser tab with Zoom/Meet'}
       >
         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

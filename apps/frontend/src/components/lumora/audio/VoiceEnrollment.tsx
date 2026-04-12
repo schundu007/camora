@@ -214,7 +214,8 @@ export function VoiceEnrollment({ disabled }: VoiceEnrollmentProps) {
         <button
           onClick={handleEnroll}
           disabled={isEnrolling || disabled}
-          className={`flex items-center gap-1 px-2 py-1 text-xs font-bold border border-gray-500 rounded transition-colors shrink-0 ${isRecording ? 'text-rose-400' : 'text-white font-bold hover:text-white'}`}
+          className="flex items-center gap-1 px-2 py-1 text-[11px] font-bold rounded-lg transition-all shrink-0"
+          style={{ color: isRecording ? '#fff' : 'rgba(255,255,255,0.6)', background: isRecording ? 'rgba(255,255,255,0.08)' : 'transparent', border: '1px solid rgba(255,255,255,0.08)' }}
           title="Enroll your voice so the app can filter it out during interviews"
         >
           {isRecording ? (
@@ -244,7 +245,8 @@ export function VoiceEnrollment({ disabled }: VoiceEnrollmentProps) {
       <button
         onClick={handleToggleFilter}
         disabled={disabled}
-        className={`flex items-center gap-1 px-2 py-1 text-xs font-bold border border-gray-500 rounded transition-colors shrink-0 ${voiceFilterEnabled ? 'text-emerald-400 border-emerald-600' : 'text-white font-bold hover:text-white'}`}
+        className="flex items-center gap-1 px-2 py-1 text-[11px] font-bold rounded-lg transition-all shrink-0"
+        style={{ color: voiceFilterEnabled ? '#34d399' : 'rgba(255,255,255,0.6)', background: voiceFilterEnabled ? 'rgba(16,185,129,0.08)' : 'transparent', border: '1px solid rgba(255,255,255,0.08)' }}
         title={voiceFilterEnabled ? 'Voice filter active - only interviewer is transcribed' : 'Voice filter disabled'}
       >
         <VoiceIcon filled={voiceFilterEnabled} />
