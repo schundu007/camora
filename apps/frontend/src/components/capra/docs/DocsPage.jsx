@@ -527,6 +527,10 @@ export default function DocsPage({ onBack }) {
       if (topicDetails.interviewRelevance) toc.push({ id: 'interview-relevance', label: 'Interview Relevance' });
       if (topicDetails.keyQuestions) toc.push({ id: 'key-questions', label: 'Key Questions' });
       toc.push({ id: 'generate-tutorial', label: 'Generate Tutorial' });
+    } else if (activePage === 'roadmaps') {
+      if (topicDetails.introduction) toc.push({ id: 'overview', label: 'Overview' });
+      if (topicDetails.phases) toc.push({ id: 'roadmap-phases', label: 'Roadmap Phases' });
+      if (topicDetails.keyQuestions) toc.push({ id: 'key-questions', label: 'FAQ' });
     }
     return toc;
   };
@@ -2169,6 +2173,72 @@ export default function DocsPage({ onBack }) {
                                     <div className="flex items-center gap-1.5 shrink-0 mt-1">
                                       {isStarred && <Icon name="star" size={12} className="text-amber-400" />}
                                       <Icon name="chevronRight" size={12} className="text-gray-300 group-hover:text-emerald-500 group-hover:translate-x-0.5 transition-all" />
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Roadmaps Content */}
+              {activePage === 'roadmaps' && (
+                <>
+                  <div className="mb-6">
+                    <div className="mb-4">
+                      <span className="landing-mono text-xs text-amber-600 tracking-widest uppercase">Learning Paths</span>
+                      <h2 className="landing-display font-bold text-xl mt-1 tracking-tight text-gray-900">Roadmaps</h2>
+                      <p className="text-sm text-gray-500 mt-1">12 structured learning paths with visual phase diagrams from beginner to advanced.</p>
+                    </div>
+                    <div className="space-y-3">
+                    {roadmapCategories.map((category) => {
+                      const categoryTopics = filteredTopics.filter(t => roadmapCategoryMap[t.id] === category.id);
+                      if (categoryTopics.length === 0) return null;
+                      return (
+                        <div key={category.id} className="rounded-lg overflow-hidden border border-[#e3e8ee]">
+                          <div className="px-4 py-2.5 flex items-center gap-2.5 bg-gray-50/80 border-b border-[#e3e8ee]">
+                            <Icon name={category.icon} size={14} style={{ color: category.color }} />
+                            <h3 className="landing-display font-semibold text-sm text-gray-900">{category.name}</h3>
+                            <span className="text-[10px] landing-mono text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">{categoryTopics.length}</span>
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                            {categoryTopics.map((topic) => {
+                              const isCompleted = completedTopics[topic.id];
+                              const isStarred = starredTopics[topic.id];
+                              const isLocked = contentAccess.isTopicLocked('roadmaps', topic.id);
+                              return (
+                                <div
+                                  key={topic.id}
+                                  onClick={() => !isLocked && setSelectedTopic(topic.id)}
+                                  className={`group relative px-4 py-3 border-b border-r border-[#e3e8ee] cursor-pointer transition-all duration-150 hover:bg-amber-50/50 ${isLocked ? 'opacity-60' : ''}`}
+                                >
+                                  <div className="flex items-start justify-between gap-2">
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <span className="w-2 h-2 rounded-full shrink-0" style={{ background: topic.color }} />
+                                        <span className="landing-display font-semibold text-sm text-gray-900 truncate">{topic.title}</span>
+                                        {isCompleted && <Icon name="check" size={12} className="text-emerald-500 shrink-0" />}
+                                        {isLocked && <Icon name="lock" size={12} className="text-gray-400 shrink-0" />}
+                                      </div>
+                                      <p className="text-xs text-gray-500 line-clamp-2 mb-2">{topic.description}</p>
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-[10px] landing-mono text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200 font-semibold">
+                                          {topic.phases?.length || 0} phases
+                                        </span>
+                                        <span className="text-[10px] landing-mono text-gray-400">
+                                          {topic.phases?.reduce((acc, p) => acc + p.topics.length, 0) || 0} topics
+                                        </span>
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center gap-1.5 shrink-0 mt-1">
+                                      {isStarred && <Icon name="star" size={12} className="text-amber-400" />}
+                                      <Icon name="chevronRight" size={12} className="text-gray-300 group-hover:text-amber-500 group-hover:translate-x-0.5 transition-all" />
                                     </div>
                                   </div>
                                 </div>
