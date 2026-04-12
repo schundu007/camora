@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useInterviewStore } from '@/stores/interview-store';
 import { DESIGN_BLOCK_TYPES, CODING_BLOCK_TYPES } from '@/lib/constants';
@@ -51,10 +51,20 @@ interface InterviewPanelProps {
   onAskQuestion?: (question: string) => void;
   onSwitchToCoding?: (problem?: string) => void;
   onSwitchToDesign?: (problem?: string) => void;
+  focusedEntry?: number | null;
+  onClearFocus?: () => void;
 }
 
-export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: InterviewPanelProps) {
+export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesign, focusedEntry, onClearFocus }: InterviewPanelProps) {
   const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
+
+  // When sidebar clicks an entry, expand it
+  useEffect(() => {
+    if (focusedEntry !== null && focusedEntry !== undefined) {
+      setExpandedIdx(focusedEntry);
+      onClearFocus?.();
+    }
+  }, [focusedEntry, onClearFocus]);
 
   const {
     question,
