@@ -15,6 +15,7 @@ const PREPARE_ITEMS = [
   { id: 'low-level', label: 'Low-Level Design', icon: 'layers', href: '/capra/prepare/low-level-design' },
   { id: 'projects', label: 'Projects', icon: 'code', href: '/capra/prepare/projects' },
   { id: 'roadmaps', label: 'Roadmaps', icon: 'trendingUp', href: '/capra/prepare/roadmaps' },
+  { id: 'eng-blogs', label: 'Eng Blogs', icon: 'bookOpen', href: '/capra/prepare/eng-blogs' },
   { id: 'behavioral', label: 'Behavioral', icon: 'users', href: '/capra/prepare/behavioral' },
 ];
 
