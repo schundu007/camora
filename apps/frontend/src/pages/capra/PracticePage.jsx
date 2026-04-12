@@ -595,104 +595,51 @@ export default function PracticePage() {
           {/* ── SETUP PHASE ── */}
           {phase === 'setup' && (
             <>
-              {/* Gamification overview */}
-              <div className="mb-6">
+              {/* Compact stats bar */}
+              <div className="mb-4">
                 <GamificationWidget />
               </div>
 
-              {/* Daily Challenge Banner */}
-              <div style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', borderRadius: 16, padding: '22px 26px', marginBottom: 20, position: 'relative', overflow: 'hidden' }}>
-                <div style={{ position: 'absolute', inset: 0, opacity: 0.03, backgroundImage: 'linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px)', backgroundSize: '32px 32px', pointerEvents: 'none' }} />
-                <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 24, flexWrap: 'wrap' }}>
-                  <div style={{ flex: 1, minWidth: 200 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="#34d399"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-                      <span style={{ fontSize: 11, fontWeight: 700, color: '#34d399', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Daily Challenge</span>
-                    </div>
-                    <h2 className="practice-display" style={{ fontSize: 19, fontWeight: 700, color: '#f1f5f9', margin: '0 0 6px' }}>{dailyChallenge.q}</h2>
-                    <p style={{ fontSize: 13, color: '#94a3b8', margin: '0 0 10px', lineHeight: 1.5 }}>{dailyChallenge.desc}</p>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', padding: '3px 10px', borderRadius: 6, background: `${dc.text}18`, color: dc.text }}>{dailyChallenge.difficulty}</span>
-                      <span style={{ fontSize: 11, color: '#64748b' }}>{catLabel(dailyCategory)}</span>
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-                    <button onClick={() => startChallenge(dailyCategory, dailyChallenge.difficulty, [dailyChallenge])} style={{ padding: '12px 28px', background: 'linear-gradient(135deg, #10b981, #059669)', color: '#fff', fontSize: 14, fontWeight: 700, borderRadius: 12, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, boxShadow: '0 4px 14px rgba(16,185,129,0.3)', transition: 'transform 0.15s' }}>
-                      <Icon name="play" size={15} style={{ color: '#fff' }} />
-                      Start
-                    </button>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 14, fontSize: 11, color: '#64748b' }}>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <svg width="12" height="12" viewBox="0 0 20 20" fill="#f59e0b"><path d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z"/></svg>
-                        {stats.streak || 0} day streak
-                      </span>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-                        {socialCount.toLocaleString()} today
-                      </span>
-                    </div>
+              {/* Readiness — compact inline */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16, padding: '12px 20px', background: '#fff', border: '1px solid #e3e8ee', borderRadius: 12 }}>
+                {/* Readiness score */}
+                <div style={{ position: 'relative', width: 50, height: 50, shrink: 0 }}>
+                  <svg width={50} height={50} style={{ transform: 'rotate(-90deg)' }}>
+                    <circle cx={25} cy={25} r={20} fill="none" stroke="#f1f5f9" strokeWidth={5} />
+                    <circle cx={25} cy={25} r={20} fill="none" stroke={readiness >= 70 ? '#10b981' : readiness >= 40 ? '#f59e0b' : '#ef4444'} strokeWidth={5} strokeDasharray={126} strokeDashoffset={126 - (readiness / 100) * 126} strokeLinecap="round" />
+                  </svg>
+                  <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <span className="practice-display" style={{ fontSize: 14, fontWeight: 800, color: '#0f172a' }}>{readiness}</span>
                   </div>
                 </div>
-              </div>
-
-              {/* Readiness Dashboard */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 16, marginBottom: 20 }}>
-                {/* Readiness score card */}
-                <div style={{ background: '#fff', border: '1px solid #e3e8ee', borderRadius: 16, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                  <div style={{ position: 'relative', width: 110, height: 110 }}>
-                    <svg width={110} height={110} style={{ transform: 'rotate(-90deg)' }}>
-                      <circle cx={55} cy={55} r={46} fill="none" stroke="#f1f5f9" strokeWidth={10} />
-                      <circle cx={55} cy={55} r={46} fill="none" stroke={readiness >= 70 ? '#10b981' : readiness >= 40 ? '#f59e0b' : '#ef4444'} strokeWidth={10} strokeDasharray={289} strokeDashoffset={289 - (readiness / 100) * 289} strokeLinecap="round" style={{ transition: 'stroke-dashoffset 0.8s ease' }} />
-                    </svg>
-                    <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                      <span className="practice-display" style={{ fontSize: 30, fontWeight: 800, color: '#0f172a', lineHeight: 1 }}>{readiness}</span>
-                      <span style={{ fontSize: 10, color: '#94a3b8', fontWeight: 600 }}>/ 100</span>
-                    </div>
+                {/* Stats inline */}
+                {[
+                  { label: 'Done', value: stats.totalCompleted || 0 },
+                  { label: 'Streak', value: `${stats.streak || 0}d` },
+                  { label: 'Best', value: `${stats.bestScore || 0}%` },
+                ].map(s => (
+                  <div key={s.label} style={{ textAlign: 'center' }}>
+                    <div className="practice-mono" style={{ fontSize: 16, fontWeight: 800, color: '#0f172a' }}>{s.value}</div>
+                    <div style={{ fontSize: 9, color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase' }}>{s.label}</div>
                   </div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: '#334155', marginTop: 10 }}>Interview Ready</div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, width: '100%', marginTop: 14 }}>
-                    {[
-                      { label: 'Done', value: stats.totalCompleted || 0 },
-                      { label: 'Streak', value: `${stats.streak || 0}d` },
-                      { label: 'Best', value: `${stats.bestScore || 0}%` },
-                      { label: 'Avg', value: formatTime(Math.round(CATEGORIES.reduce((a, c) => a + (stats.categories?.[c]?.avgTime || 0), 0) / 3)) },
-                    ].map(s => (
-                      <div key={s.label} style={{ textAlign: 'center', padding: '8px 0', background: '#f8fafc', borderRadius: 10 }}>
-                        <div className="practice-mono" style={{ fontSize: 16, fontWeight: 800, color: '#0f172a' }}>{s.value}</div>
-                        <div style={{ fontSize: 9, color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{s.label}</div>
+                ))}
+                <div style={{ width: 1, height: 30, background: '#e3e8ee' }} />
+                {/* Category bars inline */}
+                {CATEGORIES.map(cat => {
+                  const s = getCategoryScore(stats, cat);
+                  const colors = { coding: '#8b5cf6', 'system-design': '#06b6d4', behavioral: '#f59e0b' };
+                  return (
+                    <div key={cat} style={{ flex: 1, minWidth: 80 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, marginBottom: 3 }}>
+                        <span style={{ fontWeight: 600, color: '#374151' }}>{catLabel(cat)}</span>
+                        <span className="practice-mono" style={{ fontWeight: 700, color: s >= 70 ? '#10b981' : '#94a3b8' }}>{s}%</span>
                       </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Category breakdown */}
-                <div style={{ background: '#fff', border: '1px solid #e3e8ee', borderRadius: 16, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-                  <h2 className="practice-display" style={{ fontSize: 15, fontWeight: 700, color: '#0f172a', margin: '0 0 18px' }}>Category Progress</h2>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                    {CATEGORIES.map(cat => {
-                      const s = getCategoryScore(stats, cat);
-                      const completed = stats.categories?.[cat]?.completed || 0;
-                      const colors = { coding: '#8b5cf6', 'system-design': '#06b6d4', behavioral: '#f59e0b' };
-                      return (
-                        <div key={cat}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                              <div style={{ width: 8, height: 8, borderRadius: 3, background: colors[cat] }} />
-                              <span style={{ fontSize: 14, fontWeight: 600, color: '#1e293b' }}>{catLabel(cat)}</span>
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                              <span style={{ fontSize: 12, color: '#94a3b8', fontWeight: 500 }}>{completed} done</span>
-                              <span className="practice-mono" style={{ fontSize: 14, fontWeight: 800, color: s >= 70 ? '#10b981' : s >= 40 ? '#f59e0b' : '#94a3b8', minWidth: 36, textAlign: 'right' }}>{s}%</span>
-                            </div>
-                          </div>
-                          <div style={{ height: 8, borderRadius: 99, background: '#f1f5f9', overflow: 'hidden' }}>
-                            <div style={{ height: '100%', borderRadius: 99, background: `linear-gradient(90deg, ${colors[cat]}, ${colors[cat]}cc)`, width: `${Math.max(s, 2)}%`, transition: 'width 0.6s ease', opacity: s > 0 ? 1 : 0.2 }} />
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
+                      <div style={{ height: 4, borderRadius: 99, background: '#f1f5f9', overflow: 'hidden' }}>
+                        <div style={{ height: '100%', borderRadius: 99, background: colors[cat], width: `${Math.max(s, 2)}%`, opacity: s > 0 ? 1 : 0.2 }} />
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
 
               {/* Challenge Configuration */}
