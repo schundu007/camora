@@ -1,24 +1,22 @@
 /**
- * Code execution service — sandboxed test runner for coding solutions.
+ * Code execution service — sandboxed runner for 30+ languages.
  *
- * Supports: Python, JavaScript, Ruby.
+ * Supports interpreted, compiled, and special-case languages.
  * Uses child_process.execFile (not exec) for sandboxed execution.
- * Timeout: 10 seconds per test case.
- *
- * Migrated from Python FastAPI — the `exec()` fallthrough from the Python
- * version is intentionally NOT ported (security issue).
+ * Timeout: 10s per run, 15s for compilation.
  */
 import { execFile } from 'node:child_process';
-import { writeFile, unlink } from 'node:fs/promises';
+import { writeFile, unlink, mkdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { which } from '../utils/which.js';
 
 const TIMEOUT_MS = 10_000;
+const COMPILE_TIMEOUT_MS = 15_000;
 
 // ---------------------------------------------------------------------------
-// Runtime map: language -> base runtime
+// Language → runtime mapping
 // ---------------------------------------------------------------------------
 
 const RUNTIME_MAP = {
@@ -30,32 +28,233 @@ const RUNTIME_MAP = {
   javascript: 'javascript', typescript: 'javascript',
   react: 'javascript', vue: 'javascript', angular: 'javascript',
   svelte: 'javascript', nextjs: 'javascript', nodejs: 'javascript',
+  coffeescript: 'javascript',
   // Ruby
   ruby: 'ruby', rails: 'ruby',
-};
-
-const CMD_MAP = {
-  python: 'python3',
-  javascript: 'node',
-  ruby: 'ruby',
-};
-
-const EXT_MAP = {
-  python: '.py',
-  javascript: '.js',
-  ruby: '.rb',
+  // Compiled
+  java: 'java', spring: 'java',
+  c: 'c',
+  cpp: 'cpp',
+  go: 'go',
+  rust: 'rust',
+  csharp: 'csharp',
+  objectivec: 'objectivec',
+  // Interpreted
+  php: 'php',
+  swift: 'swift',
+  kotlin: 'kotlin',
+  scala: 'scala',
+  bash: 'bash',
+  perl: 'perl',
+  lua: 'lua',
+  r: 'r',
+  haskell: 'haskell',
+  elixir: 'elixir',
+  erlang: 'erlang',
+  ocaml: 'ocaml',
+  dart: 'dart',
+  julia: 'julia',
+  tcl: 'tcl',
+  clojure: 'clojure',
+  fsharp: 'fsharp',
+  vb: 'vb',
 };
 
 // ---------------------------------------------------------------------------
-// Runner builders — produce self-contained scripts that call user code
+// Execution configs by type
 // ---------------------------------------------------------------------------
 
-/**
- * Build a Python runner script.
- *
- * Strips any __main__ block, introspects the user's function, parses test
- * input, and prints the result.
- */
+// Interpreted: execFile(cmd, [filePath])
+const INTERPRETED = {
+  python:     { cmd: 'python3',  ext: '.py' },
+  javascript: { cmd: 'node',     ext: '.js' },
+  ruby:       { cmd: 'ruby',     ext: '.rb' },
+  php:        { cmd: 'php',      ext: '.php' },
+  perl:       { cmd: 'perl',     ext: '.pl' },
+  lua:        { cmd: 'lua',      ext: '.lua' },
+  bash:       { cmd: 'bash',     ext: '.sh' },
+  r:          { cmd: 'Rscript',  ext: '.R' },
+  haskell:    { cmd: 'runghc',   ext: '.hs' },
+  swift:      { cmd: 'swift',    ext: '.swift' },
+  elixir:     { cmd: 'elixir',   ext: '.exs' },
+  ocaml:      { cmd: 'ocaml',    ext: '.ml' },
+  julia:      { cmd: 'julia',    ext: '.jl' },
+  tcl:        { cmd: 'tclsh',    ext: '.tcl' },
+  erlang:     { cmd: 'escript',  ext: '.erl' },
+  scala:      { cmd: 'scala',    ext: '.scala' },
+  clojure:    { cmd: 'clojure',  ext: '.clj' },
+  fsharp:     { cmd: 'dotnet-script', ext: '.fsx' },
+  vb:         { cmd: 'vbnc',     ext: '.vb' },
+};
+
+// Subcommand: execFile(cmd, [subcmd, filePath])
+const SUBCOMMAND = {
+  go:     { cmd: 'go',      subcmd: 'run',     ext: '.go' },
+  dart:   { cmd: 'dart',    subcmd: 'run',     ext: '.dart' },
+  kotlin: { cmd: 'kotlinc', subcmd: '-script', ext: '.kts' },
+};
+
+// Compiled: compile first, then run the binary
+const COMPILED = {
+  c:          { compiler: 'gcc', ext: '.c',  args: (s, o) => [s, '-o', o, '-lm'] },
+  cpp:        { compiler: 'g++', ext: '.cpp', args: (s, o) => [s, '-o', o, '-lm'] },
+  rust:       { compiler: 'rustc', ext: '.rs', args: (s, o) => [s, '-o', o] },
+  objectivec: { compiler: 'gcc', ext: '.m',  args: (s, o) => [s, '-o', o, '-lobjc', '-lm'] },
+};
+
+// C# uses mcs + mono (two separate commands)
+const CSHARP_CONFIG = { compiler: 'mcs', runner: 'mono', ext: '.cs' };
+
+// Java needs class name matching
+const JAVA_EXT = '.java';
+
+// ---------------------------------------------------------------------------
+// General command runner
+// ---------------------------------------------------------------------------
+
+function runCommand(cmd, args = [], opts = {}) {
+  return new Promise((resolve) => {
+    const child = execFile(cmd, args, {
+      timeout: opts.timeout || TIMEOUT_MS,
+      cwd: opts.cwd || tmpdir(),
+      maxBuffer: 1024 * 1024,
+      env: { ...process.env, PATH: process.env.PATH },
+    }, (error, stdout, stderr) => {
+      if (error?.killed) {
+        resolve({ stdout: '', stderr: 'Execution timed out (10s limit)', exitCode: 1 });
+      } else {
+        resolve({
+          stdout: stdout || '',
+          stderr: stderr || '',
+          exitCode: error ? error.code || 1 : 0,
+        });
+      }
+    });
+    if (opts.stdin && child.stdin) {
+      child.stdin.write(opts.stdin);
+      child.stdin.end();
+    }
+  });
+}
+
+// Keep legacy runInSandbox for test case builders
+function runInSandbox(cmd, filePath, stdinData) {
+  return runCommand(cmd, [filePath], { stdin: stdinData });
+}
+
+// ---------------------------------------------------------------------------
+// Direct execution — no test cases
+// ---------------------------------------------------------------------------
+
+async function directExecute(code, runtime) {
+  const id = randomUUID();
+  const tmpBase = join(tmpdir(), `lumora-${id}`);
+
+  // ── Interpreted languages ──
+  if (INTERPRETED[runtime]) {
+    const { cmd, ext } = INTERPRETED[runtime];
+    const srcPath = `${tmpBase}${ext}`;
+    await writeFile(srcPath, code, 'utf8');
+    try {
+      const bin = await which(cmd);
+      if (!bin) throw new Error(`Runtime '${cmd}' not found on server`);
+      const { stdout, stderr, exitCode } = await runCommand(cmd, [srcPath]);
+      if (exitCode !== 0) return { direct_output: stderr ? `Error:\n${stderr}` : 'Execution failed' };
+      const out = stderr ? `${stdout}\n[stderr]: ${stderr}` : stdout;
+      return { direct_output: out.trim() || '(no output)' };
+    } finally {
+      await unlink(srcPath).catch(() => {});
+    }
+  }
+
+  // ── Subcommand languages (go run, dart run, kotlinc -script) ──
+  if (SUBCOMMAND[runtime]) {
+    const { cmd, subcmd, ext } = SUBCOMMAND[runtime];
+    const srcPath = `${tmpBase}${ext}`;
+    await writeFile(srcPath, code, 'utf8');
+    try {
+      const bin = await which(cmd);
+      if (!bin) throw new Error(`Runtime '${cmd}' not found on server`);
+      const args = subcmd ? [subcmd, srcPath] : [srcPath];
+      const { stdout, stderr, exitCode } = await runCommand(cmd, args, { timeout: COMPILE_TIMEOUT_MS });
+      if (exitCode !== 0) return { direct_output: stderr ? `Error:\n${stderr}` : 'Execution failed' };
+      const out = stderr ? `${stdout}\n[stderr]: ${stderr}` : stdout;
+      return { direct_output: out.trim() || '(no output)' };
+    } finally {
+      await unlink(srcPath).catch(() => {});
+    }
+  }
+
+  // ── Compiled languages (C, C++, Rust, Objective-C) ──
+  if (COMPILED[runtime]) {
+    const { compiler, ext, args: makeArgs } = COMPILED[runtime];
+    const srcPath = `${tmpBase}${ext}`;
+    const binPath = tmpBase;
+    await writeFile(srcPath, code, 'utf8');
+    try {
+      const bin = await which(compiler);
+      if (!bin) throw new Error(`Compiler '${compiler}' not found on server`);
+      const compile = await runCommand(compiler, makeArgs(srcPath, binPath), { timeout: COMPILE_TIMEOUT_MS });
+      if (compile.exitCode !== 0) return { direct_output: `Compilation Error:\n${compile.stderr}` };
+      const { stdout, stderr, exitCode } = await runCommand(binPath, []);
+      if (exitCode !== 0) return { direct_output: stderr ? `Runtime Error:\n${stderr}` : 'Execution failed' };
+      const out = stderr ? `${stdout}\n[stderr]: ${stderr}` : stdout;
+      return { direct_output: out.trim() || '(no output)' };
+    } finally {
+      await unlink(srcPath).catch(() => {});
+      await unlink(binPath).catch(() => {});
+    }
+  }
+
+  // ── Java (class name must match filename) ──
+  if (runtime === 'java') {
+    const classMatch = code.match(/(?:public\s+)?class\s+(\w+)/);
+    const className = classMatch ? classMatch[1] : 'Main';
+    const srcDir = join(tmpdir(), `lumora-java-${id}`);
+    const srcPath = join(srcDir, `${className}.java`);
+    await mkdir(srcDir, { recursive: true });
+    await writeFile(srcPath, code, 'utf8');
+    try {
+      const javac = await which('javac');
+      if (!javac) throw new Error("Runtime 'javac' not found on server");
+      const compile = await runCommand('javac', [srcPath], { timeout: COMPILE_TIMEOUT_MS });
+      if (compile.exitCode !== 0) return { direct_output: `Compilation Error:\n${compile.stderr}` };
+      const { stdout, stderr, exitCode } = await runCommand('java', ['-cp', srcDir, className]);
+      if (exitCode !== 0) return { direct_output: stderr ? `Runtime Error:\n${stderr}` : 'Execution failed' };
+      const out = stderr ? `${stdout}\n[stderr]: ${stderr}` : stdout;
+      return { direct_output: out.trim() || '(no output)' };
+    } finally {
+      await rm(srcDir, { recursive: true }).catch(() => {});
+    }
+  }
+
+  // ── C# (mcs compile + mono run) ──
+  if (runtime === 'csharp') {
+    const srcPath = `${tmpBase}.cs`;
+    const binPath = `${tmpBase}.exe`;
+    await writeFile(srcPath, code, 'utf8');
+    try {
+      const mcs = await which('mcs');
+      if (!mcs) throw new Error("Compiler 'mcs' (Mono) not found on server");
+      const compile = await runCommand('mcs', [`-out:${binPath}`, srcPath], { timeout: COMPILE_TIMEOUT_MS });
+      if (compile.exitCode !== 0) return { direct_output: `Compilation Error:\n${compile.stderr}` };
+      const { stdout, stderr, exitCode } = await runCommand('mono', [binPath]);
+      if (exitCode !== 0) return { direct_output: stderr ? `Runtime Error:\n${stderr}` : 'Execution failed' };
+      const out = stderr ? `${stdout}\n[stderr]: ${stderr}` : stdout;
+      return { direct_output: out.trim() || '(no output)' };
+    } finally {
+      await unlink(srcPath).catch(() => {});
+      await unlink(binPath).catch(() => {});
+    }
+  }
+
+  throw new Error(`No execution strategy for runtime: ${runtime}`);
+}
+
+// ---------------------------------------------------------------------------
+// Test case runner builders (Python, JS, Ruby)
+// ---------------------------------------------------------------------------
+
 function buildPythonRunner(code, testInput) {
   const codeB64 = Buffer.from(code).toString('base64');
   const inputB64 = Buffer.from(testInput).toString('base64');
@@ -98,7 +297,6 @@ def listToArray(head):
     return r
 ` : '';
 
-  // Strip __main__ block from user code
   const cleanCode = code.replace(/\n*if\s+__name__\s*==\s*['"]__main__['"]\s*:[\s\S]*/m, '');
 
   return `${llHelpers}
@@ -239,12 +437,6 @@ elif _kind == 'standalone':
 `;
 }
 
-/**
- * Build a JavaScript runner script.
- *
- * If user code already has console.log, run it as-is.
- * Otherwise, introspect for the main function and call it.
- */
 function buildJavascriptRunner(code, testInput) {
   if (code.includes('console.log(')) {
     return code;
@@ -307,9 +499,6 @@ if (_funcMatch) {
 `;
 }
 
-/**
- * Build a Ruby runner script.
- */
 function buildRubyRunner(code, testInput) {
   const inputB64 = Buffer.from(testInput).toString('base64');
   const codeB64 = Buffer.from(code).toString('base64');
@@ -373,10 +562,6 @@ end
 `;
 }
 
-// ---------------------------------------------------------------------------
-// Runner config
-// ---------------------------------------------------------------------------
-
 const BUILDERS = {
   python: buildPythonRunner,
   javascript: buildJavascriptRunner,
@@ -384,74 +569,25 @@ const BUILDERS = {
 };
 
 // ---------------------------------------------------------------------------
-// Core execution function
+// Output comparison
 // ---------------------------------------------------------------------------
 
-/**
- * Execute code in a temp file using child_process.execFile.
- *
- * Returns a promise that resolves with { stdout, stderr, exitCode }.
- */
-function runInSandbox(cmd, filePath, stdinData) {
-  return new Promise((resolve) => {
-    const child = execFile(cmd, [filePath], {
-      timeout: TIMEOUT_MS,
-      cwd: tmpdir(),
-      maxBuffer: 1024 * 1024, // 1 MB
-      env: { ...process.env, PATH: process.env.PATH },
-    }, (error, stdout, stderr) => {
-      if (error?.killed) {
-        resolve({ stdout: '', stderr: 'Execution timed out (10s limit)', exitCode: 1 });
-      } else {
-        resolve({
-          stdout: stdout || '',
-          stderr: stderr || '',
-          exitCode: error ? error.code || 1 : 0,
-        });
-      }
-    });
-
-    // Pipe stdin if needed
-    if (stdinData && child.stdin) {
-      child.stdin.write(stdinData);
-      child.stdin.end();
-    }
-  });
-}
-
-/**
- * Normalize output for comparison: strip whitespace, try JSON/literal parse.
- */
 function normalizeValue(s) {
   s = s.trim();
   if (!s) return s;
-
-  // Try JSON parse
   try { return JSON.parse(s); } catch { /* continue */ }
-
-  // Boolean / null normalization
   if (s === 'True' || s === 'true') return true;
   if (s === 'False' || s === 'false') return false;
   if (s === 'None' || s === 'null') return null;
-
-  // Number
   const num = Number(s);
   if (!isNaN(num) && s !== '') return num;
-
   return s;
 }
 
-/**
- * Compare expected vs actual output with fuzzy matching.
- */
 function compareOutput(expected, actual) {
   const expVal = normalizeValue(expected);
   const actVal = normalizeValue(actual);
-
-  // Strict equality
   if (JSON.stringify(expVal) === JSON.stringify(actVal)) return true;
-
-  // Order-insensitive array comparison
   if (Array.isArray(expVal) && Array.isArray(actVal)) {
     if (expVal.length === actVal.length) {
       const eSorted = [...expVal].map(String).sort();
@@ -459,70 +595,69 @@ function compareOutput(expected, actual) {
       if (JSON.stringify(eSorted) === JSON.stringify(aSorted)) return true;
     }
   }
-
-  // String fallback
   return expected.trim() === actual.trim();
 }
+
+// ---------------------------------------------------------------------------
+// Not executable languages
+// ---------------------------------------------------------------------------
+
+const NOT_EXECUTABLE = new Set([
+  'sql', 'mysql', 'postgresql', 'html', 'terraform', 'kubernetes', 'docker',
+]);
 
 // ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
 
-/**
- * Execute user code against test cases.
- *
- * @param {string} code       - The user's code
- * @param {string} language   - Target language (e.g. "python", "javascript", "ruby")
- * @param {Array}  testCases  - Array of { input, expected }
- * @returns {{ results: Array, all_passed: boolean, direct_output?: string }}
- */
 export async function executeCode(code, language, testCases = []) {
   const lang = language.toLowerCase();
-  const runtime = RUNTIME_MAP[lang];
 
-  if (!runtime) {
+  // Check for non-executable languages
+  if (NOT_EXECUTABLE.has(lang)) {
     throw new Error(
-      `Code execution for '${language}' is not available on the server. ` +
-      `Solution generation works for all languages, but execution requires a local runtime.`,
+      `'${language}' is not directly executable. ` +
+      `Solution generation works for all languages, but code execution is only available for programming languages.`,
     );
   }
 
-  const cmd = CMD_MAP[runtime];
-  if (!cmd) {
-    throw new Error(`No command configured for runtime: ${runtime}`);
+  const runtime = RUNTIME_MAP[lang];
+  if (!runtime) {
+    throw new Error(
+      `Code execution for '${language}' is not available. ` +
+      `Solution generation works for all languages, but execution requires a server runtime.`,
+    );
   }
 
-  // Check that the binary exists
-  const binaryPath = await which(cmd);
-  if (!binaryPath) {
-    throw new Error(`Runtime '${cmd}' not found on server`);
-  }
-
-  const ext = EXT_MAP[runtime] || '.txt';
-  const builder = BUILDERS[runtime];
-
-  // No test cases -> direct execution
+  // No test cases → direct execution
   const validTestCases = testCases.filter(tc => tc.input?.trim());
 
   if (validTestCases.length === 0) {
-    const tmpPath = join(tmpdir(), `lumora-${randomUUID()}${ext}`);
-    try {
-      await writeFile(tmpPath, code, 'utf8');
-      const { stdout, stderr, exitCode } = await runInSandbox(cmd, tmpPath);
-
-      if (exitCode !== 0) {
-        return { direct_output: stderr ? `Error:\n${stderr}` : 'Execution failed' };
-      }
-      const fullOutput = stderr ? `${stdout}\n[stderr]: ${stderr}` : stdout;
-      return { direct_output: fullOutput.trim() || '(no output)' };
-    } finally {
-      await unlink(tmpPath).catch(() => {});
-    }
+    return directExecute(code, runtime);
   }
 
-  // With test cases -> run each through the builder
+  // With test cases → use builder if available, otherwise fall back to direct execution
+  const builder = BUILDERS[runtime];
   if (!builder) {
-    throw new Error(`Test runner not available for ${runtime}. Direct execution only.`);
+    // For languages without test runners, run directly and return as single result
+    const result = await directExecute(code, runtime);
+    return {
+      direct_output: result.direct_output,
+      results: [],
+      all_passed: false,
+    };
+  }
+
+  // Get the interpreter command for test execution
+  const interpreted = INTERPRETED[runtime];
+  if (!interpreted) {
+    return directExecute(code, runtime);
+  }
+
+  const { cmd, ext } = interpreted;
+  const binaryPath = await which(cmd);
+  if (!binaryPath) {
+    throw new Error(`Runtime '${cmd}' not found on server`);
   }
 
   const results = [];
