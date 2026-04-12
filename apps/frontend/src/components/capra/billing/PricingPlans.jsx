@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
 
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
 export default function PricingPlans({ isOpen, onClose }) {
   const { token: authToken, user } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(null);
   const [error, setError] = useState('');
   const dialogRef = useRef(null);
@@ -47,7 +49,7 @@ export default function PricingPlans({ isOpen, onClose }) {
   ];
 
   const handleSubscribe = async (planId) => {
-    if (!user) { window.location.href = '/login'; return; }
+    if (!user) { navigate('/login'); return; }
     setLoading(planId);
     setError('');
     try {

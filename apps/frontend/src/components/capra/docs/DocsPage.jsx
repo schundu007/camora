@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { useIsMobile } from '../../../hooks/capra/useIsMobile';
 import { useAppShell } from '../layout/AppShellContext';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -226,10 +226,16 @@ export default function DocsPage({ onBack }) {
           code: '',
         }),
       });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        setAiAnswer(`Error: ${errData.error || errData.detail || `Request failed (${res.status})`}`);
+        return;
+      }
       const contentType = res.headers.get('content-type') || '';
       if (contentType.includes('text/event-stream')) {
         // SSE streaming response
-        const reader = res.body.getReader();
+        const reader = res.body?.getReader();
+        if (!reader) { setAiAnswer('Failed to read response stream.'); return; }
         const decoder = new TextDecoder();
         let fullText = '';
         let buf = '';
@@ -615,7 +621,7 @@ export default function DocsPage({ onBack }) {
                     <span>Back</span>
                   </button>
                 )}
-                <a href="/capra/prepare" className="text-gray-400 hover:text-gray-900 transition-colors cursor-pointer landing-body font-medium no-underline">Prepare</a>
+                <Link to="/capra/prepare" className="text-gray-400 hover:text-gray-900 transition-colors cursor-pointer landing-body font-medium no-underline">Prepare</Link>
                 <Icon name="chevronRight" size={14} className="text-gray-300" />
                 {selectedTopic && topicDetails ? (
                   <>
@@ -629,12 +635,12 @@ export default function DocsPage({ onBack }) {
               </div>
               {!selectedTopic && (
                 <div className="flex items-center gap-3">
-                  <a
-                    href="/practice"
+                  <Link
+                    to="/capra/practice"
                     className="px-5 py-2 bg-emerald-500 text-white font-semibold text-sm rounded hover:bg-emerald-600 transition-colors landing-body"
                   >
                     Start Practice
-                  </a>
+                  </Link>
                 </div>
               )}
             </div>

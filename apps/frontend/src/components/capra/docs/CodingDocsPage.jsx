@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Icon } from '../../shared/Icons.jsx';
 // DocsSidebar removed — navigation handled by AppShell
 
@@ -58,9 +59,9 @@ export default function CodingDocsPage() {
         <div className="sticky top-0 z-20 px-8 py-4 flex items-center justify-between" style={{ background: 'rgba(9, 9, 11, 0.9)', backdropFilter: 'blur(8px)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
           <div />
           <div className="flex items-center gap-4">
-            <a href="/capra/prepare" className="px-4 py-2 rounded-lg text-sm font-medium text-green-400 hover:bg-green-400/10 transition-colors" style={{ border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+            <Link to="/capra/prepare" className="px-4 py-2 rounded-lg text-sm font-medium text-green-400 hover:bg-green-400/10 transition-colors" style={{ border: '1px solid rgba(16, 185, 129, 0.3)' }}>
               Getting started guide
-            </a>
+            </Link>
             <button className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm text-gray-400 hover:text-gray-900 transition-colors" style={{ background: 'rgba(255,255,255,0.05)' }}>
               <Icon name="search" size={16} />
               Search everything
@@ -101,7 +102,7 @@ export default function CodingDocsPage() {
           </div>
 
           {/* Featured Banner */}
-          <a href="#" className="block mb-8 p-5 rounded-lg transition-all hover:scale-[1.01]" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <div className="block mb-8 p-5 rounded-lg cursor-default" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: '#10b981' }}>
@@ -111,7 +112,7 @@ export default function CodingDocsPage() {
               </div>
               <Icon name="chevronRight" size={20} className="text-gray-500" />
             </div>
-          </a>
+          </div>
 
           {/* Topic Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">

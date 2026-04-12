@@ -53,7 +53,7 @@ function Block({ block, delay }: { block: ParsedBlock; delay: number }) {
       );
 
     case 'ANSWER':
-      const lines = block.content
+      const lines = (block.content || '')
         .split('\n')
         .map(l => cleanText(l).replace(/^[•\-*]\s*/, ''))
         .filter(Boolean);

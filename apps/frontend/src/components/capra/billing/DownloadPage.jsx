@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
 import { Icon } from '../../shared/Icons';
 
@@ -9,6 +10,7 @@ const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.co
  */
 export default function DownloadPage() {
   const { user, token: accessToken } = useAuth();
+  const navigate = useNavigate();
   const [downloadInfo, setDownloadInfo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -30,7 +32,7 @@ export default function DownloadPage() {
   const checkDownloadAccess = async () => {
     try {
       const token = accessToken;
-      if (!token) { window.location.href = '/login'; return; }
+      if (!token) { navigate('/login'); return; }
       const response = await fetch(`${API_URL}/api/billing/download-access`, { headers: { Authorization: `Bearer ${token}` } });
       if (!response.ok) throw new Error('Failed to check download access');
       const data = await response.json();
@@ -61,7 +63,7 @@ export default function DownloadPage() {
           <Icon name="alertTriangle" size={48} className="text-red-500 mx-auto mb-4" />
           <h2 className="landing-display text-xl font-bold text-gray-900 mb-2">Error</h2>
           <p className="text-gray-500 landing-body mb-4">{error}</p>
-          <button onClick={() => window.location.href = '/capra/prepare'} className="px-6 py-2 rounded-lg bg-emerald-500 text-white font-semibold text-sm hover:bg-emerald-600 transition-colors landing-body">Go Home</button>
+          <button onClick={() => navigate('/capra/prepare')} className="px-6 py-2 rounded-lg bg-emerald-500 text-white font-semibold text-sm hover:bg-emerald-600 transition-colors landing-body">Go Home</button>
         </div>
         <style>{`.landing-root { -webkit-font-smoothing: antialiased; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; } .landing-display { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; } .landing-body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }`}</style>
       </div>
@@ -75,7 +77,7 @@ export default function DownloadPage() {
           <Icon name="lock" size={48} className="text-yellow-500 mx-auto mb-4" />
           <h2 className="landing-display text-xl font-bold text-gray-900 mb-2">Purchase Required</h2>
           <p className="text-gray-500 landing-body mb-6">You need an Elite subscription to download the desktop app.</p>
-          <button onClick={() => window.location.href = '/?pricing=true'} className="px-6 py-3 rounded-lg bg-emerald-500 text-white font-semibold text-sm hover:bg-emerald-600 transition-all hover:scale-105 landing-body">View Pricing</button>
+          <button onClick={() => navigate('/?pricing=true')} className="px-6 py-3 rounded-lg bg-emerald-500 text-white font-semibold text-sm hover:bg-emerald-600 transition-all hover:scale-105 landing-body">View Pricing</button>
         </div>
         <style>{`.landing-root { -webkit-font-smoothing: antialiased; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; } .landing-display { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; } .landing-body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }`}</style>
       </div>
@@ -152,7 +154,7 @@ export default function DownloadPage() {
           </div>
         </div>
 
-        <div className="mt-8 text-center"><button onClick={() => window.location.href = '/capra/prepare'} className="text-gray-500 hover:text-gray-900 transition-colors landing-body">&larr; Back to Home</button></div>
+        <div className="mt-8 text-center"><button onClick={() => navigate('/capra/prepare')} className="text-gray-500 hover:text-gray-900 transition-colors landing-body">&larr; Back to Home</button></div>
       </div>
 
       <style>{`
