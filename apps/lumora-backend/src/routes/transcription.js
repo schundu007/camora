@@ -150,11 +150,13 @@ router.post(
 
       // ── Speaker diarization / verification (optional) ─────────────────
       if (filterUserVoice) {
+        console.log(`[VoiceFilter] Checking voice for user ${req.user.email}, audio size: ${file.buffer.length}`);
         const diarization = await diarizeSpeaker(
           String(req.user.id),
           file.buffer,
           file.originalname || 'audio.webm',
         );
+        console.log(`[VoiceFilter] Result:`, JSON.stringify(diarization));
 
         if (!diarization.should_transcribe) {
           const ratio = diarization.interviewer_ratio ?? diarization.similarity ?? 0;
