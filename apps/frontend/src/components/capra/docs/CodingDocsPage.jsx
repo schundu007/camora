@@ -161,7 +161,7 @@ export default function CodingDocsPage() {
               {/* Data Structures */}
               <div className="p-6 rounded-lg" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
                 <h3 className="text-gray-900 font-semibold mb-4 flex items-center gap-2">
-                  <Icon name="database" size={18} className="text-blue-400" />
+                  <Icon name="database" size={18} className="text-gray-400" />
                   When to Use What
                 </h3>
                 <div className="space-y-2 text-sm">

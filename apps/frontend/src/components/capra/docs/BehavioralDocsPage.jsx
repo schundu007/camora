@@ -57,7 +57,7 @@ export default function BehavioralDocsPage() {
         <div className="sticky top-0 z-20 px-8 py-4 flex items-center justify-between" style={{ background: 'rgba(9, 9, 11, 0.9)', backdropFilter: 'blur(8px)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
           <div />
           <div className="flex items-center gap-4">
-            <Link to="/capra/prepare" className="px-4 py-2 rounded-lg text-sm font-medium text-purple-400 hover:bg-purple-400/10 transition-colors" style={{ border: '1px solid rgba(168, 85, 247, 0.3)' }}>
+            <Link to="/capra/prepare" className="px-4 py-2 rounded-lg text-sm font-medium text-emerald-400 hover:bg-emerald-400/10 transition-colors" style={{ border: '1px solid rgba(16, 185, 129, 0.3)' }}>
               Getting started guide
             </Link>
             <button className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm text-gray-400 hover:text-gray-900 transition-colors" style={{ background: 'rgba(255,255,255,0.05)' }}>
@@ -115,7 +115,7 @@ export default function BehavioralDocsPage() {
           {/* STAR Method */}
           <div className="p-6 rounded-lg mb-8" style={{ background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(168, 85, 247, 0.02))', border: '1px solid rgba(168, 85, 247, 0.2)' }}>
             <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <Icon name="star" size={20} className="text-purple-400" />
+              <Icon name="star" size={20} className="text-emerald-400" />
               The STAR Method
             </h3>
             <div className="grid md:grid-cols-4 gap-4">

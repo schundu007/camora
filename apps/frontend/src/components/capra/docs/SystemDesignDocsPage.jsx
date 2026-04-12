@@ -259,16 +259,16 @@ export default function SystemDesignDocsPage() {
 
   const difficultyStyles = {
     Easy: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    Medium: 'bg-amber-50 text-amber-700 border-amber-200',
+    Medium: 'bg-gray-50 text-gray-700 border-gray-200',
     Hard: 'bg-red-50 text-red-700 border-red-200',
   };
 
   /* ── Data for new sections ── */
   const evaluationCriteria = [
     { title: 'Problem Solving', pct: '~30%', color: '#10b981', bg: 'bg-emerald-50', border: 'border-emerald-300', text: 'text-emerald-700', desc: 'Break down ambiguous problems into clear requirements. Identify edge cases and constraints before designing.' },
-    { title: 'Technical Design', pct: '~30%', color: '#3b82f6', bg: 'bg-blue-50', border: 'border-blue-300', text: 'text-blue-700', desc: 'Propose appropriate components, data models, and APIs. Justify technology choices with concrete reasoning.' },
-    { title: 'Trade-Off Analysis', pct: '~20%', color: '#f59e0b', bg: 'bg-amber-50', border: 'border-amber-300', text: 'text-amber-700', desc: 'Evaluate consistency vs availability, latency vs throughput, and cost vs performance for each decision.' },
-    { title: 'Communication', pct: '~20%', color: '#f43f5e', bg: 'bg-rose-50', border: 'border-rose-300', text: 'text-rose-700', desc: 'Structure your approach clearly. Narrate your thought process and proactively address follow-up concerns.' },
+    { title: 'Technical Design', pct: '~30%', color: '#3b82f6', bg: 'bg-gray-50', border: 'border-gray-300', text: 'text-gray-700', desc: 'Propose appropriate components, data models, and APIs. Justify technology choices with concrete reasoning.' },
+    { title: 'Trade-Off Analysis', pct: '~20%', color: '#f59e0b', bg: 'bg-gray-50', border: 'border-gray-300', text: 'text-gray-700', desc: 'Evaluate consistency vs availability, latency vs throughput, and cost vs performance for each decision.' },
+    { title: 'Communication', pct: '~20%', color: '#f43f5e', bg: 'bg-gray-50', border: 'border-gray-300', text: 'text-gray-700', desc: 'Structure your approach clearly. Narrate your thought process and proactively address follow-up concerns.' },
   ];
 
   const frameworkPhases = [
@@ -287,9 +287,9 @@ export default function SystemDesignDocsPage() {
     {
       phase: 'Phase 2: Math & Interface',
       color: '#f59e0b',
-      bg: 'bg-amber-50',
-      border: 'border-amber-300',
-      dotBg: 'bg-amber-500',
+      bg: 'bg-gray-50',
+      border: 'border-gray-300',
+      dotBg: 'bg-gray-500',
       steps: [
         { num: 4, title: 'Capacity Estimation', desc: 'Traffic & storage math' },
         { num: 5, title: 'Define System APIs', desc: 'REST/gRPC endpoints' },
@@ -298,9 +298,9 @@ export default function SystemDesignDocsPage() {
     {
       phase: 'Phase 3: High-Level Architecture',
       color: '#3b82f6',
-      bg: 'bg-blue-50',
-      border: 'border-blue-300',
-      dotBg: 'bg-blue-500',
+      bg: 'bg-gray-50',
+      border: 'border-gray-300',
+      dotBg: 'bg-gray-500',
       steps: [
         { num: 6, title: 'Data Model & Schema', desc: 'Map core entities' },
         { num: 7, title: 'Database Selection', desc: 'SQL vs. NoSQL choices' },
@@ -310,9 +310,9 @@ export default function SystemDesignDocsPage() {
     {
       phase: 'Phase 4: Deep Dives',
       color: '#f43f5e',
-      bg: 'bg-rose-50',
-      border: 'border-rose-300',
-      dotBg: 'bg-rose-500',
+      bg: 'bg-gray-50',
+      border: 'border-gray-300',
+      dotBg: 'bg-gray-500',
       steps: [
         { num: 9, title: 'Component Deep Dive', desc: 'Hardest logical challenge' },
         { num: 10, title: 'Partitioning & Sharding', desc: 'Split data for scale' },
@@ -324,9 +324,9 @@ export default function SystemDesignDocsPage() {
     {
       phase: 'Phase 5: Evaluation',
       color: '#8b5cf6',
-      bg: 'bg-purple-50',
+      bg: 'bg-gray-50',
       border: 'border-purple-300',
-      dotBg: 'bg-purple-500',
+      dotBg: 'bg-gray-500',
       steps: [
         { num: 14, title: 'Trade-offs Analysis', desc: 'Defend architectural choices' },
       ],
@@ -375,8 +375,8 @@ export default function SystemDesignDocsPage() {
 
   const faangLevels = [
     { level: 'L4', subtitle: 'Mid-Level', desc: 'Build a working system with guidance. Cover core components, basic scaling, and common patterns. Acceptable to receive hints.', borderColor: 'border-emerald-400', bg: 'bg-emerald-50/50', badge: 'bg-emerald-100 text-emerald-700', featured: false },
-    { level: 'L5', subtitle: 'Senior', desc: 'Drive the interview end-to-end. Identify bottlenecks proactively, propose multiple solutions with trade-offs, and handle follow-ups confidently.', borderColor: 'border-cyan-400', bg: 'bg-cyan-50/50', badge: 'bg-cyan-100 text-cyan-700', featured: true },
-    { level: 'L6', subtitle: 'Staff+', desc: 'Anticipate 100x scale from the start. Design multi-region architecture, address tail latency, plan capacity for 3-5 year growth, and mentor the interviewer through your thought process.', borderColor: 'border-purple-400', bg: 'bg-purple-50/50', badge: 'bg-purple-100 text-purple-700', featured: false },
+    { level: 'L5', subtitle: 'Senior', desc: 'Drive the interview end-to-end. Identify bottlenecks proactively, propose multiple solutions with trade-offs, and handle follow-ups confidently.', borderColor: 'border-emerald-400', bg: 'bg-gray-50/50', badge: 'bg-emerald-50 text-emerald-700', featured: true },
+    { level: 'L6', subtitle: 'Staff+', desc: 'Anticipate 100x scale from the start. Design multi-region architecture, address tail latency, plan capacity for 3-5 year growth, and mentor the interviewer through your thought process.', borderColor: 'border-gray-400', bg: 'bg-gray-50/50', badge: 'bg-gray-100 text-gray-700', featured: false },
   ];
 
   return (
@@ -642,7 +642,7 @@ export default function SystemDesignDocsPage() {
                 >
                   {item.featured && (
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                      <span className="px-3 py-1 bg-cyan-500 text-white text-[10px] landing-mono font-semibold rounded-full uppercase tracking-wider">Most Common</span>
+                      <span className="px-3 py-1 bg-gray-500 text-white text-[10px] landing-mono font-semibold rounded-full uppercase tracking-wider">Most Common</span>
                     </div>
                   )}
                   <div className="flex items-center gap-3 mb-3">
@@ -759,10 +759,10 @@ export default function SystemDesignDocsPage() {
 
               {/* Latency Reference Callout */}
               <div className="lg:col-span-1">
-                <div className="sticky top-20 p-5 rounded-lg border border-amber-200 bg-amber-50/50">
+                <div className="sticky top-20 p-5 rounded-lg border border-gray-200 bg-gray-50/50">
                   <div className="flex items-center gap-2 mb-4">
-                    <div className="w-7 h-7 rounded flex items-center justify-center bg-amber-100">
-                      <Icon name="zap" size={14} className="text-amber-600" />
+                    <div className="w-7 h-7 rounded flex items-center justify-center bg-gray-100">
+                      <Icon name="zap" size={14} className="text-gray-600" />
                     </div>
                     <h3 className="landing-display font-bold text-sm text-gray-900">Latency Reference</h3>
                   </div>
@@ -770,11 +770,11 @@ export default function SystemDesignDocsPage() {
                     {latencyRef.map((item, i) => (
                       <div key={i} className="flex justify-between items-center">
                         <span className="text-xs text-gray-600 landing-body">{item.label}</span>
-                        <span className="text-xs font-semibold landing-mono text-amber-700 bg-amber-100 px-2 py-0.5 rounded">{item.value}</span>
+                        <span className="text-xs font-semibold landing-mono text-gray-700 bg-gray-100 px-2 py-0.5 rounded">{item.value}</span>
                       </div>
                     ))}
                   </div>
-                  <div className="mt-4 pt-3 border-t border-amber-200">
+                  <div className="mt-4 pt-3 border-t border-gray-200">
                     <p className="text-[10px] text-gray-500 landing-body leading-relaxed">
                       Memorize these for back-of-envelope calculations. Interviewers expect you to reference real latency numbers when estimating capacity.
                     </p>
@@ -896,8 +896,8 @@ export default function SystemDesignDocsPage() {
               {/* Building Blocks */}
               <div className="p-5 rounded-lg border border-gray-200 bg-white">
                 <h3 className="text-gray-900 font-semibold text-sm landing-display mb-4 flex items-center gap-2">
-                  <div className="w-7 h-7 rounded flex items-center justify-center bg-blue-50">
-                    <Icon name="layers" size={14} className="text-blue-500" />
+                  <div className="w-7 h-7 rounded flex items-center justify-center bg-gray-50">
+                    <Icon name="layers" size={14} className="text-gray-500" />
                   </div>
                   Building Blocks
                 </h3>
@@ -921,8 +921,8 @@ export default function SystemDesignDocsPage() {
               {/* Key Trade-offs (kept as quick summary) */}
               <div className="p-5 rounded-lg border border-gray-200 bg-white">
                 <h3 className="text-gray-900 font-semibold text-sm landing-display mb-4 flex items-center gap-2">
-                  <div className="w-7 h-7 rounded flex items-center justify-center bg-violet-50">
-                    <Icon name="puzzle" size={14} className="text-violet-500" />
+                  <div className="w-7 h-7 rounded flex items-center justify-center bg-gray-50">
+                    <Icon name="puzzle" size={14} className="text-gray-500" />
                   </div>
                   Key Trade-offs
                 </h3>
@@ -1032,7 +1032,7 @@ export default function SystemDesignDocsPage() {
 
                   {/* Decision 2: FAANG? */}
                   <div className="relative w-48 h-24 flex items-center justify-center mb-3">
-                    <div className="absolute inset-0 border-2 border-blue-400 bg-blue-50 rotate-45 rounded-lg" />
+                    <div className="absolute inset-0 border-2 border-blue-400 bg-gray-50 rotate-45 rounded-lg" />
                     <span className="relative z-10 text-center landing-display font-semibold text-xs text-gray-900 leading-tight px-2">
                       Prepping for<br />FAANG?
                     </span>
@@ -1041,14 +1041,14 @@ export default function SystemDesignDocsPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
                     {/* YES → Core Loop */}
                     <div className="flex flex-col items-center">
-                      <span className="landing-mono text-xs font-bold text-blue-600 mb-2">YES</span>
+                      <span className="landing-mono text-xs font-bold text-gray-600 mb-2">YES</span>
                       <div className="w-0.5 h-4 bg-blue-300 mb-2" />
-                      <div className="relative w-full p-3 rounded-lg border-2 border-blue-400 bg-blue-50 text-center">
+                      <div className="relative w-full p-3 rounded-lg border-2 border-blue-400 bg-gray-50 text-center">
                         <div className="absolute -top-2.5 left-1/2 -translate-x-1/2">
-                          <span className="px-2 py-0.5 bg-blue-500 text-white text-[8px] landing-mono font-bold rounded-full uppercase">Popular</span>
+                          <span className="px-2 py-0.5 bg-gray-500 text-white text-[8px] landing-mono font-bold rounded-full uppercase">Popular</span>
                         </div>
-                        <div className="landing-display font-bold text-xs text-blue-800 mb-0.5 mt-1">Core Interview Loop</div>
-                        <p className="text-[10px] text-blue-600 landing-body">14-step framework + top 20 designs</p>
+                        <div className="landing-display font-bold text-xs text-gray-800 mb-0.5 mt-1">Core Interview Loop</div>
+                        <p className="text-[10px] text-gray-600 landing-body">14-step framework + top 20 designs</p>
                       </div>
                     </div>
 
@@ -1059,17 +1059,17 @@ export default function SystemDesignDocsPage() {
 
                       {/* Decision 3: L5/L6? */}
                       <div className="relative w-full h-20 flex items-center justify-center mb-2">
-                        <div className="absolute inset-0 border-2 border-purple-400 bg-purple-50 rotate-45 rounded-lg" />
+                        <div className="absolute inset-0 border-2 border-gray-400 bg-gray-50 rotate-45 rounded-lg" />
                         <span className="relative z-10 text-center landing-display font-semibold text-[10px] text-gray-900 leading-tight px-2">
                           Aiming for<br />L5/L6?
                         </span>
                       </div>
 
-                      <span className="landing-mono text-xs font-bold text-purple-600 mb-1">YES</span>
-                      <div className="w-0.5 h-3 bg-purple-300 mb-1" />
-                      <div className="w-full p-3 rounded-lg border-2 border-purple-400 bg-purple-50 text-center">
-                        <div className="landing-display font-bold text-xs text-purple-800 mb-0.5">Advanced Path</div>
-                        <p className="text-[10px] text-purple-600 landing-body">Multi-region, distributed consensus, tail latency</p>
+                      <span className="landing-mono text-xs font-bold text-gray-600 mb-1">YES</span>
+                      <div className="w-0.5 h-3 bg-gray-300 mb-1" />
+                      <div className="w-full p-3 rounded-lg border-2 border-gray-400 bg-gray-50 text-center">
+                        <div className="landing-display font-bold text-xs text-gray-800 mb-0.5">Advanced Path</div>
+                        <p className="text-[10px] text-gray-600 landing-body">Multi-region, distributed consensus, tail latency</p>
                       </div>
                     </div>
                   </div>
