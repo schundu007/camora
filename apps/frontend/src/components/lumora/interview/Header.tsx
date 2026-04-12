@@ -3,6 +3,7 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useInterviewStore } from '@/stores/interview-store';
 import { useAuth } from '@/contexts/AuthContext';
 import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
+import { MicrophoneSelector } from '@/components/lumora/audio/MicrophoneSelector';
 import { DocumentUpload } from '@/components/lumora/documents/DocumentUpload';
 import CamoraLogo from '../../shared/CamoraLogo';
 
@@ -153,110 +154,85 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
           </button>
         )}
 
-        {/* Logo */}
-        <Link to="/" className="flex items-center gap-1.5 px-3 h-full shrink-0" style={{ borderRight: '1px solid rgba(255,255,255,0.06)' }}>
-          <CamoraLogo size={22} />
-          <span className="hidden lg:block font-display font-bold text-sm tracking-tight" style={{ fontFamily: "'Comfortaa', sans-serif", background: 'linear-gradient(135deg, #fff, #94a3b8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Camora</span>
+        {/* Logo — brand identity, Comfortaa font */}
+        <Link to="/" className="flex items-center gap-2 px-4 h-full shrink-0" style={{ borderRight: '1px solid rgba(255,255,255,0.04)' }}>
+          <CamoraLogo size={24} />
+          <span className="hidden lg:block text-sm font-bold tracking-tight" style={{ fontFamily: "'Comfortaa', sans-serif", color: '#fff' }}>Camora</span>
         </Link>
 
-        {/* Back to Prepare */}
-        <Link
-          to="/capra/prepare"
-          className="flex items-center gap-1 px-2.5 h-full shrink-0 text-xs font-medium transition-colors"
-          style={{ color: 'rgba(255,255,255,0.45)', borderRight: '1px solid rgba(255,255,255,0.06)' }}
-          onMouseEnter={(e) => { e.currentTarget.style.color = '#10b981'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.45)'; }}
-          title="Back to Prepare"
-        >
-          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
-          </svg>
-          <span className="hidden xl:inline">Prepare</span>
-        </Link>
-
-        {/* Tabs */}
-        <div data-tour="tabs" className="flex items-center gap-1 px-2 h-full shrink-0" style={{ borderRight: '1px solid rgba(255,255,255,0.06)' }}>
+        {/* Navigation — pill tabs with icon+label, Jakarta Sans bold */}
+        <div data-tour="tabs" className="flex items-center h-full shrink-0 px-1" style={{ borderRight: '1px solid rgba(255,255,255,0.04)' }}>
+          <Link to="/capra/prepare" className="flex items-center gap-1 px-2 py-1 mx-0.5 rounded-md text-[11px] transition-all" style={{ color: 'rgba(255,255,255,0.4)', fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 600 }} title="Prepare">
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
+            <span className="hidden xl:inline">Prepare</span>
+          </Link>
           {TABS.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => handleTabClick(tab.id)}
-              className="font-display flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all duration-200"
+            <button key={tab.id} onClick={() => handleTabClick(tab.id)}
+              className="flex items-center gap-1.5 px-2.5 py-1 mx-0.5 rounded-md text-[11px] font-bold transition-all"
               style={currentTab === tab.id
-                ? { background: 'linear-gradient(135deg, #10b981, #059669)', color: '#fff', boxShadow: '0 2px 12px rgba(16,185,129,0.35), inset 0 1px 0 rgba(255,255,255,0.1)' }
-                : { color: 'rgba(255,255,255,0.5)' }}
-              onMouseEnter={(e) => { if (currentTab !== tab.id) e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}
-              onMouseLeave={(e) => { if (currentTab !== tab.id) { e.currentTarget.style.color = 'rgba(255,255,255,0.5)'; e.currentTarget.style.background = 'transparent'; }}}
-            >
+                ? { background: 'rgba(16,185,129,0.15)', color: '#34d399', fontFamily: "'Plus Jakarta Sans', sans-serif", boxShadow: 'inset 0 0 0 1px rgba(16,185,129,0.2)' }
+                : { color: 'rgba(255,255,255,0.45)', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
               <span className="hidden md:inline">{TAB_ICONS[tab.id]}</span>
               <span>{tab.label}</span>
             </button>
           ))}
         </div>
 
-        {/* Platform */}
-        <div data-tour="platform" className="hidden lg:flex items-center px-2 h-full shrink-0" style={{ borderRight: '1px solid rgba(255,255,255,0.06)' }}>
-          <select className="font-display bg-white/5 text-white/70 font-semibold text-[11px] border border-white/10 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-emerald-500/50 cursor-pointer" defaultValue="general">
+        {/* Mic Selector — between tabs and platform */}
+        <div className="flex items-center px-1.5 h-full shrink-0" style={{ borderRight: '1px solid rgba(255,255,255,0.04)' }}>
+          <MicrophoneSelector disabled={false} />
+        </div>
+
+        {/* Platform — monospace badge style */}
+        <div data-tour="platform" className="hidden lg:flex items-center px-2 h-full shrink-0" style={{ borderRight: '1px solid rgba(255,255,255,0.04)' }}>
+          <select className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-1 rounded-md cursor-pointer focus:outline-none"
+            style={{ background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.06)' }} defaultValue="general">
             <option value="general">General</option>
             <option value="zoom">Zoom</option>
-            <option value="meet">Google Meet</option>
-            <option value="teams">MS Teams</option>
+            <option value="meet">Meet</option>
+            <option value="teams">Teams</option>
             <option value="hackerrank">HackerRank</option>
             <option value="coderpad">CoderPad</option>
             <option value="codility">Codility</option>
           </select>
         </div>
 
-        {/* Audio + Docs */}
-        <div data-tour="audio" className="flex items-center gap-1 px-1.5 h-full shrink-0">
+        {/* Audio Controls — grouped with subtle frosted bg */}
+        <div data-tour="audio" className="flex items-center gap-1.5 px-2 h-full shrink-0" style={{ background: 'rgba(255,255,255,0.02)', borderRight: '1px solid rgba(255,255,255,0.04)' }}>
           <AudioCapture onTranscription={onTranscription} />
           <DocumentUpload />
         </div>
 
-        {/* Spacer pushes right controls to the end */}
+        {/* Spacer */}
         <div className="flex-1 min-w-0" />
 
-        {/* Status pill — right side */}
-        <div className="hidden lg:flex items-center gap-1.5 px-2 h-full shrink-0" style={{ borderLeft: '1px solid rgba(255,255,255,0.06)' }}>
-          <div className={`w-2 h-2 rounded-full shrink-0 ${
+        {/* Status — monospace, right-aligned with glow dot */}
+        <div className="hidden lg:flex items-center gap-2 px-3 h-full shrink-0" style={{ borderLeft: '1px solid rgba(255,255,255,0.04)' }}>
+          <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${
             status.state === 'ready' ? 'bg-emerald-400' :
-            status.state === 'error' ? 'bg-red-500' :
-            status.state === 'warn' ? 'bg-amber-500' :
+            status.state === 'error' ? 'bg-red-400' :
+            status.state === 'warn' ? 'bg-amber-400' :
             status.state === 'listen' || status.state === 'write' ? 'bg-emerald-400 animate-pulse' :
-            'bg-gray-500'
-          }`} style={status.state === 'ready' ? { boxShadow: '0 0 8px rgba(52,211,153,0.6)' } : {}} />
-          <span className="font-code text-[10px] text-white/50 font-medium truncate whitespace-nowrap max-w-[100px]">
+            'bg-white/20'
+          }`} style={status.state === 'ready' ? { boxShadow: '0 0 6px rgba(52,211,153,0.5)' } : {}} />
+          <span className="text-[10px] font-mono font-medium tracking-wide truncate max-w-[90px]" style={{ color: 'rgba(255,255,255,0.35)' }}>
             {status.message}
           </span>
         </div>
 
-        {/* Search + Reset */}
-        <div className="flex items-center gap-1 px-1.5 h-full shrink-0" style={{ borderLeft: '1px solid rgba(255,255,255,0.06)' }}>
-          <button
-            onClick={() => setUseSearch(!useSearch)}
-            className="p-1.5 rounded-lg transition-all duration-200"
-            style={useSearch
-              ? { background: 'linear-gradient(135deg, #10b981, #059669)', color: '#fff', boxShadow: '0 2px 8px rgba(16,185,129,0.3)' }
-              : { color: 'rgba(255,255,255,0.4)' }}
-            onMouseEnter={(e) => { if (!useSearch) { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}}
-            onMouseLeave={(e) => { if (!useSearch) { e.currentTarget.style.color = 'rgba(255,255,255,0.4)'; e.currentTarget.style.background = 'transparent'; }}}
-            title="Toggle web search (⌘S)"
-          >
+        {/* Actions — icon-only, subtle */}
+        <div className="flex items-center gap-0.5 px-1.5 h-full shrink-0" style={{ borderLeft: '1px solid rgba(255,255,255,0.04)' }}>
+          <button onClick={() => setUseSearch(!useSearch)} className="p-1.5 rounded-md transition-all"
+            style={useSearch ? { background: 'rgba(16,185,129,0.12)', color: '#34d399' } : { color: 'rgba(255,255,255,0.3)' }} title="Search (⌘S)">
             <SearchIcon />
           </button>
-          <button
-            className="p-1.5 rounded-lg transition-all duration-200"
-            style={{ color: 'rgba(255,255,255,0.4)' }}
-            onMouseEnter={(e) => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.4)'; e.currentTarget.style.background = 'transparent'; }}
-            onClick={() => clearHistory()}
-            title="Reset (⌘⌫)"
-          >
+          <button className="p-1.5 rounded-md transition-all" style={{ color: 'rgba(255,255,255,0.3)' }} onClick={() => clearHistory()} title="Reset (⌘⌫)">
             <ResetIcon />
           </button>
         </div>
 
-        {/* User */}
-        <div className="flex items-center gap-1.5 px-2 h-full shrink-0" style={{ borderLeft: '1px solid rgba(255,255,255,0.06)' }}>
+        {/* User — avatar pill */}
+        <div className="flex items-center px-2 h-full shrink-0" style={{ borderLeft: '1px solid rgba(255,255,255,0.04)' }}>
           <UserBadge />
         </div>
       </div>
