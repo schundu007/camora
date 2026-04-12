@@ -6,6 +6,7 @@ import SiteFooter from '../../components/shared/SiteFooter';
 import { getAuthHeaders } from '../../utils/authHeaders.js';
 import SharedDiagram from '../../components/shared/diagrams/SharedDiagram';
 import GamificationWidget from '../../components/capra/features/GamificationWidget';
+import { InterviewTimer } from '../../components/shared/timer/InterviewTimer';
 
 
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
@@ -334,18 +335,8 @@ export default function PracticePage() {
   const challengeStartRef = useRef(0);
   const endChallengeRef = useRef(null);
 
-  // Timer — uses ref to avoid stale closure
-  useEffect(() => {
-    if (phase === 'active' && timeLeft > 0) {
-      timerRef.current = setInterval(() => {
-        setTimeLeft(t => {
-          if (t <= 1) { clearInterval(timerRef.current); if (endChallengeRef.current) endChallengeRef.current(); return 0; }
-          return t - 1;
-        });
-      }, 1000);
-      return () => clearInterval(timerRef.current);
-    }
-  }, [phase]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Timer countdown is now handled by the shared InterviewTimer component.
+  // The onExpire callback on InterviewTimer calls endChallengeRef.current().
 
   useEffect(() => { window.scrollTo(0, 0); }, []);
 
@@ -569,8 +560,6 @@ export default function PracticePage() {
 
   const readiness = getReadiness(stats);
   const modeConfig = MODES.find(m => m.id === mode);
-  const timerPercent = modeConfig ? (timeLeft / modeConfig.time) * 100 : 100;
-  const timerColor = timerPercent > 50 ? '#10b981' : timerPercent > 20 ? '#f59e0b' : '#ef4444';
 
   // Social proof (simulated)
   const socialCount = 1247 + Math.floor((new Date().getHours() * 37 + new Date().getMinutes()) % 300);
@@ -797,12 +786,13 @@ export default function PracticePage() {
                       <div key={qi} style={{ width: qi === currentIdx ? 18 : 8, height: 8, borderRadius: 99, background: qi < currentIdx ? '#10b981' : qi === currentIdx ? '#10b981' : '#e5e7eb', transition: 'all 0.3s' }} />
                     ))}
                   </div>
-                  <span className="practice-mono" style={{ fontSize: 22, fontWeight: 700, color: timerColor, fontVariantNumeric: 'tabular-nums' }}>
-                    {formatTime(timeLeft)}
-                  </span>
-                </div>
-                <div style={{ height: 4, borderRadius: 99, background: '#e5e7eb', overflow: 'hidden' }}>
-                  <div style={{ height: '100%', borderRadius: 99, background: timerColor, width: `${timerPercent}%`, transition: 'width 1s linear, background 0.5s' }} />
+                  <InterviewTimer
+                    duration={modeConfig.time}
+                    isRunning={phase === 'active'}
+                    onExpire={() => { if (endChallengeRef.current) endChallengeRef.current(); }}
+                    showControls={false}
+                    className="text-base font-bold"
+                  />
                 </div>
                 <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 4 }}>
                   Question {currentIdx + 1} of {questions.length} / {catLabel(category)} / {MODES.find(m => m.id === mode)?.label}
