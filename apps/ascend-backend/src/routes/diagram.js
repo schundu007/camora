@@ -213,6 +213,7 @@ router.post('/generate', async (req, res, next) => {
           question,
           cloudProvider: provider,
           detailLevel,
+          direction,
         });
 
         // Cache mermaid code in DB

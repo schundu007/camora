@@ -206,12 +206,31 @@ setInterval(cleanupOldDiagrams, 30 * 60 * 1000);
  * @param {string} [options.detailLevel='overview'] - Detail level
  * @returns {Promise<Object>} - { success, type: 'mermaid', mermaid_code }
  */
-export async function generateMermaidFallback({ question, cloudProvider = 'aws', detailLevel = 'overview' }) {
+export async function generateMermaidFallback({ question, cloudProvider = 'aws', detailLevel = 'overview', direction = 'LR' }) {
   const apiKey = getApiKey();
   if (!apiKey) throw new Error('ANTHROPIC_API_KEY not configured');
 
   const Anthropic = (await import('@anthropic-ai/sdk')).default;
   const client = new Anthropic({ apiKey });
+
+  const dir = direction === 'TB' ? 'TB' : 'LR';
+  const isDetailed = detailLevel === 'detailed';
+
+  const detailInstructions = isDetailed
+    ? `This is a DETAILED diagram. Include:
+- All microservices with specific responsibilities
+- Primary and replica databases with replication arrows
+- Cache layers (Redis/Memcached) with TTL notes
+- Message queues (Kafka/RabbitMQ) with topic names
+- CDN, DNS, load balancers with algorithms (round-robin, consistent hash)
+- Monitoring, logging, rate limiting components
+- Use subgraphs to group: Client, Edge, Application, Data, Infrastructure
+- Add edge labels describing data flow (e.g., "write", "async", "cache miss")`
+    : `This is an OVERVIEW diagram. Include only the key components:
+- Clients, load balancer, main services (2-4), primary database, cache
+- Keep it clean and readable — no more than 12-15 nodes
+- Use subgraphs sparingly (max 2-3 groups)
+- Add edge labels for key data flows only`;
 
   const resp = await client.messages.create({
     model: 'claude-sonnet-4-20250514',
@@ -221,19 +240,14 @@ export async function generateMermaidFallback({ question, cloudProvider = 'aws',
       content: `Generate a Mermaid flowchart diagram for this system design: "${question}"
 
 Cloud provider: ${cloudProvider}
-Detail level: ${detailLevel}
+Direction: ${dir} (${dir === 'LR' ? 'left-to-right horizontal' : 'top-to-bottom vertical'})
 
-Return ONLY the Mermaid code (flowchart LR or flowchart TB format). Include:
-- Client/users at the start
-- Load balancers, API gateways
-- Application servers/microservices
-- Databases, caches, message queues
-- Use descriptive node labels
-- Use proper Mermaid syntax with subgraphs for logical grouping
-- Add edge labels for data flow descriptions
+${detailInstructions}
+
+IMPORTANT: The diagram MUST start with "flowchart ${dir}" — use ${dir === 'LR' ? 'horizontal left-to-right' : 'vertical top-to-bottom'} layout.
 
 Example format:
-flowchart LR
+flowchart ${dir}
   subgraph Client
     A[Web Client]
     B[Mobile Client]
