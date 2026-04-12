@@ -80,7 +80,10 @@ export function DocumentUpload() {
     <div className="relative" ref={containerRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center gap-1 px-2 py-1 text-sm font-bold rounded border transition-colors shrink-0 ${documents.length > 0 ? 'bg-emerald-500 text-white border-emerald-600' : 'text-white hover:text-white border-gray-600'}`}
+        className="flex items-center gap-1 px-2 py-1 text-[11px] font-bold rounded-lg transition-all shrink-0"
+        style={documents.length > 0
+          ? { background: 'rgba(16,185,129,0.1)', color: '#34d399', border: '1px solid rgba(16,185,129,0.15)' }
+          : { color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.08)' }}
         title={`Prep docs (${documents.length})`}
       >
         <DocIcon />
