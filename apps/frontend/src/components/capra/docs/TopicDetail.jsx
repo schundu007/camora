@@ -6,6 +6,7 @@ import FormattedContent from './FormattedContent.jsx';
 import CloudArchitectureDiagram from './CloudArchitectureDiagram.jsx';
 import DiagramSVG from '../features/DiagramSVG.jsx';
 import { getAuthHeaders } from '../../../utils/authHeaders.js';
+import { useAuth } from '../../../contexts/AuthContext';
 import { generateSlug, getProblemBySlug } from '../../../data/capra/problems.js';
 import problemsFull from '../../../data/capra/problems-full.json';
 import {
@@ -352,8 +353,44 @@ export default function TopicDetail({
   progressInfo, isLocked = false, contentAccess,
 }) {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isAdmin = user?.email === 'chundubabu@gmail.com';
+  const [adminRegenStatus, setAdminRegenStatus] = useState('');
 
   if (!topicDetails) return null;
+
+  const CAPRA_API = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
+
+  // Admin: regenerate diagram via Python diagrams or Eraser API
+  const handleAdminRegen = async (engine) => {
+    const endpoint = engine === 'eraser' ? '/api/diagram/eraser' : '/api/diagram/generate';
+    const question = `Design ${topicDetails.title}. ${topicDetails.description || topicDetails.subtitle || ''}`;
+    setAdminRegenStatus(`${engine}: generating...`);
+    try {
+      const res = await fetch(`${CAPRA_API}${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify({
+          question,
+          description: question,
+          cloudProvider: diagramCloudProvider || 'auto',
+          detailLevel: diagramDetailLevel || 'overview',
+          direction: 'LR',
+          cacheKey: question,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setAdminRegenStatus(`${engine}: done! Reload to see.`);
+        // Force refresh the static image by busting cache
+        setTimeout(() => window.location.reload(), 1500);
+      } else {
+        setAdminRegenStatus(`${engine}: ${data.error || 'failed'}`);
+      }
+    } catch (err) {
+      setAdminRegenStatus(`${engine}: ${err.message}`);
+    }
+  };
 
   // Mark topic as read when viewing (only if not locked)
   useEffect(() => {
@@ -1826,6 +1863,28 @@ export default function TopicDetail({
                           ))}
                         </div>
                       </div>
+                      {/* Admin-only: Regenerate controls */}
+                      {isAdmin && (
+                        <div className="flex items-center gap-2 ml-2 pl-2 border-l border-gray-200">
+                          <button
+                            onClick={() => handleAdminRegen('python')}
+                            className="px-2 py-0.5 text-[10px] font-mono font-bold rounded bg-gray-100 text-gray-600 hover:bg-emerald-100 hover:text-emerald-700 transition-colors border border-gray-200"
+                            title="Regenerate using Python diagrams library"
+                          >
+                            Python
+                          </button>
+                          <button
+                            onClick={() => handleAdminRegen('eraser')}
+                            className="px-2 py-0.5 text-[10px] font-mono font-bold rounded bg-gray-100 text-gray-600 hover:bg-blue-100 hover:text-blue-700 transition-colors border border-gray-200"
+                            title="Regenerate using Eraser.io API"
+                          >
+                            Eraser
+                          </button>
+                          {adminRegenStatus && (
+                            <span className="text-[10px] font-mono text-gray-400">{adminRegenStatus}</span>
+                          )}
+                        </div>
+                      )}
                     </div>
                     <div className="p-3">
                       {/* Show pre-generated static diagram if available, otherwise fall back to API */}
