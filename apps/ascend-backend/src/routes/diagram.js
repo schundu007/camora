@@ -279,24 +279,42 @@ router.post('/generate', async (req, res, next) => {
  */
 router.post('/lookup', async (req, res) => {
   try {
-    const { question, cloudProvider = 'auto', detailLevel = 'overview', direction = 'LR' } = req.body;
+    const { question, cloudProvider = 'auto', detailLevel = 'overview', direction = 'TB' } = req.body;
     if (!question) return res.status(400).json({ error: 'Question required' });
 
-    const problemHash = hashProblem(`${question}::${cloudProvider}::${direction}::${detailLevel}`);
+    // Try exact match first, then try alternate direction
+    const hash1 = hashProblem(`${question}::${cloudProvider}::${direction}::${detailLevel}`);
+    const altDirection = direction === 'TB' ? 'LR' : 'TB';
+    const hash2 = hashProblem(`${question}::${cloudProvider}::${altDirection}::${detailLevel}`);
+
     const cached = await query(
-      'SELECT image_url, mermaid_code FROM ascend_diagram_cache WHERE problem_hash = $1 AND (image_data IS NOT NULL OR mermaid_code IS NOT NULL)',
-      [problemHash]
+      'SELECT image_url, mermaid_code FROM ascend_diagram_cache WHERE problem_hash IN ($1, $2) AND (image_data IS NOT NULL OR mermaid_code IS NOT NULL) LIMIT 1',
+      [hash1, hash2]
     );
 
     if (cached.rows.length > 0) {
+      console.log(`[DiagramLookup] Cache hit for question: ${question.slice(0, 50)}`);
       if (cached.rows[0].mermaid_code) {
         return res.json({ success: true, type: 'mermaid', mermaid_code: cached.rows[0].mermaid_code, cached: true });
       }
       return res.json({ success: true, image_url: cached.rows[0].image_url, cached: true });
     }
 
-    // No cache — return not found, DON'T generate
-    res.json({ success: false, cached: false, message: 'No cached diagram. Use the Design tab to generate one.' });
+    // Broad fallback: search by description LIKE match
+    const broadSearch = await query(
+      `SELECT image_url, mermaid_code FROM ascend_diagram_cache WHERE LOWER(description) LIKE $1 AND (image_data IS NOT NULL OR mermaid_code IS NOT NULL) LIMIT 1`,
+      [`%${question.trim().toLowerCase().slice(0, 60)}%`]
+    );
+    if (broadSearch.rows.length > 0) {
+      console.log(`[DiagramLookup] Broad match for: ${question.slice(0, 50)}`);
+      if (broadSearch.rows[0].mermaid_code) {
+        return res.json({ success: true, type: 'mermaid', mermaid_code: broadSearch.rows[0].mermaid_code, cached: true });
+      }
+      return res.json({ success: true, image_url: broadSearch.rows[0].image_url, cached: true });
+    }
+
+    console.log(`[DiagramLookup] No cache for: ${question.slice(0, 50)}`);
+    res.json({ success: false, cached: false });
   } catch (err) {
     res.json({ success: false, error: err.message });
   }
