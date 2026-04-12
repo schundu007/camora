@@ -684,8 +684,8 @@ export default function DocsPage({ onBack }) {
                     <span>Back to {pageConfig.title}</span>
                   </button>
                   <div className="flex flex-col items-center justify-center py-20 text-center">
-                    <div className="w-16 h-16 rounded-2xl bg-amber-50 flex items-center justify-center mb-4">
-                      <Icon name="alertTriangle" size={32} className="text-amber-500" />
+                    <div className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center mb-4">
+                      <Icon name="alertTriangle" size={32} className="text-gray-400" />
                     </div>
                     <h2 className="text-xl font-bold text-gray-900 landing-display mb-2">Topic not found</h2>
                     <p className="text-sm text-gray-500 landing-body mb-6 max-w-md">
@@ -817,9 +817,9 @@ export default function DocsPage({ onBack }) {
                         <h2 className="section-label mb-3">Interview Resources</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                           {[
-                            { href: '/capra/prepare?page=coding', icon: 'checklist', color: '#06b6d4', bg: 'bg-cyan-50', title: 'Interview Cheatsheet', desc: '17 topics covering 117 curated questions from top tech companies', badge: '117 Q' },
+                            { href: '/capra/prepare?page=coding', icon: 'checklist', color: '#06b6d4', bg: 'bg-gray-50', title: 'Interview Cheatsheet', desc: '17 topics covering 117 curated questions from top tech companies', badge: '117 Q' },
                             { href: '/handbook', icon: 'code', color: '#10b981', bg: 'bg-emerald-50', title: 'Blind 75', desc: 'The 75 essential LeetCode problems every engineer should master', badge: '75 problems' },
-                            { href: '/capra/practice', icon: 'behavioral', color: '#f59e0b', bg: 'bg-amber-50', title: 'Behavioral Questions', desc: 'Practice STAR-method answers for behavioral and leadership interviews', badge: 'Practice' },
+                            { href: '/capra/practice', icon: 'behavioral', color: '#f59e0b', bg: 'bg-gray-100', title: 'Behavioral Questions', desc: 'Practice STAR-method answers for behavioral and leadership interviews', badge: 'Practice' },
                           ].map(resource => (
                             <a
                               key={resource.title}
@@ -1137,9 +1137,9 @@ export default function DocsPage({ onBack }) {
                               {[
                                 { complexity: 'O(1)', desc: 'Constant', rating: 'Best', cls: 'text-emerald-600 bg-emerald-50 border border-emerald-200' },
                                 { complexity: 'O(log n)', desc: 'Logarithmic', rating: 'Great', cls: 'text-emerald-600 bg-emerald-50 border border-emerald-200' },
-                                { complexity: 'O(n)', desc: 'Linear', rating: 'Good', cls: 'text-amber-600 bg-amber-50 border border-amber-200' },
-                                { complexity: 'O(n log n)', desc: 'Linearithmic', rating: 'Fair', cls: 'text-amber-600 bg-amber-50 border border-amber-200' },
-                                { complexity: 'O(n²)', desc: 'Quadratic', rating: 'Slow', cls: 'bg-orange-50 text-orange-700 border-orange-200' },
+                                { complexity: 'O(n)', desc: 'Linear', rating: 'Good', cls: 'text-gray-500 bg-gray-100 border border-gray-200' },
+                                { complexity: 'O(n log n)', desc: 'Linearithmic', rating: 'Fair', cls: 'text-gray-500 bg-gray-100 border border-gray-200' },
+                                { complexity: 'O(n²)', desc: 'Quadratic', rating: 'Slow', cls: 'bg-gray-100 text-gray-700 border-gray-200' },
                                 { complexity: 'O(2ⁿ)', desc: 'Exponential', rating: 'Avoid', cls: 'text-red-600 bg-red-50 border border-red-200' },
                               ].map((item, i) => (
                                 <tr key={i} className="border-b border-gray-100 last:border-0">
@@ -1271,7 +1271,7 @@ export default function DocsPage({ onBack }) {
                       if (categoryDesigns.length === 0) return null;
                       const difficultyStyles = {
                         'Easy': 'text-emerald-600 bg-emerald-50 border border-emerald-200',
-                        'Medium': 'text-amber-600 bg-amber-50 border border-amber-200',
+                        'Medium': 'text-gray-500 bg-gray-100 border border-gray-200',
                         'Hard': 'text-red-600 bg-red-50 border border-red-200',
                       };
                       return (
@@ -1360,7 +1360,7 @@ export default function DocsPage({ onBack }) {
                           </div>
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-white overflow-hidden">
                             {categoryProblems.map((problem) => {
-                              const diffStyle = { Easy: 'text-emerald-600 bg-emerald-50 border border-emerald-200', Medium: 'text-amber-600 bg-amber-50 border border-amber-200', Hard: 'text-red-600 bg-red-50 border border-red-200' }[problem.difficulty] || 'text-amber-600 bg-amber-50 border border-amber-200';
+                              const diffStyle = { Easy: 'text-emerald-600 bg-emerald-50 border border-emerald-200', Medium: 'text-gray-500 bg-gray-100 border border-gray-200', Hard: 'text-red-600 bg-red-50 border border-red-200' }[problem.difficulty] || 'text-gray-500 bg-gray-100 border border-gray-200';
                               return (
                                 <div
                                   key={problem.id}
@@ -1403,7 +1403,7 @@ export default function DocsPage({ onBack }) {
                   {/* Distributed System Patterns Section */}
                   <div className="mb-6">
                     <div className="mb-4">
-                      <span className="landing-mono text-xs text-blue-600 tracking-widest uppercase">Advanced</span>
+                      <span className="landing-mono text-xs text-gray-500 tracking-widest uppercase">Advanced</span>
                       <h2 className="landing-display font-bold text-xl mt-1 tracking-tight text-gray-900">Distributed System Patterns</h2>
                       <p className="text-sm text-gray-500 landing-body mt-1">Consistency, availability, and data integrity patterns for distributed systems</p>
                     </div>
@@ -1454,7 +1454,7 @@ export default function DocsPage({ onBack }) {
                   {/* Microservices Patterns Section */}
                   <div className="mb-6">
                     <div className="mb-4">
-                      <span className="landing-mono text-xs text-purple-600 tracking-widest uppercase">Architecture</span>
+                      <span className="landing-mono text-xs text-gray-500 tracking-widest uppercase">Architecture</span>
                       <h2 className="landing-display font-bold text-xl mt-1 tracking-tight text-gray-900">Microservices Patterns</h2>
                       <p className="text-sm text-gray-500 landing-body mt-1">Service communication, resilience, data management, and deployment patterns</p>
                     </div>
@@ -1505,7 +1505,7 @@ export default function DocsPage({ onBack }) {
                   {/* System Design Trade-offs Section */}
                   <div className="mb-6">
                     <div className="mb-4">
-                      <span className="landing-mono text-xs text-amber-600 tracking-widest uppercase">Critical</span>
+                      <span className="landing-mono text-xs text-gray-500 tracking-widest uppercase">Critical</span>
                       <h2 className="landing-display font-bold text-xl mt-1 tracking-tight text-gray-900">System Design Trade-offs</h2>
                       <p className="text-sm text-gray-500 landing-body mt-1">Key architectural decisions and when to choose each approach</p>
                     </div>
@@ -1556,7 +1556,7 @@ export default function DocsPage({ onBack }) {
                   {/* Scalable Systems Section */}
                   <div className="mb-6">
                     <div className="mb-4">
-                      <span className="landing-mono text-xs text-orange-600 tracking-widest uppercase">Senior</span>
+                      <span className="landing-mono text-xs text-gray-500 tracking-widest uppercase">Senior</span>
                       <h2 className="landing-display font-bold text-xl mt-1 tracking-tight text-gray-900">Scalable Systems</h2>
                       <p className="text-sm text-gray-500 landing-body mt-1">Advanced caching, networking, data, and operational patterns for production systems</p>
                     </div>
@@ -1748,7 +1748,7 @@ export default function DocsPage({ onBack }) {
                           </div>
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-white overflow-hidden">
                             {categoryProblems.map((problem) => {
-                              const diffStyle = { Easy: 'text-emerald-600 bg-emerald-50 border border-emerald-200', Medium: 'text-amber-600 bg-amber-50 border border-amber-200', Hard: 'text-red-600 bg-red-50 border border-red-200' }[problem.difficulty] || 'text-amber-600 bg-amber-50 border border-amber-200';
+                              const diffStyle = { Easy: 'text-emerald-600 bg-emerald-50 border border-emerald-200', Medium: 'text-gray-500 bg-gray-100 border border-gray-200', Hard: 'text-red-600 bg-red-50 border border-red-200' }[problem.difficulty] || 'text-gray-500 bg-gray-100 border border-gray-200';
                               return (
                                 <div
                                   key={problem.id}
@@ -2037,7 +2037,7 @@ export default function DocsPage({ onBack }) {
                 <>
                   <div className="mb-6">
                     <div className="mb-4">
-                      <span className="landing-mono text-xs text-purple-600 tracking-widest uppercase">Architecture</span>
+                      <span className="landing-mono text-xs text-gray-500 tracking-widest uppercase">Architecture</span>
                       <h2 className="landing-display font-bold text-xl mt-1 tracking-tight text-gray-900">Microservices Patterns</h2>
                     </div>
                     <div className="space-y-3">
@@ -2091,7 +2091,7 @@ export default function DocsPage({ onBack }) {
                 <>
                   <div className="mb-6">
                     <div className="mb-4">
-                      <span className="landing-mono text-xs text-amber-600 tracking-widest uppercase">Deep Dive</span>
+                      <span className="landing-mono text-xs text-gray-500 tracking-widest uppercase">Deep Dive</span>
                       <h2 className="landing-display font-bold text-xl mt-1 tracking-tight text-gray-900">Database Internals</h2>
                     </div>
                     <div className="space-y-3">
@@ -2145,7 +2145,7 @@ export default function DocsPage({ onBack }) {
                 <>
                   <div className="mb-6">
                     <div className="mb-4">
-                      <span className="landing-mono text-xs text-cyan-600 tracking-widest uppercase">Query Mastery</span>
+                      <span className="landing-mono text-xs text-gray-500 tracking-widest uppercase">Query Mastery</span>
                       <h2 className="landing-display font-bold text-xl mt-1 tracking-tight text-gray-900">SQL Topics</h2>
                     </div>
                     <div className="space-y-3">
@@ -2199,7 +2199,7 @@ export default function DocsPage({ onBack }) {
                 <>
                   <div className="mb-6">
                     <div className="mb-4">
-                      <span className="landing-mono text-xs text-purple-600 tracking-widest uppercase">Build</span>
+                      <span className="landing-mono text-xs text-gray-500 tracking-widest uppercase">Build</span>
                       <h2 className="landing-display font-bold text-xl mt-1 tracking-tight text-gray-900">Projects</h2>
                       <p className="text-sm text-gray-500 mt-1">24 projects across portfolio, take-home, full-stack, system design, and frontend challenges.</p>
                     </div>
@@ -2237,7 +2237,7 @@ export default function DocsPage({ onBack }) {
                                       <div className="flex items-center gap-2 flex-wrap">
                                         <span className={`text-[10px] landing-mono px-1.5 py-0.5 rounded font-semibold ${
                                           topic.difficulty === 'beginner' ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' :
-                                          topic.difficulty === 'intermediate' ? 'bg-amber-50 text-amber-600 border border-amber-200' :
+                                          topic.difficulty === 'intermediate' ? 'bg-gray-100 text-gray-500 border border-gray-200' :
                                           'bg-red-50 text-red-600 border border-red-200'
                                         }`}>{topic.difficulty}</span>
                                         <span className="text-[10px] landing-mono text-gray-400">{topic.estimatedTime}</span>
@@ -2268,7 +2268,7 @@ export default function DocsPage({ onBack }) {
                 <>
                   <div className="mb-6">
                     <div className="mb-4">
-                      <span className="landing-mono text-xs text-amber-600 tracking-widest uppercase">Learning Paths</span>
+                      <span className="landing-mono text-xs text-gray-500 tracking-widest uppercase">Learning Paths</span>
                       <h2 className="landing-display font-bold text-xl mt-1 tracking-tight text-gray-900">Roadmaps</h2>
                       <p className="text-sm text-gray-500 mt-1">12 structured learning paths with visual phase diagrams from beginner to advanced.</p>
                     </div>
@@ -2292,7 +2292,7 @@ export default function DocsPage({ onBack }) {
                                 <div
                                   key={topic.id}
                                   onClick={() => !isLocked && setSelectedTopic(topic.id)}
-                                  className={`group relative px-4 py-3 border-b border-r border-[#e3e8ee] cursor-pointer transition-all duration-150 hover:bg-amber-50/50 ${isLocked ? 'opacity-60' : ''}`}
+                                  className={`group relative px-4 py-3 border-b border-r border-[#e3e8ee] cursor-pointer transition-all duration-150 hover:bg-gray-100/50 ${isLocked ? 'opacity-60' : ''}`}
                                 >
                                   <div className="flex items-start justify-between gap-2">
                                     <div className="flex-1 min-w-0">
@@ -2304,7 +2304,7 @@ export default function DocsPage({ onBack }) {
                                       </div>
                                       <p className="text-xs text-gray-500 line-clamp-2 mb-2">{topic.description}</p>
                                       <div className="flex items-center gap-2">
-                                        <span className="text-[10px] landing-mono text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200 font-semibold">
+                                        <span className="text-[10px] landing-mono text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200 font-semibold">
                                           {topic.phases?.length || 0} phases
                                         </span>
                                         <span className="text-[10px] landing-mono text-gray-400">
@@ -2314,7 +2314,7 @@ export default function DocsPage({ onBack }) {
                                     </div>
                                     <div className="flex items-center gap-1.5 shrink-0 mt-1">
                                       {isStarred && <Icon name="star" size={12} className="text-amber-400" />}
-                                      <Icon name="chevronRight" size={12} className="text-gray-300 group-hover:text-amber-500 group-hover:translate-x-0.5 transition-all" />
+                                      <Icon name="chevronRight" size={12} className="text-gray-300 group-hover:text-gray-400 group-hover:translate-x-0.5 transition-all" />
                                     </div>
                                   </div>
                                 </div>
@@ -2374,7 +2374,7 @@ export default function DocsPage({ onBack }) {
                                           {topic.articles?.length || topic.questions} articles
                                         </span>
                                         {topic.blogUrl && (
-                                          <a href={topic.blogUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} className="text-[10px] landing-mono text-blue-500 hover:underline">
+                                          <a href={topic.blogUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} className="text-[10px] landing-mono text-emerald-600 hover:underline">
                                             blog
                                           </a>
                                         )}
