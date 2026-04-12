@@ -11,7 +11,7 @@ import { query } from '../lib/shared-db.js';
 const router = Router();
 
 // Daily diagram cap for paid users to prevent abuse
-const PAID_DIAGRAM_DAILY_LIMIT = 5;
+const PAID_DIAGRAM_DAILY_LIMIT = 250; // Raised for batch pre-generation (was 5)
 const dailyDiagramUsage = new Map();
 
 function checkDailyDiagramLimit(userId) {
