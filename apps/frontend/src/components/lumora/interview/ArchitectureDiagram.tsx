@@ -209,11 +209,19 @@ export function ArchitectureDiagram({ question, className = '' }: ArchitectureDi
       {/* Image */}
       {imageUrl && !loading && !generating && (
         <div ref={containerRef}
-          className="border border-[#e3e8ee] rounded-lg bg-white select-none"
-          style={{ cursor: isDragging ? 'grabbing' : 'grab', overflow: 'hidden', minHeight: '250px' }}
+          className="rounded-lg select-none flex items-center justify-center"
+          style={{ cursor: isDragging ? 'grabbing' : 'grab', overflow: 'hidden', minHeight: '300px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}
           onWheel={handleWheel} onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}>
           <img src={imageUrl} alt={`Architecture: ${question.slice(0, 50)}`} draggable={false}
-            style={{ transform: `translate(${translate.x}px, ${translate.y}px) scale(${scale})`, transformOrigin: '0 0', maxWidth: 'none', width: '100%', height: 'auto' }} />
+            style={{
+              transform: `translate(${translate.x}px, ${translate.y}px) scale(${scale})`,
+              transformOrigin: 'center center',
+              maxWidth: '100%',
+              maxHeight: '100%',
+              objectFit: 'contain',
+              width: 'auto',
+              height: 'auto',
+            }} />
         </div>
       )}
     </div>

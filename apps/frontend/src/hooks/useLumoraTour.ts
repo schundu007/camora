@@ -42,7 +42,17 @@ export function useLumoraTour() {
 
       tour.addStep({
         id: 'audio',
-        text: '<strong>Audio Controls</strong><br/><strong>Live:</strong> always listening, auto-transcribes.<br/><strong>Manual:</strong> press Record or Cmd+M.<br/><strong>My Voice:</strong> enroll to filter out your voice.<br/><strong>Calibrate:</strong> adjust mic sensitivity.<br/><strong>Interviewer:</strong> capture from Zoom/Meet screen share.<br/><strong>Docs:</strong> upload prep documents for context.',
+        text: '<strong>Audio Modes</strong><br/><strong>Live:</strong> always listening, auto-transcribes the interviewer.<br/><strong>Manual:</strong> press Record or Cmd+M to capture specific questions.<br/><strong>Calibrate:</strong> adjust mic sensitivity to your environment.',
+        attachTo: { element: '[data-tour="audio"]', on: 'bottom' },
+        buttons: [
+          { text: 'Back', action: tour.back, classes: 'shepherd-button-secondary' },
+          { text: 'Next', action: tour.next },
+        ],
+      });
+
+      tour.addStep({
+        id: 'voice-filter',
+        text: '<strong>Voice Filter (Key Feature)</strong><br/>Click <strong>My Voice</strong> to record 5 seconds of yourself speaking. Camora will learn your voice and <strong>automatically filter it out</strong> — only your <strong>interviewer\'s questions</strong> get transcribed and answered.<br/><br/>Works with both:<br/>- <strong>Microphone:</strong> for in-person or speakerphone interviews<br/>- <strong>Interviewer button:</strong> captures audio from Zoom/Meet/Teams screen share<br/><br/>Two-speaker diarization identifies who is speaking in real-time.',
         attachTo: { element: '[data-tour="audio"]', on: 'bottom' },
         buttons: [
           { text: 'Back', action: tour.back, classes: 'shepherd-button-secondary' },
