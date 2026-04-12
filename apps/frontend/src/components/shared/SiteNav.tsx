@@ -38,7 +38,7 @@ export default function SiteNav() {
               key={link.label}
               to={link.href}
               className={`px-3 py-1.5 text-[13px] rounded-lg transition-all ${
-                isActive(link.href) ? 'text-white font-bold bg-white/10' : 'text-white/50 hover:text-white'
+                isActive(link.href) ? 'text-emerald-700 font-bold bg-white/50' : 'text-gray-500 hover:text-gray-900'
               }`}
             >
               {link.label}
@@ -50,23 +50,23 @@ export default function SiteNav() {
         <div className="hidden md:flex items-center gap-3">
           {isAuthenticated ? (
             <>
-              <Link to="/capra/prepare" className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-white/10 transition-colors">
+              <Link to="/capra/prepare" className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-white/40 transition-colors">
                 {user?.image ? (
                   <img src={user.image} alt="" className="w-6 h-6 rounded-full" referrerPolicy="no-referrer" />
                 ) : (
-                  <div className="w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center text-[10px] font-bold text-emerald-400">{user?.name?.[0] || '?'}</div>
+                  <div className="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center text-[10px] font-bold text-emerald-700">{user?.name?.[0] || '?'}</div>
                 )}
-                <span className="text-[13px] text-white/70 font-medium">{user?.name?.split(' ')[0] || 'Dashboard'}</span>
+                <span className="text-[13px] text-gray-700 font-medium">{user?.name?.split(' ')[0] || 'Dashboard'}</span>
               </Link>
-              <button onClick={logout} className="text-[13px] text-white/30 hover:text-red-400 transition-colors font-medium">Sign out</button>
+              <button onClick={logout} className="text-[13px] text-gray-400 hover:text-red-500 transition-colors font-medium">Sign out</button>
             </>
           ) : (
-            <Link to={`/login?redirect=${encodeURIComponent(location.pathname)}`} className="text-[13px] text-white/50 hover:text-white transition-colors font-medium">Sign in</Link>
+            <Link to={`/login?redirect=${encodeURIComponent(location.pathname)}`} className="text-[13px] text-gray-500 hover:text-gray-900 transition-colors font-medium">Sign in</Link>
           )}
         </div>
 
         {/* Mobile burger — 44px touch target */}
-        <button onClick={() => setOpen(!open)} className="md:hidden p-3 -mr-2 text-white/60 hover:text-white" aria-label={open ? 'Close menu' : 'Open menu'} aria-expanded={open}>
+        <button onClick={() => setOpen(!open)} className="md:hidden p-3 -mr-2 text-gray-600 hover:text-gray-900" aria-label={open ? 'Close menu' : 'Open menu'} aria-expanded={open}>
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
             {open
               ? <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -77,25 +77,25 @@ export default function SiteNav() {
 
       {/* Mobile menu */}
       {open && (
-        <div className="md:hidden border-t border-white/10 px-6 py-3 space-y-1" style={{ background: 'rgba(10,10,15,0.95)', backdropFilter: 'blur(12px)', zIndex: 50 }} role="menu">
+        <div className="md:hidden border-t border-white/30 px-6 py-3 space-y-1" style={{ background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)', zIndex: 50 }} role="menu">
           {NAV_LINKS.map((link) => (
             <Link
               key={link.label}
               to={link.href}
               onClick={() => setOpen(false)}
-              className={`block py-2 text-sm font-medium ${isActive(link.href) ? 'text-emerald-400' : 'text-white/60'}`}
+              className={`block py-2 text-sm font-medium ${isActive(link.href) ? 'text-emerald-600' : 'text-gray-600'}`}
             >
               {link.label}
             </Link>
           ))}
-          <div className="pt-2 border-t border-white/10">
+          <div className="pt-2 border-t border-gray-100">
             {isAuthenticated ? (
               <>
-                <Link to="/capra/prepare" onClick={() => setOpen(false)} className="block py-2 text-sm text-white/60 font-medium">Dashboard</Link>
-                <button onClick={() => { logout(); setOpen(false); }} className="block py-2 text-sm text-red-400 font-medium">Sign out</button>
+                <Link to="/capra/prepare" onClick={() => setOpen(false)} className="block py-2 text-sm text-gray-600 font-medium">Dashboard</Link>
+                <button onClick={() => { logout(); setOpen(false); }} className="block py-2 text-sm text-red-500 font-medium">Sign out</button>
               </>
             ) : (
-              <Link to={`/login?redirect=${encodeURIComponent(location.pathname)}`} onClick={() => setOpen(false)} className="block py-2 text-sm text-emerald-400 font-medium">Sign in</Link>
+              <Link to={`/login?redirect=${encodeURIComponent(location.pathname)}`} onClick={() => setOpen(false)} className="block py-2 text-sm text-emerald-600 font-medium">Sign in</Link>
             )}
           </div>
         </div>
