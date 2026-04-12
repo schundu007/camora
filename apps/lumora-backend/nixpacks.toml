@@ -1,5 +1,22 @@
 [phases.setup]
-nixPkgs = ["nodejs_20", "ffmpeg", "python3", "ruby"]
+nixPkgs = [
+  "nodejs_20", "ffmpeg",
+  # Languages
+  "python3", "ruby", "gcc", "openjdk17", "go", "rustc",
+  "php", "perl", "lua", "bash",
+  "ghc",           # Haskell (runghc)
+  "R",             # R (Rscript)
+  "elixir",        # Elixir + Erlang
+  "ocaml",         # OCaml
+  "dart",          # Dart
+  "scala",         # Scala
+  "kotlin",        # Kotlin
+  "swift",         # Swift
+  "mono",          # C# (mcs + mono)
+  "tcl",           # Tcl
+  "julia",         # Julia
+  "clojure",       # Clojure
+]
 
 [phases.install]
 cmds = ["npm install"]

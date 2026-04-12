@@ -4,6 +4,7 @@ import { useInterviewStore } from '@/stores/interview-store';
 import { streamResponse } from '@/lib/sse-client';
 import { ArchitectureDiagram } from '@/components/lumora/interview/ArchitectureDiagram';
 import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
+import { StreamingAnswer } from '@/components/lumora/interview/StreamingAnswer';
 import { transcriptionAPI } from '@/lib/api-client';
 
 const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
