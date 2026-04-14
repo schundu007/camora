@@ -43,7 +43,7 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
   return (
     <>
       <header
-        className="flex items-center justify-between px-4 shrink-0 z-40"
+        className="flex items-center justify-between px-4 shrink-0 z-30"
         style={{
           height: 'var(--topbar-height, 48px)',
           background: 'var(--bg-surface)',
