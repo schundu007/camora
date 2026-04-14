@@ -4,6 +4,7 @@ export const systemDesignPatternCategories = [
   { id: 'consistency', name: 'Consistency Patterns', icon: 'shield', color: '#3b82f6' },
   { id: 'availability', name: 'Availability Patterns', icon: 'zap', color: '#10b981' },
   { id: 'data-integrity', name: 'Data Integrity Patterns', icon: 'database', color: '#8b5cf6' },
+  { id: 'applied', name: 'Applied Architecture', icon: 'layers', color: '#06b6d4' },
 ];
 
 export const systemDesignPatternCategoryMap = {
@@ -19,6 +20,13 @@ export const systemDesignPatternCategoryMap = {
   'phi-accrual-failure-detection': 'availability',
   'outbox-pattern': 'data-integrity',
   'fencing': 'consistency',
+  'real-time-updates': 'applied',
+  'dealing-with-contention': 'applied',
+  'multi-step-processes': 'applied',
+  'scaling-reads': 'applied',
+  'scaling-writes': 'applied',
+  'handling-large-blobs': 'applied',
+  'managing-long-running-tasks': 'applied',
 };
 
 export const systemDesignPatterns = [
@@ -2744,6 +2752,3537 @@ Epoch-Based Fencing (Raft/Paxos):
   All RPCs include sender's term
   Receiver rejects if sender's term < receiver's current term
   Receiver updates its term if sender's term is higher`
+    },
+  },
+
+  // ─────────────────────────────────────────────────────────
+  // 13. Real-time Updates (applied)
+  // ─────────────────────────────────────────────────────────
+  {
+    id: 'real-time-updates',
+    title: 'Real-time Updates',
+    icon: 'radio',
+    color: '#06b6d4',
+    questions: 8,
+    description: 'Push vs pull architectures for delivering live data to clients using WebSockets, SSE, long-polling, and hybrid approaches.',
+    concepts: [
+      'Event-driven architecture',
+      'Pub/sub fanout',
+      'Connection management',
+      'Reconnection strategies',
+      'Message ordering guarantees',
+      'WebSocket scaling with sticky sessions',
+      'Hybrid push/pull patterns',
+    ],
+    tips: [
+      'Default to SSE for unidirectional server-to-client updates — simpler than WebSockets and works through HTTP proxies',
+      'WebSockets are essential only when you need bidirectional communication (chat, collaborative editing, gaming)',
+      'Long-polling is a reliable fallback when SSE or WebSockets are blocked by corporate firewalls',
+      'Always implement exponential backoff with jitter for reconnection to avoid thundering herd on server recovery',
+      'Use sticky sessions or a shared pub/sub layer (Redis, Kafka) when horizontally scaling WebSocket servers',
+      'In interviews, compare the trade-offs of each mechanism and explain when you would choose one over another',
+    ],
+
+    introduction: `**Real-time updates** refer to the ability of a system to push fresh data to clients as soon as it changes on the server, rather than waiting for the client to poll for changes. This is critical for applications like chat, live dashboards, collaborative editors, notification systems, stock tickers, and multiplayer games where stale data directly harms user experience.
+
+There are four primary mechanisms for delivering real-time updates: **WebSockets**, **Server-Sent Events (SSE)**, **long-polling**, and **short-polling**. Each sits at a different point on the complexity-vs-capability spectrum. WebSockets provide full-duplex, bidirectional communication over a single persistent TCP connection. SSE offers a simpler, HTTP-native, unidirectional channel from server to client. Long-polling emulates push by having the client hold an open HTTP request until the server has data. Short-polling is the simplest but least efficient — the client repeatedly asks "anything new?" on a timer.
+
+Choosing the right mechanism depends on your requirements: **direction of data flow** (unidirectional vs bidirectional), **infrastructure constraints** (load balancers, proxies, firewalls), **scale** (number of concurrent connections), and **message ordering guarantees**. Most production systems use a **hybrid approach** — SSE or WebSockets for the primary channel with polling as a fallback, plus a server-side pub/sub backbone (Redis Pub/Sub, Kafka, or NATS) to fan out events across horizontally scaled servers.`,
+
+    keyQuestions: [
+      {
+        question: 'Compare WebSockets, SSE, and long-polling. When would you choose each?',
+        answer: `**WebSockets**:
+\`\`\`
+  Client ◄──────────────────► Server
+         Full-duplex TCP connection
+         Binary + text frames
+         Custom protocol after HTTP upgrade
+\`\`\`
+- **Use when**: Bidirectional communication is required — chat, collaborative editing, multiplayer games, real-time auctions
+- **Pros**: Low latency in both directions, binary support, no HTTP overhead per message
+- **Cons**: Requires sticky sessions or shared state for horizontal scaling, not cacheable, some proxies/firewalls block the upgrade handshake, more complex server implementation
+
+**Server-Sent Events (SSE)**:
+\`\`\`
+  Client ◄────────────────── Server
+         Unidirectional HTTP stream
+         text/event-stream content type
+         Built-in reconnection + last-event-id
+\`\`\`
+- **Use when**: Server-to-client push only — live feeds, notifications, dashboards, progress updates
+- **Pros**: Works over standard HTTP (no upgrade), automatic reconnection with last-event-id, works through most proxies, simpler implementation
+- **Cons**: Unidirectional only, text-only (no binary), limited to ~6 concurrent connections per domain in HTTP/1.1 (not an issue with HTTP/2), no built-in acknowledgment
+
+**Long-polling**:
+\`\`\`
+  Client ──── GET /updates?since=X ────► Server
+  Client ◄── (waits up to timeout) ──── Server
+  Client ──── GET /updates?since=Y ────► Server
+         Repeated HTTP requests, held open
+\`\`\`
+- **Use when**: SSE and WebSockets are not available (legacy browsers, corporate firewalls), or as a fallback mechanism
+- **Pros**: Works everywhere HTTP works, no special server support, stateless on the server side
+- **Cons**: Higher latency (one round-trip per update), more overhead (HTTP headers per request), harder to manage timeouts correctly
+
+**Decision framework**:
+1. Need bidirectional? → WebSocket
+2. Server-to-client only? → SSE (with long-polling fallback)
+3. Hostile network environment? → Long-polling
+4. Very low update frequency? → Short-polling (simplest)`
+      },
+      {
+        question: 'How do you scale WebSocket servers horizontally?',
+        answer: `The core challenge is that a WebSocket connection is **stateful** — it is bound to a specific server process. When you scale to multiple servers, a message published on Server A must reach clients connected to Server B.
+
+**Architecture for horizontal scaling**:
+\`\`\`
+  Clients      Load Balancer (sticky sessions)
+    │               │
+    ├──► WS Server 1 ──┐
+    ├──► WS Server 2 ──┤──► Redis Pub/Sub (or Kafka/NATS)
+    └──► WS Server 3 ──┘
+\`\`\`
+
+**Step 1 — Sticky sessions**: The load balancer must route a WebSocket connection to the same backend server for the lifetime of that connection. Options:
+- IP hash routing
+- Cookie-based affinity
+- Connection ID-based routing
+
+**Step 2 — Shared pub/sub backbone**: When an event occurs (e.g., new chat message), the originating server publishes to a shared message bus. All WS servers subscribe and forward to their connected clients.
+\`\`\`
+  User sends message → WS Server 2
+  WS Server 2 → Redis PUBLISH channel:room:42 "new message"
+  WS Server 1 (subscribed to room:42) → pushes to its clients
+  WS Server 3 (subscribed to room:42) → pushes to its clients
+\`\`\`
+
+**Step 3 — Connection registry**: Track which users are connected to which servers. This enables targeted delivery:
+\`\`\`
+  Redis Hash: user:connections
+    user_123 → ws-server-2
+    user_456 → ws-server-1
+\`\`\`
+
+**Scaling considerations**:
+- Each server can handle ~50K-100K concurrent WebSocket connections (kernel tuning: file descriptors, TCP buffers)
+- Redis Pub/Sub fan-out adds ~1-2ms latency
+- For very high throughput, use Kafka with partitioned topics instead of Redis Pub/Sub
+- Consider connection draining during deployments — gracefully migrate connections to new servers`
+      },
+      {
+        question: 'How do you handle reconnection and message ordering in real-time systems?',
+        answer: `Connections drop constantly in production — network blips, mobile devices switching between WiFi and cellular, server deployments, and load balancer timeouts. A robust real-time system must handle reconnection gracefully without data loss.
+
+**SSE built-in reconnection**:
+\`\`\`
+  Server sends:
+    id: 1042
+    data: {"type":"price_update","symbol":"AAPL","price":182.50}
+
+  Connection drops...
+
+  Client reconnects with header:
+    Last-Event-ID: 1042
+
+  Server resumes from event 1043
+\`\`\`
+SSE has native support for this — the browser automatically reconnects and sends the \`Last-Event-ID\` header. The server must maintain a buffer of recent events to replay.
+
+**WebSocket reconnection strategy**:
+\`\`\`
+  Attempt 1: wait 1s    + jitter(0, 500ms)
+  Attempt 2: wait 2s    + jitter(0, 500ms)
+  Attempt 3: wait 4s    + jitter(0, 500ms)
+  Attempt 4: wait 8s    + jitter(0, 500ms)
+  ...
+  Max wait:  wait 30s   + jitter(0, 500ms)
+\`\`\`
+Exponential backoff with jitter prevents thundering herd when many clients reconnect simultaneously after a server restart.
+
+**Message ordering guarantees**:
+1. **Per-channel ordering**: Assign a sequence number per channel/topic. Clients track the last received sequence number and request gaps on reconnect.
+2. **Causal ordering**: Use vector clocks or Lamport timestamps when multiple producers generate events that have causal relationships.
+3. **Exactly-once delivery**: Assign unique message IDs. Clients deduplicate using a sliding window of recently seen IDs.
+
+**Gap detection and fill**:
+\`\`\`
+  Client tracks: last_seq = 1042
+  Receives event with seq = 1045
+  Detects gap: missing 1043, 1044
+  Fetches via REST: GET /events?after=1042&before=1045
+  Merges into local state, resumes streaming from 1045
+\`\`\`
+
+This hybrid approach — streaming for real-time delivery, REST for gap filling — is used by Slack, Discord, and most production chat systems.`
+      },
+      {
+        question: 'How does pub/sub fanout work and what are the scaling challenges?',
+        answer: `**Pub/sub fanout** is the process of distributing a single published message to all subscribers of a topic or channel. It is the backbone of most real-time systems.
+
+**Basic model**:
+\`\`\`
+  Publisher → Topic/Channel → Subscriber 1
+                            → Subscriber 2
+                            → Subscriber 3
+                            → ...
+                            → Subscriber N
+\`\`\`
+
+**Fanout ratio**: If a topic has N subscribers, one publish operation triggers N deliveries. A single message in a popular chat room with 10,000 members triggers 10,000 deliveries.
+
+**Scaling challenges**:
+
+1. **Hot topics**: A viral post or popular channel creates massive fanout. Solutions:
+   - Rate-limit publishers on hot topics
+   - Switch from push to pull for high-fanout topics (followers fetch on demand)
+   - Tiered delivery: push to online users, queue for offline users
+
+2. **Redis Pub/Sub limitations**: Messages are fire-and-forget — if a subscriber is disconnected, the message is lost. For durability, use Redis Streams or Kafka.
+
+3. **Fan-out-on-write vs fan-out-on-read** (the Twitter problem):
+\`\`\`
+  Fan-out-on-write (push):
+    User posts tweet → write to every follower's timeline cache
+    Fast reads, expensive writes
+    Bad for users with millions of followers (celebrity problem)
+
+  Fan-out-on-read (pull):
+    User opens timeline → fetch and merge tweets from followed users
+    Cheap writes, expensive reads
+    Better for high-follower accounts
+
+  Hybrid (Twitter's actual approach):
+    Regular users: fan-out-on-write
+    Celebrities (>500K followers): fan-out-on-read
+    Merge both at read time
+\`\`\`
+
+4. **Ordering across partitions**: When using Kafka, messages in a single partition are ordered, but across partitions they are not. Use a consistent partition key (e.g., room_id) to maintain ordering within a conversation.`
+      },
+      {
+        question: 'How do you design a notification system that supports real-time push and offline delivery?',
+        answer: `A production notification system must handle two modes: **real-time push** for online users and **persistent storage** for offline users who will read notifications later.
+
+**Architecture**:
+\`\`\`
+  Event Source → Notification Service → Presence Check
+                                          │
+                                ┌─────────┴──────────┐
+                                ▼                    ▼
+                          Online Path          Offline Path
+                          (push via WS/SSE)    (store in DB)
+                                │                    │
+                                ▼                    ▼
+                          WS Gateway            Notification Store
+                                │                    │
+                                ▼                    ▼
+                          Client receives      Client fetches on
+                          in real-time          next login/open
+\`\`\`
+
+**Presence tracking**: Maintain a set of online users with their connection endpoints.
+\`\`\`
+  Redis SET online:users {user_123, user_456, ...}
+  Redis HASH user:connections
+    user_123 → ws-server-2:conn-abc
+\`\`\`
+
+**Notification lifecycle**:
+1. Event occurs (new message, like, follow, system alert)
+2. Notification service determines recipients and their preferences
+3. For each recipient:
+   a. Write to notification store (permanent record)
+   b. If online → push via WebSocket/SSE gateway
+   c. If offline → optionally trigger mobile push (APNs/FCM) or email
+
+**Batching and deduplication**:
+- Group related notifications (e.g., "Alice and 5 others liked your post")
+- Debounce rapid-fire events (e.g., typing indicators)
+- Deduplicate with idempotency keys to prevent duplicate push notifications
+
+**Read status and badge counts**:
+\`\`\`
+  notification_id | user_id | type | read | created_at
+  ────────────────┼─────────┼──────┼──────┼───────────
+  notif_1         | user_42 | like | true | 2024-01-15
+  notif_2         | user_42 | msg  | false| 2024-01-15
+
+  Badge count = SELECT COUNT(*) WHERE user_id=42 AND read=false
+  (Cache in Redis for fast access, update on read/new notification)
+\`\`\`
+
+This dual-path approach ensures no notifications are lost, while online users receive instant feedback.`
+      },
+      {
+        question: 'What are the trade-offs between HTTP/2 streaming, SSE, and WebSockets for server push?',
+        answer: `All three enable server-initiated data delivery, but they differ fundamentally in protocol design and operational characteristics.
+
+**HTTP/2 Server Push** (largely deprecated for this use case):
+- Originally designed to push assets (CSS, JS) alongside an HTML response
+- Not suitable for event streaming — browsers have removed support for push promises
+- Do not confuse with HTTP/2 multiplexed streams, which SSE benefits from
+
+**SSE over HTTP/2**:
+\`\`\`
+  Single TCP connection (HTTP/2 multiplexed)
+  ├── Stream 1: SSE /events/notifications
+  ├── Stream 3: SSE /events/prices
+  ├── Stream 5: Regular REST request
+  └── Stream 7: SSE /events/activity
+\`\`\`
+- HTTP/2 eliminates the 6-connection-per-domain limit of HTTP/1.1
+- Multiple SSE streams share one TCP connection
+- Standard HTTP headers, cookies, and auth flow apply
+- Load balancers and CDNs understand HTTP natively
+- Built-in reconnection and event IDs
+
+**WebSockets over HTTP/2**:
+- RFC 8441 defines WebSocket over HTTP/2 via CONNECT method
+- Eliminates the separate TCP connection for WebSocket
+- Not yet universally supported by all proxies and CDNs
+
+**Operational comparison**:
+\`\`\`
+  ┌──────────────────┬─────────────┬────────────────┐
+  │ Concern          │ SSE         │ WebSocket      │
+  ├──────────────────┼─────────────┼────────────────┤
+  │ Protocol         │ HTTP        │ Custom (TCP)   │
+  │ Direction        │ Server→Client│ Bidirectional │
+  │ Proxy support    │ Excellent   │ Moderate       │
+  │ Auth             │ HTTP headers│ Query params   │
+  │                  │ + cookies   │ or first msg   │
+  │ Compression      │ HTTP gzip   │ Per-message    │
+  │                  │             │ deflate ext    │
+  │ Load balancer    │ Standard    │ Sticky session │
+  │ Monitoring       │ HTTP tools  │ Custom tooling │
+  │ Connection cost  │ Lower       │ Higher         │
+  │ Max connections  │ HTTP/2 mux  │ 1 TCP per conn │
+  └──────────────────┴─────────────┴────────────────┘
+\`\`\`
+
+**Recommendation**: Start with SSE unless bidirectional communication is a hard requirement. SSE is operationally simpler, works with existing HTTP infrastructure, and HTTP/2 makes it highly efficient for multiple concurrent streams.`
+      },
+      {
+        question: 'How would you design real-time updates for a collaborative document editor?',
+        answer: `Collaborative editing is one of the most demanding real-time use cases because multiple users modify the same document simultaneously, and conflicts must be resolved deterministically.
+
+**Architecture**:
+\`\`\`
+  User A (browser)                 User B (browser)
+       │                                │
+  Local edit ──► WebSocket ──► Collaboration Server ◄── WebSocket ◄── Local edit
+       │              │              │
+       ▼              ▼              ▼
+  Local state    Operation Log    Local state
+  (optimistic)   (source of truth) (optimistic)
+\`\`\`
+
+**Conflict resolution strategies**:
+
+1. **Operational Transformation (OT)** — used by Google Docs:
+   - Each edit is an operation: insert(pos, char), delete(pos)
+   - Server transforms concurrent operations against each other
+   - Guarantees convergence: all clients reach the same final state
+   - Complex to implement correctly (O(n^2) transformation pairs)
+
+2. **Conflict-free Replicated Data Types (CRDTs)** — used by Figma, Notion:
+   - Each character/element has a unique ID and position
+   - Operations are commutative — order does not matter
+   - No central server required for conflict resolution
+   - Higher memory overhead (unique IDs per element)
+
+**Real-time update flow with OT**:
+\`\`\`
+  1. User A types "hello" at position 0
+     → send: {op: "insert", pos: 0, text: "hello", rev: 5}
+
+  2. Concurrently, User B types "world" at position 0
+     → send: {op: "insert", pos: 0, text: "world", rev: 5}
+
+  3. Server receives A first, applies it (rev 6)
+  4. Server receives B, transforms against A:
+     B' = transform(B, A) → {op: "insert", pos: 5, text: "world", rev: 6}
+  5. Server broadcasts A to B, B' to A
+  6. Both clients converge on "helloworld"
+\`\`\`
+
+**Presence and cursors**: Beyond document changes, show each user's cursor position, selection, and name. This requires frequent updates (every keystroke or mouse move) but tolerates data loss — use unreliable delivery (no persistence, just broadcast).
+
+**Persistence**: Periodically snapshot the document state to storage. The operation log can be compacted after a snapshot. This hybrid ensures fast recovery without replaying the entire operation history.`
+      },
+      {
+        question: 'How do you handle backpressure in real-time streaming systems?',
+        answer: `**Backpressure** occurs when a consumer cannot keep up with the rate of incoming messages. Without handling it, the system either drops messages, runs out of memory, or cascades failures to upstream services.
+
+**Where backpressure arises in real-time systems**:
+\`\`\`
+  Fast Producer → Buffer/Queue → Slow Consumer
+  (1000 msg/s)    (growing!)      (100 msg/s)
+\`\`\`
+
+**Strategies for handling backpressure**:
+
+1. **Buffering with bounded queues**: Set a maximum buffer size. When full, apply a policy:
+   - Drop oldest messages (suitable for metrics, sensor data)
+   - Drop newest messages (suitable for commands)
+   - Block the producer (suitable for pipelines where data loss is unacceptable)
+
+2. **Rate limiting at the source**: Throttle the publisher to match consumer capacity.
+\`\`\`
+  Producer → Token Bucket (100 msg/s) → Queue → Consumer
+\`\`\`
+
+3. **Sampling/aggregation**: Instead of delivering every event, aggregate:
+   - Send price updates at most once per 100ms (latest value wins)
+   - Batch 100 small events into one delivery
+
+4. **Consumer-driven pull**: Instead of the server pushing, let the client pull at its own pace:
+\`\`\`
+  Client: GET /events?after=last_id&limit=50
+  Server: returns up to 50 events
+  Client: processes, then requests next batch
+\`\`\`
+
+5. **Adaptive quality**: Degrade gracefully based on consumer speed:
+   - Fast client: full fidelity (every tick, every keystroke)
+   - Slow client: reduced fidelity (snapshots every second, summarized updates)
+
+**WebSocket backpressure**: The WebSocket API does not natively expose backpressure. Monitor the \`bufferedAmount\` property on the WebSocket object — if it grows, the network or client is not keeping up. Pause sending until the buffer drains.
+
+**Kafka backpressure**: Consumer groups naturally handle backpressure — each consumer pulls at its own rate. If consumers fall behind, increase partitions and add consumers to the group. Monitor consumer lag as an operational metric.`
+      },
+    ],
+
+    dataModel: {
+      description: 'Real-time connection state and event delivery tracking',
+      schema: `Connection State (per client):
+  connection_id:   UUID
+  user_id:         user reference
+  server_id:       which WS/SSE server
+  transport:       websocket | sse | long-poll
+  connected_at:    timestamp
+  last_heartbeat:  timestamp
+  subscriptions:   [channel_1, channel_2, ...]
+  last_event_id:   last successfully delivered event ID
+
+Event Record:
+  event_id:        monotonic per channel
+  channel:         channel/topic name
+  event_type:      message | notification | presence | system
+  payload:         JSON data
+  created_at:      timestamp
+  ttl:             expiration for ephemeral events
+
+Delivery Tracking:
+  event_id:        reference to event
+  user_id:         recipient
+  status:          pending | delivered | read
+  delivered_at:    timestamp (null if pending)
+  delivery_method: push | pull | push_notification`
+    },
+  },
+
+  // ─────────────────────────────────────────────────────────
+  // 14. Dealing with Contention (applied)
+  // ─────────────────────────────────────────────────────────
+  {
+    id: 'dealing-with-contention',
+    title: 'Dealing with Contention',
+    icon: 'lock',
+    color: '#06b6d4',
+    questions: 7,
+    description: 'Managing concurrent access to shared resources using optimistic locking, pessimistic locking, distributed locks, and queue-based serialization.',
+    concepts: [
+      'Optimistic locking (CAS)',
+      'Pessimistic locking',
+      'Distributed locks (Redis, ZooKeeper)',
+      'Queue-based serialization',
+      'Lease-based locking',
+      'Hot key mitigation',
+    ],
+    tips: [
+      'Start with optimistic concurrency control — it scales better and handles the common case where conflicts are rare',
+      'Pessimistic locks should be a last resort for high-contention resources where retries are expensive',
+      'Redis SETNX-based locks must always use expiration to prevent deadlocks from crashed clients',
+      'Queue-based serialization eliminates contention entirely but adds latency — use for write-heavy hot keys',
+      'In interviews, always discuss what happens when a lock holder crashes — fencing tokens or lease expiry are the safety nets',
+    ],
+
+    introduction: `**Contention** occurs when multiple processes or threads attempt to access or modify the same shared resource simultaneously. In distributed systems, this manifests as concurrent writes to the same database row, simultaneous updates to the same cache key, or multiple services trying to claim the same work item from a queue.
+
+Managing contention correctly is critical because getting it wrong leads to **lost updates**, **dirty reads**, **double-processing**, and **data corruption**. The challenge is amplified in distributed systems where you cannot rely on a single-process mutex — the locks themselves must be distributed, which introduces network latency, partial failures, and the risk of lock holder crashes.
+
+There are several strategies for managing contention, each with different trade-offs. **Optimistic locking** assumes conflicts are rare and detects them at write time using version numbers or compare-and-swap (CAS). **Pessimistic locking** assumes conflicts are common and acquires exclusive access before reading. **Distributed locks** extend pessimistic locking across machines using services like Redis or ZooKeeper. **Queue-based serialization** eliminates contention entirely by routing all operations on a resource through a single-threaded processor. The right choice depends on the contention level, the cost of retries, and the consistency requirements of your system.`,
+
+    keyQuestions: [
+      {
+        question: 'How does optimistic locking work and when should you use it?',
+        answer: `**Optimistic locking** assumes that conflicts are rare. Instead of acquiring a lock before reading, you read the data along with a version number, perform your computation, and then attempt to write only if the version has not changed.
+
+**Database-level implementation (version column)**:
+\`\`\`
+  -- Read
+  SELECT balance, version FROM accounts WHERE id = 42;
+  -- Returns: balance=1000, version=7
+
+  -- Application logic
+  new_balance = 1000 - 200 = 800
+
+  -- Conditional write
+  UPDATE accounts
+  SET balance = 800, version = 8
+  WHERE id = 42 AND version = 7;
+
+  -- If rows_affected = 0 → conflict detected, retry
+\`\`\`
+
+**Compare-and-Swap (CAS)**:
+\`\`\`
+  CAS(address, expected_value, new_value)
+  - Atomically: if *address == expected_value, set *address = new_value
+  - Returns: success or failure
+  - Used by: CPU instructions, Redis WATCH/MULTI, DynamoDB ConditionExpression
+\`\`\`
+
+**DynamoDB conditional write**:
+\`\`\`
+  UpdateItem:
+    Key: {id: "42"}
+    UpdateExpression: "SET balance = :new, version = :v2"
+    ConditionExpression: "version = :v1"
+    ExpressionAttributeValues: {":v1": 7, ":v2": 8, ":new": 800}
+  -- Throws ConditionalCheckFailedException on conflict
+\`\`\`
+
+**When to use**:
+- Read-heavy workloads where conflicts are infrequent (<5% of writes conflict)
+- When the cost of a retry is low (re-read, recompute, re-write)
+- When you need high throughput — no lock acquisition overhead in the happy path
+
+**When NOT to use**:
+- High contention (many writers on the same key) — retry storms waste resources
+- When the computation between read and write is expensive (e.g., calling an external API)
+- When retries have side effects that cannot be safely repeated`
+      },
+      {
+        question: 'How do distributed locks work with Redis and what are the pitfalls?',
+        answer: `**Redis single-instance lock (SETNX)**:
+\`\`\`
+  -- Acquire lock
+  SET resource:lock unique_token NX EX 30
+  -- NX: only set if not exists
+  -- EX 30: auto-expire after 30 seconds
+  -- unique_token: random UUID for safe release
+
+  -- Release lock (Lua script for atomicity)
+  if redis.call("get", KEYS[1]) == ARGV[1] then
+    return redis.call("del", KEYS[1])
+  else
+    return 0
+  end
+\`\`\`
+
+**Why unique_token matters**: Without it, Client A's lock could expire, Client B acquires it, then Client A's delayed DEL removes Client B's lock. The token ensures only the holder can release.
+
+**Pitfalls of single-instance Redis locks**:
+1. **Redis failover**: If the Redis primary crashes after granting a lock but before replicating to the replica, the lock is lost. Two clients may hold the "same" lock simultaneously.
+2. **Clock issues with expiry**: If the lock holder's process pauses (GC, swapping), the lock may expire before the holder completes its work.
+3. **No fencing**: Even with expiry, a slow client may continue operating after its lock expires, corrupting data.
+
+**Redlock algorithm** (distributed across N Redis instances):
+\`\`\`
+  1. Get current time T1
+  2. Try to acquire lock on N/2+1 Redis instances (majority)
+     - Each with same key, value, and short timeout
+  3. Get current time T2
+  4. Lock is valid if:
+     - Acquired on majority of instances
+     - Elapsed time (T2-T1) < lock TTL
+  5. Effective TTL = original TTL - (T2-T1)
+\`\`\`
+
+**Redlock criticism** (Martin Kleppmann's analysis):
+- Relies on wall-clock time assumptions that can be violated by clock skew and process pauses
+- Does not provide fencing tokens, so a paused client with an expired lock can still corrupt data
+- For safety-critical locking, ZooKeeper with ephemeral nodes and fencing tokens is more robust
+
+**Best practice**: Use Redis locks for **efficiency** (preventing duplicate work) but not for **correctness** (protecting invariants). For correctness, combine locks with fencing tokens or use a consensus-based system.`
+      },
+      {
+        question: 'How does ZooKeeper implement distributed locks and why is it considered safer?',
+        answer: `ZooKeeper provides distributed locks through **ephemeral sequential znodes**, which offer stronger guarantees than Redis-based locks.
+
+**Lock acquisition protocol**:
+\`\`\`
+  /locks/resource-42/
+    ├── lock-0000000001 (ephemeral, Client A)  ← holder
+    ├── lock-0000000002 (ephemeral, Client B)  ← waiting
+    └── lock-0000000003 (ephemeral, Client C)  ← waiting
+\`\`\`
+
+1. Client creates an ephemeral sequential znode under the lock path
+2. Client lists all children and checks if its znode has the lowest sequence number
+3. If yes → lock acquired
+4. If no → set a watch on the znode with the next-lower sequence number (herd avoidance)
+5. When the watched znode is deleted, the client rechecks
+
+**Why ephemeral znodes are safer**:
+- If the lock holder crashes or loses its ZooKeeper session, the ephemeral znode is automatically deleted
+- The next waiter is notified and acquires the lock
+- No reliance on TTL or wall-clock time — session liveness is determined by heartbeats
+
+**Fencing with ZooKeeper**:
+\`\`\`
+  Lock znode: lock-0000000042
+  Fencing token: 42 (the sequence number)
+
+  Client includes token 42 in all writes to the protected resource
+  Storage rejects writes with token < max_seen_token
+\`\`\`
+
+The monotonically increasing sequence number serves as a natural fencing token, which Redis locks do not provide natively.
+
+**Trade-offs vs Redis**:
+\`\`\`
+  ┌─────────────────┬──────────────┬──────────────┐
+  │ Property        │ ZooKeeper    │ Redis        │
+  ├─────────────────┼──────────────┼──────────────┤
+  │ Safety          │ Strong       │ Best-effort  │
+  │ Fencing tokens  │ Built-in     │ Manual       │
+  │ Crash handling  │ Auto-release │ TTL-based    │
+  │ Latency         │ Higher       │ Lower        │
+  │ Throughput      │ Lower        │ Higher       │
+  │ Ops complexity  │ Higher       │ Lower        │
+  │ Best for        │ Correctness  │ Efficiency   │
+  └─────────────────┴──────────────┴──────────────┘
+\`\`\`
+
+**Recommendation**: Use ZooKeeper (or etcd) when a lock violation would cause data corruption or financial loss. Use Redis when a lock violation would cause duplicate work that is wasteful but not dangerous.`
+      },
+      {
+        question: 'What is queue-based serialization and when does it outperform locking?',
+        answer: `**Queue-based serialization** eliminates contention entirely by routing all operations that affect a given resource through a single, ordered queue processed by one consumer at a time.
+
+**Architecture**:
+\`\`\`
+  Writer A ──┐
+  Writer B ──┤──► Queue (partitioned by resource_id) ──► Single Consumer
+  Writer C ──┘                                            (processes sequentially)
+\`\`\`
+
+**How it works**:
+1. Instead of acquiring a lock and writing directly, clients enqueue their operations
+2. Operations for the same resource are routed to the same partition (via consistent hashing on resource_id)
+3. A single consumer processes operations for each partition sequentially
+4. No locks needed — serialization is achieved by single-threaded processing
+
+**Kafka-based implementation**:
+\`\`\`
+  Topic: account-operations (partitions: 64)
+  Partition key: account_id
+  Message: {account_id: "42", op: "debit", amount: 200, idempotency_key: "tx-abc"}
+
+  Consumer group: account-processor
+  - Each partition processed by exactly one consumer
+  - Operations on account 42 always go to partition hash(42) % 64
+  - Processed strictly in order within that partition
+\`\`\`
+
+**When queue serialization outperforms locking**:
+
+1. **Extreme contention**: When many writers target the same key (e.g., a viral post's like counter), lock-based approaches spend most of their time retrying. A queue processes every operation exactly once, no retries.
+
+2. **Complex operations**: When the operation between lock-acquire and lock-release is expensive (calls to external APIs, complex computations), holding a lock for that duration blocks all other writers. With a queue, the consumer processes at its own pace.
+
+3. **Audit requirements**: The queue naturally provides an ordered log of all operations — useful for auditing, replay, and debugging.
+
+**Trade-offs**:
+- Adds latency (enqueue → dequeue → process) compared to direct writes
+- Queue becomes a single point of failure (mitigate with replicated queues like Kafka)
+- Backpressure: if the consumer cannot keep up, the queue grows — need monitoring and scaling strategies
+- Not suitable for read-modify-write cycles where the client needs the result immediately`
+      },
+      {
+        question: 'How do you handle contention on hot keys in databases and caches?',
+        answer: `A **hot key** is a single key or row that receives a disproportionate amount of traffic. Examples: a viral tweet, a flash sale product, a global counter, or a celebrity's follower count. Hot keys create contention bottlenecks even in distributed systems because all requests funnel to a single shard or node.
+
+**Database hot key mitigation**:
+
+1. **Write buffering and batching**:
+\`\`\`
+  Instead of:  1000 concurrent UPDATEs to row X
+  Do:          Batch in memory, flush periodically
+               UPDATE products SET stock = stock - batch_sum WHERE id = X
+\`\`\`
+
+2. **Shard splitting**: Split the hot key into N sub-keys, distribute writes, aggregate on read.
+\`\`\`
+  counter:likes:post_42      (hot!)
+  → counter:likes:post_42:0  (shard 0)
+  → counter:likes:post_42:1  (shard 1)
+  → counter:likes:post_42:2  (shard 2)
+  ...
+  Total = SUM of all shards (read-time aggregation)
+\`\`\`
+
+3. **Async counter updates**: Write to a fast append-only log (Kafka, Redis Stream), aggregate periodically with a background job. Accept that the displayed count is slightly stale.
+
+**Cache hot key mitigation**:
+
+1. **Local caching (L1 cache)**: Cache the hot key in application-server memory. Use short TTL (1-5 seconds) to limit staleness.
+\`\`\`
+  Request → L1 (in-process, 1s TTL) → L2 (Redis) → Database
+  Hot key served from L1, never hits Redis at all
+\`\`\`
+
+2. **Replicated cache entries**: Store the hot key under multiple sub-keys in Redis, randomly route reads.
+\`\`\`
+  GET hot_key:{random(0,7)}  → spreads across 8 Redis slots
+\`\`\`
+
+3. **Probabilistic early expiration**: Each reader has a small probability of refreshing the cache before it expires, smoothing the thundering herd on expiry.
+
+**Real-world examples**:
+- **DynamoDB adaptive capacity**: Automatically isolates hot partitions and allocates additional throughput
+- **Instagram likes**: Async counter pipeline — enqueue increment, background worker batches updates
+- **Memcached at Facebook**: Hot keys replicated to dedicated memcached pools with higher capacity`
+      },
+      {
+        question: 'Explain lease-based locking and how it prevents split-brain in distributed systems.',
+        answer: `A **lease** is a time-bounded lock — it grants exclusive access to a resource for a fixed duration and automatically expires if not renewed. Leases solve the fundamental problem of distributed locking: what happens when the lock holder crashes and cannot release the lock.
+
+**Lease lifecycle**:
+\`\`\`
+  T=0s:   Client A acquires lease (TTL=30s)
+  T=10s:  Client A renews lease (resets TTL to 30s)
+  T=20s:  Client A renews lease (resets TTL to 30s)
+  T=25s:  Client A crashes!
+  T=50s:  Lease expires (30s after last renewal)
+  T=50s:  Client B acquires lease
+\`\`\`
+
+**Split-brain prevention with leases**:
+\`\`\`
+  Scenario without leases:
+    Client A holds lock, network partition occurs
+    Lock service thinks A is gone, grants lock to B
+    A is still running, thinks it holds the lock
+    A and B both write → data corruption!
+
+  Scenario with leases + fencing:
+    Client A holds lease with fencing_token=7
+    Network partition, lease expires after TTL
+    Client B acquires lease with fencing_token=8
+    Client A's writes are rejected (token 7 < max seen 8)
+    Only B's writes succeed
+\`\`\`
+
+**Renewal strategy**: The lease holder must renew before expiry. Best practice:
+\`\`\`
+  Renewal interval = TTL / 3
+  TTL = 30s → renew every 10s
+  This gives 2 missed renewals before expiry
+  Handles transient network blips gracefully
+\`\`\`
+
+**Applications of leases**:
+1. **Leader election**: The leader holds a lease on a "leader" key. If it fails to renew, another node becomes leader.
+2. **Cache leases** (Facebook Memcache): A client gets a lease-token when it observes a cache miss. Only the lease holder can populate the cache, preventing thundering herd.
+3. **HDFS leases**: The NameNode grants write leases on files. Only the lease holder can write. If the client dies, the lease expires and the file is available for recovery.
+
+**Trade-offs**:
+- Requires reasonably synchronized clocks (the lease holder and the lock server must agree on what "30 seconds" means)
+- Short TTL → more renewal traffic, faster failover
+- Long TTL → less renewal traffic, slower failover
+- Always combine with fencing tokens for true safety`
+      },
+      {
+        question: 'How do you choose between optimistic and pessimistic concurrency control for a given system?',
+        answer: `The choice depends on **contention level**, **cost of conflict**, **retry feasibility**, and **latency requirements**.
+
+**Decision framework**:
+\`\`\`
+  ┌──────────────────────────────────────────────────┐
+  │            Contention Level                       │
+  │  Low (<5% conflicts)  │  High (>20% conflicts)   │
+  ├───────────────────────┼──────────────────────────┤
+  │  Optimistic           │  Pessimistic             │
+  │  (version/CAS)        │  (locks/leases)          │
+  │  - High throughput    │  - No retry waste        │
+  │  - No lock overhead   │  - Guaranteed progress   │
+  │  - Occasional retry   │  - Lock overhead always  │
+  └───────────────────────┴──────────────────────────┘
+\`\`\`
+
+**Choose optimistic when**:
+1. Most transactions do not conflict (e.g., users editing their own profiles)
+2. The computation between read and write is fast and cheap to retry
+3. High throughput is more important than individual request latency
+4. The system uses a database that supports conditional writes (DynamoDB, PostgreSQL)
+
+**Choose pessimistic when**:
+1. Conflicts are frequent and predictable (e.g., inventory decrement during flash sale)
+2. The operation involves expensive side effects (external API calls, sending emails)
+3. Retries are not feasible or would confuse the user
+4. Strict ordering is required (e.g., financial transactions)
+
+**Hybrid approaches in practice**:
+
+1. **Optimistic with escalation**: Start optimistic; if a key experiences N consecutive conflicts, automatically escalate to pessimistic for that key.
+\`\`\`
+  attempt = 0
+  while true:
+    if attempt < 3:
+      result = optimistic_write(key, value, version)
+    else:
+      acquire_lock(key)
+      result = direct_write(key, value)
+      release_lock(key)
+    if result.success: break
+    attempt++
+\`\`\`
+
+2. **Multi-Version Concurrency Control (MVCC)**: Readers never block. Writers create new versions. Used by PostgreSQL, CockroachDB, Spanner.
+\`\`\`
+  Reader at T=5 sees version at T=5 (snapshot isolation)
+  Writer at T=7 creates new version
+  Reader at T=5 is unaffected
+  No read-write contention at all
+\`\`\`
+
+3. **Partitioned resources**: Reduce contention by partitioning the resource so different writers target different partitions (same as hot key sharding).
+
+**Rule of thumb**: Default to optimistic. Switch to pessimistic only when you measure high conflict rates or when retries have unacceptable side effects.`
+      },
+    ],
+
+    dataModel: {
+      description: 'Lock state and contention tracking',
+      schema: `Optimistic Lock State (database row):
+  resource_id:     primary key
+  data:            the protected resource value
+  version:         monotonically increasing integer
+  updated_at:      timestamp of last successful write
+  updated_by:      ID of last writer
+
+Distributed Lock (Redis):
+  key:             "lock:{resource_id}"
+  value:           unique_token (UUID)
+  ttl:             seconds until auto-expiry
+  acquired_at:     timestamp
+
+Lease Record:
+  lease_id:        UUID
+  resource_id:     the locked resource
+  holder_id:       client/node holding the lease
+  fencing_token:   monotonic integer for fencing
+  granted_at:      timestamp
+  expires_at:      timestamp (granted_at + TTL)
+  renewed_at:      timestamp of last renewal
+  status:          active | expired | released
+
+Contention Metrics:
+  resource_id:     the monitored resource
+  conflict_count:  number of CAS failures in window
+  lock_wait_p99:   99th percentile lock wait time
+  escalated:       boolean (switched to pessimistic)`
+    },
+  },
+
+  // ─────────────────────────────────────────────────────────
+  // 15. Multi-step Processes (applied)
+  // ─────────────────────────────────────────────────────────
+  {
+    id: 'multi-step-processes',
+    title: 'Multi-step Processes',
+    icon: 'gitBranch',
+    color: '#06b6d4',
+    questions: 7,
+    description: 'Orchestrating distributed transactions across services using sagas, compensating transactions, and event-driven choreography.',
+    concepts: [
+      'Saga pattern',
+      'Orchestration vs choreography',
+      'Compensating transactions',
+      'Idempotency keys',
+      'Two-phase commit limitations',
+      'Dead letter queues',
+      'Exactly-once processing',
+    ],
+    tips: [
+      'Sagas replace distributed transactions — each step has a compensating action that undoes it on failure',
+      'Prefer orchestration for complex flows with many steps — a central coordinator is easier to reason about and debug',
+      'Use choreography for simple, decoupled flows between 2-3 services where each service owns its own logic',
+      'Every step must be idempotent — network retries will cause duplicate deliveries',
+      'Dead letter queues are essential for capturing failed messages that exceed retry limits',
+    ],
+
+    introduction: `In a monolithic application, a business operation like "place an order" can be wrapped in a single database transaction — all steps succeed or all are rolled back atomically. In a microservices architecture, this same operation spans multiple services (order service, payment service, inventory service, shipping service), each with its own database. A traditional distributed transaction using two-phase commit (2PC) is impractical at scale because it requires all participants to be available and introduces a coordinator as a single point of failure.
+
+The **saga pattern** is the standard alternative. A saga breaks a distributed transaction into a sequence of local transactions, each executed by a different service. If any step fails, the saga executes **compensating transactions** for all previously completed steps, effectively undoing the work. Unlike 2PC, a saga does not hold locks across services — it trades atomicity for availability and partition tolerance.
+
+There are two saga coordination approaches: **orchestration** and **choreography**. In orchestration, a central saga coordinator tells each service what to do and handles failures. In choreography, services communicate through events — each service listens for events from the previous step and publishes events for the next. Orchestration is easier to understand and debug for complex flows; choreography is more decoupled but harder to trace when things go wrong. Most production systems use orchestration for critical business flows and choreography for simpler, loosely coupled integrations.`,
+
+    keyQuestions: [
+      {
+        question: 'Explain the saga pattern with a concrete example of an e-commerce order flow.',
+        answer: `**Order placement saga** — a five-step distributed transaction:
+
+\`\`\`
+  Step 1: Create Order (Order Service)
+    → Local TX: INSERT order with status=PENDING
+    → Compensation: UPDATE order SET status=CANCELLED
+
+  Step 2: Reserve Inventory (Inventory Service)
+    → Local TX: UPDATE stock SET reserved += quantity WHERE product_id=X
+    → Compensation: UPDATE stock SET reserved -= quantity
+
+  Step 3: Process Payment (Payment Service)
+    → Local TX: charge customer's payment method
+    → Compensation: issue refund
+
+  Step 4: Confirm Order (Order Service)
+    → Local TX: UPDATE order SET status=CONFIRMED
+    → Compensation: UPDATE order SET status=CANCELLED
+
+  Step 5: Schedule Shipping (Shipping Service)
+    → Local TX: create shipment record
+    → Compensation: cancel shipment
+\`\`\`
+
+**Happy path**:
+\`\`\`
+  Create Order → Reserve Inventory → Process Payment → Confirm → Ship
+       ✓              ✓                  ✓               ✓        ✓
+\`\`\`
+
+**Failure at step 3 (payment fails)**:
+\`\`\`
+  Create Order → Reserve Inventory → Process Payment (FAILS!)
+       ✓              ✓                  ✗
+       ◄──────────────◄──── Compensate ──┘
+  Release Inventory ← Cancel Order
+       ✓                    ✓
+\`\`\`
+
+**Key design decisions**:
+- Each step publishes an event or calls the orchestrator on completion
+- Compensating transactions must be idempotent (payment refund with idempotency key)
+- Intermediate states are visible to users — the order shows as "processing" during the saga
+- Timeouts on each step trigger compensation if a service is unresponsive`
+      },
+      {
+        question: 'Compare orchestration vs choreography for saga coordination.',
+        answer: `**Orchestration** — centralized coordinator:
+\`\`\`
+                    ┌──────────────┐
+                    │    Saga      │
+                    │ Orchestrator │
+                    └──────┬───────┘
+                           │
+        ┌──────────┬───────┼───────┬──────────┐
+        ▼          ▼       ▼       ▼          ▼
+    ┌───────┐ ┌────────┐ ┌─────┐ ┌───────┐ ┌──────┐
+    │Order  │ │Inventory│ │Pay  │ │Confirm│ │Ship  │
+    │Service│ │Service  │ │Svc  │ │       │ │Svc   │
+    └───────┘ └────────┘ └─────┘ └───────┘ └──────┘
+\`\`\`
+
+- Orchestrator contains the saga definition (step sequence, compensation logic)
+- Each service exposes "execute" and "compensate" endpoints
+- Orchestrator tracks saga state in its database
+- Easy to add new steps, change order, or add branching logic
+
+**Choreography** — decentralized events:
+\`\`\`
+    ┌───────┐    order.created    ┌────────┐   inventory.reserved   ┌─────┐
+    │Order  │ ──────────────────► │Inventory│ ────────────────────► │Pay  │
+    │Service│                     │Service  │                       │Svc  │
+    └───────┘                     └────────┘                       └─────┘
+        ▲                                                              │
+        │                    payment.completed                         │
+        └──────────────────────────────────────────────────────────────┘
+\`\`\`
+
+- Each service listens for events and publishes its own
+- No central coordinator — logic is distributed
+- Adding a new step requires modifying multiple services
+
+**Comparison**:
+\`\`\`
+  ┌────────────────────┬─────────────────┬──────────────────┐
+  │ Aspect             │ Orchestration   │ Choreography     │
+  ├────────────────────┼─────────────────┼──────────────────┤
+  │ Complexity visible │ One place       │ Spread across    │
+  │ Coupling           │ Orchestrator    │ Loose (events)   │
+  │                    │ knows all svcs  │                  │
+  │ Debugging          │ Centralized log │ Distributed trace│
+  │ Adding steps       │ Modify coord.   │ Modify multiple  │
+  │ Single point of    │ Orchestrator    │ None             │
+  │ failure            │ (mitigate with  │                  │
+  │                    │  HA/replicas)   │                  │
+  │ Best for           │ 4+ step flows   │ 2-3 step flows   │
+  └────────────────────┴─────────────────┴──────────────────┘
+\`\`\`
+
+**Recommendation**: Use orchestration for the core business flow (order placement, account creation). Use choreography for auxiliary, loosely coupled concerns (analytics events, cache invalidation, notification triggers).`
+      },
+      {
+        question: 'How do you ensure idempotency in multi-step processes?',
+        answer: `**Idempotency** means executing the same operation multiple times produces the same result as executing it once. In distributed systems, network retries, duplicate message delivery, and at-least-once semantics make idempotency essential — without it, a retried payment could charge the customer twice.
+
+**Idempotency key pattern**:
+\`\`\`
+  Client generates a unique key per business operation:
+    POST /payments
+    Idempotency-Key: pay_abc123_attempt1
+    {amount: 100, currency: "USD"}
+
+  Server checks:
+    1. Lookup idempotency_key in store
+    2. If found → return cached response (already processed)
+    3. If not found → process, store result, return response
+\`\`\`
+
+**Database implementation**:
+\`\`\`
+  CREATE TABLE idempotency_keys (
+    key          VARCHAR PRIMARY KEY,
+    request_hash VARCHAR,      -- hash of request body
+    response     JSONB,        -- cached response
+    status       VARCHAR,      -- pending | completed | failed
+    created_at   TIMESTAMP,
+    expires_at   TIMESTAMP     -- cleanup old keys
+  );
+
+  -- Processing with idempotency:
+  BEGIN;
+    INSERT INTO idempotency_keys (key, status)
+    VALUES ('pay_abc123', 'pending')
+    ON CONFLICT (key) DO NOTHING;
+
+    -- If INSERT succeeded (rows_affected=1), process payment
+    -- If INSERT failed (duplicate), return cached response
+  COMMIT;
+\`\`\`
+
+**Making operations naturally idempotent**:
+\`\`\`
+  ✗ Non-idempotent: UPDATE balance SET amount = amount + 100
+    (retrying adds 100 again!)
+
+  ✓ Idempotent: UPDATE balance SET amount = 1100 WHERE amount = 1000
+    (second attempt is a no-op because amount is already 1100)
+
+  ✓ Idempotent with transaction ID:
+    INSERT INTO transactions (tx_id, amount)
+    VALUES ('tx_abc', 100)
+    ON CONFLICT (tx_id) DO NOTHING;
+    -- Duplicate is silently ignored
+\`\`\`
+
+**Saga-specific idempotency considerations**:
+- Each saga step must be idempotent (the orchestrator may retry after a timeout)
+- Each compensating transaction must be idempotent (compensation may be triggered multiple times)
+- Use the saga_id + step_number as a natural idempotency key
+- Store the saga state machine in the database — the current state determines which step to execute or retry`
+      },
+      {
+        question: 'What are the limitations of two-phase commit (2PC) and why do sagas replace it?',
+        answer: `**Two-phase commit** is a distributed transaction protocol where a coordinator ensures all participants either commit or abort together.
+
+**2PC protocol**:
+\`\`\`
+  Phase 1 — Prepare:
+    Coordinator → Participant A: "Can you commit?"
+    Coordinator → Participant B: "Can you commit?"
+    Participant A → Coordinator: "Yes" (locks held)
+    Participant B → Coordinator: "Yes" (locks held)
+
+  Phase 2 — Commit:
+    Coordinator → Participant A: "Commit"
+    Coordinator → Participant B: "Commit"
+    Both commit and release locks
+\`\`\`
+
+**Limitations**:
+
+1. **Blocking protocol**: If the coordinator crashes after Phase 1 (all participants voted "yes") but before Phase 2, all participants are stuck holding locks, waiting for a decision that may never come. No participant can safely commit or abort on its own.
+
+2. **Latency**: Requires at least 2 round-trips to all participants, plus the time participants hold locks. In a microservices architecture with services in different regions, this adds significant latency.
+
+3. **Availability**: If any single participant is unavailable during the prepare phase, the entire transaction must abort. The availability of the system is the product of individual service availabilities.
+
+4. **Heterogeneous systems**: 2PC requires all participants to implement the same transaction protocol. In practice, different services use different databases, message queues, and external APIs — not all support XA transactions.
+
+5. **Scale**: Lock duration increases with the number of participants. Hot rows locked by a 2PC transaction block all other transactions on those rows.
+
+**Why sagas are preferred**:
+\`\`\`
+  ┌─────────────────┬──────────────┬──────────────┐
+  │ Property        │ 2PC          │ Saga         │
+  ├─────────────────┼──────────────┼──────────────┤
+  │ Consistency     │ Strong       │ Eventual     │
+  │ Availability    │ Low          │ High         │
+  │ Lock duration   │ Entire TX    │ Per step     │
+  │ Partial failure │ Blocks       │ Compensates  │
+  │ Coordinator     │ SPOF         │ Recoverable  │
+  │ Heterogeneous   │ Needs XA     │ Any service  │
+  │ Isolation       │ Full         │ Semantic     │
+  └─────────────────┴──────────────┴──────────────┘
+\`\`\`
+
+**Where 2PC still makes sense**: Within a single database (PostgreSQL uses 2PC internally for multi-statement transactions). Across a small number of tightly coupled, co-located services where strong consistency is non-negotiable.`
+      },
+      {
+        question: 'How do you handle failure scenarios in sagas — partial failures, timeouts, and poison messages?',
+        answer: `Failure handling is the most critical aspect of saga design. Every failure mode must be explicitly addressed.
+
+**Partial failure — compensating transactions**:
+\`\`\`
+  Saga: [Step1, Step2, Step3, Step4, Step5]
+  Step3 fails:
+    → Compensate Step2 (undo_step2)
+    → Compensate Step1 (undo_step1)
+    → Mark saga as COMPENSATED
+\`\`\`
+
+Compensations run in reverse order. Each compensation must be idempotent and must succeed eventually. If a compensation itself fails, it is retried with exponential backoff.
+
+**Timeout handling**:
+\`\`\`
+  Saga orchestrator tracks:
+    step_started_at: timestamp
+    step_timeout:    30 seconds (configurable per step)
+
+  If step_timeout exceeded:
+    1. Mark step as TIMED_OUT
+    2. Attempt to cancel the in-progress operation
+    3. If cancellation fails, add to manual review queue
+    4. Begin compensation for completed steps
+\`\`\`
+
+**Poison messages (messages that always fail)**:
+\`\`\`
+  Message → Consumer → Fails → Retry → Fails → Retry → Fails
+                                                         │
+                                                         ▼
+                                                    Dead Letter Queue
+                                                         │
+                                                         ▼
+                                                  Alert + Manual Review
+\`\`\`
+
+After N retries (typically 3-5), move the message to a dead letter queue (DLQ). This prevents a single bad message from blocking all subsequent messages in the queue.
+
+**Saga state machine**:
+\`\`\`
+  STARTED → STEP1_PENDING → STEP1_COMPLETED
+    → STEP2_PENDING → STEP2_COMPLETED
+    → STEP3_PENDING → STEP3_FAILED
+    → COMPENSATING_STEP2 → STEP2_COMPENSATED
+    → COMPENSATING_STEP1 → STEP1_COMPENSATED
+    → COMPENSATED (terminal)
+\`\`\`
+
+Persist the state machine in the database. On recovery after a crash, the orchestrator reads the current state and resumes from where it left off.
+
+**Non-compensatable steps**: Some steps cannot be undone (e.g., sending an email, shipping a physical product). Place these as late as possible in the saga, after all steps that might fail. If a non-compensatable step must be earlier, use a "pending" state (draft the email but do not send it until the saga completes).`
+      },
+      {
+        question: 'How do you achieve exactly-once processing in distributed systems?',
+        answer: `True exactly-once processing is impossible in a distributed system with unreliable networks (proven by the Two Generals problem). However, you can achieve **effectively exactly-once** by combining **at-least-once delivery** with **idempotent processing**.
+
+**The equation**:
+\`\`\`
+  Effectively exactly-once = At-least-once delivery + Idempotent consumer
+\`\`\`
+
+**At-least-once delivery**: The message system retries until it receives an acknowledgment. This guarantees no message is lost but may deliver duplicates.
+
+**Idempotent consumer**: The consumer detects and ignores duplicate messages.
+
+**Implementation pattern — transactional outbox + deduplication**:
+\`\`\`
+  Producer Side (Outbox Pattern):
+    BEGIN;
+      UPDATE orders SET status = 'confirmed';
+      INSERT INTO outbox (id, topic, payload) VALUES (...);
+    COMMIT;
+    -- Outbox relay reads and publishes to Kafka
+    -- On success, marks outbox row as published
+
+  Consumer Side (Deduplication):
+    BEGIN;
+      SELECT 1 FROM processed_messages WHERE msg_id = ?;
+      IF NOT FOUND:
+        -- Process the message
+        INSERT INTO processed_messages (msg_id) VALUES (?);
+    COMMIT;
+\`\`\`
+
+**Kafka's exactly-once semantics**:
+\`\`\`
+  Producer:
+    enable.idempotence=true
+    transactional.id="order-processor-1"
+
+  Consumer:
+    isolation.level=read_committed
+
+  This ensures:
+    - Producer deduplicates retries (sequence numbers per partition)
+    - Consumer only sees committed messages
+    - Consume-transform-produce cycles are atomic
+\`\`\`
+
+**Key insight**: Exactly-once is not a property of the transport layer alone — it requires cooperation between the producer, the transport, and the consumer. The transport provides at-least-once; the consumer provides deduplication; together they achieve effectively exactly-once.
+
+**Common pitfall**: Acknowledging a message before processing it completely (at-most-once) or processing before acknowledging (at-least-once with risk of duplicates). Always process and acknowledge in the same atomic operation (database transaction).`
+      },
+      {
+        question: 'How would you design a saga for a payment processing pipeline with refunds?',
+        answer: `**Payment saga with refund support** — handling the full lifecycle from authorization to settlement to potential refund.
+
+**Forward flow (authorization and capture)**:
+\`\`\`
+  Step 1: Validate Order
+    → Check inventory, pricing, user account
+    → Compensation: none (read-only)
+
+  Step 2: Authorize Payment
+    → Call payment gateway: authorize(amount, card_token)
+    → Returns: authorization_id
+    → Compensation: void authorization (reverseAuth)
+
+  Step 3: Reserve Inventory
+    → Decrement available stock
+    → Compensation: release reserved stock
+
+  Step 4: Capture Payment
+    → Call payment gateway: capture(authorization_id)
+    → Compensation: refund(capture_id, amount)
+
+  Step 5: Confirm and Notify
+    → Update order status, send confirmation email
+    → Compensation: send cancellation email
+\`\`\`
+
+**Refund saga** (triggered by customer request or dispute):
+\`\`\`
+  Step 1: Validate Refund Request
+    → Check eligibility, time window, refund policy
+    → Create refund record with status=PENDING
+
+  Step 2: Process Refund via Gateway
+    → Call: refund(original_capture_id, amount)
+    → Idempotency key: refund_{order_id}_{attempt}
+    → Gateway returns refund_id
+
+  Step 3: Update Inventory
+    → If physical product returned: increment stock
+    → If digital product: revoke access
+
+  Step 4: Update Accounting
+    → Credit customer account, debit revenue
+    → Generate credit note
+
+  Step 5: Notify Customer
+    → Send refund confirmation email
+    → Update order status to REFUNDED
+\`\`\`
+
+**Critical design decisions**:
+1. **Authorization vs capture**: Separate auth from capture. Auth is fully reversible (void). Capture triggers actual money movement and requires a refund to undo.
+2. **Partial refunds**: Support refunding a subset of items. Track refunded amounts to prevent over-refunding.
+3. **Timeout on authorization**: Payment authorizations expire (typically 7 days). The saga must capture before expiry or re-authorize.
+4. **Refund window**: Payment processors have refund time limits (60-120 days). After that, disputes go through chargeback.
+5. **Idempotency everywhere**: Network retries to the payment gateway are inevitable. Every gateway call must include an idempotency key to prevent double charges or double refunds.`
+      },
+    ],
+
+    dataModel: {
+      description: 'Saga state machine and step tracking',
+      schema: `Saga Instance:
+  saga_id:         UUID
+  saga_type:       e.g., "order_placement", "payment_refund"
+  status:          STARTED | RUNNING | COMPENSATING | COMPLETED | COMPENSATED | FAILED
+  current_step:    integer (index into step list)
+  payload:         JSON (initial input data)
+  created_at:      timestamp
+  updated_at:      timestamp
+  completed_at:    timestamp (null if in progress)
+
+Saga Step:
+  saga_id:         reference to saga
+  step_index:      integer (execution order)
+  step_name:       e.g., "reserve_inventory"
+  status:          PENDING | EXECUTING | COMPLETED | FAILED | COMPENSATING | COMPENSATED
+  request:         JSON (input to this step)
+  response:        JSON (output from this step)
+  idempotency_key: unique key for this step execution
+  started_at:      timestamp
+  completed_at:    timestamp
+  retry_count:     integer
+  error:           text (if failed)
+
+Dead Letter Entry:
+  dlq_id:          UUID
+  saga_id:         reference to saga
+  step_index:      failed step
+  message:         original message payload
+  error:           failure reason
+  retry_count:     number of attempts before DLQ
+  created_at:      timestamp
+  resolved_at:     timestamp (null until manually resolved)`
+    },
+  },
+
+  // ─────────────────────────────────────────────────────────
+  // 16. Scaling Reads (applied)
+  // ─────────────────────────────────────────────────────────
+  {
+    id: 'scaling-reads',
+    title: 'Scaling Reads',
+    icon: 'bookOpen',
+    color: '#06b6d4',
+    questions: 8,
+    description: 'Strategies for read-heavy workloads including read replicas, caching hierarchies, denormalization, materialized views, and CQRS.',
+    concepts: [
+      'Read replicas and replication lag',
+      'Caching hierarchy (L1/L2/CDN)',
+      'Cache-aside vs read-through',
+      'Denormalization and materialized views',
+      'CQRS (Command Query Responsibility Segregation)',
+      'Cache invalidation strategies',
+      'CDN for static and dynamic content',
+    ],
+    tips: [
+      'The most common read-scaling pattern is cache-aside with Redis — read from cache first, fall back to DB on miss, populate cache on miss',
+      'Read replicas add read capacity but introduce replication lag — design for eventual consistency or use read-your-writes consistency',
+      'CDN is the most cost-effective scaling layer for static content and semi-static API responses',
+      'Materialized views trade write-time cost for read-time speed — ideal for dashboards and analytics',
+      'In interviews, always discuss cache invalidation — it is famously the hardest problem in computer science',
+    ],
+
+    introduction: `Most web applications are **read-heavy** — the ratio of reads to writes is typically 10:1 to 1000:1. A social media feed, a product catalog, a news site, or a dashboard all serve far more reads than writes. Scaling reads is therefore the most impactful optimization for most systems.
+
+The fundamental strategies for scaling reads form a **hierarchy of caching and replication**: client-side caching (browser, mobile app), CDN edge caching, application-level caching (L1 in-process, L2 distributed cache like Redis), read replicas (database-level horizontal scaling), and denormalization or materialized views (pre-computing expensive joins). Each layer reduces load on the layers below it.
+
+The challenge in all caching and replication strategies is **consistency** — how stale can the data be? A stock price that is 5 seconds old may be acceptable, but an account balance that is 5 seconds old is not. Understanding the consistency requirements of each data type in your system is the key to choosing the right scaling strategy. Patterns like **CQRS** (Command Query Responsibility Segregation) formalize this by separating the write model (optimized for consistency) from the read model (optimized for performance).`,
+
+    keyQuestions: [
+      {
+        question: 'Explain the caching hierarchy (L1/L2/CDN) and how requests flow through it.',
+        answer: `**Caching hierarchy** — each layer intercepts requests before they reach the database:
+
+\`\`\`
+  Client ─► CDN Edge ─► Load Balancer ─► App Server ─► Redis (L2) ─► Database
+                                             │
+                                         L1 Cache
+                                      (in-process)
+\`\`\`
+
+**Layer 1 — CDN (Content Delivery Network)**:
+- Caches at the network edge, closest to the user
+- Best for: static assets (images, JS, CSS), semi-static API responses (product catalog)
+- TTL-based invalidation or explicit purge
+- Cache hit ratio for static content: 90-99%
+- Examples: CloudFront, Cloudflare, Fastly
+
+**Layer 2 — L1 In-Process Cache (Application Server)**:
+- Local memory cache within each application server process
+- Best for: frequently accessed, small data (configuration, feature flags, user sessions)
+- Fastest access (~microseconds) but limited by server memory
+- Challenge: cache coherence across multiple servers (each has its own L1)
+- Typical TTL: 1-60 seconds
+- Implementation: LRU map, Guava cache, Node.js Map with TTL
+
+**Layer 3 — L2 Distributed Cache (Redis/Memcached)**:
+- Shared cache accessible by all application servers
+- Best for: database query results, computed aggregations, session data
+- Access time: ~1ms (network round-trip)
+- Scales horizontally (Redis Cluster, Memcached consistent hashing)
+- Cache hit ratio: 70-95% depending on data patterns
+
+**Layer 4 — Database (Source of Truth)**:
+- Only reached on cache miss at all levels
+- With a well-designed caching hierarchy, database load is reduced by 90-99%
+
+**Request flow example** (fetching a product):
+\`\`\`
+  1. CDN: Cache-Control header? HIT → return (0ms latency)
+  2. CDN MISS → forward to app server
+  3. L1 cache: in-process LRU? HIT → return (0.01ms)
+  4. L1 MISS → check L2
+  5. L2 (Redis): GET product:42? HIT → return, populate L1 (1ms)
+  6. L2 MISS → query database
+  7. DB: SELECT * FROM products WHERE id=42 (5-50ms)
+  8. Populate L2 and L1, return response
+  9. Set Cache-Control header for CDN
+\`\`\``
+      },
+      {
+        question: 'Compare cache-aside, read-through, and write-through caching patterns.',
+        answer: `**Cache-Aside (Lazy Loading)** — most common pattern:
+\`\`\`
+  Read path:
+    1. App checks cache (GET key)
+    2. Cache HIT → return data
+    3. Cache MISS → query database
+    4. App writes result to cache (SET key value TTL)
+    5. Return data
+
+  Write path:
+    1. App writes to database
+    2. App invalidates cache (DEL key)
+    3. Next read will repopulate cache
+\`\`\`
+- App controls all caching logic
+- Cache only contains data that has been requested (no wasted memory)
+- Risk: cache stampede on popular key expiry (many requests simultaneously miss)
+
+**Read-Through** — cache manages DB reads:
+\`\`\`
+  Read path:
+    1. App reads from cache (always)
+    2. Cache HIT → return data
+    3. Cache MISS → cache itself queries database
+    4. Cache stores result and returns to app
+
+  App never talks directly to DB for reads
+\`\`\`
+- Simpler application code (no cache-miss handling)
+- Cache library/provider must support DB integration
+- Used by: Hibernate L2 cache, NCache, some Redis modules
+
+**Write-Through** — cache manages DB writes:
+\`\`\`
+  Write path:
+    1. App writes to cache
+    2. Cache writes to database (synchronously)
+    3. Both cache and DB are updated atomically
+    4. Return success to app
+
+  Read path:
+    Always from cache (data is always fresh)
+\`\`\`
+- Cache is always consistent with DB
+- Write latency is higher (cache + DB write)
+- Used with read-through for a complete caching layer
+
+**Write-Behind (Write-Back)**:
+\`\`\`
+  Write path:
+    1. App writes to cache
+    2. Cache acknowledges immediately
+    3. Cache asynchronously writes to database (batched)
+\`\`\`
+- Lowest write latency
+- Risk of data loss if cache crashes before flushing to DB
+- Good for write-heavy workloads where slight data loss is tolerable (analytics, counters)
+
+**Comparison**:
+\`\`\`
+  ┌────────────────┬───────────┬──────────────┬─────────────┐
+  │ Pattern        │ Read perf │ Write perf   │ Consistency │
+  ├────────────────┼───────────┼──────────────┼─────────────┤
+  │ Cache-aside    │ Good      │ Good         │ Eventual    │
+  │ Read-through   │ Good      │ Good         │ Eventual    │
+  │ Write-through  │ Excellent │ Slower       │ Strong      │
+  │ Write-behind   │ Excellent │ Excellent    │ Weak        │
+  └────────────────┴───────────┴──────────────┴─────────────┘
+\`\`\``
+      },
+      {
+        question: 'How do read replicas work and how do you handle replication lag?',
+        answer: `**Read replicas** are copies of the primary database that handle read queries, distributing read load across multiple servers.
+
+**Architecture**:
+\`\`\`
+  Writes ──► Primary DB ──► Replication Stream ──► Replica 1 (reads)
+                                                 ──► Replica 2 (reads)
+                                                 ──► Replica 3 (reads)
+  Reads  ──► Load Balancer ──► Replica 1/2/3
+\`\`\`
+
+**Replication types**:
+- **Synchronous**: Primary waits for replica acknowledgment before confirming write. Zero lag but higher write latency.
+- **Asynchronous**: Primary confirms write immediately, replica catches up later. Lower write latency but introduces replication lag.
+- **Semi-synchronous**: Primary waits for at least one replica (MySQL semi-sync).
+
+**Replication lag** — the delay between a write on the primary and its appearance on replicas. Typical: 10ms-1s for async replication, but can spike to minutes under load.
+
+**Handling replication lag**:
+
+1. **Read-your-writes consistency**: After a user writes data, ensure their subsequent reads see that write.
+\`\`\`
+  User updates profile → response includes version=42
+  User reads profile:
+    If version param = 42, route to primary (or wait for replica to catch up)
+    Else route to any replica
+\`\`\`
+
+2. **Monotonic reads**: Ensure a user does not see data go "backward" (reading from a stale replica after reading from an up-to-date one). Pin user sessions to a specific replica.
+
+3. **Lag monitoring and routing**:
+\`\`\`
+  Replica lag monitor:
+    Replica 1: lag = 50ms   ✓ routable
+    Replica 2: lag = 200ms  ✓ routable
+    Replica 3: lag = 5s     ✗ remove from rotation
+
+  Route reads to replicas with lag < threshold
+\`\`\`
+
+4. **Critical reads to primary**: For operations where staleness is unacceptable (checking balance before debit), always read from the primary.
+
+**Scaling read replicas**:
+- PostgreSQL: streaming replication, up to dozens of replicas
+- MySQL: async/semi-sync replication, read-only replicas
+- Aurora: up to 15 read replicas with shared storage (near-zero lag)
+- DynamoDB: Global tables for multi-region read replicas`
+      },
+      {
+        question: 'What is CQRS and when should you use it?',
+        answer: `**CQRS (Command Query Responsibility Segregation)** separates the write model (commands) from the read model (queries) into different data stores, each optimized for its access pattern.
+
+**Architecture**:
+\`\`\`
+  Commands (writes)              Queries (reads)
+       │                              ▲
+       ▼                              │
+  ┌─────────┐                   ┌──────────┐
+  │ Write   │ ──── Events ────► │ Read     │
+  │ Model   │    (async sync)   │ Model    │
+  │ (RDBMS) │                   │ (Elastic/│
+  └─────────┘                   │  Redis)  │
+                                └──────────┘
+\`\`\`
+
+**Write model**: Normalized, optimized for consistency and transactional integrity. Handles validations, business rules, and state transitions.
+
+**Read model**: Denormalized, pre-joined, optimized for specific query patterns. Can use a different database technology (Elasticsearch for search, Redis for fast lookups, materialized views for dashboards).
+
+**How sync works**: When the write model processes a command, it emits domain events. Event handlers update the read model asynchronously.
+
+**When to use CQRS**:
+1. **Vastly different read and write patterns**: The write model is a normalized relational schema, but reads require complex joins, aggregations, or full-text search.
+2. **Read and write scale independently**: 1000:1 read-to-write ratio — scale read infrastructure without affecting write path.
+3. **Multiple read representations**: The same data needs to be queried differently by different consumers (e.g., product data in SQL for admin, Elasticsearch for customer search, Redis for recommendations).
+
+**When NOT to use CQRS**:
+1. Simple CRUD applications where reads and writes have similar patterns
+2. Small scale where a single database handles both comfortably
+3. When strong consistency is required for all reads (CQRS introduces eventual consistency between write and read models)
+
+**CQRS with Event Sourcing** (often combined):
+\`\`\`
+  Command → Validate → Store Event → Event Store (source of truth)
+                                         │
+                                    Event Handler → Update Read Model 1
+                                         │
+                                    Event Handler → Update Read Model 2
+\`\`\`
+
+The event store is append-only (immutable log of state changes). Read models are projections that can be rebuilt from the event stream at any time. This combination provides complete audit history and the ability to create new read models retroactively.`
+      },
+      {
+        question: 'How do you handle cache invalidation in a distributed system?',
+        answer: `Cache invalidation is famously one of the hardest problems in computer science. The challenge: cached data must reflect changes in the source of truth, but the cache and the database are separate systems with no transactional guarantee linking them.
+
+**Strategy 1 — TTL-based expiration**:
+\`\`\`
+  SET product:42 "{...}" EX 300   (expire after 5 minutes)
+\`\`\`
+- Simplest approach — no explicit invalidation needed
+- Data can be stale up to the TTL duration
+- Good for: data that changes infrequently and where staleness is acceptable
+- Risk: stale data served for the full TTL; thundering herd on popular key expiry
+
+**Strategy 2 — Event-driven invalidation**:
+\`\`\`
+  Write to DB → Publish event → Cache subscriber → DEL key
+
+  Product updated in DB
+    → Kafka event: product.updated {id: 42}
+    → Cache invalidation service: DEL product:42
+    → Next read repopulates from DB
+\`\`\`
+- Near-real-time invalidation (milliseconds after write)
+- More complex infrastructure (event bus, subscriber service)
+- Risk: event delivery failure leaves stale data (mitigate with TTL as backstop)
+
+**Strategy 3 — Write-through invalidation**:
+\`\`\`
+  Application write path:
+    1. Update database
+    2. Delete cache key (invalidate)
+    -- NOT: update cache key (race condition!)
+\`\`\`
+
+**Why delete, not update?** Race condition with concurrent writes:
+\`\`\`
+  T1: Thread A writes value=100 to DB
+  T2: Thread B writes value=200 to DB
+  T3: Thread B updates cache to 200
+  T4: Thread A updates cache to 100 (stale!)
+
+  With delete:
+  T1: Thread A writes 100 to DB, deletes cache
+  T2: Thread B writes 200 to DB, deletes cache
+  T3: Next read gets 200 from DB (correct)
+\`\`\`
+
+**Strategy 4 — Cache versioning**:
+\`\`\`
+  Key: product:42:v7
+  On update: increment version → product:42:v8
+  Old cached value (v7) is never read — effectively invalidated
+  Clean up old versions asynchronously
+\`\`\`
+
+**Thundering herd prevention on cache miss**:
+\`\`\`
+  1. Lock-based: First request acquires a lock, fetches from DB,
+     populates cache. Other requests wait for the lock.
+  2. Stale-while-revalidate: Serve stale data while one request
+     refreshes in the background.
+  3. Probabilistic early expiration: Each reader has a small chance
+     of refreshing before TTL, spreading the refresh load.
+\`\`\`
+
+**Best practice**: Use TTL as a safety net (backstop) combined with event-driven invalidation for near-real-time freshness. Never rely solely on TTL for data that changes frequently, and never rely solely on events for data where a missed event would cause serious problems.`
+      },
+      {
+        question: 'How would you design a read-optimized system for a social media news feed?',
+        answer: `The news feed is the canonical read-scaling problem. Users check their feed far more often than they post (100:1+ read-to-write ratio). The feed aggregates posts from all followed users, sorted by relevance or time.
+
+**Architecture — fanout-on-write with caching**:
+\`\`\`
+  User posts ──► Post Service ──► Fanout Service ──► Feed Cache (per user)
+                                                         │
+  User reads feed ──► Feed Service ──► Feed Cache ───────┘
+                                          │ (miss)
+                                          ▼
+                                    Feed Generator
+                                    (query + merge)
+\`\`\`
+
+**Fanout-on-write**:
+\`\`\`
+  User A (1000 followers) posts:
+    1. Store post in posts table
+    2. Fanout service reads A's follower list
+    3. For each follower, prepend post_id to their feed cache:
+       LPUSH feed:user_123 post_id
+       LPUSH feed:user_456 post_id
+       ... (1000 writes)
+    4. Trim feed to latest 500 entries:
+       LTRIM feed:user_123 0 499
+\`\`\`
+
+**Celebrity/hot-user optimization (hybrid fanout)**:
+\`\`\`
+  Regular users (<10K followers): fanout-on-write
+  Celebrities (>10K followers): fanout-on-read
+
+  Feed assembly (on read):
+    1. Fetch pre-computed feed from cache (fanout-on-write results)
+    2. Fetch latest posts from followed celebrities (fanout-on-read)
+    3. Merge, rank, and return top N
+\`\`\`
+
+**Caching layers**:
+\`\`\`
+  L1: CDN — cache feed API responses for 30 seconds (Cache-Control)
+  L2: Redis — per-user feed cache (list of post_ids)
+  L3: Redis — post content cache (hash per post with text, images, counts)
+  L4: Database — posts table, follows table (source of truth)
+\`\`\`
+
+**Read path optimization**:
+\`\`\`
+  GET /feed?cursor=last_post_id&limit=20
+    1. Redis LRANGE feed:user_123 offset 20 → [post_ids]
+    2. Redis MGET post:id1 post:id2 ... → [post objects]
+    3. Enrich with user profiles (cached), like counts (cached)
+    4. Return hydrated feed with next cursor
+
+  Total latency: ~5-10ms (all from cache)
+  DB queries: 0 (on cache hit)
+\`\`\`
+
+**Consistency trade-off**: A new post may take 1-5 seconds to appear in all followers' feeds (async fanout). This is acceptable for a social feed but would not be for a banking transaction ledger.`
+      },
+      {
+        question: 'What are materialized views and how do they help scale reads?',
+        answer: `A **materialized view** is a pre-computed query result stored as a physical table. Unlike a regular view (which re-executes the query on every read), a materialized view is computed once and read directly — trading storage and write-time computation for dramatically faster reads.
+
+**Example — dashboard analytics**:
+\`\`\`
+  Base tables:
+    orders (100M rows): order_id, user_id, product_id, amount, created_at
+    products (1M rows): product_id, category, name
+
+  Expensive query (runs in 30 seconds):
+    SELECT category, DATE(created_at), SUM(amount), COUNT(*)
+    FROM orders JOIN products ON orders.product_id = products.product_id
+    WHERE created_at > NOW() - INTERVAL '30 days'
+    GROUP BY category, DATE(created_at)
+
+  Materialized view (reads in 5ms):
+    CREATE MATERIALIZED VIEW daily_sales_by_category AS
+    SELECT category, DATE(created_at) as day, SUM(amount) as revenue, COUNT(*) as order_count
+    FROM orders JOIN products ON orders.product_id = products.product_id
+    GROUP BY category, DATE(created_at);
+
+    REFRESH MATERIALIZED VIEW CONCURRENTLY daily_sales_by_category;
+\`\`\`
+
+**Refresh strategies**:
+1. **Periodic refresh**: Cron job refreshes every N minutes. Simple but data can be stale.
+2. **Concurrent refresh** (PostgreSQL): Refreshes without locking the view — readers see old data until refresh completes.
+3. **Incremental refresh** (Oracle, some custom implementations): Only process changes since last refresh — much faster for large datasets.
+4. **Trigger-based**: Database triggers update the materialized view on each insert/update. Low latency but high write overhead.
+
+**Where materialized views are used**:
+\`\`\`
+  ┌────────────────────────┬──────────────────────────────┐
+  │ Use Case               │ Materialized View            │
+  ├────────────────────────┼──────────────────────────────┤
+  │ Analytics dashboards   │ Pre-aggregated metrics       │
+  │ Search / facets        │ Denormalized product catalog │
+  │ Leaderboards           │ Pre-ranked scores            │
+  │ Reporting              │ Pre-joined cross-table data  │
+  │ Feed generation        │ Pre-computed user feeds      │
+  └────────────────────────┴──────────────────────────────┘
+\`\`\`
+
+**Custom materialized views (application-level)**:
+When the database's built-in materialized views are not sufficient, build your own:
+\`\`\`
+  Write path:
+    1. Write to source table
+    2. Publish change event (CDC or outbox)
+    3. Stream processor updates materialized table
+
+  Read path:
+    1. Query materialized table directly (fast, denormalized)
+\`\`\`
+
+This is essentially CQRS — the materialized table is the read model, updated asynchronously from write events. Tools like Kafka Connect, Debezium (CDC), and stream processors (Flink, Kafka Streams) automate this pipeline.`
+      },
+      {
+        question: 'How do you use a CDN for dynamic content, not just static assets?',
+        answer: `CDNs are traditionally associated with static assets (images, CSS, JS), but modern CDNs can cache dynamic API responses effectively, reducing origin load by 50-90% for read-heavy APIs.
+
+**Cacheable dynamic content examples**:
+\`\`\`
+  High cacheability:
+    GET /api/products/42          (product details, changes rarely)
+    GET /api/categories            (category list, changes daily)
+    GET /api/config/feature-flags  (changes on deploy)
+
+  Medium cacheability:
+    GET /api/feed/trending         (changes every minute, ok to be 60s stale)
+    GET /api/search?q=laptop       (same query = same results for short period)
+
+  Not cacheable:
+    GET /api/me/account            (personalized, per-user)
+    POST /api/orders               (mutation)
+    GET /api/me/notifications      (real-time, per-user)
+\`\`\`
+
+**Cache-Control headers for API responses**:
+\`\`\`
+  // Product page (cache for 5 minutes, revalidate)
+  Cache-Control: public, max-age=300, stale-while-revalidate=60
+
+  // User-specific (do not cache at CDN)
+  Cache-Control: private, no-store
+
+  // Feature flags (cache for 1 hour)
+  Cache-Control: public, max-age=3600
+
+  // Trending feed (cache for 60 seconds)
+  Cache-Control: public, max-age=60, stale-if-error=300
+\`\`\`
+
+**Vary header for personalized caching**:
+\`\`\`
+  Vary: Accept-Language, X-Country
+
+  CDN caches separate versions:
+    /api/products/42 (en-US) → version A
+    /api/products/42 (ja-JP) → version B
+\`\`\`
+
+**Edge computing (Cloudflare Workers, Vercel Edge Functions)**:
+\`\`\`
+  Request → CDN Edge → Edge Function → Cache
+                           │ (miss)
+                           ▼
+                     Origin API Server
+                           │
+                           ▼
+                     Response cached at edge
+\`\`\`
+
+Edge functions can assemble personalized responses from cached fragments:
+\`\`\`
+  Feed page = cached shell + cached trending posts + personalized recommendations
+  Only the personalized part hits the origin
+\`\`\`
+
+**API response caching with Surrogate Keys** (Fastly, Varnish):
+\`\`\`
+  Response header: Surrogate-Key: product-42 category-electronics
+
+  On product update:
+    PURGE Surrogate-Key: product-42
+    → Instantly invalidates all cached responses containing product 42
+    → Precise, granular invalidation without TTL delays
+\`\`\`
+
+This gives you the performance of aggressive caching with near-real-time invalidation — the best of both worlds for read-heavy APIs.`
+      },
+    ],
+
+    dataModel: {
+      description: 'Read scaling configuration and cache state tracking',
+      schema: `Cache Entry (L2 - Redis):
+  key:             "entity_type:entity_id" (e.g., "product:42")
+  value:           serialized JSON
+  ttl:             seconds until expiry
+  created_at:      when cached
+  source:          "db" | "compute" | "api"
+  hit_count:       access counter (for hot key detection)
+
+Read Replica State:
+  replica_id:      identifier
+  primary_host:    source database
+  replication_lag: seconds behind primary
+  status:          streaming | catchup | disconnected
+  last_applied_lsn: log sequence number
+
+Materialized View Metadata:
+  view_name:       identifier
+  source_tables:   [table names used in the view]
+  last_refresh:    timestamp
+  refresh_duration: seconds (last refresh took)
+  row_count:       number of rows in materialized view
+  schedule:        cron expression for periodic refresh
+  status:          fresh | refreshing | stale`
+    },
+  },
+
+  // ─────────────────────────────────────────────────────────
+  // 17. Scaling Writes (applied)
+  // ─────────────────────────────────────────────────────────
+  {
+    id: 'scaling-writes',
+    title: 'Scaling Writes',
+    icon: 'edit3',
+    color: '#06b6d4',
+    questions: 7,
+    description: 'Strategies for write-heavy workloads including sharding, write-ahead logs, batching, async writes, and append-only storage.',
+    concepts: [
+      'Sharding and shard key selection',
+      'Write-ahead log and write amplification',
+      'Batching and buffering',
+      'Async writes and eventual consistency',
+      'Append-only storage and LSM trees',
+      'Kafka as a write buffer',
+    ],
+    tips: [
+      'Shard key selection is the most critical decision — a bad shard key creates hot shards that negate the benefits of sharding',
+      'Batching writes can improve throughput by 10-100x by amortizing disk I/O and network round-trips',
+      'Append-only data structures (LSM trees, log-structured storage) turn random writes into sequential writes, which are 100x faster',
+      'When writes vastly exceed what a single node can handle, sharding is the only option — caching does not help write scaling',
+      'In interviews, always discuss the trade-offs: sharding adds complexity (cross-shard queries, rebalancing), async writes risk data loss',
+    ],
+
+    introduction: `While most applications are read-heavy, some systems face extreme write volumes: IoT telemetry ingestion, financial transaction processing, social media interactions (likes, views, impressions), logging and metrics collection, and real-time analytics. Scaling writes is fundamentally harder than scaling reads because writes must eventually reach the source of truth, and that source of truth must maintain consistency.
+
+The primary strategies for scaling writes are: **sharding** (partitioning data across multiple database nodes so writes are distributed), **batching** (grouping many small writes into fewer large writes), **async writes** (acknowledging the write to the client before it is durably stored, using a queue as a buffer), and **append-only storage** (using data structures like LSM trees that convert expensive random writes into cheap sequential writes).
+
+Each strategy has fundamental trade-offs. Sharding distributes write load but makes cross-shard queries expensive and rebalancing painful. Batching increases throughput but adds latency for individual writes. Async writes improve perceived latency but risk data loss if the buffer crashes before flushing. Understanding these trade-offs and choosing the right combination for your workload is the essence of write scaling.`,
+
+    keyQuestions: [
+      {
+        question: 'How does database sharding work and how do you choose a shard key?',
+        answer: `**Sharding** (horizontal partitioning) distributes rows across multiple database nodes. Each node holds a subset of the data, and writes are routed to the correct node based on the shard key.
+
+**Sharding architecture**:
+\`\`\`
+  Application → Shard Router → Shard 1 (user_id 1-1M)
+                             → Shard 2 (user_id 1M-2M)
+                             → Shard 3 (user_id 2M-3M)
+                             → Shard 4 (user_id 3M-4M)
+\`\`\`
+
+**Sharding strategies**:
+1. **Range-based**: Shard by ranges of the key (e.g., user_id 1-1M on shard 1). Simple but risks hot shards if data is not uniformly distributed.
+2. **Hash-based**: Shard by hash(key) % num_shards. Even distribution but range queries require scatter-gather across all shards.
+3. **Directory-based**: A lookup service maps keys to shards. Flexible but the directory is a single point of failure.
+
+**Choosing a shard key — the most critical decision**:
+\`\`\`
+  Good shard keys:
+    user_id     — distributes evenly, most queries are per-user
+    tenant_id   — natural isolation for multi-tenant SaaS
+    order_id    — even distribution, independent orders
+
+  Bad shard keys:
+    created_at  — all recent writes go to the latest shard (hot shard!)
+    country     — uneven distribution (most users in a few countries)
+    status      — only a few values, cannot distribute across many shards
+\`\`\`
+
+**Shard key evaluation criteria**:
+1. **Cardinality**: High cardinality (many unique values) for even distribution
+2. **Write distribution**: Writes should spread evenly across shards
+3. **Query locality**: Most queries should target a single shard (avoid scatter-gather)
+4. **Growth pattern**: The key should distribute future data evenly, not concentrate on recent shards
+
+**Cross-shard queries** — the main cost of sharding:
+\`\`\`
+  Single-shard query (fast):
+    SELECT * FROM orders WHERE user_id = 42
+    → Routes to shard hash(42) % 4 = shard 2
+
+  Cross-shard query (slow):
+    SELECT * FROM orders WHERE created_at > '2024-01-01'
+    → Must query ALL shards and merge results (scatter-gather)
+\`\`\`
+
+**Resharding**: When you need more shards, data must be redistributed. Consistent hashing minimizes data movement. Some systems (Vitess, CockroachDB) support online resharding.`
+      },
+      {
+        question: 'How does batching improve write throughput and what are the trade-offs?',
+        answer: `**Batching** groups multiple individual writes into a single, larger write operation. This amortizes the fixed costs of each write (disk seek, network round-trip, transaction overhead) across many records.
+
+**Why batching is so effective**:
+\`\`\`
+  Individual writes (1000 inserts):
+    1000 × (network round-trip + parse + plan + write + fsync + ack)
+    = 1000 × 5ms = 5 seconds
+
+  Batched write (1 batch of 1000):
+    1 × (network round-trip + parse + plan + bulk write + fsync + ack)
+    = 1 × 50ms = 50 milliseconds
+
+  100x improvement!
+\`\`\`
+
+**Batching patterns**:
+
+1. **Application-level batching**:
+\`\`\`
+  Buffer writes in memory:
+    buffer = []
+    on_write(record):
+      buffer.append(record)
+      if len(buffer) >= 1000 or time_since_last_flush > 1s:
+        flush(buffer)  → INSERT INTO table VALUES (r1), (r2), ..., (r1000)
+        buffer.clear()
+\`\`\`
+
+2. **Database-level batching (group commit)**:
+\`\`\`
+  PostgreSQL group commit:
+    Multiple transactions commit in the same fsync call
+    wal_writer_delay = 10ms (batch window)
+    Amortizes fsync cost across ~100 transactions
+\`\`\`
+
+3. **Message queue batching (Kafka)**:
+\`\`\`
+  Producer config:
+    batch.size = 16384        (bytes per batch)
+    linger.ms = 5             (wait up to 5ms to fill batch)
+    compression.type = lz4    (compress the batch)
+
+  Result: fewer, larger network requests to brokers
+\`\`\`
+
+**Trade-offs**:
+\`\`\`
+  ┌────────────────────┬────────────────────────────────┐
+  │ Benefit            │ Cost                           │
+  ├────────────────────┼────────────────────────────────┤
+  │ Higher throughput   │ Higher latency (wait for batch)│
+  │ Less I/O overhead   │ Memory usage for buffer       │
+  │ Better compression  │ Data loss risk if crash before │
+  │                    │ flush                          │
+  │ Fewer connections   │ Retry complexity (partial batch│
+  │                    │ failure)                       │
+  └────────────────────┴────────────────────────────────┘
+\`\`\`
+
+**Tuning**: The batch size and flush interval form a latency-throughput trade-off. Larger batches = higher throughput but more latency. For real-time systems, use small batches with short timeouts (5-10ms). For analytics/logging, use large batches with longer timeouts (1-5 seconds).`
+      },
+      {
+        question: 'How does Kafka serve as a write buffer and what problems does it solve?',
+        answer: `**Kafka as a write buffer** decouples fast producers from slow consumers, absorbing write spikes that would overwhelm a database.
+
+**Architecture**:
+\`\`\`
+  High-volume producers         Kafka             Slow consumers
+  (web servers, apps)           (buffer)          (databases, analytics)
+       │                          │                    │
+  10,000 writes/s ──► Topic ──► Consumer Group ──► Database
+                      (partitioned)               (1,000 writes/s)
+
+  Kafka absorbs the 10x difference, consumers drain at their own pace
+\`\`\`
+
+**Problems Kafka solves as a write buffer**:
+
+1. **Spike absorption**: Traffic spikes (flash sales, viral events) produce sudden write bursts. Kafka absorbs the burst; consumers process at a steady rate.
+\`\`\`
+  Without Kafka:
+    Spike: 50K writes/s → DB max: 5K writes/s → DB overwhelmed → errors
+
+  With Kafka:
+    Spike: 50K writes/s → Kafka absorbs → Consumer: steady 5K writes/s
+    Queue depth grows during spike, drains afterward
+\`\`\`
+
+2. **Multiple consumers**: One write can feed multiple downstream systems without the producer knowing about them.
+\`\`\`
+  Producer → Kafka Topic → Consumer 1: Primary DB
+                         → Consumer 2: Search index (Elasticsearch)
+                         → Consumer 3: Analytics (ClickHouse)
+                         → Consumer 4: Cache invalidation
+\`\`\`
+
+3. **Ordering guarantees**: Messages with the same partition key are ordered within a partition, enabling ordered processing per entity.
+
+4. **Replay and recovery**: Kafka retains messages for a configurable period (days to weeks). If a consumer crashes, it can replay from its last committed offset.
+
+**Configuration for write buffering**:
+\`\`\`
+  Topic: user-events
+  Partitions: 32 (parallelism for consumers)
+  Replication factor: 3 (durability)
+  Retention: 7 days (replay window)
+
+  Producer:
+    acks=all (durable writes to Kafka)
+    compression=lz4 (reduce network/disk)
+
+  Consumer:
+    enable.auto.commit=false (manual commit after DB write)
+    max.poll.records=500 (batch size per poll)
+\`\`\`
+
+**Trade-off**: Using Kafka as a write buffer means the data in the database is eventually consistent — there is a delay between the producer writing to Kafka and the consumer writing to the database. For many use cases (analytics, search indexing, notifications) this delay is acceptable. For others (account balance), it is not.`
+      },
+      {
+        question: 'How do LSM trees and append-only storage optimize write performance?',
+        answer: `**LSM trees (Log-Structured Merge trees)** convert random writes into sequential writes, achieving write throughput that is 10-100x higher than traditional B-tree storage.
+
+**The random vs sequential write problem**:
+\`\`\`
+  B-tree (traditional RDBMS):
+    Write → find page → update in-place → random I/O
+    ~100-1000 random writes/s per disk
+
+  LSM tree:
+    Write → append to WAL → insert into memtable (in-memory)
+    → when memtable is full, flush to disk as sorted SSTable
+    All disk writes are sequential → 10,000-100,000 writes/s
+\`\`\`
+
+**LSM tree write path**:
+\`\`\`
+  1. Write arrives
+  2. Append to Write-Ahead Log (sequential, durable)
+  3. Insert into memtable (in-memory sorted structure, e.g., red-black tree)
+  4. When memtable reaches threshold (e.g., 64MB):
+     → Freeze memtable
+     → Flush to disk as immutable SSTable (sorted, sequential write)
+     → Create new empty memtable
+  5. Background compaction merges SSTables (levels)
+\`\`\`
+
+**Compaction** — the background maintenance:
+\`\`\`
+  Level 0: Recent SSTables (flushed from memtable)
+  Level 1: Merged SSTables (compacted from L0)
+  Level 2: Larger merged SSTables
+  ...
+
+  Compaction: merge overlapping SSTables, discard deleted/overwritten keys
+  Size-tiered: merge similar-sized SSTables (Cassandra default)
+  Leveled: each level is 10x larger, non-overlapping (RocksDB default)
+\`\`\`
+
+**Write amplification** — the cost of LSM trees:
+\`\`\`
+  A single write may be written multiple times:
+    1. WAL (1x)
+    2. Memtable flush to L0 SSTable (1x)
+    3. Compaction L0 → L1 (1x)
+    4. Compaction L1 → L2 (1x)
+    ...
+  Total write amplification: 10-30x (leveled compaction)
+\`\`\`
+
+**LSM trees in practice**:
+\`\`\`
+  ┌─────────────────┬──────────────────────┐
+  │ System          │ LSM Engine           │
+  ├─────────────────┼──────────────────────┤
+  │ Cassandra       │ Custom LSM           │
+  │ RocksDB         │ LevelDB-derived      │
+  │ LevelDB         │ Original Google impl │
+  │ HBase           │ Custom LSM on HDFS   │
+  │ CockroachDB     │ Pebble (Go RocksDB)  │
+  │ TiKV (TiDB)    │ RocksDB              │
+  │ InfluxDB        │ Custom TSM (time-series)│
+  └─────────────────┴──────────────────────┘
+\`\`\`
+
+**Trade-off**: LSM trees optimize writes at the cost of reads. Reading a key may require checking the memtable, then each SSTable level. Bloom filters mitigate this — they quickly determine if a key is NOT in an SSTable, avoiding unnecessary disk reads.`
+      },
+      {
+        question: 'How do you handle write conflicts in a sharded or multi-region database?',
+        answer: `Write conflicts arise when two writers modify the same data concurrently, especially in systems with multiple active writers (multi-master, multi-region active-active).
+
+**Conflict types**:
+\`\`\`
+  Lost update:
+    T1: read balance=100 → compute 100+50=150 → write 150
+    T2: read balance=100 → compute 100-30=70  → write 70
+    Result: T2's write overwrites T1's. The +50 is lost.
+
+  Write-write conflict (multi-master):
+    Region A: UPDATE user SET name='Alice' WHERE id=1
+    Region B: UPDATE user SET name='Bob'   WHERE id=1
+    Which write wins?
+\`\`\`
+
+**Conflict resolution strategies**:
+
+1. **Last-writer-wins (LWW)**: The write with the highest timestamp wins. Simple but can silently lose data.
+\`\`\`
+  Region A: {name: "Alice", timestamp: 1000}
+  Region B: {name: "Bob",   timestamp: 1001}
+  Result: "Bob" wins (higher timestamp)
+  Risk: clock skew can cause the "wrong" write to win
+\`\`\`
+
+2. **Version vectors**: Track the causal history of each write. Detect true conflicts (concurrent writes) vs resolved ones (one causally follows the other).
+\`\`\`
+  No conflict (A follows B):
+    B: [A:1, B:0] → A: [A:1, B:1]  (A has seen B's write)
+
+  True conflict (concurrent):
+    A: [A:2, B:1]  B: [A:1, B:2]
+    Neither dominates → conflict → application resolves
+\`\`\`
+
+3. **CRDTs (Conflict-free Replicated Data Types)**: Data structures designed so concurrent operations always merge without conflicts.
+\`\`\`
+  G-Counter (grow-only counter):
+    Region A: {A: 5, B: 3}  → total = 8
+    Region B: {A: 4, B: 7}  → total = 11
+    Merge: {A: max(5,4)=5, B: max(3,7)=7} → total = 12
+    No conflict possible!
+\`\`\`
+
+4. **Application-level merge**: Store both conflicting versions, let the application or user resolve.
+\`\`\`
+  Amazon shopping cart (Dynamo):
+    Conflict: two versions of the cart exist
+    Resolution: merge (union of items) — may add back a deleted item
+    User can fix by removing the unwanted item
+\`\`\`
+
+**Multi-region write architecture**:
+\`\`\`
+  Option 1: Single-leader (write in one region, read everywhere)
+    → No conflicts, but write latency for remote users
+
+  Option 2: Multi-leader with conflict resolution
+    → Low write latency everywhere, but must handle conflicts
+
+  Option 3: Partitioned leaders (each row has a home region)
+    → No conflicts for most writes, low latency for local data
+\`\`\`
+
+**Recommendation**: Avoid multi-master for data that requires strong consistency. Use partitioned leaders — assign each user/entity to a home region, and route writes for that entity to its home region.`
+      },
+      {
+        question: 'How would you design a system to ingest millions of events per second (IoT/telemetry)?',
+        answer: `Telemetry ingestion is a pure write-scaling problem. Sensors, devices, and applications generate enormous volumes of small events that must be captured, stored, and made queryable.
+
+**Architecture for high-volume ingestion**:
+\`\`\`
+  IoT Devices / Apps (producers)
+       │ (millions of events/second)
+       ▼
+  Ingestion Layer (stateless, horizontally scalable)
+  ├── API Gateway / Load Balancer
+  └── Ingestion Workers (validate, enrich, route)
+       │
+       ▼
+  Kafka / Kinesis (durable buffer, partitioned)
+       │
+       ├──► Real-time Path: Stream Processor (Flink/Spark)
+       │    → Real-time dashboards, alerts
+       │
+       └──► Batch Path: Consumer → Time-Series DB / Data Lake
+            → Historical queries, analytics
+\`\`\`
+
+**Ingestion optimizations**:
+
+1. **Protocol efficiency**: Use compact binary protocols (Protobuf, MessagePack) instead of JSON. 10x reduction in payload size.
+\`\`\`
+  JSON: {"device_id":"d123","temp":23.5,"ts":1705000000}  (52 bytes)
+  Protobuf: [binary encoding]                              (12 bytes)
+\`\`\`
+
+2. **Client-side batching**: Devices buffer readings and send in batches (every 5-10 seconds) rather than per-reading.
+
+3. **Partitioning by device_id**: Ensures all data from one device lands in the same partition, enabling per-device ordering and aggregation.
+
+4. **Time-partitioned storage**: Partition tables by time (hourly, daily). Old partitions can be compressed, moved to cold storage, or dropped.
+\`\`\`
+  telemetry_2024_01_15_00  (January 15, midnight hour)
+  telemetry_2024_01_15_01  (January 15, 1am hour)
+  ...
+  Old partitions → S3 (Parquet format, columnar, compressed)
+\`\`\`
+
+**Storage layer choices**:
+\`\`\`
+  ┌──────────────────┬──────────────┬────────────────────┐
+  │ System           │ Write Speed  │ Best For           │
+  ├──────────────────┼──────────────┼────────────────────┤
+  │ InfluxDB         │ ~1M pts/s    │ Time-series metrics│
+  │ TimescaleDB      │ ~500K pts/s  │ SQL + time-series  │
+  │ ClickHouse       │ ~2M rows/s   │ Analytics queries  │
+  │ Cassandra        │ ~1M writes/s │ High write, flexible│
+  │ S3 + Parquet     │ Unlimited    │ Cold storage, batch│
+  └──────────────────┴──────────────┴────────────────────┘
+\`\`\`
+
+**Key design decisions**:
+- Accept eventual consistency — real-time dashboards showing data 5 seconds old are fine
+- Use Kafka as the durable buffer — it handles spikes and allows multiple consumers
+- Separate hot (recent, fast storage) from cold (historical, cheap storage) data
+- Downsample old data — keep per-second granularity for 24 hours, per-minute for 30 days, per-hour for 1 year`
+      },
+      {
+        question: 'What is write amplification and how do you minimize it?',
+        answer: `**Write amplification** is the ratio of total bytes written to storage versus the logical bytes written by the application. A write amplification of 10x means for every 1 byte the application writes, 10 bytes are actually written to disk.
+
+**Sources of write amplification**:
+
+1. **LSM tree compaction**: Data is rewritten as it moves through compaction levels.
+\`\`\`
+  Logical write: 1KB
+  WAL: 1KB
+  Memtable flush to L0: 1KB
+  L0 → L1 compaction: 1KB
+  L1 → L2 compaction: 1KB
+  L2 → L3 compaction: 1KB
+  Total: 5KB written for 1KB of data (5x amplification)
+
+  Worst case with leveled compaction: 10-30x
+\`\`\`
+
+2. **B-tree page splits**: Updating a single row may rewrite an entire 8-16KB page.
+\`\`\`
+  Logical write: 100 bytes
+  Page rewrite: 8192 bytes (the whole B-tree page)
+  WAL: 100 bytes
+  Amplification: ~82x for small updates
+\`\`\`
+
+3. **Replication**: Each write is replicated to N nodes.
+\`\`\`
+  Replication factor 3: every write is amplified 3x
+  Plus each replica's own internal amplification
+\`\`\`
+
+4. **Indexing**: Each secondary index requires an additional write.
+\`\`\`
+  Table with 5 indexes:
+  INSERT → 1 table write + 5 index writes = 6x amplification
+\`\`\`
+
+**Minimizing write amplification**:
+
+1. **Choose the right compaction strategy**:
+\`\`\`
+  Size-tiered: lower write amplification (~5-10x), more space amplification
+  Leveled: higher write amplification (~10-30x), less space amplification
+  FIFO: no compaction for time-series data that is naturally ordered
+\`\`\`
+
+2. **Reduce unnecessary indexes**: Each index is a write multiplier. Only create indexes that are actively used by queries.
+
+3. **Batch writes**: Larger writes amortize the per-write overhead. A 1MB batch write into a 4KB page has much lower amplification than 250 individual 4KB writes.
+
+4. **Partition by time**: For time-series data, old partitions are immutable (no compaction needed). Only the current partition has write amplification.
+
+5. **Tune compaction**: Increase the size ratio between levels (e.g., from 10x to 20x) to reduce the number of levels and compaction events. Trade-off: larger read amplification (more files to check).
+
+**Why it matters at scale**:
+\`\`\`
+  Application writes: 100 MB/s
+  Write amplification: 20x
+  Actual disk I/O: 2,000 MB/s (2 GB/s)
+
+  This determines:
+    - SSD endurance (total bytes written before failure)
+    - Required disk throughput
+    - Cost of storage infrastructure
+\`\`\`
+
+For SSD-based systems, write amplification directly impacts drive lifetime. A 20x amplification means the SSD wears out 20x faster than the logical write rate would suggest.`
+      },
+    ],
+
+    dataModel: {
+      description: 'Shard metadata and write pipeline state',
+      schema: `Shard Metadata:
+  shard_id:        integer
+  shard_range:     key range (min_key, max_key) or hash range
+  node_host:       database host for this shard
+  status:          active | draining | splitting
+  row_count:       approximate rows
+  size_bytes:      approximate data size
+  write_rate:      writes per second (for hot shard detection)
+
+Write Buffer State (Kafka topic):
+  topic:           topic name
+  partition:       partition number
+  offset:          current write offset (latest)
+  consumer_offset: consumer group's committed offset
+  lag:             offset - consumer_offset (messages behind)
+  retention:       configured retention period
+
+Batch Pipeline:
+  batch_id:        UUID
+  source:          producer identity
+  record_count:    number of records in batch
+  size_bytes:      total batch size
+  status:          buffering | flushing | committed | failed
+  created_at:      when batch started accumulating
+  flushed_at:      when batch was written to storage`
+    },
+  },
+
+  // ─────────────────────────────────────────────────────────
+  // 18. Handling Large Blobs (applied)
+  // ─────────────────────────────────────────────────────────
+  {
+    id: 'handling-large-blobs',
+    title: 'Handling Large Blobs',
+    icon: 'hardDrive',
+    color: '#06b6d4',
+    questions: 7,
+    description: 'Uploading, storing, and serving large files efficiently using chunked uploads, pre-signed URLs, content-addressable storage, and CDN distribution.',
+    concepts: [
+      'Chunked and multipart upload',
+      'Pre-signed URLs',
+      'Content-addressable storage',
+      'CDN distribution',
+      'Resumable uploads (tus protocol)',
+      'Deduplication via content hashing',
+    ],
+    tips: [
+      'Never route large file uploads through your application server — use pre-signed URLs for direct-to-storage uploads',
+      'For files over 100MB, always implement chunked/resumable uploads to handle network interruptions gracefully',
+      'Content-addressable storage (hash-based keys) gives you automatic deduplication for free',
+      'Generate thumbnails and variants asynchronously via a job queue, not synchronously during upload',
+      'Always validate file type and size on the server side, not just the client — client-side validation is easily bypassed',
+    ],
+
+    introduction: `Large binary objects (blobs) — images, videos, documents, archives, database backups — present unique challenges that differ fundamentally from small, structured data. A 2GB video file cannot be handled the same way as a 500-byte JSON payload. The upload may take minutes on a slow connection, the transfer can be interrupted, the file must be stored durably and served efficiently to potentially millions of viewers, and the storage costs must be managed.
+
+The key architectural patterns for handling large blobs are: **chunked/resumable uploads** (splitting files into pieces to handle interruptions), **pre-signed URLs** (offloading upload and download traffic directly to object storage like S3, bypassing your application server), **content-addressable storage** (using the file's content hash as its key for automatic deduplication), and **CDN distribution** (caching files at edge locations close to users for fast delivery).
+
+Production systems like YouTube, Dropbox, Google Drive, and GitHub all combine these patterns. The upload path and the download path are designed independently — uploads go directly to object storage via pre-signed URLs, while downloads are served through a CDN with aggressive caching. Asynchronous processing pipelines handle transcoding, thumbnail generation, virus scanning, and metadata extraction after the upload completes.`,
+
+    keyQuestions: [
+      {
+        question: 'How do pre-signed URLs work and why are they essential for large file uploads?',
+        answer: `**Pre-signed URLs** are temporary, authenticated URLs generated by your backend that allow clients to upload or download files directly to/from object storage (S3, GCS, Azure Blob) without routing traffic through your application server.
+
+**Upload flow with pre-signed URL**:
+\`\`\`
+  1. Client → App Server: "I want to upload profile-photo.jpg (2MB)"
+  2. App Server validates request, generates pre-signed URL:
+     s3.getSignedUrl('putObject', {
+       Bucket: 'uploads',
+       Key: 'users/42/profile-photo.jpg',
+       ContentType: 'image/jpeg',
+       Expires: 300  // URL valid for 5 minutes
+     })
+  3. App Server → Client: {upload_url: "https://s3.amazonaws.com/...?Signature=..."}
+  4. Client → S3: PUT upload_url with file body (direct upload, bypasses app server)
+  5. S3 → Client: 200 OK
+  6. Client → App Server: "Upload complete" (with key/metadata)
+  7. App Server updates database with file reference
+\`\`\`
+
+**Why this is essential**:
+\`\`\`
+  Without pre-signed URLs:
+    Client ──(2GB)──► App Server ──(2GB)──► S3
+    - App server must buffer/stream the file
+    - Doubles bandwidth usage
+    - App server CPU/memory tied up during transfer
+    - One slow upload blocks the server thread
+    - Cannot scale upload bandwidth independently
+
+  With pre-signed URLs:
+    Client ──(2GB)──────────────────────► S3 (direct)
+    Client ──(1KB metadata)──► App Server
+    - App server only handles metadata (tiny payload)
+    - S3 handles the heavy lifting (built for this)
+    - Upload bandwidth scales with S3, not your servers
+    - App server remains available for other requests
+\`\`\`
+
+**Security considerations**:
+- Short expiration (5-15 minutes) limits the window of misuse
+- Restrict Content-Type to prevent uploading executable files
+- Set maximum Content-Length to prevent abuse
+- Use a separate S3 bucket for uploads (not your production bucket)
+- Validate the uploaded file asynchronously (virus scan, type verification)
+
+**Download pre-signed URLs**: Same concept in reverse — generate a temporary download URL that grants time-limited access to a private S3 object. Useful for paid content, user-specific files, or access-controlled documents.`
+      },
+      {
+        question: 'How do you implement resumable/chunked uploads for large files?',
+        answer: `**Resumable uploads** split a file into chunks that are uploaded independently. If the connection drops, only the last incomplete chunk needs to be re-uploaded, not the entire file.
+
+**Why chunked uploads are necessary**:
+\`\`\`
+  1GB file on a 10 Mbps connection:
+    Upload time: ~14 minutes
+    Probability of network interruption: HIGH
+
+  Without chunking: start over from byte 0
+  With chunking: resume from last completed chunk
+\`\`\`
+
+**tus protocol** (open standard for resumable uploads):
+\`\`\`
+  Step 1 — Create upload:
+    POST /uploads
+    Upload-Length: 1073741824  (1GB)
+    → 201 Created
+    → Location: /uploads/abc123
+
+  Step 2 — Upload chunks:
+    PATCH /uploads/abc123
+    Upload-Offset: 0
+    Content-Length: 5242880  (5MB chunk)
+    [binary data]
+    → 204 No Content
+    → Upload-Offset: 5242880
+
+    PATCH /uploads/abc123
+    Upload-Offset: 5242880
+    Content-Length: 5242880
+    [binary data]
+    → 204 No Content
+    → Upload-Offset: 10485760
+
+  Step 3 — Resume after interruption:
+    HEAD /uploads/abc123
+    → Upload-Offset: 10485760  (server knows how far we got)
+
+    PATCH /uploads/abc123
+    Upload-Offset: 10485760  (resume from here)
+    ...
+\`\`\`
+
+**S3 multipart upload**:
+\`\`\`
+  1. CreateMultipartUpload → returns upload_id
+  2. UploadPart (part 1, 5MB) → returns ETag
+  3. UploadPart (part 2, 5MB) → returns ETag
+  ...
+  N. CompleteMultipartUpload (upload_id, [{part: 1, ETag}, ...])
+
+  On failure: ListParts to see what was uploaded, resume missing parts
+  Cleanup: AbortMultipartUpload if abandoned
+\`\`\`
+
+**Chunk size selection**:
+\`\`\`
+  ┌──────────┬─────────────────┬──────────────────┐
+  │ Chunk    │ Pros            │ Cons             │
+  ├──────────┼─────────────────┼──────────────────┤
+  │ Small    │ Fine-grained    │ More HTTP        │
+  │ (1MB)    │ resume, less    │ overhead, slower  │
+  │          │ data lost       │ overall          │
+  │ Large    │ Fewer requests, │ More data lost on│
+  │ (50MB)   │ faster overall  │ interruption     │
+  │ Adaptive │ Best of both    │ More complex     │
+  │          │ (adjust to      │ implementation   │
+  │          │ network speed)  │                  │
+  └──────────┴─────────────────┴──────────────────┘
+\`\`\`
+
+**Best practice**: Use 5-10MB chunks as a default. Implement client-side progress tracking and server-side chunk verification (checksum per chunk). Set a timeout on incomplete uploads (clean up after 24 hours).`
+      },
+      {
+        question: 'What is content-addressable storage and how does it enable deduplication?',
+        answer: `**Content-addressable storage (CAS)** uses the hash of a file's content as its storage key. Two files with identical content produce the same hash, and therefore the same key — they are stored only once regardless of how many times they are uploaded.
+
+**How it works**:
+\`\`\`
+  File upload:
+    1. Compute hash: SHA-256(file_content) → "a3f2b8c9d4e1..."
+    2. Storage key: blobs/a3/f2/a3f2b8c9d4e1...
+    3. Check if key exists in storage
+       → If yes: file already stored, skip upload (deduplicated!)
+       → If no: upload file to storage with this key
+    4. Store reference: files table → (file_id, name, hash, size, mime_type)
+
+  Multiple users upload the same photo:
+    User A uploads sunset.jpg → hash = abc123 → stored
+    User B uploads beach_sunset.jpg → hash = abc123 → already exists!
+    Both users' file records point to the same blob
+\`\`\`
+
+**Deduplication in practice (Dropbox model)**:
+\`\`\`
+  files table:
+    file_id | user_id | path           | blob_hash
+    ────────┼─────────┼────────────────┼──────────
+    f1      | user_A  | /photos/pic.jpg| abc123
+    f2      | user_B  | /my_photo.jpg  | abc123  ← same blob!
+    f3      | user_A  | /docs/spec.pdf | def456
+
+  blobs table:
+    hash    | storage_url                  | size   | ref_count
+    ────────┼──────────────────────────────┼────────┼──────────
+    abc123  | s3://blobs/ab/c1/abc123...   | 2.1 MB | 2
+    def456  | s3://blobs/de/f4/def456...   | 500 KB | 1
+\`\`\`
+
+**Block-level deduplication** (for large files):
+\`\`\`
+  Instead of hashing the entire file, split into fixed-size blocks:
+
+  File (100MB) → Block 1 (4MB) → hash1
+                → Block 2 (4MB) → hash2
+                → Block 3 (4MB) → hash3
+                → ...
+                → Block 25 (4MB) → hash25
+
+  If only Block 15 changes in an update:
+    24 blocks: already stored (deduplicated)
+    1 block: new, upload only this block
+
+  Saves ~96% of storage and bandwidth for the update!
+\`\`\`
+
+**Variable-length chunking** (Rabin fingerprinting): Instead of fixed-size blocks, use content-defined boundaries. This handles insertions at the beginning of the file without invalidating all subsequent block boundaries.
+
+**Garbage collection**: When a blob's reference count drops to zero (all files pointing to it are deleted), the blob can be garbage collected. Use a background job that periodically scans for unreferenced blobs.
+
+**Systems using CAS**: Git (content-addressable objects), Docker (image layers), IPFS (content-addressed distributed storage), Dropbox (block-level dedup), Venti (Plan 9 archival storage).`
+      },
+      {
+        question: 'How do you design a media processing pipeline for uploaded files?',
+        answer: `After a file is uploaded, it typically needs processing: images need thumbnails, videos need transcoding, documents need text extraction, and all files need virus scanning. This processing must be asynchronous — the user should not wait for it.
+
+**Architecture**:
+\`\`\`
+  Upload Complete
+       │
+       ▼
+  Event: "file.uploaded" (Kafka/SQS)
+       │
+       ├──► Virus Scanner ──► quarantine or approve
+       ├──► Metadata Extractor ──► EXIF, duration, dimensions
+       ├──► Thumbnail Generator ──► multiple sizes
+       ├──► Video Transcoder ──► multiple formats/resolutions
+       └──► Text Extractor (OCR/PDF) ──► searchable text
+
+  Each processor updates file status in database
+  Client polls or receives WebSocket notification when processing completes
+\`\`\`
+
+**Image processing pipeline**:
+\`\`\`
+  Original upload (8MB, 4000x3000 JPEG)
+       │
+       ├──► Thumbnail: 150x150 (5KB)
+       ├──► Small: 640x480 (50KB)
+       ├──► Medium: 1280x960 (150KB)
+       ├──► Large: 1920x1440 (400KB)
+       ├──► WebP variants of each (30-50% smaller)
+       └──► AVIF variants (if supported, 50-70% smaller)
+
+  Store all variants in S3:
+    images/abc123/original.jpg
+    images/abc123/thumb.jpg
+    images/abc123/small.webp
+    images/abc123/medium.webp
+    ...
+\`\`\`
+
+**Video processing pipeline**:
+\`\`\`
+  Original upload (2GB, 4K MOV)
+       │
+       ├──► 4K H.265 (adaptive bitrate, 8 Mbps)
+       ├──► 1080p H.264 (adaptive bitrate, 5 Mbps)
+       ├──► 720p H.264 (adaptive bitrate, 2.5 Mbps)
+       ├──► 480p H.264 (adaptive bitrate, 1 Mbps)
+       ├──► Thumbnail sprites (for preview on hover)
+       └──► HLS/DASH manifest for adaptive streaming
+
+  Processing time: minutes to hours (use spot instances)
+\`\`\`
+
+**Processing status tracking**:
+\`\`\`
+  file_processing_jobs:
+    job_id | file_id | job_type      | status     | progress | error
+    ───────┼─────────┼───────────────┼────────────┼──────────┼──────
+    j1     | f42     | virus_scan    | completed  | 100%     | null
+    j2     | f42     | thumbnail     | completed  | 100%     | null
+    j3     | f42     | transcode_720 | processing | 65%      | null
+    j4     | f42     | transcode_1080| queued     | 0%       | null
+\`\`\`
+
+**Key design decisions**:
+- Use a job queue (SQS, Celery, Bull) with retry and dead-letter capabilities
+- Process in priority order: virus scan first, thumbnails second (fast user feedback), then heavy processing
+- Use serverless (Lambda) or spot instances for cost-effective video transcoding
+- Set processing timeouts — a stuck job should not block the pipeline
+- Serve the original file immediately while processing runs (better UX than waiting)`
+      },
+      {
+        question: 'How do you efficiently serve large files to millions of users via CDN?',
+        answer: `Serving large files at scale requires minimizing origin load, reducing latency through edge caching, and handling partial content requests for streaming.
+
+**CDN architecture for file serving**:
+\`\`\`
+  User Request → CDN Edge (nearest PoP)
+                    │
+                 Cache HIT → Serve directly (2-20ms latency)
+                    │
+                 Cache MISS → Fetch from Origin (S3)
+                    │          → Cache at edge for subsequent requests
+                    │          → Serve to user
+                    │
+  Origin: S3 bucket (or equivalent object storage)
+\`\`\`
+
+**Range requests (essential for video streaming)**:
+\`\`\`
+  Client: GET /video.mp4
+          Range: bytes=0-1048575    (first 1MB)
+  Server: 206 Partial Content
+          Content-Range: bytes 0-1048575/104857600
+          [first 1MB of data]
+
+  Client: GET /video.mp4
+          Range: bytes=1048576-2097151    (second 1MB)
+  Server: 206 Partial Content
+          [second 1MB of data]
+\`\`\`
+Range requests enable seeking in videos, resuming downloads, and parallel chunk downloads.
+
+**Adaptive bitrate streaming (HLS/DASH)**:
+\`\`\`
+  manifest.m3u8 (master playlist):
+    #EXT-X-STREAM-INF:BANDWIDTH=800000,RESOLUTION=640x360
+    360p/playlist.m3u8
+    #EXT-X-STREAM-INF:BANDWIDTH=2800000,RESOLUTION=1280x720
+    720p/playlist.m3u8
+    #EXT-X-STREAM-INF:BANDWIDTH=5000000,RESOLUTION=1920x1080
+    1080p/playlist.m3u8
+
+  720p/playlist.m3u8:
+    #EXTINF:10.0,
+    segment001.ts    ← CDN caches each segment independently
+    #EXTINF:10.0,
+    segment002.ts
+    ...
+\`\`\`
+
+The player measures bandwidth and switches quality automatically. Each 10-second segment is a separate CDN object with its own cache lifetime.
+
+**Cache strategies for files**:
+\`\`\`
+  Immutable content (content-addressed):
+    Cache-Control: public, max-age=31536000, immutable
+    Key: /blobs/sha256-abc123.jpg
+    → Cache forever, hash changes when content changes
+
+  Mutable content:
+    Cache-Control: public, max-age=86400, stale-while-revalidate=3600
+    ETag: "v3-abc123"
+    → Cache for 24h, serve stale while revalidating
+
+  Protected content:
+    Cache-Control: private, no-store
+    → Do not cache at CDN, use pre-signed URLs with short TTL
+\`\`\`
+
+**Cost optimization**:
+- Use CDN for hot content (frequently accessed), S3 directly for cold content (rarely accessed)
+- Compress text-based files (SVG, JSON, XML) at the CDN edge (Brotli/gzip)
+- Set appropriate cache TTLs — longer TTLs = higher hit ratio = lower origin costs
+- Use origin shield (a single CDN node that caches between edge and origin) to reduce origin requests when you have many edge PoPs`
+      },
+      {
+        question: 'How do you handle file upload validation and security?',
+        answer: `File uploads are a major attack vector. Without proper validation, attackers can upload malware, web shells, oversized files that consume storage, or files that exploit image parsing vulnerabilities.
+
+**Validation layers** (defense in depth):
+
+\`\`\`
+  Layer 1 — Client-side (UX only, not security):
+    - Check file extension and size before upload
+    - Display immediate feedback to user
+    - Easily bypassed — NEVER rely on this alone
+
+  Layer 2 — Server-side pre-upload (pre-signed URL generation):
+    - Validate Content-Type and Content-Length in the pre-signed URL policy
+    - Set maximum file size (S3 policy condition)
+    - Restrict allowed Content-Types
+
+  Layer 3 — Post-upload validation:
+    - Verify actual file type by reading magic bytes (not extension)
+    - Scan with antivirus (ClamAV or cloud service)
+    - Check for embedded scripts in images (polyglot files)
+    - Validate image dimensions (prevent zip bombs disguised as images)
+    - Strip EXIF metadata (may contain GPS, device info)
+
+  Layer 4 — Storage security:
+    - Store uploads in a separate S3 bucket (not with application code)
+    - Enable S3 versioning (recover from accidental deletion)
+    - Enable server-side encryption (AES-256 or KMS)
+    - Block public access by default
+    - Serve files from a separate domain (prevent cookie theft via uploaded HTML)
+\`\`\`
+
+**Magic byte validation**:
+\`\`\`
+  // Check actual file type, not extension
+  JPEG: starts with FF D8 FF
+  PNG:  starts with 89 50 4E 47
+  PDF:  starts with 25 50 44 46
+  GIF:  starts with 47 49 46 38
+
+  // Reject if magic bytes don't match claimed Content-Type
+  if file_header != expected_magic_bytes[content_type]:
+    reject("File type mismatch")
+\`\`\`
+
+**File size limits and quotas**:
+\`\`\`
+  Per-request limit:    100MB (reject larger uploads)
+  Per-user storage:     5GB (free tier), 100GB (paid)
+  Total system storage: Monitor and alert
+
+  Implementation:
+    S3 pre-signed URL with Content-Length condition:
+    Conditions: [
+      ["content-length-range", 0, 104857600]  // max 100MB
+    ]
+\`\`\`
+
+**Serving uploaded files safely**:
+\`\`\`
+  Headers for serving user-uploaded content:
+    Content-Disposition: attachment  (force download, don't render)
+    Content-Type: application/octet-stream  (override claimed type)
+    X-Content-Type-Options: nosniff  (prevent MIME sniffing)
+    Content-Security-Policy: default-src 'none'  (no script execution)
+
+  Or better: serve from a separate domain (uploads.example.com)
+    → Isolated from main application cookies and auth
+\`\`\`
+
+**Best practice**: Treat every uploaded file as potentially malicious. Validate at every layer, scan asynchronously, store in isolation, and serve with restrictive headers.`
+      },
+      {
+        question: 'How would you design a system like Dropbox for file sync across devices?',
+        answer: `File sync is one of the most complex distributed systems problems — it combines large blob handling with conflict resolution, offline support, and real-time notifications.
+
+**Architecture**:
+\`\`\`
+  Device A (laptop)                   Cloud                   Device B (phone)
+       │                                │                          │
+  Local filesystem                 Sync Service               Local filesystem
+  File watcher ──► Sync Client ──► Block Server ◄── Sync Client ◄── File watcher
+                        │              │                  │
+                        │         Metadata Service        │
+                        │         (file tree, versions)    │
+                        │              │                  │
+                        └──► Notification Service ◄───────┘
+                             (real-time push)
+\`\`\`
+
+**Key components**:
+
+1. **File watcher**: Monitors the local filesystem for changes (inotify on Linux, FSEvents on macOS, ReadDirectoryChangesW on Windows).
+
+2. **Chunking engine**: Splits files into variable-length blocks using content-defined chunking (Rabin fingerprinting). This ensures that inserting bytes at the beginning of a file does not invalidate all chunks.
+\`\`\`
+  File (100MB) → [chunk1: 4.1MB, chunk2: 3.8MB, chunk3: 4.3MB, ...]
+  Each chunk: hash = SHA-256(content)
+
+  File modified (inserted 1KB at position 50MB):
+    Chunks 1-12: unchanged (same hashes, skip upload)
+    Chunk 13: modified (new hash, upload this chunk)
+    Chunks 14-25: unchanged (content-defined boundaries are stable)
+
+  Result: only ~4MB uploaded for a 1KB edit in a 100MB file
+\`\`\`
+
+3. **Metadata service**: Tracks the file tree — paths, versions, chunk lists, sharing permissions. This is a traditional database (PostgreSQL).
+\`\`\`
+  files:
+    file_id | path              | version | chunks
+    ────────┼───────────────────┼─────────┼────────────
+    f1      | /docs/report.pdf  | 7       | [h1, h2, h3, h4]
+    f2      | /photos/cat.jpg   | 2       | [h5, h6]
+\`\`\`
+
+4. **Block server**: Stores and retrieves chunks by their content hash. Backed by S3 or similar object storage. Automatic deduplication — same content = same hash = stored once.
+
+5. **Notification service**: Pushes real-time notifications when files change. Uses long-polling or WebSocket to inform devices of remote changes.
+
+**Conflict resolution**:
+\`\`\`
+  Device A (offline): edits report.pdf → version 8a
+  Device B (offline): edits report.pdf → version 8b
+  Both come online:
+    Conflict detected (both modified version 7)
+    Resolution: save both versions
+      report.pdf          → version 8a (Device A's version wins)
+      report (conflict).pdf → version 8b (Device B's version preserved)
+    User manually merges
+\`\`\`
+
+**Bandwidth optimization**:
+- Delta sync: only upload changed chunks
+- Compression: compress chunks before upload (LZ4 for speed)
+- Deduplication: skip upload if chunk hash already exists in cloud
+- Prioritization: sync small files first, recently modified files first`
+      },
+    ],
+
+    dataModel: {
+      description: 'File metadata and chunk tracking',
+      schema: `File Record:
+  file_id:         UUID
+  owner_id:        user reference
+  filename:        original file name
+  storage_key:     object storage key (may be content hash)
+  content_hash:    SHA-256 of file content
+  mime_type:       validated MIME type
+  size_bytes:      file size
+  status:          uploading | processing | ready | quarantined
+  upload_method:   direct | multipart | chunked
+  created_at:      timestamp
+  processed_at:    timestamp (null until processing complete)
+
+Chunk Record (for chunked uploads):
+  chunk_id:        UUID
+  file_id:         reference to parent file
+  chunk_index:     order within file
+  content_hash:    SHA-256 of chunk content
+  size_bytes:      chunk size
+  storage_key:     object storage key
+  status:          uploaded | verified | failed
+
+Processing Job:
+  job_id:          UUID
+  file_id:         reference to file
+  job_type:        virus_scan | thumbnail | transcode | ocr
+  status:          queued | processing | completed | failed
+  progress:        percentage (0-100)
+  output_key:      storage key of processed output
+  started_at:      timestamp
+  completed_at:    timestamp
+  error:           error message if failed`
+    },
+  },
+
+  // ─────────────────────────────────────────────────────────
+  // 19. Managing Long Running Tasks (applied)
+  // ─────────────────────────────────────────────────────────
+  {
+    id: 'managing-long-running-tasks',
+    title: 'Managing Long Running Tasks',
+    icon: 'clock',
+    color: '#06b6d4',
+    questions: 7,
+    description: 'Processing tasks that take seconds to hours using job queues, state machines, progress tracking, and distributed task scheduling.',
+    concepts: [
+      'Job queues and priority scheduling',
+      'Task state machines',
+      'Polling vs webhooks vs WebSocket notifications',
+      'Dead letter queues',
+      'Idempotent retries',
+      'Task timeout and heartbeat',
+      'Graceful cancellation',
+    ],
+    tips: [
+      'Never process long tasks synchronously in the request path — return a job ID immediately and process asynchronously',
+      'Implement heartbeat for tasks lasting more than a few minutes so the system can detect and reschedule stuck tasks',
+      'Every task must be idempotent — workers will crash, and the same task will be retried',
+      'Use exponential backoff with jitter for retries to avoid overwhelming downstream services',
+      'Progress tracking is a UX requirement, not optional — users need to know something is happening',
+    ],
+
+    introduction: `Many real-world operations take far longer than the typical HTTP request timeout (30 seconds). Report generation, video transcoding, data migration, machine learning training, PDF rendering, large data exports, and batch processing can take anywhere from seconds to hours. These operations cannot be handled within a synchronous request-response cycle.
+
+The standard pattern is to **accept the request, return immediately with a job ID, and process the work asynchronously** using a background worker. The client can then check the job's status via polling, receive updates via WebSocket, or be notified via webhook when the job completes. This decouples the user-facing API from the actual processing, allowing independent scaling and graceful handling of failures.
+
+The challenge lies in **reliability**: workers crash, tasks get stuck, downstream services become unavailable, and duplicate processing must be prevented. A robust long-running task system needs a persistent job queue, a state machine to track task lifecycle, heartbeat monitoring to detect stuck tasks, dead letter queues for tasks that repeatedly fail, and idempotent task handlers that produce the same result even when executed multiple times.`,
+
+    keyQuestions: [
+      {
+        question: 'How do you design an asynchronous task processing system?',
+        answer: `**Architecture**:
+\`\`\`
+  Client → API Server → Job Queue → Worker Pool → Result Store
+    │          │            │           │              │
+    │     Return job_id  Persistent   Scale          Notify
+    │     immediately    (durable)    independently  client
+    ▼                                                   │
+  Poll for status ◄─────────────────────────────────────┘
+\`\`\`
+
+**Request flow**:
+\`\`\`
+  1. Client: POST /api/reports/generate {filters: {...}}
+  2. API Server:
+     a. Validate request
+     b. Create job record (status=QUEUED)
+     c. Enqueue job to queue
+     d. Return: {job_id: "job_abc", status: "queued", poll_url: "/api/jobs/job_abc"}
+  3. Worker picks up job from queue:
+     a. Update status → PROCESSING
+     b. Execute task (generate report)
+     c. Store result (S3 or database)
+     d. Update status → COMPLETED
+  4. Client polls: GET /api/jobs/job_abc
+     → {status: "completed", result_url: "/api/reports/job_abc/download"}
+\`\`\`
+
+**Job queue options**:
+\`\`\`
+  ┌─────────────────┬──────────────────────────────────┐
+  │ Queue            │ Best For                        │
+  ├─────────────────┼──────────────────────────────────┤
+  │ Redis (Bull/BullMQ)│ Low latency, Node.js ecosystem│
+  │ SQS             │ AWS-native, serverless           │
+  │ RabbitMQ        │ Routing, priorities, AMQP        │
+  │ Kafka           │ High throughput, log-based       │
+  │ Celery          │ Python ecosystem                 │
+  │ PostgreSQL (SKIP LOCKED)│ No additional infra     │
+  └─────────────────┴──────────────────────────────────┘
+\`\`\`
+
+**PostgreSQL as a job queue** (simple, no extra infrastructure):
+\`\`\`
+  CREATE TABLE jobs (
+    id UUID PRIMARY KEY,
+    type VARCHAR,
+    payload JSONB,
+    status VARCHAR DEFAULT 'queued',
+    locked_by VARCHAR,
+    locked_at TIMESTAMP,
+    attempts INT DEFAULT 0,
+    max_attempts INT DEFAULT 3,
+    created_at TIMESTAMP,
+    completed_at TIMESTAMP,
+    result JSONB,
+    error TEXT
+  );
+
+  -- Worker picks up a job (atomic, no double-processing):
+  UPDATE jobs
+  SET status = 'processing', locked_by = 'worker-1', locked_at = NOW()
+  WHERE id = (
+    SELECT id FROM jobs
+    WHERE status = 'queued' AND attempts < max_attempts
+    ORDER BY created_at
+    FOR UPDATE SKIP LOCKED
+    LIMIT 1
+  )
+  RETURNING *;
+\`\`\``
+      },
+      {
+        question: 'How do you implement task timeout, heartbeat, and stuck task recovery?',
+        answer: `Tasks get stuck for many reasons: worker crashes, out-of-memory kills, infinite loops, deadlocks, or network calls that never return. Without detection and recovery, stuck tasks block the queue and waste resources.
+
+**Heartbeat pattern**:
+\`\`\`
+  Worker processing a task:
+    1. Pick up job, set locked_at = NOW()
+    2. Start heartbeat loop (every 30 seconds):
+       UPDATE jobs SET locked_at = NOW() WHERE id = ? AND locked_by = ?
+    3. Do actual work...
+    4. On completion: update status → COMPLETED, stop heartbeat
+    5. On failure: update status → FAILED, stop heartbeat
+
+  Reaper process (runs every 60 seconds):
+    UPDATE jobs
+    SET status = 'queued', locked_by = NULL, locked_at = NULL, attempts = attempts + 1
+    WHERE status = 'processing'
+    AND locked_at < NOW() - INTERVAL '2 minutes'  -- no heartbeat for 2 min
+    AND attempts < max_attempts;
+    -- Tasks with attempts >= max_attempts → move to dead letter queue
+\`\`\`
+
+**Visibility timeout pattern** (SQS model):
+\`\`\`
+  1. Worker receives message (invisibility period starts: 5 minutes)
+  2. Other workers cannot see this message for 5 minutes
+  3. Worker processes task:
+     a. If completed in time → delete message (acknowledged)
+     b. If not completed → extend visibility timeout
+     c. If worker crashes → message becomes visible again after timeout
+        → Another worker picks it up
+\`\`\`
+
+**Timeout strategies per task type**:
+\`\`\`
+  ┌────────────────────────┬──────────┬────────────┐
+  │ Task Type              │ Timeout  │ Heartbeat  │
+  ├────────────────────────┼──────────┼────────────┤
+  │ Thumbnail generation   │ 30s      │ Not needed │
+  │ PDF report generation  │ 5min     │ Every 30s  │
+  │ Video transcoding      │ 2 hours  │ Every 60s  │
+  │ Data export            │ 30min    │ Every 60s  │
+  │ ML training job        │ 24 hours │ Every 5min │
+  └────────────────────────┴──────────┴────────────┘
+\`\`\`
+
+**Circuit breaker for downstream services**:
+\`\`\`
+  If a task fails because a downstream service is down:
+    After 5 consecutive failures:
+      → Circuit breaker OPENS
+      → Stop sending tasks to that service
+      → Return tasks to queue with a delay
+    After 30 seconds:
+      → Circuit breaker HALF-OPEN
+      → Try one task
+      → If success → CLOSE circuit, resume processing
+      → If failure → OPEN circuit again
+\`\`\`
+
+**Monitoring alerts**:
+- Queue depth growing → workers not keeping up
+- Average processing time increasing → degradation
+- Dead letter queue growing → recurring failures need investigation
+- Heartbeat misses → workers may be stuck or under-resourced`
+      },
+      {
+        question: 'Compare polling, webhooks, and WebSocket for notifying clients about task completion.',
+        answer: `Clients need to know when their long-running task completes. Three main notification mechanisms serve this purpose, each with different trade-offs.
+
+**Polling** — client periodically asks "is it done yet?":
+\`\`\`
+  Client:
+    setInterval(async () => {
+      const job = await fetch('/api/jobs/abc');
+      if (job.status === 'completed') {
+        clearInterval(pollId);
+        showResult(job.result);
+      }
+    }, 2000);  // every 2 seconds
+\`\`\`
+
+Pros:
+- Simplest to implement (stateless, standard HTTP)
+- Works everywhere (no special infrastructure)
+- Client controls the polling rate
+
+Cons:
+- Wastes bandwidth (most polls return "still processing")
+- Delay between completion and notification (up to poll interval)
+- Many concurrent polls can load the API server
+
+**Webhooks** — server calls client's URL when done:
+\`\`\`
+  Client submits job:
+    POST /api/jobs
+    {task: "generate_report", callback_url: "https://client.com/webhooks/jobs"}
+
+  Server completes job:
+    POST https://client.com/webhooks/jobs
+    {job_id: "abc", status: "completed", result_url: "..."}
+\`\`\`
+
+Pros:
+- No wasted requests (server only calls when there is news)
+- Near-instant notification
+- Works for server-to-server communication
+
+Cons:
+- Client must expose a public HTTP endpoint (not always feasible)
+- Delivery reliability: what if the client is temporarily down? (need retry logic)
+- Security: how does the client verify the webhook is genuine? (HMAC signatures)
+- Not suitable for browser clients (browsers do not expose HTTP endpoints)
+
+**WebSocket** — persistent connection, server pushes updates:
+\`\`\`
+  Client:
+    const ws = new WebSocket('wss://api.example.com/ws');
+    ws.send(JSON.stringify({subscribe: 'job:abc'}));
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.job_id === 'abc' && data.status === 'completed') {
+        showResult(data.result);
+        ws.close();
+      }
+    };
+\`\`\`
+
+Pros:
+- Real-time updates (no delay)
+- Can send progress updates (30%, 50%, 75%...)
+- Efficient (no repeated HTTP overhead)
+
+Cons:
+- More complex infrastructure (WebSocket servers, sticky sessions)
+- Connection management (reconnection, heartbeat)
+- Not suitable for server-to-server or mobile push when app is backgrounded
+
+**Recommendation by use case**:
+\`\`\`
+  ┌──────────────────────────┬────────────────────┐
+  │ Use Case                 │ Best Mechanism      │
+  ├──────────────────────────┼────────────────────┤
+  │ Browser UI, short tasks  │ Polling (simplest)  │
+  │ Browser UI, long tasks   │ WebSocket + polling │
+  │                          │ fallback            │
+  │ Server-to-server         │ Webhooks            │
+  │ Mobile (background)      │ Push notification   │
+  │ Dashboard with many jobs │ SSE (server-sent    │
+  │                          │ events)             │
+  └──────────────────────────┴────────────────────┘
+\`\`\`
+
+**Hybrid approach** (most robust): Return a poll URL in the initial response. Optionally accept a webhook URL. If the client connects via WebSocket, push updates. This covers all client types.`
+      },
+      {
+        question: 'How do you implement priority queues for task scheduling?',
+        answer: `Not all tasks are equally urgent. A user waiting for a PDF download is more time-sensitive than a nightly analytics job. Priority queues ensure high-priority tasks are processed before low-priority ones.
+
+**Priority implementation strategies**:
+
+1. **Separate queues per priority**:
+\`\`\`
+  Queue: high-priority    → Workers check this first
+  Queue: normal-priority  → Workers check this second
+  Queue: low-priority     → Workers check this last (if idle)
+
+  Worker loop:
+    job = dequeue(high) || dequeue(normal) || dequeue(low)
+    if job: process(job)
+    else: sleep(100ms)
+\`\`\`
+
+Pros: Simple, prevents starvation with weighted processing
+Cons: Low-priority tasks may starve if high-priority queue is always full
+
+2. **Weighted fair queuing**:
+\`\`\`
+  Process 70% from high, 20% from normal, 10% from low:
+    Pick a random number 0-100:
+      0-70:   dequeue from high
+      70-90:  dequeue from normal
+      90-100: dequeue from low
+\`\`\`
+
+Prevents starvation while still favoring high-priority tasks.
+
+3. **Database-level priority (PostgreSQL)**:
+\`\`\`
+  SELECT * FROM jobs
+  WHERE status = 'queued'
+  ORDER BY priority DESC, created_at ASC
+  FOR UPDATE SKIP LOCKED
+  LIMIT 1;
+
+  -- Priority 3 (high) processed before priority 1 (low)
+  -- Within same priority, FIFO ordering
+\`\`\`
+
+4. **BullMQ priority queues**:
+\`\`\`
+  // Lower number = higher priority
+  await queue.add('task', data, { priority: 1 });  // urgent
+  await queue.add('task', data, { priority: 5 });  // normal
+  await queue.add('task', data, { priority: 10 }); // background
+\`\`\`
+
+**Priority assignment guidelines**:
+\`\`\`
+  ┌──────────┬───────────────────────────────────┐
+  │ Priority │ Examples                          │
+  ├──────────┼───────────────────────────────────┤
+  │ Critical │ Payment processing, password reset│
+  │ High     │ User-facing exports, notifications│
+  │ Normal   │ Email sending, webhook delivery   │
+  │ Low      │ Analytics, report generation      │
+  │ Background│ Data cleanup, cache warming      │
+  └──────────┴───────────────────────────────────┘
+\`\`\`
+
+**Dynamic priority adjustment**:
+\`\`\`
+  Age-based priority boost:
+    effective_priority = base_priority + (age_in_minutes / 10)
+
+  A low-priority task waiting for 30 minutes:
+    effective_priority = 1 + (30/10) = 4
+    Now competes with normal-priority tasks
+
+  Prevents indefinite starvation of low-priority tasks
+\`\`\`
+
+**Dedicated workers for priority levels**: For critical tasks, reserve dedicated workers that only process the high-priority queue. This guarantees capacity even when normal queues are backed up.`
+      },
+      {
+        question: 'How do you implement graceful cancellation of long-running tasks?',
+        answer: `Users change their minds. A report that takes 10 minutes may no longer be needed. Without graceful cancellation, the system wastes resources processing unwanted work, and users have no way to stop it.
+
+**Cancellation architecture**:
+\`\`\`
+  Client: DELETE /api/jobs/abc (or POST /api/jobs/abc/cancel)
+  API Server:
+    1. Update job status → CANCELLING
+    2. Set cancellation flag in shared store (Redis)
+       SET job:abc:cancel true EX 3600
+
+  Worker (processing job abc):
+    Periodically checks cancellation flag:
+      if redis.get("job:abc:cancel"):
+        cleanup()
+        update job status → CANCELLED
+        return
+\`\`\`
+
+**Cooperative cancellation** (worker checks for cancellation signal):
+\`\`\`
+  async function processReport(jobId, data) {
+    const pages = await getPages(data);
+
+    for (let i = 0; i < pages.length; i++) {
+      // Check for cancellation between units of work
+      if (await isCancelled(jobId)) {
+        await cleanup(jobId);  // Remove partial results
+        return { status: 'cancelled', progress: i / pages.length };
+      }
+
+      await processPage(pages[i]);
+      await updateProgress(jobId, (i + 1) / pages.length);
+    }
+
+    return { status: 'completed' };
+  }
+\`\`\`
+
+**Cancellation of queued (not yet started) tasks**:
+\`\`\`
+  If task is still in queue:
+    Option 1: Remove from queue directly (if queue supports it)
+    Option 2: Mark as cancelled in DB; worker checks before starting
+      Worker picks up job → check DB status → if CANCELLING → skip, acknowledge
+\`\`\`
+
+**Cancellation of external operations**:
+\`\`\`
+  Task calls external API (e.g., video transcoding service):
+    1. Task starts transcoding via API → receives external_job_id
+    2. Store external_job_id in job record
+    3. On cancellation:
+       a. Call external API: cancel(external_job_id)
+       b. Clean up any partial outputs
+       c. Update status → CANCELLED
+\`\`\`
+
+**Cancellation state machine**:
+\`\`\`
+  QUEUED ──► CANCELLED (simple, remove from queue)
+  PROCESSING ──► CANCELLING ──► CANCELLED (cooperative shutdown)
+  PROCESSING ──► CANCELLING ──► COMPLETED (finished before cancellation took effect)
+  COMPLETED ──► (cannot cancel, already done — offer delete result instead)
+  FAILED ──► (already terminal, no cancellation needed)
+\`\`\`
+
+**Cleanup on cancellation**:
+- Delete partial results from storage (S3)
+- Release any held locks or reservations
+- Refund any consumed resources (credits, API calls) if applicable
+- Log the cancellation reason for analytics
+
+**Key principle**: Cancellation must be cooperative. You cannot safely kill a worker mid-operation (risk of corrupted state, unreleased locks, partial writes). The worker must check for the cancellation signal and clean up gracefully.`
+      },
+      {
+        question: 'How do you design a distributed task scheduler for recurring and scheduled jobs?',
+        answer: `A distributed task scheduler handles cron-like recurring jobs and one-time scheduled tasks across a cluster of workers, ensuring each job executes exactly once even when multiple scheduler instances are running.
+
+**Architecture**:
+\`\`\`
+  Schedule Store (PostgreSQL)
+       │
+  Scheduler Service (2+ instances for HA)
+       │ (leader election for scheduling)
+       ▼
+  Job Queue (Redis/Kafka)
+       │
+  Worker Pool (N workers, auto-scaling)
+       │
+  Result Store + Notification
+\`\`\`
+
+**Schedule storage**:
+\`\`\`
+  CREATE TABLE schedules (
+    schedule_id    UUID PRIMARY KEY,
+    name           VARCHAR,
+    cron_expr      VARCHAR,          -- "0 */6 * * *" (every 6 hours)
+    task_type      VARCHAR,          -- "generate_daily_report"
+    payload        JSONB,            -- task parameters
+    timezone       VARCHAR,          -- "America/New_York"
+    next_run_at    TIMESTAMP,        -- pre-computed next execution
+    last_run_at    TIMESTAMP,
+    enabled        BOOLEAN DEFAULT true,
+    max_instances  INT DEFAULT 1,    -- concurrent execution limit
+    created_by     VARCHAR
+  );
+
+  -- One-time scheduled tasks
+  CREATE TABLE scheduled_tasks (
+    task_id        UUID PRIMARY KEY,
+    task_type      VARCHAR,
+    payload        JSONB,
+    scheduled_at   TIMESTAMP,        -- when to execute
+    status         VARCHAR DEFAULT 'scheduled',
+    created_at     TIMESTAMP
+  );
+\`\`\`
+
+**Exactly-once scheduling** (the critical challenge):
+\`\`\`
+  Problem: Two scheduler instances both see next_run_at has passed
+           Both enqueue the job → duplicate execution!
+
+  Solution: Optimistic locking on the schedule row
+    UPDATE schedules
+    SET next_run_at = compute_next(cron_expr, NOW()),
+        last_run_at = NOW()
+    WHERE schedule_id = ?
+    AND next_run_at = ?  -- CAS: only succeed if not already updated
+    RETURNING *;
+
+  If rows_affected = 0 → another scheduler already enqueued this run
+\`\`\`
+
+**Scheduler service leader election**:
+\`\`\`
+  Option 1: Database-based (simple)
+    SELECT pg_try_advisory_lock(12345);
+    Only one instance gets the lock, becomes the scheduler
+    Others are hot standbys
+
+  Option 2: Redis-based lock
+    SET scheduler:leader worker-1 NX EX 30
+    Renew every 10 seconds
+
+  Option 3: ZooKeeper/etcd leader election
+    Most robust, automatic failover
+\`\`\`
+
+**Scheduler loop**:
+\`\`\`
+  while true:
+    // Find all schedules whose next_run_at has passed
+    due_schedules = SELECT * FROM schedules
+      WHERE enabled = true
+      AND next_run_at <= NOW()
+      ORDER BY next_run_at;
+
+    for schedule in due_schedules:
+      // Atomic: claim this run and compute next
+      result = UPDATE schedules
+        SET next_run_at = compute_next_run(schedule.cron_expr)
+        WHERE schedule_id = schedule.id
+        AND next_run_at = schedule.next_run_at;
+
+      if result.rows_affected == 1:
+        enqueue_job(schedule.task_type, schedule.payload);
+
+    sleep(1 second);
+\`\`\`
+
+**Handling missed runs**: If the scheduler was down and missed a scheduled run:
+\`\`\`
+  Policies:
+    SKIP:    Skip missed runs, schedule next future run
+    CATCH_UP: Execute missed runs immediately (one at a time)
+    COALESCE: Execute one catch-up run for all missed, then resume
+\`\`\`
+
+**Production systems**: Kubernetes CronJobs, Airflow, Temporal, Celery Beat, Quartz (Java), APScheduler (Python). Each provides scheduler HA, exactly-once guarantees, and monitoring.`
+      },
+      {
+        question: 'How do you handle progress tracking and user experience for long-running operations?',
+        answer: `Progress tracking transforms a frustrating "loading spinner" into an informative experience. Users who see concrete progress are significantly more patient and less likely to abandon or retry (which would create duplicate work).
+
+**Progress reporting architecture**:
+\`\`\`
+  Worker                   Progress Store (Redis)       Client
+    │                            │                        │
+    ├── Update progress ──────►  SET job:abc:progress     │
+    │   (after each chunk)       {percent: 35,            │
+    │                             stage: "Processing",    │
+    │                             message: "Page 7 of 20"}│
+    │                            │                        │
+    │                            │  ◄──── Poll / Subscribe │
+    │                            │  ──── Return progress──►│
+    │                            │                        │
+    ├── Complete ────────────►   SET status: completed    │
+\`\`\`
+
+**Granular progress reporting**:
+\`\`\`
+  Simple percentage:
+    {progress: 0.65}  // 65%
+
+  Stage-based:
+    {
+      progress: 0.65,
+      stage: "generating_charts",
+      stages: [
+        {name: "fetching_data",      status: "completed", duration: 3.2},
+        {name: "computing_metrics",   status: "completed", duration: 8.1},
+        {name: "generating_charts",   status: "processing", progress: 0.4},
+        {name: "rendering_pdf",       status: "pending"},
+        {name: "uploading_result",    status: "pending"}
+      ],
+      estimated_remaining: 45,  // seconds
+      message: "Generating chart 4 of 10..."
+    }
+\`\`\`
+
+**Estimation accuracy**:
+\`\`\`
+  Naive: progress = items_processed / total_items
+    Problem: not all items take the same time
+
+  Weighted: progress = time_elapsed / estimated_total_time
+    Problem: estimation may be wrong
+
+  Hybrid:
+    1. Measure time for first 10% of items
+    2. Extrapolate remaining time
+    3. Blend with historical data for this task type
+    4. Smooth the estimate (never go backward)
+
+  estimated_remaining = max(
+    historical_average * (1 - progress),
+    time_per_item_so_far * remaining_items
+  ) * smoothing_factor
+\`\`\`
+
+**UX patterns for long-running tasks**:
+\`\`\`
+  Duration < 3s:
+    → Inline loading spinner, no progress bar
+
+  Duration 3s - 30s:
+    → Determinate progress bar with percentage
+    → "Processing your request..."
+
+  Duration 30s - 5min:
+    → Detailed progress with stages and ETA
+    → Option to navigate away ("We'll notify you when ready")
+
+  Duration > 5min:
+    → Email/push notification on completion
+    → Dashboard showing all active jobs with progress
+    → "This typically takes 10-15 minutes"
+
+  Duration > 1 hour:
+    → Job dashboard with cancel button
+    → Email notification with download link
+    → Historical duration statistics
+\`\`\`
+
+**Anti-patterns to avoid**:
+- Progress bars that jump from 0% to 99% and stall (bad estimation)
+- Progress that goes backward (never decrease the displayed percentage)
+- "Estimated time: 2 minutes" that turns into 20 minutes (use ranges instead)
+- No feedback at all for tasks > 3 seconds (users will retry/refresh)
+
+**Storage for progress updates**: Use Redis with TTL for transient progress data. Do not write progress to PostgreSQL on every update — the write frequency would be too high (use Redis, then write final state to PostgreSQL on completion).`
+      },
+    ],
+
+    dataModel: {
+      description: 'Job lifecycle and scheduling state',
+      schema: `Job Record:
+  job_id:          UUID
+  job_type:        task type identifier
+  payload:         JSON input data
+  status:          queued | processing | completed | failed | cancelled | cancelling
+  priority:        integer (higher = more urgent)
+  progress:        float (0.0 to 1.0)
+  progress_detail: JSON (stage info, message, ETA)
+  result:          JSON (output data or result URL)
+  error:           text (if failed)
+  attempts:        integer (retry count)
+  max_attempts:    integer
+  locked_by:       worker ID (null if not processing)
+  locked_at:       timestamp (for heartbeat monitoring)
+  created_at:      timestamp
+  started_at:      timestamp
+  completed_at:    timestamp
+
+Schedule Record:
+  schedule_id:     UUID
+  name:            human-readable name
+  cron_expression: cron string
+  timezone:        IANA timezone
+  task_type:       job type to create
+  payload:         JSON parameters
+  next_run_at:     timestamp (pre-computed)
+  last_run_at:     timestamp
+  enabled:         boolean
+  miss_policy:     skip | catch_up | coalesce
+
+Dead Letter Entry:
+  dlq_id:          UUID
+  job_id:          reference to failed job
+  job_type:        task type
+  payload:         original input
+  error:           failure reason
+  attempts:        total attempts before DLQ
+  created_at:      timestamp
+  resolved_at:     timestamp (null until manually resolved)
+  resolution:      retry | discard | manual_fix`
     },
   },
 ];
