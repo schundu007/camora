@@ -6,8 +6,7 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { Icon } from '../../shared/Icons.jsx';
 import { CompanyLogo, getCompanyLogoSrc } from '../../shared/CompanyLogo.tsx';
 import CamoraLogo from '../../shared/CamoraLogo';
-import SiteFooter from '../../shared/SiteFooter';
-import SiteNav from '../../shared/SiteNav';
+import TableOfContents from '../../layout/TableOfContents';
 import { getAuthHeaders } from '../../../utils/authHeaders.js';
 import { useContentAccess } from '../../../hooks/useContentAccess';
 import ResumeOptimizer from '../features/ResumeOptimizer';
@@ -596,7 +595,7 @@ export default function DocsPage({ onBack }) {
   const tableOfContents = getTableOfContents();
 
   return (
-    <div className="min-h-screen landing-root text-gray-900" style={{ background: 'transparent' }}>
+    <div className="min-h-screen" style={{ color: 'var(--text-primary)' }}>
       {/* Electron drag region */}
       {isElectron && (
         <div
@@ -607,13 +606,9 @@ export default function DocsPage({ onBack }) {
 
       <div className="relative min-h-screen flex">
           {/* Center Content */}
-          <div className={`flex-1 min-w-0 mx-auto w-full lg:max-w-[70%] ${isMobile ? 'px-3' : 'px-10'}`}>
-            {/* Site Nav — same as all other pages */}
-            <div className="-mx-[calc((100vw-100%)/2)] px-[calc((100vw-100%)/2)]">
-              <SiteNav />
-            </div>
-            {/* Breadcrumb Bar — secondary bar below SiteNav */}
-            <div className="sticky z-20 px-3 sm:px-4 py-2 sm:py-3 flex items-center justify-between gap-2 bg-white border-b border-[#e3e8ee]" style={{ top: 'var(--nav-h, 56px)' }}>
+          <div className={`flex-1 min-w-0 mx-auto w-full ${isMobile ? 'px-3' : 'px-10'}`}>
+            {/* Breadcrumb Bar — secondary bar below TopBar */}
+            <div className="sticky z-20 px-3 sm:px-4 py-2 sm:py-3 flex items-center justify-between gap-2 bg-[var(--bg-surface)] border-b border-[var(--border)]" style={{ top: 'var(--nav-h, 56px)' }}>
               {/* Mobile: back button when viewing a topic */}
               {isMobile && selectedTopic && (
                 <button
@@ -688,7 +683,18 @@ export default function DocsPage({ onBack }) {
                     </button>
                   </div>
                 </div>
-              ) : selectedTopic ? <TopicDetail activePage={activePage} selectedTopic={selectedTopic} topicDetails={topicDetails} pageConfig={pageConfig} completedTopics={completedTopics} starredTopics={starredTopics} toggleComplete={toggleComplete} toggleStar={toggleStar} showAskAI={showAskAI} setShowAskAI={setShowAskAI} aiQuestion={aiQuestion} setAiQuestion={setAiQuestion} aiAnswer={aiAnswer} aiLoading={aiLoading} handleAskAI={handleAskAI} showRoadmap={showRoadmap} setShowRoadmap={setShowRoadmap} expandedTheoryQuestions={expandedTheoryQuestions} setExpandedTheoryQuestions={setExpandedTheoryQuestions} setSelectedTopic={setSelectedTopic} generatingDiagram={generatingDiagram} diagramData={diagramData} diagramError={diagramError} diagramDetailLevel={diagramDetailLevel} setDiagramDetailLevel={setDiagramDetailLevel} diagramCloudProvider={diagramCloudProvider} setDiagramCloudProvider={setDiagramCloudProvider} generateDiagram={handleGenerateDiagram} codingTopics={codingTopics} systemDesignTopics={systemDesignTopics} systemDesigns={systemDesigns} behavioralTopics={behavioralTopics} filteredTopics={filteredTopics} progressInfo={getProgress()} isLocked={contentAccess.isTopicLocked(activePage, selectedTopic)} contentAccess={contentAccess} /> : (
+              ) : selectedTopic ? (
+                <div className="flex gap-6">
+                  <div className="flex-1 min-w-0 max-w-3xl">
+                    <TopicDetail activePage={activePage} selectedTopic={selectedTopic} topicDetails={topicDetails} pageConfig={pageConfig} completedTopics={completedTopics} starredTopics={starredTopics} toggleComplete={toggleComplete} toggleStar={toggleStar} showAskAI={showAskAI} setShowAskAI={setShowAskAI} aiQuestion={aiQuestion} setAiQuestion={setAiQuestion} aiAnswer={aiAnswer} aiLoading={aiLoading} handleAskAI={handleAskAI} showRoadmap={showRoadmap} setShowRoadmap={setShowRoadmap} expandedTheoryQuestions={expandedTheoryQuestions} setExpandedTheoryQuestions={setExpandedTheoryQuestions} setSelectedTopic={setSelectedTopic} generatingDiagram={generatingDiagram} diagramData={diagramData} diagramError={diagramError} diagramDetailLevel={diagramDetailLevel} setDiagramDetailLevel={setDiagramDetailLevel} diagramCloudProvider={diagramCloudProvider} setDiagramCloudProvider={setDiagramCloudProvider} generateDiagram={handleGenerateDiagram} codingTopics={codingTopics} systemDesignTopics={systemDesignTopics} systemDesigns={systemDesigns} behavioralTopics={behavioralTopics} filteredTopics={filteredTopics} progressInfo={getProgress()} isLocked={contentAccess.isTopicLocked(activePage, selectedTopic)} contentAccess={contentAccess} />
+                  </div>
+                  {tableOfContents.length > 0 && (
+                    <div className="hidden lg:block shrink-0" style={{ width: 'var(--toc-width, 200px)' }}>
+                      <TableOfContents items={tableOfContents} />
+                    </div>
+                  )}
+                </div>
+              ) : (
                 <>
                   {/* ── Resume & Cover Letter ── */}
                   {activePage === 'resume' && (
@@ -2536,7 +2542,6 @@ export default function DocsPage({ onBack }) {
         ::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
         .group:hover .hover-glow { opacity: 1; }
       `}</style>
-      <SiteFooter />
     </div>
   );
 }
