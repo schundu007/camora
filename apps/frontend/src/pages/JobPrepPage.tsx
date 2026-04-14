@@ -258,7 +258,7 @@ const categoryColors: Record<string, { bg: string; text: string; border: string 
 };
 
 function getCategoryStyle(category: string) {
-  return categoryColors[category] || { bg: '#f3f4f6', text: '#374151', border: '#d1d5db' };
+  return categoryColors[category] || { bg: 'var(--bg-elevated)', text: 'var(--text-secondary)', border: 'var(--border)' };
 }
 
 /* ──────────────────────────────── Component ──────────────────────────────── */
@@ -439,7 +439,7 @@ export default function JobPrepPage() {
         <div className="flex items-center justify-center">
           <div className="w-full lg:max-w-[70%] mx-auto px-4 sm:px-6 py-16 text-center">
             <div style={{ width: '48px', height: '48px', border: '4px solid #d1fae5', borderTopColor: '#10b981', borderRadius: '50%', margin: '0 auto 16px' }} className="animate-spin" />
-            <p style={{ fontSize: '14px', color: '#6b7280' }}>Loading preparation plan...</p>
+            <p style={{ fontSize: '14px', color: 'var(--text-muted)' }}>Loading preparation plan...</p>
           </div>
         </div>
         <SiteFooter />
@@ -499,23 +499,23 @@ export default function JobPrepPage() {
       <div>
 
         {/* ── Header ── */}
-        <div style={{ background: '#ffffff', borderBottom: '1px solid #e3e8ee' }}>
+        <div style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)' }}>
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
             {/* Breadcrumb */}
-            <div className="flex items-center gap-2 flex-wrap mb-4" style={{ fontSize: '13px', color: '#9ca3af' }}>
-              <Link to="/" style={{ color: '#9ca3af', textDecoration: 'none' }}>Home</Link>
+            <div className="flex items-center gap-2 flex-wrap mb-4" style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+              <Link to="/" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Home</Link>
               <span>/</span>
-              <Link to="/jobs" style={{ color: '#9ca3af', textDecoration: 'none' }}>Jobs</Link>
+              <Link to="/jobs" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Jobs</Link>
               <span>/</span>
-              <span style={{ color: '#6b7280' }}>{job.company_name}</span>
+              <span style={{ color: 'var(--text-muted)' }}>{job.company_name}</span>
               <span>/</span>
-              <span style={{ color: '#374151' }}>Prepare</span>
+              <span style={{ color: 'var(--text-secondary)' }}>Prepare</span>
             </div>
 
             <h1 style={{
               fontSize: '28px',
               fontWeight: 700,
-              color: '#111827',
+              color: 'var(--text-primary)',
               letterSpacing: '-0.02em',
               margin: 0,
               fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
@@ -525,7 +525,7 @@ export default function JobPrepPage() {
 
             <p style={{
               fontSize: '16px',
-              color: '#6b7280',
+              color: 'var(--text-muted)',
               marginTop: '8px',
               lineHeight: 1.6,
               maxWidth: '640px',
@@ -540,18 +540,18 @@ export default function JobPrepPage() {
 
           {/* ── Tech Stack Extracted ── */}
           {techStack.length > 0 && (
-            <section style={{ background: '#ffffff', border: '1px solid #e3e8ee', borderRadius: '12px', padding: '24px', marginBottom: '24px' }}>
-              <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#111827', margin: '0 0 4px', fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
+            <section style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '24px', marginBottom: '24px' }}>
+              <h2 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 4px', fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
                 Tech Stack Extracted
               </h2>
-              <p style={{ fontSize: '13px', color: '#9ca3af', margin: '0 0 16px' }}>
+              <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '0 0 16px' }}>
                 Technologies identified from the job listing
               </p>
               <div className="flex flex-wrap gap-2">
                 {techStack.map((tech) => {
                   const key = tech.toLowerCase().trim();
                   const match = TECH_TO_TOPICS[key];
-                  const style = match ? getCategoryStyle(match.category) : { bg: '#f3f4f6', text: '#374151', border: '#d1d5db' };
+                  const style = match ? getCategoryStyle(match.category) : { bg: 'var(--bg-elevated)', text: 'var(--text-secondary)', border: 'var(--border)' };
                   return match ? (
                     <Link
                       key={tech}
@@ -599,19 +599,19 @@ export default function JobPrepPage() {
 
           {/* ── AI Analysis Insights (shown for URL-analyzed jobs) ── */}
           {urlAnalysis && (
-            <section style={{ background: '#ffffff', border: '1px solid #e3e8ee', borderRadius: '12px', padding: '24px', marginBottom: '24px' }}>
+            <section style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '24px', marginBottom: '24px' }}>
               <div className="flex items-center gap-2 mb-3">
                 <div style={{ width: '28px', height: '28px', background: '#10b98118', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <svg width="14" height="14" fill="none" stroke="#10b981" viewBox="0 0 24 24" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
                   </svg>
                 </div>
-                <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#111827', margin: 0, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
+                <h2 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', margin: 0, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
                   AI Analysis
                 </h2>
               </div>
               {urlAnalysis.summary && (
-                <p style={{ fontSize: '14px', color: '#374151', lineHeight: 1.6, margin: '0 0 16px' }}>{urlAnalysis.summary}</p>
+                <p style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: 1.6, margin: '0 0 16px' }}>{urlAnalysis.summary}</p>
               )}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
                 {urlAnalysis.coding_focus?.length > 0 && (
@@ -647,8 +647,8 @@ export default function JobPrepPage() {
               </div>
               {urlAnalysis.key_requirements?.length > 0 && (
                 <div style={{ marginTop: '12px' }}>
-                  <p style={{ fontSize: '11px', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 6px' }}>Key Requirements</p>
-                  <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '13px', color: '#374151', lineHeight: 1.7 }}>
+                  <p style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 6px' }}>Key Requirements</p>
+                  <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.7 }}>
                     {urlAnalysis.key_requirements.map((r: string, i: number) => <li key={i}>{r}</li>)}
                   </ul>
                 </div>
@@ -657,12 +657,12 @@ export default function JobPrepPage() {
           )}
 
           {/* ── Recommended Study Path ── */}
-          <section style={{ background: '#ffffff', border: '1px solid #e3e8ee', borderRadius: '12px', padding: '24px', marginBottom: '24px' }}>
-            <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#111827', margin: '0 0 4px', fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
+          <section style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '24px', marginBottom: '24px' }}>
+            <h2 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 4px', fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
               Recommended Study Path
             </h2>
-            <p style={{ fontSize: '13px', color: '#9ca3af', margin: '0 0 24px' }}>
-              Personalized for <strong style={{ color: '#374151' }}>{job.title}</strong> at <strong style={{ color: '#374151' }}>{job.company_name}</strong>
+            <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '0 0 24px' }}>
+              Personalized for <strong style={{ color: 'var(--text-secondary)' }}>{job.title}</strong> at <strong style={{ color: 'var(--text-secondary)' }}>{job.company_name}</strong>
             </p>
 
             {studyRounds.map((round, roundIdx) => (
@@ -680,10 +680,10 @@ export default function JobPrepPage() {
                   }}>
                     {round.icon}
                   </div>
-                  <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#111827', margin: 0, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
+                  <h3 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)', margin: 0, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
                     {round.title}
                   </h3>
-                  <span style={{ fontSize: '12px', color: '#9ca3af', fontWeight: 500 }}>({round.estimate})</span>
+                  <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>({round.estimate})</span>
                 </div>
                 <div style={{ marginLeft: '14px', borderLeft: `2px solid ${round.color}40`, paddingLeft: '20px' }}>
                   {round.items.map((item) => (
@@ -695,9 +695,9 @@ export default function JobPrepPage() {
           </section>
 
           {/* ── JD based Interview Preparation ── */}
-          <section style={{ background: '#ffffff', border: '1px solid #e3e8ee', borderRadius: '12px', padding: '24px', marginBottom: '24px' }}>
+          <section style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '24px', marginBottom: '24px' }}>
             <div className="flex items-start justify-between mb-1">
-              <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#111827', margin: 0, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
+              <h2 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', margin: 0, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
                 JD based Interview Preparation
               </h2>
               {Object.keys(generatedSections).length > 0 && !generating && (
@@ -764,7 +764,7 @@ export default function JobPrepPage() {
                     width: '18px',
                     height: '18px',
                     border: '2.5px solid rgba(255,255,255,0.4)',
-                    borderTopColor: '#ffffff',
+                    borderTopColor: 'var(--bg-surface)',
                     borderRadius: '50%',
                   }}
                   className="animate-spin"
@@ -843,16 +843,16 @@ export default function JobPrepPage() {
                           alignItems: 'center',
                           gap: '12px',
                           padding: '14px 16px',
-                          background: isDone ? '#ffffff' : '#f9fafb',
-                          border: `1px solid ${isDone ? '#e3e8ee' : '#f3f4f6'}`,
+                          background: isDone ? 'var(--bg-surface)' : 'var(--bg-elevated)',
+                          border: `1px solid ${isDone ? 'var(--border)' : 'var(--border)'}`,
                           borderRadius: isExpanded ? '10px 10px 0 0' : '10px',
                           cursor: isDone ? 'pointer' : 'default',
                           textAlign: 'left',
                           transition: 'border-color 0.15s, background 0.15s',
                           ...(isDone ? {} : { opacity: isPending ? 0.5 : 1 }),
                         }}
-                        onMouseEnter={(e) => { if (isDone) { (e.currentTarget as HTMLElement).style.borderColor = '#d1d5db'; } }}
-                        onMouseLeave={(e) => { if (isDone) { (e.currentTarget as HTMLElement).style.borderColor = '#e3e8ee'; } }}
+                        onMouseEnter={(e) => { if (isDone) { (e.currentTarget as HTMLElement).style.borderColor = 'var(--border-hover)'; } }}
+                        onMouseLeave={(e) => { if (isDone) { (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)'; } }}
                       >
                         {/* Status indicator */}
                         {isDone ? (
@@ -903,7 +903,7 @@ export default function JobPrepPage() {
                           }}>
                             {sec.label}
                           </div>
-                          <div style={{ fontSize: '12px', color: '#9ca3af', marginTop: '2px' }}>
+                          <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
                             {sec.description}
                           </div>
                         </div>
@@ -932,8 +932,8 @@ export default function JobPrepPage() {
                       {isDone && isExpanded && (
                         <div style={{
                           padding: '20px',
-                          background: '#ffffff',
-                          border: '1px solid #e3e8ee',
+                          background: 'var(--bg-surface)',
+                          border: '1px solid var(--border)',
                           borderTop: 'none',
                           borderRadius: '0 0 10px 10px',
                         }}>
@@ -955,17 +955,17 @@ export default function JobPrepPage() {
                       gap: '8px',
                       fontSize: '13px',
                       fontWeight: 600,
-                      color: '#6b7280',
+                      color: 'var(--text-muted)',
                       background: 'transparent',
-                      border: '1px solid #e3e8ee',
+                      border: '1px solid var(--border)',
                       borderRadius: '8px',
                       padding: '10px 20px',
                       cursor: 'pointer',
                       marginTop: '4px',
                       transition: 'background 0.15s, border-color 0.15s, color 0.15s',
                     }}
-                    onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = '#f9fafb'; el.style.borderColor = '#d1d5db'; el.style.color = '#374151'; }}
-                    onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'transparent'; el.style.borderColor = '#e3e8ee'; el.style.color = '#6b7280'; }}
+                    onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'var(--bg-elevated)'; el.style.borderColor = 'var(--border-hover)'; el.style.color = 'var(--text-secondary)'; }}
+                    onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'transparent'; el.style.borderColor = 'var(--border)'; el.style.color = '#6b7280'; }}
                   >
                     <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182M20.99 14.359v4.992" />
@@ -978,8 +978,8 @@ export default function JobPrepPage() {
           </section>
 
           {/* ── Bottom CTAs ── */}
-          <section style={{ background: '#ffffff', border: '1px solid #e3e8ee', borderRadius: '12px', padding: '24px' }}>
-            <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#111827', margin: '0 0 16px', fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
+          <section style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '24px' }}>
+            <h2 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 16px', fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
               Ready to start?
             </h2>
             <div className="flex flex-wrap gap-3">
@@ -1015,16 +1015,16 @@ export default function JobPrepPage() {
                   gap: '8px',
                   fontSize: '14px',
                   fontWeight: 600,
-                  color: '#374151',
-                  background: '#ffffff',
-                  border: '1px solid #e3e8ee',
+                  color: 'var(--text-secondary)',
+                  background: 'var(--bg-surface)',
+                  border: '1px solid var(--border)',
                   borderRadius: '8px',
                   padding: '10px 20px',
                   textDecoration: 'none',
                   transition: 'background 0.15s, border-color 0.15s',
                 }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#f9fafb'; (e.currentTarget as HTMLElement).style.borderColor = '#d1d5db'; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '#ffffff'; (e.currentTarget as HTMLElement).style.borderColor = '#e3e8ee'; }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--bg-elevated)'; (e.currentTarget as HTMLElement).style.borderColor = 'var(--border-hover)'; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--bg-surface)'; (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)'; }}
               >
                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
@@ -1041,16 +1041,16 @@ export default function JobPrepPage() {
                   gap: '8px',
                   fontSize: '14px',
                   fontWeight: 600,
-                  color: '#374151',
-                  background: '#ffffff',
-                  border: '1px solid #e3e8ee',
+                  color: 'var(--text-secondary)',
+                  background: 'var(--bg-surface)',
+                  border: '1px solid var(--border)',
                   borderRadius: '8px',
                   padding: '10px 20px',
                   textDecoration: 'none',
                   transition: 'background 0.15s, border-color 0.15s',
                 }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#f9fafb'; (e.currentTarget as HTMLElement).style.borderColor = '#d1d5db'; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '#ffffff'; (e.currentTarget as HTMLElement).style.borderColor = '#e3e8ee'; }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--bg-elevated)'; (e.currentTarget as HTMLElement).style.borderColor = 'var(--border-hover)'; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--bg-surface)'; (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)'; }}
               >
                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
@@ -1065,13 +1065,13 @@ export default function JobPrepPage() {
       {/* Paywall Modal */}
       {showPaywall && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setShowPaywall(false)}>
-          <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full mx-4 p-8" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+          <div className="bg-[var(--bg-surface)] rounded-3xl shadow-2xl max-w-2xl w-full mx-4 p-8" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
             <div className="text-center mb-6">
               <div className="w-14 h-14 mx-auto mb-4 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #10b981, #3b82f6, #8b5cf6)' }}>
                 <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-1">Upgrade to Generate Prep Material</h3>
-              <p className="text-sm text-gray-500">AI-powered interview prep tailored to this specific job</p>
+              <h3 className="text-xl font-bold text-[var(--text-primary)] mb-1">Upgrade to Generate Prep Material</h3>
+              <p className="text-sm text-[var(--text-muted)]">AI-powered interview prep tailored to this specific job</p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
               {[
@@ -1080,21 +1080,21 @@ export default function JobPrepPage() {
                 { name: 'Annual', price: '$19', period: '/mo', features: ['Everything in Pro', 'Save 61% vs monthly', 'Locked-in pricing', 'Priority support'], best: true, priceId: 'price_1THiBUITUCNxtMxlAHUvPut7' },
               ].map(plan => (
                 <div key={plan.name} className="rounded-2xl p-4 flex flex-col" style={{
-                  border: plan.popular ? '2px solid #10b981' : plan.best ? '2px solid #f59e0b' : '1.5px solid #e3e8ee',
-                  background: 'white',
+                  border: plan.popular ? '2px solid #10b981' : plan.best ? '2px solid #f59e0b' : '1.5px solid var(--border)',
+                  background: 'var(--bg-surface)',
                 }}>
                   <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-bold text-gray-900">{plan.name}</h4>
+                    <h4 className="text-sm font-bold text-[var(--text-primary)]">{plan.name}</h4>
                     {plan.popular && <span className="px-2 py-0.5 rounded-full text-[8px] font-bold text-white uppercase" style={{ background: 'linear-gradient(135deg, #10b981, #06b6d4)' }}>Popular</span>}
                     {plan.best && <span className="px-2 py-0.5 rounded-full text-[8px] font-bold text-white uppercase" style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}>Best Value</span>}
                   </div>
                   <div className="mt-1 flex items-baseline gap-0.5">
-                    <span className="text-2xl font-bold text-gray-900">{plan.price}</span>
-                    <span className="text-xs text-gray-500">{plan.period}</span>
+                    <span className="text-2xl font-bold text-[var(--text-primary)]">{plan.price}</span>
+                    <span className="text-xs text-[var(--text-muted)]">{plan.period}</span>
                   </div>
                   <ul className="mt-3 space-y-1.5 flex-1">
                     {plan.features.map((f: string) => (
-                      <li key={f} className="flex items-start gap-1.5 text-xs text-gray-600">
+                      <li key={f} className="flex items-start gap-1.5 text-xs text-[var(--text-secondary)]">
                         <span className="text-emerald-500 mt-0.5 flex-shrink-0">✓</span>{f}
                       </li>
                     ))}
@@ -1116,7 +1116,7 @@ export default function JobPrepPage() {
                         else navigate('/pricing');
                       } catch { navigate('/pricing'); }
                     }}
-                    className={`mt-3 w-full py-2 rounded-lg text-xs font-semibold cursor-pointer transition-all ${plan.popular ? 'text-white' : plan.best ? 'text-white' : 'text-gray-700 border border-gray-300 hover:border-gray-400'}`}
+                    className={`mt-3 w-full py-2 rounded-lg text-xs font-semibold cursor-pointer transition-all ${plan.popular ? 'text-white' : plan.best ? 'text-white' : 'text-[var(--text-secondary)] border border-gray-300 hover:border-gray-400'}`}
                     style={plan.popular ? { background: 'linear-gradient(135deg, #10b981, #06b6d4)' } : plan.best ? { background: 'linear-gradient(135deg, #f59e0b, #d97706)' } : {}}
                   >
                     Get {plan.name}
@@ -1124,7 +1124,7 @@ export default function JobPrepPage() {
                 </div>
               ))}
             </div>
-            <button onClick={() => setShowPaywall(false)} className="w-full text-center text-sm text-gray-400 hover:text-gray-600 transition-colors">
+            <button onClick={() => setShowPaywall(false)} className="w-full text-center text-sm text-gray-400 hover:text-[var(--text-secondary)] transition-colors">
               Continue with free plan
             </button>
           </div>
@@ -1149,7 +1149,7 @@ function StudyItem({ label, href, reason }: { label: string; href: string; reaso
           gap: '8px',
           fontSize: '14px',
           fontWeight: 500,
-          color: '#374151',
+          color: 'var(--text-secondary)',
           textDecoration: 'none',
           padding: '6px 0',
           transition: 'color 0.15s',
@@ -1164,7 +1164,7 @@ function StudyItem({ label, href, reason }: { label: string; href: string; reaso
         <div style={{ flex: 1, minWidth: 0 }}>
           <span>{label}</span>
           {reason && (
-            <div style={{ fontSize: '12px', color: '#9ca3af', fontWeight: 400, marginTop: '1px' }}>
+            <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 400, marginTop: '1px' }}>
               {reason}
             </div>
           )}
@@ -1182,13 +1182,13 @@ function StudyItem({ label, href, reason }: { label: string; href: string; reaso
 
 const S = {
   h2: { fontSize: '18px', fontWeight: 700 as const, color: '#000', margin: '0 0 12px', borderBottom: '2px solid #d1fae5', paddingBottom: '6px' },
-  h3: { fontSize: '15px', fontWeight: 700 as const, color: '#111827', margin: '20px 0 8px', paddingLeft: '10px', borderLeft: '3px solid #6ee7b7' },
+  h3: { fontSize: '15px', fontWeight: 700 as const, color: 'var(--text-primary)', margin: '20px 0 8px', paddingLeft: '10px', borderLeft: '3px solid #6ee7b7' },
   h4: { fontSize: '12px', fontWeight: 600 as const, color: '#059669', textTransform: 'uppercase' as const, letterSpacing: '0.08em', margin: '14px 0 6px 20px' },
   p: { fontSize: '14px', color: '#1f2937', lineHeight: 1.8, margin: '0 0 8px 20px', whiteSpace: 'pre-wrap' as const },
   li: { fontSize: '14px', color: '#1f2937', lineHeight: 1.7, marginBottom: '4px' },
   ul: { margin: '0 0 8px', paddingLeft: '38px' },
   callout: (color: string) => ({ background: color === 'green' ? '#f0fdf4' : color === 'blue' ? '#eff6ff' : color === 'amber' ? '#fffbeb' : color === 'red' ? '#fef2f2' : '#f5f3ff', borderLeft: `3px solid ${color === 'green' ? '#10b981' : color === 'blue' ? '#3b82f6' : color === 'amber' ? '#f59e0b' : color === 'red' ? '#ef4444' : '#8b5cf6'}`, borderRadius: '6px', padding: '12px 16px', margin: '8px 0 12px 20px' }),
-  divider: { borderBottom: '1px solid #e5e7eb', margin: '16px 0' },
+  divider: { borderBottom: '1px solid var(--border)', margin: '16px 0' },
   code: { fontSize: '13px', background: '#0d1117', color: '#c9d1d9', borderRadius: '8px', padding: '14px 16px', overflow: 'auto' as const, margin: '8px 0 12px 20px', fontFamily: "'IBM Plex Mono', monospace" },
   badge: (color: string) => ({ fontSize: '11px', fontWeight: 700 as const, color, background: color === '#dc2626' ? '#fef2f2' : color === '#d97706' ? '#fffbeb' : '#ecfdf5', padding: '2px 10px', borderRadius: '4px', textTransform: 'uppercase' as const }),
 };
@@ -1213,9 +1213,9 @@ function PrepSectionContent({ sectionKey, data }: { sectionKey: string; data: an
             <div key={i} style={{ marginBottom: '20px' }}>
               <h3 style={S.h3}>
                 {sec.title}
-                {sec.duration && <span style={{ fontSize: '12px', fontWeight: 400, color: '#6b7280', marginLeft: '10px' }}>({sec.duration})</span>}
+                {sec.duration && <span style={{ fontSize: '12px', fontWeight: 400, color: 'var(--text-muted)', marginLeft: '10px' }}>({sec.duration})</span>}
               </h3>
-              {sec.context && <p style={{ ...S.p, fontStyle: 'italic', color: '#6b7280', fontSize: '13px' }}>{sec.context}</p>}
+              {sec.context && <p style={{ ...S.p, fontStyle: 'italic', color: 'var(--text-muted)', fontSize: '13px' }}>{sec.context}</p>}
               {sec.bullets && (
                 <ul style={S.ul}>
                   {sec.bullets.map((b: string, j: number) => <li key={j} style={S.li}>{b}</li>)}
@@ -1265,7 +1265,7 @@ function PrepSectionContent({ sectionKey, data }: { sectionKey: string; data: an
             {data.companyInsights.interviewFormat && <p style={{ ...S.p, margin: '0 0 4px' }}><strong>Interview Format:</strong> {data.companyInsights.interviewFormat}</p>}
             {data.companyInsights.culture && <p style={{ ...S.p, margin: '0 0 4px' }}><strong>Culture:</strong> {data.companyInsights.culture}</p>}
             {data.companyInsights.values && Array.isArray(data.companyInsights.values) && <p style={{ ...S.p, margin: 0 }}><strong>Values:</strong> {data.companyInsights.values.join(' · ')}</p>}
-            {data.companyInsights.recentNews && <p style={{ ...S.p, margin: '4px 0 0', fontSize: '13px', color: '#6b7280' }}>{data.companyInsights.recentNews}</p>}
+            {data.companyInsights.recentNews && <p style={{ ...S.p, margin: '4px 0 0', fontSize: '13px', color: 'var(--text-muted)' }}>{data.companyInsights.recentNews}</p>}
           </div>
         )}
 
@@ -1275,14 +1275,14 @@ function PrepSectionContent({ sectionKey, data }: { sectionKey: string; data: an
               <span style={{ color: '#059669', marginRight: '6px' }}>Q{i + 1}.</span>
               {q.question || q.q || (typeof q === 'string' ? q : '')}
             </h3>
-            {q.whyTheyAsk && <p style={{ ...S.p, fontSize: '13px', color: '#6b7280', fontStyle: 'italic' }}>Why they ask this: {q.whyTheyAsk}</p>}
+            {q.whyTheyAsk && <p style={{ ...S.p, fontSize: '13px', color: 'var(--text-muted)', fontStyle: 'italic' }}>Why they ask this: {q.whyTheyAsk}</p>}
             {(q.suggestedAnswer || q.answer || q.a || q.sampleAnswer) && (
               <div style={S.callout('green')}>
                 <h4 style={{ ...S.h4, margin: '0 0 6px 0', color: '#065f46' }}>Suggested Answer</h4>
                 <p style={{ ...S.p, margin: 0 }}>{q.suggestedAnswer || q.answer || q.a || q.sampleAnswer}</p>
               </div>
             )}
-            {q.tips && <p style={{ ...S.p, fontSize: '13px', color: '#6b7280' }}>Tip: {q.tips}</p>}
+            {q.tips && <p style={{ ...S.p, fontSize: '13px', color: 'var(--text-muted)' }}>Tip: {q.tips}</p>}
             {sectionKey === 'behavioral' && (q.situation || q.task || q.action || q.result) && (
               <div style={{ marginLeft: '20px', marginTop: '10px' }}>
                 <h4 style={{ ...S.h4, margin: '0 0 8px 0' }}>STAR Framework</h4>
@@ -1328,8 +1328,8 @@ function PrepSectionContent({ sectionKey, data }: { sectionKey: string; data: an
               {data.keyTopics.map((t: any, i: number) => (
                 <li key={i} style={S.li}>
                   <strong>{t.topic || t}</strong>
-                  {t.frequency && <span style={{ color: '#6b7280' }}> — {t.frequency}</span>}
-                  {t.whyImportant && <span style={{ color: '#6b7280' }}> — {t.whyImportant}</span>}
+                  {t.frequency && <span style={{ color: 'var(--text-muted)' }}> — {t.frequency}</span>}
+                  {t.whyImportant && <span style={{ color: 'var(--text-muted)' }}> — {t.whyImportant}</span>}
                 </li>
               ))}
             </ul>
@@ -1340,7 +1340,7 @@ function PrepSectionContent({ sectionKey, data }: { sectionKey: string; data: an
             <h3 style={S.h3}>
               <span style={S.badge((p.difficulty || '').toLowerCase() === 'hard' ? '#dc2626' : (p.difficulty || '').toLowerCase() === 'medium' ? '#d97706' : '#059669')}>{p.difficulty || 'Medium'}</span>
               <span style={{ marginLeft: '8px' }}>{p.title || p.name || `Problem ${i + 1}`}</span>
-              {p.frequency && <span style={{ fontSize: '12px', fontWeight: 400, color: '#6b7280', marginLeft: '8px' }}>({p.frequency})</span>}
+              {p.frequency && <span style={{ fontSize: '12px', fontWeight: 400, color: 'var(--text-muted)', marginLeft: '8px' }}>({p.frequency})</span>}
             </h3>
             {p.problemStatement && <p style={S.p}>{p.problemStatement}</p>}
             {p.examples && Array.isArray(p.examples) && (
@@ -1357,7 +1357,7 @@ function PrepSectionContent({ sectionKey, data }: { sectionKey: string; data: an
               <div key={j} style={{ marginLeft: '20px', marginTop: '14px' }}>
                 <h4 style={{ ...S.h4, margin: '0 0 6px 0' }}>
                   Approach {j + 1}: {a.name}
-                  <span style={{ fontWeight: 400, fontSize: '11px', color: '#6b7280', marginLeft: '8px' }}>
+                  <span style={{ fontWeight: 400, fontSize: '11px', color: 'var(--text-muted)', marginLeft: '8px' }}>
                     Time: O({a.timeComplexity}) · Space: O({a.spaceComplexity})
                   </span>
                 </h4>
@@ -1424,8 +1424,8 @@ function PrepSectionContent({ sectionKey, data }: { sectionKey: string; data: an
           <div key={i} style={{ marginBottom: '30px' }}>
             <h3 style={{ ...S.h3, fontSize: '16px' }}>
               {q.title || `Design Scenario ${i + 1}`}
-              {q.frequency && <span style={{ fontSize: '12px', fontWeight: 400, color: '#6b7280', marginLeft: '8px' }}>({q.frequency})</span>}
-              {q.timeLimit && <span style={{ fontSize: '12px', fontWeight: 400, color: '#6b7280', marginLeft: '8px' }}>{q.timeLimit}</span>}
+              {q.frequency && <span style={{ fontSize: '12px', fontWeight: 400, color: 'var(--text-muted)', marginLeft: '8px' }}>({q.frequency})</span>}
+              {q.timeLimit && <span style={{ fontSize: '12px', fontWeight: 400, color: 'var(--text-muted)', marginLeft: '8px' }}>{q.timeLimit}</span>}
             </h3>
             {q.clarifyingQuestions && Array.isArray(q.clarifyingQuestions) && (
               <div><h4 style={S.h4}>Clarifying Questions to Ask</h4><ul style={S.ul}>{q.clarifyingQuestions.map((c: string, j: number) => <li key={j} style={S.li}>{c}</li>)}</ul></div>
@@ -1440,7 +1440,7 @@ function PrepSectionContent({ sectionKey, data }: { sectionKey: string; data: an
               <div>
                 <h4 style={S.h4}>Capacity Estimation</h4>
                 {q.capacityEstimation.assumptions && Array.isArray(q.capacityEstimation.assumptions) && (
-                  <ul style={S.ul}>{q.capacityEstimation.assumptions.map((a: string, j: number) => <li key={j} style={{ ...S.li, fontSize: '13px', color: '#6b7280' }}>{a}</li>)}</ul>
+                  <ul style={S.ul}>{q.capacityEstimation.assumptions.map((a: string, j: number) => <li key={j} style={{ ...S.li, fontSize: '13px', color: 'var(--text-muted)' }}>{a}</li>)}</ul>
                 )}
                 {q.capacityEstimation.calculations && (
                   <div style={{ margin: '8px 20px', overflow: 'auto' }}>
@@ -1452,9 +1452,9 @@ function PrepSectionContent({ sectionKey, data }: { sectionKey: string; data: an
                       </tr></thead>
                       <tbody>{q.capacityEstimation.calculations.map((c: any, j: number) => (
                         <tr key={j} style={{ borderBottom: '1px solid #f3f4f6' }}>
-                          <td style={{ padding: '6px 12px', fontWeight: 600, color: '#111827' }}>{c.metric}</td>
+                          <td style={{ padding: '6px 12px', fontWeight: 600, color: 'var(--text-primary)' }}>{c.metric}</td>
                           <td style={{ padding: '6px 12px', fontFamily: 'monospace', color: '#059669', fontWeight: 600 }}>{c.result}</td>
-                          <td style={{ padding: '6px 12px', color: '#6b7280' }}>{c.calculation}</td>
+                          <td style={{ padding: '6px 12px', color: 'var(--text-muted)' }}>{c.calculation}</td>
                         </tr>
                       ))}</tbody>
                     </table>
@@ -1465,10 +1465,10 @@ function PrepSectionContent({ sectionKey, data }: { sectionKey: string; data: an
             {q.architecture && q.architecture.components && (
               <div>
                 <h4 style={S.h4}>Architecture Components</h4>
-                {q.architecture.diagramDescription && <p style={{ ...S.p, fontSize: '13px', fontStyle: 'italic', color: '#6b7280' }}>{q.architecture.diagramDescription}</p>}
+                {q.architecture.diagramDescription && <p style={{ ...S.p, fontSize: '13px', fontStyle: 'italic', color: 'var(--text-muted)' }}>{q.architecture.diagramDescription}</p>}
                 {q.architecture.components.map((c: any, j: number) => (
                   <div key={j} style={{ marginLeft: '20px', marginBottom: '8px', paddingLeft: '10px', borderLeft: '2px solid #d1fae5' }}>
-                    <p style={{ ...S.p, margin: '0 0 2px' }}><strong>{c.name}</strong> <span style={{ color: '#6b7280' }}>({c.technology})</span></p>
+                    <p style={{ ...S.p, margin: '0 0 2px' }}><strong>{c.name}</strong> <span style={{ color: 'var(--text-muted)' }}>({c.technology})</span></p>
                     <p style={{ ...S.p, margin: 0, fontSize: '13px', color: '#4b5563' }}>{c.responsibility}{c.whyThisChoice ? ` — ${c.whyThisChoice}` : ''}</p>
                   </div>
                 ))}
@@ -1491,8 +1491,8 @@ function PrepSectionContent({ sectionKey, data }: { sectionKey: string; data: an
                 <h4 style={S.h4}>API Design</h4>
                 {q.apiDesign.map((a: any, j: number) => (
                   <div key={j} style={{ marginLeft: '20px', marginBottom: '6px' }}>
-                    <code style={{ fontSize: '13px', fontWeight: 600, color: '#111827' }}>{a.endpoint}</code>
-                    {a.notes && <span style={{ fontSize: '12px', color: '#6b7280', marginLeft: '8px' }}>— {a.notes}</span>}
+                    <code style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>{a.endpoint}</code>
+                    {a.notes && <span style={{ fontSize: '12px', color: 'var(--text-muted)', marginLeft: '8px' }}>— {a.notes}</span>}
                   </div>
                 ))}
               </div>
@@ -1521,7 +1521,7 @@ function PrepSectionContent({ sectionKey, data }: { sectionKey: string; data: an
           <div key={i} style={{ marginBottom: '24px' }}>
             <h3 style={S.h3}>
               {t.technology || t.name || t.topic || (typeof t === 'string' ? t : `Topic ${i + 1}`)}
-              {t.category && <span style={{ fontSize: '11px', fontWeight: 400, color: '#6b7280', marginLeft: '10px', background: '#f3f4f6', padding: '2px 8px', borderRadius: '4px' }}>{t.category}</span>}
+              {t.category && <span style={{ fontSize: '11px', fontWeight: 400, color: 'var(--text-muted)', marginLeft: '10px', background: '#f3f4f6', padding: '2px 8px', borderRadius: '4px' }}>{t.category}</span>}
             </h3>
             {(t.description || t.detail || t.overview) && <p style={S.p}>{t.description || t.detail || t.overview}</p>}
             {t.keyConceptsToReview && Array.isArray(t.keyConceptsToReview) && (

@@ -37,7 +37,7 @@ export default function SetupWizard({ onComplete }) {
   const hasAtLeastOneKey = apiKeys.hasAnthropic || apiKeys.hasOpenai;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-auto py-8" style={{ background: '#f5f5f5' }}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-auto py-8" style={{ background: 'var(--bg-elevated)' }}>
       <div className="w-full max-w-2xl mx-4">
         {/* Header */}
         <div className="text-center mb-8">
@@ -46,8 +46,8 @@ export default function SetupWizard({ onComplete }) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
             </svg>
           </div>
-          <h1 className="text-3xl font-bold mb-2" style={{ color: '#333333' }}>Welcome to Capra</h1>
-          <p className="text-lg" style={{ color: '#666666' }}>Let's get you set up with your AI providers</p>
+          <h1 className="text-3xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Welcome to Capra</h1>
+          <p className="text-lg" style={{ color: 'var(--text-secondary)' }}>Let's get you set up with your AI providers</p>
         </div>
 
         {/* Progress */}
@@ -58,11 +58,11 @@ export default function SetupWizard({ onComplete }) {
         </div>
 
         {/* Content */}
-        <div className="rounded-lg overflow-hidden shadow-lg" style={{ background: '#ffffff', border: '1px solid #e5e5e5' }}>
+        <div className="rounded-lg overflow-hidden shadow-lg" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
           {step === 1 && (
             <div className="p-8">
-              <h2 className="text-xl font-semibold mb-2" style={{ color: '#333333' }}>Configure API Keys</h2>
-              <p className="mb-6" style={{ color: '#666666' }}>
+              <h2 className="text-xl font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>Configure API Keys</h2>
+              <p className="mb-6" style={{ color: 'var(--text-secondary)' }}>
                 Capra uses AI providers to solve coding problems. You'll need at least one API key to get started.
               </p>
 
@@ -113,13 +113,13 @@ export default function SetupWizard({ onComplete }) {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <h2 className="text-xl font-semibold mb-2" style={{ color: '#333333' }}>You're all set!</h2>
-                <p style={{ color: '#666666' }}>Capra is ready to help you solve coding problems.</p>
+                <h2 className="text-xl font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>You're all set!</h2>
+                <p style={{ color: 'var(--text-secondary)' }}>Capra is ready to help you solve coding problems.</p>
               </div>
 
-              <div className="rounded-lg p-5 mb-8" style={{ background: '#f5f5f5', border: '1px solid #e5e5e5' }}>
-                <h3 className="font-medium mb-3" style={{ color: '#333333' }}>Quick Tips</h3>
-                <ul className="space-y-2 text-sm" style={{ color: '#666666' }}>
+              <div className="rounded-lg p-5 mb-8" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+                <h3 className="font-medium mb-3" style={{ color: 'var(--text-primary)' }}>Quick Tips</h3>
+                <ul className="space-y-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
                   <li className="flex items-start gap-2">
                     <span className="font-bold" style={{ color: '#10b981' }}>1.</span>
                     <span>Paste a problem description, screenshot, or URL to get started</span>
@@ -139,7 +139,7 @@ export default function SetupWizard({ onComplete }) {
                 <button
                   onClick={() => setStep(1)}
                   className="px-4 py-2 text-sm font-medium flex items-center gap-2 transition-colors"
-                  style={{ color: '#666666' }}
+                  style={{ color: 'var(--text-secondary)' }}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -162,7 +162,7 @@ export default function SetupWizard({ onComplete }) {
         </div>
 
         {/* Footer */}
-        <div className="mt-6 text-center text-sm" style={{ color: '#999999' }}>
+        <div className="mt-6 text-center text-sm" style={{ color: 'var(--text-muted)' }}>
           Need help? Visit our <a href="https://github.com/your-repo/chundu" target="_blank" rel="noopener noreferrer" style={{ color: '#10b981' }}>documentation</a>
         </div>
       </div>

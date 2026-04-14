@@ -571,7 +571,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                                     <div className="space-y-1">
                                       {safeArray(approach.lineByLine).filter(line => line && typeof line === 'object').map((line, k) => (
                                         <div key={k} className="text-xs">
-                                          <code className="font-mono px-1 rounded" style={{ background: '#e2e8f0', color: '#1e40af' }}>{line?.line || ''}</code>
+                                          <code className="font-mono px-1 rounded" style={{ background: 'var(--bg-elevated)', color: '#1e40af' }}>{line?.line || ''}</code>
                                           <p className="ml-2 mt-0.5" style={{ color: colors.textMuted }}>→ {line?.explanation || ''}</p>
                                         </div>
                                       ))}
@@ -660,7 +660,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                                   src={q.diagramBase64 || q.diagramUrl}
                                   alt={`Architecture diagram for ${q.title || 'system design'}`}
                                   className="w-full"
-                                  style={{ background: '#ffffff' }}
+                                  style={{ background: 'var(--bg-surface)' }}
                                   onError={() => !q.diagramBase64 && handleDiagramError(i)}
                                 />
                                 {q.diagramBase64 && (
@@ -832,7 +832,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                               </svg>
                             </div>
                             <div>
-                              <span className="font-bold text-lg" style={{ color: '#111827' }}>{tech.name}</span>
+                              <span className="font-bold text-lg" style={{ color: 'var(--text-primary)' }}>{tech.name}</span>
                               {tech.importance && (
                                 <span className={`prep-difficulty-badge ml-2 ${tech.importance === 'high' ? 'hard' : tech.importance === 'medium' ? 'medium' : 'easy'}`}>
                                   {tech.importance}

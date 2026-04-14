@@ -97,12 +97,12 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${
                   expandedIdx === idx
                     ? 'border border-indigo-500/20'
-                    : 'hover:bg-white/[0.03] border border-transparent'
+                    : 'hover:bg-[var(--bg-surface)]/[0.03] border border-transparent'
                 }`}
                 style={expandedIdx === idx ? { background: 'rgba(99,102,241,0.06)', backdropFilter: 'blur(4px)' } : {}}
               >
                 <span className={`flex items-center justify-center w-6 h-6 rounded-md text-[10px] font-bold font-mono shrink-0 ${
-                  expandedIdx === idx ? 'bg-indigo-500/20 text-indigo-300' : 'bg-white/5 text-white/40'
+                  expandedIdx === idx ? 'bg-indigo-500/20 text-indigo-300' : 'bg-[var(--bg-surface)]/5 text-white/40'
                 }`}>
                   {idx + 1}
                 </span>
@@ -268,9 +268,9 @@ function EmptyState({ onAskQuestion }: { onAskQuestion?: (question: string) => v
 
         {/* Keyboard hints */}
         <div className="mt-8 flex items-center justify-center gap-4 text-[11px] font-code text-white/20">
-          <span><kbd className="px-1.5 py-0.5 rounded border border-white/10 bg-white/3 text-white/35">⌘K</kbd> focus input</span>
-          <span><kbd className="px-1.5 py-0.5 rounded border border-white/10 bg-white/3 text-white/35">⌘M</kbd> mic toggle</span>
-          <span><kbd className="px-1.5 py-0.5 rounded border border-white/10 bg-white/3 text-white/35">⌘S</kbd> web search</span>
+          <span><kbd className="px-1.5 py-0.5 rounded border border-white/10 bg-[var(--bg-surface)]/3 text-white/35">⌘K</kbd> focus input</span>
+          <span><kbd className="px-1.5 py-0.5 rounded border border-white/10 bg-[var(--bg-surface)]/3 text-white/35">⌘M</kbd> mic toggle</span>
+          <span><kbd className="px-1.5 py-0.5 rounded border border-white/10 bg-[var(--bg-surface)]/3 text-white/35">⌘S</kbd> web search</span>
         </div>
       </div>
     </div>

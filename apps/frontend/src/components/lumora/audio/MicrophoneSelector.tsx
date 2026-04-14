@@ -43,12 +43,12 @@ export function MicrophoneSelector({ disabled, onDeviceChange }: MicrophoneSelec
       title={devices.find(d => d.deviceId === selectedDeviceId)?.label || 'Select microphone'}
     >
       {isLoading ? (
-        <option value="" className="bg-white text-gray-900">Loading...</option>
+        <option value="" className="bg-[var(--bg-surface)] text-[var(--text-primary)]">Loading...</option>
       ) : devices.length === 0 ? (
-        <option value="" className="bg-white text-gray-900">No mic</option>
+        <option value="" className="bg-[var(--bg-surface)] text-[var(--text-primary)]">No mic</option>
       ) : (
         devices.map((device) => (
-          <option key={device.deviceId} value={device.deviceId} className="bg-white text-gray-900">
+          <option key={device.deviceId} value={device.deviceId} className="bg-[var(--bg-surface)] text-[var(--text-primary)]">
             {formatDeviceName(device.label)}
           </option>
         ))

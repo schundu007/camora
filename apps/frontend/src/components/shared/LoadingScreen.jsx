@@ -1,6 +1,6 @@
 export default function LoadingScreen() {
   return (
-    <div className="h-screen flex items-center justify-center bg-white">
+    <div className="h-screen flex items-center justify-center bg-[var(--bg-app)]">
       <div className="flex flex-col items-center gap-4">
         <div
           className="w-12 h-12 rounded-xl flex items-center justify-center"
@@ -11,7 +11,7 @@ export default function LoadingScreen() {
           </svg>
         </div>
         <div className="flex flex-col items-center gap-2">
-          <span className="text-sm font-semibold text-gray-900 tracking-tight">Capra</span>
+          <span className="text-sm font-semibold text-[var(--text-primary)] tracking-tight">Capra</span>
           <div className="flex items-center gap-2">
             <div className="flex gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-bounce" style={{ animationDelay: '0ms' }} />

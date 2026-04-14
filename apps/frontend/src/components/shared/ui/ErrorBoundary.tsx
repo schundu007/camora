@@ -39,10 +39,10 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             </svg>
           </div>
           <div className="text-center">
-            <h3 className="text-sm font-display font-bold text-gray-900 mb-1">
+            <h3 className="text-sm font-display font-bold text-[var(--text-primary)] mb-1">
               Something went wrong
             </h3>
-            <p className="text-xs text-gray-500 font-mono mb-3">
+            <p className="text-xs text-[var(--text-muted)] font-mono mb-3">
               {this.state.error?.message || 'An unexpected error occurred'}
             </p>
             <button

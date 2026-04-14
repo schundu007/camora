@@ -106,7 +106,7 @@ export default function PublicProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-[var(--bg-app)]">
         <SiteNav />
         <div className="flex items-center justify-center min-h-screen">
           <div className="w-12 h-12 border-4 border-emerald-200 border-t-emerald-500 rounded-full animate-spin" />
@@ -117,12 +117,12 @@ export default function PublicProfilePage() {
 
   if (notFound || !profile) {
     return (
-      <div className="min-h-screen bg-white flex flex-col">
+      <div className="min-h-screen bg-[var(--bg-app)] flex flex-col">
         <SiteNav />
         <div className="flex-1 flex flex-col items-center justify-center px-6">
           <CamoraLogo size={48} />
-          <h1 className="mt-6 text-2xl font-bold text-gray-900 tracking-tight">Profile Not Found</h1>
-          <p className="mt-2 text-sm text-gray-500 text-center max-w-sm">
+          <h1 className="mt-6 text-2xl font-bold text-[var(--text-primary)] tracking-tight">Profile Not Found</h1>
+          <p className="mt-2 text-sm text-[var(--text-muted)] text-center max-w-sm">
             This user profile does not exist or has not been made public.
           </p>
           <Link
@@ -138,7 +138,7 @@ export default function PublicProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="min-h-screen bg-[var(--bg-app)] flex flex-col">
       <SiteNav />
 
       <main className="flex-1 w-full lg:max-w-[70%] mx-auto px-4 sm:px-6 pt-24 pb-16">
@@ -149,7 +149,7 @@ export default function PublicProfilePage() {
             <img
               src={profile.avatar}
               alt={profile.name}
-              className="w-20 h-20 rounded-full object-cover border-2 border-[#e3e8ee]"
+              className="w-20 h-20 rounded-full object-cover border-2 border-[var(--border)]"
               referrerPolicy="no-referrer"
             />
           ) : (
@@ -159,7 +159,7 @@ export default function PublicProfilePage() {
           )}
 
           <div className="text-center sm:text-left">
-            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">{profile.name}</h1>
+            <h1 className="text-2xl font-bold text-[var(--text-primary)] tracking-tight">{profile.name}</h1>
             <p className="text-sm text-gray-400 mt-0.5">@{profile.username}</p>
             <div className="flex items-center gap-3 mt-3 justify-center sm:justify-start">
               <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-full">
@@ -168,7 +168,7 @@ export default function PublicProfilePage() {
                 </svg>
                 Level {profile.level}
               </span>
-              <span className="text-xs text-gray-500 font-medium">
+              <span className="text-xs text-[var(--text-muted)] font-medium">
                 {profile.xp.toLocaleString()} XP
               </span>
             </div>
@@ -177,41 +177,41 @@ export default function PublicProfilePage() {
 
         {/* Stats grid */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
-          <div className="bg-white border-0 rounded-xl px-4 py-3 text-center shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
-            <p className="text-2xl font-bold text-gray-900">{profile.problems_solved}</p>
-            <p className="text-xs text-gray-500 mt-0.5">Problems Solved</p>
+          <div className="bg-[var(--bg-app)] border-0 rounded-xl px-4 py-3 text-center shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
+            <p className="text-2xl font-bold text-[var(--text-primary)]">{profile.problems_solved}</p>
+            <p className="text-xs text-[var(--text-muted)] mt-0.5">Problems Solved</p>
           </div>
-          <div className="bg-white border-0 rounded-xl px-4 py-3 text-center shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
+          <div className="bg-[var(--bg-app)] border-0 rounded-xl px-4 py-3 text-center shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
             <div className="flex items-center justify-center gap-1">
               <svg className="w-5 h-5 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clipRule="evenodd" />
               </svg>
-              <p className="text-2xl font-bold text-gray-900">{profile.current_streak}</p>
+              <p className="text-2xl font-bold text-[var(--text-primary)]">{profile.current_streak}</p>
             </div>
-            <p className="text-xs text-gray-500 mt-0.5">Current Streak</p>
+            <p className="text-xs text-[var(--text-muted)] mt-0.5">Current Streak</p>
           </div>
-          <div className="bg-white border-0 rounded-xl px-4 py-3 text-center shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
-            <p className="text-2xl font-bold text-gray-900">{profile.longest_streak}</p>
-            <p className="text-xs text-gray-500 mt-0.5">Longest Streak</p>
+          <div className="bg-[var(--bg-app)] border-0 rounded-xl px-4 py-3 text-center shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
+            <p className="text-2xl font-bold text-[var(--text-primary)]">{profile.longest_streak}</p>
+            <p className="text-xs text-[var(--text-muted)] mt-0.5">Longest Streak</p>
           </div>
-          <div className="bg-white border-0 rounded-xl px-4 py-3 text-center shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
-            <p className="text-2xl font-bold text-gray-900">{profile.badges_earned}</p>
-            <p className="text-xs text-gray-500 mt-0.5">Badges Earned</p>
+          <div className="bg-[var(--bg-app)] border-0 rounded-xl px-4 py-3 text-center shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
+            <p className="text-2xl font-bold text-[var(--text-primary)]">{profile.badges_earned}</p>
+            <p className="text-xs text-[var(--text-muted)] mt-0.5">Badges Earned</p>
           </div>
         </div>
 
         {/* Badges */}
         {profile.badges.length > 0 && (
           <section className="mb-10">
-            <h2 className="text-lg font-bold text-gray-900 tracking-tight mb-4">Badges</h2>
+            <h2 className="text-lg font-bold text-[var(--text-primary)] tracking-tight mb-4">Badges</h2>
             <div className="flex flex-wrap gap-2">
               {profile.badges.map((badge) => (
                 <div
                   key={badge.key}
-                  className="flex items-center gap-1.5 px-3 py-2 bg-white border border-emerald-200 rounded-lg"
+                  className="flex items-center gap-1.5 px-3 py-2 bg-[var(--bg-app)] border border-emerald-200 rounded-lg"
                 >
                   <span className="text-lg">{badge.icon}</span>
-                  <span className="text-sm font-medium text-gray-800">{badge.title}</span>
+                  <span className="text-sm font-medium text-[var(--text-primary)]">{badge.title}</span>
                 </div>
               ))}
             </div>
@@ -221,7 +221,7 @@ export default function PublicProfilePage() {
         {/* Score Cards */}
         {profile.score_cards.length > 0 && (
           <section className="mb-10">
-            <h2 className="text-lg font-bold text-gray-900 tracking-tight mb-4">Recent Score Cards</h2>
+            <h2 className="text-lg font-bold text-[var(--text-primary)] tracking-tight mb-4">Recent Score Cards</h2>
             <div className="space-y-3">
               {profile.score_cards.map((sc) => (
                 <Link key={sc.id} to={`/share/${sc.share_token}`} className="block">
@@ -244,13 +244,13 @@ export default function PublicProfilePage() {
         {/* Certificates */}
         {profile.certificates.length > 0 && (
           <section className="mb-10">
-            <h2 className="text-lg font-bold text-gray-900 tracking-tight mb-4">Certificates</h2>
+            <h2 className="text-lg font-bold text-[var(--text-primary)] tracking-tight mb-4">Certificates</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {profile.certificates.map((cert) => (
                 <Link
                   key={cert.id}
                   to={`/share/${cert.share_token}`}
-                  className="flex items-start gap-3 bg-white border-0 rounded-xl px-5 py-4 shadow-[0_4px_24px_rgba(99,102,241,0.12)] hover:shadow-[0_20px_60px_rgba(99,102,241,0.28)] transition-shadow"
+                  className="flex items-start gap-3 bg-[var(--bg-app)] border-0 rounded-xl px-5 py-4 shadow-[0_4px_24px_rgba(99,102,241,0.12)] hover:shadow-[0_20px_60px_rgba(99,102,241,0.28)] transition-shadow"
                 >
                   {/* Certificate icon */}
                   <div className="shrink-0 w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center">
@@ -259,7 +259,7 @@ export default function PublicProfilePage() {
                     </svg>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-gray-900 truncate">{cert.title}</p>
+                    <p className="text-sm font-semibold text-[var(--text-primary)] truncate">{cert.title}</p>
                     <p className="text-xs text-gray-400 mt-0.5">
                       {cert.type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())} &middot; {formatDate(cert.issued_at)}
                     </p>
@@ -274,15 +274,15 @@ export default function PublicProfilePage() {
         )}
 
         {/* CTA */}
-        <div className="border-t border-[#e3e8ee] pt-10 text-center">
+        <div className="border-t border-[var(--border)] pt-10 text-center">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-medium rounded-full mb-4">
             <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
               <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.957a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.37 2.448a1 1 0 00-.364 1.118l1.287 3.957c.3.921-.755 1.688-1.54 1.118l-3.37-2.448a1 1 0 00-1.176 0l-3.37 2.448c-.784.57-1.838-.197-1.539-1.118l1.287-3.957a1 1 0 00-.364-1.118L2.063 9.384c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69l1.286-3.957z" />
             </svg>
             AI-Powered Interview Prep
           </div>
-          <h2 className="text-xl font-bold text-gray-900 tracking-tight">Join Camora</h2>
-          <p className="mt-2 text-sm text-gray-500 max-w-sm mx-auto leading-relaxed">
+          <h2 className="text-xl font-bold text-[var(--text-primary)] tracking-tight">Join Camora</h2>
+          <p className="mt-2 text-sm text-[var(--text-muted)] max-w-sm mx-auto leading-relaxed">
             Apply. Prepare. Practice. Attend. Build your public profile, earn badges, and land your dream job.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center mt-6">
@@ -294,7 +294,7 @@ export default function PublicProfilePage() {
             </Link>
             <Link
               to="/pricing"
-              className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-white border border-[#e3e8ee] hover:bg-gray-50 text-gray-700 text-sm font-medium rounded-lg transition-colors"
+              className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-[var(--bg-app)] border border-[var(--border)] hover:bg-[var(--bg-elevated)] text-[var(--text-secondary)] text-sm font-medium rounded-lg transition-colors"
             >
               View Plans
             </Link>

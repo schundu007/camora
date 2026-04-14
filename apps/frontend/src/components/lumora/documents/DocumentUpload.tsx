@@ -147,10 +147,10 @@ export function DocumentUpload() {
               documents.map((doc) => (
                 <div
                   key={doc.filename}
-                  className="flex items-start gap-2 p-2 border-b border-gray-100 last:border-b-0 hover:bg-gray-50"
+                  className="flex items-start gap-2 p-2 border-b border-[var(--border)] last:border-b-0 hover:bg-[var(--bg-elevated)]"
                 >
                   <div className="flex-1 min-w-0">
-                    <div className="font-mono text-sm font-medium text-gray-700 truncate">
+                    <div className="font-mono text-sm font-medium text-[var(--text-secondary)] truncate">
                       {doc.filename}
                     </div>
                     <div className="text-sm text-gray-400">

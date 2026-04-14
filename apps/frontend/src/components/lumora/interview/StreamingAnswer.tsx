@@ -142,8 +142,8 @@ function StreamingCodingView({ blocks }: { blocks: Record<string, ParsedBlock> }
       </div>
 
       {/* Code Block - Full Width */}
-      <div className="rounded-md border border-indigo/20 bg-gray-50 overflow-hidden">
-        <div className="flex items-center justify-between px-3 py-2 border-b border-gray-300 bg-gray-50">
+      <div className="rounded-md border border-indigo/20 bg-[var(--bg-elevated)] overflow-hidden">
+        <div className="flex items-center justify-between px-3 py-2 border-b border-gray-300 bg-[var(--bg-elevated)]">
           <div className="flex items-center gap-2">
             <div className="flex gap-1">
               <div className="w-2 h-2 rounded-full bg-rose/40" />
@@ -251,8 +251,8 @@ function StreamingComplexityList({ content, isComplete }: { content: string; isC
           const isSpace = /space/i.test(label);
 
           return (
-            <div key={i} className="flex items-center gap-3 p-2 rounded bg-gray-50">
-              <span className={`font-mono text-base font-bold px-2 py-0.5 rounded ${isTime ? 'bg-cyan/10 text-cyan-light' : isSpace ? 'bg-violet/10 text-violet-light' : 'bg-gray-100 text-text-dim'}`}>
+            <div key={i} className="flex items-center gap-3 p-2 rounded bg-[var(--bg-elevated)]">
+              <span className={`font-mono text-base font-bold px-2 py-0.5 rounded ${isTime ? 'bg-cyan/10 text-cyan-light' : isSpace ? 'bg-violet/10 text-violet-light' : 'bg-[var(--bg-elevated)] text-text-dim'}`}>
                 {label}
               </span>
               <span className="font-mono text-base text-text">{value}</span>
@@ -277,7 +277,7 @@ function StreamingTestCasesList({ content, isComplete }: { content: string; isCo
         const arrowMatch = line.match(/Input:\s*(.+?)\s*[-→>]+\s*Output:\s*(.+)/i);
         if (arrowMatch) {
           return (
-            <div key={i} className="flex flex-col gap-1 p-2 rounded bg-gray-50 border border-gray-200">
+            <div key={i} className="flex flex-col gap-1 p-2 rounded bg-[var(--bg-elevated)] border border-[var(--border)]">
               <div className="flex items-center gap-2">
                 <span className="font-mono text-base font-bold text-indigo-light bg-indigo/10 px-2 py-0.5 rounded">IN</span>
                 <code className="font-mono text-base text-text-muted">{arrowMatch[1]}</code>
@@ -601,7 +601,7 @@ function TradeoffsList({ content, isComplete }: { content: string; isComplete: b
         if (!pick) return <div key={i} className="text-base text-text-muted leading-snug">{line}</div>;
 
         return (
-          <div key={i} className="py-1 border-b border-gray-200 last:border-b-0">
+          <div key={i} className="py-1 border-b border-[var(--border)] last:border-b-0">
             <div className="flex items-baseline gap-2 flex-wrap">
               <span className="font-mono text-base font-semibold text-cyan-light">{pick}</span>
               {alt && (
@@ -653,7 +653,7 @@ function StreamingFollowupList({ content, isComplete }: { content: string; isCom
   return (
     <div className="space-y-2">
       {pairs.map((pair, i) => (
-        <div key={i} className="py-1.5 border-b border-gray-200 last:border-b-0">
+        <div key={i} className="py-1.5 border-b border-[var(--border)] last:border-b-0">
           <div className="flex items-start gap-2 text-base">
             <span className="font-mono font-bold text-amber-light bg-amber/10 px-2 py-0.5 rounded shrink-0">Q{i + 1}</span>
             <span className="text-text-muted leading-snug">{pair.question}</span>

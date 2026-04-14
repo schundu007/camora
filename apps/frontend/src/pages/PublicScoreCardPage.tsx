@@ -87,7 +87,7 @@ export default function PublicScoreCardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-[var(--bg-surface)]">
         <SiteNav />
         <div className="flex items-center justify-center min-h-screen">
           <div className="w-12 h-12 border-4 border-emerald-200 border-t-emerald-500 rounded-full animate-spin" />
@@ -98,12 +98,12 @@ export default function PublicScoreCardPage() {
 
   if (notFound || !card) {
     return (
-      <div className="min-h-screen bg-white flex flex-col">
+      <div className="min-h-screen bg-[var(--bg-surface)] flex flex-col">
         <SiteNav />
         <div className="flex-1 flex flex-col items-center justify-center px-6">
           <CamoraLogo size={48} />
-          <h1 className="mt-6 text-2xl font-bold text-gray-900 tracking-tight">Score Card Not Found</h1>
-          <p className="mt-2 text-sm text-gray-500 text-center max-w-sm">
+          <h1 className="mt-6 text-2xl font-bold text-[var(--text-primary)] tracking-tight">Score Card Not Found</h1>
+          <p className="mt-2 text-sm text-[var(--text-muted)] text-center max-w-sm">
             This score card may have been removed or the link is no longer valid.
           </p>
           <Link
@@ -119,7 +119,7 @@ export default function PublicScoreCardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="min-h-screen bg-[var(--bg-surface)] flex flex-col">
       <SiteNav />
 
       {/* Main content */}
@@ -144,8 +144,8 @@ export default function PublicScoreCardPage() {
             </svg>
             AI-Powered Interview Prep
           </div>
-          <h2 className="text-xl font-bold text-gray-900 tracking-tight">Start your prep journey</h2>
-          <p className="mt-2 text-sm text-gray-500 leading-relaxed">
+          <h2 className="text-xl font-bold text-[var(--text-primary)] tracking-tight">Start your prep journey</h2>
+          <p className="mt-2 text-sm text-[var(--text-muted)] leading-relaxed">
             Practice coding, system design, and behavioral questions with AI-powered feedback. Track your progress and earn score cards.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center mt-6">
@@ -157,7 +157,7 @@ export default function PublicScoreCardPage() {
             </Link>
             <Link
               to="/pricing"
-              className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-white border border-[#e3e8ee] hover:bg-gray-50 text-gray-700 text-sm font-medium rounded-lg transition-colors"
+              className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-[var(--bg-surface)] border border-[var(--border)] hover:bg-[var(--bg-elevated)] text-[var(--text-secondary)] text-sm font-medium rounded-lg transition-colors"
             >
               View Plans
             </Link>

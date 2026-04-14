@@ -66,9 +66,9 @@ export default function ApiKeyInput({
   };
 
   return (
-    <div className="py-3" style={{ borderBottom: '1px solid #e5e5e5' }}>
+    <div className="py-3" style={{ borderBottom: '1px solid var(--border)' }}>
       <div className="flex items-center justify-between mb-2">
-        <span className="text-sm font-medium" style={{ color: '#333333' }}>{config.name}</span>
+        <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{config.name}</span>
         {hasKey && !isEditing && (
           <span className="w-2 h-2 rounded-full" style={{ background: '#10b981' }} title="Configured" />
         )}
@@ -87,16 +87,16 @@ export default function ApiKeyInput({
               placeholder={config.placeholder}
               className="w-full px-3 py-2 rounded text-sm font-mono focus:outline-none"
               style={{
-                background: '#f5f5f5',
-                border: '1px solid #e5e5e5',
-                color: '#333333',
+                background: 'var(--bg-elevated)',
+                border: '1px solid var(--border)',
+                color: 'var(--text-primary)',
               }}
             />
             <button
               type="button"
               onClick={() => setShowKey(!showKey)}
               className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-medium"
-              style={{ color: '#666666' }}
+              style={{ color: 'var(--text-secondary)' }}
             >
               {showKey ? 'Hide' : 'Show'}
             </button>
@@ -122,7 +122,7 @@ export default function ApiKeyInput({
                 <button
                   onClick={() => setIsEditing(false)}
                   className="px-2 py-1 text-xs font-medium"
-                  style={{ color: '#666666' }}
+                  style={{ color: 'var(--text-secondary)' }}
                 >
                   Cancel
                 </button>
@@ -140,14 +140,14 @@ export default function ApiKeyInput({
         </div>
       ) : (
         <div className="flex items-center justify-between">
-          <code className="text-xs font-mono" style={{ color: '#666666' }}>
+          <code className="text-xs font-mono" style={{ color: 'var(--text-secondary)' }}>
             {currentKey ? `${currentKey.slice(0, 7)}${'*'.repeat(20)}${currentKey.slice(-4)}` : '**************'}
           </code>
           <div className="flex items-center gap-2">
             <button
               onClick={() => setIsEditing(true)}
               className="text-xs font-medium"
-              style={{ color: '#666666' }}
+              style={{ color: 'var(--text-secondary)' }}
             >
               Edit
             </button>

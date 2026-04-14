@@ -75,7 +75,7 @@ export function SessionSidebar({ isOpen, onClose, onSelectEntry }: SessionSideba
                 )}
                 <button
                   onClick={onClose}
-                  className="p-1 rounded-lg text-white/30 hover:text-white/60 hover:bg-white/5 transition-colors lg:hidden"
+                  className="p-1 rounded-lg text-white/30 hover:text-white/60 hover:bg-[var(--bg-surface)]/5 transition-colors lg:hidden"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -111,7 +111,7 @@ export function SessionSidebar({ isOpen, onClose, onSelectEntry }: SessionSideba
                       >
                         <button
                           onClick={() => { onSelectEntry(item.index); if (window.innerWidth < 1024) onClose(); }}
-                          className="w-full text-left px-4 py-2 text-[13px] text-white/50 hover:text-white/80 hover:bg-white/[0.03] transition-all truncate block"
+                          className="w-full text-left px-4 py-2 text-[13px] text-white/50 hover:text-white/80 hover:bg-[var(--bg-surface)]/[0.03] transition-all truncate block"
                         >
                           {item.question}
                         </button>
