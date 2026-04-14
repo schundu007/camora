@@ -246,7 +246,7 @@ export function VoiceEnrollment({ disabled }: VoiceEnrollmentProps) {
         onClick={handleToggleFilter}
         disabled={disabled}
         className="flex items-center gap-1 px-2 py-1 text-[11px] font-bold rounded-lg transition-all shrink-0"
-        style={{ color: voiceFilterEnabled ? '#34d399' : 'rgba(255,255,255,0.6)', background: voiceFilterEnabled ? 'rgba(16,185,129,0.08)' : 'transparent', border: '1px solid rgba(255,255,255,0.08)' }}
+        style={{ color: voiceFilterEnabled ? '#818cf8' : 'rgba(255,255,255,0.6)', background: voiceFilterEnabled ? 'rgba(99,102,241,0.08)' : 'transparent', border: '1px solid rgba(255,255,255,0.08)' }}
         title={voiceFilterEnabled ? 'Voice filter active - only interviewer is transcribed' : 'Voice filter disabled'}
       >
         <VoiceIcon filled={voiceFilterEnabled} />

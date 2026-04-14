@@ -756,7 +756,7 @@ main, [role="main"] {
   position: relative;
 }
 
-/* Lumora mesh gradient — matches challenge page */
+/* Lumora mesh gradient — matches Camora design system */
 .lumora-app-bg::before {
   content: '';
   position: fixed;
@@ -764,10 +764,10 @@ main, [role="main"] {
   pointer-events: none;
   z-index: 0;
   background:
-    radial-gradient(ellipse 80% 60% at 20% 30%, rgba(16,185,129,0.10) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 50% at 80% 20%, rgba(99,102,241,0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 80% 60% at 20% 30%, rgba(99,102,241,0.10) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 20%, rgba(139,92,246,0.08) 0%, transparent 60%),
     radial-gradient(ellipse 50% 40% at 50% 80%, rgba(6,182,212,0.06) 0%, transparent 60%),
-    radial-gradient(ellipse 40% 30% at 90% 70%, rgba(245,158,11,0.04) 0%, transparent 60%);
+    radial-gradient(ellipse 40% 30% at 90% 70%, rgba(99,102,241,0.04) 0%, transparent 60%);
   animation: lumora-mesh-shift 12s ease-in-out infinite alternate;
 }
 @keyframes lumora-mesh-shift {
@@ -786,11 +786,11 @@ main, [role="main"] {
   mask-image: radial-gradient(ellipse 60% 50% at 50% 40%, black 20%, transparent 70%);
 }
 
-/* Lumora status bar with emerald glow */
+/* Lumora status bar with indigo glow */
 .lumora-status-bar {
-  background: linear-gradient(90deg, rgba(15,23,42,0.95) 0%, rgba(16,185,129,0.06) 50%, rgba(15,23,42,0.95) 100%);
-  border-top: 1px solid rgba(16,185,129,0.15);
-  box-shadow: 0 -1px 12px rgba(16,185,129,0.06);
+  background: linear-gradient(90deg, rgba(15,23,42,0.95) 0%, rgba(99,102,241,0.06) 50%, rgba(15,23,42,0.95) 100%);
+  border-top: 1px solid rgba(99,102,241,0.15);
+  box-shadow: 0 -1px 12px rgba(99,102,241,0.06);
 }
 
 /* Lumora empty state mesh gradient */

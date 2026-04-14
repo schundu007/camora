@@ -237,19 +237,19 @@ const SectionIcon = ({ type }: { type: string }) => {
 
 /** Scalability tier colors for visual variety */
 const tierColors = [
-  { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-700', dot: 'bg-emerald-500' },
+  { bg: 'bg-indigo-50', border: 'border-indigo-200', text: 'text-indigo-700', dot: 'bg-indigo-500' },
   { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-700', dot: 'bg-blue-500' },
   { bg: 'bg-violet-50', border: 'border-violet-200', text: 'text-violet-700', dot: 'bg-violet-500' },
   { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700', dot: 'bg-amber-500' },
   { bg: 'bg-cyan-50', border: 'border-cyan-200', text: 'text-cyan-700', dot: 'bg-cyan-500' },
   { bg: 'bg-rose-50', border: 'border-rose-200', text: 'text-rose-700', dot: 'bg-rose-500' },
   { bg: 'bg-indigo-50', border: 'border-indigo-200', text: 'text-indigo-700', dot: 'bg-indigo-500' },
-  { bg: 'bg-teal-50', border: 'border-teal-200', text: 'text-teal-700', dot: 'bg-teal-500' },
+  { bg: 'bg-violet-50', border: 'border-violet-200', text: 'text-violet-700', dot: 'bg-violet-500' },
 ];
 
 /** Architecture layer accent colors */
 const layerAccents = [
-  { accent: '#059669', bg: 'rgba(5,150,105,0.04)', border: 'rgba(5,150,105,0.15)' },
+  { accent: '#4f46e5', bg: 'rgba(79,70,229,0.04)', border: 'rgba(79,70,229,0.15)' },
   { accent: '#2563eb', bg: 'rgba(37,99,235,0.04)', border: 'rgba(37,99,235,0.15)' },
   { accent: '#7c3aed', bg: 'rgba(124,58,237,0.04)', border: 'rgba(124,58,237,0.15)' },
   { accent: '#d97706', bg: 'rgba(217,119,6,0.04)', border: 'rgba(217,119,6,0.15)' },
@@ -568,7 +568,7 @@ export function DesignLayout({ onBack, initialProblem }: DesignLayoutProps) {
           </button>
           <div className="h-4 w-px bg-gray-200" />
           <div className="flex items-center gap-1.5">
-            <div className="w-5 h-5 md:w-6 md:h-6 rounded bg-emerald-500 flex items-center justify-center">
+            <div className="w-5 h-5 md:w-6 md:h-6 rounded bg-indigo-500 flex items-center justify-center">
               <span className="text-white text-[10px] md:text-xs font-extrabold">L</span>
             </div>
             <span className="text-gray-900 font-bold text-xs md:text-sm">System Design</span>
@@ -597,7 +597,7 @@ export function DesignLayout({ onBack, initialProblem }: DesignLayoutProps) {
             <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-xs font-mono font-bold transition-colors ${
               timerUrgent ? 'bg-red-50 border-red-200 text-red-600' :
               timerSeconds === 0 ? 'bg-gray-100 border-gray-200 text-gray-700' :
-              'bg-emerald-50 border-emerald-200 text-emerald-700'
+              'bg-indigo-50 border-indigo-200 text-indigo-700'
             } ${timerUrgent ? 'timer-urgent' : ''}`}>
               <div className="relative w-4 h-4">
                 <svg className="w-4 h-4 -rotate-90" viewBox="0 0 20 20">
@@ -617,7 +617,7 @@ export function DesignLayout({ onBack, initialProblem }: DesignLayoutProps) {
             <div className="flex items-center">
               {[15, 30, 45, 60].map(m => (
                 <button key={m} onClick={() => startTimer(m)}
-                  className="px-1.5 py-0.5 text-[10px] font-mono text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 rounded transition-colors"
+                  className="px-1.5 py-0.5 text-[10px] font-mono text-gray-700 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors"
                   title={`${m} min timer`}>
                   {m}m
                 </button>
@@ -626,9 +626,9 @@ export function DesignLayout({ onBack, initialProblem }: DesignLayoutProps) {
           )}
 
           {isLoading && (
-            <div className="flex items-center gap-1.5 px-2 py-0.5 bg-emerald-50 border border-emerald-200 rounded-lg">
-              <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-              <span className="text-emerald-600 text-[10px] md:text-xs font-medium">Generating...</span>
+            <div className="flex items-center gap-1.5 px-2 py-0.5 bg-indigo-50 border border-indigo-200 rounded-lg">
+              <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse" />
+              <span className="text-indigo-600 text-[10px] md:text-xs font-medium">Generating...</span>
             </div>
           )}
 
@@ -689,7 +689,7 @@ export function DesignLayout({ onBack, initialProblem }: DesignLayoutProps) {
                 value={problemText}
                 onChange={(e) => setProblemText(e.target.value)}
                 placeholder="Describe your system design problem...&#10;&#10;Example: Design a URL shortener like bit.ly that handles 100M links/month"
-                className="w-full h-[100px] bg-white border border-gray-200 rounded-lg p-3 text-gray-900 text-xs md:text-sm leading-relaxed placeholder:text-gray-400 resize-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/20 focus:outline-none transition-all font-mono"
+                className="w-full h-[100px] bg-white border border-gray-200 rounded-lg p-3 text-gray-900 text-xs md:text-sm leading-relaxed placeholder:text-gray-400 resize-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/20 focus:outline-none transition-all font-mono"
               />
             )}
             {inputTab === 'url' && (
@@ -699,7 +699,7 @@ export function DesignLayout({ onBack, initialProblem }: DesignLayoutProps) {
                   value={urlInput}
                   onChange={(e) => setUrlInput(e.target.value)}
                   placeholder="https://leetcode.com/problems/..."
-                  className="flex-1 bg-white border border-gray-200 rounded-lg px-3 py-2 text-gray-900 text-xs md:text-sm placeholder:text-gray-400 focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/20 focus:outline-none transition-all font-mono"
+                  className="flex-1 bg-white border border-gray-200 rounded-lg px-3 py-2 text-gray-900 text-xs md:text-sm placeholder:text-gray-400 focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/20 focus:outline-none transition-all font-mono"
                 />
                 <button
                   onClick={async () => {
@@ -717,7 +717,7 @@ export function DesignLayout({ onBack, initialProblem }: DesignLayoutProps) {
                       setErrorMsg(`Failed to fetch URL: ${err.message}`);
                     }
                   }}
-                  className="px-4 py-2 bg-emerald-500 text-white text-xs font-semibold rounded-lg hover:bg-emerald-600 disabled:opacity-50 transition-colors"
+                  className="px-4 py-2 bg-indigo-500 text-white text-xs font-semibold rounded-lg hover:bg-indigo-600 disabled:opacity-50 transition-colors"
                 >
                   Fetch
                 </button>
@@ -732,7 +732,7 @@ export function DesignLayout({ onBack, initialProblem }: DesignLayoutProps) {
                   const file = e.dataTransfer.files?.[0];
                   if (file && file.type.startsWith('image/')) handleImageUpload(file);
                 }}
-                className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-200 rounded-lg cursor-pointer hover:border-emerald-400/50 hover:bg-emerald-50/30 transition-all"
+                className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-200 rounded-lg cursor-pointer hover:border-indigo-400/50 hover:bg-indigo-50/30 transition-all"
               >
                 <input
                   ref={imageInputRef}
@@ -769,7 +769,7 @@ export function DesignLayout({ onBack, initialProblem }: DesignLayoutProps) {
             <button
               onClick={handleSubmit}
               disabled={!problemText.trim() || isLoading}
-              className="w-full py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-sm font-bold rounded-lg hover:from-emerald-600 hover:to-teal-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 shadow-sm"
+              className="w-full py-2.5 bg-gradient-to-r from-indigo-500 to-violet-500 text-white text-sm font-bold rounded-lg hover:from-indigo-600 hover:to-violet-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 shadow-sm"
             >
               {isLoading ? (
                 <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Generating...</>
@@ -794,11 +794,11 @@ export function DesignLayout({ onBack, initialProblem }: DesignLayoutProps) {
               {sd.techJustifications && sd.techJustifications.length > 0 && (
                 <div className="mt-4 pt-3 border-t border-gray-200 space-y-1.5">
                   <div className="flex items-center gap-2 mb-2">
-                    <svg className="w-3.5 h-3.5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-3.5 h-3.5 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                     </svg>
-                    <h4 className="text-[10px] font-mono font-bold text-teal-700 uppercase tracking-wider">Architecture Layers</h4>
-                    <span className="text-[10px] font-mono text-teal-400">{sd.techJustifications.length}</span>
+                    <h4 className="text-[10px] font-mono font-bold text-violet-700 uppercase tracking-wider">Architecture Layers</h4>
+                    <span className="text-[10px] font-mono text-violet-400">{sd.techJustifications.length}</span>
                   </div>
                   {sd.techJustifications.map((tier, i) => (
                     <div key={i} className="rounded-lg border border-gray-100 p-2">
@@ -820,10 +820,10 @@ export function DesignLayout({ onBack, initialProblem }: DesignLayoutProps) {
 
         {/* Resizable divider - hidden on mobile, matching coding page */}
         <div
-          className="hidden md:flex w-1.5 bg-gray-100 hover:bg-emerald-200 cursor-col-resize transition-colors items-center justify-center group shrink-0"
+          className="hidden md:flex w-1.5 bg-gray-100 hover:bg-indigo-200 cursor-col-resize transition-colors items-center justify-center group shrink-0"
           onMouseDown={handleDividerMouseDown}
         >
-          <div className="w-0.5 h-8 bg-gray-300 group-hover:bg-emerald-500 rounded-full transition-colors" />
+          <div className="w-0.5 h-8 bg-gray-300 group-hover:bg-indigo-500 rounded-full transition-colors" />
         </div>
 
         {/* Right: Design Result — light panel, exempt from dark overrides */}
@@ -843,12 +843,12 @@ export function DesignLayout({ onBack, initialProblem }: DesignLayoutProps) {
 
           {isLoading && !sd && (
             <div className="flex flex-col h-full p-3 md:p-5">
-              <div className="flex items-center gap-3 p-3 bg-emerald-50 border border-emerald-100 rounded-xl mb-4 shrink-0">
+              <div className="flex items-center gap-3 p-3 bg-indigo-50 border border-indigo-100 rounded-xl mb-4 shrink-0">
                 <div className="relative w-5 h-5">
-                  <div className="absolute inset-0 border-2 border-emerald-200 rounded-full" />
-                  <div className="absolute inset-0 border-2 border-transparent border-t-emerald-500 rounded-full animate-spin" />
+                  <div className="absolute inset-0 border-2 border-indigo-200 rounded-full" />
+                  <div className="absolute inset-0 border-2 border-transparent border-t-indigo-500 rounded-full animate-spin" />
                 </div>
-                <span className="text-xs font-semibold text-emerald-700">Analyzing and designing system architecture...</span>
+                <span className="text-xs font-semibold text-indigo-700">Analyzing and designing system architecture...</span>
               </div>
               {streamingText && (
                 <pre className="flex-1 overflow-auto text-[10px] text-gray-400 font-mono whitespace-pre-wrap leading-relaxed max-h-60">{streamingText}</pre>
@@ -861,10 +861,10 @@ export function DesignLayout({ onBack, initialProblem }: DesignLayoutProps) {
 
               {/* ── OVERVIEW ── */}
               {sd.overview && (
-                <section className="rounded-2xl border border-emerald-200 bg-white overflow-hidden" style={{boxShadow: '0 2px 8px rgba(0,0,0,0.04)'}}>
+                <section className="rounded-2xl border border-indigo-200 bg-white overflow-hidden" style={{boxShadow: '0 2px 8px rgba(0,0,0,0.04)'}}>
                   <div className="flex items-center gap-2.5 px-4 py-2.5">
-                    <div className="w-1.5 h-5 rounded-full bg-gradient-to-b from-emerald-500 to-teal-500" />
-                    <h2 className="text-sm font-bold text-emerald-800">Overview</h2>
+                    <div className="w-1.5 h-5 rounded-full bg-gradient-to-b from-indigo-500 to-violet-500" />
+                    <h2 className="text-sm font-bold text-indigo-800">Overview</h2>
                   </div>
                   <div className="px-4 py-3">
                     <p className="text-sm text-gray-700 leading-relaxed">{sd.overview}</p>
@@ -888,17 +888,17 @@ export function DesignLayout({ onBack, initialProblem }: DesignLayoutProps) {
               {/* ── REQUIREMENTS: Functional + Non-Functional ── */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 items-start">
                 {sd.requirements?.functional && sd.requirements.functional.length > 0 && (
-                  <section className="rounded-2xl border border-emerald-200 bg-white overflow-hidden" style={{boxShadow: '0 2px 8px rgba(0,0,0,0.04)'}}>
+                  <section className="rounded-2xl border border-indigo-200 bg-white overflow-hidden" style={{boxShadow: '0 2px 8px rgba(0,0,0,0.04)'}}>
                     <div className="flex items-center gap-2.5 px-4 py-2.5">
-                      <div className="w-1.5 h-5 rounded-full bg-gradient-to-b from-emerald-500 to-green-500" />
-                      <h2 className="text-sm font-bold text-emerald-800">Functional</h2>
-                      <span className="ml-auto text-[10px] font-mono text-emerald-500 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5">{sd.requirements.functional.length}</span>
+                      <div className="w-1.5 h-5 rounded-full bg-gradient-to-b from-indigo-500 to-violet-500" />
+                      <h2 className="text-sm font-bold text-indigo-800">Functional</h2>
+                      <span className="ml-auto text-[10px] font-mono text-indigo-500 bg-indigo-50 border border-indigo-200 rounded-full px-2 py-0.5">{sd.requirements.functional.length}</span>
                     </div>
                     <div className="px-4 py-3">
                       <div className="grid grid-cols-1 gap-y-1">
                         {sd.requirements.functional.map((r, i) => (
                           <div key={i} className="flex items-start gap-2 text-sm text-gray-700 leading-snug py-0.5">
-                            <span className="font-bold text-emerald-600 shrink-0">{i + 1}.</span>{r}
+                            <span className="font-bold text-indigo-600 shrink-0">{i + 1}.</span>{r}
                           </div>
                         ))}
                       </div>
@@ -951,10 +951,10 @@ export function DesignLayout({ onBack, initialProblem }: DesignLayoutProps) {
 
               {/* ── SCALABILITY TIERS ── */}
               {sd.techJustifications && sd.techJustifications.length > 0 && (
-                <section className="rounded-2xl border border-teal-200 bg-white overflow-hidden" style={{boxShadow: '0 2px 8px rgba(0,0,0,0.04)'}}>
+                <section className="rounded-2xl border border-violet-200 bg-white overflow-hidden" style={{boxShadow: '0 2px 8px rgba(0,0,0,0.04)'}}>
                   <div className="flex items-center gap-2.5 px-4 py-2.5">
-                    <div className="w-1.5 h-5 rounded-full bg-gradient-to-b from-teal-500 to-emerald-500" />
-                    <h2 className="text-sm font-bold text-teal-800">Scalability Tiers</h2>
+                    <div className="w-1.5 h-5 rounded-full bg-gradient-to-b from-violet-500 to-indigo-500" />
+                    <h2 className="text-sm font-bold text-violet-800">Scalability Tiers</h2>
                   </div>
                   <div className="px-4 py-3">
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -963,9 +963,9 @@ export function DesignLayout({ onBack, initialProblem }: DesignLayoutProps) {
                         return (
                           <div key={i} className="rounded-lg border border-gray-100 p-2 text-center">
                             <div className={`text-xs font-bold text-white bg-gradient-to-r ${
-                              ['from-emerald-500 to-green-500', 'from-blue-500 to-indigo-500', 'from-violet-500 to-purple-500',
-                               'from-amber-500 to-orange-500', 'from-cyan-500 to-teal-500', 'from-rose-500 to-pink-500',
-                               'from-indigo-500 to-blue-500', 'from-teal-500 to-emerald-500'][i % 8]
+                              ['from-indigo-500 to-violet-500', 'from-blue-500 to-indigo-500', 'from-violet-500 to-purple-500',
+                               'from-amber-500 to-orange-500', 'from-cyan-500 to-blue-500', 'from-rose-500 to-pink-500',
+                               'from-indigo-500 to-blue-500', 'from-violet-500 to-indigo-500'][i % 8]
                             } rounded px-2 py-1 mb-1`}>{tier.tech}</div>
                             {tier.details.length > 0 && (
                               <div className="text-xs text-gray-600 leading-relaxed text-left mt-1">
