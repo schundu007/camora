@@ -156,7 +156,6 @@ const sections: NavSection[] = [
   {
     title: 'Prepare',
     items: [
-      { label: 'Overview', path: '/capra/prepare', icon: icons.home },
       { label: 'DSA', path: '/capra/prepare/coding', icon: icons.cpu },
       { label: 'System Design', path: '/capra/prepare/system-design', icon: icons.layers },
       { label: 'Microservices', path: '/capra/prepare/microservices', icon: icons.grid },
@@ -338,6 +337,34 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     <div className="flex flex-col h-full">
       {/* Scrollable nav */}
       <nav className={`flex-1 overflow-y-auto ${collapsed ? 'px-1.5' : 'px-3'} py-3 no-scrollbar`}>
+        {/* Overview — standalone item */}
+        {(() => {
+          const active = pathname === '/capra/prepare';
+          const style: React.CSSProperties = collapsed ? {
+            height: '36px', width: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            margin: '2px auto', color: active ? 'var(--accent)' : 'var(--text-muted)',
+            background: active ? 'var(--accent-subtle)' : 'transparent', borderRadius: '8px', transition: 'background 0.12s, color 0.12s',
+          } : {
+            height: '32px', fontSize: '13px', fontWeight: 500,
+            color: active ? 'var(--text-primary)' : 'var(--text-secondary)',
+            background: active ? 'var(--accent-subtle)' : 'transparent',
+            borderLeft: active ? '2px solid var(--accent)' : '2px solid transparent',
+            borderRadius: '6px', transition: 'background 0.12s, color 0.12s',
+          };
+          return (
+            <div className="mb-2">
+              <Link
+                to="/capra/prepare"
+                className={collapsed ? 'flex rounded-md no-underline sidebar-item' : 'flex items-center gap-2.5 px-2.5 rounded-md no-underline sidebar-item'}
+                style={style}
+                title={collapsed ? 'Overview' : undefined}
+              >
+                <span className="flex-shrink-0" style={{ color: active ? 'var(--accent)' : 'var(--text-muted)' }}>{icons.home}</span>
+                {!collapsed && 'Overview'}
+              </Link>
+            </div>
+          );
+        })()}
         {sections.map((section) => (
           <SidebarSection
             key={section.title}
