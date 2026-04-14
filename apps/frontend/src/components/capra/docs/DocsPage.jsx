@@ -497,30 +497,16 @@ export default function DocsPage({ onBack }) {
     if (activePage === 'roadmaps') return roadmapTopics.find(t => t.id === selectedTopic);
     if (activePage === 'eng-blogs') return engBlogTopics.find(t => t.id === selectedTopic);
 
-    // Cross-page fallback: topic might be on a different page than the URL says
+    // Cross-page fallback: search all topic arrays (read-only, no state changes)
     const allSources = [
-      { topics: codingTopics, page: 'coding' },
-      { topics: systemDesignTopics, page: 'system-design' },
-      { topics: systemDesigns, page: 'system-design' },
-      { topics: systemDesignPatterns, page: 'system-design' },
-      { topics: systemDesignTradeoffs, page: 'system-design' },
-      { topics: lldTopics, page: 'low-level' },
-      { topics: lldProblems, page: 'low-level' },
-      { topics: behavioralTopics, page: 'behavioral' },
-      { topics: microservicesPatterns, page: 'microservices' },
-      { topics: databaseTopics, page: 'databases' },
-      { topics: sqlTopics, page: 'sql' },
-      { topics: projectTopics, page: 'projects' },
-      { topics: roadmapTopics, page: 'roadmaps' },
-      { topics: engBlogTopics, page: 'eng-blogs' },
+      codingTopics, systemDesignTopics, systemDesigns, systemDesignPatterns,
+      systemDesignTradeoffs, lldTopics, lldProblems, behavioralTopics,
+      microservicesPatterns, databaseTopics, sqlTopics, projectTopics,
+      roadmapTopics, engBlogTopics, concurrencyTopics, scalableSystemsTopics, companyPrep,
     ];
-    for (const { topics: arr, page } of allSources) {
+    for (const arr of allSources) {
       const found = arr?.find(t => t.id === selectedTopic);
-      if (found) {
-        // Auto-redirect to correct page
-        if (page !== activePage) setActivePage(page);
-        return found;
-      }
+      if (found) return found;
     }
     return null;
   };
