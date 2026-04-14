@@ -693,7 +693,7 @@ export default function DashboardPage() {
   // ---------------------------------------------------------------------------
   const toggleSidebar = useCallback(() => {}, []);
 
-  // Listen for settings open event from ShellSidebar
+  // Listen for settings open event from sidebar
   useEffect(() => {
     const handler = () => setShowSettings(true);
     window.addEventListener('ascend:open-settings', handler);
