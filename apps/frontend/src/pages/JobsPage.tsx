@@ -4,6 +4,83 @@ import { useAuth } from '../contexts/AuthContext';
 import SiteNav from '../components/shared/SiteNav';
 import SiteFooter from '../components/shared/SiteFooter';
 
+/* ──────────────────────────── Company Logo Mapping ──────────────────────────── */
+
+const COMPANY_LOGO_MAP: Record<string, string> = {
+  // Tech giants
+  google: '/logos/google.png', alphabet: '/logos/google.png', 'google cloud': '/logos/gcp.png',
+  amazon: '/logos/amazon.png', 'amazon web services': '/logos/aws.png', aws: '/logos/aws.png',
+  meta: '/logos/meta.png', facebook: '/logos/facebook.png', instagram: '/logos/instagram.png', whatsapp: '/logos/whatsapp.png',
+  microsoft: '/logos/microsoft.png', github: '/logos/github.png', linkedin: '/logos/linkedin.png', azure: '/logos/azure.png',
+  apple: '/logos/apple.png', netflix: '/logos/netflix.png', uber: '/logos/uber.png', airbnb: '/logos/airbnb.png',
+  nvidia: '/logos/nvidia.png', oracle: '/logos/oracle.png', ibm: '/logos/ibm.png', intel: '/logos/intel.png',
+  samsung: '/logos/samsung.png', adobe: '/logos/adobe.png', cisco: '/logos/cisco.png', vmware: '/logos/vmware.png',
+  salesforce: '/logos/salesforce.png', tesla: '/logos/tesla.png', spacex: '/logos/spacex.png',
+  // Payments & fintech
+  stripe: '/logos/stripe.png', paypal: '/logos/paypal.png', shopify: '/logos/shopify.png', block: '/logos/block.png',
+  square: '/logos/square.png', coinbase: '/logos/coinbase.png', robinhood: '/logos/robinhood.png',
+  visa: '/logos/visa.png', mastercard: '/logos/mastercard.png', 'american express': '/logos/amex.png', amex: '/logos/amex.png',
+  // Social & media
+  spotify: '/logos/spotify.png', discord: '/logos/discord.png', slack: '/logos/slack.png',
+  twitter: '/logos/twitter.png', 'x corp': '/logos/twitter.png', x: '/logos/twitter.png',
+  zoom: '/logos/zoom.png', tiktok: '/logos/tiktok.png', bytedance: '/logos/bytedance.png',
+  reddit: '/logos/reddit.png', twitch: '/logos/twitch.png', pinterest: '/logos/pinterest.png',
+  snap: '/logos/snap.png', snapchat: '/logos/snap.png', lyft: '/logos/lyft.png',
+  doordash: '/logos/doordash.png', tinder: '/logos/tinder.png', ticketmaster: '/logos/ticketmaster.png',
+  youtube: '/logos/youtube.png', gmail: '/logos/gmail.png',
+  // Cloud & DevOps
+  docker: '/logos/docker.png', vercel: '/logos/vercel.png', railway: '/logos/railway.png',
+  terraform: '/logos/terraform.png', sentry: '/logos/sentry.png', figma: '/logos/figma.png',
+  dropbox: '/logos/dropbox.png', openai: '/logos/openai.png', anthropic: '/logos/anthropic.png',
+  cloudflare: '/logos/cloudflare.png', datadog: '/logos/datadog.png', hashicorp: '/logos/hashicorp.png',
+  snowflake: '/logos/snowflake.png', databricks: '/logos/databricks.png', elastic: '/logos/elastic.png',
+  splunk: '/logos/splunk.png', pagerduty: '/logos/pagerduty.png', crowdstrike: '/logos/crowdstrike.png',
+  supabase: '/logos/supabase.png', netlify: '/logos/netlify.png', digitalocean: '/logos/digitalocean.png',
+  mongodb: '/logos/mongodb.png', atlassian: '/logos/atlassian.png', twilio: '/logos/twilio.png',
+  palantir: '/logos/palantir.png', okta: '/logos/okta.png',
+  // SaaS & productivity
+  workday: '/logos/workday.png', servicenow: '/logos/servicenow.png',
+  notion: '/logos/notion.png', asana: '/logos/asana.png', monday: '/logos/monday.png',
+  hubspot: '/logos/hubspot.png', zendesk: '/logos/zendesk.png', freshworks: '/logos/freshworks.png',
+  canva: '/logos/canva.png', grammarly: '/logos/grammarly.png',
+  // Finance
+  'jpmorgan': '/logos/jpmorgan.png', 'jp morgan': '/logos/jpmorgan.png', 'j.p. morgan': '/logos/jpmorgan.png',
+  'goldman sachs': '/logos/goldman.png', goldman: '/logos/goldman.png',
+  'morgan stanley': '/logos/morgan-stanley.png', 'capital one': '/logos/capital-one.png',
+  'wells fargo': '/logos/wells-fargo.png', 'bank of america': '/logos/bank-of-america.png',
+  citi: '/logos/citi.png', citigroup: '/logos/citi.png', citibank: '/logos/citi.png',
+  bloomberg: '/logos/bloomberg.png',
+  // Consulting
+  accenture: '/logos/accenture.png', deloitte: '/logos/deloitte.png', mckinsey: '/logos/mckinsey.png',
+  // Retail
+  walmart: '/logos/walmart.png', target: '/logos/target.png',
+  // Gaming
+  roblox: '/logos/roblox.png', unity: '/logos/unity.png', 'epic games': '/logos/epic.png',
+  ea: '/logos/ea.png', 'electronic arts': '/logos/ea.png', activision: '/logos/activision.png',
+  // Hardware
+  qualcomm: '/logos/qualcomm.png', amd: '/logos/amd.png', dell: '/logos/dell.png', hp: '/logos/hp.png',
+};
+
+/** Match a free-text company_name to a local logo path */
+function getCompanyLogoPath(companyName: string): string | null {
+  const name = companyName.toLowerCase().trim();
+  // Direct match
+  if (COMPANY_LOGO_MAP[name]) return COMPANY_LOGO_MAP[name];
+  // Partial match — check if any key is contained in the company name
+  for (const [key, path] of Object.entries(COMPANY_LOGO_MAP)) {
+    if (name.includes(key) || key.includes(name)) return path;
+  }
+  return null;
+}
+
+/** Generate a deterministic color from company name for the initial fallback */
+function getCompanyColor(name: string): string {
+  const colors = ['#6366f1', '#8b5cf6', '#3b82f6', '#06b6d4', '#ec4899', '#f97316', '#10b981', '#ef4444', '#f59e0b', '#a855f7'];
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  return colors[Math.abs(hash) % colors.length];
+}
+
 /* ──────────────────────────────── Constants ──────────────────────────────── */
 
 const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
@@ -788,21 +865,36 @@ export default function JobsPage() {
                 return (
                   <div
                     key={job.id}
-                    className="jobs-card"
+                    className="jobs-card card-glow"
                     style={{
                       background: '#ffffff',
-                      border: '1px solid #e3e8ee',
+                      border: 'none',
                       borderRadius: '16px',
                       display: 'flex',
                       flexDirection: 'column',
                       cursor: 'default',
-                    }}
+                      boxShadow: '0 4px 24px rgba(99,102,241,0.12)',
+                      '--glow-hover': '0 20px 60px rgba(99,102,241,0.22)',
+                    } as React.CSSProperties}
                   >
                     {/* Compact colored strip + title row */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 16px', borderBottom: '1px solid #f3f4f6' }}>
-                      <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: `linear-gradient(135deg, ${color}, ${color}cc)`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <CategoryIcon category={category} size={20} />
-                      </div>
+                      {(() => {
+                        const logoPath = getCompanyLogoPath(job.company_name);
+                        if (logoPath) {
+                          return (
+                            <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: '1px solid #e2e8f0' }}>
+                              <img src={logoPath} alt={job.company_name} width={26} height={26} style={{ objectFit: 'contain', borderRadius: 4 }} loading="lazy" />
+                            </div>
+                          );
+                        }
+                        const initColor = getCompanyColor(job.company_name);
+                        return (
+                          <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: `linear-gradient(135deg, ${initColor}, ${initColor}cc)`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <span style={{ color: '#fff', fontSize: '16px', fontWeight: 800, fontFamily: "'Source Sans 3', sans-serif" }}>{job.company_name.charAt(0).toUpperCase()}</span>
+                          </div>
+                        );
+                      })()}
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#111827', margin: 0, lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {job.title}
@@ -837,7 +929,7 @@ export default function JobsPage() {
 
                       {/* Action links */}
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #f3f4f6', paddingTop: '12px', marginTop: '12px', paddingBottom: '14px' }}>
-                        <a href={job.job_url} target="_blank" rel="noopener noreferrer" className="jobs-action-link" style={{ fontSize: '13px', fontWeight: 600, color: '#10b981', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <a href={job.job_url} target="_blank" rel="noopener noreferrer" className="jobs-action-link" style={{ fontSize: '13px', fontWeight: 600, color: '#6366f1', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
                           Apply Now
                           <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" /></svg>
                         </a>
