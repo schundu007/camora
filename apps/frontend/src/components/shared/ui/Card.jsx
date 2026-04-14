@@ -8,19 +8,19 @@ import { cn } from '../../../utils/cn';
 
 const cardVariants = cva(
   [
-    'rounded-lg',
+    'rounded-xl',
     'transition-all duration-200',
     'overflow-hidden',
   ],
   {
     variants: {
       variant: {
-        default: ['bg-white border-0 shadow-[0_4px_24px_rgba(99,102,241,0.10)] rounded-2xl'],
-        elevated: ['bg-white border-0', 'shadow-[0_8px_32px_rgba(99,102,241,0.14)] hover:shadow-[0_20px_60px_rgba(99,102,241,0.22)]'],
-        outlined: ['bg-transparent border border-gray-200'],
-        filled: ['bg-gray-50 border-0'],
-        glass: ['bg-white/80 backdrop-blur-md border border-white/40 shadow-[0_4px_24px_rgba(99,102,241,0.10)]'],
-        interactive: ['bg-white border-0', 'shadow-[0_4px_24px_rgba(99,102,241,0.10)] hover:shadow-[0_20px_60px_rgba(99,102,241,0.25)]', 'hover:-translate-y-1', 'cursor-pointer'],
+        default: ['bg-[var(--bg-surface)] border border-[var(--border)] shadow-[var(--shadow-sm)]'],
+        elevated: ['bg-[var(--bg-surface)] border border-[var(--border)] shadow-[var(--shadow-sm)]', 'hover:border-[var(--border-hover)]'],
+        outlined: ['bg-transparent border border-[var(--border)]'],
+        filled: ['bg-[var(--bg-elevated)]'],
+        glass: ['bg-[var(--bg-surface)]/80 backdrop-blur-md border border-[var(--border)]'],
+        interactive: ['bg-[var(--bg-surface)] border border-[var(--border)] shadow-[var(--shadow-sm)]', 'hover:border-[var(--border-hover)]', 'hover:-translate-y-0.5', 'cursor-pointer'],
         ghost: ['bg-transparent border-0'],
       },
       padding: {
@@ -49,12 +49,12 @@ const CardHeader = forwardRef(({ className, children, ...props }, ref) => (
 CardHeader.displayName = 'CardHeader';
 
 const CardTitle = forwardRef(({ className, children, as: Component = 'h3', ...props }, ref) => (
-  <Component ref={ref} className={cn('text-lg font-semibold text-gray-900 leading-tight', className)} {...props}>{children}</Component>
+  <Component ref={ref} className={cn('text-lg font-semibold text-[var(--text-primary)] leading-tight', className)} {...props}>{children}</Component>
 ));
 CardTitle.displayName = 'CardTitle';
 
 const CardDescription = forwardRef(({ className, children, ...props }, ref) => (
-  <p ref={ref} className={cn('text-sm text-gray-600', className)} {...props}>{children}</p>
+  <p ref={ref} className={cn('text-sm text-[var(--text-secondary)]', className)} {...props}>{children}</p>
 ));
 CardDescription.displayName = 'CardDescription';
 
@@ -69,7 +69,7 @@ const CardFooter = forwardRef(({ className, children, ...props }, ref) => (
 CardFooter.displayName = 'CardFooter';
 
 const CardDivider = forwardRef(({ className, ...props }, ref) => (
-  <hr ref={ref} className={cn('border-0 border-t border-gray-200', className)} {...props} />
+  <hr ref={ref} className={cn('border-0 border-t border-[var(--border)]', className)} {...props} />
 ));
 CardDivider.displayName = 'CardDivider';
 

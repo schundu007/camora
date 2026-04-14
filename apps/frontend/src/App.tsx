@@ -69,16 +69,16 @@ function LoginPage() {
 
       {/* ── Centered card ─────────────────────────────── */}
       <div className="flex items-center justify-center py-12 px-4" style={{ minHeight: 'calc(100vh - 82px)' }}>
-        <div className="w-full max-w-sm bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.04)] border border-[#e3e8ee] p-8">
+        <div className="w-full max-w-sm rounded-2xl p-8" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', boxShadow: '0 4px 24px rgba(0,0,0,0.3)' }}>
 
           {/* Header */}
-          <h1 className="text-xl font-bold text-black tracking-tight">Sign in to Camora</h1>
-          <p className="mt-1 text-sm text-gray-500">Apply. Prepare. Practice. Attend.</p>
+          <h1 className="text-xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>Sign in to Camora</h1>
+          <p className="mt-1 text-sm" style={{ color: 'var(--text-secondary)' }}>Apply. Prepare. Practice. Attend.</p>
 
           {/* Social login buttons */}
           <div className="mt-6 space-y-3">
             <a href={googleAuthUrl}
-               className="flex items-center justify-center gap-3 w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all">
+               className="flex items-center justify-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-medium transition-all" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}>
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" />
                 <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
