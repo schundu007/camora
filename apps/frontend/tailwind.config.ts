@@ -1,21 +1,34 @@
 import type { Config } from 'tailwindcss';
 
 export default {
-  content: ['./index.html', './src/**/*.{ts,tsx}'],
+  content: ['./index.html', './src/**/*.{js,jsx,ts,tsx}'],
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Plus Jakarta Sans', 'system-ui', 'sans-serif'],
-        display: ['Plus Jakarta Sans', 'system-ui', 'sans-serif'],
-        code: ['IBM Plex Mono', 'monospace'],
-        mono: ['IBM Plex Mono', 'monospace'],
+        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'system-ui', 'sans-serif'],
+        display: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'system-ui', 'sans-serif'],
+        code: ['JetBrains Mono', 'IBM Plex Mono', 'ui-monospace', 'monospace'],
+        mono: ['JetBrains Mono', 'IBM Plex Mono', 'ui-monospace', 'monospace'],
         logo: ['Comfortaa', 'system-ui', 'sans-serif'],
       },
       colors: {
         primary: {
-          DEFAULT: '#10b981',
-          light: '#34d399',
-          dark: '#059669',
+          DEFAULT: '#6366f1',
+          light: '#818cf8',
+          dark: '#4f46e5',
+        },
+        brand: {
+          DEFAULT: '#6366f1',
+          50: '#eef2ff',
+          100: '#e0e7ff',
+          200: '#c7d2fe',
+          300: '#a5b4fc',
+          400: '#818cf8',
+          500: '#6366f1',
+          600: '#4f46e5',
+          700: '#4338ca',
+          800: '#3730a3',
+          900: '#312e81',
         },
       },
     },
