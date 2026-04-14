@@ -149,10 +149,10 @@ export default function PrepPlanPage() {
       <div className="min-h-screen">
         <div className="pt-20 pb-12 px-4 max-w-3xl mx-auto">
           <div className="animate-pulse space-y-6">
-            <div className="h-6 bg-gray-100 rounded w-64" />
-            <div className="h-4 bg-gray-100 rounded w-40" />
-            <div className="h-32 bg-gray-100 rounded-2xl" />
-            <div className="h-32 bg-gray-100 rounded-2xl" />
+            <div className="h-6 bg-[var(--bg-elevated)] rounded w-64" />
+            <div className="h-4 bg-[var(--bg-elevated)] rounded w-40" />
+            <div className="h-32 bg-[var(--bg-elevated)] rounded-2xl" />
+            <div className="h-32 bg-[var(--bg-elevated)] rounded-2xl" />
           </div>
         </div>
       </div>
@@ -164,7 +164,7 @@ export default function PrepPlanPage() {
       <div className="min-h-screen">
         <div className="pt-20 pb-12 px-4 max-w-3xl mx-auto text-center">
           <p className="text-sm text-red-500 mt-8">{error}</p>
-          <Link to="/capra/prepare" className="text-sm text-emerald-600 hover:underline mt-4 inline-block">
+          <Link to="/capra/prepare" className="text-sm text-[var(--accent)] hover:underline mt-4 inline-block">
             Back to dashboard
           </Link>
         </div>
@@ -177,10 +177,10 @@ export default function PrepPlanPage() {
       <div className="min-h-screen">
         <div className="pt-20 pb-12 px-4 max-w-3xl mx-auto text-center">
           <div className="mt-16">
-            <p className="text-gray-500 text-sm">No prep plan set up yet.</p>
+            <p className="text-[var(--text-secondary)] text-sm">No prep plan set up yet.</p>
             <Link
               to="/capra/prepare"
-              className="inline-block mt-4 px-5 py-2.5 bg-emerald-500 text-white text-sm font-semibold rounded-xl hover:bg-emerald-600 transition-colors"
+              className="inline-block mt-4 px-5 py-2.5 bg-[var(--accent)] text-white text-sm font-semibold rounded-xl hover:bg-[var(--accent-hover)] transition-colors"
             >
               Go to Dashboard
             </Link>
@@ -205,44 +205,44 @@ export default function PrepPlanPage() {
           {/* Header */}
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div>
-              <h1 className="text-xl font-bold text-gray-900 tracking-tight">
+              <h1 className="text-xl font-bold text-[var(--text-primary)] tracking-tight">
                 {target_company} Interview Prep
               </h1>
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-sm text-[var(--text-secondary)] mt-1">
                 {target_role ? `${target_role} \u2022 ` : ''}{formattedDate}
               </p>
             </div>
             <button
               onClick={clearPlan}
               disabled={clearing}
-              className="px-3 py-1.5 text-xs font-medium text-red-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+              className="px-3 py-1.5 text-xs font-medium text-red-500 hover:text-red-600 hover:bg-red-500/10 rounded-lg transition-colors disabled:opacity-50"
             >
               {clearing ? 'Clearing...' : 'Clear plan'}
             </button>
           </div>
 
           {/* Progress summary */}
-          <div className="mt-6 bg-white border-0 rounded-2xl p-5 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
+          <div className="mt-6 bg-[var(--bg-surface)] border-0 rounded-2xl p-5 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
             <div className="flex items-center gap-6 flex-wrap">
               {/* Days remaining */}
               <div className="text-center">
-                <p className="text-3xl font-bold text-emerald-600">{days_remaining}</p>
-                <p className="text-xs text-gray-500 mt-0.5">{days_remaining === 1 ? 'day left' : 'days left'}</p>
+                <p className="text-3xl font-bold text-[var(--accent)]">{days_remaining}</p>
+                <p className="text-xs text-[var(--text-secondary)] mt-0.5">{days_remaining === 1 ? 'day left' : 'days left'}</p>
               </div>
 
               {/* Progress bar */}
               <div className="flex-1 min-w-[200px]">
                 <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-sm font-medium text-gray-700">Overall Progress</span>
-                  <span className="text-sm font-semibold text-emerald-600">{completion_pct}%</span>
+                  <span className="text-sm font-medium text-[var(--text-primary)]">Overall Progress</span>
+                  <span className="text-sm font-semibold text-[var(--accent)]">{completion_pct}%</span>
                 </div>
-                <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
+                <div className="h-2.5 bg-[var(--bg-elevated)] rounded-full overflow-hidden">
                   <div
                     className="h-full bg-emerald-500 rounded-full transition-all duration-500"
                     style={{ width: `${completion_pct}%` }}
                   />
                 </div>
-                <p className="text-xs text-gray-400 mt-1">{completed_tasks} of {total_tasks} tasks completed</p>
+                <p className="text-xs text-[var(--text-muted)] mt-1">{completed_tasks} of {total_tasks} tasks completed</p>
               </div>
             </div>
           </div>
@@ -255,26 +255,26 @@ export default function PrepPlanPage() {
               const allDone = dayCompleted === dayTotal && dayTotal > 0;
 
               return (
-                <div key={day.day} className="bg-white border-0 rounded-2xl overflow-hidden shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
+                <div key={day.day} className="bg-[var(--bg-surface)] border-0 rounded-2xl overflow-hidden shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
                   {/* Day header */}
-                  <div className={`px-5 py-3 border-b border-[#e3e8ee] flex items-center justify-between ${allDone ? 'bg-emerald-50/50' : 'bg-gray-50/50'}`}>
+                  <div className={`px-5 py-3 border-b border-[var(--border)] flex items-center justify-between ${allDone ? 'bg-emerald-500/10' : 'bg-[var(--bg-elevated)]'}`}>
                     <div className="flex items-center gap-2">
-                      <span className={`text-sm font-bold ${allDone ? 'text-emerald-700' : 'text-gray-900'}`}>
+                      <span className={`text-sm font-bold ${allDone ? 'text-emerald-700' : 'text-[var(--text-primary)]'}`}>
                         Day {day.day}
                       </span>
-                      <span className="text-sm text-gray-500">&mdash; {day.focus}</span>
+                      <span className="text-sm text-[var(--text-secondary)]">&mdash; {day.focus}</span>
                     </div>
-                    <span className="text-xs text-gray-400">{dayCompleted}/{dayTotal}</span>
+                    <span className="text-xs text-[var(--text-muted)]">{dayCompleted}/{dayTotal}</span>
                   </div>
 
                   {/* Tasks */}
-                  <div className="divide-y divide-gray-50">
+                  <div className="divide-y divide-[var(--border)]">
                     {day.tasks.map((task) => {
                       const link = getTaskLink(task);
                       return (
                         <div
                           key={task.id}
-                          className="flex items-center gap-3 px-5 py-3 hover:bg-gray-50/50 transition-colors"
+                          className="flex items-center gap-3 px-5 py-3 hover:bg-[var(--bg-elevated)] transition-colors"
                         >
                           {/* Checkbox */}
                           <button
@@ -283,7 +283,7 @@ export default function PrepPlanPage() {
                             className={`flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
                               task.completed
                                 ? 'bg-emerald-500 border-emerald-500'
-                                : 'border-gray-300 hover:border-emerald-400'
+                                : 'border-[var(--border)] hover:border-emerald-400'
                             } ${togglingTask === task.id ? 'opacity-50' : ''}`}
                             aria-label={task.completed ? `Mark "${task.title}" incomplete` : `Mark "${task.title}" complete`}
                           >
@@ -295,7 +295,7 @@ export default function PrepPlanPage() {
                           </button>
 
                           {/* Title */}
-                          <span className={`flex-1 text-sm ${task.completed ? 'text-gray-400 line-through' : 'text-gray-800'}`}>
+                          <span className={`flex-1 text-sm ${task.completed ? 'text-[var(--text-muted)] line-through' : 'text-[var(--text-primary)]'}`}>
                             {task.title}
                           </span>
 
@@ -303,7 +303,7 @@ export default function PrepPlanPage() {
                           {link && (
                             <Link
                               to={link}
-                              className="text-xs font-medium text-emerald-600 hover:text-emerald-700 transition-colors flex-shrink-0"
+                              className="text-xs font-medium text-[var(--accent)] hover:text-[var(--accent-hover)] transition-colors flex-shrink-0"
                             >
                               Practice &rarr;
                             </Link>
@@ -319,7 +319,7 @@ export default function PrepPlanPage() {
 
           {/* Back link */}
           <div className="mt-8 text-center">
-            <Link to="/capra/prepare" className="text-sm text-gray-500 hover:text-gray-700 transition-colors">
+            <Link to="/capra/prepare" className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
               &larr; Back to dashboard
             </Link>
           </div>

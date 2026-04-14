@@ -78,7 +78,7 @@ const MODES = [
 const DIFFICULTIES = ['easy', 'medium', 'hard'];
 const CATEGORIES = ['coding', 'system-design', 'behavioral'];
 const COMPANIES = [
-  { id: 'all', label: 'All', color: '#6b7280' },
+  { id: 'all', label: 'All', color: 'var(--text-muted)' },
   { id: 'google', label: 'Google', color: '#4285f4' },
   { id: 'meta', label: 'Meta', color: '#0668E1' },
   { id: 'amazon', label: 'Amazon', color: '#FF9900' },
@@ -164,15 +164,15 @@ function scoreColor(s) {
 }
 
 function scoreBg(s) {
-  if (s >= 70) return '#ecfdf5';
-  if (s >= 40) return '#fffbeb';
-  return '#fef2f2';
+  if (s >= 70) return 'rgba(5,150,105,0.12)';
+  if (s >= 40) return 'rgba(217,119,6,0.12)';
+  return 'rgba(220,38,38,0.12)';
 }
 
 function diffColor(d) {
-  if (d === 'easy') return { bg: '#ecfdf5', text: '#059669' };
-  if (d === 'medium') return { bg: '#fffbeb', text: '#d97706' };
-  return { bg: '#fef2f2', text: '#dc2626' };
+  if (d === 'easy') return { bg: 'rgba(5,150,105,0.12)', text: '#059669' };
+  if (d === 'medium') return { bg: 'rgba(217,119,6,0.12)', text: '#d97706' };
+  return { bg: 'rgba(220,38,38,0.12)', text: '#dc2626' };
 }
 
 function catLabel(cat) {
@@ -213,12 +213,12 @@ function RadarChart({ values, labels, size = 200 }) {
       {gridLevels.map((level) => {
         const pts = Array.from({ length: n }, (_, i) => point(i, level));
         const path = pts.map((p, i) => (i === 0 ? 'M' : 'L') + p[0] + ',' + p[1]).join(' ') + ' Z';
-        return <path key={level} d={path} fill="none" stroke="#e5e7eb" strokeWidth={1} />;
+        return <path key={level} d={path} fill="none" stroke="var(--border)" strokeWidth={1} />;
       })}
       {/* Axes */}
       {Array.from({ length: n }, (_, i) => {
         const [x, y] = point(i, 1);
-        return <line key={i} x1={cx} y1={cy} x2={x} y2={y} stroke="#e5e7eb" strokeWidth={1} />;
+        return <line key={i} x1={cx} y1={cy} x2={x} y2={y} stroke="var(--border)" strokeWidth={1} />;
       })}
       {/* Data shape */}
       <path d={dataPath} fill="rgba(99,102,241,0.15)" stroke="#6366f1" strokeWidth={2} />
@@ -230,16 +230,16 @@ function RadarChart({ values, labels, size = 200 }) {
       {labels.map((label, i) => {
         const [x, y] = point(i, 1.18);
         return (
-          <text key={i} x={x} y={y} textAnchor="middle" dominantBaseline="central" style={{ fontSize: 9, fontWeight: 600, fill: '#6b7280', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+          <text key={i} x={x} y={y} textAnchor="middle" dominantBaseline="central" style={{ fontSize: 9, fontWeight: 600, fill: 'var(--text-muted)', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
             {label}
           </text>
         );
       })}
       {/* Center score */}
-      <text x={cx} y={cy - 6} textAnchor="middle" dominantBaseline="central" style={{ fontSize: 22, fontWeight: 800, fill: '#111827', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+      <text x={cx} y={cy - 6} textAnchor="middle" dominantBaseline="central" style={{ fontSize: 22, fontWeight: 800, fill: 'var(--text-primary)', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
         {avg}%
       </text>
-      <text x={cx} y={cy + 12} textAnchor="middle" dominantBaseline="central" style={{ fontSize: 9, fontWeight: 500, fill: '#9ca3af', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+      <text x={cx} y={cy + 12} textAnchor="middle" dominantBaseline="central" style={{ fontSize: 9, fontWeight: 500, fill: 'var(--text-muted)', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
         readiness
       </text>
     </svg>
@@ -255,9 +255,9 @@ function ScoreRing({ value, size = 140, strokeW = 10, animated = false }) {
   const color = scoreColor(value);
   return (
     <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
-      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#f3f4f6" strokeWidth={strokeW} />
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--bg-elevated)" strokeWidth={strokeW} />
       <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={strokeW} strokeDasharray={circ} strokeDashoffset={animated ? offset : offset} strokeLinecap="round" style={{ transition: 'stroke-dashoffset 1s cubic-bezier(0.4,0,0.2,1)' }} />
-      <text x={size / 2} y={size / 2} textAnchor="middle" dominantBaseline="central" fill="#111827" fontSize={size * 0.22} fontWeight={800} style={{ transform: 'rotate(90deg)', transformOrigin: 'center', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+      <text x={size / 2} y={size / 2} textAnchor="middle" dominantBaseline="central" fill="var(--text-primary)" fontSize={size * 0.22} fontWeight={800} style={{ transform: 'rotate(90deg)', transformOrigin: 'center', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
         {value}%
       </text>
     </svg>
@@ -292,11 +292,11 @@ function DimensionBars({ dimensions, compact = false }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: compact ? 6 : 8 }}>
       {Object.entries(dimensions).map(([key, val]) => (
         <div key={key}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, fontWeight: 600, color: '#374151', marginBottom: 3 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 3 }}>
             <span>{labels[key] || key}</span>
             <span style={{ color: scoreColor(val) }}>{val}%</span>
           </div>
-          <div style={{ height: 5, borderRadius: 99, background: '#f3f4f6', overflow: 'hidden' }}>
+          <div style={{ height: 5, borderRadius: 99, background: 'var(--bg-elevated)', overflow: 'hidden' }}>
             <div style={{ height: '100%', borderRadius: 99, background: scoreColor(val), width: `${val}%`, transition: 'width 0.6s ease' }} />
           </div>
         </div>
@@ -596,15 +596,15 @@ export default function PracticePage() {
           {phase === 'setup' && (
             <>
               {/* Readiness — compact inline */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16, padding: '12px 20px', background: '#fff', border: 'none', borderRadius: 12, boxShadow: '0 4px 24px rgba(99,102,241,0.12)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16, padding: '12px 20px', background: 'var(--bg-surface)', border: 'none', borderRadius: 12, boxShadow: '0 4px 24px rgba(99,102,241,0.12)' }}>
                 {/* Readiness score */}
                 <div style={{ position: 'relative', width: 50, height: 50, shrink: 0 }}>
                   <svg width={50} height={50} style={{ transform: 'rotate(-90deg)' }}>
-                    <circle cx={25} cy={25} r={20} fill="none" stroke="#f1f5f9" strokeWidth={5} />
+                    <circle cx={25} cy={25} r={20} fill="none" stroke="var(--bg-elevated)" strokeWidth={5} />
                     <circle cx={25} cy={25} r={20} fill="none" stroke={readiness >= 70 ? '#10b981' : readiness >= 40 ? '#f59e0b' : '#ef4444'} strokeWidth={5} strokeDasharray={126} strokeDashoffset={126 - (readiness / 100) * 126} strokeLinecap="round" />
                   </svg>
                   <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <span className="practice-display" style={{ fontSize: 14, fontWeight: 800, color: '#0f172a' }}>{readiness}</span>
+                    <span className="practice-display" style={{ fontSize: 14, fontWeight: 800, color: 'var(--text-primary)' }}>{readiness}</span>
                   </div>
                 </div>
                 {/* Stats inline */}
@@ -614,11 +614,11 @@ export default function PracticePage() {
                   { label: 'Best', value: `${stats.bestScore || 0}%` },
                 ].map(s => (
                   <div key={s.label} style={{ textAlign: 'center' }}>
-                    <div className="practice-mono" style={{ fontSize: 16, fontWeight: 800, color: '#0f172a' }}>{s.value}</div>
-                    <div style={{ fontSize: 9, color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase' }}>{s.label}</div>
+                    <div className="practice-mono" style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)' }}>{s.value}</div>
+                    <div style={{ fontSize: 9, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>{s.label}</div>
                   </div>
                 ))}
-                <div style={{ width: 1, height: 30, background: '#e3e8ee' }} />
+                <div style={{ width: 1, height: 30, background: 'var(--border)' }} />
                 {/* Category bars inline */}
                 {CATEGORIES.map(cat => {
                   const s = getCategoryScore(stats, cat);
@@ -626,10 +626,10 @@ export default function PracticePage() {
                   return (
                     <div key={cat} style={{ flex: 1, minWidth: 80 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, marginBottom: 3 }}>
-                        <span style={{ fontWeight: 600, color: '#374151' }}>{catLabel(cat)}</span>
+                        <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>{catLabel(cat)}</span>
                         <span className="practice-mono" style={{ fontWeight: 700, color: s >= 70 ? '#10b981' : '#94a3b8' }}>{s}%</span>
                       </div>
-                      <div style={{ height: 4, borderRadius: 99, background: '#f1f5f9', overflow: 'hidden' }}>
+                      <div style={{ height: 4, borderRadius: 99, background: 'var(--bg-elevated)', overflow: 'hidden' }}>
                         <div style={{ height: '100%', borderRadius: 99, background: colors[cat], width: `${Math.max(s, 2)}%`, opacity: s > 0 ? 1 : 0.2 }} />
                       </div>
                     </div>
@@ -638,26 +638,26 @@ export default function PracticePage() {
               </div>
 
               {/* Challenge Configuration */}
-              <div style={{ background: '#fff', border: 'none', borderRadius: 16, overflow: 'hidden', boxShadow: '0 4px 24px rgba(99,102,241,0.12)', marginBottom: 24 }}>
-                <div style={{ padding: '20px 24px', borderBottom: '1px solid #f1f5f9' }}>
-                  <h2 className="practice-display" style={{ fontSize: 17, fontWeight: 700, color: '#0f172a', margin: 0 }}>Start a Challenge</h2>
+              <div style={{ background: 'var(--bg-surface)', border: 'none', borderRadius: 16, overflow: 'hidden', boxShadow: '0 4px 24px rgba(99,102,241,0.12)', marginBottom: 24 }}>
+                <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border)' }}>
+                  <h2 className="practice-display" style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>Start a Challenge</h2>
                 </div>
 
                 <div style={{ padding: '20px 24px' }}>
                   {/* Mode cards */}
                   <div style={{ marginBottom: 22 }}>
-                    <label style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10, display: 'block' }}>Mode</label>
+                    <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10, display: 'block' }}>Mode</label>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10 }}>
                       {MODES.map(m => (
-                        <button key={m.id} onClick={() => setMode(m.id)} style={{ padding: '16px 18px', borderRadius: 14, border: mode === m.id ? '2px solid #6366f1' : '1px solid #e2e8f0', background: mode === m.id ? 'linear-gradient(135deg, #eef2ff, #f5f3ff)' : '#fafbfc', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>
+                        <button key={m.id} onClick={() => setMode(m.id)} style={{ padding: '16px 18px', borderRadius: 14, border: mode === m.id ? '2px solid #6366f1' : '1px solid var(--border)', background: mode === m.id ? 'var(--accent-subtle)' : 'var(--bg-surface)', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                            <div style={{ width: 28, height: 28, borderRadius: 8, background: mode === m.id ? '#6366f1' : '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <div style={{ width: 28, height: 28, borderRadius: 8, background: mode === m.id ? '#6366f1' : 'var(--bg-elevated)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                               <Icon name={m.icon} size={14} style={{ color: mode === m.id ? '#fff' : '#94a3b8' }} />
                             </div>
-                            <span style={{ fontSize: 14, fontWeight: 700, color: mode === m.id ? '#4f46e5' : '#1e293b' }}>{m.label}</span>
+                            <span style={{ fontSize: 14, fontWeight: 700, color: mode === m.id ? '#4f46e5' : 'var(--text-primary)' }}>{m.label}</span>
                           </div>
-                          <p style={{ fontSize: 12, color: '#94a3b8', margin: '0 0 6px', lineHeight: 1.5 }}>{m.desc}</p>
-                          <span className="practice-mono" style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>{formatTime(m.time)} / {m.questions}q</span>
+                          <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '0 0 6px', lineHeight: 1.5 }}>{m.desc}</p>
+                          <span className="practice-mono" style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>{formatTime(m.time)} / {m.questions}q</span>
                         </button>
                       ))}
                     </div>
@@ -666,10 +666,10 @@ export default function PracticePage() {
                   {/* Category + Difficulty */}
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 22 }}>
                     <div>
-                      <label style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10, display: 'block' }}>Category</label>
+                      <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10, display: 'block' }}>Category</label>
                       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                         {CATEGORIES.map(c => (
-                          <button key={c} onClick={() => setCategory(c)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 18px', borderRadius: 10, border: category === c ? '2px solid #6366f1' : '1px solid #e2e8f0', background: category === c ? '#eef2ff' : '#fafbfc', color: category === c ? '#4f46e5' : '#475569', fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s' }}>
+                          <button key={c} onClick={() => setCategory(c)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 18px', borderRadius: 10, border: category === c ? '2px solid #6366f1' : '1px solid var(--border)', background: category === c ? 'var(--accent-subtle)' : 'var(--bg-surface)', color: category === c ? '#4f46e5' : 'var(--text-secondary)', fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s' }}>
                             <Icon name={catIcon(c)} size={14} />
                             {catLabel(c)}
                           </button>
@@ -677,12 +677,12 @@ export default function PracticePage() {
                       </div>
                     </div>
                     <div>
-                      <label style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10, display: 'block' }}>Difficulty</label>
+                      <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10, display: 'block' }}>Difficulty</label>
                       <div style={{ display: 'flex', gap: 8 }}>
                         {DIFFICULTIES.map(d => {
                           const dc2 = diffColor(d);
                           return (
-                            <button key={d} onClick={() => setDifficulty(d)} style={{ padding: '9px 20px', borderRadius: 10, border: difficulty === d ? `2px solid ${dc2.text}` : '1px solid #e2e8f0', background: difficulty === d ? dc2.bg : '#fafbfc', color: difficulty === d ? dc2.text : '#475569', fontSize: 13, fontWeight: 600, cursor: 'pointer', textTransform: 'capitalize', transition: 'all 0.15s' }}>{d}</button>
+                            <button key={d} onClick={() => setDifficulty(d)} style={{ padding: '9px 20px', borderRadius: 10, border: difficulty === d ? `2px solid ${dc2.text}` : '1px solid var(--border)', background: difficulty === d ? dc2.bg : 'var(--bg-surface)', color: difficulty === d ? dc2.text : 'var(--text-secondary)', fontSize: 13, fontWeight: 600, cursor: 'pointer', textTransform: 'capitalize', transition: 'all 0.15s' }}>{d}</button>
                           );
                         })}
                       </div>
@@ -691,10 +691,10 @@ export default function PracticePage() {
 
                   {/* Company Focus */}
                   <div style={{ marginBottom: 24 }}>
-                    <label style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10, display: 'block' }}>Company Focus</label>
+                    <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10, display: 'block' }}>Company Focus</label>
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                       {COMPANIES.map(c => (
-                        <button key={c.id} onClick={() => setCompany(c.id)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 10, border: company === c.id ? `2px solid ${c.color}` : '1px solid #e2e8f0', background: company === c.id ? `${c.color}0d` : '#fafbfc', fontSize: 13, fontWeight: 600, cursor: 'pointer', color: company === c.id ? c.color : '#475569', transition: 'all 0.15s' }}>
+                        <button key={c.id} onClick={() => setCompany(c.id)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 10, border: company === c.id ? `2px solid ${c.color}` : '1px solid var(--border)', background: company === c.id ? `${c.color}0d` : 'var(--bg-surface)', fontSize: 13, fontWeight: 600, cursor: 'pointer', color: company === c.id ? c.color : 'var(--text-secondary)', transition: 'all 0.15s' }}>
                           <span style={{ width: 8, height: 8, borderRadius: 3, background: c.color, display: 'inline-block' }} />
                           {c.label}
                         </button>
@@ -704,7 +704,7 @@ export default function PracticePage() {
                 </div>
 
                 {/* CTA Footer */}
-                <div style={{ padding: '16px 24px', background: '#f8fafc', borderTop: '1px solid #f1f5f9', textAlign: 'center' }}>
+                <div style={{ padding: '16px 24px', background: 'var(--bg-elevated)', borderTop: '1px solid var(--border)', textAlign: 'center' }}>
                   <button onClick={() => startChallenge()} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '13px 36px', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: '#fff', fontSize: 15, fontWeight: 700, borderRadius: 12, border: 'none', cursor: 'pointer', boxShadow: '0 4px 14px rgba(99,102,241,0.3)', transition: 'transform 0.15s, box-shadow 0.15s' }}>
                     <Icon name="play" size={16} style={{ color: '#fff' }} />
                     Start Challenge
@@ -716,11 +716,11 @@ export default function PracticePage() {
               {stats.history && stats.history.length > 0 && (
                 <div style={{ marginBottom: 24 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                    <h2 className="practice-display" style={{ fontSize: 18, fontWeight: 700, color: '#111827', margin: 0 }}>Challenge History</h2>
+                    <h2 className="practice-display" style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>Challenge History</h2>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                       {scoreTrend.length >= 2 && (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <span style={{ fontSize: 11, color: '#9ca3af' }}>Score trend</span>
+                          <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Score trend</span>
                           <Sparkline data={scoreTrend} width={80} height={24} />
                         </div>
                       )}
@@ -742,34 +742,34 @@ export default function PracticePage() {
                       const hDC = diffColor(h.difficulty || 'medium');
                       const companyObj = COMPANIES.find(c => c.id === h.company);
                       return (
-                        <div key={i} style={{ background: '#fff', border: 'none', borderRadius: 12, overflow: 'hidden', boxShadow: '0 4px 24px rgba(99,102,241,0.12)' }}>
+                        <div key={i} style={{ background: 'var(--bg-surface)', border: 'none', borderRadius: 12, overflow: 'hidden', boxShadow: '0 4px 24px rgba(99,102,241,0.12)' }}>
                           <button onClick={() => setExpandedHistory(expandedHistory === i ? null : i)} style={{ width: '100%', padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 12, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
-                            <Icon name={catIcon(h.category || 'coding')} size={18} style={{ color: '#6b7280' }} />
+                            <Icon name={catIcon(h.category || 'coding')} size={18} style={{ color: 'var(--text-muted)' }} />
                             <div style={{ flex: 1 }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
-                                <span style={{ fontSize: 13, fontWeight: 600, color: '#111827' }}>{catLabel(h.category || 'coding')}</span>
+                                <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{catLabel(h.category || 'coding')}</span>
                                 <span style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', padding: '1px 6px', borderRadius: 99, background: hDC.bg, color: hDC.text }}>{h.difficulty || 'medium'}</span>
                                 {companyObj && companyObj.id !== 'all' && (
                                   <span style={{ fontSize: 10, fontWeight: 500, padding: '1px 6px', borderRadius: 99, background: `${companyObj.color}15`, color: companyObj.color }}>{companyObj.label}</span>
                                 )}
                               </div>
-                              <div style={{ fontSize: 11, color: '#9ca3af' }}>
+                              <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
                                 {h.date} / {MODES.find(m => m.id === h.mode)?.label || h.mode} / {formatTime(h.timeSpent || 0)}
                               </div>
                             </div>
                             <span style={{ padding: '4px 12px', borderRadius: 99, fontSize: 13, fontWeight: 700, background: scoreBg(h.score), color: scoreColor(h.score) }}>{h.score}%</span>
-                            <Icon name={expandedHistory === i ? 'chevronUp' : 'chevronDown'} size={16} style={{ color: '#9ca3af' }} />
+                            <Icon name={expandedHistory === i ? 'chevronUp' : 'chevronDown'} size={16} style={{ color: 'var(--text-muted)' }} />
                           </button>
                           {expandedHistory === i && h.questions && (
-                            <div style={{ borderTop: '1px solid #f3f4f6', padding: '12px 18px' }}>
+                            <div style={{ borderTop: '1px solid var(--border)', padding: '12px 18px' }}>
                               {h.questions.map((hq, qi) => (
                                 <div key={qi} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: qi < h.questions.length - 1 ? '1px solid #f9fafb' : 'none' }}>
-                                  <span style={{ fontSize: 12, color: '#374151' }}>{qi + 1}. {hq.q}</span>
+                                  <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{qi + 1}. {hq.q}</span>
                                   <span style={{ fontSize: 12, fontWeight: 600, color: scoreColor(hq.score), minWidth: 40, textAlign: 'right' }}>{hq.score}%</span>
                                 </div>
                               ))}
                               {h.questions.some(hq => hq.feedback) && (
-                                <div style={{ marginTop: 8, fontSize: 11, color: '#6b7280', lineHeight: 1.5 }}>
+                                <div style={{ marginTop: 8, fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.5 }}>
                                   {h.questions.filter(hq => hq.feedback && hq.feedback !== 'Skipped').map((hq, fi) => (
                                     <p key={fi} style={{ margin: '2px 0' }}><strong>{hq.q}:</strong> {hq.feedback}</p>
                                   ))}
@@ -794,7 +794,7 @@ export default function PracticePage() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     {questions.map((_, qi) => (
-                      <div key={qi} style={{ width: qi === currentIdx ? 18 : 8, height: 8, borderRadius: 99, background: qi < currentIdx ? '#6366f1' : qi === currentIdx ? '#6366f1' : '#e5e7eb', transition: 'all 0.3s' }} />
+                      <div key={qi} style={{ width: qi === currentIdx ? 18 : 8, height: 8, borderRadius: 99, background: qi < currentIdx ? '#6366f1' : qi === currentIdx ? '#6366f1' : 'var(--border)', transition: 'all 0.3s' }} />
                     ))}
                   </div>
                   <InterviewTimer
@@ -805,16 +805,16 @@ export default function PracticePage() {
                     className="text-base font-bold"
                   />
                 </div>
-                <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 4 }}>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
                   Question {currentIdx + 1} of {questions.length} / {catLabel(category)} / {MODES.find(m => m.id === mode)?.label}
                 </div>
               </div>
 
               {/* Question card */}
-              <div style={{ background: '#fff', border: 'none', borderRadius: 16, padding: 24, marginBottom: 16, boxShadow: '0 4px 24px rgba(99,102,241,0.12)' }}>
+              <div style={{ background: 'var(--bg-surface)', border: 'none', borderRadius: 16, padding: 24, marginBottom: 16, boxShadow: '0 4px 24px rgba(99,102,241,0.12)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
                   <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', padding: '2px 8px', borderRadius: 99, background: diffColor(questions[currentIdx].difficulty).bg, color: diffColor(questions[currentIdx].difficulty).text }}>{questions[currentIdx].difficulty}</span>
-                  <span style={{ fontSize: 10, fontWeight: 500, padding: '2px 8px', borderRadius: 99, background: '#f3f4f6', color: '#6b7280' }}>{catLabel(category)}</span>
+                  <span style={{ fontSize: 10, fontWeight: 500, padding: '2px 8px', borderRadius: 99, background: 'var(--bg-elevated)', color: 'var(--text-muted)' }}>{catLabel(category)}</span>
                   {questions[currentIdx].companies?.slice(0, 3).map(co => {
                     const coObj = COMPANIES.find(c => c.id === co);
                     return coObj ? (
@@ -825,16 +825,16 @@ export default function PracticePage() {
                     <span key={t} style={{ fontSize: 10, fontWeight: 500, padding: '2px 6px', borderRadius: 99, background: '#ede9fe', color: '#7c3aed' }}>{t}</span>
                   ))}
                 </div>
-                <h2 className="practice-display" style={{ fontSize: 20, fontWeight: 700, color: '#111827', margin: '0 0 6px' }}>
+                <h2 className="practice-display" style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 6px' }}>
                   {questions[currentIdx].q}
                 </h2>
-                <p style={{ fontSize: 14, color: '#6b7280', margin: 0, lineHeight: 1.5 }}>{questions[currentIdx].desc}</p>
+                <p style={{ fontSize: 14, color: 'var(--text-muted)', margin: 0, lineHeight: 1.5 }}>{questions[currentIdx].desc}</p>
               </div>
 
               {/* Answer area — different for each category */}
               {category === 'coding' && (
                 <div style={{ position: 'relative', marginBottom: 8 }}>
-                  <div style={{ position: 'absolute', top: 0, left: 0, width: 36, height: '100%', background: '#f8f9fa', borderRadius: '12px 0 0 12px', borderRight: '1px solid #e3e8ee', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 14, pointerEvents: 'none' }}>
+                  <div style={{ position: 'absolute', top: 0, left: 0, width: 36, height: '100%', background: 'var(--bg-elevated)', borderRadius: '12px 0 0 12px', borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 14, pointerEvents: 'none' }}>
                     {Array.from({ length: Math.max(10, (answers[currentIdx] || '').split('\n').length) }, (_, i) => (
                       <div key={i} style={{ fontSize: 11, color: '#c0c5ce', lineHeight: '22.1px', fontFamily: "'IBM Plex Mono', monospace", userSelect: 'none' }}>{i + 1}</div>
                     ))}
@@ -844,7 +844,7 @@ export default function PracticePage() {
                     value={answers[currentIdx]}
                     onChange={(e) => { const newA = [...answers]; newA[currentIdx] = e.target.value; setAnswers(newA); }}
                     placeholder="Write your solution here... (pseudocode or real code)"
-                    style={{ width: '100%', minHeight: 220, padding: '12px 16px 12px 44px', borderRadius: 12, border: '1px solid #e3e8ee', fontSize: 13, resize: 'vertical', outline: 'none', fontFamily: "'IBM Plex Mono', monospace", background: '#fafbfc', lineHeight: '22.1px', tabSize: 2 }}
+                    style={{ width: '100%', minHeight: 220, padding: '12px 16px 12px 44px', borderRadius: 12, border: '1px solid var(--border)', fontSize: 13, resize: 'vertical', outline: 'none', fontFamily: "'IBM Plex Mono', monospace", background: 'var(--bg-surface)', lineHeight: '22.1px', tabSize: 2 }}
                     autoFocus
                     disabled={!!inlineEval}
                   />
@@ -997,7 +997,7 @@ export default function PracticePage() {
                   <div style={{ marginBottom: 8 }}>
                     {/* Auto-generate button */}
                     <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
-                      <button onClick={autoGenerate} disabled={sdGenerating} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', fontSize: 12, fontWeight: 600, color: sdGenerating ? '#9ca3af' : '#8b5cf6', background: sdGenerating ? '#f3f4f6' : '#f5f3ff', border: `1px solid ${sdGenerating ? '#d1d5db' : '#ddd6fe'}`, borderRadius: 8, cursor: sdGenerating ? 'wait' : 'pointer' }}>
+                      <button onClick={autoGenerate} disabled={sdGenerating} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', fontSize: 12, fontWeight: 600, color: sdGenerating ? 'var(--text-muted)' : '#8b5cf6', background: sdGenerating ? 'var(--bg-elevated)' : 'rgba(139,92,246,0.1)', border: `1px solid ${sdGenerating ? 'var(--border)' : 'rgba(139,92,246,0.25)'}`, borderRadius: 8, cursor: sdGenerating ? 'wait' : 'pointer' }}>
                         {sdGenerating ? (
                           <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ animation: 'spin 1s linear infinite' }}><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Generating...</>
                         ) : (
@@ -1006,12 +1006,12 @@ export default function PracticePage() {
                       </button>
                     </div>
 
-                    <div style={{ height: 'calc(100vh - 280px)', minHeight: 420, borderRadius: 12, overflow: 'hidden', border: '1px solid #e3e8ee' }}>
+                    <div style={{ height: 'calc(100vh - 280px)', minHeight: 420, borderRadius: 12, overflow: 'hidden', border: '1px solid var(--border)' }}>
                       <Allotment defaultSizes={[45, 55]}>
                         {/* Left: Excalidraw Whiteboard */}
                         <Allotment.Pane minSize={320}>
                           <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
-                            <Suspense fallback={<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#9ca3af', fontSize: 13 }}>Loading whiteboard...</div>}>
+                            <Suspense fallback={<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)', fontSize: 13 }}>Loading whiteboard...</div>}>
                               <ExcalidrawWhiteboard
                                 key={currentIdx}
                                 initialElements={whiteboardState.getScene(currentIdx)}
@@ -1024,7 +1024,7 @@ export default function PracticePage() {
 
                         {/* Right: Section text areas */}
                         <Allotment.Pane minSize={340}>
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: 'repeat(4, 1fr)', gap: 6, padding: 12, height: '100%', background: '#fff' }}>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: 'repeat(4, 1fr)', gap: 6, padding: 12, height: '100%', background: 'var(--bg-surface)' }}>
                             {SD_SECTIONS.map((section, si) => {
                               const val = parts[si] || '';
                               return (
@@ -1045,7 +1045,7 @@ export default function PracticePage() {
                                       setAnswers(newA);
                                     }}
                                     placeholder={section.placeholder}
-                                    style={{ width: '100%', flex: 1, minHeight: 0, padding: 10, borderRadius: 8, border: '1px solid #e3e8ee', fontSize: 12, resize: 'none', outline: 'none', background: '#fafbfc', lineHeight: 1.6 }}
+                                    style={{ width: '100%', flex: 1, minHeight: 0, padding: 10, borderRadius: 8, border: '1px solid var(--border)', fontSize: 12, resize: 'none', outline: 'none', background: 'var(--bg-surface)', lineHeight: 1.6 }}
                                     autoFocus={si === 0}
                                   />
                                 </div>
@@ -1083,7 +1083,7 @@ export default function PracticePage() {
                             setAnswers(newA);
                           }}
                           placeholder={`Describe the ${section.toLowerCase()}...`}
-                          style={{ width: '100%', minHeight: 70, padding: 12, borderRadius: 10, border: '1px solid #e3e8ee', fontSize: 13, resize: 'vertical', outline: 'none', background: '#fafbfc', lineHeight: 1.6 }}
+                          style={{ width: '100%', minHeight: 70, padding: 12, borderRadius: 10, border: '1px solid var(--border)', fontSize: 13, resize: 'vertical', outline: 'none', background: 'var(--bg-surface)', lineHeight: 1.6 }}
                           autoFocus={si === 0}
                         />
                       </div>
@@ -1094,12 +1094,12 @@ export default function PracticePage() {
 
               {/* Inline Evaluation */}
               {inlineEval && (
-                <div style={{ background: '#fff', border: 'none', borderRadius: 16, padding: 24, marginBottom: 16, boxShadow: '0 4px 24px rgba(99,102,241,0.12)' }}>
+                <div style={{ background: 'var(--bg-surface)', border: 'none', borderRadius: 16, padding: 24, marginBottom: 16, boxShadow: '0 4px 24px rgba(99,102,241,0.12)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16 }}>
                     <ScoreRing value={inlineEval.score} size={80} strokeW={7} animated />
                     <div style={{ flex: 1 }}>
-                      <h3 className="practice-display" style={{ fontSize: 16, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Evaluation</h3>
-                      <p style={{ fontSize: 13, color: '#6b7280', margin: 0, lineHeight: 1.5 }}>{inlineEval.feedback}</p>
+                      <h3 className="practice-display" style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 4px' }}>Evaluation</h3>
+                      <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0, lineHeight: 1.5 }}>{inlineEval.feedback}</p>
                     </div>
                   </div>
 
@@ -1127,7 +1127,7 @@ export default function PracticePage() {
                         {showModelAnswer === currentIdx ? 'Hide' : 'Show'} Model Answer
                       </button>
                       {showModelAnswer === currentIdx && (
-                        <div style={{ marginTop: 8, padding: 14, background: '#eef2ff', borderRadius: 10, fontSize: 13, color: '#3730a3', lineHeight: 1.6, fontFamily: category === 'coding' ? "'IBM Plex Mono', monospace" : 'inherit', whiteSpace: 'pre-wrap' }}>
+                        <div style={{ marginTop: 8, padding: 14, background: 'var(--accent-subtle)', borderRadius: 10, fontSize: 13, color: 'var(--accent-hover)', lineHeight: 1.6, fontFamily: category === 'coding' ? "'IBM Plex Mono', monospace" : 'inherit', whiteSpace: 'pre-wrap' }}>
                           {inlineEval.modelAnswer}
                         </div>
                       )}
@@ -1155,7 +1155,7 @@ export default function PracticePage() {
                       <><Icon name="loader" size={14} style={{ color: '#fff', animation: 'spin 1s linear infinite' }} /> Evaluating...</>
                     ) : 'Submit Answer'}
                   </button>
-                  <button onClick={skipQuestion} disabled={evaluating} style={{ padding: '10px 20px', background: '#f3f4f6', color: '#374151', fontSize: 13, fontWeight: 500, borderRadius: 10, border: '1px solid #e3e8ee', cursor: 'pointer' }}>
+                  <button onClick={skipQuestion} disabled={evaluating} style={{ padding: '10px 20px', background: 'var(--bg-elevated)', color: 'var(--text-secondary)', fontSize: 13, fontWeight: 500, borderRadius: 10, border: '1px solid var(--border)', cursor: 'pointer' }}>
                     Skip
                   </button>
                   <button onClick={() => endChallenge()} disabled={evaluating} style={{ padding: '10px 20px', background: '#fef2f2', color: '#dc2626', fontSize: 13, fontWeight: 500, borderRadius: 10, border: '1px solid #fecaca', cursor: evaluating ? 'not-allowed' : 'pointer', marginLeft: 'auto', opacity: evaluating ? 0.5 : 1 }}>
@@ -1191,12 +1191,12 @@ export default function PracticePage() {
                     <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
                       <div style={{ textAlign: 'center' }}>
                         <div style={{ fontSize: 20, fontWeight: 800, color: '#fff' }}>{passed}/{total}</div>
-                        <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 500 }}>Passed</div>
+                        <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 500 }}>Passed</div>
                       </div>
                       <div style={{ width: 1, height: 28, background: '#334155' }} />
                       <div style={{ textAlign: 'center' }}>
-                        <div style={{ fontSize: 14, fontWeight: 700, color: '#94a3b8', textTransform: 'capitalize' }}>{catLabel(category)}</div>
-                        <div style={{ fontSize: 11, color: '#64748b', fontWeight: 500, textTransform: 'capitalize' }}>{difficulty}</div>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'capitalize' }}>{catLabel(category)}</div>
+                        <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 500, textTransform: 'capitalize' }}>{difficulty}</div>
                       </div>
                     </div>
                   </div>
@@ -1234,13 +1234,13 @@ export default function PracticePage() {
                     const val = resultDimensions[k] || 0;
                     const dimColor = val >= 70 ? '#10b981' : val >= 50 ? '#f59e0b' : '#ef4444';
                     return (
-                      <div key={k} style={{ background: '#fff', border: 'none', borderRadius: 14, padding: '16px 18px', boxShadow: '0 4px 24px rgba(99,102,241,0.12)' }}>
-                        <div style={{ fontSize: 11, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>{DIMENSION_LABELS[i]}</div>
+                      <div key={k} style={{ background: 'var(--bg-surface)', border: 'none', borderRadius: 14, padding: '16px 18px', boxShadow: '0 4px 24px rgba(99,102,241,0.12)' }}>
+                        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>{DIMENSION_LABELS[i]}</div>
                         <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
                           <span style={{ fontSize: 22, fontWeight: 800, color: dimColor }}>{val}</span>
-                          <span style={{ fontSize: 12, color: '#9ca3af' }}>/ 100</span>
+                          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>/ 100</span>
                         </div>
-                        <div style={{ height: 4, borderRadius: 99, background: '#f3f4f6', marginTop: 8, overflow: 'hidden' }}>
+                        <div style={{ height: 4, borderRadius: 99, background: 'var(--bg-elevated)', marginTop: 8, overflow: 'hidden' }}>
                           <div style={{ height: '100%', borderRadius: 99, background: dimColor, width: `${val}%`, transition: 'width 0.8s ease' }} />
                         </div>
                       </div>
@@ -1267,10 +1267,10 @@ export default function PracticePage() {
               )}
 
               {/* ── Question Breakdown ── */}
-              <div style={{ background: '#fff', border: 'none', borderRadius: 16, overflow: 'hidden', boxShadow: '0 4px 24px rgba(99,102,241,0.12)' }}>
-                <div style={{ padding: '18px 24px', borderBottom: '1px solid #f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <h3 className="practice-display" style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: 0 }}>Question Breakdown</h3>
-                  <span style={{ fontSize: 12, color: '#9ca3af', fontWeight: 500 }}>{passed} of {total} passed</span>
+              <div style={{ background: 'var(--bg-surface)', border: 'none', borderRadius: 16, overflow: 'hidden', boxShadow: '0 4px 24px rgba(99,102,241,0.12)' }}>
+                <div style={{ padding: '18px 24px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <h3 className="practice-display" style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>Question Breakdown</h3>
+                  <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500 }}>{passed} of {total} passed</span>
                 </div>
                 {questions.map((q, i) => {
                   const isExpanded = expandedHistory === `result-${i}`;
@@ -1279,17 +1279,17 @@ export default function PracticePage() {
                   const sc = scores[i] || 0;
                   const pass = sc >= 60;
                   return (
-                    <div key={i} style={{ borderBottom: i < questions.length - 1 ? '1px solid #f3f4f6' : 'none' }}>
-                      <button onClick={() => setExpandedHistory(isExpanded ? null : `result-${i}`)} style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 24px', background: isExpanded ? '#fafbfc' : 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left', transition: 'background 0.15s' }}>
+                    <div key={i} style={{ borderBottom: i < questions.length - 1 ? '1px solid var(--border)' : 'none' }}>
+                      <button onClick={() => setExpandedHistory(isExpanded ? null : `result-${i}`)} style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 24px', background: isExpanded ? 'var(--bg-elevated)' : 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left', transition: 'background 0.15s' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                          <div style={{ width: 26, height: 26, borderRadius: 8, background: pass ? '#ecfdf5' : '#fef2f2', color: pass ? '#059669' : '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, flexShrink: 0 }}>{i + 1}</div>
+                          <div style={{ width: 26, height: 26, borderRadius: 8, background: pass ? 'rgba(5,150,105,0.12)' : 'rgba(220,38,38,0.12)', color: pass ? '#059669' : '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, flexShrink: 0 }}>{i + 1}</div>
                           <div>
-                            <span style={{ fontSize: 14, fontWeight: 600, color: '#111827' }}>{q.q}</span>
-                            {q.difficulty && <span style={{ fontSize: 10, fontWeight: 600, color: '#9ca3af', marginLeft: 8, textTransform: 'capitalize' }}>{q.difficulty}</span>}
+                            <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>{q.q}</span>
+                            {q.difficulty && <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', marginLeft: 8, textTransform: 'capitalize' }}>{q.difficulty}</span>}
                           </div>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                          <div style={{ width: 60, height: 5, borderRadius: 99, background: '#f3f4f6', overflow: 'hidden' }}>
+                          <div style={{ width: 60, height: 5, borderRadius: 99, background: 'var(--bg-elevated)', overflow: 'hidden' }}>
                             <div style={{ height: '100%', borderRadius: 99, background: scoreColor(sc), width: `${sc}%`, transition: 'width 0.6s ease' }} />
                           </div>
                           <span style={{ padding: '3px 10px', borderRadius: 8, fontSize: 12, fontWeight: 700, background: scoreBg(sc), color: scoreColor(sc), minWidth: 42, textAlign: 'center' }}>
@@ -1301,11 +1301,11 @@ export default function PracticePage() {
                       {isExpanded && (
                         <div style={{ padding: '0 24px 20px 60px' }}>
                           {answers[i] && (
-                            <div style={{ marginBottom: 14, padding: 14, background: '#f8fafc', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 12, color: '#374151', lineHeight: 1.7, fontFamily: category === 'coding' ? "'IBM Plex Mono', monospace" : 'inherit', whiteSpace: 'pre-wrap', maxHeight: 140, overflow: 'auto' }}>
+                            <div style={{ marginBottom: 14, padding: 14, background: 'var(--bg-elevated)', borderRadius: 10, border: '1px solid var(--border)', fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.7, fontFamily: category === 'coding' ? "'IBM Plex Mono', monospace" : 'inherit', whiteSpace: 'pre-wrap', maxHeight: 140, overflow: 'auto' }}>
                               {answers[i].replace(/---SECTION---/g, '\n\n').replace(/---STAR---/g, '\n\n')}
                             </div>
                           )}
-                          {aiFeedback[i] && <p style={{ fontSize: 13, color: '#64748b', margin: '0 0 14px', lineHeight: 1.6 }}>{aiFeedback[i]}</p>}
+                          {aiFeedback[i] && <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '0 0 14px', lineHeight: 1.6 }}>{aiFeedback[i]}</p>}
                           {Object.keys(dims).length > 0 && <DimensionBars dimensions={dims} compact />}
                           {ma.modelAnswer && (
                             <div style={{ marginTop: 12 }}>
@@ -1314,7 +1314,7 @@ export default function PracticePage() {
                                 {showModelAnswer === `r-${i}` ? 'Hide' : 'Show'} Model Answer
                               </button>
                               {showModelAnswer === `r-${i}` && (
-                                <div style={{ marginTop: 8, padding: 14, background: '#eef2ff', borderRadius: 10, border: '1px solid #c7d2fe', fontSize: 12, color: '#3730a3', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
+                                <div style={{ marginTop: 8, padding: 14, background: 'var(--accent-subtle)', borderRadius: 10, border: '1px solid rgba(99,102,241,0.25)', fontSize: 12, color: 'var(--accent-hover)', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
                                   {ma.modelAnswer}
                                 </div>
                               )}
