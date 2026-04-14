@@ -347,6 +347,7 @@ export default function PracticePage() {
 
   // Whiteboard state for system design practice
   const whiteboardState = useWhiteboardState(questions.length || 10);
+  const [sdGenerating, setSdGenerating] = useState(false);
 
   // Timer countdown is now handled by the shared InterviewTimer component.
   // The onExpire callback on InterviewTimer calls endChallengeRef.current().
@@ -868,62 +869,87 @@ export default function PracticePage() {
 
                 const autoGenerate = async () => {
                   const q = questions[currentIdx];
+                  setSdGenerating(true);
                   try {
-                    const sectionPrompt = SD_SECTIONS.map(s => s.label).join(', ');
                     const res = await fetch(`${API_URL}/api/solve/stream`, {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
                       body: JSON.stringify({
-                        problem: `System Design: ${q.q}. ${q.desc}\n\nProvide your answer organized into these sections: ${sectionPrompt}`,
+                        problem: `System Design: ${q.q}. ${q.desc}`,
                         ascendMode: 'system-design',
                         designDetailLevel: 'basic',
                       }),
                     });
-                    if (!res.ok) throw new Error('Failed');
+                    if (!res.ok) {
+                      const errText = await res.text().catch(() => '');
+                      console.error('Auto-generate HTTP error:', res.status, errText);
+                      return;
+                    }
                     const reader = res.body?.getReader();
                     if (!reader) return;
                     const decoder = new TextDecoder();
                     let fullText = '';
+                    let structuredResult = null;
                     while (true) {
                       const { done, value } = await reader.read();
                       if (done) break;
                       const raw = decoder.decode(value, { stream: true });
                       for (const line of raw.split('\n')) {
-                        if (line.startsWith('data: ') && line !== 'data: [DONE]') {
-                          try {
-                            const d = JSON.parse(line.slice(6));
-                            if (d.chunk) fullText += d.chunk;
-                            if (d.done && d.result?.systemDesign) {
-                              const sd = d.result.systemDesign;
-                              const sectionTexts = [
-                                (sd.requirements?.functional || []).join('\n'),
-                                (sd.requirements?.nonFunctional || []).join('\n'),
-                                (sd.architecture?.components || []).join('\n'),
-                                sd.architecture?.description || '',
-                                sd.overview || '',
-                                (sd.scalability || []).join('\n'),
-                                (sd.tradeoffs || []).join('\n'),
-                              ];
-                              const newA = [...answers];
-                              newA[currentIdx] = sectionTexts.join('---SECTION---');
-                              setAnswers(newA);
-                              return;
-                            }
-                          } catch {}
-                        }
+                        if (!line.startsWith('data: ') || line === 'data: [DONE]') continue;
+                        try {
+                          const d = JSON.parse(line.slice(6));
+                          if (d.error) { console.error('Solve stream error:', d.error); continue; }
+                          if (d.chunk) fullText += d.chunk;
+                          if (d.done && d.result) structuredResult = d.result;
+                        } catch {}
                       }
                     }
-                    // Fallback: parse sections from raw streaming text
-                    const sectionTexts = SD_SECTIONS.map(s => {
-                      const regex = new RegExp(`(?:${s.label}|${s.label.replace('.', '')})[:\\n]([\\s\\S]*?)(?=(?:${SD_SECTIONS.map(x => x.label.replace('.', '')).join('|')})[:\\n]|$)`, 'i');
-                      const match = fullText.match(regex);
-                      return match ? match[1].trim() : '';
-                    });
-                    const newA = [...answers];
-                    newA[currentIdx] = sectionTexts.join('---SECTION---');
-                    setAnswers(newA);
+
+                    // Try structured systemDesign result first
+                    if (structuredResult?.systemDesign) {
+                      const sd = structuredResult.systemDesign;
+                      const sectionTexts = [
+                        (sd.requirements?.functional || []).join('\n'),
+                        (sd.requirements?.nonFunctional || []).join('\n'),
+                        (sd.architecture?.components || []).join('\n'),
+                        sd.architecture?.description || '',
+                        sd.overview || '',
+                        (sd.scalability || []).join('\n'),
+                        (sd.tradeoffs || []).join('\n'),
+                      ];
+                      const newA = [...answers];
+                      newA[currentIdx] = sectionTexts.join('---SECTION---');
+                      setAnswers(newA);
+                      return;
+                    }
+
+                    // Fallback: use raw streamed text and distribute across sections
+                    if (fullText.trim()) {
+                      // Try regex parsing by section labels
+                      const sectionTexts = SD_SECTIONS.map(s => {
+                        const escaped = s.label.replace('.', '\\.?');
+                        const regex = new RegExp(`${escaped}[:\\s]*([\\s\\S]*?)(?=(?:${SD_SECTIONS.map(x => x.label.replace('.', '\\.?')).join('|')})[:\\s]|$)`, 'i');
+                        const match = fullText.match(regex);
+                        return match ? match[1].trim() : '';
+                      });
+                      // If regex parsing got results, use them
+                      if (sectionTexts.some(t => t.length > 0)) {
+                        const newA = [...answers];
+                        newA[currentIdx] = sectionTexts.join('---SECTION---');
+                        setAnswers(newA);
+                      } else {
+                        // Last resort: put all text in the first section
+                        const newA = [...answers];
+                        const empty = new Array(SD_SECTIONS.length).fill('');
+                        empty[0] = fullText.trim();
+                        newA[currentIdx] = empty.join('---SECTION---');
+                        setAnswers(newA);
+                      }
+                    }
                   } catch (err) {
                     console.error('Auto-generate failed:', err);
+                  } finally {
+                    setSdGenerating(false);
                   }
                 };
 
@@ -956,18 +982,8 @@ export default function PracticePage() {
                     const data = await res.json();
                     if (data.mermaid_code) return data.mermaid_code;
 
-                    // If only image_url returned (no mermaid), generate mermaid directly
-                    // by asking solve endpoint for a simple architecture description
-                    return `graph TB
-    Client[Client App] --> LB[Load Balancer]
-    LB --> API[API Gateway]
-    API --> Auth[Auth Service]
-    API --> Core[Core Service]
-    Core --> Cache[(Redis Cache)]
-    Core --> DB[(PostgreSQL)]
-    Core --> Queue[Message Queue]
-    Queue --> Worker[Background Workers]
-    Worker --> DB`;
+                    // If only image_url returned (no mermaid), provide simple flowchart
+                    return `flowchart TD\n  A[Client] --> B[Load Balancer]\n  B --> C[API Server]\n  C --> D[Auth]\n  C --> E[Service]\n  E --> F[Cache]\n  E --> G[Database]\n  E --> H[Queue]\n  H --> I[Worker]`;
                   } catch {
                     return null;
                   }
@@ -977,9 +993,12 @@ export default function PracticePage() {
                   <div style={{ marginBottom: 8 }}>
                     {/* Auto-generate button */}
                     <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
-                      <button onClick={autoGenerate} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', fontSize: 12, fontWeight: 600, color: '#8b5cf6', background: '#f5f3ff', border: '1px solid #ddd6fe', borderRadius: 8, cursor: 'pointer' }}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/></svg>
-                        Auto Generate Answers
+                      <button onClick={autoGenerate} disabled={sdGenerating} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', fontSize: 12, fontWeight: 600, color: sdGenerating ? '#9ca3af' : '#8b5cf6', background: sdGenerating ? '#f3f4f6' : '#f5f3ff', border: `1px solid ${sdGenerating ? '#d1d5db' : '#ddd6fe'}`, borderRadius: 8, cursor: sdGenerating ? 'wait' : 'pointer' }}>
+                        {sdGenerating ? (
+                          <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ animation: 'spin 1s linear infinite' }}><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Generating...</>
+                        ) : (
+                          <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/></svg> Auto Generate Answers</>
+                        )}
                       </button>
                     </div>
 
