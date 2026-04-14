@@ -101,7 +101,7 @@ export default function DocsPage({ onBack }) {
     return null;
   });
 
-  // React to URL changes from AppShell sidebar navigation
+  // React to URL changes from sidebar navigation
   useEffect(() => {
     const pathSegment = routerLocation.pathname.replace('/capra/prepare', '').replace(/^\//, '');
     const params = new URLSearchParams(routerLocation.search);
@@ -198,7 +198,6 @@ export default function DocsPage({ onBack }) {
     setAiAnswer('');
     setShowAskAI(false);
     if (topic) {
-      /* sidebar close handled by AppShell */;
       // Scroll the nearest scrollable container (RootShell <main>) to top
       const el = document.getElementById('app-scroll-container') || document.querySelector('main');
       if (el) el.scrollTo({ top: 0, behavior: 'smooth' });
