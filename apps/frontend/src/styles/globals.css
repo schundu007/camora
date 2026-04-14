@@ -447,11 +447,21 @@ main, [role="main"] { animation: fadeUp 0.15s ease-out; }
    LUMORA — Live Interview Dark Theme
    ══════════════════════════════════════════════════════════════ */
 
-/* Lumora pages use the same dark tokens as the rest of the app now.
-   .lumora-app-bg only adds the mesh gradient + grid overlay effects. */
+/* Lumora pages ALWAYS use dark theme (live interview = dark screen).
+   Force dark tokens regardless of light-theme class. */
 .lumora-app-bg {
-  background: var(--bg-app);
-  color: var(--text-primary);
+  --bg-app: #0D0C14;
+  --bg-surface: #16141F;
+  --bg-elevated: #1E1C28;
+  --border: #2A2833;
+  --border-hover: #3B3947;
+  --text-primary: #F2F1F3;
+  --text-secondary: #A1A0AB;
+  --text-muted: #6C6B7B;
+  --text-dimmed: #545260;
+  background: #0D0C14;
+  color: #F2F1F3;
+  color-scheme: dark;
   position: relative;
 }
 .lumora-app-bg::before {
