@@ -164,7 +164,7 @@ export default function PricingPage() {
       <section className="px-6 pt-4 pb-16">
         <div className="w-full lg:max-w-[70%] mx-auto">
           <div className="mb-10 text-center">
-            <span className="text-xs font-bold uppercase tracking-[0.2em]" style={{ background: 'linear-gradient(135deg, #34d399, #38bdf8, #818cf8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Why Camora Wins</span>
+            <span className="text-xs font-bold uppercase tracking-[0.2em]" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6, #a78bfa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Why Camora Wins</span>
             <h2 className="mt-3 text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900">
               See how we compare.
             </h2>
@@ -174,9 +174,8 @@ export default function PricingPage() {
             className="overflow-x-auto"
             style={{
               background: 'white',
-              border: '1px solid #e3e8ee',
               borderRadius: '16px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+              boxShadow: '0 4px 24px rgba(99,102,241,0.12)',
               padding: '12px 16px',
             }}
           >
@@ -200,12 +199,12 @@ export default function PricingPage() {
                     <th
                       key={col.name}
                       className={`py-3 px-2 text-center whitespace-nowrap ${col.hide ? `hidden ${col.hide}:table-cell` : ''}`}
-                      style={col.highlight ? { background: 'linear-gradient(180deg, #ecfdf5, #d1fae5)', borderRadius: '14px 14px 0 0', boxShadow: 'inset 0 -2px 0 #34d399' } : {}}
+                      style={col.highlight ? { background: 'linear-gradient(180deg, #eef2ff, #e0e7ff)', borderRadius: '14px 14px 0 0', boxShadow: 'inset 0 -2px 0 #6366f1' } : {}}
                     >
-                      <div className={`text-[11px] font-medium ${col.highlight ? '' : 'text-gray-500'}`} style={col.highlight ? { background: 'linear-gradient(135deg, #059669, #0891b2)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontSize: '13px', fontWeight: 800 } : {}}>
+                      <div className={`text-[11px] font-medium ${col.highlight ? '' : 'text-gray-500'}`} style={col.highlight ? { background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontSize: '13px', fontWeight: 800 } : {}}>
                         {col.name}
                       </div>
-                      <div className="text-sm font-extrabold mt-0.5" style={col.highlight ? { color: '#059669' } : { background: 'linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                      <div className="text-sm font-extrabold mt-0.5" style={col.highlight ? { color: '#6366f1' } : { background: 'linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
                         {col.price}<span className="text-[9px] font-normal text-gray-400">{col.unit}</span>
                       </div>
                     </th>
@@ -221,12 +220,12 @@ export default function PricingPage() {
                   };
                   return (
                     <tr key={i} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                      <td className={`py-3 px-4 text-sm ${row.unique ? 'text-emerald-600 font-semibold' : 'text-gray-700'}`}>
+                      <td className={`py-3 px-4 text-sm ${row.unique ? 'text-indigo-600 font-semibold' : 'text-gray-700'}`}>
                         {row.feature}
                       </td>
-                      <td className="py-3 px-3 text-center" style={{ background: '#f0fdf4' }}>
+                      <td className="py-3 px-3 text-center" style={{ background: '#eef2ff' }}>
                         {row.camora === true
-                          ? <span className="text-emerald-500 font-bold text-base">&#10003;</span>
+                          ? <span className="text-indigo-500 font-bold text-base">&#10003;</span>
                           : <Cell val={row.camora} />
                         }
                       </td>
@@ -251,7 +250,7 @@ export default function PricingPage() {
 
       {/* Divider */}
       <div className="w-full lg:max-w-[70%] mx-auto px-6">
-        <div className="h-px bg-[#e3e8ee]" />
+        <div className="h-px bg-indigo-100/30" />
       </div>
 
       {/* Plans */}
@@ -260,19 +259,16 @@ export default function PricingPage() {
           {PLANS.map((plan) => (
             <div
               key={plan.name}
-              className="relative p-6 flex flex-col"
+              className={`relative p-6 flex flex-col rounded-2xl overflow-hidden bg-white card-glow ${plan.popular ? 'border-2 border-indigo-400' : plan.name === 'Annual' ? 'border-2 border-amber-400' : ''}`}
               style={{
-                borderRadius: '16px',
-                background: 'white',
-                border: plan.popular ? '2px solid #10b981' : plan.name === 'Annual' ? '2px solid #f59e0b' : '1px solid #e3e8ee',
-                boxShadow: plan.popular ? '0 4px 16px rgba(16,185,129,0.12)' : plan.name === 'Annual' ? '0 4px 16px rgba(245,158,11,0.12)' : '0 2px 8px rgba(0,0,0,0.04)',
+                boxShadow: plan.popular ? '0 20px 60px rgba(99,102,241,0.25)' : plan.name === 'Annual' ? '0 4px 24px rgba(245,158,11,0.15)' : '0 4px 24px rgba(99,102,241,0.12)',
               }}
             >
               <div className="mb-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-semibold text-gray-900">{plan.name}</h3>
                   {plan.popular && (
-                    <span className="px-3 py-0.5 rounded-full text-[9px] font-bold text-white uppercase tracking-wider" style={{ background: 'linear-gradient(135deg, #10b981, #06b6d4)' }}>Popular</span>
+                    <span className="px-3 py-0.5 rounded-full text-[9px] font-bold text-white uppercase tracking-wider" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>Popular</span>
                   )}
                   {plan.name === 'Annual' && (
                     <span className="px-3 py-0.5 rounded-full text-[9px] font-bold text-white uppercase tracking-wider" style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}>Best Value</span>
@@ -288,7 +284,7 @@ export default function PricingPage() {
               <ul className="space-y-2.5 flex-1 mb-6">
                 {plan.features.map((f, i) => (
                   <li key={i} className="flex items-start gap-2 text-[13px] text-gray-400">
-                    <span className="w-1 h-1 bg-emerald-400/60 mt-2 shrink-0" />
+                    <span className="w-1 h-1 bg-indigo-400/60 mt-2 shrink-0" />
                     {f}
                   </li>
                 ))}
@@ -305,7 +301,7 @@ export default function PricingPage() {
                     : 'border-2 border-[#c7cfe0] text-gray-800 hover:border-indigo-400 hover:text-indigo-600 hover:shadow-md'
                 } disabled:opacity-50`}
                 style={plan.popular ? {
-                  background: 'linear-gradient(135deg, #34d399, #06b6d4, #6366f1)',
+                  background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
                   boxShadow: '0 4px 14px rgba(99,102,241,0.3)',
                 } : plan.name === 'Annual' ? {
                   background: 'linear-gradient(135deg, #fbbf24, #f59e0b, #d97706)',
@@ -337,7 +333,7 @@ export default function PricingPage() {
                 <div>
                   <h3 className="text-sm font-semibold text-gray-900">{pack.name}</h3>
                   <div className="flex items-baseline gap-1 mt-0.5">
-                    <span className="text-lg font-bold text-emerald-600">{pack.price}</span>
+                    <span className="text-lg font-bold text-indigo-600">{pack.price}</span>
                     <span className="text-[11px] text-gray-400">one-time</span>
                   </div>
                   <p className="text-[11px] text-gray-400 mt-0.5">{pack.desc}</p>
@@ -371,7 +367,7 @@ export default function PricingPage() {
 
       {/* Divider */}
       <div className="w-full lg:max-w-[70%] mx-auto px-6">
-        <div className="h-px bg-[#e3e8ee]" />
+        <div className="h-px bg-indigo-100/30" />
       </div>
 
 
