@@ -147,7 +147,7 @@ export default function PricingPage() {
   };
 
   return (
-    <div className="min-h-screen text-gray-900">
+    <div className="min-h-screen" style={{ color: 'var(--text-primary)' }}>
 
       <SEO title="Pricing" description="Interview prep plans starting free. Monthly, Quarterly Pro, and Desktop Lifetime options." path="/pricing" />
       <SiteNav />
@@ -155,7 +155,7 @@ export default function PricingPage() {
       {/* Header */}
       <section className="pt-20 pb-0 px-6 text-center">
         <span className="section-label">Pricing</span>
-        <h1 className="mt-1 text-3xl md:text-4xl font-semibold tracking-tight text-gray-900">
+        <h1 className="mt-1 text-3xl md:text-4xl font-semibold tracking-tight" style={{ color: 'var(--text-primary)' }}>
           The APPA platform. All-in-one.
         </h1>
       </section>
@@ -165,7 +165,7 @@ export default function PricingPage() {
         <div className="w-full lg:max-w-[70%] mx-auto">
           <div className="mb-10 text-center">
             <span className="text-xs font-bold uppercase tracking-[0.2em]" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6, #a78bfa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Why Camora Wins</span>
-            <h2 className="mt-3 text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900">
+            <h2 className="mt-3 text-3xl md:text-4xl font-extrabold tracking-tight" style={{ color: 'var(--text-primary)' }}>
               See how we compare.
             </h2>
           </div>
@@ -173,16 +173,17 @@ export default function PricingPage() {
           <div
             className="overflow-x-auto"
             style={{
-              background: 'white',
+              background: 'var(--bg-surface)',
               borderRadius: '16px',
-              boxShadow: '0 4px 24px rgba(99,102,241,0.12)',
+              boxShadow: '0 4px 24px rgba(0,0,0,0.3)',
               padding: '12px 16px',
+              border: '1px solid var(--border)',
             }}
           >
             <table className="w-full text-[13px]">
               <thead>
-                <tr style={{ borderBottom: '2px solid #e2e8f0', verticalAlign: 'bottom' }}>
-                  <th className="text-left py-3 px-4 text-gray-500 font-mono text-[10px] uppercase tracking-wider min-w-[120px] sm:min-w-[200px]">Feature</th>
+                <tr style={{ borderBottom: '2px solid var(--border)', verticalAlign: 'bottom' }}>
+                  <th className="text-left py-3 px-4 font-mono text-[10px] uppercase tracking-wider min-w-[120px] sm:min-w-[200px]" style={{ color: 'var(--text-secondary)' }}>Feature</th>
                   {[
                     { name: 'Camora', price: 'FREE', unit: '', highlight: true },
                     { name: 'Final Round', price: '$100', unit: '/mo' },
@@ -199,13 +200,13 @@ export default function PricingPage() {
                     <th
                       key={col.name}
                       className={`py-3 px-2 text-center whitespace-nowrap ${col.hide ? `hidden ${col.hide}:table-cell` : ''}`}
-                      style={col.highlight ? { background: 'linear-gradient(180deg, #eef2ff, #e0e7ff)', borderRadius: '14px 14px 0 0', boxShadow: 'inset 0 -2px 0 #6366f1' } : {}}
+                      style={col.highlight ? { background: 'rgba(99,102,241,0.1)', borderRadius: '14px 14px 0 0', boxShadow: 'inset 0 -2px 0 #6366f1' } : {}}
                     >
-                      <div className={`text-[11px] font-medium ${col.highlight ? '' : 'text-gray-500'}`} style={col.highlight ? { background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontSize: '13px', fontWeight: 800 } : {}}>
+                      <div className="text-[11px] font-medium" style={col.highlight ? { background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontSize: '13px', fontWeight: 800 } : { color: 'var(--text-secondary)' }}>
                         {col.name}
                       </div>
                       <div className="text-sm font-extrabold mt-0.5" style={col.highlight ? { color: '#6366f1' } : { background: 'linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                        {col.price}<span className="text-[9px] font-normal text-gray-400">{col.unit}</span>
+                        {col.price}<span className="text-[9px] font-normal" style={{ color: 'var(--text-muted)' }}>{col.unit}</span>
                       </div>
                     </th>
                   ))}
@@ -214,16 +215,16 @@ export default function PricingPage() {
               <tbody>
                 {COMPARISON.map((row, i) => {
                   const Cell = ({ val }: { val: boolean | string }) => {
-                    if (val === true) return <span className="text-gray-400">&#10003;</span>;
-                    if (val === false) return <span className="text-gray-700">-</span>;
+                    if (val === true) return <span style={{ color: 'var(--text-muted)' }}>&#10003;</span>;
+                    if (val === false) return <span style={{ color: 'var(--text-muted)' }}>-</span>;
                     return <span className="text-[10px] text-amber-400 font-mono">{val}</span>;
                   };
                   return (
-                    <tr key={i} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                      <td className={`py-3 px-4 text-sm ${row.unique ? 'text-indigo-600 font-semibold' : 'text-gray-700'}`}>
+                    <tr key={i} style={{ borderBottom: '1px solid var(--border)' }}>
+                      <td className={`py-3 px-4 text-sm ${row.unique ? 'text-indigo-400 font-semibold' : ''}`} style={!row.unique ? { color: 'var(--text-secondary)' } : {}}>
                         {row.feature}
                       </td>
-                      <td className="py-3 px-3 text-center" style={{ background: '#eef2ff' }}>
+                      <td className="py-3 px-3 text-center" style={{ background: 'rgba(99,102,241,0.08)' }}>
                         {row.camora === true
                           ? <span className="text-indigo-500 font-bold text-base">&#10003;</span>
                           : <Cell val={row.camora} />
@@ -259,14 +260,16 @@ export default function PricingPage() {
           {PLANS.map((plan) => (
             <div
               key={plan.name}
-              className={`relative p-6 flex flex-col rounded-2xl overflow-hidden bg-white card-glow ${plan.popular ? 'border-2 border-indigo-400' : plan.name === 'Annual' ? 'border-2 border-amber-400' : ''}`}
+              className={`relative p-6 flex flex-col rounded-2xl overflow-hidden card-glow ${plan.popular ? 'border-2 border-indigo-400' : plan.name === 'Annual' ? 'border-2 border-amber-400' : ''}`}
               style={{
-                boxShadow: plan.popular ? '0 20px 60px rgba(99,102,241,0.25)' : plan.name === 'Annual' ? '0 4px 24px rgba(245,158,11,0.15)' : '0 4px 24px rgba(99,102,241,0.12)',
+                background: 'var(--bg-surface)',
+                border: plan.popular ? '2px solid #818cf8' : plan.name === 'Annual' ? '2px solid #fbbf24' : '1px solid var(--border)',
+                boxShadow: plan.popular ? '0 20px 60px rgba(99,102,241,0.2)' : plan.name === 'Annual' ? '0 4px 24px rgba(245,158,11,0.1)' : '0 4px 24px rgba(0,0,0,0.2)',
               }}
             >
               <div className="mb-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-semibold text-gray-900">{plan.name}</h3>
+                  <h3 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{plan.name}</h3>
                   {plan.popular && (
                     <span className="px-3 py-0.5 rounded-full text-[9px] font-bold text-white uppercase tracking-wider" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>Popular</span>
                   )}
@@ -275,15 +278,15 @@ export default function PricingPage() {
                   )}
                 </div>
                 <div className="mt-2 flex items-baseline gap-0.5">
-                  <span className="text-3xl font-semibold text-gray-900">{plan.price}</span>
-                  <span className="text-sm text-gray-500">{plan.period}</span>
+                  <span className="text-3xl font-semibold" style={{ color: 'var(--text-primary)' }}>{plan.price}</span>
+                  <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>{plan.period}</span>
                 </div>
-                <p className="mt-1 text-[13px] text-gray-500">{plan.description}</p>
+                <p className="mt-1 text-[13px]" style={{ color: 'var(--text-secondary)' }}>{plan.description}</p>
               </div>
 
               <ul className="space-y-2.5 flex-1 mb-6">
                 {plan.features.map((f, i) => (
-                  <li key={i} className="flex items-start gap-2 text-[13px] text-gray-400">
+                  <li key={i} className="flex items-start gap-2 text-[13px]" style={{ color: 'var(--text-muted)' }}>
                     <span className="w-1 h-1 bg-indigo-400/60 mt-2 shrink-0" />
                     {f}
                   </li>
@@ -298,7 +301,7 @@ export default function PricingPage() {
                     ? 'text-white hover:opacity-90'
                     : plan.name === 'Annual'
                     ? 'text-white hover:opacity-90'
-                    : 'border-2 border-[#c7cfe0] text-gray-800 hover:border-indigo-400 hover:text-indigo-600 hover:shadow-md'
+                    : 'border-2 border-[var(--border)] hover:border-indigo-400 hover:text-indigo-400 hover:shadow-md'
                 } disabled:opacity-50`}
                 style={plan.popular ? {
                   background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
@@ -329,14 +332,14 @@ export default function PricingPage() {
               { name: '50 AI Questions', price: '$10', desc: 'Includes 8 bonus diagrams', packId: 'questions_50' },
               { name: '5 Live Sessions', price: '$15', desc: '90 minutes per session', packId: 'sessions_5' },
             ].map((pack) => (
-              <div key={pack.packId} className="bg-white rounded-2xl border-0 p-4 flex items-center justify-between gap-4" style={{ boxShadow: '0 4px 24px rgba(99,102,241,0.12)' }}>
+              <div key={pack.packId} className="rounded-2xl p-4 flex items-center justify-between gap-4" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', boxShadow: '0 4px 24px rgba(0,0,0,0.2)' }}>
                 <div>
-                  <h3 className="text-sm font-semibold text-gray-900">{pack.name}</h3>
+                  <h3 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{pack.name}</h3>
                   <div className="flex items-baseline gap-1 mt-0.5">
-                    <span className="text-lg font-bold text-indigo-600">{pack.price}</span>
-                    <span className="text-[11px] text-gray-400">one-time</span>
+                    <span className="text-lg font-bold text-indigo-400">{pack.price}</span>
+                    <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>one-time</span>
                   </div>
-                  <p className="text-[11px] text-gray-400 mt-0.5">{pack.desc}</p>
+                  <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-muted)' }}>{pack.desc}</p>
                 </div>
                 <button
                   onClick={async () => {
@@ -355,7 +358,7 @@ export default function PricingPage() {
                       if (data.url) window.location.href = data.url;
                     } catch { /* ignore */ }
                   }}
-                  className="shrink-0 px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white text-xs font-semibold rounded-lg transition-colors"
+                  className="shrink-0 px-4 py-2 text-white text-xs font-semibold rounded-lg transition-colors" style={{ background: 'var(--accent)' }}
                 >
                   Buy
                 </button>

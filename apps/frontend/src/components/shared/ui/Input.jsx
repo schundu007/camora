@@ -3,14 +3,14 @@ import { cva } from 'class-variance-authority';
 import { cn } from '../../../utils/cn';
 
 const inputVariants = cva(
-  ['flex w-full', 'text-sm', 'transition-all duration-200', 'placeholder:text-gray-500', 'focus:outline-none', 'disabled:cursor-not-allowed disabled:opacity-50', 'file:border-0 file:bg-transparent file:text-sm file:font-medium'],
+  ['flex w-full', 'text-sm', 'transition-all duration-200', 'placeholder:text-[var(--text-muted)]', 'focus:outline-none', 'disabled:cursor-not-allowed disabled:opacity-50', 'file:border-0 file:bg-transparent file:text-sm file:font-medium'],
   {
     variants: {
       variant: {
-        default: ['bg-gray-200 border border-gray-200 text-gray-900', 'hover:border-gray-300', 'focus:border-brand-400 focus:ring-2 focus:ring-brand-400/20'],
-        filled: ['bg-gray-50 border-2 border-transparent text-gray-900', 'hover:bg-gray-200', 'focus:bg-white focus:border-brand-400'],
-        ghost: ['bg-transparent border-0 text-gray-900', 'hover:bg-gray-50', 'focus:bg-gray-50'],
-        underline: ['bg-transparent border-0 border-b-2 border-gray-200 rounded-none text-gray-900', 'hover:border-gray-300', 'focus:border-brand-400', 'px-0'],
+        default: ['bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text-primary)]', 'hover:border-[var(--border-hover)]', 'focus:border-[var(--accent)] focus:ring-2 focus:ring-[rgba(99,102,241,0.15)]'],
+        filled: ['bg-[var(--bg-elevated)] border-2 border-transparent text-[var(--text-primary)]', 'hover:bg-[var(--bg-elevated)]', 'focus:border-[var(--accent)]'],
+        ghost: ['bg-transparent border-0 text-[var(--text-primary)]', 'hover:bg-[var(--bg-elevated)]', 'focus:bg-[var(--bg-elevated)]'],
+        underline: ['bg-transparent border-0 border-b-2 border-[var(--border)] rounded-none text-[var(--text-primary)]', 'hover:border-[var(--border-hover)]', 'focus:border-[var(--accent)]', 'px-0'],
       },
       size: {
         sm: 'h-8 px-3 text-xs rounded-md',
@@ -19,7 +19,7 @@ const inputVariants = cva(
         xl: 'h-12 px-4 text-base rounded-lg',
       },
       hasError: {
-        true: ['border-error-500 focus:border-error-500 focus:ring-error-500/20', 'dark:border-error-500 dark:focus:border-error-500'],
+        true: ['border-[var(--danger)] focus:border-[var(--danger)] focus:ring-[var(--danger)]/20'],
       },
     },
     defaultVariants: { variant: 'default', size: 'md' },
@@ -32,16 +32,16 @@ const Input = forwardRef(({ className, variant, size, type = 'text', leftIcon, r
   return (
     <div className="w-full">
       {label && (
-        <label htmlFor={id} className={cn('block text-sm font-medium mb-1.5', 'text-gray-900', hasError && 'text-error-400')}>
-          {label}{required && <span className="text-error-500 ml-0.5">*</span>}
+        <label htmlFor={id} className={cn('block text-sm font-medium mb-1.5', 'text-[var(--text-primary)]', hasError && 'text-[var(--danger)]')}>
+          {label}{required && <span className="text-[var(--danger)] ml-0.5">*</span>}
         </label>
       )}
       <div className="relative">
-        {leftIcon && <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600">{leftIcon}</span>}
+        {leftIcon && <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]">{leftIcon}</span>}
         <input ref={ref} id={id} type={type} className={cn(inputVariants({ variant, size, hasError }), leftIcon && 'pl-9', rightIcon && 'pr-9', className)} {...props} />
-        {rightIcon && <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600">{rightIcon}</span>}
+        {rightIcon && <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]">{rightIcon}</span>}
       </div>
-      {(error || hint) && <p className={cn('mt-1.5 text-xs', hasError ? 'text-error-400' : 'text-gray-600')}>{error || hint}</p>}
+      {(error || hint) && <p className={cn('mt-1.5 text-xs', hasError ? 'text-[var(--danger)]' : 'text-[var(--text-muted)]')}>{error || hint}</p>}
     </div>
   );
 });
@@ -54,12 +54,12 @@ const Textarea = forwardRef(({ className, variant = 'default', error, hint, labe
   return (
     <div className="w-full">
       {label && (
-        <label htmlFor={id} className={cn('block text-sm font-medium mb-1.5', 'text-gray-900', hasError && 'text-error-400')}>
-          {label}{required && <span className="text-error-500 ml-0.5">*</span>}
+        <label htmlFor={id} className={cn('block text-sm font-medium mb-1.5', 'text-[var(--text-primary)]', hasError && 'text-[var(--danger)]')}>
+          {label}{required && <span className="text-[var(--danger)] ml-0.5">*</span>}
         </label>
       )}
       <textarea ref={ref} id={id} rows={rows} className={cn(inputVariants({ variant, hasError }), 'min-h-[80px] py-2', resizeClass[resize], className)} {...props} />
-      {(error || hint) && <p className={cn('mt-1.5 text-xs', hasError ? 'text-error-400' : 'text-gray-600')}>{error || hint}</p>}
+      {(error || hint) && <p className={cn('mt-1.5 text-xs', hasError ? 'text-[var(--danger)]' : 'text-[var(--text-muted)]')}>{error || hint}</p>}
     </div>
   );
 });
@@ -77,7 +77,7 @@ const SearchInput = forwardRef(({ className, onClear, value, ...props }, ref) =>
     }
     rightIcon={
       value && onClear ? (
-        <button type="button" onClick={onClear} className="hover:text-gray-800 transition-colors">
+        <button type="button" onClick={onClear} className="hover:text-[var(--text-primary)] transition-colors">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>

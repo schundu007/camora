@@ -7,7 +7,7 @@ const spinnerVariants = cva(
   {
     variants: {
       size: { xs: 'w-3 h-3', sm: 'w-4 h-4', md: 'w-6 h-6', lg: 'w-8 h-8', xl: 'w-12 h-12' },
-      color: { default: 'text-gray-500', primary: 'text-brand-400', white: 'text-gray-900', current: 'text-current' },
+      color: { default: 'text-[var(--text-muted)]', primary: 'text-[var(--accent)]', white: 'text-white', current: 'text-current' },
     },
     defaultVariants: { size: 'md', color: 'default' },
   }
@@ -24,7 +24,7 @@ Spinner.displayName = 'Spinner';
 const DotsLoader = forwardRef(({ className, size = 'md', color = 'default', ...props }, ref) => {
   const sizeClasses = { xs: 'gap-0.5', sm: 'gap-1', md: 'gap-1.5', lg: 'gap-2', xl: 'gap-2.5' };
   const dotSizeClasses = { xs: 'w-1 h-1', sm: 'w-1.5 h-1.5', md: 'w-2 h-2', lg: 'w-2.5 h-2.5', xl: 'w-3 h-3' };
-  const colorClasses = { default: 'bg-gray-300', primary: 'bg-brand-400', white: 'bg-white', current: 'bg-current' };
+  const colorClasses = { default: 'bg-[var(--text-muted)]', primary: 'bg-[var(--accent)]', white: 'bg-white', current: 'bg-current' };
   return (
     <div ref={ref} className={cn('flex items-center', sizeClasses[size], className)} {...props}>
       {[0, 1, 2].map((i) => (
@@ -37,7 +37,7 @@ DotsLoader.displayName = 'DotsLoader';
 
 const PulseLoader = forwardRef(({ className, size = 'md', color = 'primary', ...props }, ref) => {
   const sizeClasses = { xs: 'w-6 h-6', sm: 'w-8 h-8', md: 'w-10 h-10', lg: 'w-12 h-12', xl: 'w-16 h-16' };
-  const colorClasses = { default: 'bg-gray-300', primary: 'bg-brand-400', white: 'bg-white' };
+  const colorClasses = { default: 'bg-[var(--text-muted)]', primary: 'bg-[var(--accent)]', white: 'bg-white' };
   return (
     <div ref={ref} className={cn('relative flex items-center justify-center', sizeClasses[size], className)} {...props}>
       <span className={cn('absolute rounded-full animate-ping opacity-75', sizeClasses[size], colorClasses[color])} />
@@ -53,12 +53,12 @@ const Skeleton = forwardRef(({ className, variant = 'text', lines = 1, width, he
     return (
       <div ref={ref} className={cn('space-y-2', className)} {...props}>
         {Array.from({ length: lines }).map((_, i) => (
-          <div key={i} className={cn('animate-pulse bg-gray-200 rounded', 'h-4', i === lines - 1 && 'w-3/4')} />
+          <div key={i} className={cn('animate-pulse bg-[var(--bg-elevated)] rounded', 'h-4', i === lines - 1 && 'w-3/4')} />
         ))}
       </div>
     );
   }
-  return <div ref={ref} className={cn('animate-pulse bg-gray-200', circle && 'rounded-full', variantClasses[variant], className)} style={{ width, height }} {...props} />;
+  return <div ref={ref} className={cn('animate-pulse bg-[var(--bg-elevated)]', circle && 'rounded-full', variantClasses[variant], className)} style={{ width, height }} {...props} />;
 });
 Skeleton.displayName = 'Skeleton';
 
@@ -66,9 +66,9 @@ const LoadingOverlay = forwardRef(({ className, children, loading = true, spinne
   <div ref={ref} className={cn('relative', className)} {...props}>
     {children}
     {loading && (
-      <div className={cn('absolute inset-0 flex flex-col items-center justify-center gap-3', 'bg-gray-100/80', blur && 'backdrop-blur-sm', 'z-50')}>
+      <div className={cn('absolute inset-0 flex flex-col items-center justify-center gap-3', 'bg-[var(--bg-app)]/80', blur && 'backdrop-blur-sm', 'z-50')}>
         <Spinner size={spinnerSize} color="primary" />
-        {text && <p className="text-sm font-medium text-gray-600">{text}</p>}
+        {text && <p className="text-sm font-medium text-[var(--text-secondary)]">{text}</p>}
       </div>
     )}
   </div>
@@ -78,13 +78,13 @@ LoadingOverlay.displayName = 'LoadingOverlay';
 const Progress = forwardRef(({ className, value = 0, max = 100, indeterminate = false, size = 'md', color = 'primary', showValue = false, ...props }, ref) => {
   const percentage = Math.min(Math.max((value / max) * 100, 0), 100);
   const sizeClasses = { xs: 'h-1', sm: 'h-1.5', md: 'h-2', lg: 'h-3', xl: 'h-4' };
-  const colorClasses = { primary: 'bg-brand-500', success: 'bg-success-500', warning: 'bg-warning-500', error: 'bg-error-500', info: 'bg-info-500' };
+  const colorClasses = { primary: 'bg-[var(--accent)]', success: 'bg-[var(--success)]', warning: 'bg-[var(--warning)]', error: 'bg-[var(--danger)]', info: 'bg-[var(--accent)]' };
   return (
     <div className={cn('w-full', className)}>
-      <div ref={ref} role="progressbar" aria-valuenow={indeterminate ? undefined : value} aria-valuemin={0} aria-valuemax={max} className={cn('w-full overflow-hidden rounded-full', 'bg-gray-200', sizeClasses[size])} {...props}>
+      <div ref={ref} role="progressbar" aria-valuenow={indeterminate ? undefined : value} aria-valuemin={0} aria-valuemax={max} className={cn('w-full overflow-hidden rounded-full', 'bg-[var(--bg-elevated)]', sizeClasses[size])} {...props}>
         <div className={cn('h-full rounded-full transition-all duration-300 ease-out', colorClasses[color], indeterminate && 'animate-[progress-indeterminate_1.5s_ease-in-out_infinite] w-1/3')} style={indeterminate ? undefined : { width: `${percentage}%` }} />
       </div>
-      {showValue && !indeterminate && <p className="mt-1 text-xs text-gray-600 text-right">{Math.round(percentage)}%</p>}
+      {showValue && !indeterminate && <p className="mt-1 text-xs text-[var(--text-muted)] text-right">{Math.round(percentage)}%</p>}
     </div>
   );
 });

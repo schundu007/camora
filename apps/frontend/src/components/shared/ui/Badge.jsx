@@ -7,19 +7,19 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
-        default: ['bg-gray-200 text-gray-900'],
-        primary: ['bg-brand-400/10 text-brand-400'],
-        secondary: ['bg-gray-200 text-gray-800'],
-        success: ['bg-success-500/10 text-success-400'],
-        warning: ['bg-warning-500/10 text-warning-400'],
-        error: ['bg-error-500/10 text-error-400'],
-        info: ['bg-info-500/10 text-info-400'],
-        outline: ['bg-transparent border border-gray-200 text-gray-900'],
-        'outline-primary': ['bg-transparent border border-brand-400/30 text-brand-400'],
-        'outline-success': ['bg-transparent border border-success-500/30 text-success-400'],
-        'outline-warning': ['bg-transparent border border-warning-500/30 text-warning-400'],
-        'outline-error': ['bg-transparent border border-error-500/30 text-error-400'],
-        ghost: ['bg-transparent text-gray-600'],
+        default: ['bg-[var(--bg-elevated)] text-[var(--text-secondary)]'],
+        primary: ['bg-[var(--accent-subtle)] text-[var(--accent-hover)]'],
+        secondary: ['bg-[var(--bg-elevated)] text-[var(--text-secondary)]'],
+        success: ['bg-[rgba(70,167,88,0.12)] text-[var(--success)]'],
+        warning: ['bg-[rgba(255,197,61,0.12)] text-[var(--warning)]'],
+        error: ['bg-[rgba(229,72,77,0.12)] text-[var(--danger)]'],
+        info: ['bg-[var(--accent-subtle)] text-[var(--accent-hover)]'],
+        outline: ['bg-transparent border border-[var(--border)] text-[var(--text-secondary)]'],
+        'outline-primary': ['bg-transparent border border-[var(--accent)]/30 text-[var(--accent-hover)]'],
+        'outline-success': ['bg-transparent border border-[var(--success)]/30 text-[var(--success)]'],
+        'outline-warning': ['bg-transparent border border-[var(--warning)]/30 text-[var(--warning)]'],
+        'outline-error': ['bg-transparent border border-[var(--danger)]/30 text-[var(--danger)]'],
+        ghost: ['bg-transparent text-[var(--text-muted)]'],
       },
       size: {
         xs: 'h-4 px-1.5 text-xs',
@@ -37,12 +37,12 @@ const Badge = forwardRef(({ className, variant, size, dot = false, removable = f
     {dot && (
       <span className={cn(
         'w-1.5 h-1.5 rounded-full',
-        variant === 'success' && 'bg-success-500',
-        variant === 'warning' && 'bg-warning-500',
-        variant === 'error' && 'bg-error-500',
-        variant === 'info' && 'bg-info-500',
-        variant === 'primary' && 'bg-brand-500',
-        (!variant || variant === 'default' || variant === 'secondary') && 'bg-gray-300',
+        variant === 'success' && 'bg-[var(--success)]',
+        variant === 'warning' && 'bg-[var(--warning)]',
+        variant === 'error' && 'bg-[var(--danger)]',
+        variant === 'info' && 'bg-[var(--accent)]',
+        variant === 'primary' && 'bg-[var(--accent)]',
+        (!variant || variant === 'default' || variant === 'secondary') && 'bg-[var(--text-muted)]',
       )} />
     )}
     {leftIcon && <span className="flex-shrink-0 -ml-0.5">{leftIcon}</span>}
@@ -52,7 +52,7 @@ const Badge = forwardRef(({ className, variant, size, dot = false, removable = f
       <button
         type="button"
         onClick={onRemove}
-        className={cn('flex-shrink-0 -mr-1 ml-0.5', 'w-3.5 h-3.5 rounded-full', 'inline-flex items-center justify-center', 'hover:bg-black/10 dark:hover:bg-white/10', 'transition-colors duration-150', 'focus:outline-none')}
+        className={cn('flex-shrink-0 -mr-1 ml-0.5', 'w-3.5 h-3.5 rounded-full', 'inline-flex items-center justify-center', 'hover:bg-white/10', 'transition-colors duration-150', 'focus:outline-none')}
         aria-label="Remove"
       >
         <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

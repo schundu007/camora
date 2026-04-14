@@ -128,8 +128,8 @@ function ProcessAccordion() {
             onClick={() => setActive(i)}
             className="cursor-pointer rounded-2xl border overflow-hidden"
             animate={{
-              borderColor: isActive ? `${step.color}50` : '#e5e7eb',
-              backgroundColor: isActive ? `${step.color}08` : 'rgba(255,255,255,0)',
+              borderColor: isActive ? `${step.color}50` : 'var(--border)',
+              backgroundColor: isActive ? `${step.color}08` : 'transparent',
             }}
             transition={{ duration: 0.3 }}
           >
@@ -137,12 +137,12 @@ function ProcessAccordion() {
               <div className="flex items-center gap-4">
                 <motion.div
                   className="w-10 h-10 rounded-xl flex items-center justify-center"
-                  animate={{ backgroundColor: isActive ? `${step.color}20` : '#f3f4f6', color: isActive ? step.color : '#9ca3af' }}
+                  animate={{ backgroundColor: isActive ? `${step.color}20` : 'var(--bg-elevated)', color: isActive ? step.color : '#9ca3af' }}
                   transition={{ duration: 0.3 }}
                 >
                   {step.icon}
                 </motion.div>
-                <span className={`text-base font-semibold transition-colors duration-300 ${isActive ? 'text-gray-900' : 'text-gray-400'}`}>
+                <span className="text-base font-semibold transition-colors duration-300" style={{ color: isActive ? 'var(--text-primary)' : 'var(--text-muted)' }}>
                   {step.label}
                 </span>
               </div>
@@ -162,8 +162,8 @@ function ProcessAccordion() {
                   transition={{ duration: 0.3, ease: 'easeInOut' }}
                 >
                   <div className="px-6 pb-6 pl-20">
-                    <p className="text-gray-500 leading-relaxed">{step.desc}</p>
-                    <div className="mt-4 h-[3px] rounded-full bg-gray-100 overflow-hidden">
+                    <p style={{ color: 'var(--text-secondary)' }} className="leading-relaxed">{step.desc}</p>
+                    <div className="mt-4 h-[3px] rounded-full overflow-hidden" style={{ background: 'var(--bg-elevated)' }}>
                       <motion.div
                         className="h-full rounded-full"
                         style={{ background: step.color }}
@@ -187,15 +187,15 @@ function ProcessAccordion() {
 /* ── Browser Chrome wrapper ────────────────────────────── */
 function BrowserChrome({ url, children, className = '' }: { url: string; children: React.ReactNode; className?: string }) {
   return (
-    <div className={`rounded-2xl border border-gray-200 overflow-hidden shadow-2xl shadow-gray-200/50 ${className}`}>
-      <div className="flex items-center gap-2.5 px-4 py-3 bg-gray-50/80 border-b border-gray-200">
+    <div className={`rounded-2xl overflow-hidden ${className}`} style={{ border: '1px solid var(--border)', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.4)' }}>
+      <div className="flex items-center gap-2.5 px-4 py-3" style={{ background: 'var(--bg-elevated)', borderBottom: '1px solid var(--border)' }}>
         <div className="flex gap-[6px]">
           <div className="w-[11px] h-[11px] rounded-full bg-[#ff5f57]" />
           <div className="w-[11px] h-[11px] rounded-full bg-[#febc2e]" />
           <div className="w-[11px] h-[11px] rounded-full bg-[#28c840]" />
         </div>
         <div className="flex-1 flex justify-center">
-          <div className="px-4 py-1 rounded-lg bg-white border border-gray-200 text-xs text-gray-400 font-code">
+          <div className="px-4 py-1 rounded-lg text-xs font-code" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}>
             {url}
           </div>
         </div>
@@ -243,15 +243,15 @@ function PrepShowcase() {
           transition: 'opacity 0.7s ease, transform 0.7s ease', transitionDelay: '200ms' }}>
         <div className="relative flex-shrink-0" style={{ width: 220, height: 220 }}>
           <svg viewBox="0 0 200 200" width="220" height="220" className="w-[180px] h-[180px] md:w-[220px] md:h-[220px]">
-            <circle cx="100" cy="100" r={RADIUS} fill="none" stroke="#e5e7eb" strokeWidth="18" />
+            <circle cx="100" cy="100" r={RADIUS} fill="none" stroke="var(--border)" strokeWidth="18" />
             {donutSegments.map((seg, i) => (
               <circle key={seg.name} cx="100" cy="100" r={RADIUS} fill="none" stroke={seg.color} strokeWidth="18"
                 strokeDasharray={`${inView ? seg.dash : 0} ${inView ? seg.gap : CIRCUMFERENCE}`}
                 strokeDashoffset={seg.offset} strokeLinecap="butt"
                 style={{ transition: `stroke-dasharray 1.2s ease ${i * 100 + 300}ms` }} />
             ))}
-            <text x="100" y="93" textAnchor="middle" fill="#111827" fontSize="28" fontWeight="bold" fontFamily="inherit">415+</text>
-            <text x="100" y="116" textAnchor="middle" fill="#9ca3af" fontSize="12" fontWeight="500" fontFamily="inherit">Total Topics</text>
+            <text x="100" y="93" textAnchor="middle" fill="var(--text-primary)" fontSize="28" fontWeight="bold" fontFamily="inherit">415+</text>
+            <text x="100" y="116" textAnchor="middle" fill="var(--text-muted)" fontSize="12" fontWeight="500" fontFamily="inherit">Total Topics</text>
           </svg>
         </div>
         <div className="flex flex-wrap gap-x-6 gap-y-3">
@@ -260,8 +260,8 @@ function PrepShowcase() {
               style={{ opacity: inView ? 1 : 0, transform: inView ? 'translateX(0)' : 'translateX(12px)',
                 transition: 'opacity 0.5s ease, transform 0.5s ease', transitionDelay: `${i * 80 + 500}ms` }}>
               <span className="flex-shrink-0 w-3 h-3 rounded-full" style={{ background: cat.color }} />
-              <span className="text-sm text-gray-700 font-medium whitespace-nowrap">{cat.name}</span>
-              <span className="text-sm text-gray-500 font-code font-semibold">{cat.count}</span>
+              <span className="text-sm font-medium whitespace-nowrap" style={{ color: 'var(--text-secondary)' }}>{cat.name}</span>
+              <span className="text-sm font-code font-semibold" style={{ color: 'var(--text-muted)' }}>{cat.count}</span>
             </div>
           ))}
         </div>
@@ -296,10 +296,10 @@ function PrepShowcase() {
                   {item.difficulty}
                 </span>
               </div>
-              <h4 className="text-base font-bold text-gray-900 mb-2">{item.name}</h4>
+              <h4 className="text-base font-bold mb-2" style={{ color: 'var(--text-primary)' }}>{item.name}</h4>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-400">{item.topics} subtopics</span>
-                <div className="w-20 h-1.5 rounded-full bg-gray-100 overflow-hidden">
+                <span className="text-sm" style={{ color: 'var(--text-muted)' }}>{item.topics} subtopics</span>
+                <div className="w-20 h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--bg-elevated)' }}>
                   <div className="h-full rounded-full transition-all duration-1000" style={{ width: inView ? `${30 + i * 12}%` : '0%', background: item.color }} />
                 </div>
               </div>
@@ -394,7 +394,7 @@ export default function LandingPage() {
   }, []);
 
   return (
-    <div className="min-h-screen text-gray-900 overflow-hidden" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
+    <div className="min-h-screen overflow-hidden" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", color: 'var(--text-primary)' }}>
       <SEO path="/" />
 
       {/* ── Styles ── */}
@@ -430,7 +430,7 @@ export default function LandingPage() {
       {/* ── Subtle background gradient ── */}
       <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[140vw] h-[60vh]"
-             style={{ background: 'radial-gradient(ellipse 70% 50% at 50% 0%, rgba(16,185,129,0.06) 0%, transparent 70%)' }} />
+             style={{ background: 'radial-gradient(ellipse 70% 50% at 50% 0%, rgba(99,102,241,0.08) 0%, transparent 70%)' }} />
       </div>
 
       {/* ── NAV ── */}
@@ -440,12 +440,12 @@ export default function LandingPage() {
       <section className="relative pt-24 pb-10 md:pt-32 md:pb-14 px-6" style={{ zIndex: 1 }}>
         <div className="w-full lg:max-w-[70%] mx-auto text-center">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 border border-emerald-200/60 mb-6">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6" style={{ background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.2)' }}>
               <span className="relative flex h-2 w-2">
                 <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 animate-ping opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
               </span>
-              <span className="text-xs font-semibold text-emerald-700 tracking-wide">APPA — Apply · Prepare · Practice · Attend</span>
+              <span className="text-xs font-semibold text-emerald-400 tracking-wide">APPA — Apply · Prepare · Practice · Attend</span>
             </div>
           </motion.div>
           <motion.h1 className="font-display font-extrabold tracking-[-0.04em]"
@@ -468,11 +468,11 @@ export default function LandingPage() {
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6, delay: 0.5 }}>
               <div className="flex -space-x-1.5">
                 {['#34d399','#818cf8','#38bdf8','#fbbf24'].map((c, i) => (
-                  <div key={i} className="w-6 h-6 rounded-full border-2 border-white" style={{ background: c }} />
+                  <div key={i} className="w-6 h-6 rounded-full" style={{ background: c, border: '2px solid var(--bg-app)' }} />
                 ))}
               </div>
-              <span className="text-sm text-gray-500">
-                <span className="font-bold text-gray-900">{visitorCount.toLocaleString()}+</span> engineers visited
+              <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                <span className="font-bold" style={{ color: 'var(--text-primary)' }}>{visitorCount.toLocaleString()}+</span> engineers visited
               </span>
             </motion.div>
           )}
@@ -497,8 +497,8 @@ export default function LandingPage() {
                        style={{ background: `${step.color}15`, color: step.color }}>
                     {AppaIcons[step.label.toLowerCase() as keyof typeof AppaIcons]?.(step.color)}
                   </div>
-                  <h3 className="text-lg font-bold text-gray-900 font-display mb-2">{step.label}</h3>
-                  <p className="text-sm text-gray-500 leading-relaxed flex-1">{step.desc}</p>
+                  <h3 className="text-lg font-bold font-display mb-2" style={{ color: 'var(--text-primary)' }}>{step.label}</h3>
+                  <p className="text-sm leading-relaxed flex-1" style={{ color: 'var(--text-secondary)' }}>{step.desc}</p>
                   <div className="mt-4 flex items-center gap-1 text-xs font-semibold transition-colors duration-200 group-hover:gap-2" style={{ color: step.color }}>
                     <span>Explore</span>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-200 group-hover:translate-x-0.5">
@@ -526,9 +526,9 @@ export default function LandingPage() {
               <div className="h-full flex flex-col">
                 <div className="relative rounded-3xl p-10 flex-1 flex flex-col justify-center overflow-hidden"
                      style={{
-                       background: 'linear-gradient(145deg, rgba(255,255,255,0.95) 0%, rgba(236,253,245,0.9) 25%, rgba(224,242,254,0.85) 50%, rgba(245,243,255,0.9) 75%, rgba(255,255,255,0.95) 100%)',
-                       boxShadow: '0 8px 40px rgba(16,185,129,0.12), 0 2px 8px rgba(99,102,241,0.08), inset 0 1px 0 rgba(255,255,255,0.8)',
-                       border: '1px solid rgba(16,185,129,0.15)',
+                       background: 'linear-gradient(145deg, var(--bg-surface) 0%, rgba(52,211,153,0.05) 25%, rgba(99,102,241,0.05) 50%, rgba(139,92,246,0.05) 75%, var(--bg-surface) 100%)',
+                       boxShadow: '0 8px 40px rgba(0,0,0,0.3), 0 2px 8px rgba(99,102,241,0.1)',
+                       border: '1px solid var(--border)',
                      }}>
                   {/* Gradient glow orbs */}
                   <div className="absolute top-0 right-0 w-40 h-40 rounded-full blur-3xl opacity-30" style={{ background: 'radial-gradient(circle, #34d399, transparent)' }} />
@@ -558,8 +558,8 @@ export default function LandingPage() {
                             )}
                           </div>
                           <div className="pt-2.5">
-                            <span className="text-base font-bold text-gray-900">{step.label.split(' ')[0]}</span>
-                            <p className="text-sm text-gray-500 mt-1 leading-relaxed">{step.label.split(' ').slice(1).join(' ')}</p>
+                            <span className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>{step.label.split(' ')[0]}</span>
+                            <p className="text-sm mt-1 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{step.label.split(' ').slice(1).join(' ')}</p>
                           </div>
                         </div>
                       ))}
@@ -589,11 +589,11 @@ export default function LandingPage() {
           ].map((demo, i) => (
             <FadeIn key={demo.url} delay={0.1 * (i + 1)}>
               <div className="card rounded-2xl overflow-hidden hover:-translate-y-0.5 hover:shadow-md transition-all duration-300 group" style={{ padding: 0 }}>
-                <div className="flex items-center gap-2 px-3 py-2 bg-gray-50/80 border-b border-gray-100">
+                <div className="flex items-center gap-2 px-3 py-2" style={{ background: 'var(--bg-elevated)', borderBottom: '1px solid var(--border)' }}>
                   <div className="flex gap-1">
                     <div className="w-2 h-2 rounded-full bg-[#ff5f57]" /><div className="w-2 h-2 rounded-full bg-[#febc2e]" /><div className="w-2 h-2 rounded-full bg-[#28c840]" />
                   </div>
-                  <span className="text-[10px] text-gray-400 truncate font-code">{demo.url}</span>
+                  <span className="text-[10px] truncate font-code" style={{ color: 'var(--text-muted)' }}>{demo.url}</span>
                 </div>
                 <div className="aspect-[4/3] bg-gray-100 relative">
                   <video src={demo.src} autoPlay loop muted playsInline className="w-full h-full object-cover" />
@@ -611,7 +611,7 @@ export default function LandingPage() {
       <section className="px-6 py-12 md:py-16" style={{ zIndex: 1 }}>
         <div className="w-full lg:max-w-[70%] mx-auto">
           <FadeIn className="text-center mb-10">
-            <span className="section-label inline-flex items-center gap-2 text-sm font-bold tracking-[0.15em] px-5 py-2 rounded-full border border-emerald-300 bg-white text-emerald-700 shadow-sm">
+            <span className="section-label inline-flex items-center gap-2 text-sm font-bold tracking-[0.15em] px-5 py-2 rounded-full" style={{ border: '1px solid rgba(52,211,153,0.3)', background: 'rgba(52,211,153,0.08)', color: '#34d399' }}>
               <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" /></svg>
               NEW FEATURE
             </span>
@@ -625,8 +625,8 @@ export default function LandingPage() {
 
           <FadeIn delay={0.15}>
             <div className="card max-w-3xl mx-auto rounded-2xl overflow-hidden shadow-lg shadow-gray-100/40" style={{ padding: 0 }}>
-              <div className="px-6 py-5 border-b border-gray-100">
-                <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-gray-50 border border-gray-200">
+              <div className="px-6 py-5" style={{ borderBottom: '1px solid var(--border)' }}>
+                <div className="flex items-center gap-3 px-4 py-3 rounded-xl" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
                   <svg width="18" height="18" fill="none" stroke="#9ca3af" viewBox="0 0 24 24" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m9.86-4.122a4.5 4.5 0 00-6.364-6.364L4.5 6.1" /></svg>
                   <span className="text-sm text-gray-400 font-code truncate">https://nvidia.wd5.myworkdayjobs.com/...Senior-DevOps-Engineer</span>
                   <span className="ml-auto px-4 py-1.5 text-xs font-bold text-white rounded-lg flex-shrink-0" style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}>Analyze</span>
@@ -643,11 +643,11 @@ export default function LandingPage() {
                     { label: 'System Design', items: ['CI/CD Pipeline', 'Container Orchestration', 'Monitoring'], color: '#3b82f6', bg: '#eff6ff' },
                     { label: 'Behavioral', items: ['Leadership', 'Incident Mgmt', 'Cross-Team'], color: '#f59e0b', bg: '#fffbeb' },
                   ].map(col => (
-                    <div key={col.label} className="card-sm rounded-xl" style={{ background: col.bg, border: 'none' }}>
+                    <div key={col.label} className="card-sm rounded-xl" style={{ background: `${col.color}08`, border: 'none' }}>
                       <p className="text-[10px] font-bold uppercase tracking-wider mb-2.5" style={{ color: col.color }}>{col.label}</p>
                       <div className="flex flex-col gap-1.5">
                         {col.items.map(item => (
-                          <span key={item} className="text-xs font-medium text-gray-700 px-2.5 py-1.5 rounded-lg bg-white border border-gray-100 shadow-sm shadow-gray-50">{item}</span>
+                          <span key={item} className="text-xs font-medium px-2.5 py-1.5 rounded-lg" style={{ color: 'var(--text-secondary)', background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>{item}</span>
                         ))}
                       </div>
                     </div>
@@ -685,14 +685,14 @@ export default function LandingPage() {
       <section className="px-6 py-12 md:py-16" style={{ zIndex: 1 }}>
         <div className="w-full lg:max-w-[70%] mx-auto">
           <FadeIn className="text-center mb-20">
-            <span className="section-label inline-block text-sm font-bold tracking-[0.2em] px-4 py-1.5 rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700">ONLY ON CAMORA</span>
+            <span className="section-label inline-block text-sm font-bold tracking-[0.2em] px-4 py-1.5 rounded-full" style={{ border: '1px solid rgba(52,211,153,0.3)', background: 'rgba(52,211,153,0.08)', color: '#34d399' }}>ONLY ON CAMORA</span>
             <h2 className="heading-1 font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mt-6">What no other interview tool can do.</h2>
           </FadeIn>
           <div className="grid md:grid-cols-2 gap-6">
             {FEATURE_GROUPS.map((group, gi) => (
               <FadeIn key={group.groupTitle} delay={gi * 0.1}>
                 <div className="card rounded-2xl overflow-hidden hover:-translate-y-0.5 hover:shadow-md transition-all duration-300" style={{ padding: 0 }}>
-                  <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between" style={{ background: `${group.accent}06` }}>
+                  <div className="px-6 py-4 flex items-center justify-between" style={{ background: `${group.accent}06`, borderBottom: '1px solid var(--border)' }}>
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: `${group.accent}15` }}>
                         <span className="w-2.5 h-2.5 rounded-full" style={{ background: group.accent }} />
@@ -704,9 +704,9 @@ export default function LandingPage() {
                   <div className="p-5">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                       {group.features.map(f => (
-                        <div key={f.title} className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 transition-colors group/feat">
+                        <div key={f.title} className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors group/feat" style={{ cursor: 'default' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-elevated)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                           <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-200 group-hover/feat:scale-110" style={{ background: `${group.accent}10`, color: group.accent }}>{f.icon}</div>
-                          <span className="text-sm font-medium text-gray-700 leading-tight">{f.title}</span>
+                          <span className="text-sm font-medium leading-tight" style={{ color: 'var(--text-secondary)' }}>{f.title}</span>
                         </div>
                       ))}
                     </div>
@@ -727,7 +727,7 @@ export default function LandingPage() {
           </FadeIn>
           <FadeIn className="max-w-2xl mx-auto">
             <div className="card rounded-2xl overflow-hidden" style={{ padding: 0 }}>
-              <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/60 flex items-center justify-between">
+              <div className="px-6 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid var(--border)', background: 'var(--bg-elevated)' }}>
                 <span className="heading-3 font-display">Feature Count by Platform</span>
                 <span className="badge-new">2024 DATA</span>
               </div>
@@ -741,11 +741,11 @@ export default function LandingPage() {
                         {isCamora && <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 mr-1.5 align-middle" />}
                         {bar.name}
                       </span>
-                      <div className="flex-1 h-8 rounded-lg bg-gray-50 border border-gray-100 overflow-hidden">
+                      <div className="flex-1 h-8 rounded-lg overflow-hidden" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
                         <div className={`h-full rounded-lg flex items-center justify-end pr-3 ${isCamora ? 'shadow-sm' : ''}`}
                           style={{
                             width: compInView ? `${(bar.count / 45) * 100}%` : '0%',
-                            background: isCamora ? 'linear-gradient(135deg, #34d399, #10b981)' : '#e5e7eb',
+                            background: isCamora ? 'linear-gradient(135deg, #34d399, #10b981)' : 'var(--border)',
                             transition: `width 1s ease ${i * 100 + 400}ms`,
                           }}>
                           <span className={`text-xs font-bold font-code whitespace-nowrap ${isCamora ? 'text-white' : 'text-gray-500'}`}>{bar.count}{bar.suffix}</span>
@@ -755,7 +755,7 @@ export default function LandingPage() {
                   );
                 })}
               </div>
-              <div className="px-6 py-3 border-t border-gray-100 bg-gray-50/40">
+              <div className="px-6 py-3" style={{ borderTop: '1px solid var(--border)', background: 'var(--bg-elevated)' }}>
                 <p className="section-label text-center font-code tracking-wide">FEATURES COMPARISON</p>
               </div>
             </div>
@@ -768,8 +768,8 @@ export default function LandingPage() {
         <FadeIn className="max-w-3xl mx-auto">
           <div className="relative rounded-3xl px-8 py-16 md:px-16 md:py-20 text-center overflow-hidden"
                style={{
-                 background: 'linear-gradient(145deg, rgba(236,253,245,0.7) 0%, rgba(224,242,254,0.5) 50%, rgba(245,243,255,0.6) 100%)',
-                 border: '1px solid rgba(16,185,129,0.15)',
+                 background: 'linear-gradient(145deg, rgba(52,211,153,0.06) 0%, rgba(99,102,241,0.06) 50%, rgba(139,92,246,0.06) 100%)',
+                 border: '1px solid var(--border)',
                }}>
             {/* Subtle glow orbs */}
             <div className="absolute top-0 right-1/4 w-48 h-48 rounded-full blur-3xl opacity-20 pointer-events-none" style={{ background: 'radial-gradient(circle, #34d399, transparent)' }} />
