@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
 /* ─── Types ──────────────────────────────────────────────────── */
@@ -186,48 +186,63 @@ const sections: NavSection[] = [
 function SidebarSection({
   section,
   pathname,
+  collapsed,
 }: {
   section: NavSection;
   pathname: string;
+  collapsed: boolean;
 }) {
   const [open, setOpen] = useState(true);
 
   return (
-    <div className="mt-4 first:mt-0">
-      {/* Section header */}
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        className="flex items-center justify-between w-full mb-1 px-2 cursor-pointer select-none group"
-        style={{
-          fontSize: '11px',
-          fontWeight: 600,
-          textTransform: 'uppercase',
-          letterSpacing: '0.05em',
-          color: 'var(--text-muted)',
-          background: 'none',
-          border: 'none',
-        }}
-      >
-        <span>{section.title}</span>
-        <span
-          className="transition-transform duration-150"
+    <div className="mt-3 first:mt-0">
+      {/* Section header — hidden when collapsed */}
+      {!collapsed && (
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          className="flex items-center justify-between w-full mb-1 px-2 cursor-pointer select-none group"
           style={{
-            transform: open ? 'rotate(90deg)' : 'rotate(0deg)',
-            color: 'var(--text-dimmed)',
+            fontSize: '11px',
+            fontWeight: 600,
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em',
+            color: 'var(--text-muted)',
+            background: 'none',
+            border: 'none',
           }}
         >
-          {icons.chevron}
-        </span>
-      </button>
+          <span>{section.title}</span>
+          <span
+            className="transition-transform duration-150"
+            style={{
+              transform: open ? 'rotate(90deg)' : 'rotate(0deg)',
+              color: 'var(--text-dimmed)',
+            }}
+          >
+            {icons.chevron}
+          </span>
+        </button>
+      )}
 
-      {/* Items */}
-      {open && (
+      {/* Items — always visible when collapsed (no toggle) */}
+      {(collapsed || open) && (
         <ul className="list-none m-0 p-0">
           {section.items.map((item) => {
             const active = isActive(item.path, pathname);
 
-            const linkStyles: React.CSSProperties = {
+            const linkStyles: React.CSSProperties = collapsed ? {
+              height: '36px',
+              width: '36px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '2px auto',
+              color: active ? 'var(--accent)' : 'var(--text-muted)',
+              background: active ? 'var(--accent-subtle)' : 'transparent',
+              borderRadius: '8px',
+              transition: 'background 0.12s, color 0.12s',
+            } : {
               height: '32px',
               fontSize: '13px',
               fontWeight: 500,
@@ -238,6 +253,12 @@ function SidebarSection({
               transition: 'background 0.12s, color 0.12s',
             };
 
+            const iconEl = (
+              <span className="flex-shrink-0" style={{ color: active ? 'var(--accent)' : 'var(--text-muted)' }}>
+                {item.icon}
+              </span>
+            );
+
             if (item.external) {
               return (
                 <li key={item.path}>
@@ -245,13 +266,12 @@ function SidebarSection({
                     href={item.path}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2.5 px-2.5 rounded-md no-underline sidebar-item"
+                    className={collapsed ? 'flex rounded-md no-underline sidebar-item' : 'flex items-center gap-2.5 px-2.5 rounded-md no-underline sidebar-item'}
                     style={linkStyles}
+                    title={collapsed ? item.label : undefined}
                   >
-                    <span className="flex-shrink-0" style={{ color: active ? 'var(--accent)' : 'var(--text-muted)' }}>
-                      {item.icon}
-                    </span>
-                    {item.label}
+                    {iconEl}
+                    {!collapsed && item.label}
                   </a>
                 </li>
               );
@@ -261,13 +281,12 @@ function SidebarSection({
               <li key={item.path}>
                 <Link
                   to={item.path}
-                  className="flex items-center gap-2.5 px-2.5 rounded-md no-underline sidebar-item"
+                  className={collapsed ? 'flex rounded-md no-underline sidebar-item' : 'flex items-center gap-2.5 px-2.5 rounded-md no-underline sidebar-item'}
                   style={linkStyles}
+                  title={collapsed ? item.label : undefined}
                 >
-                  <span className="flex-shrink-0" style={{ color: active ? 'var(--accent)' : 'var(--text-muted)' }}>
-                    {item.icon}
-                  </span>
-                  {item.label}
+                  {iconEl}
+                  {!collapsed && item.label}
                 </Link>
               </li>
             );
@@ -296,49 +315,64 @@ function isActive(itemPath: string, currentPath: string): boolean {
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const { pathname } = useLocation();
+  const [collapsed, setCollapsed] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('camora-sidebar-collapsed') !== 'false';
+    }
+    return true; // collapsed by default
+  });
+
+  useEffect(() => {
+    localStorage.setItem('camora-sidebar-collapsed', String(collapsed));
+  }, [collapsed]);
+
+  const sidebarWidth = collapsed ? '56px' : '240px';
 
   const sidebarContent = (
     <div className="flex flex-col h-full">
       {/* Scrollable nav */}
-      <nav className="flex-1 overflow-y-auto px-3 py-4 no-scrollbar">
+      <nav className={`flex-1 overflow-y-auto ${collapsed ? 'px-1.5' : 'px-3'} py-3 no-scrollbar`}>
         {sections.map((section) => (
           <SidebarSection
             key={section.title}
             section={section}
             pathname={pathname}
+            collapsed={collapsed}
           />
         ))}
       </nav>
 
       {/* Bottom section */}
       <div
-        className="px-3 py-3 flex flex-col gap-2"
+        className={`${collapsed ? 'px-1.5' : 'px-3'} py-3 flex flex-col gap-2 items-center`}
         style={{ borderTop: '1px solid var(--border)' }}
       >
-        <Link
-          to="/pricing"
-          className="flex items-center gap-2.5 px-2.5 rounded-md no-underline sidebar-item"
+        {/* Expand/Collapse toggle */}
+        <button
+          onClick={() => setCollapsed(c => !c)}
+          className="sidebar-item flex items-center justify-center rounded-md"
           style={{
+            width: collapsed ? '36px' : '100%',
             height: '32px',
+            color: 'var(--text-muted)',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
             fontSize: '13px',
             fontWeight: 500,
-            color: 'var(--text-secondary)',
           }}
+          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
-          <span className="flex-shrink-0" style={{ color: 'var(--text-muted)' }}>
-            {icons.pricing}
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ transform: collapsed ? 'rotate(0deg)' : 'rotate(180deg)', transition: 'transform 0.2s' }}>
+            <path d="M6 3l5 5-5 5" />
+          </svg>
+          {!collapsed && <span className="ml-2">Collapse</span>}
+        </button>
+        {!collapsed && (
+          <span className="px-2.5 block" style={{ fontSize: '10px', color: 'var(--text-dimmed)' }}>
+            &copy; 2026 Cariara
           </span>
-          Pricing
-        </Link>
-        <span
-          className="px-2.5 block"
-          style={{
-            fontSize: '10px',
-            color: 'var(--text-dimmed)',
-          }}
-        >
-          &copy; 2026 Cariara
-        </span>
+        )}
       </div>
     </div>
   );
@@ -349,7 +383,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       <aside
         className="hidden md:flex flex-col shrink-0"
         style={{
-          width: 'var(--sidebar-width, 240px)',
+          width: sidebarWidth,
+          transition: 'width 0.2s ease-out',
           height: 'calc(100vh - var(--topbar-height, 48px))',
           position: 'sticky',
           top: 'var(--topbar-height, 48px)',
