@@ -137,7 +137,7 @@ function ProcessAccordion() {
               <div className="flex items-center gap-4">
                 <motion.div
                   className="w-10 h-10 rounded-xl flex items-center justify-center"
-                  animate={{ backgroundColor: isActive ? `${step.color}20` : 'var(--bg-elevated)', color: isActive ? step.color : '#9ca3af' }}
+                  animate={{ backgroundColor: isActive ? `${step.color}20` : 'var(--bg-elevated)', color: isActive ? step.color : 'var(--text-muted)' }}
                   transition={{ duration: 0.3 }}
                 >
                   {step.icon}
@@ -147,7 +147,7 @@ function ProcessAccordion() {
                 </span>
               </div>
               <motion.div animate={{ rotate: isActive ? 45 : 0 }} transition={{ duration: 0.2 }}>
-                <svg className="w-5 h-5" style={{ color: isActive ? step.color : '#d1d5db' }}
+                <svg className="w-5 h-5" style={{ color: isActive ? step.color : 'var(--text-muted)' }}
                      fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
                 </svg>
@@ -457,7 +457,7 @@ export default function LandingPage() {
             <Link to={isAuthenticated ? "/capra/prepare" : "/signup"} className="shimmer-btn px-6 py-3 text-base font-semibold rounded-xl text-white transition-colors" style={{ background: 'linear-gradient(135deg, #10b981, #3b82f6, #8b5cf6)' }}>
               {isAuthenticated ? 'Go to Dashboard' : 'Get Started Free'}
             </Link>
-            <a href="#process" className="btn-secondary px-6 py-3 text-base rounded-xl hover:bg-white/50 transition-colors">
+            <a href="#process" className="btn-secondary px-6 py-3 text-base rounded-xl transition-colors">
               See How It Works
             </a>
           </motion.div>
@@ -519,7 +519,7 @@ export default function LandingPage() {
             <FadeIn>
               <span className="section-label gradient-text text-sm font-bold tracking-[0.2em]">Our Process</span>
               <h2 className="heading-1 font-display text-4xl md:text-5xl font-bold tracking-tight mt-4 leading-[1.1]">Your path to the offer</h2>
-              <p className="text-body text-lg text-gray-400 mt-5 leading-relaxed">A streamlined process designed for engineers who want to land their dream role.</p>
+              <p className="text-body text-lg mt-5 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>A streamlined process designed for engineers who want to land their dream role.</p>
               <ProcessAccordion />
             </FadeIn>
             <FadeIn delay={0.2} className="hidden lg:flex">
@@ -576,7 +576,7 @@ export default function LandingPage() {
       <section className="px-6 pb-10 md:pb-16" style={{ zIndex: 1 }}>
         <FadeIn className="w-full lg:max-w-[70%] mx-auto">
           <BrowserChrome url="camora.cariara.com/lumora">
-            <div className="aspect-video bg-gray-100">
+            <div className="aspect-video" style={{ background: 'var(--bg-elevated)' }}>
               <video src="/demo-lumora.mp4" autoPlay loop muted playsInline title="Lumora live interview demo" className="w-full h-full object-cover" />
             </div>
           </BrowserChrome>
@@ -595,7 +595,7 @@ export default function LandingPage() {
                   </div>
                   <span className="text-[10px] truncate font-code" style={{ color: 'var(--text-muted)' }}>{demo.url}</span>
                 </div>
-                <div className="aspect-[4/3] bg-gray-100 relative">
+                <div className="aspect-[4/3] relative" style={{ background: 'var(--bg-elevated)' }}>
                   <video src={demo.src} autoPlay loop muted playsInline className="w-full h-full object-cover" />
                   <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent px-4 py-3">
                     <span className="text-sm font-semibold text-white">{demo.label}</span>
@@ -618,30 +618,30 @@ export default function LandingPage() {
             <h2 className="heading-1 font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mt-6">
               Confused where to start preparing?
             </h2>
-            <p className="text-body mt-4 text-lg md:text-xl text-gray-500 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-body mt-4 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
               Paste any job URL. Get an AI-powered prep plan with coding, system design, and behavioral questions tailored to <em>that exact role</em>.
             </p>
           </FadeIn>
 
           <FadeIn delay={0.15}>
-            <div className="card max-w-3xl mx-auto rounded-2xl overflow-hidden shadow-lg shadow-gray-100/40" style={{ padding: 0 }}>
+            <div className="card max-w-3xl mx-auto rounded-2xl overflow-hidden" style={{ padding: 0, boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }}>
               <div className="px-6 py-5" style={{ borderBottom: '1px solid var(--border)' }}>
                 <div className="flex items-center gap-3 px-4 py-3 rounded-xl" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-                  <svg width="18" height="18" fill="none" stroke="#9ca3af" viewBox="0 0 24 24" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m9.86-4.122a4.5 4.5 0 00-6.364-6.364L4.5 6.1" /></svg>
-                  <span className="text-sm text-gray-400 font-code truncate">https://nvidia.wd5.myworkdayjobs.com/...Senior-DevOps-Engineer</span>
+                  <svg width="18" height="18" fill="none" stroke="var(--text-muted)" viewBox="0 0 24 24" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m9.86-4.122a4.5 4.5 0 00-6.364-6.364L4.5 6.1" /></svg>
+                  <span className="text-sm font-code truncate" style={{ color: 'var(--text-muted)' }}>https://nvidia.wd5.myworkdayjobs.com/...Senior-DevOps-Engineer</span>
                   <span className="ml-auto px-4 py-1.5 text-xs font-bold text-white rounded-lg flex-shrink-0" style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}>Analyze</span>
                 </div>
               </div>
               <div className="px-6 py-5">
                 <div className="flex items-center gap-2 mb-4">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  <span className="text-xs font-bold text-emerald-600 tracking-wide uppercase font-code">AI Analysis Complete</span>
+                  <span className="text-xs font-bold text-emerald-400 tracking-wide uppercase font-code">AI Analysis Complete</span>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   {[
-                    { label: 'Coding Focus', items: ['Graph Algorithms', 'Scripting', 'Automation'], color: '#10b981', bg: '#ecfdf5' },
-                    { label: 'System Design', items: ['CI/CD Pipeline', 'Container Orchestration', 'Monitoring'], color: '#3b82f6', bg: '#eff6ff' },
-                    { label: 'Behavioral', items: ['Leadership', 'Incident Mgmt', 'Cross-Team'], color: '#f59e0b', bg: '#fffbeb' },
+                    { label: 'Coding Focus', items: ['Graph Algorithms', 'Scripting', 'Automation'], color: '#10b981' },
+                    { label: 'System Design', items: ['CI/CD Pipeline', 'Container Orchestration', 'Monitoring'], color: '#3b82f6' },
+                    { label: 'Behavioral', items: ['Leadership', 'Incident Mgmt', 'Cross-Team'], color: '#f59e0b' },
                   ].map(col => (
                     <div key={col.label} className="card-sm rounded-xl" style={{ background: `${col.color}08`, border: 'none' }}>
                       <p className="text-[10px] font-bold uppercase tracking-wider mb-2.5" style={{ color: col.color }}>{col.label}</p>
@@ -737,7 +737,7 @@ export default function LandingPage() {
                   return (
                     <div key={bar.name} className="flex items-center gap-4"
                       style={{ opacity: compInView ? 1 : 0, transition: 'opacity 0.5s ease', transitionDelay: `${i * 100 + 300}ms` }}>
-                      <span className={`text-sm font-semibold w-24 text-right flex-shrink-0 ${isCamora ? 'text-emerald-600' : 'text-gray-400'}`}>
+                      <span className={`text-sm font-semibold w-24 text-right flex-shrink-0`} style={{ color: isCamora ? '#34d399' : 'var(--text-muted)' }}>
                         {isCamora && <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 mr-1.5 align-middle" />}
                         {bar.name}
                       </span>
@@ -748,7 +748,7 @@ export default function LandingPage() {
                             background: isCamora ? 'linear-gradient(135deg, #34d399, #10b981)' : 'var(--border)',
                             transition: `width 1s ease ${i * 100 + 400}ms`,
                           }}>
-                          <span className={`text-xs font-bold font-code whitespace-nowrap ${isCamora ? 'text-white' : 'text-gray-500'}`}>{bar.count}{bar.suffix}</span>
+                          <span className="text-xs font-bold font-code whitespace-nowrap" style={{ color: isCamora ? '#fff' : 'var(--text-muted)' }}>{bar.count}{bar.suffix}</span>
                         </div>
                       </div>
                     </div>
@@ -779,7 +779,7 @@ export default function LandingPage() {
               <h2 className="heading-1 font-display text-3xl md:text-4xl lg:text-[42px] font-bold tracking-tight">
                 Your next interview <span className="gradient-text">starts here.</span>
               </h2>
-              <p className="text-body mt-6 text-base md:text-lg text-gray-500">Apply, Prepare, Practice, Attend.</p>
+              <p className="text-body mt-6 text-base md:text-lg" style={{ color: 'var(--text-secondary)' }}>Apply, Prepare, Practice, Attend.</p>
               <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Link to="/lumora" className="btn-primary shimmer-btn px-8 py-4 text-lg rounded-2xl">Start Free — No Credit Card</Link>
                 <Link to="/pricing" className="btn-secondary px-8 py-4 text-lg rounded-2xl">View Pricing</Link>

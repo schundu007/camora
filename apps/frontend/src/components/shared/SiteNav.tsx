@@ -23,12 +23,12 @@ export default function SiteNav() {
   const navHeight = showTicker ? 56 + TICKER_HEIGHT : 56;
 
   const nav = (
-    <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl border-b border-white/[0.06]" style={{ background: 'linear-gradient(135deg, rgba(15,23,42,0.92) 0%, rgba(30,27,75,0.90) 40%, rgba(20,20,60,0.92) 70%, rgba(15,23,42,0.92) 100%)', fontFamily: "'Source Sans 3', sans-serif" }}>
+    <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl border-b border-white/[0.06]" style={{ background: 'linear-gradient(135deg, rgba(15,23,42,0.92) 0%, rgba(30,27,75,0.90) 40%, rgba(20,20,60,0.92) 70%, rgba(15,23,42,0.92) 100%)', fontFamily: "var(--font-sans)" }}>
       <div className="w-full lg:max-w-[70%] mx-auto flex items-center justify-between px-4 sm:px-6 h-14">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2.5">
           <CamoraLogo size={36} />
-          <span className="text-sm font-extrabold tracking-tight text-white" style={{ fontFamily: "'Source Sans 3', sans-serif" }}>Camora</span>
+          <span className="text-sm font-extrabold tracking-tight text-white" style={{ fontFamily: "var(--font-sans)" }}>Camora</span>
         </Link>
 
         {/* Desktop links */}
