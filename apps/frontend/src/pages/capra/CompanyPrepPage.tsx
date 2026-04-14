@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Icon } from '../../components/shared/Icons.jsx';
 import SiteNav from '../../components/shared/SiteNav';
@@ -355,6 +356,11 @@ function StatIcon({ type }: { type: string }) {
 
 export default function CompanyPrepPage() {
   const { company } = useParams<{ company: string }>();
+
+  useEffect(() => {
+    document.title = 'Company Prep | Camora';
+    return () => { document.title = 'Camora'; };
+  }, []);
 
   const companyData = company ? COMPANIES[company.toLowerCase()] : undefined;
 

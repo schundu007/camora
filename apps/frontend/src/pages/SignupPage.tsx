@@ -1,8 +1,13 @@
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import SiteNav from '../components/shared/SiteNav';
 import SEO from '../components/shared/SEO';
 
 export default function SignupPage() {
+  useEffect(() => {
+    document.title = 'Sign Up | Camora';
+    return () => { document.title = 'Camora'; };
+  }, []);
   const googleAuthUrl = `${import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com'}/api/auth/google/login`;
 
   return (

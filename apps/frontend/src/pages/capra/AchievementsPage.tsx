@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import SiteNav from '../../components/shared/SiteNav';
 import SiteFooter from '../../components/shared/SiteFooter';
 import GamificationWidget from '../../components/capra/features/GamificationWidget';
@@ -5,6 +6,11 @@ import BadgeGrid from '../../components/capra/features/BadgeGrid';
 import Leaderboard from '../../components/capra/features/Leaderboard';
 
 export default function AchievementsPage() {
+  useEffect(() => {
+    document.title = 'Achievements | Camora';
+    return () => { document.title = 'Camora'; };
+  }, []);
+
   return (
     <div className="min-h-screen bg-[#fafbfc]">
       <SiteNav />

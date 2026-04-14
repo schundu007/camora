@@ -310,6 +310,11 @@ function DimensionBars({ dimensions, compact = false }) {
 /* ══════════════════════════════ Component ══════════════════════════════ */
 
 export default function PracticePage() {
+  useEffect(() => {
+    document.title = 'Practice | Camora';
+    return () => { document.title = 'Camora'; };
+  }, []);
+
   // Stats
   const [stats, setStats] = useState(getStats);
 

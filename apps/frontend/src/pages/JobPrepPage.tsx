@@ -280,6 +280,11 @@ export default function JobPrepPage() {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [prepError, setPrepError] = useState<string | null>(null);
 
+  useEffect(() => {
+    document.title = 'Job Prep | Camora';
+    return () => { document.title = 'Camora'; };
+  }, []);
+
   const generatePrep = async () => {
     if (!job) return;
     // Gate: free users can't generate prep material

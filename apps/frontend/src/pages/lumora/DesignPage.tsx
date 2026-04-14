@@ -1,4 +1,4 @@
-import { Suspense } from 'react';
+import { Suspense, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { DesignLayout } from '../../components/lumora/design/DesignLayout';
 import { ErrorBoundary } from '../../components/shared/ui/ErrorBoundary';
@@ -19,6 +19,11 @@ function DesignPageContent() {
 }
 
 export function DesignPage() {
+  useEffect(() => {
+    document.title = 'Design Interview | Camora';
+    return () => { document.title = 'Camora'; };
+  }, []);
+
   return (
     <PaywallGate feature="System Design">
       <ErrorBoundary>

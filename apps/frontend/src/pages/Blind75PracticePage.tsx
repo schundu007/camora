@@ -5671,6 +5671,10 @@ export default function Blind75PracticePage() {
   const problem = id ? PROBLEMS[id] : null;
   const staticSolution = id ? SOLUTIONS[id] : undefined;
 
+  useEffect(() => {
+    document.title = 'Blind 75 Practice | Camora';
+    return () => { document.title = 'Camora'; };
+  }, []);
   useEffect(() => { window.scrollTo(0, 0); }, []);
   useEffect(() => { setCode(STARTER_CODE[language](problem?.title || 'Solution')); setOutput(''); }, [language, problem?.title]);
 

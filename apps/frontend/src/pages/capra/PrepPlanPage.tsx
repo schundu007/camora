@@ -32,6 +32,11 @@ interface PlanData {
 }
 
 export default function PrepPlanPage() {
+  useEffect(() => {
+    document.title = 'Prep Plan | Camora';
+    return () => { document.title = 'Camora'; };
+  }, []);
+
   const [data, setData] = useState<PlanData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

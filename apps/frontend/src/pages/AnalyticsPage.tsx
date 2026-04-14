@@ -62,6 +62,11 @@ function RefreshBtn({ onClick, loading }: { onClick: () => void; loading: boolea
 export default function AnalyticsPage() {
   const { token, user: authUser } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
+
+  useEffect(() => {
+    document.title = 'Analytics | Camora';
+    return () => { document.title = 'Camora'; };
+  }, []);
   const validTabs: Tab[] = ['analytics', 'users', 'emails'];
   const tabParam = searchParams.get('tab') as Tab;
   const tab: Tab = validTabs.includes(tabParam) ? tabParam : 'analytics';

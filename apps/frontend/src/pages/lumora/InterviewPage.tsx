@@ -22,6 +22,11 @@ export function InterviewPage() {
 
   useLumoraTour();
 
+  useEffect(() => {
+    document.title = 'Live Interview | Camora';
+    return () => { document.title = 'Camora'; };
+  }, []);
+
   // Emergency blank: Cmd+B
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import SiteNav from '../components/shared/SiteNav';
@@ -101,6 +101,11 @@ export default function PricingPage() {
   const { token } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState('');
+
+  useEffect(() => {
+    document.title = 'Pricing | Camora';
+    return () => { document.title = 'Camora'; };
+  }, []);
 
   const handleCheckout = async (plan: typeof PLANS[number]) => {
     // Free plan — go straight to the app

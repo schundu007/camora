@@ -192,6 +192,11 @@ function CategoryIcon({ category, size = 28 }: { category: string; size?: number
 export default function JobsPage() {
   const { token, user, isLoading: authLoading } = useAuth();
 
+  useEffect(() => {
+    document.title = 'Job Board | Camora';
+    return () => { document.title = 'Camora'; };
+  }, []);
+
   // Map user's onboarding role to job filter category
   const getUserCategory = (): string => {
     const roles = user?.job_roles;

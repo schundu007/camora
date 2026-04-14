@@ -313,6 +313,11 @@ function saveCompleted(ids: Set<number>) {
 export default function Blind75Page() {
   const { token } = useAuth();
 
+  useEffect(() => {
+    document.title = 'Blind 75 | Camora';
+    return () => { document.title = 'Camora'; };
+  }, []);
+
   /* ── Shared state ── */
   const [activeTab, setActiveTab] = useState<TabKey>(() => { const p = new URLSearchParams(window.location.search); const t = p.get('tab'); return (t === 'algorithms' || t === 'behavioral' || t === 'cheatsheet') ? t : 'blind75'; });
 
