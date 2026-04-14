@@ -142,6 +142,40 @@ const icons = {
       <path d="M4 2l4 4-4 4" />
     </svg>
   ),
+  // SQL — table/grid with rows
+  table: (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="1" y="2" width="14" height="12" rx="1.5" />
+      <path d="M1 6h14" />
+      <path d="M1 10h14" />
+      <path d="M6 6v8" />
+    </svg>
+  ),
+  // Analytics — bar chart
+  barChart: (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 14V9" />
+      <path d="M8 14V4" />
+      <path d="M12 14V7" />
+    </svg>
+  ),
+  // My Plan — clipboard checklist
+  clipboard: (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="2" width="10" height="13" rx="1.5" />
+      <path d="M6 1h4v2H6V1z" />
+      <path d="M6 7h4" />
+      <path d="M6 10h4" />
+    </svg>
+  ),
+  // Design Solver — pen tool / bezier
+  penTool: (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M8 1L3 11h10L8 1z" />
+      <circle cx="8" cy="13" r="1.5" />
+      <path d="M8 11v.5" />
+    </svg>
+  ),
 };
 
 /* ─── Navigation sections ────────────────────────────────────── */
@@ -160,7 +194,7 @@ const sections: NavSection[] = [
       { label: 'System Design', path: '/capra/prepare/system-design', icon: icons.layers },
       { label: 'Microservices', path: '/capra/prepare/microservices', icon: icons.grid },
       { label: 'Databases', path: '/capra/prepare/databases', icon: icons.database },
-      { label: 'SQL', path: '/capra/prepare/sql', icon: icons.database },
+      { label: 'SQL', path: '/capra/prepare/sql', icon: icons.table },
       { label: 'Low-Level', path: '/capra/prepare/low-level-design', icon: icons.code },
       { label: 'Projects', path: '/capra/prepare/projects', icon: icons.folder },
       { label: 'Roadmaps', path: '/capra/prepare/roadmaps', icon: icons.map },
@@ -173,8 +207,8 @@ const sections: NavSection[] = [
     items: [
       { label: 'Practice', path: '/capra/practice', icon: icons.play },
       { label: 'Blind 75', path: '/handbook', icon: icons.star },
-      { label: 'My Plan', path: '/capra/plan', icon: icons.map },
-      { label: 'Analytics', path: '/analytics', icon: icons.cpu },
+      { label: 'My Plan', path: '/capra/plan', icon: icons.clipboard },
+      { label: 'Analytics', path: '/analytics', icon: icons.barChart },
       { label: 'Achievements', path: '/capra/achievements', icon: icons.trophy },
     ],
   },
@@ -183,7 +217,7 @@ const sections: NavSection[] = [
     items: [
       { label: 'Live Interview', path: '/lumora', icon: icons.mic },
       { label: 'Code Solver', path: '/capra', icon: icons.layout },
-      { label: 'Design Solver', path: '/capra/design', icon: icons.layers },
+      { label: 'Design Solver', path: '/capra/design', icon: icons.penTool },
     ],
   },
 ];
