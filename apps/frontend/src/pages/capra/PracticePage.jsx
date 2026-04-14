@@ -79,12 +79,12 @@ const DIFFICULTIES = ['easy', 'medium', 'hard'];
 const CATEGORIES = ['coding', 'system-design', 'behavioral'];
 const COMPANIES = [
   { id: 'all', label: 'All', color: 'var(--text-muted)' },
-  { id: 'google', label: 'Google', color: '#4285f4', logo: 'https://logo.dev/google.com?token=pk_JbMG3CfhR5aa19Y3PuKjcQ&format=png&size=40' },
-  { id: 'meta', label: 'Meta', color: '#0668E1', logo: 'https://logo.dev/meta.com?token=pk_JbMG3CfhR5aa19Y3PuKjcQ&format=png&size=40' },
-  { id: 'amazon', label: 'Amazon', color: '#FF9900', logo: 'https://logo.dev/amazon.com?token=pk_JbMG3CfhR5aa19Y3PuKjcQ&format=png&size=40' },
-  { id: 'apple', label: 'Apple', color: '#555', logo: 'https://logo.dev/apple.com?token=pk_JbMG3CfhR5aa19Y3PuKjcQ&format=png&size=40' },
-  { id: 'microsoft', label: 'Microsoft', color: '#00A4EF', logo: 'https://logo.dev/microsoft.com?token=pk_JbMG3CfhR5aa19Y3PuKjcQ&format=png&size=40' },
-  { id: 'netflix', label: 'Netflix', color: '#E50914', logo: 'https://logo.dev/netflix.com?token=pk_JbMG3CfhR5aa19Y3PuKjcQ&format=png&size=40' },
+  { id: 'google', label: 'Google', color: '#4285f4', logo: '/logos/companies/google.svg' },
+  { id: 'meta', label: 'Meta', color: '#0668E1', logo: '/logos/companies/meta.svg' },
+  { id: 'amazon', label: 'Amazon', color: '#FF9900', logo: '/logos/companies/amazon.svg' },
+  { id: 'apple', label: 'Apple', color: '#555', logo: '/logos/companies/apple.svg' },
+  { id: 'microsoft', label: 'Microsoft', color: '#00A4EF', logo: '/logos/companies/microsoft.svg' },
+  { id: 'netflix', label: 'Netflix', color: '#E50914', logo: '/logos/companies/netflix.svg' },
 ];
 
 const DIMENSION_LABELS = ['Solving', 'Design', 'DSA', 'Comms', 'Time'];
