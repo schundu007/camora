@@ -1,4 +1,4 @@
-import { Suspense } from 'react';
+import { Suspense, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CodingLayout } from '../../components/lumora/coding/CodingLayout';
 import { ErrorBoundary } from '../../components/shared/ui/ErrorBoundary';
@@ -23,6 +23,11 @@ function CodingPageContent() {
 }
 
 export function CodingPage() {
+  useEffect(() => {
+    document.title = 'Coding Interview | Camora';
+    return () => { document.title = 'Camora'; };
+  }, []);
+
   return (
     <PaywallGate feature="Coding Solutions">
       <ErrorBoundary>

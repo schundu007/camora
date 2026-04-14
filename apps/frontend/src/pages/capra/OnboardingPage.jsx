@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -152,6 +152,11 @@ const ACCEPTED_EXTENSIONS = ['.pdf', '.docx', '.txt'];
 export default function OnboardingPage() {
   const { token: accessToken } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    document.title = 'Get Started | Camora';
+    return () => { document.title = 'Camora'; };
+  }, []);
 
   const [step, setStep] = useState(1);
   const [selectedRoles, setSelectedRoles] = useState([]);

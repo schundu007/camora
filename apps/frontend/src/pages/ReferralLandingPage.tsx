@@ -6,6 +6,11 @@ export default function ReferralLandingPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    document.title = 'Refer Friends | Camora';
+    return () => { document.title = 'Camora'; };
+  }, []);
+
+  useEffect(() => {
     if (code) {
       localStorage.setItem('camora_referral_code', code);
     }

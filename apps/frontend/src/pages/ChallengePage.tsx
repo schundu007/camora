@@ -138,6 +138,11 @@ export default function ChallengePage() {
   const timerRef = useRef<any>(null);
 
   useEffect(() => {
+    document.title = 'Daily Challenge | Camora';
+    return () => { document.title = 'Camora'; };
+  }, []);
+
+  useEffect(() => {
     if (!isAuthenticated) return;
     fetch(`${API_URL}/api/challenge/status`, { headers: { ...getAuthHeaders() } })
       .then(r => r.ok ? r.json() : null).then(d => d && setChallengeStatus(d)).catch(() => {});

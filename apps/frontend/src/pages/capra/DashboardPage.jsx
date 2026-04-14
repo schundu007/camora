@@ -117,6 +117,11 @@ MONITORING: CloudWatch, X-Ray, Centralized logging, Alerting.`;
 // Main App Component
 // ============================================================================
 export default function DashboardPage() {
+  useEffect(() => {
+    document.title = 'Dashboard | Camora';
+    return () => { document.title = 'Camora'; };
+  }, []);
+
   // ---------------------------------------------------------------------------
   // Responsive
   // ---------------------------------------------------------------------------

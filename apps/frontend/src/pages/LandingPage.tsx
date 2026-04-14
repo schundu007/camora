@@ -388,6 +388,11 @@ export default function LandingPage() {
 
   useEffect(() => { window.scrollTo(0, 0); }, []);
 
+  useEffect(() => {
+    document.title = 'Camora — Apply, Prepare, Practice & Attend';
+    return () => { document.title = 'Camora'; };
+  }, []);
+
   return (
     <div className="min-h-screen text-gray-900 overflow-hidden" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
       <SEO path="/" />
