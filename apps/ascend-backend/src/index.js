@@ -36,6 +36,7 @@ import companyPrepsRouter from './routes/companyPreps.js';
 import extensionRouter from './routes/extension.js';
 import jobAnalyzeRouter from './routes/jobAnalyze.js';
 import topicReadsRouter from './routes/topicReads.js';
+import topicCommentsRouter from './routes/topicComments.js';
 import referralRouter from './routes/referral.js';
 import interviewCountdownRouter from './routes/interviewCountdown.js';
 import gamificationRouter from './routes/gamification.js';
@@ -94,6 +95,22 @@ async function runMigrations() {
     )`);
     await query('CREATE INDEX IF NOT EXISTS idx_topic_reads_user_cat ON ascend_topic_reads(user_id, category)');
     console.log('[Migrations] Topic reads table ensured');
+
+    // Topic comments — user discussions on prep topics
+    await query(`CREATE TABLE IF NOT EXISTS ascend_topic_comments (
+      id SERIAL PRIMARY KEY,
+      topic_id VARCHAR(255) NOT NULL,
+      user_id INTEGER NOT NULL,
+      user_name VARCHAR(255),
+      user_image TEXT,
+      content TEXT NOT NULL,
+      parent_id INTEGER REFERENCES ascend_topic_comments(id) ON DELETE CASCADE,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      updated_at TIMESTAMPTZ DEFAULT NOW()
+    )`);
+    await query('CREATE INDEX IF NOT EXISTS idx_topic_comments_topic ON ascend_topic_comments(topic_id)');
+    await query('CREATE INDEX IF NOT EXISTS idx_topic_comments_user ON ascend_topic_comments(user_id)');
+    console.log('[Migrations] Topic comments table ensured');
 
     // Sprint 1: Referral system
     await query('ALTER TABLE users ADD COLUMN IF NOT EXISTS referral_code VARCHAR(8) UNIQUE');
@@ -727,6 +744,7 @@ app.use('/api/credits', apiLimiter, creditsRouter);
 app.use('/api/company-preps', apiLimiter, companyPrepsRouter);
 app.use('/api/usage', apiLimiter, usageRouter);
 app.use('/api/topic-reads', apiLimiter, topicReadsRouter);
+app.use('/api/topic-comments', apiLimiter, topicCommentsRouter);
 
 // Referral routes (some public, some jwtAuth — handled internally)
 app.use('/api/referral', apiLimiter, referralRouter);
