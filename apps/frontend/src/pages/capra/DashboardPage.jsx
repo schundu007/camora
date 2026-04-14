@@ -892,97 +892,37 @@ export default function DashboardPage() {
 // ============================================================================
 
 function Header({ ascendMode, onModeChange, showSidebar, onToggleSidebar, isLoading, isMobile, onSettingsClick, onPricingClick, onAssistantClick, showAscendAssistant, user }) {
-  // ---- Mobile Header ----
-  if (isMobile) {
-    return (
-      <header className="flex items-center justify-between gap-3 px-3 border-b border-[var(--border)] safe-top" style={{ height: '52px', background: 'var(--bg-surface)' }}>
-        <div className="flex items-center gap-3">
-          <button onClick={onToggleSidebar} className="w-10 h-10 rounded-lg flex items-center justify-center text-[var(--text-secondary)] active:bg-[var(--bg-elevated)] transition-colors" aria-label="Open menu">
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg>
-          </button>
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: '#10b981' }}>
-              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-              </svg>
-            </div>
-            <span className="text-sm font-bold text-[var(--text-primary)]">Capra</span>
-            {isLoading && <div className="w-3.5 h-3.5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />}
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          {/* Credits placeholder */}
-        </div>
-      </header>
-    );
-  }
-
-  // ---- Desktop Header — with APPA nav tabs ----
+  // ---- Compact toolbar (no duplicate nav — RootShell handles that) ----
   const modeConfig = {
-    coding: { label: 'Coding', color: '#10b981' },
+    coding: { label: 'Coding', color: 'var(--accent)' },
     'system-design': { label: 'System Design', color: '#3b82f6' },
     behavioral: { label: 'Interview Prep', color: '#f59e0b' },
   };
   const currentMode = modeConfig[ascendMode] || modeConfig.coding;
 
-  const APPA_TABS = [
-    { label: 'Apply', href: '/jobs' },
-    { label: 'Prepare', href: '/capra/prepare' },
-    { label: 'Practice', href: '/capra/practice' },
-    { label: 'Attend', href: '/lumora' },
-    { label: 'Pricing', href: '/pricing' },
-  ];
-
-  // Determine which APPA tab is active based on mode
-  const activeAppaTab = ascendMode === 'behavioral' ? 'Prepare' : 'Practice';
-
   return (
     <header
-      className="flex items-center justify-between gap-4 px-5 relative"
-      style={{
-        height: '52px',
-        background: 'var(--bg-surface)',
-        borderBottom: '1px solid #e3e8ee',
-      }}
+      className="flex items-center justify-between gap-4 px-4"
+      style={{ height: '40px', background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)' }}
     >
       {/* Left: mode indicator */}
-      <div className="flex items-center gap-1.5">
-        <div className="w-2 h-2 rounded-full" style={{ background: currentMode.color }} />
-        <span className="text-sm font-semibold text-[var(--text-primary)]">{currentMode.label}</span>
+      <div className="flex items-center gap-2">
+        <div className="w-1.5 h-1.5 rounded-full" style={{ background: currentMode.color }} />
+        <span className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>{currentMode.label}</span>
+        {isLoading && <div className="w-3 h-3 border-2 rounded-full animate-spin" style={{ borderColor: 'var(--border)', borderTopColor: 'var(--accent)' }} />}
       </div>
 
-      {/* Center: APPA tabs */}
-      <div className="hidden md:flex items-center gap-1">
-        {APPA_TABS.map((tab) => (
-          <Link
-            key={tab.label}
-            to={tab.href}
-            className={`px-3 py-1.5 text-sm font-medium transition-colors ${
-              tab.label === activeAppaTab
-                ? 'text-[var(--accent)] border-b-2 border-emerald-500'
-                : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
-            }`}
-          >
-            {tab.label}
-          </Link>
-        ))}
-      </div>
-
-      {/* Right: action buttons */}
-      <div className="flex items-center gap-1 sm:gap-2">
-        <button onClick={onAssistantClick} aria-label="Toggle interview assistant" className={`flex items-center gap-2 p-2 sm:px-3 sm:py-1.5 rounded-lg text-sm font-medium transition-all duration-200 min-w-[36px] min-h-[36px] justify-center ${showAscendAssistant ? 'text-[var(--accent)] bg-[var(--accent-subtle)]' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)]'}`}>
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
-          <span className="hidden sm:inline">Assistant</span>
-        </button>
-        <Link to="/capra/prepare" className="hidden sm:flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-[var(--bg-elevated)] transition-colors">
-          {user?.image ? (
-            <img src={user.image} alt="" className="w-6 h-6 rounded-full" referrerPolicy="no-referrer" />
-          ) : (
-            <div className="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center text-[10px] font-bold text-emerald-700">{user?.name?.[0] || '?'}</div>
-          )}
-          <span className="text-sm text-[var(--text-primary)] font-medium">{user?.name?.split(' ')[0] || 'Dashboard'}</span>
-        </Link>
-      </div>
+      {/* Right: assistant toggle */}
+      <button onClick={onAssistantClick} aria-label="Toggle assistant"
+        className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-colors"
+        style={{
+          color: showAscendAssistant ? 'var(--accent)' : 'var(--text-muted)',
+          background: showAscendAssistant ? 'var(--accent-subtle)' : 'transparent',
+        }}
+      >
+        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
+        AI Assistant
+      </button>
     </header>
   );
 }
