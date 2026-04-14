@@ -71,11 +71,11 @@ export default function InterviewSetupModal({ isOpen, onClose, onSetup }: Interv
       />
 
       {/* Modal */}
-      <div className="relative bg-white rounded-2xl shadow-xl border-0 w-full max-w-md p-6">
+      <div className="relative bg-[var(--bg-surface)] rounded-2xl shadow-xl border-0 w-full max-w-md p-6">
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-1 text-gray-400 hover:text-gray-600 transition-colors"
+          className="absolute top-4 right-4 p-1 text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
           aria-label="Close"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
@@ -83,15 +83,15 @@ export default function InterviewSetupModal({ isOpen, onClose, onSetup }: Interv
           </svg>
         </button>
 
-        <h2 className="text-lg font-bold text-gray-900 tracking-tight">Set Your Interview Date</h2>
-        <p className="text-sm text-gray-500 mt-1">
+        <h2 className="text-lg font-bold text-[var(--text-primary)] tracking-tight">Set Your Interview Date</h2>
+        <p className="text-sm text-[var(--text-muted)] mt-1">
           We'll build a personalized prep plan based on your timeline.
         </p>
 
         <form onSubmit={handleSubmit} className="mt-5 space-y-4">
           {/* Date */}
           <div>
-            <label htmlFor="interview-date" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="interview-date" className="block text-sm font-medium text-[var(--text-secondary)] mb-1">
               Interview Date
             </label>
             <input
@@ -100,14 +100,14 @@ export default function InterviewSetupModal({ isOpen, onClose, onSetup }: Interv
               min={today}
               value={interviewDate}
               onChange={(e) => setInterviewDate(e.target.value)}
-              className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition-colors"
+              className="w-full px-3 py-2.5 border border-[var(--border)] rounded-xl text-sm text-[var(--text-primary)] bg-[var(--bg-elevated)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20 focus:border-[var(--accent)] transition-colors"
               required
             />
           </div>
 
           {/* Company */}
           <div>
-            <label htmlFor="target-company" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="target-company" className="block text-sm font-medium text-[var(--text-secondary)] mb-1">
               Company
             </label>
             <input
@@ -116,14 +116,14 @@ export default function InterviewSetupModal({ isOpen, onClose, onSetup }: Interv
               placeholder="e.g. Google, Amazon"
               value={targetCompany}
               onChange={(e) => setTargetCompany(e.target.value)}
-              className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition-colors"
+              className="w-full px-3 py-2.5 border border-[var(--border)] rounded-xl text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] bg-[var(--bg-elevated)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20 focus:border-[var(--accent)] transition-colors"
               required
             />
           </div>
 
           {/* Role */}
           <div>
-            <label htmlFor="target-role" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="target-role" className="block text-sm font-medium text-[var(--text-secondary)] mb-1">
               Role
             </label>
             <input
@@ -132,7 +132,7 @@ export default function InterviewSetupModal({ isOpen, onClose, onSetup }: Interv
               placeholder="e.g. Senior SDE, L5"
               value={targetRole}
               onChange={(e) => setTargetRole(e.target.value)}
-              className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition-colors"
+              className="w-full px-3 py-2.5 border border-[var(--border)] rounded-xl text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] bg-[var(--bg-elevated)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20 focus:border-[var(--accent)] transition-colors"
             />
           </div>
 
@@ -145,14 +145,14 @@ export default function InterviewSetupModal({ isOpen, onClose, onSetup }: Interv
             <button
               type="submit"
               disabled={submitting}
-              className="flex-1 px-4 py-2.5 bg-emerald-500 text-white text-sm font-semibold rounded-xl hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="flex-1 px-4 py-2.5 bg-[var(--accent)] text-white text-sm font-semibold rounded-xl hover:bg-[var(--accent-hover)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {submitting ? 'Creating plan...' : 'Create Prep Plan'}
             </button>
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2.5 text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors"
+              className="px-4 py-2.5 text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
             >
               Cancel
             </button>

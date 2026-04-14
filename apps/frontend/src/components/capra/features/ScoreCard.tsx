@@ -18,9 +18,9 @@ function scoreColor(score: number): string {
 }
 
 function scoreBgColor(score: number): string {
-  if (score >= 70) return 'bg-emerald-50';
-  if (score >= 40) return 'bg-amber-50';
-  return 'bg-red-50';
+  if (score >= 70) return 'bg-[var(--accent)]/10';
+  if (score >= 40) return 'bg-amber-500/10';
+  return 'bg-red-500/10';
 }
 
 function scoreRingColor(score: number): string {
@@ -65,7 +65,7 @@ export default function ScoreCard({
 
   if (compact) {
     return (
-      <div className="flex items-center gap-3 bg-white border-0 rounded-xl px-4 py-3 shadow-[0_4px_24px_rgba(99,102,241,0.12)] hover:shadow-[0_20px_60px_rgba(99,102,241,0.28)] transition-shadow">
+      <div className="flex items-center gap-3 bg-[var(--bg-surface)] border-0 rounded-xl px-4 py-3 shadow-[0_4px_24px_rgba(99,102,241,0.12)] hover:shadow-[0_20px_60px_rgba(99,102,241,0.28)] transition-shadow">
         {/* Mini score ring */}
         <div className="relative shrink-0">
           <svg width={ringSize} height={ringSize} className="-rotate-90">
@@ -74,7 +74,7 @@ export default function ScoreCard({
               cy={ringSize / 2}
               r={ringRadius}
               fill="none"
-              stroke="#f3f4f6"
+              stroke="var(--border)"
               strokeWidth={ringStroke}
             />
             <circle
@@ -96,12 +96,12 @@ export default function ScoreCard({
 
         {/* Info */}
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-gray-900 truncate">{title}</p>
-          <p className="text-xs text-gray-400">{typeLabel(type)} &middot; {formatDate(date)}</p>
+          <p className="text-sm font-semibold text-[var(--text-primary)] truncate">{title}</p>
+          <p className="text-xs text-[var(--text-muted)]">{typeLabel(type)} &middot; {formatDate(date)}</p>
         </div>
 
         {/* Category pill */}
-        <span className="shrink-0 text-[11px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+        <span className="shrink-0 text-[11px] font-medium text-[var(--accent)] bg-[var(--accent)]/10 px-2 py-0.5 rounded-full">
           {category}
         </span>
       </div>
@@ -109,25 +109,25 @@ export default function ScoreCard({
   }
 
   return (
-    <div className="bg-white rounded-2xl border-0 shadow-[0_4px_24px_rgba(99,102,241,0.12)] overflow-hidden w-full max-w-md">
+    <div className="bg-[var(--bg-surface)] rounded-2xl border-0 shadow-[0_4px_24px_rgba(99,102,241,0.12)] overflow-hidden w-full max-w-md">
       {/* Header with branding */}
       <div className="px-6 pt-5 pb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <CamoraLogo size={28} />
           <span
-            className="text-sm font-bold text-gray-900 tracking-tight"
+            className="text-sm font-bold text-[var(--text-primary)] tracking-tight"
             style={{ fontFamily: "'Comfortaa', sans-serif" }}
           >
             Camora
           </span>
         </div>
-        <span className="text-[11px] font-medium text-gray-400 uppercase tracking-wider">
+        <span className="text-[11px] font-medium text-[var(--text-muted)] uppercase tracking-wider">
           Score Card
         </span>
       </div>
 
       {/* Divider */}
-      <div className="mx-6 border-t border-[#e3e8ee]" />
+      <div className="mx-6 border-t border-[var(--border)]" />
 
       {/* Score */}
       <div className="px-6 py-6 flex flex-col items-center">
@@ -138,7 +138,7 @@ export default function ScoreCard({
               cy={ringSize / 2}
               r={ringRadius}
               fill="none"
-              stroke="#f3f4f6"
+              stroke="var(--border)"
               strokeWidth={ringStroke}
             />
             <circle
@@ -159,17 +159,17 @@ export default function ScoreCard({
           </span>
         </div>
 
-        <p className="mt-1 text-xs text-gray-400 font-medium">out of 100</p>
+        <p className="mt-1 text-xs text-[var(--text-muted)] font-medium">out of 100</p>
       </div>
 
       {/* Title + Category */}
       <div className="px-6 text-center">
-        <h3 className="text-lg font-bold text-gray-900 tracking-tight leading-snug">{title}</h3>
+        <h3 className="text-lg font-bold text-[var(--text-primary)] tracking-tight leading-snug">{title}</h3>
         <div className="flex items-center justify-center gap-2 mt-2">
           <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${scoreBgColor(score)} ${scoreColor(score)}`}>
             {typeLabel(type)}
           </span>
-          <span className="text-xs font-medium text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full">
+          <span className="text-xs font-medium text-[var(--accent)] bg-[var(--accent)]/10 px-2.5 py-0.5 rounded-full">
             {category}
           </span>
         </div>
@@ -177,7 +177,7 @@ export default function ScoreCard({
 
       {/* User + Date */}
       <div className="px-6 pt-5 pb-5">
-        <div className="flex items-center justify-between border-t border-[#e3e8ee] pt-4">
+        <div className="flex items-center justify-between border-t border-[var(--border)] pt-4">
           <div className="flex items-center gap-2.5">
             {userAvatar ? (
               <img
@@ -187,13 +187,13 @@ export default function ScoreCard({
                 referrerPolicy="no-referrer"
               />
             ) : (
-              <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-xs font-bold text-emerald-700">
+              <div className="w-8 h-8 rounded-full bg-[var(--accent)]/15 flex items-center justify-center text-xs font-bold text-[var(--accent)]">
                 {userName[0]?.toUpperCase() || '?'}
               </div>
             )}
-            <span className="text-sm font-medium text-gray-700">{userName}</span>
+            <span className="text-sm font-medium text-[var(--text-secondary)]">{userName}</span>
           </div>
-          <span className="text-xs text-gray-400">{formatDate(date)}</span>
+          <span className="text-xs text-[var(--text-muted)]">{formatDate(date)}</span>
         </div>
       </div>
     </div>

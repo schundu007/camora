@@ -237,8 +237,8 @@ export default function ResumeOptimizer() {
       {/* ───────── Left: Input Panel ───────── */}
       <div
         style={{
-          background: '#ffffff',
-          border: '1px solid #e3e8ee',
+          background: 'var(--bg-surface)',
+          border: '1px solid var(--border)',
           borderRadius: '16px',
           padding: '28px',
           display: 'flex',
@@ -250,7 +250,7 @@ export default function ResumeOptimizer() {
           style={{
             fontSize: '20px',
             fontWeight: 700,
-            color: '#111827',
+            color: 'var(--text-primary)',
             margin: 0,
             letterSpacing: '-0.01em',
           }}
@@ -264,7 +264,7 @@ export default function ResumeOptimizer() {
             style={{
               fontSize: '13px',
               fontWeight: 600,
-              color: '#6b7280',
+              color: 'var(--text-muted)',
               textTransform: 'uppercase',
               letterSpacing: '0.05em',
             }}
@@ -279,12 +279,12 @@ export default function ResumeOptimizer() {
             style={{
               width: '100%',
               padding: '12px 14px',
-              border: '1px solid #e3e8ee',
+              border: '1px solid var(--border)',
               borderRadius: '10px',
               fontSize: '14px',
               fontFamily: "'Plus Jakarta Sans', sans-serif",
-              color: '#1f2937',
-              background: '#f9fafb',
+              color: 'var(--text-primary)',
+              background: 'var(--bg-elevated)',
               resize: 'vertical',
               outline: 'none',
               lineHeight: '1.6',
@@ -299,7 +299,7 @@ export default function ResumeOptimizer() {
             }}
           >
             <span
-              style={{ fontSize: '12px', color: '#9ca3af', fontWeight: 500 }}
+              style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}
             >
               Or paste a URL:
             </span>
@@ -311,12 +311,12 @@ export default function ResumeOptimizer() {
               style={{
                 flex: 1,
                 padding: '8px 12px',
-                border: '1px solid #e3e8ee',
+                border: '1px solid var(--border)',
                 borderRadius: '8px',
                 fontSize: '13px',
                 fontFamily: "'IBM Plex Mono', monospace",
-                color: '#1f2937',
-                background: '#f9fafb',
+                color: 'var(--text-primary)',
+                background: 'var(--bg-elevated)',
                 outline: 'none',
                 boxSizing: 'border-box',
               }}
@@ -330,7 +330,7 @@ export default function ResumeOptimizer() {
             style={{
               fontSize: '13px',
               fontWeight: 600,
-              color: '#6b7280',
+              color: 'var(--text-muted)',
               textTransform: 'uppercase',
               letterSpacing: '0.05em',
             }}
@@ -345,12 +345,12 @@ export default function ResumeOptimizer() {
             style={{
               width: '100%',
               padding: '12px 14px',
-              border: '1px solid #e3e8ee',
+              border: '1px solid var(--border)',
               borderRadius: '10px',
               fontSize: '14px',
               fontFamily: "'Plus Jakarta Sans', sans-serif",
-              color: '#1f2937',
-              background: '#f9fafb',
+              color: 'var(--text-primary)',
+              background: 'var(--bg-elevated)',
               resize: 'vertical',
               outline: 'none',
               lineHeight: '1.6',
@@ -370,12 +370,12 @@ export default function ResumeOptimizer() {
             style={{
               alignSelf: 'flex-start',
               padding: '7px 16px',
-              border: '1px solid #e3e8ee',
+              border: '1px solid var(--border)',
               borderRadius: '8px',
-              background: '#ffffff',
+              background: 'var(--bg-surface)',
               fontSize: '13px',
               fontWeight: 500,
-              color: '#6b7280',
+              color: 'var(--text-muted)',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -384,11 +384,11 @@ export default function ResumeOptimizer() {
             }}
             onMouseEnter={(e) =>
               ((e.currentTarget as HTMLButtonElement).style.borderColor =
-                '#10b981')
+                'var(--accent)')
             }
             onMouseLeave={(e) =>
               ((e.currentTarget as HTMLButtonElement).style.borderColor =
-                '#e3e8ee')
+                'var(--border)')
             }
           >
             <svg
@@ -423,7 +423,7 @@ export default function ResumeOptimizer() {
               style={{
                 fontSize: '13px',
                 fontWeight: 600,
-                color: '#6b7280',
+                color: 'var(--text-muted)',
                 textTransform: 'uppercase',
                 letterSpacing: '0.05em',
               }}
@@ -435,12 +435,12 @@ export default function ResumeOptimizer() {
               onChange={(e) => setCompany(e.target.value)}
               style={{
                 padding: '10px 12px',
-                border: '1px solid #e3e8ee',
+                border: '1px solid var(--border)',
                 borderRadius: '8px',
                 fontSize: '14px',
                 fontFamily: "'Plus Jakarta Sans', sans-serif",
-                color: '#1f2937',
-                background: '#f9fafb',
+                color: 'var(--text-primary)',
+                background: 'var(--bg-elevated)',
                 outline: 'none',
                 cursor: 'pointer',
                 appearance: 'none',
@@ -472,7 +472,7 @@ export default function ResumeOptimizer() {
               style={{
                 fontSize: '13px',
                 fontWeight: 600,
-                color: '#6b7280',
+                color: 'var(--text-muted)',
                 textTransform: 'uppercase',
                 letterSpacing: '0.05em',
               }}
@@ -486,12 +486,12 @@ export default function ResumeOptimizer() {
               placeholder="e.g. Senior Software Engineer"
               style={{
                 padding: '10px 12px',
-                border: '1px solid #e3e8ee',
+                border: '1px solid var(--border)',
                 borderRadius: '8px',
                 fontSize: '14px',
                 fontFamily: "'Plus Jakarta Sans', sans-serif",
-                color: '#1f2937',
-                background: '#f9fafb',
+                color: 'var(--text-primary)',
+                background: 'var(--bg-elevated)',
                 outline: 'none',
                 boxSizing: 'border-box',
               }}
@@ -528,8 +528,8 @@ export default function ResumeOptimizer() {
               border: 'none',
               borderRadius: '10px',
               background: loading
-                ? '#d1d5db'
-                : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                ? 'var(--bg-elevated)'
+                : 'linear-gradient(135deg, var(--accent) 0%, #4f46e5 100%)',
               color: '#ffffff',
               fontSize: '14px',
               fontWeight: 600,
@@ -551,7 +551,7 @@ export default function ResumeOptimizer() {
               border: 'none',
               borderRadius: '10px',
               background: loading
-                ? '#d1d5db'
+                ? 'var(--bg-elevated)'
                 : 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
               color: '#ffffff',
               fontSize: '14px',
@@ -570,8 +570,8 @@ export default function ResumeOptimizer() {
       {/* ───────── Right: Output Panel ───────── */}
       <div
         style={{
-          background: '#ffffff',
-          border: '1px solid #e3e8ee',
+          background: 'var(--bg-surface)',
+          border: '1px solid var(--border)',
           borderRadius: '16px',
           padding: '28px',
           display: 'flex',
@@ -593,7 +593,7 @@ export default function ResumeOptimizer() {
           <div
             style={{
               display: 'flex',
-              background: '#f3f4f6',
+              background: 'var(--bg-elevated)',
               borderRadius: '10px',
               padding: '3px',
               gap: '2px',
@@ -617,8 +617,8 @@ export default function ResumeOptimizer() {
                   fontSize: '13px',
                   fontWeight: activeTab === tab.key ? 600 : 500,
                   fontFamily: "'Plus Jakarta Sans', sans-serif",
-                  color: activeTab === tab.key ? '#111827' : '#6b7280',
-                  background: activeTab === tab.key ? '#ffffff' : 'transparent',
+                  color: activeTab === tab.key ? 'var(--text-primary)' : 'var(--text-muted)',
+                  background: activeTab === tab.key ? 'var(--bg-surface)' : 'transparent',
                   boxShadow:
                     activeTab === tab.key
                       ? '0 1px 3px rgba(0,0,0,0.08)'
@@ -641,12 +641,12 @@ export default function ResumeOptimizer() {
                 onClick={handleCopy}
                 style={{
                   padding: '6px 14px',
-                  border: '1px solid #e3e8ee',
+                  border: '1px solid var(--border)',
                   borderRadius: '8px',
-                  background: '#ffffff',
+                  background: 'var(--bg-surface)',
                   fontSize: '12px',
                   fontWeight: 500,
-                  color: '#6b7280',
+                  color: 'var(--text-muted)',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
@@ -656,11 +656,11 @@ export default function ResumeOptimizer() {
                 }}
                 onMouseEnter={(e) =>
                   ((e.currentTarget as HTMLButtonElement).style.borderColor =
-                    '#10b981')
+                    'var(--accent)')
                 }
                 onMouseLeave={(e) =>
                   ((e.currentTarget as HTMLButtonElement).style.borderColor =
-                    '#e3e8ee')
+                    'var(--border)')
                 }
               >
                 <svg
@@ -683,12 +683,12 @@ export default function ResumeOptimizer() {
                 onClick={handleDownload}
                 style={{
                   padding: '6px 14px',
-                  border: '1px solid #e3e8ee',
+                  border: '1px solid var(--border)',
                   borderRadius: '8px',
-                  background: '#ffffff',
+                  background: 'var(--bg-surface)',
                   fontSize: '12px',
                   fontWeight: 500,
-                  color: '#6b7280',
+                  color: 'var(--text-muted)',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
@@ -698,11 +698,11 @@ export default function ResumeOptimizer() {
                 }}
                 onMouseEnter={(e) =>
                   ((e.currentTarget as HTMLButtonElement).style.borderColor =
-                    '#10b981')
+                    'var(--accent)')
                 }
                 onMouseLeave={(e) =>
                   ((e.currentTarget as HTMLButtonElement).style.borderColor =
-                    '#e3e8ee')
+                    'var(--border)')
                 }
               >
                 <svg
@@ -729,8 +729,8 @@ export default function ResumeOptimizer() {
         <div
           style={{
             flex: 1,
-            background: '#f9fafb',
-            border: '1px solid #e3e8ee',
+            background: 'var(--bg-elevated)',
+            border: '1px solid var(--border)',
             borderRadius: '10px',
             padding: '20px',
             overflowY: 'auto',
@@ -753,14 +753,14 @@ export default function ResumeOptimizer() {
                 style={{
                   width: '36px',
                   height: '36px',
-                  border: '3px solid #e5e7eb',
-                  borderTopColor: '#10b981',
+                  border: '3px solid var(--border)',
+                  borderTopColor: 'var(--accent)',
                   borderRadius: '50%',
                   animation: 'resumeOptimizerSpin 0.8s linear infinite',
                 }}
               />
               <span
-                style={{ fontSize: '14px', color: '#6b7280', fontWeight: 500 }}
+                style={{ fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}
               >
                 {activeTab === 'resume'
                   ? 'Optimizing your resume...'
@@ -782,7 +782,7 @@ export default function ResumeOptimizer() {
                 fontFamily: "'IBM Plex Mono', monospace",
                 fontSize: '13px',
                 lineHeight: '1.7',
-                color: '#1f2937',
+                color: 'var(--text-primary)',
                 whiteSpace: 'pre-wrap',
                 wordBreak: 'break-word',
               }}
@@ -798,7 +798,7 @@ export default function ResumeOptimizer() {
                 justifyContent: 'center',
                 height: '100%',
                 gap: '12px',
-                color: '#9ca3af',
+                color: 'var(--text-muted)',
               }}
             >
               <svg

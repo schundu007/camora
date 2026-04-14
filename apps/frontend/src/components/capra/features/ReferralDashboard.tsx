@@ -54,14 +54,14 @@ export default function ReferralDashboard() {
 
   if (loading) {
     return (
-      <div className="bg-white border-0 rounded-2xl p-6 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
+      <div className="bg-[var(--bg-surface)] border-0 rounded-2xl p-6 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
         <div className="animate-pulse space-y-4">
-          <div className="h-5 bg-gray-100 rounded w-40" />
-          <div className="h-10 bg-gray-100 rounded" />
+          <div className="h-5 bg-[var(--bg-elevated)] rounded w-40" />
+          <div className="h-10 bg-[var(--bg-elevated)] rounded" />
           <div className="flex gap-4">
-            <div className="h-20 bg-gray-100 rounded flex-1" />
-            <div className="h-20 bg-gray-100 rounded flex-1" />
-            <div className="h-20 bg-gray-100 rounded flex-1" />
+            <div className="h-20 bg-[var(--bg-elevated)] rounded flex-1" />
+            <div className="h-20 bg-[var(--bg-elevated)] rounded flex-1" />
+            <div className="h-20 bg-[var(--bg-elevated)] rounded flex-1" />
           </div>
         </div>
       </div>
@@ -70,7 +70,7 @@ export default function ReferralDashboard() {
 
   if (error) {
     return (
-      <div className="bg-white border-0 rounded-2xl p-6 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
+      <div className="bg-[var(--bg-surface)] border-0 rounded-2xl p-6 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
         <p className="text-sm text-red-500">{error}</p>
       </div>
     );
@@ -79,21 +79,21 @@ export default function ReferralDashboard() {
   if (!data) return null;
 
   return (
-    <div className="bg-white border-0 rounded-2xl p-6 space-y-6 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
+    <div className="bg-[var(--bg-surface)] border-0 rounded-2xl p-6 space-y-6 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
       {/* Header */}
       <div>
-        <h3 className="text-lg font-bold text-gray-900 tracking-tight">Refer Friends, Earn Credits</h3>
-        <p className="text-sm text-gray-500 mt-1">Share your link and earn credits when friends sign up.</p>
+        <h3 className="text-lg font-bold text-[var(--text-primary)] tracking-tight">Refer Friends, Earn Credits</h3>
+        <p className="text-sm text-[var(--text-muted)] mt-1">Share your link and earn credits when friends sign up.</p>
       </div>
 
       {/* Referral Link */}
       <div className="flex items-center gap-2">
-        <div className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-700 font-mono truncate">
+        <div className="flex-1 bg-[var(--bg-elevated)] border border-[var(--border)] rounded-lg px-4 py-2.5 text-sm text-[var(--text-secondary)] font-mono truncate">
           {data.link}
         </div>
         <button
           onClick={handleCopyLink}
-          className="shrink-0 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium rounded-lg transition-colors"
+          className="shrink-0 px-4 py-2.5 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-sm font-medium rounded-lg transition-colors"
         >
           {copied ? 'Copied!' : 'Copy'}
         </button>
@@ -104,40 +104,40 @@ export default function ReferralDashboard() {
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
-        <div className="bg-gray-50 rounded-xl p-4 text-center">
-          <p className="text-2xl font-bold text-gray-900">{data.total_invited}</p>
-          <p className="text-xs text-gray-500 mt-1">Invited</p>
+        <div className="bg-[var(--bg-elevated)] rounded-xl p-4 text-center">
+          <p className="text-2xl font-bold text-[var(--text-primary)]">{data.total_invited}</p>
+          <p className="text-xs text-[var(--text-muted)] mt-1">Invited</p>
         </div>
-        <div className="bg-gray-50 rounded-xl p-4 text-center">
-          <p className="text-2xl font-bold text-gray-900">{data.total_rewarded}</p>
-          <p className="text-xs text-gray-500 mt-1">Rewarded</p>
+        <div className="bg-[var(--bg-elevated)] rounded-xl p-4 text-center">
+          <p className="text-2xl font-bold text-[var(--text-primary)]">{data.total_rewarded}</p>
+          <p className="text-xs text-[var(--text-muted)] mt-1">Rewarded</p>
         </div>
-        <div className="bg-emerald-50 rounded-xl p-4 text-center">
-          <p className="text-2xl font-bold text-emerald-600">{data.rewards_earned}</p>
-          <p className="text-xs text-gray-500 mt-1">Credits Earned</p>
+        <div className="bg-[var(--accent)]/10 rounded-xl p-4 text-center">
+          <p className="text-2xl font-bold text-[var(--accent)]">{data.rewards_earned}</p>
+          <p className="text-xs text-[var(--text-muted)] mt-1">Credits Earned</p>
         </div>
       </div>
 
       {/* Referral List */}
       {data.referrals.length > 0 && (
         <div>
-          <h4 className="text-sm font-semibold text-gray-700 mb-3">Your Referrals</h4>
+          <h4 className="text-sm font-semibold text-[var(--text-secondary)] mb-3">Your Referrals</h4>
           <div className="space-y-2">
             {data.referrals.map((ref, i) => (
-              <div key={i} className="flex items-center gap-3 py-2.5 px-3 bg-gray-50 rounded-lg">
+              <div key={i} className="flex items-center gap-3 py-2.5 px-3 bg-[var(--bg-elevated)] rounded-lg">
                 {/* Avatar */}
                 {ref.avatar ? (
                   <img src={ref.avatar} alt="" className="w-8 h-8 rounded-full object-cover" />
                 ) : (
-                  <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 text-xs font-bold">
+                  <div className="w-8 h-8 rounded-full bg-[var(--accent)]/15 flex items-center justify-center text-[var(--accent)] text-xs font-bold">
                     {(ref.name || '?').charAt(0).toUpperCase()}
                   </div>
                 )}
 
                 {/* Name */}
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">{ref.name || 'Anonymous'}</p>
-                  <p className="text-xs text-gray-400">
+                  <p className="text-sm font-medium text-[var(--text-primary)] truncate">{ref.name || 'Anonymous'}</p>
+                  <p className="text-xs text-[var(--text-muted)]">
                     {new Date(ref.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                   </p>
                 </div>
@@ -145,7 +145,7 @@ export default function ReferralDashboard() {
                 {/* Status Badge */}
                 <span className={`shrink-0 text-xs font-medium px-2 py-0.5 rounded-full ${
                   ref.status === 'rewarded'
-                    ? 'bg-emerald-100 text-emerald-700'
+                    ? 'bg-[var(--accent)]/15 text-[var(--accent)]'
                     : 'bg-amber-100 text-amber-700'
                 }`}>
                   {ref.status === 'rewarded' ? 'Rewarded' : 'Pending'}

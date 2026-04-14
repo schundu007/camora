@@ -127,7 +127,7 @@ export default function LanguageSelectorModal({ isOpen, onClose, selectedLanguag
       onClick={onClose}
     >
       <div
-        className="relative w-full rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 bg-white border border-gray-200"
+        className="relative w-full rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 bg-[var(--bg-surface)] border border-[var(--border)]"
         style={{
           maxWidth: '800px',
           height: '560px',
@@ -142,21 +142,21 @@ export default function LanguageSelectorModal({ isOpen, onClose, selectedLanguag
         />
 
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 bg-gray-50">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border)] bg-[var(--bg-elevated)]">
           <div>
-            <h2 className="text-lg font-bold text-gray-900">Select Language</h2>
-            <p className="text-xs text-gray-600">Choose your preferred programming language</p>
+            <h2 className="text-lg font-bold text-[var(--text-primary)]">Select Language</h2>
+            <p className="text-xs text-[var(--text-secondary)]">Choose your preferred programming language</p>
           </div>
           <button
             onClick={onClose}
-            className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all text-gray-600 hover:text-gray-800 hover:bg-gray-200"
+            className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)]"
           >
             Close
           </button>
         </div>
 
         {/* Category Pills */}
-        <div className="px-5 py-3 flex flex-wrap gap-2 border-b border-gray-200 bg-gray-50">
+        <div className="px-5 py-3 flex flex-wrap gap-2 border-b border-[var(--border)] bg-[var(--bg-elevated)]">
           {CATEGORIES.map(cat => (
             <button
               key={cat.id}
@@ -178,19 +178,19 @@ export default function LanguageSelectorModal({ isOpen, onClose, selectedLanguag
         </div>
 
         {/* Search */}
-        <div className="px-5 py-3 border-b border-gray-200 bg-gray-50">
+        <div className="px-5 py-3 border-b border-[var(--border)] bg-[var(--bg-elevated)]">
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Type to search..."
-            className="w-full px-4 py-2.5 text-sm rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-brand-400/30 bg-gray-200 text-gray-800 border border-gray-200 placeholder-gray-400"
+            className="w-full px-4 py-2.5 text-sm rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-brand-400/30 bg-[var(--bg-elevated)] text-[var(--text-primary)] border border-[var(--border)] placeholder-[var(--text-muted)]"
             autoFocus
           />
         </div>
 
         {/* Language Grid */}
-        <div className="flex-1 overflow-y-auto p-5 bg-white" style={{ maxHeight: 'calc(100% - 220px)' }}>
+        <div className="flex-1 overflow-y-auto p-5 bg-[var(--bg-surface)]" style={{ maxHeight: 'calc(100% - 220px)' }}>
           {/* Auto option */}
           <button
             type="button"
@@ -198,7 +198,7 @@ export default function LanguageSelectorModal({ isOpen, onClose, selectedLanguag
               e.stopPropagation();
               handleSelect('auto');
             }}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg mb-4 transition-all hover:bg-gray-100"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg mb-4 transition-all hover:bg-[var(--bg-elevated)]"
             style={{
               background: selectedLanguage === 'auto'
                 ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%)'
@@ -217,8 +217,8 @@ export default function LanguageSelectorModal({ isOpen, onClose, selectedLanguag
               ✨
             </div>
             <div className="text-left flex-1">
-              <div className="text-sm font-semibold text-gray-900">Auto Detect</div>
-              <div className="text-xs text-gray-600">Let AI choose the best language</div>
+              <div className="text-sm font-semibold text-[var(--text-primary)]">Auto Detect</div>
+              <div className="text-xs text-[var(--text-secondary)]">Let AI choose the best language</div>
             </div>
             {selectedLanguage === 'auto' && (
               <span className="text-lg font-bold text-brand-400">✓</span>
@@ -235,7 +235,7 @@ export default function LanguageSelectorModal({ isOpen, onClose, selectedLanguag
                   e.stopPropagation();
                   handleSelect(lang.value);
                 }}
-                className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-left transition-all hover:bg-gray-100 group"
+                className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-left transition-all hover:bg-[var(--bg-elevated)] group"
                 style={{
                   background: selectedLanguage === lang.value
                     ? `linear-gradient(135deg, ${activeCategoryData?.color || '#10b981'}15 0%, ${activeCategoryData?.color || '#10b981'}08 100%)`
@@ -256,7 +256,7 @@ export default function LanguageSelectorModal({ isOpen, onClose, selectedLanguag
                 >
                   {lang.icon}
                 </span>
-                <span className="text-sm font-medium text-gray-800 truncate flex-1">{lang.label}</span>
+                <span className="text-sm font-medium text-[var(--text-primary)] truncate flex-1">{lang.label}</span>
                 {selectedLanguage === lang.value && (
                   <span className="text-sm font-bold flex-shrink-0" style={{ color: activeCategoryData?.color || '#10b981' }}>✓</span>
                 )}
@@ -266,14 +266,14 @@ export default function LanguageSelectorModal({ isOpen, onClose, selectedLanguag
 
           {filteredLanguages.length === 0 && (
             <div className="text-center py-12">
-              <p className="text-gray-600 font-medium">No languages found</p>
-              <p className="text-sm text-gray-500 mt-1">Try a different search term</p>
+              <p className="text-[var(--text-secondary)] font-medium">No languages found</p>
+              <p className="text-sm text-[var(--text-muted)] mt-1">Try a different search term</p>
             </div>
           )}
         </div>
 
         {/* Footer hint */}
-        <div className="px-5 py-3 flex items-center justify-between text-xs text-gray-500 border-t border-gray-200 bg-gray-50">
+        <div className="px-5 py-3 flex items-center justify-between text-xs text-[var(--text-muted)] border-t border-[var(--border)] bg-[var(--bg-elevated)]">
           <span>Press ESC to close</span>
           <span>{filteredLanguages.length} languages available</span>
         </div>
