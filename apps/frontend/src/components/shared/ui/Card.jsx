@@ -15,12 +15,12 @@ const cardVariants = cva(
   {
     variants: {
       variant: {
-        default: ['bg-white border border-gray-200'],
-        elevated: ['bg-white border border-gray-200', 'shadow-card hover:shadow-card-hover'],
-        outlined: ['bg-transparent border border-gray-200'],
-        filled: ['bg-gray-100 border-0'],
-        glass: ['bg-gray-100/80 backdrop-blur-md border border-gray-200/30'],
-        interactive: ['bg-white border border-gray-200', 'shadow-card hover:shadow-card-hover', 'hover:border-brand-400/50 hover:-translate-y-0.5', 'cursor-pointer'],
+        default: ['bg-gradient-to-br from-white/80 to-indigo-50/30 border border-indigo-200/30 shadow-[0_2px_12px_rgba(99,102,241,0.06)]'],
+        elevated: ['bg-gradient-to-br from-white/80 to-indigo-50/30 border border-indigo-200/30', 'shadow-[0_4px_16px_rgba(99,102,241,0.08)] hover:shadow-[0_12px_40px_rgba(99,102,241,0.14)]'],
+        outlined: ['bg-transparent border border-indigo-200/30'],
+        filled: ['bg-indigo-50/40 border-0'],
+        glass: ['bg-white/60 backdrop-blur-md border border-indigo-200/20 shadow-[0_2px_12px_rgba(99,102,241,0.06)]'],
+        interactive: ['bg-gradient-to-br from-white/80 to-indigo-50/30 border border-indigo-200/30', 'shadow-[0_2px_12px_rgba(99,102,241,0.06)] hover:shadow-[0_12px_40px_rgba(99,102,241,0.14)]', 'hover:border-indigo-300/40 hover:-translate-y-0.5', 'cursor-pointer'],
         ghost: ['bg-transparent border-0'],
       },
       padding: {
