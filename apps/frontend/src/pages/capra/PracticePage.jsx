@@ -937,10 +937,10 @@ export default function PracticePage() {
                       </button>
                     </div>
 
-                    <div style={{ height: 520, borderRadius: 12, overflow: 'hidden', border: '1px solid #e3e8ee' }}>
-                      <Allotment defaultSizes={[40, 60]}>
+                    <div style={{ height: 'calc(100vh - 340px)', minHeight: 500, borderRadius: 12, overflow: 'hidden', border: '1px solid #e3e8ee' }}>
+                      <Allotment defaultSizes={[50, 50]}>
                         {/* Left: Excalidraw Whiteboard */}
-                        <Allotment.Pane minSize={280}>
+                        <Allotment.Pane minSize={350}>
                           <Suspense fallback={<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#9ca3af', fontSize: 13 }}>Loading whiteboard...</div>}>
                             <ExcalidrawWhiteboard
                               key={currentIdx}
@@ -951,13 +951,13 @@ export default function PracticePage() {
                           </Suspense>
                         </Allotment.Pane>
 
-                        {/* Right: Section text areas — 2-col grid */}
-                        <Allotment.Pane minSize={360}>
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, padding: 12, overflowY: 'auto', height: '100%', background: '#fff' }}>
+                        {/* Right: Section text areas */}
+                        <Allotment.Pane minSize={380}>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, padding: 16, overflowY: 'auto', height: '100%', background: '#fff' }}>
                             {SD_SECTIONS.map((section, si) => {
                               const val = parts[si] || '';
                               return (
-                                <div key={section.label}>
+                                <div key={section.label} style={si === SD_SECTIONS.length - 1 ? { gridColumn: '1 / -1' } : undefined}>
                                   <label style={{ fontSize: 11, fontWeight: 600, color: section.color, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                                     <Icon name={section.icon} size={12} style={{ color: section.color }} />
                                     {section.label}
@@ -974,7 +974,7 @@ export default function PracticePage() {
                                       setAnswers(newA);
                                     }}
                                     placeholder={section.placeholder}
-                                    style={{ width: '100%', minHeight: 80, padding: 10, borderRadius: 10, border: '1px solid #e3e8ee', fontSize: 12, resize: 'vertical', outline: 'none', background: '#fafbfc', lineHeight: 1.6 }}
+                                    style={{ width: '100%', minHeight: 100, padding: 12, borderRadius: 10, border: '1px solid #e3e8ee', fontSize: 13, resize: 'vertical', outline: 'none', background: '#fafbfc', lineHeight: 1.7 }}
                                     autoFocus={si === 0}
                                   />
                                 </div>
