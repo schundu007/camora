@@ -1,70 +1,73 @@
 import { useState, useEffect } from 'react';
 
-// Language data with icons - categories is an array to support multiple categories
+// Devicon CDN base for original language logos
+const D = 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons';
+
+// Language data with logo URLs from devicon CDN
 const LANGUAGES = [
   // Core Languages
-  { value: 'python3', label: 'Python 3', icon: '🐍', categories: ['all', 'data'] },
-  { value: 'python2', label: 'Python 2', icon: '🐍', categories: ['all'] },
-  { value: 'javascript', label: 'JavaScript', icon: 'JS', categories: ['all', 'frontend', 'backend'] },
-  { value: 'typescript', label: 'TypeScript', icon: 'TS', categories: ['all', 'frontend', 'backend'] },
-  { value: 'java', label: 'Java', icon: '☕', categories: ['all', 'backend', 'mobile'] },
-  { value: 'c', label: 'C', icon: 'C', categories: ['all'] },
-  { value: 'cpp', label: 'C++', icon: 'C+', categories: ['all'] },
-  { value: 'csharp', label: 'C#', icon: 'C#', categories: ['all', 'backend'] },
-  { value: 'go', label: 'Go', icon: 'Go', categories: ['all', 'backend', 'devops'] },
-  { value: 'rust', label: 'Rust', icon: '🦀', categories: ['all'] },
-  { value: 'ruby', label: 'Ruby', icon: '💎', categories: ['all', 'backend'] },
-  { value: 'php', label: 'PHP', icon: '🐘', categories: ['all', 'backend'] },
-  { value: 'swift', label: 'Swift 5', icon: '🕊️', categories: ['all', 'mobile'] },
-  { value: 'kotlin', label: 'Kotlin', icon: 'K', categories: ['all', 'mobile'] },
-  { value: 'scala', label: 'Scala', icon: 'S', categories: ['all', 'backend'] },
-  { value: 'bash', label: 'Bash', icon: '$>', categories: ['all', 'devops'] },
-  { value: 'perl', label: 'Perl', icon: '🐪', categories: ['all'] },
-  { value: 'lua', label: 'Lua', icon: '🌙', categories: ['all'] },
-  { value: 'r', label: 'R', icon: 'R', categories: ['all', 'data'] },
-  { value: 'haskell', label: 'Haskell', icon: 'λ', categories: ['all'] },
-  { value: 'clojure', label: 'Clojure', icon: '()', categories: ['all'] },
-  { value: 'elixir', label: 'Elixir', icon: '💧', categories: ['all', 'backend'] },
-  { value: 'erlang', label: 'Erlang', icon: 'E', categories: ['all'] },
-  { value: 'fsharp', label: 'F#', icon: 'F#', categories: ['all'] },
-  { value: 'ocaml', label: 'OCaml', icon: '🐫', categories: ['all'] },
-  { value: 'dart', label: 'Dart', icon: '🎯', categories: ['all', 'mobile'] },
-  { value: 'julia', label: 'Julia', icon: 'Ju', categories: ['all', 'data'] },
-  { value: 'objectivec', label: 'Objective-C', icon: 'OC', categories: ['all', 'mobile'] },
-  { value: 'coffeescript', label: 'CoffeeScript', icon: '☕', categories: ['all'] },
-  { value: 'vb', label: 'Visual Basic', icon: 'VB', categories: ['all'] },
-  { value: 'tcl', label: 'Tcl', icon: 'Tc', categories: ['all'] },
+  { value: 'python3', label: 'Python 3', logo: `${D}/python/python-original.svg`, categories: ['all', 'data'] },
+  { value: 'python2', label: 'Python 2', logo: `${D}/python/python-original.svg`, categories: ['all'] },
+  { value: 'javascript', label: 'JavaScript', logo: `${D}/javascript/javascript-original.svg`, categories: ['all', 'frontend', 'backend'] },
+  { value: 'typescript', label: 'TypeScript', logo: `${D}/typescript/typescript-original.svg`, categories: ['all', 'frontend', 'backend'] },
+  { value: 'java', label: 'Java', logo: `${D}/java/java-original.svg`, categories: ['all', 'backend', 'mobile'] },
+  { value: 'c', label: 'C', logo: `${D}/c/c-original.svg`, categories: ['all'] },
+  { value: 'cpp', label: 'C++', logo: `${D}/cplusplus/cplusplus-original.svg`, categories: ['all'] },
+  { value: 'csharp', label: 'C#', logo: `${D}/csharp/csharp-original.svg`, categories: ['all', 'backend'] },
+  { value: 'go', label: 'Go', logo: `${D}/go/go-original-wordmark.svg`, categories: ['all', 'backend', 'devops'] },
+  { value: 'rust', label: 'Rust', logo: `${D}/rust/rust-original.svg`, categories: ['all'] },
+  { value: 'ruby', label: 'Ruby', logo: `${D}/ruby/ruby-original.svg`, categories: ['all', 'backend'] },
+  { value: 'php', label: 'PHP', logo: `${D}/php/php-original.svg`, categories: ['all', 'backend'] },
+  { value: 'swift', label: 'Swift 5', logo: `${D}/swift/swift-original.svg`, categories: ['all', 'mobile'] },
+  { value: 'kotlin', label: 'Kotlin', logo: `${D}/kotlin/kotlin-original.svg`, categories: ['all', 'mobile'] },
+  { value: 'scala', label: 'Scala', logo: `${D}/scala/scala-original.svg`, categories: ['all', 'backend'] },
+  { value: 'bash', label: 'Bash', logo: `${D}/bash/bash-original.svg`, categories: ['all', 'devops'] },
+  { value: 'perl', label: 'Perl', logo: `${D}/perl/perl-original.svg`, categories: ['all'] },
+  { value: 'lua', label: 'Lua', logo: `${D}/lua/lua-original.svg`, categories: ['all'] },
+  { value: 'r', label: 'R', logo: `${D}/r/r-original.svg`, categories: ['all', 'data'] },
+  { value: 'haskell', label: 'Haskell', logo: `${D}/haskell/haskell-original.svg`, categories: ['all'] },
+  { value: 'clojure', label: 'Clojure', logo: `${D}/clojure/clojure-original.svg`, categories: ['all'] },
+  { value: 'elixir', label: 'Elixir', logo: `${D}/elixir/elixir-original.svg`, categories: ['all', 'backend'] },
+  { value: 'erlang', label: 'Erlang', logo: `${D}/erlang/erlang-original.svg`, categories: ['all'] },
+  { value: 'fsharp', label: 'F#', logo: `${D}/fsharp/fsharp-original.svg`, categories: ['all'] },
+  { value: 'ocaml', label: 'OCaml', logo: `${D}/ocaml/ocaml-original.svg`, categories: ['all'] },
+  { value: 'dart', label: 'Dart', logo: `${D}/dart/dart-original.svg`, categories: ['all', 'mobile'] },
+  { value: 'julia', label: 'Julia', logo: `${D}/julia/julia-original.svg`, categories: ['all', 'data'] },
+  { value: 'objectivec', label: 'Objective-C', logo: `${D}/objectivec/objectivec-plain.svg`, categories: ['all', 'mobile'] },
+  { value: 'coffeescript', label: 'CoffeeScript', logo: `${D}/coffeescript/coffeescript-original.svg`, categories: ['all'] },
+  { value: 'vb', label: 'Visual Basic', logo: `${D}/visualbasic/visualbasic-original.svg`, categories: ['all'] },
+  { value: 'tcl', label: 'Tcl', icon: 'Tcl', categories: ['all'] },
   // Database / SQL
-  { value: 'sql', label: 'SQL', icon: '🗃️', categories: ['all', 'sql'] },
-  { value: 'mysql', label: 'MySQL', icon: '🐬', categories: ['all', 'sql'] },
-  { value: 'postgresql', label: 'PostgreSQL', icon: '🐘', categories: ['all', 'sql'] },
+  { value: 'sql', label: 'SQL', logo: `${D}/azuresqldatabase/azuresqldatabase-original.svg`, categories: ['all', 'sql'] },
+  { value: 'mysql', label: 'MySQL', logo: `${D}/mysql/mysql-original.svg`, categories: ['all', 'sql'] },
+  { value: 'postgresql', label: 'PostgreSQL', logo: `${D}/postgresql/postgresql-original.svg`, categories: ['all', 'sql'] },
   // Frontend Frameworks
-  { value: 'react', label: 'React', icon: '⚛️', categories: ['all', 'frontend', 'mobile'] },
-  { value: 'vue', label: 'Vue', icon: 'V', categories: ['all', 'frontend'] },
-  { value: 'angular', label: 'Angular', icon: 'A', categories: ['all', 'frontend'] },
-  { value: 'svelte', label: 'Svelte', icon: 'S', categories: ['all', 'frontend'] },
-  { value: 'nextjs', label: 'Next.js', icon: 'N', categories: ['all', 'frontend'] },
-  { value: 'html', label: 'HTML', icon: '🌐', categories: ['all', 'frontend'] },
+  { value: 'react', label: 'React', logo: `${D}/react/react-original.svg`, categories: ['all', 'frontend', 'mobile'] },
+  { value: 'vue', label: 'Vue', logo: `${D}/vuejs/vuejs-original.svg`, categories: ['all', 'frontend'] },
+  { value: 'angular', label: 'Angular', logo: `${D}/angular/angular-original.svg`, categories: ['all', 'frontend'] },
+  { value: 'svelte', label: 'Svelte', logo: `${D}/svelte/svelte-original.svg`, categories: ['all', 'frontend'] },
+  { value: 'nextjs', label: 'Next.js', logo: `${D}/nextjs/nextjs-original.svg`, categories: ['all', 'frontend'] },
+  { value: 'html', label: 'HTML', logo: `${D}/html5/html5-original.svg`, categories: ['all', 'frontend'] },
   // Backend Frameworks
-  { value: 'nodejs', label: 'NodeJS', icon: '💚', categories: ['all', 'backend'] },
-  { value: 'django', label: 'Django', icon: 'Dj', categories: ['all', 'backend'] },
-  { value: 'rails', label: 'Rails', icon: '🛤️', categories: ['all', 'backend'] },
-  { value: 'spring', label: 'Spring', icon: '🌱', categories: ['all', 'backend'] },
+  { value: 'nodejs', label: 'NodeJS', logo: `${D}/nodejs/nodejs-original.svg`, categories: ['all', 'backend'] },
+  { value: 'django', label: 'Django', logo: `${D}/django/django-plain.svg`, categories: ['all', 'backend'] },
+  { value: 'rails', label: 'Rails', logo: `${D}/rails/rails-plain.svg`, categories: ['all', 'backend'] },
+  { value: 'spring', label: 'Spring', logo: `${D}/spring/spring-original.svg`, categories: ['all', 'backend'] },
   // DevOps
-  { value: 'terraform', label: 'Terraform', icon: '🏗️', categories: ['all', 'devops'] },
-  { value: 'kubernetes', label: 'Kubernetes', icon: '☸️', categories: ['all', 'devops'] },
-  { value: 'docker', label: 'Docker', icon: '🐳', categories: ['all', 'devops'] },
+  { value: 'terraform', label: 'Terraform', logo: `${D}/terraform/terraform-original.svg`, categories: ['all', 'devops'] },
+  { value: 'kubernetes', label: 'Kubernetes', logo: `${D}/kubernetes/kubernetes-original.svg`, categories: ['all', 'devops'] },
+  { value: 'docker', label: 'Docker', logo: `${D}/docker/docker-original.svg`, categories: ['all', 'devops'] },
   // Data Science / ML
-  { value: 'pyspark', label: 'PySpark', icon: '⚡', categories: ['all', 'data'] },
-  { value: 'pytorch', label: 'PyTorch', icon: '🔥', categories: ['all', 'data'] },
-  { value: 'tensorflow', label: 'TensorFlow', icon: 'TF', categories: ['all', 'data'] },
-  { value: 'scipy', label: 'SciPy', icon: '📊', categories: ['all', 'data'] },
+  { value: 'pyspark', label: 'PySpark', logo: `${D}/apachespark/apachespark-original.svg`, categories: ['all', 'data'] },
+  { value: 'pytorch', label: 'PyTorch', logo: `${D}/pytorch/pytorch-original.svg`, categories: ['all', 'data'] },
+  { value: 'tensorflow', label: 'TensorFlow', logo: `${D}/tensorflow/tensorflow-original.svg`, categories: ['all', 'data'] },
+  { value: 'scipy', label: 'SciPy', icon: 'SciPy', categories: ['all', 'data'] },
   // Blockchain
-  { value: 'solidity', label: 'Solidity', icon: '⟠', categories: ['all'] },
+  { value: 'solidity', label: 'Solidity', logo: `${D}/solidity/solidity-original.svg`, categories: ['all'] },
   // Hardware
-  { value: 'verilog', label: 'Verilog', icon: '🔌', categories: ['all'] },
+  { value: 'verilog', label: 'Verilog', icon: 'V', categories: ['all'] },
   // Docs
-  { value: 'markdown', label: 'Markdown', icon: 'MD', categories: ['all', 'docs'] },
+  { value: 'markdown', label: 'Markdown', logo: `${D}/markdown/markdown-original.svg`, categories: ['all', 'docs'] },
 ];
 
 const CATEGORIES = [
@@ -246,7 +249,7 @@ export default function LanguageSelectorModal({ isOpen, onClose, selectedLanguag
                 }}
               >
                 <span
-                  className="w-8 h-8 flex items-center justify-center rounded-lg text-sm font-bold transition-all group-hover:scale-105"
+                  className="w-8 h-8 flex items-center justify-center rounded-lg text-sm font-bold transition-all group-hover:scale-105 overflow-hidden"
                   style={{
                     background: selectedLanguage === lang.value
                       ? activeCategoryData?.color || '#10b981'
@@ -254,7 +257,9 @@ export default function LanguageSelectorModal({ isOpen, onClose, selectedLanguag
                     color: selectedLanguage === lang.value ? '#0c1322' : '#cbd5e1',
                   }}
                 >
-                  {lang.icon}
+                  {lang.logo
+                    ? <img src={lang.logo} alt="" className="w-5 h-5" loading="lazy" />
+                    : lang.icon}
                 </span>
                 <span className="text-sm font-medium text-[var(--text-primary)] truncate flex-1">{lang.label}</span>
                 {selectedLanguage === lang.value && (

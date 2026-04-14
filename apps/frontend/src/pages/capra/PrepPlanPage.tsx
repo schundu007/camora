@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { getAuthHeaders } from '../../utils/authHeaders.js';
+import { Icon } from '../../components/shared/Icons.jsx';
 import { codingTopics } from '../../data/capra/topics/codingTopics.js';
 import { systemDesignTopics } from '../../data/capra/topics/systemDesignTopics.js';
 import { lldTopics } from '../../data/capra/topics/lldTopics.js';
@@ -15,14 +15,14 @@ const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.co
 /* ─── Category definitions ─────────────────────────────────── */
 
 const CATEGORIES = [
-  { id: 'coding', label: 'DSA & Algorithms', icon: '⚡', color: '#10b981', href: '/capra/prepare/coding', topics: codingTopics },
-  { id: 'system-design', label: 'System Design', icon: '🏗', color: '#6366f1', href: '/capra/prepare/system-design', topics: systemDesignTopics },
-  { id: 'microservices', label: 'Microservices', icon: '🔗', color: '#8b5cf6', href: '/capra/prepare/microservices', topics: microservicesPatterns },
-  { id: 'databases', label: 'Databases', icon: '🗄', color: '#f59e0b', href: '/capra/prepare/databases', topics: databaseTopics },
-  { id: 'sql', label: 'SQL', icon: '📊', color: '#06b6d4', href: '/capra/prepare/sql', topics: sqlTopics },
-  { id: 'low-level', label: 'Low-Level Design', icon: '🧩', color: '#ec4899', href: '/capra/prepare/low-level-design', topics: lldTopics },
-  { id: 'projects', label: 'Projects', icon: '🛠', color: '#8b5cf6', href: '/capra/prepare/projects', topics: projectTopics },
-  { id: 'behavioral', label: 'Behavioral', icon: '💬', color: '#14b8a6', href: '/capra/prepare/behavioral', topics: behavioralTopics },
+  { id: 'coding', label: 'DSA & Algorithms', iconName: 'cpu', color: '#10b981', href: '/capra/prepare/coding', topics: codingTopics },
+  { id: 'system-design', label: 'System Design', iconName: 'systemDesign', color: '#6366f1', href: '/capra/prepare/system-design', topics: systemDesignTopics },
+  { id: 'microservices', label: 'Microservices', iconName: 'grid', color: '#8b5cf6', href: '/capra/prepare/microservices', topics: microservicesPatterns },
+  { id: 'databases', label: 'Databases', iconName: 'database', color: '#f59e0b', href: '/capra/prepare/databases', topics: databaseTopics },
+  { id: 'sql', label: 'SQL', iconName: 'database', color: '#06b6d4', href: '/capra/prepare/sql', topics: sqlTopics },
+  { id: 'low-level', label: 'Low-Level Design', iconName: 'layers', color: '#ec4899', href: '/capra/prepare/low-level-design', topics: lldTopics },
+  { id: 'projects', label: 'Projects', iconName: 'code', color: '#8b5cf6', href: '/capra/prepare/projects', topics: projectTopics },
+  { id: 'behavioral', label: 'Behavioral', iconName: 'users', color: '#14b8a6', href: '/capra/prepare/behavioral', topics: behavioralTopics },
 ];
 
 /* ─── Local storage helpers ─────────────────────────────────── */
@@ -319,7 +319,7 @@ export default function PrepPlanPage() {
 
             {overallPct === 100 && (
               <div className="mt-5 flex items-center gap-2 px-4 py-2.5 bg-emerald-500/10 rounded-xl">
-                <span className="text-lg">🏆</span>
+                <Icon name="trophy" size={18} className="text-amber-500" />
                 <span className="text-sm font-semibold text-emerald-600">All topics complete — you're ready!</span>
               </div>
             )}
@@ -337,7 +337,7 @@ export default function PrepPlanPage() {
                     className="flex items-center gap-3 p-4 bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl hover:border-indigo-500/30 hover:bg-[var(--bg-elevated)] transition-all no-underline group"
                   >
                     <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `${item.category.color}15` }}>
-                      <span className="text-base">{item.category.icon}</span>
+                      <Icon name={item.category.iconName} size={16} style={{ color: item.category.color }} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-[var(--text-primary)] truncate group-hover:text-[var(--accent)] transition-colors">{item.topic.title}</p>
@@ -365,7 +365,7 @@ export default function PrepPlanPage() {
                   className="flex items-center gap-4 p-4 bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl hover:border-[var(--border)] hover:bg-[var(--bg-elevated)] transition-all no-underline group"
                 >
                   <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `${cat.color}15` }}>
-                    <span className="text-base">{cat.icon}</span>
+                    <Icon name={cat.iconName} size={16} style={{ color: cat.color }} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1.5">
@@ -397,7 +397,7 @@ export default function PrepPlanPage() {
                       to={cat ? `${cat.href}?topic=${topic.id}` : '/capra/prepare'}
                       className="flex items-center gap-3 px-4 py-3 hover:bg-[var(--bg-elevated)] transition-colors no-underline group"
                     >
-                      <span className="text-amber-500 text-sm">★</span>
+                      <Icon name="star5" size={14} className="text-amber-500" />
                       <span className={`flex-1 text-sm ${completed[topic.id] ? 'text-[var(--text-muted)] line-through' : 'text-[var(--text-primary)]'} group-hover:text-[var(--accent)] transition-colors`}>
                         {topic.title}
                       </span>
@@ -423,7 +423,7 @@ export default function PrepPlanPage() {
               to="/capra/practice"
               className="flex items-center gap-3 p-4 bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl hover:border-emerald-500/30 transition-all no-underline group"
             >
-              <span className="text-lg">🎯</span>
+              <Icon name="target" size={18} className="text-emerald-500" />
               <div>
                 <p className="text-sm font-medium text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors">Practice Problems</p>
                 <p className="text-xs text-[var(--text-muted)]">Solve coding challenges</p>
@@ -433,7 +433,7 @@ export default function PrepPlanPage() {
               to="/capra/achievements"
               className="flex items-center gap-3 p-4 bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl hover:border-amber-500/30 transition-all no-underline group"
             >
-              <span className="text-lg">🏆</span>
+              <Icon name="trophy" size={18} className="text-amber-500" />
               <div>
                 <p className="text-sm font-medium text-[var(--text-primary)] group-hover:text-amber-500 transition-colors">Achievements</p>
                 <p className="text-xs text-[var(--text-muted)]">View your badges</p>
@@ -443,7 +443,7 @@ export default function PrepPlanPage() {
               to="/capra/prepare"
               className="flex items-center gap-3 p-4 bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl hover:border-indigo-500/30 transition-all no-underline group"
             >
-              <span className="text-lg">📚</span>
+              <Icon name="bookOpen" size={18} className="text-indigo-500" />
               <div>
                 <p className="text-sm font-medium text-[var(--text-primary)] group-hover:text-indigo-500 transition-colors">All Topics</p>
                 <p className="text-xs text-[var(--text-muted)]">Browse study material</p>
