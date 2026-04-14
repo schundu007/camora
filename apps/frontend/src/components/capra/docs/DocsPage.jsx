@@ -472,37 +472,14 @@ export default function DocsPage({ onBack }) {
   // Find selected topic details
   const getSelectedTopicDetails = () => {
     if (!selectedTopic) return null;
-    if (activePage === 'coding') return codingTopics.find(t => t.id === selectedTopic);
-    if (activePage === 'system-design') {
-      return systemDesignTopics.find(t => t.id === selectedTopic) ||
-             systemDesigns.find(t => t.id === selectedTopic) ||
-             concurrencyTopics.find(t => t.id === selectedTopic) ||
-             systemDesignPatterns.find(t => t.id === selectedTopic) ||
-             microservicesPatterns.find(t => t.id === selectedTopic) ||
-             systemDesignTradeoffs.find(t => t.id === selectedTopic) ||
-             scalableSystemsTopics.find(t => t.id === selectedTopic);
-    }
-    if (activePage === 'low-level') {
-      return lldTopics.find(t => t.id === selectedTopic) ||
-             lldProblems.find(t => t.id === selectedTopic);
-    }
-    if (activePage === 'behavioral') {
-      return behavioralTopics.find(t => t.id === selectedTopic) ||
-             companyPrep.find(t => t.id === selectedTopic);
-    }
-    if (activePage === 'microservices') return microservicesPatterns.find(t => t.id === selectedTopic);
-    if (activePage === 'databases') return databaseTopics.find(t => t.id === selectedTopic);
-    if (activePage === 'sql') return sqlTopics.find(t => t.id === selectedTopic);
-    if (activePage === 'projects') return projectTopics.find(t => t.id === selectedTopic);
-    if (activePage === 'roadmaps') return roadmapTopics.find(t => t.id === selectedTopic);
-    if (activePage === 'eng-blogs') return engBlogTopics.find(t => t.id === selectedTopic);
 
-    // Cross-page fallback: search all topic arrays (read-only, no state changes)
+    // Search all topic arrays — no page restriction, prevents "topic not found" for valid topics
     const allSources = [
       codingTopics, systemDesignTopics, systemDesigns, systemDesignPatterns,
-      systemDesignTradeoffs, lldTopics, lldProblems, behavioralTopics,
+      systemDesignTradeoffs, concurrencyTopics, scalableSystemsTopics,
+      lldTopics, lldProblems, behavioralTopics, companyPrep,
       microservicesPatterns, databaseTopics, sqlTopics, projectTopics,
-      roadmapTopics, engBlogTopics, concurrencyTopics, scalableSystemsTopics, companyPrep,
+      roadmapTopics, engBlogTopics,
     ];
     for (const arr of allSources) {
       const found = arr?.find(t => t.id === selectedTopic);
