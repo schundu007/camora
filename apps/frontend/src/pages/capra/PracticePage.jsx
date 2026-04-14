@@ -373,9 +373,10 @@ export default function PracticePage() {
     setTimeLeft(modeConfig.time);
     setQuestionStartTime(Date.now());
     challengeStartRef.current = Date.now();
+    whiteboardState.clearAll();
     setPhase('active');
     window.scrollTo(0, 0);
-  }, [mode, category, difficulty, company]);
+  }, [mode, category, difficulty, company, whiteboardState]);
 
   const submitAnswer = useCallback(async () => {
     const q = questions[currentIdx];
@@ -868,13 +869,14 @@ export default function PracticePage() {
                 const autoGenerate = async () => {
                   const q = questions[currentIdx];
                   try {
-                    const res = await fetch(`${API_URL}/api/v1/solve`, {
+                    const sectionPrompt = SD_SECTIONS.map(s => s.label).join(', ');
+                    const res = await fetch(`${API_URL}/api/solve/stream`, {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
                       body: JSON.stringify({
-                        problem: `System Design: ${q.q}. ${q.desc}`,
-                        type: 'system-design-sections',
-                        sections: SD_SECTIONS.map(s => s.label),
+                        problem: `System Design: ${q.q}. ${q.desc}\n\nProvide your answer organized into these sections: ${sectionPrompt}`,
+                        ascendMode: 'system-design',
+                        designDetailLevel: 'basic',
                       }),
                     });
                     if (!res.ok) throw new Error('Failed');
@@ -885,14 +887,33 @@ export default function PracticePage() {
                     while (true) {
                       const { done, value } = await reader.read();
                       if (done) break;
-                      const chunk = decoder.decode(value, { stream: true });
-                      for (const line of chunk.split('\n')) {
+                      const raw = decoder.decode(value, { stream: true });
+                      for (const line of raw.split('\n')) {
                         if (line.startsWith('data: ') && line !== 'data: [DONE]') {
-                          try { const d = JSON.parse(line.slice(6)); if (d.t) fullText += d.t; } catch {}
+                          try {
+                            const d = JSON.parse(line.slice(6));
+                            if (d.chunk) fullText += d.chunk;
+                            if (d.done && d.result?.systemDesign) {
+                              const sd = d.result.systemDesign;
+                              const sectionTexts = [
+                                (sd.requirements?.functional || []).join('\n'),
+                                (sd.requirements?.nonFunctional || []).join('\n'),
+                                (sd.architecture?.components || []).join('\n'),
+                                sd.architecture?.description || '',
+                                sd.overview || '',
+                                (sd.scalability || []).join('\n'),
+                                (sd.tradeoffs || []).join('\n'),
+                              ];
+                              const newA = [...answers];
+                              newA[currentIdx] = sectionTexts.join('---SECTION---');
+                              setAnswers(newA);
+                              return;
+                            }
+                          } catch {}
                         }
                       }
                     }
-                    // Parse sections from AI response
+                    // Fallback: parse sections from raw streaming text
                     const sectionTexts = SD_SECTIONS.map(s => {
                       const regex = new RegExp(`(?:${s.label}|${s.label.replace('.', '')})[:\\n]([\\s\\S]*?)(?=(?:${SD_SECTIONS.map(x => x.label.replace('.', '')).join('|')})[:\\n]|$)`, 'i');
                       const match = fullText.match(regex);
@@ -937,7 +958,7 @@ export default function PracticePage() {
                       </button>
                     </div>
 
-                    <div style={{ height: 'calc(100vh - 340px)', minHeight: 500, borderRadius: 12, overflow: 'hidden', border: '1px solid #e3e8ee' }}>
+                    <div style={{ height: '90vh', minHeight: 600, borderRadius: 12, overflow: 'hidden', border: '1px solid #e3e8ee' }}>
                       <Allotment defaultSizes={[50, 50]}>
                         {/* Left: Excalidraw Whiteboard */}
                         <Allotment.Pane minSize={350}>
