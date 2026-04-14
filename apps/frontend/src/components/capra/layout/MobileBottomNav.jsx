@@ -24,7 +24,7 @@ export default function MobileBottomNav({
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-fixed flex items-stretch justify-around bg-white/95 border-t border-gray-200 backdrop-blur-md safe-bottom"
+    <nav className="fixed bottom-0 left-0 right-0 z-fixed flex items-stretch justify-around bg-[var(--bg-surface)]/95 border-t border-[var(--border)] backdrop-blur-md safe-bottom"
       style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 4px)' }}
     >
       {items.map(({ id, label, icon: Icon, active }) => {
@@ -34,7 +34,7 @@ export default function MobileBottomNav({
             key={id}
             onClick={() => handleTap(id)}
             className={`flex flex-col items-center justify-center gap-0.5 flex-1 min-h-[52px] pt-2 pb-1 text-xs font-medium transition-colors duration-150
-              ${isActive ? 'text-emerald-600' : 'text-gray-400 active:text-gray-600'}`}
+              ${isActive ? 'text-emerald-600' : 'text-[var(--text-muted)] active:text-[var(--text-secondary)]'}`}
           >
             <Icon active={isActive} />
             <span>{label}</span>

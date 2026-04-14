@@ -253,7 +253,7 @@ export default function InputPanel({ inputs, onChange, hasInputs }) {
                     <span style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--content-text)' }}>{field.label}</span>
                     <span style={{ fontSize: '0.875rem', color: '#16a34a', marginTop: '2px' }}>{wordCount.toLocaleString()} words</span>
                     <button
-                      className="mt-2 px-3 py-1 rounded text-xs transition-all hover:bg-white/50"
+                      className="mt-2 px-3 py-1 rounded text-xs transition-all hover:bg-[var(--bg-elevated)]/50"
                       style={{ background: 'rgba(255,255,255,0.5)', color: '#666666' }}
                       onClick={(e) => { e.stopPropagation(); onChange(field.id, ''); }}
                     >
@@ -406,7 +406,7 @@ export default function InputPanel({ inputs, onChange, hasInputs }) {
           onClick={() => setEditingField(null)}
         >
           <div
-            className="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4"
+            className="bg-[var(--bg-surface)] rounded-lg shadow-xl w-full max-w-2xl mx-4"
             style={{ maxHeight: '80vh' }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -424,7 +424,7 @@ export default function InputPanel({ inputs, onChange, hasInputs }) {
                 </button>
                 <button
                   onClick={() => setEditingField(null)}
-                  className="p-1 rounded hover:bg-gray-100"
+                  className="p-1 rounded hover:bg-[var(--bg-elevated)]"
                 >
                   {ICONS.x}
                 </button>
@@ -461,7 +461,7 @@ export default function InputPanel({ inputs, onChange, hasInputs }) {
                   setEditingField(null);
                   setEditText('');
                 }}
-                className="px-4 py-2 rounded text-sm text-gray-900"
+                className="px-4 py-2 rounded text-sm text-[var(--text-primary)]"
                 style={{ background: '#10b981' }}
                 disabled={!editText.trim()}
               >

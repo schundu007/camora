@@ -73,7 +73,7 @@ export default function AppShell() {
 
         {/* Desktop sidebar — collapsible */}
         <div
-          className="hidden md:flex md:flex-shrink-0 h-screen border-r border-gray-100 transition-all duration-200"
+          className="hidden md:flex md:flex-shrink-0 h-screen border-r border-[var(--border)] transition-all duration-200"
           style={{ width: collapsed ? 56 : 256 }}
         >
           <ShellSidebar />
@@ -84,7 +84,7 @@ export default function AppShell() {
           <div className="md:hidden fixed inset-0 z-40" onClick={ctx.closeSidebar}>
             <div className="absolute inset-0 bg-black/60" />
             <div
-              className="absolute top-0 left-0 h-full w-72 max-w-[80vw] bg-white shadow-xl z-50"
+              className="absolute top-0 left-0 h-full w-72 max-w-[80vw] bg-[var(--bg-surface)] shadow-xl z-50"
               onClick={e => e.stopPropagation()}
             >
               <ShellSidebar />

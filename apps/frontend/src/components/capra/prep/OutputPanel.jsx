@@ -144,7 +144,7 @@ class ErrorBoundary extends Component {
           >
             Try Again
           </button>
-          <pre className="mt-2 text-xs text-left bg-gray-100 p-2 rounded overflow-auto max-h-40">
+          <pre className="mt-2 text-xs text-left bg-[var(--bg-elevated)] p-2 rounded overflow-auto max-h-40">
             {this.state.error?.message}
           </pre>
         </div>
@@ -529,7 +529,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
 
                         {/* Problem Statement */}
                         {q.problemStatement && (
-                          <p className="mb-3 p-2 rounded bg-gray-50" style={{ color: colors.text }}>{q.problemStatement}</p>
+                          <p className="mb-3 p-2 rounded bg-[var(--bg-elevated)]" style={{ color: colors.text }}>{q.problemStatement}</p>
                         )}
 
                         {/* Examples */}
@@ -669,7 +669,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                                   </p>
                                 )}
                                 {q.diagramDescription && (
-                                  <p className="text-xs p-2 bg-gray-50" style={{ color: colors.textMuted }}>{q.diagramDescription}</p>
+                                  <p className="text-xs p-2 bg-[var(--bg-elevated)]" style={{ color: colors.textMuted }}>{q.diagramDescription}</p>
                                 )}
                               </div>
                             ) : q.architecture?.asciiDiagram ? (
@@ -699,7 +699,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                             <p className="font-semibold text-xs uppercase tracking-wide mb-2" style={{ color: colors.accent }}>Components</p>
                             <div className="space-y-2">
                               {safeArray(q.architecture.components).filter(comp => comp && typeof comp === 'object').map((comp, j) => (
-                                <div key={j} className="text-xs p-2 rounded bg-gray-50">
+                                <div key={j} className="text-xs p-2 rounded bg-[var(--bg-elevated)]">
                                   <span className="font-semibold" style={{ color: '#1e40af' }}>{comp?.name || ''}</span>
                                   <span className="ml-2 px-1.5 py-0.5 rounded text-xs" style={{ background: '#E0E7FF', color: '#3730A3' }}>{comp?.technology || ''}</span>
                                   <p className="mt-1" style={{ color: colors.textMuted }}>{comp?.responsibility || ''}</p>
@@ -792,7 +792,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                             </div>
                           </div>
                         )}
-                        {q.tips && <p className="mt-2 p-2 rounded italic text-xs bg-gray-50" style={{ color: colors.accent }}>💡 {safeStr(q.tips).trim()}</p>}
+                        {q.tips && <p className="mt-2 p-2 rounded italic text-xs bg-[var(--bg-elevated)]" style={{ color: colors.accent }}>💡 {safeStr(q.tips).trim()}</p>}
                       </div>
                     ))}
                   </div>
@@ -841,7 +841,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                             </div>
                           </div>
                         </div>
-                        {tech.whyImportant && <p className="text-sm mb-4 leading-relaxed text-gray-500 landing-body">{tech.whyImportant}</p>}
+                        {tech.whyImportant && <p className="text-sm mb-4 leading-relaxed text-[var(--text-muted)] landing-body">{tech.whyImportant}</p>}
 
                         {/* Concepts to Know */}
                         {safeArray(tech.conceptsToKnow).length > 0 && (
@@ -989,7 +989,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                     ) : (
                       <div className="space-y-2">
                         {safeArray(displayContent.architectureTopics).filter(topic => topic && typeof topic === 'object').map((topic, i) => (
-                          <div key={i} className="p-2 rounded bg-gray-50">
+                          <div key={i} className="p-2 rounded bg-[var(--bg-elevated)]">
                             <span className="font-semibold" style={{ color: colors.accent }}>{topic?.topic || ''}</span>
                             {topic?.relevance && <p className="text-xs" style={{ color: colors.textMuted }}>{topic.relevance}</p>}
                             {safeArray(topic?.keyPoints).length > 0 && (
@@ -1008,7 +1008,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                     <p className="font-semibold text-xs uppercase tracking-wide mb-2" style={{ color: colors.textLight }}>System Integrations</p>
                     <div className="space-y-2">
                       {safeArray(displayContent.systemIntegrations).filter(int => int && typeof int === 'object').map((int, i) => (
-                        <div key={i} className="p-2 rounded bg-gray-50">
+                        <div key={i} className="p-2 rounded bg-[var(--bg-elevated)]">
                           <span className="font-semibold" style={{ color: colors.accent }}>{int?.integration || ''}</span>
                           {safeArray(int?.patterns).length > 0 && (
                             <p className="text-xs mt-1">{safeArray(int.patterns).join(' • ')}</p>
@@ -1144,7 +1144,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                             }
                             if (item.type === 'tech') {
                               return (
-                                <div key={i} className="p-3 rounded-lg bg-gray-50 border border-gray-200">
+                                <div key={i} className="p-3 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)]">
                                   <span className="font-bold text-base" style={{ color: '#1e40af' }}>{item.name}</span>
                                   <p className="text-sm mt-1" style={{ color: colors.textMuted }}>{item.description}</p>
                                 </div>
@@ -1234,7 +1234,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                         ) : Array.isArray(value) ? (
                           <div className="space-y-2">
                             {value.map((item, idx) => (
-                              <div key={idx} className="p-3 rounded bg-gray-50 border border-gray-200">
+                              <div key={idx} className="p-3 rounded bg-[var(--bg-elevated)] border border-[var(--border)]">
                                 {typeof item === 'string' ? (
                                   <p className="text-sm">{item}</p>
                                 ) : typeof item === 'object' && item ? (
@@ -1253,7 +1253,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                             ))}
                           </div>
                         ) : typeof value === 'object' && value ? (
-                          <div className="p-3 rounded bg-gray-50 border border-gray-200">
+                          <div className="p-3 rounded bg-[var(--bg-elevated)] border border-[var(--border)]">
                             {Object.entries(value).map(([k, v]) => (
                               <p key={k} className="text-sm mb-1">
                                 <span className="font-medium" style={{ color: colors.accent }}>{k}: </span>

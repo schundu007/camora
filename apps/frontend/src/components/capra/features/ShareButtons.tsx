@@ -23,7 +23,7 @@ export default function ShareButtons({ link, text = 'Check out Camora — Apply,
       {/* Copy Link */}
       <button
         onClick={handleCopy}
-        className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-colors"
+        className="flex items-center gap-2 px-4 py-2 bg-[var(--bg-elevated)] hover:bg-[var(--border)] text-[var(--text-secondary)] text-sm font-medium rounded-lg transition-colors"
       >
         {copied ? (
           <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
@@ -55,7 +55,7 @@ export default function ShareButtons({ link, text = 'Check out Camora — Apply,
         href={`https://twitter.com/intent/tweet?text=${encodedText}`}
         target="_blank"
         rel="noopener noreferrer"
-        className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-colors"
+        className="flex items-center gap-2 px-4 py-2 bg-[var(--bg-elevated)] hover:bg-[var(--border)] text-[var(--text-secondary)] text-sm font-medium rounded-lg transition-colors"
       >
         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
           <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />

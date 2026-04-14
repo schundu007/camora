@@ -46,7 +46,7 @@ function TestCase({ testCase, index, isActive, onClick, result }) {
     ? 'bg-green-500/20 text-green-400 border-green-500/30'
     : result?.error
     ? 'bg-red-500/20 text-red-400 border-red-500/30'
-    : 'bg-gray-800/50 text-gray-400 border-gray-200';
+    : 'bg-gray-800/50 text-[var(--text-muted)] border-[var(--border)]';
 
   return (
     <button
@@ -85,12 +85,12 @@ function CodeBlock({ code, language }) {
     <div className="relative group">
       <button
         onClick={copyCode}
-        className="absolute top-3 right-3 px-3 py-1.5 rounded-lg bg-gray-700/50 text-gray-400 hover:text-gray-900 hover:bg-gray-700 transition-all opacity-0 group-hover:opacity-100 touch:opacity-100 text-sm flex items-center gap-2"
+        className="absolute top-3 right-3 px-3 py-1.5 rounded-lg bg-gray-700/50 text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-gray-700 transition-all opacity-0 group-hover:opacity-100 touch:opacity-100 text-sm flex items-center gap-2"
       >
         <Icon name={copied ? 'check' : 'copy'} size={14} />
         {copied ? 'Copied!' : 'Copy'}
       </button>
-      <pre className="bg-[#0d1117] rounded-lg p-5 overflow-x-auto border border-gray-200">
+      <pre className="bg-[#0d1117] rounded-lg p-5 overflow-x-auto border border-[var(--border)]">
         <code className="text-sm leading-relaxed font-mono text-gray-300 whitespace-pre">
           {code}
         </code>
@@ -104,26 +104,26 @@ function CodeBlock({ code, language }) {
  */
 function ExampleBlock({ example, index }) {
   return (
-    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-      <div className="px-4 py-2.5 bg-gray-800/30 border-b border-gray-200">
-        <span className="text-base font-semibold text-gray-900">Example {index + 1}</span>
+    <div className="bg-[var(--bg-surface)] rounded-lg border border-[var(--border)] overflow-hidden">
+      <div className="px-4 py-2.5 bg-gray-800/30 border-b border-[var(--border)]">
+        <span className="text-base font-semibold text-[var(--text-primary)]">Example {index + 1}</span>
       </div>
       <div className="p-4 space-y-3">
         <div>
-          <span className="text-xs text-gray-500 font-medium uppercase tracking-wide">Input</span>
+          <span className="text-xs text-[var(--text-muted)] font-medium uppercase tracking-wide">Input</span>
           <pre className="mt-1.5 bg-[#0d1117] rounded-lg p-3 text-emerald-400 font-mono text-sm overflow-x-auto">
             {example.input}
           </pre>
         </div>
         <div>
-          <span className="text-xs text-gray-500 font-medium uppercase tracking-wide">Output</span>
+          <span className="text-xs text-[var(--text-muted)] font-medium uppercase tracking-wide">Output</span>
           <pre className="mt-1.5 bg-[#0d1117] rounded-lg p-3 text-yellow-400 font-mono text-sm overflow-x-auto">
             {example.output}
           </pre>
         </div>
         {example.explanation && (
           <div>
-            <span className="text-xs text-gray-500 font-medium uppercase tracking-wide">Explanation</span>
+            <span className="text-xs text-[var(--text-muted)] font-medium uppercase tracking-wide">Explanation</span>
             <p className="mt-1.5 text-gray-300 text-sm leading-relaxed">{example.explanation}</p>
           </div>
         )}
@@ -139,16 +139,16 @@ function HintCard({ hint, index }) {
   const [revealed, setRevealed] = useState(false);
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+    <div className="bg-[var(--bg-surface)] rounded-lg border border-[var(--border)] overflow-hidden">
       <button
         onClick={() => setRevealed(!revealed)}
         className="w-full px-5 py-3.5 flex items-center justify-between hover:bg-gray-800/30 transition-colors"
       >
-        <span className="font-medium text-gray-900">Hint {index + 1}</span>
+        <span className="font-medium text-[var(--text-primary)]">Hint {index + 1}</span>
         <Icon
           name={revealed ? 'eye' : 'eyeOff'}
           size={18}
-          className={revealed ? 'text-emerald-400' : 'text-gray-500'}
+          className={revealed ? 'text-emerald-400' : 'text-[var(--text-muted)]'}
         />
       </button>
       {revealed && (
@@ -339,11 +339,11 @@ export default function ProblemPage({ slug, onBack }) {
                 onClick={onBack}
                 className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
               >
-                <Icon name="arrowLeft" size={18} className="text-gray-400" />
+                <Icon name="arrowLeft" size={18} className="text-[var(--text-muted)]" />
               </button>
               <div className="flex items-center gap-3">
-                <span className="text-sm text-gray-500 font-mono">#{problem.id}</span>
-                <h1 className="text-xl font-bold text-gray-900">{problem.name}</h1>
+                <span className="text-sm text-[var(--text-muted)] font-mono">#{problem.id}</span>
+                <h1 className="text-xl font-bold text-[var(--text-primary)]">{problem.name}</h1>
                 <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${difficultyColor.bg} ${difficultyColor.text}`}>
                   {problem.difficulty}
                 </span>
@@ -378,8 +378,8 @@ export default function ProblemPage({ slug, onBack }) {
                   onClick={() => setActiveTab('description')}
                   className={`px-4 py-2 rounded-t-lg text-sm font-medium transition-colors ${
                     activeTab === 'description'
-                      ? 'bg-white text-emerald-400'
-                      : 'text-gray-400 hover:text-gray-900 hover:bg-gray-800/50'
+                      ? 'bg-[var(--bg-surface)] text-emerald-400'
+                      : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-gray-800/50'
                   }`}
                 >
                   Description
@@ -388,8 +388,8 @@ export default function ProblemPage({ slug, onBack }) {
                   onClick={() => setActiveTab('solution')}
                   className={`px-4 py-2 rounded-t-lg text-sm font-medium transition-colors ${
                     activeTab === 'solution'
-                      ? 'bg-white text-emerald-400'
-                      : 'text-gray-400 hover:text-gray-900 hover:bg-gray-800/50'
+                      ? 'bg-[var(--bg-surface)] text-emerald-400'
+                      : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-gray-800/50'
                   }`}
                 >
                   Solution
@@ -398,8 +398,8 @@ export default function ProblemPage({ slug, onBack }) {
                   onClick={() => setActiveTab('hints')}
                   className={`px-4 py-2 rounded-t-lg text-sm font-medium transition-colors ${
                     activeTab === 'hints'
-                      ? 'bg-white text-emerald-400'
-                      : 'text-gray-400 hover:text-gray-900 hover:bg-gray-800/50'
+                      ? 'bg-[var(--bg-surface)] text-emerald-400'
+                      : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-gray-800/50'
                   }`}
                 >
                   Hints
@@ -421,7 +421,7 @@ export default function ProblemPage({ slug, onBack }) {
                               </code>
                             ) : (
                               <span key={j} dangerouslySetInnerHTML={{
-                                __html: part.replace(/\*\*(.*?)\*\*/g, '<strong class="text-gray-900">$1</strong>')
+                                __html: part.replace(/\*\*(.*?)\*\*/g, '<strong class="text-[var(--text-primary)]">$1</strong>')
                               }} />
                             )
                           )}
@@ -437,8 +437,8 @@ export default function ProblemPage({ slug, onBack }) {
                         ))}
                       </div>
                     ) : problem.isDynamic ? (
-                      <div className="bg-gray-800/50 border border-gray-200 rounded-lg p-5 text-center">
-                        <Icon name="externalLink" size={32} className="mx-auto mb-3 text-gray-400" />
+                      <div className="bg-gray-800/50 border border-[var(--border)] rounded-lg p-5 text-center">
+                        <Icon name="externalLink" size={32} className="mx-auto mb-3 text-[var(--text-muted)]" />
                         <p className="text-gray-300 mb-4">
                           This problem is not in our practice database yet.
                         </p>
@@ -446,7 +446,7 @@ export default function ProblemPage({ slug, onBack }) {
                           href={`https://leetcode.com/problemset/?search=${encodeURIComponent(problem.name)}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="px-5 py-2.5 bg-gray-700 hover:bg-gray-600 text-gray-900 rounded-lg font-medium transition-colors inline-flex items-center gap-2"
+                          className="px-5 py-2.5 bg-gray-700 hover:bg-gray-600 text-[var(--text-primary)] rounded-lg font-medium transition-colors inline-flex items-center gap-2"
                         >
                           <Icon name="externalLink" size={16} />
                           Find on LeetCode
@@ -457,7 +457,7 @@ export default function ProblemPage({ slug, onBack }) {
                     {/* Constraints */}
                     {problem.constraints && problem.constraints.length > 0 && (
                       <div>
-                        <h3 className="text-base font-semibold text-gray-900 mb-3">Constraints</h3>
+                        <h3 className="text-base font-semibold text-[var(--text-primary)] mb-3">Constraints</h3>
                         <ul className="space-y-1.5">
                           {problem.constraints.map((constraint, i) => (
                             <li key={i} className="flex items-start gap-2 text-gray-300 text-sm">
@@ -472,7 +472,7 @@ export default function ProblemPage({ slug, onBack }) {
                     {/* Tags */}
                     <div className="flex flex-wrap gap-2 pt-2">
                       {problem.tags.map((tag, i) => (
-                        <span key={i} className="px-2.5 py-1 bg-gray-800 text-gray-400 text-xs rounded-lg">
+                        <span key={i} className="px-2.5 py-1 bg-gray-800 text-[var(--text-muted)] text-xs rounded-lg">
                           {tag}
                         </span>
                       ))}
@@ -491,7 +491,7 @@ export default function ProblemPage({ slug, onBack }) {
                           className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                             selectedLanguage === key
                               ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
-                              : 'bg-gray-800/50 text-gray-400 hover:text-gray-900 hover:bg-gray-800 border border-transparent'
+                              : 'bg-gray-800/50 text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-gray-800 border border-transparent'
                           }`}
                         >
                           {lang.name}
@@ -501,8 +501,8 @@ export default function ProblemPage({ slug, onBack }) {
 
                     {/* Approach */}
                     {problem.approach && (
-                      <div className="bg-white rounded-lg border border-gray-200 p-5">
-                        <h3 className="text-base font-semibold text-gray-900 mb-3">Approach</h3>
+                      <div className="bg-[var(--bg-surface)] rounded-lg border border-[var(--border)] p-5">
+                        <h3 className="text-base font-semibold text-[var(--text-primary)] mb-3">Approach</h3>
                         <div className="prose prose-invert prose-sm max-w-none">
                           {problem.approach.split('\n').map((line, i) => {
                             if (line.startsWith('**')) {
@@ -526,12 +526,12 @@ export default function ProblemPage({ slug, onBack }) {
                     {solution && (
                       <div>
                         <div className="flex items-center justify-between mb-3">
-                          <h3 className="text-base font-semibold text-gray-900">{LANGUAGE_CONFIG[selectedLanguage].name} Solution</h3>
+                          <h3 className="text-base font-semibold text-[var(--text-primary)]">{LANGUAGE_CONFIG[selectedLanguage].name} Solution</h3>
                           <div className="flex gap-3 text-xs">
-                            <span className="text-gray-400">
+                            <span className="text-[var(--text-muted)]">
                               Time: <span className="text-emerald-400 font-mono">{solution.timeComplexity}</span>
                             </span>
-                            <span className="text-gray-400">
+                            <span className="text-[var(--text-muted)]">
                               Space: <span className="text-emerald-400 font-mono">{solution.spaceComplexity}</span>
                             </span>
                           </div>
@@ -560,7 +560,7 @@ export default function ProblemPage({ slug, onBack }) {
               <Allotment.Pane minSize={200} preferredSize="60%">
                 <div className="h-full flex flex-col bg-[#0d1117]">
                   {/* Editor Header */}
-                  <div className="flex-shrink-0 flex items-center justify-between px-4 py-2 bg-[#161b22] border-b border-gray-200">
+                  <div className="flex-shrink-0 flex items-center justify-between px-4 py-2 bg-[#161b22] border-b border-[var(--border)]">
                     <div className="flex items-center gap-2">
                       {Object.entries(LANGUAGE_CONFIG).map(([key, lang]) => (
                         <button
@@ -569,7 +569,7 @@ export default function ProblemPage({ slug, onBack }) {
                           className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
                             selectedLanguage === key
                               ? 'bg-emerald-500/20 text-emerald-400'
-                              : 'text-gray-400 hover:text-gray-900'
+                              : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
                           }`}
                         >
                           {lang.name}
@@ -582,7 +582,7 @@ export default function ProblemPage({ slug, onBack }) {
                           setUserCode(problem.solutions[selectedLanguage].code);
                         }
                       }}
-                      className="px-3 py-1 text-xs text-gray-400 hover:text-gray-900 transition-colors"
+                      className="px-3 py-1 text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
                     >
                       Reset to Solution
                     </button>
@@ -601,16 +601,16 @@ export default function ProblemPage({ slug, onBack }) {
 
               {/* Test Cases / Output */}
               <Allotment.Pane minSize={120}>
-                <div className="h-full flex flex-col bg-white">
+                <div className="h-full flex flex-col bg-[var(--bg-surface)]">
                   {/* Tabs */}
-                  <div className="flex-shrink-0 flex items-center justify-between px-3 py-2 border-b border-gray-200">
+                  <div className="flex-shrink-0 flex items-center justify-between px-3 py-2 border-b border-[var(--border)]">
                     <div className="flex gap-1">
                       <button
                         onClick={() => setBottomTab('testcase')}
                         className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
                           bottomTab === 'testcase'
-                            ? 'bg-gray-700/50 text-gray-900'
-                            : 'text-gray-400 hover:text-gray-900'
+                            ? 'bg-gray-700/50 text-[var(--text-primary)]'
+                            : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
                         }`}
                       >
                         Test Cases
@@ -619,8 +619,8 @@ export default function ProblemPage({ slug, onBack }) {
                         onClick={() => setBottomTab('output')}
                         className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
                           bottomTab === 'output'
-                            ? 'bg-gray-700/50 text-gray-900'
-                            : 'text-gray-400 hover:text-gray-900'
+                            ? 'bg-gray-700/50 text-[var(--text-primary)]'
+                            : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
                         }`}
                       >
                         Output
@@ -630,7 +630,7 @@ export default function ProblemPage({ slug, onBack }) {
                       <button
                         onClick={runCode}
                         disabled={isRunning}
-                        className="px-4 py-1.5 bg-gray-700 hover:bg-gray-600 text-gray-900 rounded text-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50"
+                        className="px-4 py-1.5 bg-gray-700 hover:bg-gray-600 text-[var(--text-primary)] rounded text-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50"
                       >
                         {isRunning ? (
                           <Icon name="loader" size={14} className="animate-spin" />
@@ -642,7 +642,7 @@ export default function ProblemPage({ slug, onBack }) {
                       <button
                         onClick={runAllTests}
                         disabled={isRunning}
-                        className="px-4 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-gray-900 rounded text-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50"
+                        className="px-4 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-[var(--text-primary)] rounded text-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50"
                       >
                         Submit
                       </button>
@@ -673,13 +673,13 @@ export default function ProblemPage({ slug, onBack }) {
                             {problem.examples[activeTestCase] && (
                               <div className="space-y-3">
                                 <div>
-                                  <span className="text-xs text-gray-500 font-medium uppercase tracking-wide">Input</span>
+                                  <span className="text-xs text-[var(--text-muted)] font-medium uppercase tracking-wide">Input</span>
                                   <pre className="mt-1.5 bg-[#0d1117] rounded-lg p-3 text-emerald-400 font-mono text-sm overflow-x-auto">
                                     {problem.examples[activeTestCase].input}
                                   </pre>
                                 </div>
                                 <div>
-                                  <span className="text-xs text-gray-500 font-medium uppercase tracking-wide">Expected Output</span>
+                                  <span className="text-xs text-[var(--text-muted)] font-medium uppercase tracking-wide">Expected Output</span>
                                   <pre className="mt-1.5 bg-[#0d1117] rounded-lg p-3 text-yellow-400 font-mono text-sm overflow-x-auto">
                                     {problem.examples[activeTestCase].output}
                                   </pre>
@@ -688,7 +688,7 @@ export default function ProblemPage({ slug, onBack }) {
                             )}
                           </>
                         ) : (
-                          <div className="text-center py-6 text-gray-500">
+                          <div className="text-center py-6 text-[var(--text-muted)]">
                             <Icon name="document" size={32} className="mx-auto mb-3 opacity-50" />
                             <p>No test cases available.</p>
                             <p className="text-sm mt-1">Generate a solution to get test cases.</p>
@@ -718,14 +718,14 @@ export default function ProblemPage({ slug, onBack }) {
                                 </div>
                                 {output.input && (
                                   <div>
-                                    <span className="text-xs text-gray-500 font-medium uppercase tracking-wide">Input</span>
+                                    <span className="text-xs text-[var(--text-muted)] font-medium uppercase tracking-wide">Input</span>
                                     <pre className="mt-1.5 bg-[#0d1117] rounded-lg p-3 text-emerald-400 font-mono text-sm overflow-x-auto">
                                       {output.input}
                                     </pre>
                                   </div>
                                 )}
                                 <div>
-                                  <span className="text-xs text-gray-500 font-medium uppercase tracking-wide">
+                                  <span className="text-xs text-[var(--text-muted)] font-medium uppercase tracking-wide">
                                     {output.success ? 'Output' : 'Error'}
                                   </span>
                                   <pre className={`mt-1.5 bg-[#0d1117] rounded-lg p-3 font-mono text-sm overflow-x-auto ${output.success ? 'text-gray-300' : 'text-red-400'}`}>
@@ -734,7 +734,7 @@ export default function ProblemPage({ slug, onBack }) {
                                 </div>
                                 {output.expected && (
                                   <div>
-                                    <span className="text-xs text-gray-500 font-medium uppercase tracking-wide">Expected</span>
+                                    <span className="text-xs text-[var(--text-muted)] font-medium uppercase tracking-wide">Expected</span>
                                     <pre className="mt-1.5 bg-[#0d1117] rounded-lg p-3 text-yellow-400 font-mono text-sm overflow-x-auto">
                                       {output.expected}
                                     </pre>
@@ -744,7 +744,7 @@ export default function ProblemPage({ slug, onBack }) {
                             )}
                           </>
                         ) : (
-                          <div className="text-center py-8 text-gray-500">
+                          <div className="text-center py-8 text-[var(--text-muted)]">
                             <Icon name="play" size={32} className="mx-auto mb-3 opacity-50" />
                             <p className="text-sm">Run your code to see output</p>
                           </div>

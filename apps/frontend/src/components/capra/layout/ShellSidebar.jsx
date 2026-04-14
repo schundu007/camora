@@ -62,9 +62,9 @@ export default function ShellSidebar() {
   const isPracticeActive = (href) => location.pathname === href || location.pathname.startsWith(href + '/');
 
   return (
-    <div className="flex flex-col h-full bg-white w-full">
+    <div className="flex flex-col h-full bg-[var(--bg-surface)] w-full">
       {/* Logo */}
-      <div className={`border-b border-gray-100 flex items-center ${isCollapsed ? 'justify-center px-2 py-4' : 'justify-between px-5 py-4'}`}>
+      <div className={`border-b border-[var(--border)] flex items-center ${isCollapsed ? 'justify-center px-2 py-4' : 'justify-between px-5 py-4'}`}>
         {isCollapsed ? (
           <Link to="/" className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center hover:scale-105 transition-transform">
             <Icon name="ascend" size={16} className="text-white" />
@@ -75,13 +75,13 @@ export default function ShellSidebar() {
               <Icon name="ascend" size={16} className="text-white" />
             </div>
             <div>
-              <span className="font-bold text-base tracking-tight text-gray-900" style={{ fontFamily: "'Comfortaa', sans-serif" }}>Camora</span>
+              <span className="font-bold text-base tracking-tight text-[var(--text-primary)]" style={{ fontFamily: "'Comfortaa', sans-serif" }}>Camora</span>
               <span className="block text-[9px] font-mono uppercase tracking-[0.2em] text-emerald-600 -mt-0.5">Apply · Prepare · Practice · Attend</span>
             </div>
           </Link>
         )}
         {isMobile && (
-          <button onClick={closeSidebar} className="p-2 text-gray-400 hover:text-gray-900 transition-colors">
+          <button onClick={closeSidebar} className="p-2 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -107,19 +107,19 @@ export default function ShellSidebar() {
                   className={`px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-all ${
                     location.pathname.startsWith(link.href)
                       ? 'bg-emerald-50 text-emerald-700'
-                      : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                      : 'bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)]'
                   }`}
                 >
                   {link.label}
                 </Link>
               ))}
             </div>
-            <div className="h-px bg-gray-100 mx-4 mb-3" />
+            <div className="h-px bg-[var(--bg-elevated)] mx-4 mb-3" />
           </>
         )}
 
         {/* Prepare */}
-        {!isCollapsed && <div className="text-[10px] font-semibold text-gray-400 tracking-widest uppercase px-3 mb-2">Prepare</div>}
+        {!isCollapsed && <div className="text-[10px] font-semibold text-[var(--text-muted)] tracking-widest uppercase px-3 mb-2">Prepare</div>}
         {PREPARE_ITEMS.map((item) => {
           const isActive = isOnPrepare && activeSection === item.id;
           return (
@@ -132,20 +132,20 @@ export default function ShellSidebar() {
               } ${
                 isActive
                   ? `text-emerald-700 font-semibold bg-emerald-50 ${isCollapsed ? '' : 'border-l-2 border-emerald-500'}`
-                  : `text-gray-600 hover:text-gray-900 hover:bg-gray-50 font-medium ${isCollapsed ? '' : 'border-l-2 border-transparent'}`
+                  : `text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] font-medium ${isCollapsed ? '' : 'border-l-2 border-transparent'}`
               }`}
             >
-              <Icon name={item.icon} size={isCollapsed ? 18 : 16} className={isActive ? 'text-emerald-500' : 'text-gray-400'} />
+              <Icon name={item.icon} size={isCollapsed ? 18 : 16} className={isActive ? 'text-emerald-500' : 'text-[var(--text-muted)]'} />
               {!isCollapsed && <span className="flex-1 text-left text-[13px]">{item.label}</span>}
             </button>
           );
         })}
 
         {/* Divider */}
-        <div className={`h-px bg-gray-100 my-3 ${isCollapsed ? 'mx-1' : 'mx-4'}`} />
+        <div className={`h-px bg-[var(--bg-elevated)] my-3 ${isCollapsed ? 'mx-1' : 'mx-4'}`} />
 
         {/* Practice */}
-        {!isCollapsed && <div className="text-[10px] font-semibold text-gray-400 tracking-widest uppercase px-3 mb-2">Practice</div>}
+        {!isCollapsed && <div className="text-[10px] font-semibold text-[var(--text-muted)] tracking-widest uppercase px-3 mb-2">Practice</div>}
         {PRACTICE_ITEMS.map((item) => {
           const isActive = isPracticeActive(item.href);
           return (
@@ -158,10 +158,10 @@ export default function ShellSidebar() {
               } ${
                 isActive
                   ? `text-emerald-700 font-semibold bg-emerald-50 ${isCollapsed ? '' : 'border-l-2 border-emerald-500'}`
-                  : `text-gray-600 hover:text-gray-900 hover:bg-gray-50 font-medium ${isCollapsed ? '' : 'border-l-2 border-transparent'}`
+                  : `text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] font-medium ${isCollapsed ? '' : 'border-l-2 border-transparent'}`
               }`}
             >
-              <Icon name={item.icon} size={isCollapsed ? 18 : 16} className={isActive ? 'text-emerald-500' : 'text-gray-400'} />
+              <Icon name={item.icon} size={isCollapsed ? 18 : 16} className={isActive ? 'text-emerald-500' : 'text-[var(--text-muted)]'} />
               {!isCollapsed && <span className="flex-1 text-left text-[13px]">{item.label}</span>}
             </button>
           );
@@ -170,9 +170,9 @@ export default function ShellSidebar() {
 
       {/* Reading Progress */}
       {!isCollapsed && (
-        <div className="mx-3 mb-2 p-3 rounded-lg bg-gray-50 border border-gray-100">
+        <div className="mx-3 mb-2 p-3 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)]">
           <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[10px] font-semibold text-gray-400 tracking-widest uppercase">Progress</span>
+            <span className="text-[10px] font-semibold text-[var(--text-muted)] tracking-widest uppercase">Progress</span>
             <span className="text-[11px] font-bold text-emerald-600">{(() => {
               try {
                 const stored = localStorage.getItem('camora_completed_topics');
@@ -181,7 +181,7 @@ export default function ShellSidebar() {
               } catch { return 0; }
             })()} topics</span>
           </div>
-          <div className="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
+          <div className="w-full h-1.5 bg-[var(--bg-elevated)] rounded-full overflow-hidden">
             <div
               className="h-full bg-emerald-500 rounded-full transition-all duration-500"
               style={{ width: `${(() => {
@@ -198,7 +198,7 @@ export default function ShellSidebar() {
       )}
 
       {/* Bottom utility */}
-      <div className={`border-t border-gray-100 ${isCollapsed ? 'px-1.5 py-2' : 'px-3 py-3'}`}>
+      <div className={`border-t border-[var(--border)] ${isCollapsed ? 'px-1.5 py-2' : 'px-3 py-3'}`}>
         {/* User info */}
         {user && (
           <div className={`flex items-center mb-2 ${isCollapsed ? 'justify-center py-1.5' : 'gap-2.5 px-3 py-2'}`}>
@@ -211,12 +211,12 @@ export default function ShellSidebar() {
             )}
             {!isCollapsed && (
               <div className="flex-1 min-w-0">
-                <div className="text-[13px] font-medium text-gray-900 truncate">{user.name || 'User'}</div>
-                <div className="text-[10px] text-gray-400 truncate">{user.email}</div>
+                <div className="text-[13px] font-medium text-[var(--text-primary)] truncate">{user.name || 'User'}</div>
+                <div className="text-[10px] text-[var(--text-muted)] truncate">{user.email}</div>
               </div>
             )}
             {!isCollapsed && (
-              <button onClick={signOut} className="p-1 text-gray-400 hover:text-red-500 transition-colors flex-shrink-0" title="Sign out">
+              <button onClick={signOut} className="p-1 text-[var(--text-muted)] hover:text-red-500 transition-colors flex-shrink-0" title="Sign out">
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
               </button>
             )}
@@ -225,11 +225,11 @@ export default function ShellSidebar() {
         <button
           onClick={handleSettingsClick}
           title={isCollapsed ? 'Settings' : undefined}
-          className={`w-full flex items-center rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition-all font-medium ${
+          className={`w-full flex items-center rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] transition-all font-medium ${
             isCollapsed ? 'justify-center p-2.5' : 'gap-3 px-3 py-2 text-[13px]'
           }`}
         >
-          <Icon name="settings" size={isCollapsed ? 18 : 15} className="text-gray-400" />
+          <Icon name="settings" size={isCollapsed ? 18 : 15} className="text-[var(--text-muted)]" />
           {!isCollapsed && <span>Settings</span>}
         </button>
         <Link
@@ -261,14 +261,14 @@ export default function ShellSidebar() {
           <button
             onClick={toggleCollapsed}
             title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            className={`w-full flex items-center rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-all mt-1 ${
+            className={`w-full flex items-center rounded-lg text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)] transition-all mt-1 ${
               isCollapsed ? 'justify-center p-2.5' : 'gap-3 px-3 py-2 text-[13px]'
             }`}
           >
             <svg className={`w-4 h-4 transition-transform duration-200 ${isCollapsed ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
             </svg>
-            {!isCollapsed && <span className="text-gray-400 font-medium">Collapse</span>}
+            {!isCollapsed && <span className="text-[var(--text-muted)] font-medium">Collapse</span>}
           </button>
         )}
       </div>

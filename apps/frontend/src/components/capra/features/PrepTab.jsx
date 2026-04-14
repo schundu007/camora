@@ -154,7 +154,7 @@ export default function PrepTab({ isOpen, onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.6)' }}>
-      <div className="w-full max-w-2xl mx-4 rounded-lg overflow-hidden shadow-2xl border border-gray-200" style={{ background: '#ffffff' }}>
+      <div className="w-full max-w-2xl mx-4 rounded-lg overflow-hidden shadow-2xl border border-[var(--border)]" style={{ background: 'var(--bg-surface)' }}>
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3" style={{ background: '#1e293b', borderBottom: '1px solid #334155' }}>
           <div className="flex items-center gap-3">
@@ -166,7 +166,7 @@ export default function PrepTab({ isOpen, onClose }) {
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded transition-colors hover:bg-white/10"
+            className="p-1.5 rounded transition-colors hover:bg-[var(--bg-surface)]/10"
             style={{ color: '#94a3b8' }}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -176,7 +176,7 @@ export default function PrepTab({ isOpen, onClose }) {
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-gray-200">
+        <div className="flex border-b border-[var(--border)]">
           <button
             onClick={() => setActiveTab('coding')}
             className="flex-1 px-4 py-2.5 text-xs font-semibold uppercase tracking-wide transition-colors"
@@ -202,7 +202,7 @@ export default function PrepTab({ isOpen, onClose }) {
         </div>
 
         {/* Content */}
-        <div className="p-4 max-h-[60vh] overflow-y-auto bg-gray-50">
+        <div className="p-4 max-h-[60vh] overflow-y-auto bg-[var(--bg-elevated)]">
           {/* Browser Extension Notice - Webapp only */}
           {!isElectron && (
             <div className="mb-4 p-4 rounded-lg" style={{ background: '#fffbeb', border: '1px solid #fcd34d' }}>
@@ -281,19 +281,19 @@ export default function PrepTab({ isOpen, onClose }) {
                   return (
                     <div
                       key={key}
-                      className={`p-3 rounded-lg transition-all border ${isAuthenticated ? 'border-emerald-500 bg-emerald-50' : 'border-gray-200 bg-white'}`}
+                      className={`p-3 rounded-lg transition-all border ${isAuthenticated ? 'border-emerald-500 bg-emerald-500/10' : 'border-[var(--border)] bg-[var(--bg-surface)]'}`}
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           <div
-                            className="w-9 h-9 rounded flex items-center justify-center text-gray-900 font-bold text-sm"
+                            className="w-9 h-9 rounded flex items-center justify-center text-white font-bold text-sm"
                             style={{ background: platform.color }}
                           >
                             {initials}
                           </div>
                           <div>
-                            <div className="font-semibold text-sm" style={{ color: '#333333' }}>{platform.name}</div>
-                            <div className="text-xs" style={{ color: isAuthenticated ? '#10b981' : '#999999' }}>
+                            <div className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>{platform.name}</div>
+                            <div className="text-xs" style={{ color: isAuthenticated ? '#10b981' : 'var(--text-muted)' }}>
                               {isAuthenticated ? 'Connected' : 'Not connected'}
                             </div>
                           </div>
@@ -334,7 +334,7 @@ export default function PrepTab({ isOpen, onClose }) {
               </div>
 
               {/* Fetch Content Section */}
-              <div className="p-4 rounded-lg bg-white border border-gray-200">
+              <div className="p-4 rounded-lg bg-[var(--bg-surface)] border border-[var(--border)]">
                 <h3 className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: '#475569' }}>
                   Fetch Problem by URL
                 </h3>
@@ -345,7 +345,7 @@ export default function PrepTab({ isOpen, onClose }) {
                     onChange={(e) => setFetchUrl(e.target.value)}
                     placeholder="https://leetcode.com/problems/two-sum"
                     className="flex-1 px-3 py-2.5 text-sm rounded-lg"
-                    style={{ background: '#f5f5f5', border: '1px solid #e5e5e5', color: '#333333' }}
+                    style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
                   />
                   <button
                     onClick={handleFetchContent}
@@ -370,7 +370,7 @@ export default function PrepTab({ isOpen, onClose }) {
                     ) : (
                       <>
                         <div className="font-medium mb-1" style={{ color: '#059669' }}>{fetchedContent.title}</div>
-                        <p className="text-xs" style={{ color: '#666666' }}>
+                        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
                           Problem extracted! Close this and use the URL tab in Problem Input to solve it.
                         </p>
                       </>
@@ -383,7 +383,7 @@ export default function PrepTab({ isOpen, onClose }) {
         </div>
 
         {/* Footer */}
-        <div className="px-4 py-3 bg-gray-50 border-t border-gray-200">
+        <div className="px-4 py-3 bg-[var(--bg-elevated)] border-t border-[var(--border)]">
           <p className="text-xs text-center" style={{ color: '#64748b' }}>
             {isElectron
               ? 'Connect to platforms to auto-fetch problems • Sessions persist across restarts'

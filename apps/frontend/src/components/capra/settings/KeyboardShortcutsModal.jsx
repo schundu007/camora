@@ -27,16 +27,16 @@ export default function KeyboardShortcutsModal({ onClose }) {
     >
       <div
         className="rounded-lg w-full max-w-[420px] mx-4 max-h-[80vh] overflow-hidden shadow-xl"
-        style={{ background: '#ffffff', border: '1px solid #e5e7eb' }}
+        style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid #e5e7eb' }}>
-          <span className="text-sm font-semibold" style={{ color: '#111827' }}>Keyboard Shortcuts</span>
+        <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid var(--border)' }}>
+          <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Keyboard Shortcuts</span>
           <button
             onClick={onClose}
             style={{ color: '#6b7280' }}
-            className="hover:text-gray-900 transition-colors"
+            className="hover:text-[var(--text-primary)] transition-colors"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -55,7 +55,7 @@ export default function KeyboardShortcutsModal({ onClose }) {
                 {section.items.map((shortcut, idx) => (
                   <div
                     key={idx}
-                    className="flex items-center justify-between py-1.5 px-2 rounded bg-gray-50"
+                    className="flex items-center justify-between py-1.5 px-2 rounded bg-[var(--bg-elevated)]"
                   >
                     <span className="text-xs" style={{ color: '#374151' }}>{shortcut.description}</span>
                     <div className="flex items-center gap-1">
