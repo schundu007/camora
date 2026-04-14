@@ -229,7 +229,7 @@ export default function LanguageSelectorModal({ isOpen, onClose, selectedLanguag
           </button>
 
           {/* Language grid */}
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
             {filteredLanguages.map(lang => (
               <button
                 key={lang.value}

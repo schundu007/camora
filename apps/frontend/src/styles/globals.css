@@ -273,7 +273,10 @@
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
 /* Body scroll lock (applied via JS when menus/modals are open) */
-body.scroll-locked { overflow: hidden !important; position: fixed; width: 100%; }
+body.scroll-locked { overflow: hidden !important; position: fixed; width: 100%; top: 0; left: 0; }
+
+/* iOS momentum scrolling for all scrollable containers */
+.overflow-x-auto, .overflow-auto, .overflow-y-auto, pre { -webkit-overflow-scrolling: touch; }
 
 /* Prevent iOS auto-zoom on focused inputs (font < 16px triggers zoom) */
 @media screen and (max-width: 767px) {

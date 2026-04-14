@@ -1428,7 +1428,7 @@ export default function TopicDetail({
 
           {/* 2. Time + Space Complexity — side by side cards */}
           {(topicDetails.timeComplexity || topicDetails.spaceComplexity) && (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {topicDetails.timeComplexity && (
                 <div className="rounded-xl overflow-hidden bg-[var(--bg-surface)] border border-[var(--border)] shadow-sm flex">
                   <div className="w-1 bg-emerald-400 flex-shrink-0" />
