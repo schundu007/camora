@@ -594,7 +594,7 @@ export default function PracticePage() {
 
       {/* ═══════════ Main Content ═══════════ */}
       <div>
-        <div className="w-full lg:max-w-[70%] mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: 32, paddingBottom: 80 }}>
+        <div className="w-full lg:max-w-[90%] mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: 32, paddingBottom: 80 }}>
 
           {/* ── SETUP PHASE ── */}
           {phase === 'setup' && (
@@ -868,7 +868,9 @@ export default function PracticePage() {
                 const parts = (answers[currentIdx] || '').split('---SECTION---');
 
                 const autoGenerate = async () => {
+                  console.log('[AutoGenerate] clicked, starting...');
                   const q = questions[currentIdx];
+                  if (!q) { console.error('[AutoGenerate] No question found'); return; }
                   setSdGenerating(true);
                   try {
                     const res = await fetch(`${API_URL}/api/solve/stream`, {
