@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { Icon } from '../../components/shared/Icons.jsx';
 import { codingTopics } from '../../data/capra/topics/codingTopics.js';
