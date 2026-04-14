@@ -43,7 +43,7 @@ export default function RootShell({ children }: RootShellProps) {
           isOpen={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
         />
-        <main ref={mainRef} className="flex-1 overflow-y-auto">
+        <main ref={mainRef} id="app-scroll-container" className="flex-1 overflow-y-auto">
           {children}
         </main>
       </div>

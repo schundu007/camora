@@ -202,8 +202,8 @@ export default function DocsPage({ onBack }) {
     if (topic) {
       /* sidebar close handled by AppShell */;
       // Scroll the nearest scrollable container (RootShell <main>) to top
-      const scrollable = document.querySelector('main.overflow-y-auto') || document.querySelector('main');
-      if (scrollable) scrollable.scrollTo({ top: 0, behavior: 'smooth' });
+      const el = document.getElementById('app-scroll-container') || document.querySelector('main');
+      if (el) el.scrollTo({ top: 0, behavior: 'smooth' });
       else window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };

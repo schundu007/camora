@@ -26,9 +26,11 @@ export default function AppShell() {
     });
   }, []);
 
-  // Close drawer on any navigation
+  // Close drawer + scroll to top on any navigation
   useEffect(() => {
     setSidebarOpen(false);
+    const el = document.getElementById('app-scroll-container');
+    if (el) el.scrollTo({ top: 0 });
   }, [location.pathname, location.search]);
 
   // Derive active section from URL
@@ -93,7 +95,7 @@ export default function AppShell() {
         )}
 
         {/* Main content */}
-        <div className="flex-1 overflow-auto min-w-0">
+        <div id="app-scroll-container" className="flex-1 overflow-auto min-w-0">
           <Outlet />
         </div>
       </div>
