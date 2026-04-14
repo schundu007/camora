@@ -6,7 +6,7 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { Icon } from '../../shared/Icons.jsx';
 import { CompanyLogo, getCompanyLogoSrc } from '../../shared/CompanyLogo.tsx';
 import CamoraLogo from '../../shared/CamoraLogo';
-import TableOfContents from '../../layout/TableOfContents';
+
 import { getAuthHeaders } from '../../../utils/authHeaders.js';
 import { useContentAccess } from '../../../hooks/useContentAccess';
 import ResumeOptimizer from '../features/ResumeOptimizer';
@@ -527,73 +527,6 @@ export default function DocsPage({ onBack }) {
 
   // Render topic detail view
 
-  // Generate table of contents for topic detail view
-  const getTableOfContents = () => {
-    if (!topicDetails) return [];
-    const toc = [];
-
-    if (activePage === 'coding') {
-      if (topicDetails.introduction) toc.push({ id: 'overview', label: 'Overview' });
-      if (topicDetails.whenToUse) toc.push({ id: 'when-to-use', label: 'When to Use' });
-      if (topicDetails.approach) toc.push({ id: 'approach', label: 'Approach' });
-      if (topicDetails.codeExamples) toc.push({ id: 'code-examples', label: 'Code Examples' });
-      if (topicDetails.commonProblems) toc.push({ id: 'practice', label: 'Practice Problems' });
-      if (topicDetails.tips) toc.push({ id: 'tips', label: 'Interview Tips' });
-    } else if (activePage === 'system-design') {
-      if (topicDetails.introduction) toc.push({ id: 'overview', label: 'Overview' });
-      if (topicDetails.requirements) toc.push({ id: 'requirements', label: 'Requirements' });
-      if (topicDetails.keyQuestions) toc.push({ id: 'key-questions', label: 'Key Questions' });
-      if (topicDetails.estimation) toc.push({ id: 'estimation', label: 'Estimation' });
-      if (topicDetails.apiDesign) toc.push({ id: 'api-design', label: 'API Design' });
-      if (topicDetails.dataModel) toc.push({ id: 'data-model', label: 'Data Model' });
-      if (topicDetails.basicImplementation) toc.push({ id: 'architecture', label: 'Architecture' });
-    } else if (activePage === 'low-level') {
-      if (topicDetails.introduction) toc.push({ id: 'overview', label: 'Overview' });
-      if (topicDetails.keyQuestions) toc.push({ id: 'key-questions', label: 'Key Questions' });
-      if (topicDetails.coreEntities) toc.push({ id: 'core-entities', label: 'Core Entities' });
-      if (topicDetails.designPatterns) toc.push({ id: 'design-patterns', label: 'Design Patterns' });
-      if (topicDetails.implementation) toc.push({ id: 'implementation', label: 'Implementation' });
-      if (topicDetails.sampleQuestions) toc.push({ id: 'sample-questions', label: 'Practice Questions' });
-      if (topicDetails.tips) toc.push({ id: 'tips', label: 'Tips' });
-    } else if (activePage === 'behavioral') {
-      if (topicDetails.introduction) toc.push({ id: 'overview', label: 'Overview' });
-      if (topicDetails.keyQuestions) toc.push({ id: 'key-questions', label: 'Key Questions' });
-      if (topicDetails.starExample) toc.push({ id: 'star-example', label: 'STAR Example' });
-      if (topicDetails.exampleResponse) toc.push({ id: 'example-response', label: 'Example Response' });
-      if (topicDetails.sampleQuestions) toc.push({ id: 'sample-questions', label: 'Practice Questions' });
-      if (topicDetails.tips) toc.push({ id: 'tips', label: 'Tips' });
-    } else if (activePage === 'microservices' || activePage === 'databases') {
-      if (topicDetails.introduction) toc.push({ id: 'overview', label: 'Overview' });
-      if (topicDetails.keyQuestions) toc.push({ id: 'key-questions', label: 'Key Questions' });
-      if (topicDetails.dataModel) toc.push({ id: 'data-model', label: 'Data Model' });
-      if (topicDetails.basicImplementation) toc.push({ id: 'architecture', label: 'Architecture' });
-      if (topicDetails.tips) toc.push({ id: 'tips', label: 'Tips' });
-    } else if (activePage === 'sql') {
-      if (topicDetails.introduction) toc.push({ id: 'overview', label: 'Overview' });
-      if (topicDetails.whenToUse) toc.push({ id: 'when-to-use', label: 'When to Use' });
-      if (topicDetails.approach) toc.push({ id: 'approach', label: 'Approach' });
-      if (topicDetails.commonProblems) toc.push({ id: 'practice', label: 'Practice Problems' });
-      if (topicDetails.tips) toc.push({ id: 'tips', label: 'Interview Tips' });
-    } else if (activePage === 'projects') {
-      if (topicDetails.introduction) toc.push({ id: 'overview', label: 'Overview' });
-      if (topicDetails.learningObjectives) toc.push({ id: 'learning-objectives', label: 'Learning Objectives' });
-      if (topicDetails.interviewRelevance) toc.push({ id: 'interview-relevance', label: 'Interview Relevance' });
-      if (topicDetails.keyQuestions) toc.push({ id: 'key-questions', label: 'Key Questions' });
-      toc.push({ id: 'generate-tutorial', label: 'Generate Tutorial' });
-    } else if (activePage === 'roadmaps') {
-      if (topicDetails.introduction) toc.push({ id: 'overview', label: 'Overview' });
-      if (topicDetails.phases) toc.push({ id: 'roadmap-phases', label: 'Roadmap Phases' });
-      if (topicDetails.keyQuestions) toc.push({ id: 'key-questions', label: 'FAQ' });
-    } else if (activePage === 'eng-blogs') {
-      if (topicDetails.introduction) toc.push({ id: 'overview', label: 'Overview' });
-      if (topicDetails.articles) toc.push({ id: 'articles', label: 'Articles' });
-      if (topicDetails.keyQuestions) toc.push({ id: 'key-questions', label: 'Key Takeaways' });
-    }
-    return toc;
-  };
-
-  const tableOfContents = getTableOfContents();
-
   return (
     <div className="min-h-screen" style={{ color: 'var(--text-primary)' }}>
       {/* Electron drag region */}
@@ -606,7 +539,7 @@ export default function DocsPage({ onBack }) {
 
       <div className="relative min-h-screen flex">
           {/* Center Content */}
-          <div className={`flex-1 min-w-0 mx-auto w-full ${isMobile ? 'px-3' : 'px-10'}`}>
+          <div className={`flex-1 min-w-0 mx-auto w-full ${isMobile ? 'px-3' : 'px-4 sm:px-6 lg:px-8'}`}>
             {/* Breadcrumb Bar — secondary bar below TopBar */}
             <div className="sticky z-20 px-3 sm:px-4 py-2 sm:py-3 flex items-center justify-between gap-2 bg-[var(--bg-surface)] border-b border-[var(--border)]" style={{ top: 0 }}>
               {/* Mobile: back button when viewing a topic */}
@@ -685,16 +618,7 @@ export default function DocsPage({ onBack }) {
                   </div>
                 </div>
               ) : selectedTopic ? (
-                <div className="flex gap-6">
-                  <div className="flex-1 min-w-0 max-w-3xl">
-                    <TopicDetail activePage={activePage} selectedTopic={selectedTopic} topicDetails={topicDetails} pageConfig={pageConfig} completedTopics={completedTopics} starredTopics={starredTopics} toggleComplete={toggleComplete} toggleStar={toggleStar} showAskAI={showAskAI} setShowAskAI={setShowAskAI} aiQuestion={aiQuestion} setAiQuestion={setAiQuestion} aiAnswer={aiAnswer} aiLoading={aiLoading} handleAskAI={handleAskAI} showRoadmap={showRoadmap} setShowRoadmap={setShowRoadmap} expandedTheoryQuestions={expandedTheoryQuestions} setExpandedTheoryQuestions={setExpandedTheoryQuestions} setSelectedTopic={setSelectedTopic} generatingDiagram={generatingDiagram} diagramData={diagramData} diagramError={diagramError} diagramDetailLevel={diagramDetailLevel} setDiagramDetailLevel={setDiagramDetailLevel} diagramCloudProvider={diagramCloudProvider} setDiagramCloudProvider={setDiagramCloudProvider} generateDiagram={handleGenerateDiagram} codingTopics={codingTopics} systemDesignTopics={systemDesignTopics} systemDesigns={systemDesigns} behavioralTopics={behavioralTopics} filteredTopics={filteredTopics} progressInfo={getProgress()} isLocked={contentAccess.isTopicLocked(activePage, selectedTopic)} contentAccess={contentAccess} />
-                  </div>
-                  {tableOfContents.length > 0 && (
-                    <div className="hidden lg:block shrink-0" style={{ width: 'var(--toc-width, 200px)' }}>
-                      <TableOfContents items={tableOfContents} />
-                    </div>
-                  )}
-                </div>
+                <TopicDetail activePage={activePage} selectedTopic={selectedTopic} topicDetails={topicDetails} pageConfig={pageConfig} completedTopics={completedTopics} starredTopics={starredTopics} toggleComplete={toggleComplete} toggleStar={toggleStar} showAskAI={showAskAI} setShowAskAI={setShowAskAI} aiQuestion={aiQuestion} setAiQuestion={setAiQuestion} aiAnswer={aiAnswer} aiLoading={aiLoading} handleAskAI={handleAskAI} showRoadmap={showRoadmap} setShowRoadmap={setShowRoadmap} expandedTheoryQuestions={expandedTheoryQuestions} setExpandedTheoryQuestions={setExpandedTheoryQuestions} setSelectedTopic={setSelectedTopic} generatingDiagram={generatingDiagram} diagramData={diagramData} diagramError={diagramError} diagramDetailLevel={diagramDetailLevel} setDiagramDetailLevel={setDiagramDetailLevel} diagramCloudProvider={diagramCloudProvider} setDiagramCloudProvider={setDiagramCloudProvider} generateDiagram={handleGenerateDiagram} codingTopics={codingTopics} systemDesignTopics={systemDesignTopics} systemDesigns={systemDesigns} behavioralTopics={behavioralTopics} filteredTopics={filteredTopics} progressInfo={getProgress()} isLocked={contentAccess.isTopicLocked(activePage, selectedTopic)} contentAccess={contentAccess} />
               ) : (
                 <>
                   {/* ── Resume & Cover Letter ── */}
@@ -717,22 +641,19 @@ export default function DocsPage({ onBack }) {
                         {/* Overall progress stats row */}
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                           {[
-                            { label: 'Total Topics', value: overviewTotalTopics, icon: 'bookOpen', grad: 'linear-gradient(135deg, #6366f1 0%, #818cf8 50%, #a78bfa 100%)', glow: '#6366f1' },
-                            { label: 'Completed', value: overviewTotalCompleted, icon: 'check', grad: 'linear-gradient(135deg, #06b6d4 0%, #22d3ee 50%, #67e8f9 100%)', glow: '#06b6d4' },
-                            { label: 'Categories', value: overviewCategories.length, icon: 'grid', grad: 'linear-gradient(135deg, #8b5cf6 0%, #a78bfa 50%, #c4b5fd 100%)', glow: '#8b5cf6' },
-                            { label: 'Progress', value: `${overviewTotalTopics > 0 ? Math.round((overviewTotalCompleted / overviewTotalTopics) * 100) : 0}%`, icon: 'trendingUp', grad: 'linear-gradient(135deg, #3b82f6 0%, #60a5fa 50%, #93c5fd 100%)', glow: '#3b82f6' },
+                            { label: 'Total Topics', value: overviewTotalTopics, icon: 'bookOpen', color: '#6366f1' },
+                            { label: 'Completed', value: overviewTotalCompleted, icon: 'check', color: '#06b6d4' },
+                            { label: 'Categories', value: overviewCategories.length, icon: 'grid', color: '#8b5cf6' },
+                            { label: 'Progress', value: `${overviewTotalTopics > 0 ? Math.round((overviewTotalCompleted / overviewTotalTopics) * 100) : 0}%`, icon: 'trendingUp', color: '#3b82f6' },
                           ].map(stat => (
-                            <div key={stat.label} className="relative overflow-hidden rounded-2xl p-4 card-glow" style={{ background: stat.grad, boxShadow: `0 8px 32px ${stat.glow}30`, '--glow-hover': `0 20px 60px ${stat.glow}45` }}>
-                              <div className="absolute top-0 right-0 w-24 h-24 rounded-full opacity-20" style={{ background: 'radial-gradient(circle, white, transparent)', transform: 'translate(30%, -30%)' }} />
-                              <div className="relative z-10">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-white/20 backdrop-blur-sm">
-                                    <Icon name={stat.icon} size={16} className="text-white" />
-                                  </div>
+                            <div key={stat.label} className="rounded-xl p-4" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+                              <div className="flex items-center gap-2 mb-2">
+                                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'var(--bg-elevated)' }}>
+                                  <Icon name={stat.icon} size={16} style={{ color: stat.color }} />
                                 </div>
-                                <div className="text-2xl font-extrabold text-white landing-display">{stat.value}</div>
-                                <div className="text-[11px] text-white/70 landing-body mt-0.5 font-semibold">{stat.label}</div>
                               </div>
+                              <div className="text-2xl font-extrabold landing-display" style={{ color: 'var(--text-primary)' }}>{stat.value}</div>
+                              <div className="text-[11px] landing-body mt-0.5 font-semibold" style={{ color: 'var(--text-muted)' }}>{stat.label}</div>
                             </div>
                           ))}
                         </div>
@@ -746,29 +667,29 @@ export default function DocsPage({ onBack }) {
                             <a
                               key={cat.id}
                               href={`/capra/prepare/${cat.href}`}
-                              className="group relative rounded-2xl overflow-hidden bg-[var(--bg-surface)] card-glow"
-                              style={{ boxShadow: `0 4px 24px ${cat.color}18`, '--glow-hover': `0 20px 60px ${cat.color}35` }}
+                              className="group relative rounded-xl overflow-hidden transition-colors"
+                              style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '12px' }}
+                              onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--border-hover)'}
+                              onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
                             >
-                              {/* Bold gradient accent bar */}
-                              <div className="h-1.5" style={{ background: cat.grad }} />
                               <div className="p-5">
                                 <div className="flex items-start justify-between mb-4">
-                                  <div className="w-11 h-11 rounded-xl flex items-center justify-center shadow-lg" style={{ background: cat.grad }}>
-                                    <Icon name={cat.icon} size={22} className="text-white" />
+                                  <div className="w-11 h-11 rounded-xl flex items-center justify-center" style={{ background: 'var(--bg-elevated)' }}>
+                                    <Icon name={cat.icon} size={22} style={{ color: cat.color }} />
                                   </div>
                                   <span
-                                    className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold landing-mono text-white"
-                                    style={{ background: cat.grad }}
+                                    className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold landing-mono"
+                                    style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)' }}
                                   >
                                     {cat.count} topics
                                   </span>
                                 </div>
-                                <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display mb-3 transition-colors" style={{ '--tw-text-opacity': 1 }}>{cat.title}</h3>
+                                <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display mb-3 transition-colors">{cat.title}</h3>
                                 {/* Progress bar */}
                                 <div className="w-full h-2 rounded-full bg-[var(--bg-elevated)] overflow-hidden">
                                   <div
                                     className="h-full rounded-full transition-all duration-500"
-                                    style={{ width: `${cat.progress}%`, background: cat.grad }}
+                                    style={{ width: `${cat.progress}%`, background: cat.color }}
                                   />
                                 </div>
                                 <div className="flex justify-between mt-2">
@@ -786,26 +707,26 @@ export default function DocsPage({ onBack }) {
                         <h2 className="section-label mb-3">Recommended Path</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-0">
                           {[
-                            { step: 1, title: 'DSA Fundamentals', desc: 'Arrays, strings, trees, graphs', href: '/capra/prepare/coding', icon: 'cpu', color: '#6366f1', grad: 'linear-gradient(135deg, #6366f1, #818cf8)' },
-                            { step: 2, title: 'System Design', desc: 'Scalability, databases, caching', href: '/capra/prepare/system-design', icon: 'systemDesign', color: '#3b82f6', grad: 'linear-gradient(135deg, #3b82f6, #60a5fa)' },
-                            { step: 3, title: 'Low-Level Design', desc: 'OOP, SOLID, design patterns', href: '/capra/prepare/low-level-design', icon: 'layers', color: '#ec4899', grad: 'linear-gradient(135deg, #ec4899, #f472b6)' },
-                            { step: 4, title: 'Behavioral', desc: 'STAR method, leadership stories', href: '/capra/prepare/behavioral', icon: 'users', color: '#a855f7', grad: 'linear-gradient(135deg, #a855f7, #c084fc)' },
+                            { step: 1, title: 'DSA Fundamentals', desc: 'Arrays, strings, trees, graphs', href: '/capra/prepare/coding', icon: 'cpu', color: '#6366f1' },
+                            { step: 2, title: 'System Design', desc: 'Scalability, databases, caching', href: '/capra/prepare/system-design', icon: 'systemDesign', color: '#3b82f6' },
+                            { step: 3, title: 'Low-Level Design', desc: 'OOP, SOLID, design patterns', href: '/capra/prepare/low-level-design', icon: 'layers', color: '#ec4899' },
+                            { step: 4, title: 'Behavioral', desc: 'STAR method, leadership stories', href: '/capra/prepare/behavioral', icon: 'users', color: '#a855f7' },
                           ].map((phase, idx) => (
                             <Link key={phase.step} to={phase.href} className="group relative">
                               {/* Connector line between steps */}
                               {idx < 3 && (
-                                <div className="hidden md:block absolute top-6 left-[calc(50%+20px)] w-[calc(100%-40px)] h-0.5 z-0" style={{ background: 'linear-gradient(90deg, rgba(99,102,241,0.3), rgba(139,92,246,0.3))' }} />
+                                <div className="hidden md:block absolute top-6 left-[calc(50%+20px)] w-[calc(100%-40px)] h-0.5 z-0" style={{ background: 'var(--border)' }} />
                               )}
-                              <div className="relative z-10 flex flex-col items-center text-center p-4 rounded-xl card-glow" style={{ '--glow-hover': `0 16px 48px ${phase.color}30` }}>
-                                {/* Step number circle — solid gradient */}
+                              <div className="relative z-10 flex flex-col items-center text-center p-4 rounded-xl">
+                                {/* Step number circle */}
                                 <div
-                                  className="w-12 h-12 rounded-full flex items-center justify-center mb-3 shadow-lg"
-                                  style={{ background: phase.grad }}
+                                  className="w-12 h-12 rounded-full flex items-center justify-center mb-3"
+                                  style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}
                                 >
-                                  <span className="text-sm font-extrabold text-white landing-mono">{phase.step}</span>
+                                  <span className="text-sm font-extrabold landing-mono" style={{ color: 'var(--text-primary)' }}>{phase.step}</span>
                                 </div>
-                                <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-2 shadow-md" style={{ background: phase.grad }}>
-                                  <Icon name={phase.icon} size={16} className="text-white" />
+                                <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-2" style={{ background: 'var(--bg-elevated)' }}>
+                                  <Icon name={phase.icon} size={16} style={{ color: phase.color }} />
                                 </div>
                                 <div className="text-sm font-bold text-[var(--text-primary)] landing-display mb-1 transition-colors">{phase.title}</div>
                                 <div className="text-xs text-[var(--text-muted)] landing-body leading-relaxed">{phase.desc}</div>
@@ -820,23 +741,24 @@ export default function DocsPage({ onBack }) {
                         <h2 className="section-label mb-3">Interview Resources</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                           {[
-                            { href: '/capra/prepare?page=coding', icon: 'checklist', color: '#6366f1', grad: 'linear-gradient(135deg, #6366f1, #818cf8)', title: 'Interview Cheatsheet', desc: '17 topics covering 117 curated questions from top tech companies', badge: '117 Q' },
-                            { href: '/handbook', icon: 'code', color: '#8b5cf6', grad: 'linear-gradient(135deg, #8b5cf6, #a78bfa)', title: 'Blind 75', desc: 'The 75 essential LeetCode problems every engineer should master', badge: '75 problems' },
-                            { href: '/capra/practice', icon: 'behavioral', color: '#06b6d4', grad: 'linear-gradient(135deg, #06b6d4, #22d3ee)', title: 'Behavioral Questions', desc: 'Practice STAR-method answers for behavioral and leadership interviews', badge: 'Practice' },
+                            { href: '/capra/prepare?page=coding', icon: 'checklist', color: '#6366f1', title: 'Interview Cheatsheet', desc: '17 topics covering 117 curated questions from top tech companies', badge: '117 Q' },
+                            { href: '/handbook', icon: 'code', color: '#8b5cf6', title: 'Blind 75', desc: 'The 75 essential LeetCode problems every engineer should master', badge: '75 problems' },
+                            { href: '/capra/practice', icon: 'behavioral', color: '#06b6d4', title: 'Behavioral Questions', desc: 'Practice STAR-method answers for behavioral and leadership interviews', badge: 'Practice' },
                           ].map(resource => (
                             <a
                               key={resource.title}
                               href={resource.href}
-                              className="group rounded-2xl overflow-hidden bg-[var(--bg-surface)] card-glow"
-                              style={{ boxShadow: `0 4px 24px ${resource.color}18`, '--glow-hover': `0 20px 60px ${resource.color}35` }}
+                              className="group rounded-xl overflow-hidden transition-colors"
+                              style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '12px' }}
+                              onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--border-hover)'}
+                              onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
                             >
-                              <div className="h-1" style={{ background: resource.grad }} />
                               <div className="p-5">
                                 <div className="flex items-start justify-between mb-3">
-                                  <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md" style={{ background: resource.grad }}>
-                                    <Icon name={resource.icon} size={20} className="text-white" />
+                                  <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'var(--bg-elevated)' }}>
+                                    <Icon name={resource.icon} size={20} style={{ color: resource.color }} />
                                   </div>
-                                  <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold landing-mono text-white" style={{ background: resource.grad }}>
+                                  <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold landing-mono" style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)' }}>
                                     {resource.badge}
                                   </span>
                                 </div>
@@ -857,24 +779,23 @@ export default function DocsPage({ onBack }) {
                         <h2 className="section-label mb-3">Interview Cheatsheet</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                           {[
-                            { title: 'Before the Interview', items: interviewCheatsheet.before, icon: 'clipboard', color: '#6366f1', grad: 'linear-gradient(135deg, #6366f1, #818cf8)', step: 'Prep' },
-                            { title: 'During the Interview', items: interviewCheatsheet.during, icon: 'play', color: '#8b5cf6', grad: 'linear-gradient(135deg, #8b5cf6, #a78bfa)', step: 'Execute' },
-                            { title: 'After the Interview', items: interviewCheatsheet.after, icon: 'check', color: '#06b6d4', grad: 'linear-gradient(135deg, #06b6d4, #22d3ee)', step: 'Follow up' },
+                            { title: 'Before the Interview', items: interviewCheatsheet.before, icon: 'clipboard', color: '#6366f1', step: 'Prep' },
+                            { title: 'During the Interview', items: interviewCheatsheet.during, icon: 'play', color: '#8b5cf6', step: 'Execute' },
+                            { title: 'After the Interview', items: interviewCheatsheet.after, icon: 'check', color: '#06b6d4', step: 'Follow up' },
                           ].map((card) => (
                             <div
                               key={card.title}
-                              className="rounded-2xl overflow-hidden bg-[var(--bg-surface)] card-glow"
-                              style={{ boxShadow: `0 4px 24px ${card.color}18`, '--glow-hover': `0 16px 48px ${card.color}30` }}
+                              className="rounded-xl overflow-hidden"
+                              style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '12px' }}
                             >
-                              <div className="h-1" style={{ background: card.grad }} />
                               <div className="p-5">
                               <div className="flex items-center gap-3 mb-4">
-                                <div className="w-9 h-9 rounded-lg flex items-center justify-center shadow-md" style={{ background: card.grad }}>
-                                  <Icon name={card.icon} size={18} className="text-white" />
+                                <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: 'var(--bg-elevated)' }}>
+                                  <Icon name={card.icon} size={18} style={{ color: card.color }} />
                                 </div>
                                 <div>
                                   <h3 className="landing-display text-sm font-bold text-[var(--text-primary)]">{card.title}</h3>
-                                  <span className="text-[10px] font-bold landing-mono text-white px-2 py-0.5 rounded-full" style={{ background: card.grad }}>{card.step}</span>
+                                  <span className="text-[10px] font-bold landing-mono px-2 py-0.5 rounded-full" style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)' }}>{card.step}</span>
                                 </div>
                               </div>
                               <div className="flex flex-col gap-2.5">
@@ -2446,49 +2367,29 @@ export default function DocsPage({ onBack }) {
         </div>
         </div>
 
-        {/* ── Right Sidebar — Progress & TOC (visible when topic selected) ── */}
-        {selectedTopic && topicDetails && (
+        {/* ── Right Sidebar — Favorites (visible when topic selected) ── */}
+        {selectedTopic && topicDetails && Object.keys(starredTopics).filter(k => starredTopics[k]).length > 0 && (
           <div className="w-48 flex-shrink-0 h-screen sticky top-0 hidden xl:flex flex-col py-6 px-3 overflow-y-auto bg-[var(--bg-surface)] border-l border-[var(--border)]">
-            {/* Table of Contents */}
-            {tableOfContents.length > 0 && (
-              <div>
-                <div className="landing-mono text-[10px] text-[var(--accent)] tracking-widest uppercase mb-3">On This Page</div>
-                <div className="space-y-0.5">
-                  {tableOfContents.map((item, i) => (
-                    <a
-                      key={i}
-                      href={`#${item.id}`}
-                      className="block px-3 py-1.5 rounded text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] transition-all truncate landing-body"
-                    >
-                      {item.label}
-                    </a>
-                  ))}
-                </div>
-              </div>
-            )}
-
             {/* Starred Topics */}
-            {Object.keys(starredTopics).filter(k => starredTopics[k]).length > 0 && (
-              <div className="mt-6 pt-6 border-t border-[var(--border)]">
-                <div className="landing-mono text-[10px] text-[var(--accent)] tracking-widest uppercase mb-3">Favorites</div>
-                <div className="space-y-1">
-                  {Object.keys(starredTopics).filter(k => starredTopics[k]).map((topicId) => {
-                    const t = [...codingTopics, ...systemDesignTopics, ...systemDesigns, ...behavioralTopics, ...systemDesignPatterns, ...microservicesPatterns, ...systemDesignTradeoffs, ...scalableSystemsTopics, ...databaseTopics, ...sqlTopics, ...concurrencyTopics, ...lldTopics, ...lldProblems, ...companyPrep].find(x => x.id === topicId);
-                    if (!t) return null;
-                    return (
-                      <button
-                        key={topicId}
-                        onClick={() => setSelectedTopic(topicId)}
-                        className="w-full flex items-center gap-2 px-3 py-1.5 rounded text-xs text-left text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] transition-all landing-body"
-                      >
-                        <Icon name="star5" size={10} className="text-yellow-500 flex-shrink-0" />
-                        <span className="truncate">{t.title}</span>
-                      </button>
-                    );
-                  })}
-                </div>
+            <div>
+              <div className="landing-mono text-[10px] text-[var(--accent)] tracking-widest uppercase mb-3">Favorites</div>
+              <div className="space-y-1">
+                {Object.keys(starredTopics).filter(k => starredTopics[k]).map((topicId) => {
+                  const t = [...codingTopics, ...systemDesignTopics, ...systemDesigns, ...behavioralTopics, ...systemDesignPatterns, ...microservicesPatterns, ...systemDesignTradeoffs, ...scalableSystemsTopics, ...databaseTopics, ...sqlTopics, ...concurrencyTopics, ...lldTopics, ...lldProblems, ...companyPrep].find(x => x.id === topicId);
+                  if (!t) return null;
+                  return (
+                    <button
+                      key={topicId}
+                      onClick={() => setSelectedTopic(topicId)}
+                      className="w-full flex items-center gap-2 px-3 py-1.5 rounded text-xs text-left text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] transition-all landing-body"
+                    >
+                      <Icon name="star5" size={10} className="text-yellow-500 flex-shrink-0" />
+                      <span className="truncate">{t.title}</span>
+                    </button>
+                  );
+                })}
               </div>
-            )}
+            </div>
           </div>
         )}
       </div>
