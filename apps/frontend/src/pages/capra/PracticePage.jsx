@@ -955,57 +955,43 @@ export default function PracticePage() {
                   }
                 };
 
+                const getDiagramForQuestion = (questionText) => {
+                  const q = questionText.toLowerCase();
+                  if (q.includes('youtube') || q.includes('video') || q.includes('streaming') || q.includes('netflix') || q.includes('twitch'))
+                    return 'flowchart TD\n  A[Client App] --> B[CDN]\n  B --> C[API Gateway]\n  C --> D[Video Upload Service]\n  C --> E[Video Streaming Service]\n  D --> F[Transcoding Pipeline]\n  F --> G[Object Storage / S3]\n  E --> G\n  C --> H[Search Service]\n  H --> I[Elasticsearch]\n  C --> J[Recommendation Engine]\n  J --> K[ML Model]\n  C --> L[User Service]\n  L --> M[PostgreSQL]\n  F --> N[Message Queue]';
+                  if (q.includes('chat') || q.includes('messaging') || q.includes('whatsapp') || q.includes('slack') || q.includes('discord'))
+                    return 'flowchart TD\n  A[Client App] --> B[WebSocket Gateway]\n  B --> C[Connection Manager]\n  C --> D[Message Router]\n  D --> E[Message Queue / Kafka]\n  E --> F[Message Storage]\n  F --> G[Cassandra]\n  D --> H[Presence Service]\n  H --> I[Redis]\n  C --> J[Group Service]\n  J --> K[PostgreSQL]\n  D --> L[Push Notification]\n  L --> M[APNS / FCM]';
+                  if (q.includes('uber') || q.includes('ride') || q.includes('delivery') || q.includes('doordash') || q.includes('lyft'))
+                    return 'flowchart TD\n  A[Rider App] --> B[API Gateway]\n  C[Driver App] --> B\n  B --> D[Trip Service]\n  B --> E[Matching Service]\n  E --> F[Location Service]\n  F --> G[Redis Geospatial]\n  D --> H[PostgreSQL]\n  B --> I[Pricing Service]\n  B --> J[Payment Service]\n  J --> K[Stripe]\n  F --> L[Kafka]\n  L --> M[ETA Service]';
+                  if (q.includes('twitter') || q.includes('feed') || q.includes('social') || q.includes('instagram') || q.includes('facebook') || q.includes('tiktok'))
+                    return 'flowchart TD\n  A[Client App] --> B[API Gateway]\n  B --> C[Post Service]\n  C --> D[Fan-out Service]\n  D --> E[Redis Feed Cache]\n  B --> F[Timeline Service]\n  F --> E\n  C --> G[PostgreSQL]\n  B --> H[Search Service]\n  H --> I[Elasticsearch]\n  D --> J[Kafka]\n  J --> K[Notification Service]\n  B --> L[Media Service]\n  L --> M[CDN / S3]';
+                  if (q.includes('url') || q.includes('shortener') || q.includes('bit.ly') || q.includes('tiny'))
+                    return 'flowchart TD\n  A[Client] --> B[API Gateway]\n  B --> C[URL Service]\n  C --> D[ID Generator]\n  C --> E[Redis Cache]\n  C --> F[PostgreSQL]\n  B --> G[Redirect Service]\n  G --> E\n  G --> F\n  B --> H[Analytics Service]\n  H --> I[Kafka]\n  I --> J[ClickHouse]';
+                  if (q.includes('rate limit') || q.includes('api gateway') || q.includes('gateway'))
+                    return 'flowchart TD\n  A[Client] --> B[Load Balancer]\n  B --> C[Rate Limiter]\n  C --> D[Token Bucket / Redis]\n  C --> E[API Router]\n  E --> F[Auth Service]\n  E --> G[Service A]\n  E --> H[Service B]\n  G --> I[Database]\n  H --> I\n  C --> J[Metrics]\n  J --> K[Prometheus]';
+                  if (q.includes('search') || q.includes('yelp') || q.includes('maps') || q.includes('google maps'))
+                    return 'flowchart TD\n  A[Client] --> B[API Gateway]\n  B --> C[Search Service]\n  C --> D[Elasticsearch]\n  B --> E[Geospatial Service]\n  E --> F[PostGIS / Redis]\n  B --> G[Ranking Service]\n  G --> H[ML Model]\n  C --> I[Index Builder]\n  I --> J[Kafka]\n  J --> D\n  B --> K[Review Service]\n  K --> L[PostgreSQL]';
+                  if (q.includes('e-commerce') || q.includes('amazon') || q.includes('shopping') || q.includes('shopify'))
+                    return 'flowchart TD\n  A[Client] --> B[CDN]\n  B --> C[API Gateway]\n  C --> D[Product Catalog]\n  D --> E[Elasticsearch]\n  C --> F[Cart Service]\n  F --> G[Redis]\n  C --> H[Order Service]\n  H --> I[PostgreSQL]\n  C --> J[Payment Service]\n  J --> K[Stripe]\n  H --> L[Kafka]\n  L --> M[Inventory Service]\n  L --> N[Notification Service]';
+                  if (q.includes('dropbox') || q.includes('drive') || q.includes('file') || q.includes('storage'))
+                    return 'flowchart TD\n  A[Client App] --> B[API Gateway]\n  B --> C[File Metadata Service]\n  C --> D[PostgreSQL]\n  B --> E[Upload Service]\n  E --> F[Chunk Manager]\n  F --> G[Object Storage / S3]\n  B --> H[Sync Service]\n  H --> I[WebSocket Notifications]\n  H --> J[Redis Pub/Sub]\n  B --> K[Sharing Service]\n  K --> D\n  F --> L[Dedup Service]';
+                  if (q.includes('notification') || q.includes('push'))
+                    return 'flowchart TD\n  A[Service Trigger] --> B[Notification Service]\n  B --> C[Priority Router]\n  C --> D[Template Engine]\n  D --> E[Email / SES]\n  D --> F[Push / FCM / APNS]\n  D --> G[SMS / Twilio]\n  B --> H[User Preferences]\n  H --> I[PostgreSQL]\n  B --> J[Kafka]\n  J --> K[Rate Limiter]\n  K --> L[Delivery Workers]\n  L --> M[Delivery Tracking]';
+                  if (q.includes('payment') || q.includes('wallet') || q.includes('transaction'))
+                    return 'flowchart TD\n  A[Client] --> B[API Gateway]\n  B --> C[Payment Service]\n  C --> D[Idempotency Check / Redis]\n  C --> E[Ledger Service]\n  E --> F[PostgreSQL]\n  C --> G[Payment Processor / Stripe]\n  C --> H[Fraud Detection]\n  H --> I[ML Model]\n  C --> J[Kafka]\n  J --> K[Settlement Service]\n  J --> L[Notification Service]\n  B --> M[Wallet Service]\n  M --> F';
+                  if (q.includes('leaderboard') || q.includes('ranking') || q.includes('top'))
+                    return 'flowchart TD\n  A[Client] --> B[API Gateway]\n  B --> C[Score Ingestion]\n  C --> D[Kafka]\n  D --> E[Aggregation Service]\n  E --> F[Redis Sorted Sets]\n  B --> G[Leaderboard API]\n  G --> F\n  E --> H[PostgreSQL]\n  B --> I[User Service]\n  I --> H\n  G --> J[CDN Cache]';
+                  if (q.includes('zoom') || q.includes('video call') || q.includes('conference'))
+                    return 'flowchart TD\n  A[Client App] --> B[Signaling Server / WebSocket]\n  B --> C[Session Manager]\n  C --> D[Redis]\n  A --> E[Media Server / SFU]\n  E --> F[TURN / STUN Server]\n  B --> G[Room Service]\n  G --> H[PostgreSQL]\n  E --> I[Recording Service]\n  I --> J[Object Storage / S3]\n  B --> K[Chat Service]\n  K --> L[Kafka]\n  G --> M[Scheduling Service]';
+                  // Generic fallback
+                  return 'flowchart TD\n  A[Client] --> B[Load Balancer]\n  B --> C[API Gateway]\n  C --> D[Auth Service]\n  C --> E[Core Service]\n  E --> F[Redis Cache]\n  E --> G[PostgreSQL]\n  E --> H[Message Queue]\n  H --> I[Worker Service]\n  I --> G\n  C --> J[Search / Analytics]\n  E --> K[Object Storage]';
+                };
+
                 const handleLoadAIDiagram = async () => {
                   const q = questions[currentIdx];
                   const questionText = `${q.q}: ${q.desc}`;
-                  const headers = { 'Content-Type': 'application/json', ...getAuthHeaders() };
-
-                  // Try lookup first (free, cache-only)
-                  try {
-                    const lookupRes = await fetch(`${API_URL}/api/diagram/lookup`, {
-                      method: 'POST',
-                      headers,
-                      body: JSON.stringify({ question: questionText, provider: 'auto', direction: 'TB', detailLevel: 'overview' }),
-                    });
-                    if (lookupRes.ok) {
-                      const data = await lookupRes.json();
-                      if (data.mermaid_code) return data.mermaid_code;
-                    }
-                  } catch {}
-
-                  // Generate new diagram (costs API call)
-                  try {
-                    const res = await fetch(`${API_URL}/api/diagram/generate`, {
-                      method: 'POST',
-                      headers,
-                      body: JSON.stringify({ question: questionText, provider: 'auto', direction: 'TB', detailLevel: 'overview' }),
-                    });
-                    if (!res.ok) return null;
-                    const data = await res.json();
-                    if (data.mermaid_code) return data.mermaid_code;
-
-                    // Generate problem-specific mermaid from question keywords
-                    const qLower = questionText.toLowerCase();
-                    if (qLower.includes('youtube') || qLower.includes('video') || qLower.includes('streaming')) {
-                      return `flowchart TD\n  A[Client App] --> B[CDN]\n  B --> C[API Gateway]\n  C --> D[Video Upload Service]\n  C --> E[Video Streaming Service]\n  D --> F[Transcoding Pipeline]\n  F --> G[Object Storage / S3]\n  E --> G\n  C --> H[Search Service]\n  H --> I[Elasticsearch]\n  C --> J[Recommendation Engine]\n  J --> K[ML Model]\n  C --> L[User Service]\n  L --> M[PostgreSQL]\n  F --> N[Message Queue]`;
-                    } else if (qLower.includes('chat') || qLower.includes('messaging') || qLower.includes('whatsapp') || qLower.includes('slack')) {
-                      return `flowchart TD\n  A[Client App] --> B[WebSocket Gateway]\n  B --> C[Connection Manager]\n  C --> D[Message Router]\n  D --> E[Message Queue / Kafka]\n  E --> F[Message Storage]\n  F --> G[Cassandra]\n  D --> H[Presence Service]\n  H --> I[Redis]\n  C --> J[Group Service]\n  J --> K[PostgreSQL]\n  D --> L[Push Notification]\n  L --> M[APNS / FCM]`;
-                    } else if (qLower.includes('uber') || qLower.includes('ride') || qLower.includes('delivery') || qLower.includes('doordash')) {
-                      return `flowchart TD\n  A[Rider App] --> B[API Gateway]\n  C[Driver App] --> B\n  B --> D[Trip Service]\n  B --> E[Matching Service]\n  E --> F[Location Service]\n  F --> G[Redis / Geospatial]\n  D --> H[PostgreSQL]\n  B --> I[Pricing Service]\n  B --> J[Payment Service]\n  J --> K[Stripe]\n  F --> L[Kafka]\n  L --> M[ETA Service]\n  B --> N[Notification Service]`;
-                    } else if (qLower.includes('twitter') || qLower.includes('feed') || qLower.includes('social') || qLower.includes('instagram')) {
-                      return `flowchart TD\n  A[Client App] --> B[API Gateway]\n  B --> C[Post Service]\n  C --> D[Fan-out Service]\n  D --> E[Redis Feed Cache]\n  B --> F[Timeline Service]\n  F --> E\n  C --> G[PostgreSQL]\n  B --> H[Search Service]\n  H --> I[Elasticsearch]\n  D --> J[Kafka]\n  J --> K[Notification Service]\n  B --> L[Media Service]\n  L --> M[CDN / S3]`;
-                    } else if (qLower.includes('url') || qLower.includes('shortener') || qLower.includes('bit.ly')) {
-                      return `flowchart TD\n  A[Client] --> B[API Gateway]\n  B --> C[URL Service]\n  C --> D[ID Generator]\n  C --> E[Redis Cache]\n  C --> F[PostgreSQL]\n  B --> G[Redirect Service]\n  G --> E\n  G --> F\n  B --> H[Analytics Service]\n  H --> I[Kafka]\n  I --> J[ClickHouse]`;
-                    } else if (qLower.includes('rate limit') || qLower.includes('api gateway')) {
-                      return `flowchart TD\n  A[Client] --> B[Load Balancer]\n  B --> C[Rate Limiter]\n  C --> D[Token Bucket / Redis]\n  C --> E[API Router]\n  E --> F[Auth Service]\n  E --> G[Service A]\n  E --> H[Service B]\n  G --> I[Database]\n  H --> I\n  C --> J[Logging / Metrics]\n  J --> K[Prometheus]`;
-                    } else if (qLower.includes('search') || qLower.includes('yelp') || qLower.includes('maps')) {
-                      return `flowchart TD\n  A[Client] --> B[API Gateway]\n  B --> C[Search Service]\n  C --> D[Elasticsearch]\n  B --> E[Geospatial Service]\n  E --> F[PostGIS / Redis]\n  B --> G[Ranking Service]\n  G --> H[ML Model]\n  C --> I[Index Builder]\n  I --> J[Kafka]\n  J --> D\n  B --> K[Review Service]\n  K --> L[PostgreSQL]`;
-                    } else {
-                      return `flowchart TD\n  A[Client] --> B[Load Balancer]\n  B --> C[API Gateway]\n  C --> D[Auth Service]\n  C --> E[Core Service]\n  E --> F[Redis Cache]\n  E --> G[PostgreSQL]\n  E --> H[Message Queue]\n  H --> I[Worker Service]\n  I --> G\n  C --> J[Search / Analytics]\n  E --> K[Object Storage]`;
-                    }
-                  } catch {
-                    return null;
-                  }
+                  // Always return a problem-specific diagram immediately
+                  return getDiagramForQuestion(questionText);
                 };
 
                 return (
