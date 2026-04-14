@@ -79,12 +79,12 @@ const DIFFICULTIES = ['easy', 'medium', 'hard'];
 const CATEGORIES = ['coding', 'system-design', 'behavioral'];
 const COMPANIES = [
   { id: 'all', label: 'All', color: 'var(--text-muted)' },
-  { id: 'google', label: 'Google', color: '#4285f4' },
-  { id: 'meta', label: 'Meta', color: '#0668E1' },
-  { id: 'amazon', label: 'Amazon', color: '#FF9900' },
-  { id: 'apple', label: 'Apple', color: '#555' },
-  { id: 'microsoft', label: 'Microsoft', color: '#00A4EF' },
-  { id: 'netflix', label: 'Netflix', color: '#E50914' },
+  { id: 'google', label: 'Google', color: '#4285f4', logo: 'https://logo.dev/google.com?token=pk_JbMG3CfhR5aa19Y3PuKjcQ&format=png&size=40' },
+  { id: 'meta', label: 'Meta', color: '#0668E1', logo: 'https://logo.dev/meta.com?token=pk_JbMG3CfhR5aa19Y3PuKjcQ&format=png&size=40' },
+  { id: 'amazon', label: 'Amazon', color: '#FF9900', logo: 'https://logo.dev/amazon.com?token=pk_JbMG3CfhR5aa19Y3PuKjcQ&format=png&size=40' },
+  { id: 'apple', label: 'Apple', color: '#555', logo: 'https://logo.dev/apple.com?token=pk_JbMG3CfhR5aa19Y3PuKjcQ&format=png&size=40' },
+  { id: 'microsoft', label: 'Microsoft', color: '#00A4EF', logo: 'https://logo.dev/microsoft.com?token=pk_JbMG3CfhR5aa19Y3PuKjcQ&format=png&size=40' },
+  { id: 'netflix', label: 'Netflix', color: '#E50914', logo: 'https://logo.dev/netflix.com?token=pk_JbMG3CfhR5aa19Y3PuKjcQ&format=png&size=40' },
 ];
 
 const DIMENSION_LABELS = ['Solving', 'Design', 'DSA', 'Comms', 'Time'];
@@ -695,7 +695,10 @@ export default function PracticePage() {
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                       {COMPANIES.map(c => (
                         <button key={c.id} onClick={() => setCompany(c.id)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 10, border: company === c.id ? `2px solid ${c.color}` : '1px solid var(--border)', background: company === c.id ? `${c.color}0d` : 'var(--bg-surface)', fontSize: 13, fontWeight: 600, cursor: 'pointer', color: company === c.id ? c.color : 'var(--text-secondary)', transition: 'all 0.15s' }}>
-                          <span style={{ width: 8, height: 8, borderRadius: 3, background: c.color, display: 'inline-block' }} />
+                          {c.logo
+                            ? <img src={c.logo} alt="" style={{ width: 16, height: 16, borderRadius: 3, objectFit: 'contain' }} loading="lazy" />
+                            : <span style={{ width: 8, height: 8, borderRadius: 3, background: c.color, display: 'inline-block' }} />
+                          }
                           {c.label}
                         </button>
                       ))}
@@ -750,7 +753,10 @@ export default function PracticePage() {
                                 <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{catLabel(h.category || 'coding')}</span>
                                 <span style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', padding: '1px 6px', borderRadius: 99, background: hDC.bg, color: hDC.text }}>{h.difficulty || 'medium'}</span>
                                 {companyObj && companyObj.id !== 'all' && (
-                                  <span style={{ fontSize: 10, fontWeight: 500, padding: '1px 6px', borderRadius: 99, background: `${companyObj.color}15`, color: companyObj.color }}>{companyObj.label}</span>
+                                  <span style={{ fontSize: 10, fontWeight: 500, padding: '1px 6px', borderRadius: 99, background: `${companyObj.color}15`, color: companyObj.color, display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                                    {companyObj.logo && <img src={companyObj.logo} alt="" style={{ width: 12, height: 12, borderRadius: 2, objectFit: 'contain' }} loading="lazy" />}
+                                    {companyObj.label}
+                                  </span>
                                 )}
                               </div>
                               <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
