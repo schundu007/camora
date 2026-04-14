@@ -50,7 +50,7 @@
     --card-shadow: var(--shadow-sm);
 
     /* Layout */
-    --sidebar-width: 240px;
+    --sidebar-width: 56px;
     --topbar-height: 48px;
     --toc-width: 200px;
     --content-max: 720px;

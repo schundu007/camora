@@ -167,15 +167,15 @@ export function App() {
           <Route path="/jobs" element={<ShellRoute><JobsPage /></ShellRoute>} />
           <Route path="/jobs/:id/prepare" element={<ShellRoute><JobPrepPage /></ShellRoute>} />
 
-          {/* ── Lumora: Live Interview ─────────────────── */}
-          <Route path="/lumora" element={<ShellRoute><LumoraInterviewPage /></ShellRoute>} />
-          <Route path="/lumora/coding" element={<ShellRoute><LumoraCodingPage /></ShellRoute>} />
-          <Route path="/lumora/design" element={<ShellRoute><LumoraDesignPage /></ShellRoute>} />
+          {/* ── Lumora: Live Interview (full-screen, NO shell — has its own Header) ── */}
+          <Route path="/lumora" element={<ProtectedRoute><LumoraInterviewPage /></ProtectedRoute>} />
+          <Route path="/lumora/coding" element={<ProtectedRoute><LumoraCodingPage /></ProtectedRoute>} />
+          <Route path="/lumora/design" element={<ProtectedRoute><LumoraDesignPage /></ProtectedRoute>} />
 
           {/* ── Also accessible via /app paths ──────────── */}
-          <Route path="/app" element={<ShellRoute><LumoraInterviewPage /></ShellRoute>} />
-          <Route path="/app/coding" element={<ShellRoute><LumoraCodingPage /></ShellRoute>} />
-          <Route path="/app/design" element={<ShellRoute><LumoraDesignPage /></ShellRoute>} />
+          <Route path="/app" element={<ProtectedRoute><LumoraInterviewPage /></ProtectedRoute>} />
+          <Route path="/app/coding" element={<ProtectedRoute><LumoraCodingPage /></ProtectedRoute>} />
+          <Route path="/app/design" element={<ProtectedRoute><LumoraDesignPage /></ProtectedRoute>} />
 
           {/* ── Capra: Preparation ─────────────────────── */}
           <Route path="/capra" element={<ShellRoute><CapraDashboard /></ShellRoute>} />
