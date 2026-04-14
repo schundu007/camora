@@ -564,20 +564,20 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem }: Co
   return (
     <div className="h-screen w-full flex flex-col lumora-app-bg">
       {/* ═══ HEADER ═══ */}
-      <header className="flex items-center justify-between h-11 px-3 bg-white border-b border-gray-200 shrink-0">
+      <header className="flex items-center justify-between h-11 px-3 shrink-0" style={{ background: 'linear-gradient(135deg, rgba(15,23,42,0.98) 0%, rgba(30,27,75,0.96) 50%, rgba(15,23,42,0.98) 100%)', borderBottom: '1px solid rgba(99,102,241,0.12)' }}>
         <div className="flex items-center gap-2 md:gap-3">
-          <button onClick={onBack} className="flex items-center gap-1 px-1.5 py-1 text-xs md:text-sm font-medium text-gray-700 hover:text-gray-900 rounded transition-colors">
+          <button onClick={onBack} className="flex items-center gap-1 px-1.5 py-1 text-xs md:text-sm font-bold text-white/70 hover:text-white rounded transition-colors">
             <svg className="w-3 h-3 md:w-3.5 md:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
             </svg>
             <span className="hidden sm:inline">Back</span>
           </button>
-          <div className="h-4 w-px bg-gray-200" />
+          <div className="h-4 w-px bg-white/10" />
           <div className="flex items-center gap-1.5">
-            <div className="w-5 h-5 md:w-6 md:h-6 rounded bg-indigo-500 flex items-center justify-center">
+            <div className="w-5 h-5 md:w-6 md:h-6 rounded flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
               <span className="text-white text-[10px] md:text-xs font-extrabold">L</span>
             </div>
-            <span className="text-gray-900 font-bold text-xs md:text-sm">Coding</span>
+            <span className="text-white font-extrabold text-xs md:text-sm" style={{ fontFamily: "'Source Sans 3', sans-serif" }}>Coding</span>
           </div>
         </div>
 
@@ -597,7 +597,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem }: Co
                 </svg>
               </div>
               <span>{formatTime(timerSeconds)}</span>
-              <button onClick={stopTimer} className="ml-1 text-gray-700 hover:text-red-500 transition-colors" title="Stop timer">
+              <button onClick={stopTimer} className="ml-1 text-white/50 hover:text-red-400 transition-colors" title="Stop timer">
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -607,7 +607,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem }: Co
             <div className="flex items-center">
               {[15, 30, 45, 60].map(m => (
                 <button key={m} onClick={() => startTimer(m)}
-                  className="px-1.5 py-0.5 text-[10px] font-mono text-gray-700 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors"
+                  className="px-1.5 py-0.5 text-[10px] font-mono text-white/50 hover:text-white hover:bg-white/10 rounded transition-colors"
                   title={`${m} min timer`}>
                   {m}m
                 </button>
@@ -645,13 +645,13 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem }: Co
             <button
               onClick={() => setProblemTab('description')}
               className={`px-3 py-1 text-xs font-semibold rounded-md transition-all ${
-                problemTab === 'description' ? 'bg-indigo-500 text-white shadow-sm' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'
+                problemTab === 'description' ? 'bg-indigo-500 text-white shadow-sm' : 'text-white/50 hover:text-white hover:bg-white/10'
               }`}
             >Description</button>
             <button
               onClick={() => setProblemTab('solution')}
               className={`px-3 py-1 text-xs font-semibold rounded-md transition-all flex items-center gap-1.5 ${
-                problemTab === 'solution' ? 'bg-indigo-500 text-white shadow-sm' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'
+                problemTab === 'solution' ? 'bg-indigo-500 text-white shadow-sm' : 'text-white/50 hover:text-white hover:bg-white/10'
               }`}
             >
               Solution
