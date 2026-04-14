@@ -4,11 +4,11 @@ import { NAV_LINKS } from '../../lib/constants';
 
 export default function SiteFooter() {
   return (
-    <footer className="border-t border-white/[0.06] px-4 sm:px-6 mt-auto" style={{ height: 48, width: '100%', background: 'linear-gradient(135deg, rgba(15,23,42,0.95) 0%, rgba(30,27,75,0.93) 50%, rgba(15,23,42,0.95) 100%)', fontFamily: "'Source Sans 3', sans-serif" }}>
+    <footer className="border-t border-white/[0.06] px-4 sm:px-6 mt-auto" style={{ height: 48, width: '100%', background: 'linear-gradient(135deg, rgba(15,23,42,0.95) 0%, rgba(30,27,75,0.93) 50%, rgba(15,23,42,0.95) 100%)', fontFamily: "var(--font-sans)" }}>
       <div className="w-full lg:max-w-[70%] mx-auto h-full flex items-center justify-between">
         <div className="flex items-center gap-2">
           <CamoraLogo size={22} />
-          <span className="text-xs font-extrabold text-white" style={{ fontFamily: "'Source Sans 3', sans-serif" }}>Camora</span>
+          <span className="text-xs font-extrabold text-white" style={{ fontFamily: "var(--font-sans)" }}>Camora</span>
         </div>
         <div className="flex items-center gap-4">
           {NAV_LINKS.map((link) => (
