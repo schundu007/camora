@@ -856,7 +856,7 @@ export default function PracticePage() {
 
               {category === 'system-design' && !inlineEval && (() => {
                 const SD_SECTIONS = [
-                  { label: 'Functional Req.', icon: 'clipboardList', color: '#3b82f6', placeholder: 'List core functional requirements...' },
+                  { label: 'Functional Req.', icon: 'clipboard', color: '#3b82f6', placeholder: 'List core functional requirements...' },
                   { label: 'Non-Functional Req.', icon: 'shield', color: '#8b5cf6', placeholder: 'Latency, availability, consistency, scale...' },
                   { label: 'Components', icon: 'layers', color: '#10b981', placeholder: 'Key services, databases, caches...' },
                   { label: 'Data Flow', icon: 'gitBranch', color: '#06b6d4', placeholder: 'Request path, data pipeline...' },
@@ -983,23 +983,25 @@ export default function PracticePage() {
                       </button>
                     </div>
 
-                    <div style={{ height: '90vh', minHeight: 600, borderRadius: 12, overflow: 'hidden', border: '1px solid #e3e8ee' }}>
-                      <Allotment defaultSizes={[50, 50]}>
+                    <div style={{ height: 'calc(100vh - 280px)', minHeight: 420, borderRadius: 12, overflow: 'hidden', border: '1px solid #e3e8ee' }}>
+                      <Allotment defaultSizes={[45, 55]}>
                         {/* Left: Excalidraw Whiteboard */}
-                        <Allotment.Pane minSize={350}>
-                          <Suspense fallback={<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#9ca3af', fontSize: 13 }}>Loading whiteboard...</div>}>
-                            <ExcalidrawWhiteboard
-                              key={currentIdx}
-                              initialElements={whiteboardState.getScene(currentIdx)}
-                              onChange={(elements) => whiteboardState.saveScene(currentIdx, elements)}
-                              onLoadAIDiagram={handleLoadAIDiagram}
-                            />
-                          </Suspense>
+                        <Allotment.Pane minSize={320}>
+                          <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
+                            <Suspense fallback={<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#9ca3af', fontSize: 13 }}>Loading whiteboard...</div>}>
+                              <ExcalidrawWhiteboard
+                                key={currentIdx}
+                                initialElements={whiteboardState.getScene(currentIdx)}
+                                onChange={(elements) => whiteboardState.saveScene(currentIdx, elements)}
+                                onLoadAIDiagram={handleLoadAIDiagram}
+                              />
+                            </Suspense>
+                          </div>
                         </Allotment.Pane>
 
                         {/* Right: Section text areas */}
-                        <Allotment.Pane minSize={380}>
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, padding: 16, overflowY: 'auto', height: '100%', background: '#fff' }}>
+                        <Allotment.Pane minSize={340}>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, padding: 14, overflowY: 'auto', height: '100%', background: '#fff' }}>
                             {SD_SECTIONS.map((section, si) => {
                               const val = parts[si] || '';
                               return (
