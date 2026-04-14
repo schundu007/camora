@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import CamoraLogo from './CamoraLogo';
@@ -16,6 +16,20 @@ export default function SiteNav() {
   const { isAuthenticated, user, logout } = useAuth();
   const location = useLocation();
   const [open, setOpen] = useState(false);
+
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (open) {
+      const scrollY = window.scrollY;
+      document.body.classList.add('scroll-locked');
+      document.body.style.top = `-${scrollY}px`;
+      return () => {
+        document.body.classList.remove('scroll-locked');
+        document.body.style.top = '';
+        window.scrollTo(0, scrollY);
+      };
+    }
+  }, [open]);
 
   const isActive = (href: string) => location.pathname === href || location.pathname.startsWith(href + '/');
 
@@ -66,7 +80,7 @@ export default function SiteNav() {
         </div>
 
         {/* Mobile burger — 44px touch target */}
-        <button onClick={() => setOpen(!open)} className="md:hidden p-3 -mr-2 text-white hover:text-white/80" aria-label={open ? 'Close menu' : 'Open menu'} aria-expanded={open}>
+        <button onClick={() => setOpen(!open)} className="md:hidden flex items-center justify-center min-w-[44px] min-h-[44px] -mr-2 text-white hover:text-white/80" aria-label={open ? 'Close menu' : 'Open menu'} aria-expanded={open}>
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
             {open
               ? <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -75,15 +89,19 @@ export default function SiteNav() {
         </button>
       </div>
 
-      {/* Mobile menu */}
-      {open && (
-        <div className="md:hidden border-t border-white/[0.06] px-6 py-3 space-y-1" style={{ background: 'rgba(15,23,42,0.97)', backdropFilter: 'blur(12px)', zIndex: 50 }} role="menu">
+      {/* Mobile menu — animated slide */}
+      <div
+        className={`md:hidden border-t border-white/[0.06] px-6 overflow-hidden transition-all duration-200 ease-out ${open ? 'max-h-[400px] py-3 opacity-100' : 'max-h-0 py-0 opacity-0'}`}
+        style={{ background: 'rgba(15,23,42,0.97)', backdropFilter: 'blur(12px)' }}
+        role="menu"
+      >
+        <div className="space-y-1">
           {NAV_LINKS.map((link) => (
             <Link
               key={link.label}
               to={link.href}
               onClick={() => setOpen(false)}
-              className={`block py-2 text-sm font-bold ${isActive(link.href) ? 'text-white' : 'text-white/80'}`}
+              className={`flex items-center min-h-[44px] py-2 text-sm font-bold ${isActive(link.href) ? 'text-white' : 'text-white/80'}`}
             >
               {link.label}
             </Link>
@@ -91,15 +109,15 @@ export default function SiteNav() {
           <div className="pt-2 border-t border-white/[0.06]">
             {isAuthenticated ? (
               <>
-                <Link to="/capra/prepare" onClick={() => setOpen(false)} className="block py-2 text-sm text-white font-bold">Dashboard</Link>
-                <button onClick={() => { logout(); setOpen(false); }} className="block py-2 text-sm text-red-300 font-bold">Sign out</button>
+                <Link to="/capra/prepare" onClick={() => setOpen(false)} className="flex items-center min-h-[44px] py-2 text-sm text-white font-bold">Dashboard</Link>
+                <button onClick={() => { logout(); setOpen(false); }} className="flex items-center min-h-[44px] py-2 text-sm text-red-300 font-bold">Sign out</button>
               </>
             ) : (
-              <Link to={`/login?redirect=${encodeURIComponent(location.pathname)}`} onClick={() => setOpen(false)} className="block py-2 text-sm text-white font-bold">Sign in</Link>
+              <Link to={`/login?redirect=${encodeURIComponent(location.pathname)}`} onClick={() => setOpen(false)} className="flex items-center min-h-[44px] py-2 text-sm text-white font-bold">Sign in</Link>
             )}
           </div>
         </div>
-      )}
+      </div>
       {/* Challenge Campaign Ticker — all pages including /challenge */}
       {new Date() < CHALLENGE_END && (
         <Link to="/challenge" className="block overflow-hidden" style={{ background: 'linear-gradient(90deg, #10b981, #6366f1, #0ea5e9, #f59e0b)', height: TICKER_HEIGHT }}>

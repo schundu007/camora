@@ -150,7 +150,7 @@ export default function PrepPlanPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <main className="flex-1 py-8 px-4">
+      <main className="flex-1 py-4 sm:py-8 px-3 sm:px-4">
         <div className="max-w-4xl mx-auto">
           {/* ── Header ───────────────────────────────────── */}
           <div className="mb-8">
@@ -238,18 +238,18 @@ export default function PrepPlanPage() {
                   <p className="text-sm font-semibold text-[var(--text-primary)]">Set Your Interview Date</p>
                   <button onClick={() => setShowSetup(false)} className="text-xs text-[var(--text-muted)] hover:text-[var(--text-secondary)]">Cancel</button>
                 </div>
-                <form onSubmit={handleSetup} className="flex flex-wrap gap-3 items-end">
-                  <div className="flex-1 min-w-[140px]">
+                <form onSubmit={handleSetup} className="flex flex-col sm:flex-row sm:flex-wrap gap-3 items-stretch sm:items-end">
+                  <div className="flex-1">
                     <label htmlFor="plan-date" className="block text-xs font-medium text-[var(--text-muted)] mb-1">Date</label>
                     <input id="plan-date" type="date" min={today} value={interviewDate} onChange={e => setInterviewDate(e.target.value)}
                       className="w-full px-3 py-2 border border-[var(--border)] rounded-xl text-sm text-[var(--text-primary)] bg-[var(--bg-elevated)] focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-colors" required />
                   </div>
-                  <div className="flex-1 min-w-[140px]">
+                  <div className="flex-1">
                     <label htmlFor="plan-company" className="block text-xs font-medium text-[var(--text-muted)] mb-1">Company</label>
                     <input id="plan-company" type="text" placeholder="e.g. Google" value={targetCompany} onChange={e => setTargetCompany(e.target.value)}
                       className="w-full px-3 py-2 border border-[var(--border)] rounded-xl text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] bg-[var(--bg-elevated)] focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-colors" required />
                   </div>
-                  <div className="flex-1 min-w-[140px]">
+                  <div className="flex-1">
                     <label htmlFor="plan-role" className="block text-xs font-medium text-[var(--text-muted)] mb-1">Role (optional)</label>
                     <input id="plan-role" type="text" placeholder="e.g. Senior SDE" value={targetRole} onChange={e => setTargetRole(e.target.value)}
                       className="w-full px-3 py-2 border border-[var(--border)] rounded-xl text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] bg-[var(--bg-elevated)] focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-colors" />
@@ -265,7 +265,7 @@ export default function PrepPlanPage() {
 
           {/* ── Overall Progress ──────────────────────────── */}
           <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-2xl p-6 mb-6">
-            <div className="flex items-center gap-8 flex-wrap">
+            <div className="flex items-center gap-4 sm:gap-8 flex-wrap">
               {/* Progress ring */}
               <div className="relative flex-shrink-0">
                 <svg width="104" height="104" viewBox="0 0 104 104">
@@ -418,7 +418,7 @@ export default function PrepPlanPage() {
           )}
 
           {/* ── Quick Actions ─────────────────────────────── */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             <Link
               to="/capra/practice"
               className="flex items-center gap-3 p-4 bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl hover:border-emerald-500/30 transition-all no-underline group"

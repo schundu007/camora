@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import TopBar from './TopBar';
 import Sidebar from './Sidebar';
 
@@ -8,6 +8,21 @@ interface RootShellProps {
 
 export default function RootShell({ children }: RootShellProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const scrollYRef = useRef(0);
+
+  // Lock body scroll when mobile sidebar is open
+  useEffect(() => {
+    if (sidebarOpen && window.innerWidth < 768) {
+      scrollYRef.current = window.scrollY;
+      document.body.classList.add('scroll-locked');
+      document.body.style.top = `-${scrollYRef.current}px`;
+      return () => {
+        document.body.classList.remove('scroll-locked');
+        document.body.style.top = '';
+        window.scrollTo(0, scrollYRef.current);
+      };
+    }
+  }, [sidebarOpen]);
 
   return (
     <div className="h-screen flex flex-col overflow-hidden">

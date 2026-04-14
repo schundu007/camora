@@ -62,7 +62,7 @@ export default function ShellSidebar() {
   const isPracticeActive = (href) => location.pathname === href || location.pathname.startsWith(href + '/');
 
   return (
-    <div className="flex flex-col h-full bg-[var(--bg-surface)] w-full">
+    <div className="flex flex-col h-full bg-[var(--bg-surface)] w-full" style={{ paddingBottom: 'var(--sai-bottom, 0px)' }}>
       {/* Logo */}
       <div className={`border-b border-[var(--border)] flex items-center ${isCollapsed ? 'justify-center px-2 py-4' : 'justify-between px-5 py-4'}`}>
         {isCollapsed ? (
@@ -93,7 +93,7 @@ export default function ShellSidebar() {
         {/* Quick Nav — mobile only */}
         {isMobile && (
           <>
-            <div className="flex flex-wrap gap-1.5 px-2 mb-3">
+            <div className="flex flex-wrap gap-2 px-2 mb-3">
               {[
                 { label: 'Apply', href: '/jobs', icon: 'briefcase' },
                 { label: 'Practice', href: '/capra/practice', icon: 'code' },
@@ -104,7 +104,7 @@ export default function ShellSidebar() {
                   key={link.label}
                   to={link.href}
                   onClick={closeSidebar}
-                  className={`px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-all ${
+                  className={`flex items-center px-3 py-2 min-h-[40px] rounded-lg text-[13px] font-semibold transition-all ${
                     location.pathname.startsWith(link.href)
                       ? 'bg-emerald-50 text-emerald-700'
                       : 'bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)]'
@@ -127,8 +127,9 @@ export default function ShellSidebar() {
               key={item.id}
               onClick={() => handleNav(item.href, item.id)}
               title={isCollapsed ? item.label : undefined}
+              aria-label={isCollapsed ? item.label : undefined}
               className={`w-full flex items-center rounded-lg transition-all mb-0.5 ${
-                isCollapsed ? 'justify-center p-2.5' : 'gap-3 px-3 py-2.5'
+                isCollapsed ? 'justify-center p-2.5' : 'gap-3 px-3 py-2.5 min-h-[40px]'
               } ${
                 isActive
                   ? `text-emerald-700 font-semibold bg-emerald-50 ${isCollapsed ? '' : 'border-l-2 border-emerald-500'}`
@@ -153,8 +154,9 @@ export default function ShellSidebar() {
               key={item.id}
               onClick={() => handleNav(item.href)}
               title={isCollapsed ? item.label : undefined}
+              aria-label={isCollapsed ? item.label : undefined}
               className={`w-full flex items-center rounded-lg transition-all mb-0.5 ${
-                isCollapsed ? 'justify-center p-2.5' : 'gap-3 px-3 py-2.5'
+                isCollapsed ? 'justify-center p-2.5' : 'gap-3 px-3 py-2.5 min-h-[40px]'
               } ${
                 isActive
                   ? `text-emerald-700 font-semibold bg-emerald-50 ${isCollapsed ? '' : 'border-l-2 border-emerald-500'}`
@@ -225,8 +227,9 @@ export default function ShellSidebar() {
         <button
           onClick={handleSettingsClick}
           title={isCollapsed ? 'Settings' : undefined}
+          aria-label={isCollapsed ? 'Settings' : undefined}
           className={`w-full flex items-center rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] transition-all font-medium ${
-            isCollapsed ? 'justify-center p-2.5' : 'gap-3 px-3 py-2 text-[13px]'
+            isCollapsed ? 'justify-center p-2.5' : 'gap-3 px-3 py-2.5 min-h-[40px] text-[13px]'
           }`}
         >
           <Icon name="settings" size={isCollapsed ? 18 : 15} className="text-[var(--text-muted)]" />

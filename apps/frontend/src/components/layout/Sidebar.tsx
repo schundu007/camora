@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
 /* ─── Types ──────────────────────────────────────────────────── */
@@ -250,7 +250,7 @@ function SidebarSection({
               borderRadius: '8px',
               transition: 'background 0.12s, color 0.12s',
             } : {
-              height: '32px',
+              minHeight: '40px',
               fontSize: '13px',
               fontWeight: 500,
               color: active ? 'var(--text-primary)' : 'var(--text-secondary)',
@@ -322,6 +322,7 @@ function isActive(itemPath: string, currentPath: string): boolean {
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const { pathname } = useLocation();
+  const scrollYRef = useRef(0);
   const [collapsed, setCollapsed] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('camora-sidebar-collapsed') !== 'false';
@@ -332,6 +333,20 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   useEffect(() => {
     localStorage.setItem('camora-sidebar-collapsed', String(collapsed));
   }, [collapsed]);
+
+  // Lock body scroll when mobile drawer is open
+  useEffect(() => {
+    if (isOpen && window.innerWidth < 768) {
+      scrollYRef.current = window.scrollY;
+      document.body.classList.add('scroll-locked');
+      document.body.style.top = `-${scrollYRef.current}px`;
+      return () => {
+        document.body.classList.remove('scroll-locked');
+        document.body.style.top = '';
+        window.scrollTo(0, scrollYRef.current);
+      };
+    }
+  }, [isOpen]);
 
   const sidebarWidth = collapsed ? '56px' : '240px';
 
@@ -443,11 +458,12 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
           {/* Drawer */}
           <aside
-            className="fixed top-0 left-0 z-50 flex flex-col md:hidden"
+            className="fixed top-0 left-0 z-[60] flex flex-col md:hidden"
             style={{
-              width: '280px',
-              height: '100vh',
+              width: 'min(280px, 85vw)',
+              height: '100dvh',
               paddingTop: 'var(--topbar-height, 48px)',
+              paddingBottom: 'var(--sai-bottom, 0px)',
               background: 'var(--bg-app)',
               borderRight: '1px solid var(--border)',
               boxShadow: 'var(--shadow-xl)',
