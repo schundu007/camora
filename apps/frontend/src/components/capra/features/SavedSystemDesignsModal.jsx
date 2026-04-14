@@ -77,18 +77,18 @@ export default function SavedSystemDesignsModal({
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="rounded-2xl shadow-2xl w-full max-w-7xl max-h-[95vh] flex flex-col bg-white border border-gray-200 overflow-hidden">
+      <div className="rounded-2xl shadow-2xl w-full max-w-7xl max-h-[95vh] flex flex-col bg-[var(--bg-surface)] border border-[var(--border)] overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 bg-gray-50 border-b border-gray-200">
+        <div className="flex items-center justify-between p-4 bg-[var(--bg-elevated)] border-b border-[var(--border)]">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">Saved System Designs</h2>
-            <p className="text-sm text-gray-600">
+            <h2 className="text-lg font-semibold text-[var(--text-primary)]">Saved System Designs</h2>
+            <p className="text-sm text-[var(--text-secondary)]">
               {sessions.length} saved session{sessions.length !== 1 ? 's' : ''}
             </p>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg transition-colors text-gray-600 hover:text-gray-800 hover:bg-gray-200"
+            className="p-2 rounded-lg transition-colors text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)]"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -97,9 +97,9 @@ export default function SavedSystemDesignsModal({
         </div>
 
         {/* Search */}
-        <div className="p-4 border-b border-gray-200 bg-gray-50">
+        <div className="p-4 border-b border-[var(--border)] bg-[var(--bg-elevated)]">
           <div className="relative">
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
             <input
@@ -107,20 +107,20 @@ export default function SavedSystemDesignsModal({
               placeholder="Search saved designs..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-400/30 bg-gray-200 border border-gray-200 text-gray-800 placeholder-gray-400"
+              className="w-full pl-10 pr-4 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-400/30 bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text-primary)] placeholder-gray-400"
             />
           </div>
         </div>
 
         {/* Sessions List */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-white">
+        <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-[var(--bg-surface)]">
           {filteredSessions.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-gray-600">
+              <p className="text-[var(--text-secondary)]">
                 {searchQuery ? 'No matching designs found' : 'No saved system designs yet'}
               </p>
               {!searchQuery && (
-                <p className="text-sm mt-1 text-gray-500">
+                <p className="text-sm mt-1 text-[var(--text-muted)]">
                   Generate a system design to save it automatically
                 </p>
               )}
@@ -129,7 +129,7 @@ export default function SavedSystemDesignsModal({
             filteredSessions.map((session) => (
               <div
                 key={session.id}
-                className="group rounded-lg p-4 transition-all cursor-pointer bg-gray-100 border border-gray-200 hover:bg-gray-100 hover:border-gray-200"
+                className="group rounded-lg p-4 transition-all cursor-pointer bg-[var(--bg-elevated)] border border-[var(--border)] hover:bg-[var(--bg-elevated)] hover:border-[var(--border)]"
                 onClick={() => {
                   onLoadSession(session.id);
                   onClose();
@@ -137,10 +137,10 @@ export default function SavedSystemDesignsModal({
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-medium truncate transition-colors text-gray-900 group-hover:text-brand-400">
+                    <h3 className="font-medium truncate transition-colors text-[var(--text-primary)] group-hover:text-brand-400">
                       {session.title}
                     </h3>
-                    <div className="flex items-center gap-2 mt-1 text-xs text-gray-500">
+                    <div className="flex items-center gap-2 mt-1 text-xs text-[var(--text-muted)]">
                       <span>{formatDate(session.timestamp)}</span>
                       <span>•</span>
                       <span className={`px-1.5 py-0.5 rounded ${
@@ -160,7 +160,7 @@ export default function SavedSystemDesignsModal({
                       )}
                     </div>
                     {session.systemDesign?.overview && (
-                      <p className="text-sm mt-2 line-clamp-2 text-gray-600">
+                      <p className="text-sm mt-2 line-clamp-2 text-[var(--text-secondary)]">
                         {session.systemDesign.overview}
                       </p>
                     )}
@@ -176,7 +176,7 @@ export default function SavedSystemDesignsModal({
                       className={`px-2 py-1 rounded-lg text-xs font-medium transition-colors ${
                         deleteConfirmId === session.id
                           ? 'bg-error-500/10 text-error-400 border border-error-500/30'
-                          : 'text-gray-500 hover:text-error-400 hover:bg-error-500/10 border border-transparent'
+                          : 'text-[var(--text-muted)] hover:text-error-400 hover:bg-error-500/10 border border-transparent'
                       }`}
                       title={deleteConfirmId === session.id ? 'Click again to confirm' : 'Delete'}
                     >
@@ -189,22 +189,22 @@ export default function SavedSystemDesignsModal({
                 {session.systemDesign && (
                   <div className="flex flex-wrap gap-1.5 mt-3">
                     {session.systemDesign.requirements && (
-                      <span className="px-2 py-0.5 rounded text-xs bg-gray-200 text-gray-600">
+                      <span className="px-2 py-0.5 rounded text-xs bg-[var(--bg-elevated)] text-[var(--text-secondary)]">
                         Requirements
                       </span>
                     )}
                     {session.systemDesign.apiDesign?.length > 0 && (
-                      <span className="px-2 py-0.5 rounded text-xs bg-gray-200 text-gray-600">
+                      <span className="px-2 py-0.5 rounded text-xs bg-[var(--bg-elevated)] text-[var(--text-secondary)]">
                         {session.systemDesign.apiDesign.length} API endpoints
                       </span>
                     )}
                     {session.systemDesign.dataModel?.length > 0 && (
-                      <span className="px-2 py-0.5 rounded text-xs bg-gray-200 text-gray-600">
+                      <span className="px-2 py-0.5 rounded text-xs bg-[var(--bg-elevated)] text-[var(--text-secondary)]">
                         {session.systemDesign.dataModel.length} tables
                       </span>
                     )}
                     {session.systemDesign.diagram && (
-                      <span className="px-2 py-0.5 rounded text-xs bg-gray-200 text-gray-600">
+                      <span className="px-2 py-0.5 rounded text-xs bg-[var(--bg-elevated)] text-[var(--text-secondary)]">
                         Diagram
                       </span>
                     )}
@@ -222,13 +222,13 @@ export default function SavedSystemDesignsModal({
 
         {/* Footer */}
         {sessions.length > 0 && (
-          <div className="p-4 flex justify-end items-center border-t border-gray-200 bg-gray-50">
+          <div className="p-4 flex justify-end items-center border-t border-[var(--border)] bg-[var(--bg-elevated)]">
             <button
               onClick={handleClearAll}
               className={`text-sm px-3 py-1.5 rounded-lg transition-colors ${
                 confirmClearAll
                   ? 'bg-error-500/10 text-error-400 border border-error-500/30'
-                  : 'text-gray-500 hover:text-error-400 hover:bg-error-500/10 border border-transparent'
+                  : 'text-[var(--text-muted)] hover:text-error-400 hover:bg-error-500/10 border border-transparent'
               }`}
             >
               {confirmClearAll ? 'Click to confirm clear all' : 'Clear All'}

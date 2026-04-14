@@ -181,9 +181,9 @@ export default function ProblemInput({ onSubmit, onFetchUrl, onScreenshot, onCle
   // Collapsed view
   if (expanded === false) {
     return (
-      <div className="flex items-center gap-3 py-2.5 px-4 rounded-lg bg-white border border-gray-200">
+      <div className="flex items-center gap-3 py-2.5 px-4 rounded-lg bg-[var(--bg-surface)] border border-[var(--border)]">
         <div className="flex-1 min-w-0">
-          <p className="text-sm text-gray-700 truncate">{problemText ? getPreviewText() : <span className="text-gray-400 italic">No problem text</span>}</p>
+          <p className="text-sm text-[var(--text-secondary)] truncate">{problemText ? getPreviewText() : <span className="text-[var(--text-muted)] italic">No problem text</span>}</p>
         </div>
         <button
           onClick={onToggleExpand}
@@ -204,7 +204,7 @@ export default function ProblemInput({ onSubmit, onFetchUrl, onScreenshot, onCle
       <div className="flex items-center justify-between gap-3 mb-3 flex-shrink-0">
         {/* Tabs */}
         <div className="flex items-center gap-2">
-          <div className="flex gap-0.5 p-1 rounded-xl border border-gray-200" style={{ background: '#f8fafc' }}>
+          <div className="flex gap-0.5 p-1 rounded-xl border border-[var(--border)]" style={{ background: 'var(--bg-elevated)' }}>
             {tabs.map(tab => {
               const Icon = tab.icon;
               return (
@@ -215,7 +215,7 @@ export default function ProblemInput({ onSubmit, onFetchUrl, onScreenshot, onCle
                     landing-body flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-lg transition-all duration-200 min-h-[36px] touch:min-h-[40px]
                     ${activeTab === tab.id
                       ? 'bg-emerald-500 text-white shadow-sm'
-                      : 'text-gray-500 hover:text-gray-800 hover:bg-white'
+                      : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)]'
                     }
                   `}
                 >
@@ -230,7 +230,7 @@ export default function ProblemInput({ onSubmit, onFetchUrl, onScreenshot, onCle
           {onToggleExpand && (
             <button
               onClick={onToggleExpand}
-              className="p-2 rounded-lg text-gray-500 hover:text-gray-800 hover:bg-gray-100 transition-colors min-h-[36px] min-w-[36px] touch:min-h-[40px] touch:min-w-[40px] flex items-center justify-center"
+              className="p-2 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] transition-colors min-h-[36px] min-w-[36px] touch:min-h-[40px] touch:min-w-[40px] flex items-center justify-center"
               title="Collapse"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -249,7 +249,7 @@ export default function ProblemInput({ onSubmit, onFetchUrl, onScreenshot, onCle
                 if (fileInputRef.current) fileInputRef.current.value = '';
                 onClear?.();
               }}
-              className="p-2 rounded-lg text-gray-500 hover:text-red-500 hover:bg-red-50 transition-colors min-h-[36px] min-w-[36px] touch:min-h-[40px] touch:min-w-[40px] flex items-center justify-center"
+              className="p-2 rounded-lg text-[var(--text-muted)] hover:text-red-500 hover:bg-red-50 transition-colors min-h-[36px] min-w-[36px] touch:min-h-[40px] touch:min-w-[40px] flex items-center justify-center"
               title="Clear"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -269,7 +269,7 @@ export default function ProblemInput({ onSubmit, onFetchUrl, onScreenshot, onCle
               value={problemText}
               onChange={(e) => setProblemText(e.target.value)}
               placeholder={ascendMode === 'system-design' ? 'Describe your system design problem...' : 'Paste coding problem...'}
-              className="landing-body w-full px-4 py-3 resize-none rounded-xl text-sm bg-white border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/40 transition-all shadow-sm"
+              className="landing-body w-full px-4 py-3 resize-none rounded-xl text-sm bg-[var(--bg-surface)] border border-[var(--border)] text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/40 transition-all shadow-sm"
               style={{
                 minHeight: '60px',
                 maxHeight: window.matchMedia?.('(max-width: 1024px)')?.matches ? '40vh' : (expanded !== false ? '600px' : '400px'),
@@ -281,7 +281,7 @@ export default function ProblemInput({ onSubmit, onFetchUrl, onScreenshot, onCle
               disabled={isLoading}
             />
             <div className="flex items-center justify-between mt-3 flex-shrink-0">
-              <span className="text-xs text-gray-400">
+              <span className="text-xs text-[var(--text-muted)]">
                 {problemText.length > 0 && `${problemText.length} chars`}
               </span>
               <button
@@ -310,7 +310,7 @@ export default function ProblemInput({ onSubmit, onFetchUrl, onScreenshot, onCle
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               placeholder="https://leetcode.com/problems/..."
-              className="w-full px-4 py-3 text-sm rounded-lg bg-white border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-400/30 focus:border-brand-400/50 transition-all"
+              className="w-full px-4 py-3 text-sm rounded-lg bg-[var(--bg-surface)] border border-[var(--border)] text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-brand-400/30 focus:border-brand-400/50 transition-all"
               disabled={isLoading}
             />
             <div className="flex justify-end">
@@ -328,7 +328,7 @@ export default function ProblemInput({ onSubmit, onFetchUrl, onScreenshot, onCle
         {activeTab === 'screenshot' && (
           <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
             {preview ? (
-              <div className="relative rounded-lg overflow-hidden bg-white border border-gray-200" style={{ maxHeight: '300px' }}>
+              <div className="relative rounded-lg overflow-hidden bg-[var(--bg-surface)] border border-[var(--border)]" style={{ maxHeight: '300px' }}>
                 <img
                   src={preview}
                   alt="Preview"
@@ -338,7 +338,7 @@ export default function ProblemInput({ onSubmit, onFetchUrl, onScreenshot, onCle
                 <button
                   onClick={clearPreview}
                   disabled={isLoading}
-                  className="absolute top-3 right-3 p-2 rounded-lg bg-black/60 hover:bg-black/80 text-gray-900 transition-colors backdrop-blur-sm"
+                  className="absolute top-3 right-3 p-2 rounded-lg bg-black/60 hover:bg-black/80 text-[var(--text-primary)] transition-colors backdrop-blur-sm"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -346,7 +346,7 @@ export default function ProblemInput({ onSubmit, onFetchUrl, onScreenshot, onCle
                 </button>
               </div>
             ) : isSelectingFile ? (
-              <div className="flex-1 flex items-center justify-center py-8 text-sm text-gray-400 dark:text-gray-500">
+              <div className="flex-1 flex items-center justify-center py-8 text-sm text-[var(--text-muted)]">
                 <span className="flex items-center gap-2">
                   <svg className="w-5 h-5 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -365,20 +365,20 @@ export default function ProblemInput({ onSubmit, onFetchUrl, onScreenshot, onCle
                   border-2 border-dashed
                   ${isDragging
                     ? 'border-brand-500 bg-brand-50 '
-                    : 'border-gray-200 dark:border-gray-200 bg-gray-50 dark:bg-gray-50 hover:border-brand-400 hover:bg-brand-50/50 '
+                    : 'border-[var(--border)] bg-[var(--bg-elevated)] hover:border-brand-400 hover:bg-brand-50/50 '
                   }
                 `}
               >
                 <div className={`
                   w-14 h-14 rounded-2xl flex items-center justify-center mb-3 transition-colors
-                  ${isDragging ? 'bg-brand-100 ' : 'bg-gray-100 '}
+                  ${isDragging ? 'bg-brand-100 ' : 'bg-[var(--bg-elevated)] '}
                 `}>
-                  <svg className={`w-7 h-7 ${isDragging ? 'text-brand-600 dark:text-brand-400' : 'text-gray-400 dark:text-gray-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className={`w-7 h-7 ${isDragging ? 'text-brand-600' : 'text-[var(--text-muted)]'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                 </div>
-                <span className="text-sm font-medium text-gray-600 dark:text-gray-700">Drop image or click to upload</span>
-                <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">PNG, JPG up to 10MB</span>
+                <span className="text-sm font-medium text-[var(--text-secondary)]">Drop image or click to upload</span>
+                <span className="text-xs text-[var(--text-muted)] mt-1">PNG, JPG up to 10MB</span>
               </div>
             )}
             <input ref={fileInputRef} type="file" accept="image/*" capture="environment" onChange={handleFileChange} className="hidden" />

@@ -1810,13 +1810,13 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
                   </svg>
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-gray-900 landing-display">Job Description</h2>
+                  <h2 className="text-xl font-bold text-[var(--text-primary)] landing-display">Job Description</h2>
                   <div className="flex items-center gap-2 mt-0.5">
                     <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium" style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6' }}>
                       {activeCompany || 'No company'}
                     </span>
                     {inputs.jobDescription?.trim() && (
-                      <span className="text-xs text-gray-400">
+                      <span className="text-xs text-[var(--text-muted)]">
                         {inputs.jobDescription.length.toLocaleString()} chars
                       </span>
                     )}
@@ -1825,7 +1825,7 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
               </div>
               <button
                 onClick={() => setShowJDPopup(false)}
-                className="w-10 h-10 rounded-lg flex items-center justify-center transition-all hover:bg-gray-100"
+                className="w-10 h-10 rounded-lg flex items-center justify-center transition-all hover:bg-[var(--bg-elevated)]"
                 style={{ color: '#9ca3af' }}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1838,14 +1838,14 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
             <div className="px-6 pb-6">
               <div
                 className="rounded-2xl overflow-hidden"
-                className="bg-gray-50 border border-gray-200"
+                className="bg-[var(--bg-elevated)] border border-[var(--border)]"
                 style={{
                   maxHeight: '60vh'
                 }}
               >
                 {inputs.jobDescription?.trim() ? (
                   <div className="p-5 overflow-y-auto" style={{ maxHeight: '60vh' }}>
-                    <div className="prose prose-sm max-w-none text-sm leading-relaxed text-gray-500 whitespace-pre-wrap landing-body">
+                    <div className="prose prose-sm max-w-none text-sm leading-relaxed text-[var(--text-muted)] whitespace-pre-wrap landing-body">
                       {inputs.jobDescription}
                     </div>
                   </div>
@@ -1859,8 +1859,8 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2 landing-display">No Job Description Yet</h3>
-                    <p className="text-sm text-gray-500 mb-4 landing-body">
+                    <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-2 landing-display">No Job Description Yet</h3>
+                    <p className="text-sm text-[var(--text-muted)] mb-4 landing-body">
                       Paste a job description in Input Materials
                     </p>
                     <button
@@ -1877,8 +1877,8 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
 
             {/* Keyboard hint */}
             <div className="px-6 pb-4 flex justify-center">
-              <span className="text-xs text-gray-400">
-                Press <kbd className="px-1.5 py-0.5 rounded bg-gray-100 text-gray-500 font-mono text-xs">ESC</kbd> to close
+              <span className="text-xs text-[var(--text-muted)]">
+                Press <kbd className="px-1.5 py-0.5 rounded bg-[var(--bg-elevated)] text-[var(--text-muted)] font-mono text-xs">ESC</kbd> to close
               </span>
             </div>
           </div>

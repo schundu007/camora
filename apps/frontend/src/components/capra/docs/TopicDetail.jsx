@@ -670,7 +670,7 @@ export default function TopicDetail({
                             else navigate('/pricing');
                           } catch { navigate('/pricing'); }
                         }}
-                        className={`mt-2 w-full py-1.5 rounded-lg text-[10px] font-semibold cursor-pointer transition-all ${plan.popular ? 'text-white' : plan.best ? 'text-white' : 'text-[var(--text-secondary)] border border-gray-300 hover:border-gray-400'}`}
+                        className={`mt-2 w-full py-1.5 rounded-lg text-[10px] font-semibold cursor-pointer transition-all ${plan.popular ? 'text-white' : plan.best ? 'text-white' : 'text-[var(--text-secondary)] border border-[var(--border)] hover:border-gray-400'}`}
                         style={plan.popular ? { background: 'linear-gradient(135deg, #10b981, #06b6d4)' } : plan.best ? { background: 'linear-gradient(135deg, #f59e0b, #d97706)' } : {}}
                       >
                         Get {plan.name}
@@ -1157,7 +1157,7 @@ export default function TopicDetail({
                 </div>
                 <div className="p-3 grid grid-cols-1 gap-1.5">
                   {topicDetails.whenToUse.map((item, i) => (
-                    <div key={i} className="flex items-start gap-2.5 p-2.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border)] hover:shadow-md hover:border-gray-300 transition-all landing-body">
+                    <div key={i} className="flex items-start gap-2.5 p-2.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border)] hover:shadow-md hover:border-[var(--border)] transition-all landing-body">
                       <span className="w-5 h-5 rounded-full bg-[var(--accent)]/15 flex items-center justify-center flex-shrink-0 mt-0.5">
                         <Icon name="check" size={10} className="text-[var(--accent)]" />
                       </span>
@@ -1366,7 +1366,7 @@ export default function TopicDetail({
                 </div>
                 <div className="p-3 grid grid-cols-1 gap-1.5">
                   {topicDetails.tips.map((tip, i) => (
-                    <div key={i} className="flex items-start gap-2.5 p-2 rounded-lg bg-[var(--bg-surface)] border border-[var(--border)] hover:shadow-md hover:border-gray-300 transition-all">
+                    <div key={i} className="flex items-start gap-2.5 p-2 rounded-lg bg-[var(--bg-surface)] border border-[var(--border)] hover:shadow-md hover:border-[var(--border)] transition-all">
                       <span className="w-5 h-5 rounded-full bg-[var(--accent)]/15 flex items-center justify-center flex-shrink-0 mt-0.5">
                         <Icon name="check" size={10} className="text-[var(--accent)]" />
                       </span>
@@ -1713,7 +1713,7 @@ export default function TopicDetail({
                   {topicDetails.basicImplementation && (
                     <div className="rounded-2xl overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)]">
                       <div className="border-b border-[var(--border)] px-4 py-2 flex items-center gap-2 bg-[var(--bg-elevated)]">
-                        <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-gray-200 text-[var(--text-secondary)] uppercase tracking-wider landing-mono">Basic</span>
+                        <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-[var(--bg-elevated)] text-[var(--text-secondary)] uppercase tracking-wider landing-mono">Basic</span>
                         <h3 className="text-sm font-bold text-[var(--text-secondary)] landing-display">{topicDetails.basicImplementation.title || 'Basic Approach'}</h3>
                       </div>
                       <div className="p-4">
@@ -2907,7 +2907,7 @@ export default function TopicDetail({
           ) : <div className="flex-1" />}
           <button
             onClick={() => setSelectedTopic(null)}
-            className="px-4 py-3 rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] hover:border-gray-300 hover:bg-[var(--bg-elevated)] transition-all text-xs font-medium text-[var(--text-muted)] hover:text-[var(--text-secondary)] landing-body flex items-center gap-1.5 flex-shrink-0"
+            className="px-4 py-3 rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] hover:border-[var(--border)] hover:bg-[var(--bg-elevated)] transition-all text-xs font-medium text-[var(--text-muted)] hover:text-[var(--text-secondary)] landing-body flex items-center gap-1.5 flex-shrink-0"
           >
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg>
             All Topics

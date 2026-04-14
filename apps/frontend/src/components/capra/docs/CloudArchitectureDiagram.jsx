@@ -18,7 +18,7 @@ export default function CloudArchitectureDiagram({ imageUrl, loading = false, er
           </svg>
           <div>
             <p className="text-lg text-gray-300 font-medium">Generating architecture diagram...</p>
-            <p className="text-sm text-gray-500 mt-1">Using {cloudProvider.toUpperCase()} cloud icons</p>
+            <p className="text-sm text-[var(--text-muted)] mt-1">Using {cloudProvider.toUpperCase()} cloud icons</p>
           </div>
         </div>
       </div>
@@ -42,9 +42,9 @@ export default function CloudArchitectureDiagram({ imageUrl, loading = false, er
   if (!imageUrl || imageError) {
     return (
       <div className="text-center py-8 rounded-lg" style={{ background: '#0D0C14' }}>
-        <Icon name="image" size={32} className="mx-auto mb-3 text-gray-500" />
-        <p className="text-lg text-gray-400">No pre-generated diagram available</p>
-        <p className="text-sm text-gray-500 mt-1">Real AWS/GCP/Azure cloud icons</p>
+        <Icon name="image" size={32} className="mx-auto mb-3 text-[var(--text-muted)]" />
+        <p className="text-lg text-[var(--text-muted)]">No pre-generated diagram available</p>
+        <p className="text-sm text-[var(--text-muted)] mt-1">Real AWS/GCP/Azure cloud icons</p>
         {onRetry && (
           <button onClick={onRetry} className="mt-3 px-4 py-2 text-sm bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors font-medium">
             Generate Diagram

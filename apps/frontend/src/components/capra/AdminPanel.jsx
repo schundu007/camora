@@ -128,13 +128,13 @@ export default function AdminPanel({ token, onClose }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.5)' }}>
       <div className="w-full max-w-3xl max-h-[90vh] overflow-hidden rounded-lg shadow-xl" style={{ background: '#ffffff', border: '1px solid #e5e5e5' }}>
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 bg-gray-50" style={{ borderBottom: '1px solid #e5e7eb' }}>
+        <div className="flex items-center justify-between px-6 py-4 bg-[var(--bg-elevated)]" style={{ borderBottom: '1px solid #e5e7eb' }}>
           <h2 className="text-lg font-semibold" style={{ color: '#111827' }}>
             User Management
           </h2>
           <button
             onClick={onClose}
-            className="p-2 rounded transition-colors hover:bg-gray-100"
+            className="p-2 rounded transition-colors hover:bg-[var(--bg-elevated)]"
             style={{ color: '#6b7280' }}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

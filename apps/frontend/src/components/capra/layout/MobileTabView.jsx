@@ -71,7 +71,7 @@ export default function MobileTabView({ tabs, activeTab, onTabChange, children, 
       {/* Tab bar */}
       <div
         ref={tabBarRef}
-        className="relative flex items-stretch border-b border-gray-200 bg-white/95 backdrop-blur-sm flex-shrink-0"
+        className="relative flex items-stretch border-b border-[var(--border)] bg-[var(--bg-surface)]/95 backdrop-blur-sm flex-shrink-0"
       >
         {tabs.map((tab) => (
           <button
@@ -79,7 +79,7 @@ export default function MobileTabView({ tabs, activeTab, onTabChange, children, 
             data-tab-id={tab.id}
             onClick={() => setActive(tab.id)}
             className={`flex-1 py-3 text-xs font-semibold uppercase tracking-wider transition-colors duration-200
-              ${active === tab.id ? 'text-emerald-600' : 'text-gray-400 active:text-gray-600'}`}
+              ${active === tab.id ? 'text-emerald-600' : 'text-[var(--text-muted)] active:text-[var(--text-secondary)]'}`}
           >
             <span className="flex items-center justify-center gap-1.5">
               {tab.label}

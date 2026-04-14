@@ -51,7 +51,7 @@ export default function OnboardingModal({ isOpen, onComplete, onOpenPricing }) {
       ),
       content: (
         <div className="space-y-6">
-          <p className="text-center text-base text-gray-500 landing-body">
+          <p className="text-center text-base text-[var(--text-muted)] landing-body">
             Ascend helps you prepare for technical interviews with AI-powered assistance
             for coding challenges, system design, and behavioral questions.
           </p>
@@ -109,7 +109,7 @@ export default function OnboardingModal({ isOpen, onComplete, onOpenPricing }) {
           ].map((step, idx) => (
             <div
               key={idx}
-              className="flex items-start gap-4 p-4 rounded-lg transition-all hover:scale-[1.02] bg-gray-50 border border-gray-200"
+              className="flex items-start gap-4 p-4 rounded-lg transition-all hover:scale-[1.02] bg-[var(--bg-elevated)] border border-[var(--border)]"
             >
               <div
                 className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 text-lg font-bold text-white"
@@ -118,8 +118,8 @@ export default function OnboardingModal({ isOpen, onComplete, onOpenPricing }) {
                 {step.num}
               </div>
               <div>
-                <h4 className="font-semibold mb-1 text-gray-900 landing-body">{step.title}</h4>
-                <p className="text-sm text-gray-400 landing-body">{step.desc}</p>
+                <h4 className="font-semibold mb-1 text-[var(--text-primary)] landing-body">{step.title}</h4>
+                <p className="text-sm text-[var(--text-muted)] landing-body">{step.desc}</p>
               </div>
             </div>
           ))}
@@ -138,7 +138,7 @@ export default function OnboardingModal({ isOpen, onComplete, onOpenPricing }) {
       ),
       content: (
         <div className="space-y-4">
-          <p className="text-gray-500 landing-body">
+          <p className="text-[var(--text-muted)] landing-body">
             Create personalized interview prep materials for any company. Get AI-generated:
           </p>
           <div className="space-y-2">
@@ -150,14 +150,14 @@ export default function OnboardingModal({ isOpen, onComplete, onOpenPricing }) {
             ].map((item, idx) => (
               <div
                 key={idx}
-                className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 border border-gray-200"
+                className="flex items-center gap-3 p-3 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)]"
               >
                 <div className="w-6 h-6 rounded-full flex items-center justify-center bg-emerald-100">
                   <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <span className="text-gray-500 landing-body">{item}</span>
+                <span className="text-[var(--text-muted)] landing-body">{item}</span>
               </div>
             ))}
           </div>
@@ -176,31 +176,31 @@ export default function OnboardingModal({ isOpen, onComplete, onOpenPricing }) {
       ),
       content: (
         <div className="space-y-4">
-          <p className="text-gray-500 landing-body">
+          <p className="text-[var(--text-muted)] landing-body">
             Each credit allows you to create one company interview preparation package.
           </p>
           <div className="grid grid-cols-3 gap-3">
             <div
               className="p-4 rounded-lg text-center relative overflow-hidden bg-emerald-50 border border-emerald-200"
             >
-              <div className="text-2xl font-bold text-gray-900 landing-display">$29</div>
+              <div className="text-2xl font-bold text-[var(--text-primary)] landing-display">$29</div>
               <div className="text-sm font-medium text-emerald-500 landing-body">Interview Ready</div>
-              <div className="text-xs mt-2 text-gray-400 landing-body">/month</div>
+              <div className="text-xs mt-2 text-[var(--text-muted)] landing-body">/month</div>
             </div>
             <div
               className="p-4 rounded-lg text-center relative overflow-hidden bg-cyan-50 border border-cyan-200"
             >
               <div className="absolute top-1 right-1 px-1.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500 text-white landing-mono">POPULAR</div>
-              <div className="text-2xl font-bold text-gray-900 landing-display">$59</div>
+              <div className="text-2xl font-bold text-[var(--text-primary)] landing-display">$59</div>
               <div className="text-sm font-medium text-cyan-500 landing-body">FAANG Track</div>
-              <div className="text-xs mt-2 text-gray-400 landing-body">/month</div>
+              <div className="text-xs mt-2 text-[var(--text-muted)] landing-body">/month</div>
             </div>
             <div
               className="p-4 rounded-lg text-center bg-violet-50 border border-violet-200"
             >
-              <div className="text-2xl font-bold text-gray-900 landing-display">$99</div>
+              <div className="text-2xl font-bold text-[var(--text-primary)] landing-display">$99</div>
               <div className="text-sm font-medium text-violet-400 landing-body">Elite</div>
-              <div className="text-xs mt-2 text-gray-400 landing-body">/month</div>
+              <div className="text-xs mt-2 text-[var(--text-muted)] landing-body">/month</div>
             </div>
           </div>
         </div>
@@ -218,7 +218,7 @@ export default function OnboardingModal({ isOpen, onComplete, onOpenPricing }) {
       ),
       content: (
         <div className="space-y-6 text-center">
-          <p className="text-gray-500 landing-body">
+          <p className="text-[var(--text-muted)] landing-body">
             You're ready to start preparing for your dream job interviews.
             Get credits to unlock company-specific prep materials.
           </p>
@@ -287,7 +287,7 @@ export default function OnboardingModal({ isOpen, onComplete, onOpenPricing }) {
         }}
       >
         {/* Progress bar */}
-        <div className="h-1 bg-gray-200">
+        <div className="h-1 bg-[var(--bg-elevated)]">
           <div
             className="h-full transition-all duration-500 ease-out bg-gradient-to-r from-emerald-500 to-emerald-400"
             style={{
@@ -306,7 +306,7 @@ export default function OnboardingModal({ isOpen, onComplete, onOpenPricing }) {
             <h2 className="text-2xl font-bold mb-2 landing-display">
               <span className="text-emerald-500">{currentStepData.title}</span>
             </h2>
-            <p className="text-gray-400 landing-body">{currentStepData.subtitle}</p>
+            <p className="text-[var(--text-muted)] landing-body">{currentStepData.subtitle}</p>
           </div>
 
           {/* Step content */}
@@ -319,7 +319,7 @@ export default function OnboardingModal({ isOpen, onComplete, onOpenPricing }) {
             <div className="flex items-center justify-between mt-8">
               <button
                 onClick={handleSkip}
-                className="text-sm transition-colors hover:opacity-80 text-gray-400 landing-body"
+                className="text-sm transition-colors hover:opacity-80 text-[var(--text-muted)] landing-body"
               >
                 Skip intro
               </button>

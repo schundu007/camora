@@ -26,15 +26,15 @@ function CloudArchitectureDiagram({
 
   if (loading) {
     return (
-      <div className={`p-3 rounded bg-gray-50 border border-gray-200 text-center ${expanded ? 'min-h-[400px]' : ''}`}>
+      <div className={`p-3 rounded bg-[var(--bg-elevated)] border border-[var(--border)] text-center ${expanded ? 'min-h-[400px]' : ''}`}>
         <div className="flex flex-col items-center justify-center gap-2">
           <svg className="w-5 h-5 animate-spin text-brand-400" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
           </svg>
           <div>
-            <p className="text-xs text-gray-900 font-medium">Generating diagram...</p>
-            <p className="text-xs text-gray-500">{cloudProvider.toUpperCase()}</p>
+            <p className="text-xs text-[var(--text-primary)] font-medium">Generating diagram...</p>
+            <p className="text-xs text-[var(--text-muted)]">{cloudProvider.toUpperCase()}</p>
           </div>
         </div>
       </div>
@@ -51,19 +51,19 @@ function CloudArchitectureDiagram({
 
   if (!imageUrl || imageError) {
     return (
-      <div className="text-center py-4 text-gray-500">
-        <svg className="w-8 h-8 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="text-center py-4 text-[var(--text-muted)]">
+        <svg className="w-8 h-8 mx-auto mb-2 text-[var(--text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
         </svg>
         <p className="text-xs">Click Generate for cloud architecture</p>
-        <p className="text-xs text-gray-400">AWS/GCP/Azure icons</p>
+        <p className="text-xs text-[var(--text-muted)]">AWS/GCP/Azure icons</p>
         {imageError && <p className="text-xs text-error-400 mt-0.5">Image failed to load</p>}
       </div>
     );
   }
 
   return (
-    <div className={`rounded overflow-hidden border border-gray-200 bg-gray-50 flex justify-center ${expanded ? 'p-4' : 'p-4'}`}>
+    <div className={`rounded overflow-hidden border border-[var(--border)] bg-[var(--bg-elevated)] flex justify-center ${expanded ? 'p-4' : 'p-4'}`}>
       <img
         src={imageUrl}
         alt="Cloud Architecture Diagram"
@@ -104,26 +104,26 @@ function DiagramModal({ isOpen, onClose, title, children }) {
       onClick={onClose}
     >
       <div
-        className="relative bg-white rounded-2xl shadow-2xl w-[95vw] h-[90vh] flex flex-col border border-gray-200"
+        className="relative bg-[var(--bg-surface)] rounded-2xl shadow-2xl w-[95vw] h-[90vh] flex flex-col border border-[var(--border)]"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-gray-50">
-          <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wide">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)] bg-[var(--bg-elevated)]">
+          <h3 className="text-sm font-semibold text-[var(--text-primary)] uppercase tracking-wide">
             {title}
           </h3>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
+            className="p-2 rounded-lg bg-[var(--bg-elevated)] hover:bg-[var(--bg-elevated)] transition-colors"
             title="Close (ESC)"
           >
-            <svg className="w-5 h-5 text-gray-900 hover:text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-[var(--text-primary)] hover:text-[var(--text-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
         {/* Content */}
-        <div className="flex-1 overflow-auto p-4 flex items-center justify-center bg-white">
+        <div className="flex-1 overflow-auto p-4 flex items-center justify-center bg-[var(--bg-surface)]">
           {children}
         </div>
       </div>
@@ -136,17 +136,17 @@ function CollapsibleSection({ title, icon, color, children, defaultOpen = true, 
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
-    <div className="rounded-lg bg-white border border-gray-200 overflow-hidden">
+    <div className="rounded-lg bg-[var(--bg-surface)] border border-[var(--border)] overflow-hidden">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-3 py-2 flex items-center justify-between hover:bg-gray-200/30 transition-colors"
+        className="w-full px-3 py-2 flex items-center justify-between hover:bg-[var(--bg-elevated)]/30 transition-colors"
       >
-        <span className="text-xs font-semibold uppercase tracking-wide flex items-center gap-2 text-gray-600">
+        <span className="text-xs font-semibold uppercase tracking-wide flex items-center gap-2 text-[var(--text-secondary)]">
           {title}
           {badge && <span className="px-1.5 py-0.5 bg-brand-400/10 text-brand-400 border border-brand-400/30 rounded text-xs font-medium">{badge}</span>}
         </span>
         <svg
-          className={`w-3.5 h-3.5 text-gray-500 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          className={`w-3.5 h-3.5 text-[var(--text-muted)] transition-transform ${isOpen ? 'rotate-180' : ''}`}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -290,7 +290,7 @@ function ASCIIDiagram({ systemDesign, detailed = false }) {
   const asciiDiagram = buildASCII();
 
   return (
-    <div className="font-mono text-sm leading-relaxed bg-gray-100 text-brand-400 p-4 rounded whitespace-pre border border-gray-200 overflow-x-auto">
+    <div className="font-mono text-sm leading-relaxed bg-[var(--bg-elevated)] text-brand-400 p-4 rounded whitespace-pre border border-[var(--border)] overflow-x-auto">
       {asciiDiagram}
     </div>
   );
@@ -417,9 +417,9 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
 
   if (!systemDesign || !systemDesign.included) {
     return (
-      <div className="text-center py-8 text-gray-500">
+      <div className="text-center py-8 text-[var(--text-muted)]">
         <p className="text-sm">System design analysis not available for this problem.</p>
-        <p className="text-xs mt-1 text-gray-400">Try a different system design question or check your connection.</p>
+        <p className="text-xs mt-1 text-[var(--text-muted)]">Try a different system design question or check your connection.</p>
       </div>
     );
   }
@@ -441,29 +441,29 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
     return (
       <div className="h-full flex flex-col overflow-hidden">
         {/* Diagram Controls */}
-        <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200 bg-gray-50 flex-wrap gap-2 flex-shrink-0">
-          <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-900">
+        <div className="flex items-center justify-between px-3 py-2 border-b border-[var(--border)] bg-[var(--bg-elevated)] flex-wrap gap-2 flex-shrink-0">
+          <h4 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-primary)]">
             Cloud Architecture {diagramData?.cloudProvider && `(${diagramData.cloudProvider.toUpperCase()})`}
           </h4>
           <div className="flex items-center gap-1.5 flex-wrap">
-            <div className="flex rounded border border-gray-300 overflow-hidden">
-              <button onClick={() => handleGenerateDiagram('overview', diagramDirection)} className={`px-2 py-1 text-[10px] font-semibold transition-colors ${diagramDetailLevel === 'overview' ? 'bg-emerald-500 text-white' : 'bg-white text-gray-500 hover:bg-gray-50'}`}>Overview</button>
-              <button onClick={() => handleGenerateDiagram('detailed', diagramDirection)} className={`px-2 py-1 text-[10px] font-semibold transition-colors ${diagramDetailLevel === 'detailed' ? 'bg-emerald-500 text-white' : 'bg-white text-gray-500 hover:bg-gray-50'}`}>Detailed</button>
+            <div className="flex rounded border border-[var(--border)] overflow-hidden">
+              <button onClick={() => handleGenerateDiagram('overview', diagramDirection)} className={`px-2 py-1 text-[10px] font-semibold transition-colors ${diagramDetailLevel === 'overview' ? 'bg-indigo-500 text-white' : 'bg-[var(--bg-surface)] text-[var(--text-muted)] hover:bg-[var(--bg-elevated)]'}`}>Overview</button>
+              <button onClick={() => handleGenerateDiagram('detailed', diagramDirection)} className={`px-2 py-1 text-[10px] font-semibold transition-colors ${diagramDetailLevel === 'detailed' ? 'bg-indigo-500 text-white' : 'bg-[var(--bg-surface)] text-[var(--text-muted)] hover:bg-[var(--bg-elevated)]'}`}>Detailed</button>
             </div>
-            <div className="flex rounded border border-gray-300 overflow-hidden">
-              <button onClick={() => handleGenerateDiagram(diagramDetailLevel, 'LR')} className={`px-2 py-1 text-[10px] font-semibold transition-colors ${diagramDirection === 'LR' ? 'bg-blue-500 text-white' : 'bg-white text-gray-500 hover:bg-gray-50'}`} title="Left to Right">L→R</button>
-              <button onClick={() => handleGenerateDiagram(diagramDetailLevel, 'TB')} className={`px-2 py-1 text-[10px] font-semibold transition-colors ${diagramDirection === 'TB' ? 'bg-blue-500 text-white' : 'bg-white text-gray-500 hover:bg-gray-50'}`} title="Top to Bottom">T↓B</button>
+            <div className="flex rounded border border-[var(--border)] overflow-hidden">
+              <button onClick={() => handleGenerateDiagram(diagramDetailLevel, 'LR')} className={`px-2 py-1 text-[10px] font-semibold transition-colors ${diagramDirection === 'LR' ? 'bg-blue-500 text-white' : 'bg-[var(--bg-surface)] text-[var(--text-muted)] hover:bg-[var(--bg-elevated)]'}`} title="Left to Right">L→R</button>
+              <button onClick={() => handleGenerateDiagram(diagramDetailLevel, 'TB')} className={`px-2 py-1 text-[10px] font-semibold transition-colors ${diagramDirection === 'TB' ? 'bg-blue-500 text-white' : 'bg-[var(--bg-surface)] text-[var(--text-muted)] hover:bg-[var(--bg-elevated)]'}`} title="Top to Bottom">T↓B</button>
             </div>
             {diagramData && (
               <div className="flex items-center gap-1">
-                <button onClick={() => setDiagramScale(s => Math.max(0.3, s - 0.15))} className="w-6 h-6 flex items-center justify-center rounded border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 text-xs font-bold">−</button>
-                <span className="text-[10px] font-mono text-gray-500 w-8 text-center">{Math.round(diagramScale * 100)}%</span>
-                <button onClick={() => setDiagramScale(s => Math.min(4, s + 0.15))} className="w-6 h-6 flex items-center justify-center rounded border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 text-xs font-bold">+</button>
-                <button onClick={() => { setDiagramScale(1); setDiagramTranslate({ x: 0, y: 0 }); }} className="px-1.5 py-0.5 rounded border border-gray-300 bg-white text-[10px] text-gray-500 hover:bg-gray-50">Fit</button>
+                <button onClick={() => setDiagramScale(s => Math.max(0.3, s - 0.15))} className="w-6 h-6 flex items-center justify-center rounded border border-[var(--border)] bg-[var(--bg-surface)] text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)] text-xs font-bold">−</button>
+                <span className="text-[10px] font-mono text-[var(--text-muted)] w-8 text-center">{Math.round(diagramScale * 100)}%</span>
+                <button onClick={() => setDiagramScale(s => Math.min(4, s + 0.15))} className="w-6 h-6 flex items-center justify-center rounded border border-[var(--border)] bg-[var(--bg-surface)] text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)] text-xs font-bold">+</button>
+                <button onClick={() => { setDiagramScale(1); setDiagramTranslate({ x: 0, y: 0 }); }} className="px-1.5 py-0.5 rounded border border-[var(--border)] bg-[var(--bg-surface)] text-[10px] text-[var(--text-muted)] hover:bg-[var(--bg-elevated)]">Fit</button>
               </div>
             )}
             {diagramData && (
-              <button onClick={() => setDiagramModal(true)} className="w-6 h-6 flex items-center justify-center rounded border border-gray-300 bg-white text-gray-600 hover:bg-gray-50" title="Full Screen">
+              <button onClick={() => setDiagramModal(true)} className="w-6 h-6 flex items-center justify-center rounded border border-[var(--border)] bg-[var(--bg-surface)] text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)]" title="Full Screen">
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /></svg>
               </button>
             )}
@@ -482,47 +482,47 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
             diagramData.imageUrl ? (
               <>
                 {!diagramImgLoaded && (
-                  <div className="flex flex-col items-center justify-center h-full text-gray-400">
-                    <svg className="w-6 h-6 animate-spin text-emerald-500 mb-2" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" /></svg>
+                  <div className="flex flex-col items-center justify-center h-full text-[var(--text-muted)]">
+                    <svg className="w-6 h-6 animate-spin text-indigo-400 mb-2" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" /></svg>
                     <span className="text-xs">Loading diagram...</span>
                   </div>
                 )}
                 <img src={diagramData.imageUrl} alt="Cloud Architecture" className="select-none" draggable={false} style={{ transform: `translate(${diagramTranslate.x}px, ${diagramTranslate.y}px) scale(${diagramScale})`, transformOrigin: '0 0', maxWidth: 'none', display: diagramImgLoaded ? 'block' : 'none' }} onLoad={() => setDiagramImgLoaded(true)} onError={() => { setDiagramImgLoaded(false); setDiagramError({ message: 'Image failed to load. Click Retry to regenerate.', subscriptionRequired: false }); }} />
               </>
             ) : diagramData.mermaidCode ? (
-              <div className="p-2 bg-white rounded" style={{ transform: `scale(${diagramScale})`, transformOrigin: '0 0' }}>
+              <div className="p-2 bg-[var(--bg-surface)] rounded" style={{ transform: `scale(${diagramScale})`, transformOrigin: '0 0' }}>
                 <MermaidDiagram content={diagramData.mermaidCode} />
               </div>
             ) : null
           ) : generatingDiagram ? (
-            <div className="flex flex-col items-center justify-center h-full text-gray-500">
-              <svg className="w-6 h-6 animate-spin text-emerald-500 mb-2" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" /></svg>
+            <div className="flex flex-col items-center justify-center h-full text-[var(--text-muted)]">
+              <svg className="w-6 h-6 animate-spin text-indigo-400 mb-2" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" /></svg>
               <span className="text-xs">Generating diagram...</span>
             </div>
           ) : diagramError ? (
             <div className="flex flex-col items-center justify-center h-full p-6">
               {diagramError.subscriptionRequired ? (
                 <>
-                  <div className="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center mb-3">
+                  <div className="w-12 h-12 rounded-2xl bg-amber-500/10 flex items-center justify-center mb-3">
                     <svg className="w-6 h-6 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                   </div>
-                  <p className="text-sm font-semibold text-gray-900 mb-1">Free diagrams used up</p>
-                  <p className="text-xs text-gray-500 mb-4 text-center max-w-xs">Upgrade to Premium for unlimited architecture diagram generation.</p>
-                  <Link to="/pricing" className="px-4 py-2 bg-emerald-500 text-white text-xs font-bold rounded-lg hover:bg-emerald-600 transition-colors">View Plans</Link>
+                  <p className="text-sm font-semibold text-[var(--text-primary)] mb-1">Free diagrams used up</p>
+                  <p className="text-xs text-[var(--text-muted)] mb-4 text-center max-w-xs">Upgrade to Premium for unlimited architecture diagram generation.</p>
+                  <Link to="/pricing" className="px-4 py-2 bg-indigo-500 text-white text-xs font-bold rounded-lg hover:bg-indigo-600 transition-colors">View Plans</Link>
                 </>
               ) : (
                 <>
-                  <div className="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center mb-3">
+                  <div className="w-12 h-12 rounded-2xl bg-red-500/10 flex items-center justify-center mb-3">
                     <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" /></svg>
                   </div>
-                  <p className="text-sm font-semibold text-gray-900 mb-1">Diagram generation failed</p>
-                  <p className="text-xs text-gray-500 mb-3 text-center max-w-xs">{diagramError.message}</p>
-                  <button onClick={() => { setDiagramError(null); handleGenerateDiagram(diagramDetailLevel, diagramDirection); }} className="px-4 py-2 bg-gray-100 text-gray-700 text-xs font-bold rounded-lg hover:bg-gray-200 transition-colors">Retry</button>
+                  <p className="text-sm font-semibold text-[var(--text-primary)] mb-1">Diagram generation failed</p>
+                  <p className="text-xs text-[var(--text-muted)] mb-3 text-center max-w-xs">{diagramError.message}</p>
+                  <button onClick={() => { setDiagramError(null); handleGenerateDiagram(diagramDetailLevel, diagramDirection); }} className="px-4 py-2 bg-[var(--bg-elevated)] text-[var(--text-secondary)] text-xs font-bold rounded-lg hover:bg-[var(--bg-elevated)] transition-colors">Retry</button>
                 </>
               )}
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center h-full text-gray-400">
+            <div className="flex flex-col items-center justify-center h-full text-[var(--text-muted)]">
               <svg className="w-8 h-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" /></svg>
               <p className="text-xs">Auto-generating diagram...</p>
             </div>
@@ -536,12 +536,12 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
   }
 
   return (
-    <div className="p-2 rounded-lg animate-fade-in bg-white border border-gray-200 h-full flex flex-col overflow-hidden">
+    <div className="p-2 rounded-lg animate-fade-in bg-[var(--bg-surface)] border border-[var(--border)] h-full flex flex-col overflow-hidden">
       {/* Compact Header */}
-      <div className="flex-shrink-0 mb-2 pb-1.5 flex items-center justify-between border-b border-gray-200">
+      <div className="flex-shrink-0 mb-2 pb-1.5 flex items-center justify-between border-b border-[var(--border)]">
         <div className="flex items-center gap-2">
           <div className="w-1.5 h-1.5 rounded-full bg-brand-400" />
-          <span className="text-xs font-semibold uppercase tracking-wide text-gray-800">System Design</span>
+          <span className="text-xs font-semibold uppercase tracking-wide text-[var(--text-primary)]">System Design</span>
         </div>
       </div>
 
@@ -551,34 +551,34 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
           <div className="space-y-2">
             {/* Overview for focused answer */}
             {systemDesign.overview && (
-              <div className="rounded p-2 bg-gray-200/30 border border-gray-200">
-                <p className="text-xs text-gray-900 leading-snug">{systemDesign.overview}</p>
+              <div className="rounded p-2 bg-[var(--bg-elevated)]/30 border border-[var(--border)]">
+                <p className="text-xs text-[var(--text-primary)] leading-snug">{systemDesign.overview}</p>
               </div>
             )}
 
             {/* Categories as Compact Tables */}
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-2">
               {systemDesign.categories.map((category, catIdx) => (
-                <div key={catIdx} className="rounded overflow-hidden border border-gray-200">
-                  <div className="bg-brand-400/10 px-2 py-1 border-b border-gray-200">
+                <div key={catIdx} className="rounded overflow-hidden border border-[var(--border)]">
+                  <div className="bg-brand-400/10 px-2 py-1 border-b border-[var(--border)]">
                     <h4 className="text-xs font-semibold text-brand-400">{category.name}</h4>
                   </div>
-                  <div className="bg-gray-50 overflow-x-auto">
+                  <div className="bg-[var(--bg-elevated)] overflow-x-auto">
                     <table className="w-full text-xs">
                       <thead>
-                        <tr className="border-b border-gray-200">
-                          <th className="text-left px-2 py-1 text-gray-600 font-semibold ">Metric</th>
-                          <th className="text-left px-2 py-1 text-gray-600 font-semibold ">Target</th>
-                          <th className="text-left px-2 py-1 text-gray-600 font-semibold ">Measurement</th>
-                          <th className="text-left px-2 py-1 text-gray-600 font-semibold ">Alert</th>
+                        <tr className="border-b border-[var(--border)]">
+                          <th className="text-left px-2 py-1 text-[var(--text-secondary)] font-semibold ">Metric</th>
+                          <th className="text-left px-2 py-1 text-[var(--text-secondary)] font-semibold ">Target</th>
+                          <th className="text-left px-2 py-1 text-[var(--text-secondary)] font-semibold ">Measurement</th>
+                          <th className="text-left px-2 py-1 text-[var(--text-secondary)] font-semibold ">Alert</th>
                         </tr>
                       </thead>
                       <tbody>
                         {category.items?.map((item, itemIdx) => (
-                          <tr key={itemIdx} className="border-b border-gray-200/30 last:border-b-0">
-                            <td className="px-2 py-1 text-gray-800 font-medium">{item.metric || item.name || '-'}</td>
+                          <tr key={itemIdx} className="border-b border-[var(--border)]/30 last:border-b-0">
+                            <td className="px-2 py-1 text-[var(--text-primary)] font-medium">{item.metric || item.name || '-'}</td>
                             <td className="px-2 py-1 text-brand-400 font-mono text-xs">{item.target || item.value || '-'}</td>
-                            <td className="px-2 py-1 text-gray-900">{item.measurement || item.description || '-'}</td>
+                            <td className="px-2 py-1 text-[var(--text-primary)]">{item.measurement || item.description || '-'}</td>
                             <td className="px-2 py-1 text-warning-400 text-xs">{item.alertThreshold || item.alert || '-'}</td>
                           </tr>
                         ))}
@@ -597,15 +597,15 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
 
             {/* Row 1: Explanation */}
             {systemDesign.overview && (
-              <div className="col-span-full rounded p-2 bg-gray-200/30 border border-gray-200">
-                <h4 className="text-xs font-semibold uppercase tracking-wide mb-1 text-gray-500">Explanation</h4>
-                <p className="text-xs text-gray-900 leading-snug">{systemDesign.overview}</p>
+              <div className="col-span-full rounded p-2 bg-[var(--bg-elevated)]/30 border border-[var(--border)]">
+                <h4 className="text-xs font-semibold uppercase tracking-wide mb-1 text-[var(--text-muted)]">Explanation</h4>
+                <p className="text-xs text-[var(--text-primary)] leading-snug">{systemDesign.overview}</p>
               </div>
             )}
             {hasScalability && (
-              <div className="col-span-full rounded p-2 bg-gray-200/30 border border-gray-200">
+              <div className="col-span-full rounded p-2 bg-[var(--bg-elevated)]/30 border border-[var(--border)]">
                 <div className="flex items-start gap-3">
-                  <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-500 whitespace-nowrap pt-0.5 flex items-center gap-1">
+                  <h4 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)] whitespace-nowrap pt-0.5 flex items-center gap-1">
                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                     </svg>
@@ -629,11 +629,11 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
             {(hasRequirements || hasTradeoffs || hasEdgeCases) && (
               <>
                 {systemDesign.requirements?.functional?.length > 0 && (
-                  <div className="col-span-full sm:col-span-3 rounded p-2 bg-gray-200/30 border border-gray-200">
-                    <h4 className="text-xs font-semibold uppercase tracking-wide mb-1 text-gray-500">Functional</h4>
+                  <div className="col-span-full sm:col-span-3 rounded p-2 bg-[var(--bg-elevated)]/30 border border-[var(--border)]">
+                    <h4 className="text-xs font-semibold uppercase tracking-wide mb-1 text-[var(--text-muted)]">Functional</h4>
                     <ul className="space-y-0.5">
                       {systemDesign.requirements.functional.map((req, i) => (
-                        <li key={i} className="text-xs text-gray-900 flex items-start gap-1.5">
+                        <li key={i} className="text-xs text-[var(--text-primary)] flex items-start gap-1.5">
                           <span className="text-brand-400 mt-0.5 flex-shrink-0 text-xs">●</span>
                           {req}
                         </li>
@@ -642,11 +642,11 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
                   </div>
                 )}
                 {systemDesign.requirements?.nonFunctional?.length > 0 && (
-                  <div className="col-span-full sm:col-span-3 rounded p-2 bg-gray-200/30 border border-gray-200">
-                    <h4 className="text-xs font-semibold uppercase tracking-wide mb-1 text-gray-500">Non-Functional</h4>
+                  <div className="col-span-full sm:col-span-3 rounded p-2 bg-[var(--bg-elevated)]/30 border border-[var(--border)]">
+                    <h4 className="text-xs font-semibold uppercase tracking-wide mb-1 text-[var(--text-muted)]">Non-Functional</h4>
                     <ul className="space-y-0.5">
                       {systemDesign.requirements.nonFunctional.map((req, i) => (
-                        <li key={i} className="text-xs text-gray-900 flex items-start gap-1.5">
+                        <li key={i} className="text-xs text-[var(--text-primary)] flex items-start gap-1.5">
                           <span className="text-brand-400 mt-0.5 flex-shrink-0 text-xs">●</span>
                           {req}
                         </li>
@@ -695,17 +695,17 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
 
             {/* Row 3: Architecture Components */}
             {hasArchitecture && (
-              <div className="col-span-full rounded p-2 bg-gray-200/30 border border-gray-200">
-                <h4 className="text-xs font-semibold uppercase tracking-wide mb-1 text-gray-500">Architecture Components</h4>
+              <div className="col-span-full rounded p-2 bg-[var(--bg-elevated)]/30 border border-[var(--border)]">
+                <h4 className="text-xs font-semibold uppercase tracking-wide mb-1 text-[var(--text-muted)]">Architecture Components</h4>
                 <div className="flex flex-wrap gap-1 mb-1.5">
                   {systemDesign.architecture.components?.map((component, i) => (
-                    <span key={i} className="px-1.5 py-0.5 bg-gray-200 text-gray-900 text-xs rounded border border-gray-300">
+                    <span key={i} className="px-1.5 py-0.5 bg-[var(--bg-elevated)] text-[var(--text-primary)] text-xs rounded border border-[var(--border)]">
                       {component}
                     </span>
                   ))}
                 </div>
                 {systemDesign.architecture.description && (
-                  <p className="text-xs text-gray-600 leading-snug">{systemDesign.architecture.description}</p>
+                  <p className="text-xs text-[var(--text-secondary)] leading-snug">{systemDesign.architecture.description}</p>
                 )}
               </div>
             )}
@@ -713,8 +713,8 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
 
             {/* Row 3b: API Design */}
             {hasApiDesign && (
-              <div className="col-span-full rounded p-2 bg-gray-200/30 border border-gray-200">
-                <h4 className="text-xs font-semibold uppercase tracking-wide mb-1.5 flex items-center gap-1.5 text-gray-500">
+              <div className="col-span-full rounded p-2 bg-[var(--bg-elevated)]/30 border border-[var(--border)]">
+                <h4 className="text-xs font-semibold uppercase tracking-wide mb-1.5 flex items-center gap-1.5 text-[var(--text-muted)]">
                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
@@ -723,30 +723,30 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
                 </h4>
                 <div className="space-y-1.5">
                   {systemDesign.apiDesign.map((api, i) => (
-                    <div key={i} className="bg-gray-50 border border-gray-200 rounded p-2">
+                    <div key={i} className="bg-[var(--bg-elevated)] border border-[var(--border)] rounded p-2">
                       <div className="flex items-center gap-2 mb-1">
                         <span className={`px-1.5 py-0.5 text-xs font-bold rounded ${
                           api.method === 'GET' ? 'bg-blue-100 text-blue-700' :
                           api.method === 'POST' ? 'bg-green-100 text-green-700' :
                           api.method === 'PUT' ? 'bg-yellow-100 text-yellow-700' :
                           api.method === 'DELETE' ? 'bg-red-100 text-red-700' :
-                          'bg-gray-200 text-gray-700'
+                          'bg-[var(--bg-elevated)] text-[var(--text-secondary)]'
                         }`}>{api.method}</span>
-                        <code className="text-xs font-mono text-gray-800">{api.endpoint}</code>
+                        <code className="text-xs font-mono text-[var(--text-primary)]">{api.endpoint}</code>
                       </div>
-                      <p className="text-xs text-gray-600 leading-snug">{api.description}</p>
+                      <p className="text-xs text-[var(--text-secondary)] leading-snug">{api.description}</p>
                       {(api.request || api.response) && (
                         <div className="grid grid-cols-2 gap-2 mt-1.5">
                           {api.request && (
                             <div>
-                              <span className="text-xs font-semibold text-gray-500 uppercase">Request</span>
-                              <pre className="text-xs text-gray-700 bg-gray-100 rounded p-1.5 mt-0.5 overflow-x-auto font-mono whitespace-pre-wrap">{typeof api.request === 'string' ? api.request : JSON.stringify(api.request, null, 2)}</pre>
+                              <span className="text-xs font-semibold text-[var(--text-muted)] uppercase">Request</span>
+                              <pre className="text-xs text-[var(--text-secondary)] bg-[var(--bg-elevated)] rounded p-1.5 mt-0.5 overflow-x-auto font-mono whitespace-pre-wrap">{typeof api.request === 'string' ? api.request : JSON.stringify(api.request, null, 2)}</pre>
                             </div>
                           )}
                           {api.response && (
                             <div>
-                              <span className="text-xs font-semibold text-gray-500 uppercase">Response</span>
-                              <pre className="text-xs text-gray-700 bg-gray-100 rounded p-1.5 mt-0.5 overflow-x-auto font-mono whitespace-pre-wrap">{typeof api.response === 'string' ? api.response : JSON.stringify(api.response, null, 2)}</pre>
+                              <span className="text-xs font-semibold text-[var(--text-muted)] uppercase">Response</span>
+                              <pre className="text-xs text-[var(--text-secondary)] bg-[var(--bg-elevated)] rounded p-1.5 mt-0.5 overflow-x-auto font-mono whitespace-pre-wrap">{typeof api.response === 'string' ? api.response : JSON.stringify(api.response, null, 2)}</pre>
                             </div>
                           )}
                         </div>
@@ -759,8 +759,8 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
 
             {/* Row 3c: Data Model */}
             {hasDataModel && (
-              <div className="col-span-full rounded p-2 bg-gray-200/30 border border-gray-200">
-                <h4 className="text-xs font-semibold uppercase tracking-wide mb-1.5 flex items-center gap-1.5 text-gray-500">
+              <div className="col-span-full rounded p-2 bg-[var(--bg-elevated)]/30 border border-[var(--border)]">
+                <h4 className="text-xs font-semibold uppercase tracking-wide mb-1.5 flex items-center gap-1.5 text-[var(--text-muted)]">
                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
                   </svg>
@@ -769,25 +769,25 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
                 </h4>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-1.5">
                   {systemDesign.dataModel.map((model, i) => (
-                    <div key={i} className="bg-gray-50 border border-gray-200 rounded overflow-hidden">
-                      <div className="bg-gray-100 px-2 py-1 border-b border-gray-200">
-                        <span className="text-xs font-bold text-gray-800 font-mono">{model.table}</span>
+                    <div key={i} className="bg-[var(--bg-elevated)] border border-[var(--border)] rounded overflow-hidden">
+                      <div className="bg-[var(--bg-elevated)] px-2 py-1 border-b border-[var(--border)]">
+                        <span className="text-xs font-bold text-[var(--text-primary)] font-mono">{model.table}</span>
                       </div>
                       <div className="px-2 py-1">
                         <table className="w-full text-xs">
                           <thead>
-                            <tr className="border-b border-gray-200">
-                              <th className="text-left py-0.5 text-gray-500 font-semibold">Field</th>
-                              <th className="text-left py-0.5 text-gray-500 font-semibold">Type</th>
-                              <th className="text-left py-0.5 text-gray-500 font-semibold">Description</th>
+                            <tr className="border-b border-[var(--border)]">
+                              <th className="text-left py-0.5 text-[var(--text-muted)] font-semibold">Field</th>
+                              <th className="text-left py-0.5 text-[var(--text-muted)] font-semibold">Type</th>
+                              <th className="text-left py-0.5 text-[var(--text-muted)] font-semibold">Description</th>
                             </tr>
                           </thead>
                           <tbody>
                             {model.fields?.map((field, fi) => (
-                              <tr key={fi} className="border-b border-gray-100 last:border-0">
-                                <td className="py-0.5 font-mono text-gray-800">{field.name}</td>
+                              <tr key={fi} className="border-b border-[var(--border)] last:border-0">
+                                <td className="py-0.5 font-mono text-[var(--text-primary)]">{field.name}</td>
                                 <td className="py-0.5 text-blue-600 font-mono">{field.type}</td>
-                                <td className="py-0.5 text-gray-600">{field.description}</td>
+                                <td className="py-0.5 text-[var(--text-secondary)]">{field.description}</td>
                               </tr>
                             ))}
                           </tbody>
@@ -801,8 +801,8 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
 
             {/* Row 3d: Mermaid Diagram */}
             {hasDiagram && (
-              <div className="col-span-full rounded-lg p-3 bg-gray-200/30 border border-gray-200">
-                <h4 className="text-xs font-semibold uppercase tracking-wide mb-2 text-gray-500">System Flow Diagram</h4>
+              <div className="col-span-full rounded-lg p-3 bg-[var(--bg-elevated)]/30 border border-[var(--border)]">
+                <h4 className="text-xs font-semibold uppercase tracking-wide mb-2 text-[var(--text-muted)]">System Flow Diagram</h4>
                 {systemDesign.diagram && (
                   <MermaidDiagram content={systemDesign.diagram.replace(/\\n/g, '\n')} />
                 )}
@@ -810,9 +810,9 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
             )}
 
             {/* Row 4: ASCII Diagram - Full Width */}
-            <div className="col-span-full rounded-lg p-4 bg-gray-200/30 border border-gray-200">
+            <div className="col-span-full rounded-lg p-4 bg-[var(--bg-elevated)]/30 border border-[var(--border)]">
               <div className="flex items-center justify-between mb-3">
-                <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-900">Architecture Flow</h4>
+                <h4 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-primary)]">Architecture Flow</h4>
                 <button
                   onClick={() => setDiagramDetailLevel(diagramDetailLevel === 'detailed' ? 'overview' : 'detailed')}
                   className={`px-3 py-1.5 text-xs font-medium rounded border transition-all ${
@@ -827,19 +827,19 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
 
             {/* Row 5: Tech Justifications (compact grid) */}
             {hasTechJustifications && (
-              <div className="col-span-full rounded p-2 bg-gray-200/30 border border-gray-200">
-                <h4 className="text-xs font-semibold uppercase tracking-wide mb-1.5 flex items-center gap-1.5 text-gray-500">
+              <div className="col-span-full rounded p-2 bg-[var(--bg-elevated)]/30 border border-[var(--border)]">
+                <h4 className="text-xs font-semibold uppercase tracking-wide mb-1.5 flex items-center gap-1.5 text-[var(--text-muted)]">
                   Technologies
                   <span className="px-1 py-0.5 bg-brand-400/10 text-brand-400 border border-brand-400/30 rounded text-xs">{systemDesign.techJustifications.length}</span>
                 </h4>
                 <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-1.5">
                   {systemDesign.techJustifications.map((item, i) => (
-                    <div key={i} className="bg-gray-50 border border-gray-200 rounded p-1.5 hover:border-brand-400/30 transition-colors">
+                    <div key={i} className="bg-[var(--bg-elevated)] border border-[var(--border)] rounded p-1.5 hover:border-brand-400/30 transition-colors">
                       <div className="flex flex-wrap items-center gap-1 mb-1">
-                        <span className="px-1 py-0.5 bg-brand-500 text-gray-900 text-xs font-semibold rounded">{item.tech}</span>
-                        {item.category && <span className="px-1 py-0.5 bg-gray-200 text-gray-600 text-xs font-medium rounded">{item.category}</span>}
+                        <span className="px-1 py-0.5 bg-brand-500 text-[var(--text-primary)] text-xs font-semibold rounded">{item.tech}</span>
+                        {item.category && <span className="px-1 py-0.5 bg-[var(--bg-elevated)] text-[var(--text-secondary)] text-xs font-medium rounded">{item.category}</span>}
                       </div>
-                      <p className="text-xs text-gray-900 leading-snug line-clamp-2">{item.why}</p>
+                      <p className="text-xs text-[var(--text-primary)] leading-snug line-clamp-2">{item.why}</p>
                       {item.alternatives && <p className="text-xs text-brand-400 mt-0.5 truncate"><span className="font-semibold">Alt:</span> {item.alternatives}</p>}
                     </div>
                   ))}
@@ -851,8 +851,8 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
             {systemDesign.comparison && (
               <div className="col-span-full grid grid-cols-2 gap-2">
                 {systemDesign.comparison.approach1 && (
-                  <div className="rounded p-2 bg-gray-50 border border-gray-200">
-                    <h5 className="text-xs font-bold text-gray-800 mb-1 flex items-center gap-1.5">
+                  <div className="rounded p-2 bg-[var(--bg-elevated)] border border-[var(--border)]">
+                    <h5 className="text-xs font-bold text-[var(--text-primary)] mb-1 flex items-center gap-1.5">
                       <span className="w-1.5 h-1.5 rounded-full bg-info-400"></span>
                       {systemDesign.comparison.approach1.name || 'Approach 1'}
                     </h5>
@@ -862,7 +862,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
                           <span className="text-xs font-semibold text-brand-400 uppercase">Pros</span>
                           <ul className="mt-0.5 space-y-0.5">
                             {systemDesign.comparison.approach1.pros.slice(0, 3).map((pro, i) => (
-                              <li key={i} className="text-xs text-gray-800 flex items-start gap-1">
+                              <li key={i} className="text-xs text-[var(--text-primary)] flex items-start gap-1">
                                 <span className="text-brand-400 mt-0.5 text-xs">+</span>
                                 <span className="line-clamp-1">{pro}</span>
                               </li>
@@ -875,7 +875,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
                           <span className="text-xs font-semibold text-error-400 uppercase">Cons</span>
                           <ul className="mt-0.5 space-y-0.5">
                             {systemDesign.comparison.approach1.cons.slice(0, 3).map((con, i) => (
-                              <li key={i} className="text-xs text-gray-800 flex items-start gap-1">
+                              <li key={i} className="text-xs text-[var(--text-primary)] flex items-start gap-1">
                                 <span className="text-error-400 mt-0.5 text-xs">-</span>
                                 <span className="line-clamp-1">{con}</span>
                               </li>
@@ -887,8 +887,8 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
                   </div>
                 )}
                 {systemDesign.comparison.approach2 && (
-                  <div className="rounded p-2 bg-gray-50 border border-gray-200">
-                    <h5 className="text-xs font-bold text-gray-800 mb-1 flex items-center gap-1.5">
+                  <div className="rounded p-2 bg-[var(--bg-elevated)] border border-[var(--border)]">
+                    <h5 className="text-xs font-bold text-[var(--text-primary)] mb-1 flex items-center gap-1.5">
                       <span className="w-1.5 h-1.5 rounded-full bg-accent-purple"></span>
                       {systemDesign.comparison.approach2.name || 'Approach 2'}
                     </h5>
@@ -898,7 +898,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
                           <span className="text-xs font-semibold text-brand-400 uppercase">Pros</span>
                           <ul className="mt-0.5 space-y-0.5">
                             {systemDesign.comparison.approach2.pros.slice(0, 3).map((pro, i) => (
-                              <li key={i} className="text-xs text-gray-800 flex items-start gap-1">
+                              <li key={i} className="text-xs text-[var(--text-primary)] flex items-start gap-1">
                                 <span className="text-brand-400 mt-0.5 text-xs">+</span>
                                 <span className="line-clamp-1">{pro}</span>
                               </li>
@@ -911,7 +911,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
                           <span className="text-xs font-semibold text-error-400 uppercase">Cons</span>
                           <ul className="mt-0.5 space-y-0.5">
                             {systemDesign.comparison.approach2.cons.slice(0, 3).map((con, i) => (
-                              <li key={i} className="text-xs text-gray-800 flex items-start gap-1">
+                              <li key={i} className="text-xs text-[var(--text-primary)] flex items-start gap-1">
                                 <span className="text-error-400 mt-0.5 text-xs">-</span>
                                 <span className="line-clamp-1">{con}</span>
                               </li>
@@ -948,27 +948,27 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
                 {qaHistory.length > 0 ? (
                   <div className="space-y-1.5 max-h-[150px] overflow-y-auto">
                     {[...qaHistory].reverse().map((qa, i) => (
-                      <div key={i} className="p-1.5 rounded bg-gray-50 border border-gray-200/30">
+                      <div key={i} className="p-1.5 rounded bg-[var(--bg-elevated)] border border-[var(--border)]/30">
                         <div className="flex items-start gap-1.5 mb-1">
                           <span className="w-4 h-4 rounded flex-shrink-0 flex items-center justify-center text-xs font-bold bg-info-900/30 text-info-400">Q</span>
-                          <p className="text-xs text-gray-800 font-medium line-clamp-2">{qa.question}</p>
+                          <p className="text-xs text-[var(--text-primary)] font-medium line-clamp-2">{qa.question}</p>
                         </div>
                         <div className="flex items-start gap-1.5">
                           <span className="w-4 h-4 rounded flex-shrink-0 flex items-center justify-center text-xs font-bold bg-brand-900/30 text-brand-400">A</span>
                           {qa.pending ? (
                             <div className="flex items-center gap-1.5">
                               <div className="w-2.5 h-2.5 border-2 rounded-full animate-spin border-brand-400 border-t-transparent" />
-                              <p className="text-xs text-gray-500 italic">Generating...</p>
+                              <p className="text-xs text-[var(--text-muted)] italic">Generating...</p>
                             </div>
                           ) : (
-                            <p className="text-xs text-gray-900 line-clamp-3">{qa.answer}</p>
+                            <p className="text-xs text-[var(--text-primary)] line-clamp-3">{qa.answer}</p>
                           )}
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-xs text-gray-500 text-center py-2">
+                  <p className="text-xs text-[var(--text-muted)] text-center py-2">
                     Questions will appear here when auto-listen captures interviewer questions
                   </p>
                 )}
@@ -1017,7 +1017,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
                     href={eraserDiagram.editUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-gray-200 text-gray-800 border border-gray-200 hover:bg-gray-200 transition-colors"
+                    className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-[var(--bg-elevated)] text-[var(--text-primary)] border border-[var(--border)] hover:bg-[var(--bg-elevated)] transition-colors"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />

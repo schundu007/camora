@@ -25,7 +25,7 @@ export default function OAuthLogin() {
   useEffect(() => { setMounted(true); window.scrollTo(0, 0); }, []);
 
   return (
-    <div className="min-h-screen text-gray-900 overflow-hidden landing-root" style={{ background: 'linear-gradient(180deg, #fdf2f8 0%, #ede9fe 50%, #e0e7ff 100%)', paddingBottom: '52px' }}>
+    <div className="min-h-screen text-[var(--text-primary)] overflow-hidden landing-root" style={{ background: 'linear-gradient(180deg, #fdf2f8 0%, #ede9fe 50%, #e0e7ff 100%)', paddingBottom: '52px' }}>
       <SiteNav />
 
       {/* Hero */}
@@ -36,11 +36,11 @@ export default function OAuthLogin() {
         </div>
 
         <h1 className={`landing-display font-extrabold leading-tight tracking-tight max-w-4xl transition-all duration-700 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
-          <span className="text-3xl md:text-4xl lg:text-5xl text-gray-900">Your Winning Edge in </span>
+          <span className="text-3xl md:text-4xl lg:text-5xl text-[var(--text-primary)]">Your Winning Edge in </span>
           <span className="text-3xl md:text-4xl lg:text-5xl bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent">Every Interview</span>
         </h1>
 
-        <p className={`mt-4 text-base md:text-lg text-gray-500 max-w-2xl leading-relaxed landing-body transition-all duration-700 delay-200 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
+        <p className={`mt-4 text-base md:text-lg text-[var(--text-muted)] max-w-2xl leading-relaxed landing-body transition-all duration-700 delay-200 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
           AI-powered coding solutions, system design, and live interview assistance. 20+ languages. Invisible to screen share.
         </p>
 
@@ -51,7 +51,7 @@ export default function OAuthLogin() {
                 Go to Dashboard
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
               </Link>
-              <Link to="/pricing" className="px-8 py-3 text-gray-600 font-semibold text-sm rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors landing-body">
+              <Link to="/pricing" className="px-8 py-3 text-[var(--text-secondary)] font-semibold text-sm rounded-lg border border-[var(--border)] hover:bg-[var(--bg-elevated)] transition-colors landing-body">
                 View Plans
               </Link>
             </>
@@ -61,7 +61,7 @@ export default function OAuthLogin() {
                 Start Free
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
               </Link>
-              <Link to="/pricing" className="px-8 py-3 text-gray-600 font-semibold text-sm rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors landing-body">
+              <Link to="/pricing" className="px-8 py-3 text-[var(--text-secondary)] font-semibold text-sm rounded-lg border border-[var(--border)] hover:bg-[var(--bg-elevated)] transition-colors landing-body">
                 View Plans
               </Link>
             </>
@@ -89,8 +89,8 @@ export default function OAuthLogin() {
                 <div className="journey-icon w-14 h-14 rounded-xl flex items-center justify-center transition-all duration-500 group-hover:scale-115 group-hover:rotate-6" style={{ background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(8px)', boxShadow: `0 4px 16px rgba(${item.glowColor},0.2)`, animationDelay: `${i * 0.25}s` }}>
                   <Icon name={item.icon} size={26} style={{ color: item.iconColor }} />
                 </div>
-                <span className="text-base font-bold text-gray-900 landing-display">{item.label}</span>
-                <span className="text-xs text-gray-500 landing-body">{item.desc}</span>
+                <span className="text-base font-bold text-[var(--text-primary)] landing-display">{item.label}</span>
+                <span className="text-xs text-[var(--text-muted)] landing-body">{item.desc}</span>
                 <div className="journey-shimmer absolute inset-0 rounded-2xl overflow-hidden pointer-events-none" style={{ animationDelay: `${i * 0.8}s` }} />
               </Link>
             ))}
@@ -99,12 +99,12 @@ export default function OAuthLogin() {
       </section>
 
       {/* Features */}
-      <section id="features" className="px-6 md:px-12 py-10 md:py-12 bg-gray-50/50">
+      <section id="features" className="px-6 md:px-12 py-10 md:py-12 bg-[var(--bg-elevated)]/50">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-6">
             <span className="landing-mono text-xs text-emerald-600 tracking-widest uppercase">Capabilities</span>
-            <h2 className="landing-display font-bold text-2xl md:text-3xl mt-2 tracking-tight text-gray-900">
-              Everything You Need. <span className="text-gray-400">Nothing You Don't.</span>
+            <h2 className="landing-display font-bold text-2xl md:text-3xl mt-2 tracking-tight text-[var(--text-primary)]">
+              Everything You Need. <span className="text-[var(--text-muted)]">Nothing You Don't.</span>
             </h2>
           </div>
 
@@ -114,15 +114,15 @@ export default function OAuthLogin() {
               { icon: 'code', title: 'Coding Engine', desc: '20+ languages with explanations, auto-fix, and complexity analysis.', tags: ['Multi-Language', 'Auto-Fix', 'Complexity'], color: 'cyan', href: '/capra/prepare/coding' },
               { icon: 'systemDesign', title: 'System Design', desc: 'Architecture diagrams, scalability analysis, and tech justifications.', tags: ['Diagrams', 'Scale Math', 'Tradeoffs'], color: 'violet', href: '/capra/design' },
             ].map((f) => (
-              <Link key={f.title} to={f.href} className="block p-4 border border-gray-200 rounded-lg bg-white hover:border-gray-300 hover:shadow-sm transition-all">
+              <Link key={f.title} to={f.href} className="block p-4 border border-[var(--border)] rounded-lg bg-[var(--bg-surface)] hover:border-[var(--border)] hover:shadow-sm transition-all">
                 <div className={`w-9 h-9 border border-${f.color}-200 bg-${f.color}-50 rounded flex items-center justify-center mb-3`}>
                   <Icon name={f.icon} size={18} className={`text-${f.color}-500`} />
                 </div>
-                <h3 className="landing-display font-semibold text-base mb-1 text-gray-900">{f.title}</h3>
-                <p className="text-sm text-gray-500 leading-snug landing-body">{f.desc}</p>
+                <h3 className="landing-display font-semibold text-base mb-1 text-[var(--text-primary)]">{f.title}</h3>
+                <p className="text-sm text-[var(--text-muted)] leading-snug landing-body">{f.desc}</p>
                 <div className="mt-2.5 flex flex-wrap gap-1">
                   {f.tags.map(t => (
-                    <span key={t} className="text-[10px] landing-mono px-2 py-1 border border-gray-200 text-gray-400 rounded">{t}</span>
+                    <span key={t} className="text-[10px] landing-mono px-2 py-1 border border-[var(--border)] text-[var(--text-muted)] rounded">{t}</span>
                   ))}
                 </div>
               </Link>
@@ -135,13 +135,13 @@ export default function OAuthLogin() {
               { icon: 'resume', title: 'Resume Builder', desc: 'ATS-optimized with PDF and DOCX export.', color: 'cyan', href: '/capra/prepare/coding' },
               { icon: 'eyeOff', title: 'Stealth Mode', desc: 'Hidden from screen share, dock, and task manager.', color: 'rose', href: '/download' },
             ].map((f) => (
-              <Link key={f.title} to={f.href} className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg bg-white hover:border-gray-300 hover:shadow-sm transition-all">
+              <Link key={f.title} to={f.href} className="flex items-center gap-3 p-4 border border-[var(--border)] rounded-lg bg-[var(--bg-surface)] hover:border-[var(--border)] hover:shadow-sm transition-all">
                 <div className={`w-9 h-9 border border-${f.color}-200 bg-${f.color}-50 rounded flex items-center justify-center flex-shrink-0`}>
                   <Icon name={f.icon} size={16} className={`text-${f.color}-500`} />
                 </div>
                 <div className="min-w-0">
-                  <div className="text-sm font-semibold text-gray-900 landing-display">{f.title}</div>
-                  <div className="text-sm text-gray-500 landing-body">{f.desc}</div>
+                  <div className="text-sm font-semibold text-[var(--text-primary)] landing-display">{f.title}</div>
+                  <div className="text-sm text-[var(--text-muted)] landing-body">{f.desc}</div>
                 </div>
               </Link>
             ))}
@@ -154,8 +154,8 @@ export default function OAuthLogin() {
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-6">
             <span className="landing-mono text-xs text-emerald-600 tracking-widest uppercase">Workflow</span>
-            <h2 className="landing-display font-bold text-2xl md:text-3xl mt-2 tracking-tight text-gray-900">
-              Three Steps. <span className="text-gray-400">Zero Friction.</span>
+            <h2 className="landing-display font-bold text-2xl md:text-3xl mt-2 tracking-tight text-[var(--text-primary)]">
+              Three Steps. <span className="text-[var(--text-muted)]">Zero Friction.</span>
             </h2>
           </div>
 
@@ -165,12 +165,12 @@ export default function OAuthLogin() {
               { step: '02', title: 'AI Generates', desc: 'Code, explanations, diagrams, and edge cases in seconds.', color: 'text-cyan-200' },
               { step: '03', title: 'Practice & Refine', desc: 'Step-by-step walkthrough with follow-up Q&A. Build confidence.', color: 'text-violet-200' },
             ].map((item, i) => (
-              <div key={i} className="group p-4 border border-gray-200 rounded-lg bg-white text-center">
+              <div key={i} className="group p-4 border border-[var(--border)] rounded-lg bg-[var(--bg-surface)] text-center">
                 <span className={`landing-mono text-3xl font-black ${item.color} group-hover:text-gray-300 transition-colors`}>
                   {item.step}
                 </span>
-                <h3 className="landing-display font-semibold text-sm mt-2 mb-1 text-gray-900">{item.title}</h3>
-                <p className="text-xs text-gray-500 leading-relaxed landing-body">{item.desc}</p>
+                <h3 className="landing-display font-semibold text-sm mt-2 mb-1 text-[var(--text-primary)]">{item.title}</h3>
+                <p className="text-xs text-[var(--text-muted)] leading-relaxed landing-body">{item.desc}</p>
               </div>
             ))}
           </div>
@@ -179,11 +179,11 @@ export default function OAuthLogin() {
 
       {/* CTA */}
       <section className="px-6 md:px-12 py-10 md:py-14 text-center">
-        <h2 className="landing-display font-bold text-2xl md:text-3xl tracking-tight max-w-2xl mx-auto text-gray-900">
+        <h2 className="landing-display font-bold text-2xl md:text-3xl tracking-tight max-w-2xl mx-auto text-[var(--text-primary)]">
           Your Next Interview{' '}
           <span className="bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent">Starts Here</span>
         </h2>
-        <p className="mt-2 text-sm text-gray-500 max-w-lg mx-auto landing-body">
+        <p className="mt-2 text-sm text-[var(--text-muted)] max-w-lg mx-auto landing-body">
           Stop memorizing. Start understanding. Practice with AI that thinks like a senior engineer.
         </p>
         <Link to="/capra/practice" className="inline-block mt-4 px-8 py-3 bg-emerald-500 text-white font-semibold text-sm rounded-lg hover:bg-emerald-600 transition-colors shadow-sm landing-body">
@@ -208,13 +208,13 @@ export default function OAuthLogin() {
               { label: 'Support', href: 'mailto:support@cariara.com' },
             ].map((link) => (
               link.href.startsWith('mailto:') ? (
-                <a key={link.label} href={link.href} className="text-xs text-gray-400 hover:text-emerald-400 transition-colors landing-body font-medium">{link.label}</a>
+                <a key={link.label} href={link.href} className="text-xs text-[var(--text-muted)] hover:text-emerald-400 transition-colors landing-body font-medium">{link.label}</a>
               ) : (
-                <Link key={link.label} to={link.href} className="text-xs text-gray-400 hover:text-emerald-400 transition-colors landing-body font-medium">{link.label}</Link>
+                <Link key={link.label} to={link.href} className="text-xs text-[var(--text-muted)] hover:text-emerald-400 transition-colors landing-body font-medium">{link.label}</Link>
               )
             ))}
           </div>
-          <p className="text-xs text-gray-500 landing-mono">
+          <p className="text-xs text-[var(--text-muted)] landing-mono">
             &copy; {new Date().getFullYear()} Ascend by Cariara
           </p>
         </div>

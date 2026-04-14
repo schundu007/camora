@@ -314,17 +314,17 @@ const CodeDisplay = forwardRef(function CodeDisplay({ code: initialCode, languag
   // DESIGN MODE: Show only system design content
   if (isDesignMode) {
     return (
-      <div className="h-full flex flex-col bg-white rounded-lg border border-gray-200">
+      <div className="h-full flex flex-col bg-[var(--bg-surface)] rounded-lg border border-[var(--border)]">
         {/* Header for Design Mode */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-gray-50">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)] bg-[var(--bg-elevated)]">
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-brand-400" />
-            <span className="text-sm font-semibold text-gray-900">System Design</span>
+            <span className="text-sm font-semibold text-[var(--text-primary)]">System Design</span>
           </div>
         </div>
 
         {/* Design Content */}
-        <div className="flex-1 overflow-auto p-4 bg-white">
+        <div className="flex-1 overflow-auto p-4 bg-[var(--bg-surface)]">
           {hasSystemDesign ? (
             <SystemDesignPanel
               systemDesign={systemDesign}
@@ -335,7 +335,7 @@ const CodeDisplay = forwardRef(function CodeDisplay({ code: initialCode, languag
               cloudProvider={cloudProvider}
             />
           ) : isStreaming ? (
-            <div className="flex flex-col items-center justify-center h-full text-gray-900">
+            <div className="flex flex-col items-center justify-center h-full text-[var(--text-primary)]">
               <div className="flex gap-1 mb-2">
                 <span className="w-2 h-2 rounded-full bg-brand-400 animate-bounce" style={{ animationDelay: '0ms' }} />
                 <span className="w-2 h-2 rounded-full bg-brand-400 animate-bounce" style={{ animationDelay: '150ms' }} />
@@ -344,7 +344,7 @@ const CodeDisplay = forwardRef(function CodeDisplay({ code: initialCode, languag
               <span className="text-sm">Generating system design...</span>
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center h-full text-gray-500">
+            <div className="flex flex-col items-center justify-center h-full text-[var(--text-muted)]">
               <svg className="w-12 h-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
               </svg>
@@ -360,15 +360,15 @@ const CodeDisplay = forwardRef(function CodeDisplay({ code: initialCode, languag
   // Empty state for coding mode
   if (!code && !isStreaming) {
     return (
-      <div className="h-full flex flex-col bg-white rounded-lg border border-gray-200">
-        <div className="flex items-center justify-between px-2 sm:px-4 py-2 sm:py-3 border-b border-gray-200 bg-gray-50 gap-2" style={{ minHeight: '44px' }}>
+      <div className="h-full flex flex-col bg-[var(--bg-surface)] rounded-lg border border-[var(--border)]">
+        <div className="flex items-center justify-between px-2 sm:px-4 py-2 sm:py-3 border-b border-[var(--border)] bg-[var(--bg-elevated)] gap-2" style={{ minHeight: '44px' }}>
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-gray-400" />
-            <span className="text-sm font-semibold text-gray-900">Code</span>
+            <span className="text-sm font-semibold text-[var(--text-primary)]">Code</span>
           </div>
         </div>
-        <div className="flex-1 flex items-center justify-center bg-white">
-          <div className="text-center text-gray-500">
+        <div className="flex-1 flex items-center justify-center bg-[var(--bg-surface)]">
+          <div className="text-center text-[var(--text-muted)]">
             <svg className="w-10 h-10 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
             </svg>
@@ -382,11 +382,11 @@ const CodeDisplay = forwardRef(function CodeDisplay({ code: initialCode, languag
   // Streaming state for coding mode
   if (isStreaming && !code) {
     return (
-      <div className="h-full flex flex-col bg-white rounded-lg border border-gray-200">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-gray-50">
+      <div className="h-full flex flex-col bg-[var(--bg-surface)] rounded-lg border border-[var(--border)]">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)] bg-[var(--bg-elevated)]">
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-brand-400" />
-            <span className="text-sm font-semibold text-gray-900">Code</span>
+            <span className="text-sm font-semibold text-[var(--text-primary)]">Code</span>
             <div className="flex gap-0.5 ml-1.5">
               <span className="w-1 h-1 rounded-full bg-brand-400 animate-bounce" style={{ animationDelay: '0ms' }} />
               <span className="w-1 h-1 rounded-full bg-brand-400 animate-bounce" style={{ animationDelay: '150ms' }} />
@@ -394,8 +394,8 @@ const CodeDisplay = forwardRef(function CodeDisplay({ code: initialCode, languag
             </div>
           </div>
         </div>
-        <div className="flex-1 flex items-center justify-center bg-white">
-          <div className="text-xs text-gray-500">Generating code...</div>
+        <div className="flex-1 flex items-center justify-center bg-[var(--bg-surface)]">
+          <div className="text-xs text-[var(--text-muted)]">Generating code...</div>
         </div>
       </div>
     );
@@ -403,24 +403,24 @@ const CodeDisplay = forwardRef(function CodeDisplay({ code: initialCode, languag
 
   // CODING MODE: Full code display with all features
   return (
-    <div className="h-full flex flex-col bg-white rounded-lg border border-gray-200">
+    <div className="h-full flex flex-col bg-[var(--bg-surface)] rounded-lg border border-[var(--border)]">
       {/* Approach Tabs */}
       {approaches && approaches.length > 1 && (
-        <div className="flex items-center gap-0 border-b border-gray-200 bg-gray-50 px-2 flex-shrink-0" style={{ minHeight: '36px' }}>
+        <div className="flex items-center gap-0 border-b border-[var(--border)] bg-[var(--bg-elevated)] px-2 flex-shrink-0" style={{ minHeight: '36px' }}>
           {approaches.map((approach, i) => (
             <button
               key={i}
               onClick={() => onApproachChange?.(i)}
               className={`px-3 py-1.5 text-xs font-medium transition-all border-b-2 whitespace-nowrap ${
                 activeApproach === i
-                  ? 'border-emerald-500 text-emerald-700 bg-white'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                  ? 'border-emerald-500 text-indigo-400 bg-[var(--bg-surface)]'
+                  : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)]'
               }`}
             >
               {approach.name || `Approach ${i + 1}`}
               {approach.complexity?.time && (
                 <span className={`ml-1.5 text-[10px] px-1.5 py-0.5 rounded ${
-                  activeApproach === i ? 'bg-emerald-100 text-emerald-600' : 'bg-gray-200 text-gray-500'
+                  activeApproach === i ? 'bg-indigo-500/20 text-indigo-400' : 'bg-[var(--bg-elevated)] text-[var(--text-muted)]'
                 }`}>
                   {approach.complexity.time}
                 </span>
@@ -430,7 +430,7 @@ const CodeDisplay = forwardRef(function CodeDisplay({ code: initialCode, languag
         </div>
       )}
       {/* Header - CoderPad style with Run button */}
-      <div className="flex items-center justify-between px-2 sm:px-4 py-2 sm:py-3 border-b border-gray-200 bg-gray-50 gap-2" style={{ minHeight: '44px' }}>
+      <div className="flex items-center justify-between px-2 sm:px-4 py-2 sm:py-3 border-b border-[var(--border)] bg-[var(--bg-elevated)] gap-2" style={{ minHeight: '44px' }}>
         <div className="flex items-center gap-3">
           {/* Run Button - Modern gradient with glow */}
           <button
@@ -474,12 +474,12 @@ const CodeDisplay = forwardRef(function CodeDisplay({ code: initialCode, languag
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold px-3 py-1.5 rounded-md bg-gray-100 text-brand-400 border border-gray-200">
+          <span className="text-xs font-semibold px-3 py-1.5 rounded-md bg-[var(--bg-elevated)] text-brand-400 border border-[var(--border)]">
             {normalizedLanguage}
           </span>
           <button
             onClick={handleCopy}
-            className="px-3 py-1 text-xs font-medium rounded-md transition-all hover:bg-gray-100"
+            className="px-3 py-1 text-xs font-medium rounded-md transition-all hover:bg-[var(--bg-elevated)]"
             style={{
               color: copied ? '#10b981' : '#94a3b8',
               background: copied ? 'rgba(16, 185, 129, 0.1)' : 'transparent'
@@ -531,15 +531,15 @@ const CodeDisplay = forwardRef(function CodeDisplay({ code: initialCode, languag
 
       {/* Footer - Test input & Fix buttons (only for code tab) */}
       { code && (
-      <div className="px-3 py-1.5 flex items-center justify-between bg-gray-50 border-t border-gray-200">
+      <div className="px-3 py-1.5 flex items-center justify-between bg-[var(--bg-elevated)] border-t border-[var(--border)]">
         <div className="flex items-center gap-2">
           {/* Test input toggle */}
-          <label className="flex items-center gap-1.5 text-xs cursor-pointer text-gray-600 hover:text-gray-900">
+          <label className="flex items-center gap-1.5 text-xs cursor-pointer text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
             <input
               type="checkbox"
               checked={showTestInput}
               onChange={(e) => setShowTestInput(e.target.checked)}
-              className="rounded w-3 h-3 bg-gray-100 border-gray-200 text-brand-400 focus:ring-brand-400/30"
+              className="rounded w-3 h-3 bg-[var(--bg-elevated)] border-[var(--border)] text-brand-400 focus:ring-brand-400/30"
             />
             Custom input
           </label>
@@ -569,7 +569,7 @@ const CodeDisplay = forwardRef(function CodeDisplay({ code: initialCode, languag
           )}
 
           {/* Keyboard shortcuts hint — hidden on mobile/touch */}
-          <span className="text-xs text-gray-500 hidden lg:inline">
+          <span className="text-xs text-[var(--text-muted)] hidden lg:inline">
             ^1 solve · ^2 run · ^3 copy
           </span>
         </div>
@@ -578,7 +578,7 @@ const CodeDisplay = forwardRef(function CodeDisplay({ code: initialCode, languag
 
       {/* Test Input Panel - only for code tab */}
       { code && showTestInput && (
-        <div className="px-3 py-2 bg-gray-50 border-t border-gray-200">
+        <div className="px-3 py-2 bg-[var(--bg-elevated)] border-t border-[var(--border)]">
           <div className="flex items-center gap-1.5 mb-1.5">
             {examples?.map((ex, idx) => (
               <button
@@ -586,8 +586,8 @@ const CodeDisplay = forwardRef(function CodeDisplay({ code: initialCode, languag
                 onClick={() => handleExampleSelect(idx)}
                 className={`px-2 py-0.5 text-xs font-medium rounded transition-colors ${
                   selectedExample === idx
-                    ? 'bg-brand-400 text-gray-900'
-                    : 'bg-gray-100 text-gray-600 border border-gray-200 hover:text-gray-900'
+                    ? 'bg-brand-400 text-[var(--text-primary)]'
+                    : 'bg-[var(--bg-elevated)] text-[var(--text-secondary)] border border-[var(--border)] hover:text-[var(--text-primary)]'
                 }`}
               >
                 Ex {idx + 1}
@@ -598,20 +598,20 @@ const CodeDisplay = forwardRef(function CodeDisplay({ code: initialCode, languag
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Enter custom input..."
-            className="w-full h-16 px-2 py-1.5 rounded font-mono text-xs resize-none bg-gray-100 border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-400/30 focus:border-brand-400/50"
+            className="w-full h-16 px-2 py-1.5 rounded font-mono text-xs resize-none bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-brand-400/30 focus:border-brand-400/50"
           />
         </div>
       )}
 
       {/* Output Panel - only for code tab */}
       {output && !outputExpanded && (
-        <div className="bg-gray-50 border-t border-gray-200">
+        <div className="bg-[var(--bg-elevated)] border-t border-[var(--border)]">
           {/* Resize Handle */}
           <div
             onMouseDown={handleResizeStart}
-            className="h-1.5 cursor-ns-resize flex items-center justify-center hover:bg-gray-100 transition-colors border-b border-gray-200/30"
+            className="h-1.5 cursor-ns-resize flex items-center justify-center hover:bg-[var(--bg-elevated)] transition-colors border-b border-[var(--border)]/30"
           >
-            <div className="w-6 h-0.5 rounded-full bg-gray-200" />
+            <div className="w-6 h-0.5 rounded-full bg-[var(--bg-elevated)]" />
           </div>
           <div className="px-3 py-1 flex items-center justify-between">
             <div className="flex items-center gap-1.5">
@@ -623,14 +623,14 @@ const CodeDisplay = forwardRef(function CodeDisplay({ code: initialCode, languag
                   Auto
                 </span>
               )}
-              <span className="text-xs text-gray-500">
+              <span className="text-xs text-[var(--text-muted)]">
                 {(output.success ? output.output : (output.error || output.stderr || output.output))?.split('\n').length || 0} lines
               </span>
             </div>
             <div className="flex items-center gap-1.5">
               <button
                 onClick={() => setOutputExpanded(true)}
-                className="text-xs px-1.5 py-0.5 rounded hover:bg-gray-100 transition-colors flex items-center gap-1 text-gray-600 hover:text-gray-900"
+                className="text-xs px-1.5 py-0.5 rounded hover:bg-[var(--bg-elevated)] transition-colors flex items-center gap-1 text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                 title="Expand output"
               >
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -642,14 +642,14 @@ const CodeDisplay = forwardRef(function CodeDisplay({ code: initialCode, languag
                 onClick={() => {
                   navigator.clipboard.writeText(output.success ? output.output : (output.error || output.stderr || output.output));
                 }}
-                className="text-xs px-1.5 py-0.5 rounded hover:bg-gray-100 transition-colors text-gray-600 hover:text-gray-900"
+                className="text-xs px-1.5 py-0.5 rounded hover:bg-[var(--bg-elevated)] transition-colors text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                 title="Copy output"
               >
                 Copy
               </button>
               <button
                 onClick={() => setOutput(null)}
-                className="p-2 min-w-[32px] min-h-[32px] flex items-center justify-center text-gray-500 hover:text-gray-900 transition-colors rounded hover:bg-gray-100"
+                className="p-2 min-w-[32px] min-h-[32px] flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors rounded hover:bg-[var(--bg-elevated)]"
               >
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -658,7 +658,7 @@ const CodeDisplay = forwardRef(function CodeDisplay({ code: initialCode, languag
             </div>
           </div>
           <pre
-            className="px-3 py-1.5 text-xs font-mono overflow-auto select-text scrollbar-thin cursor-pointer bg-gray-50"
+            className="px-3 py-1.5 text-xs font-mono overflow-auto select-text scrollbar-thin cursor-pointer bg-[var(--bg-elevated)]"
             style={{
               color: output.success ? '#10b981' : '#f87171',
               height: `${outputHeight}px`,
@@ -680,18 +680,18 @@ const CodeDisplay = forwardRef(function CodeDisplay({ code: initialCode, languag
           onClick={() => setOutputExpanded(false)}
         >
           <div
-            className="w-full max-w-4xl max-h-[80vh] mx-4 sm:mx-auto bg-gray-50 rounded-2xl border border-gray-200 shadow-2xl overflow-hidden animate-scale-in"
+            className="w-full max-w-4xl max-h-[80vh] mx-4 sm:mx-auto bg-[var(--bg-elevated)] rounded-2xl border border-[var(--border)] shadow-2xl overflow-hidden animate-scale-in"
             onClick={e => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="px-4 py-3 flex items-center justify-between border-b border-gray-200 bg-gray-50">
+            <div className="px-4 py-3 flex items-center justify-between border-b border-[var(--border)] bg-[var(--bg-elevated)]">
               <div className="flex items-center gap-3">
                 <div className={`w-2.5 h-2.5 rounded-full ${output.success ? 'bg-brand-400' : 'bg-error-400'}`}
                      style={{ boxShadow: output.success ? '0 0 8px rgba(16, 185, 129, 0.5)' : '0 0 8px rgba(239, 68, 68, 0.5)' }} />
-                <span className="text-sm font-semibold text-gray-900">
+                <span className="text-sm font-semibold text-[var(--text-primary)]">
                   {output.success ? 'Program Output' : 'Error Output'}
                 </span>
-                <span className="text-xs px-2.5 py-1 rounded-md font-medium bg-gray-100 text-gray-600">
+                <span className="text-xs px-2.5 py-1 rounded-md font-medium bg-[var(--bg-elevated)] text-[var(--text-secondary)]">
                   {(output.success ? output.output : (output.error || output.stderr || output.output))?.split('\n').length || 0} lines
                 </span>
               </div>
@@ -700,7 +700,7 @@ const CodeDisplay = forwardRef(function CodeDisplay({ code: initialCode, languag
                   onClick={() => {
                     navigator.clipboard.writeText(output.success ? output.output : (output.error || output.stderr || output.output));
                   }}
-                  className="text-xs px-3 py-1.5 rounded-md flex items-center gap-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                  className="text-xs px-3 py-1.5 rounded-md flex items-center gap-1.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] transition-colors"
                 >
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -709,7 +709,7 @@ const CodeDisplay = forwardRef(function CodeDisplay({ code: initialCode, languag
                 </button>
                 <button
                   onClick={() => setOutputExpanded(false)}
-                  className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                  className="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] transition-colors"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -722,7 +722,7 @@ const CodeDisplay = forwardRef(function CodeDisplay({ code: initialCode, languag
             <div className="flex-1 overflow-auto" style={{ maxHeight: 'calc(80vh - 60px)' }}>
               <div className="flex text-xs font-mono">
                 {/* Line Numbers */}
-                <div className="py-3 px-2 text-right select-none bg-gray-100 text-gray-400 min-w-[40px]">
+                <div className="py-3 px-2 text-right select-none bg-[var(--bg-elevated)] text-[var(--text-muted)] min-w-[40px]">
                   {(output.success ? output.output : (output.error || output.stderr || output.output))?.split('\n').map((_, i) => (
                     <div key={i} className="leading-5">{i + 1}</div>
                   ))}
@@ -738,7 +738,7 @@ const CodeDisplay = forwardRef(function CodeDisplay({ code: initialCode, languag
             </div>
 
             {/* Modal Footer */}
-            <div className="px-4 py-2 flex items-center justify-between text-xs border-t border-gray-200 text-gray-500">
+            <div className="px-4 py-2 flex items-center justify-between text-xs border-t border-[var(--border)] text-[var(--text-muted)]">
               <span>Press Escape or click outside to close</span>
               <span className={output.success ? 'text-brand-400' : 'text-error-400'}>
                 {output.success ? '✓ Execution successful' : '✗ Execution failed'}
