@@ -1,9 +1,9 @@
 // Combined enrichment data for all 9 projects (system-impl + frontend)
 // Imported and merged into projectTopics via enrichProjectTopics()
 
-import { enrichment_1_3 } from './projectEnrichment_1_3';
-import { enrichment_4_5 } from './projectEnrichment_4_5';
-import { enrichment_6_9 } from './projectEnrichment_6_9';
+import { enrichment_1_3 } from './projectEnrichment_1_3.js';
+import { enrichment_4_5 } from './projectEnrichment_4_5.js';
+import { enrichment_6_9 } from './projectEnrichment_6_9.js';
 
 export const projectEnrichmentMap = {
   ...enrichment_1_3,

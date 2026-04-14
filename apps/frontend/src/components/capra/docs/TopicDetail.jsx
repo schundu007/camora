@@ -581,6 +581,17 @@ export default function TopicDetail({
             <Icon name="sparkles" size={16} />
             <span className="hidden sm:inline">Ask AI</span>
           </button>
+          {/* Generate Tutorial — projects only */}
+          {activePage === 'projects' && (
+            <button
+              onClick={() => handleAskAI(`Generate a complete step-by-step tutorial for building: ${topicDetails?.title || ''}\n\nTech stack: ${(topicDetails?.techStack || []).join(', ')}\nDifficulty: ${topicDetails?.difficulty || ''}\nDescription: ${topicDetails?.description || ''}\n\nProvide:\n1. Project setup and file structure\n2. Each implementation step with complete code snippets\n3. Key architectural decisions and why\n4. Testing guidance\n5. Deployment instructions\n\nMake it practical and implementation-focused.`)}
+              className="flex items-center gap-2 px-2 sm:px-3 py-2 rounded-lg text-sm font-medium text-white transition-all landing-body border border-emerald-500/30"
+              style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}
+            >
+              <Icon name="zap" size={16} />
+              <span className="hidden sm:inline">Generate Tutorial</span>
+            </button>
+          )}
           {/* Course Roadmap — hide on tabs that ARE roadmaps/projects/blogs */}
           {activePage !== 'roadmaps' && activePage !== 'projects' && activePage !== 'eng-blogs' && (
             <button
@@ -1346,17 +1357,6 @@ export default function TopicDetail({
             </div>
           )}
 
-          {/* Generate Tutorial — compact button only */}
-          <div id="generate-tutorial" className="scroll-mt-24">
-            <button
-              onClick={() => handleAskAI(`Generate a complete step-by-step tutorial for building: ${topicDetails.title}\n\nTech stack: ${(topicDetails.techStack || []).join(', ')}\nDifficulty: ${topicDetails.difficulty}\nDescription: ${topicDetails.description}\n\nProvide:\n1. Project setup and file structure\n2. Each implementation step with complete code snippets\n3. Key architectural decisions and why\n4. Testing guidance\n5. Deployment instructions\n\nMake it practical and implementation-focused.`)}
-              className="inline-flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-bold text-white transition-all hover:opacity-90"
-              style={{ background: 'linear-gradient(135deg, #10b981, #059669)', boxShadow: '0 2px 8px rgba(16,185,129,0.25)' }}
-            >
-              <Icon name="zap" size={14} />
-              Generate Tutorial
-            </button>
-          </div>
         </div>
       )}
 
