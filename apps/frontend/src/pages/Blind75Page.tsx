@@ -3,9 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { techInterviewTopics, interviewCheatsheet, behavioralQuestions } from '../data/capra/topics/techInterviewHandbook';
 import { SOLUTIONS } from './Blind75PracticePage';
-import SiteNav from '../components/shared/SiteNav';
 import SEO from '../components/shared/SEO';
-import SiteFooter from '../components/shared/SiteFooter';
 
 /* ──────────────────────────────── Constants ──────────────────────────────── */
 
@@ -478,8 +476,6 @@ export default function Blind75Page() {
 
   return (
     <div style={{ background: 'transparent', minHeight: '100vh' }}>
-
-      <SiteNav />
 
       {/* ═══════════════════════ Header Section ═══════════════════════ */}
       <div>
@@ -1790,8 +1786,6 @@ export default function Blind75Page() {
           </div>
         </div>
       )}
-
-      <SiteFooter />
 
       {/* ═══════════════════════ Scoped Styles ═══════════════════════ */}
       <style>{`

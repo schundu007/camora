@@ -1,8 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import SiteNav from '../components/shared/SiteNav';
-import SiteFooter from '../components/shared/SiteFooter';
 
 /* ──────────────────────────── Company Logo Mapping ──────────────────────────── */
 
@@ -436,8 +434,6 @@ export default function JobsPage() {
 
   return (
     <div style={{ background: 'transparent', minHeight: '100vh' }}>
-
-      <SiteNav />
 
       {/* ═══════════════════════ Page Content ═══════════════════════ */}
       <div>
@@ -961,8 +957,6 @@ export default function JobsPage() {
           )}
         </div>
       </div>
-
-      <SiteFooter />
 
       {/* ═══════════════════════ Scoped Styles ═══════════════════════ */}
       <style>{`
