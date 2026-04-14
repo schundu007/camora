@@ -1,5 +1,5 @@
 // Project categories and topics — 24 projects across 5 categories
-import { projectEnrichmentMap } from './projectEnrichment';
+import { projectEnrichmentMap } from './projectEnrichment.js';
 
 export const projectCategories = [
   { id: 'portfolio', name: 'Portfolio Projects', icon: 'star', color: '#8b5cf6' },
