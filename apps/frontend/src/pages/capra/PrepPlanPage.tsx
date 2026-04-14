@@ -86,7 +86,7 @@ export default function PrepPlanPage() {
       setData((prev) => {
         if (!prev) return prev;
         const updated = { ...prev };
-        updated.plan = updated.plan.map((day) => ({
+        updated.plan = (updated.plan || []).map((day) => ({
           ...day,
           tasks: day.tasks.map((t) =>
             t.id === taskId ? { ...t, completed: !t.completed } : t
@@ -190,7 +190,8 @@ export default function PrepPlanPage() {
     );
   }
 
-  const { interview_date, target_company, target_role, days_remaining, completion_pct, completed_tasks, total_tasks, plan } = data;
+  const { interview_date, target_company, target_role, days_remaining, completion_pct, completed_tasks, total_tasks, plan: rawPlan } = data;
+  const plan = rawPlan || [];
   const formattedDate = new Date(interview_date + 'T00:00:00').toLocaleDateString('en-US', {
     weekday: 'long',
     month: 'long',
