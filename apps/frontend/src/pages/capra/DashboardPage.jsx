@@ -7,7 +7,6 @@ import ProblemInput from '../../components/capra/features/ProblemInput';
 import CodeDisplay from '../../components/capra/features/CodeDisplay';
 import ExplanationPanel from '../../components/capra/features/ExplanationPanel';
 import AscendModeSelector from '../../components/capra/features/AscendModeSelector';
-import { useAppShell } from '../../components/capra/layout/AppShellContext';
 import MobileBottomNav from '../../components/capra/layout/MobileBottomNav';
 import MobileTabView from '../../components/capra/layout/MobileTabView';
 import { ErrorBoundary } from '../../components/shared/ui/ErrorBoundary';
@@ -692,11 +691,7 @@ export default function DashboardPage() {
   // ---------------------------------------------------------------------------
   // Utility Handlers
   // ---------------------------------------------------------------------------
-  const { toggleSidebar: toggleAppShellSidebar } = useAppShell();
-
-  const toggleSidebar = useCallback(() => {
-    toggleAppShellSidebar();
-  }, [toggleAppShellSidebar]);
+  const toggleSidebar = useCallback(() => {}, []);
 
   // Listen for settings open event from ShellSidebar
   useEffect(() => {

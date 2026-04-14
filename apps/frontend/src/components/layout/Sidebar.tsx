@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
 /* ─── Types ──────────────────────────────────────────────────── */
@@ -326,7 +326,6 @@ function isActive(itemPath: string, currentPath: string): boolean {
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const { pathname } = useLocation();
-  const scrollYRef = useRef(0);
   const [collapsed, setCollapsed] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('camora-sidebar-collapsed') !== 'false';
@@ -337,20 +336,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   useEffect(() => {
     localStorage.setItem('camora-sidebar-collapsed', String(collapsed));
   }, [collapsed]);
-
-  // Lock body scroll when mobile drawer is open
-  useEffect(() => {
-    if (isOpen && window.innerWidth < 768) {
-      scrollYRef.current = window.scrollY;
-      document.body.classList.add('scroll-locked');
-      document.body.style.top = `-${scrollYRef.current}px`;
-      return () => {
-        document.body.classList.remove('scroll-locked');
-        document.body.style.top = '';
-        window.scrollTo(0, scrollYRef.current);
-      };
-    }
-  }, [isOpen]);
 
   const sidebarWidth = collapsed ? '56px' : '240px';
 
@@ -464,20 +449,21 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             aria-hidden="true"
           />
 
-          {/* Drawer — always expanded with labels on mobile */}
+          {/* Drawer — icons only on mobile */}
           <aside
-            className="fixed top-0 left-0 z-[60] flex flex-col md:hidden"
+            className="fixed top-0 left-0 z-50 flex flex-col md:hidden"
             style={{
-              width: 'min(280px, 85vw)',
+              width: '60px',
               height: '100dvh',
               paddingTop: 'var(--topbar-height, 48px)',
-              paddingBottom: 'var(--sai-bottom, 0px)',
+              paddingBottom: 'max(env(safe-area-inset-bottom), 8px)',
+              paddingLeft: 'env(safe-area-inset-left, 0px)',
               background: 'var(--bg-app)',
               borderRight: '1px solid var(--border)',
-              boxShadow: 'var(--shadow-xl)',
+              boxShadow: '4px 0 24px rgba(0,0,0,0.3)',
             }}
           >
-            {renderSidebarContent(true, onClose)}
+            {renderSidebarContent(false, onClose)}
           </aside>
         </>
       )}

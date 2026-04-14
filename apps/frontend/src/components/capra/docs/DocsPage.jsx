@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { useIsMobile } from '../../../hooks/capra/useIsMobile';
-import { useAppShell } from '../layout/AppShellContext';
 import { useAuth } from '../../../contexts/AuthContext';
 import { Icon } from '../../shared/Icons.jsx';
 import { CompanyLogo, getCompanyLogoSrc } from '../../shared/CompanyLogo.tsx';
@@ -58,7 +57,6 @@ const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.co
  */
 export default function DocsPage({ onBack }) {
   const { isMobile } = useIsMobile();
-  const { setActiveSection } = useAppShell();
   const { user } = useAuth();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const contentAccess = useContentAccess();
@@ -117,7 +115,7 @@ export default function DocsPage({ onBack }) {
     const company = params.get('company') || null;
     setActivePageState(page);
     setSelectedTopicState(topic);
-    setActiveSection(page);
+
     if (role) {
       setJobContext({ role, focus, jobTitle, company });
     } else {
@@ -163,7 +161,7 @@ export default function DocsPage({ onBack }) {
       const page = pageAliases[rawPage] || rawPage;
       setActivePageState(page);
       setSelectedTopicState(topic);
-      setActiveSection(page);
+  
       if (topic) {
         const el = document.getElementById('app-scroll-container') || document.querySelector('main');
         if (el) el.scrollTo({ top: 0, behavior: 'smooth' });
@@ -178,7 +176,7 @@ export default function DocsPage({ onBack }) {
   const setActivePage = (page) => {
     setActivePageState(page);
     setSelectedTopicState(null);
-    setActiveSection(page);
+
     // Clear job context when user manually navigates via sidebar
     // (they can always get back to the filtered view from JobPrepPage)
     setJobContext(null);
@@ -974,7 +972,7 @@ export default function DocsPage({ onBack }) {
                         ].map((tab) => (
                           <button
                             key={tab.key}
-                            onClick={() => { setActivePageState(tab.key); setSelectedTopicState(null); setActiveSection(tab.key); }}
+                            onClick={() => { setActivePageState(tab.key); setSelectedTopicState(null); }}
                             className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors landing-body ${activePage === tab.key ? 'bg-[var(--accent)] text-white' : 'bg-[var(--bg-surface)] text-[var(--text-secondary)] border border-[var(--border)] hover:bg-[var(--bg-elevated)]'}`}
                           >
                             <Icon name={tab.icon} size={12} />
