@@ -464,11 +464,11 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             aria-hidden="true"
           />
 
-          {/* Drawer — icons only on mobile to save space */}
+          {/* Drawer — always expanded with labels on mobile */}
           <aside
             className="fixed top-0 left-0 z-[60] flex flex-col md:hidden"
             style={{
-              width: '56px',
+              width: 'min(280px, 85vw)',
               height: '100dvh',
               paddingTop: 'var(--topbar-height, 48px)',
               paddingBottom: 'var(--sai-bottom, 0px)',
@@ -477,7 +477,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               boxShadow: 'var(--shadow-xl)',
             }}
           >
-            {renderSidebarContent(false, onClose)}
+            {renderSidebarContent(true, onClose)}
           </aside>
         </>
       )}
