@@ -6,21 +6,22 @@ export default function CamoraLogo({ size = 36 }: { size?: number }) {
     <svg width={size} height={size} viewBox="0 0 48 48" fill="none">
       <defs>
         <linearGradient id={`${id}-a`} x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#34d399" />
-          <stop offset="50%" stopColor="#38bdf8" />
-          <stop offset="100%" stopColor="#818cf8" />
+          <stop offset="0%" stopColor="#6366f1" />
+          <stop offset="50%" stopColor="#8b5cf6" />
+          <stop offset="100%" stopColor="#a78bfa" />
         </linearGradient>
         <linearGradient id={`${id}-b`} x1="0%" y1="100%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="#818cf8" />
-          <stop offset="100%" stopColor="#34d399" />
+          <stop offset="0%" stopColor="#a78bfa" />
+          <stop offset="50%" stopColor="#6366f1" />
+          <stop offset="100%" stopColor="#818cf8" />
         </linearGradient>
       </defs>
 
-      {/* Rounded square background */}
+      {/* Rounded square background — indigo gradient */}
       <rect x="2" y="2" width="44" height="44" rx="12" fill={`url(#${id}-a)`} />
 
-      {/* Inner white rounded square */}
-      <rect x="6" y="6" width="36" height="36" rx="9" fill="white" opacity="0.95" />
+      {/* Inner dark rounded square */}
+      <rect x="6" y="6" width="36" height="36" rx="9" fill="#0D0C14" opacity="0.9" />
 
       {/* C letterform — bold, modern, open */}
       <path
@@ -31,11 +32,11 @@ export default function CamoraLogo({ size = 36 }: { size?: number }) {
         fill="none"
       />
 
-      {/* Four APPA dots */}
-      <circle cx="34" cy="14" r="2.5" fill="#34d399" />
-      <circle cx="37" cy="21" r="2" fill="#818cf8" />
-      <circle cx="37" cy="28" r="2" fill="#38bdf8" />
-      <circle cx="34" cy="34" r="2.5" fill="#fbbf24" />
+      {/* Four APPA dots — indigo/violet palette */}
+      <circle cx="34" cy="14" r="2.5" fill="#818cf8" />
+      <circle cx="37" cy="21" r="2" fill="#a78bfa" />
+      <circle cx="37" cy="28" r="2" fill="#6366f1" />
+      <circle cx="34" cy="34" r="2.5" fill="#c4b5fd" />
     </svg>
   );
 }
