@@ -558,35 +558,37 @@ export function DesignLayout({ onBack, initialProblem }: DesignLayoutProps) {
   return (
     <div className="h-screen w-full flex flex-col lumora-app-bg">
       {/* Header — matching coding page enterprise style */}
-      <header className="flex items-center justify-between h-11 px-3 bg-white border-b border-gray-200 shrink-0">
+      <header className="flex items-center justify-between h-11 px-3 shrink-0" style={{ background: 'linear-gradient(135deg, rgba(15,23,42,0.98) 0%, rgba(30,27,75,0.96) 50%, rgba(15,23,42,0.98) 100%)', borderBottom: '1px solid rgba(99,102,241,0.12)' }}>
         <div className="flex items-center gap-2 md:gap-3">
-          <button onClick={onBack} className="flex items-center gap-1 px-1.5 py-1 text-xs md:text-sm font-medium text-gray-700 hover:text-gray-900 rounded transition-colors">
+          <button onClick={onBack} className="flex items-center gap-1 px-1.5 py-1 text-xs md:text-sm font-bold text-white/70 hover:text-white rounded transition-colors">
             <svg className="w-3 h-3 md:w-3.5 md:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
             </svg>
             <span className="hidden sm:inline">Back</span>
           </button>
-          <div className="h-4 w-px bg-gray-200" />
+          <div className="h-4 w-px bg-white/10" />
           <div className="flex items-center gap-1.5">
-            <div className="w-5 h-5 md:w-6 md:h-6 rounded bg-indigo-500 flex items-center justify-center">
+            <div className="w-5 h-5 md:w-6 md:h-6 rounded flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
               <span className="text-white text-[10px] md:text-xs font-extrabold">L</span>
             </div>
-            <span className="text-gray-900 font-bold text-xs md:text-sm">System Design</span>
+            <span className="text-white font-extrabold text-xs md:text-sm" style={{ fontFamily: "'Source Sans 3', sans-serif" }}>System Design</span>
           </div>
-          <div className="h-4 w-px bg-gray-200 hidden md:block" />
+          <div className="h-4 w-px bg-white/10 hidden md:block" />
           {/* Detail level toggle */}
-          <div className="hidden md:flex items-center gap-0.5 p-0.5 bg-gray-100 rounded-lg">
+          <div className="hidden md:flex items-center gap-0.5 p-0.5 rounded-lg" style={{ background: 'rgba(255,255,255,0.08)' }}>
             <button
               onClick={() => setDetailLevel('basic')}
-              className={`px-2.5 py-1 text-[10px] md:text-xs font-semibold rounded-md transition-all ${
-                detailLevel === 'basic' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-700 hover:text-gray-900'
+              className={`px-2.5 py-1 text-[10px] md:text-xs font-bold rounded-md transition-all ${
+                detailLevel === 'basic' ? 'text-white shadow-sm' : 'text-white/50 hover:text-white'
               }`}
+              style={detailLevel === 'basic' ? { background: 'rgba(99,102,241,0.25)' } : {}}
             >Basic</button>
             <button
               onClick={() => setDetailLevel('full')}
-              className={`px-2.5 py-1 text-[10px] md:text-xs font-semibold rounded-md transition-all ${
-                detailLevel === 'full' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-700 hover:text-gray-900'
+              className={`px-2.5 py-1 text-[10px] md:text-xs font-bold rounded-md transition-all ${
+                detailLevel === 'full' ? 'text-white shadow-sm' : 'text-white/50 hover:text-white'
               }`}
+              style={detailLevel === 'full' ? { background: 'rgba(99,102,241,0.25)' } : {}}
             >Full</button>
           </div>
         </div>
@@ -633,7 +635,7 @@ export function DesignLayout({ onBack, initialProblem }: DesignLayoutProps) {
           )}
 
           {/* Reset */}
-          <button onClick={handleReset} className="p-1.5 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors" title="Reset">
+          <button onClick={handleReset} className="p-1.5 text-white/50 hover:text-white hover:bg-white/10 rounded-md transition-colors" title="Reset">
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
@@ -657,15 +659,16 @@ export function DesignLayout({ onBack, initialProblem }: DesignLayoutProps) {
         {/* Left: Problem Input - full width on mobile */}
         <div className="w-full md:shrink-0 flex flex-col border-b md:border-b-0 md:border-r border-gray-200 design-left-panel max-h-[35vh] md:max-h-none overflow-auto" style={{ ['--left-w' as any]: `${leftWidth}%` }}>
           {/* Input Tab Header */}
-          <div className="flex items-center justify-between px-3 py-1.5 bg-gray-50/50 border-b border-gray-100">
-            <div className="flex items-center gap-0.5 p-0.5 bg-gray-100 rounded-lg">
+          <div className="flex items-center justify-between px-3 py-1.5" style={{ background: 'rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+            <div className="flex items-center gap-0.5 p-0.5 rounded-lg" style={{ background: 'rgba(255,255,255,0.08)' }}>
               {(['text', 'url', 'image'] as const).map(tab => (
                 <button
                   key={tab}
                   onClick={() => { setInputTab(tab); setInputCollapsed(false); }}
-                  className={`px-2.5 py-1 text-[10px] md:text-xs font-semibold rounded-md transition-all ${
-                    inputTab === tab ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                  className={`px-2.5 py-1 text-[10px] md:text-xs font-bold rounded-md transition-all ${
+                    inputTab === tab ? 'text-white' : 'text-white/50 hover:text-white/80'
                   }`}
+                  style={inputTab === tab ? { background: 'rgba(99,102,241,0.3)', boxShadow: '0 1px 4px rgba(0,0,0,0.2)' } : {}}
                 >
                   {tab === 'text' ? 'Text' : tab === 'url' ? 'URL' : 'Image'}
                 </button>
@@ -673,7 +676,7 @@ export function DesignLayout({ onBack, initialProblem }: DesignLayoutProps) {
             </div>
             <button
               onClick={() => setInputCollapsed(!inputCollapsed)}
-              className="p-1 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
+              className="p-1 text-white/40 hover:text-white hover:bg-white/10 rounded transition-colors"
             >
               <svg className={`w-3 h-3 transition-transform ${inputCollapsed ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
@@ -689,7 +692,8 @@ export function DesignLayout({ onBack, initialProblem }: DesignLayoutProps) {
                 value={problemText}
                 onChange={(e) => setProblemText(e.target.value)}
                 placeholder="Describe your system design problem...&#10;&#10;Example: Design a URL shortener like bit.ly that handles 100M links/month"
-                className="w-full h-[100px] bg-white border border-gray-200 rounded-lg p-3 text-gray-900 text-xs md:text-sm leading-relaxed placeholder:text-gray-400 resize-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/20 focus:outline-none transition-all font-mono"
+                className="w-full h-[100px] rounded-lg p-3 text-xs md:text-sm leading-relaxed resize-none focus:ring-1 focus:ring-indigo-400/30 focus:outline-none transition-all font-mono"
+                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: '#f1f5f9' }}
               />
             )}
             {inputTab === 'url' && (
@@ -699,7 +703,8 @@ export function DesignLayout({ onBack, initialProblem }: DesignLayoutProps) {
                   value={urlInput}
                   onChange={(e) => setUrlInput(e.target.value)}
                   placeholder="https://leetcode.com/problems/..."
-                  className="flex-1 bg-white border border-gray-200 rounded-lg px-3 py-2 text-gray-900 text-xs md:text-sm placeholder:text-gray-400 focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/20 focus:outline-none transition-all font-mono"
+                  className="flex-1 rounded-lg px-3 py-2 text-xs md:text-sm focus:ring-1 focus:ring-indigo-400/30 focus:outline-none transition-all font-mono"
+                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: '#f1f5f9' }}
                 />
                 <button
                   onClick={async () => {
@@ -732,7 +737,8 @@ export function DesignLayout({ onBack, initialProblem }: DesignLayoutProps) {
                   const file = e.dataTransfer.files?.[0];
                   if (file && file.type.startsWith('image/')) handleImageUpload(file);
                 }}
-                className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-200 rounded-lg cursor-pointer hover:border-indigo-400/50 hover:bg-indigo-50/30 transition-all"
+                className="flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-lg cursor-pointer transition-all"
+                style={{ borderColor: 'rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.03)' }}
               >
                 <input
                   ref={imageInputRef}
