@@ -20,9 +20,7 @@ export default function BadgeGrid() {
   useEffect(() => {
     async function fetchBadges() {
       try {
-        const res = await fetch(`${API_URL}/api/gamification/badges`, {
-          headers: { ...getAuthHeaders() },
-        });
+        const res = await fetch(`${API_URL}/api/gamification/badges`, { headers: { ...getAuthHeaders() } });
         if (!res.ok) throw new Error('Failed to load badges');
         const json = await res.json();
         setBadges(json.badges || []);
@@ -37,12 +35,12 @@ export default function BadgeGrid() {
 
   if (loading) {
     return (
-      <div className="bg-[var(--bg-surface)] border-0 rounded-2xl p-6 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
+      <div className="rounded-xl p-5" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
         <div className="animate-pulse space-y-4">
-          <div className="h-5 bg-[var(--bg-elevated)] rounded w-32" />
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            {Array.from({ length: 10 }).map((_, i) => (
-              <div key={i} className="h-32 bg-[var(--bg-elevated)] rounded-xl" />
+          <div className="h-4 rounded w-24" style={{ background: 'var(--bg-elevated)' }} />
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="h-28 rounded-lg" style={{ background: 'var(--bg-elevated)' }} />
             ))}
           </div>
         </div>
@@ -52,75 +50,51 @@ export default function BadgeGrid() {
 
   if (error) {
     return (
-      <div className="bg-[var(--bg-surface)] border-0 rounded-2xl p-6 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
-        <p className="text-sm text-red-500">{error}</p>
+      <div className="rounded-xl p-5" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+        <p className="text-sm text-red-400">{error}</p>
       </div>
     );
   }
 
+  const earned = badges.filter(b => b.earned);
+  const unearned = badges.filter(b => !b.earned);
+
   return (
-    <div className="bg-[var(--bg-surface)] border-0 rounded-2xl p-6 space-y-5 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
-      <div>
-        <h3 className="text-lg font-bold text-[var(--text-primary)] tracking-tight">Badges</h3>
-        <p className="text-sm text-[var(--text-muted)] mt-1">
-          {badges.filter((b) => b.earned).length} of {badges.length} earned
-        </p>
+    <div className="rounded-xl p-5 space-y-4" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Badges</h3>
+        <span className="text-xs font-mono" style={{ color: 'var(--text-muted)' }}>{earned.length}/{badges.length}</span>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        {badges.map((badge) => (
-          <div
-            key={badge.key}
-            className={`relative rounded-xl p-4 text-center transition-all ${
-              badge.earned
-                ? 'bg-[var(--bg-surface)] border-2 border-[var(--accent)]/40 shadow-sm'
-                : 'bg-[var(--bg-elevated)] border border-[var(--border)]'
-            }`}
-          >
-            {/* Lock overlay for unearned badges */}
-            {!badge.earned && (
-              <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-[var(--bg-elevated)]/60">
-                <svg className="w-5 h-5 text-[var(--text-muted)]" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-                </svg>
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        {/* Earned badges first */}
+        {earned.map(badge => (
+          <div key={badge.key} className="rounded-lg p-3 transition-all hover:scale-[1.02]"
+            style={{ background: 'var(--accent-subtle)', border: '1px solid rgba(99,102,241,0.2)' }}>
+            <div className="text-2xl mb-2">{badge.icon}</div>
+            <div className="text-xs font-semibold leading-tight" style={{ color: 'var(--text-primary)' }}>{badge.title}</div>
+            <div className="text-[10px] mt-1 leading-tight" style={{ color: 'var(--text-muted)' }}>{badge.desc}</div>
+            {badge.earned_at && (
+              <div className="text-[9px] font-mono mt-2" style={{ color: 'var(--accent)' }}>
+                {new Date(badge.earned_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
               </div>
             )}
+          </div>
+        ))}
 
-            {/* Icon */}
-            <span
-              className={`text-3xl block ${badge.earned ? '' : 'grayscale opacity-40'}`}
-            >
-              {badge.icon}
-            </span>
-
-            {/* Title */}
-            <p
-              className={`text-sm font-semibold mt-2 ${
-                badge.earned ? 'text-[var(--text-primary)]' : 'text-[var(--text-muted)]'
-              }`}
-            >
-              {badge.title}
-            </p>
-
-            {/* Description */}
-            <p
-              className={`text-[11px] mt-1 leading-tight ${
-                badge.earned ? 'text-[var(--text-muted)]' : 'text-[var(--text-muted)]'
-              }`}
-            >
-              {badge.desc}
-            </p>
-
-            {/* Earned date */}
-            {badge.earned && badge.earned_at && (
-              <p className="text-[10px] text-[var(--accent)] font-medium mt-2">
-                {new Date(badge.earned_at).toLocaleDateString('en-US', {
-                  month: 'short',
-                  day: 'numeric',
-                  year: 'numeric',
-                })}
-              </p>
-            )}
+        {/* Unearned badges — muted */}
+        {unearned.map(badge => (
+          <div key={badge.key} className="rounded-lg p-3 relative overflow-hidden"
+            style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+            <div className="text-2xl mb-2 grayscale opacity-30">{badge.icon}</div>
+            <div className="text-xs font-semibold leading-tight" style={{ color: 'var(--text-muted)' }}>{badge.title}</div>
+            <div className="text-[10px] mt-1 leading-tight" style={{ color: 'var(--text-dimmed)' }}>{badge.desc}</div>
+            {/* Lock icon */}
+            <div className="absolute top-2 right-2">
+              <svg width="12" height="12" viewBox="0 0 20 20" fill="var(--text-dimmed)">
+                <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+              </svg>
+            </div>
           </div>
         ))}
       </div>
