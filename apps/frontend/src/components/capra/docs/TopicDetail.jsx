@@ -996,15 +996,149 @@ export default function TopicDetail({
             </div>
           )}
 
-          {/* Interview Relevance */}
-          {topicDetails.interviewRelevance && (
-            <div id="interview-relevance" className="rounded-xl overflow-hidden scroll-mt-24 border border-emerald-500/20 bg-[var(--accent)]/10/50">
-              <div className="px-4 py-2.5 border-b border-emerald-500/20 bg-[var(--accent)]/10/50 flex items-center gap-2">
-                <Icon name="briefcase" size={14} className="text-[var(--accent)]" />
-                <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">Interview Relevance</h3>
+          {/* Implementation Steps — phased build guide */}
+          {topicDetails.implementationSteps && topicDetails.implementationSteps.length > 0 && (
+            <div id="implementation-steps" className="rounded-xl overflow-hidden scroll-mt-24 border border-[var(--border)]">
+              <div className="px-4 py-2.5 border-b border-[var(--border)] bg-[var(--bg-surface)]/80 flex items-center gap-2">
+                <Icon name="list" size={14} className="text-[var(--accent)]" />
+                <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">Implementation Guide</h3>
+                <span className="text-[10px] landing-mono text-[var(--text-muted)] bg-[var(--bg-elevated)] px-1.5 py-0.5 rounded">{topicDetails.implementationSteps.length} phases</span>
               </div>
-              <div className="p-4">
-                <p className="text-sm text-[var(--text-secondary)] landing-body leading-relaxed">{topicDetails.interviewRelevance}</p>
+              <div className="p-3 space-y-2">
+                {topicDetails.implementationSteps.map((step, i) => (
+                  <div key={i} className="rounded-lg border border-[var(--border)] overflow-hidden">
+                    <button
+                      onClick={() => setExpandedTheoryQuestions(prev => ({ ...prev, [`step-${i}`]: !prev[`step-${i}`] }))}
+                      className="w-full flex items-center gap-3 px-4 py-3 bg-[var(--bg-surface)] hover:bg-[var(--bg-elevated)] transition-colors text-left"
+                    >
+                      <span className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0 text-white landing-mono" style={{ background: topicDetails.color || '#8b5cf6' }}>
+                        {step.phase}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-sm font-bold text-[var(--text-primary)] landing-display">{step.title}</h4>
+                        <p className="text-xs text-[var(--text-muted)] landing-body mt-0.5 truncate">{step.description}</p>
+                      </div>
+                      <span className="text-[10px] landing-mono text-[var(--text-muted)] bg-[var(--bg-elevated)] px-1.5 py-0.5 rounded">{step.tasks.length}</span>
+                      <Icon name={expandedTheoryQuestions[`step-${i}`] ? 'chevronUp' : 'chevronDown'} size={14} className="text-[var(--text-muted)] shrink-0" />
+                    </button>
+                    {expandedTheoryQuestions[`step-${i}`] && (
+                      <div className="px-4 pb-3 pt-1 border-t border-[var(--border)]">
+                        <div className="ml-10 space-y-1.5">
+                          {step.tasks.map((task, j) => (
+                            <div key={j} className="flex items-start gap-2.5 text-sm">
+                              <span className="w-5 h-5 rounded-md bg-[var(--accent)]/10 border border-emerald-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <span className="text-[10px] font-bold text-[var(--accent)] landing-mono">{j + 1}</span>
+                              </span>
+                              <span className="text-[var(--text-secondary)] landing-body leading-relaxed">{task}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* File Structure */}
+          {topicDetails.fileStructure && (
+            <div id="file-structure" className="rounded-xl overflow-hidden scroll-mt-24 border border-[var(--border)]">
+              <div className="px-4 py-2.5 border-b border-[var(--border)] bg-[var(--bg-surface)]/80 flex items-center gap-2">
+                <Icon name="folder" size={14} className="text-[var(--text-secondary)]" />
+                <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">Project Structure</h3>
+              </div>
+              <div className="bg-[#0d1117] overflow-x-auto">
+                <pre className="p-4 text-sm leading-6 text-gray-300 landing-mono" style={{ whiteSpace: 'pre', margin: 0 }}>{topicDetails.fileStructure}</pre>
+              </div>
+            </div>
+          )}
+
+          {/* Architecture Layers */}
+          {topicDetails.architectureLayers && (
+            <div id="architecture-layers" className="rounded-xl overflow-hidden scroll-mt-24 border border-[var(--border)]">
+              <div className="px-4 py-2.5 border-b border-[var(--border)] bg-[var(--bg-surface)]/80 flex items-center gap-2">
+                <Icon name="layers" size={14} style={{ color: topicDetails.color || '#14b8a6' }} />
+                <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">Architecture Layers</h3>
+              </div>
+              <div className="p-3 space-y-1.5">
+                {topicDetails.architectureLayers.map((layer, i) => {
+                  const LAYER_COLORS = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ef4444', '#06b6d4', '#ec4899', '#6366f1'];
+                  const lc = LAYER_COLORS[i % LAYER_COLORS.length];
+                  return (
+                    <div key={i} className="flex items-start gap-3 p-2.5 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)]">
+                      <span className="w-6 h-6 rounded-md flex items-center justify-center text-xs font-bold flex-shrink-0 text-white" style={{ background: lc }}>{i + 1}</span>
+                      <div>
+                        <span className="text-sm font-bold text-[var(--text-primary)] landing-display">{layer.name}</span>
+                        <div className="text-[var(--text-secondary)] text-xs landing-body leading-relaxed mt-0.5">
+                          <FormattedContent content={layer.description} color="teal" />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* API Design + Data Model */}
+          {(topicDetails.apiDesign?.endpoints || topicDetails.dataModel) && (
+            <div className={`grid gap-3 scroll-mt-24 ${topicDetails.apiDesign?.endpoints && topicDetails.dataModel ? '' : 'grid-cols-1'}`}>
+              {topicDetails.apiDesign && topicDetails.apiDesign.endpoints && (
+                <div id="api-design" className="rounded-xl overflow-hidden scroll-mt-24 border border-[var(--border)]">
+                  <div className="px-4 py-2.5 border-b border-[var(--border)] bg-[var(--bg-surface)]/80 flex items-center gap-2">
+                    <Icon name="code" size={14} className="text-[var(--text-secondary)]" />
+                    <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">API Design</h3>
+                    <span className="ml-auto text-[10px] landing-mono text-[var(--text-muted)] bg-[var(--bg-elevated)] px-1.5 py-0.5 rounded">{topicDetails.apiDesign.endpoints.length} endpoints</span>
+                  </div>
+                  <div className="p-3 grid grid-cols-1 gap-2">
+                    {topicDetails.apiDesign.endpoints.map((endpoint, i) => (
+                      <div key={i} className="rounded-lg p-3 bg-[var(--bg-surface)] border border-[var(--border)] hover:shadow-md transition-all">
+                        <div className="flex items-center gap-2.5 mb-2">
+                          <span className={`text-[11px] landing-mono px-2.5 py-1 rounded-full font-bold uppercase tracking-wide ${
+                            endpoint.method === 'GET' ? 'bg-[var(--accent)]/10 text-[var(--accent)] border border-emerald-500/20' :
+                            endpoint.method === 'POST' ? 'bg-[var(--bg-elevated)] text-[var(--text-secondary)] border border-[var(--border)]' :
+                            endpoint.method === 'PUT' || endpoint.method === 'PATCH' ? 'bg-[var(--bg-elevated)] text-[var(--text-secondary)] border border-[var(--border)]' :
+                            'bg-red-500/10 text-red-400 border border-red-500/20'
+                          }`}>{endpoint.method}</span>
+                          <code className="text-[var(--text-primary)] landing-mono text-sm font-medium">{endpoint.path}</code>
+                        </div>
+                        {endpoint.response && (
+                          <div className="rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] px-3 py-2 overflow-x-auto">
+                            <code className="text-xs landing-mono text-[var(--text-secondary)] whitespace-pre-wrap leading-5">{endpoint.response}</code>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {topicDetails.dataModel && (
+                <DataModelSection schema={topicDetails.dataModel.schema} />
+              )}
+            </div>
+          )}
+
+          {/* Code Examples */}
+          {topicDetails.codeExamples && typeof topicDetails.codeExamples === 'object' && !Array.isArray(topicDetails.codeExamples) && (
+            <div id="code-examples" className="rounded-xl overflow-hidden scroll-mt-24 border border-[var(--border)]">
+              <div className="px-4 py-2.5 border-b border-[var(--border)] bg-[var(--bg-surface)]/80 flex items-center gap-2">
+                <Icon name="code" size={14} className="text-[var(--accent)]" />
+                <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">Implementation Code</h3>
+              </div>
+              <div className="p-3 grid grid-cols-1 gap-2">
+                {Object.entries(topicDetails.codeExamples).map(([lang, code], i) => (
+                  <div key={i} className="rounded-lg border border-[var(--border)] overflow-hidden">
+                    <div className="flex items-center justify-between px-3 py-1.5 bg-gray-900">
+                      <div className="flex items-center gap-2">
+                        <div className="flex gap-1"><div className="w-2 h-2 rounded-full bg-red-400" /><div className="w-2 h-2 rounded-full bg-amber-400" /><div className="w-2 h-2 rounded-full bg-emerald-400" /></div>
+                        <span className="text-xs font-bold text-gray-400 landing-mono uppercase">{lang}</span>
+                      </div>
+                      <button onClick={() => navigator.clipboard.writeText(code)} className="text-xs text-gray-400 hover:text-gray-300 px-2 py-0.5 border border-gray-700 rounded hover:border-gray-500 transition-colors landing-mono">Copy</button>
+                    </div>
+                    <pre className="p-3 bg-[#0d1117] overflow-x-auto max-h-80 overflow-y-auto"><code className="text-sm landing-mono text-gray-300 leading-relaxed whitespace-pre">{code}</code></pre>
+                  </div>
+                ))}
               </div>
             </div>
           )}
@@ -1021,20 +1155,191 @@ export default function TopicDetail({
                 {topicDetails.keyQuestions.map((qa, i) => (
                   <div key={i} className="px-4 py-3">
                     <button
-                      onClick={() => setExpandedTheoryQuestions(prev => ({ ...prev, [i]: !prev[i] }))}
+                      onClick={() => setExpandedTheoryQuestions(prev => ({ ...prev, [`kq-${i}`]: !prev[`kq-${i}`] }))}
                       className="w-full flex items-start gap-3 text-left group"
                     >
                       <span className="w-6 h-6 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] flex items-center justify-center flex-shrink-0 mt-0.5 text-xs font-bold text-[var(--text-secondary)] landing-mono">
                         {i + 1}
                       </span>
                       <span className="flex-1 text-sm font-semibold text-[var(--text-primary)] landing-display">{qa.question}</span>
-                      <Icon name={expandedTheoryQuestions[i] ? 'chevronUp' : 'chevronDown'} size={14} className="text-[var(--text-muted)] mt-1 shrink-0" />
+                      <Icon name={expandedTheoryQuestions[`kq-${i}`] ? 'chevronUp' : 'chevronDown'} size={14} className="text-[var(--text-muted)] mt-1 shrink-0" />
                     </button>
-                    {expandedTheoryQuestions[i] && (
+                    {expandedTheoryQuestions[`kq-${i}`] && (
                       <div className="mt-2 ml-9 text-sm text-[var(--text-secondary)] landing-body leading-relaxed">
                         <FormattedContent content={qa.answer} color="blue" />
                       </div>
                     )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Deep Dive Topics */}
+          {topicDetails.deepDiveTopics && topicDetails.deepDiveTopics.length > 0 && (
+            <div id="deep-dives" className="rounded-xl overflow-hidden scroll-mt-24 border border-[var(--border)]">
+              <div className="px-4 py-2.5 border-b border-[var(--border)] bg-[var(--bg-surface)]/80 flex items-center gap-2">
+                <Icon name="search" size={14} className="text-[var(--text-secondary)]" />
+                <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">Deep Dive Topics</h3>
+              </div>
+              <div className="p-3 grid grid-cols-1 gap-2">
+                {topicDetails.deepDiveTopics.map((item, i) => (
+                  <div key={i} className="p-3 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)]">
+                    <h4 className="text-sm font-bold text-[var(--text-primary)] mb-1 landing-display">{item.topic}</h4>
+                    <div className="text-[var(--text-secondary)] text-xs landing-body leading-relaxed">
+                      <FormattedContent content={item.detail} color="sky" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Trade-off Decisions */}
+          {topicDetails.tradeoffDecisions && topicDetails.tradeoffDecisions.length > 0 && (
+            <div id="tradeoffs" className="rounded-xl overflow-hidden scroll-mt-24 border border-[var(--border)]">
+              <div className="px-4 py-2.5 border-b border-[var(--border)] bg-[var(--bg-surface)]/80 flex items-center gap-2">
+                <Icon name="gitBranch" size={14} className="text-[var(--text-secondary)]" />
+                <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">Trade-off Decisions</h3>
+              </div>
+              <div className="p-3 grid grid-cols-1 gap-2">
+                {topicDetails.tradeoffDecisions.map((d, i) => (
+                  <div key={i} className="p-3 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)]">
+                    <div className="flex items-center gap-1.5 mb-1 flex-wrap">
+                      <span className="text-xs font-bold text-[var(--text-secondary)] landing-mono">{d.choice}</span>
+                      <span className="text-[var(--text-muted)]">→</span>
+                      <span className="text-xs font-bold text-[var(--accent)] landing-mono">{d.picked}</span>
+                    </div>
+                    <div className="text-[var(--text-secondary)] text-xs landing-body leading-relaxed">
+                      <FormattedContent content={d.reason} color="rose" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Common Pitfalls */}
+          {topicDetails.commonPitfalls && topicDetails.commonPitfalls.length > 0 && (
+            <div id="pitfalls" className="rounded-xl overflow-hidden scroll-mt-24 border border-[var(--border)]">
+              <div className="px-4 py-2.5 border-b border-[var(--border)] bg-[var(--bg-surface)]/80 flex items-center gap-2">
+                <Icon name="alertTriangle" size={14} className="text-red-400" />
+                <h3 className="text-sm font-bold text-red-400 landing-display">Common Pitfalls</h3>
+                <span className="text-[10px] landing-mono text-[var(--text-muted)] bg-[var(--bg-elevated)] px-1.5 py-0.5 rounded">{topicDetails.commonPitfalls.length}</span>
+              </div>
+              <div className="p-3 space-y-2">
+                {topicDetails.commonPitfalls.map((p, i) => (
+                  <div key={i} className="rounded-lg border border-red-500/15 bg-red-500/5 overflow-hidden">
+                    <div className="px-4 py-3">
+                      <div className="flex items-center gap-2.5 mb-1.5">
+                        <span className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 bg-red-500/10 border border-red-500/20">
+                          <span className="text-[10px] font-bold text-red-400 landing-mono">{i + 1}</span>
+                        </span>
+                        <h4 className="text-[var(--text-primary)] font-semibold text-sm landing-display">{p.pitfall}</h4>
+                      </div>
+                      <p className="text-[var(--text-secondary)] text-xs leading-relaxed ml-8 landing-body">{p.why}</p>
+                      <div className="ml-8 mt-2 px-3 py-2 rounded-lg bg-[var(--accent)]/10 border border-emerald-500/20">
+                        <span className="text-[10px] font-bold text-[var(--accent)] uppercase tracking-wider landing-mono">Solution</span>
+                        <p className="text-[var(--accent)] text-xs leading-relaxed mt-0.5 landing-body">{p.solution}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Edge Cases */}
+          {topicDetails.edgeCases && topicDetails.edgeCases.length > 0 && (
+            <div id="edge-cases" className="rounded-xl overflow-hidden scroll-mt-24 border border-[var(--border)]">
+              <div className="px-4 py-2.5 border-b border-[var(--border)] bg-[var(--bg-surface)]/80 flex items-center gap-2">
+                <Icon name="alertTriangle" size={14} className="text-[var(--text-secondary)]" />
+                <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">Edge Cases</h3>
+                <span className="text-[10px] landing-mono text-[var(--text-muted)] bg-[var(--bg-elevated)] px-1.5 py-0.5 rounded">{topicDetails.edgeCases.length}</span>
+              </div>
+              <div className="p-3 space-y-2">
+                {topicDetails.edgeCases.map((ec, i) => (
+                  <div key={i} className="rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] overflow-hidden">
+                    <div className="px-4 py-3">
+                      <div className="flex items-center gap-2.5 mb-1.5">
+                        <span className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 bg-[var(--bg-elevated)] border border-[var(--border)]">
+                          <span className="text-[10px] font-bold text-[var(--text-secondary)] landing-mono">{i + 1}</span>
+                        </span>
+                        <h4 className="text-[var(--text-primary)] font-semibold text-sm landing-display">{ec.scenario}</h4>
+                      </div>
+                      <p className="text-[var(--text-secondary)] text-xs leading-relaxed ml-8 landing-body">{ec.impact}</p>
+                      <div className="ml-8 mt-2 px-3 py-2 rounded-lg bg-[var(--accent)]/10 border border-emerald-500/20">
+                        <span className="text-[10px] font-bold text-[var(--accent)] uppercase tracking-wider landing-mono">Mitigation</span>
+                        <p className="text-[var(--accent)] text-xs leading-relaxed mt-0.5 landing-body">{ec.mitigation}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Interview Relevance */}
+          {topicDetails.interviewRelevance && (
+            <div id="interview-relevance" className="rounded-xl overflow-hidden scroll-mt-24 border border-emerald-500/20">
+              <div className="px-4 py-2.5 border-b border-emerald-500/20 bg-[var(--accent)]/10 flex items-center gap-2">
+                <Icon name="briefcase" size={14} className="text-[var(--accent)]" />
+                <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">Interview Relevance</h3>
+              </div>
+              <div className="p-4">
+                <p className="text-sm text-[var(--text-secondary)] landing-body leading-relaxed">{topicDetails.interviewRelevance}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Interview Follow-ups */}
+          {topicDetails.interviewFollowups && topicDetails.interviewFollowups.length > 0 && (
+            <div id="followups" className="rounded-xl overflow-hidden scroll-mt-24 border border-[var(--border)]">
+              <div className="px-4 py-2.5 border-b border-[var(--border)] bg-[var(--bg-surface)]/80 flex items-center gap-2">
+                <Icon name="helpCircle" size={14} className="text-[var(--text-secondary)]" />
+                <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">Common Follow-up Questions</h3>
+              </div>
+              <div className="p-3 grid grid-cols-1 gap-2">
+                {topicDetails.interviewFollowups.map((item, i) => (
+                  <div key={i} className="rounded-lg border border-[var(--border)] overflow-hidden">
+                    <div className="flex items-start gap-2 px-3 py-2 bg-[var(--bg-elevated)] border-b border-[var(--border)]">
+                      <span className="text-xs font-bold text-[var(--text-secondary)] landing-mono flex-shrink-0">Q{i + 1}</span>
+                      <span className="text-sm font-semibold text-[var(--text-primary)] landing-display">{item.question}</span>
+                    </div>
+                    <div className="px-3 py-2 pl-7 text-[var(--text-secondary)] text-xs landing-body leading-relaxed">
+                      <FormattedContent content={item.answer} color="orange" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Extension Ideas */}
+          {topicDetails.extensionIdeas && topicDetails.extensionIdeas.length > 0 && (
+            <div id="extensions" className="rounded-xl overflow-hidden scroll-mt-24 border border-[var(--border)]">
+              <div className="px-4 py-2.5 border-b border-[var(--border)] bg-[var(--bg-surface)]/80 flex items-center gap-2">
+                <Icon name="zap" size={14} style={{ color: topicDetails.color || '#8b5cf6' }} />
+                <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">Extension Ideas</h3>
+                <span className="text-[10px] landing-mono text-[var(--text-muted)] bg-[var(--bg-elevated)] px-1.5 py-0.5 rounded">Level Up</span>
+              </div>
+              <div className="p-3 grid grid-cols-1 gap-2">
+                {topicDetails.extensionIdeas.map((ext, i) => (
+                  <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)]">
+                    <span className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 mt-0.5" style={{ background: `${topicDetails.color || '#8b5cf6'}15` }}>
+                      <Icon name="zap" size={12} style={{ color: topicDetails.color || '#8b5cf6' }} />
+                    </span>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className="text-sm font-bold text-[var(--text-primary)] landing-display">{ext.idea}</span>
+                        <span className={`text-[10px] landing-mono px-1.5 py-0.5 rounded-full font-bold ${
+                          ext.difficulty === 'beginner' ? 'bg-[var(--accent)]/15 text-[var(--accent)]' :
+                          ext.difficulty === 'intermediate' ? 'bg-[var(--bg-elevated)] text-[var(--text-secondary)] border border-[var(--border)]' :
+                          'bg-red-500/10 text-red-400'
+                        }`}>{ext.difficulty}</span>
+                      </div>
+                      <p className="text-xs text-[var(--text-secondary)] landing-body leading-relaxed">{ext.description}</p>
+                    </div>
                   </div>
                 ))}
               </div>
