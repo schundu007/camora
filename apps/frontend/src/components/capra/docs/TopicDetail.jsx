@@ -639,7 +639,7 @@ export default function TopicDetail({
                   ].map(plan => (
                     <div key={plan.name} className="rounded-xl p-3 flex flex-col" style={{
                       border: plan.popular ? '2px solid #10b981' : plan.best ? '2px solid #f59e0b' : '1.5px solid var(--border)',
-                      background: 'white',
+                      background: 'var(--bg-surface)',
                     }}>
                       <div className="flex items-center justify-between">
                         <h4 className="text-xs font-bold text-[var(--text-primary)]">{plan.name}</h4>
