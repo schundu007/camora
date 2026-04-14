@@ -263,7 +263,7 @@ function DataModelSection({ schema }) {
           )}
         </button>
       </div>
-      <div className="overflow-x-auto bg-[#f6f8fa] max-h-96 overflow-y-auto">
+      <div className="overflow-x-auto bg-[var(--bg-elevated)] max-h-96 overflow-y-auto">
         <table className="w-full">
           <tbody>
             {schemaLines.map((line, i) => (
@@ -483,7 +483,7 @@ export default function TopicDetail({
                 <span className={`text-[10px] landing-mono px-1.5 py-0.5 rounded border ${
                   topicDetails.difficulty === 'Easy' ? 'bg-[var(--accent)]/10 text-[var(--accent)] border-emerald-500/20' :
                   topicDetails.difficulty === 'Medium' ? 'bg-[var(--bg-elevated)] text-[var(--text-secondary)] border-[var(--border)]' :
-                  'bg-red-50 text-red-600 border-red-200'
+                  'bg-red-500/10 text-red-400 border-red-500/20'
                 }`}>
                   {topicDetails.difficulty}
                 </span>
@@ -698,7 +698,7 @@ export default function TopicDetail({
               onChange={(e) => setAiQuestion(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleAskAI()}
               placeholder={`Ask anything about ${topicDetails.title}...`}
-              className="flex-1 px-3 py-2.5 rounded-lg text-sm text-[var(--text-primary)] placeholder-gray-500 focus:outline-none border border-[var(--border)] bg-[var(--bg-surface)] focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-300 landing-body"
+              className="flex-1 px-3 py-2.5 rounded-lg text-sm text-[var(--text-primary)] placeholder-gray-500 focus:outline-none border border-[var(--border)] bg-[var(--bg-surface)] focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 landing-body"
             />
             <button
               onClick={() => handleAskAI()}
@@ -770,7 +770,7 @@ export default function TopicDetail({
           {topicDetails.articles && topicDetails.articles.length > 0 && (
             <div id="articles" className="rounded-xl overflow-hidden scroll-mt-24 border border-[var(--border)]">
               <div className="px-4 py-2.5 border-b border-[var(--border)] bg-[var(--bg-surface)]/80 flex items-center gap-2">
-                <Icon name="list" size={14} className="text-red-600" />
+                <Icon name="list" size={14} className="text-red-400" />
                 <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">Articles</h3>
                 <span className="text-[10px] landing-mono text-[var(--text-muted)] bg-[var(--bg-elevated)] px-1.5 py-0.5 rounded">{topicDetails.articles.length}</span>
               </div>
@@ -948,9 +948,9 @@ export default function TopicDetail({
               {/* Difficulty + Time badges */}
               <div className="flex items-center gap-2 flex-wrap mb-3">
                 <span className={`text-xs landing-mono px-2 py-1 rounded-full font-bold ${
-                  topicDetails.difficulty === 'beginner' ? 'bg-emerald-100 text-[var(--accent)]' :
+                  topicDetails.difficulty === 'beginner' ? 'bg-[var(--accent)]/15 text-[var(--accent)]' :
                   topicDetails.difficulty === 'intermediate' ? 'bg-[var(--bg-elevated)] text-[var(--text-secondary)]' :
-                  'bg-red-100 text-red-700'
+                  'bg-red-500/10 text-red-400'
                 }`}>{topicDetails.difficulty}</span>
                 {topicDetails.estimatedTime && (
                   <span className="text-xs landing-mono text-[var(--text-muted)] flex items-center gap-1">
@@ -1158,7 +1158,7 @@ export default function TopicDetail({
                 <div className="p-3 grid grid-cols-1 gap-1.5">
                   {topicDetails.whenToUse.map((item, i) => (
                     <div key={i} className="flex items-start gap-2.5 p-2.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border)] hover:shadow-md hover:border-gray-300 transition-all landing-body">
-                      <span className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <span className="w-5 h-5 rounded-full bg-[var(--accent)]/15 flex items-center justify-center flex-shrink-0 mt-0.5">
                         <Icon name="check" size={10} className="text-[var(--accent)]" />
                       </span>
                       <span className="text-sm text-[var(--text-secondary)] leading-relaxed">{item}</span>
@@ -1204,7 +1204,7 @@ export default function TopicDetail({
                     {topicDetails.approach.map((step, i) => (
                       <div key={i} className="flex items-start gap-3 relative">
                         {i < topicDetails.approach.length - 1 && (
-                          <div className="absolute left-[11px] top-6 w-0.5 bg-emerald-200" style={{ height: 'calc(100% - 4px)' }} />
+                          <div className="absolute left-[11px] top-6 w-0.5 bg-emerald-500/30" style={{ height: 'calc(100% - 4px)' }} />
                         )}
                         <div className="w-6 h-6 rounded-full bg-[var(--accent)]/100 text-white flex items-center justify-center text-[11px] font-bold flex-shrink-0 z-10 landing-mono">{i + 1}</div>
                         <div className="text-sm text-[var(--text-secondary)] leading-relaxed pb-4 landing-body">{step}</div>
@@ -1225,8 +1225,8 @@ export default function TopicDetail({
                 </div>
                 <div className="p-3 grid grid-cols-1 gap-1.5">
                   {topicDetails.commonMistakes.map((mistake, i) => (
-                    <div key={i} className="flex items-start gap-2.5 p-2.5 rounded-lg bg-red-50/50 border border-red-100 hover:shadow-md hover:border-red-200 transition-all">
-                      <span className="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <div key={i} className="flex items-start gap-2.5 p-2.5 rounded-lg bg-red-500/5 border border-red-500/15 hover:shadow-md hover:border-red-500/30 transition-all">
+                      <span className="w-5 h-5 rounded-full bg-red-500/15 flex items-center justify-center flex-shrink-0 mt-0.5">
                         <span className="text-red-500 text-xs font-bold leading-none">&#10005;</span>
                       </span>
                       <span className="text-sm text-[var(--text-secondary)] leading-relaxed landing-body">{mistake}</span>
@@ -1279,12 +1279,12 @@ export default function TopicDetail({
                           <span className={`text-[10px] landing-mono px-1.5 py-0.5 rounded-full border font-medium ${
                             difficulty === 'Easy' ? 'bg-[var(--accent)]/10 text-[var(--accent)] border-emerald-500/20' :
                             difficulty === 'Medium' ? 'bg-[var(--bg-elevated)] text-[var(--text-secondary)] border-[var(--border)]' :
-                            'bg-red-50 text-red-600 border-red-200'
+                            'bg-red-500/10 text-red-400 border-red-500/20'
                           }`}>{difficulty}</span>
                         ) : <span className="text-gray-300 text-xs">--</span>}
                       </span>
                       <span className="flex justify-center">
-                        <span className="text-[10px] font-bold text-[var(--accent)] bg-[var(--accent)]/10 border border-emerald-500/20 px-2.5 py-1 rounded-md group-hover:bg-emerald-100 transition-colors landing-mono uppercase tracking-wide">Solve</span>
+                        <span className="text-[10px] font-bold text-[var(--accent)] bg-[var(--accent)]/10 border border-emerald-500/20 px-2.5 py-1 rounded-md group-hover:bg-[var(--accent)]/20 transition-colors landing-mono uppercase tracking-wide">Solve</span>
                       </span>
                     </Link>
                   );
@@ -1320,7 +1320,7 @@ export default function TopicDetail({
                     const isExpanded = expandedTheoryQuestions[questionKey];
                     const borderColor = q.difficulty === 'Easy' ? 'border-l-emerald-400' : q.difficulty === 'Medium' ? 'border-l-amber-400' : q.difficulty === 'Hard' ? 'border-l-red-400' : 'border-l-blue-400';
                     return (
-                      <div key={i} className={`rounded-lg overflow-hidden bg-[var(--bg-surface)] border border-[var(--border)] hover:border-[#d0d5dd] transition-all ${isExpanded ? `border-l-[3px] ${borderColor}` : ''}`}>
+                      <div key={i} className={`rounded-lg overflow-hidden bg-[var(--bg-surface)] border border-[var(--border)] hover:border-[var(--border-hover,var(--border))] transition-all ${isExpanded ? `border-l-[3px] ${borderColor}` : ''}`}>
                         <button
                           onClick={() => setExpandedTheoryQuestions(prev => ({ ...prev, [questionKey]: !prev[questionKey] }))}
                           className="w-full flex items-center gap-2 p-3 hover:bg-[var(--bg-elevated)] transition-colors text-left"
@@ -1331,7 +1331,7 @@ export default function TopicDetail({
                             <span className={`text-[10px] landing-mono px-1.5 py-0.5 rounded-full border font-medium flex-shrink-0 ${
                               q.difficulty === 'Easy' ? 'bg-[var(--accent)]/10 text-[var(--accent)] border-emerald-500/20' :
                               q.difficulty === 'Medium' ? 'bg-[var(--bg-elevated)] text-[var(--text-secondary)] border-[var(--border)]' :
-                              'bg-red-50 text-red-600 border-red-200'
+                              'bg-red-500/10 text-red-400 border-red-500/20'
                             }`}>{q.difficulty}</span>
                           )}
                           <svg className={`w-4 h-4 text-[var(--text-muted)] transition-transform flex-shrink-0 ${isExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1367,7 +1367,7 @@ export default function TopicDetail({
                 <div className="p-3 grid grid-cols-1 gap-1.5">
                   {topicDetails.tips.map((tip, i) => (
                     <div key={i} className="flex items-start gap-2.5 p-2 rounded-lg bg-[var(--bg-surface)] border border-[var(--border)] hover:shadow-md hover:border-gray-300 transition-all">
-                      <span className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <span className="w-5 h-5 rounded-full bg-[var(--accent)]/15 flex items-center justify-center flex-shrink-0 mt-0.5">
                         <Icon name="check" size={10} className="text-[var(--accent)]" />
                       </span>
                       <span className="text-sm text-[var(--text-secondary)] leading-relaxed landing-body">{tip}</span>
@@ -1558,14 +1558,14 @@ export default function TopicDetail({
                 <div className="rounded-2xl overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)]">
                   <div className="bg-[var(--accent)]/10/50 border-b border-[var(--border)] px-4 py-2 flex items-center gap-2">
                     <Icon name="check" size={14} className="text-[var(--accent)]" />
-                    <h3 className="text-sm font-bold text-emerald-800 landing-display">Functional Requirements</h3>
-                    <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-[var(--accent)] landing-mono">{(topicDetails.functionalRequirements || topicDetails.requirements).length} requirements</span>
+                    <h3 className="text-sm font-bold text-[var(--accent)] landing-display">Functional Requirements</h3>
+                    <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--accent)]/15 text-[var(--accent)] landing-mono">{(topicDetails.functionalRequirements || topicDetails.requirements).length} requirements</span>
                   </div>
                   <div className="p-2.5">
                     <div className="grid grid-cols-1 gap-1.5">
                       {(topicDetails.functionalRequirements || topicDetails.requirements).map((req, i) => (
                         <div key={i} className="flex items-start gap-2.5 px-3 py-2.5 rounded-xl border border-transparent bg-[var(--bg-elevated)] hover:border-emerald-500/20 hover:bg-[var(--accent)]/10/40 hover:shadow-sm transition-all cursor-default">
-                          <span className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 bg-emerald-100 text-[var(--accent)] mt-0.5">
+                          <span className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 bg-[var(--accent)]/15 text-[var(--accent)] mt-0.5">
                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
                           </span>
                           <span className="text-[var(--text-secondary)] text-sm landing-body leading-relaxed">{req}</span>
@@ -1626,18 +1626,18 @@ export default function TopicDetail({
                       <div className="p-3">
                         <div className="grid grid-cols-1 gap-2">
                           {topicDetails.apiDesign.endpoints.map((endpoint, i) => (
-                            <div key={i} className="rounded-xl p-3.5 bg-[var(--bg-surface)] border border-[var(--border)] hover:shadow-md hover:border-[#d0d5dd] hover:-translate-y-0.5 transition-all">
+                            <div key={i} className="rounded-xl p-3.5 bg-[var(--bg-surface)] border border-[var(--border)] hover:shadow-md hover:border-[var(--border-hover,var(--border))] hover:-translate-y-0.5 transition-all">
                               <div className="flex items-center gap-2.5 mb-2">
                                 <span className={`text-[11px] landing-mono px-2.5 py-1 rounded-full font-bold uppercase tracking-wide ${
-                                  endpoint.method === 'GET' ? 'bg-emerald-100 text-[var(--accent)] border border-emerald-500/20' :
+                                  endpoint.method === 'GET' ? 'bg-[var(--accent)]/10 text-[var(--accent)] border border-emerald-500/20' :
                                   endpoint.method === 'POST' || endpoint.method === 'INSERT' ? 'bg-[var(--bg-elevated)] text-[var(--text-secondary)] border border-[var(--border)]' :
                                   endpoint.method === 'PUT' || endpoint.method === 'UPDATE' ? 'bg-[var(--bg-elevated)] text-[var(--text-secondary)] border border-[var(--border)]' :
-                                  'bg-red-100 text-red-700 border border-red-200'
+                                  'bg-red-500/10 text-red-400 border border-red-500/20'
                                 }`}>{endpoint.method}</span>
                                 <code className="text-[var(--text-primary)] landing-mono text-sm font-medium">{endpoint.path}</code>
                               </div>
                               {endpoint.response && (
-                                <div className="rounded-lg bg-[#f6f8fa] border border-[var(--border)] px-3 py-2 overflow-x-auto">
+                                <div className="rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] px-3 py-2 overflow-x-auto">
                                   <code className="text-xs landing-mono text-[var(--text-secondary)] whitespace-pre-wrap leading-5">{endpoint.response}</code>
                                 </div>
                               )}
@@ -1683,7 +1683,7 @@ export default function TopicDetail({
                     {topicDetails.keyQuestions.map((q, i) => {
                       const isOpen = sdExpandedQs[i] || false;
                       return (
-                        <div key={i} className={`rounded-xl overflow-hidden border transition-all ${isOpen ? 'border-emerald-500/20 shadow-sm' : 'border-[var(--border)] hover:border-[#d0d5dd]'}`}>
+                        <div key={i} className={`rounded-xl overflow-hidden border transition-all ${isOpen ? 'border-emerald-500/20 shadow-sm' : 'border-[var(--border)] hover:border-[var(--border-hover,var(--border))]'}`}>
                           <button
                             onClick={() => setSdExpandedQs(prev => ({ ...prev, [i]: !prev[i] }))}
                             className="w-full flex items-center gap-2.5 px-3.5 py-3 bg-[var(--bg-surface)] hover:bg-[var(--bg-elevated)] transition-colors text-left"
@@ -1748,8 +1748,8 @@ export default function TopicDetail({
                             </h4>
                             <div className="grid grid-cols-1 gap-1.5">
                               {topicDetails.basicImplementation.problems.map((problem, i) => (
-                                <div key={i} className="flex items-start gap-2.5 px-3 py-2 rounded-lg bg-red-50/50 border border-red-100 text-sm landing-body">
-                                  <span className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 bg-red-100 mt-0.5">
+                                <div key={i} className="flex items-start gap-2.5 px-3 py-2 rounded-lg bg-red-500/5 border border-red-500/15 text-sm landing-body">
+                                  <span className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 bg-red-500/15 mt-0.5">
                                     <svg className="w-2.5 h-2.5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                                   </span>
                                   <span className="text-[var(--text-secondary)]">{problem}</span>
@@ -1766,8 +1766,8 @@ export default function TopicDetail({
                   {topicDetails.advancedImplementation && (
                     <div className="rounded-2xl overflow-hidden border border-emerald-500/20 bg-[var(--bg-surface)]">
                       <div className="border-b border-emerald-500/20 px-4 py-2 flex items-center gap-2 bg-[var(--accent)]/10/60">
-                        <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-[var(--accent)] uppercase tracking-wider landing-mono">Advanced</span>
-                        <h3 className="text-sm font-bold text-emerald-800 landing-display">{topicDetails.advancedImplementation.title || 'Scalable Solution'}</h3>
+                        <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-[var(--accent)]/15 text-[var(--accent)] uppercase tracking-wider landing-mono">Advanced</span>
+                        <h3 className="text-sm font-bold text-[var(--accent)] landing-display">{topicDetails.advancedImplementation.title || 'Scalable Solution'}</h3>
                       </div>
                       <div className="p-4">
                         <p className="text-[var(--text-secondary)] text-sm mb-3 leading-relaxed landing-body">{topicDetails.advancedImplementation.description}</p>
@@ -1783,7 +1783,7 @@ export default function TopicDetail({
                               <Icon name="zap" size={12} className="text-[var(--accent)]" />
                               <span className="text-[10px] font-bold text-[var(--accent)] uppercase tracking-wider landing-mono">Architecture</span>
                             </div>
-                            <div className="bg-[#f6f8fa] overflow-x-auto border-[var(--border)]">
+                            <div className="bg-[var(--bg-elevated)] overflow-x-auto border-[var(--border)]">
                               <pre
                                 className="p-4 text-sm leading-7 text-[var(--accent)] landing-mono"
                                 style={{ whiteSpace: 'pre', margin: 0, tabSize: 4 }}
@@ -1798,8 +1798,8 @@ export default function TopicDetail({
                             <h4 className="text-[var(--text-primary)] text-xs font-bold mb-2 landing-display uppercase tracking-wider">Key Points</h4>
                             <div className="grid grid-cols-1 gap-1.5">
                               {topicDetails.advancedImplementation.keyPoints.map((point, i) => (
-                                <div key={i} className="flex items-start gap-2.5 px-3 py-2 rounded-lg bg-[var(--accent)]/10/50 border border-emerald-100 text-sm landing-body">
-                                  <span className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 bg-emerald-100 mt-0.5">
+                                <div key={i} className="flex items-start gap-2.5 px-3 py-2 rounded-lg bg-[var(--accent)]/10/50 border border-emerald-500/20 text-sm landing-body">
+                                  <span className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 bg-[var(--accent)]/15 mt-0.5">
                                     <svg className="w-2.5 h-2.5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
                                   </span>
                                   <span className="text-[var(--text-secondary)]">{point}</span>
@@ -1922,7 +1922,7 @@ export default function TopicDetail({
                         <div className="flex items-center gap-2 ml-2 pl-2 border-l border-[var(--border)]">
                           <button
                             onClick={() => handleAdminRegen('python')}
-                            className="px-2 py-0.5 text-[10px] font-mono font-bold rounded bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:bg-emerald-100 hover:text-[var(--accent)] transition-colors border border-[var(--border)]"
+                            className="px-2 py-0.5 text-[10px] font-mono font-bold rounded bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:bg-[var(--accent)]/15 hover:text-[var(--accent)] transition-colors border border-[var(--border)]"
                             title="Regenerate using Python diagrams library"
                           >
                             Python
@@ -1987,7 +1987,7 @@ export default function TopicDetail({
                     <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)]">
                       <div className="px-3 py-2 border-b border-[var(--border)] flex items-center gap-2 bg-[var(--bg-elevated)]">
                         <Icon name="arrowRight" size={16} className="text-[var(--accent)]" />
-                        <h3 className="text-sm font-bold text-emerald-800 landing-display">{topicDetails.createFlow.title}</h3>
+                        <h3 className="text-sm font-bold text-[var(--accent)] landing-display">{topicDetails.createFlow.title}</h3>
                       </div>
                       <div className="p-3">
                         <ol className="grid grid-cols-1  gap-1">
@@ -2009,7 +2009,7 @@ export default function TopicDetail({
                     <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)]">
                       <div className="px-3 py-2 border-b border-[var(--border)] flex items-center gap-2 bg-[var(--bg-elevated)]">
                         <Icon name="arrowLeft" size={16} className="text-[var(--accent)]" />
-                        <h3 className="text-sm font-bold text-emerald-800 landing-display">{topicDetails.redirectFlow.title}</h3>
+                        <h3 className="text-sm font-bold text-[var(--accent)] landing-display">{topicDetails.redirectFlow.title}</h3>
                       </div>
                       <div className="p-3">
                         <ol className="grid grid-cols-1  gap-1">
@@ -2045,7 +2045,7 @@ export default function TopicDetail({
                       const visiblePoints = isExpanded ? point.points : point.points.slice(0, 2);
                       const hasMore = point.points.length > 2;
                       return (
-                        <div key={i} className="rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] hover:border-[#d0d5dd] transition-all overflow-hidden">
+                        <div key={i} className="rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] hover:border-[var(--border-hover,var(--border))] transition-all overflow-hidden">
                           <div className="px-4 py-3">
                             <div className="flex items-center gap-2.5 mb-2.5">
                               <span className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `${dotColor}15` }}>
@@ -2178,25 +2178,25 @@ export default function TopicDetail({
               {/* Edge Cases — Critical scenarios to address in interviews */}
               {topicDetails.edgeCases && (
                 <div className="rounded-2xl overflow-hidden bg-[var(--bg-surface)] border border-[var(--border)]">
-                  <div className="px-4 py-2 border-b border-[var(--border)] flex items-center gap-2 bg-red-50/50">
-                    <Icon name="alertTriangle" size={14} className="text-red-600" />
-                    <h3 className="text-sm font-bold text-red-800 landing-display">Edge Cases</h3>
-                    <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-red-100 text-red-700 landing-mono">{topicDetails.edgeCases.length} cases</span>
+                  <div className="px-4 py-2 border-b border-[var(--border)] flex items-center gap-2 bg-red-500/5">
+                    <Icon name="alertTriangle" size={14} className="text-red-400" />
+                    <h3 className="text-sm font-bold text-red-400 landing-display">Edge Cases</h3>
+                    <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-red-500/10 text-red-400 landing-mono">{topicDetails.edgeCases.length} cases</span>
                   </div>
                   <div className="p-2.5 space-y-2">
                     {topicDetails.edgeCases.map((ec, i) => (
-                      <div key={i} className="rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] hover:border-red-200 transition-all overflow-hidden">
+                      <div key={i} className="rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] hover:border-red-500/30 transition-all overflow-hidden">
                         <div className="px-4 py-3">
                           <div className="flex items-center gap-2.5 mb-1.5">
-                            <span className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 bg-red-50 border border-red-100">
-                              <span className="text-[10px] font-bold text-red-600 landing-mono">{i + 1}</span>
+                            <span className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 bg-red-500/10 border border-red-500/20">
+                              <span className="text-[10px] font-bold text-red-400 landing-mono">{i + 1}</span>
                             </span>
                             <h4 className="text-[var(--text-primary)] font-semibold text-sm landing-display">{ec.scenario}</h4>
                           </div>
                           <p className="text-[var(--text-secondary)] text-xs leading-relaxed ml-8 landing-body">{ec.impact}</p>
-                          <div className="ml-8 mt-2 px-3 py-2 rounded-lg bg-[var(--accent)]/10 border border-emerald-100">
+                          <div className="ml-8 mt-2 px-3 py-2 rounded-lg bg-[var(--accent)]/10 border border-emerald-500/20">
                             <span className="text-[10px] font-bold text-[var(--accent)] uppercase tracking-wider landing-mono">Mitigation</span>
-                            <p className="text-emerald-800 text-xs leading-relaxed mt-0.5 landing-body">{ec.mitigation}</p>
+                            <p className="text-[var(--accent)] text-xs leading-relaxed mt-0.5 landing-body">{ec.mitigation}</p>
                           </div>
                         </div>
                       </div>
@@ -2218,15 +2218,15 @@ export default function TopicDetail({
                       <div key={i} className="rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] hover:border-[var(--border)] transition-all overflow-hidden">
                         <div className="px-4 py-3">
                           <div className="flex items-center gap-2.5 mb-2">
-                            <span className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 bg-[var(--bg-elevated)] border border-amber-100">
+                            <span className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 bg-[var(--bg-elevated)] border border-amber-500/20">
                               <Icon name="gitBranch" size={12} className="text-[var(--text-secondary)]" />
                             </span>
                             <h4 className="text-[var(--text-primary)] font-semibold text-sm landing-display">{t.decision}</h4>
                           </div>
                           <div className="ml-8 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                            <div className="px-3 py-2 rounded-lg bg-[var(--accent)]/10 border border-emerald-100">
+                            <div className="px-3 py-2 rounded-lg bg-[var(--accent)]/10 border border-emerald-500/20">
                               <span className="text-[10px] font-bold text-[var(--accent)] uppercase tracking-wider landing-mono">Pros</span>
-                              <p className="text-emerald-800 text-xs leading-relaxed mt-0.5 landing-body">{t.pros}</p>
+                              <p className="text-[var(--accent)] text-xs leading-relaxed mt-0.5 landing-body">{t.pros}</p>
                             </div>
                             <div className="px-3 py-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)]">
                               <span className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-wider landing-mono">Cons</span>
@@ -2366,8 +2366,8 @@ export default function TopicDetail({
                     <div className="rounded-2xl overflow-hidden bg-[var(--bg-surface)] border border-[var(--border)]">
                       <div className="px-4 py-2 border-b border-[var(--border)] flex items-center gap-2 bg-[var(--accent)]/10/50">
                         <Icon name="lightbulb" size={14} className="text-[var(--accent)]" />
-                        <h3 className="text-sm font-bold text-emerald-800 landing-display">Key Design Decisions</h3>
-                        <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-[var(--accent)] landing-mono">{topicDetails.keyDecisions.length}</span>
+                        <h3 className="text-sm font-bold text-[var(--accent)] landing-display">Key Design Decisions</h3>
+                        <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--accent)]/15 text-[var(--accent)] landing-mono">{topicDetails.keyDecisions.length}</span>
                       </div>
                       <div className="p-3">
                         <div className="flex flex-nowrap gap-2.5 overflow-x-auto pb-2" style={{ scrollbarWidth: 'thin' }}>
@@ -2377,7 +2377,7 @@ export default function TopicDetail({
                                 <span className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 bg-[var(--accent)]/100 text-white landing-mono">
                                   {i + 1}
                                 </span>
-                                <div className="h-px flex-1 bg-emerald-200" />
+                                <div className="h-px flex-1 bg-emerald-500/30" />
                               </div>
                               <p className="text-[var(--text-secondary)] text-sm leading-relaxed landing-body">{decision}</p>
                             </div>
@@ -2434,7 +2434,7 @@ export default function TopicDetail({
                 <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)]">
                   <div className="px-3 py-2 border-b border-[var(--border)] flex items-center gap-2 bg-[var(--bg-elevated)]">
                     <Icon name="code" size={16} className="text-[var(--accent)]" />
-                    <h3 className="text-sm font-bold text-emerald-800 landing-display">Implementation</h3>
+                    <h3 className="text-sm font-bold text-[var(--accent)] landing-display">Implementation</h3>
                   </div>
                   <div className="overflow-x-auto bg-[#0d1117]">
                     <pre
@@ -2615,7 +2615,7 @@ export default function TopicDetail({
                   const questionKey = `behavioral-${index}`;
                   const isExpanded = expandedTheoryQuestions[questionKey] === undefined ? index < 2 : expandedTheoryQuestions[questionKey];
                   return (
-                    <div key={index} className="rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)] hover:border-[#d0d5dd] hover:shadow-sm transition-all">
+                    <div key={index} className="rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)] hover:border-[var(--border-hover,var(--border))] hover:shadow-sm transition-all">
                       {/* Question header — clickable to expand/collapse */}
                       <button
                         onClick={() => setExpandedTheoryQuestions(prev => ({ ...prev, [questionKey]: !isExpanded }))}
@@ -2659,7 +2659,7 @@ export default function TopicDetail({
                             const renderLine = (t, i) => {
                               if (t.startsWith('\u2705') || t.startsWith('\u274C')) {
                                 const ok = t.startsWith('\u2705');
-                                return <div key={i} className="flex items-start gap-2 mb-1"><span className={`w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${ok ? 'bg-emerald-100' : 'bg-red-100'}`}><svg className={`w-2.5 h-2.5 ${ok ? 'text-[var(--accent)]' : 'text-red-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}>{ok ? <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /> : <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />}</svg></span><span className="text-sm landing-body">{t.substring(2).trim()}</span></div>;
+                                return <div key={i} className="flex items-start gap-2 mb-1"><span className={`w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${ok ? 'bg-[var(--accent)]/15' : 'bg-red-100'}`}><svg className={`w-2.5 h-2.5 ${ok ? 'text-[var(--accent)]' : 'text-red-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}>{ok ? <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /> : <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />}</svg></span><span className="text-sm landing-body">{t.substring(2).trim()}</span></div>;
                               }
                               if (t.startsWith('"') && t.endsWith('"')) {
                                 return <div key={i} className="pl-3 py-1 text-sm italic text-[var(--text-muted)] rounded-r landing-body" style={{ borderLeft: `2px solid ${topicDetails.color}30` }}>{t.slice(1, -1)}</div>;
@@ -2799,11 +2799,11 @@ export default function TopicDetail({
           {topicDetails.exampleResponse && (
             <div id="example-response" className="rounded-2xl overflow-hidden scroll-mt-24 border border-[var(--border)] bg-[var(--bg-surface)]">
               <div className="px-4 py-2 border-b border-[var(--border)] flex items-center gap-2 bg-[var(--accent)]/10/50">
-                <div className="w-6 h-6 rounded-lg flex items-center justify-center bg-emerald-100">
+                <div className="w-6 h-6 rounded-lg flex items-center justify-center bg-[var(--accent)]/15">
                   <Icon name="messageSquare" size={12} className="text-[var(--accent)]" />
                 </div>
                 <h3 className="text-sm font-bold text-emerald-900 landing-display">Example Response</h3>
-                <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-[var(--accent)] landing-mono">Ready to use</span>
+                <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--accent)]/15 text-[var(--accent)] landing-mono">Ready to use</span>
               </div>
               <div className="p-5">
                 <div className="relative rounded-xl p-5" style={{ background: `linear-gradient(135deg, ${topicDetails.color}06, ${topicDetails.color}02)`, borderLeft: `4px solid ${topicDetails.color}40` }}>
@@ -2861,17 +2861,17 @@ export default function TopicDetail({
           {topicDetails.tips && (
             <div id="tips" className="rounded-2xl overflow-hidden scroll-mt-24 border border-[var(--border)] bg-[var(--bg-surface)]">
               <div className="px-4 py-2 border-b border-[var(--border)] flex items-center gap-2 bg-[var(--accent)]/10/50">
-                <div className="w-6 h-6 rounded-lg flex items-center justify-center bg-emerald-100">
+                <div className="w-6 h-6 rounded-lg flex items-center justify-center bg-[var(--accent)]/15">
                   <svg className="w-3.5 h-3.5 text-[var(--accent)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
                 <h3 className="text-sm font-bold text-emerald-900 landing-display">Tips for Success</h3>
-                <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-[var(--accent)] landing-mono">{topicDetails.tips.length} tips</span>
+                <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--accent)]/15 text-[var(--accent)] landing-mono">{topicDetails.tips.length} tips</span>
               </div>
               <div className="p-2.5 space-y-1.5">
                 {topicDetails.tips.map((tip, i) => (
-                  <div key={i} className="flex items-start gap-2.5 px-3.5 py-3 rounded-xl bg-[var(--accent)]/10/40 border border-emerald-100 hover:bg-[var(--accent)]/10/70 hover:border-emerald-500/20 hover:shadow-sm transition-all group">
+                  <div key={i} className="flex items-start gap-2.5 px-3.5 py-3 rounded-xl bg-[var(--accent)]/10/40 border border-emerald-500/20 hover:bg-[var(--accent)]/10/70 hover:border-emerald-500/20 hover:shadow-sm transition-all group">
                     <span className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 bg-[var(--accent)]/100 text-white mt-0.5 shadow-sm">
                       <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
                     </span>
