@@ -2,6 +2,7 @@ import { Routes, Route, Navigate, useLocation, Link } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { lazy, Suspense, useEffect } from 'react';
 import SiteNav from './components/shared/SiteNav';
+import RootShell from './components/layout/RootShell';
 import { usePageTracker } from './hooks/usePageTracker';
 
 // ── Shared pages ────────────────────────────────────────
@@ -38,8 +39,11 @@ const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage'));
 
 function Loading() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-white">
-      <div className="w-12 h-12 border-4 border-emerald-200 border-t-emerald-500 rounded-full animate-spin" />
+    <div
+      className="min-h-screen flex flex-col items-center justify-center gap-4"
+      style={{ background: 'var(--bg-app)' }}
+    >
+      <div className="w-12 h-12 border-4 border-indigo-900 border-t-indigo-400 rounded-full animate-spin" />
     </div>
   );
 }
@@ -125,6 +129,14 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function ShellRoute({ children }: { children: React.ReactNode }) {
+  return (
+    <ProtectedRoute>
+      <RootShell>{children}</RootShell>
+    </ProtectedRoute>
+  );
+}
+
 function ScrollToTop() {
   const { pathname } = useLocation();
   useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
@@ -149,41 +161,41 @@ export function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/premium" element={<PricingPage />} />
-          <Route path="/download" element={<ProtectedRoute><CapraDashboard /></ProtectedRoute>} />
+          <Route path="/download" element={<ShellRoute><CapraDashboard /></ShellRoute>} />
 
           {/* ── Jobs: Apply ──────────────────────────────── */}
-          <Route path="/jobs" element={<ProtectedRoute><JobsPage /></ProtectedRoute>} />
-          <Route path="/jobs/:id/prepare" element={<ProtectedRoute><JobPrepPage /></ProtectedRoute>} />
+          <Route path="/jobs" element={<ShellRoute><JobsPage /></ShellRoute>} />
+          <Route path="/jobs/:id/prepare" element={<ShellRoute><JobPrepPage /></ShellRoute>} />
 
           {/* ── Lumora: Live Interview ─────────────────── */}
-          <Route path="/lumora" element={<ProtectedRoute><LumoraInterviewPage /></ProtectedRoute>} />
-          <Route path="/lumora/coding" element={<ProtectedRoute><LumoraCodingPage /></ProtectedRoute>} />
-          <Route path="/lumora/design" element={<ProtectedRoute><LumoraDesignPage /></ProtectedRoute>} />
+          <Route path="/lumora" element={<ShellRoute><LumoraInterviewPage /></ShellRoute>} />
+          <Route path="/lumora/coding" element={<ShellRoute><LumoraCodingPage /></ShellRoute>} />
+          <Route path="/lumora/design" element={<ShellRoute><LumoraDesignPage /></ShellRoute>} />
 
           {/* ── Also accessible via /app paths ──────────── */}
-          <Route path="/app" element={<ProtectedRoute><LumoraInterviewPage /></ProtectedRoute>} />
-          <Route path="/app/coding" element={<ProtectedRoute><LumoraCodingPage /></ProtectedRoute>} />
-          <Route path="/app/design" element={<ProtectedRoute><LumoraDesignPage /></ProtectedRoute>} />
+          <Route path="/app" element={<ShellRoute><LumoraInterviewPage /></ShellRoute>} />
+          <Route path="/app/coding" element={<ShellRoute><LumoraCodingPage /></ShellRoute>} />
+          <Route path="/app/design" element={<ShellRoute><LumoraDesignPage /></ShellRoute>} />
 
           {/* ── Capra: Preparation ─────────────────────── */}
-          <Route path="/capra" element={<ProtectedRoute><CapraDashboard /></ProtectedRoute>} />
-          <Route path="/capra/coding" element={<ProtectedRoute><CapraDashboard /></ProtectedRoute>} />
-          <Route path="/capra/design" element={<ProtectedRoute><CapraDashboard /></ProtectedRoute>} />
-          <Route path="/capra/prep" element={<ProtectedRoute><CapraDashboard /></ProtectedRoute>} />
-          <Route path="/capra/practice" element={<ProtectedRoute><CapraPractice /></ProtectedRoute>} />
-          <Route path="/capra/prepare/*" element={<ProtectedRoute><CapraPrepare /></ProtectedRoute>} />
-          <Route path="/capra/plan" element={<ProtectedRoute><PrepPlanPage /></ProtectedRoute>} />
+          <Route path="/capra" element={<ShellRoute><CapraDashboard /></ShellRoute>} />
+          <Route path="/capra/coding" element={<ShellRoute><CapraDashboard /></ShellRoute>} />
+          <Route path="/capra/design" element={<ShellRoute><CapraDashboard /></ShellRoute>} />
+          <Route path="/capra/prep" element={<ShellRoute><CapraDashboard /></ShellRoute>} />
+          <Route path="/capra/practice" element={<ShellRoute><CapraPractice /></ShellRoute>} />
+          <Route path="/capra/prepare/*" element={<ShellRoute><CapraPrepare /></ShellRoute>} />
+          <Route path="/capra/plan" element={<ShellRoute><PrepPlanPage /></ShellRoute>} />
           <Route path="/capra/onboarding" element={<ProtectedRoute><CapraOnboarding /></ProtectedRoute>} />
           <Route path="/capra/landing" element={<CapraLanding />} />
-          <Route path="/capra/achievements" element={<ProtectedRoute><AchievementsPage /></ProtectedRoute>} />
+          <Route path="/capra/achievements" element={<ShellRoute><AchievementsPage /></ShellRoute>} />
 
           {/* ── Also accessible via old Capra paths ────── */}
-          <Route path="/prepare/*" element={<ProtectedRoute><CapraPrepare /></ProtectedRoute>} />
-          <Route path="/practice" element={<ProtectedRoute><CapraPractice /></ProtectedRoute>} />
-          <Route path="/handbook" element={<ProtectedRoute><Blind75Page /></ProtectedRoute>} />
-          <Route path="/handbook/:id/practice" element={<ProtectedRoute><Blind75PracticePage /></ProtectedRoute>} />
-          <Route path="/handbook/:id/solution" element={<ProtectedRoute><Blind75PracticePage /></ProtectedRoute>} />
-          <Route path="/problems/:slug" element={<ProtectedRoute><CapraDashboard /></ProtectedRoute>} />
+          <Route path="/prepare/*" element={<ShellRoute><CapraPrepare /></ShellRoute>} />
+          <Route path="/practice" element={<ShellRoute><CapraPractice /></ShellRoute>} />
+          <Route path="/handbook" element={<ShellRoute><Blind75Page /></ShellRoute>} />
+          <Route path="/handbook/:id/practice" element={<ShellRoute><Blind75PracticePage /></ShellRoute>} />
+          <Route path="/handbook/:id/solution" element={<ShellRoute><Blind75PracticePage /></ShellRoute>} />
+          <Route path="/problems/:slug" element={<ShellRoute><CapraDashboard /></ShellRoute>} />
           <Route path="/onboarding" element={<ProtectedRoute><CapraOnboarding /></ProtectedRoute>} />
 
           {/* ── Referral ────────────────────────────── */}
@@ -196,7 +208,7 @@ export function App() {
           <Route path="/challenge" element={<ChallengePage />} />
 
           {/* ── Analytics ─────────────────────────────── */}
-          <Route path="/analytics" element={<ProtectedRoute><AnalyticsPage /></ProtectedRoute>} />
+          <Route path="/analytics" element={<ShellRoute><AnalyticsPage /></ShellRoute>} />
 
           {/* ── Company Interview Questions ─────────────── */}
           <Route path="/interview-questions/:company" element={<InterviewQuestionsPage />} />
