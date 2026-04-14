@@ -164,7 +164,11 @@ export default function DocsPage({ onBack }) {
       setActivePageState(page);
       setSelectedTopicState(topic);
       setActiveSection(page);
-      if (topic) window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (topic) {
+        const scrollable = document.querySelector('main.overflow-y-auto') || document.querySelector('main');
+        if (scrollable) scrollable.scrollTo({ top: 0, behavior: 'smooth' });
+        else window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
@@ -197,7 +201,10 @@ export default function DocsPage({ onBack }) {
     setShowAskAI(false);
     if (topic) {
       /* sidebar close handled by AppShell */;
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      // Scroll the nearest scrollable container (RootShell <main>) to top
+      const scrollable = document.querySelector('main.overflow-y-auto') || document.querySelector('main');
+      if (scrollable) scrollable.scrollTo({ top: 0, behavior: 'smooth' });
+      else window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
