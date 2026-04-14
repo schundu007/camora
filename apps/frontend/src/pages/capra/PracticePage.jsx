@@ -731,7 +731,7 @@ export default function PracticePage() {
                             setStats(getStats());
                           }
                         }}
-                        style={{ padding: '5px 12px', fontSize: 11, fontWeight: 600, color: '#ef4444', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, cursor: 'pointer', transition: 'all 0.15s' }}
+                        style={{ padding: '5px 12px', fontSize: 11, fontWeight: 600, color: '#ef4444', background: 'rgba(220,38,38,0.1)', border: '1px solid rgba(220,38,38,0.25)', borderRadius: 8, cursor: 'pointer', transition: 'all 0.15s' }}
                       >
                         Reset History
                       </button>
@@ -763,7 +763,7 @@ export default function PracticePage() {
                           {expandedHistory === i && h.questions && (
                             <div style={{ borderTop: '1px solid var(--border)', padding: '12px 18px' }}>
                               {h.questions.map((hq, qi) => (
-                                <div key={qi} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: qi < h.questions.length - 1 ? '1px solid #f9fafb' : 'none' }}>
+                                <div key={qi} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: qi < h.questions.length - 1 ? '1px solid var(--border)' : 'none' }}>
                                   <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{qi + 1}. {hq.q}</span>
                                   <span style={{ fontSize: 12, fontWeight: 600, color: scoreColor(hq.score), minWidth: 40, textAlign: 'right' }}>{hq.score}%</span>
                                 </div>
@@ -822,7 +822,7 @@ export default function PracticePage() {
                     ) : null;
                   })}
                   {questions[currentIdx].topics?.slice(0, 2).map(t => (
-                    <span key={t} style={{ fontSize: 10, fontWeight: 500, padding: '2px 6px', borderRadius: 99, background: '#ede9fe', color: '#7c3aed' }}>{t}</span>
+                    <span key={t} style={{ fontSize: 10, fontWeight: 500, padding: '2px 6px', borderRadius: 99, background: 'rgba(124,58,237,0.12)', color: '#a78bfa' }}>{t}</span>
                   ))}
                 </div>
                 <h2 className="practice-display" style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 6px' }}>
@@ -1108,10 +1108,10 @@ export default function PracticePage() {
 
                   {/* Improvement tips */}
                   {inlineEval.improvementTips && inlineEval.improvementTips.length > 0 && (
-                    <div style={{ marginTop: 14, padding: 12, background: '#fffbeb', borderRadius: 10, border: '1px solid #fde68a' }}>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: '#92400e', textTransform: 'uppercase', marginBottom: 6 }}>Tips to improve</div>
+                    <div style={{ marginTop: 14, padding: 12, background: 'rgba(245,158,11,0.08)', borderRadius: 10, border: '1px solid rgba(245,158,11,0.25)' }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: '#f59e0b', textTransform: 'uppercase', marginBottom: 6 }}>Tips to improve</div>
                       {inlineEval.improvementTips.map((tip, ti) => (
-                        <div key={ti} style={{ fontSize: 12, color: '#92400e', display: 'flex', alignItems: 'flex-start', gap: 6, marginBottom: 2 }}>
+                        <div key={ti} style={{ fontSize: 12, color: 'var(--text-secondary)', display: 'flex', alignItems: 'flex-start', gap: 6, marginBottom: 2 }}>
                           <span style={{ color: '#f59e0b', flexShrink: 0 }}>-</span>
                           {tip}
                         </div>
@@ -1158,7 +1158,7 @@ export default function PracticePage() {
                   <button onClick={skipQuestion} disabled={evaluating} style={{ padding: '10px 20px', background: 'var(--bg-elevated)', color: 'var(--text-secondary)', fontSize: 13, fontWeight: 500, borderRadius: 10, border: '1px solid var(--border)', cursor: 'pointer' }}>
                     Skip
                   </button>
-                  <button onClick={() => endChallenge()} disabled={evaluating} style={{ padding: '10px 20px', background: '#fef2f2', color: '#dc2626', fontSize: 13, fontWeight: 500, borderRadius: 10, border: '1px solid #fecaca', cursor: evaluating ? 'not-allowed' : 'pointer', marginLeft: 'auto', opacity: evaluating ? 0.5 : 1 }}>
+                  <button onClick={() => endChallenge()} disabled={evaluating} style={{ padding: '10px 20px', background: 'rgba(220,38,38,0.1)', color: '#ef4444', fontSize: 13, fontWeight: 500, borderRadius: 10, border: '1px solid rgba(220,38,38,0.25)', cursor: evaluating ? 'not-allowed' : 'pointer', marginLeft: 'auto', opacity: evaluating ? 0.5 : 1 }}>
                     End Session
                   </button>
                 </div>
@@ -1251,14 +1251,14 @@ export default function PracticePage() {
 
               {/* ── Improvement Tips ── */}
               {aiModelAnswers.some(a => a.improvementTips && a.improvementTips.length > 0) && (
-                <div style={{ background: 'linear-gradient(135deg, #fefce8, #fffbeb)', border: '1px solid #fde68a', borderRadius: 16, padding: '18px 22px', marginBottom: 20 }}>
-                  <h3 className="practice-display" style={{ fontSize: 13, fontWeight: 700, color: '#92400e', margin: '0 0 10px', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <div style={{ background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: 16, padding: '18px 22px', marginBottom: 20 }}>
+                  <h3 className="practice-display" style={{ fontSize: 13, fontWeight: 700, color: '#f59e0b', margin: '0 0 10px', display: 'flex', alignItems: 'center', gap: 6 }}>
                     <Icon name="lightbulb" size={15} style={{ color: '#f59e0b' }} />
                     Focus Areas
                   </h3>
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                     {[...new Set(aiModelAnswers.flatMap(a => a.improvementTips || []))].slice(0, 5).map((tip, i) => (
-                      <span key={i} style={{ fontSize: 12, color: '#78350f', padding: '5px 12px', borderRadius: 99, background: 'rgba(253,224,71,0.3)', fontWeight: 500 }}>
+                      <span key={i} style={{ fontSize: 12, color: '#fbbf24', padding: '5px 12px', borderRadius: 99, background: 'rgba(245,158,11,0.12)', fontWeight: 500 }}>
                         {tip}
                       </span>
                     ))}
