@@ -54,11 +54,11 @@ export default function InterviewCountdown() {
 
   if (loading) {
     return (
-      <div className="bg-white border-0 rounded-2xl p-5 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
+      <div className="bg-[var(--bg-surface)] border-0 rounded-2xl p-5 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
         <div className="animate-pulse space-y-3">
-          <div className="h-4 bg-gray-100 rounded w-32" />
-          <div className="h-12 bg-gray-100 rounded w-20" />
-          <div className="h-3 bg-gray-100 rounded w-48" />
+          <div className="h-4 bg-[var(--bg-elevated)] rounded w-32" />
+          <div className="h-12 bg-[var(--bg-elevated)] rounded w-20" />
+          <div className="h-3 bg-[var(--bg-elevated)] rounded w-48" />
         </div>
       </div>
     );
@@ -70,12 +70,12 @@ export default function InterviewCountdown() {
       <>
         <button
           onClick={() => setShowSetup(true)}
-          className="w-full bg-white border-0 rounded-2xl p-5 text-left shadow-[0_4px_24px_rgba(99,102,241,0.12)] hover:shadow-[0_20px_60px_rgba(99,102,241,0.28)] transition-all group"
+          className="w-full bg-[var(--bg-surface)] border-0 rounded-2xl p-5 text-left shadow-[0_4px_24px_rgba(99,102,241,0.12)] hover:shadow-[0_20px_60px_rgba(99,102,241,0.28)] transition-all group"
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-semibold text-gray-900">Interview Countdown</p>
-              <p className="text-[13px] text-gray-500 mt-0.5">Track your prep progress</p>
+              <p className="text-sm font-semibold text-[var(--text-primary)]">Interview Countdown</p>
+              <p className="text-[13px] text-[var(--text-muted)] mt-0.5">Track your prep progress</p>
             </div>
             <span className="text-indigo-600 text-sm font-medium group-hover:translate-x-0.5 transition-transform">
               Set your interview date &rarr;
@@ -99,14 +99,14 @@ export default function InterviewCountdown() {
   const strokeDashoffset = circumference - (completion_pct / 100) * circumference;
 
   return (
-    <div className="bg-white border-0 rounded-2xl p-5 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
+    <div className="bg-[var(--bg-surface)] border-0 rounded-2xl p-5 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
       <div className="flex items-center gap-4">
         {/* Progress ring */}
         <div className="relative flex-shrink-0">
           <svg width="72" height="72" viewBox="0 0 72 72">
             <circle
               cx="36" cy="36" r={radius}
-              fill="none" stroke="#e5e7eb" strokeWidth="5"
+              fill="none" stroke="var(--border)" strokeWidth="5"
             />
             <circle
               cx="36" cy="36" r={radius}
@@ -119,21 +119,21 @@ export default function InterviewCountdown() {
             />
           </svg>
           <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-lg font-bold text-emerald-600">{days_remaining}</span>
+            <span className="text-lg font-bold text-[var(--accent)]">{days_remaining}</span>
           </div>
         </div>
 
         {/* Info */}
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Countdown</p>
-          <p className="text-[15px] font-semibold text-gray-900 mt-0.5">
+          <p className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wide">Countdown</p>
+          <p className="text-[15px] font-semibold text-[var(--text-primary)] mt-0.5">
             {days_remaining} {days_remaining === 1 ? 'day' : 'days'} until your {target_company} interview
           </p>
           <div className="flex items-center gap-3 mt-2">
-            <span className="text-xs text-gray-500">{completion_pct}% prepared</span>
+            <span className="text-xs text-[var(--text-muted)]">{completion_pct}% prepared</span>
             <Link
               to="/capra/plan"
-              className="text-xs font-medium text-emerald-600 hover:text-emerald-700 transition-colors"
+              className="text-xs font-medium text-[var(--accent)] hover:text-[var(--accent-hover)] transition-colors"
             >
               View plan &rarr;
             </Link>

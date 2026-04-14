@@ -30,23 +30,23 @@ export default function ProgressTracker() {
 
   const stats = [
     { value: completed, label: 'Done', color: '#10b981' },
-    { value: TOTAL, label: 'Total', color: '#111827' },
+    { value: TOTAL, label: 'Total', color: 'var(--text-primary)' },
     { value: CATEGORIES.length, label: 'Categories', color: '#3b82f6' },
     { value: `${pct}%`, label: 'Complete', color: '#8b5cf6' },
   ];
 
   return (
-    <div className="flex items-center gap-4 rounded-xl border border-gray-200 bg-white px-4 py-3" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+    <div className="flex items-center gap-4 rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
       {/* Ring */}
       <div className="relative shrink-0" style={{ width: 44, height: 44 }}>
         <svg width={44} height={44} style={{ transform: 'rotate(-90deg)' }}>
-          <circle cx={22} cy={22} r={R} fill="none" stroke="#f3f4f6" strokeWidth={STROKE} />
+          <circle cx={22} cy={22} r={R} fill="none" stroke="var(--border)" strokeWidth={STROKE} />
           <circle cx={22} cy={22} r={R} fill="none" stroke="#10b981" strokeWidth={STROKE}
             strokeLinecap="round" strokeDasharray={C} strokeDashoffset={offset}
             style={{ transition: 'stroke-dashoffset 0.6s ease' }} />
         </svg>
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-[10px] font-bold text-gray-900">{pct}%</span>
+          <span className="text-[10px] font-bold text-[var(--text-primary)]">{pct}%</span>
         </div>
       </div>
 
@@ -55,14 +55,14 @@ export default function ProgressTracker() {
         {stats.map(s => (
           <div key={s.label} className="shrink-0">
             <div className="text-lg font-bold leading-tight" style={{ color: s.color }}>{s.value}</div>
-            <div className="text-[10px] text-gray-400 font-medium">{s.label}</div>
+            <div className="text-[10px] text-[var(--text-muted)] font-medium">{s.label}</div>
           </div>
         ))}
       </div>
 
       {/* Stacked bar */}
       <div className="hidden sm:flex flex-col gap-1 w-32 shrink-0">
-        <div className="h-2 rounded-full bg-gray-100 overflow-hidden flex">
+        <div className="h-2 rounded-full bg-[var(--bg-elevated)] overflow-hidden flex">
           {CATEGORIES.map(cat => (
             <div key={cat.id} className="h-full" style={{ width: `${cat.total / TOTAL * 100}%`, background: `${cat.color}40` }} />
           ))}

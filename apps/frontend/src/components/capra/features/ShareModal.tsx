@@ -57,13 +57,13 @@ export default function ShareModal({
       onClick={handleBackdropClick}
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
     >
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden">
+      <div className="bg-[var(--bg-surface)] rounded-2xl shadow-xl w-full max-w-lg overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-6 pt-5 pb-4">
-          <h2 className="text-lg font-bold text-gray-900 tracking-tight">Share Your Score</h2>
+          <h2 className="text-lg font-bold text-[var(--text-primary)] tracking-tight">Share Your Score</h2>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors text-gray-400 hover:text-gray-600"
+            className="p-1.5 rounded-lg hover:bg-[var(--bg-elevated)] transition-colors text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
             aria-label="Close"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
@@ -72,10 +72,10 @@ export default function ShareModal({
           </button>
         </div>
 
-        <div className="border-t border-[#e3e8ee]" />
+        <div className="border-t border-[var(--border)]" />
 
         {/* Preview */}
-        <div className="px-6 py-5 flex justify-center bg-gray-50/50">
+        <div className="px-6 py-5 flex justify-center bg-[var(--bg-elevated)]/50">
           <div className="scale-[0.85] origin-center">
             <ScoreCard
               type={type}
@@ -89,7 +89,7 @@ export default function ShareModal({
           </div>
         </div>
 
-        <div className="border-t border-[#e3e8ee]" />
+        <div className="border-t border-[var(--border)]" />
 
         {/* Share actions */}
         <div className="px-6 py-5 space-y-3">
@@ -99,11 +99,11 @@ export default function ShareModal({
               type="text"
               readOnly
               value={shareUrl}
-              className="flex-1 px-3 py-2 text-sm text-gray-600 bg-gray-50 border border-[#e3e8ee] rounded-lg truncate focus:outline-none"
+              className="flex-1 px-3 py-2 text-sm text-[var(--text-secondary)] bg-[var(--bg-elevated)] border border-[var(--border)] rounded-lg truncate focus:outline-none"
             />
             <button
               onClick={handleCopy}
-              className="shrink-0 flex items-center gap-1.5 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium rounded-lg transition-colors"
+              className="shrink-0 flex items-center gap-1.5 px-4 py-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-sm font-medium rounded-lg transition-colors"
             >
               {copied ? (
                 <>
@@ -143,7 +143,7 @@ export default function ShareModal({
               href={twitterUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-colors"
+              className="flex items-center gap-2 px-4 py-2.5 bg-[var(--bg-elevated)] hover:bg-[var(--bg-elevated)] text-[var(--text-secondary)] text-sm font-medium rounded-lg transition-colors"
             >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
@@ -156,7 +156,7 @@ export default function ShareModal({
               href={shareUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-colors"
+              className="flex items-center gap-2 px-4 py-2.5 bg-[var(--bg-elevated)] hover:bg-[var(--bg-elevated)] text-[var(--text-secondary)] text-sm font-medium rounded-lg transition-colors"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />

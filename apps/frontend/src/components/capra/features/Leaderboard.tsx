@@ -13,9 +13,9 @@ interface LeaderboardEntry {
 }
 
 const RANK_STYLES: Record<number, { bg: string; text: string; icon: string }> = {
-  1: { bg: 'bg-amber-50', text: 'text-amber-700', icon: '🥇' },
-  2: { bg: 'bg-gray-50', text: 'text-gray-500', icon: '🥈' },
-  3: { bg: 'bg-orange-50', text: 'text-orange-700', icon: '🥉' },
+  1: { bg: 'bg-amber-500/10', text: 'text-amber-400', icon: '🥇' },
+  2: { bg: 'bg-[var(--bg-elevated)]', text: 'text-[var(--text-muted)]', icon: '🥈' },
+  3: { bg: 'bg-orange-500/10', text: 'text-orange-400', icon: '🥉' },
 };
 
 export default function Leaderboard() {
@@ -55,14 +55,14 @@ export default function Leaderboard() {
 
   if (loading) {
     return (
-      <div className="bg-white border-0 rounded-2xl p-6 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
+      <div className="bg-[var(--bg-surface)] border-0 rounded-2xl p-6 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
         <div className="animate-pulse space-y-3">
-          <div className="h-5 bg-gray-100 rounded w-40" />
+          <div className="h-5 bg-[var(--bg-elevated)] rounded w-40" />
           {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="flex items-center gap-3">
-              <div className="h-8 w-8 bg-gray-100 rounded-full" />
-              <div className="h-4 bg-gray-100 rounded flex-1" />
-              <div className="h-4 bg-gray-100 rounded w-16" />
+              <div className="h-8 w-8 bg-[var(--bg-elevated)] rounded-full" />
+              <div className="h-4 bg-[var(--bg-elevated)] rounded flex-1" />
+              <div className="h-4 bg-[var(--bg-elevated)] rounded w-16" />
             </div>
           ))}
         </div>
@@ -72,7 +72,7 @@ export default function Leaderboard() {
 
   if (error) {
     return (
-      <div className="bg-white border-0 rounded-2xl p-6 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
+      <div className="bg-[var(--bg-surface)] border-0 rounded-2xl p-6 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
         <p className="text-sm text-red-500">{error}</p>
       </div>
     );
@@ -80,24 +80,24 @@ export default function Leaderboard() {
 
   if (entries.length === 0) {
     return (
-      <div className="bg-white border-0 rounded-2xl p-6 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
-        <h3 className="text-lg font-bold text-gray-900 tracking-tight">Weekly Leaderboard</h3>
-        <p className="text-sm text-gray-500 mt-2">No activity this week yet. Be the first!</p>
+      <div className="bg-[var(--bg-surface)] border-0 rounded-2xl p-6 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
+        <h3 className="text-lg font-bold text-[var(--text-primary)] tracking-tight">Weekly Leaderboard</h3>
+        <p className="text-sm text-[var(--text-muted)] mt-2">No activity this week yet. Be the first!</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white border-0 rounded-2xl p-6 space-y-5 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
+    <div className="bg-[var(--bg-surface)] border-0 rounded-2xl p-6 space-y-5 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
       <div>
-        <h3 className="text-lg font-bold text-gray-900 tracking-tight">Weekly Leaderboard</h3>
-        <p className="text-sm text-gray-500 mt-1">Top performers this week</p>
+        <h3 className="text-lg font-bold text-[var(--text-primary)] tracking-tight">Weekly Leaderboard</h3>
+        <p className="text-sm text-[var(--text-muted)] mt-1">Top performers this week</p>
       </div>
 
-      <div className="rounded-lg overflow-hidden border border-gray-100">
+      <div className="rounded-lg overflow-hidden border border-[var(--border)]">
         <table className="w-full text-left">
           <thead>
-            <tr className="bg-gray-50 text-xs font-medium text-gray-500 uppercase tracking-wide">
+            <tr className="bg-[var(--bg-elevated)] text-xs font-medium text-[var(--text-muted)] uppercase tracking-wide">
               <th className="px-4 py-3 w-14">Rank</th>
               <th className="px-4 py-3">Name</th>
               <th className="px-4 py-3 text-right">XP</th>
@@ -112,12 +112,12 @@ export default function Leaderboard() {
               return (
                 <tr
                   key={entry.user_id}
-                  className={`border-t border-gray-100 transition-colors ${
+                  className={`border-t border-[var(--border)] transition-colors ${
                     isCurrentUser
-                      ? 'bg-emerald-50/60'
+                      ? 'bg-[var(--accent)]/10'
                       : idx % 2 === 0
-                        ? 'bg-white'
-                        : 'bg-gray-50/40'
+                        ? 'bg-[var(--bg-surface)]'
+                        : 'bg-[var(--bg-elevated)]/50'
                   }`}
                 >
                   {/* Rank */}
@@ -127,7 +127,7 @@ export default function Leaderboard() {
                         {rankStyle.icon}
                       </span>
                     ) : (
-                      <span className="inline-flex items-center justify-center w-7 h-7 rounded-full text-sm font-semibold text-gray-500 bg-gray-100">
+                      <span className="inline-flex items-center justify-center w-7 h-7 rounded-full text-sm font-semibold text-[var(--text-muted)] bg-[var(--bg-elevated)]">
                         {entry.rank}
                       </span>
                     )}
@@ -143,14 +143,14 @@ export default function Leaderboard() {
                           className="w-8 h-8 rounded-full object-cover"
                         />
                       ) : (
-                        <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 text-xs font-bold">
+                        <div className="w-8 h-8 rounded-full bg-[var(--accent)]/15 flex items-center justify-center text-[var(--accent)] text-xs font-bold">
                           {(entry.name || '?').charAt(0).toUpperCase()}
                         </div>
                       )}
-                      <span className={`text-sm font-medium ${isCurrentUser ? 'text-emerald-700' : 'text-gray-900'}`}>
+                      <span className={`text-sm font-medium ${isCurrentUser ? 'text-[var(--accent)]' : 'text-[var(--text-primary)]'}`}>
                         {entry.name}
                         {isCurrentUser && (
-                          <span className="ml-1.5 text-[10px] font-bold text-emerald-600 uppercase">You</span>
+                          <span className="ml-1.5 text-[10px] font-bold text-[var(--accent)] uppercase">You</span>
                         )}
                       </span>
                     </div>
@@ -158,14 +158,14 @@ export default function Leaderboard() {
 
                   {/* XP */}
                   <td className="px-4 py-3 text-right">
-                    <span className={`text-sm font-semibold ${rankStyle ? rankStyle.text : 'text-gray-700'}`}>
+                    <span className={`text-sm font-semibold ${rankStyle ? rankStyle.text : 'text-[var(--text-secondary)]'}`}>
                       {entry.xp_earned.toLocaleString()}
                     </span>
                   </td>
 
                   {/* Problems Solved */}
                   <td className="px-4 py-3 text-right">
-                    <span className="text-sm text-gray-600">
+                    <span className="text-sm text-[var(--text-secondary)]">
                       {entry.problems_solved}
                     </span>
                   </td>
