@@ -1990,14 +1990,14 @@ export async function GET(req: NextRequest) {
 }`,
     },
     tradeoffDecisions: [
-      { choice: 'Drizzle ORM vs Prisma', picked: 'Drizzle ORM', reason: "The spec calls for Drizzle. It produces transparent SQL-like query builders — you can predict the exact SQL generated. Prisma's generated client is more opaque with a heavier runtime footprint." },
+      { choice: 'Drizzle ORM vs Prisma', picked: 'Drizzle ORM', reason: "The spec calls for Drizzle. It produces transparent SQL-like query builders — you can predict the exact SQL generated. Prisma\'s generated client is more opaque with a heavier runtime footprint." },
       { choice: 'Server-side vs client-side filtering', picked: 'Server-side filtering', reason: 'Database-level filtering with indexes scales to any dataset size and demonstrates the SQL skills evaluators are testing. Client-side filtering breaks at scale and misses the point of the project.' },
       { choice: 'Next.js Route Handlers vs separate Express backend', picked: 'Next.js Route Handlers', reason: 'Single deployable unit in Docker simplifies evaluator setup. No CORS config needed. Route Handlers share the same TypeScript types as the UI, enabling end-to-end type safety.' },
       { choice: 'URL query state vs React useState for filters', picked: 'URL state via useSearchParams', reason: 'URL-synced filters survive page refreshes, are shareable, and support browser back/forward navigation — a professional pattern that evaluators notice.' },
     ],
     deepDiveTopics: [
       { topic: 'Drizzle ORM type inference', detail: 'Drizzle infers TypeScript types directly from schema definitions — no separate type file to maintain. The select() return type exactly reflects queried columns, and joins produce correctly merged types. drizzle-kit generates inspectable SQL migration files you can version-control, giving full visibility into every schema change.' },
-      { topic: 'PostgreSQL TEXT[] array columns', detail: 'Native array columns map cleanly to JavaScript string arrays. For filtering by flavor note, use the @> (contains) operator: WHERE flavor_notes @> ARRAY['blueberry']. A GIN index on the column makes this O(log n) at scale. Drizzle's .array() modifier handles serialization and deserialization automatically.' },
+      { topic: 'PostgreSQL TEXT[] array columns', detail: 'Native array columns map cleanly to JavaScript string arrays. For filtering by flavor note, use the @> (contains) operator: WHERE flavor_notes @> ARRAY[\'blueberry\']. A GIN index on the column makes this O(log n) at scale. Drizzle\'s .array() modifier handles serialization and deserialization automatically.' },
       { topic: 'Docker multi-stage builds for Next.js', detail: 'Naively copying node_modules produces a 1GB+ image. Next.js standalone output mode (output: "standalone" in next.config.js) bundles only runtime-required files. Multi-stage Dockerfile: stage 1 installs deps and builds, stage 2 copies only .next/standalone into clean node:20-alpine. Final image: ~200MB.' },
       { topic: 'Offset vs cursor-based pagination', detail: 'LIMIT/OFFSET pagination scans and discards all preceding rows: page 500 of 10,000 rows reads 9,980 rows to return 20. Cursor pagination (WHERE id > $lastId LIMIT 20) uses an index seek, constant-time regardless of page. For a take-home, offset is fine — mentioning cursor pagination signals senior-level DB awareness.' },
     ],
@@ -2050,6 +2050,133 @@ export async function GET(req: NextRequest) {
       { question: 'What UI details do evaluators notice?', answer: 'Loading states (skeleton cards), empty states ("No books match your filters" with a clear-filters button), smooth filter transitions, keyboard navigation, URL-synced filters (?genre=fiction&sort=year), accessible form controls, and focus management when switching views.' },
       { question: 'How do I make the grid/list toggle work well?', answer: 'Use CSS Grid with a state variable for layout mode. Grid mode: auto-fill columns with minmax(280px, 1fr). List mode: single column with horizontal card layout. Add a smooth height transition using layout animations (Framer Motion) or CSS transitions with fixed-height cards.' },
     ],
+    implementationSteps: [
+      { phase: 1, title: 'Project Setup & Data', description: 'Scaffold the Vite + React app, load the JSON book dataset, and verify data renders before building any filter logic.', tasks: ['Initialize Vite project with React and JavaScript templates, install Tailwind CSS', 'Create src/data/books.json with 50 realistic book entries covering genre, year, author, rating, availability, and ISBN fields', 'Build a BookCard component that renders a single book with all fields', 'Render the raw book array in a simple grid to verify data flow end-to-end', 'Set up React Router with / for the catalog and /books/:id for detail view'] },
+      { phase: 2, title: 'Filter & Search State', description: 'Build the centralized filter state and the pure filter function that produces the visible book list from any combination of active filters.', tasks: ['Define a single filters state object: { search, genres, yearRange, availability, rating, sortBy, sortOrder }', 'Write a filterBooks(books, filters) pure function using Array.filter and Array.sort chained in useMemo', 'Implement debounced search input (300ms) using a custom useDebounce hook', 'Build genre multi-select component with checkbox list and active count badge', 'Add year range dual-handle slider and rating minimum selector'] },
+      { phase: 3, title: 'Grid/List Layout & Wishlist', description: 'Build the responsive layout toggle between grid and list view, plus the localStorage-persisted wishlist with undo-remove.', tasks: ['Implement layout toggle (grid/list) with a CSS Grid className swap and smooth card transition', 'Build WishlistContext with add, remove, and undo-remove actions using a removedBuffer state', 'Persist wishlist to localStorage using useEffect with a JSON.stringify/parse round-trip', 'Show wishlist count badge in the header and a slide-out wishlist panel', 'Add empty state for both the book list ("No books match your filters") and the wishlist'] },
+      { phase: 4, title: 'Detail View & Polish', description: 'Build the book detail page, URL-synced filters, and accessibility and performance polish.', tasks: ['Create /books/:id detail page with full metadata, availability badge, and Add to Wishlist button', 'Sync active filters to URL query params so filter state survives page refresh and is shareable', 'Add loading skeleton cards (CSS animation) shown while the initial data loads', 'Keyboard navigation: focusable cards, Enter to open detail, Escape to close modals', 'Final check: sort by title A-Z, Z-A, year newest/oldest, rating highest/lowest'] },
+    ],
+    fileStructure: `rare-book-library/
+├── index.html
+├── package.json
+├── vite.config.js
+├── tailwind.config.js
+└── src/
+    ├── main.jsx
+    ├── App.jsx
+    ├── data/
+    │   └── books.json
+    ├── contexts/
+    │   └── WishlistContext.jsx
+    ├── hooks/
+    │   ├── useDebounce.js
+    │   └── useLocalStorage.js
+    ├── lib/
+    │   └── filterBooks.js
+    ├── components/
+    │   ├── BookCard.jsx
+    │   ├── BookGrid.jsx
+    │   ├── FilterPanel.jsx
+    │   ├── SearchBar.jsx
+    │   ├── SortControls.jsx
+    │   ├── WishlistPanel.jsx
+    │   ├── LayoutToggle.jsx
+    │   └── SkeletonCard.jsx
+    └── pages/
+        ├── CatalogPage.jsx
+        └── BookDetailPage.jsx`,
+    architectureLayers: [
+      { name: 'Data Layer', description: 'Static books.json dataset loaded at module import time. No API calls — the entire dataset is in memory, enabling instant filtering and sorting without any network latency.' },
+      { name: 'Filter Logic Layer', description: 'Pure filterBooks(books, filters) function in lib/filterBooks.js that chains Array.filter calls and sorts the result. Wrapped in useMemo so it only recomputes when books or filters change.' },
+      { name: 'State Layer', description: 'Single filters object in CatalogPage state, passed down to filter controls and consumed by filterBooks. WishlistContext provides global wishlist state with localStorage persistence.' },
+      { name: 'URL Sync Layer', description: 'useSearchParams hook syncs filter state to URL query params on change. On mount, initializes filter state from URL params — enables shareable filter URLs and refresh persistence.' },
+      { name: 'Component Layer', description: 'Presentational components (BookCard, FilterPanel, WishlistPanel) receive props and emit callbacks. No internal state except for controlled input values.' },
+      { name: 'Page Layer', description: 'CatalogPage orchestrates all state and renders the filter panel, book grid, and wishlist panel. BookDetailPage reads the book ID from URL params and displays full metadata.' },
+    ],
+    codeExamples: {
+      typescript: `// lib/filterBooks.js — pure filter + sort function
+export function filterBooks(books, filters) {
+  const { search, genres, yearRange, availability, rating, sortBy, sortOrder } = filters;
+  const query = search.toLowerCase().trim();
+
+  let result = books.filter(book => {
+    if (query && !book.title.toLowerCase().includes(query)
+              && !book.author.toLowerCase().includes(query)
+              && !book.isbn.includes(query)) return false;
+
+    if (genres.length > 0 && !genres.includes(book.genre)) return false;
+
+    if (yearRange) {
+      const [min, max] = yearRange;
+      if (book.year < min || book.year > max) return false;
+    }
+
+    if (availability !== null && book.available !== availability) return false;
+
+    if (rating !== null && book.rating < rating) return false;
+
+    return true;
+  });
+
+  result.sort((a, b) => {
+    let cmp = 0;
+    if (sortBy === 'title')  cmp = a.title.localeCompare(b.title);
+    if (sortBy === 'year')   cmp = a.year - b.year;
+    if (sortBy === 'rating') cmp = a.rating - b.rating;
+    return sortOrder === 'asc' ? cmp : -cmp;
+  });
+
+  return result;
+}
+
+// hooks/useDebounce.js — debounce any value
+import { useState, useEffect } from 'react';
+
+export function useDebounce(value, delay = 300) {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+  return debounced;
+}`,
+    },
+    tradeoffDecisions: [
+      { choice: 'Client-side vs server-side filtering', picked: 'Client-side filtering', reason: 'The dataset is static JSON loaded once. Client-side filtering is instant (no network round-trips) and appropriate for datasets up to ~10,000 items. This is explicitly the expected approach for a frontend take-home.' },
+      { choice: 'Single filters object vs separate useState per filter', picked: 'Single filters object', reason: 'A single state object means one re-render per filter change regardless of how many filters update simultaneously. It also makes URL serialization trivial: Object.entries(filters) maps directly to query params.' },
+      { choice: 'URL query params vs localStorage for filter persistence', picked: 'URL query params', reason: 'URL persistence makes filter states shareable via link and supports browser back/forward. localStorage would persist across sessions but breaks the shareable-URL use case that evaluators specifically look for.' },
+      { choice: 'Framer Motion vs CSS transitions for layout animation', picked: 'CSS transitions', reason: 'CSS transitions require zero additional dependencies. A grid-cols class swap with transition-all and fixed card heights achieves a smooth layout toggle. Framer Motion adds 40KB for marginal visual improvement.' },
+    ],
+    deepDiveTopics: [
+      { topic: 'useMemo for filter performance', detail: 'Without memoization, filterBooks runs on every render — including renders caused by unrelated state changes like wishlist updates. Wrapping in useMemo with [books, filters] as dependencies ensures the filter only recomputes when inputs change. For a 1,000-book dataset with multiple active filters, this can avoid dozens of wasted iterations per second.' },
+      { topic: 'URL state synchronization pattern', detail: 'The pattern: on filter change, call setSearchParams(new URLSearchParams(filters)) to write to URL. On mount, call new URLSearchParams(location.search) to read initial state. This creates a two-way sync. The key insight is to treat the URL as the source of truth, initializing React state from URL on mount rather than the reverse.' },
+      { topic: 'Accessible filter controls', detail: 'Evaluators who care about accessibility check: genre checkboxes have associated <label> elements, the range slider uses aria-valuemin/valuemax/valuenow, the search input has aria-label="Search books", clear-filters button is focusable and has descriptive aria-label, and color is never the sole indicator of availability status (use text or icon alongside color).' },
+      { topic: 'Debounce vs throttle for search', detail: 'Debounce delays execution until N ms after the last call — perfect for search: wait until the user stops typing before filtering. Throttle limits execution to at most once per N ms — better for scroll events. For a 300ms debounce on search: typing "tolkien" produces one filter call after the user pauses, not 7 calls for each character.' },
+    ],
+    commonPitfalls: [
+      { pitfall: 'Filter state not persisting across page navigation', why: 'Navigating to a book detail page and back resets filter state if it only lives in component state. The user loses their place in the filtered catalog.', solution: 'Sync filter state to URL query params. On mount, initialize filter state from searchParams. React Router preserves query params across navigations when using <Link> components.' },
+      { pitfall: 'Re-filtering on every keystroke without debounce', why: 'Filtering 500 books on every keypress is fast but triggers a new render every 50ms while the user types, causing noticeable jank on slower devices.', solution: 'Apply a 300ms debounce to the search input value. Show the raw (non-debounced) value in the input for immediate visual feedback, but only pass the debounced value to filterBooks.' },
+      { pitfall: 'Genre filter with hardcoded values', why: 'If genre options are hardcoded in the FilterPanel component, adding new genres to books.json requires updating two files. The options get out of sync.', solution: 'Derive genre options dynamically: const genres = useMemo(() => [...new Set(books.map(b => b.genre))].sort(), [books]). The filter UI always reflects the actual dataset.' },
+      { pitfall: 'Wishlist state reset on page refresh', why: 'Using React state alone for the wishlist loses it when the page refreshes. Users expect wishlists to persist.', solution: 'Persist wishlist to localStorage via useEffect: useEffect(() => { localStorage.setItem("wishlist", JSON.stringify(wishlist)); }, [wishlist]). Initialize state from localStorage: useState(() => JSON.parse(localStorage.getItem("wishlist") ?? "[]")).' },
+    ],
+    edgeCases: [
+      { scenario: 'Search query with special regex characters', impact: 'If the search string is used in a RegExp constructor (new RegExp(query)), characters like "." or "+" break the regex or match unintended patterns.', mitigation: 'Use String.includes() or String.toLowerCase().includes() for simple substring matching. Avoid RegExp unless you specifically need pattern matching — it adds complexity and edge cases.' },
+      { scenario: 'Books dataset with missing or null fields', impact: 'If some books are missing the genre field, the genre filter throws "Cannot read property of null" when accessing book.genre.', mitigation: 'Add defensive checks in filterBooks: if (genres.length > 0 && !genres.includes(book.genre ?? \'\')) return false. Also validate the JSON dataset during development with a schema check script.' },
+      { scenario: 'Year range slider with min > max', impact: 'If the user somehow sets the minimum year above the maximum (can happen with direct input fields), filterBooks returns zero results with no explanation.', mitigation: 'Clamp values: const [minYear, maxYear] = [Math.min(a, b), Math.max(a, b)]. Or validate in the slider component: do not allow min handle to exceed max handle position.' },
+      { scenario: 'Wishlist persistence with invalid localStorage data', impact: 'If localStorage contains corrupted or outdated JSON (e.g., from an older version of the app), JSON.parse throws and crashes the app on load.', mitigation: 'Wrap localStorage.getItem in try/catch: try { return JSON.parse(raw) } catch { localStorage.removeItem("wishlist"); return []; }' },
+    ],
+    interviewFollowups: [
+      { question: 'How would you handle a dataset of 100,000 books?', answer: 'Client-side filtering no longer works at that scale — the initial payload is too large. Move to a server-side API with pagination. Implement debounced API calls for search, and use React Query for caching and loading states. Consider ElasticSearch for full-text search across large catalogs.' },
+      { question: 'How would you add virtual scrolling for the book grid?', answer: 'Use react-window or TanStack Virtual. Calculate the total grid height from item count * row height, render only the visible rows plus an overscan buffer, and absolutely position each row. This keeps the DOM node count constant regardless of how many books match the filters.' },
+      { question: 'How would you make the filters accessible to screen reader users?', answer: 'All inputs need associated labels. Use role="group" and aria-labelledby for filter sections. Live region (aria-live="polite") announcing "showing X of Y books" after filters update. Ensure keyboard focus order is logical: search first, then filters, then results.' },
+      { question: 'How would you implement fuzzy search?', answer: 'Replace the String.includes check with Fuse.js, a lightweight fuzzy-matching library. Configure with keys: ["title", "author", "isbn"] and a threshold of 0.3. Fuse scores matches and returns them in relevance order. This handles typos like "Tolkein" matching "Tolkien".' },
+    ],
+    extensionIdeas: [
+      { idea: 'URL-shareable wishlist', difficulty: 'beginner', description: 'Encode the wishlist as a base64 URL param (?wish=abc123). Anyone with the link sees the same wishlist pre-populated. Demonstrates URL encoding and shareable state patterns.' },
+      { idea: 'Reading progress tracker', difficulty: 'beginner', description: 'Add "Want to Read / Reading / Finished" status per book stored in localStorage. Show status badge on each BookCard. Filter by reading status in the sidebar. Common UX pattern from Goodreads.' },
+      { idea: 'Keyboard command palette', difficulty: 'intermediate', description: 'Cmd+K opens a command palette (like Linear or Raycast). Type to search books, select genres, or clear filters. Implemented with a modal + filtered command list + keyboard arrow navigation.' },
+      { idea: 'Infinite scroll with Intersection Observer', difficulty: 'intermediate', description: 'Replace static grid with paginated rendering: show first 20 books, attach an Intersection Observer to the last card, load 20 more when it enters the viewport. Keeps initial render fast for large filtered result sets.' },
+    ],
   },
   {
     id: 'kanban-board',
@@ -2075,6 +2202,130 @@ export async function GET(req: NextRequest) {
       { question: 'How do I handle cross-column moves?', answer: 'On drag end: 1) Remove card from source column, 2) Insert at target position in target column, 3) Recalculate order values for affected cards, 4) Update state optimistically, 5) Persist to storage. Use dnd-kit\'s onDragEnd with active/over container detection to determine source and target columns.' },
       { question: 'What features make this production-quality?', answer: 'Keyboard accessibility (tab through cards, arrow keys to move), undo/redo (Cmd+Z), search/filter across all cards, drag placeholder animation, column WIP limits with visual warnings, and smooth card creation animation.' },
     ],
+    implementationSteps: [
+      { phase: 1, title: 'Data Model & Board Scaffold', description: 'Define the normalized board data structure and render a static board before adding any drag-and-drop behavior.', tasks: ['Define TypeScript types: Column { id, title, order }, Card { id, columnId, title, description, labels, dueDate, order }', 'Initialize board state with useReducer: { columns: Record<id, Column>, cards: Record<id, Card>, columnOrder: string[] }', 'Render static columns and card stacks from state using columnOrder to drive column sequence', 'Add inline column title editing with double-click to edit, Enter to save, Escape to cancel', 'Add new card input at bottom of each column with Cmd+Enter to save quickly'] },
+      { phase: 2, title: 'Drag-and-Drop with dnd-kit', description: 'Integrate @dnd-kit/core and @dnd-kit/sortable to handle card reordering within columns and card moves between columns.', tasks: ['Install @dnd-kit/core, @dnd-kit/sortable, @dnd-kit/utilities', 'Wrap the board in DndContext with onDragStart, onDragOver, and onDragEnd handlers', 'Make each column a SortableContext with its card IDs array and verticalListSortingStrategy', 'Make each card a useSortable item with transform and transition styles applied', 'Handle cross-column moves in onDragEnd: detect active container vs over container, update card.columnId and recalculate order values'] },
+      { phase: 3, title: 'Card Detail Modal & Labels', description: 'Build the card detail modal with rich editing: full description, color labels, due date picker, and checklist items.', tasks: ['Create CardModal component triggered by clicking a card (not the drag handle)', 'Add markdown-capable textarea for description with a live preview toggle', 'Build label system: 6 color presets, click to toggle on/off card, display as colored dots on the card', 'Add due date picker (native <input type="date">) with overdue visual state (red badge when past due)', 'Add checklist: add/remove/check items, show "X/Y" completion count on the card in board view'] },
+      { phase: 4, title: 'Persistence, Undo & Polish', description: 'Add localStorage persistence, undo/redo history, search/filter across cards, and keyboard accessibility.', tasks: ['Persist board state to localStorage on every dispatch via a useEffect subscriber', 'Implement undo/redo: maintain past and future state stacks, Cmd+Z / Cmd+Shift+Z handlers', 'Add global card search: filter cards matching query, dim non-matching cards, highlight matching text', 'Add keyboard shortcuts: N for new card in focused column, Delete for selected card (with confirmation)', 'Smooth drag overlay: custom DragOverlay rendering a slightly scaled card clone during drag'] },
+    ],
+    fileStructure: `kanban-board/
+├── index.html
+├── package.json
+├── vite.config.ts
+├── tailwind.config.js
+└── src/
+    ├── main.tsx
+    ├── App.tsx
+    ├── types/
+    │   └── board.ts
+    ├── store/
+    │   ├── boardReducer.ts
+    │   └── useBoard.ts
+    ├── hooks/
+    │   ├── useLocalStorage.ts
+    │   └── useUndoRedo.ts
+    ├── components/
+    │   ├── Board.tsx
+    │   ├── Column.tsx
+    │   ├── Card.tsx
+    │   ├── CardModal.tsx
+    │   ├── DragOverlay.tsx
+    │   ├── LabelPicker.tsx
+    │   ├── Checklist.tsx
+    │   └── SearchBar.tsx
+    └── lib/
+        └── orderUtils.ts`,
+    architectureLayers: [
+      { name: 'State Layer', description: 'useReducer with a normalized state shape: columns and cards stored as Record<id, entity> maps, with a separate columnOrder array. All mutations go through typed action dispatches, enabling undo/redo by snapshotting state.' },
+      { name: 'Undo/Redo Layer', description: 'useUndoRedo hook wraps the reducer, maintaining past[] and future[] state stacks. Every dispatch pushes current state to past. Cmd+Z pops past into current; Cmd+Shift+Z pops future.' },
+      { name: 'DnD Layer', description: '@dnd-kit DndContext handles the full drag lifecycle. onDragStart captures the active item, onDragOver produces the visual placeholder, onDragEnd commits the reorder or cross-column move to state.' },
+      { name: 'Order Management Layer', description: 'Cards and columns use floating-point order values. Inserting between two items: newOrder = (before.order + after.order) / 2. When precision degrades (gap < 0.001), a rebalance pass reassigns integer order values to all items in the list.' },
+      { name: 'Persistence Layer', description: 'useEffect subscriber watches board state and writes to localStorage on every change. On app mount, state initializes from localStorage with a fallback to the default empty board.' },
+      { name: 'Component Layer', description: 'Board renders columns via columnOrder. Column renders its card list via a per-column card ID array. Card is a pure presentational component receiving data and callbacks as props.' },
+    ],
+    codeExamples: {
+      typescript: `// store/boardReducer.ts — normalized state with typed actions
+import type { Board, Card } from '../types/board';
+
+type Action =
+  | { type: 'MOVE_CARD'; cardId: string; toColumnId: string; newOrder: number }
+  | { type: 'ADD_CARD'; columnId: string; title: string }
+  | { type: 'UPDATE_CARD'; cardId: string; updates: Partial<Card> }
+  | { type: 'DELETE_CARD'; cardId: string }
+  | { type: 'ADD_COLUMN'; title: string }
+  | { type: 'REORDER_COLUMNS'; newOrder: string[] };
+
+export function boardReducer(state: Board, action: Action): Board {
+  switch (action.type) {
+    case 'MOVE_CARD': {
+      const card = state.cards[action.cardId];
+      return {
+        ...state,
+        cards: {
+          ...state.cards,
+          [action.cardId]: { ...card, columnId: action.toColumnId, order: action.newOrder },
+        },
+      };
+    }
+    case 'ADD_CARD': {
+      const id = crypto.randomUUID();
+      const colCards = Object.values(state.cards)
+        .filter(c => c.columnId === action.columnId);
+      const maxOrder = colCards.length ? Math.max(...colCards.map(c => c.order)) : 0;
+      return {
+        ...state,
+        cards: {
+          ...state.cards,
+          [id]: { id, columnId: action.columnId, title: action.title,
+                   description: '', labels: [], dueDate: null,
+                   checklist: [], order: maxOrder + 1000 },
+        },
+      };
+    }
+    case 'UPDATE_CARD':
+      return { ...state, cards: { ...state.cards,
+        [action.cardId]: { ...state.cards[action.cardId], ...action.updates } } };
+    default:
+      return state;
+  }
+}`,
+    },
+    tradeoffDecisions: [
+      { choice: '@dnd-kit vs react-beautiful-dnd', picked: '@dnd-kit', reason: 'react-beautiful-dnd is officially deprecated. @dnd-kit is actively maintained, supports touch/pointer events natively, has built-in keyboard accessibility, and its modular design (core + sortable + utilities) keeps bundle size small.' },
+      { choice: 'Floating-point order values vs integer gap strategy', picked: 'Floating-point midpoint', reason: 'Midpoint ordering (newOrder = (a + b) / 2) allows arbitrary insertions without updating adjacent items. Only a rare rebalance pass is needed when precision degrades. Integer gap (increment by 1000) requires updating many order values on every reorder.' },
+      { choice: 'useReducer vs Zustand for board state', picked: 'useReducer', reason: 'For a take-home, useReducer is the right tool — it is built-in, shows mastery of React state patterns, and pairs naturally with undo/redo (just snapshot the state object). Zustand adds value in larger apps where state needs to be accessed across distant component trees.' },
+      { choice: 'localStorage vs IndexedDB for persistence', picked: 'localStorage', reason: 'localStorage is synchronous and simple — a JSON.stringify/parse round-trip on state change. IndexedDB handles large datasets and async operations but is overkill for a Kanban board with hundreds of cards. Mention IndexedDB as the production-ready alternative.' },
+    ],
+    deepDiveTopics: [
+      { topic: 'dnd-kit drag lifecycle', detail: 'Three phases: onDragStart (fires when pointer moves past the activation distance — store the dragged item in activeId state and show a DragOverlay clone), onDragOver (fires on every pointer move over a droppable — produce the placeholder position for visual feedback), onDragEnd (fires on pointer release — commit the reorder to state or reset if dropped outside a valid target). The key insight is that the actual state update only happens in onDragEnd; onDragOver only updates transient UI.' },
+      { topic: 'Fractional indexing for card order', detail: 'Storing order as floats allows O(1) insertion: to insert between cards with order 1.0 and 2.0, assign 1.5. The problem is precision loss after many insertions: eventually you get 1.0000000000001 and 1.0000000000002 with no room between them. The fix is a rebalance pass that reassigns clean integer order values (1000, 2000, 3000...) when the minimum gap between adjacent cards drops below a threshold like 0.001.' },
+      { topic: 'Normalized vs nested board state', detail: 'A nested state shape (columns contain arrays of card objects) feels natural but makes updates painful: to move a card, you must find it in the source column array, splice it out, find the target column, and splice it in — mutating deeply nested structures. A normalized shape (cards: Record<id,Card>, each card has columnId) makes the MOVE_CARD action a single object spread with no array mutations.' },
+      { topic: 'Keyboard accessibility with dnd-kit', detail: 'dnd-kit includes a KeyboardSensor that supports keyboard-only drag: press Space to pick up a card, arrow keys to move to the next drop target, Space again to drop. Configure with KeyboardCoordinateGetter that returns the center coordinates of the target container. This is essential for accessibility compliance and is a detail evaluators specifically look for in senior frontend take-homes.' },
+    ],
+    commonPitfalls: [
+      { pitfall: 'Triggering drag when clicking to open card detail', why: 'If the entire card surface is the drag handle, any click starts a drag. Tapping to open the modal conflicts with the drag activation distance.', solution: 'Use a separate drag handle (a grip icon in the card corner). Set the draggable area to the handle only using useDraggable with a dedicated handle ref. Card body click opens the modal.' },
+      { pitfall: 'State desync between drag overlay and actual card', why: 'If the DragOverlay renders a copy of the card but the underlying card is still visible at its original position, you get a visual duplicate during drag.', solution: 'Apply opacity: 0 to the original card while isDragging is true (use the useSortable transform: isDragging state). Only the DragOverlay clone should be visible during the drag.' },
+      { pitfall: 'Stale closure in onDragEnd accessing old state', why: 'If onDragEnd is defined outside the DndContext or not recreated when state changes, it captures a stale snapshot of state. Cross-column moves reference wrong card positions.', solution: 'Define onDragEnd inside the component or use useCallback with board state as a dependency. For complex boards, use a ref to always access the latest state: const stateRef = useRef(state); stateRef.current = state.' },
+      { pitfall: 'localStorage serialization losing Date objects', why: 'JSON.stringify converts Date objects to ISO strings. JSON.parse does not convert them back — dueDate becomes a string, and date comparisons (isOverdue) break silently.', solution: 'Write a reviver function for JSON.parse: JSON.parse(data, (key, val) => key === "dueDate" && val ? new Date(val) : val). Or store dates as ISO strings throughout and convert to Date only at the display layer.' },
+    ],
+    edgeCases: [
+      { scenario: 'Dropping a card onto the column header (not a card slot)', impact: 'onDragEnd receives an over target that is the column container, not a card. Without handling this case, the card is dropped at order 0 or not moved at all.', mitigation: 'In onDragEnd, detect if over.id is a column ID (not a card ID). If so, append the card to the end of that column: find the max order of cards in the column and assign max + 1000.' },
+      { scenario: 'Deleting a column that still has cards', impact: 'If cards reference a deleted column via columnId, they become orphaned — they exist in the cards map but no column renders them.', mitigation: 'In the DELETE_COLUMN action, first collect all card IDs in that column, then delete both the column and all its cards from state in a single reducer update.' },
+      { scenario: 'Two cards with identical order values after concurrent updates', impact: 'If two operations assign the same order value (e.g., both appending to an empty column simultaneously), the sort order is non-deterministic.', mitigation: 'Use Date.now() + Math.random() for order values on creation to make collisions astronomically unlikely. For production, use a proper fractional indexing library like fractional-indexing.' },
+      { scenario: 'localStorage quota exceeded (5MB limit)', impact: 'Writing a large board to localStorage throws a QuotaExceededError. The catch-free useEffect crashes silently and state stops persisting.', mitigation: 'Wrap the localStorage.setItem call in a try/catch. On QuotaExceededError, show a toast warning: "Board too large to save locally. Consider deleting old cards." Log the error for debugging.' },
+    ],
+    interviewFollowups: [
+      { question: 'How would you add real-time collaboration (multiple users editing simultaneously)?', answer: 'Replace localStorage with a WebSocket connection to a server. Use Operational Transforms or CRDTs (like Yjs) to merge concurrent edits without conflicts. Each client broadcasts its actions; the server applies them in order and broadcasts the merged state. Yjs has a dnd-kit integration for shared sortable lists.' },
+      { question: 'How would you implement WIP (Work In Progress) limits per column?', answer: 'Add a wipLimit field to the Column type. In the column header, show current card count vs limit. In onDragEnd, check if the target column\'s card count would exceed its WIP limit. If so, cancel the drop and show a toast warning. Visually highlight columns at or over their limit with a red border.' },
+      { question: 'How would you scale this to a team board with 1,000 cards?', answer: 'Load only the visible columns and their cards (virtual columns). Use virtualized lists within each column (react-window) for columns with many cards. Store state in a database (PostgreSQL with column and card tables). Use optimistic updates on the frontend: update state immediately, sync to API in background, roll back on error.' },
+      { question: 'How does your order system handle the precision degradation problem?', answer: 'After many midpoint insertions, the floating-point gap between adjacent cards approaches zero. When the minimum gap drops below a threshold (e.g., 0.001), a rebalance pass reassigns clean integer order values (1000, 2000, 3000...) to all cards in the affected column. This rebalance is transparent to the user and restores full insertion capacity.' },
+    ],
+    extensionIdeas: [
+      { idea: 'Board templates', difficulty: 'beginner', description: 'Provide 3-4 starter board templates (Software Sprint, Content Calendar, Job Search). Store as JSON presets. New Board dialog shows template thumbnails. Populates the board state with pre-configured columns and sample cards.' },
+      { idea: 'Card due date notifications', difficulty: 'intermediate', description: 'Use the Notification API to show browser notifications for cards due today. On app load, check all cards with dueDate === today and request notification permission if not granted. Schedule notifications with setTimeout for cards due later today.' },
+      { idea: 'Board analytics view', difficulty: 'intermediate', description: 'A /board/:id/analytics route showing: cards per column (bar chart), average time cards spend in each column (requires createdAt and movedAt timestamps per card), throughput over time (cards completed per week), and bottleneck column identification.' },
+      { idea: 'Multi-board support with board list', difficulty: 'advanced', description: 'Home page lists all boards with thumbnails (CSS mini-preview of column structure). Each board is a separate entry in localStorage (or a separate DB row). Board switching with URL routing: /board/:id. Shared labels across boards.' },
+    ],
   },
   {
     id: 'ecommerce-product-page',
@@ -2099,6 +2350,145 @@ export async function GET(req: NextRequest) {
       { question: 'How do I build the image gallery?', answer: 'Main image with thumbnail strip below. Click thumbnail to swap main image (with crossfade transition). Add zoom-on-hover for the main image (track mouse position, transform: scale(2) with transform-origin at cursor). Support swipe on mobile with touch events.' },
       { question: 'How do variant selections work?', answer: 'Model variants as a matrix: { size: ["S","M","L","XL"], color: ["Black","White","Navy"] }. Each combination maps to a SKU with price, inventory count, and image. Disable unavailable combinations (e.g., "XL + Navy" if out of stock). Update price and image when variant changes.' },
       { question: 'What checkout flow is expected?', answer: 'Three steps: 1) Shipping (name, address, phone with validation), 2) Payment (card number, expiry, CVV — mock, not real), 3) Review & Place Order (summary, edit links). Use a progress stepper component. Validate each step before allowing next. Show order confirmation with animation on success.' },
+    ],
+    implementationSteps: [
+      { phase: 1, title: 'Product Data & Store Setup', description: 'Define the product and variant data model, set up Zustand cart store with localStorage persistence, and render the product listing grid.', tasks: ['Create src/data/products.ts with 12 products, each having variants matrix: { size: string[], color: string[] } and SKUs mapping size+color to { price, stock, imageUrl }', 'Set up Zustand cart store with persist middleware: { items: CartItem[], addItem, removeItem, updateQuantity, clearCart, total }', 'Build ProductGrid component rendering responsive card grid (minmax(280px, 1fr))', 'Add ProductCard with hover zoom effect, price display, and Add to Cart quick-action', 'Implement cart count badge in site header that updates reactively from Zustand store'] },
+      { phase: 2, title: 'Product Detail & Variant Selection', description: 'Build the full product detail page with image gallery, variant picker, inventory-aware availability, and cart integration.', tasks: ['Create ProductDetailPage with React Router route /products/:slug', 'Build image gallery: main image display with thumbnail strip, click-to-swap with crossfade, swipe support on mobile', 'Implement variant picker: color swatches + size buttons, disable unavailable combinations, update price and image on selection', 'Add quantity selector with +/- buttons clamped to 1..stock, Add to Cart button disabled when out of stock or no variant selected', 'Show stock count warning ("Only 3 left") when stock <= 5'] },
+      { phase: 3, title: 'Cart Sidebar & Checkout Form', description: 'Build the slide-out cart sidebar with item management and a three-step checkout form with full validation.', tasks: ['Build CartSidebar component: slide-in from right, item list with image/name/variant/qty/price, remove button, subtotal calculation', 'Implement cart item quantity update inline with immediate Zustand state update and localStorage sync', 'Create CheckoutPage with three steps: Shipping, Payment (mock), Order Review', 'Build step-by-step validation: each step validates its fields before enabling Next button, show inline field errors', 'Build OrderConfirmation component with animated checkmark, order summary, and "Continue Shopping" button that clears cart'] },
+      { phase: 4, title: 'Polish & Accessibility', description: 'Add loading states, empty states, keyboard navigation, mobile optimization, and final visual polish.', tasks: ['Add skeleton loading for product grid initial load (CSS pulse animation)', 'Implement zoom-on-hover for product main image: track mouse position, apply transform: scale(2) with transform-origin at cursor coordinates', 'Mobile cart drawer: full-screen overlay on mobile vs side panel on desktop using responsive Tailwind classes', 'Keyboard accessibility: focus trap in cart sidebar, arrow keys for variant selection, Tab order through checkout steps', 'Add empty states: empty product grid ("No products found"), empty cart ("Your cart is empty" with Shop Now link)'] },
+    ],
+    fileStructure: `ecommerce-product-page/
+├── index.html
+├── package.json
+├── vite.config.ts
+├── tailwind.config.js
+└── src/
+    ├── main.tsx
+    ├── App.tsx
+    ├── data/
+    │   └── products.ts
+    ├── store/
+    │   └── cartStore.ts
+    ├── types/
+    │   └── product.ts
+    ├── hooks/
+    │   └── useVariantSelection.ts
+    ├── components/
+    │   ├── ProductGrid.tsx
+    │   ├── ProductCard.tsx
+    │   ├── ImageGallery.tsx
+    │   ├── VariantPicker.tsx
+    │   ├── QuantitySelector.tsx
+    │   ├── CartSidebar.tsx
+    │   ├── CartItem.tsx
+    │   └── checkout/
+    │       ├── CheckoutStepper.tsx
+    │       ├── ShippingStep.tsx
+    │       ├── PaymentStep.tsx
+    │       ├── ReviewStep.tsx
+    │       └── OrderConfirmation.tsx
+    └── pages/
+        ├── ProductListPage.tsx
+        └── ProductDetailPage.tsx`,
+    architectureLayers: [
+      { name: 'Data Layer', description: 'Static products.ts defines the full product catalog with variant matrices and SKU maps. All available combinations, prices, and stock counts are pre-computed as a lookup table keyed by "size:color".' },
+      { name: 'Cart Store Layer', description: 'Zustand store with Zustand persist middleware handles all cart state — add, remove, update quantity, clear. Automatically serializes to localStorage on every mutation. Total is a computed selector derived from items.' },
+      { name: 'Variant Selection Layer', description: 'useVariantSelection hook manages selected size and color, derives the active SKU key, and exposes: selectedVariant (the SKU data), isAvailable (stock > 0), and a select() function with availability validation.' },
+      { name: 'Component Layer', description: 'Presentational components are fully controlled via props. ImageGallery manages its own active index state. VariantPicker fires onSelect callbacks. CartSidebar reads from Zustand directly and dispatches actions.' },
+      { name: 'Checkout Layer', description: 'CheckoutPage uses a step index (0-2) with per-step validation. Each step component uses react-hook-form with Zod schema validation. Checkout state is local to CheckoutPage — not persisted (cleared on page refresh is acceptable).' },
+      { name: 'Routing Layer', description: 'React Router: / for product listing, /products/:slug for detail, /checkout for the multi-step form, /order-confirmation/:orderId for the success page. Cart state persists across all routes via Zustand.' },
+    ],
+    codeExamples: {
+      typescript: `// store/cartStore.ts — Zustand cart with localStorage persistence
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+
+interface CartItem {
+  productId: string;
+  variantKey: string;  // "M:Black"
+  name: string;
+  image: string;
+  price: number;
+  quantity: number;
+}
+
+interface CartStore {
+  items: CartItem[];
+  addItem: (item: Omit<CartItem, 'quantity'>) => void;
+  removeItem: (productId: string, variantKey: string) => void;
+  updateQuantity: (productId: string, variantKey: string, quantity: number) => void;
+  clearCart: () => void;
+  total: () => number;
+}
+
+export const useCartStore = create<CartStore>()(
+  persist(
+    (set, get) => ({
+      items: [],
+      addItem: (newItem) => set(state => {
+        const existing = state.items.find(
+          i => i.productId === newItem.productId && i.variantKey === newItem.variantKey
+        );
+        if (existing) {
+          return { items: state.items.map(i =>
+            i.productId === newItem.productId && i.variantKey === newItem.variantKey
+              ? { ...i, quantity: i.quantity + 1 } : i
+          )};
+        }
+        return { items: [...state.items, { ...newItem, quantity: 1 }] };
+      }),
+      removeItem: (productId, variantKey) => set(state => ({
+        items: state.items.filter(i => !(i.productId === productId && i.variantKey === variantKey))
+      })),
+      updateQuantity: (productId, variantKey, quantity) => set(state => ({
+        items: quantity <= 0
+          ? state.items.filter(i => !(i.productId === productId && i.variantKey === variantKey))
+          : state.items.map(i =>
+              i.productId === productId && i.variantKey === variantKey ? { ...i, quantity } : i
+            )
+      })),
+      clearCart: () => set({ items: [] }),
+      total: () => get().items.reduce((sum, i) => sum + i.price * i.quantity, 0),
+    }),
+    { name: 'cart-storage' }
+  )
+);`,
+    },
+    tradeoffDecisions: [
+      { choice: 'Zustand vs React Context for cart state', picked: 'Zustand', reason: 'The spec calls for Zustand. It avoids the Context re-render problem (all Context consumers re-render on any state change). Zustand uses selectors so components only re-render when their specific slice changes. The persist middleware adds localStorage sync in one line.' },
+      { choice: 'SKU matrix vs flat variant array', picked: 'SKU matrix (Record<string, SKU>)', reason: 'A SKU matrix keyed by "size:color" enables O(1) lookup for any combination. A flat array requires Array.find on every selection change. The matrix also makes it trivial to check if a specific combination is in stock.' },
+      { choice: 'React Hook Form vs controlled inputs for checkout', picked: 'React Hook Form', reason: 'react-hook-form registers inputs without controlled state, producing zero re-renders during typing. Controlled inputs re-render on every keystroke. For a 10-field checkout form, this is a meaningful performance difference, and react-hook-form shows library familiarity.' },
+      { choice: 'Static product data vs mock API', picked: 'Static TypeScript data', reason: 'A frontend take-home does not require a backend. Static TypeScript data is type-safe, instantly available, and removes deployment complexity. Evaluators care about the UI implementation, not the data source.' },
+    ],
+    deepDiveTopics: [
+      { topic: 'Zustand persist middleware', detail: 'The persist middleware wraps the store and automatically calls JSON.stringify(state) on every mutation, writing to localStorage under the configured name key. On app mount, it reads localStorage and merges the stored state into the initial state. Custom serializers can be provided for Date objects or other non-JSON types. partialize option lets you persist only specific fields (e.g., persist items but not UI state).' },
+      { topic: 'Variant availability matrix', detail: 'The cleanest data model: each product has a variants object typed as Record<string, SKU> where the key is "size:color". Checking availability: const sku = product.variants[selectedSize + ":" + selectedColor]; const available = !!sku && sku.stock > 0. Disabling an option: for each size, check if any color combination with that size has stock > 0. If none, disable the size button.' },
+      { topic: 'Image zoom on hover implementation', detail: 'Track mouse position on the image container via onMouseMove: const { left, top, width, height } = e.currentTarget.getBoundingClientRect(); const x = ((e.clientX - left) / width) * 100; const y = ((e.clientY - top) / height) * 100. Apply to the image: transform: scale(2), transformOrigin: `${x}% ${y}%`. On mouseLeave, reset transform. Use overflow: hidden on the container to clip the scaled image.' },
+      { topic: 'Multi-step form validation patterns', detail: 'Each checkout step has its own Zod schema. On clicking Next, trigger validation for only the current step fields using form.trigger(["field1", "field2"]). If validation passes (returns true), increment the step index. This prevents advancing with invalid data while keeping step schemas independent. Store completed step data in a top-level state object so earlier steps remain filled when the user goes back.' },
+    ],
+    commonPitfalls: [
+      { pitfall: 'Cart persisting stale variant data after product changes', why: 'If product prices or images change after the cart is persisted to localStorage, the cart still shows the old values. The user sees outdated prices at checkout.', solution: 'On cart hydration from localStorage, re-validate each cart item against the current product data. If a variant no longer exists or the price changed, show a warning toast and update the item.' },
+      { pitfall: 'Variant selection state not resetting between products', why: 'If selectedSize and selectedColor are stored in a parent component and the user navigates from Product A to Product B, the previous selections carry over — sometimes selecting an invalid variant for the new product.', solution: 'Store variant selection in the ProductDetailPage component and reset it (or reinitialize from product defaults) via a useEffect that runs when the product slug changes: useEffect(() => { setSize(null); setColor(null); }, [slug]).' },
+      { pitfall: 'Add to Cart button enabled before a variant is fully selected', why: 'If a product has both size and color options and only one is selected, clicking Add to Cart creates a cart item with an incomplete variantKey like "M:undefined".', solution: 'Disable the Add to Cart button until both required variant dimensions are selected: const canAddToCart = selectedSize !== null && selectedColor !== null && selectedVariant?.stock > 0.' },
+      { pitfall: 'Cart total showing floating point errors', why: 'JavaScript floating point arithmetic: 29.99 + 19.99 = 49.980000000000004. Displaying raw totals shows ugly numbers.', solution: 'Round monetary values at display time only: total.toFixed(2). Never round intermediate values — always compute the full-precision total and format only the final displayed string.' },
+    ],
+    edgeCases: [
+      { scenario: 'Adding the last item in stock to cart multiple times', impact: 'User adds a product with stock = 1 to cart three times. The cart shows quantity 3 but only 1 unit exists. At a real checkout, fulfillment would fail.', mitigation: 'In addItem, clamp the resulting quantity to the variant stock: quantity: Math.min(existing.quantity + 1, sku.stock). Show a "Maximum stock reached" toast when the user tries to exceed the limit.' },
+      { scenario: 'Cart persisted across sessions with out-of-stock items', impact: 'User adds items, closes browser, item sells out overnight. On return, cart shows items that are now unavailable with no indication.', mitigation: 'On app mount, validate all cart items against current stock. Mark out-of-stock items with an "Unavailable" badge in CartSidebar. Prevent proceeding to checkout until out-of-stock items are removed.' },
+      { scenario: 'Checkout form back navigation losing filled data', impact: 'User fills out Shipping step, proceeds to Payment, clicks Back. Shipping form is blank — all their data was lost.', mitigation: 'Store each completed step\'s form data in CheckoutPage state: const [stepData, setStepData] = useState<StepData>({}) and pass it as defaultValues to each step form. Forms initialize with previously entered data on back navigation.' },
+      { scenario: 'Mobile viewport with open cart sidebar blocking scroll', impact: 'On mobile, the cart sidebar slides in but the background content is still scrollable. The user accidentally scrolls the page behind the cart overlay.', mitigation: 'When CartSidebar opens, add overflow: hidden to document.body to lock background scroll. Remove it when the sidebar closes. Use a cleanup function in useEffect to ensure removal even if the component unmounts while open.' },
+    ],
+    interviewFollowups: [
+      { question: 'How would you integrate a real payment provider?', answer: 'Replace the mock payment step with Stripe Elements or Stripe Checkout. Use Stripe.js to tokenize card details client-side — never send raw card numbers to your server. On the backend, create a PaymentIntent with the cart total, return the client_secret to the frontend, and use stripe.confirmCardPayment(clientSecret) to complete the charge.' },
+      { question: 'How would you add product search and filtering?', answer: 'Add a filter state object (similar to the Rare Book Library pattern): { search, categories, priceRange, inStockOnly }. Apply filters in a useMemo over the products array. Sync filter state to URL query params. For a large catalog, move filtering server-side with debounced API calls and React Query for caching.' },
+      { question: 'How would you handle cart state for authenticated users across devices?', answer: 'On login, merge the localStorage cart with the server-side cart (resolve conflicts by taking the higher quantity for each item). Use a POST /api/cart/sync endpoint on login. Store cart in the database for authenticated users. For anonymous users, keep using localStorage. On logout, optionally save the cart to localStorage for continuity.' },
+      { question: 'How would you optimize the product images for performance?', answer: 'Use next/image (or a CDN with image optimization) to serve WebP format, resize to display dimensions, and lazy-load below-the-fold products. For the product detail zoom feature, load the high-resolution image only when the user hovers, not on initial page load. Add blur-up placeholders using base64-encoded tiny previews.' },
+    ],
+    extensionIdeas: [
+      { idea: 'Product quick-view modal', difficulty: 'beginner', description: 'Hovering a product card shows a Quick View button. Clicking opens a modal with the image gallery, variant picker, and Add to Cart — without navigating away from the listing. Common pattern on fashion e-commerce sites.' },
+      { idea: 'Recently viewed products', difficulty: 'beginner', description: 'Track the last 5 viewed product IDs in localStorage. Show a "Recently Viewed" horizontal scroll section at the bottom of product detail pages. Update on every product page visit.' },
+      { idea: 'Product comparison', difficulty: 'intermediate', description: 'Add a Compare checkbox to product cards. When 2-3 products are selected, a sticky comparison bar appears. Clicking Compare opens a side-by-side table of all product attributes. Useful for demonstrating complex state management across disconnected components.' },
+      { idea: 'Discount code system', difficulty: 'intermediate', description: 'Add a discount code input to the cart sidebar. Validate against a hardcoded list of codes (SAVE10 = 10% off, FREESHIP = free shipping). Show the discount line item in the cart total breakdown. State: { code: string | null, discountPercent: number }.' },
     ],
   },
 
@@ -2131,6 +2521,229 @@ export async function GET(req: NextRequest) {
       { question: 'How do I implement rate limiting?', answer: 'Redis-based sliding window: INCR a key like ratelimit:{ip}:{minute}, EXPIRE after 60 seconds. Allow 10 URL creations per minute per IP. Return 429 Too Many Requests with Retry-After header. Also add a global rate limit for the redirect service.' },
       { question: 'What database schema should I use?', answer: 'Tables: urls (id, short_code UNIQUE, original_url, user_id, created_at, expires_at, click_count), clicks (id, url_id FK, clicked_at, ip, user_agent, referrer, country, device). Index: urls.short_code (B-tree unique), clicks.url_id + clicks.clicked_at (composite for analytics queries).' },
     ],
+    implementationSteps: [
+      {
+        phase: 1,
+        title: 'Backend Foundation',
+        description: 'Set up Express server, PostgreSQL schema, and core shortening logic.',
+        tasks: [
+          'Initialize Node.js/Express project with dotenv, pg, ioredis, nanoid dependencies',
+          'Create PostgreSQL tables: urls and clicks with proper indexes on startup',
+          'Implement POST /api/urls: validate URL, generate random 7-char code, insert to DB',
+          'Implement GET /:shortCode redirect: query Redis then PostgreSQL, return 302, log click async',
+          'Add express-validator input validation (URL format, max length) and error middleware',
+        ],
+      },
+      {
+        phase: 2,
+        title: 'Redis Caching & Rate Limiting',
+        description: 'Add Redis caching for hot URLs and per-IP sliding-window rate limiting.',
+        tasks: [
+          'Integrate ioredis: cache shortCode to originalUrl on first lookup with 24h TTL',
+          'Implement explicit cache invalidation: DEL key on URL delete or deactivation',
+          'Build sliding-window rate limiter: INCR ratelimit:{ip}:{minute}, EXPIRE 60s, cap at 10/min',
+          'Add URL expiration: check expires_at on redirect, return 410 Gone for expired links',
+          'Write integration tests for cache hit/miss paths and rate limit enforcement',
+        ],
+      },
+      {
+        phase: 3,
+        title: 'Analytics Pipeline',
+        description: 'Build async click tracking, geolocation enrichment, and aggregation queries.',
+        tasks: [
+          'Fire-and-forget click insert: respond with 302 before awaiting the DB INSERT',
+          'Parse User-Agent header for device/browser detection using ua-parser-js',
+          'Add IP-to-country lookup with maxmind GeoLite2 local database',
+          'Build GET /api/urls/:id/analytics: clicks per day, top referrers, device breakdown',
+          'Create GET /api/urls endpoint listing all user URLs with click counts and status',
+        ],
+      },
+      {
+        phase: 4,
+        title: 'React Dashboard',
+        description: 'Build the frontend: URL creation form, links list, and analytics charts.',
+        tasks: [
+          'Create URL creation form with validation, loading state, and copy-to-clipboard button',
+          'Build dashboard table: list of URLs with click counts, status badges, and delete action',
+          'Integrate Recharts for daily clicks line chart and device breakdown pie chart',
+          'Add custom alias input and expiration date picker to the creation form',
+          'Deploy: Railway for backend with Redis add-on, Vercel for React frontend',
+        ],
+      },
+    ],
+    fileStructure: `url-shortener/
+├── server/
+│   ├── src/
+│   │   ├── routes/
+│   │   │   ├── urls.js          # POST /api/urls, GET /api/urls, DELETE /api/urls/:id
+│   │   │   ├── redirect.js      # GET /:shortCode redirect handler
+│   │   │   └── analytics.js     # GET /api/urls/:id/analytics
+│   │   ├── services/
+│   │   │   ├── shortener.js     # generateShortCode() random nanoid Base62
+│   │   │   ├── cache.js         # Redis get/set/del wrappers (ioredis)
+│   │   │   ├── clickTracker.js  # async click insert + UA parse + geo lookup
+│   │   │   └── rateLimiter.js   # sliding window rate limit middleware
+│   │   ├── db/
+│   │   │   ├── pool.js          # pg Pool singleton
+│   │   │   └── migrate.js       # CREATE TABLE IF NOT EXISTS on startup
+│   │   ├── middleware/
+│   │   │   ├── auth.js          # JWT verify middleware
+│   │   │   └── validate.js      # express-validator chains
+│   │   └── index.js             # Express app entry point
+│   ├── .env
+│   └── package.json
+├── client/
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── CreateUrlForm.jsx
+│   │   │   ├── LinkCard.jsx
+│   │   │   └── AnalyticsChart.jsx
+│   │   ├── pages/
+│   │   │   ├── Dashboard.jsx
+│   │   │   └── Analytics.jsx
+│   │   ├── lib/
+│   │   │   └── api.js
+│   │   └── App.jsx
+│   ├── index.html
+│   └── vite.config.js
+└── docker-compose.yml`,
+    architectureLayers: [
+      { name: 'React Client', description: 'SPA served from Vercel. URL creation form, links dashboard, and analytics charts. Communicates via Axios with a JWT Authorization header.' },
+      { name: 'Express API Layer', description: 'Handles authentication, request validation, and CRUD routes for URL management and analytics. Runs on Railway.' },
+      { name: 'Redirect Service', description: 'High-throughput GET /:shortCode handler. Checks Redis first, falls back to PostgreSQL on cache miss, fires click tracking async, returns 302 immediately.' },
+      { name: 'Redis Cache', description: 'Caches shortCode to originalUrl mappings with 24h TTL. Also stores per-IP rate-limit counters. Acts as the primary hot path for all popular redirects.' },
+      { name: 'Click Tracker', description: 'Fire-and-forget async service: inserts click events, parses User-Agent for device/browser, performs IP geolocation without blocking the redirect response.' },
+      { name: 'PostgreSQL', description: 'Source of truth for URLs, users, and raw click events. Analytics via aggregation queries (GROUP BY day, referrer, device). Indexed on short_code and (url_id, clicked_at).' },
+      { name: 'Expiry Worker', description: 'Periodic cron job scanning for URLs past their expires_at, marking them inactive, and DELeting Redis cache keys to prevent stale redirects.' },
+    ],
+    dataModel: {
+      description: 'Two core tables: urls stores short links with owner and metadata; clicks stores every redirect event for analytics aggregation.',
+      schema: `CREATE TABLE users (
+  id            SERIAL PRIMARY KEY,
+  email         TEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  created_at    TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE urls (
+  id           SERIAL PRIMARY KEY,
+  short_code   VARCHAR(12) UNIQUE NOT NULL,
+  original_url TEXT NOT NULL,
+  user_id      INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  title        TEXT,
+  is_active    BOOLEAN DEFAULT TRUE,
+  expires_at   TIMESTAMPTZ,
+  click_count  INTEGER DEFAULT 0,
+  created_at   TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX idx_urls_short_code ON urls(short_code);
+CREATE INDEX idx_urls_user_id ON urls(user_id);
+
+CREATE TABLE clicks (
+  id         BIGSERIAL PRIMARY KEY,
+  url_id     INTEGER NOT NULL REFERENCES urls(id) ON DELETE CASCADE,
+  clicked_at TIMESTAMPTZ DEFAULT NOW(),
+  ip         INET,
+  country    CHAR(2),
+  device     VARCHAR(20),
+  browser    VARCHAR(40),
+  referrer   TEXT,
+  user_agent TEXT
+);
+
+CREATE INDEX idx_clicks_url_id_at ON clicks(url_id, clicked_at DESC);`,
+    },
+    apiDesign: {
+      description: 'RESTful API for URL management and analytics plus a root-level redirect handler. Auth via JWT Bearer token.',
+      endpoints: [
+        { method: 'POST', path: '/api/urls', response: '{ id, shortCode, shortUrl, originalUrl, expiresAt, createdAt }' },
+        { method: 'GET', path: '/api/urls', response: '{ urls: [...], total, page, limit }' },
+        { method: 'GET', path: '/api/urls/:id', response: '{ id, shortCode, originalUrl, clickCount, createdAt, expiresAt, isActive }' },
+        { method: 'DELETE', path: '/api/urls/:id', response: '204 No Content' },
+        { method: 'GET', path: '/api/urls/:id/analytics', response: '{ timeSeries: [...], topReferrers: [...], deviceBreakdown: {...}, countryBreakdown: [...] }' },
+        { method: 'GET', path: '/:shortCode', response: 'HTTP 302 redirect to originalUrl, or 404 if not found, 410 if expired' },
+        { method: 'GET', path: '/api/urls/:id/qr', response: 'PNG image stream of QR code for the short URL' },
+      ],
+    },
+    codeExamples: {
+      javascript: `// server/src/routes/redirect.js
+import { getPool } from '../db/pool.js';
+import { redisClient } from '../services/cache.js';
+import { trackClick } from '../services/clickTracker.js';
+
+export async function handleRedirect(req, res) {
+  const { shortCode } = req.params;
+
+  // 1. Check Redis cache first (~1ms)
+  let originalUrl = await redisClient.get('url:' + shortCode);
+
+  if (!originalUrl) {
+    // 2. Cache miss: query PostgreSQL (~5ms)
+    const { rows } = await getPool().query(
+      'SELECT id, original_url, is_active, expires_at FROM urls WHERE short_code = $1',
+      [shortCode]
+    );
+    if (!rows.length || !rows[0].is_active) {
+      return res.status(404).json({ error: 'Short URL not found' });
+    }
+    const url = rows[0];
+    if (url.expires_at && new Date(url.expires_at) < new Date()) {
+      return res.status(410).json({ error: 'This link has expired' });
+    }
+    originalUrl = url.original_url;
+    // 3. Populate cache (24h TTL)
+    await redisClient.setex('url:' + shortCode, 86400, originalUrl);
+  }
+
+  // 4. Redirect immediately — do not await analytics
+  res.redirect(302, originalUrl);
+
+  // 5. Track click asynchronously (fire-and-forget)
+  trackClick({
+    shortCode,
+    ip: req.ip,
+    userAgent: req.headers['user-agent'],
+    referrer: req.headers['referer'] || null,
+  }).catch(err => console.error('Click tracking failed:', err));
+}`,
+    },
+    tradeoffDecisions: [
+      { choice: 'Short code generation strategy', picked: 'Random nanoid (7 chars)', reason: 'Sequential Base62-encoded IDs are enumerable — an attacker can scrape all short links in order. Random nanoid prevents enumeration. 7 chars gives 62^7 roughly 3.5 trillion combinations with negligible collision probability.' },
+      { choice: 'Redirect HTTP status code', picked: '302 Temporary Redirect', reason: '301 redirects are cached permanently by browsers — clicks stop registering after the first visit, breaking analytics entirely. 302 ensures every redirect hits the server for accurate click counting.' },
+      { choice: 'Analytics write strategy', picked: 'Fire-and-forget async INSERT', reason: 'Awaiting the DB INSERT before returning the 302 adds 5-15ms latency per click. Async write decouples redirect performance from analytics throughput at the cost of less than 0.1% data loss on server crash.' },
+      { choice: 'Cache invalidation approach', picked: 'TTL plus explicit DEL on delete', reason: 'Pure TTL means deleted URLs remain accessible from cache for up to 24h. Explicit DEL on URL deletion ensures dead links are immediately unreachable. TTL handles the common case; DEL handles the critical safety edge case.' },
+    ],
+    deepDiveTopics: [
+      { topic: 'Base62 encoding mechanics', detail: 'Base62 uses [0-9a-zA-Z] (62 chars). To encode an auto-increment integer: repeatedly divide by 62, map each remainder to the charset, reverse the result. A 7-char code supports 62^7 roughly 3.5 trillion unique values. Sequential IDs produce predictable codes (enumerable); random generation eliminates that but requires a uniqueness check on insert.' },
+      { topic: 'Cache-aside pattern', detail: 'On read: check cache first. On miss: read from DB, write result to cache with TTL, return value. On write/delete: update DB first, then explicitly DEL or update the cache key. This keeps Redis as an optional acceleration layer — if Redis goes down, the system falls back to PostgreSQL gracefully.' },
+      { topic: 'Click analytics aggregation', detail: 'Raw click events (one row per click) support any query but slow down as the table grows to hundreds of millions of rows. Pre-compute hourly aggregates into a url_stats table (url_id, hour, device, country, click_count). A background job runs every 15 minutes aggregating new raw events. Dashboard queries hit the aggregate table rather than scanning the full clicks table.' },
+      { topic: 'Bloom filter for scale', detail: 'At 1 billion short codes, collision checks (SELECT EXISTS WHERE short_code = ?) cost one DB round-trip per code generation. A Bloom filter (stored in Redis via RedisBloom) answers "probably exists / definitely does not exist" in microseconds. False positives just trigger code regeneration, eliminating DB reads for the majority of no-collision cases.' },
+    ],
+    commonPitfalls: [
+      { pitfall: 'Blocking the redirect on analytics write', why: 'Awaiting the click INSERT before returning the 302 adds DB latency to every redirect. Under load this causes queue buildup and 5xx timeouts for end users.', solution: 'Respond with the redirect immediately, then fire analytics asynchronously without await. Use .catch() to log but not crash on analytics failures.' },
+      { pitfall: 'Missing index on short_code column', why: 'Without a unique index, every redirect triggers a full table scan. At 10M rows this takes seconds per request, making the service unusable.', solution: 'CREATE UNIQUE INDEX idx_urls_short_code ON urls(short_code). This is automatically created by a UNIQUE constraint. Verify with \d urls in psql.' },
+      { pitfall: 'Using 301 redirect during development', why: 'Browsers cache 301 responses permanently. Changing where a short code points during testing has no effect because the browser serves the old destination indefinitely from cache.', solution: 'Always use 302 during development and for analytics-tracked links. Reserve 301 only for truly permanent redirects where click counting is not needed.' },
+      { pitfall: 'No collision handling on code generation', why: 'Two concurrent requests generating the same short code causes one INSERT to fail with a unique constraint violation (pg error 23505), crashing the request with an unhandled error.', solution: 'Catch pg error code 23505, generate a new random code, and retry up to 3 times before returning a 500. With 7-char codes, collisions are rare but must be handled.' },
+    ],
+    edgeCases: [
+      { scenario: 'Malicious URL submitted (phishing or malware)', impact: 'Service becomes a vector for distributing harmful links; domain gets blacklisted by browsers and email clients.', mitigation: 'Check submitted URLs against the Google Safe Browsing API before insertion. Reject flagged URLs with 422. Add a user-facing report endpoint to catch newly-flagged content.' },
+      { scenario: 'Short code collision on generation', impact: 'Second concurrent INSERT fails with a unique constraint violation, returning a 500 error to that user.', mitigation: 'Catch pg error 23505, regenerate a new code, retry up to 3 times. Log collision events and increase code length from 7 to 8 chars if collision rate exceeds 1 in 10K.' },
+      { scenario: 'Redis unavailable', impact: 'All redirects fall through to PostgreSQL. Under high traffic the DB connection pool exhausts, causing timeouts across the service.', mitigation: 'Wrap all Redis calls in try/catch with silent fallthrough to DB. Alert on sustained high miss rates. Use Redis Sentinel or Cluster for high-availability production deployments.' },
+      { scenario: 'Short URL points to another short URL (redirect chain)', impact: 'Two HTTP round trips instead of one; potential circular redirect loop causing browser errors.', mitigation: 'Resolve chains server-side on creation: follow up to 3 hops and store the final destination URL. Detect cycles using a visited Set during resolution.' },
+    ],
+    interviewFollowups: [
+      { question: 'How would you scale this to 100M redirects per day?', answer: 'Horizontal-scale the stateless redirect service behind a load balancer. Move Redis to a cluster with read replicas. Use Cloudflare Workers to cache popular short codes at the edge for sub-5ms global response. Shard the clicks table by url_id for parallel analytics writes. Consider ClickHouse for the analytics write path to handle millions of inserts per hour.' },
+      { question: 'How would you prevent spam and phishing abuse?', answer: 'Rate-limit creation per IP (10/min) and per account (100/day). Check submitted URLs against Google Safe Browsing. Require email verification before allowing URL creation. Add CAPTCHA for anonymous users. Re-scan URLs 24h after creation since malware sites are often flagged with a delay.' },
+      { question: 'Why Redis instead of an in-process cache?', answer: 'In-process caches do not share state across multiple server instances. When scaled to N servers, each has its own cache with an effective hit rate of 1/N. Redis is a shared, consistent layer: all instances read and write to the same cache, maintaining high hit rates regardless of how many servers are running.' },
+      { question: 'How would you implement custom vanity domains?', answer: 'Add a user_domains table (user_id, domain, verified_at). On each redirect request, inspect the Host header and look it up in user_domains. Scope short_code lookups to that user namespace via a user_id filter. Verify domain ownership by checking for a CNAME or TXT DNS record. Issue TLS certificates via Let\'s Encrypt.' },
+    ],
+    extensionIdeas: [
+      { idea: 'QR Code Generation', difficulty: 'beginner', description: 'Add GET /api/urls/:id/qr returning a PNG QR code using the qrcode npm package. Show it inline in the dashboard with a download button — useful for print materials and slide decks.' },
+      { idea: 'UTM Parameter Builder', difficulty: 'intermediate', description: 'Add a UI flow that appends UTM parameters (utm_source, utm_medium, utm_campaign) before shortening. Display UTM-tagged traffic breakdowns in analytics for campaign tracking.' },
+      { idea: 'A/B Split Testing', difficulty: 'intermediate', description: 'Allow one short code to redirect to 2-3 destinations with configurable weights (60/40 split). Track clicks per variant to measure which destination performs better.' },
+      { idea: 'Retargeting Pixel Injection', difficulty: 'advanced', description: 'Serve a fast intermediate HTML page with a meta-refresh redirect that fires retargeting pixels (Facebook, Google Ads) before forwarding. Lets marketers retarget anyone who clicked the link.' },
+    ],
   },
   {
     id: 'realtime-chat-app',
@@ -2156,6 +2769,239 @@ export async function GET(req: NextRequest) {
       { question: 'How should I paginate message history?', answer: 'Cursor-based pagination: load the latest 50 messages initially. When user scrolls to top, fetch 50 more messages before the earliest loaded message\'s timestamp. Use MongoDB query: { roomId, createdAt: { $lt: cursor } } with .sort({ createdAt: -1 }).limit(50). This avoids the offset-skip performance issue.' },
       { question: 'How do I handle reconnection?', answer: 'Socket.io has built-in reconnection with exponential backoff. On reconnect: 1) Re-join all rooms, 2) Fetch messages since last received message timestamp, 3) Merge with local messages (dedup by message ID), 4) Re-broadcast online status. Use socket.on("reconnect") to trigger this sync.' },
     ],
+    implementationSteps: [
+      {
+        phase: 1,
+        title: 'Backend & Socket.io Setup',
+        description: 'Set up Express server with Socket.io and MongoDB connection.',
+        tasks: [
+          'Initialize Node.js project with express, socket.io, mongoose, jsonwebtoken, bcrypt',
+          'Create MongoDB schemas: User, Room, Message with appropriate indexes',
+          'Build JWT auth: POST /api/auth/register, POST /api/auth/login returning signed tokens',
+          'Set up Socket.io server with JWT handshake middleware to authenticate connections',
+          'Implement join-room, leave-room, and send-message socket event handlers',
+        ],
+      },
+      {
+        phase: 2,
+        title: 'Real-time Features',
+        description: 'Add typing indicators, online presence, and read receipts.',
+        tasks: [
+          'Implement typing indicators: client emits typing/stop-typing, server broadcasts to room',
+          'Track online presence: store socket-to-user mapping, emit user-online/offline on connect/disconnect',
+          'Add read receipts: emit message-read event, update Message.readBy array in DB',
+          'Handle duplicate message prevention: include client-generated messageId, deduplicate on server',
+          'Store active room memberships in Redis so presence survives server restarts',
+        ],
+      },
+      {
+        phase: 3,
+        title: 'Message History & REST API',
+        description: 'Build cursor-based pagination for message history and room management REST endpoints.',
+        tasks: [
+          'GET /api/rooms: list rooms the authenticated user belongs to',
+          'POST /api/rooms: create a new room with name and optional member list',
+          'GET /api/rooms/:id/messages?before=<cursor>&limit=50: paginated message history',
+          'POST /api/rooms/:id/members: add member to room (emit room-joined socket event)',
+          'Add full-text search across messages using MongoDB text index on content field',
+        ],
+      },
+      {
+        phase: 4,
+        title: 'React Chat UI',
+        description: 'Build the multi-room chat interface with sidebar, message list, and input area.',
+        tasks: [
+          'Create socket.io-client connection with auth token in handshake query',
+          'Build RoomSidebar: list of rooms with unread count badges and online member dots',
+          'Build MessageList: virtualized list with scroll-to-load-more for history pagination',
+          'Build MessageInput: textarea with typing indicator emission, Enter to send',
+          'Add notification sound and browser title badge for unread messages in inactive tabs',
+        ],
+      },
+    ],
+    fileStructure: `realtime-chat-app/
+├── server/
+│   ├── src/
+│   │   ├── models/
+│   │   │   ├── User.js          # mongoose schema: email, passwordHash, avatar, createdAt
+│   │   │   ├── Room.js          # schema: name, members[], createdBy, createdAt
+│   │   │   └── Message.js       # schema: roomId, userId, content, readBy[], createdAt
+│   │   ├── socket/
+│   │   │   ├── index.js         # Socket.io server setup + auth middleware
+│   │   │   ├── chatHandlers.js  # join-room, send-message, leave-room events
+│   │   │   └── presenceHandlers.js  # online/offline, typing events
+│   │   ├── routes/
+│   │   │   ├── auth.js          # POST /api/auth/register, /login
+│   │   │   ├── rooms.js         # GET/POST /api/rooms, GET /api/rooms/:id/messages
+│   │   │   └── users.js         # GET /api/users/me, search users
+│   │   ├── middleware/
+│   │   │   └── auth.js          # JWT verify for REST routes
+│   │   └── index.js
+│   ├── .env
+│   └── package.json
+├── client/
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── RoomSidebar.jsx
+│   │   │   ├── MessageList.jsx
+│   │   │   ├── MessageInput.jsx
+│   │   │   └── TypingIndicator.jsx
+│   │   ├── hooks/
+│   │   │   ├── useSocket.js     # socket.io-client singleton + event registration
+│   │   │   └── useMessages.js   # message state + pagination
+│   │   ├── pages/
+│   │   │   ├── ChatPage.jsx
+│   │   │   └── LoginPage.jsx
+│   │   └── App.jsx
+│   └── vite.config.js
+└── docker-compose.yml`,
+    architectureLayers: [
+      { name: 'React Client', description: 'SPA with socket.io-client. Manages room sidebar, message list with virtual scroll, and real-time event listeners. JWT stored in memory (not localStorage) for security.' },
+      { name: 'Socket.io Server', description: 'Handles all real-time bidirectional events: message delivery, typing indicators, presence updates. Rooms map directly to Socket.io rooms. Auth via JWT handshake middleware.' },
+      { name: 'Express REST API', description: 'Handles non-real-time operations: auth, room creation, message history pagination, user search. Serves as the data-fetch layer for initial page loads.' },
+      { name: 'Presence Store (Redis)', description: 'Maps socket IDs to user IDs. Tracks which users are online and in which rooms. Survives server restarts and supports horizontal scaling across multiple server instances.' },
+      { name: 'MongoDB', description: 'Stores users, rooms, and message history. Text index on Message.content for search. TTL index option for ephemeral messages. Cursor-based pagination via createdAt field.' },
+      { name: 'Message Fan-out', description: 'Socket.io room broadcasts handle fan-out to all online members. Offline members receive messages when they reconnect by fetching history since their last seen timestamp.' },
+    ],
+    dataModel: {
+      description: 'MongoDB document model. Three collections: users, rooms, and messages. References by ObjectId with lean population for list queries.',
+      schema: `// User collection
+{
+  _id: ObjectId,
+  email: String (unique, indexed),
+  passwordHash: String,
+  username: String (unique, indexed),
+  avatar: String,          // URL
+  lastSeen: Date,
+  createdAt: Date
+}
+
+// Room collection
+{
+  _id: ObjectId,
+  name: String,
+  type: String,            // 'group' | 'direct'
+  members: [ObjectId],     // ref: User, indexed
+  admins: [ObjectId],      // ref: User
+  createdBy: ObjectId,     // ref: User
+  lastMessage: {
+    content: String,
+    senderId: ObjectId,
+    sentAt: Date
+  },
+  createdAt: Date
+}
+
+// Message collection
+{
+  _id: ObjectId,
+  roomId: ObjectId (indexed),  // ref: Room
+  senderId: ObjectId,          // ref: User
+  content: String,
+  type: String,                // 'text' | 'image' | 'file'
+  readBy: [ObjectId],          // ref: User
+  editedAt: Date,
+  deletedAt: Date,             // soft delete
+  createdAt: Date (indexed)    // for cursor pagination
+}
+
+// Indexes:
+db.messages.createIndex({ roomId: 1, createdAt: -1 })
+db.messages.createIndex({ content: 'text' })  // full-text search`,
+    },
+    apiDesign: {
+      description: 'REST API for auth and data loading; Socket.io events for all real-time communication.',
+      endpoints: [
+        { method: 'POST', path: '/api/auth/register', response: '{ token, user: { id, email, username } }' },
+        { method: 'POST', path: '/api/auth/login', response: '{ token, user: { id, email, username } }' },
+        { method: 'GET', path: '/api/rooms', response: 'Array of rooms with lastMessage and unread count for the authenticated user' },
+        { method: 'POST', path: '/api/rooms', response: '{ id, name, type, members, createdAt }' },
+        { method: 'GET', path: '/api/rooms/:id/messages?before=<timestamp>&limit=50', response: '{ messages: [...], hasMore: bool, nextCursor: timestamp }' },
+        { method: 'GET', path: '/api/users/search?q=<query>', response: 'Array of matching users for adding to rooms' },
+        { method: 'POST', path: '/api/rooms/:id/members', response: '{ success: true } — emits room-member-added socket event' },
+      ],
+    },
+    codeExamples: {
+      javascript: `// server/src/socket/chatHandlers.js
+export function registerChatHandlers(io, socket) {
+  const userId = socket.userId; // set by JWT auth middleware
+
+  socket.on('join-room', async ({ roomId }) => {
+    // Verify user is a member of this room
+    const room = await Room.findOne({ _id: roomId, members: userId });
+    if (!room) return socket.emit('error', { message: 'Not a member' });
+
+    socket.join(roomId);
+    socket.emit('joined-room', { roomId });
+  });
+
+  socket.on('send-message', async ({ roomId, content, clientMsgId }) => {
+    // clientMsgId allows client-side deduplication
+    const message = await Message.create({
+      roomId, senderId: userId, content, createdAt: new Date()
+    });
+
+    // Broadcast to all room members (including sender for confirmation)
+    io.to(roomId).emit('new-message', {
+      id: message._id,
+      roomId,
+      senderId: userId,
+      content,
+      createdAt: message.createdAt,
+      clientMsgId,  // echoed back so client can replace optimistic message
+    });
+
+    // Update room's lastMessage for sidebar preview
+    await Room.updateOne({ _id: roomId }, {
+      $set: { 'lastMessage.content': content, 'lastMessage.sentAt': message.createdAt }
+    });
+  });
+
+  socket.on('typing', ({ roomId }) => {
+    socket.to(roomId).emit('user-typing', { userId, roomId });
+  });
+
+  socket.on('stop-typing', ({ roomId }) => {
+    socket.to(roomId).emit('user-stop-typing', { userId, roomId });
+  });
+}`,
+    },
+    tradeoffDecisions: [
+      { choice: 'MongoDB vs PostgreSQL for messages', picked: 'MongoDB', reason: 'Messages are append-only documents with a flexible readBy array. MongoDB schemaless design handles evolving message types (text, image, file, reactions) without migrations. The (roomId, createdAt) compound index gives O(log N) cursor pagination — equivalent to PostgreSQL for this workload.' },
+      { choice: 'Socket.io vs raw WebSocket', picked: 'Socket.io', reason: 'Socket.io provides automatic reconnection with exponential backoff, room abstractions, namespace support, and fallback to long-polling. Raw WebSocket requires reimplementing all of this. For a project build, Socket.io saves 10-15 hours of infrastructure work.' },
+      { choice: 'Presence storage: Redis vs in-memory', picked: 'Redis', reason: 'In-memory presence maps are lost on server restart and do not work across multiple server instances. Redis persists presence data and is shared across all instances, enabling horizontal scaling of the Socket.io server.' },
+      { choice: 'Message pagination: offset vs cursor', picked: 'Cursor-based (createdAt)', reason: 'Offset pagination (skip N) becomes slow at large offsets — MongoDB must scan and discard N documents. Cursor pagination (WHERE createdAt < cursor) uses the index directly regardless of history depth, making it O(log N) even for rooms with 1M+ messages.' },
+    ],
+    deepDiveTopics: [
+      { topic: 'Socket.io room internals', detail: 'Socket.io rooms are in-memory sets of socket IDs maintained per server instance. io.to(roomId).emit() iterates the set and sends to each socket. With multiple server instances, Socket.io needs a Redis adapter (socket.io-redis) so room membership is shared — otherwise users on different instances cannot receive each others messages.' },
+      { topic: 'Message ordering guarantees', detail: 'TCP guarantees order for a single connection, so messages from one sender arrive in order. But two senders in the same room may interleave arbitrarily. Clients should sort messages by createdAt timestamp for display. For strict ordering, use a Lamport clock or sequence number per room, incrementing atomically in Redis (INCR room:{id}:seq).' },
+      { topic: 'Typing indicator debouncing', detail: 'Naive typing indicators emit a "typing" event on every keypress — at 5 chars/second this is 5 socket events per second per user. With 50 users typing simultaneously, the server receives 250 events/second just for presence. Debounce client-side: emit typing on first keypress, set a 1-second timer. If another keypress arrives before the timer fires, reset the timer. Only emit stop-typing when the timer actually fires.' },
+      { topic: 'Horizontal scaling with Redis adapter', detail: 'A single Socket.io server handles ~10K concurrent connections. To scale beyond this, run multiple instances behind a load balancer with sticky sessions (or not, since Socket.io handles reconnection). Install @socket.io/redis-adapter: io.adapter(createAdapter(pubClient, subClient)). All instances share room membership via Redis Pub/Sub, so io.to(roomId).emit() works across instances.' },
+    ],
+    commonPitfalls: [
+      { pitfall: 'Not authenticating Socket.io connections', why: 'Without auth middleware on the Socket.io handshake, any client can connect and join any room, send messages as any user, and read private conversations.', solution: 'Add auth middleware: io.use((socket, next) => { const token = socket.handshake.auth.token; verifyJWT(token, (err, user) => { if (err) return next(new Error("Unauthorized")); socket.userId = user.id; next(); }); })' },
+      { pitfall: 'Broadcasting to rooms without membership check', why: 'socket.join(roomId) without verifying the user is a member allows any authenticated user to subscribe to any room\'s messages.', solution: 'Always verify membership before join: const room = await Room.findOne({ _id: roomId, members: socket.userId }). Reject with an error event if the check fails.' },
+      { pitfall: 'Memory leak from unremoved event listeners', why: 'Registering socket.on() handlers inside React useEffect without cleanup causes multiple duplicate handlers to accumulate across re-renders, leading to duplicate messages and memory leaks.', solution: 'Return a cleanup function from useEffect: return () => { socket.off("new-message", handler); }. Or use socket.once() for one-time handlers.' },
+      { pitfall: 'Sending full message history on reconnect', why: 'On reconnect, fetching all messages since account creation sends megabytes of data and blocks the UI for seconds.', solution: 'Track the timestamp of the last received message per room in localStorage. On reconnect, fetch only messages since that timestamp using the cursor pagination endpoint.' },
+    ],
+    edgeCases: [
+      { scenario: 'User in the same room on two devices', impact: 'Socket.io associates one socket per connection, not per user. Messages sent to the room reach both sockets correctly, but read receipts and typing state may conflict.', mitigation: 'Track all socket IDs per user (store in Redis as a set: user:{id}:sockets). When marking messages as read, update readBy for the user, not the socket. Both sockets receive the read-receipt event.' },
+      { scenario: 'Server crash with in-flight messages', impact: 'Messages emitted just before crash may be received by some room members but not persisted to MongoDB, causing inconsistent state.', mitigation: 'Persist the message to MongoDB before broadcasting it. Accept the slight latency increase. For critical messages, clients can implement an acknowledgement pattern (socket emit with callback) and retry on timeout.' },
+      { scenario: 'MongoDB replica set failover during message write', impact: 'Primary steps down; writes fail for 10-30 seconds during election, returning write errors to active senders.', mitigation: 'Wrap message writes in try/catch and emit an error event back to the sender: socket.emit("message-failed", { clientMsgId, reason: "Server error, please retry" }). The client can show a retry button.' },
+      { scenario: 'Thundering herd on reconnect after server restart', impact: 'All connected clients reconnect simultaneously, overwhelming the server with auth and room-join requests.', mitigation: 'Socket.io client uses exponential backoff with jitter by default (reconnectionDelay, reconnectionDelayMax options). This naturally spreads reconnect attempts over time. Do not override these defaults.' },
+    ],
+    interviewFollowups: [
+      { question: 'How would you scale this to 1M concurrent users?', answer: 'Run multiple Socket.io instances behind a load balancer with the Redis adapter for shared room state. Use Redis Cluster for the presence and adapter layer. Shard MongoDB by roomId for message storage. Add a CDN/edge layer for static assets. At 1M users across 100 server instances, each handles ~10K connections — well within Socket.io single-instance limits.' },
+      { question: 'How would you implement end-to-end encryption?', answer: 'Use the Signal Protocol (libsignal). Each user generates a key pair on device; public keys are registered with the server. On first message to a user, fetch their public key and perform a Diffie-Hellman key exchange to derive a shared secret. Messages are encrypted client-side before sending — the server stores and forwards ciphertext and never sees plaintext.' },
+      { question: 'How would you handle message search across all rooms?', answer: 'MongoDB text indexes work but do not scale past ~1M messages. For production-scale search, sync messages to Elasticsearch using a MongoDB change stream. Elasticsearch provides full-text search with relevance ranking, room-level ACL filtering, and sub-100ms query response across billions of messages.' },
+      { question: 'How would you add push notifications for offline users?', answer: 'On disconnect, mark the user as offline in Redis. When a message is sent to a room, check which members are offline. For offline members, enqueue a push notification job. Use Firebase Cloud Messaging (FCM) for mobile and Web Push API for browsers. Store FCM tokens in the users collection, registered when the client first loads.' },
+    ],
+    extensionIdeas: [
+      { idea: 'Message Reactions', difficulty: 'beginner', description: 'Add emoji reactions to messages: store reactions as a Map of emoji to array of user IDs on the Message document. Emit reaction-added/removed socket events. Show reaction counts below each message with a click-to-toggle interaction.' },
+      { idea: 'File and Image Sharing', difficulty: 'intermediate', description: 'Generate an S3 presigned upload URL via POST /api/files/upload-url. Client uploads directly to S3. Send the resulting S3 URL as a message with type: "image" or "file". Render image messages inline and file messages as download cards.' },
+      { idea: 'Message Threading', difficulty: 'intermediate', description: 'Add a parentMessageId field to support reply threads. Show a "X replies" indicator on threaded messages. Clicking opens a thread panel alongside the main chat. Threads are their own cursor-paginated message stream filtered by parentMessageId.' },
+      { idea: 'Voice Messages', difficulty: 'advanced', description: 'Use the MediaRecorder Web API to record audio in the browser. Upload the WebM blob to S3 via presigned URL. Send as a message with type: "audio" and a duration field. Render a waveform player using Web Audio API with a playback progress bar.' },
+    ],
   },
   {
     id: 'job-board-api',
@@ -2180,6 +3026,265 @@ export async function GET(req: NextRequest) {
       { question: 'How do I implement role-based access?', answer: 'JWT payload includes role: "employer" | "candidate" | "admin". Middleware checks: requireRole("employer") for creating jobs, requireRole("candidate") for applying, requireRole("admin") for moderation. Employers can only edit/delete their own jobs. Candidates can only view their own applications.' },
       { question: 'How should the application state machine work?', answer: 'States: applied → screening → interviewing → offered → accepted | rejected. Only employers can advance the state. Each transition is logged in an application_events table (application_id, from_state, to_state, note, created_at). Invalid transitions return 422 Unprocessable Entity.' },
       { question: 'What database schema should I use?', answer: 'Tables: users (id, email, password_hash, role, name, profile_data), companies (id, name, logo, owner_id FK), jobs (id, company_id FK, title, description, location, salary_range, type, status, created_at), applications (id, job_id FK, candidate_id FK, status, resume_url, cover_letter, created_at), application_events (id, application_id FK, from_state, to_state, note, created_at).' },
+    ],
+    implementationSteps: [
+      {
+        phase: 1,
+        title: 'Auth & User Roles',
+        description: 'Set up Express, PostgreSQL schema, JWT auth with role-based access.',
+        tasks: [
+          'Initialize Express project with pg, bcrypt, jsonwebtoken, express-validator',
+          'Create PostgreSQL tables: users, companies, jobs, applications, application_events',
+          'Build POST /api/auth/register (accepts role: employer|candidate) and POST /api/auth/login',
+          'Create JWT middleware: authenticate() validates token, requireRole("employer") gates routes',
+          'Add POST /api/companies for employers to create their company profile',
+        ],
+      },
+      {
+        phase: 2,
+        title: 'Jobs API',
+        description: 'Build full CRUD for job listings with search and filtering.',
+        tasks: [
+          'POST /api/jobs: employer-only, validate required fields, insert with company_id from JWT',
+          'GET /api/jobs: public endpoint with query params (search, location, type, page, limit)',
+          'Add PostgreSQL full-text search: tsvector column on title + description, GIN index',
+          'PUT /api/jobs/:id: employer-only, verify company ownership before update',
+          'DELETE /api/jobs/:id: soft-delete (set status=closed) rather than hard delete',
+        ],
+      },
+      {
+        phase: 3,
+        title: 'Application State Machine',
+        description: 'Build application submission flow and employer-driven status transitions.',
+        tasks: [
+          'POST /api/jobs/:id/applications: candidate-only, enforce one application per job per user',
+          'GET /api/jobs/:id/applications: employer-only, list all applications for their job',
+          'PATCH /api/applications/:id/status: employer advances state with transition validation',
+          'Log every transition to application_events table with from_state, to_state, note, timestamp',
+          'GET /api/applications/mine: candidate view of all their own applications with current status',
+        ],
+      },
+      {
+        phase: 4,
+        title: 'React Frontend',
+        description: 'Build the job board UI for candidates and the employer dashboard.',
+        tasks: [
+          'Build public job listings page with search bar, location/type filter dropdowns, and pagination',
+          'Build job detail page with apply button that opens a modal (cover letter + resume URL)',
+          'Build employer dashboard: list of posted jobs with application count badges',
+          'Build application review panel: list of applicants with status dropdown and notes input',
+          'Add candidate My Applications page showing job title, company, current status, and timeline',
+        ],
+      },
+    ],
+    fileStructure: `job-board-api/
+├── server/
+│   ├── src/
+│   │   ├── routes/
+│   │   │   ├── auth.js          # POST /api/auth/register, /login, /refresh
+│   │   │   ├── jobs.js          # GET/POST /api/jobs, GET/PUT/DELETE /api/jobs/:id
+│   │   │   ├── applications.js  # POST /api/jobs/:id/applications, PATCH /api/applications/:id/status
+│   │   │   ├── companies.js     # POST/GET /api/companies
+│   │   │   └── users.js         # GET /api/users/me, PUT /api/users/me
+│   │   ├── middleware/
+│   │   │   ├── auth.js          # authenticate(), requireRole(role)
+│   │   │   └── validate.js      # express-validator chains per route
+│   │   ├── services/
+│   │   │   ├── search.js        # full-text search query builder
+│   │   │   └── stateMachine.js  # valid transition map + transition validator
+│   │   ├── db/
+│   │   │   ├── pool.js
+│   │   │   └── migrate.js       # CREATE TABLE IF NOT EXISTS on startup
+│   │   └── index.js
+│   ├── .env
+│   └── package.json
+├── client/
+│   ├── src/
+│   │   ├── pages/
+│   │   │   ├── JobsPage.jsx         # public job listings with search/filter
+│   │   │   ├── JobDetailPage.jsx    # job detail + apply modal
+│   │   │   ├── EmployerDashboard.jsx
+│   │   │   └── MyApplicationsPage.jsx
+│   │   ├── components/
+│   │   │   ├── JobCard.jsx
+│   │   │   ├── ApplicationRow.jsx
+│   │   │   └── StatusBadge.jsx
+│   │   ├── contexts/
+│   │   │   └── AuthContext.jsx  # role-aware auth context
+│   │   └── App.jsx
+│   └── vite.config.js
+└── docker-compose.yml`,
+    architectureLayers: [
+      { name: 'React Client', description: 'Role-aware SPA. Candidates see job listings and applications; employers see their posted jobs and application pipelines. Routes protected by role checks in the auth context.' },
+      { name: 'Express API Layer', description: 'RESTful API with JWT auth middleware and role-based route guards. Validates all inputs via express-validator before touching the database.' },
+      { name: 'Auth Middleware', description: 'authenticate() verifies JWT and attaches req.user. requireRole("employer") checks the role claim. Resource ownership checked inline: employers can only modify their own jobs.' },
+      { name: 'Full-Text Search', description: 'PostgreSQL tsvector on jobs(title, description, company_name). GIN index enables sub-10ms keyword search across 100K listings. Built-in, no external search service needed.' },
+      { name: 'Application State Machine', description: 'stateMachine.js defines valid transitions: applied→screening, screening→interviewing, interviewing→offered, any→rejected. Invalid transitions return 422. Every valid transition is logged to application_events.' },
+      { name: 'PostgreSQL', description: 'Relational schema with proper FK constraints and indexes. Five tables: users, companies, jobs, applications, application_events. Parameterized queries throughout — no raw string interpolation.' },
+    ],
+    dataModel: {
+      description: 'Relational schema modeling the employer-candidate relationship with a full application audit trail.',
+      schema: `CREATE TABLE users (
+  id            SERIAL PRIMARY KEY,
+  email         TEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  role          VARCHAR(10) NOT NULL CHECK (role IN ('employer','candidate','admin')),
+  full_name     TEXT,
+  created_at    TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE companies (
+  id          SERIAL PRIMARY KEY,
+  name        TEXT NOT NULL,
+  website     TEXT,
+  logo_url    TEXT,
+  description TEXT,
+  owner_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE jobs (
+  id           SERIAL PRIMARY KEY,
+  company_id   INTEGER NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  title        TEXT NOT NULL,
+  description  TEXT NOT NULL,
+  location     TEXT,
+  salary_min   INTEGER,
+  salary_max   INTEGER,
+  type         VARCHAR(20) CHECK (type IN ('full-time','part-time','contract','internship')),
+  status       VARCHAR(10) DEFAULT 'open' CHECK (status IN ('open','closed','draft')),
+  search_vec   TSVECTOR,
+  created_at   TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_jobs_search ON jobs USING GIN(search_vec);
+CREATE INDEX idx_jobs_status  ON jobs(status);
+
+CREATE TABLE applications (
+  id            SERIAL PRIMARY KEY,
+  job_id        INTEGER NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
+  candidate_id  INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  status        VARCHAR(20) DEFAULT 'applied',
+  resume_url    TEXT,
+  cover_letter  TEXT,
+  created_at    TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE (job_id, candidate_id)
+);
+
+CREATE TABLE application_events (
+  id              SERIAL PRIMARY KEY,
+  application_id  INTEGER NOT NULL REFERENCES applications(id) ON DELETE CASCADE,
+  from_state      VARCHAR(20),
+  to_state        VARCHAR(20) NOT NULL,
+  note            TEXT,
+  actor_id        INTEGER REFERENCES users(id),
+  created_at      TIMESTAMPTZ DEFAULT NOW()
+);`,
+    },
+    apiDesign: {
+      description: 'REST API with role-based access. Public endpoints for browsing; protected endpoints for employers and candidates. All write endpoints validate inputs.',
+      endpoints: [
+        { method: 'POST', path: '/api/auth/register', response: '{ token, user: { id, email, role } }' },
+        { method: 'GET', path: '/api/jobs?search=&location=&type=&page=&limit=', response: '{ jobs: [...], total, page, limit }' },
+        { method: 'POST', path: '/api/jobs', response: '{ id, title, companyId, status, createdAt } — employer only' },
+        { method: 'PUT', path: '/api/jobs/:id', response: '{ id, title, ... updated fields } — employer, own job only' },
+        { method: 'POST', path: '/api/jobs/:id/applications', response: '{ id, jobId, candidateId, status: "applied" } — candidate only' },
+        { method: 'GET', path: '/api/jobs/:id/applications', response: 'Array of applications with candidate profile — employer, own job only' },
+        { method: 'PATCH', path: '/api/applications/:id/status', response: '{ id, status, updatedAt } — employer only, validates state transition' },
+        { method: 'GET', path: '/api/applications/mine', response: 'Array of applications with job and company info — candidate only' },
+      ],
+    },
+    codeExamples: {
+      javascript: `// server/src/services/stateMachine.js
+const TRANSITIONS = {
+  applied:      ['screening', 'rejected'],
+  screening:    ['interviewing', 'rejected'],
+  interviewing: ['offered', 'rejected'],
+  offered:      ['accepted', 'rejected'],
+};
+
+export function isValidTransition(fromState, toState) {
+  return TRANSITIONS[fromState]?.includes(toState) ?? false;
+}
+
+// server/src/routes/applications.js — status update handler
+router.patch('/:id/status', authenticate, requireRole('employer'), async (req, res) => {
+  const { status, note } = req.body;
+  const { id } = req.params;
+
+  const { rows } = await pool.query(
+    \`SELECT a.*, j.company_id FROM applications a
+     JOIN jobs j ON a.job_id = j.id
+     WHERE a.id = $1\`,
+    [id]
+  );
+
+  if (!rows.length) return res.status(404).json({ error: 'Application not found' });
+
+  const app = rows[0];
+
+  // Verify employer owns the job this application belongs to
+  const company = await pool.query(
+    'SELECT id FROM companies WHERE id = $1 AND owner_id = $2',
+    [app.company_id, req.user.id]
+  );
+  if (!company.rows.length) return res.status(403).json({ error: 'Forbidden' });
+
+  // Validate state transition
+  if (!isValidTransition(app.status, status)) {
+    return res.status(422).json({
+      error: \`Invalid transition: \${app.status} -> \${status}\`
+    });
+  }
+
+  // Update status and log the event atomically
+  await pool.query('BEGIN');
+  await pool.query('UPDATE applications SET status = $1 WHERE id = $2', [status, id]);
+  await pool.query(
+    \`INSERT INTO application_events (application_id, from_state, to_state, note, actor_id)
+     VALUES ($1, $2, $3, $4, $5)\`,
+    [id, app.status, status, note || null, req.user.id]
+  );
+  await pool.query('COMMIT');
+
+  res.json({ id: Number(id), status, updatedAt: new Date() });
+});`,
+    },
+    tradeoffDecisions: [
+      { choice: 'Full-text search implementation', picked: 'PostgreSQL tsvector with GIN index', reason: 'Adding Elasticsearch for a job board take-home is over-engineered and adds infrastructure complexity. PostgreSQL built-in full-text search handles 100K listings at sub-10ms with a GIN index. Use Elasticsearch only when you outgrow PostgreSQL FTS (10M+ documents or need relevance tuning).' },
+      { choice: 'Application state transitions', picked: 'Server-side state machine with explicit transition map', reason: 'Allowing arbitrary status updates from the client would let employers set status to any value, corrupting the audit trail. A server-side transition map enforces that only valid progressions are allowed and logs every change, creating a defensible audit trail.' },
+      { choice: 'Role storage in JWT vs DB', picked: 'Role in JWT payload', reason: 'Fetching role from DB on every request adds a DB round trip to every authenticated endpoint. Role rarely changes — storing it in the JWT (signed, tamper-proof) is safe and fast. On role change (e.g., user upgraded to employer), invalidate existing JWTs via a short expiry (1h access token, 30d refresh token).' },
+      { choice: 'Soft delete vs hard delete for jobs', picked: 'Soft delete (status=closed)', reason: 'Hard-deleting a job cascades to delete all its applications, destroying the candidate audit trail. Employers may want to re-open a job or review past applicants. Soft-delete preserves history while hiding the job from public listings.' },
+    ],
+    deepDiveTopics: [
+      { topic: 'PostgreSQL full-text search with tsvector', detail: 'tsvector is a preprocessed document representation: to_tsvector("english", title || " " || description) normalizes words to lexemes and removes stop words. A GIN index on this column enables fast @@ (matches) queries. Rank results with ts_rank(search_vec, query). For multi-language support, pass the language parameter explicitly rather than using the server default.' },
+      { topic: 'JWT refresh token rotation', detail: 'Access tokens should have short expiry (15min-1h) to limit damage from leakage. Refresh tokens (30 days) are stored in httpOnly cookies and used to issue new access tokens. On each refresh, rotate the refresh token (issue a new one, invalidate the old). Store refresh tokens in a DB table to enable logout-everywhere and detect token theft (if a token is used twice, revoke the family).' },
+      { topic: 'Application state machine design', detail: 'Model states and transitions explicitly: const TRANSITIONS = { applied: ["screening","rejected"], screening: ["interviewing","rejected"] ... }. Never model this as a free-form status column with no validation — employers will corrupt data by sending arbitrary values. Returning 422 Unprocessable Entity on invalid transitions makes the constraint explicit to API consumers.' },
+      { topic: 'Pagination: offset vs keyset', detail: 'Offset pagination (LIMIT 20 OFFSET 200) scans and discards 200 rows on every page-2 request. With 100K jobs, page 5000 scans 100K rows. Keyset pagination (WHERE created_at < :cursor ORDER BY created_at DESC LIMIT 20) uses the index directly regardless of page depth. Use keyset for infinite-scroll job feeds; offset is acceptable for small datasets with numbered pagination UI.' },
+    ],
+    commonPitfalls: [
+      { pitfall: 'Not checking resource ownership on update/delete', why: 'An employer can update or delete any job if the route only checks the employer role without verifying company ownership. This allows one employer to sabotage a competitor\'s listings.', solution: 'After authenticating the employer, query: SELECT id FROM jobs WHERE id = $1 AND company_id IN (SELECT id FROM companies WHERE owner_id = $2). Return 403 if not found.' },
+      { pitfall: 'Allowing duplicate applications', why: 'Without a UNIQUE constraint, a candidate can apply to the same job multiple times. Duplicate applications confuse employers and clutter the pipeline.', solution: 'Add UNIQUE(job_id, candidate_id) to the applications table. On insert, catch pg error 23505 and return 409 Conflict with the message "You have already applied to this job."' },
+      { pitfall: 'Storing role in a mutable user table column without re-issuing JWTs', why: 'If a user\'s role changes in the DB but their JWT still claims the old role, they retain old permissions until their token expires.', solution: 'Use short-lived access tokens (15-60min). On role change, optionally add the user ID to a JWT blocklist checked during verification. The blocklist can be a Redis set with TTL matching the token expiry.' },
+      { pitfall: 'Returning password hashes in API responses', why: 'SELECT * FROM users returns password_hash. If any endpoint accidentally returns the full user object, password hashes leak to clients.', solution: 'Always explicitly list columns: SELECT id, email, role, full_name FROM users. Never SELECT * on the users table in application code. Add a toJSON() sanitizer that strips sensitive fields.' },
+    ],
+    edgeCases: [
+      { scenario: 'Employer deletes a job with active applications', impact: 'Cascading delete removes all application history. Candidates who applied have no record of their application. Application events are permanently lost.', mitigation: 'Use soft delete: SET status = \'closed\'. Only hard-delete after a retention period (e.g., 90 days). Notify candidates via email when a job they applied to is closed.' },
+      { scenario: 'Two candidates apply at the same moment (race condition)', impact: 'Both inserts succeed without the UNIQUE constraint, creating duplicate applications.', mitigation: 'UNIQUE(job_id, candidate_id) at the DB level is the correct guard. The constraint is enforced transactionally by PostgreSQL regardless of concurrent inserts. No application-level locking needed.' },
+      { scenario: 'Employer account deleted with active job listings', impact: 'ON DELETE CASCADE propagates to companies, then jobs, then applications — wiping all candidate application history.', mitigation: 'Use ON DELETE SET NULL or a soft-delete pattern for employers. Archive rather than delete accounts. Require admin action to remove employer accounts with active listings.' },
+      { scenario: 'Job search returning irrelevant results', impact: 'A search for "React" returns every job containing the word "react" in any context (even in rejection emails stored in descriptions), reducing result quality.', mitigation: 'Use tsquery with lexeme matching: plainto_tsquery("english", $1). Add salary range and recency filters. Let candidates save searches and get email alerts on new matches.' },
+    ],
+    interviewFollowups: [
+      { question: 'How would you add email notifications for application status changes?', answer: 'On each status transition, enqueue a notification job (BullMQ or pg-boss). The worker picks up the job, fetches candidate email and job title from DB, and sends via SendGrid/Resend. This decouples the HTTP response from the email send — the status update completes in <10ms regardless of email delivery latency.' },
+      { question: 'How would you implement a resume parsing feature?', answer: 'Accept PDF uploads via presigned S3 URL. After upload, enqueue a parsing job. The worker sends the PDF to a resume parsing API (Affinda, Sovren, or a custom Python service using pdfminer + spaCy NER). Parse out name, email, skills, and work history. Store structured data in a candidate_profiles table. Surface it in the employer application view.' },
+      { question: 'How would you handle job listing deduplication from multiple scrapers?', answer: 'Add a content_hash column to jobs: MD5(company_id || title || location || type). Enforce UNIQUE(content_hash). When importing from scrapers, use INSERT ... ON CONFLICT(content_hash) DO UPDATE SET updated_at = NOW(). This deduplicates identical listings while updating stale ones.' },
+      { question: 'How would you scale the search to millions of jobs?', answer: 'PostgreSQL FTS works up to ~1M jobs before query times exceed 100ms even with GIN indexes. Beyond that, add Elasticsearch: sync jobs via a change-data-capture stream (Debezium on PostgreSQL WAL) into an Elasticsearch index. Elasticsearch handles relevance ranking, faceted search (by location, salary, type), and auto-suggest on job titles at scale.' },
+    ],
+    extensionIdeas: [
+      { idea: 'Saved Jobs and Email Alerts', difficulty: 'beginner', description: 'Add a saved_jobs junction table (user_id, job_id). Let candidates bookmark listings. Add a daily cron job that checks saved search queries against new postings and sends digest emails via SendGrid.' },
+      { idea: 'Company Reviews and Ratings', difficulty: 'intermediate', description: 'Add a company_reviews table (user_id, company_id, rating 1-5, review_text, created_at). Show aggregate rating and review count on company pages. Require one verified application to that company before allowing a review, preventing spam.' },
+      { idea: 'Applicant Tracking System (ATS) Kanban', difficulty: 'intermediate', description: 'Build a drag-and-drop Kanban board for employers to manage applications. Columns map to application stages. Dragging a card between columns fires the PATCH /api/applications/:id/status endpoint. Implemented with @dnd-kit/core.' },
+      { idea: 'Salary Insights Dashboard', difficulty: 'advanced', description: 'Aggregate anonymized salary data from posted jobs by role, location, and company size. Build a salary comparison chart showing percentiles. This is the core value proposition of Levels.fyi and Glassdoor salary features.' },
     ],
   },
   {
