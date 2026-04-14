@@ -598,7 +598,7 @@ export function DesignLayout({ onBack, initialProblem }: DesignLayoutProps) {
           {timerDuration > 0 ? (
             <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-xs font-mono font-bold transition-colors ${
               timerUrgent ? 'bg-red-50 border-red-200 text-red-600' :
-              timerSeconds === 0 ? 'bg-gray-100 border-gray-200 text-gray-700' :
+              timerSeconds === 0 ? 'bg-white/10 border-white/20 text-white/70' :
               'bg-indigo-50 border-indigo-200 text-indigo-700'
             } ${timerUrgent ? 'timer-urgent' : ''}`}>
               <div className="relative w-4 h-4">
@@ -609,7 +609,7 @@ export function DesignLayout({ onBack, initialProblem }: DesignLayoutProps) {
                 </svg>
               </div>
               <span>{formatTime(timerSeconds)}</span>
-              <button onClick={stopTimer} className="ml-1 text-gray-700 hover:text-red-500 transition-colors" title="Stop timer">
+              <button onClick={stopTimer} className="ml-1 text-white/50 hover:text-red-400 transition-colors" title="Stop timer">
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -619,7 +619,7 @@ export function DesignLayout({ onBack, initialProblem }: DesignLayoutProps) {
             <div className="flex items-center">
               {[15, 30, 45, 60].map(m => (
                 <button key={m} onClick={() => startTimer(m)}
-                  className="px-1.5 py-0.5 text-[10px] font-mono text-gray-700 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors"
+                  className="px-1.5 py-0.5 text-[10px] font-mono text-white/50 hover:text-white hover:bg-white/10 rounded transition-colors"
                   title={`${m} min timer`}>
                   {m}m
                 </button>
@@ -657,7 +657,7 @@ export function DesignLayout({ onBack, initialProblem }: DesignLayoutProps) {
       {/* Main content - vertical on mobile, horizontal on desktop */}
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden" ref={mainRef}>
         {/* Left: Problem Input - full width on mobile */}
-        <div className="w-full md:shrink-0 flex flex-col border-b md:border-b-0 md:border-r border-gray-200 design-left-panel max-h-[35vh] md:max-h-none overflow-auto" style={{ ['--left-w' as any]: `${leftWidth}%` }}>
+        <div className="w-full md:shrink-0 flex flex-col border-b md:border-b-0 md:border-r border-[var(--border)] design-left-panel max-h-[35vh] md:max-h-none overflow-auto" style={{ ['--left-w' as any]: `${leftWidth}%` }}>
           {/* Input Tab Header */}
           <div className="flex items-center justify-between px-3 py-1.5" style={{ background: 'rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
             <div className="flex items-center gap-0.5 p-0.5 rounded-lg" style={{ background: 'rgba(255,255,255,0.08)' }}>
@@ -754,7 +754,7 @@ export function DesignLayout({ onBack, initialProblem }: DesignLayoutProps) {
                   <img src={imagePreview} alt="Preview" className="max-h-32 rounded-lg" />
                 ) : (
                   <div className="space-y-2 text-center">
-                    <div className="w-10 h-10 mx-auto bg-gray-100 rounded-full flex items-center justify-center">
+                    <div className="w-10 h-10 mx-auto bg-white/10 rounded-full flex items-center justify-center">
                       <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
@@ -787,7 +787,7 @@ export function DesignLayout({ onBack, initialProblem }: DesignLayoutProps) {
 
           {/* Architecture Diagram - in left panel below input */}
           {question && sd && (
-            <div className="border-t border-gray-200 p-3 flex-1 overflow-auto min-h-0 hidden md:block">
+            <div className="border-t border-[var(--border)] p-3 flex-1 overflow-auto min-h-0 hidden md:block">
               <div className="flex items-center gap-2 mb-2">
                 <svg className="w-3.5 h-3.5 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
@@ -798,7 +798,7 @@ export function DesignLayout({ onBack, initialProblem }: DesignLayoutProps) {
 
               {/* Architecture Layers explanation below diagram */}
               {sd.techJustifications && sd.techJustifications.length > 0 && (
-                <div className="mt-4 pt-3 border-t border-gray-200 space-y-1.5">
+                <div className="mt-4 pt-3 border-t border-[var(--border)] space-y-1.5">
                   <div className="flex items-center gap-2 mb-2">
                     <svg className="w-3.5 h-3.5 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
@@ -807,12 +807,12 @@ export function DesignLayout({ onBack, initialProblem }: DesignLayoutProps) {
                     <span className="text-[10px] font-mono text-violet-400">{sd.techJustifications.length}</span>
                   </div>
                   {sd.techJustifications.map((tier, i) => (
-                    <div key={i} className="rounded-lg border border-gray-100 p-2">
-                      <div className="text-xs font-bold text-gray-900 mb-0.5">{tier.tech}</div>
+                    <div key={i} className="rounded-lg border border-[var(--border)] p-2">
+                      <div className="text-xs font-bold text-[var(--text-primary)] mb-0.5">{tier.tech}</div>
                       {tier.details.length > 0 && (
                         <div className="space-y-0.5">
                           {tier.details.map((d, j) => (
-                            <div key={j} className="text-[11px] text-gray-500 leading-snug pl-2">- {d}</div>
+                            <div key={j} className="text-[11px] text-[var(--text-muted)] leading-snug pl-2">- {d}</div>
                           ))}
                         </div>
                       )}
@@ -826,10 +826,10 @@ export function DesignLayout({ onBack, initialProblem }: DesignLayoutProps) {
 
         {/* Resizable divider - hidden on mobile, matching coding page */}
         <div
-          className="hidden md:flex w-1.5 bg-gray-100 hover:bg-indigo-200 cursor-col-resize transition-colors items-center justify-center group shrink-0"
+          className="hidden md:flex w-1.5 bg-[var(--bg-elevated)] hover:bg-indigo-200 cursor-col-resize transition-colors items-center justify-center group shrink-0"
           onMouseDown={handleDividerMouseDown}
         >
-          <div className="w-0.5 h-8 bg-gray-300 group-hover:bg-indigo-500 rounded-full transition-colors" />
+          <div className="w-0.5 h-8 bg-[var(--border)] group-hover:bg-indigo-500 rounded-full transition-colors" />
         </div>
 
         {/* Right: Design Result — light panel, exempt from dark overrides */}
@@ -1066,24 +1066,24 @@ export function DesignLayout({ onBack, initialProblem }: DesignLayoutProps) {
       </div>
 
       {/* Enterprise Status Bar — matching coding page */}
-      <div className="hidden sm:flex items-center justify-between h-7 px-3 bg-gray-50 border-t border-gray-200 shrink-0">
+      <div className="hidden sm:flex items-center justify-between h-7 px-3 bg-[var(--bg-elevated)] border-t border-[var(--border)] shrink-0">
         <div className="flex items-center gap-2">
           <span className={`w-2 h-2 rounded-full ${isLoading ? 'bg-emerald-500 animate-pulse' : 'bg-emerald-400'}`} />
-          <span className="text-[10px] font-mono text-gray-500">
+          <span className="text-[10px] font-mono text-[var(--text-muted)]">
             {isLoading ? 'Generating...' : 'Ready'}
           </span>
           {question && (
-            <span className="text-[10px] font-mono text-gray-400 border-l border-gray-200 pl-2 truncate max-w-[200px]">
+            <span className="text-[10px] font-mono text-[var(--text-muted)] border-l border-[var(--border)] pl-2 truncate max-w-[200px]">
               {question}
             </span>
           )}
         </div>
-        <div className="flex items-center gap-3 text-[10px] font-mono text-gray-400">
+        <div className="flex items-center gap-3 text-[10px] font-mono text-[var(--text-muted)]">
           <span>
-            <kbd className="px-1 py-0.5 rounded border border-gray-200 text-gray-500 text-[9px]">⌘↵</kbd> submit
+            <kbd className="px-1 py-0.5 rounded border border-[var(--border)] text-[var(--text-muted)] text-[9px]">⌘↵</kbd> submit
           </span>
           <span>
-            <kbd className="px-1 py-0.5 rounded border border-gray-200 text-gray-500 text-[9px]">Esc</kbd> clear
+            <kbd className="px-1 py-0.5 rounded border border-[var(--border)] text-[var(--text-muted)] text-[9px]">Esc</kbd> clear
           </span>
         </div>
       </div>

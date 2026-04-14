@@ -412,26 +412,26 @@ export default function CompanyPrepPage() {
 
         <div>
           {/* Header */}
-          <div style={{ background: '#ffffff', borderBottom: '1px solid #e3e8ee' }}>
+          <div style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)' }}>
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-              <div className="flex items-center gap-2 mb-4" style={{ fontSize: 13, color: '#9ca3af' }}>
-                <Link to="/" style={{ color: '#9ca3af', textDecoration: 'none' }}>Home</Link>
+              <div className="flex items-center gap-2 mb-4" style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+                <Link to="/" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Home</Link>
                 <span>/</span>
-                <Link to="/jobs" style={{ color: '#9ca3af', textDecoration: 'none' }}>Jobs</Link>
+                <Link to="/jobs" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Jobs</Link>
                 <span>/</span>
-                <span style={{ color: '#374151' }}>{displayName}</span>
+                <span style={{ color: 'var(--text-secondary)' }}>{displayName}</span>
               </div>
               <div className="flex items-center gap-4 mb-3">
                 <div className="w-14 h-14 rounded-xl flex items-center justify-center" style={{ background: '#f3f4f6', border: '1px solid #e5e7eb' }}>
-                  <span style={{ fontSize: 22, fontWeight: 800, color: '#6b7280' }}>
+                  <span style={{ fontSize: 22, fontWeight: 800, color: 'var(--text-muted)' }}>
                     {displayName.charAt(0).toUpperCase()}
                   </span>
                 </div>
                 <div>
-                  <h1 className="practice-display" style={{ fontSize: 26, fontWeight: 700, color: '#111827', margin: 0, letterSpacing: '-0.02em' }}>
+                  <h1 className="practice-display" style={{ fontSize: 26, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>
                     {displayName} Interview Prep
                   </h1>
-                  <p className="practice-body" style={{ fontSize: 15, color: '#6b7280', margin: '4px 0 0' }}>
+                  <p className="practice-body" style={{ fontSize: 15, color: 'var(--text-muted)', margin: '4px 0 0' }}>
                     Prepare for your interview with curated coding, system design, and behavioral topics.
                   </p>
                 </div>
@@ -443,27 +443,27 @@ export default function CompanyPrepPage() {
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
               {genericSections.map((section) => (
-                <div key={section.title} style={{ background: '#ffffff', border: '1px solid #e3e8ee', borderRadius: 12, overflow: 'hidden' }}>
+                <div key={section.title} style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
                   <div style={{ padding: '20px 24px', borderBottom: '1px solid #f3f4f6' }}>
                     <div className="flex items-center gap-3 mb-2">
                       <div style={{ width: 36, height: 36, borderRadius: 10, background: `${section.color}12`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         {getSectionIcon(section.icon)}
                       </div>
-                      <h2 className="practice-display" style={{ fontSize: 17, fontWeight: 700, color: '#111827', margin: 0 }}>
+                      <h2 className="practice-display" style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
                         {section.title}
                       </h2>
                     </div>
-                    <p className="practice-body" style={{ fontSize: 14, color: '#6b7280', margin: 0, lineHeight: 1.6 }}>
+                    <p className="practice-body" style={{ fontSize: 14, color: 'var(--text-muted)', margin: 0, lineHeight: 1.6 }}>
                       {section.description}
                     </p>
                   </div>
                   <div style={{ padding: '16px 24px' }}>
-                    <p className="practice-body" style={{ fontSize: 12, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 10px' }}>
+                    <p className="practice-body" style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 10px' }}>
                       Key Topics to Focus On
                     </p>
                     <div className="flex flex-wrap gap-2 mb-4">
                       {section.topics.map((topic) => (
-                        <span key={topic} style={{ fontSize: 13, fontWeight: 500, color: '#374151', background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 6, padding: '4px 10px' }}>
+                        <span key={topic} style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)', background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 6, padding: '4px 10px' }}>
                           {topic}
                         </span>
                       ))}
@@ -480,7 +480,7 @@ export default function CompanyPrepPage() {
                       <Link
                         to={section.practiceLink}
                         className="practice-body"
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 16px', color: '#374151', background: '#f3f4f6', fontSize: 13, fontWeight: 600, borderRadius: 8, textDecoration: 'none', border: '1px solid #e5e7eb' }}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 16px', color: 'var(--text-secondary)', background: '#f3f4f6', fontSize: 13, fontWeight: 600, borderRadius: 8, textDecoration: 'none', border: '1px solid #e5e7eb' }}
                       >
                         {section.practiceLabel}
                       </Link>
@@ -491,11 +491,11 @@ export default function CompanyPrepPage() {
             </div>
 
             {/* Jobs CTA */}
-            <div style={{ marginTop: 24, background: '#ffffff', border: '1px solid #e3e8ee', borderRadius: 12, padding: 24, textAlign: 'center' }}>
-              <h3 className="practice-display" style={{ fontSize: 16, fontWeight: 700, color: '#111827', margin: '0 0 6px' }}>
+            <div style={{ marginTop: 24, background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 12, padding: 24, textAlign: 'center' }}>
+              <h3 className="practice-display" style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 6px' }}>
                 Looking for {displayName} jobs?
               </h3>
-              <p className="practice-body" style={{ fontSize: 14, color: '#6b7280', margin: '0 0 16px' }}>
+              <p className="practice-body" style={{ fontSize: 14, color: 'var(--text-muted)', margin: '0 0 16px' }}>
                 Browse open positions and prepare with tailored study plans.
               </p>
               <div className="flex items-center justify-center gap-3">
@@ -509,7 +509,7 @@ export default function CompanyPrepPage() {
                 <Link
                   to="/capra/prepare"
                   className="practice-body"
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '10px 20px', color: '#374151', background: '#f3f4f6', fontSize: 14, fontWeight: 600, borderRadius: 8, textDecoration: 'none', border: '1px solid #e5e7eb' }}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '10px 20px', color: 'var(--text-secondary)', background: '#f3f4f6', fontSize: 14, fontWeight: 600, borderRadius: 8, textDecoration: 'none', border: '1px solid #e5e7eb' }}
                 >
                   All Prep Topics
                 </Link>
@@ -542,12 +542,12 @@ export default function CompanyPrepPage() {
 
           {/* ── Breadcrumb ── */}
           <div style={{ padding: '16px 0 0' }}>
-            <nav className="practice-body" style={{ fontSize: 13, color: '#9ca3af', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-              <Link to="/" className="breadcrumb-link" style={{ color: '#9ca3af', textDecoration: 'none', transition: 'color 0.15s' }}>Home</Link>
+            <nav className="practice-body" style={{ fontSize: 13, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+              <Link to="/" className="breadcrumb-link" style={{ color: 'var(--text-muted)', textDecoration: 'none', transition: 'color 0.15s' }}>Home</Link>
               <span style={{ color: '#d1d5db' }}>/</span>
-              <Link to="/capra/practice" className="breadcrumb-link" style={{ color: '#9ca3af', textDecoration: 'none', transition: 'color 0.15s' }}>Interview Questions</Link>
+              <Link to="/capra/practice" className="breadcrumb-link" style={{ color: 'var(--text-muted)', textDecoration: 'none', transition: 'color 0.15s' }}>Interview Questions</Link>
               <span style={{ color: '#d1d5db' }}>/</span>
-              <span style={{ color: '#6b7280', fontWeight: 500 }}>{companyData.name}</span>
+              <span style={{ color: 'var(--text-muted)', fontWeight: 500 }}>{companyData.name}</span>
             </nav>
           </div>
 
@@ -581,7 +581,7 @@ export default function CompanyPrepPage() {
                   style={{
                     fontSize: 32,
                     fontWeight: 800,
-                    color: '#111827',
+                    color: 'var(--text-primary)',
                     margin: '0 0 8px',
                     letterSpacing: '-0.02em',
                     lineHeight: 1.2,
@@ -589,10 +589,10 @@ export default function CompanyPrepPage() {
                 >
                   {companyData.name} Interview Questions
                 </h1>
-                <p className="practice-body" style={{ fontSize: 15, color: '#6b7280', margin: 0, lineHeight: 1.6, maxWidth: 640 }}>
+                <p className="practice-body" style={{ fontSize: 15, color: 'var(--text-muted)', margin: 0, lineHeight: 1.6, maxWidth: 640 }}>
                   {companyData.description}
                 </p>
-                <p className="practice-body" style={{ fontSize: 13, color: '#9ca3af', margin: '10px 0 0' }}>
+                <p className="practice-body" style={{ fontSize: 13, color: 'var(--text-muted)', margin: '10px 0 0' }}>
                   {totalQuestions} curated questions across {companyData.sections.length} categories
                 </p>
               </div>
@@ -617,8 +617,8 @@ export default function CompanyPrepPage() {
               <div
                 key={stat.label}
                 style={{
-                  background: '#ffffff',
-                  border: '1px solid #e3e8ee',
+                  background: 'var(--bg-surface)',
+                  border: '1px solid var(--border)',
                   borderRadius: 10,
                   padding: '16px 18px',
                   display: 'flex',
@@ -626,9 +626,9 @@ export default function CompanyPrepPage() {
                   gap: 8,
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#9ca3af' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-muted)' }}>
                   <StatIcon type={stat.icon} />
-                  <span className="practice-body" style={{ fontSize: 12, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#9ca3af' }}>
+                  <span className="practice-body" style={{ fontSize: 12, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)' }}>
                     {stat.label}
                   </span>
                 </div>
@@ -637,7 +637,7 @@ export default function CompanyPrepPage() {
                   style={{
                     fontSize: 16,
                     fontWeight: 700,
-                    color: '#111827',
+                    color: 'var(--text-primary)',
                   }}
                 >
                   {stat.value}
@@ -652,8 +652,8 @@ export default function CompanyPrepPage() {
               <div
                 key={sIdx}
                 style={{
-                  background: '#ffffff',
-                  border: '1px solid #e3e8ee',
+                  background: 'var(--bg-surface)',
+                  border: '1px solid var(--border)',
                   borderRadius: 12,
                   overflow: 'hidden',
                 }}
@@ -662,7 +662,7 @@ export default function CompanyPrepPage() {
                 <div
                   style={{
                     padding: '18px 22px',
-                    borderBottom: '1px solid #e3e8ee',
+                    borderBottom: '1px solid var(--border)',
                     display: 'flex',
                     alignItems: 'center',
                     gap: 12,
@@ -671,10 +671,10 @@ export default function CompanyPrepPage() {
                   <div style={{ color: companyData.color, display: 'flex', alignItems: 'center' }}>
                     {getSectionIcon(section.icon)}
                   </div>
-                  <h2 className="practice-display" style={{ fontSize: 17, fontWeight: 700, color: '#111827', margin: 0 }}>
+                  <h2 className="practice-display" style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
                     {section.title}
                   </h2>
-                  <span className="practice-body" style={{ fontSize: 12, color: '#9ca3af', fontWeight: 500, marginLeft: 'auto' }}>
+                  <span className="practice-body" style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500, marginLeft: 'auto' }}>
                     {section.questions.length} question{section.questions.length !== 1 ? 's' : ''}
                   </span>
                 </div>
@@ -712,7 +712,7 @@ export default function CompanyPrepPage() {
                         </span>
 
                         {/* Question text */}
-                        <span className="practice-body" style={{ fontSize: 14, color: '#374151', flex: 1, lineHeight: 1.5 }}>
+                        <span className="practice-body" style={{ fontSize: 14, color: 'var(--text-secondary)', flex: 1, lineHeight: 1.5 }}>
                           {question.q}
                         </span>
 
@@ -722,7 +722,7 @@ export default function CompanyPrepPage() {
                           style={{
                             fontSize: 11,
                             fontWeight: 500,
-                            color: '#6b7280',
+                            color: 'var(--text-muted)',
                             background: '#f3f4f6',
                             padding: '3px 8px',
                             borderRadius: 4,
@@ -779,18 +779,18 @@ export default function CompanyPrepPage() {
           {/* ── Bottom CTA ── */}
           <div
             style={{
-              background: '#ffffff',
-              border: '1px solid #e3e8ee',
+              background: 'var(--bg-surface)',
+              border: '1px solid var(--border)',
               borderRadius: 12,
               padding: '40px 32px',
               textAlign: 'center',
               marginBottom: 48,
             }}
           >
-            <h2 className="practice-display" style={{ fontSize: 24, fontWeight: 800, color: '#111827', margin: '0 0 10px', letterSpacing: '-0.02em' }}>
+            <h2 className="practice-display" style={{ fontSize: 24, fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 10px', letterSpacing: '-0.02em' }}>
               Start preparing for {companyData.name} interviews
             </h2>
-            <p className="practice-body" style={{ fontSize: 15, color: '#6b7280', margin: '0 0 24px', lineHeight: 1.6 }}>
+            <p className="practice-body" style={{ fontSize: 15, color: 'var(--text-muted)', margin: '0 0 24px', lineHeight: 1.6 }}>
               Practice with AI-powered mock interviews, get real-time feedback, and track your progress.
             </p>
             <Link

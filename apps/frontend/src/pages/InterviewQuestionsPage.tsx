@@ -50,11 +50,11 @@ export default function InterviewQuestionsPage() {
 
   if (!company) {
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-[var(--bg-surface)]">
         <SiteNav />
         <div className="pt-20 text-center">
-          <h1 className="text-2xl font-bold text-gray-900">Company not found</h1>
-          <p className="mt-2 text-gray-500">We don't have interview data for this company yet.</p>
+          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Company not found</h1>
+          <p className="mt-2 text-[var(--text-muted)]">We don't have interview data for this company yet.</p>
           <Link to="/" className="mt-4 inline-block text-emerald-600 hover:text-emerald-700 font-medium">
             Go home
           </Link>
@@ -73,19 +73,19 @@ export default function InterviewQuestionsPage() {
       <section className="pt-24 pb-12 px-4" style={{ background: 'linear-gradient(135deg, rgba(178,235,242,0.3) 0%, rgba(179,198,231,0.3) 50%, rgba(197,179,227,0.3) 100%)' }}>
         <div className="max-w-3xl mx-auto text-center">
           <img src={company.logo} alt={`${company.name} logo`} className="w-16 h-16 rounded-xl object-contain mx-auto" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-          <h1 className="mt-4 text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">
+          <h1 className="mt-4 text-3xl sm:text-4xl font-extrabold text-[var(--text-primary)] tracking-tight">
             {company.name} Interview Questions
           </h1>
-          <p className="mt-2 text-lg text-gray-600">{company.tagline}</p>
+          <p className="mt-2 text-lg text-[var(--text-secondary)]">{company.tagline}</p>
 
           <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
             <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${diffColor.bg} ${diffColor.text}`}>
               {company.difficulty}
             </span>
-            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700">
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-[var(--bg-elevated)] text-[var(--text-secondary)]">
               {company.avgSalary}
             </span>
-            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700">
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-[var(--bg-elevated)] text-[var(--text-secondary)]">
               {company.interviewRounds} rounds
             </span>
           </div>
@@ -97,19 +97,19 @@ export default function InterviewQuestionsPage() {
 
         {/* Description */}
         <section>
-          <p className="text-gray-700 leading-relaxed">{company.description}</p>
+          <p className="text-[var(--text-secondary)] leading-relaxed">{company.description}</p>
         </section>
 
         {/* Interview Process */}
         <section>
-          <h2 className="text-xl font-bold text-gray-900 mb-5">Interview Process</h2>
+          <h2 className="text-xl font-bold text-[var(--text-primary)] mb-5">Interview Process</h2>
           <ol className="space-y-3">
             {company.interviewProcess.map((step, i) => (
               <li key={i} className="flex items-start gap-3">
                 <span className="flex-shrink-0 w-7 h-7 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold flex items-center justify-center">
                   {i + 1}
                 </span>
-                <span className="text-gray-700 pt-0.5">{step}</span>
+                <span className="text-[var(--text-secondary)] pt-0.5">{step}</span>
               </li>
             ))}
           </ol>
@@ -117,7 +117,7 @@ export default function InterviewQuestionsPage() {
 
         {/* Sample Questions */}
         <section>
-          <h2 className="text-xl font-bold text-gray-900 mb-5">Sample Interview Questions</h2>
+          <h2 className="text-xl font-bold text-[var(--text-primary)] mb-5">Sample Interview Questions</h2>
           <div className="space-y-3">
             {company.sampleQuestions.map((question, i) => {
               const typeStyle = TYPE_COLORS[question.type] ?? TYPE_COLORS.coding;
@@ -127,10 +127,10 @@ export default function InterviewQuestionsPage() {
               return (
                 <div
                   key={i}
-                  className={`relative bg-white border-0 rounded-xl p-5 shadow-[0_4px_24px_rgba(99,102,241,0.12)] ${isBlurred ? 'select-none' : ''}`}
+                  className={`relative bg-[var(--bg-surface)] border-0 rounded-xl p-5 shadow-[0_4px_24px_rgba(99,102,241,0.12)] ${isBlurred ? 'select-none' : ''}`}
                 >
                   {isBlurred && (
-                    <div className="absolute inset-0 backdrop-blur-sm bg-white/60 rounded-xl z-10 flex items-center justify-center">
+                    <div className="absolute inset-0 backdrop-blur-sm bg-[var(--bg-surface)]/60 rounded-xl z-10 flex items-center justify-center">
                       <Link
                         to="/signup"
                         className="px-5 py-2.5 bg-emerald-600 text-white text-sm font-semibold rounded-lg hover:bg-emerald-700 transition-colors shadow-sm"
@@ -147,7 +147,7 @@ export default function InterviewQuestionsPage() {
                       {question.difficulty}
                     </span>
                   </div>
-                  <p className="text-gray-800 font-medium">{question.q}</p>
+                  <p className="text-[var(--text-primary)] font-medium">{question.q}</p>
                 </div>
               );
             })}
@@ -156,25 +156,25 @@ export default function InterviewQuestionsPage() {
 
         {/* Tips */}
         <section>
-          <h2 className="text-xl font-bold text-gray-900 mb-5">Interview Tips</h2>
+          <h2 className="text-xl font-bold text-[var(--text-primary)] mb-5">Interview Tips</h2>
           <div className="grid gap-3 sm:grid-cols-3">
             {company.tips.map((tip, i) => (
-              <div key={i} className="bg-white border-0 rounded-xl p-5 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
+              <div key={i} className="bg-[var(--bg-surface)] border-0 rounded-xl p-5 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
                 <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 text-sm font-bold mb-3">
                   {i + 1}
                 </span>
-                <p className="text-sm text-gray-700 leading-relaxed">{tip}</p>
+                <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{tip}</p>
               </div>
             ))}
           </div>
         </section>
 
         {/* CTA */}
-        <section className="text-center bg-white border-0 rounded-2xl p-8 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
-          <h2 className="text-xl font-bold text-gray-900">
+        <section className="text-center bg-[var(--bg-surface)] border-0 rounded-2xl p-8 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
+          <h2 className="text-xl font-bold text-[var(--text-primary)]">
             Start preparing for {company.name} interviews
           </h2>
-          <p className="mt-2 text-gray-500 text-sm">
+          <p className="mt-2 text-[var(--text-muted)] text-sm">
             Practice with AI-powered mock interviews, coding problems, and system design exercises.
           </p>
           <Link
@@ -187,7 +187,7 @@ export default function InterviewQuestionsPage() {
 
         {/* Related Companies */}
         <section>
-          <h2 className="text-xl font-bold text-gray-900 mb-5">Explore Other Companies</h2>
+          <h2 className="text-xl font-bold text-[var(--text-primary)] mb-5">Explore Other Companies</h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {related.map((relSlug) => {
               const rel = COMPANY_SEO_DATA[relSlug];
@@ -196,11 +196,11 @@ export default function InterviewQuestionsPage() {
                 <Link
                   key={relSlug}
                   to={`/interview-questions/${relSlug}`}
-                  className="bg-white border-0 rounded-xl p-4 text-center shadow-[0_4px_24px_rgba(99,102,241,0.12)] hover:shadow-[0_20px_60px_rgba(99,102,241,0.28)] transition-all"
+                  className="bg-[var(--bg-surface)] border-0 rounded-xl p-4 text-center shadow-[0_4px_24px_rgba(99,102,241,0.12)] hover:shadow-[0_20px_60px_rgba(99,102,241,0.28)] transition-all"
                 >
                   <img src={rel.logo} alt={rel.name} className="w-10 h-10 rounded-lg object-contain mx-auto" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                  <p className="mt-1.5 text-sm font-semibold text-gray-900">{rel.name}</p>
-                  <p className="text-[11px] text-gray-500 mt-0.5">{rel.difficulty} &middot; {rel.interviewRounds} rounds</p>
+                  <p className="mt-1.5 text-sm font-semibold text-[var(--text-primary)]">{rel.name}</p>
+                  <p className="text-[11px] text-[var(--text-muted)] mt-0.5">{rel.difficulty} &middot; {rel.interviewRounds} rounds</p>
                 </Link>
               );
             })}

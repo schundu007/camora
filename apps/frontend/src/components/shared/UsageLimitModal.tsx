@@ -83,11 +83,11 @@ export function UsageLimitModal({ isOpen, onClose, type, used, limit, plan }: Us
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-[fadeIn_200ms_ease-out]"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="relative w-full max-w-lg mx-4 bg-white rounded-2xl shadow-2xl animate-[scaleIn_200ms_ease-out] overflow-hidden">
+      <div className="relative w-full max-w-lg mx-4 bg-[var(--bg-surface)] rounded-2xl shadow-2xl animate-[scaleIn_200ms_ease-out] overflow-hidden">
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition-colors text-gray-500 hover:text-gray-700"
+          className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-[var(--bg-elevated)] hover:bg-[var(--border)] transition-colors text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
           aria-label="Close"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -98,10 +98,10 @@ export function UsageLimitModal({ isOpen, onClose, type, used, limit, plan }: Us
         {/* Usage bar at top */}
         <div className="px-6 pt-6 pb-4">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-semibold text-gray-500 uppercase tracking-wide">{typeLabel} used</span>
+            <span className="text-sm font-semibold text-[var(--text-muted)] uppercase tracking-wide">{typeLabel} used</span>
             <span className="text-sm font-bold text-red-600">{used}/{limit}</span>
           </div>
-          <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
+          <div className="w-full h-3 bg-[var(--bg-elevated)] rounded-full overflow-hidden">
             <div
               className="h-full rounded-full bg-gradient-to-r from-red-500 to-rose-500 transition-all duration-500"
               style={{ width: `${pct}%` }}
@@ -111,10 +111,10 @@ export function UsageLimitModal({ isOpen, onClose, type, used, limit, plan }: Us
 
         {/* Heading */}
         <div className="px-6 pb-4">
-          <h2 className="text-xl font-bold text-gray-900 font-display">
+          <h2 className="text-xl font-bold text-[var(--text-primary)] font-display">
             You've reached your monthly limit
           </h2>
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="mt-1 text-sm text-[var(--text-muted)]">
             You've used all {limit} {typeLabel} included in your <span className="font-semibold capitalize">{plan}</span> plan this month.
             Upgrade or grab a top-up to keep going.
           </p>
@@ -168,10 +168,10 @@ export function UsageLimitModal({ isOpen, onClose, type, used, limit, plan }: Us
               {TOP_UP_PACKS.map((pack) => (
                 <div
                   key={pack.id}
-                  className="flex items-center justify-between rounded-lg border border-cyan-200 bg-white px-3 py-2 hover:border-cyan-400 transition-colors"
+                  className="flex items-center justify-between rounded-lg border border-cyan-200 bg-[var(--bg-elevated)] px-3 py-2 hover:border-cyan-400 transition-colors"
                 >
                   <div>
-                    <p className="text-xs font-bold text-gray-800">{pack.label}</p>
+                    <p className="text-xs font-bold text-[var(--text-primary)]">{pack.label}</p>
                     <p className="text-[11px] text-gray-400">{pack.description}</p>
                   </div>
                   <button

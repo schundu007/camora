@@ -586,7 +586,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem }: Co
           {timerDuration > 0 ? (
             <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-xs font-mono font-bold transition-colors ${
               timerUrgent ? 'bg-red-50 border-red-200 text-red-600' :
-              timerSeconds === 0 ? 'bg-gray-100 border-gray-200 text-gray-700' :
+              timerSeconds === 0 ? 'bg-white/10 border-white/20 text-white/70' :
               'bg-indigo-50 border-indigo-200 text-indigo-700'
             }`}>
               <div className="relative w-4 h-4">
@@ -639,7 +639,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem }: Co
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
 
         {/* ── LEFT PANEL: Problem / Solution ── */}
-        <div className="w-full md:w-auto flex flex-col bg-white md:border-r border-b md:border-b-0 border-gray-200 coding-left-panel max-h-[40vh] md:max-h-none overflow-auto" style={{ ['--left-w' as any]: `${leftPanelWidth}%` }}>
+        <div className="w-full md:w-auto flex flex-col bg-white md:border-r border-b md:border-b-0 border-gray-200 coding-left-panel lumora-light-panel max-h-[40vh] md:max-h-none overflow-auto" style={{ ['--left-w' as any]: `${leftPanelWidth}%` }}>
           {/* Tabs */}
           <div className="flex items-center gap-1 px-3 py-1.5 bg-gray-50/50 border-b border-gray-100">
             <button
@@ -1021,12 +1021,12 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem }: Co
 
         {/* ── Horizontal Resize Handle (desktop only) ── */}
         <div onMouseDown={() => setIsResizingH(true)}
-          className="hidden md:flex w-1.5 bg-gray-100 hover:bg-indigo-200 cursor-col-resize transition-colors items-center justify-center group shrink-0">
-          <div className="w-0.5 h-8 bg-gray-300 group-hover:bg-indigo-500 rounded-full transition-colors" />
+          className="hidden md:flex w-1.5 bg-[var(--bg-elevated)] hover:bg-indigo-200 cursor-col-resize transition-colors items-center justify-center group shrink-0">
+          <div className="w-0.5 h-8 bg-[var(--border)] group-hover:bg-indigo-500 rounded-full transition-colors" />
         </div>
 
         {/* ── RIGHT PANEL: Code Editor + Output ── */}
-        <div className="flex-1 flex flex-col bg-white min-w-0">
+        <div className="flex-1 flex flex-col bg-white min-w-0 lumora-light-panel">
           {/* Editor Header */}
           <div className="flex items-center justify-between px-3 py-1.5 bg-gray-50 border-b border-gray-100">
             <div className="flex items-center gap-2">

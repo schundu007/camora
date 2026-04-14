@@ -126,16 +126,16 @@ export default function AdminPanel({ token, onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.5)' }}>
-      <div className="w-full max-w-3xl max-h-[90vh] overflow-hidden rounded-lg shadow-xl" style={{ background: '#ffffff', border: '1px solid #e5e5e5' }}>
+      <div className="w-full max-w-3xl max-h-[90vh] overflow-hidden rounded-lg shadow-xl" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 bg-[var(--bg-elevated)]" style={{ borderBottom: '1px solid #e5e7eb' }}>
-          <h2 className="text-lg font-semibold" style={{ color: '#111827' }}>
+        <div className="flex items-center justify-between px-6 py-4 bg-[var(--bg-elevated)]" style={{ borderBottom: '1px solid var(--border)' }}>
+          <h2 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
             User Management
           </h2>
           <button
             onClick={onClose}
             className="p-2 rounded transition-colors hover:bg-[var(--bg-elevated)]"
-            style={{ color: '#6b7280' }}
+            style={{ color: 'var(--text-muted)' }}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -144,7 +144,7 @@ export default function AdminPanel({ token, onClose }) {
         </div>
 
         {/* Tabs */}
-        <div className="flex px-6 pt-4 gap-2" style={{ borderBottom: '1px solid #e5e5e5' }}>
+        <div className="flex px-6 pt-4 gap-2" style={{ borderBottom: '1px solid var(--border)' }}>
           <button
             onClick={() => setActiveTab('pending')}
             className="px-4 py-2 text-sm font-medium rounded-t transition-colors"
@@ -191,7 +191,7 @@ export default function AdminPanel({ token, onClose }) {
         )}
 
         {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[60vh]" style={{ background: '#f5f5f5' }}>
+        <div className="p-6 overflow-y-auto max-h-[60vh]" style={{ background: 'var(--bg-elevated)' }}>
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <div className="w-6 h-6 rounded-full animate-spin" style={{ border: '2px solid #e5e5e5', borderTopColor: '#10b981' }} />
@@ -199,7 +199,7 @@ export default function AdminPanel({ token, onClose }) {
           ) : activeTab === 'pending' ? (
             // Pending Users
             pendingUsers.length === 0 ? (
-              <div className="text-center py-12" style={{ color: '#999999' }}>
+              <div className="text-center py-12" style={{ color: 'var(--text-muted)' }}>
                 No pending users
               </div>
             ) : (
@@ -208,16 +208,16 @@ export default function AdminPanel({ token, onClose }) {
                   <div
                     key={user.username}
                     className="flex items-center justify-between p-4 rounded"
-                    style={{ background: '#ffffff', border: '1px solid #e5e5e5' }}
+                    style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
                   >
                     <div>
-                      <p className="font-medium" style={{ color: '#333333' }}>
+                      <p className="font-medium" style={{ color: 'var(--text-primary)' }}>
                         {user.name}
                       </p>
-                      <p className="text-sm" style={{ color: '#666666' }}>
+                      <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                         @{user.username}
                       </p>
-                      <p className="text-xs mt-1" style={{ color: '#999999' }}>
+                      <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
                         Registered: {new Date(user.createdAt).toLocaleDateString()}
                       </p>
                     </div>
@@ -248,11 +248,11 @@ export default function AdminPanel({ token, onClose }) {
                 <div
                   key={user.username}
                   className="p-4 rounded"
-                  style={{ background: '#ffffff', border: '1px solid #e5e5e5' }}
+                  style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div>
-                      <p className="font-medium" style={{ color: '#333333' }}>
+                      <p className="font-medium" style={{ color: 'var(--text-primary)' }}>
                         {user.name}
                         {user.isEnvUser && (
                           <span className="ml-2 px-2 py-0.5 text-xs rounded" style={{ background: '#fef9c3', color: '#ca8a04' }}>
@@ -260,7 +260,7 @@ export default function AdminPanel({ token, onClose }) {
                           </span>
                         )}
                       </p>
-                      <p className="text-sm" style={{ color: '#666666' }}>
+                      <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                         @{user.username}
                       </p>
                     </div>

@@ -178,7 +178,7 @@ function CodingView({ blocks }: { blocks: ParsedBlock[] }) {
 
       {/* Code Block - Full Width */}
       <div className="rounded-md border border-indigo/20 bg-[#0d1117] overflow-hidden">
-        <div className="flex items-center justify-between px-3 py-2 border-b border-white/10 bg-white/[0.02]">
+        <div className="flex items-center justify-between px-3 py-2 border-b border-white/10 bg-[var(--bg-surface)]/[0.02]">
           <div className="flex items-center gap-2">
             <div className="flex gap-1">
               <div className="w-2 h-2 rounded-full bg-rose/40" />
@@ -259,8 +259,8 @@ function ComplexityList({ content }: { content: string }) {
           const isSpace = /space/i.test(label);
 
           return (
-            <div key={i} className="flex items-center gap-3 p-2 rounded bg-white/[0.02]">
-              <span className={`font-mono text-xs font-bold px-2 py-0.5 rounded ${isTime ? 'bg-cyan/10 text-cyan-light' : isSpace ? 'bg-violet/10 text-violet-light' : 'bg-white/5 text-text-dim'}`}>
+            <div key={i} className="flex items-center gap-3 p-2 rounded bg-[var(--bg-surface)]/[0.02]">
+              <span className={`font-mono text-xs font-bold px-2 py-0.5 rounded ${isTime ? 'bg-cyan/10 text-cyan-light' : isSpace ? 'bg-violet/10 text-violet-light' : 'bg-[var(--bg-surface)]/5 text-text-dim'}`}>
                 {label}
               </span>
               <span className="font-mono text-[13px] text-text">{value}</span>
@@ -307,7 +307,7 @@ function TestCasesList({ content }: { content: string }) {
         const arrowMatch = line.match(/Input:\s*(.+?)\s*[-→>]+\s*Output:\s*(.+)/i);
         if (arrowMatch) {
           return (
-            <div key={i} className="flex flex-col gap-1 p-2 rounded bg-white/[0.02] border border-white/5">
+            <div key={i} className="flex flex-col gap-1 p-2 rounded bg-[var(--bg-surface)]/[0.02] border border-white/5">
               <div className="flex items-center gap-2">
                 <span className="font-mono text-xs font-bold text-indigo-light bg-indigo/10 px-2 py-0.5 rounded">IN</span>
                 <code className="font-mono text-[12px] text-text-muted">{arrowMatch[1]}</code>
@@ -427,7 +427,7 @@ function GridCard({
     <div className={`border border-border bg-bg2/50 overflow-hidden min-w-0 flex flex-col rounded-lg ${className}`}>
       <button
         onClick={() => collapsible && setCollapsed(!collapsed)}
-        className={`flex items-center justify-between ${compact ? 'px-3 py-2' : 'px-4 pt-3 pb-2'} border-b border-border shrink-0 w-full text-left ${collapsible ? 'cursor-pointer hover:bg-white/[0.02]' : 'cursor-default'}`}
+        className={`flex items-center justify-between ${compact ? 'px-3 py-2' : 'px-4 pt-3 pb-2'} border-b border-border shrink-0 w-full text-left ${collapsible ? 'cursor-pointer hover:bg-[var(--bg-surface)]/[0.02]' : 'cursor-default'}`}
       >
         <span className={`font-mono text-[10px] font-bold tracking-widest uppercase ${titleColor}`}>
           {title}
@@ -464,7 +464,7 @@ function ArchitectureCard({ question }: { question: string }) {
 
 function EmptyBlock() {
   return (
-    <div className="flex items-center gap-2 py-3 text-gray-500">
+    <div className="flex items-center gap-2 py-3 text-[var(--text-muted)]">
       <svg className="w-4 h-4 shrink-0 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>

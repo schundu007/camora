@@ -164,18 +164,18 @@ export default function InputPanel({ inputs, onChange, hasInputs }) {
   };
 
   return (
-    <div className="h-full flex flex-col" style={{ background: '#f5f5f5' }}>
+    <div className="h-full flex flex-col" style={{ background: 'var(--bg-elevated)' }}>
       {/* Header - matches Coding/Design panel headers */}
       <div
         className="px-4 py-3 flex items-center justify-between"
-        style={{ background: '#f5f5f5', borderBottom: '1px solid #e5e5e5' }}
+        style={{ background: 'var(--bg-elevated)', borderBottom: '1px solid var(--border)' }}
       >
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 rounded-full" style={{ background: '#10b981' }} />
           <span style={{
             fontSize: '0.875rem',
             fontWeight: 600,
-            color: '#666666',
+            color: 'var(--text-secondary)',
             textTransform: 'uppercase',
             letterSpacing: '0.5px'
           }}>
@@ -197,7 +197,7 @@ export default function InputPanel({ inputs, onChange, hasInputs }) {
       </div>
 
       {/* Cards Grid - Light background matching Coding/Design */}
-      <div className="flex-1 overflow-y-auto p-4" style={{ background: '#f5f5f5' }}>
+      <div className="flex-1 overflow-y-auto p-4" style={{ background: 'var(--bg-elevated)' }}>
         <div className="grid grid-cols-2 gap-3">
           {INPUT_FIELDS.map((field) => {
             const hasContent = inputs[field.id]?.trim();
@@ -210,7 +210,7 @@ export default function InputPanel({ inputs, onChange, hasInputs }) {
                 key={field.id}
                 className="rounded-lg transition-all cursor-pointer"
                 style={{
-                  background: hasContent ? '#dcfce7' : '#ffffff',
+                  background: hasContent ? '#dcfce7' : 'var(--bg-surface)',
                   border: isDragging
                     ? '2px dashed #10b981'
                     : hasContent
@@ -254,7 +254,7 @@ export default function InputPanel({ inputs, onChange, hasInputs }) {
                     <span style={{ fontSize: '0.875rem', color: '#16a34a', marginTop: '2px' }}>{wordCount.toLocaleString()} words</span>
                     <button
                       className="mt-2 px-3 py-1 rounded text-xs transition-all hover:bg-[var(--bg-elevated)]/50"
-                      style={{ background: 'rgba(255,255,255,0.5)', color: '#666666' }}
+                      style={{ background: 'rgba(255,255,255,0.5)', color: 'var(--text-secondary)' }}
                       onClick={(e) => { e.stopPropagation(); onChange(field.id, ''); }}
                     >
                       Replace
@@ -264,7 +264,7 @@ export default function InputPanel({ inputs, onChange, hasInputs }) {
                   <>
                     <div
                       className="w-8 h-8 rounded-full flex items-center justify-center mb-2"
-                      style={{ background: '#f5f5f5', color: '#888888' }}
+                      style={{ background: 'var(--bg-elevated)', color: 'var(--text-muted)' }}
                     >
                       {ICONS[field.icon]}
                     </div>
@@ -272,7 +272,7 @@ export default function InputPanel({ inputs, onChange, hasInputs }) {
                       {field.label}
                       {field.required && <span style={{ color: '#ef4444', marginLeft: '2px' }}>*</span>}
                     </span>
-                    <span style={{ fontSize: '0.875rem', color: '#888888', marginTop: '2px' }}>Drop or click</span>
+                    <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginTop: '2px' }}>Drop or click</span>
                   </>
                 )}
                 <input
@@ -292,7 +292,7 @@ export default function InputPanel({ inputs, onChange, hasInputs }) {
           <div
             className="rounded-lg transition-all"
             style={{
-              background: inputs.documentation?.length > 0 ? '#f0fdf4' : '#ffffff',
+              background: inputs.documentation?.length > 0 ? '#f0fdf4' : 'var(--bg-surface)',
               border: dragOver === 'documentation'
                 ? '2px dashed #10b981'
                 : inputs.documentation?.length > 0
@@ -305,11 +305,11 @@ export default function InputPanel({ inputs, onChange, hasInputs }) {
             onDrop={handleDocDrop}
           >
             <div className="flex items-center justify-between mb-2">
-              <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#666666', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                 Study Materials
               </span>
               {inputs.documentation?.length > 0 && (
-                <span style={{ fontSize: '0.875rem', color: '#888888' }}>
+                <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>
                   {inputs.documentation.length} files
                 </span>
               )}
@@ -329,7 +329,7 @@ export default function InputPanel({ inputs, onChange, hasInputs }) {
                   <div
                     key={idx}
                     className="flex items-center gap-2 px-2 py-1 rounded"
-                    style={{ background: 'var(--content-bg)', border: '1px solid #e5e5e5' }}
+                    style={{ background: 'var(--content-bg)', border: '1px solid var(--border)' }}
                   >
                     <span style={{ fontSize: '0.875rem', color: 'var(--content-text)' }}>{doc.name}</span>
                     <button
@@ -338,7 +338,7 @@ export default function InputPanel({ inputs, onChange, hasInputs }) {
                         onChange('documentation', docs);
                       }}
                       className="p-0.5 rounded hover:bg-red-50"
-                      style={{ color: '#888888' }}
+                      style={{ color: 'var(--text-muted)' }}
                     >
                       {ICONS.x}
                     </button>
@@ -360,11 +360,11 @@ export default function InputPanel({ inputs, onChange, hasInputs }) {
               >
                 <div
                   className="w-8 h-8 rounded-full flex items-center justify-center mb-2"
-                  style={{ background: '#f5f5f5', color: '#888888' }}
+                  style={{ background: 'var(--bg-elevated)', color: 'var(--text-muted)' }}
                 >
                   {ICONS.upload}
                 </div>
-                <span style={{ fontSize: '0.875rem', color: '#888888' }}>Drop files or click</span>
+                <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>Drop files or click</span>
               </div>
             )}
             <input
@@ -385,7 +385,7 @@ export default function InputPanel({ inputs, onChange, hasInputs }) {
       </div>
 
       {/* Footer Status */}
-      <div className="px-4 py-2" style={{ borderTop: '1px solid #e5e5e5', background: '#f5f5f5' }}>
+      <div className="px-4 py-2" style={{ borderTop: '1px solid var(--border)', background: 'var(--bg-elevated)' }}>
         <div className="flex items-center justify-center gap-2">
           {hasInputs ? (
             <>
@@ -393,7 +393,7 @@ export default function InputPanel({ inputs, onChange, hasInputs }) {
               <span style={{ fontSize: '0.875rem', color: '#10b981' }}>Select a section to generate</span>
             </>
           ) : (
-            <span style={{ fontSize: '0.875rem', color: '#888888' }}>Add JD & Resume to start</span>
+            <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>Add JD & Resume to start</span>
           )}
         </div>
       </div>
@@ -418,7 +418,7 @@ export default function InputPanel({ inputs, onChange, hasInputs }) {
                 <button
                   onClick={() => fileInputRefs.current[editingField]?.click()}
                   className="px-3 py-1.5 rounded text-sm"
-                  style={{ background: '#f5f5f5', color: '#666' }}
+                  style={{ background: 'var(--bg-elevated)', color: '#666' }}
                 >
                   Upload File
                 </button>
@@ -439,7 +439,7 @@ export default function InputPanel({ inputs, onChange, hasInputs }) {
                 className="w-full rounded-lg p-3 text-sm resize-none"
                 style={{
                   height: '300px',
-                  border: '1px solid #e5e5e5',
+                  border: '1px solid var(--border)',
                   background: '#fafafa',
                   color: 'var(--content-text)'
                 }}
@@ -449,7 +449,7 @@ export default function InputPanel({ inputs, onChange, hasInputs }) {
               <button
                 onClick={() => setEditingField(null)}
                 className="px-4 py-2 rounded text-sm"
-                style={{ background: '#f5f5f5', color: '#666' }}
+                style={{ background: 'var(--bg-elevated)', color: '#666' }}
               >
                 Cancel
               </button>

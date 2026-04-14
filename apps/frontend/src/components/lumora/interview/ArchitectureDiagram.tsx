@@ -131,42 +131,42 @@ export function ArchitectureDiagram({ question, className = '' }: ArchitectureDi
       <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
         <div className="flex items-center gap-2">
           <select value={cloudProvider} onChange={(e) => setCloudProvider(e.target.value)}
-            className="text-xs font-mono bg-transparent border border-[#e3e8ee] rounded px-1.5 py-0.5 text-gray-500">
+            className="text-xs font-mono bg-transparent border border-[var(--border)] rounded px-1.5 py-0.5 text-[var(--text-muted)]">
             <option value="auto">Auto</option>
             <option value="aws">AWS</option>
             <option value="azure">Azure</option>
             <option value="gcp">GCP</option>
           </select>
-          <div className="flex items-center border border-gray-200 rounded overflow-hidden">
+          <div className="flex items-center border border-[var(--border)] rounded overflow-hidden">
             {(['LR', 'TB'] as const).map(d => (
               <button key={d} onClick={() => setDirection(d)}
-                className={`px-1.5 py-0.5 text-xs font-mono transition-colors ${d !== 'LR' ? 'border-l border-gray-200' : ''} ${
-                  direction === d ? 'bg-emerald-500 text-white' : 'text-gray-500 hover:text-emerald-600'
+                className={`px-1.5 py-0.5 text-xs font-mono transition-colors ${d !== 'LR' ? 'border-l border-[var(--border)]' : ''} ${
+                  direction === d ? 'bg-emerald-500 text-white' : 'text-[var(--text-muted)] hover:text-emerald-600'
                 }`}>{d}</button>
             ))}
           </div>
-          <div className="flex items-center border border-gray-200 rounded overflow-hidden">
+          <div className="flex items-center border border-[var(--border)] rounded overflow-hidden">
             {(['overview', 'detailed'] as const).map(d => (
               <button key={d} onClick={() => setDetailLevel(d)}
-                className={`px-2 py-0.5 text-xs font-mono capitalize transition-colors ${d !== 'overview' ? 'border-l border-gray-200' : ''} ${
-                  detailLevel === d ? 'bg-emerald-500 text-white' : 'text-gray-500 hover:text-emerald-600'
+                className={`px-2 py-0.5 text-xs font-mono capitalize transition-colors ${d !== 'overview' ? 'border-l border-[var(--border)]' : ''} ${
+                  detailLevel === d ? 'bg-emerald-500 text-white' : 'text-[var(--text-muted)] hover:text-emerald-600'
                 }`}>{d}</button>
             ))}
           </div>
         </div>
         {imageUrl && !loading && (
           <div className="flex items-center gap-1">
-            <button onClick={() => setScale(s => Math.min(s + 0.25, 4))} className="px-1.5 py-0.5 text-xs font-mono border border-gray-200 rounded hover:bg-gray-50 text-gray-500">+</button>
+            <button onClick={() => setScale(s => Math.min(s + 0.25, 4))} className="px-1.5 py-0.5 text-xs font-mono border border-[var(--border)] rounded hover:bg-[var(--bg-elevated)] text-[var(--text-muted)]">+</button>
             <span className="text-xs font-mono text-gray-400 min-w-[3ch] text-center">{Math.round(scale * 100)}%</span>
-            <button onClick={() => setScale(s => Math.max(s - 0.25, 0.3))} className="px-1.5 py-0.5 text-xs font-mono border border-gray-200 rounded hover:bg-gray-50 text-gray-500">-</button>
-            <button onClick={resetView} className="px-1.5 py-0.5 text-xs font-mono border border-gray-200 rounded hover:bg-gray-50 text-gray-500 ml-1">Fit</button>
+            <button onClick={() => setScale(s => Math.max(s - 0.25, 0.3))} className="px-1.5 py-0.5 text-xs font-mono border border-[var(--border)] rounded hover:bg-[var(--bg-elevated)] text-[var(--text-muted)]">-</button>
+            <button onClick={resetView} className="px-1.5 py-0.5 text-xs font-mono border border-[var(--border)] rounded hover:bg-[var(--bg-elevated)] text-[var(--text-muted)] ml-1">Fit</button>
           </div>
         )}
       </div>
 
       {/* Loading */}
       {loading && (
-        <div className="flex items-center justify-center p-8 border border-[#e3e8ee] rounded-lg bg-white">
+        <div className="flex items-center justify-center p-8 border border-[var(--border)] rounded-lg bg-[var(--bg-surface)]">
           <div className="flex items-center gap-3">
             <div className="w-5 h-5 border-2 border-emerald-200 border-t-emerald-500 rounded-full animate-spin" />
             <span className="text-sm text-gray-400 font-mono">Looking up cached diagram...</span>

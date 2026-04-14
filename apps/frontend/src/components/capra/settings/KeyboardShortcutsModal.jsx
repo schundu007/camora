@@ -35,7 +35,7 @@ export default function KeyboardShortcutsModal({ onClose }) {
           <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Keyboard Shortcuts</span>
           <button
             onClick={onClose}
-            style={{ color: '#6b7280' }}
+            style={{ color: 'var(--text-muted)' }}
             className="hover:text-[var(--text-primary)] transition-colors"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -57,23 +57,23 @@ export default function KeyboardShortcutsModal({ onClose }) {
                     key={idx}
                     className="flex items-center justify-between py-1.5 px-2 rounded bg-[var(--bg-elevated)]"
                   >
-                    <span className="text-xs" style={{ color: '#374151' }}>{shortcut.description}</span>
+                    <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{shortcut.description}</span>
                     <div className="flex items-center gap-1">
                       {shortcut.keys.map((key, kidx) => (
                         <span key={kidx}>
                           <kbd
                             className="px-1.5 py-0.5 text-xs font-mono rounded"
                             style={{
-                              background: '#e2e8f0',
-                              color: '#111827',
-                              border: '1px solid #cbd5e1',
-                              boxShadow: '0 1px 0 #d1d5db'
+                              background: 'var(--bg-elevated)',
+                              color: 'var(--text-primary)',
+                              border: '1px solid var(--border)',
+                              boxShadow: '0 1px 0 var(--border)'
                             }}
                           >
                             {key}
                           </kbd>
                           {kidx < shortcut.keys.length - 1 && (
-                            <span className="mx-0.5 text-xs" style={{ color: '#9ca3af' }}>+</span>
+                            <span className="mx-0.5 text-xs" style={{ color: 'var(--text-muted)' }}>+</span>
                           )}
                         </span>
                       ))}
