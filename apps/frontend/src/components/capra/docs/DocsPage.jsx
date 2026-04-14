@@ -663,42 +663,55 @@ export default function DocsPage({ onBack }) {
                       <div className="mb-8">
                         <h2 className="section-label mb-3">Categories</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                          {overviewCategories.map(cat => (
+                          {overviewCategories.map(cat => {
+                            const radius = 18;
+                            const circumference = 2 * Math.PI * radius;
+                            const strokeDashoffset = circumference - (cat.progress / 100) * circumference;
+                            return (
                             <a
                               key={cat.id}
                               href={`/capra/prepare/${cat.href}`}
-                              className="group relative rounded-xl overflow-hidden transition-colors"
+                              className="group relative rounded-xl overflow-hidden transition-all duration-200"
                               style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '12px' }}
-                              onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--border-hover)'}
-                              onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
+                              onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--border-hover)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                              onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.transform = 'translateY(0)'; }}
                             >
-                              <div className="p-5">
-                                <div className="flex items-start justify-between mb-4">
-                                  <div className="w-11 h-11 rounded-xl flex items-center justify-center" style={{ background: 'var(--bg-elevated)' }}>
-                                    <Icon name={cat.icon} size={22} style={{ color: cat.color }} />
+                              <div className="p-4">
+                                {/* Row 1: Icon + Title + Topic count */}
+                                <div className="flex items-center gap-3 mb-4">
+                                  <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: `${cat.color}18` }}>
+                                    <Icon name={cat.icon} size={18} style={{ color: cat.color }} />
                                   </div>
-                                  <span
-                                    className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold landing-mono"
-                                    style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)' }}
-                                  >
-                                    {cat.count} topics
-                                  </span>
+                                  <h3 className="text-[14px] font-semibold text-[var(--text-primary)] flex-1 min-w-0 truncate">{cat.title}</h3>
+                                  <span className="text-2xl font-bold tabular-nums shrink-0" style={{ color: cat.color }}>{cat.count}</span>
                                 </div>
-                                <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display mb-3 transition-colors">{cat.title}</h3>
-                                {/* Progress bar */}
-                                <div className="w-full h-2 rounded-full bg-[var(--bg-elevated)] overflow-hidden">
-                                  <div
-                                    className="h-full rounded-full transition-all duration-500"
-                                    style={{ width: `${cat.progress}%`, background: cat.color }}
-                                  />
-                                </div>
-                                <div className="flex justify-between mt-2">
-                                  <span className="text-[11px] text-[var(--text-muted)] landing-body font-medium">{cat.completed}/{cat.count} done</span>
-                                  <span className="text-[11px] font-bold landing-mono" style={{ color: cat.color }}>{cat.progress}%</span>
+                                {/* Row 2: Progress ring + stats */}
+                                <div className="flex items-center gap-3">
+                                  {/* Mini progress ring */}
+                                  <div className="relative shrink-0" style={{ width: 44, height: 44 }}>
+                                    <svg width="44" height="44" viewBox="0 0 44 44" className="transform -rotate-90">
+                                      <circle cx="22" cy="22" r={radius} fill="none" stroke="var(--bg-elevated)" strokeWidth="3" />
+                                      <circle cx="22" cy="22" r={radius} fill="none" stroke={cat.color} strokeWidth="3"
+                                        strokeDasharray={circumference} strokeDashoffset={strokeDashoffset}
+                                        strokeLinecap="round" className="transition-all duration-700" />
+                                    </svg>
+                                    <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold" style={{ color: cat.progress > 0 ? cat.color : 'var(--text-muted)' }}>
+                                      {cat.progress}%
+                                    </span>
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="text-[12px] font-medium" style={{ color: 'var(--text-secondary)' }}>
+                                      {cat.completed} of {cat.count} completed
+                                    </div>
+                                    <div className="text-[11px] mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                                      {cat.progress === 0 ? 'Not started' : cat.progress === 100 ? 'Completed!' : 'In progress'}
+                                    </div>
+                                  </div>
                                 </div>
                               </div>
                             </a>
-                          ))}
+                            );
+                          })}
                         </div>
                       </div>
 
