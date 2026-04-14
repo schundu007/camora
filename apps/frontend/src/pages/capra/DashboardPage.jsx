@@ -1,4 +1,3 @@
-import CloudArchitectureDiagram from '../../components/capra/docs/CloudArchitectureDiagram.jsx';
 import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
 import { Allotment } from 'allotment';
 import 'allotment/dist/style.css';

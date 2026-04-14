@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Comfortaa:wght@700&family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
+/* Fonts loaded via index.html — Inter, Plus Jakarta Sans, IBM Plex Mono, JetBrains Mono, Source Sans 3, Comfortaa */
 @import "tailwindcss";
 @config "../../tailwind.config.ts";
 
@@ -74,17 +74,6 @@ body {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
-.card-shimmer::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: linear-gradient(90deg, transparent 30%, rgba(255,255,255,0.12) 50%, transparent 70%);
-  background-size: 200% 100%;
-  animation: shimmer 3s ease-in-out infinite;
-  pointer-events: none;
-}
-
 /* Animated gradient border */
 @keyframes border-pulse {
   0%, 100% { opacity: 0.4; }
@@ -144,51 +133,12 @@ body {
 }
 .btn-secondary:hover { border-color: #10b981; color: #059669; }
 
-.btn-ghost {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 8px 16px;
-  background: transparent;
-  color: #6b7280;
-  font-size: 13px;
-  font-weight: 500;
-  border-radius: 8px;
-  border: 1px solid #e3e8ee;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-.btn-ghost:hover { background: #f3f4f6; }
-
-.btn-danger {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 8px 16px;
-  background: #fef2f2;
-  color: #dc2626;
-  font-size: 13px;
-  font-weight: 500;
-  border-radius: 8px;
-  border: 1px solid #fecaca;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-.btn-danger:hover { background: #fee2e2; }
-
-/* Badges */
-.badge-easy { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 4px; color: #059669; background: #ecfdf5; border: 1px solid #a7f3d0; }
-.badge-medium { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 4px; color: #d97706; background: #fffbeb; border: 1px solid #fde68a; }
-.badge-hard { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 4px; color: #dc2626; background: #fef2f2; border: 1px solid #fecaca; }
+/* Badges — only badge-new is actively used */
 .badge-new { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; color: #059669; background: #ecfdf5; border: 1px solid #a7f3d0; text-transform: uppercase; }
-.badge-neutral { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 4px; color: #6b7280; background: #f3f4f6; border: 1px solid #e5e7eb; }
 
 /* Category pills */
 .pill { font-size: 12px; font-weight: 500; padding: 4px 12px; border-radius: 9999px; border: 1px solid #e3e8ee; background: #ffffff; color: #4b5563; cursor: pointer; transition: all 0.15s; }
 .pill:hover { border-color: #d0d5dd; }
-.pill-active { border-color: #10b981; background: #ecfdf5; color: #059669; }
 
 /* Section label */
 .section-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #6b7280; }
@@ -199,7 +149,6 @@ body {
 .heading-3 { font-size: 16px; font-weight: 600; color: #111827; line-height: 1.4; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
 .text-body { font-size: 14px; color: #374151; line-height: 1.6; }
 .text-small { font-size: 12px; color: #6b7280; line-height: 1.5; }
-.text-mono { font-family: 'IBM Plex Mono', monospace; font-size: 13px; }
 
 /* APPA gradient strip — top and bottom of every page */
 body::before,
@@ -817,26 +766,6 @@ main, [role="main"] {
   z-index: 0;
 }
 
-/* Lumora icon glow ring */
-.lumora-icon-glow {
-  position: relative;
-}
-.lumora-icon-glow::after {
-  content: '';
-  position: absolute;
-  inset: -6px;
-  border-radius: 1.25rem;
-  background: conic-gradient(from 0deg, rgba(16,185,129,0.2), rgba(6,182,212,0.15), rgba(129,140,248,0.1), rgba(16,185,129,0.2));
-  filter: blur(10px);
-  opacity: 0.6;
-  z-index: -1;
-  animation: lumora-glow-rotate 8s linear infinite;
-}
-@keyframes lumora-glow-rotate {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
 /* Enterprise status bar */
 .status-bar {
   @apply flex items-center justify-between px-3 border-t shrink-0;
@@ -852,170 +781,7 @@ main, [role="main"] {
   @apply flex items-center gap-2;
 }
 
-/* Enterprise tab pill */
-.tab-pill {
-  @apply px-3 py-1 text-xs font-semibold rounded-md transition-all duration-150;
-}
-
-.tab-pill-active {
-  @apply bg-emerald-500 text-white shadow-sm;
-  box-shadow: 0 1px 3px rgba(5, 150, 105, 0.3);
-}
-
-.tab-pill-inactive {
-  @apply text-gray-500;
-}
-
-.tab-pill-inactive:hover {
-  @apply text-gray-900 bg-gray-100;
-}
-
-/* Q history pill */
-.q-pill {
-  @apply inline-flex items-center gap-0.5 text-xs font-code font-bold rounded-xl transition-all duration-150 cursor-pointer;
-  padding: 3px 10px;
-  border: 1px solid transparent;
-}
-
-.q-pill:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(16,185,129,0.15);
-}
-
-/* Interview history card */
-.history-question-card {
-  @apply flex items-start gap-2.5 p-3 rounded-2xl border transition-all duration-150;
-  border-color: rgba(255,255,255,0.08);
-  background: rgba(255,255,255,0.03);
-}
-
-.history-question-card:hover {
-  border-color: rgba(16, 185, 129, 0.25);
-  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.1);
-}
-
-/* Timer ring animation */
-@keyframes timerPulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
-}
-
-.timer-urgent {
-  animation: timerPulse 1s ease-in-out infinite;
-}
-
-/* ── Prep Sidebar (from Capra/Ascend) ─────────────────── */
-.prep-sidebar {
-  background: var(--nav-bg);
-  border-right: 1px solid var(--nav-border);
-}
-
-.prep-nav-item {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 12px;
-  margin: 2px 8px;
-  border-radius: 8px;
-  font-size: 0.875rem;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  color: var(--nav-text-secondary);
-  background: transparent;
-  border: 1px solid transparent;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  overflow: hidden;
-}
-
-.prep-nav-item::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 3px;
-  height: 0;
-  background: linear-gradient(180deg, #10b981 0%, #059669 100%);
-  border-radius: 0 2px 2px 0;
-  transition: height 0.2s ease;
-}
-
-.prep-nav-item:hover {
-  background: var(--nav-hover);
-  color: var(--nav-text);
-}
-
-.prep-nav-item.active {
-  background: rgba(16, 185, 129, 0.1);
-  color: #10b981;
-  border-color: rgba(16, 185, 129, 0.2);
-  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.1);
-}
-
-.prep-nav-item.active::before {
-  height: 60%;
-}
-
-.prep-nav-item.completed {
-  color: #10b981;
-}
-
-.prep-nav-item.completed .prep-nav-icon {
-  color: #10b981;
-}
-
-.prep-nav-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  border-radius: 6px;
-  background: rgba(16, 185, 129, 0.12);
-  color: var(--nav-text-muted);
-  transition: all 0.2s ease;
-}
-
-.prep-nav-item:hover .prep-nav-icon,
-.prep-nav-item.active .prep-nav-icon {
-  background: rgba(16, 185, 129, 0.15);
-  color: #10b981;
-}
-
-.prep-nav-item.custom {
-  margin: 2px 8px;
-}
-
-.prep-nav-item.custom .prep-nav-icon {
-  background: rgba(139, 92, 246, 0.12);
-  color: var(--nav-text-muted);
-}
-
-.prep-nav-item.custom:hover .prep-nav-icon,
-.prep-nav-item.custom.active .prep-nav-icon {
-  background: rgba(139, 92, 246, 0.18);
-  color: #8b5cf6;
-}
-
-.prep-nav-item.custom.active {
-  background: rgba(139, 92, 246, 0.1);
-  color: #8b5cf6;
-  border-color: rgba(139, 92, 246, 0.2);
-}
-
-.prep-nav-item.custom.active::before {
-  background: linear-gradient(180deg, #8b5cf6 0%, #7c3aed 100%);
-}
-
-.prep-nav-item.custom.completed {
-  color: #8b5cf6;
-}
-
-.prep-nav-item.custom.completed .prep-nav-icon {
-  color: #8b5cf6;
-}
+/* (Dead CSS classes removed in v4 cleanup: tab-pill, q-pill, history-question-card, timer-urgent, prep-sidebar/nav) */
 
 
 /* Mobile: disable pricing card scale to prevent overflow */
