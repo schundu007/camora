@@ -133,10 +133,10 @@ export default function SharedDiagram({
           </div>
           {imageUrl && (
             <div className="flex items-center gap-1">
-              <button onClick={() => setScale(s => Math.min(s + 0.25, 4))} className="px-1.5 py-0.5 text-xs border rounded text-gray-500">+</button>
+              <button onClick={() => setScale(s => Math.min(s + 0.25, 4))} className="px-2.5 py-1.5 text-xs min-h-[36px] border rounded text-gray-500">+</button>
               <span className="text-xs text-gray-400 min-w-[3ch] text-center">{Math.round(scale * 100)}%</span>
-              <button onClick={() => setScale(s => Math.max(s - 0.25, 0.3))} className="px-1.5 py-0.5 text-xs border rounded text-gray-500">-</button>
-              <button onClick={resetView} className="px-1.5 py-0.5 text-xs border rounded text-gray-500 ml-1">Fit</button>
+              <button onClick={() => setScale(s => Math.max(s - 0.25, 0.3))} className="px-2.5 py-1.5 text-xs min-h-[36px] border rounded text-gray-500">-</button>
+              <button onClick={resetView} className="px-2.5 py-1.5 text-xs min-h-[36px] border rounded text-gray-500 ml-1">Fit</button>
             </div>
           )}
         </div>
