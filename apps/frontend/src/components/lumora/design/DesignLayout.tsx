@@ -657,7 +657,7 @@ export function DesignLayout({ onBack, initialProblem }: DesignLayoutProps) {
       {/* Main content - vertical on mobile, horizontal on desktop */}
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden" ref={mainRef}>
         {/* Left: Problem Input - full width on mobile */}
-        <div className="w-full md:shrink-0 flex flex-col border-b md:border-b-0 md:border-r border-[var(--border)] design-left-panel max-h-[35vh] md:max-h-none overflow-auto" style={{ ['--left-w' as any]: `${leftWidth}%` }}>
+        <div className="w-full md:shrink-0 flex flex-col border-b md:border-b-0 md:border-r border-[var(--border)] design-left-panel max-h-[50vh] sm:max-h-[45vh] md:max-h-none overflow-auto" style={{ ['--left-w' as any]: `${leftWidth}%` }}>
           {/* Input Tab Header */}
           <div className="flex items-center justify-between px-3 py-1.5" style={{ background: 'rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
             <div className="flex items-center gap-0.5 p-0.5 rounded-lg" style={{ background: 'rgba(255,255,255,0.08)' }}>

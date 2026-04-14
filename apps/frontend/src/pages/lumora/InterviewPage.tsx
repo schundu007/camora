@@ -128,7 +128,7 @@ export function InterviewPage() {
                     <div className="flex items-center justify-between px-3 py-2 border-t border-white/5">
                       <span className="text-[10px] font-code text-white/25">{inputValue.length > 0 ? `${inputValue.length} chars` : 'Cmd+Enter to send'}</span>
                       <div className="flex items-center gap-2">
-                        <button onClick={() => setIsExpanded(false)} className="text-xs text-white/40 hover:text-white/70 transition-colors px-2 py-1">Collapse</button>
+                        <button onClick={() => setIsExpanded(false)} className="text-xs text-white/40 hover:text-white/70 transition-colors px-3 py-2 min-h-[36px]">Collapse</button>
                         <button onClick={handleInputSubmit} disabled={!inputValue.trim() || isStreaming}
                           className="px-4 py-1.5 rounded-lg text-xs font-bold text-white disabled:opacity-30 transition-all"
                           style={{ background: inputValue.trim() ? 'linear-gradient(135deg, #6366f1, #4f46e5)' : 'rgba(255,255,255,0.06)' }}>
@@ -155,7 +155,7 @@ export function InterviewPage() {
                       disabled={isStreaming}
                     />
                     <button onClick={() => { setIsExpanded(true); setTimeout(() => textareaRef.current?.focus(), 50); }}
-                      className="p-1.5 rounded-lg text-white/30 hover:text-white/60 hover:bg-white/5 transition-colors shrink-0"
+                      className="p-2.5 min-h-[36px] min-w-[36px] rounded-lg text-white/30 hover:text-white/60 hover:bg-white/5 transition-colors shrink-0"
                       title="Expand for multi-line input">
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />

@@ -639,7 +639,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem }: Co
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
 
         {/* ── LEFT PANEL: Problem / Solution ── */}
-        <div className="w-full md:w-auto flex flex-col bg-white md:border-r border-b md:border-b-0 border-gray-200 coding-left-panel lumora-light-panel max-h-[40vh] md:max-h-none overflow-auto" style={{ ['--left-w' as any]: `${leftPanelWidth}%` }}>
+        <div className="w-full md:w-auto flex flex-col bg-white md:border-r border-b md:border-b-0 border-gray-200 coding-left-panel lumora-light-panel max-h-[50vh] sm:max-h-[45vh] md:max-h-none overflow-auto" style={{ ['--left-w' as any]: `${leftPanelWidth}%` }}>
           {/* Tabs */}
           <div className="flex items-center gap-1 px-3 py-1.5 bg-gray-50/50 border-b border-gray-100">
             <button
@@ -1031,7 +1031,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem }: Co
           <div className="flex items-center justify-between px-3 py-1.5 bg-gray-50 border-b border-gray-100">
             <div className="flex items-center gap-2">
               <select value={language} onChange={(e) => handleLanguageChange(e.target.value)}
-                className="bg-white border border-gray-200 rounded-md px-2 py-1 text-gray-900 text-xs font-mono focus:border-indigo-400 focus:outline-none cursor-pointer">
+                className="bg-white border border-gray-200 rounded-md px-2 py-1 min-h-[36px] text-gray-900 text-xs font-mono focus:border-indigo-400 focus:outline-none cursor-pointer">
                 {LANGUAGES.map(l => <option key={l.id} value={l.id}>{l.label}</option>)}
               </select>
             </div>

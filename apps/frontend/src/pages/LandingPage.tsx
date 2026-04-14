@@ -482,7 +482,7 @@ export default function LandingPage() {
       {/* ── APPA STEP CARDS — Visual summary ── */}
       <section className="px-6 py-10 md:py-14" style={{ zIndex: 1 }}>
         <div className="w-full lg:max-w-[70%] mx-auto">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {APPA.map((step, i) => (
               <FadeIn key={step.label} delay={i * 0.08}>
                 <Link to={step.href}
