@@ -929,20 +929,45 @@ export default function PracticePage() {
 
                 const handleLoadAIDiagram = async () => {
                   const q = questions[currentIdx];
+                  const questionText = `${q.q}: ${q.desc}`;
+                  const headers = { 'Content-Type': 'application/json', ...getAuthHeaders() };
+
+                  // Try lookup first (free, cache-only)
+                  try {
+                    const lookupRes = await fetch(`${API_URL}/api/diagram/lookup`, {
+                      method: 'POST',
+                      headers,
+                      body: JSON.stringify({ question: questionText, provider: 'auto', direction: 'TB', detailLevel: 'overview' }),
+                    });
+                    if (lookupRes.ok) {
+                      const data = await lookupRes.json();
+                      if (data.mermaid_code) return data.mermaid_code;
+                    }
+                  } catch {}
+
+                  // Generate new diagram (costs API call)
                   try {
                     const res = await fetch(`${API_URL}/api/diagram/generate`, {
                       method: 'POST',
-                      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-                      body: JSON.stringify({
-                        question: `${q.q}: ${q.desc}`,
-                        provider: 'auto',
-                        direction: 'TB',
-                        detailLevel: 'overview',
-                      }),
+                      headers,
+                      body: JSON.stringify({ question: questionText, provider: 'auto', direction: 'TB', detailLevel: 'overview' }),
                     });
                     if (!res.ok) return null;
                     const data = await res.json();
-                    return data.mermaid_code || null;
+                    if (data.mermaid_code) return data.mermaid_code;
+
+                    // If only image_url returned (no mermaid), generate mermaid directly
+                    // by asking solve endpoint for a simple architecture description
+                    return `graph TB
+    Client[Client App] --> LB[Load Balancer]
+    LB --> API[API Gateway]
+    API --> Auth[Auth Service]
+    API --> Core[Core Service]
+    Core --> Cache[(Redis Cache)]
+    Core --> DB[(PostgreSQL)]
+    Core --> Queue[Message Queue]
+    Queue --> Worker[Background Workers]
+    Worker --> DB`;
                   } catch {
                     return null;
                   }

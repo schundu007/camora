@@ -46,23 +46,61 @@ export default function ExcalidrawWhiteboard({
     setLoadingAI(true);
     try {
       const mermaidCode = await onLoadAIDiagram();
-      if (!mermaidCode) return;
+      if (!mermaidCode) {
+        console.warn('No mermaid code returned from AI diagram');
+        return;
+      }
 
-      const { parseMermaidToExcalidraw } = await import(
-        '@excalidraw/mermaid-to-excalidraw'
-      );
-      const { convertToExcalidrawElements } = await import(
-        '@excalidraw/excalidraw'
-      );
+      let excalidrawElements: any[] = [];
 
-      const { elements: skeletonElements } =
-        await parseMermaidToExcalidraw(mermaidCode);
-      const excalidrawElements = convertToExcalidrawElements(skeletonElements);
+      try {
+        const { parseMermaidToExcalidraw } = await import(
+          '@excalidraw/mermaid-to-excalidraw'
+        );
+        const { convertToExcalidrawElements } = await import(
+          '@excalidraw/excalidraw'
+        );
+        const { elements: skeletonElements } =
+          await parseMermaidToExcalidraw(mermaidCode);
+        excalidrawElements = convertToExcalidrawElements(skeletonElements);
+      } catch (convErr) {
+        console.warn('Mermaid-to-Excalidraw conversion failed, creating text fallback:', convErr);
+        // Fallback: render mermaid code as a readable text element on the canvas
+        const id = Math.random().toString(36).slice(2, 10);
+        excalidrawElements = [{
+          id,
+          type: 'text' as const,
+          x: 50,
+          y: 50,
+          width: 600,
+          height: 400,
+          text: mermaidCode,
+          fontSize: 14,
+          fontFamily: 3,
+          textAlign: 'left' as const,
+          verticalAlign: 'top' as const,
+          strokeColor: '#1e1e1e',
+          backgroundColor: 'transparent',
+          fillStyle: 'solid' as const,
+          strokeWidth: 1,
+          roughness: 0,
+          opacity: 100,
+          angle: 0,
+          groupIds: [],
+          boundElements: null,
+          updated: Date.now(),
+          version: 1,
+          versionNonce: 0,
+          isDeleted: false,
+          link: null,
+          locked: false,
+        }];
+      }
 
-      excalidrawAPI.updateScene({
-        elements: excalidrawElements,
-      });
-      excalidrawAPI.scrollToContent(excalidrawElements, { fitToContent: true });
+      if (excalidrawElements.length > 0) {
+        excalidrawAPI.updateScene({ elements: excalidrawElements });
+        excalidrawAPI.scrollToContent(excalidrawElements, { fitToContent: true });
+      }
     } catch (err) {
       console.error('Failed to load AI diagram:', err);
     } finally {
