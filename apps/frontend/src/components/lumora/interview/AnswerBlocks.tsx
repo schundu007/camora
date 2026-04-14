@@ -45,7 +45,7 @@ function Block({ block, delay }: { block: ParsedBlock; delay: number }) {
     case 'HEADLINE':
       return (
         <div className="relative rounded-xl overflow-hidden animate-fade-up" style={{...style, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(8px)'}}>
-          <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: 'linear-gradient(90deg, #10b981, #06b6d4, #818cf8)' }} />
+          <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: 'linear-gradient(90deg, #6366f1, #8b5cf6, #818cf8)' }} />
           <div className="p-5">
             <p className="text-[15px] text-white/90 leading-relaxed font-medium" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>{cleanText(block.content)}</p>
           </div>
@@ -102,7 +102,7 @@ function Block({ block, delay }: { block: ParsedBlock; delay: number }) {
           <div className="flex items-center justify-between px-4 py-2 border-b border-white/6">
             <div className="flex items-center gap-2">
               <div className="flex gap-1"><div className="w-2 h-2 rounded-full bg-red-400/40" /><div className="w-2 h-2 rounded-full bg-amber-400/40" /><div className="w-2 h-2 rounded-full bg-emerald-400/40" /></div>
-              <span className="font-mono text-[10px] font-bold text-emerald-400/80 uppercase tracking-widest">{lang}</span>
+              <span className="font-mono text-[10px] font-bold text-indigo-400/80 uppercase tracking-widest">{lang}</span>
             </div>
             <button className="text-[10px] font-mono text-white/30 hover:text-white/70 px-2 py-0.5 border border-white/10 rounded hover:border-white/25 transition-all opacity-0 group-hover:opacity-100"
               onClick={() => navigator.clipboard.writeText(block.content)}>Copy</button>
@@ -177,15 +177,15 @@ function CodingView({ blocks }: { blocks: ParsedBlock[] }) {
       </div>
 
       {/* Code Block - Full Width */}
-      <div className="rounded-md border border-emerald/20 bg-[#0d1117] overflow-hidden">
+      <div className="rounded-md border border-indigo/20 bg-[#0d1117] overflow-hidden">
         <div className="flex items-center justify-between px-3 py-2 border-b border-white/10 bg-white/[0.02]">
           <div className="flex items-center gap-2">
             <div className="flex gap-1">
               <div className="w-2 h-2 rounded-full bg-rose/40" />
               <div className="w-2 h-2 rounded-full bg-amber/40" />
-              <div className="w-2 h-2 rounded-full bg-emerald/40" />
+              <div className="w-2 h-2 rounded-full bg-indigo/40" />
             </div>
-            <span className="font-mono text-xs text-emerald-light tracking-wider uppercase font-bold">
+            <span className="font-mono text-xs text-indigo-light tracking-wider uppercase font-bold">
               {lang}
             </span>
           </div>
@@ -228,7 +228,7 @@ function CodingView({ blocks }: { blocks: ParsedBlock[] }) {
             <EdgeCasesList content={byType.EDGECASES.content} />
           ) : <Shimmer />}
         </GridCard>
-        <GridCard title="TEST CASES" titleColor="text-emerald-light" className="border-emerald/15 bg-emerald/[0.02]">
+        <GridCard title="TEST CASES" titleColor="text-indigo-light" className="border-indigo/15 bg-indigo/[0.02]">
           {byType.TESTCASES ? (
             <TestCasesList content={byType.TESTCASES.content} />
           ) : <Shimmer />}
@@ -309,7 +309,7 @@ function TestCasesList({ content }: { content: string }) {
           return (
             <div key={i} className="flex flex-col gap-1 p-2 rounded bg-white/[0.02] border border-white/5">
               <div className="flex items-center gap-2">
-                <span className="font-mono text-xs font-bold text-emerald-light bg-emerald/10 px-2 py-0.5 rounded">IN</span>
+                <span className="font-mono text-xs font-bold text-indigo-light bg-indigo/10 px-2 py-0.5 rounded">IN</span>
                 <code className="font-mono text-[12px] text-text-muted">{arrowMatch[1]}</code>
               </div>
               <div className="flex items-center gap-2">
@@ -368,7 +368,7 @@ function SystemDesignView({ blocks, question }: { blocks: ParsedBlock[]; questio
             </GridCard>
           </div>
           {/* Scale Math */}
-          <GridCard title="SCALE MATH" titleColor="text-emerald-light" compact>
+          <GridCard title="SCALE MATH" titleColor="text-indigo-light" compact>
             {byType.SCALEMATH ? (
               <ScaleMathList content={byType.SCALEMATH.content} />
             ) : <EmptyBlock />}
@@ -523,11 +523,11 @@ function ScaleMathList({ content }: { content: string }) {
     <div className="space-y-3">
       <div className="grid grid-cols-2 gap-2">
         {metrics.map((m, i) => (
-          <div key={i} className="rounded-lg border border-emerald-500/15 bg-emerald-500/[0.04] p-3">
+          <div key={i} className="rounded-lg border border-indigo-500/15 bg-indigo-500/[0.04] p-3">
             <div className="font-mono text-[10px] font-bold text-text-dim uppercase tracking-wider mb-1.5">
               {m.label}
             </div>
-            <div className="font-mono text-sm font-semibold text-emerald-light leading-snug">
+            <div className="font-mono text-sm font-semibold text-indigo-light leading-snug">
               {m.value}
             </div>
           </div>
@@ -580,7 +580,7 @@ function DeepDesignList({ content }: { content: string }) {
             <div className="space-y-0.5 pl-7">
               {layer.bullets.map((bullet, j) => (
                 <div key={j} className="flex items-start gap-1.5">
-                  <svg className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                  <svg className="w-3.5 h-3.5 text-indigo-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
                   <span className="text-[12px] text-text-muted leading-relaxed">{bullet}</span>
@@ -695,12 +695,12 @@ function FollowupList({ content }: { content: string }) {
       {pairs.map((pair, i) => (
         <div key={i}>
           <div className="flex items-start gap-3 mb-2">
-            <span className="font-mono text-[11px] font-bold text-emerald-900 bg-emerald-400/90 px-2 py-0.5 rounded shrink-0">
+            <span className="font-mono text-[11px] font-bold text-indigo-900 bg-indigo-400/90 px-2 py-0.5 rounded shrink-0">
               Q{i + 1}
             </span>
             <span className="text-sm font-semibold text-text leading-relaxed">{pair.question}</span>
           </div>
-          <div className="ml-9 border-l-2 border-emerald-500/30 pl-4 py-1">
+          <div className="ml-9 border-l-2 border-indigo-500/30 pl-4 py-1">
             <span className="text-[13px] text-text-muted leading-relaxed">{pair.answer}</span>
           </div>
         </div>

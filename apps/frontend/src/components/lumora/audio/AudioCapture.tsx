@@ -334,7 +334,7 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
       {/* Audio level bars */}
       <div className="flex items-center gap-0.5 shrink-0">
         {[0, 1, 2, 3, 4].map((i) => (
-          <div key={i} className={`w-0.5 rounded-full transition-all duration-75 ${audioLevel > i * 0.15 ? 'bg-emerald-400' : 'bg-white/10'}`}
+          <div key={i} className={`w-0.5 rounded-full transition-all duration-75 ${audioLevel > i * 0.15 ? 'bg-indigo-400' : 'bg-white/10'}`}
             style={{ height: `${6 + i * 2}px` }} />
         ))}
       </div>

@@ -96,13 +96,13 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
                 onClick={() => setExpandedIdx(expandedIdx === idx ? null : idx)}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${
                   expandedIdx === idx
-                    ? 'border border-emerald-500/20'
+                    ? 'border border-indigo-500/20'
                     : 'hover:bg-white/[0.03] border border-transparent'
                 }`}
-                style={expandedIdx === idx ? { background: 'rgba(16,185,129,0.06)', backdropFilter: 'blur(4px)' } : {}}
+                style={expandedIdx === idx ? { background: 'rgba(99,102,241,0.06)', backdropFilter: 'blur(4px)' } : {}}
               >
                 <span className={`flex items-center justify-center w-6 h-6 rounded-md text-[10px] font-bold font-mono shrink-0 ${
-                  expandedIdx === idx ? 'bg-emerald-500/20 text-emerald-300' : 'bg-white/5 text-white/40'
+                  expandedIdx === idx ? 'bg-indigo-500/20 text-indigo-300' : 'bg-white/5 text-white/40'
                 }`}>
                   {idx + 1}
                 </span>
@@ -133,17 +133,17 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
             <>
               {/* Current streaming question header */}
               {isStreaming && question && (
-                <div className="flex items-center gap-3 px-4 py-3 rounded-xl shrink-0" style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.15)' }}>
+                <div className="flex items-center gap-3 px-4 py-3 rounded-xl shrink-0" style={{ background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.15)' }}>
                   <div className="relative flex items-center justify-center w-6 h-6 shrink-0">
-                    <span className="flex items-center justify-center w-6 h-6 rounded-md bg-emerald-500/20 text-emerald-300 text-[10px] font-bold font-mono">
+                    <span className="flex items-center justify-center w-6 h-6 rounded-md bg-indigo-500/20 text-indigo-300 text-[10px] font-bold font-mono">
                       {history.length + 1}
                     </span>
-                    <div className="absolute inset-0 border-2 border-transparent border-t-emerald-400 rounded-md animate-spin" />
+                    <div className="absolute inset-0 border-2 border-transparent border-t-indigo-400 rounded-md animate-spin" />
                   </div>
                   <span className="text-sm font-medium text-white/90 leading-snug flex-1" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
                     {question}
                   </span>
-                  <span className="text-[10px] font-mono text-emerald-400 shrink-0 animate-pulse">analyzing</span>
+                  <span className="text-[10px] font-mono text-indigo-400 shrink-0 animate-pulse">analyzing</span>
                 </div>
               )}
 
@@ -159,8 +159,8 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
               {/* Show latest history entry when not streaming */}
               {!isStreaming && history.length > 0 && (
                 <div className="flex-1 flex flex-col gap-2 overflow-auto">
-                  <div className="flex items-center gap-3 px-4 py-3 rounded-xl shrink-0" style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.15)' }}>
-                    <span className="flex items-center justify-center w-6 h-6 rounded-md bg-emerald-500/20 text-emerald-300 text-[10px] font-bold font-mono shrink-0">
+                  <div className="flex items-center gap-3 px-4 py-3 rounded-xl shrink-0" style={{ background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.15)' }}>
+                    <span className="flex items-center justify-center w-6 h-6 rounded-md bg-indigo-500/20 text-indigo-300 text-[10px] font-bold font-mono shrink-0">
                       {history.length}
                     </span>
                     <span className="text-sm font-medium text-white/90 leading-snug flex-1" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
@@ -223,7 +223,7 @@ function EmptyState({ onAskQuestion }: { onAskQuestion?: (question: string) => v
     { text: 'Design a URL shortener like TinyURL', category: 'System Design', color: '#06b6d4' },
     { text: 'Implement LRU Cache in Python', category: 'Coding', color: '#8b5cf6' },
     { text: 'Tell me about a time you led a failing project', category: 'Behavioral', color: '#f59e0b' },
-    { text: 'Explain consistent hashing', category: 'Concepts', color: '#10b981' },
+    { text: 'Explain consistent hashing', category: 'Concepts', color: '#6366f1' },
     { text: 'Design Instagram news feed at scale', category: 'System Design', color: '#06b6d4' },
     { text: 'Find median of two sorted arrays', category: 'Coding', color: '#8b5cf6' },
   ];
@@ -233,8 +233,8 @@ function EmptyState({ onAskQuestion }: { onAskQuestion?: (question: string) => v
       <div className="relative z-10 w-full max-w-2xl px-4 text-center">
         {/* Animated logo mark */}
         <div className="relative w-16 h-16 mx-auto mb-6">
-          <div className="absolute inset-0 rounded-2xl animate-pulse" style={{ background: 'linear-gradient(135deg, rgba(16,185,129,0.15), rgba(6,182,212,0.1))', filter: 'blur(12px)' }} />
-          <div className="relative w-16 h-16 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #10b981, #06b6d4)', boxShadow: '0 4px 24px rgba(16,185,129,0.25)' }}>
+          <div className="absolute inset-0 rounded-2xl animate-pulse" style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.1))', filter: 'blur(12px)' }} />
+          <div className="relative w-16 h-16 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', boxShadow: '0 4px 24px rgba(99,102,241,0.25)' }}>
             <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
             </svg>

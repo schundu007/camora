@@ -33,7 +33,7 @@ export function MicrophoneSelector({ disabled, onDeviceChange }: MicrophoneSelec
       value={selectedDeviceId || ''}
       onChange={handleChange}
       disabled={disabled || isLoading}
-      className="appearance-none bg-gray-800 border border-gray-600 text-white font-bold text-sm px-1.5 py-1 w-[100px] sm:w-[120px] truncate focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:opacity-50 cursor-pointer rounded"
+      className="appearance-none bg-gray-800 border border-gray-600 text-white font-bold text-sm px-1.5 py-1 w-[100px] sm:w-[120px] truncate focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:opacity-50 cursor-pointer rounded"
       style={{
         backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' fill='none'%3E%3Cpath d='M1 1l3 3 3-3' stroke='%239ca3af' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
         backgroundRepeat: 'no-repeat',
@@ -89,7 +89,7 @@ function formatDeviceName(name: string): string {
 function MicIcon() {
   return (
     <svg
-      className="w-3 h-3 text-emerald flex-shrink-0"
+      className="w-3 h-3 text-indigo flex-shrink-0"
       fill="none"
       stroke="currentColor"
       strokeWidth="2"

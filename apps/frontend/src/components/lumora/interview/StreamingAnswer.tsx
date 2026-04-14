@@ -142,22 +142,22 @@ function StreamingCodingView({ blocks }: { blocks: Record<string, ParsedBlock> }
       </div>
 
       {/* Code Block - Full Width */}
-      <div className="rounded-md border border-emerald/20 bg-gray-50 overflow-hidden">
+      <div className="rounded-md border border-indigo/20 bg-gray-50 overflow-hidden">
         <div className="flex items-center justify-between px-3 py-2 border-b border-gray-300 bg-gray-50">
           <div className="flex items-center gap-2">
             <div className="flex gap-1">
               <div className="w-2 h-2 rounded-full bg-rose/40" />
               <div className="w-2 h-2 rounded-full bg-amber/40" />
-              <div className="w-2 h-2 rounded-full bg-emerald/40" />
+              <div className="w-2 h-2 rounded-full bg-indigo/40" />
             </div>
-            <span className="font-mono text-base text-emerald-light tracking-wider uppercase font-bold">
+            <span className="font-mono text-base text-indigo-light tracking-wider uppercase font-bold">
               {lang}
             </span>
           </div>
         </div>
         {blocks.CODE ? (
           <pre className="p-4 overflow-x-auto">
-            <code className={`language-${lang} text-base leading-relaxed text-emerald-light`}>
+            <code className={`language-${lang} text-base leading-relaxed text-indigo-light`}>
               {blocks.CODE.content}
               {!blocks.CODE.isComplete && <Cursor />}
             </code>
@@ -188,8 +188,8 @@ function StreamingCodingView({ blocks }: { blocks: Record<string, ParsedBlock> }
             <EdgeCasesList content={blocks.EDGECASES.content} isComplete={blocks.EDGECASES.isComplete} />
           ) : <ShimmerBlock lines={3} />}
         </div>
-        <div className="rounded-md border border-emerald/15 bg-emerald/[0.02] p-3">
-          <div className="font-display text-base font-bold tracking-[0.1em] uppercase mb-2 pb-1 border-b border-border text-emerald-light">
+        <div className="rounded-md border border-indigo/15 bg-indigo/[0.02] p-3">
+          <div className="font-display text-base font-bold tracking-[0.1em] uppercase mb-2 pb-1 border-b border-border text-indigo-light">
             TEST CASES
           </div>
           {blocks.TESTCASES ? (
@@ -279,7 +279,7 @@ function StreamingTestCasesList({ content, isComplete }: { content: string; isCo
           return (
             <div key={i} className="flex flex-col gap-1 p-2 rounded bg-gray-50 border border-gray-200">
               <div className="flex items-center gap-2">
-                <span className="font-mono text-base font-bold text-emerald-light bg-emerald/10 px-2 py-0.5 rounded">IN</span>
+                <span className="font-mono text-base font-bold text-indigo-light bg-indigo/10 px-2 py-0.5 rounded">IN</span>
                 <code className="font-mono text-base text-text-muted">{arrowMatch[1]}</code>
               </div>
               <div className="flex items-center gap-2">
@@ -342,7 +342,7 @@ function StreamingDesignView({ blocks }: { blocks: Record<string, ParsedBlock> }
           </div>
 
           {/* SCALE MATH */}
-          <StreamingGridCard title="SCALE MATH" titleColor="text-emerald-light" block={blocks.SCALEMATH} type="scalemath" />
+          <StreamingGridCard title="SCALE MATH" titleColor="text-indigo-light" block={blocks.SCALEMATH} type="scalemath" />
 
           {/* TRADE-OFFS | EDGE CASES */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -462,11 +462,11 @@ function ScaleMathList({ content, isComplete }: { content: string; isComplete: b
     <div className="space-y-3">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         {metrics.map((m, i) => (
-          <div key={i} className="rounded-lg border border-emerald-500/15 bg-emerald-500/[0.04] p-3">
+          <div key={i} className="rounded-lg border border-indigo-500/15 bg-indigo-500/[0.04] p-3">
             <div className="font-mono text-[10px] font-bold text-text-dim uppercase tracking-wider mb-1.5">
               {m.label}
             </div>
-            <div className="font-mono text-sm font-semibold text-emerald-light leading-snug break-words">
+            <div className="font-mono text-sm font-semibold text-indigo-light leading-snug break-words">
               {m.value}
             </div>
           </div>
