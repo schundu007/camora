@@ -5734,7 +5734,7 @@ export default function Blind75PracticePage() {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
         <div style={{ textAlign: 'center' }}>
-          <h2 style={{ fontSize: 20, fontWeight: 700, color: '#111827' }}>Problem not found</h2>
+          <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-primary)' }}>Problem not found</h2>
           <Link to="/handbook" style={{ color: '#6366f1', fontSize: 14, fontWeight: 600, marginTop: 8, display: 'inline-block' }}>&#8592; Back to Blind 75</Link>
         </div>
       </div>
@@ -5747,14 +5747,14 @@ export default function Blind75PracticePage() {
   return (
     <div style={{ minHeight: '100vh', fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", display: 'flex', flexDirection: 'column' }}>
       {/* Breadcrumb Bar */}
-      <div style={{ background: '#fff', borderBottom: '1px solid #e5e7eb', height: 48, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 16px', flexShrink: 0 }}>
+      <div style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)', height: 48, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 16px', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <Link to="/handbook" style={{ display: 'flex', alignItems: 'center', gap: 6, textDecoration: 'none', color: '#6b7280', fontSize: 13, fontWeight: 500 }}>
+          <Link to="/handbook" style={{ display: 'flex', alignItems: 'center', gap: 6, textDecoration: 'none', color: 'var(--text-muted)', fontSize: 13, fontWeight: 500 }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
             Blind 75
           </Link>
-          <div style={{ width: 1, height: 18, background: '#e5e7eb' }} />
-          <span style={{ fontSize: 14, fontWeight: 700, color: '#111827' }}>{problem.title}</span>
+          <div style={{ width: 1, height: 18, background: 'var(--border)' }} />
+          <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>{problem.title}</span>
           <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 6, color: DIFF_COLORS[problem.difficulty], background: `${DIFF_COLORS[problem.difficulty]}12` }}>
             {problem.difficulty}
           </span>
@@ -5762,10 +5762,10 @@ export default function Blind75PracticePage() {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <button onClick={() => setActiveTab('practice')} style={{ fontSize: 12, fontWeight: 600, padding: '5px 14px', borderRadius: 7, border: 'none', cursor: 'pointer',
-            background: activeTab === 'practice' ? '#6366f1' : '#f3f4f6', color: activeTab === 'practice' ? '#fff' : '#6b7280' }}>Practice</button>
+            background: activeTab === 'practice' ? '#6366f1' : 'var(--bg-elevated)', color: activeTab === 'practice' ? '#fff' : '#6b7280' }}>Practice</button>
           <button onClick={() => setActiveTab('solution')} style={{ fontSize: 12, fontWeight: 600, padding: '5px 14px', borderRadius: 7, border: 'none', cursor: 'pointer',
-            background: activeTab === 'solution' ? '#818cf8' : '#f3f4f6', color: activeTab === 'solution' ? '#fff' : '#6b7280' }}>Solution</button>
-          <a href={problem.leetcode} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, fontWeight: 500, padding: '5px 12px', borderRadius: 7, border: '1px solid rgba(99,102,241,0.18)', background: '#fff', color: '#6b7280', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
+            background: activeTab === 'solution' ? '#818cf8' : 'var(--bg-elevated)', color: activeTab === 'solution' ? '#fff' : '#6b7280' }}>Solution</button>
+          <a href={problem.leetcode} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, fontWeight: 500, padding: '5px 12px', borderRadius: 7, border: '1px solid rgba(99,102,241,0.18)', background: 'var(--bg-surface)', color: 'var(--text-muted)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
             LeetCode <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" /></svg>
           </a>
         </div>
@@ -5775,16 +5775,16 @@ export default function Blind75PracticePage() {
         /* PRACTICE MODE */
         <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
           {/* Left: Problem */}
-          <div style={{ width: '40%', borderRight: '1px solid #e5e7eb', overflow: 'auto', padding: '28px 24px', background: '#fff' }}>
+          <div style={{ width: '40%', borderRight: '1px solid var(--border)', overflow: 'auto', padding: '28px 24px', background: 'var(--bg-surface)' }}>
             <div style={{ fontSize: 11, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>{problem.category}</div>
-            <h1 style={{ fontSize: 24, fontWeight: 800, color: '#111827', margin: '0 0 16px 0' }}>{problem.title}</h1>
-            <div style={{ fontSize: 15, color: '#374151', lineHeight: 1.8, whiteSpace: 'pre-wrap', marginBottom: 24 }}>{problem.description}</div>
+            <h1 style={{ fontSize: 24, fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 16px 0' }}>{problem.title}</h1>
+            <div style={{ fontSize: 15, color: 'var(--text-secondary)', lineHeight: 1.8, whiteSpace: 'pre-wrap', marginBottom: 24 }}>{problem.description}</div>
 
             {problem.examples.length > 0 && (
               <div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: '#111827', marginBottom: 10 }}>Examples</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 10 }}>Examples</div>
                 {problem.examples.map((ex, i) => (
-                  <pre key={i} style={{ background: '#f9fafb', border: '1px solid rgba(99,102,241,0.10)', borderRadius: 10, padding: 14, fontSize: 13, fontFamily: "'JetBrains Mono', monospace", color: '#374151', marginBottom: 10, whiteSpace: 'pre-wrap', lineHeight: 1.6, boxShadow: '0 2px 12px rgba(99,102,241,0.06)' }}>{ex}</pre>
+                  <pre key={i} style={{ background: 'var(--bg-elevated)', border: '1px solid rgba(99,102,241,0.10)', borderRadius: 10, padding: 14, fontSize: 13, fontFamily: "'JetBrains Mono', monospace", color: 'var(--text-secondary)', marginBottom: 10, whiteSpace: 'pre-wrap', lineHeight: 1.6, boxShadow: '0 2px 12px rgba(99,102,241,0.06)' }}>{ex}</pre>
                 ))}
               </div>
             )}
@@ -5823,7 +5823,7 @@ export default function Blind75PracticePage() {
               style={{ flex: 1, resize: 'none', border: 'none', outline: 'none', padding: 16, fontFamily: "'JetBrains Mono', 'Fira Code', monospace", fontSize: 14, lineHeight: 1.6, background: '#1e1e1e', color: '#d4d4d4', tabSize: 2, minHeight: 300 }} />
             {/* Output */}
             <div style={{ borderTop: '1px solid #333', background: '#1a1a1a', padding: 12, minHeight: 80, maxHeight: 200, overflow: 'auto' }}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: '#6b7280', marginBottom: 4 }}>OUTPUT</div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4 }}>OUTPUT</div>
               <pre style={{ margin: 0, fontSize: 13, fontFamily: "'JetBrains Mono', monospace", color: output.startsWith('Error') ? '#ef4444' : '#10b981', whiteSpace: 'pre-wrap' }}>
                 {output || 'Click "Run Code" to execute'}
               </pre>
@@ -5832,13 +5832,13 @@ export default function Blind75PracticePage() {
         </div>
       ) : (
         /* SOLUTION MODE */
-        <div style={{ flex: 1, overflow: 'auto', background: '#f9fafb' }}>
+        <div style={{ flex: 1, overflow: 'auto', background: 'var(--bg-elevated)' }}>
           <div style={{ maxWidth: 880, margin: '0 auto', padding: '32px 24px' }}>
             {/* Problem header */}
             <div style={{ marginBottom: 24 }}>
               <div style={{ fontSize: 11, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{problem.category}</div>
-              <h2 style={{ fontSize: 24, fontWeight: 800, color: '#111827', margin: '4px 0 8px' }}>{problem.title}</h2>
-              <p style={{ fontSize: 14, color: '#6b7280', lineHeight: 1.7, margin: 0 }}>{problem.description}</p>
+              <h2 style={{ fontSize: 24, fontWeight: 800, color: 'var(--text-primary)', margin: '4px 0 8px' }}>{problem.title}</h2>
+              <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.7, margin: 0 }}>{problem.description}</p>
             </div>
 
             {staticSolution ? (
@@ -5846,13 +5846,13 @@ export default function Blind75PracticePage() {
               <>
                 {/* Language selector */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: '#6b7280' }}>Language:</span>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)' }}>Language:</span>
                   {(['python', 'javascript'] as const).map(lang => (
                     <button key={lang} onClick={() => setLanguage(lang)}
                       style={{
                         fontSize: 12, fontWeight: 600, padding: '5px 14px', borderRadius: 7, border: 'none', cursor: 'pointer',
-                        background: solutionLang === lang ? '#818cf8' : '#e5e7eb',
-                        color: solutionLang === lang ? '#fff' : '#374151',
+                        background: solutionLang === lang ? '#818cf8' : 'var(--bg-elevated)',
+                        color: solutionLang === lang ? '#fff' : 'var(--text-secondary)',
                       }}>
                       {lang === 'python' ? 'Python' : 'JavaScript'}
                     </button>
@@ -5866,8 +5866,8 @@ export default function Blind75PracticePage() {
                       style={{
                         fontSize: 13, fontWeight: 600, padding: '8px 18px', borderRadius: 9,
                         border: selectedApproach === idx ? '2px solid #818cf8' : '1px solid rgba(99,102,241,0.15)',
-                        background: selectedApproach === idx ? '#eef2ff' : '#fff',
-                        color: selectedApproach === idx ? '#4f46e5' : '#374151',
+                        background: selectedApproach === idx ? 'var(--accent-subtle)' : 'var(--bg-surface)',
+                        color: selectedApproach === idx ? '#818cf8' : 'var(--text-secondary)',
                         cursor: 'pointer',
                       }}>
                       {approach.name}
@@ -5882,9 +5882,9 @@ export default function Blind75PracticePage() {
                   return (
                     <div key={idx}>
                       {/* Description */}
-                      <div style={{ background: '#fff', borderRadius: 12, border: 'none', padding: 20, marginBottom: 16, boxShadow: '0 4px 24px rgba(99,102,241,0.12)' }}>
-                        <h3 style={{ fontSize: 18, fontWeight: 700, color: '#111827', margin: '0 0 8px' }}>{approach.name}</h3>
-                        <p style={{ fontSize: 14, color: '#374151', lineHeight: 1.7, margin: 0 }}>{approach.description}</p>
+                      <div style={{ background: 'var(--bg-surface)', borderRadius: 12, border: 'none', padding: 20, marginBottom: 16, boxShadow: '0 4px 24px rgba(99,102,241,0.12)' }}>
+                        <h3 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 8px' }}>{approach.name}</h3>
+                        <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.7, margin: 0 }}>{approach.description}</p>
                       </div>
 
                       {/* Code block */}
@@ -5910,11 +5910,11 @@ export default function Blind75PracticePage() {
 
                       {/* Complexity badges */}
                       <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#fff', borderRadius: 8, border: 'none', padding: '8px 14px', boxShadow: '0 4px 24px rgba(99,102,241,0.12)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--bg-surface)', borderRadius: 8, border: 'none', padding: '8px 14px', boxShadow: '0 4px 24px rgba(99,102,241,0.12)' }}>
                           <span style={{ fontSize: 11, fontWeight: 600, color: '#9ca3af' }}>TIME</span>
                           <span style={{ fontSize: 14, fontWeight: 700, color: '#6366f1' }}>{approach.complexity.time}</span>
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#fff', borderRadius: 8, border: 'none', padding: '8px 14px', boxShadow: '0 4px 24px rgba(99,102,241,0.12)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--bg-surface)', borderRadius: 8, border: 'none', padding: '8px 14px', boxShadow: '0 4px 24px rgba(99,102,241,0.12)' }}>
                           <span style={{ fontSize: 11, fontWeight: 600, color: '#9ca3af' }}>SPACE</span>
                           <span style={{ fontSize: 14, fontWeight: 700, color: '#8b5cf6' }}>{approach.complexity.space}</span>
                         </div>
@@ -5935,12 +5935,12 @@ export default function Blind75PracticePage() {
               /* NO STATIC SOLUTION -- Fallback to AI generation */
               <>
                 {!aiSolution && !isSolving ? (
-                  <div style={{ textAlign: 'center', padding: 48, background: '#fff', borderRadius: 12, border: 'none', boxShadow: '0 4px 24px rgba(99,102,241,0.12)' }}>
-                    <p style={{ color: '#6b7280', fontSize: 15, marginBottom: 8 }}>No pre-written solution available for this problem yet.</p>
+                  <div style={{ textAlign: 'center', padding: 48, background: 'var(--bg-surface)', borderRadius: 12, border: 'none', boxShadow: '0 4px 24px rgba(99,102,241,0.12)' }}>
+                    <p style={{ color: 'var(--text-muted)', fontSize: 15, marginBottom: 8 }}>No pre-written solution available for this problem yet.</p>
                     <p style={{ color: '#9ca3af', fontSize: 13, marginBottom: 20 }}>Generate an AI-powered solution with multiple approaches.</p>
                     <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginBottom: 16 }}>
                       <select value={language} onChange={e => setLanguage(e.target.value as Language)}
-                        style={{ fontSize: 13, padding: '8px 14px', borderRadius: 8, border: '1px solid rgba(99,102,241,0.18)', background: '#fff', color: '#374151' }}>
+                        style={{ fontSize: 13, padding: '8px 14px', borderRadius: 8, border: '1px solid rgba(99,102,241,0.18)', background: 'var(--bg-surface)', color: 'var(--text-secondary)' }}>
                         {LANGUAGES.map(l => <option key={l} value={l}>{LANG_LABELS[l]}</option>)}
                       </select>
                     </div>
@@ -5950,20 +5950,20 @@ export default function Blind75PracticePage() {
                     </button>
                   </div>
                 ) : (
-                  <div style={{ background: '#fff', borderRadius: 12, border: 'none', boxShadow: '0 4px 24px rgba(99,102,241,0.12)' }}>
+                  <div style={{ background: 'var(--bg-surface)', borderRadius: 12, border: 'none', boxShadow: '0 4px 24px rgba(99,102,241,0.12)' }}>
                     <div style={{ padding: '12px 20px', borderBottom: '1px solid rgba(99,102,241,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <span style={{ fontSize: 13, fontWeight: 600, color: '#6b7280' }}>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-muted)' }}>
                         AI Generated Solution {isSolving && <span style={{ color: '#818cf8' }}> (streaming...)</span>}
                       </span>
                       <select value={language} onChange={e => { setLanguage(e.target.value as Language); setAiSolution(''); }}
-                        style={{ fontSize: 12, padding: '4px 10px', borderRadius: 6, border: '1px solid rgba(99,102,241,0.18)', background: '#fff', color: '#374151' }}>
+                        style={{ fontSize: 12, padding: '4px 10px', borderRadius: 6, border: '1px solid rgba(99,102,241,0.18)', background: 'var(--bg-surface)', color: 'var(--text-secondary)' }}>
                         {LANGUAGES.map(l => <option key={l} value={l}>{LANG_LABELS[l]}</option>)}
                       </select>
                     </div>
                     <pre style={{
                       margin: 0, padding: 24, fontSize: 14,
                       fontFamily: "'JetBrains Mono', monospace",
-                      color: '#374151', whiteSpace: 'pre-wrap', lineHeight: 1.7,
+                      color: 'var(--text-secondary)', whiteSpace: 'pre-wrap', lineHeight: 1.7,
                     }}>
                       {aiSolution || 'Generating...'}
                     </pre>
@@ -5973,7 +5973,7 @@ export default function Blind75PracticePage() {
             )}
 
             {/* Back to practice button */}
-            <button onClick={() => setActiveTab('practice')} style={{ marginTop: 20, fontSize: 13, fontWeight: 600, padding: '8px 20px', borderRadius: 8, border: '1px solid rgba(99,102,241,0.18)', background: '#fff', color: '#374151', cursor: 'pointer', boxShadow: '0 2px 12px rgba(99,102,241,0.06)' }}>
+            <button onClick={() => setActiveTab('practice')} style={{ marginTop: 20, fontSize: 13, fontWeight: 600, padding: '8px 20px', borderRadius: 8, border: '1px solid rgba(99,102,241,0.18)', background: 'var(--bg-surface)', color: 'var(--text-secondary)', cursor: 'pointer', boxShadow: '0 2px 12px rgba(99,102,241,0.06)' }}>
               &#8592; Back to Practice
             </button>
           </div>

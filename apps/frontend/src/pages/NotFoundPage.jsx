@@ -30,7 +30,7 @@ export default function NotFoundPage() {
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               to="/"
-              className="inline-flex items-center justify-center gap-2 px-6 py-2.5 text-[13px] font-medium text-black bg-emerald-400 hover:bg-emerald-300 transition-colors"
+              className="inline-flex items-center justify-center gap-2 px-6 py-2.5 text-[13px] font-medium text-white bg-[var(--accent)] hover:bg-[var(--accent-hover)] transition-colors rounded-lg"
             >
               Go Home
             </Link>

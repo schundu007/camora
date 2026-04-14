@@ -711,16 +711,16 @@ export default function DashboardPage() {
   // ---------------------------------------------------------------------------
   if (!authChecked) {
     return (
-      <div className="h-screen flex items-center justify-center bg-white landing-root">
+      <div className="h-screen flex items-center justify-center bg-[var(--bg-surface)] landing-root">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ background: '#10b981' }}>
-            <svg className="w-6 h-6 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-6 h-6 text-[var(--text-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
             </svg>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-gray-700">Loading...</span>
+            <div className="w-2 h-2 rounded-full bg-[var(--accent-subtle)]0 animate-pulse" />
+            <span className="text-[var(--text-primary)]">Loading...</span>
           </div>
         </div>
       </div>
@@ -731,7 +731,7 @@ export default function DashboardPage() {
   // Main App Render
   // ---------------------------------------------------------------------------
   return (
-    <div className={`h-screen flex overflow-hidden landing-root text-gray-900`} style={{ background: 'transparent', ...(isMobile ? { paddingBottom: 'calc(52px + env(safe-area-inset-bottom, 0px))' } : {}) }}>
+    <div className={`h-screen flex overflow-hidden landing-root text-[var(--text-primary)]`} style={{ background: 'transparent', ...(isMobile ? { paddingBottom: 'calc(52px + env(safe-area-inset-bottom, 0px))' } : {}) }}>
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -751,14 +751,14 @@ export default function DashboardPage() {
 
         {/* Quick Nav Pills — mobile only */}
         {isMobile && (
-          <div className="flex items-center gap-2 px-3 py-2 overflow-x-auto no-scrollbar border-b border-gray-100" style={{ WebkitOverflowScrolling: 'touch' }}>
+          <div className="flex items-center gap-2 px-3 py-2 overflow-x-auto no-scrollbar border-b border-[var(--border)]" style={{ WebkitOverflowScrolling: 'touch' }}>
             {[
               { label: 'Apply', to: '/jobs' },
               { label: 'Practice', to: '/capra/practice' },
               { label: 'Attend', to: '/lumora' },
               { label: 'Challenge', to: '/challenge' },
             ].map(pill => (
-              <Link key={pill.label} to={pill.to} className="shrink-0 px-3 py-1.5 text-xs font-semibold rounded-full bg-gray-100 text-gray-600 hover:bg-emerald-50 hover:text-emerald-700 transition-colors whitespace-nowrap">
+              <Link key={pill.label} to={pill.to} className="shrink-0 px-3 py-1.5 text-xs font-semibold rounded-full bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:bg-[var(--accent-subtle)] hover:text-[var(--accent-hover)] transition-colors whitespace-nowrap">
                 {pill.label}
               </Link>
             ))}
@@ -781,7 +781,7 @@ export default function DashboardPage() {
           <Suspense fallback={<div className="flex-1 flex items-center justify-center"><div className="w-6 h-6 border-2 border-brand-400 border-t-transparent rounded-full animate-spin" /></div>}>
           <main className="flex-1 overflow-hidden relative z-10">
             {ascendMode === 'behavioral' ? (
-              <div className="h-full" style={{ background: '#f7f8f9' }}>
+              <div className="h-full" style={{ background: 'var(--bg-elevated)' }}>
                 <AscendPrepModal isOpen={true} onClose={() => {}} provider={provider} model={model} embedded={true} />
               </div>
             ) : (
@@ -896,9 +896,9 @@ function Header({ ascendMode, onModeChange, showSidebar, onToggleSidebar, isLoad
   // ---- Mobile Header ----
   if (isMobile) {
     return (
-      <header className="flex items-center justify-between gap-3 px-3 border-b border-[#e3e8ee] safe-top" style={{ height: '52px', background: '#ffffff' }}>
+      <header className="flex items-center justify-between gap-3 px-3 border-b border-[var(--border)] safe-top" style={{ height: '52px', background: 'var(--bg-surface)' }}>
         <div className="flex items-center gap-3">
-          <button onClick={onToggleSidebar} className="w-10 h-10 rounded-lg flex items-center justify-center text-gray-600 active:bg-gray-100 transition-colors" aria-label="Open menu">
+          <button onClick={onToggleSidebar} className="w-10 h-10 rounded-lg flex items-center justify-center text-[var(--text-secondary)] active:bg-[var(--bg-elevated)] transition-colors" aria-label="Open menu">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg>
           </button>
           <div className="flex items-center gap-2">
@@ -907,7 +907,7 @@ function Header({ ascendMode, onModeChange, showSidebar, onToggleSidebar, isLoad
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
               </svg>
             </div>
-            <span className="text-sm font-bold text-gray-900">Capra</span>
+            <span className="text-sm font-bold text-[var(--text-primary)]">Capra</span>
             {isLoading && <div className="w-3.5 h-3.5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />}
           </div>
         </div>
@@ -942,7 +942,7 @@ function Header({ ascendMode, onModeChange, showSidebar, onToggleSidebar, isLoad
       className="flex items-center justify-between gap-4 px-5 relative"
       style={{
         height: '52px',
-        background: '#ffffff',
+        background: 'var(--bg-surface)',
         borderBottom: '1px solid #e3e8ee',
       }}
     >
@@ -950,12 +950,12 @@ function Header({ ascendMode, onModeChange, showSidebar, onToggleSidebar, isLoad
       <div className="flex items-center gap-3">
         <Link to="/" className="flex items-center gap-2">
           <CamoraLogo size={36} />
-          <span className="text-sm font-bold text-gray-900 hidden sm:inline" style={{ fontFamily: "'Comfortaa', sans-serif" }}>Camora</span>
+          <span className="text-sm font-bold text-[var(--text-primary)] hidden sm:inline" style={{ fontFamily: "'Comfortaa', sans-serif" }}>Camora</span>
         </Link>
         <div className="w-px h-5 bg-gray-200 hidden sm:block" />
         <div className="flex items-center gap-1.5">
           <div className="w-2 h-2 rounded-full" style={{ background: currentMode.color }} />
-          <span className="text-sm font-semibold text-gray-700">{currentMode.label}</span>
+          <span className="text-sm font-semibold text-[var(--text-primary)]">{currentMode.label}</span>
         </div>
       </div>
 
@@ -967,8 +967,8 @@ function Header({ ascendMode, onModeChange, showSidebar, onToggleSidebar, isLoad
             to={tab.href}
             className={`px-3 py-1.5 text-sm font-medium transition-colors ${
               tab.label === activeAppaTab
-                ? 'text-emerald-600 border-b-2 border-emerald-500'
-                : 'text-gray-400 hover:text-gray-700'
+                ? 'text-[var(--accent)] border-b-2 border-emerald-500'
+                : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
             }`}
           >
             {tab.label}
@@ -978,17 +978,17 @@ function Header({ ascendMode, onModeChange, showSidebar, onToggleSidebar, isLoad
 
       {/* Right: action buttons */}
       <div className="flex items-center gap-1 sm:gap-2">
-        <button onClick={onAssistantClick} aria-label="Toggle interview assistant" className={`flex items-center gap-2 p-2 sm:px-3 sm:py-1.5 rounded-lg text-sm font-medium transition-all duration-200 min-w-[36px] min-h-[36px] justify-center ${showAscendAssistant ? 'text-emerald-600 bg-emerald-50' : 'text-gray-400 hover:text-gray-700 hover:bg-gray-50'}`}>
+        <button onClick={onAssistantClick} aria-label="Toggle interview assistant" className={`flex items-center gap-2 p-2 sm:px-3 sm:py-1.5 rounded-lg text-sm font-medium transition-all duration-200 min-w-[36px] min-h-[36px] justify-center ${showAscendAssistant ? 'text-[var(--accent)] bg-[var(--accent-subtle)]' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)]'}`}>
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
           <span className="hidden sm:inline">Assistant</span>
         </button>
-        <Link to="/capra/prepare" className="hidden sm:flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-gray-50 transition-colors">
+        <Link to="/capra/prepare" className="hidden sm:flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-[var(--bg-elevated)] transition-colors">
           {user?.image ? (
             <img src={user.image} alt="" className="w-6 h-6 rounded-full" referrerPolicy="no-referrer" />
           ) : (
             <div className="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center text-[10px] font-bold text-emerald-700">{user?.name?.[0] || '?'}</div>
           )}
-          <span className="text-sm text-gray-700 font-medium">{user?.name?.split(' ')[0] || 'Dashboard'}</span>
+          <span className="text-sm text-[var(--text-primary)] font-medium">{user?.name?.split(' ')[0] || 'Dashboard'}</span>
         </Link>
       </div>
     </header>
@@ -1042,16 +1042,16 @@ function LoadingProgress() {
 
 function Footer({ isLoading, ascendMode }) {
   return (
-    <footer className="relative z-10 px-5 py-3 flex items-center justify-between text-xs border-t border-[#e3e8ee] bg-[#f7f8f9]">
+    <footer className="relative z-10 px-5 py-3 flex items-center justify-between text-xs border-t border-[var(--border)] bg-[var(--bg-elevated)]">
       <div className="flex items-center gap-4">
         <span className="flex items-center gap-2">
-          <span className={`w-2 h-2 rounded-full ${isLoading ? 'animate-pulse bg-emerald-500' : 'bg-emerald-500'}`} />
-          <span className={`text-sm font-medium ${isLoading ? 'text-emerald-600' : 'text-gray-500'}`}>
+          <span className={`w-2 h-2 rounded-full ${isLoading ? 'animate-pulse bg-[var(--accent-subtle)]0' : 'bg-[var(--accent-subtle)]0'}`} />
+          <span className={`text-sm font-medium ${isLoading ? 'text-[var(--accent)]' : 'text-[var(--text-secondary)]'}`}>
             {isLoading ? 'Processing...' : 'Ready'}
           </span>
         </span>
       </div>
-      <div className="flex items-center gap-5 font-mono text-xs text-gray-400">
+      <div className="flex items-center gap-5 font-mono text-xs text-[var(--text-muted)]">
         {[
           { key: '^1', label: ascendMode === 'system-design' ? 'design' : 'code' },
           { key: '^2', label: 'run' },
@@ -1059,7 +1059,7 @@ function Footer({ isLoading, ascendMode }) {
           { key: 'Esc', label: 'clear' },
         ].map(({ key, label }) => (
           <span key={key} className="flex items-center gap-1.5">
-            <kbd className="px-2 py-1 rounded-md text-xs font-semibold bg-white border border-[#e3e8ee] text-gray-500">{key}</kbd>
+            <kbd className="px-2 py-1 rounded-md text-xs font-semibold bg-[var(--bg-surface)] border border-[var(--border)] text-[var(--text-secondary)]">{key}</kbd>
             <span>{label}</span>
           </span>
         ))}
@@ -1071,9 +1071,9 @@ function Footer({ isLoading, ascendMode }) {
 function CopyToast() {
   return (
     <div className="fixed bottom-20 left-1/2 transform -translate-x-1/2 z-50 animate-scale-in">
-      <div className="flex items-center gap-3 px-5 py-3 rounded-lg bg-emerald-500 shadow-lg">
-        <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center backdrop-blur-sm">
-          <svg className="w-4 h-4 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+      <div className="flex items-center gap-3 px-5 py-3 rounded-lg bg-[var(--accent-subtle)]0 shadow-lg">
+        <div className="w-7 h-7 rounded-lg bg-[var(--bg-surface)]/20 flex items-center justify-center backdrop-blur-sm">
+          <svg className="w-4 h-4 text-[var(--text-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
         </div>
         <span className="text-sm font-semibold text-white" aria-live="polite">Code copied to clipboard!</span>
       </div>
@@ -1125,14 +1125,14 @@ function CodingLayout({
   const activeComplexity = currentApproachData?.complexity || solution?.complexity || streamingContent.complexity;
 
   const problemPane = (
-    <div className="h-full flex flex-col overflow-y-auto" style={{ background: '#f7f8f9' }}>
+    <div className="h-full flex flex-col overflow-y-auto" style={{ background: 'var(--bg-elevated)' }}>
       <div className="flex-shrink-0">
-        <div className="flex items-center justify-between px-4 sm:px-5 py-3 border-b border-[#e3e8ee] gap-2 min-h-[48px] flex-wrap" style={{ background: '#ffffff' }}>
+        <div className="flex items-center justify-between px-4 sm:px-5 py-3 border-b border-[var(--border)] gap-2 min-h-[48px] flex-wrap" style={{ background: 'var(--bg-surface)' }}>
           <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
             <div className="w-1.5 h-5 rounded-full flex-shrink-0" style={{ background: ascendMode === 'system-design' ? '#3b82f6' : '#10b981' }} />
-            <h2 className="landing-display text-sm font-bold truncate text-gray-900">{ascendMode === 'system-design' ? 'System Design' : 'Problem'}</h2>
+            <h2 className="landing-display text-sm font-bold truncate text-[var(--text-primary)]">{ascendMode === 'system-design' ? 'System Design' : 'Problem'}</h2>
             {ascendMode === 'system-design' && (
-              <button onClick={onSavedDesignsClick} aria-label="View saved designs" className={`flex-shrink-0 flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg transition-all duration-200 ${savedDesignsCount > 0 ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'bg-[#f7f8f9] text-gray-500 hover:text-gray-700 border border-[#e3e8ee] hover:border-[#d0d5dd]'}`}>
+              <button onClick={onSavedDesignsClick} aria-label="View saved designs" className={`flex-shrink-0 flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg transition-all duration-200 ${savedDesignsCount > 0 ? 'bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--accent)]' : 'bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border)] hover:border-[var(--border-hover)]'}`}>
                 <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" /></svg>
                 Saved ({savedDesignsCount})
               </button>
@@ -1153,7 +1153,7 @@ function CodingLayout({
   );
 
   const designPane = (
-    <div className="h-full overflow-auto p-4" style={{ background: '#f7f8f9' }}>
+    <div className="h-full overflow-auto p-4" style={{ background: 'var(--bg-elevated)' }}>
       {hasSystemDesign ? (
         <SystemDesignPanel systemDesign={systemDesign} eraserDiagram={eraserDiagram} autoGenerateEraser={autoGenerateEraser} onGenerateEraserDiagram={onGenerateEraserDiagram} question={currentProblem || loadedProblem} cloudProvider="auto" qaHistory={qaHistory || []} onFollowUpQuestion={onFollowUpQuestion} isProcessingFollowUp={isProcessingFollowUp} />
       ) : isLoading && loadingType === 'solve' ? (
@@ -1163,14 +1163,14 @@ function CodingLayout({
             <span className="w-2.5 h-2.5 rounded-full bg-violet-500 animate-bounce" style={{ animationDelay: '150ms' }} />
             <span className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: '300ms' }} />
           </div>
-          <span className="landing-body text-sm font-medium text-gray-500">Generating system design...</span>
+          <span className="landing-body text-sm font-medium text-[var(--text-secondary)]">Generating system design...</span>
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center h-full">
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-50 to-violet-50 border border-blue-100 flex items-center justify-center mb-4">
             <svg className="w-7 h-7 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
           </div>
-          <span className="landing-body text-sm font-medium text-gray-400">Enter a system design question</span>
+          <span className="landing-body text-sm font-medium text-[var(--text-muted)]">Enter a system design question</span>
           <span className="landing-body text-xs text-gray-300 mt-1">e.g. "Design a URL shortener like bit.ly"</span>
         </div>
       )}
@@ -1178,13 +1178,13 @@ function CodingLayout({
   );
 
   const codePane = (
-    <div className="h-full" style={{ background: '#f7f8f9' }}>
+    <div className="h-full" style={{ background: 'var(--bg-elevated)' }}>
       <CodeDisplay ref={codeDisplayRef} code={activeCode} language={solution?.language || streamingContent.language} complexity={activeComplexity} onLineHover={onLineHover} examples={solution?.examples} isStreaming={isLoading && loadingType === 'solve' && !solution} autoRunOutput={autoRunOutput} onExplanationsUpdate={onExplanationsUpdate} ascendMode={ascendMode} codingLanguage={codingLanguage} onLanguageChange={ascendMode === 'coding' ? onLanguageChange : undefined} detailLevel={codingDetailLevel} onDetailLevelChange={ascendMode === 'coding' ? onCodingDetailLevelChange : undefined} editorSettings={editorSettings} systemDesign={solution?.systemDesign || streamingContent.systemDesign} eraserDiagram={eraserDiagram} autoGenerateEraser={autoGenerateEraser} question={currentProblem || loadedProblem} cloudProvider="auto" onGenerateEraserDiagram={onGenerateEraserDiagram} approaches={approaches} activeApproach={activeApproach} onApproachChange={setActiveApproach} />
     </div>
   );
 
   const explainPane = (
-    <div className="h-full overflow-hidden bg-white">
+    <div className="h-full overflow-hidden bg-[var(--bg-surface)]">
       <ExplanationPanel explanations={activeExplanations} highlightedLine={highlightedLine} pitch={activePitch} systemDesign={solution?.systemDesign || streamingContent.systemDesign} isStreaming={isLoading && loadingType === 'solve' && !solution} onExpandSystemDesign={onExpandSystemDesign} canExpandSystemDesign={!!currentProblem && !isLoading} onFollowUpQuestion={onFollowUpQuestion} isProcessingFollowUp={isProcessingFollowUp} />
     </div>
   );
@@ -1198,7 +1198,7 @@ function CodingLayout({
       : [{ id: 'problem', label: 'Problem' }, { id: 'code', label: 'Code' }, { id: 'explain', label: 'Explain' }];
 
     return (
-      <div className="h-full bg-white">
+      <div className="h-full bg-[var(--bg-surface)]">
         <MobileTabView tabs={tabs} activeTab={mobileTab} onTabChange={setMobileTab} loadingTabId={isLoading ? (ascendMode === 'system-design' ? 'design' : 'code') : null}>
           {(activeId) => (
             <>
@@ -1214,10 +1214,10 @@ function CodingLayout({
         {showAscendAssistant && (
           <div className="fixed inset-0 z-modal flex flex-col">
             <div className="flex-1 bg-black/50" onClick={onCloseAscendAssistant} />
-            <div className="h-[75dvh] bg-white rounded-t-2xl border-t border-[#e3e8ee] overflow-hidden animate-slide-in-up shadow-[0_-4px_16px_rgba(0,0,0,0.08)]">
-              <div className="flex items-center justify-between px-4 py-3 border-b border-[#e3e8ee]">
-                <span className="text-sm font-semibold text-gray-900">Assistant</span>
-                <button onClick={onCloseAscendAssistant} className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 active:bg-gray-100">
+            <div className="h-[75dvh] bg-[var(--bg-surface)] rounded-t-2xl border-t border-[var(--border)] overflow-hidden animate-slide-in-up shadow-[0_-4px_16px_rgba(0,0,0,0.08)]">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)]">
+                <span className="text-sm font-semibold text-[var(--text-primary)]">Assistant</span>
+                <button onClick={onCloseAscendAssistant} className="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] active:bg-[var(--bg-elevated)]">
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
               </div>
@@ -1236,18 +1236,18 @@ function CodingLayout({
   // ===========================================================================
   if (ascendMode === 'system-design') {
     return (
-      <div className="h-full bg-white">
+      <div className="h-full bg-[var(--bg-surface)]">
         <Allotment defaultSizes={showAscendAssistant ? [50, 50] : [40, 60]}>
           {/* LEFT PANEL — Problem input + Architecture diagram */}
           <Allotment.Pane minSize={250}>
-            <div className="h-full flex flex-col overflow-hidden bg-white border-r border-[#e3e8ee]">
+            <div className="h-full flex flex-col overflow-hidden bg-[var(--bg-surface)] border-r border-[var(--border)]">
               {/* Header */}
-              <div className="flex-shrink-0 border-b border-[#e3e8ee]">
-                <div className="flex items-center justify-between px-3 py-2 bg-[#f7f8f9]">
+              <div className="flex-shrink-0 border-b border-[var(--border)]">
+                <div className="flex items-center justify-between px-3 py-2 bg-[var(--bg-elevated)]">
                   <div className="flex items-center gap-2">
                     <div className="w-1 h-4 rounded-full" style={{ background: '#10b981' }} />
-                    <h2 className="text-sm font-semibold text-gray-900">System Design</h2>
-                    <button onClick={onSavedDesignsClick} aria-label="View saved designs" className={`flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-lg transition-all duration-200 ${savedDesignsCount > 0 ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'bg-[#f7f8f9] text-gray-500 hover:text-gray-700 border border-[#e3e8ee] hover:border-[#d0d5dd]'}`}>
+                    <h2 className="text-sm font-semibold text-[var(--text-primary)]">System Design</h2>
+                    <button onClick={onSavedDesignsClick} aria-label="View saved designs" className={`flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-lg transition-all duration-200 ${savedDesignsCount > 0 ? 'bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--accent)]' : 'bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border)] hover:border-[var(--border-hover)]'}`}>
                       <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" /></svg>
                       Saved ({savedDesignsCount})
                     </button>
@@ -1256,7 +1256,7 @@ function CodingLayout({
                 </div>
               </div>
               {/* Problem input */}
-              <div className="flex-shrink-0 px-3 py-2 border-b border-[#e3e8ee]">
+              <div className="flex-shrink-0 px-3 py-2 border-b border-[var(--border)]">
                 <ProblemInput {...problemInputProps} />
               </div>
               {/* Cloud Architecture Diagram fills remaining space */}
@@ -1274,16 +1274,16 @@ function CodingLayout({
                     />
                   </Suspense>
                 ) : isLoading ? (
-                  <div className="flex flex-col items-center justify-center h-full text-gray-500">
+                  <div className="flex flex-col items-center justify-center h-full text-[var(--text-secondary)]">
                     <div className="flex gap-1 mb-2">
-                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-bounce" style={{ animationDelay: '0ms' }} />
-                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-bounce" style={{ animationDelay: '150ms' }} />
-                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-bounce" style={{ animationDelay: '300ms' }} />
+                      <span className="w-2 h-2 rounded-full bg-[var(--accent-subtle)]0 animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <span className="w-2 h-2 rounded-full bg-[var(--accent-subtle)]0 animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <span className="w-2 h-2 rounded-full bg-[var(--accent-subtle)]0 animate-bounce" style={{ animationDelay: '300ms' }} />
                     </div>
                     <span className="text-sm">Generating system design...</span>
                   </div>
                 ) : (
-                  <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                  <div className="flex flex-col items-center justify-center h-full text-[var(--text-muted)]">
                     <svg className="w-12 h-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
                     <span className="text-sm">Enter a system design question</span>
                   </div>
@@ -1311,13 +1311,13 @@ function CodingLayout({
   }
 
   return (
-    <div className="h-full bg-white">
+    <div className="h-full bg-[var(--bg-surface)]">
       <Allotment defaultSizes={showAscendAssistant ? [30, 40, 30] : [30, 70]}>
         <Allotment.Pane minSize={220}>
           {problemPane}
         </Allotment.Pane>
         <Allotment.Pane minSize={300}>
-          <div className="h-full bg-[#f7f8f9] border-l border-[#e3e8ee]">
+          <div className="h-full bg-[var(--bg-elevated)] border-l border-[var(--border)]">
             {codePane}
           </div>
         </Allotment.Pane>

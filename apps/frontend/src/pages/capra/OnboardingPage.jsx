@@ -285,14 +285,14 @@ export default function OnboardingPage() {
   const progressPercent = step === 1 ? 50 : 100;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-[var(--bg-app)] flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-2xl">
         {/* Card */}
-        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+        <div className="bg-[var(--bg-surface)] rounded-2xl shadow-lg overflow-hidden">
           {/* Progress bar */}
-          <div className="h-1 bg-gray-100">
+          <div className="h-1 bg-[var(--bg-elevated)]">
             <div
-              className="h-full bg-emerald-500 transition-all duration-500 ease-out"
+              className="h-full bg-[var(--accent-subtle)]0 transition-all duration-500 ease-out"
               style={{ width: `${progressPercent}%` }}
             />
           </div>
@@ -301,11 +301,11 @@ export default function OnboardingPage() {
             {/* Step indicator dots */}
             <div className="flex items-center justify-center gap-3 mb-8">
               <div className={`w-2.5 h-2.5 rounded-full transition-colors duration-300 ${
-                step >= 1 ? 'bg-emerald-500' : 'bg-gray-200'
+                step >= 1 ? 'bg-[var(--accent-subtle)]0' : 'bg-[var(--border)]'
               }`} />
-              <div className="w-8 h-px bg-gray-200" />
+              <div className="w-8 h-px bg-[var(--border)]" />
               <div className={`w-2.5 h-2.5 rounded-full transition-colors duration-300 ${
-                step >= 2 ? 'bg-emerald-500' : 'bg-gray-200'
+                step >= 2 ? 'bg-[var(--accent-subtle)]0' : 'bg-[var(--border)]'
               }`} />
             </div>
 
@@ -313,10 +313,10 @@ export default function OnboardingPage() {
             {step === 1 && (
               <div className="animate-fadeIn">
                 <div className="text-center mb-8">
-                  <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                  <h1 className="text-2xl font-bold text-[var(--text-primary)] mb-2">
                     What roles are you interviewing for?
                   </h1>
-                  <p className="text-gray-500">
+                  <p className="text-[var(--text-secondary)]">
                     Select all that apply — we'll tailor your preparation
                   </p>
                 </div>
@@ -330,18 +330,18 @@ export default function OnboardingPage() {
                         onClick={() => toggleRole(role.id)}
                         className={`relative flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all duration-200 cursor-pointer text-center
                           ${selected
-                            ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
-                            : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50'
+                            ? 'border-[var(--accent)] bg-[var(--accent-subtle)] text-[var(--accent-hover)]'
+                            : 'border-[var(--border)] bg-[var(--bg-surface)] text-[var(--text-secondary)] hover:border-[var(--border)] hover:bg-[var(--bg-app)]'
                           }`}
                       >
                         {selected && (
                           <div className="absolute top-2 right-2">
-                            <svg className="w-4 h-4 text-emerald-500" viewBox="0 0 20 20" fill="currentColor">
+                            <svg className="w-4 h-4 text-[var(--accent)]" viewBox="0 0 20 20" fill="currentColor">
                               <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                             </svg>
                           </div>
                         )}
-                        <div className={`${selected ? 'text-emerald-600' : 'text-gray-400'} transition-colors`}>
+                        <div className={`${selected ? 'text-[var(--accent)]' : 'text-[var(--text-muted)]'} transition-colors`}>
                           {role.icon}
                         </div>
                         <span className="text-sm font-medium leading-tight">{role.label}</span>
@@ -355,8 +355,8 @@ export default function OnboardingPage() {
                   disabled={selectedRoles.length === 0}
                   className={`w-full py-3 px-6 rounded-xl font-semibold text-sm transition-all duration-200
                     ${selectedRoles.length > 0
-                      ? 'bg-emerald-500 text-white hover:bg-emerald-600 shadow-sm hover:shadow-md'
-                      : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      ? 'bg-[var(--accent-subtle)]0 text-white hover:bg-[var(--accent-hover)] shadow-sm hover:shadow-md'
+                      : 'bg-[var(--bg-elevated)] text-[var(--text-muted)] cursor-not-allowed'
                     }`}
                 >
                   Continue
@@ -368,22 +368,22 @@ export default function OnboardingPage() {
             {step === 2 && (
               <div className="animate-fadeIn">
                 <div className="text-center mb-8">
-                  <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                  <h1 className="text-2xl font-bold text-[var(--text-primary)] mb-2">
                     Upload your resume
                   </h1>
-                  <p className="text-gray-500">
+                  <p className="text-[var(--text-secondary)]">
                     We'll use this to personalize your interview prep
                   </p>
                 </div>
 
                 {/* Tabs */}
-                <div className="flex border-b border-gray-200 mb-6">
+                <div className="flex border-b border-[var(--border)] mb-6">
                   <button
                     onClick={() => setResumeTab('upload')}
                     className={`flex-1 pb-3 text-sm font-medium border-b-2 transition-colors ${
                       resumeTab === 'upload'
-                        ? 'border-emerald-500 text-emerald-600'
-                        : 'border-transparent text-gray-400 hover:text-gray-600'
+                        ? 'border-[var(--accent)] text-[var(--accent)]'
+                        : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-secondary)]'
                     }`}
                   >
                     Upload File
@@ -392,8 +392,8 @@ export default function OnboardingPage() {
                     onClick={() => setResumeTab('paste')}
                     className={`flex-1 pb-3 text-sm font-medium border-b-2 transition-colors ${
                       resumeTab === 'paste'
-                        ? 'border-emerald-500 text-emerald-600'
-                        : 'border-transparent text-gray-400 hover:text-gray-600'
+                        ? 'border-[var(--accent)] text-[var(--accent)]'
+                        : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-secondary)]'
                     }`}
                   >
                     Paste Text
@@ -404,11 +404,11 @@ export default function OnboardingPage() {
                 {resumeTab === 'upload' && (
                   <div className="mb-6">
                     {uploadedFileName ? (
-                      <div className="flex items-center gap-3 p-4 rounded-xl border-2 border-emerald-200 bg-emerald-50">
-                        <svg className="w-5 h-5 text-emerald-500 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                      <div className="flex items-center gap-3 p-4 rounded-xl border-2 border-[var(--accent)] bg-[var(--accent-subtle)]">
+                        <svg className="w-5 h-5 text-[var(--accent)] flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
                           <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                         </svg>
-                        <span className="text-sm text-emerald-700 font-medium truncate">{uploadedFileName}</span>
+                        <span className="text-sm text-[var(--accent-hover)] font-medium truncate">{uploadedFileName}</span>
                         <button
                           onClick={() => {
                             setUploadedFileName('');
@@ -416,7 +416,7 @@ export default function OnboardingPage() {
                             setResumeText('');
                             if (fileInputRef.current) fileInputRef.current.value = '';
                           }}
-                          className="ml-auto text-emerald-400 hover:text-emerald-600 transition-colors"
+                          className="ml-auto text-[var(--accent)] hover:text-[var(--accent)] transition-colors"
                         >
                           <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
                             <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
@@ -431,30 +431,30 @@ export default function OnboardingPage() {
                         onClick={() => fileInputRef.current?.click()}
                         className={`flex flex-col items-center justify-center gap-3 p-8 rounded-xl border-2 border-dashed cursor-pointer transition-all duration-200
                           ${dragOver
-                            ? 'border-emerald-400 bg-emerald-50'
-                            : 'border-gray-300 hover:border-gray-400 bg-gray-50 hover:bg-gray-100'
+                            ? 'border-[var(--accent)] bg-[var(--accent-subtle)]'
+                            : 'border-[var(--border)] hover:border-[var(--border-hover)] bg-[var(--bg-app)] hover:bg-[var(--bg-elevated)]'
                           }
                           ${uploading ? 'pointer-events-none opacity-60' : ''}`}
                       >
                         {uploading ? (
                           <div className="flex flex-col items-center gap-2">
-                            <svg className="w-8 h-8 text-emerald-500 animate-spin" viewBox="0 0 24 24" fill="none">
+                            <svg className="w-8 h-8 text-[var(--accent)] animate-spin" viewBox="0 0 24 24" fill="none">
                               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                             </svg>
-                            <span className="text-sm text-gray-500">Uploading...</span>
+                            <span className="text-sm text-[var(--text-secondary)]">Uploading...</span>
                           </div>
                         ) : (
                           <>
-                            <svg className="w-8 h-8 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                            <svg className="w-8 h-8 text-[var(--text-muted)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                               <path d="M12 16V4m0 0l-4 4m4-4l4 4" />
                               <path d="M2 17l.621 2.485A2 2 0 004.561 21h14.878a2 2 0 001.94-1.515L22 17" />
                             </svg>
                             <div className="text-center">
-                              <p className="text-sm text-gray-600">
-                                <span className="text-emerald-600 font-medium">Click to upload</span> or drag and drop
+                              <p className="text-sm text-[var(--text-secondary)]">
+                                <span className="text-[var(--accent)] font-medium">Click to upload</span> or drag and drop
                               </p>
-                              <p className="text-xs text-gray-400 mt-1">PDF, DOCX, or TXT (max 5MB)</p>
+                              <p className="text-xs text-[var(--text-muted)] mt-1">PDF, DOCX, or TXT (max 5MB)</p>
                             </div>
                           </>
                         )}
@@ -478,14 +478,14 @@ export default function OnboardingPage() {
                       onChange={(e) => setResumeText(e.target.value)}
                       placeholder="Paste your resume text here..."
                       rows={8}
-                      className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-emerald-400 focus:ring-0 outline-none text-sm text-gray-700 placeholder-gray-400 resize-none transition-colors"
+                      className="w-full px-4 py-3 rounded-xl border-2 border-[var(--border)] focus:border-[var(--accent)] focus:ring-0 outline-none text-sm text-[var(--text-primary)] placeholder-gray-400 resize-none transition-colors"
                     />
                   </div>
                 )}
 
                 {/* Error message */}
                 {error && (
-                  <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-sm">
+                  <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-600 text-sm">
                     {error}
                   </div>
                 )}
@@ -495,7 +495,7 @@ export default function OnboardingPage() {
                   <button
                     onClick={handleComplete}
                     disabled={submitting}
-                    className="w-full py-3 px-6 rounded-xl font-semibold text-sm bg-emerald-500 text-white hover:bg-emerald-600 shadow-sm hover:shadow-md transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="w-full py-3 px-6 rounded-xl font-semibold text-sm bg-[var(--accent-subtle)]0 text-white hover:bg-[var(--accent-hover)] shadow-sm hover:shadow-md transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     {submitting && (
                       <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
@@ -509,7 +509,7 @@ export default function OnboardingPage() {
                   <div className="flex items-center justify-between">
                     <button
                       onClick={() => { setStep(1); setError(''); }}
-                      className="text-sm text-gray-400 hover:text-gray-600 transition-colors flex items-center gap-1"
+                      className="text-sm text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors flex items-center gap-1"
                     >
                       <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -519,7 +519,7 @@ export default function OnboardingPage() {
                     <button
                       onClick={handleComplete}
                       disabled={submitting}
-                      className="text-sm text-gray-400 hover:text-gray-600 transition-colors"
+                      className="text-sm text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
                     >
                       Skip for now
                     </button>
@@ -531,7 +531,7 @@ export default function OnboardingPage() {
         </div>
 
         {/* Footer */}
-        <p className="text-center text-xs text-gray-400 mt-6">
+        <p className="text-center text-xs text-[var(--text-muted)] mt-6">
           You can update these preferences anytime in Settings
         </p>
       </div>
