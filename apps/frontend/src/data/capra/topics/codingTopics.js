@@ -982,6 +982,165 @@ Two pointers work when you can eliminate possibilities by moving one pointer—e
 
     return True  # They met, cycle exists`
         }
+      ,
+        {
+          title: 'Two Sum II (Sorted Array) - Opposite Direction',
+          language: 'javascript',
+          description: 'Find two numbers that sum to target in sorted array.',
+          code: `function twoSumSorted(numbers, target) {
+    let left = 0, right = numbers.length - 1;
+
+    while (left < right) {
+        const sum = numbers[left] + numbers[right];
+        if (sum === target) return [left + 1, right + 1]; // 1-indexed
+        else if (sum < target) left++;   // Need larger sum
+        else right--;                    // Need smaller sum
+    }
+    return []; // No solution
+}`
+        },
+        {
+          title: 'Two Sum II (Sorted Array) - Opposite Direction',
+          language: 'java',
+          description: 'Find two numbers that sum to target in sorted array.',
+          code: `public int[] twoSumSorted(int[] numbers, int target) {
+    int left = 0, right = numbers.length - 1;
+
+    while (left < right) {
+        int sum = numbers[left] + numbers[right];
+        if (sum == target) return new int[]{left + 1, right + 1};
+        else if (sum < target) left++;
+        else right--;
+    }
+    return new int[]{};
+}`
+        },
+        {
+          title: 'Three Sum - Fix One, Two-Pointer on Rest',
+          language: 'javascript',
+          description: 'Find all unique triplets that sum to zero.',
+          code: `function threeSum(nums) {
+    nums.sort((a, b) => a - b);
+    const result = [];
+
+    for (let i = 0; i < nums.length - 2; i++) {
+        if (i > 0 && nums[i] === nums[i - 1]) continue; // Skip dupes
+
+        let left = i + 1, right = nums.length - 1;
+        while (left < right) {
+            const total = nums[i] + nums[left] + nums[right];
+            if (total === 0) {
+                result.push([nums[i], nums[left], nums[right]]);
+                while (left < right && nums[left] === nums[left + 1]) left++;
+                while (left < right && nums[right] === nums[right - 1]) right--;
+                left++; right--;
+            } else if (total < 0) left++;
+            else right--;
+        }
+    }
+    return result;
+}`
+        },
+        {
+          title: 'Three Sum - Fix One, Two-Pointer on Rest',
+          language: 'java',
+          description: 'Find all unique triplets that sum to zero.',
+          code: `public List<List<Integer>> threeSum(int[] nums) {
+    Arrays.sort(nums);
+    List<List<Integer>> result = new ArrayList<>();
+
+    for (int i = 0; i < nums.length - 2; i++) {
+        if (i > 0 && nums[i] == nums[i - 1]) continue;
+
+        int left = i + 1, right = nums.length - 1;
+        while (left < right) {
+            int total = nums[i] + nums[left] + nums[right];
+            if (total == 0) {
+                result.add(Arrays.asList(nums[i], nums[left], nums[right]));
+                while (left < right && nums[left] == nums[left + 1]) left++;
+                while (left < right && nums[right] == nums[right - 1]) right--;
+                left++; right--;
+            } else if (total < 0) left++;
+            else right--;
+        }
+    }
+    return result;
+}`
+        },
+        {
+          title: 'Container With Most Water - Greedy Two Pointers',
+          language: 'javascript',
+          description: 'Find max water between two lines. Move the shorter line.',
+          code: `function maxArea(height) {
+    let left = 0, right = height.length - 1;
+    let maxWater = 0;
+
+    while (left < right) {
+        const width = right - left;
+        const h = Math.min(height[left], height[right]);
+        maxWater = Math.max(maxWater, width * h);
+
+        if (height[left] < height[right]) left++;
+        else right--;
+    }
+    return maxWater;
+}`
+        },
+        {
+          title: 'Container With Most Water - Greedy Two Pointers',
+          language: 'java',
+          description: 'Find max water between two lines. Move the shorter line.',
+          code: `public int maxArea(int[] height) {
+    int left = 0, right = height.length - 1;
+    int maxWater = 0;
+
+    while (left < right) {
+        int width = right - left;
+        int h = Math.min(height[left], height[right]);
+        maxWater = Math.max(maxWater, width * h);
+
+        if (height[left] < height[right]) left++;
+        else right--;
+    }
+    return maxWater;
+}`
+        },
+        {
+          title: 'Fast/Slow Pointers - Linked List Cycle',
+          language: 'javascript',
+          description: 'Detect if linked list has a cycle using Floyd\'s algorithm.',
+          code: `function hasCycle(head) {
+    if (!head || !head.next) return false;
+
+    let slow = head;
+    let fast = head.next;
+
+    while (slow !== fast) {
+        if (!fast || !fast.next) return false;
+        slow = slow.next;       // Move 1 step
+        fast = fast.next.next;  // Move 2 steps
+    }
+    return true; // They met, cycle exists
+}`
+        },
+        {
+          title: 'Fast/Slow Pointers - Linked List Cycle',
+          language: 'java',
+          description: 'Detect if linked list has a cycle using Floyd\'s algorithm.',
+          code: `public boolean hasCycle(ListNode head) {
+    if (head == null || head.next == null) return false;
+
+    ListNode slow = head;
+    ListNode fast = head.next;
+
+    while (slow != fast) {
+        if (fast == null || fast.next == null) return false;
+        slow = slow.next;       // Move 1 step
+        fast = fast.next.next;  // Move 2 steps
+    }
+    return true; // They met, cycle exists
+}`
+        }
       ]
     },
     {
@@ -1963,6 +2122,7 @@ Most linked list problems become easier if you:
         },
         {
           title: 'Detect Cycle - Floyd\'s Algorithm',
+          language: 'python',
           description: 'Detect if linked list has a cycle using fast/slow pointers.',
           code: `def has_cycle(head):
     slow = fast = head
@@ -2028,6 +2188,167 @@ Most linked list problems become easier if you:
     # Skip the nth node
     slow.next = slow.next.next
     return dummy.next`
+        }
+      ,
+        {
+          title: 'Reverse Linked List',
+          language: 'javascript',
+          description: 'Iteratively reverse a singly linked list in O(1) space.',
+          code: `function reverseList(head) {
+    let prev = null, curr = head;
+
+    while (curr) {
+        const nextTemp = curr.next; // Save next node
+        curr.next = prev;           // Reverse pointer
+        prev = curr;                // Move prev forward
+        curr = nextTemp;            // Move curr forward
+    }
+    return prev; // New head
+}`
+        },
+        {
+          title: 'Reverse Linked List',
+          language: 'java',
+          description: 'Iteratively reverse a singly linked list in O(1) space.',
+          code: `public ListNode reverseList(ListNode head) {
+    ListNode prev = null, curr = head;
+
+    while (curr != null) {
+        ListNode nextTemp = curr.next;
+        curr.next = prev;
+        prev = curr;
+        curr = nextTemp;
+    }
+    return prev;
+}`
+        },
+        {
+          title: 'Detect Cycle - Floyd\'s Algorithm',
+          language: 'javascript',
+          description: 'Detect if linked list has a cycle using fast/slow pointers.',
+          code: `function hasCycle(head) {
+    let slow = head, fast = head;
+
+    while (fast && fast.next) {
+        slow = slow.next;
+        fast = fast.next.next;
+        if (slow === fast) return true;
+    }
+    return false;
+}`
+        },
+        {
+          title: 'Detect Cycle - Floyd\'s Algorithm',
+          language: 'java',
+          description: 'Detect if linked list has a cycle using fast/slow pointers.',
+          code: `public boolean hasCycle(ListNode head) {
+    ListNode slow = head, fast = head;
+
+    while (fast != null && fast.next != null) {
+        slow = slow.next;
+        fast = fast.next.next;
+        if (slow == fast) return true;
+    }
+    return false;
+}`
+        },
+        {
+          title: 'Find Middle Node',
+          language: 'javascript',
+          description: 'Find middle node using slow/fast pointers.',
+          code: `function findMiddle(head) {
+    let slow = head, fast = head;
+
+    while (fast && fast.next) {
+        slow = slow.next;
+        fast = fast.next.next;
+    }
+    return slow;
+}`
+        },
+        {
+          title: 'Find Middle Node',
+          language: 'java',
+          description: 'Find middle node using slow/fast pointers.',
+          code: `public ListNode middleNode(ListNode head) {
+    ListNode slow = head, fast = head;
+
+    while (fast != null && fast.next != null) {
+        slow = slow.next;
+        fast = fast.next.next;
+    }
+    return slow;
+}`
+        },
+        {
+          title: 'Merge Two Sorted Lists',
+          language: 'javascript',
+          description: 'Merge two sorted lists into one sorted list.',
+          code: `function mergeTwoLists(l1, l2) {
+    const dummy = { val: 0, next: null };
+    let current = dummy;
+
+    while (l1 && l2) {
+        if (l1.val <= l2.val) {
+            current.next = l1; l1 = l1.next;
+        } else {
+            current.next = l2; l2 = l2.next;
+        }
+        current = current.next;
+    }
+    current.next = l1 || l2;
+    return dummy.next;
+}`
+        },
+        {
+          title: 'Merge Two Sorted Lists',
+          language: 'java',
+          description: 'Merge two sorted lists into one sorted list.',
+          code: `public ListNode mergeTwoLists(ListNode l1, ListNode l2) {
+    ListNode dummy = new ListNode(0);
+    ListNode current = dummy;
+
+    while (l1 != null && l2 != null) {
+        if (l1.val <= l2.val) {
+            current.next = l1; l1 = l1.next;
+        } else {
+            current.next = l2; l2 = l2.next;
+        }
+        current = current.next;
+    }
+    current.next = (l1 != null) ? l1 : l2;
+    return dummy.next;
+}`
+        },
+        {
+          title: 'Remove Nth Node From End',
+          language: 'javascript',
+          description: 'Remove the nth node from end in one pass.',
+          code: `function removeNthFromEnd(head, n) {
+    const dummy = { val: 0, next: head };
+    let slow = dummy, fast = dummy;
+
+    for (let i = 0; i <= n; i++) fast = fast.next;
+    while (fast) { slow = slow.next; fast = fast.next; }
+
+    slow.next = slow.next.next;
+    return dummy.next;
+}`
+        },
+        {
+          title: 'Remove Nth Node From End',
+          language: 'java',
+          description: 'Remove the nth node from end in one pass.',
+          code: `public ListNode removeNthFromEnd(ListNode head, int n) {
+    ListNode dummy = new ListNode(0, head);
+    ListNode slow = dummy, fast = dummy;
+
+    for (int i = 0; i <= n; i++) fast = fast.next;
+    while (fast != null) { slow = slow.next; fast = fast.next; }
+
+    slow.next = slow.next.next;
+    return dummy.next;
+}`
         }
       ]
     },
@@ -2297,6 +2618,130 @@ def level_order(root):
         return root  # p and q in different subtrees
     return left or right  # Both in same subtree`
         }
+      ,
+        {
+          title: 'Maximum Depth (Postorder - Bottom Up)',
+          language: 'javascript',
+          description: 'Height is 1 + max of children heights.',
+          code: `function maxDepth(root) {
+    if (!root) return 0;
+    const leftDepth = maxDepth(root.left);
+    const rightDepth = maxDepth(root.right);
+    return 1 + Math.max(leftDepth, rightDepth);
+}`
+        },
+        {
+          title: 'Maximum Depth (Postorder - Bottom Up)',
+          language: 'java',
+          description: 'Height is 1 + max of children heights.',
+          code: `public int maxDepth(TreeNode root) {
+    if (root == null) return 0;
+    int leftDepth = maxDepth(root.left);
+    int rightDepth = maxDepth(root.right);
+    return 1 + Math.max(leftDepth, rightDepth);
+}`
+        },
+        {
+          title: 'Validate BST (Preorder with Range)',
+          language: 'javascript',
+          description: 'Each node must be within valid range.',
+          code: `function isValidBST(root, min = -Infinity, max = Infinity) {
+    if (!root) return true;
+    if (root.val <= min || root.val >= max) return false;
+    return isValidBST(root.left, min, root.val) &&
+           isValidBST(root.right, root.val, max);
+}`
+        },
+        {
+          title: 'Validate BST (Preorder with Range)',
+          language: 'java',
+          description: 'Each node must be within valid range.',
+          code: `public boolean isValidBST(TreeNode root) {
+    return validate(root, Long.MIN_VALUE, Long.MAX_VALUE);
+}
+
+private boolean validate(TreeNode node, long min, long max) {
+    if (node == null) return true;
+    if (node.val <= min || node.val >= max) return false;
+    return validate(node.left, min, node.val) &&
+           validate(node.right, node.val, max);
+}`
+        },
+        {
+          title: 'Level Order Traversal (BFS)',
+          language: 'javascript',
+          description: 'Process tree level by level using queue.',
+          code: `function levelOrder(root) {
+    if (!root) return [];
+    const result = [];
+    const queue = [root];
+
+    while (queue.length) {
+        const levelSize = queue.length;
+        const level = [];
+        for (let i = 0; i < levelSize; i++) {
+            const node = queue.shift();
+            level.push(node.val);
+            if (node.left) queue.push(node.left);
+            if (node.right) queue.push(node.right);
+        }
+        result.push(level);
+    }
+    return result;
+}`
+        },
+        {
+          title: 'Level Order Traversal (BFS)',
+          language: 'java',
+          description: 'Process tree level by level using queue.',
+          code: `public List<List<Integer>> levelOrder(TreeNode root) {
+    List<List<Integer>> result = new ArrayList<>();
+    if (root == null) return result;
+    Queue<TreeNode> queue = new LinkedList<>();
+    queue.offer(root);
+
+    while (!queue.isEmpty()) {
+        int levelSize = queue.size();
+        List<Integer> level = new ArrayList<>();
+        for (int i = 0; i < levelSize; i++) {
+            TreeNode node = queue.poll();
+            level.add(node.val);
+            if (node.left != null) queue.offer(node.left);
+            if (node.right != null) queue.offer(node.right);
+        }
+        result.add(level);
+    }
+    return result;
+}`
+        },
+        {
+          title: 'Lowest Common Ancestor',
+          language: 'javascript',
+          description: 'Find LCA of two nodes in binary tree.',
+          code: `function lowestCommonAncestor(root, p, q) {
+    if (!root || root === p || root === q) return root;
+
+    const left = lowestCommonAncestor(root.left, p, q);
+    const right = lowestCommonAncestor(root.right, p, q);
+
+    if (left && right) return root;
+    return left || right;
+}`
+        },
+        {
+          title: 'Lowest Common Ancestor',
+          language: 'java',
+          description: 'Find LCA of two nodes in binary tree.',
+          code: `public TreeNode lowestCommonAncestor(TreeNode root, TreeNode p, TreeNode q) {
+    if (root == null || root == p || root == q) return root;
+
+    TreeNode left = lowestCommonAncestor(root.left, p, q);
+    TreeNode right = lowestCommonAncestor(root.right, p, q);
+
+    if (left != null && right != null) return root;
+    return left != null ? left : right;
+}`
+        }
       ]
     },
     {
@@ -2557,6 +3002,7 @@ visualizations: [
         },
         {
           title: 'Topological Sort - Kahn\'s Algorithm',
+          language: 'python',
           description: 'Order courses by prerequisites using BFS.',
           code: `from collections import deque
 
