@@ -37,7 +37,7 @@ export default function BadgeGrid() {
 
   if (loading) {
     return (
-      <div className="bg-gradient-to-br from-white/80 to-indigo-50/30 border border-indigo-200/30 rounded-2xl p-6">
+      <div className="bg-white border-0 rounded-2xl p-6 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
         <div className="animate-pulse space-y-4">
           <div className="h-5 bg-gray-100 rounded w-32" />
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -52,14 +52,14 @@ export default function BadgeGrid() {
 
   if (error) {
     return (
-      <div className="bg-gradient-to-br from-white/80 to-indigo-50/30 border border-indigo-200/30 rounded-2xl p-6">
+      <div className="bg-white border-0 rounded-2xl p-6 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
         <p className="text-sm text-red-500">{error}</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-gradient-to-br from-white/80 to-indigo-50/30 border border-indigo-200/30 rounded-2xl p-6 space-y-5">
+    <div className="bg-white border-0 rounded-2xl p-6 space-y-5 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
       <div>
         <h3 className="text-lg font-bold text-gray-900 tracking-tight">Badges</h3>
         <p className="text-sm text-gray-500 mt-1">

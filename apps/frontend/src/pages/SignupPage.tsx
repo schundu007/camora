@@ -16,7 +16,7 @@ export default function SignupPage() {
       <SiteNav />
 
       <div className="flex items-center justify-center px-4" style={{ minHeight: '100vh', paddingTop: '80px' }}>
-        <div className="w-full max-w-sm bg-gradient-to-br from-white/80 to-indigo-50/30 rounded-2xl shadow-[0_2px_12px_rgba(99,102,241,0.06)] border border-indigo-200/30 p-8">
+        <div className="w-full max-w-sm bg-white rounded-2xl shadow-[0_4px_24px_rgba(99,102,241,0.12)] border-0 p-8">
 
           {/* Header */}
           <h1 className="text-xl font-bold text-black tracking-tight text-center">Create your account</h1>

@@ -127,7 +127,7 @@ export default function InterviewQuestionsPage() {
               return (
                 <div
                   key={i}
-                  className={`relative bg-gradient-to-br from-white/80 to-indigo-50/30 border border-indigo-200/30 rounded-xl p-5 ${isBlurred ? 'select-none' : ''}`}
+                  className={`relative bg-white border-0 rounded-xl p-5 shadow-[0_4px_24px_rgba(99,102,241,0.12)] ${isBlurred ? 'select-none' : ''}`}
                 >
                   {isBlurred && (
                     <div className="absolute inset-0 backdrop-blur-sm bg-white/60 rounded-xl z-10 flex items-center justify-center">
@@ -159,7 +159,7 @@ export default function InterviewQuestionsPage() {
           <h2 className="text-xl font-bold text-gray-900 mb-5">Interview Tips</h2>
           <div className="grid gap-3 sm:grid-cols-3">
             {company.tips.map((tip, i) => (
-              <div key={i} className="bg-gradient-to-br from-white/80 to-indigo-50/30 border border-indigo-200/30 rounded-xl p-5">
+              <div key={i} className="bg-white border-0 rounded-xl p-5 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
                 <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 text-sm font-bold mb-3">
                   {i + 1}
                 </span>
@@ -170,7 +170,7 @@ export default function InterviewQuestionsPage() {
         </section>
 
         {/* CTA */}
-        <section className="text-center bg-gradient-to-br from-white/80 to-indigo-50/30 border border-indigo-200/30 rounded-2xl p-8">
+        <section className="text-center bg-white border-0 rounded-2xl p-8 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
           <h2 className="text-xl font-bold text-gray-900">
             Start preparing for {company.name} interviews
           </h2>
@@ -196,7 +196,7 @@ export default function InterviewQuestionsPage() {
                 <Link
                   key={relSlug}
                   to={`/interview-questions/${relSlug}`}
-                  className="bg-gradient-to-br from-white/80 to-indigo-50/30 border border-indigo-200/30 rounded-xl p-4 text-center hover:border-indigo-300/40 hover:shadow-sm transition-all"
+                  className="bg-white border-0 rounded-xl p-4 text-center shadow-[0_4px_24px_rgba(99,102,241,0.12)] hover:shadow-[0_20px_60px_rgba(99,102,241,0.28)] transition-all"
                 >
                   <img src={rel.logo} alt={rel.name} className="w-10 h-10 rounded-lg object-contain mx-auto" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                   <p className="mt-1.5 text-sm font-semibold text-gray-900">{rel.name}</p>

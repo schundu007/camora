@@ -55,7 +55,7 @@ export default function Leaderboard() {
 
   if (loading) {
     return (
-      <div className="bg-gradient-to-br from-white/80 to-indigo-50/30 border border-indigo-200/30 rounded-2xl p-6">
+      <div className="bg-white border-0 rounded-2xl p-6 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
         <div className="animate-pulse space-y-3">
           <div className="h-5 bg-gray-100 rounded w-40" />
           {Array.from({ length: 5 }).map((_, i) => (
@@ -72,7 +72,7 @@ export default function Leaderboard() {
 
   if (error) {
     return (
-      <div className="bg-gradient-to-br from-white/80 to-indigo-50/30 border border-indigo-200/30 rounded-2xl p-6">
+      <div className="bg-white border-0 rounded-2xl p-6 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
         <p className="text-sm text-red-500">{error}</p>
       </div>
     );
@@ -80,7 +80,7 @@ export default function Leaderboard() {
 
   if (entries.length === 0) {
     return (
-      <div className="bg-gradient-to-br from-white/80 to-indigo-50/30 border border-indigo-200/30 rounded-2xl p-6">
+      <div className="bg-white border-0 rounded-2xl p-6 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
         <h3 className="text-lg font-bold text-gray-900 tracking-tight">Weekly Leaderboard</h3>
         <p className="text-sm text-gray-500 mt-2">No activity this week yet. Be the first!</p>
       </div>
@@ -88,7 +88,7 @@ export default function Leaderboard() {
   }
 
   return (
-    <div className="bg-gradient-to-br from-white/80 to-indigo-50/30 border border-indigo-200/30 rounded-2xl p-6 space-y-5">
+    <div className="bg-white border-0 rounded-2xl p-6 space-y-5 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
       <div>
         <h3 className="text-lg font-bold text-gray-900 tracking-tight">Weekly Leaderboard</h3>
         <p className="text-sm text-gray-500 mt-1">Top performers this week</p>

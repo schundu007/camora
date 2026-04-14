@@ -65,7 +65,7 @@ export default function ScoreCard({
 
   if (compact) {
     return (
-      <div className="flex items-center gap-3 bg-gradient-to-br from-white/80 to-indigo-50/30 border border-indigo-200/30 rounded-xl px-4 py-3 hover:shadow-sm transition-shadow">
+      <div className="flex items-center gap-3 bg-white border-0 rounded-xl px-4 py-3 shadow-[0_4px_24px_rgba(99,102,241,0.12)] hover:shadow-[0_20px_60px_rgba(99,102,241,0.28)] transition-shadow">
         {/* Mini score ring */}
         <div className="relative shrink-0">
           <svg width={ringSize} height={ringSize} className="-rotate-90">
@@ -109,7 +109,7 @@ export default function ScoreCard({
   }
 
   return (
-    <div className="bg-gradient-to-br from-white/80 to-indigo-50/30 rounded-2xl border border-indigo-200/30 shadow-[0_2px_12px_rgba(99,102,241,0.06)] overflow-hidden w-full max-w-md">
+    <div className="bg-white rounded-2xl border-0 shadow-[0_4px_24px_rgba(99,102,241,0.12)] overflow-hidden w-full max-w-md">
       {/* Header with branding */}
       <div className="px-6 pt-5 pb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">

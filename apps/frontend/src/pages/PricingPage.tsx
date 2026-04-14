@@ -333,7 +333,7 @@ export default function PricingPage() {
               { name: '50 AI Questions', price: '$10', desc: 'Includes 8 bonus diagrams', packId: 'questions_50' },
               { name: '5 Live Sessions', price: '$15', desc: '90 minutes per session', packId: 'sessions_5' },
             ].map((pack) => (
-              <div key={pack.packId} className="bg-gradient-to-br from-white/80 to-indigo-50/30 rounded-2xl border border-indigo-200/30 p-4 flex items-center justify-between gap-4" style={{ boxShadow: '0 2px 12px rgba(99,102,241,0.06)' }}>
+              <div key={pack.packId} className="bg-white rounded-2xl border-0 p-4 flex items-center justify-between gap-4" style={{ boxShadow: '0 4px 24px rgba(99,102,241,0.12)' }}>
                 <div>
                   <h3 className="text-sm font-semibold text-gray-900">{pack.name}</h3>
                   <div className="flex items-baseline gap-1 mt-0.5">
