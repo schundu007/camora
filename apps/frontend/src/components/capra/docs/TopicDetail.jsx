@@ -13,6 +13,7 @@ import {
   ComparisonCard, CheatSheetCard, EvolutionTimeline,
   PatternCardGrid, StaticDiagramGrid, FlowchartCard, ChartCard
 } from './TopicVisuals.jsx';
+import TopicComments from './TopicComments';
 
 /**
  * Simple regex-based syntax highlighter for Python code.
@@ -2885,6 +2886,9 @@ export default function TopicDetail({
           )}
         </div>
       )}
+
+      {/* Comments */}
+      <TopicComments topicId={selectedTopic} />
 
       {/* Bottom prev/next topic navigation */}
       {filteredTopics && filteredTopics.length > 1 && (
