@@ -165,8 +165,8 @@ export default function DocsPage({ onBack }) {
       setSelectedTopicState(topic);
       setActiveSection(page);
       if (topic) {
-        const scrollable = document.querySelector('main.overflow-y-auto') || document.querySelector('main');
-        if (scrollable) scrollable.scrollTo({ top: 0, behavior: 'smooth' });
+        const el = document.getElementById('app-scroll-container') || document.querySelector('main');
+        if (el) el.scrollTo({ top: 0, behavior: 'smooth' });
         else window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     };
