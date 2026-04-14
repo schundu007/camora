@@ -233,12 +233,12 @@ export default function AnalyticsPage() {
 
   return (
     <div className="min-h-screen bg-gray-950 text-white" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
-      <div className="max-w-6xl mx-auto px-4 py-12">
+      <div className="max-w-6xl mx-auto px-4 py-6 sm:py-12">
         <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
         <p className="text-gray-400 mb-6">Analytics, user management & emails</p>
 
         {/* Tabs */}
-        <div className="flex gap-1 mb-8 bg-gray-900 rounded-lg p-1 w-fit">
+        <div className="flex flex-wrap gap-1 mb-8 bg-gray-900 rounded-lg p-1 w-fit">
           {(['analytics', 'users', 'emails'] as Tab[]).map(t => (
             <button
               key={t}

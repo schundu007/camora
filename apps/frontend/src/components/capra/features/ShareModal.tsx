@@ -55,7 +55,7 @@ export default function ShareModal({
     <div
       ref={backdropRef}
       onClick={handleBackdropClick}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4 py-4"
     >
       <div className="bg-[var(--bg-surface)] rounded-2xl shadow-xl w-full max-w-lg overflow-hidden">
         {/* Header */}

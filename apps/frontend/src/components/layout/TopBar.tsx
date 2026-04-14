@@ -56,7 +56,7 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
           <button
             type="button"
             onClick={onToggleSidebar}
-            className="md:hidden flex items-center justify-center w-8 h-8 rounded-md transition-colors"
+            className="md:hidden flex items-center justify-center w-10 h-10 rounded-md transition-colors"
             style={{ color: 'var(--text-secondary)' }}
             aria-label={sidebarOpen ? 'Close sidebar' : 'Open sidebar'}
           >
@@ -145,7 +145,7 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
           <button
             type="button"
             onClick={toggleTheme}
-            className="flex items-center justify-center w-7 h-7 rounded-md transition-colors"
+            className="flex items-center justify-center w-10 h-10 rounded-md transition-colors"
             style={{ color: 'var(--text-muted)' }}
             aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
             title={theme === 'dark' ? 'Light mode' : 'Dark mode'}
@@ -186,7 +186,7 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
           <button
             type="button"
             onClick={() => setCmdOpen(true)}
-            className="sm:hidden flex items-center justify-center w-7 h-7 rounded-md transition-colors"
+            className="sm:hidden flex items-center justify-center w-10 h-10 rounded-md transition-colors"
             style={{ color: 'var(--text-muted)' }}
             aria-label="Search"
           >
@@ -236,7 +236,7 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
           <button
             type="button"
             onClick={logout}
-            className="flex items-center justify-center w-7 h-7 rounded-md transition-colors"
+            className="flex items-center justify-center w-10 h-10 rounded-md transition-colors"
             style={{ color: 'var(--text-muted)' }}
             aria-label="Sign out"
             title="Sign out"

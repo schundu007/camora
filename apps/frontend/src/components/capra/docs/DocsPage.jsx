@@ -1212,7 +1212,7 @@ export default function DocsPage({ onBack }) {
                             })()}
                           </div>
                           {/* Topics in Category */}
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)] overflow-hidden">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)]">
                             {categoryTopics.map((topic) => (
                               <div
                                 key={topic.id}
@@ -1278,7 +1278,7 @@ export default function DocsPage({ onBack }) {
                             <span className="text-[10px] landing-mono text-[var(--text-muted)]">{categoryDesigns.length} systems</span>
                           </div>
                           {/* Designs in Category */}
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)] overflow-hidden">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)]">
                             {categoryDesigns.map((design) => {
                               const diffStyle = difficultyStyles[design.difficulty] || difficultyStyles['Medium'];
                               const designProblem = `Design ${design.title}. ${design.description || design.subtitle || ''}`;
@@ -1351,7 +1351,7 @@ export default function DocsPage({ onBack }) {
                             <h3 className="text-sm font-semibold text-[var(--text-primary)] landing-display">{category.name}</h3>
                             <span className="text-[10px] landing-mono text-[var(--text-muted)]">{categoryProblems.length} problems</span>
                           </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)] overflow-hidden">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)]">
                             {categoryProblems.map((problem) => {
                               const diffStyle = { Easy: 'text-emerald-600 bg-emerald-500/10 border border-emerald-500/20', Medium: 'text-[var(--text-muted)] bg-[var(--bg-elevated)] border border-[var(--border)]', Hard: 'text-red-600 bg-red-500/10 border border-red-500/20' }[problem.difficulty] || 'text-[var(--text-muted)] bg-[var(--bg-elevated)] border border-[var(--border)]';
                               return (
@@ -1413,7 +1413,7 @@ export default function DocsPage({ onBack }) {
                             <h3 className="text-sm font-semibold text-[var(--text-primary)] landing-display">{category.name}</h3>
                             <span className="text-[10px] landing-mono text-[var(--text-muted)]">{categoryTopics.length} patterns</span>
                           </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)] overflow-hidden">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)]">
                             {categoryTopics.map((topic) => (
                               <div
                                 key={topic.id}
@@ -1464,7 +1464,7 @@ export default function DocsPage({ onBack }) {
                             <h3 className="text-sm font-semibold text-[var(--text-primary)] landing-display">{category.name}</h3>
                             <span className="text-[10px] landing-mono text-[var(--text-muted)]">{categoryTopics.length} patterns</span>
                           </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)] overflow-hidden">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)]">
                             {categoryTopics.map((topic) => (
                               <div
                                 key={topic.id}
@@ -1515,7 +1515,7 @@ export default function DocsPage({ onBack }) {
                             <h3 className="text-sm font-semibold text-[var(--text-primary)] landing-display">{category.name}</h3>
                             <span className="text-[10px] landing-mono text-[var(--text-muted)]">{categoryTopics.length} topics</span>
                           </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)] overflow-hidden">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)]">
                             {categoryTopics.map((topic) => (
                               <div
                                 key={topic.id}
@@ -1566,7 +1566,7 @@ export default function DocsPage({ onBack }) {
                             <h3 className="text-sm font-semibold text-[var(--text-primary)] landing-display">{category.name}</h3>
                             <span className="text-[10px] landing-mono text-[var(--text-muted)]">{categoryTopics.length} topics</span>
                           </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)] overflow-hidden">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)]">
                             {categoryTopics.map((topic) => (
                               <div
                                 key={topic.id}
@@ -1605,7 +1605,7 @@ export default function DocsPage({ onBack }) {
                       <p className="text-sm text-[var(--text-muted)] landing-body mt-1">Thread-safe programming, synchronization, and classic problems</p>
                     </div>
                     <div className="rounded-2xl overflow-hidden border-0 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)] overflow-hidden">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)]">
                         {concurrencyTopics.map((topic) => (
                           <div
                             key={topic.id}
@@ -1685,7 +1685,7 @@ export default function DocsPage({ onBack }) {
                             <h3 className="text-sm font-semibold text-[var(--text-primary)] landing-display">{category.name}</h3>
                             <span className="text-[10px] landing-mono text-[var(--text-muted)]">{categoryTopics.length} topics</span>
                           </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)] overflow-hidden">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)]">
                             {categoryTopics.map((topic) => (
                               <div
                                 key={topic.id}
@@ -1739,7 +1739,7 @@ export default function DocsPage({ onBack }) {
                             <h3 className="text-sm font-semibold text-[var(--text-primary)] landing-display">{category.name}</h3>
                             <span className="text-[10px] landing-mono text-[var(--text-muted)]">{categoryProblems.length} problems</span>
                           </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)] overflow-hidden">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)]">
                             {categoryProblems.map((problem) => {
                               const diffStyle = { Easy: 'text-emerald-600 bg-emerald-500/10 border border-emerald-500/20', Medium: 'text-[var(--text-muted)] bg-[var(--bg-elevated)] border border-[var(--border)]', Hard: 'text-red-600 bg-red-500/10 border border-red-500/20' }[problem.difficulty] || 'text-[var(--text-muted)] bg-[var(--bg-elevated)] border border-[var(--border)]';
                               return (
@@ -1907,7 +1907,7 @@ export default function DocsPage({ onBack }) {
                             </div>
                           </div>
                           {/* Topics in Category */}
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)] overflow-hidden">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)]">
                             {categoryTopics.map((topic) => (
                               <div
                                 key={topic.id}
@@ -2046,7 +2046,7 @@ export default function DocsPage({ onBack }) {
                             <h3 className="text-sm font-semibold text-[var(--text-primary)] landing-display">{category.name}</h3>
                             <span className="text-[10px] landing-mono text-[var(--text-muted)]">{categoryTopics.length} patterns</span>
                           </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)] overflow-hidden">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)]">
                             {categoryTopics.map((topic) => (
                               <div
                                 key={topic.id}
@@ -2100,7 +2100,7 @@ export default function DocsPage({ onBack }) {
                             <h3 className="text-sm font-semibold text-[var(--text-primary)] landing-display">{category.name}</h3>
                             <span className="text-[10px] landing-mono text-[var(--text-muted)]">{categoryTopics.length} topics</span>
                           </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)] overflow-hidden">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)]">
                             {categoryTopics.map((topic) => (
                               <div
                                 key={topic.id}
@@ -2154,7 +2154,7 @@ export default function DocsPage({ onBack }) {
                             <h3 className="text-sm font-semibold text-[var(--text-primary)] landing-display">{category.name}</h3>
                             <span className="text-[10px] landing-mono text-[var(--text-muted)]">{categoryTopics.length} topics</span>
                           </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)] overflow-hidden">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)]">
                             {categoryTopics.map((topic) => (
                               <div
                                 key={topic.id}

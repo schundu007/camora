@@ -55,7 +55,7 @@ export default function OnboardingModal({ isOpen, onComplete, onOpenPricing }) {
             Ascend helps you prepare for technical interviews with AI-powered assistance
             for coding challenges, system design, and behavioral questions.
           </p>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             <div
               className="text-center p-4 rounded-lg transition-all hover:scale-105 bg-emerald-50 border border-emerald-200"
             >
@@ -179,7 +179,7 @@ export default function OnboardingModal({ isOpen, onComplete, onOpenPricing }) {
           <p className="text-[var(--text-muted)] landing-body">
             Each credit allows you to create one company interview preparation package.
           </p>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             <div
               className="p-4 rounded-lg text-center relative overflow-hidden bg-emerald-50 border border-emerald-200"
             >
