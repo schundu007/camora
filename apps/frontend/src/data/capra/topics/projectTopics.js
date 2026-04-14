@@ -3311,6 +3311,259 @@ router.patch('/:id/status', authenticate, requireRole('employer'), async (req, r
       { question: 'How should likes work?', answer: 'Optimistic update: increment count and toggle heart immediately on click. Send POST /api/posts/:id/like in background. On failure, rollback the UI state. Store likes in a junction table (user_id, post_id, created_at) with a unique constraint. Cache like counts in Redis (INCR/DECR) for fast reads.' },
       { question: 'What database schema is needed?', answer: 'Tables: users, posts (id, user_id, content, image_url, like_count, comment_count, created_at), likes (user_id, post_id — composite PK), comments (id, post_id, user_id, content, created_at), follows (follower_id, following_id — composite PK). Indexes: posts.user_id + created_at for user profile, follows.follower_id for feed generation.' },
     ],
+    implementationSteps: [
+      {
+        phase: 1,
+        title: 'Backend Core — Posts, Users, Follows',
+        description: 'Set up Express, PostgreSQL schema, auth, and the follow graph.',
+        tasks: [
+          'Initialize Node.js/Express project with pg, bcrypt, jsonwebtoken, multer, ioredis',
+          'Create PostgreSQL tables: users, posts, likes, comments, follows with indexes',
+          'Build JWT auth: POST /api/auth/register and /login',
+          'Build POST /api/users/:id/follow and DELETE /api/users/:id/follow',
+          'Build POST /api/posts with optional image upload (multer to S3 presigned URL)',
+        ],
+      },
+      {
+        phase: 2,
+        title: 'Feed Generation with Redis Fan-out',
+        description: 'Implement fan-out-on-write feed using Redis sorted sets.',
+        tasks: [
+          'On post creation, fetch all follower IDs from follows table (WHERE following_id = userId)',
+          'For each follower, ZADD feed:{followerId} {timestamp} {postId} in Redis',
+          'GET /api/feed: ZREVRANGE feed:{userId} 0 19 to get latest 20 post IDs, then batch-fetch posts from PostgreSQL',
+          'Handle cursor pagination: ZREVRANGEBYSCORE feed:{userId} {cursor} -inf LIMIT 0 20',
+          'Cap feed size: ZREMRANGEBYRANK feed:{userId} 0 -1001 to keep only the latest 1000 items per user',
+        ],
+      },
+      {
+        phase: 3,
+        title: 'Likes, Comments & Real-time Updates',
+        description: 'Build optimistic like/unlike, comment threads, and Socket.io notifications.',
+        tasks: [
+          'POST /api/posts/:id/like and DELETE /api/posts/:id/like with unique constraint enforcement',
+          'Cache like counts in Redis (INCR/DECR post:likes:{postId}) for fast reads',
+          'POST /api/posts/:id/comments: insert comment, increment post.comment_count',
+          'Add Socket.io for real-time like/comment notifications to the post author',
+          'Build GET /api/users/:id/posts for profile page with cursor pagination',
+        ],
+      },
+      {
+        phase: 4,
+        title: 'React Feed UI',
+        description: 'Build the infinite-scroll feed, post composer, and profile pages.',
+        tasks: [
+          'Build PostCard component with image, like button (optimistic toggle), comment count',
+          'Implement infinite scroll with IntersectionObserver on a sentinel div at feed bottom',
+          'Build post composer: textarea with image upload preview and character counter',
+          'Build UserProfile page showing posts grid and follower/following counts',
+          'Add a "New posts" banner that appears when new posts arrive via Socket.io',
+        ],
+      },
+    ],
+    fileStructure: `social-media-feed/
+├── server/
+│   ├── src/
+│   │   ├── routes/
+│   │   │   ├── auth.js          # POST /api/auth/register, /login
+│   │   │   ├── feed.js          # GET /api/feed (personalized), GET /api/explore
+│   │   │   ├── posts.js         # POST/GET/DELETE /api/posts, likes, comments
+│   │   │   └── users.js         # GET /api/users/:id, follow/unfollow
+│   │   ├── services/
+│   │   │   ├── feedService.js   # fan-out on write, feed Redis ops
+│   │   │   ├── likeService.js   # like/unlike with Redis counter cache
+│   │   │   └── upload.js        # S3 presigned URL generation
+│   │   ├── socket/
+│   │   │   └── notifications.js # real-time like/comment events
+│   │   ├── db/
+│   │   │   ├── pool.js
+│   │   │   └── migrate.js
+│   │   └── index.js
+│   ├── .env
+│   └── package.json
+├── client/
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── PostCard.jsx
+│   │   │   ├── PostComposer.jsx
+│   │   │   ├── LikeButton.jsx   # optimistic update logic
+│   │   │   └── FeedSentinel.jsx # IntersectionObserver target
+│   │   ├── pages/
+│   │   │   ├── FeedPage.jsx
+│   │   │   └── ProfilePage.jsx
+│   │   ├── hooks/
+│   │   │   └── useInfiniteScroll.js
+│   │   └── App.jsx
+│   └── vite.config.js
+└── docker-compose.yml`,
+    architectureLayers: [
+      { name: 'React Client', description: 'SPA with infinite-scroll feed, optimistic like/unlike, and real-time notifications via Socket.io. IntersectionObserver drives pagination without scroll event listeners.' },
+      { name: 'Express API Layer', description: 'Handles post CRUD, follow/unfollow, likes, comments, and feed retrieval. All write endpoints require JWT auth. Validates inputs before touching the DB.' },
+      { name: 'Feed Service (Redis)', description: 'Maintains per-user feed caches as Redis sorted sets (score = timestamp, member = postId). Fan-out-on-write: every post creation pushes to all followers feeds instantly.' },
+      { name: 'Like Counter Cache (Redis)', description: 'Stores like counts as Redis integers (post:likes:{postId}). INCR/DECR on like/unlike. Eliminates COUNT(*) queries on the likes table for every post render.' },
+      { name: 'Socket.io Notifications', description: 'Real-time notification layer: emits like-received and comment-received events to the post author. Users subscribe to their personal notification channel on connect.' },
+      { name: 'PostgreSQL', description: 'Source of truth for users, posts, likes, comments, and follows. Like counts denormalized onto posts table for fast reads. Indexed on (user_id, created_at) for profile queries and on follower_id for follow graph traversal.' },
+      { name: 'S3 / Storage', description: 'Post images stored in S3 (or MinIO locally). Images uploaded directly from the browser via presigned POST URL — the server generates the URL but never handles the image bytes.' },
+    ],
+    dataModel: {
+      description: 'Denormalized for read performance: like_count and comment_count stored on posts table to avoid COUNT() joins on every feed render.',
+      schema: `CREATE TABLE users (
+  id            SERIAL PRIMARY KEY,
+  email         TEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  username      TEXT UNIQUE NOT NULL,
+  bio           TEXT,
+  avatar_url    TEXT,
+  follower_count  INTEGER DEFAULT 0,
+  following_count INTEGER DEFAULT 0,
+  created_at    TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE posts (
+  id            SERIAL PRIMARY KEY,
+  user_id       INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  content       TEXT,
+  image_url     TEXT,
+  like_count    INTEGER DEFAULT 0,
+  comment_count INTEGER DEFAULT 0,
+  created_at    TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_posts_user_created ON posts(user_id, created_at DESC);
+CREATE INDEX idx_posts_created      ON posts(created_at DESC);
+
+CREATE TABLE likes (
+  user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  post_id    INTEGER NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  PRIMARY KEY (user_id, post_id)
+);
+
+CREATE TABLE comments (
+  id         SERIAL PRIMARY KEY,
+  post_id    INTEGER NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+  user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  content    TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_comments_post ON comments(post_id, created_at);
+
+CREATE TABLE follows (
+  follower_id  INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  following_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at   TIMESTAMPTZ DEFAULT NOW(),
+  PRIMARY KEY (follower_id, following_id)
+);
+
+CREATE INDEX idx_follows_following ON follows(following_id);`,
+    },
+    apiDesign: {
+      description: 'REST API for social actions plus real-time notifications via Socket.io. Feed endpoint returns paginated post IDs from Redis, hydrated with full post data from PostgreSQL.',
+      endpoints: [
+        { method: 'GET', path: '/api/feed?cursor=<timestamp>&limit=20', response: '{ posts: [...], nextCursor, hasMore }' },
+        { method: 'POST', path: '/api/posts', response: '{ id, content, imageUrl, likeCount, commentCount, createdAt }' },
+        { method: 'GET', path: '/api/posts/:id', response: 'Full post object with author info and liked status for current user' },
+        { method: 'POST', path: '/api/posts/:id/like', response: '{ liked: true, likeCount: N }' },
+        { method: 'DELETE', path: '/api/posts/:id/like', response: '{ liked: false, likeCount: N }' },
+        { method: 'POST', path: '/api/posts/:id/comments', response: '{ id, content, userId, createdAt }' },
+        { method: 'POST', path: '/api/users/:id/follow', response: '{ following: true }' },
+        { method: 'GET', path: '/api/users/:id/posts?cursor=', response: 'Paginated posts for a user profile page' },
+      ],
+    },
+    codeExamples: {
+      javascript: `// server/src/services/feedService.js — fan-out on write
+import { redis } from './redis.js';
+import { getPool } from '../db/pool.js';
+
+export async function fanOutPost(postId, authorId, timestamp) {
+  // Get all follower IDs
+  const { rows } = await getPool().query(
+    'SELECT follower_id FROM follows WHERE following_id = $1',
+    [authorId]
+  );
+
+  const FEED_MAX_SIZE = 1000;
+  const pipe = redis.pipeline();
+
+  for (const { follower_id } of rows) {
+    const feedKey = 'feed:' + follower_id;
+    // Add post to follower's feed sorted set (score = unix timestamp)
+    pipe.zadd(feedKey, timestamp, String(postId));
+    // Trim feed to max size (keep newest 1000)
+    pipe.zremrangebyrank(feedKey, 0, -(FEED_MAX_SIZE + 1));
+  }
+
+  await pipe.exec();
+}
+
+// server/src/routes/feed.js — feed retrieval
+router.get('/', authenticate, async (req, res) => {
+  const userId = req.user.id;
+  const cursor = req.query.cursor ? Number(req.query.cursor) : '+inf';
+  const limit = 20;
+
+  const feedKey = 'feed:' + userId;
+  // Get postIds from Redis sorted set, newest first
+  const postIds = await redis.zrevrangebyscore(
+    feedKey, cursor, '-inf', 'LIMIT', 0, limit + 1
+  );
+
+  const hasMore = postIds.length > limit;
+  const pageIds = hasMore ? postIds.slice(0, limit) : postIds;
+
+  if (!pageIds.length) return res.json({ posts: [], hasMore: false });
+
+  // Batch-fetch full post data from PostgreSQL
+  const { rows } = await getPool().query(
+    \`SELECT p.*, u.username, u.avatar_url,
+       EXISTS(SELECT 1 FROM likes WHERE user_id = $2 AND post_id = p.id) AS liked
+     FROM posts p JOIN users u ON p.user_id = u.id
+     WHERE p.id = ANY($1::int[])
+     ORDER BY p.created_at DESC\`,
+    [pageIds.map(Number), userId]
+  );
+
+  const nextCursor = hasMore ? rows[rows.length - 1].created_at.getTime() : null;
+  res.json({ posts: rows, nextCursor, hasMore });
+});`,
+    },
+    tradeoffDecisions: [
+      { choice: 'Feed generation strategy', picked: 'Fan-out-on-write (push model)', reason: 'Fan-out-on-read requires querying all followed users on every feed load — O(following_count) DB queries. At 500 follows, this is 500 queries per page load. Fan-out-on-write pre-builds the feed in Redis at post time. Feed reads are O(1) sorted set range queries, making the common case (read) fast at the cost of slower writes.' },
+      { choice: 'Like count storage', picked: 'Denormalized integer on posts table + Redis cache', reason: 'Running SELECT COUNT(*) FROM likes WHERE post_id = X for every post in a 20-item feed = 20 count queries per page load. Denormalized like_count on the posts row collapses this to the existing SELECT. Redis INCR/DECR keeps the cache consistent on like/unlike without a DB read.' },
+      { choice: 'Image upload strategy', picked: 'Client direct-to-S3 via presigned URL', reason: 'Routing image uploads through the Express server adds unnecessary load — the server becomes a bandwidth bottleneck for large images. Presigned URLs let the client upload directly to S3 at full network speed. The server only generates the URL (fast) and records the resulting S3 key in the DB.' },
+      { choice: 'Optimistic vs pessimistic like UI', picked: 'Optimistic update with rollback', reason: 'Waiting for the server to confirm a like before updating the UI adds 100-300ms of perceived latency on every heart tap. Optimistic update makes the interaction feel instant. Rollback on failure (which is rare on a like endpoint) restores correct state.' },
+    ],
+    deepDiveTopics: [
+      { topic: 'Redis sorted sets for feeds', detail: 'A sorted set stores members with a float score. ZADD feed:{userId} {timestamp} {postId} adds a post. ZREVRANGEBYSCORE feed:{userId} +inf {cursor} LIMIT 0 20 returns the 20 most recent posts before the cursor — this is cursor-based pagination on a sorted set. The time complexity is O(log N + M) where N is feed size and M is result count, regardless of how far into history you paginate.' },
+      { topic: 'Celebrity problem in fan-out', detail: 'A user with 10M followers posting triggers 10M Redis ZADD operations synchronously. This is the "celebrity problem." Solution: hybrid fan-out. For users with fewer than 10K followers, use fan-out-on-write (push). For celebrities, use fan-out-on-read (pull). When loading the feed, pull from the celebrity's post list directly and merge it with the pre-built Redis feed. Twitter's timeline service uses exactly this hybrid approach.' },
+      { topic: 'Optimistic UI and rollback mechanics', detail: 'Store the previous state before the optimistic update. On API failure, restore from the saved state. In React: const previousLiked = post.liked; setPost(p => ({...p, liked: !p.liked, likeCount: p.likeCount + (p.liked ? -1 : 1)})); const result = await api.toggleLike(post.id); if (!result.ok) setPost(p => ({...p, liked: previousLiked, likeCount: ...})). The key is saving the previous state before mutating it.' },
+      { topic: 'Infinite scroll with IntersectionObserver', detail: 'Create a sentinel div after the last post. const observer = new IntersectionObserver(([entry]) => { if (entry.isIntersecting && !loading) fetchNextPage(); }); observer.observe(sentinelRef.current). When the sentinel enters the viewport, fetch the next page using the last post's timestamp as cursor. Disconnect the observer while loading to prevent duplicate fetches. Re-observe after the new posts render.' },
+    ],
+    commonPitfalls: [
+      { pitfall: 'Forgetting to update denormalized like_count on the posts table', why: 'If you only insert into the likes table without incrementing posts.like_count, the feed renders with stale counts. The UI shows 0 likes even after 100 people liked a post.', solution: 'Use a PostgreSQL transaction: INSERT INTO likes; then UPDATE posts SET like_count = like_count + 1. Or use a trigger: CREATE TRIGGER update_like_count AFTER INSERT ON likes...' },
+      { pitfall: 'Race condition on like/unlike', why: 'Two rapid clicks can both fire the like request before the first response returns, causing a double-like or like-then-unlike sequence. The UNIQUE constraint will reject the second insert but the UI shows incorrect state.', solution: 'Debounce the like button client-side (200ms). Disable the button while the request is in flight. The UNIQUE(user_id, post_id) constraint is the safety net but client debouncing prevents confusing UX.' },
+      { pitfall: 'N+1 queries when loading the feed', why: 'Fetching 20 post IDs from Redis, then running 20 individual SELECT * FROM posts WHERE id = X queries is 20 round trips. Under load this is catastrophically slow.', solution: 'Batch-fetch all posts in one query: SELECT * FROM posts WHERE id = ANY($1::int[]) where $1 is the full array of IDs. PostgreSQL handles the IN clause efficiently with the primary key index.' },
+      { pitfall: 'Feed staleness after unfollow', why: 'When a user unfollows someone, existing posts from that person remain in the Redis feed sorted set. The unfollowed user's posts continue appearing in the feed.', solution: 'On unfollow, remove all of the unfollowed user's post IDs from the follower's Redis feed. Query all postIds WHERE user_id = unfollowedId in the feed range and ZREM them. This is O(feed_size) but unfollow is rare.' },
+    ],
+    edgeCases: [
+      { scenario: 'New user with no follows sees an empty feed', impact: 'Empty feed on first login is a poor first-run experience that causes user drop-off.', mitigation: 'Fall back to an "explore" feed (trending or recent public posts) when the personalized Redis feed is empty. Show a prompt to follow suggested users based on interests selected during onboarding.' },
+      { scenario: 'Post deleted after appearing in followers feeds', impact: 'Followers' Redis feeds still contain the deleted post ID. When the feed is loaded and post IDs hydrated from PostgreSQL, the deleted post returns null — crashing the client or showing an error card.', mitigation: 'Filter out null posts after the batch PostgreSQL fetch. The Redis entry will naturally expire when the feed rotates past its max size. For immediate removal, on delete, scan all follower feeds and ZREM the post ID (async job).' },
+      { scenario: 'High-follower user (celebrity) posting', impact: 'Fan-out-on-write for a 1M-follower user triggers 1M Redis ZADD operations synchronously, blocking the POST /api/posts response for seconds.', mitigation: 'Perform fan-out asynchronously: enqueue a fan-out job immediately after creating the post and return 201 to the client. A background worker executes the Redis writes in batches. Use the hybrid approach for users above a follower threshold.' },
+      { scenario: 'Feed cursor mismatch after timezone change or clock skew', impact: 'Cursor-based pagination using Unix timestamps breaks if the client and server clocks differ, causing posts to be skipped or repeated.', mitigation: 'Return the cursor as an opaque base64-encoded value that includes the post ID in addition to the timestamp. On the server, decode and use the post ID for tiebreaking: ORDER BY created_at DESC, id DESC WHERE (created_at, id) < (cursor_time, cursor_id).' },
+    ],
+    interviewFollowups: [
+      { question: 'How would you scale the feed to 10M users?', answer: 'Fan-out-on-write stops scaling when users have millions of followers. Move to a hybrid model: fan-out for normal users (<10K followers), fan-out-on-read for celebrities. Scale Redis to a cluster (feed data partitioned by user_id). Move fan-out to an async queue (Kafka or BullMQ). At 10M users with 100 posts/day average, the write rate is ~1000 fan-out operations/second — manageable with a modest Kafka cluster.' },
+      { question: 'How would you implement content moderation?', answer: 'On post creation, enqueue a moderation job. The worker sends image and text to a moderation API (AWS Rekognition for images, a custom ML classifier or OpenAI moderation endpoint for text). Flag posts that exceed confidence thresholds. Auto-hide flagged content pending human review. Store moderation results in a post_moderation_results table. Repeat scoring for posts that accumulate reports.' },
+      { question: 'How would you add hashtag and mention support?', answer: 'Parse post content for #hashtags and @mentions using regex. Upsert into hashtags table and create post_hashtags join rows. Upsert into mentions table, triggering a notification to the mentioned user. For hashtag feeds, maintain per-hashtag Redis sorted sets using the same fan-out pattern as user feeds.' },
+      { question: 'How would you implement story/24h post expiry?', answer: 'Add an expires_at column to posts (NOW() + INTERVAL 24 hours for stories). A cron job runs every 5 minutes: DELETE FROM posts WHERE expires_at < NOW() AND type = 'story'. On delete, fire the feed cleanup async job. Alternatively use PostgreSQL TTL triggers or a background worker watching a Redis ZSET of (expires_at, postId) pairs.' },
+    ],
+    extensionIdeas: [
+      { idea: 'Hashtag Feeds', difficulty: 'beginner', description: 'Parse #hashtags from post content on save. Store in a hashtags table and maintain per-hashtag Redis sorted sets. Build a GET /api/hashtags/:tag/posts endpoint. Add a trending hashtags panel showing the top 10 by post count in the last 24h.' },
+      { idea: 'Direct Messages', difficulty: 'intermediate', description: 'Add a direct_messages table (sender_id, recipient_id, content, read_at). Build a DM inbox UI showing conversation threads. Use Socket.io for real-time delivery. This reuses the follow graph to control who can DM whom (only mutual follows).' },
+      { idea: 'Post Bookmarks / Saves', difficulty: 'beginner', description: 'Add a bookmarks table (user_id, post_id, created_at). Add a save/unsave button on PostCard. Build a Saved Posts page showing bookmarked posts. Useful for content the user wants to revisit without liking publicly.' },
+      { idea: 'Recommendation Engine', difficulty: 'advanced', description: 'Build a "users you may know" feature using collaborative filtering: users who follow the same people as you are likely interesting. Compute this with a SQL query: SELECT following_id FROM follows WHERE follower_id IN (your follows) AND following_id NOT IN (your follows). Schedule daily pre-computation and cache results in Redis.' },
+    ],
   },
   {
     id: 'file-storage-service',
@@ -3335,6 +3588,264 @@ router.patch('/:id/status', authenticate, requireRole('employer'), async (req, r
       { question: 'How do I implement file sharing?', answer: 'Generate a share token (random UUID), store it with: file_id, created_by, expires_at, password_hash (optional), download_count, max_downloads. Share URL: /share/:token. On access: verify token exists, check expiry, check download count, verify password if set, then redirect to S3 presigned download URL (short TTL, e.g., 5 minutes).' },
       { question: 'How do I build the folder hierarchy?', answer: 'Adjacency list model: files table has a parent_folder_id column (NULL for root). Query children: WHERE parent_folder_id = :folderId. Build breadcrumb by recursively fetching parent folders. For operations like "folder size" or "delete folder," use recursive CTEs in PostgreSQL: WITH RECURSIVE folder_tree AS (...).' },
       { question: 'How do I enforce storage quotas?', answer: 'Track total storage per user: SUM(file_size) WHERE user_id = :userId. Check quota before upload: if current_usage + new_file_size > quota, reject with 413 Payload Too Large. Cache the usage in Redis for fast checks. Update cache atomically on upload (INCRBY) and delete (DECRBY).' },
+    ],
+    implementationSteps: [
+      {
+        phase: 1,
+        title: 'Backend Setup, Auth & PostgreSQL Schema',
+        description: 'Set up Express, PostgreSQL schema for files/folders, and JWT auth.',
+        tasks: [
+          'Initialize Node.js/Express project with pg, @aws-sdk/client-s3, ioredis, bcrypt, jsonwebtoken',
+          'Create PostgreSQL tables: users, files, folders, share_tokens with proper FK relationships',
+          'Build JWT auth: POST /api/auth/register and /login',
+          'Configure AWS S3 SDK (or MinIO locally via docker-compose): bucket, region, credentials',
+          'Build GET /api/files?folderId= listing files and folders at a given path level',
+        ],
+      },
+      {
+        phase: 2,
+        title: 'File Upload & Download via S3 Presigned URLs',
+        description: 'Implement presigned URL upload flow and secure download.',
+        tasks: [
+          'POST /api/files/upload-url: validate quota, generate S3 presigned PUT URL (15min TTL)',
+          'POST /api/files/confirm: client calls after S3 upload to record file metadata in PostgreSQL',
+          'GET /api/files/:id/download: generate presigned GET URL (5min TTL), redirect client',
+          'DELETE /api/files/:id: delete from S3 (DeleteObjectCommand), remove DB record, update quota',
+          'Add quota check middleware: fetch user storage_used from Redis or DB, compare to limit',
+        ],
+      },
+      {
+        phase: 3,
+        title: 'Folder Hierarchy & Share Links',
+        description: 'Build folder management with adjacency list model and expiring share tokens.',
+        tasks: [
+          'POST /api/folders: create folder with name and parent_folder_id (NULL for root)',
+          'Build breadcrumb: recursive CTE to fetch ancestor chain from any folder to root',
+          'DELETE /api/folders/:id: recursive CTE to find all descendant files, delete from S3 in batch, then delete DB records',
+          'POST /api/files/:id/share: generate UUID share token with expires_at and optional password',
+          'GET /share/:token: validate token, check expiry/password, redirect to presigned download URL',
+        ],
+      },
+      {
+        phase: 4,
+        title: 'React File Manager UI',
+        description: 'Build the file manager: browser, drag-and-drop upload, preview, and sharing.',
+        tasks: [
+          'Build FileBrowser: grid/list toggle showing folders and files with icons by mime type',
+          'Add drag-and-drop upload with progress bar (XHR to presigned URL, onprogress events)',
+          'Build breadcrumb navigation component that updates URL query params on folder change',
+          'Add context menu: rename, delete, share, move, download actions per file/folder',
+          'Build share modal: show share link with copy button, expiry date picker, optional password',
+        ],
+      },
+    ],
+    fileStructure: `file-storage-service/
+├── server/
+│   ├── src/
+│   │   ├── routes/
+│   │   │   ├── auth.js          # POST /api/auth/register, /login
+│   │   │   ├── files.js         # upload-url, confirm, download, delete, move
+│   │   │   ├── folders.js       # CRUD for folders, recursive delete
+│   │   │   ├── share.js         # POST /api/files/:id/share, GET /share/:token
+│   │   │   └── storage.js       # GET /api/storage/usage
+│   │   ├── services/
+│   │   │   ├── s3.js            # S3 SDK wrappers: presignedPut, presignedGet, deleteObject
+│   │   │   ├── quota.js         # check/update storage usage (Redis + DB)
+│   │   │   └── folderTree.js    # recursive CTE helpers for breadcrumb + recursive delete
+│   │   ├── middleware/
+│   │   │   ├── auth.js          # JWT verify
+│   │   │   └── quota.js         # quota check before upload
+│   │   ├── db/
+│   │   │   ├── pool.js
+│   │   │   └── migrate.js
+│   │   └── index.js
+│   ├── .env
+│   └── package.json
+├── client/
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── FileBrowser.jsx
+│   │   │   ├── FileCard.jsx
+│   │   │   ├── UploadZone.jsx   # drag-and-drop with progress
+│   │   │   ├── Breadcrumb.jsx
+│   │   │   └── ShareModal.jsx
+│   │   ├── pages/
+│   │   │   ├── DashboardPage.jsx
+│   │   │   └── SharedFilePage.jsx  # public share link view
+│   │   └── App.jsx
+│   └── vite.config.js
+├── docker-compose.yml           # postgres + redis + minio
+└── .env.example`,
+    architectureLayers: [
+      { name: 'React Client', description: 'File manager SPA with drag-and-drop upload zone, breadcrumb navigation, file/folder grid, and context menus. Uploads go directly to S3/MinIO — the server never handles file bytes.' },
+      { name: 'Express API Layer', description: 'Issues presigned S3 URLs, records file metadata, manages folder hierarchy, generates share tokens, and enforces quotas. Thin orchestration layer — no file streaming.' },
+      { name: 'S3 / MinIO Storage', description: 'Object storage for all file bytes. Presigned PUT URLs for client-direct uploads; presigned GET URLs for secure, time-limited downloads. MinIO used locally (S3-compatible API).' },
+      { name: 'PostgreSQL', description: 'Stores file metadata (name, size, mime type, S3 key), folder adjacency list, share tokens, and per-user storage totals. Recursive CTEs for folder tree operations.' },
+      { name: 'Redis Quota Cache', description: 'Caches current storage_used per user (INCRBY/DECRBY on upload/delete). Eliminates SUM(file_size) queries on every upload. Falls back to DB SUM on cache miss.' },
+      { name: 'Share Token Service', description: 'Generates UUID-based share tokens with optional expiry and bcrypt-hashed passwords. Public /share/:token endpoint validates token then issues a short-lived presigned download URL.' },
+    ],
+    dataModel: {
+      description: 'Files and folders in an adjacency list hierarchy. Share tokens stored separately for clean expiry management. Storage usage tracked both on the user row and cached in Redis.',
+      schema: `CREATE TABLE users (
+  id            SERIAL PRIMARY KEY,
+  email         TEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  storage_used  BIGINT DEFAULT 0,       -- bytes, denormalized
+  storage_limit BIGINT DEFAULT 5368709120,  -- 5 GB default
+  created_at    TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE folders (
+  id               SERIAL PRIMARY KEY,
+  name             TEXT NOT NULL,
+  user_id          INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  parent_folder_id INTEGER REFERENCES folders(id) ON DELETE CASCADE,
+  created_at       TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_folders_user_parent ON folders(user_id, parent_folder_id);
+
+CREATE TABLE files (
+  id               SERIAL PRIMARY KEY,
+  name             TEXT NOT NULL,
+  user_id          INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  folder_id        INTEGER REFERENCES folders(id) ON DELETE CASCADE,
+  s3_key           TEXT NOT NULL UNIQUE,
+  mime_type        TEXT,
+  size_bytes       BIGINT NOT NULL,
+  created_at       TIMESTAMPTZ DEFAULT NOW(),
+  updated_at       TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_files_user_folder ON files(user_id, folder_id);
+
+CREATE TABLE share_tokens (
+  id             SERIAL PRIMARY KEY,
+  token          UUID UNIQUE NOT NULL DEFAULT gen_random_uuid(),
+  file_id        INTEGER NOT NULL REFERENCES files(id) ON DELETE CASCADE,
+  created_by     INTEGER NOT NULL REFERENCES users(id),
+  password_hash  TEXT,
+  expires_at     TIMESTAMPTZ,
+  download_count INTEGER DEFAULT 0,
+  max_downloads  INTEGER,
+  created_at     TIMESTAMPTZ DEFAULT NOW()
+);`,
+    },
+    apiDesign: {
+      description: 'Two-phase upload flow: get presigned URL, upload to S3, then confirm. Separate public endpoint for share link access.',
+      endpoints: [
+        { method: 'POST', path: '/api/files/upload-url', response: '{ uploadUrl, s3Key, expiresIn: 900 } — presigned S3 PUT URL' },
+        { method: 'POST', path: '/api/files/confirm', response: '{ id, name, sizeBytes, mimeType, createdAt } — records file after S3 upload' },
+        { method: 'GET', path: '/api/files?folderId=<id>', response: '{ folders: [...], files: [...] } — contents of a folder (null = root)' },
+        { method: 'GET', path: '/api/files/:id/download', response: 'HTTP 302 to presigned S3 GET URL (5min TTL)' },
+        { method: 'DELETE', path: '/api/files/:id', response: '204 No Content — deletes from S3 and DB, updates quota' },
+        { method: 'POST', path: '/api/files/:id/share', response: '{ shareUrl, token, expiresAt }' },
+        { method: 'GET', path: '/share/:token', response: 'HTTP 302 to presigned download URL after token validation' },
+        { method: 'GET', path: '/api/folders/:id/breadcrumb', response: 'Array of { id, name } from root to the current folder' },
+      ],
+    },
+    codeExamples: {
+      javascript: `// server/src/routes/files.js — two-phase upload + download
+import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { nanoid } from 'nanoid';
+import { getPool } from '../db/pool.js';
+import { checkAndReserveQuota, releaseQuota } from '../services/quota.js';
+
+const s3 = new S3Client({ region: process.env.AWS_REGION });
+const BUCKET = process.env.S3_BUCKET;
+
+// Phase 1: generate presigned upload URL
+router.post('/upload-url', authenticate, async (req, res) => {
+  const { filename, mimeType, sizeBytes } = req.body;
+
+  // Check quota before issuing the URL
+  const allowed = await checkAndReserveQuota(req.user.id, sizeBytes);
+  if (!allowed) {
+    return res.status(413).json({ error: 'Storage quota exceeded' });
+  }
+
+  const s3Key = 'uploads/' + req.user.id + '/' + nanoid() + '/' + filename;
+
+  const command = new PutObjectCommand({
+    Bucket: BUCKET, Key: s3Key,
+    ContentType: mimeType, ContentLength: sizeBytes,
+  });
+  const uploadUrl = await getSignedUrl(s3, command, { expiresIn: 900 });
+
+  res.json({ uploadUrl, s3Key, expiresIn: 900 });
+});
+
+// Phase 2: confirm after client uploads to S3
+router.post('/confirm', authenticate, async (req, res) => {
+  const { s3Key, filename, sizeBytes, mimeType, folderId } = req.body;
+
+  const { rows } = await getPool().query(
+    \`INSERT INTO files (name, user_id, folder_id, s3_key, mime_type, size_bytes)
+     VALUES ($1, $2, $3, $4, $5, $6) RETURNING *\`,
+    [filename, req.user.id, folderId || null, s3Key, mimeType, sizeBytes]
+  );
+
+  // Update user storage_used
+  await getPool().query(
+    'UPDATE users SET storage_used = storage_used + $1 WHERE id = $2',
+    [sizeBytes, req.user.id]
+  );
+
+  res.status(201).json(rows[0]);
+});
+
+// Download: generate short-lived presigned GET URL
+router.get('/:id/download', authenticate, async (req, res) => {
+  const { rows } = await getPool().query(
+    'SELECT s3_key, name FROM files WHERE id = $1 AND user_id = $2',
+    [req.params.id, req.user.id]
+  );
+  if (!rows.length) return res.status(404).json({ error: 'File not found' });
+
+  const command = new GetObjectCommand({
+    Bucket: BUCKET, Key: rows[0].s3_key,
+    ResponseContentDisposition: 'attachment; filename="' + rows[0].name + '"',
+  });
+  const downloadUrl = await getSignedUrl(s3, command, { expiresIn: 300 });
+  res.redirect(302, downloadUrl);
+});`,
+    },
+    tradeoffDecisions: [
+      { choice: 'Upload routing: client-direct vs server-proxied', picked: 'Client direct-to-S3 via presigned URL', reason: 'Routing uploads through Express means the server handles every byte of every file upload — a 1GB upload ties up a server worker for minutes. Presigned URLs let the client upload at full network speed directly to S3. The server only spends <10ms generating the URL.' },
+      { choice: 'Folder hierarchy model', picked: 'Adjacency list (parent_folder_id)', reason: 'Nested sets and closure tables are more complex to maintain. Adjacency list is simple: one FK column. PostgreSQL recursive CTEs (WITH RECURSIVE) handle the tree traversal for breadcrumbs and recursive deletes efficiently without changing the schema.' },
+      { choice: 'Share link security', picked: 'UUID token + optional bcrypt password', reason: 'UUID (128-bit) tokens are unguessable — no auth required for the holder. Optional bcrypt password adds a second factor for sensitive files. Short-lived presigned download URLs (5min) mean the share token never exposes S3 credentials directly.' },
+      { choice: 'Quota enforcement timing', picked: 'Check before generating upload URL, update after confirm', reason: 'Checking quota after the upload means the user has already transferred data that will be rejected. Checking before the presigned URL is generated prevents wasted bandwidth. The quota reservation is optimistic — if the client never calls /confirm, a cleanup job reconciles reserved-but-unused space.' },
+    ],
+    deepDiveTopics: [
+      { topic: 'S3 presigned URL security model', detail: 'A presigned PUT URL encodes the bucket, key, content-type, and expiry in a signed query string using HMAC-SHA256 over your AWS credentials. Anyone with the URL can upload to that exact key before expiry — no auth required. The signature prevents uploading to a different key or after the TTL. Set a short TTL (15min) so leaked URLs cannot be exploited. Add a ContentLength condition to prevent users uploading more than the allowed file size.' },
+      { topic: 'Recursive CTEs for folder trees', detail: 'PostgreSQL WITH RECURSIVE syntax: WITH RECURSIVE tree AS (SELECT id, name, parent_folder_id FROM folders WHERE id = $rootId UNION ALL SELECT f.id, f.name, f.parent_folder_id FROM folders f JOIN tree t ON f.parent_folder_id = t.id) SELECT * FROM tree. This traverses the entire subtree in one query. For breadcrumbs, traverse upward instead: join on parent_folder_id = t.id.' },
+      { topic: 'Large file chunked upload with resumability', detail: 'For files over 100MB, use S3 multipart upload. The client initiates (CreateMultipartUpload), uploads 5MB+ chunks in parallel (UploadPart), and completes (CompleteMultipartUpload). If the upload is interrupted, the client can resume by listing existing parts (ListParts) and only re-uploading missing chunks. Store the S3 UploadId in the DB during upload to support resume.' },
+      { topic: 'Storage quota consistency', detail: 'If you update storage_used in the DB after every upload/delete, concurrent uploads can create race conditions: two simultaneous uploads both read storage_used = 4.9GB (limit 5GB), both pass the check, both add 200MB, resulting in 5.3GB used. Solution: use PostgreSQL UPDATE users SET storage_used = storage_used + $1 WHERE id = $2 AND storage_used + $1 <= storage_limit RETURNING id. If no row is returned, the quota was exceeded.' },
+    ],
+    commonPitfalls: [
+      { pitfall: 'Storing files in PostgreSQL as bytea', why: 'Storing file contents in the DB bloats the database, causes massive memory pressure on queries, and makes backups enormous. PostgreSQL is optimized for structured data, not binary blobs.', solution: 'Always store files in S3 or equivalent object storage. Store only the S3 key, metadata, and size in PostgreSQL. The DB stays fast; S3 handles petabytes of binary data cheaply.' },
+      { pitfall: 'Generating presigned download URLs that never expire', why: 'A presigned URL with a long TTL (1 week, 1 year) that gets shared or leaked remains valid indefinitely. Anyone with the URL can download the file regardless of whether the share was revoked.', solution: 'Use short-lived presigned download URLs (5min TTL). On each GET /files/:id/download request, generate a fresh presigned URL. The download URL expires quickly; access is controlled by the API endpoint auth, not the URL itself.' },
+      { pitfall: 'Not deleting S3 objects on file deletion', why: 'Deleting the DB record without deleting the S3 object leaves orphaned files accumulating in S3. Over time, S3 costs grow and confidential files remain accessible to anyone with the key.', solution: 'Always issue DeleteObjectCommand before or after deleting the DB record. Wrap both in a try/catch — if S3 delete fails, retry async rather than leaving a dangling DB record.' },
+      { pitfall: 'Race condition on quota enforcement', why: 'Two concurrent uploads both read storage_used < limit and both succeed, pushing the user over quota.', solution: 'Use a conditional PostgreSQL UPDATE with a RETURNING clause: UPDATE users SET storage_used = storage_used + $1 WHERE id = $2 AND storage_used + $1 <= storage_limit RETURNING id. If the UPDATE returns 0 rows, reject the upload.' },
+    ],
+    edgeCases: [
+      { scenario: 'Client uploads to presigned URL but never calls /confirm', impact: 'S3 has the file bytes; DB has no record. Quota was not incremented, so the user effectively has free hidden storage. S3 costs increase silently.', mitigation: 'Store a pending_uploads record with the s3_key on URL generation. A cleanup cron job runs every hour, finds pending uploads older than 30min with no confirmed file record, and deletes the orphaned S3 objects.' },
+      { scenario: 'User deletes their account with files in storage', impact: 'On DELETE CASCADE, DB records are removed but S3 objects remain, accumulating orphaned storage costs indefinitely.', mitigation: 'Before account deletion (or via a DB trigger), query all files for the user and issue S3 DeleteObjects in batches. S3 allows batch deletes of up to 1000 keys per request. Soft-delete the account first; run cleanup async; hard-delete after confirmation.' },
+      { scenario: 'File name collisions in the same folder', impact: 'Two files named "resume.pdf" in the same folder. The second upload overwrites the first S3 object if the key is derived from the filename.', mitigation: 'Always generate unique S3 keys using a UUID or nanoid prefix: uploads/{userId}/{uuid}/{filename}. Display the original filename from the DB to the user; the S3 key is an internal detail they never see.' },
+      { scenario: 'Share link accessed after file is deleted', impact: 'The share token record references a file that no longer exists. The presigned URL generation fails or returns a 404 from S3.', mitigation: 'ON DELETE CASCADE from files to share_tokens. When fetching a share token, JOIN with files — if the file is gone, the share token row is already deleted, and the server returns 404 Not Found.' },
+    ],
+    interviewFollowups: [
+      { question: 'How would you implement chunked resumable uploads for large files?', answer: 'Use S3 multipart upload. Step 1: client calls POST /api/files/multipart-start, server calls CreateMultipartUpload and returns an UploadId. Step 2: client splits the file into 5MB chunks and uploads each via presigned UploadPart URLs. Step 3: client calls POST /api/files/multipart-complete with the UploadId and ETag list. On resume, the client calls ListParts to find already-uploaded chunks and skips them.' },
+      { question: 'How would you support real-time collaborative editing like Google Docs?', answer: 'File storage is the wrong layer for real-time collaboration. Separate the concerns: use the file storage service for versioned file blobs (save points). Use a separate CRDT-based collaboration service (e.g., Yjs) for real-time editing state. On save, serialize the Yjs document to a blob and upload a new version to S3. Show version history from the files table.' },
+      { question: 'How would you implement file versioning?', answer: 'Add a version_number column to files and a parent_file_id self-reference. On update, insert a new file row (new S3 key, incremented version) rather than overwriting. The latest version is MAX(version_number) WHERE id = :fileId OR parent_file_id = :fileId. Show version history in a side panel. Enable S3 versioning as well for an additional safety net.' },
+      { question: 'How would you scan uploaded files for malware?', answer: 'After the client calls /confirm, enqueue a scan job. The worker downloads the file from S3 (using a presigned GET URL with short TTL), runs it through ClamAV (open source) or VirusTotal API. If malware is detected, set file.status = "quarantined", delete from S3, and notify the user. This is why the /confirm step exists — it gives you a hook for post-upload processing.' },
+    ],
+    extensionIdeas: [
+      { idea: 'Inline File Preview', difficulty: 'beginner', description: 'Generate thumbnail previews for images using sharp (server-side resize and WebP conversion). Store thumbnails as separate S3 objects. For PDFs, use pdf2pic to generate a cover page thumbnail. Show thumbnails in the file grid for instant visual scanning.' },
+      { idea: 'File Version History', difficulty: 'intermediate', description: 'On file update, insert a new row with an incremented version_number and new S3 key instead of replacing. Show a version history drawer with timestamps and sizes. Allow restoring any previous version by making it the "current" pointer. Retain versions for 90 days then delete old S3 objects.' },
+      { idea: 'Full-Text Search Inside Documents', difficulty: 'advanced', description: 'After upload, extract text from PDFs (pdfminer), DOCX (mammoth), and TXT files. Index extracted text in Elasticsearch or PostgreSQL tsvector. Build a search bar that finds files by content, not just filename. Return matching snippets with the search terms highlighted.' },
+      { idea: 'Team Workspaces with Permissions', difficulty: 'advanced', description: 'Add a workspaces table with members and roles (owner, editor, viewer). Files and folders belong to a workspace. Implement folder-level permission inheritance: a viewer cannot delete files in shared folders. Build a workspace settings page to invite members by email.' },
     ],
   },
 
