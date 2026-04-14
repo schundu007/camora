@@ -71,7 +71,7 @@ export default function InterviewSetupModal({ isOpen, onClose, onSetup }: Interv
       />
 
       {/* Modal */}
-      <div className="relative bg-gradient-to-br from-white/80 to-indigo-50/30 rounded-2xl shadow-xl border border-indigo-200/30 w-full max-w-md p-6">
+      <div className="relative bg-white rounded-2xl shadow-xl border-0 w-full max-w-md p-6">
         {/* Close button */}
         <button
           onClick={onClose}

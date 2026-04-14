@@ -229,7 +229,7 @@ export default function PrepPlanPage() {
           </div>
 
           {/* Progress summary */}
-          <div className="mt-6 bg-gradient-to-br from-white/80 to-indigo-50/30 border border-indigo-200/30 rounded-2xl p-5">
+          <div className="mt-6 bg-white border-0 rounded-2xl p-5 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
             <div className="flex items-center gap-6 flex-wrap">
               {/* Days remaining */}
               <div className="text-center">
@@ -262,7 +262,7 @@ export default function PrepPlanPage() {
               const allDone = dayCompleted === dayTotal && dayTotal > 0;
 
               return (
-                <div key={day.day} className="bg-gradient-to-br from-white/80 to-indigo-50/30 border border-indigo-200/30 rounded-2xl overflow-hidden">
+                <div key={day.day} className="bg-white border-0 rounded-2xl overflow-hidden shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
                   {/* Day header */}
                   <div className={`px-5 py-3 border-b border-[#e3e8ee] flex items-center justify-between ${allDone ? 'bg-emerald-50/50' : 'bg-gray-50/50'}`}>
                     <div className="flex items-center gap-2">
