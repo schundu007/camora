@@ -414,6 +414,7 @@ export default function TopicDetail({
 
   // Coding code-example copy state
   const [copiedCodeIdx, setCopiedCodeIdx] = useState(null);
+  const [codeLanguage, setCodeLanguage] = useState('python');
 
   // Reset SD accordion state when topic changes
   useEffect(() => {
@@ -1087,6 +1088,28 @@ export default function TopicDetail({
             </div>
           )}
 
+          {/* 1b. Visual Explanation — algorithm diagrams */}
+          {topicDetails.visualizations && topicDetails.visualizations.length > 0 && (
+            <div className="rounded-xl overflow-hidden border border-[#e3e8ee] bg-white">
+              <div className="px-4 py-2.5 border-b border-[#e3e8ee] flex items-center gap-2">
+                <Icon name="image" size={14} className="text-indigo-500" />
+                <h3 className="text-sm font-bold text-gray-900 landing-display">Visual Explanation</h3>
+                <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-indigo-200 text-indigo-500 bg-indigo-50">{topicDetails.visualizations.length}</span>
+              </div>
+              <div className={`p-4 grid gap-4 ${topicDetails.visualizations.length > 1 ? 'md:grid-cols-2' : ''}`}>
+                {topicDetails.visualizations.map((viz, vi) => (
+                  <div key={vi} className="rounded-lg border border-[#e3e8ee] overflow-hidden">
+                    <div className="px-3 py-2 border-b border-gray-100 bg-gray-50/50">
+                      <h4 className="text-xs font-semibold text-gray-700 landing-display">{viz.title}</h4>
+                      {viz.description && <p className="text-[11px] text-gray-500 mt-0.5 landing-body">{viz.description}</p>}
+                    </div>
+                    <div className="p-3 flex justify-center items-center bg-white" dangerouslySetInnerHTML={{ __html: viz.svg }} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* 2. Time + Space Complexity — side by side cards */}
           {(topicDetails.timeComplexity || topicDetails.spaceComplexity) && (
             <div className="grid grid-cols-2 gap-3">
@@ -1403,42 +1426,72 @@ export default function TopicDetail({
             </div>
           )}
 
-          {/* Multiple Code Examples */}
-          {topicDetails.codeExamples && topicDetails.codeExamples.length > 0 && (
-            <div className="space-y-3 scroll-mt-24">
-              {topicDetails.codeExamples.map((example, i) => (
-                <div key={i} className="rounded-xl overflow-hidden border border-[#e3e8ee] shadow-sm">
-                  <div className="px-4 py-2.5 bg-[#1e1e2e] flex items-center gap-2">
-                    <Icon name="code" size={14} className="text-emerald-400" />
-                    <h3 className="text-sm font-bold text-[#e2e8f0] landing-display truncate">{example.title}</h3>
-                    <span className="text-[10px] landing-mono text-blue-300 bg-blue-900/50 px-2 py-0.5 rounded-full border border-blue-700/50 ml-1 flex-shrink-0">Python</span>
-                    <button
-                      className="ml-auto text-[10px] landing-mono text-gray-400 hover:text-white transition-colors flex items-center gap-1 flex-shrink-0"
-                      onClick={() => { navigator.clipboard.writeText(example.code); setCopiedCodeIdx(i); setTimeout(() => setCopiedCodeIdx(null), 2000); }}
-                    >
-                      <Icon name={copiedCodeIdx === i ? 'check' : 'copy'} size={12} className={copiedCodeIdx === i ? 'text-emerald-400' : ''} />
-                      {copiedCodeIdx === i ? 'Copied' : 'Copy'}
-                    </button>
-                  </div>
-                  {example.description && (
-                    <div className="px-4 py-2 bg-[#252536] border-t border-[#2e2e44]">
-                      <p className="text-xs text-gray-400 landing-body">{example.description}</p>
-                    </div>
-                  )}
-                  <div className="bg-[#1e1e2e] overflow-x-auto">
-                    <pre className="text-sm landing-mono leading-6 p-4">
-                      {example.code.split('\n').map((line, idx) => (
-                        <div key={idx} className="flex">
-                          <span className="w-8 text-right pr-4 text-gray-600 select-none text-xs flex-shrink-0">{idx + 1}</span>
-                          <span className="text-[#e2e8f0]" dangerouslySetInnerHTML={{ __html: highlightCodeLine(line) }} />
+          {/* Multiple Code Examples with Language Tabs */}
+          {topicDetails.codeExamples && topicDetails.codeExamples.length > 0 && (() => {
+            // Group examples by title for language tabs
+            const grouped = {};
+            topicDetails.codeExamples.forEach((ex, i) => {
+              const key = ex.title || `Example ${i + 1}`;
+              if (!grouped[key]) grouped[key] = [];
+              grouped[key].push({ ...ex, _idx: i });
+            });
+            return (
+              <div className="space-y-3 scroll-mt-24">
+                {Object.entries(grouped).map(([title, examples], gi) => {
+                  const hasMultipleLangs = examples.length > 1 && examples.some(e => e.language);
+                  const activeEx = hasMultipleLangs ? (examples.find(e => e.language === (codeLanguage || 'python')) || examples[0]) : examples[0];
+                  return (
+                    <div key={gi} className="rounded-xl overflow-hidden border border-[#e3e8ee] shadow-sm">
+                      <div className="px-4 py-2.5 bg-[#1e1e2e] flex items-center gap-2">
+                        <Icon name="code" size={14} className="text-emerald-400" />
+                        <h3 className="text-sm font-bold text-[#e2e8f0] landing-display truncate">{title}</h3>
+                        {hasMultipleLangs ? (
+                          <div className="flex gap-1 ml-2 flex-shrink-0">
+                            {examples.map((ex) => {
+                              const lang = ex.language || 'python';
+                              const isActive = lang === (codeLanguage || 'python');
+                              const langColors = { python: 'blue', javascript: 'yellow', java: 'orange', cpp: 'purple', typescript: 'cyan' };
+                              const c = langColors[lang] || 'gray';
+                              return (
+                                <button key={lang} onClick={() => setCodeLanguage(lang)}
+                                  className={`text-[10px] landing-mono px-2 py-0.5 rounded-full border transition-all cursor-pointer ${isActive ? `text-${c}-300 bg-${c}-900/50 border-${c}-700/50` : 'text-gray-500 bg-transparent border-gray-700 hover:text-gray-300'}`}
+                                  style={isActive ? { color: c === 'yellow' ? '#fde68a' : undefined, background: c === 'yellow' ? 'rgba(161,98,7,0.3)' : undefined } : {}}
+                                >{lang.charAt(0).toUpperCase() + lang.slice(1)}</button>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          <span className="text-[10px] landing-mono text-blue-300 bg-blue-900/50 px-2 py-0.5 rounded-full border border-blue-700/50 ml-1 flex-shrink-0">{activeEx.language || 'Python'}</span>
+                        )}
+                        <button
+                          className="ml-auto text-[10px] landing-mono text-gray-400 hover:text-white transition-colors flex items-center gap-1 flex-shrink-0"
+                          onClick={() => { navigator.clipboard.writeText(activeEx.code); setCopiedCodeIdx(activeEx._idx); setTimeout(() => setCopiedCodeIdx(null), 2000); }}
+                        >
+                          <Icon name={copiedCodeIdx === activeEx._idx ? 'check' : 'copy'} size={12} className={copiedCodeIdx === activeEx._idx ? 'text-emerald-400' : ''} />
+                          {copiedCodeIdx === activeEx._idx ? 'Copied' : 'Copy'}
+                        </button>
+                      </div>
+                      {activeEx.description && (
+                        <div className="px-4 py-2 bg-[#252536] border-t border-[#2e2e44]">
+                          <p className="text-xs text-gray-400 landing-body">{activeEx.description}</p>
                         </div>
-                      ))}
-                    </pre>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+                      )}
+                      <div className="bg-[#1e1e2e] overflow-x-auto">
+                        <pre className="text-sm landing-mono leading-6 p-4">
+                          {activeEx.code.split('\n').map((line, idx) => (
+                            <div key={idx} className="flex">
+                              <span className="w-8 text-right pr-4 text-gray-600 select-none text-xs flex-shrink-0">{idx + 1}</span>
+                              <span className="text-[#e2e8f0]" dangerouslySetInnerHTML={{ __html: highlightCodeLine(line) }} />
+                            </div>
+                          ))}
+                        </pre>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
         </div>
       )}
 

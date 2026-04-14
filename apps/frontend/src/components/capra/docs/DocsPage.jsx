@@ -1082,12 +1082,22 @@ export default function DocsPage({ onBack }) {
                       const isFirstInCategory = idx === 0 || codingCategoryMap[filteredTopics[idx-1]?.id] !== catId;
                       return (
                         <div key={topic.id}>
-                          {isFirstInCategory && category && (
-                            <div className={`col-span-full px-4 py-2 flex items-center gap-2 landing-mono text-[10px] text-gray-400 uppercase tracking-widest bg-gray-50/80 ${idx > 0 ? 'border-t border-[#e3e8ee]' : ''} border-b border-gray-100`}>
-                              <Icon name={category.icon} size={11} style={{ color: category.color }} />
-                              {category.name} · {filteredTopics.filter(t => codingCategoryMap[t.id] === catId).length}
-                            </div>
-                          )}
+                          {isFirstInCategory && category && (() => {
+                            const catTopics = filteredTopics.filter(t => codingCategoryMap[t.id] === catId);
+                            const completedCount = catTopics.filter(t => completedTopics[t.id]).length;
+                            const progressPct = catTopics.length > 0 ? Math.round((completedCount / catTopics.length) * 100) : 0;
+                            return (
+                              <div className={`col-span-full px-4 py-2.5 flex items-center gap-3 bg-gray-50/80 ${idx > 0 ? 'border-t border-[#e3e8ee]' : ''} border-b border-gray-100`}>
+                                <Icon name={category.icon} size={12} style={{ color: category.color }} />
+                                <span className="landing-mono text-[10px] text-gray-500 uppercase tracking-widest font-semibold">{category.name}</span>
+                                <span className="landing-mono text-[10px] text-gray-400">{completedCount}/{catTopics.length}</span>
+                                <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden max-w-[120px]">
+                                  <div className="h-full bg-emerald-500 rounded-full transition-all duration-500" style={{ width: `${progressPct}%` }} />
+                                </div>
+                                {progressPct === 100 && <span className="text-[10px] text-emerald-600 font-semibold">Done</span>}
+                              </div>
+                            );
+                          })()}
                           <div
                             onClick={() => setSelectedTopic(topic.id)}
                             className="px-4 py-2.5 flex items-center justify-between cursor-pointer hover:border-[#d0d5dd] transition-all group border-b border-r border-gray-100"
@@ -1099,9 +1109,23 @@ export default function DocsPage({ onBack }) {
                               <span className={`text-sm landing-body font-medium group-hover:text-emerald-600 transition-colors ${completedTopics[topic.id] ? 'text-gray-400 line-through' : 'text-gray-900'}`}>{topic.title}</span>
                             </div>
                             <div className="flex items-center gap-1.5 flex-shrink-0">
-                              <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[#e3e8ee] text-gray-400">
-                                {topic.commonProblems?.length || topic.keyQuestions?.length || 0}Q
-                              </span>
+                              {topic.commonProblems && (() => {
+                                const easy = topic.commonProblems.filter(p => p.difficulty === 'Easy').length;
+                                const med = topic.commonProblems.filter(p => p.difficulty === 'Medium').length;
+                                const hard = topic.commonProblems.filter(p => p.difficulty === 'Hard').length;
+                                return (
+                                  <div className="flex items-center gap-1">
+                                    {easy > 0 && <span className="text-[9px] landing-mono px-1 py-0.5 rounded bg-emerald-50 text-emerald-600 border border-emerald-200">{easy}E</span>}
+                                    {med > 0 && <span className="text-[9px] landing-mono px-1 py-0.5 rounded bg-amber-50 text-amber-600 border border-amber-200">{med}M</span>}
+                                    {hard > 0 && <span className="text-[9px] landing-mono px-1 py-0.5 rounded bg-red-50 text-red-600 border border-red-200">{hard}H</span>}
+                                  </div>
+                                );
+                              })()}
+                              {!topic.commonProblems && (
+                                <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[#e3e8ee] text-gray-400">
+                                  {topic.keyQuestions?.length || 0}Q
+                                </span>
+                              )}
                               <Icon name="chevronRight" size={12} className="text-gray-300 group-hover:text-emerald-500 group-hover:translate-x-0.5 transition-all" />
                             </div>
                           </div>
@@ -1210,13 +1234,24 @@ export default function DocsPage({ onBack }) {
                       if (categoryTopics.length === 0) return null;
                       return (
                         <div key={category.id} className="rounded-lg overflow-hidden border border-[#e3e8ee] shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-                          {/* Category Header */}
+                          {/* Category Header with Progress */}
                           <div className="px-4 py-2.5 flex items-center gap-2.5 bg-gray-50/80 border-b border-gray-100">
                             <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: `${category.color}12` }}>
                               <Icon name={category.icon} size={14} style={{ color: category.color }} />
                             </div>
                             <h3 className="text-sm font-semibold text-gray-900 landing-display">{category.name}</h3>
-                            <span className="text-[10px] landing-mono text-gray-400">{categoryTopics.length} topics</span>
+                            {(() => {
+                              const done = categoryTopics.filter(t => completedTopics[t.id]).length;
+                              const pct = Math.round((done / categoryTopics.length) * 100);
+                              return (
+                                <>
+                                  <span className="text-[10px] landing-mono text-gray-400">{done}/{categoryTopics.length}</span>
+                                  <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden max-w-[100px] flex-shrink-0">
+                                    <div className="h-full bg-emerald-500 rounded-full transition-all duration-500" style={{ width: `${pct}%` }} />
+                                  </div>
+                                </>
+                              );
+                            })()}
                           </div>
                           {/* Topics in Category */}
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-white overflow-hidden">
