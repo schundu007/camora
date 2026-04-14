@@ -14,6 +14,7 @@ import {
   PatternCardGrid, StaticDiagramGrid, FlowchartCard, ChartCard
 } from './TopicVisuals.jsx';
 import TopicComments from './TopicComments';
+import RoadmapFlowDiagram from './RoadmapFlowDiagram';
 
 /**
  * Simple regex-based syntax highlighter for Python code.
@@ -858,6 +859,15 @@ export default function TopicDetail({
                 </div>
               </div>
             </div>
+          )}
+
+          {/* Flow Diagram — visual overview of all phases */}
+          {topicDetails.phases && topicDetails.phases.length > 0 && (
+            <RoadmapFlowDiagram
+              title={topicDetails.title}
+              phases={topicDetails.phases}
+              color={topicDetails.color}
+            />
           )}
 
           {/* Visual Roadmap — dark spine with branching topics */}
