@@ -80,9 +80,10 @@ export default function ExcalidrawWhiteboard({
           elements: initialElements ? [...initialElements] : [],
           appState: {
             theme: 'light',
-            viewBackgroundColor: '#fafbfc',
+            viewBackgroundColor: '#ffffff',
             currentItemFontFamily: 1,
-            gridSize: 20,
+            gridSize: null,
+            openSidebar: null,
           },
         }}
         onChange={handleChange}
@@ -91,6 +92,9 @@ export default function ExcalidrawWhiteboard({
             export: false,
             saveAsImage: true,
             loadScene: false,
+          },
+          tools: {
+            image: false,
           },
         }}
         renderTopRightUI={() =>
@@ -154,6 +158,9 @@ export default function ExcalidrawWhiteboard({
         @keyframes spin {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
+        }
+        .excalidraw .layer-ui__library {
+          display: none !important;
         }
       `}</style>
     </div>
