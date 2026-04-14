@@ -1,5 +1,7 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
 import { Link } from 'react-router-dom';
+import { Allotment } from 'allotment';
+import 'allotment/dist/style.css';
 import { Icon } from '../../components/shared/Icons.jsx';
 import SiteNav from '../../components/shared/SiteNav';
 import SiteFooter from '../../components/shared/SiteFooter';
@@ -7,6 +9,9 @@ import { getAuthHeaders } from '../../utils/authHeaders.js';
 import SharedDiagram from '../../components/shared/diagrams/SharedDiagram';
 import GamificationWidget from '../../components/capra/features/GamificationWidget';
 import { InterviewTimer } from '../../components/shared/timer/InterviewTimer';
+import { useWhiteboardState } from '../../hooks/useWhiteboardState';
+
+const ExcalidrawWhiteboard = lazy(() => import('../../components/shared/diagrams/ExcalidrawWhiteboard'));
 
 
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
@@ -334,6 +339,9 @@ export default function PracticePage() {
   const textareaRef = useRef(null);
   const challengeStartRef = useRef(0);
   const endChallengeRef = useRef(null);
+
+  // Whiteboard state for system design practice
+  const whiteboardState = useWhiteboardState(questions.length || 10);
 
   // Timer countdown is now handled by the shared InterviewTimer component.
   // The onExpire callback on InterviewTimer calls endChallengeRef.current().
@@ -893,6 +901,27 @@ export default function PracticePage() {
                   }
                 };
 
+                const handleLoadAIDiagram = async () => {
+                  const q = questions[currentIdx];
+                  try {
+                    const res = await fetch(`${API_URL}/api/diagram/generate`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+                      body: JSON.stringify({
+                        question: `${q.q}: ${q.desc}`,
+                        provider: 'auto',
+                        direction: 'TB',
+                        detailLevel: 'overview',
+                      }),
+                    });
+                    if (!res.ok) return null;
+                    const data = await res.json();
+                    return data.mermaid_code || null;
+                  } catch {
+                    return null;
+                  }
+                };
+
                 return (
                   <div style={{ marginBottom: 8 }}>
                     {/* Auto-generate button */}
@@ -903,45 +932,53 @@ export default function PracticePage() {
                       </button>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 12 }}>
-                      {/* Left: Architecture Diagram */}
-                      <div>
-                        <SharedDiagram
-                          question={`${questions[currentIdx].q}: ${questions[currentIdx].desc}`}
-                          className="rounded-lg border border-[#e3e8ee] overflow-hidden"
-                        />
-                      </div>
-
-                      {/* Right: Section text areas — 2-col grid */}
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                      {SD_SECTIONS.map((section, si) => {
-                        const val = parts[si] || '';
-                        return (
-                          <div key={section.label}>
-                            <label style={{ fontSize: 11, fontWeight: 600, color: section.color, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                              <Icon name={section.icon} size={12} style={{ color: section.color }} />
-                              {section.label}
-                            </label>
-                            <textarea
-                              ref={si === 0 ? textareaRef : undefined}
-                              value={val}
-                              onChange={(e) => {
-                                const newParts = (answers[currentIdx] || '').split('---SECTION---');
-                                while (newParts.length < SD_SECTIONS.length) newParts.push('');
-                                newParts[si] = e.target.value;
-                                const newA = [...answers];
-                                newA[currentIdx] = newParts.join('---SECTION---');
-                                setAnswers(newA);
-                              }}
-                              placeholder={section.placeholder}
-                              style={{ width: '100%', minHeight: 80, padding: 10, borderRadius: 10, border: '1px solid #e3e8ee', fontSize: 12, resize: 'vertical', outline: 'none', background: '#fafbfc', lineHeight: 1.6 }}
-                              autoFocus={si === 0}
+                    <div style={{ height: 520, borderRadius: 12, overflow: 'hidden', border: '1px solid #e3e8ee' }}>
+                      <Allotment defaultSizes={[40, 60]}>
+                        {/* Left: Excalidraw Whiteboard */}
+                        <Allotment.Pane minSize={280}>
+                          <Suspense fallback={<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#9ca3af', fontSize: 13 }}>Loading whiteboard...</div>}>
+                            <ExcalidrawWhiteboard
+                              key={currentIdx}
+                              initialElements={whiteboardState.getScene(currentIdx)}
+                              onChange={(elements) => whiteboardState.saveScene(currentIdx, elements)}
+                              onLoadAIDiagram={handleLoadAIDiagram}
                             />
+                          </Suspense>
+                        </Allotment.Pane>
+
+                        {/* Right: Section text areas — 2-col grid */}
+                        <Allotment.Pane minSize={360}>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, padding: 12, overflowY: 'auto', height: '100%', background: '#fff' }}>
+                            {SD_SECTIONS.map((section, si) => {
+                              const val = parts[si] || '';
+                              return (
+                                <div key={section.label}>
+                                  <label style={{ fontSize: 11, fontWeight: 600, color: section.color, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                    <Icon name={section.icon} size={12} style={{ color: section.color }} />
+                                    {section.label}
+                                  </label>
+                                  <textarea
+                                    ref={si === 0 ? textareaRef : undefined}
+                                    value={val}
+                                    onChange={(e) => {
+                                      const newParts = (answers[currentIdx] || '').split('---SECTION---');
+                                      while (newParts.length < SD_SECTIONS.length) newParts.push('');
+                                      newParts[si] = e.target.value;
+                                      const newA = [...answers];
+                                      newA[currentIdx] = newParts.join('---SECTION---');
+                                      setAnswers(newA);
+                                    }}
+                                    placeholder={section.placeholder}
+                                    style={{ width: '100%', minHeight: 80, padding: 10, borderRadius: 10, border: '1px solid #e3e8ee', fontSize: 12, resize: 'vertical', outline: 'none', background: '#fafbfc', lineHeight: 1.6 }}
+                                    autoFocus={si === 0}
+                                  />
+                                </div>
+                              );
+                            })}
                           </div>
-                        );
-                      })}
+                        </Allotment.Pane>
+                      </Allotment>
                     </div>
-                  </div>
                   </div>
                 );
               })()}
