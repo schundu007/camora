@@ -176,7 +176,7 @@ const sections: NavSection[] = [
     items: [
       { label: 'Live Interview', path: '/lumora', icon: icons.mic },
       { label: 'Jobs', path: '/jobs', icon: icons.briefcase },
-      { label: 'Dashboard', path: '/capra', icon: icons.layout },
+      { label: 'Code Solver', path: '/capra', icon: icons.layout },
     ],
   },
 ];
