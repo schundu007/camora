@@ -11,7 +11,6 @@ import { useAppShell } from '../../components/capra/layout/AppShellContext';
 import MobileBottomNav from '../../components/capra/layout/MobileBottomNav';
 import MobileTabView from '../../components/capra/layout/MobileTabView';
 import { ErrorBoundary } from '../../components/shared/ui/ErrorBoundary';
-import CamoraLogo from '../../components/shared/CamoraLogo';
 
 // Lazy-loaded components (modals, panels rendered on demand)
 const AdminPanel = lazy(() => import('../../components/capra/AdminPanel'));
@@ -946,17 +945,10 @@ function Header({ ascendMode, onModeChange, showSidebar, onToggleSidebar, isLoad
         borderBottom: '1px solid #e3e8ee',
       }}
     >
-      {/* Left: Camora logo + brand */}
-      <div className="flex items-center gap-3">
-        <Link to="/" className="flex items-center gap-2">
-          <CamoraLogo size={36} />
-          <span className="text-sm font-bold text-[var(--text-primary)] hidden sm:inline" style={{ fontFamily: "'Comfortaa', sans-serif" }}>Camora</span>
-        </Link>
-        <div className="w-px h-5 bg-gray-200 hidden sm:block" />
-        <div className="flex items-center gap-1.5">
-          <div className="w-2 h-2 rounded-full" style={{ background: currentMode.color }} />
-          <span className="text-sm font-semibold text-[var(--text-primary)]">{currentMode.label}</span>
-        </div>
+      {/* Left: mode indicator */}
+      <div className="flex items-center gap-1.5">
+        <div className="w-2 h-2 rounded-full" style={{ background: currentMode.color }} />
+        <span className="text-sm font-semibold text-[var(--text-primary)]">{currentMode.label}</span>
       </div>
 
       {/* Center: APPA tabs */}
