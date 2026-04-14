@@ -1,7 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import SiteNav from '../../components/shared/SiteNav';
-import SiteFooter from '../../components/shared/SiteFooter';
 import { getAuthHeaders } from '../../utils/authHeaders.js';
 
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
@@ -148,8 +146,7 @@ export default function PrepPlanPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#fafbfc]">
-        <SiteNav />
+      <div className="min-h-screen">
         <div className="pt-20 pb-12 px-4 max-w-3xl mx-auto">
           <div className="animate-pulse space-y-6">
             <div className="h-6 bg-gray-100 rounded w-64" />
@@ -164,8 +161,7 @@ export default function PrepPlanPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-[#fafbfc]">
-        <SiteNav />
+      <div className="min-h-screen">
         <div className="pt-20 pb-12 px-4 max-w-3xl mx-auto text-center">
           <p className="text-sm text-red-500 mt-8">{error}</p>
           <Link to="/capra/prepare" className="text-sm text-emerald-600 hover:underline mt-4 inline-block">
@@ -178,8 +174,7 @@ export default function PrepPlanPage() {
 
   if (!data) {
     return (
-      <div className="min-h-screen bg-[#fafbfc]">
-        <SiteNav />
+      <div className="min-h-screen">
         <div className="pt-20 pb-12 px-4 max-w-3xl mx-auto text-center">
           <div className="mt-16">
             <p className="text-gray-500 text-sm">No prep plan set up yet.</p>
@@ -204,9 +199,7 @@ export default function PrepPlanPage() {
   });
 
   return (
-    <div className="min-h-screen bg-[#fafbfc] flex flex-col">
-      <SiteNav />
-
+    <div className="min-h-screen flex flex-col">
       <main className="flex-1 pt-20 pb-12 px-4">
         <div className="max-w-3xl mx-auto">
           {/* Header */}
@@ -332,8 +325,6 @@ export default function PrepPlanPage() {
           </div>
         </div>
       </main>
-
-      <SiteFooter />
     </div>
   );
 }

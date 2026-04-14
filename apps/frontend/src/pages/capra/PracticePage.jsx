@@ -3,8 +3,6 @@ import { Link } from 'react-router-dom';
 import { Allotment } from 'allotment';
 import 'allotment/dist/style.css';
 import { Icon } from '../../components/shared/Icons.jsx';
-import SiteNav from '../../components/shared/SiteNav';
-import SiteFooter from '../../components/shared/SiteFooter';
 import { getAuthHeaders } from '../../utils/authHeaders.js';
 import SharedDiagram from '../../components/shared/diagrams/SharedDiagram';
 import GamificationWidget from '../../components/capra/features/GamificationWidget';
@@ -589,8 +587,6 @@ export default function PracticePage() {
 
   return (
     <div className="practice-root" style={{ background: 'transparent', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-
-      <SiteNav />
 
       {/* ═══════════ Main Content ═══════════ */}
       <div>
@@ -1336,8 +1332,6 @@ export default function PracticePage() {
 
         </div>
       </div>
-
-      <SiteFooter />
 
       {/* ═══════════ Styles ═══════════ */}
       <style>{`

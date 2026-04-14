@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useSearchParams } from 'react-router-dom';
-import SiteNav from '../components/shared/SiteNav';
 
 const API = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 const EXCLUDE = 'chundubabu@gmail.com,babuchundu@gmail.com';
@@ -225,7 +224,6 @@ export default function AnalyticsPage() {
   if (isAdmin === false) {
     return (
       <div className="min-h-screen bg-gray-950 text-white" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
-        <SiteNav />
         <div className="flex items-center justify-center py-32">
           <p className="text-gray-400 text-lg">You don't have access to this page.</p>
         </div>
@@ -235,7 +233,6 @@ export default function AnalyticsPage() {
 
   return (
     <div className="min-h-screen bg-gray-950 text-white" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
-      <SiteNav />
       <div className="max-w-6xl mx-auto px-4 py-12">
         <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
         <p className="text-gray-400 mb-6">Analytics, user management & emails</p>
