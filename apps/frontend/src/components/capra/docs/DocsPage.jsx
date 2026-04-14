@@ -454,15 +454,15 @@ export default function DocsPage({ onBack }) {
     switch (activePage) {
       case 'overview': return { title: 'Overview', color: '#6366f1' };
       case 'coding': return { title: 'Data Structures & Algorithms', color: '#6366f1' };
-      case 'system-design': return { title: 'System Design', color: '#818cf8' };
-      case 'low-level': return { title: 'Low-Level Design', color: '#a78bfa' };
-      case 'behavioral': return { title: 'Behavioral Interviews', color: '#a78bfa' };
+      case 'system-design': return { title: 'System Design', color: '#3b82f6' };
+      case 'low-level': return { title: 'Low-Level Design', color: '#ec4899' };
+      case 'behavioral': return { title: 'Behavioral Interviews', color: '#a855f7' };
       case 'microservices': return { title: 'Microservices Patterns', color: '#8b5cf6' };
-      case 'databases': return { title: 'Database Internals', color: '#7c3aed' };
+      case 'databases': return { title: 'Database Internals', color: '#f59e0b' };
       case 'sql': return { title: 'SQL for Interviews', color: '#06b6d4' };
-      case 'projects': return { title: 'Projects', color: '#6366f1' };
-      case 'roadmaps': return { title: 'Roadmaps', color: '#818cf8' };
-      case 'eng-blogs': return { title: 'Engineering Blogs', color: '#06b6d4' };
+      case 'projects': return { title: 'Projects', color: '#10b981' };
+      case 'roadmaps': return { title: 'Roadmaps', color: '#f97316' };
+      case 'eng-blogs': return { title: 'Engineering Blogs', color: '#ef4444' };
       default: return { title: 'Documentation', color: '#6366f1' };
     }
   };
@@ -505,16 +505,16 @@ export default function DocsPage({ onBack }) {
   // ── Overview dashboard data ──
   const overviewCategories = (() => {
     const cats = [
-      { id: 'coding', href: 'coding', title: 'DSA & Algorithms', icon: 'cpu', color: '#6366f1', topics: codingTopics },
-      { id: 'system-design', href: 'system-design', title: 'System Design', icon: 'systemDesign', color: '#818cf8', topics: [...systemDesignTopics, ...systemDesigns, ...concurrencyTopics, ...systemDesignPatterns, ...microservicesPatterns, ...systemDesignTradeoffs, ...scalableSystemsTopics] },
-      { id: 'microservices', href: 'microservices', title: 'Microservices', icon: 'grid', color: '#8b5cf6', topics: microservicesPatterns },
-      { id: 'databases', href: 'databases', title: 'Database Internals', icon: 'database', color: '#7c3aed', topics: databaseTopics },
-      { id: 'sql', href: 'sql', title: 'SQL for Interviews', icon: 'database', color: '#06b6d4', topics: sqlTopics },
-      { id: 'low-level', href: 'low-level-design', title: 'Low-Level Design', icon: 'layers', color: '#a78bfa', topics: [...lldTopics, ...lldProblems] },
-      { id: 'projects', href: 'projects', title: 'Projects', icon: 'code', color: '#6366f1', topics: projectTopics },
-      { id: 'roadmaps', href: 'roadmaps', title: 'Roadmaps', icon: 'trendingUp', color: '#818cf8', topics: roadmapTopics },
-      { id: 'eng-blogs', href: 'eng-blogs', title: 'Eng Blogs', icon: 'bookOpen', color: '#06b6d4', topics: engBlogTopics },
-      { id: 'behavioral', href: 'behavioral', title: 'Behavioral', icon: 'users', color: '#a78bfa', topics: [...behavioralTopics, ...companyPrep] },
+      { id: 'coding', href: 'coding', title: 'DSA & Algorithms', icon: 'cpu', color: '#6366f1', grad: 'linear-gradient(135deg, #6366f1, #818cf8)', topics: codingTopics },
+      { id: 'system-design', href: 'system-design', title: 'System Design', icon: 'systemDesign', color: '#3b82f6', grad: 'linear-gradient(135deg, #3b82f6, #60a5fa)', topics: [...systemDesignTopics, ...systemDesigns, ...concurrencyTopics, ...systemDesignPatterns, ...microservicesPatterns, ...systemDesignTradeoffs, ...scalableSystemsTopics] },
+      { id: 'microservices', href: 'microservices', title: 'Microservices', icon: 'grid', color: '#8b5cf6', grad: 'linear-gradient(135deg, #8b5cf6, #a78bfa)', topics: microservicesPatterns },
+      { id: 'databases', href: 'databases', title: 'Database Internals', icon: 'database', color: '#f59e0b', grad: 'linear-gradient(135deg, #f59e0b, #fbbf24)', topics: databaseTopics },
+      { id: 'sql', href: 'sql', title: 'SQL for Interviews', icon: 'database', color: '#06b6d4', grad: 'linear-gradient(135deg, #06b6d4, #22d3ee)', topics: sqlTopics },
+      { id: 'low-level', href: 'low-level-design', title: 'Low-Level Design', icon: 'layers', color: '#ec4899', grad: 'linear-gradient(135deg, #ec4899, #f472b6)', topics: [...lldTopics, ...lldProblems] },
+      { id: 'projects', href: 'projects', title: 'Projects', icon: 'code', color: '#10b981', grad: 'linear-gradient(135deg, #10b981, #34d399)', topics: projectTopics },
+      { id: 'roadmaps', href: 'roadmaps', title: 'Roadmaps', icon: 'trendingUp', color: '#f97316', grad: 'linear-gradient(135deg, #f97316, #fb923c)', topics: roadmapTopics },
+      { id: 'eng-blogs', href: 'eng-blogs', title: 'Eng Blogs', icon: 'bookOpen', color: '#ef4444', grad: 'linear-gradient(135deg, #ef4444, #f87171)', topics: engBlogTopics },
+      { id: 'behavioral', href: 'behavioral', title: 'Behavioral', icon: 'users', color: '#a855f7', grad: 'linear-gradient(135deg, #a855f7, #c084fc)', topics: [...behavioralTopics, ...companyPrep] },
     ];
     return cats.map(c => {
       const count = c.topics.length;
@@ -710,19 +710,22 @@ export default function DocsPage({ onBack }) {
                         {/* Overall progress stats row */}
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                           {[
-                            { label: 'Total Topics', value: overviewTotalTopics, icon: 'bookOpen', color: '#6366f1' },
-                            { label: 'Completed', value: overviewTotalCompleted, icon: 'check', color: '#06b6d4' },
-                            { label: 'Categories', value: overviewCategories.length, icon: 'grid', color: '#8b5cf6' },
-                            { label: 'Progress', value: `${overviewTotalTopics > 0 ? Math.round((overviewTotalCompleted / overviewTotalTopics) * 100) : 0}%`, icon: 'trendingUp', color: '#818cf8' },
+                            { label: 'Total Topics', value: overviewTotalTopics, icon: 'bookOpen', grad: 'linear-gradient(135deg, #6366f1 0%, #818cf8 50%, #a78bfa 100%)', glow: '#6366f1' },
+                            { label: 'Completed', value: overviewTotalCompleted, icon: 'check', grad: 'linear-gradient(135deg, #06b6d4 0%, #22d3ee 50%, #67e8f9 100%)', glow: '#06b6d4' },
+                            { label: 'Categories', value: overviewCategories.length, icon: 'grid', grad: 'linear-gradient(135deg, #8b5cf6 0%, #a78bfa 50%, #c4b5fd 100%)', glow: '#8b5cf6' },
+                            { label: 'Progress', value: `${overviewTotalTopics > 0 ? Math.round((overviewTotalCompleted / overviewTotalTopics) * 100) : 0}%`, icon: 'trendingUp', grad: 'linear-gradient(135deg, #3b82f6 0%, #60a5fa 50%, #93c5fd 100%)', glow: '#3b82f6' },
                           ].map(stat => (
-                            <div key={stat.label} className="rounded-xl border border-indigo-200/30 p-4 shadow-[0_2px_12px_rgba(99,102,241,0.06)] transition-all duration-200 hover:shadow-[0_8px_24px_rgba(99,102,241,0.10)] hover:-translate-y-0.5" style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.85), rgba(238,242,255,0.5))' }}>
-                              <div className="flex items-center gap-2 mb-2">
-                                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: `${stat.color}14` }}>
-                                  <Icon name={stat.icon} size={16} style={{ color: stat.color }} />
+                            <div key={stat.label} className="relative overflow-hidden rounded-2xl p-4 card-glow" style={{ background: stat.grad, boxShadow: `0 8px 32px ${stat.glow}30`, '--glow-hover': `0 20px 60px ${stat.glow}45` }}>
+                              <div className="absolute top-0 right-0 w-24 h-24 rounded-full opacity-20" style={{ background: 'radial-gradient(circle, white, transparent)', transform: 'translate(30%, -30%)' }} />
+                              <div className="relative z-10">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-white/20 backdrop-blur-sm">
+                                    <Icon name={stat.icon} size={16} className="text-white" />
+                                  </div>
                                 </div>
+                                <div className="text-2xl font-extrabold text-white landing-display">{stat.value}</div>
+                                <div className="text-[11px] text-white/70 landing-body mt-0.5 font-semibold">{stat.label}</div>
                               </div>
-                              <div className="text-xl font-bold text-gray-900 landing-display">{stat.value}</div>
-                              <div className="text-[11px] text-gray-400 landing-body mt-0.5">{stat.label}</div>
                             </div>
                           ))}
                         </div>
@@ -736,31 +739,35 @@ export default function DocsPage({ onBack }) {
                             <a
                               key={cat.id}
                               href={`/capra/prepare/${cat.href}`}
-                              className="group relative rounded-xl border border-indigo-200/30 p-5 shadow-[0_2px_12px_rgba(99,102,241,0.06)] transition-all duration-300 hover:shadow-[0_12px_40px_rgba(99,102,241,0.14)] hover:border-indigo-300/40 hover:-translate-y-1"
-                              style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.85), rgba(238,242,255,0.5))', borderLeft: `3px solid ${cat.color}` }}
+                              className="group relative rounded-2xl overflow-hidden bg-white card-glow"
+                              style={{ boxShadow: `0 4px 24px ${cat.color}18`, '--glow-hover': `0 20px 60px ${cat.color}35` }}
                             >
-                              <div className="flex items-start justify-between mb-4">
-                                <div className="w-11 h-11 rounded-xl flex items-center justify-center" style={{ background: `${cat.color}14` }}>
-                                  <Icon name={cat.icon} size={22} style={{ color: cat.color }} />
+                              {/* Bold gradient accent bar */}
+                              <div className="h-1.5" style={{ background: cat.grad }} />
+                              <div className="p-5">
+                                <div className="flex items-start justify-between mb-4">
+                                  <div className="w-11 h-11 rounded-xl flex items-center justify-center shadow-lg" style={{ background: cat.grad }}>
+                                    <Icon name={cat.icon} size={22} className="text-white" />
+                                  </div>
+                                  <span
+                                    className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold landing-mono text-white"
+                                    style={{ background: cat.grad }}
+                                  >
+                                    {cat.count} topics
+                                  </span>
                                 </div>
-                                <span
-                                  className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold landing-mono"
-                                  style={{ background: `${cat.color}14`, color: cat.color }}
-                                >
-                                  {cat.count} topics
-                                </span>
-                              </div>
-                              <h3 className="text-[15px] font-bold text-gray-900 landing-display mb-3 group-hover:text-indigo-600 transition-colors">{cat.title}</h3>
-                              {/* Progress bar */}
-                              <div className="w-full h-1.5 rounded-full bg-indigo-50 overflow-hidden">
-                                <div
-                                  className="h-full rounded-full transition-all duration-500"
-                                  style={{ width: `${cat.progress}%`, background: `linear-gradient(90deg, ${cat.color}, ${cat.color}bb)` }}
-                                />
-                              </div>
-                              <div className="flex justify-between mt-2">
-                                <span className="text-[11px] text-gray-500 landing-body font-medium">{cat.completed}/{cat.count} done</span>
-                                <span className="text-[11px] font-semibold landing-mono" style={{ color: cat.color }}>{cat.progress}%</span>
+                                <h3 className="text-[15px] font-bold text-gray-900 landing-display mb-3 transition-colors" style={{ '--tw-text-opacity': 1 }}>{cat.title}</h3>
+                                {/* Progress bar */}
+                                <div className="w-full h-2 rounded-full bg-gray-100 overflow-hidden">
+                                  <div
+                                    className="h-full rounded-full transition-all duration-500"
+                                    style={{ width: `${cat.progress}%`, background: cat.grad }}
+                                  />
+                                </div>
+                                <div className="flex justify-between mt-2">
+                                  <span className="text-[11px] text-gray-500 landing-body font-medium">{cat.completed}/{cat.count} done</span>
+                                  <span className="text-[11px] font-bold landing-mono" style={{ color: cat.color }}>{cat.progress}%</span>
+                                </div>
                               </div>
                             </a>
                           ))}
@@ -772,28 +779,28 @@ export default function DocsPage({ onBack }) {
                         <h2 className="section-label mb-3">Recommended Path</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-0">
                           {[
-                            { step: 1, title: 'DSA Fundamentals', desc: 'Arrays, strings, trees, graphs', href: '/capra/prepare/coding', icon: 'cpu', color: '#6366f1' },
-                            { step: 2, title: 'System Design', desc: 'Scalability, databases, caching', href: '/capra/prepare/system-design', icon: 'systemDesign', color: '#818cf8' },
-                            { step: 3, title: 'Low-Level Design', desc: 'OOP, SOLID, design patterns', href: '/capra/prepare/low-level-design', icon: 'layers', color: '#8b5cf6' },
-                            { step: 4, title: 'Behavioral', desc: 'STAR method, leadership stories', href: '/capra/prepare/behavioral', icon: 'users', color: '#06b6d4' },
+                            { step: 1, title: 'DSA Fundamentals', desc: 'Arrays, strings, trees, graphs', href: '/capra/prepare/coding', icon: 'cpu', color: '#6366f1', grad: 'linear-gradient(135deg, #6366f1, #818cf8)' },
+                            { step: 2, title: 'System Design', desc: 'Scalability, databases, caching', href: '/capra/prepare/system-design', icon: 'systemDesign', color: '#3b82f6', grad: 'linear-gradient(135deg, #3b82f6, #60a5fa)' },
+                            { step: 3, title: 'Low-Level Design', desc: 'OOP, SOLID, design patterns', href: '/capra/prepare/low-level-design', icon: 'layers', color: '#ec4899', grad: 'linear-gradient(135deg, #ec4899, #f472b6)' },
+                            { step: 4, title: 'Behavioral', desc: 'STAR method, leadership stories', href: '/capra/prepare/behavioral', icon: 'users', color: '#a855f7', grad: 'linear-gradient(135deg, #a855f7, #c084fc)' },
                           ].map((phase, idx) => (
                             <Link key={phase.step} to={phase.href} className="group relative">
-                              {/* Connector line between steps (hidden on mobile, hidden for last item) */}
+                              {/* Connector line between steps */}
                               {idx < 3 && (
-                                <div className="hidden md:block absolute top-6 left-[calc(50%+20px)] w-[calc(100%-40px)] h-0.5 bg-gray-200 z-0" />
+                                <div className="hidden md:block absolute top-6 left-[calc(50%+20px)] w-[calc(100%-40px)] h-0.5 z-0" style={{ background: 'linear-gradient(90deg, rgba(99,102,241,0.3), rgba(139,92,246,0.3))' }} />
                               )}
-                              <div className="relative z-10 flex flex-col items-center text-center p-4 rounded-xl transition-all duration-200 hover:-translate-y-0.5 hover:bg-white hover:shadow-[0_4px_16px_rgba(0,0,0,0.06)]">
-                                {/* Step number circle */}
+                              <div className="relative z-10 flex flex-col items-center text-center p-4 rounded-xl card-glow" style={{ '--glow-hover': `0 16px 48px ${phase.color}30` }}>
+                                {/* Step number circle — solid gradient */}
                                 <div
-                                  className="w-12 h-12 rounded-full flex items-center justify-center mb-3 border-2 transition-colors duration-200"
-                                  style={{ borderColor: phase.color, background: `${phase.color}10` }}
+                                  className="w-12 h-12 rounded-full flex items-center justify-center mb-3 shadow-lg"
+                                  style={{ background: phase.grad }}
                                 >
-                                  <span className="text-sm font-bold landing-mono" style={{ color: phase.color }}>{phase.step}</span>
+                                  <span className="text-sm font-extrabold text-white landing-mono">{phase.step}</span>
                                 </div>
-                                <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-2" style={{ background: `${phase.color}14` }}>
-                                  <Icon name={phase.icon} size={16} style={{ color: phase.color }} />
+                                <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-2 shadow-md" style={{ background: phase.grad }}>
+                                  <Icon name={phase.icon} size={16} className="text-white" />
                                 </div>
-                                <div className="text-sm font-bold text-gray-900 landing-display mb-1 group-hover:text-indigo-600 transition-colors">{phase.title}</div>
+                                <div className="text-sm font-bold text-gray-900 landing-display mb-1 transition-colors">{phase.title}</div>
                                 <div className="text-xs text-gray-500 landing-body leading-relaxed">{phase.desc}</div>
                               </div>
                             </Link>
@@ -806,29 +813,32 @@ export default function DocsPage({ onBack }) {
                         <h2 className="section-label mb-3">Interview Resources</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                           {[
-                            { href: '/capra/prepare?page=coding', icon: 'checklist', color: '#6366f1', bg: 'bg-indigo-50/50', title: 'Interview Cheatsheet', desc: '17 topics covering 117 curated questions from top tech companies', badge: '117 Q' },
-                            { href: '/handbook', icon: 'code', color: '#8b5cf6', bg: 'bg-violet-50/50', title: 'Blind 75', desc: 'The 75 essential LeetCode problems every engineer should master', badge: '75 problems' },
-                            { href: '/capra/practice', icon: 'behavioral', color: '#06b6d4', bg: 'bg-cyan-50/50', title: 'Behavioral Questions', desc: 'Practice STAR-method answers for behavioral and leadership interviews', badge: 'Practice' },
+                            { href: '/capra/prepare?page=coding', icon: 'checklist', color: '#6366f1', grad: 'linear-gradient(135deg, #6366f1, #818cf8)', title: 'Interview Cheatsheet', desc: '17 topics covering 117 curated questions from top tech companies', badge: '117 Q' },
+                            { href: '/handbook', icon: 'code', color: '#8b5cf6', grad: 'linear-gradient(135deg, #8b5cf6, #a78bfa)', title: 'Blind 75', desc: 'The 75 essential LeetCode problems every engineer should master', badge: '75 problems' },
+                            { href: '/capra/practice', icon: 'behavioral', color: '#06b6d4', grad: 'linear-gradient(135deg, #06b6d4, #22d3ee)', title: 'Behavioral Questions', desc: 'Practice STAR-method answers for behavioral and leadership interviews', badge: 'Practice' },
                           ].map(resource => (
                             <a
                               key={resource.title}
                               href={resource.href}
-                              className="group rounded-xl border border-indigo-200/30 p-5 shadow-[0_2px_12px_rgba(99,102,241,0.06)] transition-all duration-300 hover:shadow-[0_12px_40px_rgba(99,102,241,0.14)] hover:border-indigo-300/40 hover:-translate-y-1"
-                              style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.85), rgba(238,242,255,0.5))' }}
+                              className="group rounded-2xl overflow-hidden bg-white card-glow"
+                              style={{ boxShadow: `0 4px 24px ${resource.color}18`, '--glow-hover': `0 20px 60px ${resource.color}35` }}
                             >
-                              <div className="flex items-start justify-between mb-3">
-                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${resource.bg}`}>
-                                  <Icon name={resource.icon} size={20} style={{ color: resource.color }} />
+                              <div className="h-1" style={{ background: resource.grad }} />
+                              <div className="p-5">
+                                <div className="flex items-start justify-between mb-3">
+                                  <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md" style={{ background: resource.grad }}>
+                                    <Icon name={resource.icon} size={20} className="text-white" />
+                                  </div>
+                                  <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold landing-mono text-white" style={{ background: resource.grad }}>
+                                    {resource.badge}
+                                  </span>
                                 </div>
-                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold landing-mono" style={{ background: `${resource.color}14`, color: resource.color }}>
-                                  {resource.badge}
-                                </span>
-                              </div>
-                              <h3 className="text-sm font-bold text-gray-900 landing-display mb-1 group-hover:text-indigo-600 transition-colors">{resource.title}</h3>
-                              <p className="text-xs text-gray-500 landing-body leading-relaxed mb-3">{resource.desc}</p>
-                              <div className="flex items-center gap-1 text-xs font-medium text-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity landing-body">
-                                <span>Explore</span>
-                                <Icon name="arrowRight" size={12} />
+                                <h3 className="text-sm font-bold text-gray-900 landing-display mb-1 transition-colors">{resource.title}</h3>
+                                <p className="text-xs text-gray-500 landing-body leading-relaxed mb-3">{resource.desc}</p>
+                                <div className="flex items-center gap-1 text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity landing-body" style={{ color: resource.color }}>
+                                  <span>Explore</span>
+                                  <Icon name="arrowRight" size={12} />
+                                </div>
                               </div>
                             </a>
                           ))}
@@ -840,23 +850,24 @@ export default function DocsPage({ onBack }) {
                         <h2 className="section-label mb-3">Interview Cheatsheet</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                           {[
-                            { title: 'Before the Interview', items: interviewCheatsheet.before, icon: 'clipboard', color: '#6366f1', step: 'Prep' },
-                            { title: 'During the Interview', items: interviewCheatsheet.during, icon: 'play', color: '#8b5cf6', step: 'Execute' },
-                            { title: 'After the Interview', items: interviewCheatsheet.after, icon: 'check', color: '#06b6d4', step: 'Follow up' },
+                            { title: 'Before the Interview', items: interviewCheatsheet.before, icon: 'clipboard', color: '#6366f1', grad: 'linear-gradient(135deg, #6366f1, #818cf8)', step: 'Prep' },
+                            { title: 'During the Interview', items: interviewCheatsheet.during, icon: 'play', color: '#8b5cf6', grad: 'linear-gradient(135deg, #8b5cf6, #a78bfa)', step: 'Execute' },
+                            { title: 'After the Interview', items: interviewCheatsheet.after, icon: 'check', color: '#06b6d4', grad: 'linear-gradient(135deg, #06b6d4, #22d3ee)', step: 'Follow up' },
                           ].map((card) => (
                             <div
                               key={card.title}
-                              className="rounded-xl border border-indigo-200/30 p-5 shadow-[0_2px_12px_rgba(99,102,241,0.06)] transition-all duration-300 hover:shadow-[0_8px_28px_rgba(99,102,241,0.12)] hover:-translate-y-0.5"
-                              style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.85), rgba(238,242,255,0.5))' }}
-                              style={{ borderTop: `3px solid ${card.color}` }}
+                              className="rounded-2xl overflow-hidden bg-white card-glow"
+                              style={{ boxShadow: `0 4px 24px ${card.color}18`, '--glow-hover': `0 16px 48px ${card.color}30` }}
                             >
+                              <div className="h-1" style={{ background: card.grad }} />
+                              <div className="p-5">
                               <div className="flex items-center gap-3 mb-4">
-                                <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: `${card.color}14` }}>
-                                  <Icon name={card.icon} size={18} style={{ color: card.color }} />
+                                <div className="w-9 h-9 rounded-lg flex items-center justify-center shadow-md" style={{ background: card.grad }}>
+                                  <Icon name={card.icon} size={18} className="text-white" />
                                 </div>
                                 <div>
                                   <h3 className="landing-display text-sm font-bold text-gray-900">{card.title}</h3>
-                                  <span className="text-[10px] font-semibold landing-mono" style={{ color: card.color }}>{card.step}</span>
+                                  <span className="text-[10px] font-bold landing-mono text-white px-2 py-0.5 rounded-full" style={{ background: card.grad }}>{card.step}</span>
                                 </div>
                               </div>
                               <div className="flex flex-col gap-2.5">
@@ -866,6 +877,7 @@ export default function DocsPage({ onBack }) {
                                     <span>{item}</span>
                                   </label>
                                 ))}
+                              </div>
                               </div>
                             </div>
                           ))}
@@ -884,7 +896,7 @@ export default function DocsPage({ onBack }) {
                         return (
                           <div className="mb-8">
                             <h2 className="section-label mb-3">Continue Where You Left Off</h2>
-                            <div className="rounded-xl border border-indigo-200/30 overflow-hidden shadow-[0_2px_12px_rgba(99,102,241,0.06)]" style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.85), rgba(238,242,255,0.5))' }}>
+                            <div className="rounded-2xl overflow-hidden bg-white" style={{ boxShadow: '0 4px 24px rgba(99,102,241,0.12)' }}>
                               {recentItems.map((topic) => (
                                 <a
                                   key={topic.id}
@@ -1137,7 +1149,7 @@ export default function DocsPage({ onBack }) {
                     </div>
                     <div className="grid md:grid-cols-2 gap-4">
                       {/* Time Complexity Card */}
-                      <div className="rounded-lg overflow-hidden border border-indigo-200/30 bg-gradient-to-br from-white/80 to-indigo-50/30 shadow-[0_2px_12px_rgba(99,102,241,0.06)] hover:border-indigo-300/40 hover:shadow-[0_8px_24px_rgba(99,102,241,0.10)] transition-colors">
+                      <div className="rounded-lg overflow-hidden border-0 bg-white shadow-[0_4px_24px_rgba(99,102,241,0.12)] hover:shadow-[0_20px_60px_rgba(99,102,241,0.25)] transition-colors">
                         <div className="px-4 py-3 border-b border-gray-100 bg-emerald-50/50">
                           <h3 className="text-sm text-gray-900 font-semibold landing-display flex items-center gap-2">
                             <div className="w-6 h-6 rounded flex items-center justify-center bg-emerald-100">
@@ -1172,7 +1184,7 @@ export default function DocsPage({ onBack }) {
                         </div>
                       </div>
                       {/* Data Structure Selection Card */}
-                      <div className="rounded-lg overflow-hidden border border-indigo-200/30 bg-gradient-to-br from-white/80 to-indigo-50/30 shadow-[0_2px_12px_rgba(99,102,241,0.06)] hover:border-indigo-300/40 hover:shadow-[0_8px_24px_rgba(99,102,241,0.10)] transition-colors">
+                      <div className="rounded-lg overflow-hidden border-0 bg-white shadow-[0_4px_24px_rgba(99,102,241,0.12)] hover:shadow-[0_20px_60px_rgba(99,102,241,0.25)] transition-colors">
                         <div className="px-4 py-3 border-b border-gray-100 bg-emerald-50/50">
                           <h3 className="text-sm text-gray-900 font-semibold landing-display flex items-center gap-2">
                             <div className="w-6 h-6 rounded flex items-center justify-center bg-emerald-100">
@@ -1224,7 +1236,7 @@ export default function DocsPage({ onBack }) {
                       const categoryTopics = filteredTopics.filter(t => systemDesignCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
                       return (
-                        <div key={category.id} className="rounded-lg overflow-hidden border border-indigo-200/30 shadow-[0_2px_12px_rgba(99,102,241,0.06)]">
+                        <div key={category.id} className="rounded-2xl overflow-hidden border-0 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
                           {/* Category Header with Progress */}
                           <div className="px-4 py-2.5 flex items-center gap-2.5 bg-gray-50/80 border-b border-gray-100">
                             <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: `${category.color}12` }}>
@@ -1301,7 +1313,7 @@ export default function DocsPage({ onBack }) {
                         'Hard': 'text-red-600 bg-red-50 border border-red-200',
                       };
                       return (
-                        <div key={category.id} className="rounded-lg overflow-hidden border border-indigo-200/30 shadow-[0_2px_12px_rgba(99,102,241,0.06)]">
+                        <div key={category.id} className="rounded-2xl overflow-hidden border-0 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
                           {/* Category Header */}
                           <div className="px-4 py-2.5 flex items-center gap-2.5 bg-gray-50/80 border-b border-gray-100">
                             <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: `${category.color}12` }}>
@@ -1376,7 +1388,7 @@ export default function DocsPage({ onBack }) {
                       if (categoryProblems.length === 0) return null;
                       // diffStyle is computed inline per-problem below
                       return (
-                        <div key={category.id} className="rounded-lg overflow-hidden border border-indigo-200/30 shadow-[0_2px_12px_rgba(99,102,241,0.06)]">
+                        <div key={category.id} className="rounded-2xl overflow-hidden border-0 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
                           <div className="px-4 py-2.5 flex items-center gap-2.5 bg-gray-50/80 border-b border-gray-100">
                             <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: `${category.color}12` }}>
                               <Icon name={category.icon} size={14} style={{ color: category.color }} />
@@ -1438,7 +1450,7 @@ export default function DocsPage({ onBack }) {
                       const categoryTopics = systemDesignPatterns.filter(t => systemDesignPatternCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
                       return (
-                        <div key={category.id} className="rounded-lg overflow-hidden border border-indigo-200/30 shadow-[0_2px_12px_rgba(99,102,241,0.06)]">
+                        <div key={category.id} className="rounded-2xl overflow-hidden border-0 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
                           <div className="px-4 py-2.5 flex items-center gap-2.5 bg-gray-50/80 border-b border-gray-100">
                             <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: `${category.color}12` }}>
                               <Icon name={category.icon} size={14} style={{ color: category.color }} />
@@ -1489,7 +1501,7 @@ export default function DocsPage({ onBack }) {
                       const categoryTopics = microservicesPatterns.filter(t => microservicesCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
                       return (
-                        <div key={category.id} className="rounded-lg overflow-hidden border border-indigo-200/30 shadow-[0_2px_12px_rgba(99,102,241,0.06)]">
+                        <div key={category.id} className="rounded-2xl overflow-hidden border-0 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
                           <div className="px-4 py-2.5 flex items-center gap-2.5 bg-gray-50/80 border-b border-gray-100">
                             <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: `${category.color}12` }}>
                               <Icon name={category.icon} size={14} style={{ color: category.color }} />
@@ -1540,7 +1552,7 @@ export default function DocsPage({ onBack }) {
                       const categoryTopics = systemDesignTradeoffs.filter(t => tradeoffCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
                       return (
-                        <div key={category.id} className="rounded-lg overflow-hidden border border-indigo-200/30 shadow-[0_2px_12px_rgba(99,102,241,0.06)]">
+                        <div key={category.id} className="rounded-2xl overflow-hidden border-0 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
                           <div className="px-4 py-2.5 flex items-center gap-2.5 bg-gray-50/80 border-b border-gray-100">
                             <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: `${category.color}12` }}>
                               <Icon name={category.icon} size={14} style={{ color: category.color }} />
@@ -1591,7 +1603,7 @@ export default function DocsPage({ onBack }) {
                       const categoryTopics = scalableSystemsTopics.filter(t => scalableSystemsCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
                       return (
-                        <div key={category.id} className="rounded-lg overflow-hidden border border-indigo-200/30 shadow-[0_2px_12px_rgba(99,102,241,0.06)]">
+                        <div key={category.id} className="rounded-2xl overflow-hidden border-0 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
                           <div className="px-4 py-2.5 flex items-center gap-2.5 bg-gray-50/80 border-b border-gray-100">
                             <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: `${category.color}12` }}>
                               <Icon name={category.icon} size={14} style={{ color: category.color }} />
@@ -1637,7 +1649,7 @@ export default function DocsPage({ onBack }) {
                       <h2 className="landing-display font-bold text-xl mt-1 tracking-tight text-gray-900">Concurrency & Multithreading</h2>
                       <p className="text-sm text-gray-500 landing-body mt-1">Thread-safe programming, synchronization, and classic problems</p>
                     </div>
-                    <div className="rounded-lg overflow-hidden border border-indigo-200/30 shadow-[0_2px_12px_rgba(99,102,241,0.06)]">
+                    <div className="rounded-2xl overflow-hidden border-0 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-white overflow-hidden">
                         {concurrencyTopics.map((topic) => (
                           <div
@@ -1667,7 +1679,7 @@ export default function DocsPage({ onBack }) {
                   <div className="h-px bg-[#e3e8ee] mb-6" />
 
                   {/* Interview Framework */}
-                  <div className="rounded-lg border border-indigo-200/30 bg-gradient-to-br from-white/80 to-indigo-50/30 p-5 shadow-[0_2px_12px_rgba(99,102,241,0.06)]">
+                  <div className="rounded-2xl border-0 bg-white p-5 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
                     <div className="mb-4">
                       <span className="landing-mono text-xs text-emerald-600 tracking-widest uppercase">Framework</span>
                       <h3 className="landing-display font-bold text-lg mt-1 tracking-tight text-gray-900 flex items-center gap-2">
@@ -1710,7 +1722,7 @@ export default function DocsPage({ onBack }) {
                       const categoryTopics = filteredTopics.filter(t => lldCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
                       return (
-                        <div key={category.id} className="rounded-lg overflow-hidden border border-indigo-200/30 shadow-[0_2px_12px_rgba(99,102,241,0.06)]">
+                        <div key={category.id} className="rounded-2xl overflow-hidden border-0 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
                           <div className="px-4 py-2.5 flex items-center gap-2.5 bg-gray-50/80 border-b border-gray-100">
                             <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: `${category.color}12` }}>
                               <Icon name={category.icon} size={14} style={{ color: category.color }} />
@@ -1764,7 +1776,7 @@ export default function DocsPage({ onBack }) {
                       const categoryProblems = lldProblems.filter(p => lldProblemCategoryMap[p.id] === category.id);
                       if (categoryProblems.length === 0) return null;
                       return (
-                        <div key={category.id} className="rounded-lg overflow-hidden border border-indigo-200/30 shadow-[0_2px_12px_rgba(99,102,241,0.06)]">
+                        <div key={category.id} className="rounded-2xl overflow-hidden border-0 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
                           <div className="px-4 py-2.5 flex items-center gap-2.5 bg-gray-50/80 border-b border-gray-100">
                             <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: `${category.color}12` }}>
                               <Icon name={category.icon} size={14} style={{ color: category.color }} />
@@ -1848,9 +1860,9 @@ export default function DocsPage({ onBack }) {
                           {/* Stats row */}
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                             {[
-                              { value: completedCount, label: 'Topics Done', total: totalTopics, color: '#6366f1' },
-                              { value: starredCount, label: 'Starred', total: null, color: '#8b5cf6' },
-                              { value: companyCompleted, label: 'Companies', total: companyPrep.length, color: '#06b6d4' },
+                              { value: completedCount, label: 'Topics Done', total: totalTopics, color: '#10b981' },
+                              { value: starredCount, label: 'Starred', total: null, color: '#f59e0b' },
+                              { value: companyCompleted, label: 'Companies', total: companyPrep.length, color: '#3b82f6' },
                               { value: behavioralCategories.filter(cat => { const ct = behavioralTopics.filter(t => topicCategoryMap[t.id] === cat.id); return ct.length > 0 && ct.every(t => completedTopics[t.id]); }).length, label: 'Categories Done', total: behavioralCategories.length, color: '#8b5cf6' },
                             ].map((stat, i) => (
                               <div key={i} className="text-center p-2.5 rounded-lg bg-gray-50">
@@ -1877,10 +1889,10 @@ export default function DocsPage({ onBack }) {
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2">
                         {[
-                          { icon: 'mapPin', title: 'Situation', desc: 'Set the scene — when, where, stakes', color: '#6366f1', timing: '15%' },
-                          { icon: 'clipboardList', title: 'Task', desc: 'Your responsibility & expectations', color: '#818cf8', timing: '10%' },
-                          { icon: 'zap', title: 'Action', desc: 'Steps you took — use "I", own it', color: '#8b5cf6', timing: '60%' },
-                          { icon: 'trendingUp', title: 'Result', desc: 'Measurable outcomes & impact', color: '#06b6d4', timing: '15%' },
+                          { icon: 'mapPin', title: 'Situation', desc: 'Set the scene — when, where, stakes', color: '#3b82f6', timing: '15%' },
+                          { icon: 'clipboardList', title: 'Task', desc: 'Your responsibility & expectations', color: '#f59e0b', timing: '10%' },
+                          { icon: 'zap', title: 'Action', desc: 'Steps you took — use "I", own it', color: '#10b981', timing: '60%' },
+                          { icon: 'trendingUp', title: 'Result', desc: 'Measurable outcomes & impact', color: '#8b5cf6', timing: '15%' },
                         ].map((step, i) => (
                           <div key={i} className="flex items-center gap-2.5 rounded-lg px-3 py-2 border border-gray-100 hover:shadow-sm transition-all">
                             <span className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0" style={{ background: `${step.color}12` }}>
@@ -1920,7 +1932,7 @@ export default function DocsPage({ onBack }) {
                       const catCompleted = categoryTopics.filter(t => completedTopics[t.id]).length;
                       const catPercent = Math.round((catCompleted / categoryTopics.length) * 100);
                       return (
-                        <div key={category.id} className="rounded-lg overflow-hidden border border-indigo-200/30 shadow-[0_2px_12px_rgba(99,102,241,0.06)]">
+                        <div key={category.id} className="rounded-2xl overflow-hidden border-0 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
                           {/* Category Header with Progress */}
                           <div className="px-4 py-2.5 flex items-center gap-2.5 bg-gray-50/80 border-b border-gray-100">
                             <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: `${category.color}12` }}>
@@ -2071,7 +2083,7 @@ export default function DocsPage({ onBack }) {
                       const categoryTopics = filteredTopics.filter(t => microservicesCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
                       return (
-                        <div key={category.id} className="rounded-lg overflow-hidden border border-indigo-200/30 shadow-[0_2px_12px_rgba(99,102,241,0.06)]">
+                        <div key={category.id} className="rounded-2xl overflow-hidden border-0 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
                           <div className="px-4 py-2.5 flex items-center gap-2.5 bg-gray-50/80 border-b border-gray-100">
                             <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: `${category.color}12` }}>
                               <Icon name={category.icon} size={14} style={{ color: category.color }} />
@@ -2125,7 +2137,7 @@ export default function DocsPage({ onBack }) {
                       const categoryTopics = filteredTopics.filter(t => databaseCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
                       return (
-                        <div key={category.id} className="rounded-lg overflow-hidden border border-indigo-200/30 shadow-[0_2px_12px_rgba(99,102,241,0.06)]">
+                        <div key={category.id} className="rounded-2xl overflow-hidden border-0 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
                           <div className="px-4 py-2.5 flex items-center gap-2.5 bg-gray-50/80 border-b border-gray-100">
                             <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: `${category.color}12` }}>
                               <Icon name={category.icon} size={14} style={{ color: category.color }} />
@@ -2179,7 +2191,7 @@ export default function DocsPage({ onBack }) {
                       const categoryTopics = filteredTopics.filter(t => sqlCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
                       return (
-                        <div key={category.id} className="rounded-lg overflow-hidden border border-indigo-200/30 shadow-[0_2px_12px_rgba(99,102,241,0.06)]">
+                        <div key={category.id} className="rounded-2xl overflow-hidden border-0 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
                           <div className="px-4 py-2.5 flex items-center gap-2.5 bg-gray-50/80 border-b border-gray-100">
                             <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: `${category.color}12` }}>
                               <Icon name={category.icon} size={14} style={{ color: category.color }} />

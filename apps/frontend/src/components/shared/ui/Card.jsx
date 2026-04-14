@@ -15,12 +15,12 @@ const cardVariants = cva(
   {
     variants: {
       variant: {
-        default: ['bg-gradient-to-br from-white/80 to-indigo-50/30 border border-indigo-200/30 shadow-[0_2px_12px_rgba(99,102,241,0.06)]'],
-        elevated: ['bg-gradient-to-br from-white/80 to-indigo-50/30 border border-indigo-200/30', 'shadow-[0_4px_16px_rgba(99,102,241,0.08)] hover:shadow-[0_12px_40px_rgba(99,102,241,0.14)]'],
-        outlined: ['bg-transparent border border-indigo-200/30'],
-        filled: ['bg-indigo-50/40 border-0'],
-        glass: ['bg-white/60 backdrop-blur-md border border-indigo-200/20 shadow-[0_2px_12px_rgba(99,102,241,0.06)]'],
-        interactive: ['bg-gradient-to-br from-white/80 to-indigo-50/30 border border-indigo-200/30', 'shadow-[0_2px_12px_rgba(99,102,241,0.06)] hover:shadow-[0_12px_40px_rgba(99,102,241,0.14)]', 'hover:border-indigo-300/40 hover:-translate-y-0.5', 'cursor-pointer'],
+        default: ['bg-white border-0 shadow-[0_4px_24px_rgba(99,102,241,0.10)] rounded-2xl'],
+        elevated: ['bg-white border-0', 'shadow-[0_8px_32px_rgba(99,102,241,0.14)] hover:shadow-[0_20px_60px_rgba(99,102,241,0.22)]'],
+        outlined: ['bg-transparent border border-gray-200'],
+        filled: ['bg-gray-50 border-0'],
+        glass: ['bg-white/80 backdrop-blur-md border border-white/40 shadow-[0_4px_24px_rgba(99,102,241,0.10)]'],
+        interactive: ['bg-white border-0', 'shadow-[0_4px_24px_rgba(99,102,241,0.10)] hover:shadow-[0_20px_60px_rgba(99,102,241,0.25)]', 'hover:-translate-y-1', 'cursor-pointer'],
         ghost: ['bg-transparent border-0'],
       },
       padding: {
