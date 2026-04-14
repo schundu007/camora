@@ -901,18 +901,24 @@ export default function DocsPage({ onBack }) {
                       {activePage === 'roadmaps' && <>Follow the{' '}<span className="bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">Roadmap</span></>}
                       {activePage === 'eng-blogs' && <>Engineering{' '}<span className="bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent">Blogs</span></>}
                     </h1>
-                    <p className="text-base md:text-lg text-[var(--text-muted)] max-w-2xl leading-relaxed landing-body">
-                      {activePage === 'coding' && 'Master the fundamental data structures and algorithms needed to ace technical interviews at top tech companies.'}
-                      {activePage === 'system-design' && 'Master distributed systems, scalability patterns, and architecture trade-offs. From fundamentals to real-world designs at top companies.'}
-                      {activePage === 'low-level' && 'OOP principles, SOLID design, UML diagrams, and all 23 Gang of Four design patterns. Build clean, extensible object-oriented systems.'}
-                      {activePage === 'behavioral' && 'Prepare compelling stories and answers for behavioral interviews using proven frameworks like STAR.'}
-                      {activePage === 'microservices' && 'Service communication, resilience patterns, data management, and deployment strategies for distributed microservices architectures.'}
-                      {activePage === 'databases' && 'Storage engines, indexing, transactions, replication, sharding, and consensus algorithms. Deep dive into how databases really work.'}
-                      {activePage === 'sql' && 'From fundamentals to window functions. Master SQL queries, joins, subqueries, and complex interview problems.'}
-                      {activePage === 'projects' && 'Portfolio projects, take-home assignments, and full-stack builds. Get AI-generated step-by-step tutorials for each project.'}
-                      {activePage === 'roadmaps' && 'Structured learning paths from beginner to advanced. Each roadmap shows the optimal order to learn topics with visual flow diagrams.'}
-                      {activePage === 'eng-blogs' && 'Curated engineering articles from 35 top tech companies. Learn how real systems are built at scale — from search and recommendations to distributed infrastructure.'}
-                    </p>
+                    <div className="flex flex-wrap gap-2 mt-3">
+                      {(activePage === 'coding' ? ['Data Structures', 'Algorithms', 'Technical Interviews', 'Top Companies']
+                        : activePage === 'system-design' ? ['Distributed Systems', 'Scalability', 'Architecture Trade-offs', 'Real-World Designs']
+                        : activePage === 'low-level' ? ['OOP Principles', 'SOLID Design', 'UML Diagrams', 'Design Patterns']
+                        : activePage === 'behavioral' ? ['STAR Framework', 'Storytelling', 'Leadership', 'Conflict Resolution']
+                        : activePage === 'microservices' ? ['Service Communication', 'Resilience Patterns', 'Data Management', 'Deployment Strategies']
+                        : activePage === 'databases' ? ['Storage Engines', 'Indexing', 'Transactions', 'Replication', 'Sharding']
+                        : activePage === 'sql' ? ['Fundamentals', 'Window Functions', 'Joins', 'Subqueries', 'Interview Problems']
+                        : activePage === 'projects' ? ['Portfolio Projects', 'Take-Home', 'Full-Stack Builds', 'Step-by-Step Tutorials']
+                        : activePage === 'roadmaps' ? ['Learning Paths', 'Beginner to Advanced', 'Visual Flow Diagrams', 'Optimal Order']
+                        : activePage === 'eng-blogs' ? ['35+ Companies', 'Real Systems at Scale', 'Search & Recommendations', 'Infrastructure']
+                        : []
+                      ).map(tag => (
+                        <span key={tag} className="px-3 py-1 rounded-full text-xs font-medium landing-mono border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-secondary)]">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                   )}
                   {/* Job Context Banner — shown when navigating from a job prep page or URL analysis */}
