@@ -178,6 +178,10 @@ export default function DocsPage({ onBack }) {
     // Clear job context when user manually navigates via sidebar
     // (they can always get back to the filtered view from JobPrepPage)
     setJobContext(null);
+    // Reset Ask AI state when switching pages
+    setAiQuestion('');
+    setAiAnswer('');
+    setShowAskAI(false);
   };
 
   // Clear job-role filter
@@ -187,6 +191,10 @@ export default function DocsPage({ onBack }) {
 
   const setSelectedTopic = (topic) => {
     setSelectedTopicState(topic);
+    // Reset Ask AI state when switching topics
+    setAiQuestion('');
+    setAiAnswer('');
+    setShowAskAI(false);
     if (topic) {
       /* sidebar close handled by AppShell */;
       window.scrollTo({ top: 0, behavior: 'smooth' });
