@@ -54,7 +54,7 @@ export default function ReferralDashboard() {
 
   if (loading) {
     return (
-      <div className="bg-white border border-[#e3e8ee] rounded-2xl p-6">
+      <div className="bg-gradient-to-br from-white/80 to-indigo-50/30 border border-indigo-200/30 rounded-2xl p-6">
         <div className="animate-pulse space-y-4">
           <div className="h-5 bg-gray-100 rounded w-40" />
           <div className="h-10 bg-gray-100 rounded" />
@@ -70,7 +70,7 @@ export default function ReferralDashboard() {
 
   if (error) {
     return (
-      <div className="bg-white border border-[#e3e8ee] rounded-2xl p-6">
+      <div className="bg-gradient-to-br from-white/80 to-indigo-50/30 border border-indigo-200/30 rounded-2xl p-6">
         <p className="text-sm text-red-500">{error}</p>
       </div>
     );
@@ -79,7 +79,7 @@ export default function ReferralDashboard() {
   if (!data) return null;
 
   return (
-    <div className="bg-white border border-[#e3e8ee] rounded-2xl p-6 space-y-6">
+    <div className="bg-gradient-to-br from-white/80 to-indigo-50/30 border border-indigo-200/30 rounded-2xl p-6 space-y-6">
       {/* Header */}
       <div>
         <h3 className="text-lg font-bold text-gray-900 tracking-tight">Refer Friends, Earn Credits</h3>

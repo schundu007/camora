@@ -54,7 +54,7 @@ export default function InterviewCountdown() {
 
   if (loading) {
     return (
-      <div className="bg-white border border-[#e3e8ee] rounded-2xl p-5">
+      <div className="bg-gradient-to-br from-white/80 to-indigo-50/30 border border-indigo-200/30 rounded-2xl p-5">
         <div className="animate-pulse space-y-3">
           <div className="h-4 bg-gray-100 rounded w-32" />
           <div className="h-12 bg-gray-100 rounded w-20" />
@@ -70,14 +70,14 @@ export default function InterviewCountdown() {
       <>
         <button
           onClick={() => setShowSetup(true)}
-          className="w-full bg-white border border-[#e3e8ee] rounded-2xl p-5 text-left hover:border-emerald-300 hover:shadow-sm transition-all group"
+          className="w-full bg-gradient-to-br from-white/80 to-indigo-50/30 border border-indigo-200/30 rounded-2xl p-5 text-left hover:border-indigo-300/40 hover:shadow-sm transition-all group"
         >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-semibold text-gray-900">Interview Countdown</p>
               <p className="text-[13px] text-gray-500 mt-0.5">Track your prep progress</p>
             </div>
-            <span className="text-emerald-600 text-sm font-medium group-hover:translate-x-0.5 transition-transform">
+            <span className="text-indigo-600 text-sm font-medium group-hover:translate-x-0.5 transition-transform">
               Set your interview date &rarr;
             </span>
           </div>
@@ -99,7 +99,7 @@ export default function InterviewCountdown() {
   const strokeDashoffset = circumference - (completion_pct / 100) * circumference;
 
   return (
-    <div className="bg-white border border-[#e3e8ee] rounded-2xl p-5">
+    <div className="bg-gradient-to-br from-white/80 to-indigo-50/30 border border-indigo-200/30 rounded-2xl p-5">
       <div className="flex items-center gap-4">
         {/* Progress ring */}
         <div className="relative flex-shrink-0">
