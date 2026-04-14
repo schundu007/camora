@@ -1,0 +1,161 @@
+import { useState, useRef, useCallback, useEffect } from 'react';
+import { Excalidraw } from '@excalidraw/excalidraw';
+import type { ExcalidrawImperativeAPI, ExcalidrawElement } from '@excalidraw/excalidraw/types';
+
+interface ExcalidrawWhiteboardProps {
+  initialElements?: readonly ExcalidrawElement[];
+  onChange?: (elements: readonly ExcalidrawElement[]) => void;
+  onLoadAIDiagram?: () => Promise<string | null>;
+  className?: string;
+}
+
+export default function ExcalidrawWhiteboard({
+  initialElements,
+  onChange,
+  onLoadAIDiagram,
+  className = '',
+}: ExcalidrawWhiteboardProps) {
+  const [excalidrawAPI, setExcalidrawAPI] = useState<ExcalidrawImperativeAPI | null>(null);
+  const [loadingAI, setLoadingAI] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Debounced onChange handler
+  const handleChange = useCallback(
+    (elements: readonly ExcalidrawElement[]) => {
+      if (!onChange) return;
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => {
+        const activeElements = elements.filter((el) => !el.isDeleted);
+        onChange(activeElements);
+      }, 500);
+    },
+    [onChange],
+  );
+
+  // Cleanup debounce on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
+
+  // Load AI diagram and convert Mermaid to Excalidraw elements
+  const handleLoadAIDiagram = useCallback(async () => {
+    if (!onLoadAIDiagram || !excalidrawAPI) return;
+    setLoadingAI(true);
+    try {
+      const mermaidCode = await onLoadAIDiagram();
+      if (!mermaidCode) return;
+
+      const { parseMermaidToExcalidraw } = await import(
+        '@excalidraw/mermaid-to-excalidraw'
+      );
+      const { convertToExcalidrawElements } = await import(
+        '@excalidraw/excalidraw'
+      );
+
+      const { elements: skeletonElements } =
+        await parseMermaidToExcalidraw(mermaidCode);
+      const excalidrawElements = convertToExcalidrawElements(skeletonElements);
+
+      excalidrawAPI.updateScene({
+        elements: excalidrawElements,
+      });
+      excalidrawAPI.scrollToContent(excalidrawElements, { fitToContent: true });
+    } catch (err) {
+      console.error('Failed to load AI diagram:', err);
+    } finally {
+      setLoadingAI(false);
+    }
+  }, [onLoadAIDiagram, excalidrawAPI]);
+
+  return (
+    <div
+      className={className}
+      style={{ width: '100%', height: '100%', minHeight: 400, position: 'relative' }}
+    >
+      <Excalidraw
+        excalidrawAPI={(api) => setExcalidrawAPI(api)}
+        initialData={{
+          elements: initialElements ? [...initialElements] : [],
+          appState: {
+            theme: 'light',
+            viewBackgroundColor: '#fafbfc',
+            currentItemFontFamily: 1,
+            gridSize: 20,
+          },
+        }}
+        onChange={handleChange}
+        UIOptions={{
+          canvasActions: {
+            export: false,
+            saveAsImage: true,
+            loadScene: false,
+          },
+        }}
+        renderTopRightUI={() =>
+          onLoadAIDiagram ? (
+            <button
+              onClick={handleLoadAIDiagram}
+              disabled={loadingAI}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '6px 14px',
+                fontSize: 12,
+                fontWeight: 600,
+                color: loadingAI ? '#9ca3af' : '#059669',
+                background: loadingAI ? '#f3f4f6' : '#ecfdf5',
+                border: `1px solid ${loadingAI ? '#d1d5db' : '#a7f3d0'}`,
+                borderRadius: 8,
+                cursor: loadingAI ? 'wait' : 'pointer',
+                fontFamily: 'Plus Jakarta Sans, sans-serif',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {loadingAI ? (
+                <>
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    style={{ animation: 'spin 1s linear infinite' }}
+                  >
+                    <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                  </svg>
+                  Loading...
+                </>
+              ) : (
+                <>
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83" />
+                  </svg>
+                  Load AI Diagram
+                </>
+              )}
+            </button>
+          ) : null
+        }
+      />
+      <style>{`
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
+    </div>
+  );
+}

@@ -68,6 +68,7 @@ export function useSystemDesignStorage() {
       systemDesign,
       qaHistory: [],
       eraserDiagram: null,
+      whiteboardData: null,
       title: extractTitle(problem, systemDesign)
     };
 
@@ -143,6 +144,13 @@ export function useSystemDesignStorage() {
   }, [updateSession]);
 
   /**
+   * Update the whiteboard data for a session
+   */
+  const updateWhiteboardData = useCallback((sessionId, data) => {
+    updateSession(sessionId, { whiteboardData: data });
+  }, [updateSession]);
+
+  /**
    * Delete a session
    */
   const deleteSession = useCallback(async (sessionId) => {
@@ -200,6 +208,7 @@ export function useSystemDesignStorage() {
     updateSession,
     addQAToSession,
     updateEraserDiagram,
+    updateWhiteboardData,
     deleteSession,
     getSession,
     getAllSessions,

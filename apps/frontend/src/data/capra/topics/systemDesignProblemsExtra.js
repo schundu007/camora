@@ -4,6 +4,8 @@ export const extraSystemDesignProblemCategories = [
   { id: 'payment', name: 'Payment & Financial', icon: 'dollarSign', color: '#16a34a' },
   { id: 'async', name: 'Async & Background Processing', icon: 'clock', color: '#d946ef' },
   { id: 'specialized', name: 'Specialized Systems', icon: 'zap', color: '#0ea5e9' },
+  { id: 'social', name: 'Social Media & Networking', icon: 'users', color: '#3b82f6' },
+  { id: 'streaming', name: 'Streaming & Media', icon: 'play', color: '#ef4444' },
 ];
 
 export const extraSystemDesignProblemCategoryMap = {
@@ -33,6 +35,13 @@ export const extraSystemDesignProblemCategoryMap = {
   'distributed-search': 'infrastructure',
   'blob-store': 'storage',
   'distributed-task-scheduler': 'async',
+  'leetcode-online-judge': 'specialized',
+  'strava-fitness-tracking': 'social',
+  'online-auction': 'ecommerce',
+  'fb-live-comments': 'communication',
+  'fb-post-search': 'infrastructure',
+  'price-tracking-service': 'specialized',
+  'youtube-top-k-trending': 'streaming',
 };
 
 export const extraSystemDesigns = [
@@ -7350,5 +7359,541 @@ Auto-adjustment:
       { name: 'Execution Layer', purpose: 'Dispatch tasks to workers and manage lifecycle', components: ['Worker Fleet', 'Task Dispatcher', 'Heartbeat Monitor', 'Retry Engine'] },
       { name: 'Reliability Layer', purpose: 'Ensure delivery guarantees and handle failures', components: ['Dead Letter Queue', 'Idempotency Store', 'Distributed Lock Manager', 'Audit Log (PostgreSQL)'] },
     ],
+  },
+
+  // ─── NEW: LeetCode Online Judge ──────────────────────────────────────
+  {
+    id: 'leetcode-online-judge',
+    isNew: true,
+    title: 'LeetCode Online Judge',
+    subtitle: 'Code Execution & Evaluation Platform',
+    icon: 'code',
+    color: '#f59e0b',
+    difficulty: 'Medium',
+    description: 'Design an online judge system that compiles, executes, and evaluates code submissions against test cases in multiple languages.',
+
+    introduction: `Online judge platforms like LeetCode, HackerRank, and Codeforces serve millions of developers practicing coding challenges. The core challenge is executing untrusted user code safely, efficiently, and at scale while providing near-instant feedback.
+
+The system must handle bursty traffic patterns (contest mode with thousands of simultaneous submissions), support 15+ programming languages, enforce strict time and memory limits, and prevent malicious code from escaping the sandbox. Each submission spawns an isolated execution environment, runs against multiple test cases, and returns granular results (pass/fail per test, runtime, memory usage).
+
+Beyond basic execution, production systems need plagiarism detection across submissions, editorial solutions, discussion forums, and contest ranking with real-time leaderboards. The code execution pipeline is the hardest part — it requires container orchestration, resource limiting via cgroups, and careful security boundaries.
+
+Key architectural decisions include queue-based processing vs. synchronous execution, container reuse vs. fresh containers per submission, and how to scale the worker fleet during contests.`,
+
+    functionalRequirements: [
+      'Submit code in 15+ languages and receive compilation + execution results',
+      'Run submissions against hidden test cases with time/memory limits',
+      'Support contests with real-time leaderboards and rankings',
+      'Provide per-test-case pass/fail results with runtime and memory stats',
+      'Display editorial solutions and allow community discussions',
+      'Track user progress, streaks, and problem completion history',
+    ],
+    nonFunctionalRequirements: [
+      'Submission results returned within 5 seconds for standard problems',
+      'Secure sandboxed execution — no escape from container isolation',
+      'Handle 10K+ concurrent submissions during contests',
+      'Zero data loss on submissions even during worker failures',
+      '99.9% availability for the submission pipeline',
+    ],
+    dataModel: {
+      description: 'Core entities: Users, Problems, Submissions, TestCases, Contests',
+      schema: `problems: id, title, slug, difficulty, description, constraints, companies[], topics[], acceptance_rate, created_at
+test_cases: id, problem_id, input, expected_output, is_sample, order_index
+submissions: id, user_id, problem_id, language, code, status (pending|running|accepted|wrong_answer|TLE|MLE|RE|CE), runtime_ms, memory_kb, created_at
+submission_results: id, submission_id, test_case_id, status, actual_output, runtime_ms, memory_kb
+contests: id, title, start_time, end_time, problems[], registered_users[]
+contest_rankings: contest_id, user_id, score, penalty_time, solved_count, rank`
+    },
+    apiDesign: {
+      description: 'REST API for submissions, problems, and contests',
+      endpoints: [
+        { method: 'POST', path: '/api/submissions', params: '{ problem_id, language, code }', response: '{ submission_id, status: "queued" }', notes: 'Async — returns immediately, poll for results' },
+        { method: 'GET', path: '/api/submissions/:id', params: 'submission_id', response: '{ status, runtime_ms, memory_kb, test_results[] }', notes: 'Poll or use WebSocket for real-time updates' },
+        { method: 'GET', path: '/api/problems/:slug', params: 'slug', response: '{ problem details, sample_test_cases, stats }', notes: 'Public problem data with sample cases only' },
+        { method: 'POST', path: '/api/submissions/:id/run', params: '{ code, language, custom_input }', response: '{ output, runtime, status }', notes: 'Run against custom input without submitting' },
+        { method: 'GET', path: '/api/contests/:id/leaderboard', params: 'contest_id, page', response: '{ rankings[], total }', notes: 'Real-time during contest, cached after' },
+      ]
+    },
+    keyQuestions: [
+      { question: 'How do you safely execute untrusted user code?', answer: 'Use container-level isolation with strict resource controls. Each submission runs in an ephemeral Docker container (or gVisor/Firecracker microVM) with: (1) cgroups limiting CPU time, memory, and process count, (2) seccomp profiles blocking dangerous syscalls (no network, no filesystem writes outside /tmp), (3) read-only root filesystem, (4) no network access, (5) execution timeout with SIGKILL. The container is destroyed after execution. For extra security, run workers on dedicated nodes isolated from the main infrastructure. Language-specific measures include disabling reflection/JNI in Java, restricting imports in Python, and compiling with -fsanitize in C++.' },
+      { question: 'How do you handle 10K concurrent submissions during a contest?', answer: 'Use a queue-based architecture: submissions go into a distributed message queue (Kafka or SQS), and a fleet of worker nodes pulls jobs. Auto-scale workers based on queue depth — during contests, pre-warm extra workers. Key optimizations: (1) pre-pull Docker images for all languages on workers, (2) reuse warm containers for the same language (reset state between runs), (3) prioritize contest submissions over practice submissions with separate queues, (4) use spot/preemptible instances for cost efficiency. The queue provides natural backpressure and ensures zero submission loss even if workers crash.' },
+      { question: 'How do you minimize submission latency?', answer: 'Target sub-5s end-to-end: (1) Skip cold container start by maintaining warm pools of pre-initialized containers per language, (2) compile and run in the same container to avoid network transfer, (3) stream test case results as they complete rather than waiting for all, (4) cache compilation results for identical code (hash-based), (5) use local SSD for test case data on workers, (6) run test cases in parallel for independent cases. For "Run Code" (custom input), use a fast path that skips the queue and hits a warm worker pool directly.' },
+      { question: 'How would you implement the real-time contest leaderboard?', answer: 'During a contest, use a Redis sorted set per contest. Score = (solved_count * 1000000) - penalty_time for natural ordering. On each accepted submission: ZADD updates the score atomically, then publish a leaderboard-change event via pub/sub. The frontend connects via WebSocket and receives incremental updates. For scale, partition by contest_id. After the contest ends, materialize the final rankings to PostgreSQL and cache the leaderboard. Handle tie-breaking by earliest solve time stored in a secondary sorted set.' },
+      { question: 'How do you detect plagiarism across submissions?', answer: 'Use a multi-layer approach: (1) AST-based comparison — parse submissions into abstract syntax trees and compare structural similarity (MOSS algorithm), normalizing variable names and formatting, (2) Token-based analysis — tokenize code and run winnowing/fingerprinting to detect copied segments, (3) Statistical anomaly — flag when a user suddenly solves a hard problem in under 1 minute or submits code with different coding style than their history. Run plagiarism checks asynchronously after contests. Store code fingerprints in a searchable index for O(1) lookup of known copied solutions. Alert contest admins with similarity scores and side-by-side diffs.' },
+      { question: 'How do you handle different programming languages?', answer: 'Each language has a "judge profile" defining: compiler command, run command, file extension, time multiplier (Java gets 2x time limit vs C++), memory multiplier, and compilation flags. Store profiles in a configuration service. Workers pull the appropriate Docker image (python:3.11-slim, gcc:13, openjdk:17, etc.) from a local registry. Key considerations: (1) normalize output comparison (trim trailing whitespace/newlines), (2) handle language-specific gotchas (floating point precision, integer overflow), (3) measure wall-clock time not CPU time for fairness, (4) set per-language memory limits (JVM needs more baseline memory than C).' },
+    ],
+    basicImplementation: {
+      title: 'Basic Online Judge',
+      description: 'Synchronous execution with Docker containers and a simple queue',
+      svgTemplate: null,
+      problems: ['Single worker bottleneck during contests', 'Cold container starts add 2-3s latency', 'No plagiarism detection', 'No horizontal scaling for execution'],
+    },
+    advancedImplementation: {
+      title: 'Production Online Judge',
+      description: 'Distributed execution fleet with warm container pools, priority queues, and real-time leaderboards',
+      svgTemplate: null,
+      keyPoints: ['Auto-scaling worker fleet with pre-warmed containers', 'Priority queues separating contest vs practice submissions', 'Redis sorted sets for real-time leaderboard', 'AST-based plagiarism detection pipeline', 'gVisor/Firecracker for stronger sandbox isolation'],
+      databaseChoice: 'PostgreSQL for problems/submissions/users, Redis for leaderboards and queue metadata, S3 for code storage and test case files',
+      caching: 'Cache problem metadata and sample test cases in CDN, compilation results by code hash, leaderboard snapshots in Redis',
+    },
+  },
+
+  // ─── NEW: Strava Fitness Tracking ────────────────────────────────────
+  {
+    id: 'strava-fitness-tracking',
+    isNew: true,
+    title: 'Strava Fitness Tracking',
+    subtitle: 'GPS Activity & Social Fitness Platform',
+    icon: 'activity',
+    color: '#fc4c02',
+    difficulty: 'Medium',
+    description: 'Design a fitness tracking platform that records GPS activities, provides social features, and ranks users on road segments.',
+
+    introduction: `Strava is a social fitness platform where athletes record GPS-based activities (running, cycling, swimming), share them with followers, and compete on road segments. The core technical challenges involve processing high-frequency GPS data streams, matching activities to predefined road segments, and maintaining real-time leaderboards.
+
+The system ingests millions of GPS activities daily, each containing thousands of coordinate points at 1-second intervals. Post-upload processing includes route matching to known roads, segment detection (matching portions of the activity to community-defined segments), pace/speed/elevation calculations, and social feed distribution.
+
+Segments are the killer feature — any user can create a segment on a stretch of road, and Strava automatically ranks every athlete who has ever ridden/run that segment. This requires efficient geospatial matching: given a GPS trace, find all segments that overlap with the route, determine exact entry/exit points, and compute segment-specific times.
+
+Real-time activity tracking (live location sharing during an activity) adds WebSocket complexity, while the social feed requires efficient fan-out of activities to followers.`,
+
+    functionalRequirements: [
+      'Record GPS activities with heart rate, cadence, and power data',
+      'Automatic segment detection and leaderboard ranking',
+      'Social feed showing followed athletes activities',
+      'Route matching to known roads and trails',
+      'Activity statistics: pace, elevation gain, estimated calories',
+      'Live activity tracking with real-time location sharing',
+      'Personal records and year-over-year comparisons',
+    ],
+    nonFunctionalRequirements: [
+      'Process uploaded activities within 30 seconds including segment matching',
+      'Support 50M+ active users uploading 10M+ activities per week',
+      'Segment matching accuracy within 10 meters of actual route',
+      'Live tracking updates delivered within 2 seconds',
+      '99.95% availability for activity upload and retrieval',
+    ],
+    dataModel: {
+      description: 'Core entities: Users, Activities, Segments, SegmentEfforts, Routes',
+      schema: `users: id, name, profile_pic, followers_count, following_count, total_distance_km, created_at
+activities: id, user_id, type (run|ride|swim), start_time, elapsed_time_s, distance_m, elevation_gain_m, avg_speed, max_speed, avg_hr, calories, polyline (encoded), gps_points JSONB, gear_id
+segments: id, name, creator_id, start_latlng, end_latlng, distance_m, avg_grade, polyline, city, country, bounding_box, created_at
+segment_efforts: id, segment_id, activity_id, user_id, elapsed_time_s, start_index, end_index, rank, pr_rank, created_at
+follows: follower_id, following_id, created_at
+feed_items: id, user_id, activity_id, created_at`
+    },
+    apiDesign: {
+      description: 'REST API for activities, segments, and social features',
+      endpoints: [
+        { method: 'POST', path: '/api/activities', params: '{ type, gps_points[], start_time, device }', response: '{ activity_id, processing_status }', notes: 'Async processing — GPS analysis, segment matching happen in background' },
+        { method: 'GET', path: '/api/activities/:id', params: 'activity_id', response: '{ activity, segment_efforts[], stats, map_polyline }', notes: 'Full activity details with matched segments' },
+        { method: 'GET', path: '/api/segments/:id/leaderboard', params: 'segment_id, filter (overall|age|weight|following)', response: '{ efforts[], user_rank }', notes: 'Filtered leaderboard with user position' },
+        { method: 'GET', path: '/api/feed', params: 'cursor, limit', response: '{ activities[], next_cursor }', notes: 'Paginated social feed of followed athletes' },
+        { method: 'POST', path: '/api/activities/:id/live', params: '{ lat, lng, speed, hr, timestamp }', response: '202 Accepted', notes: 'Real-time location updates during live activity via WebSocket' },
+      ]
+    },
+    keyQuestions: [
+      { question: 'How does segment matching work at scale?', answer: 'Segment matching is a geospatial problem: given a GPS trace of N points, find all segments whose polyline overlaps the trace. Use a spatial index (R-tree or S2 geometry cells) to narrow candidates. Step 1: Compute the bounding box of the activity. Step 2: Query the spatial index for all segments whose bounding boxes intersect. Step 3: For each candidate segment, use the Fréchet distance or Hausman distance to compare the segment polyline against the matching portion of the activity trace. Step 4: If distance < threshold (10m), compute the entry/exit indices and elapsed time. Optimization: pre-compute S2 cell coverage for each segment and index by cell ID in a lookup table — this turns the spatial query into a simple set intersection.' },
+      { question: 'How do you build the segment leaderboard?', answer: 'Each segment has a sorted leaderboard of all efforts. Use a Redis sorted set per segment (ZADD segment:{id} elapsed_time user_id). When a new segment effort is recorded: (1) ZADD to update the leaderboard, (2) ZRANK to get the new rank, (3) compare with previous best to detect PRs, (4) publish rank-change events for push notifications. For very popular segments (100K+ efforts), use tiered leaderboards — top 100 in Redis for fast access, full history in PostgreSQL. Filter leaderboards (age group, gender, followed athletes) require separate sorted sets or materialized views with periodic refresh.' },
+      { question: 'How do you handle the social feed at scale?', answer: 'Hybrid push/pull fan-out model. When a user uploads an activity: (1) For users with < 5K followers, push the activity_id into each followers feed list (Redis LIST or sorted set by timestamp), (2) For celebrity athletes with 100K+ followers, use pull-on-read — when a follower loads their feed, query the celebrity activity list and merge with their pre-built feed. Feed reads: ZRANGEBYSCORE on the users feed sorted set, then batch-fetch activity details. Trim feeds to last 500 items. Cache hot activity data (thumbnail, summary stats) in the feed entry itself to avoid joins.' },
+      { question: 'How do you process GPS data efficiently?', answer: 'Activity processing pipeline: (1) Ingest: receive raw GPS points (lat, lng, elevation, timestamp, hr, cadence) — typically 1 point/second, so a 1-hour ride is 3600 points. (2) Clean: remove GPS jitter using Kalman filter, fill gaps via interpolation, snap to roads using map-matching API. (3) Analyze: compute distance (Haversine formula between consecutive points), elevation gain (only count positive deltas after smoothing), speed, pace, calories (using heart rate and weight). (4) Encode: compress the polyline using Google Polyline Encoding for efficient storage and map rendering. (5) Match segments: run the spatial matching pipeline. All steps run as a Kafka-driven processing pipeline, each stage as a separate consumer group for independent scaling.' },
+      { question: 'How would you implement live activity tracking?', answer: 'Use WebSocket connections for real-time location updates. The athlete app sends GPS coordinates every 3-5 seconds via WebSocket to a Live Tracking Service. This service: (1) writes the latest position to a Redis key (live:{activity_id}) with a 60s TTL, (2) publishes position updates to a pub/sub channel (live:{activity_id}), (3) followers watching the live activity subscribe to the channel and receive updates. Scaling: partition WebSocket connections across nodes using the activity_id as the routing key. Use Redis pub/sub (or Kafka) to bridge updates across nodes. For map rendering, buffer the last 5 positions and interpolate on the client for smooth animation. Automatically detect activity end when no updates arrive for 5 minutes.' },
+      { question: 'How do you handle privacy and data protection for GPS data?', answer: 'GPS data is highly sensitive — it reveals home/work addresses and daily patterns. Implement: (1) Privacy zones — users define circular zones around addresses; any GPS points within the zone are stripped from the public activity, and the polyline is truncated before entering the zone. (2) Activity visibility controls — public, followers-only, or private per activity. (3) Segment opt-out — users can hide their efforts from public leaderboards. (4) Data retention — allow full GPS data deletion while keeping aggregate stats. (5) Enhanced privacy mode — add random offset (50-200m) to start/end points. Store raw GPS data encrypted at rest, and ensure the API never returns raw coordinates for other users activities — only encoded polylines for map display.' },
+    ],
+    basicImplementation: {
+      title: 'Basic Fitness Tracker',
+      description: 'Monolithic app with PostGIS for spatial queries and basic feed',
+      svgTemplate: null,
+      problems: ['Segment matching is O(N*M) scanning all segments', 'Feed generation requires expensive joins', 'No real-time tracking', 'GPS processing blocks the upload response'],
+    },
+    advancedImplementation: {
+      title: 'Production Fitness Platform',
+      description: 'Event-driven pipeline with spatial indexing, hybrid fan-out feed, and real-time tracking',
+      svgTemplate: null,
+      keyPoints: ['S2 geometry spatial index for O(1) segment candidate lookup', 'Kafka pipeline for async GPS processing and segment matching', 'Hybrid push/pull fan-out for social feed', 'WebSocket + Redis pub/sub for live tracking', 'Tiered leaderboards: Redis for top-N, PostgreSQL for full history'],
+      databaseChoice: 'PostgreSQL + PostGIS for activities and segments, Redis for leaderboards and live tracking, Kafka for processing pipeline, S3 for raw GPS files',
+      caching: 'Cache segment leaderboard top-100 in Redis, activity summaries in CDN, feed items with embedded activity thumbnails',
+    },
+  },
+
+  // ─── NEW: Online Auction ─────────────────────────────────────────────
+  {
+    id: 'online-auction',
+    isNew: true,
+    title: 'Online Auction (eBay)',
+    subtitle: 'Real-time Bidding & Auction Platform',
+    icon: 'dollarSign',
+    color: '#e53e3e',
+    difficulty: 'Medium',
+    description: 'Design a real-time auction platform with concurrent bidding, anti-sniping protection, and auction lifecycle management.',
+
+    introduction: `Online auction systems like eBay handle millions of concurrent auctions, each with real-time bidding, countdown timers, and strict consistency requirements. The core challenge is managing bid concurrency — when multiple users bid on the same item simultaneously, the system must guarantee that only the highest valid bid wins and that no bids are lost.
+
+Auction timing is critical: auctions must end at exactly the scheduled time (or with anti-sniping extensions), and the winning bid must be determined atomically. This requires careful handling of distributed clocks, race conditions, and network delays.
+
+The system also needs proxy bidding (automatic bidding up to a maximum), buy-it-now options, reserve prices, and a payment/escrow flow after auction completion. Real-time notifications keep bidders engaged, while the search and discovery system helps buyers find relevant auctions among millions of active listings.
+
+Anti-fraud measures include shill bidding detection, bid shielding prevention, and seller reputation scoring. The payment escrow system must handle disputes, returns, and refunds.`,
+
+    functionalRequirements: [
+      'Create auctions with start/end time, starting price, reserve price, and buy-it-now option',
+      'Place bids with real-time validation (must exceed current bid + increment)',
+      'Proxy bidding: set maximum bid, system autobids up to that amount',
+      'Anti-sniping: extend auction by 2 minutes if bid placed in final 30 seconds',
+      'Real-time notifications for outbid, auction ending soon, and won/lost',
+      'Search and browse active auctions with filters',
+      'Payment escrow and seller/buyer rating after completion',
+    ],
+    nonFunctionalRequirements: [
+      'Bid processing latency under 100ms',
+      'Strong consistency for bid ordering — no lost or phantom bids',
+      'Support 1M+ concurrent active auctions',
+      'Real-time bid updates to all watchers within 500ms',
+      '99.99% availability for bid placement during auction end times',
+    ],
+    dataModel: {
+      description: 'Core entities: Auctions, Bids, Users, Watchlist, Payments',
+      schema: `auctions: id, seller_id, title, description, category, images[], starting_price, reserve_price, buy_now_price, current_bid, current_bidder_id, bid_count, start_time, end_time, status (draft|active|ended|sold|unsold), anti_snipe_extensions
+bids: id, auction_id, bidder_id, amount, max_proxy_bid, is_proxy, created_at, status (active|outbid|winning|cancelled)
+watchlist: user_id, auction_id, created_at
+payments: id, auction_id, buyer_id, seller_id, amount, platform_fee, status (pending|paid|in_escrow|released|disputed|refunded)`
+    },
+    apiDesign: {
+      description: 'REST + WebSocket API for auctions and real-time bidding',
+      endpoints: [
+        { method: 'POST', path: '/api/auctions', params: '{ title, description, starting_price, reserve_price, duration, images[] }', response: '{ auction_id }', notes: 'Seller creates auction listing' },
+        { method: 'POST', path: '/api/auctions/:id/bid', params: '{ amount, max_proxy_bid? }', response: '{ bid_id, current_price, your_status }', notes: 'Atomic bid with optimistic concurrency control' },
+        { method: 'GET', path: '/ws/auctions/:id', params: 'WebSocket connection', response: 'Stream of bid events, timer updates', notes: 'Real-time bid stream for auction watchers' },
+        { method: 'POST', path: '/api/auctions/:id/buy-now', params: '{ }', response: '{ payment_url }', notes: 'Instant purchase at buy-now price, ends auction immediately' },
+        { method: 'GET', path: '/api/auctions/search', params: '{ query, category, price_range, sort }', response: '{ auctions[], total, facets }', notes: 'Full-text search with faceted filtering' },
+      ]
+    },
+    keyQuestions: [
+      { question: 'How do you handle concurrent bids on the same auction?', answer: 'Use optimistic concurrency control with a version counter. Each auction row has a version field. To place a bid: (1) Read current auction state (current_bid, version), (2) Validate new bid > current_bid + minimum_increment, (3) UPDATE auctions SET current_bid=:new_bid, current_bidder=:user, version=version+1 WHERE id=:auction_id AND version=:expected_version. If the UPDATE affects 0 rows, the version changed (concurrent bid), so retry from step 1. This guarantees exactly one winner per bid round without locks. For very hot auctions (100+ bids/second), use a Redis-based serialization queue — bids for the same auction are routed to the same queue and processed sequentially, then written to the database.' },
+      { question: 'How does proxy bidding work?', answer: 'When a user sets a maximum proxy bid of $100 on an auction currently at $50: (1) Store the proxy bid in a separate table (not visible to others), (2) Place an actual bid at the minimum increment above current price ($51), (3) When another user bids $60, the system automatically bids $61 on behalf of the proxy bidder, (4) Continue until the proxy maximum is reached. If two users both have proxy bids, resolve immediately: the higher proxy wins at one increment above the lower proxy maximum. Implementation: keep proxy bids in a priority queue per auction, and after each new bid, check if any proxy bid can respond. This runs within the same transaction as bid processing.' },
+      { question: 'How do you implement anti-sniping protection?', answer: 'Sniping is placing a bid in the final seconds to prevent counter-bids. Anti-sniping: if a bid is placed within the last N seconds (e.g., 30s) of an auction, extend the end time by M minutes (e.g., 2 min). Implementation: (1) Each bid checks if current_time > end_time - snipe_window, (2) If yes, UPDATE end_time = end_time + extension, (3) Track total extensions (cap at e.g., 30 minutes to prevent infinite extension). The Timer Service watches auction end times and triggers closing when end_time is reached with no further extensions. Use a Redis sorted set of auction end times, with a poller checking every second for auctions that should close.' },
+      { question: 'How do you close auctions at exactly the right time?', answer: 'Use a dedicated Auction Timer Service. Store all active auction end_times in a Redis sorted set (ZADD active_auctions end_timestamp auction_id). A worker polls every second: ZRANGEBYSCORE active_auctions 0 current_timestamp to find expired auctions. For each: (1) Acquire a distributed lock on the auction, (2) Verify end_time hasnt been extended (anti-snipe check), (3) Determine winner (highest bidder if >= reserve price), (4) Update status to ended/sold/unsold atomically, (5) Trigger payment flow for winner, (6) Send notifications to all participants. Use multiple timer workers with leader election for HA. If a worker crashes, another picks up within 1 second.' },
+      { question: 'How do you prevent auction fraud?', answer: 'Multi-layer fraud detection: (1) Shill bidding detection — flag when same-IP or related accounts bid on each others auctions using graph analysis of bidding relationships, (2) Bid shielding — detect patterns where accomplices place high bids to scare away real bidders then retract, (3) Velocity checks — rate limit bids per user per minute, (4) Payment verification — require payment method on file before bidding, (5) Seller verification — identity verification for high-value listings, (6) ML anomaly detection — train models on historical fraud patterns (unusual bidding times, bid amounts, account ages). Run fraud checks asynchronously to not slow the bid path, but immediately freeze suspicious accounts and auctions.' },
+      { question: 'How do you design the payment and escrow system?', answer: 'After auction ends: (1) Winner gets a payment notification with a deadline (e.g., 3 days), (2) Payment is collected via Stripe/payment processor and held in escrow, (3) Seller ships the item and uploads tracking, (4) Buyer confirms receipt or auto-confirm after delivery + 3 days, (5) Escrow releases payment to seller minus platform fee. Dispute flow: buyer opens dispute within 7 days of delivery, funds remain in escrow during resolution, platform mediates based on evidence. Implementation: use a state machine (pending → paid → shipped → delivered → released) with timeout-based auto-transitions. Store all state transitions for audit trail.' },
+    ],
+    basicImplementation: {
+      title: 'Basic Auction Platform',
+      description: 'Monolithic app with PostgreSQL row-level locking for bid serialization',
+      svgTemplate: null,
+      problems: ['Row-level locks create contention on hot auctions', 'Timer polling is imprecise', 'No proxy bidding', 'Notifications are delayed'],
+    },
+    advancedImplementation: {
+      title: 'Production Auction Platform',
+      description: 'Distributed bidding engine with optimistic concurrency, real-time updates, and fraud detection',
+      svgTemplate: null,
+      keyPoints: ['Optimistic concurrency with version counters for bid atomicity', 'Redis sorted sets for auction timer management', 'WebSocket fan-out for real-time bid updates', 'Proxy bid engine with priority queue resolution', 'ML-based fraud detection pipeline'],
+      databaseChoice: 'PostgreSQL for auctions/bids/users with version column, Redis for timers and leaderboards, Elasticsearch for auction search, Kafka for event processing',
+      caching: 'Cache auction details in Redis with short TTL (5s), search results in CDN, user bid history in application cache',
+    },
+  },
+
+  // ─── NEW: Facebook Live Comments ─────────────────────────────────────
+  {
+    id: 'fb-live-comments',
+    isNew: true,
+    title: 'Facebook Live Comments',
+    subtitle: 'Real-time Comment Streaming System',
+    icon: 'messageCircle',
+    color: '#1877f2',
+    difficulty: 'Medium',
+    description: 'Design a real-time comment streaming system for live video broadcasts with millions of concurrent viewers.',
+
+    introduction: `Live comment systems power real-time interaction during live video broadcasts on platforms like Facebook Live, YouTube Live, and Twitch. The core challenge is fan-out at massive scale — a single popular live stream may have millions of concurrent viewers, each seeing a real-time stream of comments flowing at hundreds per second.
+
+Unlike stored comments on regular posts, live comments are ephemeral and time-ordered. The system must ingest comments from millions of viewers, filter spam and profanity in real-time, and distribute approved comments to all connected viewers with sub-second latency. During peak events (Super Bowl, elections, celebrity streams), comment rates can spike to 10,000+ per second on a single stream.
+
+The fan-out problem is the key architectural challenge. You cannot send every comment to every viewer individually — that would require N×M message deliveries. Instead, the system uses a hierarchical distribution model where comments flow through aggregation layers before reaching viewers. Client-side sampling ensures viewers see a manageable flow (e.g., 5-10 comments/second) even when the true rate is much higher.
+
+Additional features include comment reactions (likes), pinned comments, moderator tools, and real-time sentiment analysis for the broadcaster.`,
+
+    functionalRequirements: [
+      'Post comments on live streams visible to all viewers in real-time',
+      'Spam and profanity filtering with sub-100ms latency',
+      'Comment rate limiting per user (max 1 comment per 3 seconds)',
+      'Moderator tools: delete comments, ban users, slow mode',
+      'Pinned/highlighted comments by broadcaster',
+      'Comment reactions (likes) with aggregated counts',
+      'Real-time comment count and sentiment indicators for broadcaster',
+    ],
+    nonFunctionalRequirements: [
+      'End-to-end latency under 1 second from post to display',
+      'Support 10M concurrent viewers on a single stream',
+      'Handle 10K comments/second ingestion rate per stream',
+      'Graceful degradation — show sampled comments rather than fail',
+      '99.99% availability during live broadcasts',
+    ],
+    dataModel: {
+      description: 'Core entities: LiveStreams, Comments, Moderation',
+      schema: `live_streams: id, broadcaster_id, title, status (live|ended), viewer_count, comment_count, started_at
+comments: id, stream_id, user_id, text, created_at, is_pinned, is_deleted, moderation_status (approved|filtered|deleted)
+comment_reactions: comment_id, user_id, reaction_type, created_at
+bans: stream_id, user_id, banned_by, reason, expires_at
+moderation_rules: stream_id, rule_type (word_filter|slow_mode|subscriber_only), config JSONB`
+    },
+    apiDesign: {
+      description: 'WebSocket-based real-time API with REST for management',
+      endpoints: [
+        { method: 'POST', path: '/ws/streams/:id/connect', params: 'WebSocket upgrade', response: 'Stream of comment events', notes: 'Client receives sampled comment stream based on total rate' },
+        { method: 'POST', path: '/api/streams/:id/comments', params: '{ text }', response: '{ comment_id, status }', notes: 'Rate limited to 1 per 3s, passes through spam filter' },
+        { method: 'DELETE', path: '/api/comments/:id', params: 'comment_id', response: '204', notes: 'Moderator-only, broadcasts deletion event to all viewers' },
+        { method: 'POST', path: '/api/streams/:id/pin/:commentId', params: 'comment_id', response: '{ pinned: true }', notes: 'Broadcaster pins a comment visible to all viewers' },
+        { method: 'GET', path: '/api/streams/:id/stats', params: 'stream_id', response: '{ viewer_count, comment_rate, sentiment }', notes: 'Real-time dashboard for broadcaster' },
+      ]
+    },
+    keyQuestions: [
+      { question: 'How do you fan out comments to millions of concurrent viewers?', answer: 'Use hierarchical fan-out with edge servers. Architecture: (1) Comment ingestion service receives comments and publishes to a Kafka topic partitioned by stream_id, (2) Regional aggregator services consume from Kafka and publish to a pub/sub layer (Redis pub/sub or custom), (3) Edge WebSocket servers in each region subscribe to relevant streams and push to connected clients. This creates a tree: 1 comment → Kafka → N regional aggregators → M edge servers → K clients per server. For a 10M viewer stream, with 1000 edge servers each handling 10K connections, each edge server gets the comment once and distributes locally. Total message amplification is ~1000x, not 10Mx.' },
+      { question: 'How do you handle comment rate sampling for viewers?', answer: 'When comments arrive faster than viewers can read (>5/sec), apply client-guided sampling. Each edge server maintains a token bucket per stream — allow N comments/second through to clients. Selection criteria: (1) Always show comments from friends/followed users, (2) Always show moderator and broadcaster comments, (3) Prioritize comments with early reactions, (4) Random sample from remaining. The server sends a "comment_rate" metadata field so the client UI can show "2,340 comments/sec" while displaying a readable subset. During lulls, show all comments. This is configurable per stream — a small stream shows everything, a massive one samples aggressively.' },
+      { question: 'How do you filter spam and profanity in real-time?', answer: 'Multi-stage pipeline: (1) Synchronous fast path (<10ms): word blocklist lookup using Aho-Corasick automaton (matches all blocked words in single pass), regex patterns for common spam (URLs, repeated characters), rate limit check. (2) Asynchronous slow path (<100ms): ML classifier for subtle spam/toxicity (runs in parallel, can retroactively delete if flagged). (3) User-reputation scoring: new accounts and previously flagged users get stricter filtering. Implementation: the fast path is in the ingestion service (in-memory), the ML path runs as a separate microservice that can lag behind. Comments that pass the fast path are immediately distributed; the ML path can send delete events within 100ms for false negatives.' },
+      { question: 'How do you maintain comment ordering across distributed viewers?', answer: 'Perfect global ordering across millions of viewers is impractical and unnecessary. Use approximate ordering: (1) Each comment gets a Lamport timestamp (stream_sequence_number) assigned by the Kafka partition leader for that stream, (2) Edge servers buffer comments for a short window (200ms) and sort by sequence number before sending to clients, (3) Clients maintain a local buffer and insert comments in sequence order, dropping comments that arrive too late (>2s old). This gives viewers a consistent experience without requiring distributed consensus. For pinned comments and moderator actions, use a separate high-priority channel that bypasses the buffer.' },
+      { question: 'How do you scale WebSocket connections?', answer: 'Each edge server handles 10-50K WebSocket connections. Scaling strategy: (1) Use a WebSocket gateway layer (e.g., Envoy or custom Go service) optimized for many idle connections, (2) Route viewers to the nearest edge region using DNS-based geo routing, (3) Within a region, load-balance across edge servers by stream_id consistent hashing (so all viewers of stream X on the same server share one upstream subscription), (4) Use connection pooling — each edge server maintains one subscription per stream to the regional aggregator regardless of how many local viewers. Capacity planning: 10M viewers / 10K per server = 1,000 servers. With 5 regions, ~200 servers per region. Auto-scale based on live viewer count.' },
+      { question: 'What happens when a live stream ends?', answer: 'Graceful shutdown sequence: (1) Broadcaster ends stream → status changes to "ended", (2) Send final "stream_ended" event to all connected viewers via WebSocket, (3) Stop accepting new comments, (4) Allow 30-second drain for in-flight comments, (5) Close all WebSocket connections with a clean close frame, (6) Archive comments: move from hot storage (Redis) to cold storage (PostgreSQL/S3) for replay, (7) Generate stream summary (total comments, peak rate, sentiment timeline) for broadcaster analytics, (8) Clean up pub/sub channels and edge server subscriptions. Comments remain viewable in the VOD replay, but served from the archive rather than the live pipeline.' },
+    ],
+    basicImplementation: {
+      title: 'Basic Live Comments',
+      description: 'Single-server WebSocket with direct database writes',
+      svgTemplate: null,
+      problems: ['Single server limits to ~10K concurrent connections', 'Database writes bottleneck at high comment rates', 'No spam filtering', 'No sampling for high-volume streams'],
+    },
+    advancedImplementation: {
+      title: 'Production Live Comment System',
+      description: 'Hierarchical fan-out with edge servers, Kafka backbone, and ML-based moderation',
+      svgTemplate: null,
+      keyPoints: ['Hierarchical fan-out: Kafka → regional aggregators → edge servers', 'Client-guided comment sampling for high-volume streams', 'Aho-Corasick + ML pipeline for real-time spam filtering', 'Approximate ordering with Lamport timestamps and client-side buffering', 'Auto-scaling edge fleet based on live viewer count'],
+      databaseChoice: 'Kafka for comment ingestion and distribution, Redis for hot comment storage and pub/sub, PostgreSQL for archived comments, DynamoDB for user reputation scores',
+      caching: 'Edge servers cache pinned comments and stream metadata, CDN for broadcaster profile images, in-memory word blocklist on ingestion servers',
+    },
+  },
+
+  // ─── NEW: Facebook Post Search ───────────────────────────────────────
+  {
+    id: 'fb-post-search',
+    isNew: true,
+    title: 'Facebook Post Search',
+    subtitle: 'Social Content Search Engine',
+    icon: 'search',
+    color: '#4267b2',
+    difficulty: 'Medium',
+    description: 'Design a search engine for social media posts with relevance ranking, social graph boosting, and privacy-aware filtering.',
+
+    introduction: `Social search differs fundamentally from web search. In web search, pages are public and ranking is based on content relevance and authority (PageRank). In social search, most content is private, relevance depends heavily on the searcher's social graph, and results must respect complex privacy settings in real-time.
+
+Facebook's post search must index billions of posts across text, images (via OCR/captions), links, and check-ins. When a user searches "birthday party photos," the results should prioritize posts from their friends, then friends-of-friends, then public posts — all while filtering out posts the searcher doesn't have permission to see.
+
+The indexing pipeline must handle real-time updates: when a user changes a post's privacy setting from "public" to "friends only," search results must reflect this immediately. Typeahead suggestions must return in under 100ms, combining query completions with entity suggestions (people, pages, groups, places).
+
+The ranking model blends text relevance (BM25/TF-IDF), social signals (likes, comments, shares from the searcher's network), recency, and engagement quality. Personalization is key — the same query should return different results for different users based on their social graph and interaction history.`,
+
+    functionalRequirements: [
+      'Full-text search across posts, comments, and shared content',
+      'Typeahead suggestions with query completions and entity suggestions',
+      'Privacy-aware filtering: only show results the searcher can see',
+      'Social graph boosted ranking: friends content ranked higher',
+      'Search filters: date range, post type, author, location',
+      'Search across multiple content types: text, images, videos, links, events',
+      'Trending search topics and popular queries',
+    ],
+    nonFunctionalRequirements: [
+      'Search results returned within 200ms',
+      'Typeahead suggestions within 50ms',
+      'Index updated within 30 seconds of post creation/edit',
+      'Privacy changes reflected in search within 5 seconds',
+      'Support 100K+ search queries per second',
+    ],
+    dataModel: {
+      description: 'Search index with social graph integration',
+      schema: `search_documents: doc_id, author_id, content_text, content_type (post|comment|photo|video|event|link), privacy_level (public|friends|friends_of_friends|custom), mentioned_users[], tagged_users[], location, created_at, engagement_score, like_count, comment_count, share_count
+entity_index: entity_id, entity_type (person|page|group|place|event), name, aliases[], follower_count, category
+query_log: query_id, user_id, query_text, results_clicked[], timestamp
+typeahead_index: prefix, suggestions[] (query completions + entity matches), score`
+    },
+    apiDesign: {
+      description: 'Search API with typeahead and filtered queries',
+      endpoints: [
+        { method: 'GET', path: '/api/search', params: '{ q, type, date_from, date_to, author, limit }', response: '{ results[], total, facets, did_you_mean }', notes: 'Main search with privacy filtering applied server-side' },
+        { method: 'GET', path: '/api/search/typeahead', params: '{ prefix, limit }', response: '{ suggestions: [{ type, text, entity?, score }] }', notes: 'Must return within 50ms, combines completions and entities' },
+        { method: 'GET', path: '/api/search/trending', params: '{ region }', response: '{ topics[] }', notes: 'Trending search queries by region' },
+        { method: 'POST', path: '/api/search/feedback', params: '{ query_id, result_id, action (click|hide|report) }', response: '200', notes: 'Implicit relevance feedback for ranking improvement' },
+      ]
+    },
+    keyQuestions: [
+      { question: 'How do you handle privacy filtering in search results?', answer: 'Privacy filtering is the hardest part of social search. Approach: (1) At index time, store the privacy level and author_id with each document, (2) At query time, determine the searcher relationship to each result author — this requires a social graph lookup, (3) Apply a privacy filter: public posts always visible, "friends" posts only if searcher is friends with author, "friends of friends" requires 2-hop graph check, custom lists require checking membership. For performance, pre-compute privacy posting lists: maintain an inverted index of "users who can see this post" for common access patterns. For the friends case, use a bloom filter of each users friends set — fast probabilistic check, with exact verification only for positive matches. Critical: when a user changes privacy settings, update the posting list synchronously before returning success.' },
+      { question: 'How do you rank results with social signals?', answer: 'Multi-factor ranking model: (1) Text relevance score (BM25 on content text), (2) Social distance score — posts from friends get 10x boost, friends-of-friends 3x, (3) Engagement quality — weighted sum of likes, comments, shares, with recency decay, (4) Author authority — page/profile follower count normalized, (5) Content freshness — exponential decay based on age, (6) Personal affinity — how often the searcher interacts with the author (likes their posts, comments on their content). Combine using a learned-to-rank model (LambdaMART or neural ranker) trained on click-through data. The model is retrained weekly with fresh interaction data. For real-time personalization, the social distance and affinity scores are computed at query time from cached social graph data.' },
+      { question: 'How do you implement typeahead with sub-50ms latency?', answer: 'Two-tier typeahead: (1) Prefix trie in memory on edge servers — stores the top 10M most popular query completions with their scores, updated hourly. As the user types, trie lookup returns completions in <1ms. (2) Entity matching — query a pre-built entity index (people, pages, places) using prefix matching on names and aliases. For the searcher, boost entities they follow or interact with. Combine both sources, rank by (personalized score × popularity), return top 8 suggestions. Architecture: typeahead runs on dedicated edge nodes with the trie fully in memory. The trie is built offline from query logs (frequency-weighted) and entity data, compressed using a minimal perfect hash or FST (finite state transducer) for memory efficiency.' },
+      { question: 'How do you handle near-real-time indexing?', answer: 'Dual-path indexing: (1) Batch indexing — periodically rebuild the full search index from the posts table (daily or weekly), this is the source of truth. (2) Real-time indexing — new/edited/deleted posts publish events to Kafka, a stream processor updates a real-time index segment within seconds. At query time, merge results from the base index and the real-time segment. For privacy changes, use a synchronous path: when a user changes post privacy, immediately update a "privacy override" cache that the query engine checks before returning results. This ensures privacy changes are instant even before the index catches up. Use Elasticsearch or a custom Lucene-based index with support for near-real-time refresh.' },
+      { question: 'How do you scale to 100K queries per second?', answer: 'Horizontal scaling with query routing: (1) Shard the search index by document_id range across N index servers, (2) Each query is sent to all shards in parallel (scatter), results are merged and re-ranked at the aggregator (gather), (3) Cache frequent queries: top 10K queries account for ~30% of traffic, cache their results with short TTL (30s). (4) Use query classification to route simple queries to a lightweight index (e.g., exact name match) and complex queries to the full index. (5) Replicate each shard 3x for read throughput and availability. With 100 shards × 3 replicas = 300 index servers, each handling ~1K qps. Edge caching handles another 30K qps. Scale by adding replicas to hot shards.' },
+    ],
+    basicImplementation: {
+      title: 'Basic Social Search',
+      description: 'Elasticsearch cluster with post-query privacy filtering',
+      svgTemplate: null,
+      problems: ['Post-query privacy filtering wastes computation on filtered results', 'No social graph ranking', 'Full index rebuild needed for updates', 'Typeahead is slow without in-memory trie'],
+    },
+    advancedImplementation: {
+      title: 'Production Social Search',
+      description: 'Sharded index with pre-computed privacy posting lists, social ranking, and near-real-time indexing',
+      svgTemplate: null,
+      keyPoints: ['Bloom filter-based privacy pre-filtering at index level', 'Learned-to-rank model with social distance and engagement features', 'FST-based in-memory typeahead trie on edge servers', 'Dual-path indexing: batch + real-time Kafka stream', 'Scatter-gather query across sharded index with result caching'],
+      databaseChoice: 'Custom Lucene-based search index (sharded), Redis for social graph cache and privacy overrides, Kafka for real-time indexing pipeline, PostgreSQL for query logs and analytics',
+      caching: 'Query result cache (30s TTL) for frequent queries, typeahead trie fully in memory, social graph adjacency lists in Redis, entity metadata in CDN',
+    },
+  },
+
+  // ─── NEW: Price Tracking Service ─────────────────────────────────────
+  {
+    id: 'price-tracking-service',
+    isNew: true,
+    title: 'Price Tracking Service',
+    subtitle: 'Product Price Monitoring & Alert Platform',
+    icon: 'tag',
+    color: '#059669',
+    difficulty: 'Easy',
+    description: 'Design a service that monitors product prices across e-commerce sites and alerts users when prices drop.',
+
+    introduction: `Price tracking services like CamelCamelCamel, Honey, and Keepa monitor product prices across e-commerce platforms and notify users when prices drop below their target thresholds. The system must crawl thousands of product pages, extract prices, detect changes, and deliver timely alerts.
+
+The core challenges are web scraping at scale (handling anti-bot measures, dynamic JavaScript rendering, and varying HTML structures across sites), efficient change detection (comparing new prices against stored history for millions of products), and reliable alert delivery (email, push notification, SMS within minutes of a price drop).
+
+The crawler must be respectful of target sites — adhering to robots.txt, rate limiting requests per domain, rotating IP addresses and user agents, and handling CAPTCHAs and JavaScript-rendered prices. Many e-commerce sites use dynamic pricing that changes based on location, cookies, and time of day, adding complexity.
+
+This is a great "Easy" system design problem because the architecture is straightforward (crawl → compare → alert), but the interview discussion can go deep on crawling strategies, scheduling, and notification reliability.`,
+
+    functionalRequirements: [
+      'Track product prices by URL from major e-commerce sites',
+      'Set price alerts: notify when price drops below a target',
+      'Price history charts showing price trends over time',
+      'Browser extension for one-click price tracking from product pages',
+      'Deal discovery: surface products with significant recent price drops',
+      'Support multiple currencies and regional pricing',
+    ],
+    nonFunctionalRequirements: [
+      'Price checks at least every 4 hours for tracked products',
+      'Alerts delivered within 15 minutes of price drop detection',
+      'Support tracking 10M+ products across 100+ retailers',
+      'Crawler must not get blocked — maintain >95% successful scrape rate',
+      '99.9% availability for alert delivery',
+    ],
+    dataModel: {
+      description: 'Core entities: Products, PriceHistory, Alerts, Users',
+      schema: `products: id, url, retailer, title, image_url, current_price, currency, last_checked_at, check_interval_hours, status (active|paused|broken)
+price_history: id, product_id, price, currency, availability (in_stock|out_of_stock), recorded_at
+alerts: id, user_id, product_id, target_price, alert_type (below_price|any_drop|percent_drop), status (active|triggered|expired), notified_at
+users: id, email, push_token, notification_preferences JSONB
+crawl_jobs: id, product_id, scheduled_at, status (pending|running|completed|failed), result_price, error_message`
+    },
+    apiDesign: {
+      description: 'REST API for product tracking and alerts',
+      endpoints: [
+        { method: 'POST', path: '/api/products/track', params: '{ url, target_price? }', response: '{ product_id, current_price, title }', notes: 'Parses product page and starts tracking; creates alert if target_price given' },
+        { method: 'GET', path: '/api/products/:id/history', params: 'product_id, days', response: '{ prices: [{ price, date }] }', notes: 'Price history for charting' },
+        { method: 'POST', path: '/api/alerts', params: '{ product_id, target_price, alert_type }', response: '{ alert_id }', notes: 'Create price drop alert' },
+        { method: 'GET', path: '/api/deals', params: '{ category, min_discount }', response: '{ deals: [{ product, old_price, new_price, discount_pct }] }', notes: 'Current deals sorted by discount percentage' },
+        { method: 'GET', path: '/api/products/:id', params: 'product_id', response: '{ product, current_price, price_stats, alert_count }', notes: 'Product details with price statistics (min, max, avg)' },
+      ]
+    },
+    keyQuestions: [
+      { question: 'How do you design the web crawler for price extraction?', answer: 'Use a modular crawler with site-specific extractors. Architecture: (1) Crawler Scheduler reads from the crawl_jobs queue (Redis sorted set, scored by next_check_time), (2) Worker pulls job, fetches page via headless browser (Playwright) for JS-rendered sites or simple HTTP for static sites, (3) Site-specific Extractor parses the HTML to find the price — each retailer has a custom extraction config (CSS selectors, JSON-LD schema, or regex patterns), (4) Price normalizer strips currency symbols, converts formats. For anti-bot: rotate residential proxies, randomize request timing (±30% of interval), use realistic browser fingerprints. Maintain a health dashboard showing success rate per retailer — when a retailer changes their HTML structure, the extractor needs updating.' },
+      { question: 'How do you schedule crawls efficiently for millions of products?', answer: 'Priority-based scheduling: not all products need the same check frequency. (1) Hot products (many watchers, volatile prices): check every 1-2 hours, (2) Warm products (some watchers): check every 4-6 hours, (3) Cold products (few/no watchers): check every 12-24 hours, (4) Products with pending alerts near target price: check every 30 minutes. Implementation: Redis sorted set with next_check_timestamp as score. Workers ZPOPMIN to get the next due job. When a price is checked, re-insert with score = now + interval. This naturally distributes crawl load over time. Batch same-domain requests together and respect per-domain rate limits (max 1 request per second per domain) to avoid getting blocked.' },
+      { question: 'How do you detect price changes and trigger alerts?', answer: 'After each successful crawl: (1) Compare new price with stored current_price, (2) If different: insert into price_history, update current_price, (3) Query all active alerts for this product where new_price <= target_price (or meets the alert condition), (4) For each matching alert: enqueue a notification job and mark alert as triggered. For efficiency, use a single SQL query: SELECT * FROM alerts WHERE product_id = :id AND status = "active" AND target_price >= :new_price. Batch this check into the crawl result processing pipeline. For "any drop" alerts, compare with the previous price. For "percent drop" alerts, compare with the 30-day average or all-time high.' },
+      { question: 'How do you handle different e-commerce site structures?', answer: 'Use a registry of site-specific extractors: (1) Template-based: define CSS selectors per site (e.g., Amazon: "#priceblock_ourprice", Best Buy: ".priceView-customer-price span"), (2) Structured data: many sites embed JSON-LD schema.org Product markup — parse this first as its the most reliable, (3) ML-based fallback: train a model to identify price elements on unknown pages using visual features and HTML structure. Store extractor configs in a database so they can be updated without code deploys. When an extractor starts failing (price is null or dramatically different), auto-flag for human review and fall back to the previous known price. A/B test extractor changes on a subset of crawls before rolling out.' },
+      { question: 'How do you ensure reliable alert delivery?', answer: 'Multi-channel with retry: (1) Alert jobs go into a reliable message queue (SQS or Kafka), (2) Notification worker processes jobs: try email first (SES/SendGrid), then push notification (FCM/APNS), then SMS for high-priority alerts, (3) If delivery fails, retry with exponential backoff (1min, 5min, 15min, 1hr), (4) Idempotency: deduplicate by alert_id + price_snapshot to prevent sending the same alert twice, (5) Batching: if a user has 10 products that dropped in the same window, combine into a single digest email. Track delivery status (sent, delivered, opened, clicked) for each notification. Allow users to set quiet hours and notification frequency limits (max 5 alerts per day).' },
+    ],
+    basicImplementation: {
+      title: 'Basic Price Tracker',
+      description: 'Single crawler with cron job scheduling and email alerts',
+      svgTemplate: null,
+      problems: ['Single crawler cant scale to millions of products', 'Fixed schedule wastes resources on inactive products', 'Simple HTML parsing breaks when sites change', 'No proxy rotation leads to blocking'],
+    },
+    advancedImplementation: {
+      title: 'Production Price Tracking Service',
+      description: 'Distributed crawler fleet with priority scheduling, adaptive extraction, and multi-channel alerts',
+      svgTemplate: null,
+      keyPoints: ['Priority-based crawl scheduling with Redis sorted sets', 'Site-specific extractors with JSON-LD fallback and ML backup', 'Residential proxy rotation with per-domain rate limiting', 'Multi-channel alert delivery with deduplication and batching', 'Real-time deals pipeline aggregating price drops across all products'],
+      databaseChoice: 'PostgreSQL for products/alerts/users, TimescaleDB or ClickHouse for price history (time-series optimized), Redis for crawl scheduling queue, S3 for page snapshots',
+      caching: 'Cache product details and current price in CDN (5min TTL), price history charts pre-rendered as SVGs, deals page cached with 15min refresh',
+    },
+  },
+
+  // ─── NEW: YouTube Top K / Trending ───────────────────────────────────
+  {
+    id: 'youtube-top-k-trending',
+    isNew: true,
+    title: 'YouTube Top K / Trending',
+    subtitle: 'Real-time Video Trending & Ranking System',
+    icon: 'trendingUp',
+    color: '#ff0000',
+    difficulty: 'Hard',
+    description: 'Design a real-time trending video ranking system with time-decay, regional leaderboards, and manipulation detection.',
+
+    introduction: `YouTube's trending system determines which videos surface on the trending page across 100+ countries. Unlike a simple "most viewed" leaderboard, trending must balance view velocity (how fast views are growing), engagement quality (likes, comments, shares vs. passive views), content diversity, and manipulation resistance.
+
+The system ingests billions of view events per day. Simply counting views is insufficient — trending must capture velocity (a video going from 1K to 100K views in an hour is more "trending" than one steadily at 1M views/day). This requires time-windowed aggregation with decay functions that weight recent activity higher.
+
+Regional trending adds complexity: the same video may be trending in India but not in the US. Each region has its own leaderboard computed from region-specific view data, but cross-region momentum should also be considered (a video going viral globally should appear on regional pages faster).
+
+Manipulation detection is critical — bot networks, view farms, and click fraud attempt to artificially inflate view counts to game the trending algorithm. The system must identify and discount artificial views in real-time without penalizing legitimate viral content.
+
+Heavy hitter detection (identifying videos suddenly receiving disproportionate traffic) enables early trending prediction and can trigger CDN pre-warming for anticipated viral content.`,
+
+    functionalRequirements: [
+      'Real-time trending page showing top 50 videos per region per category',
+      'Time-decay scoring: recent views weighted higher than older views',
+      'Regional leaderboards for 100+ countries with category breakdowns',
+      'Trending velocity indicator: show how fast a video is climbing',
+      'Content diversity: prevent same creator from dominating trending',
+      'Manipulation detection: identify and discount artificial views',
+      'Trending notifications: alert creators when their video starts trending',
+    ],
+    nonFunctionalRequirements: [
+      'Trending page reflects view changes within 5 minutes',
+      'Process 10B+ view events per day (115K events/second average, 500K peak)',
+      'Trending computation latency under 10 seconds per region',
+      'Manipulation detection with <1% false positive rate on legitimate content',
+      '99.99% availability for the trending API',
+    ],
+    dataModel: {
+      description: 'Event-driven with pre-aggregated counters',
+      schema: `view_events: video_id, user_id, region, device_type, watch_duration_s, timestamp (Kafka topic, not stored raw)
+video_counters: video_id, region, time_bucket (5min), view_count, unique_viewers, avg_watch_pct, like_count, comment_count, share_count
+trending_scores: video_id, region, category, score, velocity, rank, updated_at
+trending_snapshots: region, category, timestamp, video_ids[] (ordered), scores[]
+manipulation_flags: video_id, flag_type (bot_traffic|view_farm|click_fraud), confidence, detected_at, evidence JSONB`
+    },
+    apiDesign: {
+      description: 'REST API for trending consumption and event ingestion',
+      endpoints: [
+        { method: 'GET', path: '/api/trending', params: '{ region, category?, limit }', response: '{ videos: [{ video_id, title, score, velocity, rank }] }', notes: 'Served from cache, refreshed every 5 minutes' },
+        { method: 'POST', path: '/api/events/view', params: '{ video_id, user_id, region, watch_duration }', response: '202 Accepted', notes: 'High-throughput event ingestion, async processing' },
+        { method: 'GET', path: '/api/trending/video/:id', params: 'video_id', response: '{ trending_regions[], peak_rank, velocity_chart }', notes: 'Trending history for a specific video' },
+        { method: 'GET', path: '/api/trending/rising', params: '{ region }', response: '{ videos[] }', notes: 'Videos with highest velocity that havent peaked yet' },
+      ]
+    },
+    keyQuestions: [
+      { question: 'How do you compute trending scores with time decay?', answer: 'Use exponential time-decay scoring. For each video, the trending score is: score = Σ(events × e^(-λ × age_hours)) where λ is the decay constant (e.g., 0.1 means half-life of ~7 hours). Implementation: (1) Aggregate view events into 5-minute time buckets per video per region, (2) For each bucket, compute weighted_views = view_count × engagement_multiplier (likes=2x, comments=3x, shares=5x), (3) Score = Σ over all buckets in the last 48 hours of (weighted_views × e^(-λ × bucket_age_hours)). Optimization: since old buckets contribute negligibly, only sum the last 48 hours and pre-compute the decay factors. Recalculate every 5 minutes. Velocity = (score_now - score_1hr_ago) / score_1hr_ago — captures acceleration.' },
+      { question: 'How do you process 500K view events per second?', answer: 'Use a streaming aggregation pipeline: (1) Events land in Kafka partitioned by video_id (ensures all events for a video go to the same partition), (2) Apache Flink (or Kafka Streams) consumes events and maintains tumbling windows of 5 minutes, (3) At window close, emit aggregated counters (view_count, unique_viewers, engagement metrics) to a downstream Kafka topic, (4) A materialization service writes aggregated counters to a time-series store (ClickHouse or TimescaleDB). For peak handling: Kafka handles backpressure naturally with consumer lag. Pre-aggregate at the edge — CDN/API servers batch view events locally (1-second micro-batches) before publishing to Kafka, reducing event volume 10-100x. Use Count-Min Sketch for approximate unique viewer counting without storing full user sets.' },
+      { question: 'How do you handle regional trending for 100+ countries?', answer: 'Partition computation by region: (1) View events carry a region field (from IP geolocation at ingestion), (2) Flink processes events and emits per-video-per-region counters, (3) A trending computation job runs per region every 5 minutes: reads all video counters for that region, computes scores with time decay, ranks by score, applies diversity filters, writes top 200 to the trending_snapshots table. With 100 regions × 200 videos = 20K entries, this fits in a single table with region as partition key. Cross-region trending: also maintain a "global" trending by summing across regions, use this as a "momentum boost" — if a video is top-10 globally but not yet trending in a specific region, give it a 20% score boost in that region to surface it faster.' },
+      { question: 'How do you detect and prevent view count manipulation?', answer: 'Multi-signal fraud detection: (1) Traffic pattern analysis — legitimate viral videos have smooth growth curves; bot traffic shows step-function jumps. Flag videos where >30% of views come in suspiciously regular intervals. (2) Viewer profile analysis — check if viewers are real accounts (account age, activity history, device diversity). A video where 80% of views come from accounts created in the last week is suspicious. (3) Watch duration analysis — bots typically have very short watch durations (<5s) or suspiciously uniform durations. Legitimate views follow a power-law distribution. (4) Geographic anomaly — views from regions inconsistent with the videos language/content. (5) IP/fingerprint clustering — many views from the same IP ranges or device fingerprints. Implementation: run these checks asynchronously. Videos flagged with >70% confidence have their artificial views discounted (not removed) from the trending score. Human review for borderline cases.' },
+      { question: 'How do you ensure content diversity on the trending page?', answer: 'Without diversity controls, trending becomes dominated by a few mega-creators. Rules: (1) Max 2 videos per creator on the trending page, (2) Category quotas — ensure at least N videos from each category (music, gaming, news, education), (3) Novelty bonus — videos appearing on trending for the first time get a boost; those that have been trending for >24 hours get a penalty, (4) Editorial curation — reserve 5-10% of trending slots for editor picks (quality content that deserves exposure). Implementation: after computing raw scores, apply a greedy diversification algorithm: iterate through ranked videos, add each to the trending list unless it violates a constraint (creator cap, category quota), skip and try the next one.' },
+      { question: 'How do you serve the trending page with low latency?', answer: 'The trending page is pre-computed and cached. Flow: (1) Every 5 minutes, the trending computation job writes the ranked list to a trending_snapshots table and Redis, (2) CDN caches the trending API response with a 5-minute TTL, (3) API servers read from Redis (hot cache) with PostgreSQL as fallback. The trending page is the same for all users in a region (no personalization needed), making it extremely cacheable. For the "rising" page (videos gaining velocity), update more frequently (every 1 minute) with a shorter cache TTL. Video metadata (title, thumbnail, view count) is fetched separately and cached independently. Total API latency: ~10ms from Redis, ~50ms from CDN.' },
+      { question: 'How would you implement heavy hitter detection for early trending prediction?', answer: 'Use a Count-Min Sketch with sliding windows to detect videos receiving disproportionate traffic. Structure: maintain a Count-Min Sketch (width=10000, depth=5) per 1-minute window. For each view event, increment the sketch. Every minute: (1) Query the sketch for the estimated count of each recently-active video, (2) Compare against the videos historical baseline (avg views per minute over the last 7 days), (3) If current_rate > 10 × baseline, flag as a potential heavy hitter. Actions for detected heavy hitters: (a) Pre-warm CDN with the video in regions where its gaining traction, (b) Increase engagement data collection frequency for trending score accuracy, (c) Trigger manipulation detection pipeline for fraud check, (d) Notify the creator that their video is gaining momentum.' },
+    ],
+    basicImplementation: {
+      title: 'Basic Trending System',
+      description: 'Batch processing with hourly aggregation and simple view counting',
+      svgTemplate: null,
+      problems: ['Hourly batch means trending is always stale', 'Simple view count favors established creators', 'No manipulation detection', 'Single global trending ignores regional preferences'],
+    },
+    advancedImplementation: {
+      title: 'Production Trending System',
+      description: 'Real-time streaming pipeline with time-decay scoring, fraud detection, and regional computation',
+      svgTemplate: null,
+      keyPoints: ['Kafka + Flink streaming pipeline for real-time view aggregation', 'Exponential time-decay scoring with engagement multipliers', 'Count-Min Sketch for heavy hitter detection and approximate counting', 'Multi-signal fraud detection pipeline (traffic patterns, viewer profiles, watch duration)', 'Per-region trending computation with cross-region momentum boosting'],
+      databaseChoice: 'Kafka for event ingestion, ClickHouse for time-series view counters, Redis for trending cache and Count-Min Sketches, PostgreSQL for trending snapshots and video metadata',
+      caching: 'CDN caches trending page per region (5min TTL), Redis hot cache for trending lists, pre-computed trending velocity charts cached per video',
+    },
   },
 ];
