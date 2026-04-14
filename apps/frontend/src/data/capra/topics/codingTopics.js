@@ -45,6 +45,15 @@ export const codingTopics = [
       questions: 57,
       description: 'Foundation of most coding interviews. Master array manipulation and hash map usage.',
 
+visualizations: [
+        {
+          title: 'Hash Map: Array to Buckets',
+          language: 'python',
+          description: 'Shows how an array is mapped through a hash function into key-value buckets for O(1) lookup.',
+          svg: '<svg viewBox="0 0 500 250" xmlns="http://www.w3.org/2000/svg" style="background:white"><defs><marker id="ah1" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#64748b"/></marker></defs><text x="20" y="30" font-family="sans-serif" font-size="13" font-weight="bold" fill="#1e293b">Array</text><g><rect x="20" y="40" width="45" height="32" rx="4" fill="#f0fdf4" stroke="#e2e8f0" stroke-width="1.5"/><text x="42" y="61" font-family="monospace" font-size="13" fill="#1e293b" text-anchor="middle">2</text><rect x="65" y="40" width="45" height="32" rx="4" fill="#f0fdf4" stroke="#e2e8f0" stroke-width="1.5"/><text x="87" y="61" font-family="monospace" font-size="13" fill="#1e293b" text-anchor="middle">7</text><rect x="110" y="40" width="45" height="32" rx="4" fill="#f0fdf4" stroke="#e2e8f0" stroke-width="1.5"/><text x="132" y="61" font-family="monospace" font-size="13" fill="#1e293b" text-anchor="middle">11</text><rect x="155" y="40" width="45" height="32" rx="4" fill="#f0fdf4" stroke="#e2e8f0" stroke-width="1.5"/><text x="177" y="61" font-family="monospace" font-size="13" fill="#1e293b" text-anchor="middle">15</text></g><rect x="100" y="95" width="100" height="30" rx="6" fill="#10b981" stroke="#059669" stroke-width="1.5"/><text x="150" y="115" font-family="sans-serif" font-size="12" fill="white" text-anchor="middle">hash(key) % n</text><line x1="110" y1="72" x2="140" y2="95" stroke="#64748b" stroke-width="1.5" marker-end="url(#ah1)"/><line x1="155" y1="72" x2="155" y2="95" stroke="#64748b" stroke-width="1.5" marker-end="url(#ah1)"/><text x="280" y="30" font-family="sans-serif" font-size="13" font-weight="bold" fill="#1e293b">Hash Map Buckets</text><g><rect x="280" y="42" width="195" height="28" rx="4" fill="#fff" stroke="#e2e8f0" stroke-width="1.5"/><text x="290" y="61" font-family="monospace" font-size="11" fill="#64748b">0:</text><text x="310" y="61" font-family="monospace" font-size="11" fill="#1e293b">15 → idx 3</text></g><g><rect x="280" y="74" width="195" height="28" rx="4" fill="#fff" stroke="#e2e8f0" stroke-width="1.5"/><text x="290" y="93" font-family="monospace" font-size="11" fill="#64748b">1:</text><text x="310" y="93" font-family="monospace" font-size="11" fill="#1e293b">11 → idx 2</text></g><g><rect x="280" y="106" width="195" height="28" rx="4" fill="#f0fdf4" stroke="#10b981" stroke-width="2"/><text x="290" y="125" font-family="monospace" font-size="11" fill="#64748b">2:</text><text x="310" y="125" font-family="monospace" font-size="11" fill="#10b981" font-weight="bold">2 → idx 0</text></g><g><rect x="280" y="138" width="195" height="28" rx="4" fill="#f0fdf4" stroke="#10b981" stroke-width="2"/><text x="290" y="157" font-family="monospace" font-size="11" fill="#64748b">3:</text><text x="310" y="157" font-family="monospace" font-size="11" fill="#10b981" font-weight="bold">7 → idx 1</text></g><line x1="200" y1="110" x2="278" y2="85" stroke="#64748b" stroke-width="1.5" marker-end="url(#ah1)"/><text x="20" y="210" font-family="sans-serif" font-size="11" fill="#64748b">Two Sum: target=9 → need 9-2=7 → found at bucket[3] → indices [0,1]</text><rect x="20" y="220" width="460" height="22" rx="4" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/><text x="30" y="236" font-family="monospace" font-size="11" fill="#10b981">O(1) lookup per element → O(n) total instead of O(n²) brute force</text></svg>'
+        }
+      ],
+
       introduction: `Arrays and Hash Maps are the foundation of nearly every coding interview. Understanding these data structures deeply will help you solve 40-50% of all LeetCode problems.
 
 **Why This Matters:**
@@ -249,6 +258,7 @@ export const codingTopics = [
       codeExamples: [
         {
           title: 'Two Sum - Classic Hash Map Pattern',
+          language: 'python',
           description: 'Find two numbers that add up to target. O(n) time, O(n) space.',
           code: `def two_sum(nums, target):
     seen = {}  # value -> index
@@ -263,6 +273,7 @@ export const codingTopics = [
         },
         {
           title: 'Group Anagrams - Sorted String as Key',
+          language: 'python',
           description: 'Group words that are anagrams. O(n * k log k) where k is max word length.',
           code: `def group_anagrams(strs):
     groups = defaultdict(list)
@@ -276,6 +287,7 @@ export const codingTopics = [
         },
         {
           title: 'Subarray Sum Equals K - Prefix Sum + Hash Map',
+          language: 'python',
           description: 'Count subarrays with sum equal to k. O(n) time, O(n) space.',
           code: `def subarray_sum(nums, k):
     count = 0
@@ -292,6 +304,118 @@ export const codingTopics = [
 
     return count`
         }
+      ,
+        {
+          title: 'Two Sum - Classic Hash Map Pattern',
+          language: 'javascript',
+          description: 'Find two numbers that add up to target. O(n) time, O(n) space.',
+          code: `function twoSum(nums, target) {
+    const seen = new Map(); // value -> index
+    for (let i = 0; i < nums.length; i++) {
+        const complement = target - nums[i];
+        if (seen.has(complement)) {
+            return [seen.get(complement), i];
+        }
+        seen.set(nums[i], i);
+    }
+    return [];
+}
+
+// Key insight: Store what you've seen, check for complement`
+        },
+        {
+          title: 'Two Sum - Classic Hash Map Pattern',
+          language: 'java',
+          description: 'Find two numbers that add up to target. O(n) time, O(n) space.',
+          code: `public int[] twoSum(int[] nums, int target) {
+    Map<Integer, Integer> seen = new HashMap<>(); // value -> index
+    for (int i = 0; i < nums.length; i++) {
+        int complement = target - nums[i];
+        if (seen.containsKey(complement)) {
+            return new int[]{seen.get(complement), i};
+        }
+        seen.put(nums[i], i);
+    }
+    return new int[]{};
+}
+
+// Key insight: Store what you've seen, check for complement`
+        },
+        {
+          title: 'Group Anagrams - Sorted String as Key',
+          language: 'javascript',
+          description: 'Group words that are anagrams. O(n * k log k) where k is max word length.',
+          code: `function groupAnagrams(strs) {
+    const groups = new Map();
+    for (const s of strs) {
+        // Sort characters to create canonical form
+        const key = [...s].sort().join('');
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(s);
+    }
+    return [...groups.values()];
+}
+
+// Alternative: Use character count as key for O(n*k)`
+        },
+        {
+          title: 'Group Anagrams - Sorted String as Key',
+          language: 'java',
+          description: 'Group words that are anagrams. O(n * k log k) where k is max word length.',
+          code: `public List<List<String>> groupAnagrams(String[] strs) {
+    Map<String, List<String>> groups = new HashMap<>();
+    for (String s : strs) {
+        // Sort characters to create canonical form
+        char[] chars = s.toCharArray();
+        Arrays.sort(chars);
+        String key = new String(chars);
+        groups.computeIfAbsent(key, k -> new ArrayList<>()).add(s);
+    }
+    return new ArrayList<>(groups.values());
+}
+
+// Alternative: Use character count array as key for O(n*k)`
+        },
+        {
+          title: 'Subarray Sum Equals K - Prefix Sum + Hash Map',
+          language: 'javascript',
+          description: 'Count subarrays with sum equal to k. O(n) time, O(n) space.',
+          code: `function subarraySum(nums, k) {
+    let count = 0;
+    let prefixSum = 0;
+    const seen = new Map([[0, 1]]); // Empty prefix has sum 0
+
+    for (const num of nums) {
+        prefixSum += num;
+        // If (prefixSum - k) exists, we found subarrays
+        if (seen.has(prefixSum - k)) {
+            count += seen.get(prefixSum - k);
+        }
+        seen.set(prefixSum, (seen.get(prefixSum) || 0) + 1);
+    }
+    return count;
+}`
+        },
+        {
+          title: 'Subarray Sum Equals K - Prefix Sum + Hash Map',
+          language: 'java',
+          description: 'Count subarrays with sum equal to k. O(n) time, O(n) space.',
+          code: `public int subarraySum(int[] nums, int k) {
+    int count = 0, prefixSum = 0;
+    Map<Integer, Integer> seen = new HashMap<>();
+    seen.put(0, 1); // Empty prefix has sum 0
+
+    for (int num : nums) {
+        prefixSum += num;
+        // If (prefixSum - k) exists, we found subarrays
+        if (seen.containsKey(prefixSum - k)) {
+            count += seen.get(prefixSum - k);
+        }
+        seen.merge(prefixSum, 1, Integer::sum);
+    }
+    return count;
+}`
+        }
       ]
     },
     {
@@ -301,6 +425,15 @@ export const codingTopics = [
       color: '#f59e0b',
       questions: 23,
       description: 'Divide and conquer on sorted data. Essential for O(log n) solutions.',
+
+visualizations: [
+        {
+          title: 'Binary Search: L, M, R Pointers',
+          language: 'python',
+          description: 'Shows a sorted array with Left, Mid, and Right pointers narrowing the search space to find the target.',
+          svg: '<svg viewBox="0 0 500 210" xmlns="http://www.w3.org/2000/svg" style="background:white"><text x="20" y="25" font-family="sans-serif" font-size="13" font-weight="bold" fill="#1e293b">Binary Search — Target = 23</text><g><rect x="20" y="55" width="44" height="36" rx="4" fill="#fff" stroke="#e2e8f0" stroke-width="1.5"/><text x="42" y="78" font-family="monospace" font-size="12" fill="#1e293b" text-anchor="middle">2</text><rect x="68" y="55" width="44" height="36" rx="4" fill="#fff" stroke="#e2e8f0" stroke-width="1.5"/><text x="90" y="78" font-family="monospace" font-size="12" fill="#1e293b" text-anchor="middle">5</text><rect x="116" y="55" width="44" height="36" rx="4" fill="#fff" stroke="#e2e8f0" stroke-width="1.5"/><text x="138" y="78" font-family="monospace" font-size="12" fill="#1e293b" text-anchor="middle">8</text><rect x="164" y="55" width="44" height="36" rx="4" fill="#fff" stroke="#e2e8f0" stroke-width="1.5"/><text x="186" y="78" font-family="monospace" font-size="12" fill="#1e293b" text-anchor="middle">12</text><rect x="212" y="55" width="44" height="36" rx="4" fill="#fef3c7" stroke="#f59e0b" stroke-width="2.5"/><text x="234" y="78" font-family="monospace" font-size="12" fill="#f59e0b" font-weight="bold" text-anchor="middle">16</text><rect x="260" y="55" width="44" height="36" rx="4" fill="#fff" stroke="#e2e8f0" stroke-width="1.5"/><text x="282" y="78" font-family="monospace" font-size="12" fill="#1e293b" text-anchor="middle">19</text><rect x="308" y="55" width="44" height="36" rx="4" fill="#f0fdf4" stroke="#10b981" stroke-width="2.5"/><text x="330" y="78" font-family="monospace" font-size="12" fill="#10b981" font-weight="bold" text-anchor="middle">23</text><rect x="356" y="55" width="44" height="36" rx="4" fill="#fff" stroke="#e2e8f0" stroke-width="1.5"/><text x="378" y="78" font-family="monospace" font-size="12" fill="#1e293b" text-anchor="middle">34</text><rect x="404" y="55" width="44" height="36" rx="4" fill="#fff" stroke="#e2e8f0" stroke-width="1.5"/><text x="426" y="78" font-family="monospace" font-size="12" fill="#1e293b" text-anchor="middle">45</text></g><polygon points="42,50 36,40 48,40" fill="#10b981"/><text x="42" y="36" font-family="sans-serif" font-size="11" fill="#10b981" text-anchor="middle" font-weight="bold">L</text><polygon points="234,50 228,40 240,40" fill="#f59e0b"/><text x="234" y="36" font-family="sans-serif" font-size="11" fill="#f59e0b" text-anchor="middle" font-weight="bold">M</text><polygon points="426,50 420,40 432,40" fill="#ef4444"/><text x="426" y="36" font-family="sans-serif" font-size="11" fill="#ef4444" text-anchor="middle" font-weight="bold">R</text><text x="20" y="115" font-family="sans-serif" font-size="12" fill="#1e293b">Step 1: M=16 &lt; 23 → search right half (L=M+1)</text><text x="20" y="135" font-family="sans-serif" font-size="12" fill="#1e293b">Step 2: New L=19, M=23 = target → found at index 6!</text><line x1="20" y1="150" x2="460" y2="150" stroke="#e2e8f0" stroke-width="1"/><rect x="20" y="162" width="435" height="24" rx="4" fill="#f0fdf4" stroke="#10b981" stroke-width="1"/><text x="30" y="179" font-family="sans-serif" font-size="11" fill="#10b981">Halves search space each step → O(log n) time, O(1) space</text></svg>'
+        }
+      ],
 
       introduction: `Binary Search is a fundamental algorithm that reduces search time from O(n) to O(log n) by repeatedly dividing the search space in half. It's one of the most important patterns to master.
 
@@ -410,6 +543,7 @@ Binary search works on any **monotonic** property—not just sorted arrays. If y
       codeExamples: [
         {
           title: 'Template 1: Find Exact Match',
+          language: 'python',
           description: 'Standard binary search. Returns index or -1 if not found.',
           code: `def binary_search(nums, target):
     left, right = 0, len(nums) - 1
@@ -427,6 +561,7 @@ Binary search works on any **monotonic** property—not just sorted arrays. If y
         },
         {
           title: 'Template 2: Find Left Boundary',
+          language: 'python',
           description: 'Find leftmost position where target could be inserted.',
           code: `def search_left(nums, target):
     left, right = 0, len(nums)
@@ -442,6 +577,7 @@ Binary search works on any **monotonic** property—not just sorted arrays. If y
         },
         {
           title: 'Binary Search on Answer: Koko Eating Bananas',
+          language: 'python',
           description: 'Search the answer space instead of an array.',
           code: `def min_eating_speed(piles, h):
     def can_finish(speed):
@@ -461,6 +597,7 @@ Binary search works on any **monotonic** property—not just sorted arrays. If y
         },
         {
           title: 'Search in Rotated Sorted Array',
+          language: 'python',
           description: 'Binary search when array is rotated at an unknown pivot.',
           code: `def search_rotated(nums, target):
     left, right = 0, len(nums) - 1
@@ -485,6 +622,154 @@ Binary search works on any **monotonic** property—not just sorted arrays. If y
 
     return -1`
         }
+      ,
+        {
+          title: 'Template 1: Find Exact Match',
+          language: 'javascript',
+          description: 'Standard binary search. Returns index or -1 if not found.',
+          code: `function binarySearch(nums, target) {
+    let left = 0, right = nums.length - 1;
+
+    while (left <= right) {
+        const mid = left + Math.floor((right - left) / 2);
+        if (nums[mid] === target) return mid;
+        else if (nums[mid] < target) left = mid + 1;
+        else right = mid - 1;
+    }
+    return -1; // Not found
+}`
+        },
+        {
+          title: 'Template 1: Find Exact Match',
+          language: 'java',
+          description: 'Standard binary search. Returns index or -1 if not found.',
+          code: `public int binarySearch(int[] nums, int target) {
+    int left = 0, right = nums.length - 1;
+
+    while (left <= right) {
+        int mid = left + (right - left) / 2;
+        if (nums[mid] == target) return mid;
+        else if (nums[mid] < target) left = mid + 1;
+        else right = mid - 1;
+    }
+    return -1; // Not found
+}`
+        },
+        {
+          title: 'Template 2: Find Left Boundary',
+          language: 'javascript',
+          description: 'Find leftmost position where target could be inserted.',
+          code: `function searchLeft(nums, target) {
+    let left = 0, right = nums.length;
+
+    while (left < right) {
+        const mid = left + Math.floor((right - left) / 2);
+        if (nums[mid] < target) left = mid + 1;
+        else right = mid;
+    }
+    return left; // First position >= target
+}`
+        },
+        {
+          title: 'Template 2: Find Left Boundary',
+          language: 'java',
+          description: 'Find leftmost position where target could be inserted.',
+          code: `public int searchLeft(int[] nums, int target) {
+    int left = 0, right = nums.length;
+
+    while (left < right) {
+        int mid = left + (right - left) / 2;
+        if (nums[mid] < target) left = mid + 1;
+        else right = mid;
+    }
+    return left; // First position >= target
+}`
+        },
+        {
+          title: 'Binary Search on Answer: Koko Eating Bananas',
+          language: 'javascript',
+          description: 'Search the answer space instead of an array.',
+          code: `function minEatingSpeed(piles, h) {
+    function canFinish(speed) {
+        return piles.reduce((hrs, p) => hrs + Math.ceil(p / speed), 0) <= h;
+    }
+
+    let left = 1, right = Math.max(...piles);
+    while (left < right) {
+        const mid = left + Math.floor((right - left) / 2);
+        if (canFinish(mid)) right = mid;    // Try smaller speed
+        else left = mid + 1;                // Need faster speed
+    }
+    return left;
+}`
+        },
+        {
+          title: 'Binary Search on Answer: Koko Eating Bananas',
+          language: 'java',
+          description: 'Search the answer space instead of an array.',
+          code: `public int minEatingSpeed(int[] piles, int h) {
+    int left = 1, right = Arrays.stream(piles).max().getAsInt();
+
+    while (left < right) {
+        int mid = left + (right - left) / 2;
+        if (canFinish(piles, mid, h)) right = mid;
+        else left = mid + 1;
+    }
+    return left;
+}
+
+private boolean canFinish(int[] piles, int speed, int h) {
+    int hours = 0;
+    for (int p : piles) hours += (p + speed - 1) / speed;
+    return hours <= h;
+}`
+        },
+        {
+          title: 'Search in Rotated Sorted Array',
+          language: 'javascript',
+          description: 'Binary search when array is rotated at an unknown pivot.',
+          code: `function searchRotated(nums, target) {
+    let left = 0, right = nums.length - 1;
+
+    while (left <= right) {
+        const mid = left + Math.floor((right - left) / 2);
+        if (nums[mid] === target) return mid;
+
+        // Left half is sorted
+        if (nums[left] <= nums[mid]) {
+            if (nums[left] <= target && target < nums[mid]) right = mid - 1;
+            else left = mid + 1;
+        } else {
+            if (nums[mid] < target && target <= nums[right]) left = mid + 1;
+            else right = mid - 1;
+        }
+    }
+    return -1;
+}`
+        },
+        {
+          title: 'Search in Rotated Sorted Array',
+          language: 'java',
+          description: 'Binary search when array is rotated at an unknown pivot.',
+          code: `public int searchRotated(int[] nums, int target) {
+    int left = 0, right = nums.length - 1;
+
+    while (left <= right) {
+        int mid = left + (right - left) / 2;
+        if (nums[mid] == target) return mid;
+
+        // Left half is sorted
+        if (nums[left] <= nums[mid]) {
+            if (nums[left] <= target && target < nums[mid]) right = mid - 1;
+            else left = mid + 1;
+        } else {
+            if (nums[mid] < target && target <= nums[right]) left = mid + 1;
+            else right = mid - 1;
+        }
+    }
+    return -1;
+}`
+        }
       ]
     },
     {
@@ -494,6 +779,15 @@ Binary search works on any **monotonic** property—not just sorted arrays. If y
       color: '#3b82f6',
       questions: 18,
       description: 'Efficient technique for sorted arrays and linked lists. Reduces O(n²) to O(n).',
+
+visualizations: [
+        {
+          title: 'Two Pointers: Converging on Sorted Array',
+          language: 'python',
+          description: 'Shows left (green) and right (red) pointers moving toward the center on a sorted array to find a target sum.',
+          svg: '<svg viewBox="0 0 500 200" xmlns="http://www.w3.org/2000/svg" style="background:white"><defs><marker id="ah2" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#64748b"/></marker></defs><text x="20" y="25" font-family="sans-serif" font-size="13" font-weight="bold" fill="#1e293b">Sorted Array — Target Sum = 12</text><g><rect x="30" y="50" width="50" height="40" rx="4" fill="#f0fdf4" stroke="#10b981" stroke-width="2.5"/><text x="55" y="76" font-family="monospace" font-size="14" fill="#10b981" font-weight="bold" text-anchor="middle">1</text><rect x="85" y="50" width="50" height="40" rx="4" fill="#fff" stroke="#e2e8f0" stroke-width="1.5"/><text x="110" y="76" font-family="monospace" font-size="14" fill="#1e293b" text-anchor="middle">3</text><rect x="140" y="50" width="50" height="40" rx="4" fill="#fff" stroke="#e2e8f0" stroke-width="1.5"/><text x="165" y="76" font-family="monospace" font-size="14" fill="#1e293b" text-anchor="middle">5</text><rect x="195" y="50" width="50" height="40" rx="4" fill="#fff" stroke="#e2e8f0" stroke-width="1.5"/><text x="220" y="76" font-family="monospace" font-size="14" fill="#1e293b" text-anchor="middle">7</text><rect x="250" y="50" width="50" height="40" rx="4" fill="#fff" stroke="#e2e8f0" stroke-width="1.5"/><text x="275" y="76" font-family="monospace" font-size="14" fill="#1e293b" text-anchor="middle">9</text><rect x="305" y="50" width="50" height="40" rx="4" fill="#fff" stroke="#e2e8f0" stroke-width="1.5"/><text x="330" y="76" font-family="monospace" font-size="14" fill="#1e293b" text-anchor="middle">11</text><rect x="360" y="50" width="50" height="40" rx="4" fill="#fef2f2" stroke="#ef4444" stroke-width="2.5"/><text x="385" y="76" font-family="monospace" font-size="14" fill="#ef4444" font-weight="bold" text-anchor="middle">15</text></g><polygon points="55,44 49,34 61,34" fill="#10b981"/><text x="55" y="30" font-family="sans-serif" font-size="11" fill="#10b981" text-anchor="middle" font-weight="bold">L</text><polygon points="385,44 379,34 391,34" fill="#ef4444"/><text x="385" y="30" font-family="sans-serif" font-size="11" fill="#ef4444" text-anchor="middle" font-weight="bold">R</text><line x1="80" y1="70" x2="120" y2="70" stroke="#10b981" stroke-width="2" stroke-dasharray="4,3" marker-end="url(#ah2)"/><line x1="355" y1="70" x2="320" y2="70" stroke="#ef4444" stroke-width="2" stroke-dasharray="4,3" marker-end="url(#ah2)"/><text x="20" y="120" font-family="sans-serif" font-size="12" fill="#1e293b">Step 1: L=1 + R=15 = 16 &gt; 12 → move R left</text><text x="20" y="140" font-family="sans-serif" font-size="12" fill="#1e293b">Step 2: L=1 + R=11 = 12 = target → found!</text><rect x="20" y="158" width="420" height="24" rx="4" fill="#f0fdf4" stroke="#10b981" stroke-width="1"/><text x="30" y="175" font-family="sans-serif" font-size="11" fill="#10b981">sum &lt; target → move L right | sum &gt; target → move R left | O(n) time</text></svg>'
+        }
+      ],
 
       introduction: `Two Pointers is a technique that uses two index variables to traverse a data structure, typically reducing time complexity from O(n²) to O(n). It's essential for array and linked list problems.
 
@@ -600,6 +894,7 @@ Two pointers work when you can eliminate possibilities by moving one pointer—e
       codeExamples: [
         {
           title: 'Two Sum II (Sorted Array) - Opposite Direction',
+          language: 'python',
           description: 'Find two numbers that sum to target in sorted array.',
           code: `def two_sum_sorted(numbers, target):
     left, right = 0, len(numbers) - 1
@@ -617,6 +912,7 @@ Two pointers work when you can eliminate possibilities by moving one pointer—e
         },
         {
           title: 'Three Sum - Fix One, Two-Pointer on Rest',
+          language: 'python',
           description: 'Find all unique triplets that sum to zero.',
           code: `def three_sum(nums):
     nums.sort()
@@ -648,6 +944,7 @@ Two pointers work when you can eliminate possibilities by moving one pointer—e
         },
         {
           title: 'Container With Most Water - Greedy Two Pointers',
+          language: 'python',
           description: 'Find max water between two lines. Move the shorter line.',
           code: `def max_area(height):
     left, right = 0, len(height) - 1
@@ -668,6 +965,7 @@ Two pointers work when you can eliminate possibilities by moving one pointer—e
         },
         {
           title: 'Fast/Slow Pointers - Linked List Cycle',
+          language: 'python',
           description: 'Detect if linked list has a cycle using Floyd\'s algorithm.',
           code: `def has_cycle(head):
     if not head or not head.next:
@@ -693,6 +991,15 @@ Two pointers work when you can eliminate possibilities by moving one pointer—e
       color: '#8b5cf6',
       questions: 16,
       description: 'Process subarrays/substrings efficiently. Key for substring and subarray problems.',
+
+visualizations: [
+        {
+          title: 'Sliding Window on Array',
+          language: 'python',
+          description: 'Shows a window bracket sliding right across an array, expanding and contracting to find the optimal subarray.',
+          svg: '<svg viewBox="0 0 500 220" xmlns="http://www.w3.org/2000/svg" style="background:white"><text x="20" y="25" font-family="sans-serif" font-size="13" font-weight="bold" fill="#1e293b">Sliding Window — Max Sum of K=3</text><g><rect x="30" y="45" width="48" height="36" rx="4" fill="#fff" stroke="#e2e8f0" stroke-width="1.5"/><text x="54" y="68" font-family="monospace" font-size="13" fill="#94a3b8" text-anchor="middle">2</text><rect x="82" y="45" width="48" height="36" rx="4" fill="#eff6ff" stroke="#3b82f6" stroke-width="2"/><text x="106" y="68" font-family="monospace" font-size="13" fill="#3b82f6" font-weight="bold" text-anchor="middle">5</text><rect x="134" y="45" width="48" height="36" rx="4" fill="#eff6ff" stroke="#3b82f6" stroke-width="2"/><text x="158" y="68" font-family="monospace" font-size="13" fill="#3b82f6" font-weight="bold" text-anchor="middle">1</text><rect x="186" y="45" width="48" height="36" rx="4" fill="#eff6ff" stroke="#3b82f6" stroke-width="2"/><text x="210" y="68" font-family="monospace" font-size="13" fill="#3b82f6" font-weight="bold" text-anchor="middle">8</text><rect x="238" y="45" width="48" height="36" rx="4" fill="#fff" stroke="#e2e8f0" stroke-width="1.5"/><text x="262" y="68" font-family="monospace" font-size="13" fill="#94a3b8" text-anchor="middle">3</text><rect x="290" y="45" width="48" height="36" rx="4" fill="#fff" stroke="#e2e8f0" stroke-width="1.5"/><text x="314" y="68" font-family="monospace" font-size="13" fill="#94a3b8" text-anchor="middle">7</text><rect x="342" y="45" width="48" height="36" rx="4" fill="#fff" stroke="#e2e8f0" stroke-width="1.5"/><text x="366" y="68" font-family="monospace" font-size="13" fill="#94a3b8" text-anchor="middle">4</text></g><rect x="78" y="38" width="160" height="50" rx="8" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-dasharray="6,3"/><text x="158" y="105" font-family="sans-serif" font-size="12" fill="#3b82f6" text-anchor="middle" font-weight="bold">Window: sum = 14</text><line x1="240" y1="63" x2="290" y2="63" stroke="#3b82f6" stroke-width="2" stroke-dasharray="4,3"/><text x="265" y="58" font-family="sans-serif" font-size="10" fill="#3b82f6">slide →</text><text x="20" y="135" font-family="sans-serif" font-size="12" fill="#1e293b">Window slides: add right element, remove left element</text><text x="20" y="155" font-family="monospace" font-size="11" fill="#64748b">[2,5,1]=8 → [5,1,8]=14 → [1,8,3]=12 → [8,3,7]=18 → [3,7,4]=14</text><rect x="20" y="172" width="370" height="24" rx="4" fill="#f0fdf4" stroke="#10b981" stroke-width="1"/><text x="30" y="189" font-family="sans-serif" font-size="11" fill="#10b981">Max sum = 18 | Each element visited once → O(n)</text></svg>'
+        }
+      ],
 
       introduction: `Sliding Window is one of the most important patterns for string and subarray problems. It processes contiguous elements efficiently by maintaining a "window" that slides across the data.
 
@@ -800,6 +1107,7 @@ Expand the right pointer to include more elements. When a condition is violated,
       codeExamples: [
         {
           title: 'Fixed Window: Max Sum of K Elements',
+          language: 'python',
           description: 'Find maximum sum of any contiguous subarray of size k.',
           code: `def max_sum_subarray(nums, k):
     if len(nums) < k:
@@ -818,6 +1126,7 @@ Expand the right pointer to include more elements. When a condition is violated,
         },
         {
           title: 'Variable Window: Longest Substring Without Repeating',
+          language: 'python',
           description: 'Find length of longest substring without repeating characters.',
           code: `def length_of_longest_substring(s):
     char_index = {}  # char -> last seen index
@@ -836,6 +1145,7 @@ Expand the right pointer to include more elements. When a condition is violated,
         },
         {
           title: 'Variable Window: Minimum Window Substring',
+          language: 'python',
           description: 'Find smallest substring containing all characters of t.',
           code: `def min_window(s, t):
     if not t or not s:
@@ -872,6 +1182,7 @@ Expand the right pointer to include more elements. When a condition is violated,
         },
         {
           title: 'At Most K Distinct: Fruit Into Baskets',
+          language: 'python',
           description: 'Maximum length subarray with at most 2 distinct elements.',
           code: `def total_fruit(fruits):
     count = {}  # fruit -> count in window
@@ -892,6 +1203,181 @@ Expand the right pointer to include more elements. When a condition is violated,
 
     return max_fruits`
         }
+      ,
+        {
+          title: 'Fixed Window: Max Sum of K Elements',
+          language: 'javascript',
+          description: 'Find maximum sum of any contiguous subarray of size k.',
+          code: `function maxSumSubarray(nums, k) {
+    if (nums.length < k) return 0;
+
+    let windowSum = nums.slice(0, k).reduce((a, b) => a + b, 0);
+    let maxSum = windowSum;
+
+    for (let i = k; i < nums.length; i++) {
+        windowSum += nums[i] - nums[i - k]; // Add right, remove left
+        maxSum = Math.max(maxSum, windowSum);
+    }
+    return maxSum;
+}`
+        },
+        {
+          title: 'Fixed Window: Max Sum of K Elements',
+          language: 'java',
+          description: 'Find maximum sum of any contiguous subarray of size k.',
+          code: `public int maxSumSubarray(int[] nums, int k) {
+    if (nums.length < k) return 0;
+
+    int windowSum = 0;
+    for (int i = 0; i < k; i++) windowSum += nums[i];
+    int maxSum = windowSum;
+
+    for (int i = k; i < nums.length; i++) {
+        windowSum += nums[i] - nums[i - k]; // Add right, remove left
+        maxSum = Math.max(maxSum, windowSum);
+    }
+    return maxSum;
+}`
+        },
+        {
+          title: 'Variable Window: Longest Substring Without Repeating',
+          language: 'javascript',
+          description: 'Find length of longest substring without repeating characters.',
+          code: `function lengthOfLongestSubstring(s) {
+    const charIndex = new Map(); // char -> last seen index
+    let maxLen = 0, left = 0;
+
+    for (let right = 0; right < s.length; right++) {
+        if (charIndex.has(s[right]) && charIndex.get(s[right]) >= left) {
+            left = charIndex.get(s[right]) + 1;
+        }
+        charIndex.set(s[right], right);
+        maxLen = Math.max(maxLen, right - left + 1);
+    }
+    return maxLen;
+}`
+        },
+        {
+          title: 'Variable Window: Longest Substring Without Repeating',
+          language: 'java',
+          description: 'Find length of longest substring without repeating characters.',
+          code: `public int lengthOfLongestSubstring(String s) {
+    Map<Character, Integer> charIndex = new HashMap<>();
+    int maxLen = 0, left = 0;
+
+    for (int right = 0; right < s.length(); right++) {
+        char c = s.charAt(right);
+        if (charIndex.containsKey(c) && charIndex.get(c) >= left) {
+            left = charIndex.get(c) + 1;
+        }
+        charIndex.put(c, right);
+        maxLen = Math.max(maxLen, right - left + 1);
+    }
+    return maxLen;
+}`
+        },
+        {
+          title: 'Variable Window: Minimum Window Substring',
+          language: 'javascript',
+          description: 'Find smallest substring containing all characters of t.',
+          code: `function minWindow(s, t) {
+    if (!t || !s) return "";
+
+    const need = {};
+    for (const c of t) need[c] = (need[c] || 0) + 1;
+    const have = {};
+    let haveCount = 0, needCount = Object.keys(need).length;
+    let result = "", resultLen = Infinity, left = 0;
+
+    for (let right = 0; right < s.length; right++) {
+        have[s[right]] = (have[s[right]] || 0) + 1;
+        if (s[right] in need && have[s[right]] === need[s[right]]) haveCount++;
+
+        while (haveCount === needCount) {
+            if (right - left + 1 < resultLen) {
+                result = s.slice(left, right + 1);
+                resultLen = result.length;
+            }
+            have[s[left]]--;
+            if (s[left] in need && have[s[left]] < need[s[left]]) haveCount--;
+            left++;
+        }
+    }
+    return result;
+}`
+        },
+        {
+          title: 'Variable Window: Minimum Window Substring',
+          language: 'java',
+          description: 'Find smallest substring containing all characters of t.',
+          code: `public String minWindow(String s, String t) {
+    if (s.isEmpty() || t.isEmpty()) return "";
+
+    Map<Character, Integer> need = new HashMap<>(), have = new HashMap<>();
+    for (char c : t.toCharArray()) need.merge(c, 1, Integer::sum);
+
+    int haveCount = 0, needCount = need.size();
+    int[] result = {0, Integer.MAX_VALUE}; // start, length
+    int left = 0;
+
+    for (int right = 0; right < s.length(); right++) {
+        char c = s.charAt(right);
+        have.merge(c, 1, Integer::sum);
+        if (need.containsKey(c) && have.get(c).equals(need.get(c))) haveCount++;
+
+        while (haveCount == needCount) {
+            if (right - left + 1 < result[1]) { result[0] = left; result[1] = right - left + 1; }
+            char lc = s.charAt(left);
+            have.merge(lc, -1, Integer::sum);
+            if (need.containsKey(lc) && have.get(lc) < need.get(lc)) haveCount--;
+            left++;
+        }
+    }
+    return result[1] == Integer.MAX_VALUE ? "" : s.substring(result[0], result[0] + result[1]);
+}`
+        },
+        {
+          title: 'At Most K Distinct: Fruit Into Baskets',
+          language: 'javascript',
+          description: 'Maximum length subarray with at most 2 distinct elements.',
+          code: `function totalFruit(fruits) {
+    const count = new Map(); // fruit -> count in window
+    let left = 0, maxFruits = 0;
+
+    for (let right = 0; right < fruits.length; right++) {
+        count.set(fruits[right], (count.get(fruits[right]) || 0) + 1);
+
+        while (count.size > 2) {
+            count.set(fruits[left], count.get(fruits[left]) - 1);
+            if (count.get(fruits[left]) === 0) count.delete(fruits[left]);
+            left++;
+        }
+        maxFruits = Math.max(maxFruits, right - left + 1);
+    }
+    return maxFruits;
+}`
+        },
+        {
+          title: 'At Most K Distinct: Fruit Into Baskets',
+          language: 'java',
+          description: 'Maximum length subarray with at most 2 distinct elements.',
+          code: `public int totalFruit(int[] fruits) {
+    Map<Integer, Integer> count = new HashMap<>();
+    int left = 0, maxFruits = 0;
+
+    for (int right = 0; right < fruits.length; right++) {
+        count.merge(fruits[right], 1, Integer::sum);
+
+        while (count.size() > 2) {
+            count.merge(fruits[left], -1, Integer::sum);
+            if (count.get(fruits[left]) == 0) count.remove(fruits[left]);
+            left++;
+        }
+        maxFruits = Math.max(maxFruits, right - left + 1);
+    }
+    return maxFruits;
+}`
+        }
       ]
     },
     {
@@ -901,6 +1387,15 @@ Expand the right pointer to include more elements. When a condition is violated,
       color: '#22c55e',
       questions: 34,
       description: 'LIFO structure for parsing, backtracking, and monotonic stack patterns.',
+
+visualizations: [
+        {
+          title: 'Stack (LIFO) vs Queue (FIFO)',
+          language: 'python',
+          description: 'Split diagram showing Stack push/pop from the top and Queue enqueue/dequeue from opposite ends.',
+          svg: '<svg viewBox="0 0 500 250" xmlns="http://www.w3.org/2000/svg" style="background:white"><defs><marker id="ah3" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#64748b"/></marker></defs><text x="100" y="22" font-family="sans-serif" font-size="13" font-weight="bold" fill="#1e293b" text-anchor="middle">Stack (LIFO)</text><rect x="55" y="170" width="90" height="28" rx="4" fill="#e2e8f0" stroke="#cbd5e1" stroke-width="1.5"/><text x="100" y="189" font-family="monospace" font-size="12" fill="#64748b" text-anchor="middle">A</text><rect x="55" y="138" width="90" height="28" rx="4" fill="#e2e8f0" stroke="#cbd5e1" stroke-width="1.5"/><text x="100" y="157" font-family="monospace" font-size="12" fill="#64748b" text-anchor="middle">B</text><rect x="55" y="106" width="90" height="28" rx="4" fill="#e2e8f0" stroke="#cbd5e1" stroke-width="1.5"/><text x="100" y="125" font-family="monospace" font-size="12" fill="#64748b" text-anchor="middle">C</text><rect x="55" y="74" width="90" height="28" rx="4" fill="#f0fdf4" stroke="#10b981" stroke-width="2"/><text x="100" y="93" font-family="monospace" font-size="12" fill="#10b981" font-weight="bold" text-anchor="middle">D ← top</text><line x1="160" y1="55" x2="160" y2="88" stroke="#10b981" stroke-width="1.5" marker-end="url(#ah3)"/><text x="175" y="65" font-family="sans-serif" font-size="10" fill="#10b981" font-weight="bold">push</text><line x1="175" y1="88" x2="175" y2="55" stroke="#ef4444" stroke-width="1.5" marker-end="url(#ah3)"/><text x="192" y="85" font-family="sans-serif" font-size="10" fill="#ef4444" font-weight="bold">pop</text><line x1="240" y1="30" x2="240" y2="220" stroke="#e2e8f0" stroke-width="1.5" stroke-dasharray="4,4"/><text x="380" y="22" font-family="sans-serif" font-size="13" font-weight="bold" fill="#1e293b" text-anchor="middle">Queue (FIFO)</text><rect x="290" y="95" width="50" height="40" rx="4" fill="#e2e8f0" stroke="#cbd5e1" stroke-width="1.5"/><text x="315" y="120" font-family="monospace" font-size="12" fill="#64748b" text-anchor="middle">A</text><rect x="345" y="95" width="50" height="40" rx="4" fill="#e2e8f0" stroke="#cbd5e1" stroke-width="1.5"/><text x="370" y="120" font-family="monospace" font-size="12" fill="#64748b" text-anchor="middle">B</text><rect x="400" y="95" width="50" height="40" rx="4" fill="#eff6ff" stroke="#3b82f6" stroke-width="2"/><text x="425" y="120" font-family="monospace" font-size="12" fill="#3b82f6" font-weight="bold" text-anchor="middle">C</text><line x1="462" y1="115" x2="455" y2="115" stroke="#10b981" stroke-width="1.5" marker-end="url(#ah3)"/><text x="470" y="110" font-family="sans-serif" font-size="10" fill="#10b981" font-weight="bold">enq</text><line x1="290" y1="115" x2="272" y2="115" stroke="#ef4444" stroke-width="1.5" marker-end="url(#ah3)"/><text x="270" y="110" font-family="sans-serif" font-size="10" fill="#ef4444" font-weight="bold" text-anchor="end">deq</text><text x="315" y="150" font-family="sans-serif" font-size="10" fill="#64748b">front</text><text x="425" y="150" font-family="sans-serif" font-size="10" fill="#64748b" text-anchor="middle">back</text><text x="20" y="235" font-family="sans-serif" font-size="11" fill="#64748b">Stack: last in = first out (undo, DFS) | Queue: first in = first out (BFS, scheduling)</text></svg>'
+        }
+      ],
 
       introduction: `Stacks follow Last-In-First-Out (LIFO) principle. They're essential for problems involving nested structures, parsing, and finding relationships between elements.
 
@@ -1045,6 +1540,7 @@ A monotonic stack maintains elements in increasing or decreasing order. When a n
       codeExamples: [
         {
           title: 'Valid Parentheses',
+          language: 'python',
           description: 'Check if brackets are balanced and properly nested.',
           code: `def is_valid(s):
     stack = []
@@ -1062,6 +1558,7 @@ A monotonic stack maintains elements in increasing or decreasing order. When a n
         },
         {
           title: 'Daily Temperatures - Monotonic Decreasing Stack',
+          language: 'python',
           description: 'For each day, find days until warmer temperature.',
           code: `def daily_temperatures(temps):
     n = len(temps)
@@ -1079,6 +1576,7 @@ A monotonic stack maintains elements in increasing or decreasing order. When a n
         },
         {
           title: 'Largest Rectangle in Histogram',
+          language: 'python',
           description: 'Find largest rectangle that can be formed in histogram.',
           code: `def largest_rectangle(heights):
     stack = []  # Indices of increasing heights
@@ -1097,6 +1595,7 @@ A monotonic stack maintains elements in increasing or decreasing order. When a n
         },
         {
           title: 'Basic Calculator (with +, -, parentheses)',
+          language: 'python',
           description: 'Evaluate expression with +, -, and nested parentheses.',
           code: `def calculate(s):
     stack = []
@@ -1128,6 +1627,176 @@ A monotonic stack maintains elements in increasing or decreasing order. When a n
 
     return result + sign * number`
         }
+      ,
+        {
+          title: 'Valid Parentheses',
+          language: 'javascript',
+          description: 'Check if brackets are balanced and properly nested.',
+          code: `function isValid(s) {
+    const stack = [];
+    const matching = { ')': '(', '}': '{', ']': '[' };
+
+    for (const char of s) {
+        if ('({['.includes(char)) {
+            stack.push(char);
+        } else if (')}]'.includes(char)) {
+            if (!stack.length || stack[stack.length - 1] !== matching[char]) return false;
+            stack.pop();
+        }
+    }
+    return stack.length === 0;
+}`
+        },
+        {
+          title: 'Valid Parentheses',
+          language: 'java',
+          description: 'Check if brackets are balanced and properly nested.',
+          code: `public boolean isValid(String s) {
+    Deque<Character> stack = new ArrayDeque<>();
+    Map<Character, Character> matching = Map.of(')', '(', '}', '{', ']', '[');
+
+    for (char c : s.toCharArray()) {
+        if (c == '(' || c == '{' || c == '[') {
+            stack.push(c);
+        } else {
+            if (stack.isEmpty() || stack.peek() != matching.get(c)) return false;
+            stack.pop();
+        }
+    }
+    return stack.isEmpty();
+}`
+        },
+        {
+          title: 'Daily Temperatures - Monotonic Decreasing Stack',
+          language: 'javascript',
+          description: 'For each day, find days until warmer temperature.',
+          code: `function dailyTemperatures(temps) {
+    const result = new Array(temps.length).fill(0);
+    const stack = []; // Indices of temps waiting for warmer day
+
+    for (let i = 0; i < temps.length; i++) {
+        while (stack.length && temps[stack[stack.length - 1]] < temps[i]) {
+            const prevIdx = stack.pop();
+            result[prevIdx] = i - prevIdx;
+        }
+        stack.push(i);
+    }
+    return result;
+}`
+        },
+        {
+          title: 'Daily Temperatures - Monotonic Decreasing Stack',
+          language: 'java',
+          description: 'For each day, find days until warmer temperature.',
+          code: `public int[] dailyTemperatures(int[] temps) {
+    int[] result = new int[temps.length];
+    Deque<Integer> stack = new ArrayDeque<>(); // Indices
+
+    for (int i = 0; i < temps.length; i++) {
+        while (!stack.isEmpty() && temps[stack.peek()] < temps[i]) {
+            int prevIdx = stack.pop();
+            result[prevIdx] = i - prevIdx;
+        }
+        stack.push(i);
+    }
+    return result;
+}`
+        },
+        {
+          title: 'Largest Rectangle in Histogram',
+          language: 'javascript',
+          description: 'Find largest rectangle that can be formed in histogram.',
+          code: `function largestRectangle(heights) {
+    const stack = [];
+    let maxArea = 0;
+    heights.push(0); // Sentinel
+
+    for (let i = 0; i < heights.length; i++) {
+        while (stack.length && heights[stack[stack.length - 1]] > heights[i]) {
+            const height = heights[stack.pop()];
+            const width = stack.length ? i - stack[stack.length - 1] - 1 : i;
+            maxArea = Math.max(maxArea, height * width);
+        }
+        stack.push(i);
+    }
+    heights.pop(); // Remove sentinel
+    return maxArea;
+}`
+        },
+        {
+          title: 'Largest Rectangle in Histogram',
+          language: 'java',
+          description: 'Find largest rectangle that can be formed in histogram.',
+          code: `public int largestRectangleArea(int[] heights) {
+    Deque<Integer> stack = new ArrayDeque<>();
+    int maxArea = 0;
+
+    for (int i = 0; i <= heights.length; i++) {
+        int h = (i == heights.length) ? 0 : heights[i];
+        while (!stack.isEmpty() && heights[stack.peek()] > h) {
+            int height = heights[stack.pop()];
+            int width = stack.isEmpty() ? i : i - stack.peek() - 1;
+            maxArea = Math.max(maxArea, height * width);
+        }
+        stack.push(i);
+    }
+    return maxArea;
+}`
+        },
+        {
+          title: 'Basic Calculator (with +, -, parentheses)',
+          language: 'javascript',
+          description: 'Evaluate expression with +, -, and nested parentheses.',
+          code: `function calculate(s) {
+    const stack = [];
+    let result = 0, number = 0, sign = 1;
+
+    for (const char of s) {
+        if (char >= '0' && char <= '9') {
+            number = number * 10 + Number(char);
+        } else if (char === '+') {
+            result += sign * number; number = 0; sign = 1;
+        } else if (char === '-') {
+            result += sign * number; number = 0; sign = -1;
+        } else if (char === '(') {
+            stack.push(result); stack.push(sign);
+            result = 0; sign = 1;
+        } else if (char === ')') {
+            result += sign * number; number = 0;
+            result *= stack.pop(); // sign before parenthesis
+            result += stack.pop(); // result before parenthesis
+        }
+    }
+    return result + sign * number;
+}`
+        },
+        {
+          title: 'Basic Calculator (with +, -, parentheses)',
+          language: 'java',
+          description: 'Evaluate expression with +, -, and nested parentheses.',
+          code: `public int calculate(String s) {
+    Deque<Integer> stack = new ArrayDeque<>();
+    int result = 0, number = 0, sign = 1;
+
+    for (char c : s.toCharArray()) {
+        if (Character.isDigit(c)) {
+            number = number * 10 + (c - '0');
+        } else if (c == '+') {
+            result += sign * number; number = 0; sign = 1;
+        } else if (c == '-') {
+            result += sign * number; number = 0; sign = -1;
+        } else if (c == '(') {
+            stack.push(result); stack.push(sign);
+            result = 0; sign = 1;
+        } else if (c == ')') {
+            result += sign * number; number = 0;
+            result *= stack.pop();
+            result += stack.pop();
+        }
+    }
+    return result + sign * number;
+}`
+        }
       ]
     },
     {
@@ -1137,6 +1806,15 @@ A monotonic stack maintains elements in increasing or decreasing order. When a n
       color: '#a855f7',
       questions: 31,
       description: 'Pointer manipulation fundamentals. Practice reversing, merging, and cycle detection.',
+
+visualizations: [
+        {
+          title: 'Singly Linked List',
+          language: 'python',
+          description: 'Chain of nodes connected by next pointers, ending with null.',
+          svg: '<svg viewBox="0 0 500 180" xmlns="http://www.w3.org/2000/svg" style="background:white"><defs><marker id="ah4" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#64748b"/></marker></defs><text x="20" y="25" font-family="sans-serif" font-size="13" font-weight="bold" fill="#1e293b">Singly Linked List</text><text x="25" y="65" font-family="sans-serif" font-size="11" fill="#10b981" font-weight="bold">head</text><line x1="50" y1="68" x2="50" y2="82" stroke="#10b981" stroke-width="1.5" marker-end="url(#ah4)"/><g><rect x="30" y="85" width="55" height="40" rx="6" fill="#f0fdf4" stroke="#10b981" stroke-width="2"/><text x="57" y="110" font-family="monospace" font-size="15" fill="#10b981" font-weight="bold" text-anchor="middle">1</text><line x1="88" y1="105" x2="115" y2="105" stroke="#64748b" stroke-width="2" marker-end="url(#ah4)"/></g><g><rect x="120" y="85" width="55" height="40" rx="6" fill="#fff" stroke="#e2e8f0" stroke-width="1.5"/><text x="147" y="110" font-family="monospace" font-size="15" fill="#1e293b" text-anchor="middle">2</text><line x1="178" y1="105" x2="205" y2="105" stroke="#64748b" stroke-width="2" marker-end="url(#ah4)"/></g><g><rect x="210" y="85" width="55" height="40" rx="6" fill="#fff" stroke="#e2e8f0" stroke-width="1.5"/><text x="237" y="110" font-family="monospace" font-size="15" fill="#1e293b" text-anchor="middle">3</text><line x1="268" y1="105" x2="295" y2="105" stroke="#64748b" stroke-width="2" marker-end="url(#ah4)"/></g><g><rect x="300" y="85" width="55" height="40" rx="6" fill="#fff" stroke="#e2e8f0" stroke-width="1.5"/><text x="327" y="110" font-family="monospace" font-size="15" fill="#1e293b" text-anchor="middle">4</text><line x1="358" y1="105" x2="385" y2="105" stroke="#64748b" stroke-width="2" marker-end="url(#ah4)"/></g><rect x="390" y="95" width="50" height="22" rx="4" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/><text x="415" y="111" font-family="monospace" font-size="11" fill="#ef4444" text-anchor="middle">null</text><text x="20" y="155" font-family="sans-serif" font-size="11" fill="#64748b">Each node stores data + pointer to next node | Traversal O(n) | Insert/Delete at known pos O(1)</text></svg>'
+        }
+      ],
 
       introduction: `Linked Lists test your ability to manipulate pointers and think about data structures. Unlike arrays, linked lists don't have random access but allow O(1) insertion/deletion at known positions.
 
@@ -1269,6 +1947,7 @@ Most linked list problems become easier if you:
       codeExamples: [
         {
           title: 'Reverse Linked List',
+          language: 'python',
           description: 'Iteratively reverse a singly linked list in O(1) space.',
           code: `def reverse_list(head):
     prev = None
@@ -1298,6 +1977,7 @@ Most linked list problems become easier if you:
         },
         {
           title: 'Find Middle Node',
+          language: 'python',
           description: 'Find middle node using slow/fast pointers.',
           code: `def find_middle(head):
     slow = fast = head
@@ -1310,6 +1990,7 @@ Most linked list problems become easier if you:
         },
         {
           title: 'Merge Two Sorted Lists',
+          language: 'python',
           description: 'Merge two sorted lists into one sorted list.',
           code: `def merge_two_lists(l1, l2):
     dummy = ListNode(0)
@@ -1329,6 +2010,7 @@ Most linked list problems become easier if you:
         },
         {
           title: 'Remove Nth Node From End',
+          language: 'python',
           description: 'Remove the nth node from end in one pass.',
           code: `def remove_nth_from_end(head, n):
     dummy = ListNode(0, head)
@@ -1356,6 +2038,15 @@ Most linked list problems become easier if you:
       color: '#06b6d4',
       questions: 45,
       description: 'Binary trees and BSTs. Master DFS, BFS, and recursive thinking.',
+
+visualizations: [
+        {
+          title: 'Binary Tree with Traversal Orders',
+          language: 'python',
+          description: 'A binary tree showing root, children, and leaves with inorder traversal numbers.',
+          svg: '<svg viewBox="0 0 500 250" xmlns="http://www.w3.org/2000/svg" style="background:white"><defs><marker id="ah5" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#64748b"/></marker></defs><text x="20" y="22" font-family="sans-serif" font-size="13" font-weight="bold" fill="#1e293b">Binary Tree — Inorder Traversal</text><circle cx="250" cy="55" r="22" fill="#f0fdf4" stroke="#10b981" stroke-width="2.5"/><text x="250" y="60" font-family="monospace" font-size="14" fill="#10b981" font-weight="bold" text-anchor="middle">4</text><text x="250" y="30" font-family="sans-serif" font-size="10" fill="#10b981">root</text><line x1="233" y1="72" x2="170" y2="108" stroke="#64748b" stroke-width="1.5"/><line x1="267" y1="72" x2="330" y2="108" stroke="#64748b" stroke-width="1.5"/><circle cx="160" cy="120" r="22" fill="#fff" stroke="#e2e8f0" stroke-width="2"/><text x="160" y="125" font-family="monospace" font-size="14" fill="#1e293b" text-anchor="middle">2</text><circle cx="340" cy="120" r="22" fill="#fff" stroke="#e2e8f0" stroke-width="2"/><text x="340" y="125" font-family="monospace" font-size="14" fill="#1e293b" text-anchor="middle">6</text><line x1="145" y1="138" x2="105" y2="168" stroke="#64748b" stroke-width="1.5"/><line x1="175" y1="138" x2="215" y2="168" stroke="#64748b" stroke-width="1.5"/><line x1="325" y1="138" x2="285" y2="168" stroke="#64748b" stroke-width="1.5"/><line x1="355" y1="138" x2="395" y2="168" stroke="#64748b" stroke-width="1.5"/><circle cx="95" cy="182" r="20" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/><text x="95" y="187" font-family="monospace" font-size="13" fill="#64748b" text-anchor="middle">1</text><circle cx="225" cy="182" r="20" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/><text x="225" y="187" font-family="monospace" font-size="13" fill="#64748b" text-anchor="middle">3</text><circle cx="275" cy="182" r="20" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/><text x="275" y="187" font-family="monospace" font-size="13" fill="#64748b" text-anchor="middle">5</text><circle cx="405" cy="182" r="20" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/><text x="405" y="187" font-family="monospace" font-size="13" fill="#64748b" text-anchor="middle">7</text><text x="78" y="212" font-family="sans-serif" font-size="9" fill="#94a3b8">leaf</text><text x="208" y="212" font-family="sans-serif" font-size="9" fill="#94a3b8">leaf</text><text x="258" y="212" font-family="sans-serif" font-size="9" fill="#94a3b8">leaf</text><text x="388" y="212" font-family="sans-serif" font-size="9" fill="#94a3b8">leaf</text><text x="20" y="242" font-family="sans-serif" font-size="11" fill="#64748b">Inorder: 1,2,3,4,5,6,7 (sorted!) | Preorder: 4,2,1,3,6,5,7 | Postorder: 1,3,2,5,7,6,4</text></svg>'
+        }
+      ],
 
       introduction: `Trees are hierarchical data structures essential for interviews. Most tree problems require recursive thinking—solving for the current node using solutions from subtrees.
 
@@ -1543,6 +2234,7 @@ Most linked list problems become easier if you:
       codeExamples: [
         {
           title: 'Maximum Depth (Postorder - Bottom Up)',
+          language: 'python',
           description: 'Height is 1 + max of children heights.',
           code: `def max_depth(root):
     if not root:
@@ -1553,6 +2245,7 @@ Most linked list problems become easier if you:
         },
         {
           title: 'Validate BST (Preorder with Range)',
+          language: 'python',
           description: 'Each node must be within valid range.',
           code: `def is_valid_bst(root, min_val=float('-inf'), max_val=float('inf')):
     if not root:
@@ -1564,6 +2257,7 @@ Most linked list problems become easier if you:
         },
         {
           title: 'Level Order Traversal (BFS)',
+          language: 'python',
           description: 'Process tree level by level using queue.',
           code: `from collections import deque
 
@@ -1590,6 +2284,7 @@ def level_order(root):
         },
         {
           title: 'Lowest Common Ancestor',
+          language: 'python',
           description: 'Find LCA of two nodes in binary tree.',
           code: `def lowest_common_ancestor(root, p, q):
     if not root or root == p or root == q:
@@ -1611,6 +2306,15 @@ def level_order(root):
       color: '#ec4899',
       questions: 54,
       description: 'DFS, BFS, and shortest path algorithms. Represent as adjacency list.',
+
+visualizations: [
+        {
+          title: 'Graph with Adjacency List',
+          language: 'python',
+          description: 'Shows 6 connected nodes as a graph alongside its adjacency list representation.',
+          svg: '<svg viewBox="0 0 500 250" xmlns="http://www.w3.org/2000/svg" style="background:white"><defs><marker id="ah6" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#64748b"/></marker></defs><text x="20" y="22" font-family="sans-serif" font-size="13" font-weight="bold" fill="#1e293b">Undirected Graph + Adjacency List</text><line x1="80" y1="65" x2="180" y2="65" stroke="#cbd5e1" stroke-width="1.5"/><line x1="80" y1="65" x2="50" y2="140" stroke="#cbd5e1" stroke-width="1.5"/><line x1="80" y1="65" x2="130" y2="140" stroke="#cbd5e1" stroke-width="1.5"/><line x1="180" y1="65" x2="130" y2="140" stroke="#cbd5e1" stroke-width="1.5"/><line x1="180" y1="65" x2="210" y2="140" stroke="#cbd5e1" stroke-width="1.5"/><line x1="50" y1="140" x2="130" y2="140" stroke="#cbd5e1" stroke-width="1.5"/><line x1="130" y1="140" x2="130" y2="210" stroke="#cbd5e1" stroke-width="1.5"/><circle cx="80" cy="65" r="18" fill="#f0fdf4" stroke="#10b981" stroke-width="2"/><text x="80" y="70" font-family="monospace" font-size="13" fill="#10b981" font-weight="bold" text-anchor="middle">0</text><circle cx="180" cy="65" r="18" fill="#fff" stroke="#e2e8f0" stroke-width="2"/><text x="180" y="70" font-family="monospace" font-size="13" fill="#1e293b" text-anchor="middle">1</text><circle cx="50" cy="140" r="18" fill="#fff" stroke="#e2e8f0" stroke-width="2"/><text x="50" y="145" font-family="monospace" font-size="13" fill="#1e293b" text-anchor="middle">2</text><circle cx="130" cy="140" r="18" fill="#fff" stroke="#e2e8f0" stroke-width="2"/><text x="130" y="145" font-family="monospace" font-size="13" fill="#1e293b" text-anchor="middle">3</text><circle cx="210" cy="140" r="18" fill="#fff" stroke="#e2e8f0" stroke-width="2"/><text x="210" y="145" font-family="monospace" font-size="13" fill="#1e293b" text-anchor="middle">4</text><circle cx="130" cy="210" r="18" fill="#fff" stroke="#e2e8f0" stroke-width="2"/><text x="130" y="215" font-family="monospace" font-size="13" fill="#1e293b" text-anchor="middle">5</text><text x="290" y="50" font-family="sans-serif" font-size="12" font-weight="bold" fill="#1e293b">Adjacency List</text><text x="290" y="72" font-family="monospace" font-size="11" fill="#10b981" font-weight="bold">0: [1, 2, 3]</text><text x="290" y="92" font-family="monospace" font-size="11" fill="#1e293b">1: [0, 3, 4]</text><text x="290" y="112" font-family="monospace" font-size="11" fill="#1e293b">2: [0, 3]</text><text x="290" y="132" font-family="monospace" font-size="11" fill="#1e293b">3: [0, 1, 2, 5]</text><text x="290" y="152" font-family="monospace" font-size="11" fill="#1e293b">4: [1]</text><text x="290" y="172" font-family="monospace" font-size="11" fill="#1e293b">5: [3]</text><text x="290" y="210" font-family="sans-serif" font-size="11" fill="#64748b">V=6, E=7</text><text x="290" y="228" font-family="sans-serif" font-size="11" fill="#64748b">DFS/BFS: O(V+E)</text></svg>'
+        }
+      ],
 
       introduction: `Graphs model relationships between entities. Master graph traversal and you'll solve 15-20% of interview problems. Grids are graphs too—each cell connects to its neighbors.
 
@@ -1800,6 +2504,7 @@ def level_order(root):
       codeExamples: [
         {
           title: 'Number of Islands - Grid DFS',
+          language: 'python',
           description: 'Count connected components in a grid using DFS.',
           code: `def num_islands(grid):
     if not grid:
@@ -1824,6 +2529,7 @@ def level_order(root):
         },
         {
           title: 'Course Schedule - Cycle Detection',
+          language: 'python',
           description: 'Detect cycle in directed graph using DFS.',
           code: `def can_finish(num_courses, prerequisites):
     # Build adjacency list
@@ -1878,6 +2584,7 @@ def find_order(num_courses, prerequisites):
         },
         {
           title: 'Network Delay Time - Dijkstra',
+          language: 'python',
           description: 'Shortest path in weighted graph using min-heap.',
           code: `import heapq
 
@@ -1905,6 +2612,203 @@ def network_delay_time(times, n, k):
     max_dist = max(dist.values())
     return max_dist if max_dist < float('inf') else -1`
         }
+      ,
+        {
+          title: 'Number of Islands - Grid DFS',
+          language: 'javascript',
+          description: 'Count connected components in a grid using DFS.',
+          code: `function numIslands(grid) {
+    if (!grid.length) return 0;
+    const rows = grid.length, cols = grid[0].length;
+    let count = 0;
+
+    function dfs(r, c) {
+        if (r < 0 || r >= rows || c < 0 || c >= cols || grid[r][c] === '0') return;
+        grid[r][c] = '0'; // Mark visited
+        dfs(r + 1, c); dfs(r - 1, c); dfs(r, c + 1); dfs(r, c - 1);
+    }
+
+    for (let r = 0; r < rows; r++)
+        for (let c = 0; c < cols; c++)
+            if (grid[r][c] === '1') { count++; dfs(r, c); }
+    return count;
+}`
+        },
+        {
+          title: 'Number of Islands - Grid DFS',
+          language: 'java',
+          description: 'Count connected components in a grid using DFS.',
+          code: `public int numIslands(char[][] grid) {
+    int count = 0;
+    for (int r = 0; r < grid.length; r++)
+        for (int c = 0; c < grid[0].length; c++)
+            if (grid[r][c] == '1') { count++; dfs(grid, r, c); }
+    return count;
+}
+
+private void dfs(char[][] grid, int r, int c) {
+    if (r < 0 || r >= grid.length || c < 0 || c >= grid[0].length
+        || grid[r][c] == '0') return;
+    grid[r][c] = '0';
+    dfs(grid, r + 1, c); dfs(grid, r - 1, c);
+    dfs(grid, r, c + 1); dfs(grid, r, c - 1);
+}`
+        },
+        {
+          title: 'Course Schedule - Cycle Detection',
+          language: 'javascript',
+          description: 'Detect cycle in directed graph using DFS.',
+          code: `function canFinish(numCourses, prerequisites) {
+    const graph = Array.from({ length: numCourses }, () => []);
+    for (const [course, prereq] of prerequisites) graph[prereq].push(course);
+
+    const state = new Array(numCourses).fill(0); // 0:unvisited 1:visiting 2:visited
+
+    function hasCycle(course) {
+        if (state[course] === 1) return true;  // Cycle
+        if (state[course] === 2) return false;
+        state[course] = 1;
+        for (const next of graph[course]) if (hasCycle(next)) return true;
+        state[course] = 2;
+        return false;
+    }
+    return !Array.from({ length: numCourses }, (_, i) => i).some(hasCycle);
+}`
+        },
+        {
+          title: 'Course Schedule - Cycle Detection',
+          language: 'java',
+          description: 'Detect cycle in directed graph using DFS.',
+          code: `public boolean canFinish(int numCourses, int[][] prerequisites) {
+    List<List<Integer>> graph = new ArrayList<>();
+    for (int i = 0; i < numCourses; i++) graph.add(new ArrayList<>());
+    for (int[] p : prerequisites) graph.get(p[1]).add(p[0]);
+
+    int[] state = new int[numCourses]; // 0:unvisited 1:visiting 2:visited
+
+    for (int i = 0; i < numCourses; i++)
+        if (hasCycle(graph, state, i)) return false;
+    return true;
+}
+
+private boolean hasCycle(List<List<Integer>> graph, int[] state, int course) {
+    if (state[course] == 1) return true;
+    if (state[course] == 2) return false;
+    state[course] = 1;
+    for (int next : graph.get(course)) if (hasCycle(graph, state, next)) return true;
+    state[course] = 2;
+    return false;
+}`
+        },
+        {
+          title: 'Topological Sort - Kahn\'s Algorithm',
+          language: 'javascript',
+          description: 'Order courses by prerequisites using BFS.',
+          code: `function findOrder(numCourses, prerequisites) {
+    const graph = Array.from({ length: numCourses }, () => []);
+    const inDegree = new Array(numCourses).fill(0);
+
+    for (const [course, prereq] of prerequisites) {
+        graph[prereq].push(course);
+        inDegree[course]++;
+    }
+
+    const queue = [];
+    for (let i = 0; i < numCourses; i++) if (inDegree[i] === 0) queue.push(i);
+    const order = [];
+
+    while (queue.length) {
+        const course = queue.shift();
+        order.push(course);
+        for (const next of graph[course]) {
+            if (--inDegree[next] === 0) queue.push(next);
+        }
+    }
+    return order.length === numCourses ? order : [];
+}`
+        },
+        {
+          title: 'Topological Sort - Kahn\'s Algorithm',
+          language: 'java',
+          description: 'Order courses by prerequisites using BFS.',
+          code: `public int[] findOrder(int numCourses, int[][] prerequisites) {
+    List<List<Integer>> graph = new ArrayList<>();
+    int[] inDegree = new int[numCourses];
+    for (int i = 0; i < numCourses; i++) graph.add(new ArrayList<>());
+    for (int[] p : prerequisites) { graph.get(p[1]).add(p[0]); inDegree[p[0]]++; }
+
+    Queue<Integer> queue = new LinkedList<>();
+    for (int i = 0; i < numCourses; i++) if (inDegree[i] == 0) queue.offer(i);
+
+    int[] order = new int[numCourses];
+    int idx = 0;
+    while (!queue.isEmpty()) {
+        int course = queue.poll();
+        order[idx++] = course;
+        for (int next : graph.get(course))
+            if (--inDegree[next] == 0) queue.offer(next);
+    }
+    return idx == numCourses ? order : new int[0];
+}`
+        },
+        {
+          title: 'Network Delay Time - Dijkstra',
+          language: 'javascript',
+          description: 'Shortest path in weighted graph using min-heap.',
+          code: `function networkDelayTime(times, n, k) {
+    const graph = Array.from({ length: n + 1 }, () => []);
+    for (const [u, v, w] of times) graph[u].push([v, w]);
+
+    const dist = new Array(n + 1).fill(Infinity);
+    dist[k] = 0;
+    const pq = [[0, k]]; // [distance, node]
+
+    while (pq.length) {
+        pq.sort((a, b) => a[0] - b[0]);
+        const [d, node] = pq.shift();
+        if (d > dist[node]) continue;
+        for (const [neighbor, weight] of graph[node]) {
+            const newDist = d + weight;
+            if (newDist < dist[neighbor]) {
+                dist[neighbor] = newDist;
+                pq.push([newDist, neighbor]);
+            }
+        }
+    }
+    const maxDist = Math.max(...dist.slice(1));
+    return maxDist === Infinity ? -1 : maxDist;
+}`
+        },
+        {
+          title: 'Network Delay Time - Dijkstra',
+          language: 'java',
+          description: 'Shortest path in weighted graph using min-heap.',
+          code: `public int networkDelayTime(int[][] times, int n, int k) {
+    List<List<int[]>> graph = new ArrayList<>();
+    for (int i = 0; i <= n; i++) graph.add(new ArrayList<>());
+    for (int[] t : times) graph.get(t[0]).add(new int[]{t[1], t[2]});
+
+    int[] dist = new int[n + 1];
+    Arrays.fill(dist, Integer.MAX_VALUE);
+    dist[k] = 0;
+    PriorityQueue<int[]> pq = new PriorityQueue<>((a, b) -> a[0] - b[0]);
+    pq.offer(new int[]{0, k});
+
+    while (!pq.isEmpty()) {
+        int[] curr = pq.poll();
+        if (curr[0] > dist[curr[1]]) continue;
+        for (int[] edge : graph.get(curr[1])) {
+            int newDist = curr[0] + edge[1];
+            if (newDist < dist[edge[0]]) {
+                dist[edge[0]] = newDist;
+                pq.offer(new int[]{newDist, edge[0]});
+            }
+        }
+    }
+    int max = Arrays.stream(dist, 1, n + 1).max().getAsInt();
+    return max == Integer.MAX_VALUE ? -1 : max;
+}`
+        }
       ]
     },
     {
@@ -1914,6 +2818,15 @@ def network_delay_time(times, n, k):
       color: '#3b82f6',
       questions: 42,
       description: 'Optimal substructure and overlapping subproblems. Break into smaller problems.',
+
+visualizations: [
+        {
+          title: 'DP Memoization Grid (Fibonacci)',
+          language: 'python',
+          description: 'Shows a 2D memoization table with computed cells highlighted green, demonstrating how DP avoids redundant computation.',
+          svg: '<svg viewBox="0 0 500 230" xmlns="http://www.w3.org/2000/svg" style="background:white"><text x="20" y="22" font-family="sans-serif" font-size="13" font-weight="bold" fill="#1e293b">Dynamic Programming — Fibonacci Memoization</text><text x="20" y="50" font-family="sans-serif" font-size="11" fill="#64748b">dp[i] = dp[i-1] + dp[i-2]</text><g><text x="40" y="78" font-family="monospace" font-size="10" fill="#64748b" text-anchor="middle">i=0</text><text x="95" y="78" font-family="monospace" font-size="10" fill="#64748b" text-anchor="middle">i=1</text><text x="150" y="78" font-family="monospace" font-size="10" fill="#64748b" text-anchor="middle">i=2</text><text x="205" y="78" font-family="monospace" font-size="10" fill="#64748b" text-anchor="middle">i=3</text><text x="260" y="78" font-family="monospace" font-size="10" fill="#64748b" text-anchor="middle">i=4</text><text x="315" y="78" font-family="monospace" font-size="10" fill="#64748b" text-anchor="middle">i=5</text><text x="370" y="78" font-family="monospace" font-size="10" fill="#64748b" text-anchor="middle">i=6</text><text x="425" y="78" font-family="monospace" font-size="10" fill="#64748b" text-anchor="middle">i=7</text></g><g><rect x="18" y="85" width="44" height="36" rx="4" fill="#dcfce7" stroke="#10b981" stroke-width="2"/><text x="40" y="108" font-family="monospace" font-size="14" fill="#10b981" font-weight="bold" text-anchor="middle">0</text><rect x="73" y="85" width="44" height="36" rx="4" fill="#dcfce7" stroke="#10b981" stroke-width="2"/><text x="95" y="108" font-family="monospace" font-size="14" fill="#10b981" font-weight="bold" text-anchor="middle">1</text><rect x="128" y="85" width="44" height="36" rx="4" fill="#dcfce7" stroke="#10b981" stroke-width="2"/><text x="150" y="108" font-family="monospace" font-size="14" fill="#10b981" font-weight="bold" text-anchor="middle">1</text><rect x="183" y="85" width="44" height="36" rx="4" fill="#dcfce7" stroke="#10b981" stroke-width="2"/><text x="205" y="108" font-family="monospace" font-size="14" fill="#10b981" font-weight="bold" text-anchor="middle">2</text><rect x="238" y="85" width="44" height="36" rx="4" fill="#dcfce7" stroke="#10b981" stroke-width="2"/><text x="260" y="108" font-family="monospace" font-size="14" fill="#10b981" font-weight="bold" text-anchor="middle">3</text><rect x="293" y="85" width="44" height="36" rx="4" fill="#dcfce7" stroke="#10b981" stroke-width="2"/><text x="315" y="108" font-family="monospace" font-size="14" fill="#10b981" font-weight="bold" text-anchor="middle">5</text><rect x="348" y="85" width="44" height="36" rx="4" fill="#dcfce7" stroke="#10b981" stroke-width="2"/><text x="370" y="108" font-family="monospace" font-size="14" fill="#10b981" font-weight="bold" text-anchor="middle">8</text><rect x="403" y="85" width="44" height="36" rx="4" fill="#f0fdf4" stroke="#10b981" stroke-width="2.5"/><text x="425" y="108" font-family="monospace" font-size="14" fill="#10b981" font-weight="bold" text-anchor="middle">13</text></g><line x1="73" y1="130" x2="128" y2="130" stroke="#64748b" stroke-width="1" stroke-dasharray="3,2"/><text x="100" y="145" font-family="sans-serif" font-size="9" fill="#64748b" text-anchor="middle">0+1=1</text><line x1="293" y1="130" x2="403" y2="130" stroke="#10b981" stroke-width="1.5" stroke-dasharray="3,2"/><text x="350" y="145" font-family="sans-serif" font-size="9" fill="#10b981" text-anchor="middle">5+8=13</text><text x="20" y="175" font-family="sans-serif" font-size="12" fill="#1e293b">Without memo: O(2^n) — each call branches into two</text><text x="20" y="195" font-family="sans-serif" font-size="12" fill="#10b981" font-weight="bold">With memo: O(n) — each value computed exactly once</text><rect x="20" y="205" width="440" height="20" rx="4" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/><text x="30" y="220" font-family="monospace" font-size="10" fill="#64748b">Key insight: overlapping subproblems + optimal substructure = use DP</text></svg>'
+        }
+      ],
 
       introduction: `Dynamic Programming (DP) is one of the most important and challenging topics in coding interviews. It's used when a problem has overlapping subproblems and optimal substructure.
 
@@ -2116,6 +3029,7 @@ def network_delay_time(times, n, k):
       codeExamples: [
         {
           title: 'Climbing Stairs - Classic 1D DP',
+          language: 'python',
           description: 'Number of ways to climb n stairs (1 or 2 steps at a time).',
           code: `def climb_stairs(n):
     if n <= 2:
@@ -2139,6 +3053,7 @@ def climb_stairs_optimized(n):
         },
         {
           title: 'Coin Change - Unbounded Knapsack',
+          language: 'python',
           description: 'Minimum coins needed to make amount.',
           code: `def coin_change(coins, amount):
     dp = [float('inf')] * (amount + 1)
@@ -2153,6 +3068,7 @@ def climb_stairs_optimized(n):
         },
         {
           title: 'Longest Increasing Subsequence',
+          language: 'python',
           description: 'Find length of longest strictly increasing subsequence.',
           code: `def length_of_lis(nums):
     if not nums:
@@ -2172,6 +3088,7 @@ def climb_stairs_optimized(n):
         },
         {
           title: 'Longest Common Subsequence - 2D DP',
+          language: 'python',
           description: 'Find LCS of two strings.',
           code: `def longest_common_subsequence(text1, text2):
     m, n = len(text1), len(text2)
@@ -2186,6 +3103,159 @@ def climb_stairs_optimized(n):
 
     return dp[m][n]`
         }
+      ,
+        {
+          title: 'Climbing Stairs - Classic 1D DP',
+          language: 'javascript',
+          description: 'Number of ways to climb n stairs (1 or 2 steps at a time).',
+          code: `function climbStairs(n) {
+    if (n <= 2) return n;
+    const dp = new Array(n + 1).fill(0);
+    dp[1] = 1; dp[2] = 2;
+
+    for (let i = 3; i <= n; i++) dp[i] = dp[i - 1] + dp[i - 2];
+    return dp[n];
+}
+
+// Space optimized: O(1)
+function climbStairsOptimized(n) {
+    if (n <= 2) return n;
+    let prev2 = 1, prev1 = 2;
+    for (let i = 3; i <= n; i++) [prev2, prev1] = [prev1, prev2 + prev1];
+    return prev1;
+}`
+        },
+        {
+          title: 'Climbing Stairs - Classic 1D DP',
+          language: 'java',
+          description: 'Number of ways to climb n stairs (1 or 2 steps at a time).',
+          code: `public int climbStairs(int n) {
+    if (n <= 2) return n;
+    int[] dp = new int[n + 1];
+    dp[1] = 1; dp[2] = 2;
+
+    for (int i = 3; i <= n; i++) dp[i] = dp[i - 1] + dp[i - 2];
+    return dp[n];
+}
+
+// Space optimized: O(1)
+public int climbStairsOptimized(int n) {
+    if (n <= 2) return n;
+    int prev2 = 1, prev1 = 2;
+    for (int i = 3; i <= n; i++) {
+        int temp = prev1;
+        prev1 = prev2 + prev1;
+        prev2 = temp;
+    }
+    return prev1;
+}`
+        },
+        {
+          title: 'Coin Change - Unbounded Knapsack',
+          language: 'javascript',
+          description: 'Minimum coins needed to make amount.',
+          code: `function coinChange(coins, amount) {
+    const dp = new Array(amount + 1).fill(Infinity);
+    dp[0] = 0;
+
+    for (let i = 1; i <= amount; i++) {
+        for (const coin of coins) {
+            if (coin <= i && dp[i - coin] !== Infinity) {
+                dp[i] = Math.min(dp[i], dp[i - coin] + 1);
+            }
+        }
+    }
+    return dp[amount] === Infinity ? -1 : dp[amount];
+}`
+        },
+        {
+          title: 'Coin Change - Unbounded Knapsack',
+          language: 'java',
+          description: 'Minimum coins needed to make amount.',
+          code: `public int coinChange(int[] coins, int amount) {
+    int[] dp = new int[amount + 1];
+    Arrays.fill(dp, Integer.MAX_VALUE);
+    dp[0] = 0;
+
+    for (int i = 1; i <= amount; i++) {
+        for (int coin : coins) {
+            if (coin <= i && dp[i - coin] != Integer.MAX_VALUE) {
+                dp[i] = Math.min(dp[i], dp[i - coin] + 1);
+            }
+        }
+    }
+    return dp[amount] == Integer.MAX_VALUE ? -1 : dp[amount];
+}`
+        },
+        {
+          title: 'Longest Increasing Subsequence',
+          language: 'javascript',
+          description: 'Find length of longest strictly increasing subsequence.',
+          code: `function lengthOfLIS(nums) {
+    if (!nums.length) return 0;
+    const dp = new Array(nums.length).fill(1);
+
+    for (let i = 1; i < nums.length; i++) {
+        for (let j = 0; j < i; j++) {
+            if (nums[j] < nums[i]) dp[i] = Math.max(dp[i], dp[j] + 1);
+        }
+    }
+    return Math.max(...dp);
+}
+// O(n log n) solution uses binary search with patience sorting`
+        },
+        {
+          title: 'Longest Increasing Subsequence',
+          language: 'java',
+          description: 'Find length of longest strictly increasing subsequence.',
+          code: `public int lengthOfLIS(int[] nums) {
+    if (nums.length == 0) return 0;
+    int[] dp = new int[nums.length];
+    Arrays.fill(dp, 1);
+
+    for (int i = 1; i < nums.length; i++) {
+        for (int j = 0; j < i; j++) {
+            if (nums[j] < nums[i]) dp[i] = Math.max(dp[i], dp[j] + 1);
+        }
+    }
+    return Arrays.stream(dp).max().getAsInt();
+}
+// O(n log n) solution uses binary search with patience sorting`
+        },
+        {
+          title: 'Longest Common Subsequence - 2D DP',
+          language: 'javascript',
+          description: 'Find LCS of two strings.',
+          code: `function longestCommonSubsequence(text1, text2) {
+    const m = text1.length, n = text2.length;
+    const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+
+    for (let i = 1; i <= m; i++) {
+        for (let j = 1; j <= n; j++) {
+            if (text1[i - 1] === text2[j - 1]) dp[i][j] = dp[i - 1][j - 1] + 1;
+            else dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
+        }
+    }
+    return dp[m][n];
+}`
+        },
+        {
+          title: 'Longest Common Subsequence - 2D DP',
+          language: 'java',
+          description: 'Find LCS of two strings.',
+          code: `public int longestCommonSubsequence(String text1, String text2) {
+    int m = text1.length(), n = text2.length();
+    int[][] dp = new int[m + 1][n + 1];
+
+    for (int i = 1; i <= m; i++) {
+        for (int j = 1; j <= n; j++) {
+            if (text1.charAt(i - 1) == text2.charAt(j - 1)) dp[i][j] = dp[i - 1][j - 1] + 1;
+            else dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
+        }
+    }
+    return dp[m][n];
+}`
+        }
       ]
     },
     {
@@ -2195,6 +3265,15 @@ def climb_stairs_optimized(n):
       color: '#f97316',
       questions: 33,
       description: 'Efficient min/max access. Essential for top-k problems and scheduling.',
+
+visualizations: [
+        {
+          title: 'Min-Heap Binary Tree',
+          language: 'python',
+          description: 'Binary min-heap showing the heap property: every parent is smaller than its children.',
+          svg: '<svg viewBox="0 0 500 240" xmlns="http://www.w3.org/2000/svg" style="background:white"><text x="20" y="22" font-family="sans-serif" font-size="13" font-weight="bold" fill="#1e293b">Min-Heap — Parent &lt;= Children</text><line x1="250" y1="62" x2="150" y2="102" stroke="#cbd5e1" stroke-width="1.5"/><line x1="250" y1="62" x2="350" y2="102" stroke="#cbd5e1" stroke-width="1.5"/><line x1="150" y1="122" x2="90" y2="162" stroke="#cbd5e1" stroke-width="1.5"/><line x1="150" y1="122" x2="210" y2="162" stroke="#cbd5e1" stroke-width="1.5"/><line x1="350" y1="122" x2="290" y2="162" stroke="#cbd5e1" stroke-width="1.5"/><line x1="350" y1="122" x2="410" y2="162" stroke="#cbd5e1" stroke-width="1.5"/><line x1="90" y1="182" x2="60" y2="212" stroke="#cbd5e1" stroke-width="1.5"/><line x1="90" y1="182" x2="120" y2="212" stroke="#cbd5e1" stroke-width="1.5"/><circle cx="250" cy="52" r="20" fill="#dcfce7" stroke="#10b981" stroke-width="2.5"/><text x="250" y="57" font-family="monospace" font-size="14" fill="#10b981" font-weight="bold" text-anchor="middle">1</text><text x="250" y="30" font-family="sans-serif" font-size="10" fill="#10b981" text-anchor="middle">min</text><circle cx="150" cy="112" r="20" fill="#f0fdf4" stroke="#10b981" stroke-width="1.5"/><text x="150" y="117" font-family="monospace" font-size="14" fill="#1e293b" text-anchor="middle">3</text><circle cx="350" cy="112" r="20" fill="#f0fdf4" stroke="#10b981" stroke-width="1.5"/><text x="350" y="117" font-family="monospace" font-size="14" fill="#1e293b" text-anchor="middle">5</text><circle cx="90" cy="172" r="18" fill="#fff" stroke="#e2e8f0" stroke-width="1.5"/><text x="90" y="177" font-family="monospace" font-size="13" fill="#1e293b" text-anchor="middle">7</text><circle cx="210" cy="172" r="18" fill="#fff" stroke="#e2e8f0" stroke-width="1.5"/><text x="210" y="177" font-family="monospace" font-size="13" fill="#1e293b" text-anchor="middle">8</text><circle cx="290" cy="172" r="18" fill="#fff" stroke="#e2e8f0" stroke-width="1.5"/><text x="290" y="177" font-family="monospace" font-size="13" fill="#1e293b" text-anchor="middle">9</text><circle cx="410" cy="172" r="18" fill="#fff" stroke="#e2e8f0" stroke-width="1.5"/><text x="410" y="177" font-family="monospace" font-size="13" fill="#1e293b" text-anchor="middle">10</text><circle cx="60" cy="222" r="16" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/><text x="60" y="227" font-family="monospace" font-size="12" fill="#64748b" text-anchor="middle">12</text><circle cx="120" cy="222" r="16" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/><text x="120" y="227" font-family="monospace" font-size="12" fill="#64748b" text-anchor="middle">15</text><text x="190" y="35" font-family="sans-serif" font-size="10" fill="#64748b">1 &lt;= 3</text><text x="280" y="35" font-family="sans-serif" font-size="10" fill="#64748b">1 &lt;= 5</text></svg>'
+        }
+      ],
 
       introduction: `A heap is a complete binary tree that satisfies the heap property: every parent is smaller (min-heap) or larger (max-heap) than its children. It provides O(log n) insert/delete and O(1) access to min/max.
 
@@ -2340,6 +3419,7 @@ def climb_stairs_optimized(n):
       codeExamples: [
         {
           title: 'Kth Largest Element - Min Heap',
+          language: 'python',
           description: 'Keep K largest in min-heap, top is Kth largest.',
           code: `import heapq
 
@@ -2356,6 +3436,7 @@ def find_kth_largest(nums, k):
         },
         {
           title: 'Merge K Sorted Lists',
+          language: 'python',
           description: 'Use min-heap to always get smallest element.',
           code: `import heapq
 
@@ -2379,6 +3460,7 @@ def merge_k_lists(lists):
         },
         {
           title: 'Find Median from Data Stream',
+          language: 'python',
           description: 'Two heaps: max-heap for lower, min-heap for upper.',
           code: `import heapq
 
@@ -2402,6 +3484,140 @@ class MedianFinder:
             return -self.small[0]
         return (-self.small[0] + self.large[0]) / 2`
         }
+      ,
+        {
+          title: 'Kth Largest Element - Min Heap',
+          language: 'javascript',
+          description: 'Keep K largest in min-heap, top is Kth largest.',
+          code: `function findKthLargest(nums, k) {
+    // Use a min-heap of size k (simplified with sorted array)
+    const heap = nums.slice(0, k).sort((a, b) => a - b);
+
+    for (let i = k; i < nums.length; i++) {
+        if (nums[i] > heap[0]) {
+            heap[0] = nums[i];
+            heap.sort((a, b) => a - b); // Re-heapify
+        }
+    }
+    return heap[0]; // Smallest of k largest = kth largest
+}
+// Note: In production, use a proper MinHeap class for O(n log k)`
+        },
+        {
+          title: 'Kth Largest Element - Min Heap',
+          language: 'java',
+          description: 'Keep K largest in min-heap, top is Kth largest.',
+          code: `public int findKthLargest(int[] nums, int k) {
+    PriorityQueue<Integer> heap = new PriorityQueue<>(); // min-heap
+
+    for (int num : nums) {
+        heap.offer(num);
+        if (heap.size() > k) heap.poll(); // Remove smallest
+    }
+    return heap.peek(); // Smallest of k largest = kth largest
+}`
+        },
+        {
+          title: 'Merge K Sorted Lists',
+          language: 'javascript',
+          description: 'Use min-heap to always get smallest element.',
+          code: `function mergeKLists(lists) {
+    // Simplified approach using sorted insertion
+    const vals = [];
+    for (const lst of lists) {
+        let node = lst;
+        while (node) { vals.push(node.val); node = node.next; }
+    }
+    vals.sort((a, b) => a - b);
+
+    const dummy = { val: 0, next: null };
+    let current = dummy;
+    for (const val of vals) {
+        current.next = { val, next: null };
+        current = current.next;
+    }
+    return dummy.next;
+}
+// Note: Optimal uses a MinHeap for O(n log k) where k = lists.length`
+        },
+        {
+          title: 'Merge K Sorted Lists',
+          language: 'java',
+          description: 'Use min-heap to always get smallest element.',
+          code: `public ListNode mergeKLists(ListNode[] lists) {
+    PriorityQueue<ListNode> heap = new PriorityQueue<>(
+        (a, b) -> a.val - b.val);
+
+    for (ListNode node : lists)
+        if (node != null) heap.offer(node);
+
+    ListNode dummy = new ListNode(0);
+    ListNode current = dummy;
+
+    while (!heap.isEmpty()) {
+        ListNode node = heap.poll();
+        current.next = node;
+        current = current.next;
+        if (node.next != null) heap.offer(node.next);
+    }
+    return dummy.next;
+}`
+        },
+        {
+          title: 'Find Median from Data Stream',
+          language: 'javascript',
+          description: 'Two heaps: max-heap for lower, min-heap for upper.',
+          code: `class MedianFinder {
+    constructor() {
+        this.small = []; // max-heap (store negated)
+        this.large = []; // min-heap
+    }
+
+    addNum(num) {
+        // Add to max-heap, then balance
+        this.small.push(-num);
+        this.small.sort((a, b) => a - b);
+        this.large.push(-this.small.shift());
+        this.large.sort((a, b) => a - b);
+
+        if (this.large.length > this.small.length) {
+            this.small.push(-this.large.shift());
+            this.small.sort((a, b) => a - b);
+        }
+    }
+
+    findMedian() {
+        if (this.small.length > this.large.length) return -this.small[0];
+        return (-this.small[0] + this.large[0]) / 2;
+    }
+}
+// Note: In production, use a proper Heap class for O(log n) per add`
+        },
+        {
+          title: 'Find Median from Data Stream',
+          language: 'java',
+          description: 'Two heaps: max-heap for lower, min-heap for upper.',
+          code: `class MedianFinder {
+    private PriorityQueue<Integer> small; // max-heap
+    private PriorityQueue<Integer> large; // min-heap
+
+    public MedianFinder() {
+        small = new PriorityQueue<>(Collections.reverseOrder());
+        large = new PriorityQueue<>();
+    }
+
+    public void addNum(int num) {
+        small.offer(num);
+        large.offer(small.poll());
+        if (large.size() > small.size()) small.offer(large.poll());
+    }
+
+    public double findMedian() {
+        if (small.size() > large.size()) return small.peek();
+        return (small.peek() + large.peek()) / 2.0;
+    }
+}`
+        }
       ]
     },
     {
@@ -2411,6 +3627,15 @@ class MedianFinder:
       color: '#10b981',
       questions: 25,
       description: 'Explore all possibilities with pruning. Generate permutations, combinations, subsets.',
+
+visualizations: [
+        {
+          title: 'Recursion-Backtracking Decision Tree',
+          language: 'python',
+          description: 'Shows recursive branching for subsets generation with backtrack pruning, demonstrating the choose-explore-unchoose pattern.',
+          svg: '<svg viewBox="0 0 500 250" xmlns="http://www.w3.org/2000/svg" style="background:white"><defs><marker id="ah7" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#64748b"/></marker></defs><text x="20" y="22" font-family="sans-serif" font-size="13" font-weight="bold" fill="#1e293b">Backtracking: Subsets of [1,2,3]</text><rect x="210" y="35" width="50" height="24" rx="4" fill="#f0fdf4" stroke="#10b981" stroke-width="2"/><text x="235" y="52" font-family="monospace" font-size="11" fill="#10b981" text-anchor="middle" font-weight="bold">[ ]</text><line x1="215" y1="59" x2="115" y2="82" stroke="#64748b" stroke-width="1"/><line x1="235" y1="59" x2="235" y2="82" stroke="#64748b" stroke-width="1"/><line x1="255" y1="59" x2="355" y2="82" stroke="#64748b" stroke-width="1"/><rect x="85" y="85" width="55" height="24" rx="4" fill="#dcfce7" stroke="#10b981" stroke-width="1.5"/><text x="112" y="102" font-family="monospace" font-size="11" fill="#10b981" text-anchor="middle">[1]</text><rect x="210" y="85" width="55" height="24" rx="4" fill="#dcfce7" stroke="#10b981" stroke-width="1.5"/><text x="237" y="102" font-family="monospace" font-size="11" fill="#10b981" text-anchor="middle">[2]</text><rect x="330" y="85" width="55" height="24" rx="4" fill="#dcfce7" stroke="#10b981" stroke-width="1.5"/><text x="357" y="102" font-family="monospace" font-size="11" fill="#10b981" text-anchor="middle">[3]</text><line x1="100" y1="109" x2="60" y2="132" stroke="#64748b" stroke-width="1"/><line x1="125" y1="109" x2="155" y2="132" stroke="#64748b" stroke-width="1"/><line x1="235" y1="109" x2="235" y2="132" stroke="#64748b" stroke-width="1"/><rect x="30" y="135" width="62" height="22" rx="4" fill="#dcfce7" stroke="#10b981" stroke-width="1.5"/><text x="61" y="150" font-family="monospace" font-size="10" fill="#10b981" text-anchor="middle">[1,2]</text><rect x="125" y="135" width="62" height="22" rx="4" fill="#dcfce7" stroke="#10b981" stroke-width="1.5"/><text x="156" y="150" font-family="monospace" font-size="10" fill="#10b981" text-anchor="middle">[1,3]</text><rect x="208" y="135" width="62" height="22" rx="4" fill="#dcfce7" stroke="#10b981" stroke-width="1.5"/><text x="239" y="150" font-family="monospace" font-size="10" fill="#10b981" text-anchor="middle">[2,3]</text><line x1="61" y1="157" x2="61" y2="175" stroke="#64748b" stroke-width="1"/><rect x="25" y="178" width="72" height="22" rx="4" fill="#dcfce7" stroke="#10b981" stroke-width="1.5"/><text x="61" y="193" font-family="monospace" font-size="10" fill="#10b981" text-anchor="middle">[1,2,3]</text><text x="400" y="155" font-family="sans-serif" font-size="10" fill="#ef4444" font-style="italic">Pruned branches</text><text x="400" y="170" font-family="sans-serif" font-size="10" fill="#ef4444" font-style="italic">not explored</text><line x1="370" y1="100" x2="400" y2="120" stroke="#ef4444" stroke-width="1" stroke-dasharray="3,2"/><text x="410" y="130" font-family="sans-serif" font-size="9" fill="#ef4444">no elements left</text><text x="20" y="225" font-family="sans-serif" font-size="11" fill="#64748b">Result: [], [1], [1,2], [1,2,3], [1,3], [2], [2,3], [3] — all 2^3 = 8 subsets</text><text x="20" y="243" font-family="sans-serif" font-size="11" fill="#10b981">Pattern: choose → explore → unchoose (backtrack)</text></svg>'
+        }
+      ],
 
       introduction: `Backtracking is a systematic way to explore all possible solutions by building candidates incrementally and abandoning ("pruning") candidates that cannot lead to a valid solution.
 
@@ -2523,6 +3748,7 @@ class MedianFinder:
       codeExamples: [
         {
           title: 'Subsets - Include/Exclude Pattern',
+          language: 'python',
           description: 'Generate all 2^n subsets of an array.',
           code: `def subsets(nums):
     result = []
@@ -2540,6 +3766,7 @@ class MedianFinder:
         },
         {
           title: 'Permutations - Use Each Once',
+          language: 'python',
           description: 'Generate all n! permutations.',
           code: `def permute(nums):
     result = []
@@ -2563,6 +3790,7 @@ class MedianFinder:
         },
         {
           title: 'Combination Sum - Reuse Allowed',
+          language: 'python',
           description: 'Find combinations that sum to target, can reuse elements.',
           code: `def combination_sum(candidates, target):
     result = []
@@ -2585,6 +3813,7 @@ class MedianFinder:
         },
         {
           title: 'N-Queens - Constraint Satisfaction',
+          language: 'python',
           description: 'Place N queens on N×N board with no attacks.',
           code: `def solve_n_queens(n):
     result = []
@@ -2618,6 +3847,210 @@ class MedianFinder:
     backtrack(0)
     return result`
         }
+      ,
+        {
+          title: 'Subsets - Include/Exclude Pattern',
+          language: 'javascript',
+          description: 'Generate all 2^n subsets of an array.',
+          code: `function subsets(nums) {
+    const result = [];
+
+    function backtrack(start, path) {
+        result.push([...path]); // Add current subset
+
+        for (let i = start; i < nums.length; i++) {
+            path.push(nums[i]);       // Choose
+            backtrack(i + 1, path);    // Explore
+            path.pop();               // Unchoose (backtrack)
+        }
+    }
+    backtrack(0, []);
+    return result;
+}`
+        },
+        {
+          title: 'Subsets - Include/Exclude Pattern',
+          language: 'java',
+          description: 'Generate all 2^n subsets of an array.',
+          code: `public List<List<Integer>> subsets(int[] nums) {
+    List<List<Integer>> result = new ArrayList<>();
+    backtrack(nums, 0, new ArrayList<>(), result);
+    return result;
+}
+
+private void backtrack(int[] nums, int start, List<Integer> path,
+                       List<List<Integer>> result) {
+    result.add(new ArrayList<>(path));
+
+    for (int i = start; i < nums.length; i++) {
+        path.add(nums[i]);
+        backtrack(nums, i + 1, path, result);
+        path.remove(path.size() - 1);
+    }
+}`
+        },
+        {
+          title: 'Permutations - Use Each Once',
+          language: 'javascript',
+          description: 'Generate all n! permutations.',
+          code: `function permute(nums) {
+    const result = [];
+
+    function backtrack(path, used) {
+        if (path.length === nums.length) {
+            result.push([...path]);
+            return;
+        }
+        for (let i = 0; i < nums.length; i++) {
+            if (used[i]) continue;
+            used[i] = true;
+            path.push(nums[i]);
+            backtrack(path, used);
+            path.pop();
+            used[i] = false;
+        }
+    }
+    backtrack([], new Array(nums.length).fill(false));
+    return result;
+}`
+        },
+        {
+          title: 'Permutations - Use Each Once',
+          language: 'java',
+          description: 'Generate all n! permutations.',
+          code: `public List<List<Integer>> permute(int[] nums) {
+    List<List<Integer>> result = new ArrayList<>();
+    backtrack(nums, new ArrayList<>(), new boolean[nums.length], result);
+    return result;
+}
+
+private void backtrack(int[] nums, List<Integer> path, boolean[] used,
+                       List<List<Integer>> result) {
+    if (path.size() == nums.length) {
+        result.add(new ArrayList<>(path));
+        return;
+    }
+    for (int i = 0; i < nums.length; i++) {
+        if (used[i]) continue;
+        used[i] = true;
+        path.add(nums[i]);
+        backtrack(nums, path, used, result);
+        path.remove(path.size() - 1);
+        used[i] = false;
+    }
+}`
+        },
+        {
+          title: 'Combination Sum - Reuse Allowed',
+          language: 'javascript',
+          description: 'Find combinations that sum to target, can reuse elements.',
+          code: `function combinationSum(candidates, target) {
+    const result = [];
+
+    function backtrack(start, path, remaining) {
+        if (remaining === 0) { result.push([...path]); return; }
+        if (remaining < 0) return; // Prune
+
+        for (let i = start; i < candidates.length; i++) {
+            path.push(candidates[i]);
+            backtrack(i, path, remaining - candidates[i]); // Can reuse
+            path.pop();
+        }
+    }
+    backtrack(0, [], target);
+    return result;
+}`
+        },
+        {
+          title: 'Combination Sum - Reuse Allowed',
+          language: 'java',
+          description: 'Find combinations that sum to target, can reuse elements.',
+          code: `public List<List<Integer>> combinationSum(int[] candidates, int target) {
+    List<List<Integer>> result = new ArrayList<>();
+    backtrack(candidates, 0, new ArrayList<>(), target, result);
+    return result;
+}
+
+private void backtrack(int[] candidates, int start, List<Integer> path,
+                       int remaining, List<List<Integer>> result) {
+    if (remaining == 0) { result.add(new ArrayList<>(path)); return; }
+    if (remaining < 0) return;
+
+    for (int i = start; i < candidates.length; i++) {
+        path.add(candidates[i]);
+        backtrack(candidates, i, path, remaining - candidates[i], result);
+        path.remove(path.size() - 1);
+    }
+}`
+        },
+        {
+          title: 'N-Queens - Constraint Satisfaction',
+          language: 'javascript',
+          description: 'Place N queens on NxN board with no attacks.',
+          code: `function solveNQueens(n) {
+    const result = [];
+    const board = Array.from({ length: n }, () => '.'.repeat(n).split(''));
+
+    function isSafe(row, col) {
+        for (let i = 0; i < row; i++) if (board[i][col] === 'Q') return false;
+        for (let i = row - 1, j = col - 1; i >= 0 && j >= 0; i--, j--)
+            if (board[i][j] === 'Q') return false;
+        for (let i = row - 1, j = col + 1; i >= 0 && j < n; i--, j++)
+            if (board[i][j] === 'Q') return false;
+        return true;
+    }
+
+    function backtrack(row) {
+        if (row === n) { result.push(board.map(r => r.join(''))); return; }
+        for (let col = 0; col < n; col++) {
+            if (isSafe(row, col)) {
+                board[row][col] = 'Q';
+                backtrack(row + 1);
+                board[row][col] = '.';
+            }
+        }
+    }
+    backtrack(0);
+    return result;
+}`
+        },
+        {
+          title: 'N-Queens - Constraint Satisfaction',
+          language: 'java',
+          description: 'Place N queens on NxN board with no attacks.',
+          code: `public List<List<String>> solveNQueens(int n) {
+    List<List<String>> result = new ArrayList<>();
+    char[][] board = new char[n][n];
+    for (char[] row : board) Arrays.fill(row, '.');
+    backtrack(board, 0, result);
+    return result;
+}
+
+private void backtrack(char[][] board, int row, List<List<String>> result) {
+    if (row == board.length) {
+        List<String> snapshot = new ArrayList<>();
+        for (char[] r : board) snapshot.add(new String(r));
+        result.add(snapshot);
+        return;
+    }
+    for (int col = 0; col < board.length; col++) {
+        if (isSafe(board, row, col)) {
+            board[row][col] = 'Q';
+            backtrack(board, row + 1, result);
+            board[row][col] = '.';
+        }
+    }
+}
+
+private boolean isSafe(char[][] board, int row, int col) {
+    for (int i = 0; i < row; i++) if (board[i][col] == 'Q') return false;
+    for (int i = row-1, j = col-1; i >= 0 && j >= 0; i--, j--)
+        if (board[i][j] == 'Q') return false;
+    for (int i = row-1, j = col+1; i >= 0 && j < board.length; i--, j++)
+        if (board[i][j] == 'Q') return false;
+    return true;
+}`
+        }
       ],
       codeExample: `# Subsets - Backtracking
 def subsets(nums):
@@ -2642,6 +4075,15 @@ def subsets(nums):
       color: '#06b6d4',
       questions: 18,
       description: 'Make locally optimal choices. Works when local optimum leads to global optimum.',
+
+visualizations: [
+        {
+          title: 'Activity Selection (Greedy)',
+          language: 'python',
+          description: 'Timeline showing chosen activities (green) vs skipped overlapping ones (gray), selecting by earliest end time.',
+          svg: '<svg viewBox="0 0 500 230" xmlns="http://www.w3.org/2000/svg" style="background:white"><text x="20" y="22" font-family="sans-serif" font-size="13" font-weight="bold" fill="#1e293b">Greedy: Activity Selection (sort by end time)</text><line x1="40" y1="235" x2="40" y2="40" stroke="#e2e8f0" stroke-width="1"/><line x1="40" y1="220" x2="470" y2="220" stroke="#e2e8f0" stroke-width="1"/><text x="80" y="235" font-family="monospace" font-size="9" fill="#94a3b8">1</text><text x="130" y="235" font-family="monospace" font-size="9" fill="#94a3b8">2</text><text x="180" y="235" font-family="monospace" font-size="9" fill="#94a3b8">3</text><text x="230" y="235" font-family="monospace" font-size="9" fill="#94a3b8">4</text><text x="280" y="235" font-family="monospace" font-size="9" fill="#94a3b8">5</text><text x="330" y="235" font-family="monospace" font-size="9" fill="#94a3b8">6</text><text x="380" y="235" font-family="monospace" font-size="9" fill="#94a3b8">7</text><text x="430" y="235" font-family="monospace" font-size="9" fill="#94a3b8">8</text><rect x="40" y="45" width="140" height="22" rx="4" fill="#dcfce7" stroke="#10b981" stroke-width="1.5"/><text x="110" y="60" font-family="sans-serif" font-size="10" fill="#10b981" text-anchor="middle" font-weight="bold">A (0-3)</text><rect x="90" y="75" width="200" height="22" rx="4" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1"/><text x="190" y="90" font-family="sans-serif" font-size="10" fill="#94a3b8" text-anchor="middle">B (1-5) skipped</text><rect x="40" y="75" width="90" height="22" rx="4" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1" opacity="0.5"/><rect x="190" y="105" width="100" height="22" rx="4" fill="#dcfce7" stroke="#10b981" stroke-width="1.5"/><text x="240" y="120" font-family="sans-serif" font-size="10" fill="#10b981" text-anchor="middle" font-weight="bold">C (3-5)</text><rect x="140" y="135" width="200" height="22" rx="4" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1"/><text x="240" y="150" font-family="sans-serif" font-size="10" fill="#94a3b8" text-anchor="middle">D (2-6) skipped</text><rect x="290" y="165" width="150" height="22" rx="4" fill="#dcfce7" stroke="#10b981" stroke-width="1.5"/><text x="365" y="180" font-family="sans-serif" font-size="10" fill="#10b981" text-anchor="middle" font-weight="bold">E (5-8)</text><rect x="240" y="195" width="180" height="22" rx="4" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1"/><text x="330" y="210" font-family="sans-serif" font-size="10" fill="#94a3b8" text-anchor="middle">F (4-7) skipped</text></svg>'
+        }
+      ],
 
       introduction: `Greedy algorithms make the locally optimal choice at each step, hoping this leads to a globally optimal solution. Unlike Dynamic Programming which explores all possibilities, greedy commits to decisions without reconsidering them.
 
@@ -2770,6 +4212,7 @@ In interviews, greedy problems often involve intervals, scheduling, or making se
       codeExamples: [
         {
           title: 'Jump Game - Can Reach End?',
+          language: 'python',
           description: 'Track the farthest position reachable at each step.',
           code: `def canJump(nums):
     """
@@ -2798,6 +4241,7 @@ In interviews, greedy problems often involve intervals, scheduling, or making se
         },
         {
           title: 'Non-overlapping Intervals',
+          language: 'python',
           description: 'Remove minimum intervals to make rest non-overlapping. Classic greedy.',
           code: `def eraseOverlapIntervals(intervals):
     """
@@ -2830,6 +4274,7 @@ In interviews, greedy problems often involve intervals, scheduling, or making se
         },
         {
           title: 'Gas Station - Circular Route',
+          language: 'python',
           description: 'Find starting station to complete circular journey.',
           code: `def canCompleteCircuit(gas, cost):
     """
@@ -2860,6 +4305,7 @@ In interviews, greedy problems often involve intervals, scheduling, or making se
         },
         {
           title: 'Partition Labels',
+          language: 'python',
           description: 'Partition string so each letter appears in at most one part.',
           code: `def partitionLabels(s):
     """
@@ -2890,6 +4336,7 @@ In interviews, greedy problems often involve intervals, scheduling, or making se
         },
         {
           title: 'Task Scheduler with Cooldown',
+          language: 'python',
           description: 'Minimum intervals to execute all tasks with cooldown between same tasks.',
           code: `def leastInterval(tasks, n):
     """
@@ -2915,6 +4362,192 @@ In interviews, greedy problems often involve intervals, scheduling, or making se
 # Example: tasks = ["A","A","A","B","B","B"], n = 2
 # Optimal: A -> B -> idle -> A -> B -> idle -> A -> B
 # Output: 8`
+        }
+      ,
+        {
+          title: 'Jump Game - Can Reach End?',
+          language: 'javascript',
+          description: 'Track the farthest position reachable at each step.',
+          code: `function canJump(nums) {
+    let maxReach = 0;
+
+    for (let i = 0; i < nums.length; i++) {
+        if (i > maxReach) return false;
+        maxReach = Math.max(maxReach, i + nums[i]);
+        if (maxReach >= nums.length - 1) return true;
+    }
+    return true;
+}
+// Time: O(n), Space: O(1)`
+        },
+        {
+          title: 'Jump Game - Can Reach End?',
+          language: 'java',
+          description: 'Track the farthest position reachable at each step.',
+          code: `public boolean canJump(int[] nums) {
+    int maxReach = 0;
+
+    for (int i = 0; i < nums.length; i++) {
+        if (i > maxReach) return false;
+        maxReach = Math.max(maxReach, i + nums[i]);
+        if (maxReach >= nums.length - 1) return true;
+    }
+    return true;
+}
+// Time: O(n), Space: O(1)`
+        },
+        {
+          title: 'Non-overlapping Intervals',
+          language: 'javascript',
+          description: 'Remove minimum intervals to make rest non-overlapping. Classic greedy.',
+          code: `function eraseOverlapIntervals(intervals) {
+    if (!intervals.length) return 0;
+    intervals.sort((a, b) => a[1] - b[1]); // Sort by end time
+
+    let removals = 0, prevEnd = intervals[0][1];
+
+    for (let i = 1; i < intervals.length; i++) {
+        if (intervals[i][0] < prevEnd) removals++; // Overlap
+        else prevEnd = intervals[i][1];
+    }
+    return removals;
+}
+// Time: O(n log n), Space: O(1)`
+        },
+        {
+          title: 'Non-overlapping Intervals',
+          language: 'java',
+          description: 'Remove minimum intervals to make rest non-overlapping. Classic greedy.',
+          code: `public int eraseOverlapIntervals(int[][] intervals) {
+    if (intervals.length == 0) return 0;
+    Arrays.sort(intervals, (a, b) -> Integer.compare(a[1], b[1]));
+
+    int removals = 0, prevEnd = intervals[0][1];
+
+    for (int i = 1; i < intervals.length; i++) {
+        if (intervals[i][0] < prevEnd) removals++;
+        else prevEnd = intervals[i][1];
+    }
+    return removals;
+}
+// Time: O(n log n), Space: O(1)`
+        },
+        {
+          title: 'Gas Station - Circular Route',
+          language: 'javascript',
+          description: 'Find starting station to complete circular journey.',
+          code: `function canCompleteCircuit(gas, cost) {
+    let totalTank = 0, currentTank = 0, start = 0;
+
+    for (let i = 0; i < gas.length; i++) {
+        const gain = gas[i] - cost[i];
+        totalTank += gain;
+        currentTank += gain;
+
+        if (currentTank < 0) {
+            start = i + 1;
+            currentTank = 0;
+        }
+    }
+    return totalTank >= 0 ? start : -1;
+}
+// Time: O(n), Space: O(1)`
+        },
+        {
+          title: 'Gas Station - Circular Route',
+          language: 'java',
+          description: 'Find starting station to complete circular journey.',
+          code: `public int canCompleteCircuit(int[] gas, int[] cost) {
+    int totalTank = 0, currentTank = 0, start = 0;
+
+    for (int i = 0; i < gas.length; i++) {
+        int gain = gas[i] - cost[i];
+        totalTank += gain;
+        currentTank += gain;
+
+        if (currentTank < 0) {
+            start = i + 1;
+            currentTank = 0;
+        }
+    }
+    return totalTank >= 0 ? start : -1;
+}
+// Time: O(n), Space: O(1)`
+        },
+        {
+          title: 'Partition Labels',
+          language: 'javascript',
+          description: 'Partition string so each letter appears in at most one part.',
+          code: `function partitionLabels(s) {
+    const last = {};
+    for (let i = 0; i < s.length; i++) last[s[i]] = i;
+
+    const result = [];
+    let start = 0, end = 0;
+
+    for (let i = 0; i < s.length; i++) {
+        end = Math.max(end, last[s[i]]);
+        if (i === end) {
+            result.push(end - start + 1);
+            start = i + 1;
+        }
+    }
+    return result;
+}
+// Time: O(n), Space: O(1) - only 26 letters`
+        },
+        {
+          title: 'Partition Labels',
+          language: 'java',
+          description: 'Partition string so each letter appears in at most one part.',
+          code: `public List<Integer> partitionLabels(String s) {
+    int[] last = new int[26];
+    for (int i = 0; i < s.length(); i++) last[s.charAt(i) - 'a'] = i;
+
+    List<Integer> result = new ArrayList<>();
+    int start = 0, end = 0;
+
+    for (int i = 0; i < s.length(); i++) {
+        end = Math.max(end, last[s.charAt(i) - 'a']);
+        if (i == end) {
+            result.add(end - start + 1);
+            start = i + 1;
+        }
+    }
+    return result;
+}
+// Time: O(n), Space: O(1) - only 26 letters`
+        },
+        {
+          title: 'Task Scheduler with Cooldown',
+          language: 'javascript',
+          description: 'Minimum intervals to execute all tasks with cooldown between same tasks.',
+          code: `function leastInterval(tasks, n) {
+    const freq = {};
+    for (const t of tasks) freq[t] = (freq[t] || 0) + 1;
+
+    const maxFreq = Math.max(...Object.values(freq));
+    const maxCount = Object.values(freq).filter(f => f === maxFreq).length;
+
+    // Frame: (maxFreq - 1) groups of (n + 1) slots, plus maxCount final tasks
+    return Math.max(tasks.length, (maxFreq - 1) * (n + 1) + maxCount);
+}
+// Time: O(n), Space: O(1)`
+        },
+        {
+          title: 'Task Scheduler with Cooldown',
+          language: 'java',
+          description: 'Minimum intervals to execute all tasks with cooldown between same tasks.',
+          code: `public int leastInterval(char[] tasks, int n) {
+    int[] freq = new int[26];
+    for (char t : tasks) freq[t - 'A']++;
+
+    int maxFreq = Arrays.stream(freq).max().getAsInt();
+    int maxCount = (int) Arrays.stream(freq).filter(f -> f == maxFreq).count();
+
+    return Math.max(tasks.length, (maxFreq - 1) * (n + 1) + maxCount);
+}
+// Time: O(n), Space: O(1)`
         }
       ]
     },
@@ -3051,6 +4684,7 @@ Every trie interview problem fundamentally comes down to: tree traversal with ch
       codeExamples: [
         {
           title: 'Basic Trie Implementation',
+          language: 'python',
           description: 'Complete trie with insert, search, and startsWith operations.',
           code: `class TrieNode:
     def __init__(self):
@@ -3093,6 +4727,7 @@ class Trie:
         },
         {
           title: 'Word Search II - Trie + DFS',
+          language: 'python',
           description: 'Find all words from dictionary that exist in a grid. Classic hard problem.',
           code: `def findWords(board, words):
     # Build trie from words
@@ -3144,6 +4779,7 @@ class Trie:
         },
         {
           title: 'Design Add and Search Words (Wildcard)',
+          language: 'python',
           description: 'Support "." wildcard that matches any character.',
           code: `class WordDictionary:
     def __init__(self):
@@ -3185,6 +4821,7 @@ class Trie:
         },
         {
           title: 'Replace Words with Roots',
+          language: 'python',
           description: 'Replace words with their shortest root from dictionary.',
           code: `def replaceWords(dictionary, sentence):
     # Build trie from dictionary
@@ -3347,6 +4984,7 @@ Bit manipulation appears in: finding duplicates/missing numbers, efficient math 
       codeExamples: [
         {
           title: 'Single Number - XOR Magic',
+          language: 'python',
           description: 'Every element appears twice except one. Find it in O(n) time, O(1) space.',
           code: `def singleNumber(nums):
     """
@@ -3368,6 +5006,7 @@ Bit manipulation appears in: finding duplicates/missing numbers, efficient math 
         },
         {
           title: 'Single Number III - Two Unique Numbers',
+          language: 'python',
           description: 'Two numbers appear once, others twice. Find both.',
           code: `def singleNumberIII(nums):
     """
@@ -3400,6 +5039,7 @@ Bit manipulation appears in: finding duplicates/missing numbers, efficient math 
         },
         {
           title: 'Number of 1 Bits (Hamming Weight)',
+          language: 'python',
           description: 'Count set bits using Brian Kernighan\'s algorithm.',
           code: `def hammingWeight(n):
     """
@@ -3430,6 +5070,7 @@ def hammingWeight_v2(n):
         },
         {
           title: 'Missing Number - XOR with Indices',
+          language: 'python',
           description: 'Find missing number in [0,n] using XOR.',
           code: `def missingNumber(nums):
     """
@@ -3457,6 +5098,7 @@ def missingNumber_math(nums):
         },
         {
           title: 'Sum of Two Integers Without +',
+          language: 'python',
           description: 'Add two numbers using only bit operations.',
           code: `def getSum(a, b):
     """
@@ -3629,6 +5271,7 @@ The key insight for math problems: look for patterns, use modular arithmetic to 
       codeExamples: [
         {
           title: 'Fast Exponentiation (Binary Method)',
+          language: 'python',
           description: 'Calculate x^n in O(log n) time using binary method.',
           code: `def myPow(x, n):
     """
@@ -3659,6 +5302,7 @@ The key insight for math problems: look for patterns, use modular arithmetic to 
         },
         {
           title: 'Sqrt(x) - Binary Search',
+          language: 'python',
           description: 'Find integer square root without using built-in functions.',
           code: `def mySqrt(x):
     """
@@ -3696,6 +5340,7 @@ def mySqrt_newton(x):
         },
         {
           title: 'GCD and LCM',
+          language: 'python',
           description: 'Greatest Common Divisor using Euclidean algorithm.',
           code: `def gcd(a, b):
     """
@@ -3729,6 +5374,7 @@ def gcd_array(arr):
         },
         {
           title: 'Sieve of Eratosthenes',
+          language: 'python',
           description: 'Find all primes up to n efficiently.',
           code: `def countPrimes(n):
     """
@@ -3757,6 +5403,7 @@ def gcd_array(arr):
         },
         {
           title: 'Rotate Image 90° Clockwise',
+          language: 'python',
           description: 'In-place matrix rotation using transpose + reverse.',
           code: `def rotate(matrix):
     """
@@ -3928,6 +5575,7 @@ The key insight: matrices are just indexed by (row, col) pairs. Master the index
       codeExamples: [
         {
           title: 'Spiral Matrix Traversal',
+          language: 'python',
           description: 'Return all elements in spiral order using boundary pointers.',
           code: `def spiralOrder(matrix):
     """
@@ -3970,6 +5618,7 @@ The key insight: matrices are just indexed by (row, col) pairs. Master the index
         },
         {
           title: 'Set Matrix Zeroes In-Place',
+          language: 'python',
           description: 'If cell is 0, set entire row and column to 0. O(1) space.',
           code: `def setZeroes(matrix):
     """
@@ -4009,6 +5658,7 @@ The key insight: matrices are just indexed by (row, col) pairs. Master the index
         },
         {
           title: 'Search 2D Matrix II (Staircase)',
+          language: 'python',
           description: 'Matrix sorted row-wise and column-wise. O(m+n) search.',
           code: `def searchMatrix(matrix, target):
     """
@@ -4042,6 +5692,7 @@ The key insight: matrices are just indexed by (row, col) pairs. Master the index
         },
         {
           title: 'Valid Sudoku',
+          language: 'python',
           description: 'Check if 9x9 Sudoku board is valid (no duplicates in rows, cols, boxes).',
           code: `def isValidSudoku(board):
     """
@@ -4078,6 +5729,7 @@ The key insight: matrices are just indexed by (row, col) pairs. Master the index
         },
         {
           title: 'Game of Life - In Place',
+          language: 'python',
           description: 'Simulate one step using bit manipulation for state encoding.',
           code: `def gameOfLife(board):
     """
@@ -4131,6 +5783,15 @@ The key insight: matrices are just indexed by (row, col) pairs. Master the index
       color: '#10b981',
       questions: 15,
       description: 'Self-referential problem solving. Foundation for trees, graphs, and DP.',
+
+visualizations: [
+        {
+          title: 'Recursion Decision Tree',
+          language: 'python',
+          description: 'Shows recursive call branching for factorial, illustrating base case termination and result propagation back up the tree.',
+          svg: '<svg viewBox="0 0 500 250" xmlns="http://www.w3.org/2000/svg" style="background:white"><defs><marker id="ah8" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#64748b"/></marker><marker id="ah8r" markerWidth="8" markerHeight="6" refX="0" refY="3" orient="auto"><polygon points="8 0, 0 3, 8 6" fill="#10b981"/></marker></defs><text x="20" y="22" font-family="sans-serif" font-size="13" font-weight="bold" fill="#1e293b">Recursion: factorial(4) Call Stack</text><rect x="90" y="40" width="100" height="30" rx="6" fill="#f0fdf4" stroke="#10b981" stroke-width="2"/><text x="140" y="60" font-family="monospace" font-size="11" fill="#10b981" text-anchor="middle" font-weight="bold">f(4)</text><line x1="140" y1="70" x2="140" y2="90" stroke="#64748b" stroke-width="1.5" marker-end="url(#ah8)"/><text x="155" y="83" font-family="sans-serif" font-size="9" fill="#64748b">calls</text><rect x="90" y="93" width="100" height="30" rx="6" fill="#f0fdf4" stroke="#10b981" stroke-width="1.5"/><text x="140" y="113" font-family="monospace" font-size="11" fill="#1e293b" text-anchor="middle">f(3)</text><line x1="140" y1="123" x2="140" y2="143" stroke="#64748b" stroke-width="1.5" marker-end="url(#ah8)"/><rect x="90" y="146" width="100" height="30" rx="6" fill="#f0fdf4" stroke="#10b981" stroke-width="1.5"/><text x="140" y="166" font-family="monospace" font-size="11" fill="#1e293b" text-anchor="middle">f(2)</text><line x1="140" y1="176" x2="140" y2="196" stroke="#64748b" stroke-width="1.5" marker-end="url(#ah8)"/><rect x="90" y="199" width="100" height="30" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/><text x="140" y="219" font-family="monospace" font-size="11" fill="#f59e0b" text-anchor="middle" font-weight="bold">f(1)=1</text><text x="60" y="219" font-family="sans-serif" font-size="9" fill="#f59e0b" text-anchor="end">base case!</text><line x1="200" y1="214" x2="250" y2="214" stroke="#10b981" stroke-width="1.5" marker-end="url(#ah8)"/><text x="270" y="218" font-family="sans-serif" font-size="10" fill="#10b981" font-weight="bold">returns 1</text><line x1="200" y1="161" x2="250" y2="161" stroke="#10b981" stroke-width="1.5" marker-end="url(#ah8)"/><text x="270" y="165" font-family="sans-serif" font-size="10" fill="#10b981" font-weight="bold">2 * 1 = 2</text><line x1="200" y1="108" x2="250" y2="108" stroke="#10b981" stroke-width="1.5" marker-end="url(#ah8)"/><text x="270" y="112" font-family="sans-serif" font-size="10" fill="#10b981" font-weight="bold">3 * 2 = 6</text><line x1="200" y1="55" x2="250" y2="55" stroke="#10b981" stroke-width="1.5" marker-end="url(#ah8)"/><text x="270" y="59" font-family="sans-serif" font-size="10" fill="#10b981" font-weight="bold">4 * 6 = 24</text><rect x="340" y="40" width="130" height="30" rx="6" fill="#dcfce7" stroke="#10b981" stroke-width="2"/><text x="405" y="60" font-family="monospace" font-size="12" fill="#10b981" text-anchor="middle" font-weight="bold">Result: 24</text><text x="20" y="248" font-family="sans-serif" font-size="11" fill="#64748b">Each call waits on the stack until its sub-call returns | Space: O(n) call stack depth</text></svg>'
+        }
+      ],
 
       introduction: `Recursion is a problem-solving technique where a function calls itself to solve smaller instances of the same problem. It's the foundation for understanding trees, graphs, divide and conquer, and dynamic programming.
 
@@ -4246,6 +5907,7 @@ Understanding recursion deeply unlocks: binary tree problems, divide and conquer
       codeExamples: [
         {
           title: 'Understanding Recursion - Factorial',
+          language: 'python',
           description: 'Classic example showing base case and recursive case.',
           code: `def factorial(n):
     """
@@ -4272,6 +5934,7 @@ Understanding recursion deeply unlocks: binary tree problems, divide and conquer
         },
         {
           title: 'Divide and Conquer - Merge Sort',
+          language: 'python',
           description: 'Classic divide and conquer recursion pattern.',
           code: `def merge_sort(arr):
     """
@@ -4307,6 +5970,7 @@ def merge(left, right):
         },
         {
           title: 'Generate All Parentheses',
+          language: 'python',
           description: 'Recursive generation with constraints.',
           code: `def generateParenthesis(n):
     """
@@ -4340,6 +6004,7 @@ def merge(left, right):
         },
         {
           title: 'Fibonacci with Memoization',
+          language: 'python',
           description: 'Converting exponential recursion to linear with memoization.',
           code: `# Naive recursion: O(2^n) - BAD!
 def fib_naive(n):
@@ -4376,6 +6041,7 @@ def fib_iterative(n):
         },
         {
           title: 'Letter Combinations of Phone',
+          language: 'python',
           description: 'Generate all combinations recursively.',
           code: `def letterCombinations(digits):
     """
@@ -4409,6 +6075,239 @@ def fib_iterative(n):
 # Space: O(n) recursion depth
 
 # Example: "23" -> ["ad","ae","af","bd","be","bf","cd","ce","cf"]`
+        }
+      ,
+        {
+          title: 'Understanding Recursion - Factorial',
+          language: 'javascript',
+          description: 'Classic example showing base case and recursive case.',
+          code: `function factorial(n) {
+    // Base case
+    if (n <= 1) return 1;
+
+    // Recursive case: n! = n * (n-1)!
+    return n * factorial(n - 1);
+}
+
+// Trace for factorial(4):
+// factorial(4) = 4 * factorial(3)
+//              = 4 * (3 * factorial(2))
+//              = 4 * (3 * (2 * factorial(1)))
+//              = 4 * (3 * (2 * 1))
+//              = 24
+
+// Time: O(n), Space: O(n) call stack`
+        },
+        {
+          title: 'Understanding Recursion - Factorial',
+          language: 'java',
+          description: 'Classic example showing base case and recursive case.',
+          code: `public int factorial(int n) {
+    // Base case
+    if (n <= 1) return 1;
+
+    // Recursive case: n! = n * (n-1)!
+    return n * factorial(n - 1);
+}
+
+// Trace for factorial(4):
+// factorial(4) = 4 * factorial(3)
+//              = 4 * (3 * factorial(2))
+//              = 4 * (3 * (2 * factorial(1)))
+//              = 4 * (3 * (2 * 1))
+//              = 24
+
+// Time: O(n), Space: O(n) call stack`
+        },
+        {
+          title: 'Divide and Conquer - Merge Sort',
+          language: 'javascript',
+          description: 'Classic divide and conquer recursion pattern.',
+          code: `function mergeSort(arr) {
+    if (arr.length <= 1) return arr;
+
+    const mid = Math.floor(arr.length / 2);
+    const left = mergeSort(arr.slice(0, mid));
+    const right = mergeSort(arr.slice(mid));
+
+    return merge(left, right);
+}
+
+function merge(left, right) {
+    const result = [];
+    let i = 0, j = 0;
+    while (i < left.length && j < right.length) {
+        if (left[i] <= right[j]) result.push(left[i++]);
+        else result.push(right[j++]);
+    }
+    return [...result, ...left.slice(i), ...right.slice(j)];
+}
+// Time: O(n log n), Space: O(n)`
+        },
+        {
+          title: 'Divide and Conquer - Merge Sort',
+          language: 'java',
+          description: 'Classic divide and conquer recursion pattern.',
+          code: `public void mergeSort(int[] arr, int left, int right) {
+    if (left >= right) return;
+
+    int mid = left + (right - left) / 2;
+    mergeSort(arr, left, mid);
+    mergeSort(arr, mid + 1, right);
+    merge(arr, left, mid, right);
+}
+
+private void merge(int[] arr, int left, int mid, int right) {
+    int[] temp = Arrays.copyOfRange(arr, left, right + 1);
+    int i = 0, j = mid - left + 1, k = left;
+
+    while (i <= mid - left && j <= right - left) {
+        if (temp[i] <= temp[j]) arr[k++] = temp[i++];
+        else arr[k++] = temp[j++];
+    }
+    while (i <= mid - left) arr[k++] = temp[i++];
+    while (j <= right - left) arr[k++] = temp[j++];
+}
+// Time: O(n log n), Space: O(n)`
+        },
+        {
+          title: 'Generate All Parentheses',
+          language: 'javascript',
+          description: 'Recursive generation with constraints.',
+          code: `function generateParenthesis(n) {
+    const result = [];
+
+    function backtrack(current, openCount, closeCount) {
+        if (current.length === 2 * n) {
+            result.push(current);
+            return;
+        }
+        if (openCount < n) backtrack(current + '(', openCount + 1, closeCount);
+        if (closeCount < openCount) backtrack(current + ')', openCount, closeCount + 1);
+    }
+    backtrack('', 0, 0);
+    return result;
+}
+// Time: O(4^n / sqrt(n)), Space: O(n) recursion depth`
+        },
+        {
+          title: 'Generate All Parentheses',
+          language: 'java',
+          description: 'Recursive generation with constraints.',
+          code: `public List<String> generateParenthesis(int n) {
+    List<String> result = new ArrayList<>();
+    backtrack(result, new StringBuilder(), 0, 0, n);
+    return result;
+}
+
+private void backtrack(List<String> result, StringBuilder current,
+                       int open, int close, int n) {
+    if (current.length() == 2 * n) {
+        result.add(current.toString());
+        return;
+    }
+    if (open < n) { current.append('('); backtrack(result, current, open + 1, close, n); current.deleteCharAt(current.length() - 1); }
+    if (close < open) { current.append(')'); backtrack(result, current, open, close + 1, n); current.deleteCharAt(current.length() - 1); }
+}
+// Time: O(4^n / sqrt(n)), Space: O(n)`
+        },
+        {
+          title: 'Fibonacci with Memoization',
+          language: 'javascript',
+          description: 'Converting exponential recursion to linear with memoization.',
+          code: `// Naive recursion: O(2^n) - BAD!
+function fibNaive(n) {
+    if (n <= 1) return n;
+    return fibNaive(n - 1) + fibNaive(n - 2);
+}
+
+// With memoization: O(n) - GOOD!
+function fibMemo(n, memo = {}) {
+    if (n in memo) return memo[n];
+    if (n <= 1) return n;
+    memo[n] = fibMemo(n - 1, memo) + fibMemo(n - 2, memo);
+    return memo[n];
+}
+
+// Iterative (no stack overflow)
+function fibIterative(n) {
+    if (n <= 1) return n;
+    let prev = 0, curr = 1;
+    for (let i = 2; i <= n; i++) [prev, curr] = [curr, prev + curr];
+    return curr;
+}`
+        },
+        {
+          title: 'Fibonacci with Memoization',
+          language: 'java',
+          description: 'Converting exponential recursion to linear with memoization.',
+          code: `// Naive recursion: O(2^n) - BAD!
+public int fibNaive(int n) {
+    if (n <= 1) return n;
+    return fibNaive(n - 1) + fibNaive(n - 2);
+}
+
+// With memoization: O(n) - GOOD!
+private Map<Integer, Integer> memo = new HashMap<>();
+public int fibMemo(int n) {
+    if (memo.containsKey(n)) return memo.get(n);
+    if (n <= 1) return n;
+    int result = fibMemo(n - 1) + fibMemo(n - 2);
+    memo.put(n, result);
+    return result;
+}
+
+// Iterative (no stack overflow)
+public int fibIterative(int n) {
+    if (n <= 1) return n;
+    int prev = 0, curr = 1;
+    for (int i = 2; i <= n; i++) { int temp = curr; curr += prev; prev = temp; }
+    return curr;
+}`
+        },
+        {
+          title: 'Letter Combinations of Phone',
+          language: 'javascript',
+          description: 'Generate all combinations recursively.',
+          code: `function letterCombinations(digits) {
+    if (!digits) return [];
+    const phone = { '2':'abc','3':'def','4':'ghi','5':'jkl','6':'mno','7':'pqrs','8':'tuv','9':'wxyz' };
+    const result = [];
+
+    function backtrack(index, current) {
+        if (index === digits.length) { result.push(current); return; }
+        for (const letter of phone[digits[index]]) {
+            backtrack(index + 1, current + letter);
+        }
+    }
+    backtrack(0, '');
+    return result;
+}
+// Time: O(4^n), Space: O(n) recursion depth`
+        },
+        {
+          title: 'Letter Combinations of Phone',
+          language: 'java',
+          description: 'Generate all combinations recursively.',
+          code: `public List<String> letterCombinations(String digits) {
+    if (digits.isEmpty()) return new ArrayList<>();
+    Map<Character, String> phone = Map.of('2',"abc",'3',"def",'4',"ghi",
+        '5',"jkl",'6',"mno",'7',"pqrs",'8',"tuv",'9',"wxyz");
+    List<String> result = new ArrayList<>();
+    backtrack(digits, 0, new StringBuilder(), phone, result);
+    return result;
+}
+
+private void backtrack(String digits, int index, StringBuilder current,
+                       Map<Character, String> phone, List<String> result) {
+    if (index == digits.length()) { result.add(current.toString()); return; }
+    for (char letter : phone.get(digits.charAt(index)).toCharArray()) {
+        current.append(letter);
+        backtrack(digits, index + 1, current, phone, result);
+        current.deleteCharAt(current.length() - 1);
+    }
+}
+// Time: O(4^n), Space: O(n)`
         }
       ]
     },
@@ -4539,6 +6438,7 @@ In interviews, you'll rarely implement sort from scratch. Instead, focus on:
       codeExamples: [
         {
           title: 'Quick Sort - In-Place',
+          language: 'python',
           description: 'Partition-based sorting with Lomuto scheme.',
           code: `def quicksort(arr, low=0, high=None):
     """
@@ -4572,6 +6472,7 @@ def partition(arr, low, high):
         },
         {
           title: 'Quick Select - Kth Element in O(n)',
+          language: 'python',
           description: 'Find kth largest/smallest without full sort.',
           code: `def findKthLargest(nums, k):
     """
@@ -4609,6 +6510,7 @@ def findKthLargest_heap(nums, k):
         },
         {
           title: 'Sort Colors - Dutch National Flag',
+          language: 'python',
           description: 'Three-way partitioning in single pass.',
           code: `def sortColors(nums):
     """
@@ -4640,6 +6542,7 @@ def findKthLargest_heap(nums, k):
         },
         {
           title: 'Largest Number - Custom Comparator',
+          language: 'python',
           description: 'Form largest number by custom string comparison.',
           code: `def largestNumber(nums):
     """
@@ -4673,6 +6576,7 @@ def findKthLargest_heap(nums, k):
         },
         {
           title: 'Counting Sort - O(n) for Limited Range',
+          language: 'python',
           description: 'Non-comparison sort for integers in known range.',
           code: `def counting_sort(arr, max_val=None):
     """
@@ -4820,6 +6724,7 @@ Sweep line technique: Instead of treating intervals as wholes, process START and
       codeExamples: [
         {
           title: 'Merge Intervals',
+          language: 'python',
           description: 'Combine all overlapping intervals.',
           code: `def merge(intervals):
     """
@@ -4850,6 +6755,7 @@ Sweep line technique: Instead of treating intervals as wholes, process START and
         },
         {
           title: 'Meeting Rooms II - Min Heap',
+          language: 'python',
           description: 'Find minimum number of meeting rooms needed.',
           code: `def minMeetingRooms(intervals):
     """
@@ -4886,6 +6792,7 @@ Sweep line technique: Instead of treating intervals as wholes, process START and
         },
         {
           title: 'Insert Interval',
+          language: 'python',
           description: 'Insert new interval and merge if needed.',
           code: `def insert(intervals, newInterval):
     """
@@ -4922,6 +6829,7 @@ Sweep line technique: Instead of treating intervals as wholes, process START and
         },
         {
           title: 'Meeting Rooms II - Sweep Line',
+          language: 'python',
           description: 'Alternative approach using event processing.',
           code: `def minMeetingRooms_sweep(intervals):
     """
@@ -4952,6 +6860,7 @@ Sweep line technique: Instead of treating intervals as wholes, process START and
         },
         {
           title: 'Interval List Intersections',
+          language: 'python',
           description: 'Find intersections of two sorted interval lists.',
           code: `def intervalIntersection(firstList, secondList):
     """
@@ -5083,6 +6992,7 @@ Common variations:
       codeExamples: [
         {
           title: 'Binary Search Templates',
+          language: 'python',
           description: 'Two common templates: exact match and boundary.',
           code: `# Template 1: Find exact match (return -1 if not found)
 def binary_search_exact(nums, target):
@@ -5119,6 +7029,7 @@ def binary_search_left(nums, target):
         },
         {
           title: 'First and Last Position',
+          language: 'python',
           description: 'Find boundaries of target in sorted array.',
           code: `def searchRange(nums, target):
     """Find first and last index of target"""
@@ -5154,6 +7065,7 @@ def binary_search_left(nums, target):
         },
         {
           title: 'Search in Rotated Sorted Array',
+          language: 'python',
           description: 'Binary search when array is rotated.',
           code: `def search(nums, target):
     """
@@ -5189,6 +7101,7 @@ def binary_search_left(nums, target):
         },
         {
           title: 'Find Peak Element',
+          language: 'python',
           description: 'Binary search in unsorted array using local comparison.',
           code: `def findPeakElement(nums):
     """
@@ -5216,6 +7129,7 @@ def binary_search_left(nums, target):
         },
         {
           title: 'Binary Search on Answer - Koko Eating Bananas',
+          language: 'python',
           description: 'Search for minimum speed to finish within hours.',
           code: `def minEatingSpeed(piles, h):
     """
