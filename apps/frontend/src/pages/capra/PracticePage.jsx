@@ -984,8 +984,25 @@ export default function PracticePage() {
                     const data = await res.json();
                     if (data.mermaid_code) return data.mermaid_code;
 
-                    // If only image_url returned (no mermaid), provide simple flowchart
-                    return `flowchart TD\n  A[Client] --> B[Load Balancer]\n  B --> C[API Server]\n  C --> D[Auth]\n  C --> E[Service]\n  E --> F[Cache]\n  E --> G[Database]\n  E --> H[Queue]\n  H --> I[Worker]`;
+                    // Generate problem-specific mermaid from question keywords
+                    const qLower = questionText.toLowerCase();
+                    if (qLower.includes('youtube') || qLower.includes('video') || qLower.includes('streaming')) {
+                      return `flowchart TD\n  A[Client App] --> B[CDN]\n  B --> C[API Gateway]\n  C --> D[Video Upload Service]\n  C --> E[Video Streaming Service]\n  D --> F[Transcoding Pipeline]\n  F --> G[Object Storage / S3]\n  E --> G\n  C --> H[Search Service]\n  H --> I[Elasticsearch]\n  C --> J[Recommendation Engine]\n  J --> K[ML Model]\n  C --> L[User Service]\n  L --> M[PostgreSQL]\n  F --> N[Message Queue]`;
+                    } else if (qLower.includes('chat') || qLower.includes('messaging') || qLower.includes('whatsapp') || qLower.includes('slack')) {
+                      return `flowchart TD\n  A[Client App] --> B[WebSocket Gateway]\n  B --> C[Connection Manager]\n  C --> D[Message Router]\n  D --> E[Message Queue / Kafka]\n  E --> F[Message Storage]\n  F --> G[Cassandra]\n  D --> H[Presence Service]\n  H --> I[Redis]\n  C --> J[Group Service]\n  J --> K[PostgreSQL]\n  D --> L[Push Notification]\n  L --> M[APNS / FCM]`;
+                    } else if (qLower.includes('uber') || qLower.includes('ride') || qLower.includes('delivery') || qLower.includes('doordash')) {
+                      return `flowchart TD\n  A[Rider App] --> B[API Gateway]\n  C[Driver App] --> B\n  B --> D[Trip Service]\n  B --> E[Matching Service]\n  E --> F[Location Service]\n  F --> G[Redis / Geospatial]\n  D --> H[PostgreSQL]\n  B --> I[Pricing Service]\n  B --> J[Payment Service]\n  J --> K[Stripe]\n  F --> L[Kafka]\n  L --> M[ETA Service]\n  B --> N[Notification Service]`;
+                    } else if (qLower.includes('twitter') || qLower.includes('feed') || qLower.includes('social') || qLower.includes('instagram')) {
+                      return `flowchart TD\n  A[Client App] --> B[API Gateway]\n  B --> C[Post Service]\n  C --> D[Fan-out Service]\n  D --> E[Redis Feed Cache]\n  B --> F[Timeline Service]\n  F --> E\n  C --> G[PostgreSQL]\n  B --> H[Search Service]\n  H --> I[Elasticsearch]\n  D --> J[Kafka]\n  J --> K[Notification Service]\n  B --> L[Media Service]\n  L --> M[CDN / S3]`;
+                    } else if (qLower.includes('url') || qLower.includes('shortener') || qLower.includes('bit.ly')) {
+                      return `flowchart TD\n  A[Client] --> B[API Gateway]\n  B --> C[URL Service]\n  C --> D[ID Generator]\n  C --> E[Redis Cache]\n  C --> F[PostgreSQL]\n  B --> G[Redirect Service]\n  G --> E\n  G --> F\n  B --> H[Analytics Service]\n  H --> I[Kafka]\n  I --> J[ClickHouse]`;
+                    } else if (qLower.includes('rate limit') || qLower.includes('api gateway')) {
+                      return `flowchart TD\n  A[Client] --> B[Load Balancer]\n  B --> C[Rate Limiter]\n  C --> D[Token Bucket / Redis]\n  C --> E[API Router]\n  E --> F[Auth Service]\n  E --> G[Service A]\n  E --> H[Service B]\n  G --> I[Database]\n  H --> I\n  C --> J[Logging / Metrics]\n  J --> K[Prometheus]`;
+                    } else if (qLower.includes('search') || qLower.includes('yelp') || qLower.includes('maps')) {
+                      return `flowchart TD\n  A[Client] --> B[API Gateway]\n  B --> C[Search Service]\n  C --> D[Elasticsearch]\n  B --> E[Geospatial Service]\n  E --> F[PostGIS / Redis]\n  B --> G[Ranking Service]\n  G --> H[ML Model]\n  C --> I[Index Builder]\n  I --> J[Kafka]\n  J --> D\n  B --> K[Review Service]\n  K --> L[PostgreSQL]`;
+                    } else {
+                      return `flowchart TD\n  A[Client] --> B[Load Balancer]\n  B --> C[API Gateway]\n  C --> D[Auth Service]\n  C --> E[Core Service]\n  E --> F[Redis Cache]\n  E --> G[PostgreSQL]\n  E --> H[Message Queue]\n  H --> I[Worker Service]\n  I --> G\n  C --> J[Search / Analytics]\n  E --> K[Object Storage]`;
+                    }
                   } catch {
                     return null;
                   }
@@ -1022,13 +1039,13 @@ export default function PracticePage() {
 
                         {/* Right: Section text areas */}
                         <Allotment.Pane minSize={340}>
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, padding: 14, overflowY: 'auto', height: '100%', background: '#fff' }}>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: 'repeat(4, 1fr)', gap: 6, padding: 12, height: '100%', background: '#fff' }}>
                             {SD_SECTIONS.map((section, si) => {
                               const val = parts[si] || '';
                               return (
-                                <div key={section.label} style={si === SD_SECTIONS.length - 1 ? { gridColumn: '1 / -1' } : undefined}>
-                                  <label style={{ fontSize: 11, fontWeight: 600, color: section.color, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                                    <Icon name={section.icon} size={12} style={{ color: section.color }} />
+                                <div key={section.label} style={{ display: 'flex', flexDirection: 'column', minHeight: 0, ...(si === SD_SECTIONS.length - 1 ? { gridColumn: '1 / -1' } : {}) }}>
+                                  <label style={{ fontSize: 10, fontWeight: 600, color: section.color, marginBottom: 3, display: 'flex', alignItems: 'center', gap: 4, textTransform: 'uppercase', letterSpacing: '0.05em', flexShrink: 0 }}>
+                                    <Icon name={section.icon} size={11} style={{ color: section.color }} />
                                     {section.label}
                                   </label>
                                   <textarea
@@ -1043,7 +1060,7 @@ export default function PracticePage() {
                                       setAnswers(newA);
                                     }}
                                     placeholder={section.placeholder}
-                                    style={{ width: '100%', minHeight: 100, padding: 12, borderRadius: 10, border: '1px solid #e3e8ee', fontSize: 13, resize: 'vertical', outline: 'none', background: '#fafbfc', lineHeight: 1.7 }}
+                                    style={{ width: '100%', flex: 1, minHeight: 0, padding: 10, borderRadius: 8, border: '1px solid #e3e8ee', fontSize: 12, resize: 'none', outline: 'none', background: '#fafbfc', lineHeight: 1.6 }}
                                     autoFocus={si === 0}
                                   />
                                 </div>
