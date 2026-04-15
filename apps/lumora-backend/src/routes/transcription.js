@@ -131,8 +131,8 @@ router.post(
     const start = performance.now();
 
     try {
-      // Check usage limits
-      if (req.user?.id) {
+      // Check usage limits (admins bypass)
+      if (req.user?.id && !req.user.is_admin) {
         const limitCheck = await checkLimit(req.user.id, 'questions');
         if (!limitCheck.allowed) {
           return res.status(429).json({ error: 'Usage limit reached. Please upgrade your plan.', subscriptionRequired: true });
