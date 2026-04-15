@@ -13,6 +13,10 @@ export const sqlCategoryMap = {
   'sql-window-functions': 'advanced',
   'sql-set-operations': 'fundamentals',
   'sql-ddl-dml': 'fundamentals',
+  'sql-stored-procedures': 'advanced',
+  'sql-transactions': 'advanced',
+  'sql-performance-tuning': 'advanced',
+  'sql-etl-data-engineering': 'interview',
   'sql-interview-easy': 'interview',
   'sql-interview-hard': 'interview',
 };
@@ -622,7 +626,494 @@ CREATE INDEX idx_orders_status_date ON orders(status, created_at);
     ],
   },
 
-  // ─── 7. SQL Interview Easy ───────────────────────────────────────
+  // ─── 7. Stored Procedures & Triggers ──────────────────────────────
+  {
+    id: 'sql-stored-procedures',
+    title: 'Stored Procedures & Triggers',
+    icon: 'terminal',
+    color: '#8b5cf6',
+    questions: 6,
+    description: 'Server-side SQL logic: stored procedures, functions, triggers, and dynamic SQL for encapsulating business rules.',
+
+    introduction: `**Stored procedures** and **triggers** move logic into the database server. They encapsulate business rules, reduce network round trips, and enforce constraints that cannot be expressed with simple CHECK constraints.
+
+**Stored Procedures** are named, reusable SQL programs stored on the server.
+\`\`\`sql
+-- Transfer an employee to a new department with budget check
+DELIMITER //
+CREATE PROCEDURE TransferEmployee(
+    IN p_emp_id INT,
+    IN p_new_dept_id INT
+)
+BEGIN
+    DECLARE v_salary DECIMAL(10,2);
+    DECLARE v_budget DECIMAL(10,2);
+    DECLARE v_current_spend DECIMAL(10,2);
+
+    SELECT salary INTO v_salary FROM employees WHERE id = p_emp_id;
+    SELECT budget INTO v_budget FROM departments WHERE id = p_new_dept_id;
+    SELECT COALESCE(SUM(salary), 0) INTO v_current_spend
+        FROM employees WHERE department_id = p_new_dept_id;
+
+    IF v_current_spend + v_salary > v_budget THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Transfer would exceed department budget';
+    ELSE
+        UPDATE employees SET department_id = p_new_dept_id WHERE id = p_emp_id;
+    END IF;
+END //
+DELIMITER ;
+\`\`\`
+
+**Triggers** fire automatically before or after INSERT, UPDATE, or DELETE operations.
+\`\`\`sql
+-- Prevent orders that exceed available inventory
+CREATE TRIGGER CheckInventoryBeforeInsert
+BEFORE INSERT ON orders
+FOR EACH ROW
+BEGIN
+    DECLARE v_available INT;
+    SELECT quantity_available INTO v_available
+        FROM inventory WHERE product_id = NEW.product_id;
+    IF NEW.quantity > v_available THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Insufficient inventory for this order';
+    END IF;
+END;
+\`\`\`
+
+**Functions** (UDFs) return a single value and can be used in SELECT statements, unlike procedures which are called with CALL.
+
+**When to use procedures vs application code:** Use procedures for operations that must be atomic across multiple tables, enforce complex business rules close to the data, or need to run as part of a trigger chain. Prefer application code when the logic involves external services, complex control flow, or needs to be version-controlled alongside application code.`,
+
+    whenToUse: [
+      'Encapsulating multi-step business logic that must run atomically',
+      'Enforcing complex constraints that CHECK constraints cannot express',
+      'Automating audit trails or data validation on every insert/update/delete',
+      'Reducing network round trips by batching multiple statements on the server',
+      'Implementing cascading updates or derived calculations triggered by data changes',
+      'Building reusable data transformation routines called from multiple applications',
+    ],
+
+    keyPatterns: [
+      'CREATE PROCEDURE name(IN param TYPE, OUT param TYPE) BEGIN ... END',
+      'CREATE TRIGGER name BEFORE|AFTER INSERT|UPDATE|DELETE ON table FOR EACH ROW',
+      'DECLARE variable TYPE; SELECT col INTO variable FROM table WHERE ...',
+      'IF condition THEN ... ELSEIF ... ELSE ... END IF',
+      'SIGNAL SQLSTATE to raise custom errors and abort the operation',
+      'NEW.column and OLD.column references inside triggers for new/old row values',
+    ],
+
+    timeComplexity: 'Same as the underlying SQL statements — procedures add minimal overhead',
+    spaceComplexity: 'O(1) for procedure metadata, trigger overhead proportional to affected rows',
+
+    approach: [
+      'Define clear input/output parameters — use IN for input, OUT for output, INOUT for both',
+      'Always validate inputs before modifying data — check for NULLs and invalid values',
+      'Use SIGNAL SQLSTATE to raise meaningful error messages when business rules are violated',
+      'For triggers, keep logic minimal — complex triggers slow down every write operation',
+      'Use BEFORE triggers for validation and AFTER triggers for audit logging',
+      'Test procedures with edge cases: empty tables, duplicate keys, concurrent calls',
+      'Document each procedure with comments explaining its purpose and side effects',
+    ],
+
+    commonProblems: [
+      { name: 'Write a procedure to transfer funds between accounts with balance checks', difficulty: 'Medium' },
+      { name: 'Create a trigger to maintain an audit log table on every UPDATE', difficulty: 'Medium' },
+      { name: 'Implement employee department transfer with budget constraints', difficulty: 'Medium' },
+      { name: 'Write a trigger to prevent inventory overselling', difficulty: 'Medium' },
+      { name: 'Create a function to calculate running account balance', difficulty: 'Medium' },
+      { name: 'Design a stored procedure for batch data cleanup with error handling', difficulty: 'Hard' },
+    ],
+
+    commonMistakes: [
+      'Writing long, complex triggers that slow down every INSERT/UPDATE — keep triggers lean',
+      'Using triggers for business logic that belongs in the application layer (e.g., sending emails)',
+      'Forgetting that triggers fire per-row in most databases, not per-statement',
+      'Not handling concurrent execution — procedures may need explicit locking for consistency',
+      'Recursive triggers where trigger A modifies a table that has trigger B which modifies the first table',
+      'Not using DELIMITER when defining procedures in MySQL, causing syntax errors at the first semicolon',
+    ],
+
+    tips: [
+      'Prefer application code over stored procedures for most business logic — procedures are harder to test and version-control',
+      'BEFORE INSERT triggers are ideal for auto-populating or validating columns before the row is written',
+      'Use AFTER triggers for audit logging so the main operation is not affected if logging fails',
+      'In PostgreSQL, use RETURNS TRIGGER for trigger functions; in MySQL, the trigger body is inline',
+      'Always include error handling — use DECLARE HANDLER in MySQL or EXCEPTION blocks in PostgreSQL',
+    ],
+  },
+
+  // ─── 8. Transactions & Concurrency ──────────────────────────────
+  {
+    id: 'sql-transactions',
+    title: 'Transactions & Concurrency',
+    icon: 'lock',
+    color: '#8b5cf6',
+    questions: 6,
+    description: 'ACID properties, isolation levels, locking strategies, deadlocks, and safe concurrent data access patterns.',
+
+    introduction: `**Transactions** group multiple SQL statements into an atomic unit — either all succeed or all roll back. Understanding transactions and **isolation levels** is essential for building applications that handle concurrent access without data corruption.
+
+**ACID Properties:**
+- **Atomicity** — all statements in a transaction succeed or none do.
+- **Consistency** — the database moves from one valid state to another.
+- **Isolation** — concurrent transactions do not interfere with each other.
+- **Durability** — committed changes survive server crashes.
+
+\`\`\`sql
+-- Transfer funds between accounts atomically
+BEGIN;
+UPDATE accounts SET balance = balance - 500 WHERE id = 1;
+UPDATE accounts SET balance = balance + 500 WHERE id = 2;
+-- If any statement fails, ROLLBACK undoes both
+COMMIT;
+\`\`\`
+
+**Isolation Levels** (from least to most strict):
+| Level | Dirty Read | Non-Repeatable Read | Phantom Read |
+|-------|-----------|-------------------|-------------|
+| READ UNCOMMITTED | Possible | Possible | Possible |
+| READ COMMITTED | No | Possible | Possible |
+| REPEATABLE READ | No | No | Possible |
+| SERIALIZABLE | No | No | No |
+
+\`\`\`sql
+-- Set isolation level for a transaction
+SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+BEGIN;
+-- All reads in this transaction see a consistent snapshot
+SELECT balance FROM accounts WHERE id = 1;
+-- Even if another transaction modifies the balance, we see the original value
+COMMIT;
+\`\`\`
+
+**Efficient bulk deletion with transactions:**
+\`\`\`sql
+-- Delete old records in batches to avoid holding a long lock
+SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+BEGIN;
+DELETE FROM transactions
+WHERE transaction_date < CURRENT_DATE - INTERVAL '1 year'
+LIMIT 10000;
+COMMIT;
+-- Repeat in a loop until no more rows are affected
+\`\`\`
+
+**Deadlocks** occur when two transactions wait for each other's locks. The database detects this and aborts one transaction. To minimize deadlocks: always acquire locks in the same order, keep transactions short, and use the lowest isolation level that meets your requirements.`,
+
+    whenToUse: [
+      'Any operation that modifies multiple rows or tables and must be atomic',
+      'Financial operations where partial updates would leave data inconsistent',
+      'Batch processing that should roll back entirely if any row fails',
+      'High-concurrency environments where multiple users modify the same data',
+      'Long-running operations that need to see a consistent snapshot of the data',
+      'Bulk deletes or updates that must not lock the table for extended periods',
+    ],
+
+    keyPatterns: [
+      'BEGIN / COMMIT / ROLLBACK for explicit transaction control',
+      'SET TRANSACTION ISOLATION LEVEL before BEGIN',
+      'SAVEPOINT name / ROLLBACK TO SAVEPOINT name for partial rollbacks',
+      'SELECT ... FOR UPDATE to acquire row-level exclusive locks',
+      'Batch processing: DELETE/UPDATE with LIMIT inside a loop with COMMIT per batch',
+      'Optimistic concurrency: UPDATE ... WHERE version = expected_version',
+    ],
+
+    timeComplexity: 'Same as underlying statements, plus lock acquisition overhead',
+    spaceComplexity: 'O(modified rows) for undo log / write-ahead log',
+
+    approach: [
+      'Identify which statements must succeed or fail together — those belong in one transaction',
+      'Choose the lowest isolation level that meets correctness requirements',
+      'Keep transactions as short as possible — long transactions hold locks and block other users',
+      'For bulk operations, batch into chunks of 1,000-10,000 rows with COMMIT per batch',
+      'Use SAVEPOINT for complex workflows where partial rollback is acceptable',
+      'Test concurrent scenarios: what happens when two users modify the same row simultaneously?',
+      'Always handle transaction failures in application code — retry or report the error',
+    ],
+
+    commonProblems: [
+      { name: 'Implement atomic fund transfer between two accounts', difficulty: 'Medium' },
+      { name: 'Delete records older than 1 year efficiently in batches', difficulty: 'Medium' },
+      { name: 'Handle concurrent seat booking without double-booking', difficulty: 'Hard' },
+      { name: 'Implement optimistic locking with version numbers', difficulty: 'Medium' },
+      { name: 'Design a transaction for order placement with inventory deduction', difficulty: 'Medium' },
+      { name: 'Diagnose and resolve a deadlock scenario', difficulty: 'Hard' },
+    ],
+
+    commonMistakes: [
+      'Leaving transactions open too long, causing lock contention and blocking other queries',
+      'Using SERIALIZABLE when READ COMMITTED would suffice, drastically reducing throughput',
+      'Deleting millions of rows in a single transaction, filling up the undo log and locking the table',
+      'Not handling deadlock errors in application code — databases abort one transaction, your app must retry',
+      'Assuming autocommit is off by default — most databases autocommit each statement unless you BEGIN explicitly',
+      'Mixing DDL and DML in a transaction — in MySQL, DDL auto-commits any pending transaction',
+    ],
+
+    tips: [
+      'READ COMMITTED is the right default for most applications — it prevents dirty reads without excessive locking',
+      'For bulk deletes, use batched DELETE with LIMIT + COMMIT per batch to avoid holding a table-wide lock',
+      'SELECT ... FOR UPDATE locks the selected rows until COMMIT — use it for read-then-write patterns',
+      'To avoid deadlocks, always update tables and rows in a consistent order across all transactions',
+      'Use EXPLAIN to check if your queries within transactions are using indexes — unindexed queries hold more locks',
+    ],
+  },
+
+  // ─── 9. Performance Tuning & Optimization ───────────────────────
+  {
+    id: 'sql-performance-tuning',
+    title: 'Performance Tuning',
+    icon: 'activity',
+    color: '#8b5cf6',
+    questions: 7,
+    description: 'Query optimization, EXPLAIN plans, index strategies, composite indexes, query profiling, and diagnosing slow queries.',
+
+    introduction: `**SQL performance tuning** is the process of identifying and eliminating bottlenecks in query execution. It is a critical skill for senior engineering interviews and any role involving large-scale data systems.
+
+**EXPLAIN / EXPLAIN ANALYZE** is your primary diagnostic tool. It shows the query execution plan — which indexes are used, how tables are scanned, and the estimated cost of each operation.
+
+\`\`\`sql
+-- See the execution plan
+EXPLAIN ANALYZE
+SELECT customer_id, SUM(sale_amount) AS total_sales
+FROM large_sales
+WHERE sale_date BETWEEN '2023-01-01' AND '2023-12-31'
+GROUP BY customer_id;
+\`\`\`
+
+**Key things to look for in EXPLAIN output:**
+- **Seq Scan** (full table scan) — usually means a missing index
+- **Index Scan** / **Index Only Scan** — good, the query uses an index
+- **Hash Join** vs **Nested Loop** — hash joins are better for large datasets
+- **Sort** — expensive for large result sets, check if an index can eliminate it
+- **Rows estimate** — if the estimate is far off, statistics may be stale (run ANALYZE)
+
+**Composite Index Strategy:**
+\`\`\`sql
+-- Composite index on (customer_id, sale_date) for the query above
+CREATE INDEX idx_sales_customer_date ON large_sales(customer_id, sale_date);
+
+-- This index supports:
+-- WHERE customer_id = X                       (uses first column)
+-- WHERE customer_id = X AND sale_date > Y     (uses both columns)
+-- WHERE sale_date > Y                         (CANNOT use — violates leftmost prefix)
+\`\`\`
+
+**Covering indexes** include all columns needed by the query, enabling Index Only Scans:
+\`\`\`sql
+-- Covering index: no need to fetch the actual table rows
+CREATE INDEX idx_sales_covering
+ON large_sales(customer_id, sale_date, sale_amount);
+\`\`\`
+
+**Common optimization techniques:**
+- Add indexes on WHERE, JOIN, and ORDER BY columns
+- Rewrite correlated subqueries as JOINs
+- Use EXISTS instead of IN for large subquery result sets
+- Avoid SELECT * — only fetch the columns you need
+- Partition large tables by date or region
+- Use materialized views for expensive aggregations
+
+**Query Profiling in production:**
+- **SLOW QUERY LOG** (MySQL) — logs queries exceeding a time threshold
+- **pg_stat_statements** (PostgreSQL) — tracks query execution statistics
+- **Wait statistics** (SQL Server) — shows where the engine spends time waiting (CPU, I/O, locks)`,
+
+    whenToUse: [
+      'A query is running slower than expected and you need to diagnose why',
+      'Designing indexes for a new table or set of frequently-run queries',
+      'Reviewing an application before launch to identify potential bottlenecks',
+      'Optimizing batch jobs or reports that process millions of rows',
+      'After schema changes to verify that existing indexes still serve their purpose',
+      'Senior interviews where you are asked to optimize a given slow query',
+    ],
+
+    keyPatterns: [
+      'EXPLAIN ANALYZE SELECT ... to see actual execution plan with timing',
+      'CREATE INDEX idx ON table(col1, col2) — composite indexes follow leftmost prefix rule',
+      'Covering index: include all SELECTed columns in the index to avoid table access',
+      'EXISTS vs IN: EXISTS short-circuits, IN materializes the subquery result',
+      'ANALYZE / UPDATE STATISTICS to refresh query planner statistics',
+      'Partitioning: PARTITION BY RANGE (date_column) for time-series data',
+    ],
+
+    timeComplexity: 'Index scan O(log n + k) where k = matching rows; full scan O(n)',
+    spaceComplexity: 'O(n) per index, covering indexes trade more space for faster reads',
+
+    approach: [
+      'Start with EXPLAIN ANALYZE to understand the current execution plan',
+      'Look for Seq Scans on large tables — these usually indicate a missing index',
+      'Check if the query planner row estimates are accurate — stale statistics cause bad plans',
+      'Consider composite indexes that match the WHERE + ORDER BY columns in the right order',
+      'For join-heavy queries, ensure join columns have indexes on both sides',
+      'Rewrite subqueries as JOINs when the optimizer does not flatten them automatically',
+      'Measure before and after — use query timing, not just EXPLAIN cost estimates',
+    ],
+
+    commonProblems: [
+      { name: 'Optimize a slow report query by adding the right composite index', difficulty: 'Medium' },
+      { name: 'Rewrite a correlated subquery as a JOIN for better performance', difficulty: 'Medium' },
+      { name: 'Design indexes for a multi-condition search with ORDER BY', difficulty: 'Medium' },
+      { name: 'Diagnose a query that stopped using its index after a schema change', difficulty: 'Hard' },
+      { name: 'Partition a billion-row table for efficient time-range queries', difficulty: 'Hard' },
+      { name: 'Optimize concurrent writes on a high-traffic table', difficulty: 'Hard' },
+      { name: 'Use EXPLAIN to identify and fix a hash join spilling to disk', difficulty: 'Hard' },
+    ],
+
+    commonMistakes: [
+      'Adding indexes on every column instead of targeting the actual slow queries',
+      'Creating a composite index in the wrong column order — (date, customer_id) vs (customer_id, date) matters',
+      'Ignoring index maintenance — bloated indexes degrade performance over time (REINDEX periodically)',
+      'Using SELECT * which prevents covering index optimization',
+      'Relying on EXPLAIN cost without running EXPLAIN ANALYZE to see actual execution times',
+      'Optimizing queries in development with small datasets — production cardinality changes plans',
+    ],
+
+    tips: [
+      'The leftmost prefix rule: index (A, B, C) supports queries on A, A+B, or A+B+C — not B alone',
+      'Run ANALYZE/UPDATE STATISTICS after bulk data loads to keep the query planner accurate',
+      'Covering indexes eliminate table lookups entirely — a massive win for read-heavy workloads',
+      'For MySQL, use FORCE INDEX or USE INDEX hints only as a last resort — let the optimizer decide',
+      'Monitor slow query logs in production and optimize the top 5 slowest queries regularly',
+    ],
+  },
+
+  // ─── 10. ETL & Data Engineering SQL ─────────────────────────────
+  {
+    id: 'sql-etl-data-engineering',
+    title: 'ETL & Data Engineering',
+    icon: 'layers',
+    color: '#10b981',
+    questions: 6,
+    description: 'Data pipelines, ETL processes, data cleaning, aggregation pipelines, cumulative reporting, and data warehouse patterns.',
+
+    introduction: `**ETL (Extract, Transform, Load)** is the process of pulling data from source systems, cleaning and transforming it, and loading it into a target database or data warehouse. SQL is the primary language for the Transform and Load steps.
+
+**Data Cleaning and Loading:**
+\`\`\`sql
+-- Clean and load data: remove rows with null or negative amounts
+INSERT INTO cleaned_sales (id, customer_id, sale_amount, sale_date)
+SELECT id, customer_id, sale_amount, sale_date
+FROM raw_sales
+WHERE sale_amount IS NOT NULL
+  AND sale_amount > 0
+  AND sale_date IS NOT NULL;
+\`\`\`
+
+**Daily-to-Monthly Aggregation Pipeline:**
+\`\`\`sql
+-- Aggregate daily sales into monthly summaries
+INSERT INTO monthly_sales_summary (year, month, product_id, total_sales, order_count)
+SELECT
+    EXTRACT(YEAR FROM sale_date) AS year,
+    EXTRACT(MONTH FROM sale_date) AS month,
+    product_id,
+    SUM(sale_amount) AS total_sales,
+    COUNT(*) AS order_count
+FROM daily_sales
+WHERE sale_date >= DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 month')
+  AND sale_date < DATE_TRUNC('month', CURRENT_DATE)
+GROUP BY EXTRACT(YEAR FROM sale_date), EXTRACT(MONTH FROM sale_date), product_id
+ON CONFLICT (year, month, product_id)
+DO UPDATE SET total_sales = EXCLUDED.total_sales, order_count = EXCLUDED.order_count;
+\`\`\`
+
+**Analytical Reporting with Window Functions:**
+\`\`\`sql
+-- Monthly sales with cumulative total per region
+SELECT
+    region,
+    EXTRACT(MONTH FROM sale_date) AS sale_month,
+    SUM(sale_amount) AS monthly_sales,
+    SUM(SUM(sale_amount)) OVER (
+        PARTITION BY region
+        ORDER BY EXTRACT(MONTH FROM sale_date)
+    ) AS cumulative_sales
+FROM sales
+WHERE EXTRACT(YEAR FROM sale_date) = EXTRACT(YEAR FROM CURRENT_DATE)
+GROUP BY region, EXTRACT(MONTH FROM sale_date)
+ORDER BY region, sale_month;
+
+-- Average sales per product per month using CTE
+WITH monthly AS (
+    SELECT
+        product_id,
+        EXTRACT(MONTH FROM sale_date) AS month,
+        SUM(sale_amount) AS total
+    FROM sales
+    GROUP BY product_id, EXTRACT(MONTH FROM sale_date)
+)
+SELECT product_id, month, total,
+       AVG(total) OVER (PARTITION BY product_id ORDER BY month
+                        ROWS BETWEEN 2 PRECEDING AND CURRENT ROW) AS rolling_avg
+FROM monthly;
+\`\`\`
+
+**Data Warehouse Patterns:**
+- **Star schema** — fact table (events/transactions) surrounded by dimension tables (products, customers, dates)
+- **Slowly Changing Dimensions (SCD)** — Type 1 (overwrite), Type 2 (add new row with effective dates), Type 3 (add column for previous value)
+- **Upsert (MERGE/ON CONFLICT)** — insert new rows or update existing ones in a single statement`,
+
+    whenToUse: [
+      'Loading data from external sources into a normalized or denormalized schema',
+      'Cleaning raw data by removing nulls, duplicates, and invalid values before analysis',
+      'Building aggregation pipelines that summarize detailed data into reporting tables',
+      'Creating cumulative or rolling reports using window functions over time periods',
+      'Implementing incremental data loads that process only new or changed records',
+      'Designing star schema data warehouses for analytical workloads',
+    ],
+
+    keyPatterns: [
+      'INSERT INTO target SELECT ... FROM source WHERE <quality_filters>',
+      'EXTRACT(YEAR/MONTH/DAY FROM date_col) for time-based aggregation',
+      'ON CONFLICT DO UPDATE (PostgreSQL) or MERGE (SQL Server) for upserts',
+      'SUM(SUM(x)) OVER (PARTITION BY ... ORDER BY ...) for cumulative aggregation',
+      'CTEs for multi-step transformations: clean -> aggregate -> enrich',
+      'DATE_TRUNC for grouping by time periods (day, week, month)',
+    ],
+
+    timeComplexity: 'O(n) for full-table ETL scans, O(delta) for incremental loads',
+    spaceComplexity: 'O(n) for materialized aggregation tables',
+
+    approach: [
+      'Start by profiling the source data — count rows, check for nulls, identify duplicates',
+      'Define clear quality rules: what constitutes valid data vs data that should be filtered or flagged',
+      'Use CTEs to break the transformation into readable steps: clean, transform, aggregate, load',
+      'For incremental loads, track a high-water mark (e.g., max updated_at) to process only new data',
+      'Use ON CONFLICT / MERGE for idempotent loads that can be safely re-run',
+      'Build monitoring: count rows loaded, track failures, alert on unexpected volume changes',
+      'Test the full pipeline on a subset of data before running on production',
+    ],
+
+    commonProblems: [
+      { name: 'Clean and load raw CSV data into a normalized schema', difficulty: 'Medium' },
+      { name: 'Build a daily-to-monthly sales aggregation pipeline', difficulty: 'Medium' },
+      { name: 'Generate cumulative sales report by region and month', difficulty: 'Medium' },
+      { name: 'Implement an incremental data load with change detection', difficulty: 'Hard' },
+      { name: 'Design a star schema for an e-commerce data warehouse', difficulty: 'Hard' },
+      { name: 'Build a rolling average report using window functions', difficulty: 'Medium' },
+    ],
+
+    commonMistakes: [
+      'Loading data without validating quality first — garbage in, garbage out',
+      'Running full-table ETL when an incremental load would be orders of magnitude faster',
+      'Not making loads idempotent — re-running should produce the same result, not duplicate data',
+      'Using DELETE + INSERT instead of UPSERT (ON CONFLICT), which is slower and not atomic',
+      'Forgetting to update aggregate tables when source data is corrected retroactively',
+      'Building ETL logic in application code instead of SQL, losing the database engine optimization',
+    ],
+
+    tips: [
+      'ON CONFLICT DO UPDATE (PostgreSQL) or MERGE (SQL Server/Oracle) makes loads idempotent',
+      'Use EXTRACT + GROUP BY for time-based aggregation; DATE_TRUNC for grouping by period boundaries',
+      'For large loads, disable indexes and constraints, load data, then rebuild — much faster',
+      'SUM(SUM(x)) OVER() is the pattern for cumulative totals after GROUP BY — the double SUM is intentional',
+      'Track a high-water mark column (e.g., updated_at) for efficient incremental loads',
+    ],
+  },
+
+  // ─── 11. SQL Interview Easy ──────────────────────────────────────
   {
     id: 'sql-interview-easy',
     title: 'Interview Problems: Easy',
