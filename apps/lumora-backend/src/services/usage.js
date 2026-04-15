@@ -9,11 +9,14 @@ import { query } from '../lib/shared-db.js';
 // ---------------------------------------------------------------------------
 
 const PLANS = {
-  free:    { sessions: 3,  questions: 5,   diagrams: 1,  devices: 1, isLifetime: true },
-  starter: { sessions: 10, questions: 50,  diagrams: 5,  devices: 1 },
-  pro:     { sessions: 20, questions: 150, diagrams: 15, devices: 2 },
-  annual:  { sessions: 15, questions: 100, diagrams: 10, devices: 1 },
-  challenger: { sessions: 10, questions: 100, diagrams: 10, devices: 1, isLifetime: true },
+  free:            { sessions: 3,  questions: 5,   diagrams: 1,  devices: 1, isLifetime: true },
+  starter:         { sessions: 10, questions: 50,  diagrams: 5,  devices: 1 },
+  monthly:         { sessions: 10, questions: 50,  diagrams: 5,  devices: 1 },
+  pro:             { sessions: 20, questions: 150, diagrams: 15, devices: 2 },
+  quarterly_pro:   { sessions: 20, questions: 150, diagrams: 15, devices: 2 },
+  annual:          { sessions: 15, questions: 100, diagrams: 10, devices: 1 },
+  challenger:      { sessions: 10, questions: 100, diagrams: 10, devices: 1, isLifetime: true },
+  desktop_lifetime: { sessions: 20, questions: 150, diagrams: 15, devices: 2, isLifetime: true },
 };
 
 // ---------------------------------------------------------------------------
@@ -90,32 +93,28 @@ async function getOrCreateRow(userId, period) {
 /**
  * Returns the plan name for a user (falls back to 'free').
  *
- * Checks plan_type (used by billing webhook) and subscription_plan as a
- * fallback column name.
+ * Checks ascend_subscriptions first (source of truth for billing),
+ * then users.plan_type as fallback.
  */
 export async function getUserPlan(userId) {
   try {
-    const result = await query(
-      'SELECT plan_type, subscription_plan FROM users WHERE id = $1',
+    // Check ascend_subscriptions first — this is where billing webhook writes
+    const subResult = await query(
+      `SELECT plan_type FROM ascend_subscriptions WHERE user_id = $1 AND status = 'active'`,
       [userId],
     );
-    const row = result.rows[0];
-    if (!row) return 'free';
-    const plan = row.plan_type || row.subscription_plan || 'free';
-    return PLANS[plan] ? plan : 'free';
+    const subPlan = subResult.rows[0]?.plan_type;
+    if (subPlan && PLANS[subPlan]) return subPlan;
+
+    // Fallback to users table
+    const userResult = await query(
+      'SELECT plan_type FROM users WHERE id = $1',
+      [userId],
+    );
+    const userPlan = userResult.rows[0]?.plan_type || 'free';
+    return PLANS[userPlan] ? userPlan : 'free';
   } catch {
-    // If subscription_plan column doesn't exist, retry without it
-    try {
-      const result = await query(
-        'SELECT plan_type FROM users WHERE id = $1',
-        [userId],
-      );
-      const row = result.rows[0];
-      const plan = row?.plan_type || 'free';
-      return PLANS[plan] ? plan : 'free';
-    } catch {
-      return 'free';
-    }
+    return 'free';
   }
 }
 
