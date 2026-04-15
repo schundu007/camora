@@ -7,25 +7,19 @@ import * as pythonDiagrams from '../services/pythonDiagrams.js';
 import { AppError, ErrorCode } from '../middleware/errorHandler.js';
 import * as freeUsageService from '../services/freeUsageService.js';
 import { query } from '../lib/shared-db.js';
+import { cacheGet, cacheSet } from '../services/redis.js';
 
 const router = Router();
 
-// Daily diagram cap for paid users to prevent abuse
+// Daily diagram cap for paid users to prevent abuse (persists in Redis across restarts/instances)
 const PAID_DIAGRAM_DAILY_LIMIT = 50;
-const dailyDiagramUsage = new Map();
 
-function checkDailyDiagramLimit(userId) {
+async function checkDailyDiagramLimit(userId) {
   const today = new Date().toISOString().slice(0, 10);
-  const key = `${userId}:${today}`;
-  const count = dailyDiagramUsage.get(key) || 0;
+  const key = `daily_diagram:${userId}:${today}`;
+  const count = (await cacheGet(key)) || 0;
   if (count >= PAID_DIAGRAM_DAILY_LIMIT) return false;
-  dailyDiagramUsage.set(key, count + 1);
-  // Clean old entries daily
-  if (dailyDiagramUsage.size > 10000) {
-    for (const [k] of dailyDiagramUsage) {
-      if (!k.endsWith(today)) dailyDiagramUsage.delete(k);
-    }
-  }
+  await cacheSet(key, count + 1, 86400);
   return true;
 }
 
@@ -78,7 +72,7 @@ router.post('/eraser', async (req, res, next) => {
       if (!canUse.allowed) {
         return res.status(429).json({ error: canUse.reason || 'Free trial exhausted.', subscriptionRequired: true });
       }
-      if (canUse.hasSubscription && !checkDailyDiagramLimit(userId)) {
+      if (canUse.hasSubscription && !(await checkDailyDiagramLimit(userId))) {
         return res.status(429).json({ error: `Daily diagram limit reached (${PAID_DIAGRAM_DAILY_LIMIT}/day). Try again tomorrow.`, dailyLimitReached: true });
       }
     }
@@ -171,7 +165,7 @@ router.post('/generate', async (req, res, next) => {
       if (!canUse.allowed) {
         return res.status(429).json({ error: canUse.reason || 'Free trial exhausted.', subscriptionRequired: true });
       }
-      if (canUse.hasSubscription && !checkDailyDiagramLimit(userId)) {
+      if (canUse.hasSubscription && !(await checkDailyDiagramLimit(userId))) {
         return res.status(429).json({ error: `Daily diagram limit reached (${PAID_DIAGRAM_DAILY_LIMIT}/day). Try again tomorrow.`, dailyLimitReached: true });
       }
     }
