@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { useInterviewStore } from '@/stores/interview-store';
 import { useAuth } from '@/contexts/AuthContext';
 import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
@@ -104,11 +104,12 @@ interface CodingLayoutProps {
   isLoading?: boolean;
   onBack: () => void;
   initialProblem?: string;
+  hideHeader?: boolean;
 }
 
 // ── Main Component ───────────────────────────────────────────────────────────
 
-export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem }: CodingLayoutProps) {
+export const CodingLayout = forwardRef<{ setProblemText?: (t: string) => void }, CodingLayoutProps>(function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, hideHeader }, ref) {
   const { token } = useAuth();
 
   // Core state
@@ -117,6 +118,8 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem }: Co
   const [outputTab, setOutputTab] = useState<OutputTab>('testcases');
   const [inputMode, setInputMode] = useState<InputMode>('paste');
   const [problemText, setProblemText] = useState(initialProblem || '');
+
+  useImperativeHandle(ref, () => ({ setProblemText }), []);
   const [problemUrl, setProblemUrl] = useState('');
   const [code, setCode] = useState(getDefaultCode('python'));
   const [output, setOutput] = useState('');
@@ -562,9 +565,9 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem }: Co
   // ── Render ──────────────────────────────────────────────────────────────
 
   return (
-    <div className="h-screen w-full flex flex-col lumora-app-bg">
+    <div className={`${hideHeader ? 'flex-1' : 'h-screen'} w-full flex flex-col lumora-app-bg`}>
       {/* ═══ HEADER ═══ */}
-      <header className="flex items-center justify-between h-11 px-3 shrink-0" style={{ background: 'linear-gradient(135deg, rgba(15,23,42,0.98) 0%, rgba(30,27,75,0.96) 50%, rgba(15,23,42,0.98) 100%)', borderBottom: '1px solid rgba(99,102,241,0.12)' }}>
+      {!hideHeader && <header className="flex items-center justify-between h-11 px-3 shrink-0" style={{ background: 'linear-gradient(135deg, rgba(15,23,42,0.98) 0%, rgba(30,27,75,0.96) 50%, rgba(15,23,42,0.98) 100%)', borderBottom: '1px solid rgba(99,102,241,0.12)' }}>
         <div className="flex items-center gap-2 md:gap-3">
           <button onClick={onBack} className="flex items-center gap-1 px-1.5 py-1 text-xs md:text-sm font-bold text-white/70 hover:text-white rounded transition-colors">
             <svg className="w-3 h-3 md:w-3.5 md:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -633,7 +636,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem }: Co
             autoStart={false}
           />
         </div>
-      </header>
+      </header>}
 
       {/* ═══ MAIN CONTENT ═══ */}
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
@@ -1228,7 +1231,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem }: Co
       </div>
     </div>
   );
-}
+});
 
 // ── Legacy Solution Cards (for tag-based responses) ──────────────────────────
 

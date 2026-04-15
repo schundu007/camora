@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useInterviewStore } from '@/stores/interview-store';
 import { streamResponse } from '@/lib/sse-client';
@@ -12,6 +12,7 @@ const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.
 interface DesignLayoutProps {
   onBack: () => void;
   initialProblem?: string;
+  hideHeader?: boolean;
 }
 
 interface SystemDesign {
@@ -266,11 +267,13 @@ function formatTime(seconds: number): string {
   return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 }
 
-export function DesignLayout({ onBack, initialProblem }: DesignLayoutProps) {
+export const DesignLayout = forwardRef<{ setProblemText?: (t: string) => void }, DesignLayoutProps>(function DesignLayout({ onBack, initialProblem, hideHeader }, ref) {
   const { token } = useAuth();
-  const { setStatus } = useInterviewStore();
+  const { setStatus, setIsStreaming: setStoreStreaming, setQuestion: setStoreQuestion, appendStreamChunk, clearStreamChunks, setParsedBlocks } = useInterviewStore();
 
   const [problemText, setProblemText] = useState(initialProblem || '');
+
+  useImperativeHandle(ref, () => ({ setProblemText }), []);
   const autoSubmittedRef = useRef(false);
   const [inputTab, setInputTab] = useState<'text' | 'url' | 'image'>('text');
   const [detailLevel, setDetailLevel] = useState<'basic' | 'full'>('basic');
@@ -402,6 +405,9 @@ export function DesignLayout({ onBack, initialProblem }: DesignLayoutProps) {
     setStreamingText('');
     setErrorMsg(null);
     setQuestion(problemText.trim());
+    setStoreQuestion(problemText.trim());
+    setStoreStreaming(true);
+    clearStreamChunks();
     setStatus('write', 'Generating design...');
 
     const chunks: string[] = [];
@@ -415,6 +421,7 @@ export function DesignLayout({ onBack, initialProblem }: DesignLayoutProps) {
           if (data.t) {
             chunks.push(data.t);
             setStreamingText(prev => prev + data.t);
+            appendStreamChunk(data.t);
           }
         },
         onAnswer: (data: any) => {
@@ -472,6 +479,7 @@ export function DesignLayout({ onBack, initialProblem }: DesignLayoutProps) {
         },
         onComplete: () => {
           setIsLoading(false);
+          setStoreStreaming(false);
           setStatus('ready', 'Design complete');
           // Safety net: if onAnswer never fired (connection drop), parse streamed tokens directly
           setTimeout(() => {
@@ -492,12 +500,14 @@ export function DesignLayout({ onBack, initialProblem }: DesignLayoutProps) {
         },
         onError: (data) => {
           setIsLoading(false);
+          setStoreStreaming(false);
           setErrorMsg(data.msg || 'Failed to generate design. Please try again.');
           setStatus('error', data.msg);
         },
       });
     } catch (err: any) {
       setIsLoading(false);
+      setStoreStreaming(false);
       setErrorMsg(err?.message || 'Network error. Please check your connection and try again.');
     }
   }, [problemText, token, isLoading, setStatus]);
@@ -556,9 +566,9 @@ export function DesignLayout({ onBack, initialProblem }: DesignLayoutProps) {
   const sd = result?.systemDesign;
 
   return (
-    <div className="h-screen w-full flex flex-col lumora-app-bg">
+    <div className={`${hideHeader ? 'flex-1' : 'h-screen'} w-full flex flex-col lumora-app-bg`}>
       {/* Header — matching coding page enterprise style */}
-      <header className="flex items-center justify-between h-11 px-3 shrink-0" style={{ background: 'linear-gradient(135deg, rgba(15,23,42,0.98) 0%, rgba(30,27,75,0.96) 50%, rgba(15,23,42,0.98) 100%)', borderBottom: '1px solid rgba(99,102,241,0.12)' }}>
+      {!hideHeader && <header className="flex items-center justify-between h-11 px-3 shrink-0" style={{ background: 'linear-gradient(135deg, rgba(15,23,42,0.98) 0%, rgba(30,27,75,0.96) 50%, rgba(15,23,42,0.98) 100%)', borderBottom: '1px solid rgba(99,102,241,0.12)' }}>
         <div className="flex items-center gap-2 md:gap-3">
           <button onClick={onBack} className="flex items-center gap-1 px-1.5 py-1 text-xs md:text-sm font-bold text-white/70 hover:text-white rounded transition-colors">
             <svg className="w-3 h-3 md:w-3.5 md:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -652,7 +662,7 @@ export function DesignLayout({ onBack, initialProblem }: DesignLayoutProps) {
             autoStart={false}
           />
         </div>
-      </header>
+      </header>}
 
       {/* Main content - vertical on mobile, horizontal on desktop */}
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden" ref={mainRef}>
@@ -1089,4 +1099,4 @@ export function DesignLayout({ onBack, initialProblem }: DesignLayoutProps) {
       </div>
     </div>
   );
-}
+});
