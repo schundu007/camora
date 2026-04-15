@@ -120,6 +120,7 @@ export function useStreamingInterview() {
           const errorMsg = data.msg || 'An error occurred';
           setError(errorMsg);
           setStatus('error', errorMsg);
+          setIsStreaming(false);
           stopAnswerTimer();
         },
         onComplete: () => {
@@ -203,6 +204,7 @@ export function useStreamingInterview() {
           const errorMsg = data.msg || 'Failed to generate solution';
           setError(errorMsg);
           setStatus('error', errorMsg);
+          setIsStreaming(false);
           stopAnswerTimer();
         },
         onComplete: () => {
