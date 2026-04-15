@@ -483,6 +483,90 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ── PRODUCT VIDEO — Platform Demo ── */}
+      <section className="px-6 py-10 md:py-16" style={{ zIndex: 1 }}>
+        <div className="w-full lg:max-w-[70%] mx-auto">
+          <FadeIn>
+            <div className="text-center mb-8">
+              <span className="section-label gradient-text text-sm font-bold tracking-[0.2em]">See It In Action</span>
+              <h2 className="heading-1 font-display text-3xl md:text-4xl font-bold tracking-tight mt-3 leading-[1.1]">
+                From application to offer — <span className="gradient-text">in one platform</span>
+              </h2>
+              <p className="text-base mt-3 max-w-xl mx-auto" style={{ color: 'var(--text-secondary)' }}>
+                Code Solver. Design Solver. Cloud Architecture Diagrams. Live AI Interview Assistant. Watch how Camora works.
+              </p>
+            </div>
+          </FadeIn>
+          <FadeIn delay={0.15}>
+            <div
+              className="relative rounded-2xl overflow-hidden mx-auto"
+              style={{
+                maxWidth: '960px',
+                aspectRatio: '16/9',
+                background: 'linear-gradient(145deg, var(--bg-surface) 0%, rgba(99,102,241,0.06) 50%, var(--bg-surface) 100%)',
+                border: '1px solid var(--border)',
+                boxShadow: '0 20px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(99,102,241,0.1)',
+              }}
+            >
+              {/* Replace the VIDEO_URL below with your actual video embed */}
+              {(() => {
+                const VIDEO_URL = ''; // Set your YouTube/Vimeo embed URL here e.g. 'https://www.youtube.com/embed/VIDEO_ID'
+                if (VIDEO_URL) {
+                  return (
+                    <iframe
+                      src={VIDEO_URL}
+                      title="Camora Platform Demo"
+                      className="absolute inset-0 w-full h-full"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      style={{ border: 'none' }}
+                    />
+                  );
+                }
+                // Placeholder until video is ready
+                return (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    {/* Decorative gradient orbs */}
+                    <div className="absolute top-0 right-0 w-64 h-64 rounded-full blur-[100px] opacity-20" style={{ background: '#34d399' }} />
+                    <div className="absolute bottom-0 left-0 w-48 h-48 rounded-full blur-[80px] opacity-15" style={{ background: '#818cf8' }} />
+                    {/* Play button */}
+                    <Link
+                      to="/capra/prepare"
+                      className="relative group"
+                    >
+                      <div
+                        className="w-20 h-20 rounded-full flex items-center justify-center transition-all duration-300 group-hover:scale-110"
+                        style={{
+                          background: 'linear-gradient(135deg, rgba(99,102,241,0.9), rgba(139,92,246,0.9))',
+                          boxShadow: '0 8px 32px rgba(99,102,241,0.4)',
+                        }}
+                      >
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="white" stroke="none">
+                          <polygon points="8,5 20,12 8,19" />
+                        </svg>
+                      </div>
+                      {/* Pulse ring */}
+                      <div className="absolute inset-0 rounded-full animate-ping opacity-20" style={{ background: 'rgba(99,102,241,0.5)' }} />
+                    </Link>
+                    <p className="mt-6 text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
+                      Watch the platform demo
+                    </p>
+                    {/* Feature pills */}
+                    <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+                      {['Code Solver', 'Design Solver', 'AWS/GCP/Azure Diagrams', 'Live AI Assistant', '51 Languages'].map(tag => (
+                        <span key={tag} className="px-3 py-1 rounded-full text-[11px] font-medium" style={{ background: 'rgba(99,102,241,0.1)', color: '#818cf8', border: '1px solid rgba(99,102,241,0.2)' }}>
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          </FadeIn>
+        </div>
+      </section>
+
       {/* ── APPA STEP CARDS — Visual summary ── */}
       <section className="px-6 py-10 md:py-14" style={{ zIndex: 1 }}>
         <div className="w-full lg:max-w-[70%] mx-auto">
