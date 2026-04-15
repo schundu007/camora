@@ -466,17 +466,6 @@ export default function LandingPage() {
       {/* ── PRODUCT STORYBOARD — Interactive Platform Demo ── */}
       <section className="px-6 py-10 md:py-16" style={{ zIndex: 1 }}>
         <div className="w-full lg:max-w-[70%] mx-auto">
-          <FadeIn>
-            <div className="text-center mb-8">
-              <span className="section-label gradient-text text-sm font-bold tracking-[0.2em]">See It In Action</span>
-              <h2 className="heading-1 font-display text-3xl md:text-4xl font-bold tracking-tight mt-3 leading-[1.1]">
-                From application to offer — <span className="gradient-text">in one platform</span>
-              </h2>
-              <p className="text-base mt-3 max-w-xl mx-auto" style={{ color: 'var(--text-secondary)' }}>
-                Code Solver. Design Solver. Cloud Architecture Diagrams. Live AI Interview Assistant. Watch how Camora works.
-              </p>
-            </div>
-          </FadeIn>
           <FadeIn delay={0.15}>
             <div
               className="relative rounded-2xl overflow-hidden mx-auto"
