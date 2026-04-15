@@ -174,7 +174,7 @@ export default function SharedDiagram({
 
       {imageUrl && !loading && !generating && (
         <div className="rounded-lg select-none flex items-center justify-center"
-          style={{ cursor: dragging ? 'grabbing' : 'grab', overflow: 'hidden', minHeight: 250, border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}
+          style={{ cursor: dragging ? 'grabbing' : 'grab', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)', flex: '1 1 0', minHeight: 0 }}
           onWheel={e => { e.preventDefault(); setScale(s => Math.min(Math.max(0.3, s + (e.deltaY > 0 ? -0.1 : 0.1)), 4)); }}
           onMouseDown={e => { if (e.button !== 0) return; setDragging(true); dragStart.current = { x: e.clientX, y: e.clientY }; transStart.current = { ...translate }; }}
           onMouseMove={e => { if (!dragging) return; setTranslate({ x: transStart.current.x + (e.clientX - dragStart.current.x), y: transStart.current.y + (e.clientY - dragStart.current.y) }); }}
