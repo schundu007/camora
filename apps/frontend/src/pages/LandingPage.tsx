@@ -9,7 +9,7 @@ import SiteFooter from '../components/shared/SiteFooter';
 /* ── APPA steps data ───────────────────────────────────── */
 const APPA = [
   { num: '01', label: 'Apply', desc: 'Discover engineering roles matched to your skills, experience, and salary goals across 1 000+ companies.', href: '/jobs', color: '#34d399' },
-  { num: '02', label: 'Prepare', desc: 'Study 300+ curated topics spanning system design, DSA, behavioral, databases, and cloud architecture.', href: '/capra/prepare', color: '#818cf8' },
+  { num: '02', label: 'Prepare', desc: 'Study 800+ curated topics spanning system design, DSA, behavioral, databases, and cloud architecture.', href: '/capra/prepare', color: '#818cf8' },
   { num: '03', label: 'Practice', desc: 'Solve problems with AI explanations, run mock interviews, and build confidence before the real thing.', href: '/capra/practice', color: '#38bdf8' },
   { num: '04', label: 'Attend', desc: 'Get real-time AI answers during your live technical interview — system design, coding, and behavioral.', href: '/lumora', color: '#fbbf24' },
 ];
@@ -27,7 +27,7 @@ const PROCESS_STEPS = [
     ),
   },
   {
-    label: 'Prepare with 415+ Topics',
+    label: 'Prepare with 800+ Topics',
     desc: 'Study system design, DSA, microservices, databases, SQL, low-level design, and behavioral topics with AI-powered explanations and architecture diagrams.',
     color: '#818cf8',
     icon: (
@@ -211,15 +211,15 @@ function PrepShowcase() {
   const inView = useInView(ref, { once: true, margin: '-80px' });
 
   const TOPIC_CATEGORIES = [
-    { name: 'DSA & Algorithms', count: 57, color: '#34d399' },
-    { name: 'System Design', count: 163, color: '#06b6d4' },
-    { name: 'Microservices', count: 12, color: '#818cf8' },
-    { name: 'Database Internals', count: 12, color: '#f97316' },
-    { name: 'SQL for Interviews', count: 8, color: '#fbbf24' },
-    { name: 'Low-Level Design', count: 106, color: '#a78bfa' },
-    { name: 'Behavioral', count: 57, color: '#f472b6' },
+    { name: 'DSA & Algorithms', count: 65, color: '#34d399' },
+    { name: 'System Design', count: 420, color: '#06b6d4' },
+    { name: 'Microservices', count: 27, color: '#818cf8' },
+    { name: 'Database Internals', count: 16, color: '#f97316' },
+    { name: 'SQL for Interviews', count: 15, color: '#fbbf24' },
+    { name: 'Low-Level Design', count: 112, color: '#a78bfa' },
+    { name: 'Behavioral', count: 64, color: '#f472b6' },
   ];
-  const TOTAL = 415;
+  const TOTAL = 808;
   const RADIUS = 72;
   const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
@@ -250,7 +250,7 @@ function PrepShowcase() {
                 strokeDashoffset={seg.offset} strokeLinecap="butt"
                 style={{ transition: `stroke-dasharray 1.2s ease ${i * 100 + 300}ms` }} />
             ))}
-            <text x="100" y="93" textAnchor="middle" fill="var(--text-primary)" fontSize="28" fontWeight="bold" fontFamily="inherit">415+</text>
+            <text x="100" y="93" textAnchor="middle" fill="var(--text-primary)" fontSize="28" fontWeight="bold" fontFamily="inherit">800+</text>
             <text x="100" y="116" textAnchor="middle" fill="var(--text-muted)" fontSize="12" fontWeight="500" fontFamily="inherit">Total Topics</text>
           </svg>
         </div>
@@ -338,7 +338,7 @@ const FEATURE_GROUPS = [
     features: [
       { title: 'Job URL AI Analysis', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m9.86-4.122a4.5 4.5 0 00-6.364-6.364L4.5 6.1" /><path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25" /></svg> },
       { title: 'Role-Filtered Study Paths', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="6" /><circle cx="12" cy="12" r="2" /></svg> },
-      { title: '415+ Study Topics', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></svg> },
+      { title: '800+ Study Topics', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></svg> },
       { title: 'Company-Specific Prep', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 7V5a4 4 0 0 0-8 0v2" /></svg> },
       { title: 'Mock Interview Simulator', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg> },
       { title: 'AI-Powered Explanations', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg> },
