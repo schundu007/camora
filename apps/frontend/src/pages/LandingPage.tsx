@@ -539,9 +539,12 @@ export default function LandingPage() {
             <Link to={isAuthenticated ? "/capra/prepare" : "/signup"} className="shimmer-btn px-6 py-3 text-base font-semibold rounded-xl text-white transition-colors" style={{ background: 'linear-gradient(135deg, #10b981, #3b82f6, #8b5cf6)' }}>
               {isAuthenticated ? 'Go to Dashboard' : 'Get Started Free'}
             </Link>
-            <a href="#process" className="btn-secondary px-6 py-3 text-base rounded-xl transition-colors">
-              See How It Works
-            </a>
+            <Link to="/download" className="inline-flex items-center gap-2 px-6 py-3 text-base font-semibold rounded-xl text-white/90 hover:text-white transition-all" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="3" width="20" height="14" rx="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" />
+              </svg>
+              Desktop App
+            </Link>
           </motion.div>
 
           {/* Visitor Count */}
