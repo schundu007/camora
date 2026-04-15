@@ -204,11 +204,15 @@ router.delete('/:id', jwtAuth, async (req, res) => {
     const userId = req.user.id;
     const { id } = req.params;
 
-    await query(
+    const result = await query(
       `DELETE FROM ascend_company_preps
        WHERE id = $1 AND user_id = $2`,
       [id, userId]
     );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Company prep not found' });
+    }
 
     res.json({ success: true });
   } catch (error) {
