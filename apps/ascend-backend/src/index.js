@@ -494,9 +494,10 @@ app.get('/api/visitors/pageview-stats', authenticate, async (req, res) => {
       `SELECT path, COUNT(*) as views, COUNT(DISTINCT ip) as unique_visitors FROM page_views ${where} GROUP BY path ORDER BY views DESC LIMIT 50`,
       params
     );
+    const byDayParams = [...params, dayLimit];
     const byDay = await query(
-      `SELECT DATE(created_at) as date, COUNT(*) as views, COUNT(DISTINCT ip) as unique_visitors FROM page_views ${where} GROUP BY DATE(created_at) ORDER BY date DESC LIMIT ${dayLimit}`,
-      params
+      `SELECT DATE(created_at) as date, COUNT(*) as views, COUNT(DISTINCT ip) as unique_visitors FROM page_views ${where} GROUP BY DATE(created_at) ORDER BY date DESC LIMIT $${byDayParams.length}`,
+      byDayParams
     );
 
     res.json({

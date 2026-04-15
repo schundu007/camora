@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { optionalAuth } from '../middleware/authenticate.js';
+import { authenticate } from '../middleware/authenticate.js';
 
 const router = Router();
 
@@ -36,7 +36,7 @@ router.get('/events', (req, res) => {
 });
 
 // Endpoint to receive problems from Chrome extension
-router.post('/problem', optionalAuth, (req, res) => {
+router.post('/problem', authenticate, (req, res) => {
   const { url, platform, problemType, problemText, timestamp } = req.body;
 
   if (!url) {
@@ -79,7 +79,7 @@ router.post('/problem', optionalAuth, (req, res) => {
 const platformCookies = {};
 
 // Endpoint to receive cookies from Chrome extension
-router.post('/cookies', optionalAuth, (req, res) => {
+router.post('/cookies', authenticate, (req, res) => {
   const { platform, cookies, timestamp } = req.body;
 
   if (!platform || !cookies) {

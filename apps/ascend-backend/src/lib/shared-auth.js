@@ -58,12 +58,13 @@ export function authenticate(req, res, next) {
  * Set SSO cookie on response
  */
 export function setSSOCookie(res, token) {
+  // TODO: httpOnly should be true but frontend reads cookie via document.cookie — needs refactor
   res.cookie('cariara_sso', token, {
     domain: '.cariara.com',
     path: '/',
     httpOnly: false,
     secure: true,
-    sameSite: 'strict',
+    sameSite: 'lax',
     maxAge: 30 * 24 * 60 * 60 * 1000,
   });
 }
@@ -76,6 +77,6 @@ export function clearSSOCookie(res) {
     domain: '.cariara.com',
     path: '/',
     secure: true,
-    sameSite: 'strict',
+    sameSite: 'lax',
   });
 }

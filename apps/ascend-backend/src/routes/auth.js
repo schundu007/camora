@@ -216,6 +216,12 @@ router.post('/refresh', async (req, res) => {
       return res.status(401).json({ error: 'Invalid token' });
     }
 
+    // Verify user still exists and is active before issuing new token
+    const userCheck = await query('SELECT id, is_active FROM users WHERE id = $1', [parseInt(payload.sub, 10)]);
+    if (!userCheck.rows[0] || userCheck.rows[0].is_active === false) {
+      return res.status(401).json({ error: 'Account not found or inactive' });
+    }
+
     // Issue fresh token via shared-auth
     const newToken = createToken(
       { sub: payload.sub, email: payload.email, name: payload.name || '', picture: payload.picture || '', type: 'access' },

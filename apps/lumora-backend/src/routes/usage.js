@@ -8,6 +8,18 @@ import { getUsage } from '../services/usage.js';
 
 const router = Router();
 
+const ALLOWED_REDIRECT_DOMAINS = [
+  'capra.cariara.com', 'www.capra.cariara.com', 'camora.cariara.com',
+  'cariara.com', 'www.cariara.com', 'localhost', '127.0.0.1',
+];
+
+function isAllowedRedirectUrl(url) {
+  try {
+    const parsed = new URL(url);
+    return ALLOWED_REDIRECT_DOMAINS.some(d => parsed.hostname === d || parsed.hostname.endsWith('.' + d));
+  } catch { return false; }
+}
+
 // ---------------------------------------------------------------------------
 // Topup pack definitions
 // ---------------------------------------------------------------------------
@@ -45,6 +57,11 @@ router.post('/topup', authenticate, async (req, res) => {
   const { pack_id, success_url, cancel_url } = req.body;
   if (!pack_id || !success_url || !cancel_url) {
     return res.status(400).json({ error: 'pack_id, success_url, and cancel_url are required' });
+  }
+
+  // SECURITY: Validate redirect URLs to prevent open redirects
+  if (!isAllowedRedirectUrl(success_url) || !isAllowedRedirectUrl(cancel_url)) {
+    return res.status(400).json({ error: 'Invalid redirect URL domain' });
   }
 
   const pack = TOPUP_PACKS.find((p) => p.id === pack_id);
