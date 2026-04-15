@@ -4,7 +4,7 @@
  * Renders via createPortal to document.body for correct z-index stacking.
  */
 
-import { useRef, useEffect, useMemo, useCallback } from 'react';
+import { useRef, useState, useEffect, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence, useDragControls } from 'framer-motion';
 import { useInterviewStore } from '@/stores/interview-store';
@@ -125,6 +125,8 @@ export function FollowUpPopup() {
   const dragControls = useDragControls();
   const scrollRef = useRef<HTMLDivElement>(null);
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  const [size, setSize] = useState({ w: 380, h: 0 }); // h=0 means auto
+  const resizeRef = useRef<{ startX: number; startY: number; startW: number; startH: number } | null>(null);
 
   // Determine if popup should render
   const shouldShow = popupVisible && (question || isStreaming || parsedBlocks.length > 0);
@@ -149,11 +151,20 @@ export function FollowUpPopup() {
   const answerText = useMemo(() => {
     if (parsedBlocks.length > 0) {
       const a = parsedBlocks.find((b) => b.type === 'ANSWER');
-      return a ? cleanText(a.content) : null;
+      if (a) return cleanText(a.content);
+      // Fallback: use any non-HEADLINE, non-FOLLOWUP block content
+      const fallback = parsedBlocks.find((b) => b.type !== 'HEADLINE' && b.type !== 'FOLLOWUP');
+      if (fallback) return cleanText(fallback.content);
+      // Last resort: use raw streamText if blocks exist but none matched
+      if (streamText) return cleanText(streamText.replace(/\[\w+\]|\[\/\w+\]/g, '').trim());
+      return null;
     }
     if (blocks.ANSWER) return cleanText(blocks.ANSWER.content);
+    // Fallback during streaming: show any block content
+    const anyBlock = Object.values(blocks).find(b => b.type !== 'HEADLINE');
+    if (anyBlock) return cleanText(anyBlock.content);
     return null;
-  }, [parsedBlocks, blocks]);
+  }, [parsedBlocks, blocks, streamText]);
 
   // Auto-scroll answer area during streaming
   useEffect(() => {
@@ -161,6 +172,32 @@ export function FollowUpPopup() {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [isStreaming, streamText]);
+
+  // Resize handlers
+  const handleResizeStart = useCallback((e: React.PointerEvent, edge: 'nw' | 'n' | 'w') => {
+    e.preventDefault();
+    e.stopPropagation();
+    const el = (e.target as HTMLElement).closest('.followup-popup') as HTMLElement;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    resizeRef.current = { startX: e.clientX, startY: e.clientY, startW: rect.width, startH: rect.height };
+
+    const onMove = (ev: PointerEvent) => {
+      if (!resizeRef.current) return;
+      const dx = resizeRef.current.startX - ev.clientX;
+      const dy = resizeRef.current.startY - ev.clientY;
+      const newW = Math.max(320, Math.min(800, resizeRef.current.startW + (edge !== 'n' ? dx : 0)));
+      const newH = Math.max(300, Math.min(window.innerHeight - 100, resizeRef.current.startH + (edge !== 'w' ? dy : 0)));
+      setSize({ w: newW, h: newH });
+    };
+    const onUp = () => {
+      resizeRef.current = null;
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+    };
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+  }, []);
 
   if (!shouldShow) return null;
 
@@ -185,13 +222,14 @@ export function FollowUpPopup() {
         dragListener={false}
         dragMomentum={false}
         dragElastic={0}
-        className="fixed z-[9999] flex flex-col"
+        className="fixed z-[9999] flex flex-col followup-popup"
         style={{
           bottom: isMobile ? 16 : 80,
           right: isMobile ? 16 : 24,
           left: isMobile ? 16 : 'auto',
-          width: isMobile ? 'auto' : 380,
-          maxHeight: isMobile ? '60vh' : '70vh',
+          width: isMobile ? 'auto' : size.w,
+          height: isMobile ? 'auto' : size.h || 'auto',
+          maxHeight: isMobile ? '60vh' : '85vh',
           background: 'rgba(15, 15, 25, 0.95)',
           backdropFilter: 'blur(24px)',
           border: '1px solid rgba(99,102,241,0.2)',
@@ -199,6 +237,17 @@ export function FollowUpPopup() {
           boxShadow: '0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(99,102,241,0.1), 0 0 60px rgba(99,102,241,0.06)',
         }}
       >
+        {/* ── Resize handles (top, left, top-left corner) ── */}
+        {!isMobile && (
+          <>
+            <div onPointerDown={(e) => handleResizeStart(e, 'n')}
+              className="absolute top-0 left-4 right-4 h-1.5 cursor-n-resize z-10 hover:bg-indigo-400/20 rounded-t-xl transition-colors" />
+            <div onPointerDown={(e) => handleResizeStart(e, 'w')}
+              className="absolute left-0 top-4 bottom-4 w-1.5 cursor-w-resize z-10 hover:bg-indigo-400/20 rounded-l-xl transition-colors" />
+            <div onPointerDown={(e) => handleResizeStart(e, 'nw')}
+              className="absolute top-0 left-0 w-4 h-4 cursor-nw-resize z-10" />
+          </>
+        )}
         {/* ── Header (drag handle) ──────────────────────── */}
         <div
           onPointerDown={(e) => { if (!isMobile) dragControls.start(e); }}
@@ -268,8 +317,9 @@ export function FollowUpPopup() {
             style={{
               background: 'rgba(255,255,255,0.02)',
               border: '1px solid rgba(255,255,255,0.04)',
-              maxHeight: isMobile ? '25vh' : '180px',
+              maxHeight: isMobile ? '25vh' : size.h ? '50vh' : '180px',
               minHeight: 60,
+              flex: size.h ? '1 1 0' : undefined,
             }}
           >
             {answerText ? (
