@@ -71,10 +71,9 @@ router.post('/eraser', async (req, res, next) => {
       // Cache lookup failed (table might not exist yet) — fall through to generate
     }
 
-    // 2. Check free usage
-    const userId = req.user?.id;
-    const isAdmin = req.user?.is_admin;
-    if (userId && !isAdmin) {
+    // 2. Check free usage (authenticate middleware guarantees req.user)
+    const userId = req.user.id;
+    if (!req.user.is_admin) {
       const canUse = await freeUsageService.canUseFeature(userId, 'design');
       if (!canUse.allowed) {
         return res.status(429).json({ error: canUse.reason || 'Free trial exhausted.', subscriptionRequired: true });
@@ -166,9 +165,8 @@ router.post('/generate', async (req, res, next) => {
     } catch { /* table might not exist yet */ }
 
     // 2. Check free usage — only for cache misses (actual generation costs money)
-    const userId = req.user?.id;
-    const isAdmin = req.user?.is_admin;
-    if (userId && !isAdmin) {
+    const userId = req.user.id;
+    if (!req.user.is_admin) {
       const canUse = await freeUsageService.canUseFeature(userId, 'design');
       if (!canUse.allowed) {
         return res.status(429).json({ error: canUse.reason || 'Free trial exhausted.', subscriptionRequired: true });

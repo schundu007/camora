@@ -303,14 +303,14 @@ router.post('/admin/grant-subscription', async (req, res) => {
       [userId]
     );
 
-    // Reset free usage limits to max
+    // Reset free usage counters (limits stay at normal free tier — subscription handles access)
     await query(
       `INSERT INTO ascend_free_usage (user_id, coding_used, coding_limit, design_used, design_limit, company_prep_used, company_prep_limit)
-       VALUES ($1, 0, 9999, 0, 9999, 0, 9999)
+       VALUES ($1, 0, 1, 0, 1, 0, 1)
        ON CONFLICT (user_id) DO UPDATE SET
-         coding_used = 0, coding_limit = 9999,
-         design_used = 0, design_limit = 9999,
-         company_prep_used = 0, company_prep_limit = 9999`,
+         coding_used = 0, coding_limit = 1,
+         design_used = 0, design_limit = 1,
+         company_prep_used = 0, company_prep_limit = 1`,
       [userId]
     );
 

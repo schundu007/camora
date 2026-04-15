@@ -15,7 +15,9 @@ const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim
 export function checkUsage(type) {
   return async (req, res, next) => {
     try {
-      if (!req.user?.id) return next(); // No auth = skip (other middleware handles auth)
+      if (!req.user?.id) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
 
       // Admin users bypass all usage limits
       if (req.user.is_admin || ADMIN_EMAILS.includes(req.user.email?.toLowerCase())) return next();
