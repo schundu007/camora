@@ -1,10 +1,4 @@
 User-agent: *
 Allow: /
-Disallow: /capra/
-Disallow: /lumora/
-Disallow: /app/
-Disallow: /analytics
-Disallow: /jobs/
-Disallow: /onboarding
 
 Sitemap: https://camora.cariara.com/sitemap.xml
