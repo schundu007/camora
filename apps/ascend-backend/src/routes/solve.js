@@ -47,22 +47,20 @@ router.post('/', validate('solve'), async (req, res, next) => {
   try {
     const { problem, provider = 'claude', language = 'auto', fast = true, model } = req.body;
 
-    // Check free usage for webapp users
-    const userId = req.user?.id;
-    if (userId) {
-      const canUse = await freeUsageService.canUseFeature(userId, 'coding');
-      if (!canUse.allowed) {
-        return res.status(429).json({ error: canUse.reason || 'Free trial exhausted.', subscriptionRequired: true });
-      }
-      // Paid users: daily cap to prevent abuse
-      if (canUse.hasSubscription && !checkDailySolveLimit(userId)) {
-        return res.status(429).json({ error: 'Daily solve limit reached (15/day). Try again tomorrow.', dailyLimitReached: true });
-      }
+    // Check free usage (authenticate middleware guarantees req.user)
+    const userId = req.user.id;
+    const canUse = await freeUsageService.canUseFeature(userId, 'coding');
+    if (!canUse.allowed) {
+      return res.status(429).json({ error: canUse.reason || 'Free trial exhausted.', subscriptionRequired: true });
+    }
+    // Paid users: daily cap to prevent abuse
+    if (canUse.hasSubscription && !checkDailySolveLimit(userId)) {
+      return res.status(429).json({ error: 'Daily solve limit reached (15/day). Try again tomorrow.', dailyLimitReached: true });
     }
 
     // Select model based on user plan — free users get Haiku, paid users get Sonnet
     let userModel = model;
-    if (!userModel && userId && provider === 'claude') {
+    if (!userModel && provider === 'claude') {
       const subStatus = await freeUsageService.getSubscriptionStatus(userId);
       userModel = (subStatus.hasSubscription)
         ? 'claude-sonnet-4-20250514'
