@@ -248,13 +248,13 @@ function slugifyCompany(name: string): string {
 /* ──────────────────────────────── Styles ──────────────────────────────── */
 
 const categoryColors: Record<string, { bg: string; text: string; border: string }> = {
-  'Coding': { bg: '#eff6ff', text: '#1d4ed8', border: '#bfdbfe' },
-  'System Design': { bg: '#fef3c7', text: '#92400e', border: '#fcd34d' },
-  'Database': { bg: '#ecfdf5', text: '#065f46', border: '#a7f3d0' },
-  'Architecture': { bg: '#fce7f3', text: '#9d174d', border: '#f9a8d4' },
-  'DevOps': { bg: '#f3e8ff', text: '#6b21a8', border: '#d8b4fe' },
-  'API': { bg: '#fff7ed', text: '#9a3412', border: '#fdba74' },
-  'Data': { bg: '#f0fdf4', text: '#166534', border: '#86efac' },
+  'Coding': { bg: 'rgba(59,130,246,0.1)', text: '#60a5fa', border: 'rgba(59,130,246,0.3)' },
+  'System Design': { bg: 'rgba(245,158,11,0.1)', text: '#fbbf24', border: 'rgba(245,158,11,0.3)' },
+  'Database': { bg: 'rgba(16,185,129,0.1)', text: '#34d399', border: 'rgba(16,185,129,0.3)' },
+  'Architecture': { bg: 'rgba(236,72,153,0.1)', text: '#f472b6', border: 'rgba(236,72,153,0.3)' },
+  'DevOps': { bg: 'rgba(139,92,246,0.1)', text: '#a78bfa', border: 'rgba(139,92,246,0.3)' },
+  'API': { bg: 'rgba(249,115,22,0.1)', text: '#fb923c', border: 'rgba(249,115,22,0.3)' },
+  'Data': { bg: 'rgba(34,197,94,0.1)', text: '#4ade80', border: 'rgba(34,197,94,0.3)' },
 };
 
 function getCategoryStyle(category: string) {
@@ -625,21 +625,21 @@ export default function JobPrepPage() {
                   </div>
                 )}
                 {urlAnalysis.system_design_focus?.length > 0 && (
-                  <div style={{ background: '#eff6ff', borderRadius: '8px', padding: '12px' }}>
-                    <p style={{ fontSize: '11px', fontWeight: 700, color: '#2563eb', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px' }}>System Design Focus</p>
+                  <div style={{ background: 'rgba(59,130,246,0.1)', borderRadius: '8px', padding: '12px' }}>
+                    <p style={{ fontSize: '11px', fontWeight: 700, color: '#60a5fa', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px' }}>System Design Focus</p>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                       {urlAnalysis.system_design_focus.map((t: string) => (
-                        <span key={t} style={{ fontSize: '12px', color: '#1e40af', background: '#dbeafe', padding: '2px 8px', borderRadius: '4px' }}>{t}</span>
+                        <span key={t} style={{ fontSize: '12px', color: '#93c5fd', background: 'rgba(59,130,246,0.15)', padding: '2px 8px', borderRadius: '4px' }}>{t}</span>
                       ))}
                     </div>
                   </div>
                 )}
                 {urlAnalysis.behavioral_focus?.length > 0 && (
-                  <div style={{ background: '#fffbeb', borderRadius: '8px', padding: '12px' }}>
-                    <p style={{ fontSize: '11px', fontWeight: 700, color: '#d97706', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px' }}>Behavioral Focus</p>
+                  <div style={{ background: 'rgba(245,158,11,0.1)', borderRadius: '8px', padding: '12px' }}>
+                    <p style={{ fontSize: '11px', fontWeight: 700, color: '#fbbf24', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px' }}>Behavioral Focus</p>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                       {urlAnalysis.behavioral_focus.map((t: string) => (
-                        <span key={t} style={{ fontSize: '12px', color: '#92400e', background: '#fef3c7', padding: '2px 8px', borderRadius: '4px' }}>{t}</span>
+                        <span key={t} style={{ fontSize: '12px', color: '#fcd34d', background: 'rgba(245,158,11,0.15)', padding: '2px 8px', borderRadius: '4px' }}>{t}</span>
                       ))}
                     </div>
                   </div>
@@ -790,7 +790,7 @@ export default function JobPrepPage() {
                   <svg width="18" height="18" fill="none" stroke="#dc2626" viewBox="0 0 24 24" strokeWidth={2} style={{ flexShrink: 0 }}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
                   </svg>
-                  <span style={{ fontSize: '13px', color: '#991b1b' }}>
+                  <span style={{ fontSize: '13px', color: '#f87171' }}>
                     {prepError}
                   </span>
                 </div>
@@ -1181,16 +1181,16 @@ function StudyItem({ label, href, reason }: { label: string; href: string; reaso
 /* ──────────────────────────────── Styled helpers for book-style prep content ──────────────────────────────── */
 
 const S = {
-  h2: { fontSize: '18px', fontWeight: 700 as const, color: '#000', margin: '0 0 12px', borderBottom: '2px solid #d1fae5', paddingBottom: '6px' },
+  h2: { fontSize: '18px', fontWeight: 700 as const, color: 'var(--text-primary)', margin: '0 0 12px', borderBottom: '2px solid #d1fae5', paddingBottom: '6px' },
   h3: { fontSize: '15px', fontWeight: 700 as const, color: 'var(--text-primary)', margin: '20px 0 8px', paddingLeft: '10px', borderLeft: '3px solid #6ee7b7' },
-  h4: { fontSize: '12px', fontWeight: 600 as const, color: '#059669', textTransform: 'uppercase' as const, letterSpacing: '0.08em', margin: '14px 0 6px 20px' },
-  p: { fontSize: '14px', color: '#1f2937', lineHeight: 1.8, margin: '0 0 8px 20px', whiteSpace: 'pre-wrap' as const },
-  li: { fontSize: '14px', color: '#1f2937', lineHeight: 1.7, marginBottom: '4px' },
+  h4: { fontSize: '12px', fontWeight: 600 as const, color: '#34d399', textTransform: 'uppercase' as const, letterSpacing: '0.08em', margin: '14px 0 6px 20px' },
+  p: { fontSize: '14px', color: 'var(--text-secondary)', lineHeight: 1.8, margin: '0 0 8px 20px', whiteSpace: 'pre-wrap' as const },
+  li: { fontSize: '14px', color: 'var(--text-secondary)', lineHeight: 1.7, marginBottom: '4px' },
   ul: { margin: '0 0 8px', paddingLeft: '38px' },
-  callout: (color: string) => ({ background: color === 'green' ? '#f0fdf4' : color === 'blue' ? '#eff6ff' : color === 'amber' ? '#fffbeb' : color === 'red' ? '#fef2f2' : '#f5f3ff', borderLeft: `3px solid ${color === 'green' ? '#10b981' : color === 'blue' ? '#3b82f6' : color === 'amber' ? '#f59e0b' : color === 'red' ? '#ef4444' : '#8b5cf6'}`, borderRadius: '6px', padding: '12px 16px', margin: '8px 0 12px 20px' }),
+  callout: (color: string) => ({ background: color === 'green' ? 'rgba(16,185,129,0.08)' : color === 'blue' ? 'rgba(59,130,246,0.08)' : color === 'amber' ? 'rgba(245,158,11,0.08)' : color === 'red' ? 'rgba(239,68,68,0.08)' : 'rgba(139,92,246,0.08)', borderLeft: `3px solid ${color === 'green' ? '#10b981' : color === 'blue' ? '#3b82f6' : color === 'amber' ? '#f59e0b' : color === 'red' ? '#ef4444' : '#8b5cf6'}`, borderRadius: '6px', padding: '12px 16px', margin: '8px 0 12px 20px' }),
   divider: { borderBottom: '1px solid var(--border)', margin: '16px 0' },
   code: { fontSize: '13px', background: '#0d1117', color: '#c9d1d9', borderRadius: '8px', padding: '14px 16px', overflow: 'auto' as const, margin: '8px 0 12px 20px', fontFamily: "'IBM Plex Mono', monospace" },
-  badge: (color: string) => ({ fontSize: '11px', fontWeight: 700 as const, color, background: color === '#dc2626' ? '#fef2f2' : color === '#d97706' ? '#fffbeb' : '#ecfdf5', padding: '2px 10px', borderRadius: '4px', textTransform: 'uppercase' as const }),
+  badge: (color: string) => ({ fontSize: '11px', fontWeight: 700 as const, color, background: color === '#dc2626' ? 'rgba(239,68,68,0.1)' : color === '#d97706' ? 'rgba(245,158,11,0.1)' : 'rgba(16,185,129,0.1)', padding: '2px 10px', borderRadius: '4px', textTransform: 'uppercase' as const }),
 };
 
 /* ──────────────────────────────── PrepSectionContent sub-component ──────────────────────────────── */
@@ -1231,7 +1231,7 @@ function PrepSectionContent({ sectionKey, data }: { sectionKey: string; data: an
           )}
           {data.tips && (
             <div style={S.callout('amber')}>
-              <h4 style={{ ...S.h4, margin: '0 0 6px 0', color: '#92400e' }}>Delivery Tips</h4>
+              <h4 style={{ ...S.h4, margin: '0 0 6px 0', color: '#fbbf24' }}>Delivery Tips</h4>
               <p style={{ ...S.p, margin: 0 }}>{typeof data.tips === 'string' ? data.tips : Array.isArray(data.tips) ? data.tips.join('\n') : ''}</p>
             </div>
           )}
@@ -1255,13 +1255,13 @@ function PrepSectionContent({ sectionKey, data }: { sectionKey: string; data: an
       <div>
         {data.summary && typeof data.summary === 'string' && (
           <div style={S.callout('blue')}>
-            <h4 style={{ ...S.h4, margin: '0 0 6px 0', color: '#1e40af' }}>Overview</h4>
+            <h4 style={{ ...S.h4, margin: '0 0 6px 0', color: '#60a5fa' }}>Overview</h4>
             <p style={{ ...S.p, margin: 0 }}>{data.summary}</p>
           </div>
         )}
         {data.companyInsights && typeof data.companyInsights === 'object' && (
           <div style={S.callout('violet')}>
-            <h4 style={{ ...S.h4, margin: '0 0 8px 0', color: '#5b21b6' }}>Company Insights</h4>
+            <h4 style={{ ...S.h4, margin: '0 0 8px 0', color: '#a78bfa' }}>Company Insights</h4>
             {data.companyInsights.interviewFormat && <p style={{ ...S.p, margin: '0 0 4px' }}><strong>Interview Format:</strong> {data.companyInsights.interviewFormat}</p>}
             {data.companyInsights.culture && <p style={{ ...S.p, margin: '0 0 4px' }}><strong>Culture:</strong> {data.companyInsights.culture}</p>}
             {data.companyInsights.values && Array.isArray(data.companyInsights.values) && <p style={{ ...S.p, margin: 0 }}><strong>Values:</strong> {data.companyInsights.values.join(' · ')}</p>}
@@ -1298,7 +1298,7 @@ function PrepSectionContent({ sectionKey, data }: { sectionKey: string; data: an
 
         {data.salaryNegotiation && typeof data.salaryNegotiation === 'object' && (
           <div style={S.callout('amber')}>
-            <h4 style={{ ...S.h4, margin: '0 0 8px 0', color: '#92400e' }}>Salary Negotiation</h4>
+            <h4 style={{ ...S.h4, margin: '0 0 8px 0', color: '#fbbf24' }}>Salary Negotiation</h4>
             {data.salaryNegotiation.rangeEstimate && <p style={{ ...S.p, margin: '0 0 4px' }}><strong>Expected Range:</strong> {data.salaryNegotiation.rangeEstimate}</p>}
             {data.salaryNegotiation.companyContext && <p style={{ ...S.p, margin: '0 0 4px' }}>{data.salaryNegotiation.companyContext}</p>}
             {data.salaryNegotiation.negotiationTips && <p style={{ ...S.p, margin: 0 }}><strong>Tips:</strong> {data.salaryNegotiation.negotiationTips}</p>}
@@ -1320,7 +1320,7 @@ function PrepSectionContent({ sectionKey, data }: { sectionKey: string; data: an
     return (
       <div>
         {data.summary && <div style={S.callout('violet')}><p style={{ ...S.p, margin: 0 }}>{data.summary}</p></div>}
-        {data.companyInsights && <div style={S.callout('blue')}><h4 style={{ ...S.h4, margin: '0 0 6px 0', color: '#1e40af' }}>Company-Specific Notes</h4><p style={{ ...S.p, margin: 0 }}>{typeof data.companyInsights === 'string' ? data.companyInsights : ''}</p></div>}
+        {data.companyInsights && <div style={S.callout('blue')}><h4 style={{ ...S.h4, margin: '0 0 6px 0', color: '#60a5fa' }}>Company-Specific Notes</h4><p style={{ ...S.p, margin: 0 }}>{typeof data.companyInsights === 'string' ? data.companyInsights : ''}</p></div>}
         {data.keyTopics && Array.isArray(data.keyTopics) && (
           <div>
             <h3 style={S.h3}>Key Topics to Prepare</h3>
@@ -1377,8 +1377,8 @@ function PrepSectionContent({ sectionKey, data }: { sectionKey: string; data: an
             )}
             {p.commonMistakes && Array.isArray(p.commonMistakes) && (
               <div style={S.callout('red')}>
-                <h4 style={{ ...S.h4, margin: '0 0 6px 0', color: '#991b1b' }}>Common Mistakes</h4>
-                <ul style={{ ...S.ul, paddingLeft: '18px' }}>{p.commonMistakes.map((m: string, j: number) => <li key={j} style={{ ...S.li, color: '#991b1b' }}>{m}</li>)}</ul>
+                <h4 style={{ ...S.h4, margin: '0 0 6px 0', color: '#f87171' }}>Common Mistakes</h4>
+                <ul style={{ ...S.ul, paddingLeft: '18px' }}>{p.commonMistakes.map((m: string, j: number) => <li key={j} style={{ ...S.li, color: '#f87171' }}>{m}</li>)}</ul>
               </div>
             )}
             {p.followUpQuestions && Array.isArray(p.followUpQuestions) && (
@@ -1408,7 +1408,7 @@ function PrepSectionContent({ sectionKey, data }: { sectionKey: string; data: an
     return (
       <div>
         {data.summary && <div style={S.callout('blue')}><p style={{ ...S.p, margin: 0 }}>{data.summary}</p></div>}
-        {data.companyContext && <div style={S.callout('violet')}><h4 style={{ ...S.h4, margin: '0 0 6px 0', color: '#5b21b6' }}>Company Context</h4><p style={{ ...S.p, margin: 0 }}>{data.companyContext}</p></div>}
+        {data.companyContext && <div style={S.callout('violet')}><h4 style={{ ...S.h4, margin: '0 0 6px 0', color: '#a78bfa' }}>Company Context</h4><p style={{ ...S.p, margin: 0 }}>{data.companyContext}</p></div>}
         {data.ascendFramework && (
           <div style={S.callout('green')}>
             <h4 style={{ ...S.h4, margin: '0 0 8px 0', color: '#065f46' }}>Interview Framework</h4>
@@ -1469,7 +1469,7 @@ function PrepSectionContent({ sectionKey, data }: { sectionKey: string; data: an
                 {q.architecture.components.map((c: any, j: number) => (
                   <div key={j} style={{ marginLeft: '20px', marginBottom: '8px', paddingLeft: '10px', borderLeft: '2px solid #d1fae5' }}>
                     <p style={{ ...S.p, margin: '0 0 2px' }}><strong>{c.name}</strong> <span style={{ color: 'var(--text-muted)' }}>({c.technology})</span></p>
-                    <p style={{ ...S.p, margin: 0, fontSize: '13px', color: '#4b5563' }}>{c.responsibility}{c.whyThisChoice ? ` — ${c.whyThisChoice}` : ''}</p>
+                    <p style={{ ...S.p, margin: 0, fontSize: '13px', color: 'var(--text-muted)' }}>{c.responsibility}{c.whyThisChoice ? ` — ${c.whyThisChoice}` : ''}</p>
                   </div>
                 ))}
               </div>
