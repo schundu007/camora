@@ -5,12 +5,17 @@ const { createTray } = require('./tray');
 
 // ── Config ───────────────────────────────────────────────────────────────────
 const APP_URL = process.env.CAMORA_URL || 'https://camora.cariara.com';
-const IS_DEV = process.env.NODE_ENV === 'development';
 const STATE_FILE = path.join(app.getPath('userData'), 'window-state.json');
 
 // ── Single Instance Lock ─────────────────────────────────────────────────────
 const gotLock = app.requestSingleInstanceLock();
 if (!gotLock) { app.quit(); }
+
+// ── State ────────────────────────────────────────────────────────────────────
+let mainWindow = null;
+let tray = null;
+let isQuitting = false;
+let crashCount = 0;
 
 // ── Window State Persistence ─────────────────────────────────────────────────
 function loadWindowState() {
@@ -27,10 +32,7 @@ function saveWindowState(win) {
   fs.writeFileSync(STATE_FILE, JSON.stringify({ ...bounds, isMaximized }), 'utf8');
 }
 
-// ── Main ─────────────────────────────────────────────────────────────────────
-let mainWindow = null;
-let tray = null;
-
+// ── Create Window ────────────────────────────────────────────────────────────
 function createWindow() {
   const state = loadWindowState();
   const isMac = process.platform === 'darwin';
@@ -60,7 +62,6 @@ function createWindow() {
 
   if (state.isMaximized) mainWindow.maximize();
 
-  // Load the app
   mainWindow.loadURL(APP_URL);
 
   // Show when ready (avoid white flash)
@@ -69,29 +70,44 @@ function createWindow() {
     mainWindow.focus();
   });
 
-  // Save state on resize/move
+  // Save state on resize/move (debounced)
+  let saveTimeout;
   ['resize', 'move'].forEach(evt => {
-    mainWindow.on(evt, () => saveWindowState(mainWindow));
+    mainWindow.on(evt, () => {
+      clearTimeout(saveTimeout);
+      saveTimeout = setTimeout(() => saveWindowState(mainWindow), 500);
+    });
   });
 
   // Close to tray instead of quitting
   mainWindow.on('close', (e) => {
-    if (!app.isQuitting) {
+    if (!isQuitting) {
       e.preventDefault();
       mainWindow.hide();
+      if (isMac && app.dock) app.dock.hide();
     }
   });
 
-  // Crash recovery
+  // Crash recovery with backoff (max 3 attempts)
   mainWindow.webContents.on('render-process-gone', (_, details) => {
     console.error('Renderer crashed:', details.reason);
-    if (details.reason !== 'clean-exit') {
-      setTimeout(() => {
-        if (mainWindow && !mainWindow.isDestroyed()) {
-          mainWindow.loadURL(APP_URL);
-        }
-      }, 1000);
+    if (details.reason === 'clean-exit') return;
+    crashCount++;
+    if (crashCount > 3) {
+      console.error('Renderer crashed too many times, giving up.');
+      return;
     }
+    const delay = Math.min(1000 * crashCount, 10000);
+    setTimeout(() => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.loadURL(APP_URL);
+      }
+    }, delay);
+  });
+
+  // Reset crash counter on successful load
+  mainWindow.webContents.on('did-finish-load', () => {
+    crashCount = 0;
   });
 
   // Open external links in default browser
@@ -103,13 +119,13 @@ function createWindow() {
     return { action: 'allow' };
   });
 
-  // Auto-grant microphone permissions
-  session.defaultSession.setPermissionRequestHandler((webContents, permission, callback) => {
+  // Auto-grant permissions for media, display capture, notifications
+  session.defaultSession.setPermissionRequestHandler((_, permission, callback) => {
     const allowed = ['media', 'mediaKeySystem', 'notifications', 'fullscreen', 'clipboard-read', 'display-capture'];
     callback(allowed.includes(permission));
   });
 
-  session.defaultSession.setPermissionCheckHandler((webContents, permission) => {
+  session.defaultSession.setPermissionCheckHandler((_, permission) => {
     const allowed = ['media', 'mediaKeySystem', 'notifications', 'fullscreen', 'clipboard-read', 'display-capture'];
     return allowed.includes(permission);
   });
@@ -117,12 +133,29 @@ function createWindow() {
   return mainWindow;
 }
 
+// ── Show / Focus Window ──────────────────────────────────────────────────────
 function showWindow() {
+  if (process.platform === 'darwin' && app.dock) app.dock.show();
   if (!mainWindow || mainWindow.isDestroyed()) {
     createWindow();
   } else {
     mainWindow.show();
     mainWindow.focus();
+  }
+}
+
+// ── Navigate (without full page reload) ──────────────────────────────────────
+function navigateTo(urlPath) {
+  const wasDestroyed = !mainWindow || mainWindow.isDestroyed();
+  showWindow();
+  if (!mainWindow || mainWindow.isDestroyed()) return;
+  if (wasDestroyed) {
+    // Wait for renderer to load before sending navigate IPC
+    mainWindow.webContents.once('did-finish-load', () => {
+      mainWindow.webContents.send('navigate', urlPath);
+    });
+  } else {
+    mainWindow.webContents.send('navigate', urlPath);
   }
 }
 
@@ -139,14 +172,16 @@ app.whenReady().then(async () => {
 
   createWindow();
 
-  // System tray
-  const iconPath = path.join(__dirname, 'icons.iconset', 'icon_32x32.png');
-  tray = createTray(iconPath, showWindow);
+  // System tray — use template image on macOS for dark/light mode
+  const trayIconPath = path.join(__dirname, 'icons.iconset', 'icon_16x16.png');
+  const trayIcon = nativeImage.createFromPath(trayIconPath);
+  if (process.platform === 'darwin') trayIcon.setTemplateImage(true);
+  tray = createTray(trayIcon, showWindow, navigateTo);
 
   // Global hotkey: Cmd/Ctrl+Shift+C
   globalShortcut.register('CommandOrControl+Shift+C', showWindow);
 
-  // macOS: re-create window when dock icon is clicked
+  // macOS: show window when dock icon is clicked
   app.on('activate', showWindow);
 
   // Auto-updater (non-blocking)
@@ -154,16 +189,34 @@ app.whenReady().then(async () => {
     const { autoUpdater } = require('electron-updater');
     autoUpdater.autoDownload = true;
     autoUpdater.autoInstallOnAppQuit = true;
+    autoUpdater.on('update-available', (info) => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('update-available', info);
+      }
+    });
+    autoUpdater.on('update-downloaded', (info) => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('update-downloaded', info);
+      }
+    });
     autoUpdater.checkForUpdatesAndNotify().catch(() => {});
   } catch {}
 });
 
-// Second instance → focus existing window
-app.on('second-instance', showWindow);
+// Second instance → focus existing window + handle deep links on Windows/Linux
+app.on('second-instance', (_, argv) => {
+  const deepLink = argv.find(arg => arg.startsWith('camora://'));
+  showWindow();
+  if (deepLink && mainWindow && !mainWindow.isDestroyed()) {
+    const urlPath = deepLink.replace('camora://', '/');
+    navigateTo(urlPath);
+  }
+});
 
 app.on('before-quit', () => {
-  app.isQuitting = true;
+  isQuitting = true;
   if (mainWindow) saveWindowState(mainWindow);
+  if (tray) { tray.destroy(); tray = null; }
 });
 
 app.on('will-quit', () => {
@@ -185,14 +238,18 @@ if (process.defaultApp) {
 
 app.on('open-url', (event, url) => {
   event.preventDefault();
-  showWindow();
-  if (mainWindow && !mainWindow.isDestroyed()) {
-    // Parse camora:// URLs and navigate
-    const path = url.replace('camora://', '/');
-    mainWindow.loadURL(`${APP_URL}${path}`);
-  }
+  const urlPath = url.replace('camora://', '/');
+  navigateTo(urlPath);
 });
 
-// IPC handlers
+// ── IPC Handlers ─────────────────────────────────────────────────────────────
 ipcMain.handle('get-platform', () => process.platform);
 ipcMain.handle('get-version', () => app.getVersion());
+
+// Window control handlers (called from preload.js)
+ipcMain.on('window-minimize', () => mainWindow?.minimize());
+ipcMain.on('window-maximize', () => {
+  if (!mainWindow) return;
+  mainWindow.isMaximized() ? mainWindow.unmaximize() : mainWindow.maximize();
+});
+ipcMain.on('window-close', () => mainWindow?.close());
