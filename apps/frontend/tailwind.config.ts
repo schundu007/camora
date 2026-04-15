@@ -6,7 +6,7 @@ export default {
     extend: {
       fontFamily: {
         sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'system-ui', 'sans-serif'],
-        display: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'system-ui', 'sans-serif'],
+        display: ['Plus Jakarta Sans', 'system-ui', 'sans-serif'],
         code: ['JetBrains Mono', 'IBM Plex Mono', 'ui-monospace', 'monospace'],
         mono: ['JetBrains Mono', 'IBM Plex Mono', 'ui-monospace', 'monospace'],
         logo: ['Comfortaa', 'system-ui', 'sans-serif'],

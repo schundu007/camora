@@ -129,20 +129,15 @@ export default function SiteNav() {
               </span>
             ))}
           </div>
-          <style>{`
-            .challenge-ticker { animation: ticker-scroll 28s linear infinite; }
-            .challenge-ticker:hover { animation-play-state: paused; }
-            @keyframes ticker-scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-          `}</style>
         </Link>
       )}
     </nav>
   );
 
   // Set CSS variable for nav height so sticky elements can reference it
-  if (typeof document !== 'undefined') {
+  useEffect(() => {
     document.documentElement.style.setProperty('--nav-h', `${navHeight}px`);
-  }
+  }, [navHeight]);
 
   return (
     <>
