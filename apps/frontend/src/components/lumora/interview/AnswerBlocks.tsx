@@ -330,69 +330,64 @@ function SystemDesignView({ blocks, question }: { blocks: ParsedBlock[]; questio
   blocks.forEach(b => { byType[b.type] = b; });
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-1.5 h-full">
       {/* Approach Headline */}
       {byType.HEADLINE && (
-        <div className="flex items-center gap-4 px-4 py-2 border border-primary/20 bg-primary/[0.03] animate-fade-up shrink-0 rounded-lg">
-          <span className="font-mono text-[10px] font-bold text-primary border border-primary/30 px-2 py-1 tracking-widest shrink-0">
+        <div className="flex items-center gap-3 px-3 py-1.5 border border-primary/20 bg-primary/[0.03] animate-fade-up shrink-0 rounded-lg">
+          <span className="font-mono text-[9px] font-bold text-primary border border-primary/30 px-1.5 py-0.5 tracking-widest shrink-0">
             APPROACH
           </span>
-          <span className="font-display text-[13px] font-semibold text-text leading-snug">
+          <span className="font-display text-[12px] font-semibold text-text leading-snug">
             {cleanText(byType.HEADLINE.content)}
           </span>
         </div>
       )}
 
-      {/* Main layout: Architecture LEFT (sticky) + ALL cards RIGHT */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
-        {/* LEFT: Architecture diagram — sticky, full height */}
-        <div className="lg:sticky lg:top-0 lg:self-start">
+      {/* 3-column layout: Diagram | Cards Col 1 | Cards Col 2 */}
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)] gap-1.5 flex-1 min-h-0">
+        {/* COL 1: Architecture diagram */}
+        <div className="min-h-0 flex flex-col">
           <ArchitectureCard
             question={question || (byType.HEADLINE ? cleanText(byType.HEADLINE.content) : '')}
           />
         </div>
 
-        {/* RIGHT: All info cards — dense stack */}
-        <div className="flex flex-col gap-2">
-          {/* Functional + Non-Functional */}
-          <div className="grid grid-cols-2 gap-2">
-            <GridCard title="FUNCTIONAL" titleColor="text-indigo-light" compact>
-              {byType.REQUIREMENTS ? (
-                <RequirementsList content={byType.REQUIREMENTS.content} type="functional" />
-              ) : <EmptyBlock />}
-            </GridCard>
-            <GridCard title="NON-FUNCTIONAL" titleColor="text-violet-light" compact>
-              {byType.REQUIREMENTS ? (
-                <RequirementsList content={byType.REQUIREMENTS.content} type="nonfunctional" />
-              ) : <EmptyBlock />}
-            </GridCard>
-          </div>
-          {/* Scale Math */}
+        {/* COL 2: Functional, Scale Math, Trade-offs, Layer Design */}
+        <div className="flex flex-col gap-1.5 min-h-0 overflow-y-auto">
+          <GridCard title="FUNCTIONAL" titleColor="text-indigo-light" compact>
+            {byType.REQUIREMENTS ? (
+              <RequirementsList content={byType.REQUIREMENTS.content} type="functional" />
+            ) : <EmptyBlock />}
+          </GridCard>
           <GridCard title="SCALE MATH" titleColor="text-indigo-light" compact>
             {byType.SCALEMATH ? (
               <ScaleMathList content={byType.SCALEMATH.content} />
             ) : <EmptyBlock />}
           </GridCard>
-          {/* Trade-offs + Edge Cases */}
-          <div className="grid grid-cols-2 gap-2">
-            <GridCard title="TRADE-OFFS" titleColor="text-rose-light" compact>
-              {byType.TRADEOFFS ? (
-                <TradeoffsList content={byType.TRADEOFFS.content} />
-              ) : <EmptyBlock />}
-            </GridCard>
-            <GridCard title="EDGE CASES" titleColor="text-amber-light" compact>
-              {byType.EDGECASES ? (
-                <EdgeCasesList content={byType.EDGECASES.content} />
-              ) : <EmptyBlock />}
-            </GridCard>
-          </div>
-          {/* Layer Design */}
+          <GridCard title="TRADE-OFFS" titleColor="text-rose-light" compact>
+            {byType.TRADEOFFS ? (
+              <TradeoffsList content={byType.TRADEOFFS.content} />
+            ) : <EmptyBlock />}
+          </GridCard>
           {byType.DEEPDESIGN && (
             <GridCard title="LAYER DESIGN" titleColor="text-violet-light" compact>
               <DeepDesignList content={byType.DEEPDESIGN.content} />
             </GridCard>
           )}
-          {/* Follow-up Q&A */}
+        </div>
+
+        {/* COL 3: Non-Functional, Edge Cases, Follow-up Q&A */}
+        <div className="flex flex-col gap-1.5 min-h-0 overflow-y-auto">
+          <GridCard title="NON-FUNCTIONAL" titleColor="text-violet-light" compact>
+            {byType.REQUIREMENTS ? (
+              <RequirementsList content={byType.REQUIREMENTS.content} type="nonfunctional" />
+            ) : <EmptyBlock />}
+          </GridCard>
+          <GridCard title="EDGE CASES" titleColor="text-amber-light" compact>
+            {byType.EDGECASES ? (
+              <EdgeCasesList content={byType.EDGECASES.content} />
+            ) : <EmptyBlock />}
+          </GridCard>
           {byType.FOLLOWUP && (
             <GridCard title="FOLLOW-UP Q&A" titleColor="text-amber-light" className="border-amber/15 bg-amber/[0.02]" compact>
               <FollowupList content={byType.FOLLOWUP.content} />
@@ -439,7 +434,7 @@ function GridCard({
         )}
       </button>
       {!collapsed && (
-        <div className={`${compact ? 'p-3' : 'p-4'} overflow-y-auto overflow-x-auto flex-1 ${hasFullHeight ? '' : compact ? 'max-h-[280px]' : 'max-h-[420px]'}`}>
+        <div className={`${compact ? 'p-2' : 'p-4'} overflow-y-auto overflow-x-auto flex-1 ${hasFullHeight ? '' : compact ? 'max-h-[180px]' : 'max-h-[420px]'}`}>
           {children}
         </div>
       )}
@@ -449,13 +444,13 @@ function GridCard({
 
 function ArchitectureCard({ question }: { question: string }) {
   return (
-    <div className="border border-cyan/15 bg-cyan/[0.02] overflow-hidden min-w-0 flex flex-col h-full rounded-lg" style={{ minHeight: '400px' }}>
-      <div className="font-mono text-[10px] font-bold tracking-widest uppercase px-3 py-2 border-b border-border text-cyan-light shrink-0">
+    <div className="border border-cyan/15 bg-cyan/[0.02] overflow-hidden min-w-0 flex flex-col h-full rounded-lg">
+      <div className="font-mono text-[10px] font-bold tracking-widest uppercase px-3 py-1.5 border-b border-border text-cyan-light shrink-0">
         Architecture
       </div>
-      <div className="p-2 overflow-y-auto overflow-x-auto flex-1">
+      <div className="p-1.5 overflow-auto flex-1 min-h-0">
         {question ? (
-          <SharedDiagram question={question} className="w-full h-full min-h-[360px]" />
+          <SharedDiagram question={question} className="w-full h-full" />
         ) : <EmptyBlock />}
       </div>
     </div>
