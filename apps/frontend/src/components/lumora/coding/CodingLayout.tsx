@@ -119,7 +119,11 @@ export const CodingLayout = forwardRef<{ setProblemText?: (t: string) => void },
   const [inputMode, setInputMode] = useState<InputMode>('paste');
   const [problemText, setProblemText] = useState(initialProblem || '');
 
-  useImperativeHandle(ref, () => ({ setProblemText }), []);
+  useImperativeHandle(ref, () => ({
+    setProblemText,
+    getLanguage: () => language,
+    submit: () => { if (problemText.trim()) onSubmit(problemText.trim(), language); },
+  }), [language, problemText, onSubmit]);
   const [problemUrl, setProblemUrl] = useState('');
   const [code, setCode] = useState(getDefaultCode('python'));
   const [output, setOutput] = useState('');
