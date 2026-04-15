@@ -70,6 +70,16 @@ function createWindow() {
     mainWindow.focus();
   });
 
+  // Inject CSS to avoid traffic light overlap on macOS
+  if (isMac) {
+    mainWindow.webContents.on('did-finish-load', () => {
+      mainWindow.webContents.insertCSS(`
+        header:first-of-type > div:first-child { padding-left: 72px !important; }
+        .lumora-app-bg > header:first-child > div:first-child { padding-left: 72px !important; }
+      `).catch(() => {});
+    });
+  }
+
   // Save state on resize/move (debounced)
   let saveTimeout;
   ['resize', 'move'].forEach(evt => {
