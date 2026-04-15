@@ -13,7 +13,7 @@ html,body{background:#0D0C14;overflow:hidden}
 }
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
 .wrap{width:100%;font-family:var(--font-sans)}
-.stage{background:var(--nav);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;min-height:460px}
+.stage{background:var(--nav);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;height:100vh}
 .sa{flex:1;position:relative;overflow:hidden}
 .sc{position:absolute;inset:0;padding:24px 28px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;opacity:0;transition:opacity .45s;pointer-events:none}
 .sc.on{opacity:1;pointer-events:all}
@@ -519,16 +519,16 @@ html,body{background:#0D0C14;overflow:hidden}
 
 <script>
 const SCENES=[
-  {lbl:'HOOK',       dur:10},
-  {lbl:'COMPETITORS',dur:13},
-  {lbl:'CODE SOLVER',dur:17},
-  {lbl:'DESIGN',     dur:18},
-  {lbl:'EXTENSION',  dur:12},
-  {lbl:'PRACTICE',   dur:18},
-  {lbl:'LUMORA',     dur:14},
-  {lbl:'PIPELINE',   dur:10},
-  {lbl:'PRICING',    dur:12},
-  {lbl:'CTA',        dur:12},
+  {lbl:'HOOK',       dur:5},
+  {lbl:'COMPETITORS',dur:6},
+  {lbl:'CODE SOLVER',dur:7},
+  {lbl:'DESIGN',     dur:7},
+  {lbl:'EXTENSION',  dur:5},
+  {lbl:'PRACTICE',   dur:7},
+  {lbl:'LUMORA',     dur:6},
+  {lbl:'PIPELINE',   dur:5},
+  {lbl:'PRICING',    dur:5},
+  {lbl:'CTA',        dur:5},
 ];
 const TOTAL=SCENES.reduce((a,s)=>a+s.dur,0);
 let cur=0,elapsed=0,playing=false,raf=null,lastT=null,timers=[];

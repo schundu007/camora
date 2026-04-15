@@ -491,7 +491,7 @@ export default function LandingPage() {
                 src="/camora_storyboard_v3.html"
                 title="Camora Platform Storyboard"
                 className="w-full block"
-                style={{ border: 'none', minHeight: 520, height: '60vh', maxHeight: 640, background: '#0D0C14' }}
+                style={{ border: 'none', height: 480, background: '#0D0C14' }}
                 loading="lazy"
               />
             </div>
