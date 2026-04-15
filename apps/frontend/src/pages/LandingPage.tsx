@@ -482,15 +482,16 @@ export default function LandingPage() {
               className="relative rounded-2xl overflow-hidden mx-auto"
               style={{
                 maxWidth: '960px',
-                border: '1px solid var(--border)',
-                boxShadow: '0 20px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(99,102,241,0.1)',
+                background: '#0D0C14',
+                border: '1px solid rgba(99,102,241,0.15)',
+                boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(99,102,241,0.08), 0 0 80px rgba(99,102,241,0.06)',
               }}
             >
               <iframe
                 src="/camora_storyboard_v3.html"
                 title="Camora Platform Storyboard"
-                className="w-full"
-                style={{ border: 'none', minHeight: 520, height: '60vh', maxHeight: 640 }}
+                className="w-full block"
+                style={{ border: 'none', minHeight: 520, height: '60vh', maxHeight: 640, background: '#0D0C14' }}
                 loading="lazy"
               />
             </div>
