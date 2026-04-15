@@ -348,6 +348,104 @@ const COMP_BARS = [
   { name: 'Solver', count: 12, color: '#6b7280', suffix: '' },
 ];
 
+/* ── Desktop Download Section ─────────────────────────────── */
+function DesktopDownload() {
+  const getOS = (): 'mac-arm' | 'mac-intel' | 'windows' => {
+    const ua = navigator.userAgent;
+    const platform = (navigator as any).platform || '';
+    if (/Mac/i.test(platform) || /Macintosh/i.test(ua)) {
+      // Apple Silicon detection: M1+ Macs report arm in userAgent or via userAgentData
+      if (/arm64/i.test(ua) || (navigator as any).userAgentData?.architecture === 'arm') return 'mac-arm';
+      // Fallback: newer macOS versions are almost always Apple Silicon
+      return 'mac-arm';
+    }
+    return 'windows';
+  };
+
+  const os = getOS();
+  const RELEASES = 'https://github.com/schundu007/camora/releases/latest';
+  const urls = {
+    'mac-arm': `${RELEASES}/download/Camora-1.0.0-arm64.dmg`,
+    'mac-intel': `${RELEASES}/download/Camora-1.0.0-x64.dmg`,
+    'windows': `${RELEASES}/download/Camora-1.0.0-Setup.exe`,
+  };
+
+  const AppleIcon = () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+    </svg>
+  );
+
+  const WindowsIcon = () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M3 12V6.75l6-1.32v6.48L3 12zm6.37.18l8.63-.12V3.75l-8.63 1.9v6.53zM18 12.08l-8.63.12v6.39l8.63 1.91v-8.42zM9 12.27l-6 .09v5.34l6 1.33v-6.76z"/>
+    </svg>
+  );
+
+  const isMac = os === 'mac-arm' || os === 'mac-intel';
+  const primaryUrl = isMac ? urls[os] : urls['windows'];
+  const primaryLabel = isMac ? (os === 'mac-arm' ? 'Download for Mac (Apple Silicon)' : 'Download for Mac (Intel)') : 'Download for Windows';
+  const primaryIcon = isMac ? <AppleIcon /> : <WindowsIcon />;
+
+  return (
+    <div className="card rounded-2xl overflow-hidden" style={{ padding: 0 }}>
+      <div className="px-6 py-6 md:px-10 md:py-8 flex flex-col md:flex-row items-center gap-6 md:gap-10">
+        {/* Icon + text */}
+        <div className="flex-1 text-center md:text-left">
+          <div className="flex items-center justify-center md:justify-start gap-3 mb-2">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.15))', color: '#818cf8' }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="3" width="20" height="14" rx="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-bold font-display" style={{ color: 'var(--text-primary)' }}>Desktop App</h3>
+          </div>
+          <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+            Stealth mode, screen-share safe, always on top. Runs natively on macOS and Windows.
+          </p>
+        </div>
+
+        {/* Download buttons */}
+        <div className="flex flex-col items-center gap-2 flex-shrink-0">
+          <a
+            href={primaryUrl}
+            className="inline-flex items-center gap-2.5 px-6 py-3 text-sm font-semibold text-white rounded-xl transition-all duration-200 hover:opacity-90"
+            style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', boxShadow: '0 4px 14px rgba(99,102,241,0.3)' }}
+          >
+            {primaryIcon}
+            {primaryLabel}
+          </a>
+          <div className="flex items-center gap-3 text-xs" style={{ color: 'var(--text-muted)' }}>
+            {isMac ? (
+              <>
+                <a href={urls[os === 'mac-arm' ? 'mac-intel' : 'mac-arm']} className="hover:text-indigo-400 transition-colors underline underline-offset-2">
+                  {os === 'mac-arm' ? 'Intel Mac' : 'Apple Silicon'}
+                </a>
+                <span style={{ color: 'var(--border)' }}>|</span>
+                <a href={urls['windows']} className="inline-flex items-center gap-1 hover:text-indigo-400 transition-colors underline underline-offset-2">
+                  <WindowsIcon /> Windows
+                </a>
+              </>
+            ) : (
+              <>
+                <a href={urls['mac-arm']} className="inline-flex items-center gap-1 hover:text-indigo-400 transition-colors underline underline-offset-2">
+                  <AppleIcon /> Mac (Apple Silicon)
+                </a>
+                <span style={{ color: 'var(--border)' }}>|</span>
+                <a href={urls['mac-intel']} className="inline-flex items-center gap-1 hover:text-indigo-400 transition-colors underline underline-offset-2">
+                  <AppleIcon /> Mac (Intel)
+                </a>
+              </>
+            )}
+            <span style={{ color: 'var(--border)' }}>|</span>
+            <a href={RELEASES} className="hover:text-indigo-400 transition-colors underline underline-offset-2">All releases</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ════════════════════════════════════════════════════════════
    LANDING PAGE
    ════════════════════════════════════════════════════════════ */
@@ -734,6 +832,15 @@ export default function LandingPage() {
                 <p className="section-label text-center font-code tracking-wide">FEATURES COMPARISON</p>
               </div>
             </div>
+          </FadeIn>
+        </div>
+      </section>
+
+      {/* ── DESKTOP APP DOWNLOAD ── */}
+      <section className="px-6 py-12 md:py-16" style={{ zIndex: 1 }}>
+        <div className="w-full lg:max-w-[70%] mx-auto">
+          <FadeIn>
+            <DesktopDownload />
           </FadeIn>
         </div>
       </section>
