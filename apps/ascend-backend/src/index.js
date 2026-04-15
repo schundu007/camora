@@ -415,7 +415,7 @@ app.get('/health', (req, res) => {
 // ─── Public routes (no authentication) ───
 
 // Visitor counter — lightweight, no auth required
-app.post('/api/visitors/track', async (req, res) => {
+app.post('/api/visitors/track', apiLimiter, async (req, res) => {
   try {
     await query(`INSERT INTO site_visitors (visit_date, count) VALUES (CURRENT_DATE, 1)
       ON CONFLICT (visit_date) DO UPDATE SET count = site_visitors.count + 1`);
@@ -432,7 +432,7 @@ app.get('/api/visitors/count', async (req, res) => {
 });
 
 // Universal page-view tracker — no auth required
-app.post('/api/visitors/pageview', async (req, res) => {
+app.post('/api/visitors/pageview', apiLimiter, async (req, res) => {
   try {
     const { path, email, referrer } = req.body || {};
     if (!path) return res.status(400).json({ error: 'path required' });

@@ -45,7 +45,7 @@ router.post('/enroll', upload.any(), async (req, res) => {
     const inputPath = path.join(tmpDir, `enroll-${id}.webm`);
     const wavPath = path.join(tmpDir, `enroll-${id}.wav`);
 
-    fs.writeFileSync(inputPath, req.file.buffer);
+    await fs.promises.writeFile(inputPath, req.file.buffer);
 
     let audioBuffer, filename, mime;
 
@@ -87,14 +87,10 @@ router.post('/enroll', upload.any(), async (req, res) => {
     console.error('[Speaker] Enroll error:', err.message || err);
     return res.status(500).json({ error: 'Speaker enrollment failed: ' + (err.message || 'unknown error') });
   } finally {
-    try {
-      const tmpDir = os.tmpdir();
-      for (const f of fs.readdirSync(tmpDir)) {
-        if (f.startsWith('enroll-') && (f.endsWith('.webm') || f.endsWith('.wav'))) {
-          try { fs.unlinkSync(path.join(tmpDir, f)); } catch {}
-        }
-      }
-    } catch {}
+    // Clean up only the specific temp files from this request
+    for (const p of [inputPath, wavPath]) {
+      if (p) fs.promises.unlink(p).catch(() => {});
+    }
   }
 });
 

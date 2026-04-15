@@ -310,7 +310,8 @@ async function recordCodingUsage(userId, language, inputTokens, outputTokens, la
 // ---------------------------------------------------------------------------
 
 // /stream alias for backwards compatibility with frontend
-router.post('/stream', authenticate, checkUsage('questions'), async (req, res, next) => {
+// No middleware here — the request re-enters the router and hits /solve which already has them
+router.post('/stream', (req, res, next) => {
   req.url = '/solve';
   next();
 });

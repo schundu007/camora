@@ -28,6 +28,7 @@ interface AuthContextType {
   subscription: SubscriptionInfo | null;
   subscriptionLoading: boolean;
   logout: () => void;
+  refreshSubscription: () => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -39,6 +40,7 @@ const AuthContext = createContext<AuthContextType>({
   subscription: null,
   subscriptionLoading: true,
   logout: () => {},
+  refreshSubscription: () => {},
 });
 
 function getCookie(name: string): string | null {

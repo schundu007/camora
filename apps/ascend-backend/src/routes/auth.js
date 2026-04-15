@@ -132,31 +132,17 @@ router.get('/google/callback', async (req, res) => {
           return;
         }
 
-        // Try ip-api.com first (HTTP only for free tier)
+        // Use ipapi.co (HTTPS) for GeoIP lookup
         let loc = null;
         try {
-          const r = await fetch(`http://ip-api.com/json/${ip}?fields=status,city,regionName,country`);
+          const r = await fetch(`https://ipapi.co/${ip}/json/`);
           const geo = await r.json();
-          console.log('[GeoIP] ip-api response:', JSON.stringify(geo));
-          if (geo.status === 'success' && (geo.city || geo.country)) {
-            loc = [geo.city, geo.regionName, geo.country].filter(Boolean).join(', ');
+          console.log('[GeoIP] ipapi.co response:', JSON.stringify(geo));
+          if (geo.city || geo.country_name) {
+            loc = [geo.city, geo.region, geo.country_name].filter(Boolean).join(', ');
           }
         } catch (e) {
-          console.log('[GeoIP] ip-api failed:', e.message);
-        }
-
-        // Fallback to ipapi.co (HTTPS)
-        if (!loc) {
-          try {
-            const r = await fetch(`https://ipapi.co/${ip}/json/`);
-            const geo = await r.json();
-            console.log('[GeoIP] ipapi.co response:', JSON.stringify(geo));
-            if (geo.city || geo.country_name) {
-              loc = [geo.city, geo.region, geo.country_name].filter(Boolean).join(', ');
-            }
-          } catch (e) {
-            console.log('[GeoIP] ipapi.co failed:', e.message);
-          }
+          console.log('[GeoIP] ipapi.co failed:', e.message);
         }
 
         if (loc) {

@@ -15,11 +15,13 @@ import { cleanText } from '@/lib/text-utils';
 
 function AudioWaveform({ active }: { active: boolean }) {
   const bars = 24;
+  const barHeights = useMemo(() => Array.from({ length: bars }, () => Math.random()), [active]);
+  const barOpacities = useMemo(() => Array.from({ length: bars }, () => Math.random()), [active]);
   return (
     <div className="flex items-center justify-center gap-[2px] h-6 px-4 py-1">
       {Array.from({ length: bars }).map((_, i) => {
         const baseH = 3 + Math.sin(i * 0.7) * 2;
-        const activeH = 4 + Math.random() * 14;
+        const activeH = 4 + barHeights[i] * 14;
         return (
           <div
             key={i}
@@ -27,7 +29,7 @@ function AudioWaveform({ active }: { active: boolean }) {
             style={{
               height: active ? `${activeH}px` : `${baseH}px`,
               background: active
-                ? `rgba(99,102,241,${0.4 + Math.random() * 0.6})`
+                ? `rgba(99,102,241,${0.4 + barOpacities[i] * 0.6})`
                 : 'rgba(255,255,255,0.1)',
               transitionDelay: `${i * 15}ms`,
             }}
