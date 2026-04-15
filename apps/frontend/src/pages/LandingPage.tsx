@@ -185,26 +185,6 @@ function ProcessAccordion() {
 }
 
 /* ── Browser Chrome wrapper ────────────────────────────── */
-function BrowserChrome({ url, children, className = '' }: { url: string; children: React.ReactNode; className?: string }) {
-  return (
-    <div className={`rounded-2xl overflow-hidden ${className}`} style={{ border: '1px solid var(--border)', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.4)' }}>
-      <div className="flex items-center gap-2.5 px-4 py-3" style={{ background: 'var(--bg-elevated)', borderBottom: '1px solid var(--border)' }}>
-        <div className="flex gap-[6px]">
-          <div className="w-[11px] h-[11px] rounded-full bg-[#ff5f57]" />
-          <div className="w-[11px] h-[11px] rounded-full bg-[#febc2e]" />
-          <div className="w-[11px] h-[11px] rounded-full bg-[#28c840]" />
-        </div>
-        <div className="flex-1 flex justify-center">
-          <div className="px-4 py-1 rounded-lg text-xs font-code" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}>
-            {url}
-          </div>
-        </div>
-      </div>
-      {children}
-    </div>
-  );
-}
-
 /* ── Prep Showcase (animated donut + topic cards) ──────── */
 function PrepShowcase() {
   const ref = useRef<HTMLDivElement>(null);
@@ -483,7 +463,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── PRODUCT VIDEO — Platform Demo ── */}
+      {/* ── PRODUCT STORYBOARD — Interactive Platform Demo ── */}
       <section className="px-6 py-10 md:py-16" style={{ zIndex: 1 }}>
         <div className="w-full lg:max-w-[70%] mx-auto">
           <FadeIn>
@@ -502,66 +482,17 @@ export default function LandingPage() {
               className="relative rounded-2xl overflow-hidden mx-auto"
               style={{
                 maxWidth: '960px',
-                aspectRatio: '16/9',
-                background: 'linear-gradient(145deg, var(--bg-surface) 0%, rgba(99,102,241,0.06) 50%, var(--bg-surface) 100%)',
                 border: '1px solid var(--border)',
                 boxShadow: '0 20px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(99,102,241,0.1)',
               }}
             >
-              {/* Replace the VIDEO_URL below with your actual video embed */}
-              {(() => {
-                const VIDEO_URL = ''; // Set your YouTube/Vimeo embed URL here e.g. 'https://www.youtube.com/embed/VIDEO_ID'
-                if (VIDEO_URL) {
-                  return (
-                    <iframe
-                      src={VIDEO_URL}
-                      title="Camora Platform Demo"
-                      className="absolute inset-0 w-full h-full"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                      style={{ border: 'none' }}
-                    />
-                  );
-                }
-                // Placeholder until video is ready
-                return (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    {/* Decorative gradient orbs */}
-                    <div className="absolute top-0 right-0 w-64 h-64 rounded-full blur-[100px] opacity-20" style={{ background: '#34d399' }} />
-                    <div className="absolute bottom-0 left-0 w-48 h-48 rounded-full blur-[80px] opacity-15" style={{ background: '#818cf8' }} />
-                    {/* Play button */}
-                    <Link
-                      to="/capra/prepare"
-                      className="relative group"
-                    >
-                      <div
-                        className="w-20 h-20 rounded-full flex items-center justify-center transition-all duration-300 group-hover:scale-110"
-                        style={{
-                          background: 'linear-gradient(135deg, rgba(99,102,241,0.9), rgba(139,92,246,0.9))',
-                          boxShadow: '0 8px 32px rgba(99,102,241,0.4)',
-                        }}
-                      >
-                        <svg width="28" height="28" viewBox="0 0 24 24" fill="white" stroke="none">
-                          <polygon points="8,5 20,12 8,19" />
-                        </svg>
-                      </div>
-                      {/* Pulse ring */}
-                      <div className="absolute inset-0 rounded-full animate-ping opacity-20" style={{ background: 'rgba(99,102,241,0.5)' }} />
-                    </Link>
-                    <p className="mt-6 text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
-                      Watch the platform demo
-                    </p>
-                    {/* Feature pills */}
-                    <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-                      {['Code Solver', 'Design Solver', 'AWS/GCP/Azure Diagrams', 'Live AI Assistant', '51 Languages'].map(tag => (
-                        <span key={tag} className="px-3 py-1 rounded-full text-[11px] font-medium" style={{ background: 'rgba(99,102,241,0.1)', color: '#818cf8', border: '1px solid rgba(99,102,241,0.2)' }}>
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })()}
+              <iframe
+                src="/camora_storyboard_v3.html"
+                title="Camora Platform Storyboard"
+                className="w-full"
+                style={{ border: 'none', minHeight: 520, height: '60vh', maxHeight: 640 }}
+                loading="lazy"
+              />
             </div>
           </FadeIn>
         </div>
@@ -660,40 +591,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── DEMO — Videos ── */}
-      <section className="px-6 pb-10 md:pb-16" style={{ zIndex: 1 }}>
-        <FadeIn className="w-full lg:max-w-[70%] mx-auto">
-          <BrowserChrome url="camora.cariara.com/lumora">
-            <div className="aspect-video" style={{ background: 'var(--bg-elevated)' }}>
-              <video src="/demo-lumora.mp4" autoPlay loop muted playsInline title="Lumora live interview demo" className="w-full h-full object-cover" />
-            </div>
-          </BrowserChrome>
-        </FadeIn>
-        <div className="w-full lg:max-w-[70%] mx-auto mt-6 grid md:grid-cols-3 gap-4">
-          {[
-            { url: 'camora.cariara.com/capra', src: '/demo-capra.mp4', label: 'Dashboard' },
-            { url: 'camora.cariara.com/capra/prepare', src: '/demo-capra-topic.mp4', label: 'Study Topics' },
-            { url: 'camora.cariara.com/lumora/design', src: '/demo-design.mp4', label: 'Design Mode' },
-          ].map((demo, i) => (
-            <FadeIn key={demo.url} delay={0.1 * (i + 1)}>
-              <div className="card rounded-2xl overflow-hidden hover:-translate-y-0.5 hover:shadow-md transition-all duration-300 group" style={{ padding: 0 }}>
-                <div className="flex items-center gap-2 px-3 py-2" style={{ background: 'var(--bg-elevated)', borderBottom: '1px solid var(--border)' }}>
-                  <div className="flex gap-1">
-                    <div className="w-2 h-2 rounded-full bg-[#ff5f57]" /><div className="w-2 h-2 rounded-full bg-[#febc2e]" /><div className="w-2 h-2 rounded-full bg-[#28c840]" />
-                  </div>
-                  <span className="text-[10px] truncate font-code" style={{ color: 'var(--text-muted)' }}>{demo.url}</span>
-                </div>
-                <div className="aspect-[4/3] relative" style={{ background: 'var(--bg-elevated)' }}>
-                  <video src={demo.src} autoPlay loop muted playsInline className="w-full h-full object-cover" />
-                  <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent px-4 py-3">
-                    <span className="text-sm font-semibold text-white">{demo.label}</span>
-                  </div>
-                </div>
-              </div>
-            </FadeIn>
-          ))}
-        </div>
-      </section>
 
       {/* ── JOB URL ANALYSIS — Highlighted Feature ── */}
       <section className="px-6 py-12 md:py-16" style={{ zIndex: 1 }}>
