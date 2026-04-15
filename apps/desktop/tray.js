@@ -1,7 +1,7 @@
 const { Tray, Menu, app } = require('electron');
 
-function createTray(iconPath, showWindow) {
-  const tray = new Tray(iconPath);
+function createTray(icon, showWindow, navigateTo) {
+  const tray = new Tray(icon);
 
   const contextMenu = Menu.buildFromTemplate([
     {
@@ -11,24 +11,24 @@ function createTray(iconPath, showWindow) {
     { type: 'separator' },
     {
       label: 'Interview',
-      click: () => {
-        showWindow();
-        // Navigate handled by renderer
-      },
+      click: () => navigateTo('/lumora'),
     },
     {
       label: 'Coding',
-      click: showWindow,
+      click: () => navigateTo('/lumora/coding'),
     },
     {
       label: 'Design',
-      click: showWindow,
+      click: () => navigateTo('/lumora/design'),
+    },
+    {
+      label: 'Prepare',
+      click: () => navigateTo('/capra/prepare'),
     },
     { type: 'separator' },
     {
       label: 'Quit Camora',
       click: () => {
-        app.isQuitting = true;
         app.quit();
       },
     },
@@ -37,8 +37,12 @@ function createTray(iconPath, showWindow) {
   tray.setToolTip('Camora — AI Interview Co-pilot');
   tray.setContextMenu(contextMenu);
 
-  // Click tray icon to show window
-  tray.on('click', showWindow);
+  // macOS: single click to show, Windows: double click convention
+  if (process.platform !== 'darwin') {
+    tray.on('double-click', showWindow);
+  } else {
+    tray.on('click', showWindow);
+  }
 
   return tray;
 }
