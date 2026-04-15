@@ -1,0 +1,78 @@
+{
+  "name": "camora-desktop",
+  "version": "1.0.0",
+  "description": "Camora — AI Interview Co-pilot Desktop App",
+  "main": "main.js",
+  "author": "Cariara <support@cariara.com>",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "build:mac": "electron-builder --mac",
+    "build:win": "electron-builder --win",
+    "build:all": "electron-builder --mac --win"
+  },
+  "dependencies": {
+    "electron-updater": "^6.3.0"
+  },
+  "devDependencies": {
+    "electron": "^35.1.2",
+    "electron-builder": "^26.0.0"
+  },
+  "build": {
+    "appId": "com.cariara.camora",
+    "productName": "Camora",
+    "artifactName": "Camora-${version}-${arch}.${ext}",
+    "directories": {
+      "output": "build"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "tray.js",
+      "icon.png",
+      "icons.iconset/**/*"
+    ],
+    "mac": {
+      "category": "public.app-category.productivity",
+      "icon": "icon.icns",
+      "target": [
+        { "target": "dmg", "arch": ["arm64", "x64"] }
+      ],
+      "hardenedRuntime": true,
+      "entitlements": "entitlements.mac.plist",
+      "entitlementsInherit": "entitlements.mac.plist",
+      "darkModeSupport": true
+    },
+    "dmg": {
+      "title": "Camora",
+      "iconSize": 100,
+      "contents": [
+        { "x": 130, "y": 220 },
+        { "x": 410, "y": 220, "type": "link", "path": "/Applications" }
+      ]
+    },
+    "win": {
+      "icon": "icon.ico",
+      "target": [
+        { "target": "nsis", "arch": ["x64"] }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Camora",
+      "installerIcon": "icon.ico",
+      "uninstallerIcon": "icon.ico",
+      "artifactName": "Camora-${version}-Setup.${ext}"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "schundu007",
+      "repo": "camora",
+      "releaseType": "release"
+    }
+  }
+}
