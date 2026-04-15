@@ -33,10 +33,15 @@ export async function useFreeAllowance(userId, featureType) {
       [userId, featureType]
     );
 
-    return result.rows[0]?.success || false;
+    const success = result.rows[0]?.success || false;
+    if (!success) {
+      console.warn(`useFreeAllowance failed for user ${userId}, feature ${featureType}`);
+    }
+    return success;
   } catch (error) {
     console.error('Error using free allowance:', error);
-    return false;
+    // Re-throw so callers know the deduction failed — prevents uncounted free usage
+    throw error;
   }
 }
 
