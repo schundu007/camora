@@ -16,3 +16,5 @@ coverage/
 .vercel/
 .vercel
 .env*.local
+apps/desktop/build/
+apps/desktop/node_modules/
