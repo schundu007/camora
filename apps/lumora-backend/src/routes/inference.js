@@ -59,6 +59,9 @@ router.post('/conversations/:conversationId/stream', authenticate, checkUsage('q
   if (!question || typeof question !== 'string') {
     return res.status(400).json({ error: 'question is required' });
   }
+  if (question.length > 50000) {
+    return res.status(400).json({ error: 'Question too long (max 50,000 characters)' });
+  }
 
   try {
     // Check daily free limit for free-tier users
