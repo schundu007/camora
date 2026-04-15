@@ -19,7 +19,7 @@ html,body{background:#0D0C14;overflow:hidden}
 .sc.on{opacity:1;pointer-events:all}
 
 /* HUD */
-.hud{background:rgba(13,12,20,.97);border-top:1px solid var(--gb);padding:11px 18px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.hud{display:none}
 .pbtn{width:32px;height:32px;border-radius:50%;border:1.5px solid var(--em);background:transparent;color:var(--em);cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
 .pbtn:hover{background:var(--em);color:var(--nav)}
 .slbl{font-size:9px;font-weight:600;color:var(--em);letter-spacing:.12em;text-transform:uppercase;min-width:80px;text-align:right}
@@ -583,7 +583,7 @@ function tick(ts){
     if(elapsed<acc+SCENES[i].dur){if(i!==cur)goScene(i);break;}
     acc+=SCENES[i].dur;
   }
-  if(elapsed>=TOTAL){elapsed=0;goScene(0);playing=false;document.getElementById('pb').innerHTML='&#9654;';return;}
+  if(elapsed>=TOTAL){elapsed=0;goScene(0);lastT=null;raf=requestAnimationFrame(tick);return;}
   updateHUD();
   raf=requestAnimationFrame(tick);
 }
@@ -858,4 +858,7 @@ const INIT={
 };
 
 INIT[0]();
+
+/* Auto-play on load + loop */
+playing=true;lastT=null;raf=requestAnimationFrame(tick);
 </script>
