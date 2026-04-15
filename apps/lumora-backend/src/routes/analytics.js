@@ -34,8 +34,7 @@ router.get('/usage', async (req, res, next) => {
     const aggResult = await query(
       `SELECT
          COUNT(*)                              AS total_requests,
-         COALESCE(SUM(total_tokens), 0)        AS total_tokens,
-         COALESCE(SUM(cost_usd), 0)            AS total_cost_usd,
+         COALESCE(SUM(tokens_used), 0)         AS total_tokens,
          COALESCE(AVG(latency_ms), 0)          AS avg_latency_ms
        FROM lumora_usage_logs
        WHERE user_id = $1
@@ -51,8 +50,7 @@ router.get('/usage', async (req, res, next) => {
       `SELECT
          DATE_TRUNC('day', created_at)         AS date,
          COUNT(*)                              AS requests,
-         COALESCE(SUM(total_tokens), 0)        AS tokens,
-         COALESCE(SUM(cost_usd), 0)            AS cost_usd,
+         COALESCE(SUM(tokens_used), 0)         AS tokens,
          COALESCE(AVG(latency_ms), 0)          AS avg_latency_ms
        FROM lumora_usage_logs
        WHERE user_id = $1
@@ -86,7 +84,6 @@ router.get('/usage', async (req, res, next) => {
     res.json({
       total_requests: parseInt(agg.total_requests, 10),
       total_tokens: parseInt(agg.total_tokens, 10),
-      total_cost_usd: parseFloat(agg.total_cost_usd),
       avg_latency_ms: parseFloat(agg.avg_latency_ms),
       questions_today: parseInt(counters.today, 10),
       questions_this_week: parseInt(counters.this_week, 10),
@@ -95,7 +92,6 @@ router.get('/usage', async (req, res, next) => {
         date: r.date,
         requests: parseInt(r.requests, 10),
         tokens: parseInt(r.tokens, 10),
-        cost_usd: parseFloat(r.cost_usd),
         avg_latency_ms: parseFloat(r.avg_latency_ms),
       })),
       period_days: days,

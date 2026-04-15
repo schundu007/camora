@@ -61,7 +61,7 @@ export async function authenticate(req, res, next) {
       const providerId = String(payload.sub);
 
       const insertResult = await query(
-        `INSERT INTO users (email, name, image, provider, provider_id, is_active)
+        `INSERT INTO users (email, name, avatar, provider, provider_id, is_active)
          VALUES ($1, $2, $3, 'ascend_sso', $4, true)
          ON CONFLICT (email) DO UPDATE SET email = EXCLUDED.email
          RETURNING *`,

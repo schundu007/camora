@@ -104,13 +104,14 @@ export async function getFreeUsageStatus(userId) {
 export async function getSubscriptionStatus(userId) {
   try {
     const result = await query(
-      'SELECT plan_type, status, trial_ends_at FROM ascend_subscriptions WHERE user_id = $1',
+      'SELECT plan_type, status, trial_ends_at, is_challenger FROM ascend_subscriptions WHERE user_id = $1',
       [userId]
     );
 
     const subscription = result.rows[0];
     const isPaidPlan = subscription?.plan_type === 'monthly' ||
-                       subscription?.plan_type === 'quarterly_pro';
+                       subscription?.plan_type === 'quarterly_pro' ||
+                       (subscription?.plan_type === 'challenger' && subscription?.is_challenger);
     const isActive = subscription?.status === 'active';
     const hasActiveTrial = subscription?.trial_ends_at && new Date(subscription.trial_ends_at) > new Date();
 
