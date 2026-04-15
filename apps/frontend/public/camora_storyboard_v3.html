@@ -1,13 +1,17 @@
 
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#0D0C14;overflow:hidden}
 :root{
   --nav:#0D0C14;--nav2:#13121f;--nav3:#1c1b2e;--nav4:#0c1322;
   --em:#10b981;--ind:#6366f1;--cyn:#06b6d4;--amb:#f59e0b;
   --pink:#ec4899;--pur:#a855f7;--red:#ef4444;
   --mu:#6b6b8a;--w:#e8e8f0;--gb:rgba(255,255,255,0.09);
   --glass:rgba(255,255,255,0.05);
+  --font-sans:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+  --font-mono:'JetBrains Mono','IBM Plex Mono',ui-monospace,monospace;
 }
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
 .wrap{width:100%;font-family:var(--font-sans)}
 .stage{background:var(--nav);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;min-height:460px}
 .sa{flex:1;position:relative;overflow:hidden}
