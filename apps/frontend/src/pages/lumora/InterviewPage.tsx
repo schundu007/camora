@@ -7,6 +7,7 @@ import { ErrorBoundary } from '../../components/shared/ui/ErrorBoundary';
 import { useStreamingInterview } from '../../hooks/useStreamingInterview';
 import { useInterviewStore } from '../../stores/interview-store';
 import { useLumoraTour } from '../../hooks/useLumoraTour';
+import { FollowUpPopup } from '../../components/lumora/interview/FollowUpPopup';
 
 export function InterviewPage() {
   const navigate = useNavigate();
@@ -16,7 +17,7 @@ export function InterviewPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [focusedEntry, setFocusedEntry] = useState<number | null>(null);
   const { handleSubmit } = useStreamingInterview();
-  const { isStreaming, history, question, parsedBlocks } = useInterviewStore();
+  const { isStreaming, history, question, parsedBlocks, popupVisible, setPopupVisible } = useInterviewStore();
   const inputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -42,10 +43,15 @@ export function InterviewPage() {
         if (isExpanded) textareaRef.current?.focus();
         else inputRef.current?.focus();
       }
+      // Cmd+J to toggle co-pilot popup
+      if ((e.metaKey || e.ctrlKey) && e.key === 'j') {
+        e.preventDefault();
+        setPopupVisible(!popupVisible);
+      }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [isExpanded]);
+  }, [isExpanded, popupVisible, setPopupVisible]);
 
   const handleInputSubmit = useCallback(() => {
     if (inputValue.trim()) {
@@ -72,6 +78,7 @@ export function InterviewPage() {
   return (
     <div className="h-screen w-full flex flex-col overflow-hidden lumora-app-bg">
       <div className="lumora-grid-overlay" />
+      <FollowUpPopup />
 
       {/* Compact header — nav only, no input bar */}
       <Header
@@ -189,6 +196,7 @@ export function InterviewPage() {
                 <span><kbd className="px-1 py-0.5 rounded border border-white/8 text-white/40 bg-white/3">⌘M</kbd> mic</span>
                 <span><kbd className="px-1 py-0.5 rounded border border-white/8 text-white/40 bg-white/3">⌘K</kbd> focus</span>
                 <span><kbd className="px-1 py-0.5 rounded border border-white/8 text-white/40 bg-white/3">⌘B</kbd> blank</span>
+                <span><kbd className="px-1 py-0.5 rounded border border-white/8 text-white/40 bg-white/3">⌘J</kbd> popup</span>
               </div>
             </div>
           </div>

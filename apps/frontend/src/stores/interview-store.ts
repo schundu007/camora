@@ -54,6 +54,10 @@ interface InterviewState {
   voiceFilterEnabled: boolean;
   isEnrolling: boolean;
 
+  // Popup
+  popupVisible: boolean;
+  popupMinimized: boolean;
+
   // Actions
   setConversationId: (id: string | null) => void;
   setQuestion: (question: string | null) => void;
@@ -80,6 +84,8 @@ interface InterviewState {
   setVoiceEnrolled: (enrolled: boolean) => void;
   setVoiceFilterEnabled: (enabled: boolean) => void;
   setIsEnrolling: (enrolling: boolean) => void;
+  setPopupVisible: (visible: boolean) => void;
+  setPopupMinimized: (minimized: boolean) => void;
   reset: () => void;
 }
 
@@ -109,6 +115,8 @@ const initialState = {
   voiceEnrolled: false,
   voiceFilterEnabled: true, // Enable by default when enrolled
   isEnrolling: false,
+  popupVisible: true,
+  popupMinimized: false,
 };
 
 export const useInterviewStore = create<InterviewState>()(
@@ -194,6 +202,10 @@ export const useInterviewStore = create<InterviewState>()(
   setVoiceFilterEnabled: (enabled) => set({ voiceFilterEnabled: enabled }),
 
   setIsEnrolling: (enrolling) => set({ isEnrolling: enrolling }),
+
+  setPopupVisible: (visible) => set({ popupVisible: visible }),
+
+  setPopupMinimized: (minimized) => set({ popupMinimized: minimized }),
 
   reset: () => set(initialState),
     }),
