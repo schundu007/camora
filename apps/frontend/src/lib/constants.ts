@@ -65,7 +65,7 @@ export const NAV_LINKS = [
   { label: 'Practice', href: '/capra/practice' },
   { label: 'Attend', href: '/lumora' },
   { label: 'Pricing', href: '/pricing' },
-  { label: 'Challenge', href: '/challenge' },
+  { label: 'Download', href: '/download' },
 ];
 
 /** Challenge campaign dates */
