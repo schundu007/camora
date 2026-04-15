@@ -227,9 +227,16 @@ export async function incrementUsage(userId, type) {
  * @param {number} amount
  */
 export async function addTopup(userId, type, amount) {
+  const VALID_TOPUP_COLUMNS = {
+    questions: 'topup_questions',
+    sessions: 'topup_sessions',
+    diagrams: 'topup_diagrams',
+  };
+  const col = VALID_TOPUP_COLUMNS[type];
+  if (!col) throw new Error(`Invalid topup type: ${type}`);
+
   const planName = await getUserPlan(userId);
   const period = periodForPlan(planName);
-  const col = `topup_${type}`;
 
   await query(
     `INSERT INTO usage_tracking (user_id, period, ${col})
