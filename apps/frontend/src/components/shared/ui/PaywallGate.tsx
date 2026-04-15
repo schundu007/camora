@@ -1,8 +1,5 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { useState, useEffect } from 'react';
-
-const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
 
 interface PaywallGateProps {
   children: React.ReactNode;
@@ -15,28 +12,9 @@ interface PaywallGateProps {
  * Free users see an upgrade prompt instead of the content.
  */
 export function PaywallGate({ children, requiredPlan = 'any_paid', feature = 'this feature' }: PaywallGateProps) {
-  const { token } = useAuth();
-  const [plan, setPlan] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { subscription, subscriptionLoading } = useAuth();
 
-  useEffect(() => {
-    if (!token) { setLoading(false); return; }
-    (async () => {
-      try {
-        const resp = await fetch(`${API_URL}/api/v1/billing/subscription`, {
-          headers: { 'Authorization': `Bearer ${token}` },
-        });
-        if (!resp.ok) throw new Error('Request failed');
-        const data = await resp.json();
-        setPlan(data.plan || 'free');
-      } catch {
-        setPlan('free');
-      }
-      setLoading(false);
-    })();
-  }, [token]);
-
-  if (loading) {
+  if (subscriptionLoading) {
     return (
       <div className="h-screen flex items-center justify-center">
         <div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
@@ -46,7 +24,7 @@ export function PaywallGate({ children, requiredPlan = 'any_paid', feature = 'th
 
   // Check access
   // Plans set by Lumora billing webhook: 'pro' (unlimited $79/mo) or 'lifetime' (8-pack $99)
-  const hasAccess = plan !== 'free' && plan !== null;
+  const hasAccess = subscription?.plan && subscription.plan !== 'free';
 
   if (hasAccess) {
     return <>{children}</>;
@@ -72,12 +50,12 @@ export function PaywallGate({ children, requiredPlan = 'any_paid', feature = 'th
           >
             View Plans
           </Link>
-          <a
-            href="/capra/practice"
+          <Link
+            to="/capra/practice"
             className="px-6 py-3 bg-[var(--bg-elevated)] text-[var(--text-secondary)] font-semibold text-sm rounded-xl hover:bg-[var(--border)] transition-all"
           >
             Continue Free
-          </a>
+          </Link>
         </div>
         <p className="mt-4 text-xs text-gray-400">Free trial: 1 session (60 min), all AI features included</p>
       </div>

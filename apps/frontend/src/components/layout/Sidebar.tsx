@@ -216,7 +216,7 @@ const sections: NavSection[] = [
     title: 'Attend',
     items: [
       { label: 'Live Interview', path: '/lumora', icon: icons.mic },
-      { label: 'Code Solver', path: '/capra', icon: icons.layout },
+      { label: 'Code Solver', path: '/capra/coding', icon: icons.layout },
       { label: 'Design Solver', path: '/capra/design', icon: icons.penTool },
     ],
   },
