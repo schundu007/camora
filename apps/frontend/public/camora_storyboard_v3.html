@@ -1,0 +1,857 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --nav:#0D0C14;--nav2:#13121f;--nav3:#1c1b2e;--nav4:#0c1322;
+  --em:#10b981;--ind:#6366f1;--cyn:#06b6d4;--amb:#f59e0b;
+  --pink:#ec4899;--pur:#a855f7;--red:#ef4444;
+  --mu:#6b6b8a;--w:#e8e8f0;--gb:rgba(255,255,255,0.09);
+  --glass:rgba(255,255,255,0.05);
+}
+.wrap{width:100%;font-family:var(--font-sans)}
+.stage{background:var(--nav);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;min-height:460px}
+.sa{flex:1;position:relative;overflow:hidden}
+.sc{position:absolute;inset:0;padding:24px 28px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;opacity:0;transition:opacity .45s;pointer-events:none}
+.sc.on{opacity:1;pointer-events:all}
+
+/* HUD */
+.hud{background:rgba(13,12,20,.97);border-top:1px solid var(--gb);padding:11px 18px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.pbtn{width:32px;height:32px;border-radius:50%;border:1.5px solid var(--em);background:transparent;color:var(--em);cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
+.pbtn:hover{background:var(--em);color:var(--nav)}
+.slbl{font-size:9px;font-weight:600;color:var(--em);letter-spacing:.12em;text-transform:uppercase;min-width:80px;text-align:right}
+.ptrack{flex:1;height:3px;background:rgba(255,255,255,.1);border-radius:2px;cursor:pointer}
+.pfill{height:100%;background:linear-gradient(90deg,var(--em),var(--ind));border-radius:2px;width:0%;transition:width .3s linear}
+.dots{display:flex;gap:4px}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--mu);cursor:pointer;border:none;transition:all .2s}
+.dot.on{background:var(--em);transform:scale(1.4)}
+.tlbl{font-size:10px;color:var(--mu);min-width:36px;font-variant-numeric:tabular-nums}
+
+/* Shared */
+.badge{display:inline-flex;align-items:center;font-size:9px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:3px 9px;border-radius:20px;border:1px solid var(--gb);color:var(--mu)}
+.card{background:var(--nav2);border:1px solid var(--gb);border-radius:10px;padding:14px}
+.mono{font-family:var(--font-mono)}
+
+/* ── S1 HOOK ── */
+.typewriter{font-family:var(--font-mono);font-size:clamp(13px,2vw,20px);color:var(--w);text-align:center;min-height:2em;display:flex;align-items:center;justify-content:center}
+.cursor-blink{display:inline-block;width:2px;height:1.1em;background:var(--ind);vertical-align:middle;margin-left:2px;animation:cblink .7s infinite}
+@keyframes cblink{0%,100%{opacity:1}50%{opacity:0}}
+.logo-glow{font-size:clamp(32px,5vw,56px);font-weight:500;color:var(--em);letter-spacing:-.02em;opacity:0;transition:all .6s}
+.logo-glow.show{opacity:1}
+
+/* ── S2 COMPETITOR MATRIX ── */
+.matrix-wrap{width:100%;max-width:620px;overflow-x:auto}
+.matrix{border-collapse:collapse;width:100%;min-width:560px;font-size:9px}
+.matrix th{background:var(--nav3);color:var(--mu);font-weight:600;padding:5px 6px;text-align:center;border:1px solid var(--gb);white-space:nowrap}
+.matrix th.cam{background:rgba(99,102,241,.15);color:var(--ind);border-color:rgba(99,102,241,.35)}
+.matrix td{padding:5px 6px;text-align:center;border:1px solid var(--gb);color:var(--mu);white-space:nowrap}
+.matrix td.cam{background:rgba(99,102,241,.07);color:var(--ind);font-weight:700}
+.matrix td.uniq{background:rgba(16,185,129,.07);color:var(--em)}
+.matrix tr.feat td{background:rgba(16,185,129,.05)}
+.matrix tr.feat td:first-child{color:var(--em);font-weight:600;font-size:9px;text-align:left;padding-left:8px}
+.matrix tr td:first-child{text-align:left;padding-left:8px;color:var(--mu);font-size:9px}
+.check{color:var(--em);font-weight:700}
+.cross{color:rgba(239,68,68,.5)}
+.price-row th{font-size:8px;font-weight:600;padding:4px}
+
+/* ── S3 CODE SOLVER ── */
+.split2{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;max-width:600px}
+.tab-row{display:flex;gap:4px;margin-bottom:8px}
+.tab{font-size:10px;padding:4px 10px;border-radius:6px;border:1px solid var(--gb);background:transparent;color:var(--mu);cursor:pointer}
+.tab.on{background:rgba(16,185,129,.1);border-color:rgba(16,185,129,.35);color:var(--em)}
+.lang-btn{background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.35);border-radius:6px;padding:4px 10px;font-size:10px;color:var(--em);cursor:pointer;font-family:var(--font-mono)}
+.prob-area{background:var(--nav3);border:1px solid var(--gb);border-radius:6px;padding:10px;font-size:10px;color:var(--mu);min-height:70px;font-family:var(--font-mono);line-height:1.6}
+.code-area{background:var(--nav4);border:1px solid var(--gb);border-radius:6px;padding:10px;font-family:var(--font-mono);font-size:10px;line-height:1.8;min-height:130px}
+.progress-bar{height:2px;background:rgba(255,255,255,.07);border-radius:2px;overflow:hidden;margin-bottom:8px}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--em),var(--ind));border-radius:2px;width:0%;transition:width .8s ease}
+.kw{color:#7c85f3}.fn{color:#7dd3fc}.str{color:var(--em)}.cm{color:var(--mu)}.num{color:var(--amb)}
+.complexity-badges{display:flex;gap:6px;margin-top:6px}
+.cbadge{font-size:9px;padding:2px 8px;border-radius:4px;font-family:var(--font-mono)}
+.output-bar{background:rgba(16,185,129,.05);border:1px solid rgba(16,185,129,.2);border-radius:6px;padding:6px 10px;font-size:10px;color:var(--em);font-family:var(--font-mono);margin-top:6px;opacity:0;transition:opacity .4s}
+.output-bar.show{opacity:1}
+
+/* ── S4 DESIGN SOLVER ── */
+.arch-ascii{font-family:var(--font-mono);font-size:9px;color:var(--em);line-height:1.5;background:var(--nav4);border:1px solid var(--gb);border-radius:6px;padding:10px;overflow:hidden;opacity:0;transition:opacity .6s}
+.arch-ascii.show{opacity:1}
+.cloud-tabs{display:flex;gap:6px;margin-bottom:8px}
+.ctab{font-size:9px;padding:3px 10px;border-radius:6px;border:1px solid var(--gb);background:transparent;color:var(--mu);cursor:pointer;transition:all .2s}
+.ctab.on{border-color:var(--ind);color:var(--ind);background:rgba(99,102,241,.1)}
+.cloud-diag{background:var(--nav4);border:1px solid var(--gb);border-radius:6px;padding:10px;min-height:60px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.cloud-node{background:var(--nav3);border:1px solid var(--gb);border-radius:6px;padding:5px 9px;font-size:9px;color:var(--w);text-align:center}
+.cloud-arrow{color:var(--mu);font-size:10px}
+.section-pills{display:flex;gap:5px;flex-wrap:wrap}
+.spill{background:var(--nav3);border:1px solid var(--gb);border-radius:6px;padding:4px 9px;font-size:9px;color:var(--mu)}
+.spill.open{border-color:rgba(99,102,241,.35);color:var(--ind);background:rgba(99,102,241,.07)}
+
+/* ── S5 CHROME EXT ── */
+.ext-split{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;max-width:580px}
+.browser-frame{background:var(--nav2);border:1px solid var(--gb);border-radius:8px;overflow:hidden}
+.browser-bar{background:var(--nav3);border-bottom:1px solid var(--gb);padding:6px 10px;display:flex;align-items:center;gap:6px}
+.url-pill{background:var(--nav2);border:1px solid var(--gb);border-radius:4px;padding:2px 8px;font-size:9px;color:var(--mu);font-family:var(--font-mono);flex:1}
+.ext-icon{width:14px;height:14px;border-radius:3px;background:var(--ind);flex-shrink:0;animation:pulse-ind 1.5s infinite}
+@keyframes pulse-ind{0%,100%{box-shadow:0 0 0 0 rgba(99,102,241,.4)}50%{box-shadow:0 0 0 5px rgba(99,102,241,0)}}
+.browser-body{padding:10px;font-size:9px;color:var(--mu);line-height:1.6}
+.browser-body strong{color:var(--w);display:block;font-size:10px;font-weight:600;margin-bottom:4px}
+.ext-banner{background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.25);border-radius:6px;padding:6px 10px;font-size:10px;color:var(--em);opacity:0;transition:opacity .4s}
+.ext-banner.show{opacity:1}
+
+/* ── S6 PRACTICE ── */
+.mode-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%;max-width:520px}
+.mcard{background:var(--nav2);border:1px solid var(--gb);border-radius:8px;padding:10px;text-align:center;cursor:pointer;transition:all .2s}
+.mcard.sel{border-color:rgba(16,185,129,.45);background:rgba(16,185,129,.06)}
+.mcard-title{font-size:11px;font-weight:600;color:var(--w);margin-bottom:3px}
+.mcard-sub{font-size:9px;color:var(--mu)}
+.co-pills{display:flex;gap:5px;flex-wrap:wrap;justify-content:center}
+.copill{font-size:9px;padding:3px 9px;border-radius:20px;border:1px solid var(--gb);color:var(--mu);cursor:pointer}
+.copill.sel{border-color:rgba(99,102,241,.4);color:var(--ind);background:rgba(99,102,241,.08)}
+.timer{font-size:clamp(28px,4vw,42px);font-weight:500;font-family:var(--font-mono);color:var(--em);letter-spacing:.05em}
+.timer.warn{color:var(--amb)}
+.timer.danger{color:var(--red)}
+.score-ring{width:70px;height:70px;position:relative;flex-shrink:0}
+.score-ring svg{transform:rotate(-90deg)}
+.score-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;color:var(--em)}
+.radar-wrap{display:flex;gap:12px;align-items:center;width:100%;max-width:480px}
+.radar-labels{font-size:9px;color:var(--mu);display:flex;flex-direction:column;gap:6px;flex:1}
+.radar-row{display:flex;align-items:center;gap:6px}
+.radar-bar{flex:1;height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden}
+.radar-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--ind),var(--em));transition:width 1s ease}
+.radar-val{font-size:9px;color:var(--em);min-width:28px;text-align:right}
+
+/* ── S7 LUMORA ── */
+.lumora-panel{background:var(--nav2);border:1px solid rgba(16,185,129,.2);border-radius:10px;padding:14px;width:100%;max-width:500px;display:flex;flex-direction:column;gap:10px}
+.lhd{display:flex;align-items:center;gap:7px}
+.ldot{width:7px;height:7px;border-radius:50%;background:var(--em);animation:lpulse 2s infinite}
+@keyframes lpulse{0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,.4)}50%{box-shadow:0 0 0 6px rgba(16,185,129,0)}}
+.waveform{display:flex;align-items:center;gap:2px;height:20px}
+.wb{width:2px;border-radius:1px;background:var(--ind);animation:wa .8s ease-in-out infinite}
+@keyframes wa{0%,100%{height:2px}50%{height:var(--h,12px)}}
+.transcript-box{font-size:10px;color:var(--mu);border-left:2px solid rgba(99,102,241,.35);padding-left:8px;line-height:1.5}
+.ai-box{background:rgba(16,185,129,.05);border:1px solid rgba(16,185,129,.18);border-radius:7px;padding:10px}
+.ai-lbl{font-size:8px;font-weight:700;letter-spacing:.1em;color:var(--em);text-transform:uppercase;margin-bottom:5px}
+.ai-txt{font-size:10px;color:var(--w);line-height:1.5}
+.talking-pts{display:flex;flex-direction:column;gap:4px}
+.tpt{font-size:9px;color:var(--mu);padding-left:10px;position:relative}
+.tpt::before{content:'';position:absolute;left:0;top:5px;width:4px;height:4px;border-radius:50%;background:var(--ind)}
+.blank-overlay{background:var(--nav);border-radius:8px;padding:12px 20px;text-align:center;font-size:11px;color:var(--mu);font-family:var(--font-mono);opacity:0;transition:opacity .3s}
+.blank-overlay.show{opacity:1}
+
+/* ── S8 PIPELINE ── */
+.pipeline{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;max-width:520px}
+.pnode{background:var(--nav2);border:1px solid var(--gb);border-radius:10px;padding:14px;opacity:0;transform:scale(.9);transition:all .4s ease}
+.pnode.show{opacity:1;transform:scale(1)}
+.pnode-title{font-size:12px;font-weight:600;margin-bottom:8px}
+.pnode-item{font-size:10px;color:var(--mu);padding:2px 0}
+.connector{display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--mu);grid-column:span 2;height:20px}
+
+/* ── S9 PRICING ── */
+.pricing-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;width:100%;max-width:580px}
+.pcard{background:var(--nav2);border:1px solid var(--gb);border-radius:10px;padding:12px;text-align:center;opacity:0;transform:translateY(12px);transition:all .4s ease}
+.pcard.show{opacity:1;transform:translateY(0)}
+.pcard.featured{border-color:rgba(16,185,129,.4);background:rgba(16,185,129,.05)}
+.pcard-tier{font-size:9px;color:var(--mu);font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px}
+.pcard-price{font-size:22px;font-weight:500;line-height:1;margin-bottom:4px}
+.pcard-sub{font-size:9px;color:var(--mu);margin-bottom:8px}
+.pcard-feat{font-size:9px;color:var(--mu);line-height:1.7}
+.comp-flash{display:flex;flex-direction:column;gap:5px;width:100%;max-width:480px}
+.cf-row{display:flex;align-items:center;gap:8px;font-size:10px;opacity:0;transition:opacity .4s}
+.cf-row.show{opacity:1}
+.cf-comp{color:var(--red);min-width:160px}
+.cf-arrow{color:var(--mu)}
+.cf-win{color:var(--em)}
+
+/* ── S10 CTA ── */
+.cta-lines{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+.cta-line{font-size:clamp(14px,2.5vw,22px);font-weight:500;color:var(--mu);opacity:0;transform:translateX(-10px);transition:all .4s ease}
+.cta-line.show{color:var(--w);opacity:1;transform:translateX(0)}
+.cta-line.show span{color:var(--em)}
+.cta-box{background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.3);border-radius:10px;padding:16px 28px;text-align:center;opacity:0;transition:opacity .5s}
+.cta-box.show{opacity:1}
+.cta-btn-main{background:var(--em);color:var(--nav);font-size:14px;font-weight:700;padding:10px 24px;border-radius:100px;border:none;cursor:pointer;margin-bottom:6px;display:block;width:100%;transition:all .2s}
+.cta-btn-main:hover{background:#0d9a6b}
+.cta-domain{font-size:11px;color:rgba(16,185,129,.5);font-family:var(--font-mono);margin-top:4px}
+.cta-meta{font-size:10px;color:var(--mu);margin-top:6px}
+
+@keyframes blink2{0%,100%{opacity:1}50%{opacity:.3}}
+</style>
+
+<h2 class="sr-only">Camora video storyboard v3 — 10 scenes, real product data</h2>
+<div class="wrap">
+<div class="stage">
+<div class="sa" id="sa">
+
+<!-- S1 HOOK -->
+<div class="sc on" id="s0">
+  <div class="typewriter"><span id="tw-text"></span><span class="cursor-blink"></span></div>
+  <div class="logo-glow" id="logo-reveal">Camora</div>
+</div>
+
+<!-- S2 COMPETITOR MATRIX -->
+<div class="sc" id="s1">
+  <span class="badge" style="border-color:rgba(99,102,241,.35);color:var(--ind);background:rgba(99,102,241,.07)">11 Competitors Benchmarked</span>
+  <div class="matrix-wrap">
+    <table class="matrix" id="matrix-tbl">
+      <thead>
+        <tr class="price-row">
+          <th style="text-align:left">Feature</th>
+          <th class="cam">Camora<br><span style="color:var(--em);font-size:8px">FREE</span></th>
+          <th>FinalRnd<br><span style="font-size:8px">$100/mo</span></th>
+          <th>LockedIn<br><span style="font-size:8px">$55-120</span></th>
+          <th>Solver<br><span style="font-size:8px">$39/mo</span></th>
+          <th>Sensei<br><span style="font-size:8px">$24-89</span></th>
+          <th>TechPrep<br><span style="font-size:8px">$39/mo</span></th>
+          <th>AlgoMstr<br><span style="font-size:8px">$29/mo</span></th>
+          <th>DesignG<br><span style="font-size:8px">$98-197</span></th>
+          <th>AIApply<br><span style="font-size:8px">$29-200</span></th>
+          <th>OfrGoose<br><span style="font-size:8px">$89-200</span></th>
+          <th>Parakeet<br><span style="font-size:8px">$100-200</span></th>
+        </tr>
+      </thead>
+      <tbody id="matrix-body"></tbody>
+    </table>
+  </div>
+  <div style="font-size:10px;color:var(--mu);font-style:italic;text-align:center;margin-top:4px">"We benchmarked 11 competitors. Not one covers everything."</div>
+</div>
+
+<!-- S3 CODE SOLVER -->
+<div class="sc" id="s2">
+  <span class="badge" style="border-color:rgba(16,185,129,.35);color:var(--em);background:rgba(16,185,129,.07)">Phase 03 — Code Solver  /capra</span>
+  <div class="split2">
+    <div class="card" style="padding:10px">
+      <div class="tab-row">
+        <button class="tab on" id="tab-text">Text</button>
+        <button class="tab" id="tab-url">URL</button>
+        <button class="tab" id="tab-ss">Screenshot</button>
+      </div>
+      <div style="display:flex;gap:6px;margin-bottom:8px;align-items:center">
+        <div class="lang-btn" id="lang-btn">Auto</div>
+        <div class="badge" style="cursor:pointer">Basic</div>
+        <div class="badge" style="border-color:rgba(16,185,129,.35);color:var(--em);background:rgba(16,185,129,.07)">Full</div>
+      </div>
+      <div class="prob-area" id="prob-text"></div>
+      <button style="background:var(--em);color:var(--nav);font-size:11px;font-weight:700;padding:7px 14px;border-radius:6px;border:none;cursor:pointer;margin-top:8px;width:100%">Code</button>
+    </div>
+    <div class="card" style="padding:10px">
+      <div class="progress-bar"><div class="progress-fill" id="code-prog"></div></div>
+      <div style="font-size:9px;color:var(--mu);margin-bottom:4px;display:flex;justify-content:space-between"><span>solution.py</span><span style="color:var(--em)">Copy</span></div>
+      <div class="code-area" id="code-out"></div>
+      <div class="complexity-badges" id="complexity"></div>
+      <div class="output-bar" id="output-bar">Output: [0, 1]  — Passed</div>
+    </div>
+  </div>
+  <div style="font-size:10px;color:var(--mu);text-align:center">51 languages &middot; Three input methods &middot; Solutions stream in seconds</div>
+</div>
+
+<!-- S4 DESIGN SOLVER -->
+<div class="sc" id="s3">
+  <span class="badge" style="border-color:rgba(99,102,241,.35);color:var(--ind);background:rgba(99,102,241,.07)">Phase 04 — Design Solver  /capra/design</span>
+  <div style="width:100%;max-width:580px;display:flex;flex-direction:column;gap:8px">
+    <div style="display:flex;gap:8px;align-items:center">
+      <div class="card" style="padding:8px 12px;flex:1;font-size:10px;color:var(--mu);font-family:var(--font-mono)">Design a URL shortener like Bit.ly</div>
+      <button style="background:var(--ind);color:#fff;font-size:10px;font-weight:700;padding:7px 14px;border-radius:6px;border:none;cursor:pointer;flex-shrink:0">Design</button>
+    </div>
+    <div class="arch-ascii" id="ascii-diag">
+┌──────────┐   ┌──────────┐   ┌────────────┐
+│  Client  │──▶│   CDN    │──▶│ API Gateway│
+└──────────┘   └──────────┘   └─────┬──────┘
+                                     │
+              ┌──────────────────────┼──────────────┐
+         ┌────▼────┐          ┌──────▼──────┐  ┌────▼────┐
+         │  URL    │          │   Counter   │  │  Cache  │
+         │ Service │          │   Service   │  │ (Redis) │
+         └────┬────┘          └──────┬──────┘  └─────────┘
+              │                      │
+         ┌────▼────┐          ┌──────▼──────┐
+         │   DB    │          │  Analytics  │
+         │(Postgres)│         │   Service   │
+         └─────────┘          └─────────────┘</div>
+    <div>
+      <div class="cloud-tabs" id="cloud-tabs">
+        <button class="ctab on" data-cloud="aws">AWS</button>
+        <button class="ctab" data-cloud="gcp">GCP</button>
+        <button class="ctab" data-cloud="azure">Azure</button>
+      </div>
+      <div class="cloud-diag" id="cloud-diag"></div>
+    </div>
+    <div class="section-pills" id="sec-pills">
+      <div class="spill open">Functional Req</div>
+      <div class="spill">Non-Functional</div>
+      <div class="spill open">API Design</div>
+      <div class="spill">DB Schema</div>
+      <div class="spill">Scalability</div>
+      <div class="spill open">Failure Modes</div>
+    </div>
+  </div>
+</div>
+
+<!-- S5 CHROME EXTENSION -->
+<div class="sc" id="s4">
+  <span class="badge" style="border-color:rgba(6,182,212,.35);color:var(--cyn);background:rgba(6,182,212,.07)">Phase 05 — Chrome Extension</span>
+  <div class="ext-split">
+    <div class="browser-frame">
+      <div class="browser-bar">
+        <div class="url-pill">leetcode.com/problems/two-sum</div>
+        <div class="ext-icon" title="Camora extension"></div>
+      </div>
+      <div class="browser-body">
+        <strong>1. Two Sum</strong>
+        Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target...
+        <div style="margin-top:8px;display:flex;gap:4px;flex-wrap:wrap">
+          <span style="background:rgba(16,185,129,.1);color:var(--em);border-radius:4px;padding:2px 7px;font-size:8px">Array</span>
+          <span style="background:rgba(245,158,11,.1);color:var(--amb);border-radius:4px;padding:2px 7px;font-size:8px">Hash Table</span>
+          <span style="background:rgba(99,102,241,.1);color:var(--ind);border-radius:4px;padding:2px 7px;font-size:8px">Easy</span>
+        </div>
+      </div>
+    </div>
+    <div class="browser-frame">
+      <div class="browser-bar">
+        <div class="url-pill">camora.cariara.com/capra</div>
+      </div>
+      <div class="browser-body" style="padding:10px">
+        <div class="ext-banner" id="ext-banner">Problem detected from LeetCode — auto-filled</div>
+        <div style="margin-top:8px;background:var(--nav3);border-radius:6px;padding:8px;font-size:9px;color:var(--mu);font-family:var(--font-mono)" id="auto-fill"></div>
+        <div style="margin-top:6px;font-size:9px;color:var(--em)" id="stream-indicator"></div>
+      </div>
+    </div>
+  </div>
+  <div style="font-size:10px;color:var(--mu);text-align:center">Browsing LeetCode? Extension captures the problem and streams the solution instantly. Zero copy-paste.</div>
+</div>
+
+<!-- S6 PRACTICE -->
+<div class="sc" id="s5">
+  <span class="badge" style="border-color:rgba(245,158,11,.35);color:var(--amb);background:rgba(245,158,11,.07)">Phase 06 — Practice Challenges  /capra/practice</span>
+  <div id="practice-setup" style="width:100%;display:flex;flex-direction:column;align-items:center;gap:10px">
+    <div class="mode-cards">
+      <div class="mcard"><div class="mcard-title">Quick Fire</div><div class="mcard-sub">5 qs &middot; 5:00 &middot; Speed</div></div>
+      <div class="mcard sel" id="mc-dd"><div class="mcard-title">Deep Dive</div><div class="mcard-sub">3 qs &middot; 15:00 &middot; Depth</div></div>
+      <div class="mcard"><div class="mcard-title">Mock Interview</div><div class="mcard-sub">8 qs &middot; 45:00 &middot; Full sim</div></div>
+    </div>
+    <div class="co-pills" id="co-pills">
+      <div class="copill">All</div>
+      <div class="copill">Google</div>
+      <div class="copill sel">System Design</div>
+      <div class="copill">Meta</div>
+      <div class="copill">Amazon</div>
+      <div class="copill">Apple</div>
+    </div>
+    <button style="background:var(--em);color:var(--nav);font-size:12px;font-weight:700;padding:9px 24px;border-radius:100px;border:none;cursor:pointer">Start Challenge</button>
+  </div>
+  <div id="practice-live" style="display:none;width:100%;max-width:480px;flex-direction:column;gap:10px">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div class="timer" id="timer-display">15:00</div>
+      <span class="badge" style="border-color:rgba(99,102,241,.35);color:var(--ind)">Google &middot; System Design</span>
+    </div>
+    <div class="card" style="font-size:11px;color:var(--w);line-height:1.6">
+      "Design Google Drive's file sync system — handle conflict resolution, offline support, and multi-device sync."
+    </div>
+  </div>
+  <div id="practice-score" style="display:none;width:100%;max-width:460px;flex-direction:column;gap:10px;align-items:center">
+    <div style="display:flex;align-items:center;gap:16px;width:100%">
+      <div class="score-ring">
+        <svg width="70" height="70" viewBox="0 0 70 70">
+          <circle cx="35" cy="35" r="28" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="7"/>
+          <circle cx="35" cy="35" r="28" fill="none" stroke="var(--em)" stroke-width="7" stroke-linecap="round"
+            stroke-dasharray="175.9" stroke-dashoffset="175.9" id="score-circle"/>
+        </svg>
+        <div class="score-num" id="score-num">0%</div>
+      </div>
+      <div class="radar-labels" id="radar"></div>
+    </div>
+    <div class="ai-box" style="width:100%">
+      <div class="ai-lbl">AI Feedback</div>
+      <div class="ai-txt" id="feedback-txt"></div>
+    </div>
+  </div>
+</div>
+
+<!-- S7 LUMORA -->
+<div class="sc" id="s6">
+  <span class="badge" style="border-color:rgba(16,185,129,.35);color:var(--em);background:rgba(16,185,129,.07)">Phase 07 — Lumora Live AI  /lumora</span>
+  <div class="lumora-panel">
+    <div class="lhd">
+      <div class="ldot"></div>
+      <span style="font-size:11px;font-weight:500;color:var(--em)">Lumora AI Co-pilot</span>
+      <span style="margin-left:auto;font-size:9px;color:var(--mu)">LIVE &middot; Voice Verified</span>
+    </div>
+    <div class="waveform" id="lumora-wf"></div>
+    <div class="transcript-box">
+      <span style="color:var(--w)">Interviewer:</span> "Design a notification system for email, push, and in-app channels."
+    </div>
+    <div class="ai-box">
+      <div class="ai-lbl">Say This</div>
+      <div class="ai-txt" id="lumora-txt"></div>
+    </div>
+    <div>
+      <div style="font-size:9px;color:var(--mu);margin-bottom:5px;text-transform:uppercase;letter-spacing:.08em">Architecture</div>
+      <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">
+        <div class="cloud-node" style="border-color:rgba(16,185,129,.2)">Event Bus</div>
+        <div class="cloud-arrow">--&gt;</div>
+        <div class="cloud-node">Template Eng</div>
+        <div class="cloud-arrow">--&gt;</div>
+        <div class="cloud-node">Channel Router</div>
+        <div class="cloud-arrow">--&gt;</div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <div class="cloud-node" style="font-size:8px;border-color:rgba(6,182,212,.2);color:var(--cyn)">Email (Resend)</div>
+          <div class="cloud-node" style="font-size:8px;border-color:rgba(245,158,11,.2);color:var(--amb)">Push (FCM)</div>
+          <div class="cloud-node" style="font-size:8px;border-color:rgba(16,185,129,.2);color:var(--em)">In-App (WS)</div>
+        </div>
+      </div>
+    </div>
+    <div class="talking-pts">
+      <div class="tpt">Mention dead letter queues for failed deliveries</div>
+      <div class="tpt">Discuss user preference management</div>
+      <div class="tpt">Address quiet hours and frequency caps</div>
+    </div>
+    <div class="blank-overlay" id="blank-overlay">
+      Cmd+B pressed — screen blanked &mdash; "Emergency blank. One keystroke."
+    </div>
+  </div>
+</div>
+
+<!-- S8 APPA PIPELINE -->
+<div class="sc" id="s7">
+  <div style="font-size:clamp(14px,2.5vw,22px);font-weight:500;color:var(--w);text-align:center">The <span style="color:var(--em)">ONLY</span> platform for all four stages.</div>
+  <div class="pipeline">
+    <div class="pnode" id="pn0" style="border-color:rgba(16,185,129,.4)">
+      <div class="pnode-title" style="color:var(--em)">Apply</div>
+      <div class="pnode-item">Job board + matching</div>
+      <div class="pnode-item">AI resume optimizer</div>
+      <div class="pnode-item">Auto apply</div>
+    </div>
+    <div class="pnode" id="pn1" style="border-color:rgba(99,102,241,.4)">
+      <div class="pnode-title" style="color:var(--ind)">Prepare</div>
+      <div class="pnode-item">800+ topics</div>
+      <div class="pnode-item">Cloud arch diagrams</div>
+      <div class="pnode-item">7 categories</div>
+    </div>
+    <div class="pnode" id="pn2" style="border-color:rgba(6,182,212,.4)">
+      <div class="pnode-title" style="color:var(--cyn)">Practice</div>
+      <div class="pnode-item">Code + Design solver</div>
+      <div class="pnode-item">51 languages</div>
+      <div class="pnode-item">Mock challenges</div>
+    </div>
+    <div class="pnode" id="pn3" style="border-color:rgba(245,158,11,.4)">
+      <div class="pnode-title" style="color:var(--amb)">Attend</div>
+      <div class="pnode-item">Lumora live AI</div>
+      <div class="pnode-item">Voice verified</div>
+      <div class="pnode-item">Emergency blank</div>
+    </div>
+  </div>
+</div>
+
+<!-- S9 PRICING -->
+<div class="sc" id="s8">
+  <span class="badge" style="border-color:rgba(16,185,129,.35);color:var(--em);background:rgba(16,185,129,.07)">Starts free. No credit card. No catch.</span>
+  <div class="pricing-grid">
+    <div class="pcard" id="pc0">
+      <div class="pcard-tier">Free</div>
+      <div class="pcard-price" style="color:var(--w)">$0</div>
+      <div class="pcard-sub">forever</div>
+      <div class="pcard-feat">3 live sessions<br>800+ topics<br>All languages<br>No card needed</div>
+    </div>
+    <div class="pcard" id="pc1">
+      <div class="pcard-tier">Starter</div>
+      <div class="pcard-price" style="color:var(--em)">$29<span style="font-size:12px;color:var(--mu)">/mo</span></div>
+      <div class="pcard-sub">10 sessions/mo</div>
+      <div class="pcard-feat">All languages<br>Mock interviews<br>Code + Design solver<br>Practice challenges</div>
+    </div>
+    <div class="pcard featured" id="pc2">
+      <div class="pcard-tier" style="color:var(--em)">Pro</div>
+      <div class="pcard-price" style="color:var(--em)">$49<span style="font-size:12px;color:var(--mu)">/mo</span></div>
+      <div class="pcard-sub">Unlimited sessions</div>
+      <div class="pcard-feat">Jobs + Apply<br>Speaker voice filter<br>Priority support<br>Everything in Starter</div>
+    </div>
+    <div class="pcard" id="pc3" style="border-color:rgba(245,158,11,.35)">
+      <div class="pcard-tier" style="color:var(--amb)">Annual</div>
+      <div class="pcard-price" style="color:var(--amb)">$19<span style="font-size:12px;color:var(--mu)">/mo</span></div>
+      <div class="pcard-sub">Save 61%</div>
+      <div class="pcard-feat">Everything in Pro<br>Best value<br>Billed annually<br>Priority everything</div>
+    </div>
+  </div>
+  <div class="comp-flash" id="comp-flash">
+    <div class="cf-row">
+      <span class="cf-comp">Final Round $100/mo</span>
+      <span class="cf-arrow">vs</span>
+      <span class="cf-win">Camora Pro does MORE for $49</span>
+    </div>
+    <div class="cf-row">
+      <span class="cf-comp">DesignGurus $98-197/course</span>
+      <span class="cf-arrow">vs</span>
+      <span class="cf-win">Camora has it all — FREE</span>
+    </div>
+    <div class="cf-row">
+      <span class="cf-comp">Parakeet $100-200/mo</span>
+      <span class="cf-arrow">vs</span>
+      <span class="cf-win">Camora Annual: $19/mo</span>
+    </div>
+  </div>
+</div>
+
+<!-- S10 CTA -->
+<div class="sc" id="s9">
+  <div class="logo-glow" id="cta-logo" style="animation:none;opacity:0;font-size:clamp(28px,4vw,48px)">Camora</div>
+  <div class="cta-lines">
+    <div class="cta-line" id="cl0">Apply <span>smarter.</span></div>
+    <div class="cta-line" id="cl1">Prepare <span>deeper.</span></div>
+    <div class="cta-line" id="cl2">Practice <span>harder.</span></div>
+    <div class="cta-line" id="cl3">Attend with <span>confidence.</span></div>
+  </div>
+  <div class="cta-box" id="cta-box">
+    <button class="cta-btn-main" onclick="window.open('https://camora.cariara.com','_blank')">Start Free &mdash; No Credit Card</button>
+    <div class="cta-domain">camora.cariara.com</div>
+    <div class="cta-meta">3 free sessions &middot; 800+ topics &middot; 51 languages</div>
+  </div>
+</div>
+
+</div><!-- /sa -->
+
+<div class="hud">
+  <button class="pbtn" id="pb" onclick="togglePlay()">&#9654;</button>
+  <div class="slbl" id="slbl">HOOK</div>
+  <div class="ptrack" onclick="seek(event)"><div class="pfill" id="pfill"></div></div>
+  <div class="dots" id="dots"></div>
+  <div class="tlbl" id="tlbl">0:00</div>
+</div>
+</div>
+</div>
+
+<script>
+const SCENES=[
+  {lbl:'HOOK',       dur:10},
+  {lbl:'COMPETITORS',dur:13},
+  {lbl:'CODE SOLVER',dur:17},
+  {lbl:'DESIGN',     dur:18},
+  {lbl:'EXTENSION',  dur:12},
+  {lbl:'PRACTICE',   dur:18},
+  {lbl:'LUMORA',     dur:14},
+  {lbl:'PIPELINE',   dur:10},
+  {lbl:'PRICING',    dur:12},
+  {lbl:'CTA',        dur:12},
+];
+const TOTAL=SCENES.reduce((a,s)=>a+s.dur,0);
+let cur=0,elapsed=0,playing=false,raf=null,lastT=null,timers=[];
+
+/* build dots */
+const dotsEl=document.getElementById('dots');
+SCENES.forEach((_,i)=>{
+  const d=document.createElement('button');d.className='dot'+(i===0?' on':'');d.onclick=()=>goScene(i);dotsEl.appendChild(d);
+});
+
+function clearT(){timers.forEach(id=>typeof id==='number'?clearTimeout(id):clearInterval(id));timers=[];}
+
+function goScene(i){
+  clearT();
+  document.querySelectorAll('.sc').forEach(s=>s.classList.remove('on'));
+  document.querySelectorAll('.dot').forEach((d,j)=>d.classList.toggle('on',j===i));
+  cur=i;
+  document.getElementById('s'+i).classList.add('on');
+  document.getElementById('slbl').textContent=SCENES[i].lbl;
+  elapsed=SCENES.slice(0,i).reduce((a,s)=>a+s.dur,0);
+  updateHUD();
+  INIT[i]&&INIT[i]();
+}
+
+function updateHUD(){
+  document.getElementById('pfill').style.width=(elapsed/TOTAL*100)+'%';
+  const m=Math.floor(elapsed/60),s=Math.floor(elapsed%60);
+  document.getElementById('tlbl').textContent=m+':'+(s<10?'0':'')+s;
+}
+
+function seek(e){
+  const r=e.currentTarget.getBoundingClientRect();
+  const t=(e.clientX-r.left)/r.width*TOTAL;
+  let acc=0,idx=0;
+  for(let i=0;i<SCENES.length;i++){if(t>=acc&&t<acc+SCENES[i].dur){idx=i;break;}acc+=SCENES[i].dur;}
+  elapsed=t;goScene(idx);
+}
+
+function togglePlay(){
+  playing=!playing;
+  document.getElementById('pb').innerHTML=playing?'&#9646;&#9646;':'&#9654;';
+  if(playing){lastT=null;raf=requestAnimationFrame(tick);}else cancelAnimationFrame(raf);
+}
+
+function tick(ts){
+  if(!playing)return;
+  if(lastT===null)lastT=ts;
+  const dt=(ts-lastT)/1000;lastT=ts;
+  elapsed+=dt;
+  let acc=0;
+  for(let i=0;i<SCENES.length;i++){
+    if(elapsed<acc+SCENES[i].dur){if(i!==cur)goScene(i);break;}
+    acc+=SCENES[i].dur;
+  }
+  if(elapsed>=TOTAL){elapsed=0;goScene(0);playing=false;document.getElementById('pb').innerHTML='&#9654;';return;}
+  updateHUD();
+  raf=requestAnimationFrame(tick);
+}
+
+function T(fn,ms){const id=setTimeout(fn,ms);timers.push(id);}
+function IV(fn,ms){const id=setInterval(fn,ms);timers.push(id);return id;}
+
+/* ─── MATRIX DATA ─── */
+const FEATS=[
+  ['Live interview AI',     1,1,1,0,1,1,0,0,0,1,1],
+  ['Code solver (51 langs)',1,0,0,1,0,1,1,0,0,0,0],
+  ['System design solver',  1,0,0,0,0,0,0,1,0,0,0],
+  ['Mock challenges',       1,1,0,1,1,1,1,0,0,0,0],
+  ['Job discovery',         1,0,0,0,0,0,0,0,1,1,0],// unique
+  ['Speaker voice filter',  1,0,0,0,0,0,0,0,0,0,0],// unique
+  ['Prep + Live combined',  1,0,0,0,0,0,0,0,0,0,0],// unique
+  ['AWS/GCP/Azure diagrams',1,0,0,0,0,0,0,1,0,0,0],
+  ['800+ topics',           1,0,0,0,0,0,1,1,0,0,0],
+  ['Chrome extension',      1,0,1,0,1,0,0,0,0,0,0],
+  ['Resume AI',             1,0,0,0,0,0,0,0,1,1,0],
+  ['Emergency blank',       1,0,0,0,0,1,0,0,0,0,1],
+];
+const UNIQUE_ROWS=[4,5,6];
+
+/* ─── CLOUD CONFIGS ─── */
+const CLOUDS={
+  aws: ['Route 53','CloudFront','API Gateway','Lambda','DynamoDB','ElastiCache'],
+  gcp: ['Cloud DNS','Cloud CDN','Cloud Run','Firestore','Memorystore','Cloud Tasks'],
+  azure:['Azure DNS','Front Door','API Mgmt','Cosmos DB','Azure Cache','Service Bus'],
+};
+
+/* ─── INIT FUNCTIONS ─── */
+const INIT={
+  0(){ /* HOOK */
+    const logo=document.getElementById('logo-reveal');
+    logo.style.opacity='0';logo.style.transform='translateY(10px)';
+    const el=document.getElementById('tw-text');
+    el.textContent='';
+    const msg1='11 interview tools. None of them do everything.';
+    const msg2='Until now.';
+    let ci=0;
+    const type1=()=>{
+      if(ci<msg1.length){el.textContent=msg1.slice(0,++ci);T(type1,45);}
+      else{T(erase,800);}
+    };
+    const erase=()=>{
+      if(el.textContent.length>0){el.textContent=el.textContent.slice(0,-1);T(erase,25);}
+      else{T(type2,400);}
+    };
+    let ci2=0;
+    const type2=()=>{
+      if(ci2<msg2.length){el.textContent=msg2.slice(0,++ci2);T(type2,60);}
+      else{T(()=>{
+        logo.style.transition='all .6s ease';
+        logo.style.opacity='1';logo.style.transform='translateY(0)';
+      },600);}
+    };
+    T(type1,400);
+  },
+
+  1(){ /* MATRIX */
+    const tbody=document.getElementById('matrix-body');
+    tbody.innerHTML='';
+    FEATS.forEach((row,ri)=>{
+      const tr=document.createElement('tr');
+      if(UNIQUE_ROWS.includes(ri))tr.className='feat';
+      const [name,...vals]=row;
+      const td0=document.createElement('td');td0.textContent=name+(UNIQUE_ROWS.includes(ri)?' *':'');tr.appendChild(td0);
+      vals.forEach((v,ci)=>{
+        const td=document.createElement('td');
+        if(ci===0){td.className=UNIQUE_ROWS.includes(ri)?'uniq':'cam';}
+        td.textContent=v?'✓':'·';
+        if(v&&ci===0)td.className=UNIQUE_ROWS.includes(ri)?'uniq':'cam check';
+        else if(v)td.className='check';else td.className='cross';
+        tr.appendChild(td);
+      });
+      tbody.style.opacity='0';
+      tbody.appendChild(tr);
+    });
+    T(()=>{tbody.style.transition='opacity .6s';tbody.style.opacity='1';},300);
+  },
+
+  2(){ /* CODE SOLVER */
+    const prog=document.getElementById('code-prog');
+    const codeOut=document.getElementById('code-out');
+    const langBtn=document.getElementById('lang-btn');
+    const probTxt=document.getElementById('prob-text');
+    const complexity=document.getElementById('complexity');
+    const outputBar=document.getElementById('output-bar');
+    prog.style.width='0%';codeOut.innerHTML='';complexity.innerHTML='';outputBar.classList.remove('show');
+    probTxt.textContent='';langBtn.textContent='Auto';
+
+    const problem='Given an array of integers nums and an integer target, return indices of the two numbers that add up to target.';
+    let pi=0;
+    const typeProb=()=>{if(pi<problem.length){probTxt.textContent=problem.slice(0,++pi);T(typeProb,18);}};
+    T(typeProb,200);
+    T(()=>{langBtn.style.transition='all .3s';langBtn.style.background='rgba(16,185,129,.15)';langBtn.textContent='Python 3';},1800);
+    T(()=>{prog.style.transition='width .9s ease';prog.style.width='100%';},2400);
+    const lines=[
+      '<span class="kw">def</span> <span class="fn">twoSum</span>(nums, target):',
+      '    seen = {}',
+      '    <span class="kw">for</span> i, num <span class="kw">in</span> enumerate(nums):',
+      '        complement = target - num',
+      '        <span class="kw">if</span> complement <span class="kw">in</span> seen:',
+      '            <span class="kw">return</span> [seen[complement], i]',
+      '        seen[num] = i',
+    ];
+    lines.forEach((l,i)=>T(()=>{
+      const d=document.createElement('div');d.innerHTML=l;d.style.cssText='opacity:0;transition:opacity .2s';
+      codeOut.appendChild(d);setTimeout(()=>d.style.opacity='1',50);
+    },3200+i*220));
+    T(()=>{
+      complexity.innerHTML='<span class="cbadge" style="background:rgba(16,185,129,.1);color:var(--em);border:1px solid rgba(16,185,129,.25)">Time: O(n)</span><span class="cbadge" style="background:rgba(99,102,241,.1);color:var(--ind);border:1px solid rgba(99,102,241,.25)">Space: O(n)</span>';
+    },5100);
+    T(()=>outputBar.classList.add('show'),5800);
+  },
+
+  3(){ /* DESIGN SOLVER */
+    const ascii=document.getElementById('ascii-diag');
+    ascii.classList.remove('show');
+    T(()=>ascii.classList.add('show'),400);
+    // cloud tab logic
+    const tabs=document.querySelectorAll('.ctab');
+    const diagEl=document.getElementById('cloud-diag');
+    function setCloud(cloud){
+      tabs.forEach(t=>t.classList.toggle('on',t.dataset.cloud===cloud));
+      const nodes=CLOUDS[cloud];
+      diagEl.innerHTML='';
+      nodes.forEach((n,i)=>{
+        if(i>0){const a=document.createElement('div');a.className='cloud-arrow';a.textContent='-->';diagEl.appendChild(a);}
+        const d=document.createElement('div');d.className='cloud-node';d.textContent=n;
+        d.style.cssText='opacity:0;transition:opacity .3s '+(.08*i)+'s';
+        diagEl.appendChild(d);setTimeout(()=>d.style.opacity='1',50);
+      });
+    }
+    setCloud('aws');
+    tabs.forEach(t=>t.onclick=()=>setCloud(t.dataset.cloud));
+    T(()=>setCloud('gcp'),4000);
+    T(()=>setCloud('azure'),7000);
+    T(()=>setCloud('aws'),10000);
+  },
+
+  4(){ /* CHROME EXT */
+    const banner=document.getElementById('ext-banner');
+    const autoFill=document.getElementById('auto-fill');
+    const streamInd=document.getElementById('stream-indicator');
+    banner.classList.remove('show');autoFill.textContent='';streamInd.textContent='';
+    T(()=>banner.classList.add('show'),800);
+    T(()=>banner.classList.remove('show'),3800);
+    const prob='Given an array nums and target, return indices of two numbers that add up to target...';
+    let pi=0;
+    T(()=>{
+      const fill=()=>{if(pi<prob.length){autoFill.textContent=prob.slice(0,++pi);T(fill,22);}};
+      fill();
+    },1200);
+    T(()=>{streamInd.textContent='Python 3 solution streaming...';streamInd.style.animation='cblink 1s infinite';},2800);
+    T(()=>{streamInd.textContent='def twoSum(nums, target): seen = {}...';streamInd.style.animation='none';},4200);
+  },
+
+  5(){ /* PRACTICE */
+    document.getElementById('practice-setup').style.display='flex';
+    document.getElementById('practice-live').style.display='none';
+    document.getElementById('practice-score').style.display='none';
+    T(()=>{
+      document.getElementById('practice-setup').style.display='none';
+      document.getElementById('practice-live').style.display='flex';
+    },2500);
+    // timer countdown
+    let secs=900;
+    T(()=>{
+      const td=document.getElementById('timer-display');
+      const ivId=IV(()=>{
+        secs=Math.max(0,secs-2);
+        const m=Math.floor(secs/60),s=secs%60;
+        td.textContent=m+':'+(s<10?'0':'')+s;
+        if(secs<=300)td.className='timer warn';
+        if(secs<=120)td.className='timer danger';
+        if(secs===0)clearInterval(ivId);
+      },120);
+    },2600);
+    // show score after 8s
+    T(()=>{
+      document.getElementById('practice-live').style.display='none';
+      const ps=document.getElementById('practice-score');
+      ps.style.display='flex';
+      // animate score ring
+      const circle=document.getElementById('score-circle');
+      const numEl=document.getElementById('score-num');
+      const circumference=175.9;
+      let sc=0;
+      const sid=IV(()=>{
+        sc=Math.min(sc+2,78);
+        circle.style.strokeDashoffset=circumference-(circumference*sc/100);
+        numEl.textContent=sc+'%';
+        if(sc>=78)clearInterval(sid);
+      },40);
+      timers.push(sid);
+      // radar
+      const dims=[
+        {label:'Problem Solving',val:82},
+        {label:'System Design',val:85},
+        {label:'Data Structures',val:71},
+        {label:'Communication',val:76},
+        {label:'Time Management',val:68},
+      ];
+      const radar=document.getElementById('radar');
+      radar.innerHTML='';
+      dims.forEach((d,i)=>{
+        const row=document.createElement('div');row.className='radar-row';
+        row.innerHTML=`<span style="min-width:100px;font-size:9px;color:var(--mu)">${d.label}</span><div class="radar-bar"><div class="radar-fill" style="width:0%" id="rf${i}"></div></div><span class="radar-val">0%</span>`;
+        radar.appendChild(row);
+        T(()=>{
+          const fill=row.querySelector('.radar-fill');
+          const val=row.querySelector('.radar-val');
+          fill.style.width=d.val+'%';val.textContent=d.val+'%';
+        },500+i*150);
+      });
+      // feedback
+      const fb='Strong architecture choices. Consider discussing eventual consistency trade-offs and failure recovery scenarios in more depth.';
+      const ftEl=document.getElementById('feedback-txt');
+      ftEl.textContent='';
+      let fi=0;
+      T(()=>{
+        const ftype=()=>{if(fi<fb.length){ftEl.textContent=fb.slice(0,++fi);T(ftype,18);}};
+        ftype();
+      },1000);
+    },9000);
+  },
+
+  6(){ /* LUMORA */
+    const wf=document.getElementById('lumora-wf');
+    wf.innerHTML='';
+    for(let i=0;i<24;i++){
+      const b=document.createElement('div');b.className='wb';
+      const h=3+Math.random()*15;
+      b.style.cssText=`--h:${Math.round(h)}px;animation-delay:${(i*.035).toFixed(2)}s`;
+      wf.appendChild(b);
+    }
+    const lt=document.getElementById('lumora-txt');
+    lt.textContent='';
+    const blank=document.getElementById('blank-overlay');
+    blank.classList.remove('show');
+    const ans="I'd approach this with an event-driven architecture using a pub/sub pattern for decoupling. A central event bus receives notification events, routes them through a template engine, then dispatches via channel-specific adapters — email via Resend, push via FCM, and in-app via WebSocket.";
+    let li=0;
+    const ltype=()=>{if(li<ans.length){lt.textContent=ans.slice(0,++li);T(ltype,22);}};
+    T(ltype,600);
+    T(()=>blank.classList.add('show'),10000);
+    T(()=>blank.classList.remove('show'),12500);
+  },
+
+  7(){ /* PIPELINE */
+    ['pn0','pn1','pn2','pn3'].forEach(id=>document.getElementById(id).classList.remove('show'));
+    ['pn0','pn1','pn2','pn3'].forEach((id,i)=>T(()=>document.getElementById(id).classList.add('show'),400+i*300));
+  },
+
+  8(){ /* PRICING */
+    ['pc0','pc1','pc2','pc3'].forEach(id=>document.getElementById(id).classList.remove('show'));
+    ['pc0','pc1','pc2','pc3'].forEach((id,i)=>T(()=>document.getElementById(id).classList.add('show'),300+i*200));
+    document.querySelectorAll('.cf-row').forEach(r=>r.classList.remove('show'));
+    document.querySelectorAll('.cf-row').forEach((r,i)=>T(()=>r.classList.add('show'),1600+i*350));
+  },
+
+  9(){ /* CTA */
+    const logo=document.getElementById('cta-logo');
+    logo.style.opacity='0';logo.style.transform='translateY(8px)';
+    ['cl0','cl1','cl2','cl3'].forEach(id=>document.getElementById(id).classList.remove('show'));
+    document.getElementById('cta-box').classList.remove('show');
+    T(()=>{logo.style.transition='all .6s';logo.style.opacity='1';logo.style.transform='translateY(0)';},300);
+    ['cl0','cl1','cl2','cl3'].forEach((id,i)=>T(()=>document.getElementById(id).classList.add('show'),700+i*300));
+    T(()=>document.getElementById('cta-box').classList.add('show'),2000);
+  },
+};
+
+INIT[0]();
+</script>
