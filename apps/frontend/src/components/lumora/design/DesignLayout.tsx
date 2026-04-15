@@ -260,6 +260,31 @@ const layerAccents = [
   { accent: '#0d9488', bg: 'rgba(13,148,136,0.04)', border: 'rgba(13,148,136,0.15)' },
 ];
 
+const DESIGN_CARD_COLORS: Record<string, { border: string; headerBg: string; headerText: string; bar: string }> = {
+  indigo: { border: 'border-indigo-200', headerBg: 'bg-indigo-50/50', headerText: 'text-indigo-700', bar: 'from-indigo-500 to-violet-500' },
+  cyan: { border: 'border-cyan-200', headerBg: 'bg-cyan-50/50', headerText: 'text-cyan-700', bar: 'from-cyan-500 to-blue-500' },
+  violet: { border: 'border-violet-200', headerBg: 'bg-violet-50/50', headerText: 'text-violet-700', bar: 'from-violet-500 to-purple-500' },
+  rose: { border: 'border-rose-200', headerBg: 'bg-rose-50/50', headerText: 'text-rose-700', bar: 'from-rose-500 to-pink-500' },
+  amber: { border: 'border-amber-200', headerBg: 'bg-amber-50/50', headerText: 'text-amber-700', bar: 'from-amber-500 to-orange-500' },
+  orange: { border: 'border-orange-200', headerBg: 'bg-orange-50/50', headerText: 'text-orange-700', bar: 'from-orange-500 to-amber-500' },
+};
+
+function DesignCard({ title, color, count, children }: { title: string; color: string; count?: number; children: React.ReactNode }) {
+  const c = DESIGN_CARD_COLORS[color] || DESIGN_CARD_COLORS.indigo;
+  return (
+    <section className={`rounded-lg border ${c.border} bg-white overflow-hidden flex flex-col`}>
+      <div className={`flex items-center gap-1.5 px-2.5 py-1.5 border-b ${c.border} ${c.headerBg} shrink-0`}>
+        <div className={`w-1 h-3 rounded-full bg-gradient-to-b ${c.bar}`} />
+        <h2 className={`text-[10px] font-bold ${c.headerText} uppercase tracking-wider font-mono`}>{title}</h2>
+        {count !== undefined && <span className={`ml-auto text-[9px] font-mono ${c.headerText} opacity-60`}>{count}</span>}
+      </div>
+      <div className="px-2.5 py-1.5 overflow-y-auto max-h-[200px]">
+        {children}
+      </div>
+    </section>
+  );
+}
+
 /** Format seconds as MM:SS */
 function formatTime(seconds: number): string {
   const m = Math.floor(seconds / 60);
@@ -535,6 +560,11 @@ export const DesignLayout = forwardRef<{ setProblemText?: (t: string) => void },
     }
   }, [problemText, token, isLoading, handleSubmit]);
 
+  // Auto-collapse input when results arrive to maximize viewport for cards
+  useEffect(() => {
+    if (result) setInputCollapsed(true);
+  }, [result]);
+
   const handleReset = useCallback(() => {
     setProblemText('');
     setResult(null);
@@ -795,43 +825,7 @@ export const DesignLayout = forwardRef<{ setProblemText?: (t: string) => void },
             </button>
           </div>
 
-          {/* Architecture Diagram - in left panel below input */}
-          {question && sd && (
-            <div className="border-t border-[var(--border)] p-3 flex-1 overflow-auto min-h-0 hidden md:block">
-              <div className="flex items-center gap-2 mb-2">
-                <svg className="w-3.5 h-3.5 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
-                </svg>
-                <h4 className="text-[10px] font-mono font-bold text-cyan-700 uppercase tracking-wider">Architecture</h4>
-              </div>
-              <ArchitectureDiagram question={question} className="diagram-left-panel" />
-
-              {/* Architecture Layers explanation below diagram */}
-              {sd.techJustifications && sd.techJustifications.length > 0 && (
-                <div className="mt-4 pt-3 border-t border-[var(--border)] space-y-1.5">
-                  <div className="flex items-center gap-2 mb-2">
-                    <svg className="w-3.5 h-3.5 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                    </svg>
-                    <h4 className="text-[10px] font-mono font-bold text-violet-700 uppercase tracking-wider">Architecture Layers</h4>
-                    <span className="text-[10px] font-mono text-violet-400">{sd.techJustifications.length}</span>
-                  </div>
-                  {sd.techJustifications.map((tier, i) => (
-                    <div key={i} className="rounded-lg border border-[var(--border)] p-2">
-                      <div className="text-xs font-bold text-[var(--text-primary)] mb-0.5">{tier.tech}</div>
-                      {tier.details.length > 0 && (
-                        <div className="space-y-0.5">
-                          {tier.details.map((d, j) => (
-                            <div key={j} className="text-[11px] text-[var(--text-muted)] leading-snug pl-2">- {d}</div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+          {/* Left panel diagram removed — now rendered in the 3-column result grid */}
         </div>
 
         {/* Resizable divider - hidden on mobile, matching coding page */}
@@ -873,203 +867,118 @@ export const DesignLayout = forwardRef<{ setProblemText?: (t: string) => void },
           )}
 
           {sd && (
-            <div className="flex flex-col gap-2.5 p-3 md:p-5 design-result-appear" style={{ maxWidth: '1600px', margin: '0 auto' }}>
-
-              {/* ── OVERVIEW ── */}
+            <div className="flex flex-col h-full design-result-appear">
+              {/* Overview bar */}
               {sd.overview && (
-                <section className="rounded-2xl border border-indigo-200 bg-white overflow-hidden" style={{boxShadow: '0 2px 8px rgba(0,0,0,0.04)'}}>
-                  <div className="flex items-center gap-2.5 px-4 py-2.5">
-                    <div className="w-1.5 h-5 rounded-full bg-gradient-to-b from-indigo-500 to-violet-500" />
-                    <h2 className="text-sm font-bold text-indigo-800">Overview</h2>
-                  </div>
-                  <div className="px-4 py-3">
-                    <p className="text-sm text-gray-700 leading-relaxed">{sd.overview}</p>
-                  </div>
-                </section>
+                <div className="flex items-center gap-2 px-3 py-2 border-b border-indigo-100 bg-indigo-50/50 shrink-0">
+                  <div className="w-1 h-4 rounded-full bg-gradient-to-b from-indigo-500 to-violet-500" />
+                  <p className="text-xs text-gray-700 leading-snug flex-1">{sd.overview}</p>
+                </div>
               )}
 
-              {/* ── EXPLANATION ── */}
-              {result?.pitch && result.pitch !== sd.overview && (
-                <section className="rounded-2xl border border-blue-200 bg-white overflow-hidden" style={{boxShadow: '0 2px 8px rgba(0,0,0,0.04)'}}>
-                  <div className="flex items-center gap-2.5 px-4 py-2.5">
-                    <div className="w-1.5 h-5 rounded-full bg-gradient-to-b from-blue-500 to-indigo-500" />
-                    <h2 className="text-sm font-bold text-blue-800">Explanation</h2>
-                  </div>
-                  <div className="px-4 py-3">
-                    <p className="text-sm text-gray-700 leading-relaxed italic">&ldquo;{result.pitch}&rdquo;</p>
-                  </div>
-                </section>
-              )}
+              {/* 3-column dense grid — fits viewport */}
+              <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)] gap-1.5 p-1.5 overflow-hidden">
 
-              {/* ── REQUIREMENTS: Functional + Non-Functional ── */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 items-start">
-                {sd.requirements?.functional && sd.requirements.functional.length > 0 && (
-                  <section className="rounded-2xl border border-indigo-200 bg-white overflow-hidden" style={{boxShadow: '0 2px 8px rgba(0,0,0,0.04)'}}>
-                    <div className="flex items-center gap-2.5 px-4 py-2.5">
-                      <div className="w-1.5 h-5 rounded-full bg-gradient-to-b from-indigo-500 to-violet-500" />
-                      <h2 className="text-sm font-bold text-indigo-800">Functional</h2>
-                      <span className="ml-auto text-[10px] font-mono text-indigo-500 bg-indigo-50 border border-indigo-200 rounded-full px-2 py-0.5">{sd.requirements.functional.length}</span>
+                {/* COL 1: Diagram + Scale Estimates */}
+                <div className="flex flex-col gap-1.5 min-h-0 overflow-y-auto">
+                  <section className="rounded-lg border border-cyan-200 bg-white overflow-hidden flex-1 min-h-0 flex flex-col">
+                    <div className="flex items-center gap-2 px-3 py-1.5 border-b border-cyan-100 shrink-0">
+                      <div className="w-1 h-3.5 rounded-full bg-gradient-to-b from-cyan-500 to-blue-500" />
+                      <h2 className="text-[10px] font-bold text-cyan-700 uppercase tracking-wider font-mono">Architecture</h2>
                     </div>
-                    <div className="px-4 py-3">
-                      <div className="grid grid-cols-1 gap-y-1">
-                        {sd.requirements.functional.map((r, i) => (
-                          <div key={i} className="flex items-start gap-2 text-sm text-gray-700 leading-snug py-0.5">
-                            <span className="font-bold text-indigo-600 shrink-0">{i + 1}.</span>{r}
-                          </div>
-                        ))}
-                      </div>
+                    <div className="flex-1 min-h-0 p-1">
+                      <ArchitectureDiagram question={question || ''} className="w-full h-full" />
                     </div>
                   </section>
-                )}
-                {sd.requirements?.nonFunctional && sd.requirements.nonFunctional.length > 0 && (
-                  <section className="rounded-2xl border border-cyan-200 bg-white overflow-hidden" style={{boxShadow: '0 2px 8px rgba(0,0,0,0.04)'}}>
-                    <div className="flex items-center gap-2.5 px-4 py-2.5">
-                      <div className="w-1.5 h-5 rounded-full bg-gradient-to-b from-cyan-500 to-blue-500" />
-                      <h2 className="text-sm font-bold text-cyan-800">Non-Functional</h2>
-                      <span className="ml-auto text-[10px] font-mono text-cyan-500 bg-cyan-50 border border-cyan-200 rounded-full px-2 py-0.5">{sd.requirements.nonFunctional.length}</span>
-                    </div>
-                    <div className="px-4 py-3">
-                      <div className="grid grid-cols-1 gap-y-1">
-                        {sd.requirements.nonFunctional.map((r, i) => (
-                          <div key={i} className="flex items-start gap-2 text-sm text-gray-700 leading-snug py-0.5">
-                            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shrink-0 mt-1.5" />{r}
-                          </div>
-                        ))}
+                  {sd.scaleEstimates && Object.entries(sd.scaleEstimates).filter(([, v]) => v && v.trim()).length > 0 && (
+                    <section className="rounded-lg border border-violet-200 bg-white overflow-hidden shrink-0">
+                      <div className="flex items-center gap-2 px-3 py-1.5 border-b border-violet-100">
+                        <div className="w-1 h-3.5 rounded-full bg-gradient-to-b from-violet-500 to-purple-500" />
+                        <h2 className="text-[10px] font-bold text-violet-700 uppercase tracking-wider font-mono">Scale Estimates</h2>
                       </div>
-                    </div>
-                  </section>
-                )}
-              </div>
-
-              {/* ── SCALE ESTIMATES ── */}
-              {sd.scaleEstimates && Object.entries(sd.scaleEstimates).filter(([, v]) => v && v.trim()).length > 0 && (
-                <section className="rounded-2xl border border-violet-200 bg-white overflow-hidden" style={{boxShadow: '0 2px 8px rgba(0,0,0,0.04)'}}>
-                  <div className="flex items-center gap-2.5 px-4 py-2.5">
-                    <div className="w-1.5 h-5 rounded-full bg-gradient-to-b from-violet-500 to-purple-500" />
-                    <h2 className="text-sm font-bold text-violet-800">Scale Estimates</h2>
-                  </div>
-                  <div className="px-4 py-3">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                      {Object.entries(sd.scaleEstimates).filter(([, v]) => v && v.trim()).map(([key, val]) => {
-                        const highlight = parseMetricHighlight(val);
-                        return (
-                          <div key={key} className="rounded-lg bg-violet-50/50 border border-violet-100 px-3 py-3">
-                            <div className="font-bold text-violet-600 font-mono text-sm">{highlight ? highlight.number : val}</div>
-                            <div className="text-sm text-gray-700 font-medium mt-1">{key}</div>
-                            {highlight?.rest && <div className="text-xs text-gray-500 mt-1">{highlight.rest}</div>}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </section>
-              )}
-
-              {/* ── SCALABILITY TIERS ── */}
-              {sd.techJustifications && sd.techJustifications.length > 0 && (
-                <section className="rounded-2xl border border-violet-200 bg-white overflow-hidden" style={{boxShadow: '0 2px 8px rgba(0,0,0,0.04)'}}>
-                  <div className="flex items-center gap-2.5 px-4 py-2.5">
-                    <div className="w-1.5 h-5 rounded-full bg-gradient-to-b from-violet-500 to-indigo-500" />
-                    <h2 className="text-sm font-bold text-violet-800">Scalability Tiers</h2>
-                  </div>
-                  <div className="px-4 py-3">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                      {sd.techJustifications.map((tier, i) => {
-                        const color = tierColors[i % tierColors.length];
-                        return (
-                          <div key={i} className="rounded-lg border border-gray-100 p-2 text-center">
-                            <div className={`text-xs font-bold text-white bg-gradient-to-r ${
-                              ['from-indigo-500 to-violet-500', 'from-blue-500 to-indigo-500', 'from-violet-500 to-purple-500',
-                               'from-amber-500 to-orange-500', 'from-cyan-500 to-blue-500', 'from-rose-500 to-pink-500',
-                               'from-indigo-500 to-blue-500', 'from-violet-500 to-indigo-500'][i % 8]
-                            } rounded px-2 py-1 mb-1`}>{tier.tech}</div>
-                            {tier.details.length > 0 && (
-                              <div className="text-xs text-gray-600 leading-relaxed text-left mt-1">
-                                {tier.details.map((d, j) => <div key={j} title={d}>- {d}</div>)}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </section>
-              )}
-
-              {/* ── TRADEOFFS + EDGE CASES ── */}
-              {((sd.tradeoffs && sd.tradeoffs.length > 0) || (sd.edgeCases && sd.edgeCases.length > 0)) && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
-                  {sd.tradeoffs && sd.tradeoffs.length > 0 && (
-                    <section className="rounded-2xl border border-rose-200 bg-white overflow-hidden" style={{boxShadow: '0 2px 8px rgba(0,0,0,0.04)'}}>
-                      <div className="flex items-center gap-2.5 px-4 py-2.5">
-                        <div className="w-1.5 h-5 rounded-full bg-gradient-to-b from-rose-500 to-pink-500" />
-                        <h2 className="text-sm font-bold text-rose-800">Tradeoffs</h2>
-                      </div>
-                      <div className="px-4 py-3">
-                        <div className="grid grid-cols-1 gap-2">
-                          {sd.tradeoffs.map((t, i) => (
-                            <div key={i} className="rounded-lg bg-gray-50/80 border border-gray-100 px-3 py-2">
-                              <div className="flex items-start gap-2 text-sm text-gray-700 leading-snug">
-                                <span className="text-rose-500 font-bold shrink-0 mt-0.5">
-                                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
-                                </span>
-                                {t}
-                              </div>
+                      <div className="px-2 py-1.5 grid grid-cols-2 gap-1.5">
+                        {Object.entries(sd.scaleEstimates).filter(([, v]) => v && v.trim()).map(([key, val]) => {
+                          const highlight = parseMetricHighlight(val);
+                          return (
+                            <div key={key} className="rounded bg-violet-50/50 border border-violet-100 px-2 py-1.5">
+                              <div className="font-bold text-violet-600 font-mono text-xs">{highlight ? highlight.number : val}</div>
+                              <div className="text-[10px] text-gray-600 font-medium">{key}</div>
+                              {highlight?.rest && <div className="text-[9px] text-gray-400 leading-tight">{highlight.rest}</div>}
                             </div>
-                          ))}
-                        </div>
-                      </div>
-                    </section>
-                  )}
-                  {sd.edgeCases && sd.edgeCases.length > 0 && (
-                    <section className="rounded-2xl border border-amber-200 bg-white overflow-hidden" style={{boxShadow: '0 2px 8px rgba(0,0,0,0.04)'}}>
-                      <div className="flex items-center gap-2.5 px-4 py-2.5">
-                        <div className="w-1.5 h-5 rounded-full bg-gradient-to-b from-amber-500 to-orange-500" />
-                        <h2 className="text-sm font-bold text-amber-800">Edge Cases</h2>
-                      </div>
-                      <div className="px-4 py-3">
-                        <div className="grid grid-cols-1 gap-2">
-                          {sd.edgeCases.map((e, i) => (
-                            <div key={i} className="rounded-lg bg-gray-50/80 border border-gray-100 px-3 py-2">
-                              <div className="flex items-start gap-2 text-sm text-gray-700 leading-snug">
-                                <span className="text-amber-500 font-bold shrink-0 mt-0.5">
-                                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01" /></svg>
-                                </span>
-                                {e}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
+                          );
+                        })}
                       </div>
                     </section>
                   )}
                 </div>
-              )}
 
-              {/* ── FOLLOW-UP Q&A ── */}
-              {sd.followups && sd.followups.length > 0 && (
-                <section className="rounded-2xl border border-orange-200 bg-white overflow-hidden" style={{boxShadow: '0 2px 8px rgba(0,0,0,0.04)'}}>
-                  <div className="flex items-center gap-2.5 px-4 py-2.5">
-                    <div className="w-1.5 h-5 rounded-full bg-gradient-to-b from-orange-500 to-amber-500" />
-                    <h2 className="text-sm font-bold text-orange-800">Follow-up Q&A</h2>
-                    <span className="ml-auto text-[10px] font-mono text-orange-400 bg-orange-50 border border-orange-200 rounded-full px-2 py-0.5">{sd.followups.length}</span>
-                  </div>
-                  <div className="px-4 py-3">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                      {sd.followups.map((f, i) => (
-                        <div key={i} className="rounded-lg border border-gray-100 p-2.5">
-                          <div className="flex items-start gap-1.5 mb-1">
-                            <span className="text-xs font-mono font-bold text-indigo-600 shrink-0">Q{i + 1}</span>
-                            <span className="text-xs font-semibold text-gray-900">{f.question}</span>
-                          </div>
-                          <p className="text-xs text-gray-500 leading-relaxed pl-5">{f.answer}</p>
+                {/* COL 2: Functional, Tradeoffs, Architecture Layers */}
+                <div className="flex flex-col gap-1.5 min-h-0 overflow-y-auto">
+                  {sd.requirements?.functional && sd.requirements.functional.length > 0 && (
+                    <DesignCard title="Functional" color="indigo" count={sd.requirements.functional.length}>
+                      {sd.requirements.functional.map((r, i) => (
+                        <div key={i} className="flex items-start gap-1.5 text-xs text-gray-700 leading-snug py-0.5">
+                          <span className="font-bold text-indigo-600 shrink-0">{i + 1}.</span>{r}
                         </div>
                       ))}
-                    </div>
-                  </div>
-                </section>
-              )}
+                    </DesignCard>
+                  )}
+                  {sd.tradeoffs && sd.tradeoffs.length > 0 && (
+                    <DesignCard title="Tradeoffs" color="rose">
+                      {sd.tradeoffs.map((t, i) => (
+                        <div key={i} className="text-xs text-gray-700 leading-snug py-0.5 border-b border-gray-50 last:border-0">
+                          <span className="text-rose-500 mr-1">↔</span>{t}
+                        </div>
+                      ))}
+                    </DesignCard>
+                  )}
+                  {sd.techJustifications && sd.techJustifications.length > 0 && (
+                    <DesignCard title="Architecture Layers" color="violet" count={sd.techJustifications.length}>
+                      {sd.techJustifications.map((tier, i) => (
+                        <div key={i} className="py-1 border-b border-gray-50 last:border-0">
+                          <div className="text-[10px] font-bold text-violet-700">{tier.tech}</div>
+                          {tier.details.slice(0, 2).map((d, j) => (
+                            <div key={j} className="text-[10px] text-gray-500 leading-snug pl-2">- {d}</div>
+                          ))}
+                          {tier.details.length > 2 && <div className="text-[9px] text-gray-400 pl-2">+{tier.details.length - 2} more</div>}
+                        </div>
+                      ))}
+                    </DesignCard>
+                  )}
+                </div>
 
+                {/* COL 3: Non-Functional, Edge Cases, Follow-up Q&A */}
+                <div className="flex flex-col gap-1.5 min-h-0 overflow-y-auto">
+                  {sd.requirements?.nonFunctional && sd.requirements.nonFunctional.length > 0 && (
+                    <DesignCard title="Non-Functional" color="cyan" count={sd.requirements.nonFunctional.length}>
+                      {sd.requirements.nonFunctional.map((r, i) => (
+                        <div key={i} className="flex items-start gap-1.5 text-xs text-gray-700 leading-snug py-0.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shrink-0 mt-1" />{r}
+                        </div>
+                      ))}
+                    </DesignCard>
+                  )}
+                  {sd.edgeCases && sd.edgeCases.length > 0 && (
+                    <DesignCard title="Edge Cases" color="amber">
+                      {sd.edgeCases.map((e, i) => (
+                        <div key={i} className="text-xs text-gray-700 leading-snug py-0.5 border-b border-gray-50 last:border-0">
+                          <span className="text-amber-500 mr-1">⚠</span>{e}
+                        </div>
+                      ))}
+                    </DesignCard>
+                  )}
+                  {sd.followups && sd.followups.length > 0 && (
+                    <DesignCard title="Follow-up Q&A" color="orange" count={sd.followups.length}>
+                      {sd.followups.map((f, i) => (
+                        <div key={i} className="py-1 border-b border-gray-50 last:border-0">
+                          <div className="text-[10px] font-bold text-indigo-600">Q{i + 1}: <span className="text-gray-800 font-semibold">{f.question}</span></div>
+                          <p className="text-[10px] text-gray-500 leading-snug mt-0.5">{f.answer}</p>
+                        </div>
+                      ))}
+                    </DesignCard>
+                  )}
+                </div>
+              </div>
             </div>
           )}
         </div>
