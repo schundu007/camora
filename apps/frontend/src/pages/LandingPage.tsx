@@ -10,7 +10,7 @@ import SiteFooter from '../components/shared/SiteFooter';
 const APPA = [
   { num: '01', label: 'Apply', desc: 'Discover engineering roles matched to your skills, experience, and salary goals across 1 000+ companies.', href: '/jobs', color: '#34d399' },
   { num: '02', label: 'Prepare', desc: 'Study 800+ curated topics spanning system design, DSA, behavioral, databases, and cloud architecture.', href: '/capra/prepare', color: '#818cf8' },
-  { num: '03', label: 'Practice', desc: 'Solve problems with AI explanations, run mock interviews, and build confidence before the real thing.', href: '/capra/practice', color: '#38bdf8' },
+  { num: '03', label: 'Practice', desc: 'Solve 850+ coding problems with AI explanations, run mock interviews, and build confidence before the real thing.', href: '/capra/practice', color: '#38bdf8' },
   { num: '04', label: 'Attend', desc: 'Get real-time AI answers during your live technical interview — system design, coding, and behavioral.', href: '/lumora', color: '#fbbf24' },
 ];
 
@@ -211,15 +211,16 @@ function PrepShowcase() {
   const inView = useInView(ref, { once: true, margin: '-80px' });
 
   const TOPIC_CATEGORIES = [
-    { name: 'DSA & Algorithms', count: 65, color: '#34d399' },
-    { name: 'System Design', count: 420, color: '#06b6d4' },
-    { name: 'Microservices', count: 27, color: '#818cf8' },
-    { name: 'Database Internals', count: 16, color: '#f97316' },
-    { name: 'SQL for Interviews', count: 15, color: '#fbbf24' },
-    { name: 'Low-Level Design', count: 112, color: '#a78bfa' },
-    { name: 'Behavioral', count: 64, color: '#f472b6' },
+    { name: 'DSA & Algorithms', count: 65, problems: 854, color: '#34d399' },
+    { name: 'System Design', count: 420, problems: 318, color: '#06b6d4' },
+    { name: 'Microservices', count: 27, problems: 0, color: '#818cf8' },
+    { name: 'Database Internals', count: 16, problems: 112, color: '#f97316' },
+    { name: 'SQL for Interviews', count: 15, problems: 85, color: '#fbbf24' },
+    { name: 'Low-Level Design', count: 112, problems: 268, color: '#a78bfa' },
+    { name: 'Behavioral', count: 64, problems: 230, color: '#f472b6' },
   ];
   const TOTAL = 808;
+  const TOTAL_PROBLEMS = 1867;
   const RADIUS = 72;
   const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
@@ -250,8 +251,10 @@ function PrepShowcase() {
                 strokeDashoffset={seg.offset} strokeLinecap="butt"
                 style={{ transition: `stroke-dasharray 1.2s ease ${i * 100 + 300}ms` }} />
             ))}
-            <text x="100" y="93" textAnchor="middle" fill="var(--text-primary)" fontSize="28" fontWeight="bold" fontFamily="inherit">800+</text>
-            <text x="100" y="116" textAnchor="middle" fill="var(--text-muted)" fontSize="12" fontWeight="500" fontFamily="inherit">Total Topics</text>
+            <text x="100" y="85" textAnchor="middle" fill="var(--text-primary)" fontSize="26" fontWeight="bold" fontFamily="inherit">800+</text>
+            <text x="100" y="104" textAnchor="middle" fill="var(--text-muted)" fontSize="11" fontWeight="500" fontFamily="inherit">Topics</text>
+            <text x="100" y="122" textAnchor="middle" fill="var(--accent)" fontSize="16" fontWeight="bold" fontFamily="inherit">1,850+</text>
+            <text x="100" y="137" textAnchor="middle" fill="var(--text-muted)" fontSize="10" fontWeight="500" fontFamily="inherit">Problems</text>
           </svg>
         </div>
         <div className="flex flex-wrap gap-x-6 gap-y-3">
@@ -262,6 +265,7 @@ function PrepShowcase() {
               <span className="flex-shrink-0 w-3 h-3 rounded-full" style={{ background: cat.color }} />
               <span className="text-sm font-medium whitespace-nowrap" style={{ color: 'var(--text-secondary)' }}>{cat.name}</span>
               <span className="text-sm font-code font-semibold" style={{ color: 'var(--text-muted)' }}>{cat.count}</span>
+              {cat.problems > 0 && <span className="text-xs font-code" style={{ color: 'var(--text-dimmed)' }}>({cat.problems} problems)</span>}
             </div>
           ))}
         </div>
