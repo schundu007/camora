@@ -11,13 +11,17 @@ function CodingPageContent() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { handleCodingSubmit, isStreaming } = useStreamingInterview();
-  const codingRef = useRef<{ setProblemText?: (t: string) => void }>(null);
+  const codingRef = useRef<{ setProblemText?: (t: string) => void; getLanguage?: () => string; submit?: () => void }>(null);
 
   const initialProblem = searchParams.get('problem') || '';
 
   const handleTranscription = useCallback((text: string) => {
-    codingRef.current?.setProblemText?.(text);
-  }, []);
+    if (text.trim()) {
+      const lang = codingRef.current?.getLanguage?.() || 'python';
+      codingRef.current?.setProblemText?.(text.trim());
+      handleCodingSubmit(text.trim(), lang);
+    }
+  }, [handleCodingSubmit]);
 
   return (
     <div className="h-screen w-full flex flex-col overflow-hidden lumora-app-bg">

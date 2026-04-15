@@ -298,7 +298,12 @@ export const DesignLayout = forwardRef<{ setProblemText?: (t: string) => void },
 
   const [problemText, setProblemText] = useState(initialProblem || '');
 
-  useImperativeHandle(ref, () => ({ setProblemText }), []);
+  useImperativeHandle(ref, () => ({
+    setProblemText: (text: string) => {
+      setProblemText(text);
+      pendingVoiceSubmit.current = true;
+    },
+  }), []);
   const autoSubmittedRef = useRef(false);
   const [inputTab, setInputTab] = useState<'text' | 'url' | 'image'>('text');
   const [detailLevel, setDetailLevel] = useState<'basic' | 'full'>('basic');
