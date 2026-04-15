@@ -338,7 +338,6 @@ export default function PracticePage() {
   const [inlineEval, setInlineEval] = useState(null); // current question's eval before moving on
   const [expandedHistory, setExpandedHistory] = useState(null);
   const [resultDimensions, setResultDimensions] = useState(null);
-  const timerRef = useRef(null);
   const textareaRef = useRef(null);
   const challengeStartRef = useRef(0);
   const endChallengeRef = useRef(null);
@@ -485,7 +484,6 @@ export default function PracticePage() {
   }, [currentIdx, questions, scores]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const endChallenge = useCallback((finalScores) => {
-    clearInterval(timerRef.current);
     const s = finalScores || scores;
     const modeConfig = MODES.find(m => m.id === mode);
     const totalTime = Math.round((Date.now() - challengeStartRef.current) / 1000);
@@ -574,8 +572,8 @@ export default function PracticePage() {
   const readiness = getReadiness(stats);
   const modeConfig = MODES.find(m => m.id === mode);
 
-  // Social proof (simulated)
-  const socialCount = 1247 + Math.floor((new Date().getHours() * 37 + new Date().getMinutes()) % 300);
+  // Social proof (simulated) — computed once on mount
+  const [socialCount] = useState(() => 1247 + Math.floor((new Date().getHours() * 37 + new Date().getMinutes()) % 300));
 
   const dimValues = DIMENSION_KEYS.map(k => stats.dimensions?.[k] || 0);
 

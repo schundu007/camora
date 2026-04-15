@@ -564,10 +564,13 @@ app.post('/api/admin/grant-trial', authenticate, async (req, res) => {
     if (!admin.rows[0]?.is_admin) return res.status(403).json({ error: 'Admin access required' });
 
     const { userId, days } = req.body;
-    if (!userId || !days) return res.status(400).json({ error: 'userId and days required' });
+    const daysInt = parseInt(days, 10);
+    if (!userId || !Number.isFinite(daysInt) || daysInt < 1 || daysInt > 365) {
+      return res.status(400).json({ error: 'userId required; days must be 1-365' });
+    }
 
     const trialEnd = new Date();
-    trialEnd.setDate(trialEnd.getDate() + parseInt(days));
+    trialEnd.setDate(trialEnd.getDate() + daysInt);
 
     await query(
       'UPDATE ascend_subscriptions SET trial_ends_at = $1 WHERE user_id = $2',
@@ -579,7 +582,7 @@ app.post('/api/admin/grant-trial', authenticate, async (req, res) => {
 
     // Send trial notification email (non-blocking)
     if (email) {
-      sendTrialEmail({ to: email, name, days: parseInt(days), trialEndsAt: trialEnd.toISOString() })
+      sendTrialEmail({ to: email, name, days: daysInt, trialEndsAt: trialEnd.toISOString() })
         .catch(err => console.error('[Admin GrantTrial] Email error:', err.message));
     }
 

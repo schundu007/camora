@@ -9,6 +9,7 @@ import { sqlTopics } from '../../data/capra/topics/sqlTopics.js';
 import { behavioralTopics } from '../../data/capra/topics/behavioralTopics.js';
 import { projectTopics } from '../../data/capra/topics/projectTopics.js';
 import { microservicesPatterns } from '../../data/capra/topics/microservicesPatterns.js';
+import { getAuthHeaders } from '../../utils/authHeaders';
 
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 

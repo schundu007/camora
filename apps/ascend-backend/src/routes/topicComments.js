@@ -33,6 +33,9 @@ router.post('/', jwtAuth, async (req, res) => {
     if (!topicId || !content?.trim()) {
       return res.status(400).json({ error: 'topicId and content are required' });
     }
+    if (content.length > 5000) {
+      return res.status(400).json({ error: 'Comment too long (max 5000 characters)' });
+    }
 
     const result = await query(
       `INSERT INTO ascend_topic_comments (topic_id, user_id, user_name, user_image, content, parent_id)
@@ -56,6 +59,9 @@ router.put('/:id', jwtAuth, async (req, res) => {
 
     if (!content?.trim()) {
       return res.status(400).json({ error: 'content is required' });
+    }
+    if (content.length > 5000) {
+      return res.status(400).json({ error: 'Comment too long (max 5000 characters)' });
     }
 
     const result = await query(

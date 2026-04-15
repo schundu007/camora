@@ -86,15 +86,17 @@ router.post('/cookies', authenticate, (req, res) => {
     return res.status(400).json({ error: 'Platform and cookies are required' });
   }
 
-  platformCookies[platform] = cookies;
-  console.log(`[Extension] Received cookies for ${platform}, length: ${cookies.length}`);
+  const key = `${req.user.id}:${platform}`;
+  platformCookies[key] = cookies;
+  console.log(`[Extension] Received cookies for ${platform} (user ${req.user.id}), length: ${cookies.length}`);
 
   res.json({ success: true, platform, timestamp });
 });
 
 // Export function to get cookies (used by fetch route)
-export function getExtensionPlatformCookies(platform) {
-  return platformCookies[platform] || null;
+export function getExtensionPlatformCookies(platform, userId) {
+  if (!userId) return platformCookies[platform] || null;
+  return platformCookies[`${userId}:${platform}`] || null;
 }
 
 // Health check

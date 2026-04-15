@@ -362,9 +362,10 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const { pathname } = useLocation();
   const [collapsed, setCollapsed] = useState(() => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('camora-sidebar-collapsed') !== 'false';
+      const stored = localStorage.getItem('camora-sidebar-collapsed');
+      return stored === null ? false : stored === 'true';
     }
-    return true; // collapsed by default
+    return false; // expanded by default for new users
   });
 
   useEffect(() => {

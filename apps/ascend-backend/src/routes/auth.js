@@ -179,7 +179,7 @@ router.get('/google/callback', async (req, res) => {
  * POST /api/auth/refresh
  * Accepts an expired access token and issues a fresh one with the same claims.
  */
-router.post('/refresh', async (req, res) => {
+router.post('/refresh', authLimiter, async (req, res) => {
   const authHeader = req.headers.authorization;
   if (!authHeader?.startsWith('Bearer ')) {
     return res.status(401).json({ error: 'No token provided' });
@@ -264,7 +264,7 @@ router.get('/me', authenticate, async (req, res) => {
  * Grant admin subscription to a user (admin secret required)
  * POST /api/auth/admin/grant-subscription
  */
-router.post('/admin/grant-subscription', async (req, res) => {
+router.post('/admin/grant-subscription', authLimiter, async (req, res) => {
   const { email, adminSecret } = req.body;
 
   // Require admin secret from environment (no default — must be explicitly configured)
@@ -327,7 +327,7 @@ router.post('/admin/grant-subscription', async (req, res) => {
     });
   } catch (error) {
     logger.error({ error: error.message, email }, 'Grant subscription failed');
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to grant subscription' });
   }
 });
 

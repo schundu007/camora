@@ -18,9 +18,14 @@ async function checkDailyDiagramLimit(userId) {
   const today = new Date().toISOString().slice(0, 10);
   const key = `daily_diagram:${userId}:${today}`;
   const count = (await cacheGet(key)) || 0;
-  if (count >= PAID_DIAGRAM_DAILY_LIMIT) return false;
+  return count < PAID_DIAGRAM_DAILY_LIMIT;
+}
+
+async function incrementDailyDiagramCount(userId) {
+  const today = new Date().toISOString().slice(0, 10);
+  const key = `daily_diagram:${userId}:${today}`;
+  const count = (await cacheGet(key)) || 0;
   await cacheSet(key, count + 1, 86400);
-  return true;
 }
 
 /** Hash a problem description into a stable cache key */
@@ -67,11 +72,13 @@ router.post('/eraser', async (req, res, next) => {
 
     // 2. Check free usage (authenticate middleware guarantees req.user)
     const userId = req.user.id;
+    let userHasSubscription = false;
     if (!req.user.is_admin) {
       const canUse = await freeUsageService.canUseFeature(userId, 'design');
       if (!canUse.allowed) {
         return res.status(429).json({ error: canUse.reason || 'Free trial exhausted.', subscriptionRequired: true });
       }
+      userHasSubscription = canUse.hasSubscription;
       if (canUse.hasSubscription && !(await checkDailyDiagramLimit(userId))) {
         return res.status(429).json({ error: `Daily diagram limit reached (${PAID_DIAGRAM_DAILY_LIMIT}/day). Try again tomorrow.`, dailyLimitReached: true });
       }
@@ -101,6 +108,7 @@ router.post('/eraser', async (req, res, next) => {
       console.warn('[DiagramCache] Failed to save:', err.message);
     }
 
+    if (userHasSubscription) incrementDailyDiagramCount(userId).catch(() => {});
     res.json(result);
   } catch (error) {
     if (error instanceof AppError) {
@@ -160,11 +168,13 @@ router.post('/generate', async (req, res, next) => {
 
     // 2. Check free usage — only for cache misses (actual generation costs money)
     const userId = req.user.id;
+    let userHasSubscription = false;
     if (!req.user.is_admin) {
       const canUse = await freeUsageService.canUseFeature(userId, 'design');
       if (!canUse.allowed) {
         return res.status(429).json({ error: canUse.reason || 'Free trial exhausted.', subscriptionRequired: true });
       }
+      userHasSubscription = canUse.hasSubscription;
       if (canUse.hasSubscription && !(await checkDailyDiagramLimit(userId))) {
         return res.status(429).json({ error: `Daily diagram limit reached (${PAID_DIAGRAM_DAILY_LIMIT}/day). Try again tomorrow.`, dailyLimitReached: true });
       }
@@ -221,6 +231,7 @@ router.post('/generate', async (req, res, next) => {
           console.warn('[DiagramCache] Failed to cache mermaid code:', cacheErr.message);
         }
 
+        if (userHasSubscription) incrementDailyDiagramCount(userId).catch(() => {});
         return res.json({
           success: true,
           type: 'mermaid',
@@ -252,9 +263,11 @@ router.post('/generate', async (req, res, next) => {
     } catch (err) {
       console.warn('[DiagramCache] Failed to persist image:', err.message);
       // Fall back to temp file URL if DB storage fails
+      if (userHasSubscription) incrementDailyDiagramCount(userId).catch(() => {});
       return res.json({ ...pythonResult, cloud_provider: provider });
     }
 
+    if (userHasSubscription) incrementDailyDiagramCount(userId).catch(() => {});
     res.json({ success: true, image_url: imageUrl, cloud_provider: provider, cached: false });
   } catch (error) {
     if (error instanceof AppError) {
