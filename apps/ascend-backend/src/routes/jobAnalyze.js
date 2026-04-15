@@ -480,6 +480,9 @@ router.post('/text', async (req, res) => {
   if (!text || typeof text !== 'string' || text.trim().length < 50) {
     return res.status(400).json({ error: 'Please provide at least 50 characters of job description text.' });
   }
+  if (text.length > 50000) {
+    return res.status(400).json({ error: 'Text too long (max 50,000 characters)' });
+  }
 
   try {
     const jobText = cleanText(text);

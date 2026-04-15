@@ -389,7 +389,7 @@ export async function fetchProblemFromUrl(url, electronCookies = null, req = nul
       cookies = electronCookies[platform];
       console.log(`[Scraper] Using Electron cookies for ${platform}`);
     } else {
-      cookies = getExtensionPlatformCookies(platform);
+      cookies = getExtensionPlatformCookies(platform, req?.user?.id);
       if (cookies) {
         console.log(`[Scraper] Using extension-synced cookies for ${platform}`);
       } else {

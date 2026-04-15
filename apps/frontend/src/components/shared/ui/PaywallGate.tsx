@@ -23,7 +23,7 @@ export function PaywallGate({ children, requiredPlan = 'any_paid', feature = 'th
   }
 
   // Check access
-  // Plans set by Lumora billing webhook: 'pro' (unlimited $79/mo) or 'lifetime' (8-pack $99)
+  // Plans: 'starter' ($29/mo), 'pro' ($49/mo), 'annual' ($19/mo billed yearly)
   const hasAccess = subscription?.plan && subscription.plan !== 'free';
 
   if (hasAccess) {
@@ -41,7 +41,7 @@ export function PaywallGate({ children, requiredPlan = 'any_paid', feature = 'th
         </div>
         <h2 className="font-display text-2xl font-bold text-[var(--text-primary)] mb-2">Upgrade to Access {feature}</h2>
         <p className="text-[var(--text-muted)] mb-6">
-          This feature is available on Unlimited and 8-Pack plans. Upgrade to unlock unlimited AI questions, 3-approach coding solutions, system audio capture, and more.
+          This feature is available on Starter, Pro, and Annual plans. Upgrade to unlock unlimited AI questions, 3-approach coding solutions, system audio capture, and more.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link
@@ -57,7 +57,7 @@ export function PaywallGate({ children, requiredPlan = 'any_paid', feature = 'th
             Continue Free
           </Link>
         </div>
-        <p className="mt-4 text-xs text-gray-400">Free trial: 1 session (60 min), all AI features included</p>
+        <p className="mt-4 text-xs text-gray-400">Free trial: 3 live interview sessions, all AI features included</p>
       </div>
     </div>
   );

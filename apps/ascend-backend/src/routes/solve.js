@@ -20,9 +20,14 @@ async function checkDailySolveLimit(userId) {
   const today = new Date().toISOString().slice(0, 10);
   const key = `daily_solve:${userId}:${today}`;
   const count = (await cacheGet(key)) || 0;
-  if (count >= PAID_DAILY_LIMIT) return false;
+  return count < PAID_DAILY_LIMIT;
+}
+
+async function incrementDailySolveCount(userId) {
+  const today = new Date().toISOString().slice(0, 10);
+  const key = `daily_solve:${userId}:${today}`;
+  const count = (await cacheGet(key)) || 0;
   await cacheSet(key, count + 1, 86400);
-  return true;
 }
 
 // In-memory cache for coding solutions to avoid repeated Claude API calls
@@ -79,6 +84,7 @@ router.post('/', validate('solve'), async (req, res, next) => {
     }
     solutionCache.set(cacheKey, { data: result, timestamp: Date.now() });
 
+    if (canUse.hasSubscription) incrementDailySolveCount(userId).catch(() => {});
     if (userId) awardXP(userId, 'coding_solve').catch(() => {});
 
     res.json(result);
@@ -100,6 +106,7 @@ router.post('/stream', validate('solve'), async (req, res, next) => {
 
     // Check for webapp user (JWT auth) and verify subscription + usage allowance
     let webappUserId = null;
+    let webappHasSubscription = false;
     const authHeader = req.headers.authorization;
 
     if (authHeader && authHeader.startsWith('Bearer ')) {
@@ -141,6 +148,7 @@ router.post('/stream', validate('solve'), async (req, res, next) => {
             return;
           }
 
+          webappHasSubscription = canUseResult.hasSubscription;
           logger.debug({
             userId: webappUserId,
             hasSubscription: canUseResult.hasSubscription,
@@ -349,6 +357,7 @@ router.post('/stream', validate('solve'), async (req, res, next) => {
         }
       }
 
+      if (webappHasSubscription) incrementDailySolveCount(webappUserId).catch(() => {});
       if (webappUserId) awardXP(webappUserId, 'coding_solve').catch(() => {});
 
       res.write(`data: ${JSON.stringify({ done: true, result })}\n\n`);

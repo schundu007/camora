@@ -34,16 +34,18 @@ router.use(authenticate);
 router.post('/enroll', upload.any(), async (req, res) => {
   // Accept both 'audio' and 'file' field names
   if (req.files?.length > 0) req.file = req.files[0];
+
+  // Declare temp paths outside try so finally can clean them up
+  const id = randomUUID();
+  const tmpDir = os.tmpdir();
+  const inputPath = path.join(tmpDir, `enroll-${id}.webm`);
+  const wavPath = path.join(tmpDir, `enroll-${id}.wav`);
+
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'Audio file is required (field name: "audio")' });
     }
     console.log(`[Speaker] Received: name=${req.file.originalname}, size=${req.file.size}, mime=${req.file.mimetype}`);
-
-    const id = randomUUID();
-    const tmpDir = os.tmpdir();
-    const inputPath = path.join(tmpDir, `enroll-${id}.webm`);
-    const wavPath = path.join(tmpDir, `enroll-${id}.wav`);
 
     await fs.promises.writeFile(inputPath, req.file.buffer);
 
