@@ -1062,7 +1062,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
               language={getLanguageById(language)?.monaco || 'python'}
               code={code}
               onChange={setCode}
-              theme="light"
+              theme={embedded ? 'dark' : 'light'}
               fontSize={13}
             />
           </div>

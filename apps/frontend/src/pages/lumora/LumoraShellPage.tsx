@@ -178,6 +178,7 @@ export function LumoraShellPage() {
         onSubmit={handleInputSubmit}
         isStreaming={isStreaming}
         onAskQuestion={handleSubmit}
+        activeTab={activeTab}
       />
     </div>
   );
