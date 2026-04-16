@@ -36,6 +36,7 @@ const PREP_SECTIONS = [
   { key: 'system-design', label: 'System Design Questions', description: 'System design scenarios based on job requirements', icon: '🏗' },
   { key: 'behavioral', label: 'Behavioral Questions', description: 'STAR-format questions tailored to the role', icon: '⭐' },
   { key: 'techstack', label: 'Tech Stack Analysis', description: 'Technology-specific deep dives', icon: '🔧' },
+  { key: 'resume', label: 'Resume & Cover Letter', description: 'Optimize resume and generate cover letter for this role', icon: '📄' },
 ] as const;
 
 const TECH_TO_TOPICS: Record<string, { category: string; topic: string; href: string }> = {
@@ -830,6 +831,39 @@ export default function JobPrepPage() {
                   // Find the first non-completed section to mark as "active"
                   const firstPendingKey = PREP_SECTIONS.find(s => !generatedSections[s.key])?.key;
                   const isActive = generating && sec.key === firstPendingKey;
+
+                  // Resume section — always show as a link to the optimizer
+                  if (sec.key === 'resume') {
+                    const resumeUrl = `/capra/resume?company=${encodeURIComponent(job?.company_name || '')}&role=${encodeURIComponent(job?.title || '')}&url=${encodeURIComponent(job?.job_url || '')}`;
+                    return (
+                      <div key={sec.key}>
+                        <a
+                          href={resumeUrl}
+                          style={{
+                            width: '100%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '12px',
+                            padding: '14px 16px',
+                            background: 'var(--bg-surface)',
+                            border: '1px solid #8b5cf6',
+                            borderRadius: '10px',
+                            textDecoration: 'none',
+                            transition: 'border-color 0.15s, background 0.15s',
+                          }}
+                        >
+                          <div style={{ width: '24px', height: '24px', background: 'linear-gradient(135deg, #8b5cf6, #6366f1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <span style={{ fontSize: '12px' }}>{sec.icon}</span>
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>{sec.label}</div>
+                            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>{sec.description}</div>
+                          </div>
+                          <svg width="16" height="16" fill="none" stroke="#8b5cf6" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" /></svg>
+                        </a>
+                      </div>
+                    );
+                  }
 
                   return (
                     <div key={sec.key}>

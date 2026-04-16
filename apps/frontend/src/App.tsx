@@ -22,6 +22,7 @@ const CapraOnboarding = lazy(() => import('./pages/capra/OnboardingPage'));
 const CapraLanding = lazy(() => import('./pages/capra/CapraLandingPage'));
 const CompanyPrepPage = lazy(() => import('./pages/capra/CompanyPrepPage'));
 const AchievementsPage = lazy(() => import('./pages/capra/AchievementsPage'));
+const ResumePage = lazy(() => import('./pages/capra/ResumePage'));
 const PrepPlanPage = lazy(() => import('./pages/capra/PrepPlanPage'));
 const JobsPage = lazy(() => import('./pages/JobsPage'));
 const JobPrepPage = lazy(() => import('./pages/JobPrepPage'));
@@ -191,6 +192,7 @@ export function App() {
           <Route path="/capra/onboarding" element={<ProtectedRoute><CapraOnboarding /></ProtectedRoute>} />
           <Route path="/capra/landing" element={<CapraLanding />} />
           <Route path="/capra/achievements" element={<ShellRoute><AchievementsPage /></ShellRoute>} />
+          <Route path="/capra/resume" element={<ShellRoute><ResumePage /></ShellRoute>} />
 
           {/* ── Also accessible via old Capra paths ────── */}
           <Route path="/prepare/*" element={<ShellRoute><CapraPrepare /></ShellRoute>} />
