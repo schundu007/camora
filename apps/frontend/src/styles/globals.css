@@ -542,10 +542,15 @@ main, [role="main"] { animation: fadeUp 0.15s ease-out; }
 .lumora-dark-embed .shadow-sm { box-shadow: 0 1px 3px rgba(0,0,0,0.3) !important; }
 .lumora-dark-embed .placeholder\:text-gray-400::placeholder,
 .lumora-dark-embed .placeholder\:text-gray-300::placeholder { color: #545260 !important; }
-.lumora-dark-embed input,
-.lumora-dark-embed textarea,
+/* Exclude Monaco editor internals from dark overrides */
+.lumora-dark-embed input:not([class*="monaco"]):not([class*="inputarea"]),
+.lumora-dark-embed textarea:not([class*="monaco"]):not([class*="inputarea"]),
 .lumora-dark-embed select { background-color: #1E1C28 !important; color: #F2F1F3 !important; border-color: #2A2833 !important; }
-.lumora-dark-embed pre { background-color: #1E1C28 !important; color: #F2F1F3 !important; }
+.lumora-dark-embed pre:not([class*="monaco"]) { background-color: #1E1C28 !important; color: #F2F1F3 !important; }
+/* Don't override Monaco editor container styles */
+.lumora-dark-embed .monaco-editor,
+.lumora-dark-embed .monaco-editor * { background-color: unset; color: unset; border-color: unset; }
+.lumora-dark-embed .monaco-editor .overflow-guard { background-color: #1e1e1e !important; }
 
 /* Enterprise status bar */
 .status-bar {
