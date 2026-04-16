@@ -401,79 +401,60 @@ export default function PricingPage() {
       </section>
 
 
-      {/* Desktop App Download */}
-      <section className="px-6 py-10">
-        <div className="w-full lg:max-w-[70%] mx-auto">
-          <div className="rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', boxShadow: '0 4px 24px rgba(0,0,0,0.2)' }}>
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.15))', color: '#818cf8' }}>
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+      {/* Desktop App + Top-Up Packs — compact row */}
+      <section className="px-6 py-8">
+        <div className="max-w-3xl mx-auto space-y-4">
+          {/* Desktop App */}
+          <div className="rounded-xl p-4 flex items-center justify-between gap-4" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.15))', color: '#818cf8' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
                   <rect x="2" y="3" width="20" height="14" rx="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" />
                 </svg>
               </div>
               <div>
-                <h3 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Desktop App</h3>
-                <p className="text-[12px] mt-0.5" style={{ color: 'var(--text-muted)' }}>Stealth mode, screen-share safe. Available for macOS and Windows.</p>
+                <h3 className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>Desktop App</h3>
+                <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>Stealth mode, screen-share safe</p>
               </div>
             </div>
-            <a
-              href="https://github.com/schundu007/camora/releases/latest"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="shrink-0 inline-flex items-center gap-2 px-5 py-2.5 text-white text-xs font-semibold rounded-lg transition-all duration-200 hover:opacity-90"
-              style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', boxShadow: '0 4px 14px rgba(99,102,241,0.25)' }}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
-              </svg>
+            <a href="https://github.com/schundu007/camora/releases/latest" target="_blank" rel="noopener noreferrer" className="shrink-0 px-4 py-1.5 text-white text-[11px] font-semibold rounded-lg" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
               Download
             </a>
           </div>
-        </div>
-      </section>
 
-      {/* Top-Up Packs */}
-      <section className="px-6 py-10">
-        <div className="w-full lg:max-w-[70%] mx-auto">
-          <h2 className="heading-2 mb-6 text-center">Top-Up Packs</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {[
-              { name: '20 AI Questions', price: '$5', desc: 'Includes 3 bonus diagrams', packId: 'questions_20' },
-              { name: '50 AI Questions', price: '$10', desc: 'Includes 8 bonus diagrams', packId: 'questions_50' },
-              { name: '5 Live Sessions', price: '$15', desc: '90 minutes per session', packId: 'sessions_5' },
-            ].map((pack) => (
-              <div key={pack.packId} className="rounded-2xl p-4 flex items-center justify-between gap-4" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', boxShadow: '0 4px 24px rgba(0,0,0,0.2)' }}>
-                <div>
-                  <h3 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{pack.name}</h3>
-                  <div className="flex items-baseline gap-1 mt-0.5">
-                    <span className="text-lg font-bold text-indigo-400">{pack.price}</span>
-                    <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>one-time</span>
-                  </div>
-                  <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-muted)' }}>{pack.desc}</p>
+          {/* Top-Up Packs */}
+          <div>
+            <h3 className="text-xs font-bold uppercase tracking-wider text-center mb-3" style={{ color: 'var(--text-muted)' }}>Top-Up Packs</h3>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { name: '20 AI Questions', price: '$5', desc: '+ 3 diagrams', packId: 'questions_20' },
+                { name: '50 AI Questions', price: '$10', desc: '+ 8 diagrams', packId: 'questions_50' },
+                { name: '5 Live Sessions', price: '$15', desc: '90 min each', packId: 'sessions_5' },
+              ].map((pack) => (
+                <div key={pack.packId} className="rounded-xl p-3 flex flex-col items-center text-center" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+                  <span className="text-[11px] font-semibold" style={{ color: 'var(--text-primary)' }}>{pack.name}</span>
+                  <span className="text-base font-bold text-indigo-400 mt-0.5">{pack.price}</span>
+                  <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>{pack.desc}</span>
+                  <button
+                    onClick={async () => {
+                      if (!token) { navigate('/login'); return; }
+                      try {
+                        const resp = await fetch(`${API_URL}/api/v1/usage/topup`, {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                          body: JSON.stringify({ pack_id: pack.packId, success_url: `${window.location.origin}/pricing?topup=success`, cancel_url: `${window.location.origin}/pricing` }),
+                        });
+                        const data = await resp.json();
+                        if (data.url) window.location.href = data.url;
+                      } catch { /* ignore */ }
+                    }}
+                    className="mt-2 px-3 py-1 text-white text-[10px] font-semibold rounded-md cursor-pointer" style={{ background: 'var(--accent)' }}
+                  >
+                    Buy
+                  </button>
                 </div>
-                <button
-                  onClick={async () => {
-                    if (!token) { navigate('/login'); return; }
-                    try {
-                      const resp = await fetch(`${API_URL}/api/v1/usage/topup`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                        body: JSON.stringify({
-                          pack_id: pack.packId,
-                          success_url: `${window.location.origin}/pricing?topup=success`,
-                          cancel_url: `${window.location.origin}/pricing`,
-                        }),
-                      });
-                      const data = await resp.json();
-                      if (data.url) window.location.href = data.url;
-                    } catch { /* ignore */ }
-                  }}
-                  className="shrink-0 px-4 py-2 text-white text-xs font-semibold rounded-lg transition-colors" style={{ background: 'var(--accent)' }}
-                >
-                  Buy
-                </button>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </section>
