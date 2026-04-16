@@ -136,7 +136,7 @@ router.get('/', async (req, res, next) => {
     const [dataResult, countResult, lastUpdatedResult] = await Promise.all([
       queryJobs(sql, params),
       queryJobs(countSql, params.slice(0, -2)), // exclude limit/offset
-      queryJobs('SELECT MAX(date_found) AS last_updated FROM jobs WHERE is_active = true'),
+      queryJobs('SELECT GREATEST(MAX(date_found), MAX(posted_date)) AS last_updated FROM jobs WHERE is_active = true'),
     ]);
 
     res.json({
