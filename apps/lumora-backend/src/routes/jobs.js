@@ -132,15 +132,17 @@ router.get('/', async (req, res, next) => {
       WHERE ${whereClause}
     `;
 
-    // Run data query and count query in parallel
-    const [dataResult, countResult] = await Promise.all([
+    // Run data query, count query, and last-updated query in parallel
+    const [dataResult, countResult, lastUpdatedResult] = await Promise.all([
       queryJobs(sql, params),
       queryJobs(countSql, params.slice(0, -2)), // exclude limit/offset
+      queryJobs('SELECT MAX(date_found) AS last_updated FROM jobs WHERE is_active = true'),
     ]);
 
     res.json({
       jobs: dataResult.rows,
       total: parseInt(countResult.rows[0].total, 10),
+      last_updated: lastUpdatedResult.rows[0]?.last_updated || null,
       limit,
       offset,
     });

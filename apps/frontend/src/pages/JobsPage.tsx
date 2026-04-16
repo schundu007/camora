@@ -132,6 +132,7 @@ interface JobsResponse {
   jobs: Job[];
   total: number;
   companies_count?: number;
+  last_updated?: string;
 }
 
 /* ──────────────────────────────── Helpers ──────────────────────────────── */
@@ -306,6 +307,7 @@ export default function JobsPage() {
   // Data
   const [jobs, setJobs] = useState<Job[]>([]);
   const [total, setTotal] = useState(0);
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -406,6 +408,7 @@ export default function JobsPage() {
       const data: JobsResponse = await res.json();
       setJobs(data.jobs || []);
       setTotal(data.total || 0);
+      if (data.last_updated) setLastUpdated(data.last_updated);
     } catch (err: any) {
       setError(err.message || 'Failed to load jobs');
       setJobs([]);
@@ -528,7 +531,11 @@ export default function JobsPage() {
                 <strong style={{ color: 'var(--text-primary)' }}>{total}</strong> active jobs
               </span>
               <span style={{ color: 'var(--border)' }}>|</span>
-              <span>Updated daily</span>
+              <span>
+                {lastUpdated
+                  ? `Updated ${new Date(lastUpdated).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })}`
+                  : 'Updated daily'}
+              </span>
             </div>
           </div>
         </div>
