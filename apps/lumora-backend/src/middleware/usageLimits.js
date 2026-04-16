@@ -4,8 +4,6 @@
  */
 import { checkLimit, incrementUsage } from '../services/usage.js';
 
-const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
-
 /**
  * Pre-request guard: checks if user has remaining quota.
  * Returns 429 with upgrade info if limit reached.
@@ -15,12 +13,7 @@ const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim
 export function checkUsage(type) {
   return async (req, res, next) => {
     try {
-      if (!req.user?.id) {
-        return res.status(401).json({ error: 'Authentication required' });
-      }
-
-      // Admin users bypass all usage limits
-      if (req.user.is_admin || ADMIN_EMAILS.includes(req.user.email?.toLowerCase())) return next();
+      if (!req.user?.id) return next(); // No auth = skip (other middleware handles auth)
 
       const result = await checkLimit(req.user.id, type);
       if (!result.allowed) {

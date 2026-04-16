@@ -34,20 +34,18 @@ router.use(authenticate);
 router.post('/enroll', upload.any(), async (req, res) => {
   // Accept both 'audio' and 'file' field names
   if (req.files?.length > 0) req.file = req.files[0];
-
-  // Declare temp paths outside try so finally can clean them up
-  const id = randomUUID();
-  const tmpDir = os.tmpdir();
-  const inputPath = path.join(tmpDir, `enroll-${id}.webm`);
-  const wavPath = path.join(tmpDir, `enroll-${id}.wav`);
-
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'Audio file is required (field name: "audio")' });
     }
     console.log(`[Speaker] Received: name=${req.file.originalname}, size=${req.file.size}, mime=${req.file.mimetype}`);
 
-    await fs.promises.writeFile(inputPath, req.file.buffer);
+    const id = randomUUID();
+    const tmpDir = os.tmpdir();
+    const inputPath = path.join(tmpDir, `enroll-${id}.webm`);
+    const wavPath = path.join(tmpDir, `enroll-${id}.wav`);
+
+    fs.writeFileSync(inputPath, req.file.buffer);
 
     let audioBuffer, filename, mime;
 
@@ -89,10 +87,14 @@ router.post('/enroll', upload.any(), async (req, res) => {
     console.error('[Speaker] Enroll error:', err.message || err);
     return res.status(500).json({ error: 'Speaker enrollment failed: ' + (err.message || 'unknown error') });
   } finally {
-    // Clean up only the specific temp files from this request
-    for (const p of [inputPath, wavPath]) {
-      if (p) fs.promises.unlink(p).catch(() => {});
-    }
+    try {
+      const tmpDir = os.tmpdir();
+      for (const f of fs.readdirSync(tmpDir)) {
+        if (f.startsWith('enroll-') && (f.endsWith('.webm') || f.endsWith('.wav'))) {
+          try { fs.unlinkSync(path.join(tmpDir, f)); } catch {}
+        }
+      }
+    } catch {}
   }
 });
 
