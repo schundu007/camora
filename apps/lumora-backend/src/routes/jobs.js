@@ -50,6 +50,59 @@ router.get('/stats', async (req, res, next) => {
 });
 
 /**
+ * GET /filters — Available filter values for dropdowns.
+ *
+ * Returns distinct sources, locations, and work types.
+ */
+router.get('/filters', async (req, res, next) => {
+  try {
+    const [sourcesResult, locationsResult] = await Promise.all([
+      queryJobs(
+        `SELECT source, COUNT(*) AS count
+         FROM jobs WHERE is_active = true AND source IS NOT NULL
+         GROUP BY source ORDER BY count DESC`,
+      ),
+      queryJobs(
+        `SELECT DISTINCT location FROM jobs
+         WHERE is_active = true AND location IS NOT NULL AND location != ''
+         ORDER BY location`,
+      ),
+    ]);
+
+    // Extract unique city/region values from locations
+    const locationSet = new Set();
+    for (const row of locationsResult.rows) {
+      const loc = row.location;
+      if (!loc) continue;
+      // Normalize: "San Francisco, CA" → "San Francisco, CA", "Remote" → "Remote"
+      const parts = loc.split(/[•;]/);
+      for (const part of parts) {
+        const trimmed = part.trim();
+        if (trimmed) locationSet.add(trimmed);
+      }
+    }
+
+    // Group locations: Remote, then top cities
+    const allLocations = Array.from(locationSet).sort();
+    const remote = allLocations.filter((l) => /remote/i.test(l));
+    const nonRemote = allLocations.filter((l) => !/remote/i.test(l));
+
+    res.json({
+      sources: sourcesResult.rows.map((r) => ({
+        name: r.source,
+        count: parseInt(r.count, 10),
+      })),
+      locations: [...remote, ...nonRemote].slice(0, 100),
+    });
+  } catch (err) {
+    if (err.message === 'Jobs database not configured') {
+      return res.status(503).json({ detail: 'Jobs database not configured' });
+    }
+    next(err);
+  }
+});
+
+/**
  * GET / — List jobs with filters.
  *
  * Query params:
@@ -58,6 +111,8 @@ router.get('/stats', async (req, res, next) => {
  *   min_salary — minimum salary_min value
  *   search     — search title or job_description (ILIKE)
  *   company    — filter by company name (ILIKE)
+ *   source     — filter by job source (exact match)
+ *   work_type  — filter by remote/hybrid/onsite (location-based)
  *   limit      — results per page (default 50, max 200)
  *   offset     — pagination offset (default 0)
  */
@@ -100,6 +155,23 @@ router.get('/', async (req, res, next) => {
       conditions.push(`c.name ILIKE $${paramIdx}`);
       params.push(`%${req.query.company}%`);
       paramIdx++;
+    }
+
+    if (req.query.source) {
+      conditions.push(`j.source = $${paramIdx}`);
+      params.push(req.query.source);
+      paramIdx++;
+    }
+
+    if (req.query.work_type) {
+      const wt = req.query.work_type.toLowerCase();
+      if (wt === 'remote') {
+        conditions.push(`j.location ILIKE '%remote%'`);
+      } else if (wt === 'hybrid') {
+        conditions.push(`j.location ILIKE '%hybrid%'`);
+      } else if (wt === 'onsite') {
+        conditions.push(`j.location NOT ILIKE '%remote%' AND j.location NOT ILIKE '%hybrid%'`);
+      }
     }
 
     let limit = parseInt(req.query.limit, 10) || 50;
