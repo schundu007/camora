@@ -692,13 +692,8 @@ export default function TopicDetail({
           )}
 
           {/* Fade-out gradient + upgrade CTA */}
-          <div className="relative rounded-xl overflow-hidden">
-            <div className="space-y-3 filter blur-sm pointer-events-none select-none" aria-hidden="true">
-              <div className="rounded-lg bg-[var(--bg-elevated)] h-20 w-full" />
-              <div className="rounded-lg bg-[var(--bg-elevated)] h-28 w-full" />
-            </div>
-
-            <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'linear-gradient(180deg, transparent 0%, var(--bg-primary) 30%)' }}>
+          <div className="relative rounded-xl">
+            <div className="flex items-center justify-center py-8" style={{ minHeight: '420px' }}>
               <div className="max-w-4xl w-full px-4">
                 <div className="text-center mb-6">
                   <div className="w-14 h-14 mx-auto mb-4 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #10b981, #3b82f6, #8b5cf6)', boxShadow: '0 8px 24px rgba(99,102,241,0.3)' }}>
