@@ -7,6 +7,7 @@
 import { Router } from 'express';
 import { queryJobs } from '../services/jobsDb.js';
 import { authenticate } from '../middleware/authenticate.js';
+import { extractSalary } from '../services/salaryExtractor.js';
 
 const router = Router();
 
@@ -68,9 +69,48 @@ router.get('/', async (req, res, next) => {
     let paramIdx = 1;
 
     if (req.query.role) {
-      conditions.push(`j.title ILIKE $${paramIdx}`);
-      params.push(`%${req.query.role}%`);
-      paramIdx++;
+      const categoryKeywords = {
+        devops: ['devops', 'dev ops', 'devsecops', 'release engineer', 'build engineer', 'ci/cd', 'deployment engineer', 'automation engineer', 'kubernetes', 'terraform'],
+        sre: ['sre', 'site reliability', 'reliability engineer', 'production engineer', 'observability'],
+        security: ['security engineer', 'security analyst', 'appsec', 'infosec', 'cybersecurity', 'penetration test', 'red team', 'blue team', 'soc analyst', 'security architect'],
+        ml: ['machine learning', 'ml engineer', 'ml ops', 'deep learning', 'nlp', 'artificial intelligence', 'ai engineer', 'ai research', 'computer vision', 'generative ai', 'applied scientist', 'research scientist'],
+        data: ['data engineer', 'data scientist', 'data analyst', 'analytics engineer', 'etl', 'data platform', 'business intelligence', 'bi engineer', 'data architect', 'database engineer', 'dba'],
+        mobile: ['mobile engineer', 'mobile developer', 'ios engineer', 'ios developer', 'android engineer', 'android developer', 'react native', 'flutter'],
+        qa: ['qa engineer', 'qa analyst', 'quality assurance', 'test engineer', 'sdet', 'test automation', 'quality engineer'],
+        embedded: ['embedded', 'firmware', 'hardware engineer', 'fpga', 'rtos', 'iot engineer', 'robotics engineer'],
+        fullstack: ['full stack', 'fullstack', 'full-stack', 'software engineer', 'software developer', 'web developer'],
+        frontend: ['frontend', 'front-end', 'front end', 'ui engineer', 'ux engineer', 'react', 'vue', 'angular', 'javascript engineer'],
+        backend: ['backend', 'back-end', 'back end', 'server engineer', 'api engineer', 'golang', 'java developer', 'python developer', 'systems engineer'],
+        platform: ['platform engineer', 'developer experience', 'developer tools', 'dx engineer', 'internal tools'],
+        cloud: ['cloud engineer', 'cloud architect', 'aws', 'azure', 'gcp', 'infrastructure engineer', 'network engineer', 'solutions architect'],
+        tech_lead: ['tech lead', 'technical lead', 'team lead', 'engineering lead', 'lead engineer'],
+        staff: ['staff engineer', 'staff software', 'senior staff'],
+        principal: ['principal engineer', 'distinguished engineer'],
+        em: ['engineering manager', 'eng manager', 'director of engineering', 'vp engineering', 'head of engineering'],
+        tpm: ['technical program manager', 'tpm', 'program manager'],
+        product_manager: ['product manager', 'product owner', 'technical product'],
+        architect: ['solutions architect', 'software architect', 'system architect', 'enterprise architect'],
+        blockchain: ['blockchain', 'web3', 'smart contract', 'solidity', 'defi'],
+        game_dev: ['game developer', 'game engineer', 'unity developer', 'unreal', 'gameplay engineer'],
+        ios: ['ios engineer', 'ios developer', 'swift developer'],
+        android: ['android engineer', 'android developer', 'kotlin developer'],
+        network: ['network engineer', 'network architect', 'network operations'],
+      };
+      const role = req.query.role.toLowerCase();
+      const keywords = categoryKeywords[role];
+      if (keywords) {
+        const roleConds = keywords.map((kw) => {
+          const cond = `(j.title ILIKE $${paramIdx} OR j.job_description ILIKE $${paramIdx})`;
+          params.push(`%${kw}%`);
+          paramIdx++;
+          return cond;
+        });
+        conditions.push(`(${roleConds.join(' OR ')})`);
+      } else {
+        conditions.push(`(j.title ILIKE $${paramIdx} OR j.job_description ILIKE $${paramIdx})`);
+        params.push(`%${req.query.role}%`);
+        paramIdx++;
+      }
     }
 
     if (req.query.location) {
@@ -180,11 +220,56 @@ router.get('/:id', async (req, res, next) => {
       return res.status(404).json({ detail: 'Job not found' });
     }
 
-    res.json(result.rows[0]);
+    const job = result.rows[0];
+
+    // Lazy backfill: extract salary from description if missing
+    if (!job.salary_min && !job.salary_max && job.job_description) {
+      const salary = extractSalary(job.job_description);
+      if (salary && (salary.min || salary.max)) {
+        try {
+          await queryJobs(
+            'UPDATE jobs SET salary_min = COALESCE(salary_min, $1), salary_max = COALESCE(salary_max, $2) WHERE id = $3',
+            [salary.min, salary.max, job.id],
+          );
+          job.salary_min = salary.min;
+          job.salary_max = salary.max;
+        } catch { /* ignore */ }
+      }
+    }
+
+    res.json(job);
   } catch (err) {
     if (err.message === 'Jobs database not configured') {
       return res.status(503).json({ detail: 'Jobs database not configured' });
     }
+    next(err);
+  }
+});
+
+/**
+ * POST /backfill-salaries — Bulk extract salaries from job descriptions.
+ */
+router.post('/backfill-salaries', async (req, res, next) => {
+  try {
+    const batchSize = Math.min(parseInt(req.query.limit) || 500, 2000);
+    const result = await queryJobs(
+      `SELECT id, job_description FROM jobs
+       WHERE salary_min IS NULL AND salary_max IS NULL
+         AND job_description IS NOT NULL AND LENGTH(job_description) > 100
+         AND is_active = true LIMIT $1`,
+      [batchSize],
+    );
+    let updated = 0;
+    for (const row of result.rows) {
+      const salary = extractSalary(row.job_description);
+      if (salary && (salary.min || salary.max)) {
+        await queryJobs('UPDATE jobs SET salary_min = $1, salary_max = $2 WHERE id = $3', [salary.min, salary.max, row.id]);
+        updated++;
+      }
+    }
+    res.json({ processed: result.rows.length, updated });
+  } catch (err) {
+    if (err.message === 'Jobs database not configured') return res.status(503).json({ detail: 'Jobs database not configured' });
     next(err);
   }
 });

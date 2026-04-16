@@ -183,15 +183,31 @@ router.post(
       }
 
       // ── Transcribe ───────────────────────────────────────────────────
-      const text = await transcribe(file.buffer, file.originalname || 'audio.webm');
+      const rawText = await transcribe(file.buffer, file.originalname || 'audio.webm');
       const latencyMs = Math.round(performance.now() - start);
+
+      // Filter Whisper hallucinations (phantom text on silence/low audio)
+      const HALLUCINATION_PATTERNS = [
+        /^thank(s| you)?\s*(for)?\s*(watching|listening|viewing|tuning in)/i,
+        /^(please\s+)?(like\s+and\s+)?subscribe/i,
+        /^(bye|goodbye|see you)\s*(next time|later|soon)?\.?$/i,
+        /^(okay|ok)\.?\s*$/i,
+        /^\.+$/,
+        /^(\s*thank you\.?\s*)+$/i,
+        /^\s*$/,
+      ];
+      const trimmed = rawText.trim();
+      if (HALLUCINATION_PATTERNS.some(p => p.test(trimmed))) {
+        console.info(`[Whisper] Filtered hallucination: "${trimmed}"`);
+        return res.json({ text: '', latency_ms: latencyMs, skipped: true, reason: 'hallucination_filtered' });
+      }
 
       console.info(
         `Transcribed audio for user ${req.user.email}: ` +
-        `${text.length} chars in ${latencyMs}ms`,
+        `${trimmed.length} chars in ${latencyMs}ms`,
       );
 
-      return res.json({ text, latency_ms: latencyMs, skipped: false });
+      return res.json({ text: trimmed, latency_ms: latencyMs, skipped: false });
     } catch (err) {
       const latencyMs = Math.round(performance.now() - start);
       console.error('Transcription error:', err);
