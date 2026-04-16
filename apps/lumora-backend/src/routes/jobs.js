@@ -168,19 +168,34 @@ router.get('/', async (req, res, next) => {
     if (req.query.role) {
       // Category-specific keyword expansion — matches real-world job titles
       const categoryKeywords = {
-        devops: ['devops', 'dev ops', 'devsecops', 'release engineer', 'build engineer', 'ci/cd', 'ci cd', 'deployment engineer', 'automation engineer'],
-        sre: ['sre', 'site reliability', 'reliability engineer', 'production engineer', 'observability'],
-        security: ['security engineer', 'security analyst', 'appsec', 'application security', 'infosec', 'information security', 'cybersecurity', 'cyber security', 'penetration test', 'red team', 'blue team', 'threat', 'vulnerability', 'soc analyst', 'security architect', 'identity engineer', 'iam engineer'],
-        ml: ['machine learning', 'ml engineer', 'ml ops', 'deep learning', 'nlp', 'natural language', 'artificial intelligence', 'ai engineer', 'ai research', 'computer vision', 'generative ai', 'applied scientist', 'research scientist', 'research engineer'],
-        data: ['data engineer', 'data scientist', 'data analyst', 'analytics engineer', 'analytics', 'etl', 'data platform', 'data infrastructure', 'business intelligence', 'bi engineer', 'bi developer', 'data architect', 'database engineer', 'dba', 'data governance', 'data warehouse'],
-        mobile: ['mobile engineer', 'mobile developer', 'ios engineer', 'ios developer', 'android engineer', 'android developer', 'swift developer', 'kotlin developer', 'react native', 'flutter'],
-        qa: ['qa engineer', 'qa analyst', 'quality assurance', 'test engineer', 'sdet', 'automation test', 'test automation', 'quality engineer', 'software test', 'testing engineer'],
-        embedded: ['embedded', 'firmware', 'hardware engineer', 'fpga', 'rtos', 'iot engineer', 'robotics engineer', 'embedded systems', 'asic', 'chip design', 'silicon'],
+        // Core engineering roles
+        devops: ['devops', 'dev ops', 'devsecops', 'release engineer', 'build engineer', 'ci/cd', 'ci cd', 'deployment engineer', 'automation engineer', 'infrastructure automation', 'gitops', 'kubernetes', 'terraform', 'ansible', 'jenkins', 'docker'],
+        sre: ['sre', 'site reliability', 'reliability engineer', 'production engineer', 'observability', 'on-call', 'incident', 'chaos engineer'],
+        security: ['security engineer', 'security analyst', 'appsec', 'application security', 'infosec', 'information security', 'cybersecurity', 'cyber security', 'penetration test', 'red team', 'blue team', 'threat', 'vulnerability', 'soc analyst', 'security architect', 'identity engineer', 'iam engineer', 'devsecops'],
+        ml: ['machine learning', 'ml engineer', 'ml ops', 'deep learning', 'nlp', 'natural language', 'artificial intelligence', 'ai engineer', 'ai research', 'computer vision', 'generative ai', 'applied scientist', 'research scientist', 'research engineer', 'ai researcher', 'llm', 'transformer'],
+        data: ['data engineer', 'data scientist', 'data analyst', 'analytics engineer', 'analytics', 'etl', 'data platform', 'data infrastructure', 'business intelligence', 'bi engineer', 'bi developer', 'data architect', 'database engineer', 'dba', 'data governance', 'data warehouse', 'database administrator', 'data ops'],
+        mobile: ['mobile engineer', 'mobile developer', 'ios engineer', 'ios developer', 'android engineer', 'android developer', 'swift developer', 'kotlin developer', 'react native', 'flutter', 'mobile architect'],
+        qa: ['qa engineer', 'qa analyst', 'quality assurance', 'test engineer', 'sdet', 'automation test', 'test automation', 'quality engineer', 'software test', 'testing engineer', 'performance test', 'load test'],
+        embedded: ['embedded', 'firmware', 'hardware engineer', 'fpga', 'rtos', 'iot engineer', 'robotics engineer', 'embedded systems', 'asic', 'chip design', 'silicon', 'microcontroller'],
         fullstack: ['full stack', 'fullstack', 'full-stack', 'software engineer', 'software developer', 'application engineer', 'web developer'],
         frontend: ['frontend', 'front-end', 'front end', 'ui engineer', 'ui developer', 'ux engineer', 'react', 'vue', 'angular', 'javascript engineer', 'typescript engineer', 'web engineer'],
         backend: ['backend', 'back-end', 'back end', 'server engineer', 'api engineer', 'api developer', 'golang', 'java developer', 'python developer', 'ruby developer', 'node.js', 'systems engineer', 'distributed systems'],
-        platform: ['platform engineer', 'platform developer', 'platform architect', 'developer experience', 'developer tools', 'dx engineer', 'internal tools', 'tooling engineer'],
-        cloud: ['cloud engineer', 'cloud architect', 'cloud developer', 'aws', 'azure', 'gcp', 'infrastructure engineer', 'infra engineer', 'infrastructure architect', 'network engineer', 'solutions architect', 'cloud security'],
+        platform: ['platform engineer', 'platform developer', 'platform architect', 'developer experience', 'developer tools', 'dx engineer', 'internal tools', 'tooling engineer', 'developer productivity'],
+        cloud: ['cloud engineer', 'cloud architect', 'cloud developer', 'aws', 'azure', 'gcp', 'infrastructure engineer', 'infra engineer', 'infrastructure architect', 'network engineer', 'solutions architect', 'cloud security', 'cloud operations'],
+        // Leadership & management roles
+        tech_lead: ['tech lead', 'technical lead', 'team lead', 'engineering lead', 'lead engineer', 'lead developer', 'lead software'],
+        staff: ['staff engineer', 'staff software', 'staff developer', 'senior staff'],
+        principal: ['principal engineer', 'principal software', 'principal developer', 'distinguished engineer', 'fellow'],
+        em: ['engineering manager', 'eng manager', 'software manager', 'development manager', 'director of engineering', 'vp engineering', 'head of engineering', 'cto'],
+        tpm: ['technical program manager', 'tpm', 'program manager', 'technical project manager'],
+        product_manager: ['product manager', 'product owner', 'technical product', 'group product manager'],
+        architect: ['solutions architect', 'software architect', 'system architect', 'enterprise architect', 'cloud architect', 'technical architect'],
+        // Specialized roles
+        blockchain: ['blockchain', 'web3', 'smart contract', 'solidity', 'ethereum', 'defi', 'crypto engineer'],
+        game_dev: ['game developer', 'game engineer', 'game programmer', 'unity developer', 'unreal', 'gameplay engineer', 'graphics engineer'],
+        ios: ['ios engineer', 'ios developer', 'swift developer', 'ios architect', 'apple developer'],
+        android: ['android engineer', 'android developer', 'kotlin developer', 'android architect'],
+        network: ['network engineer', 'network architect', 'network operations', 'noc', 'network security', 'network admin'],
       };
       const role = req.query.role.toLowerCase();
       const keywords = categoryKeywords[role];

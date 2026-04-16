@@ -87,19 +87,36 @@ const CAPRA_API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cari
 
 const CATEGORIES = [
   { value: 'all', label: 'All' },
-  { value: 'devops', label: 'DevOps' },
+  // Core engineering
   { value: 'backend', label: 'Backend' },
   { value: 'frontend', label: 'Frontend' },
   { value: 'fullstack', label: 'Full Stack' },
+  { value: 'mobile', label: 'Mobile' },
+  { value: 'ios', label: 'iOS' },
+  { value: 'android', label: 'Android' },
+  // Infrastructure & Ops
+  { value: 'devops', label: 'DevOps' },
+  { value: 'sre', label: 'SRE' },
+  { value: 'cloud', label: 'Cloud' },
+  { value: 'platform', label: 'Platform' },
+  { value: 'network', label: 'Network' },
+  // Data & AI
   { value: 'data', label: 'Data' },
   { value: 'ml', label: 'ML/AI' },
+  // Specialized
   { value: 'security', label: 'Security' },
-  { value: 'mobile', label: 'Mobile' },
   { value: 'qa', label: 'QA/Test' },
-  { value: 'sre', label: 'SRE' },
-  { value: 'platform', label: 'Platform' },
-  { value: 'cloud', label: 'Cloud' },
   { value: 'embedded', label: 'Embedded' },
+  { value: 'blockchain', label: 'Web3' },
+  { value: 'game_dev', label: 'Gaming' },
+  // Leadership
+  { value: 'tech_lead', label: 'Tech Lead' },
+  { value: 'staff', label: 'Staff' },
+  { value: 'principal', label: 'Principal' },
+  { value: 'em', label: 'Eng Manager' },
+  { value: 'architect', label: 'Architect' },
+  { value: 'tpm', label: 'TPM' },
+  { value: 'product_manager', label: 'Product' },
 ];
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -111,10 +128,22 @@ const CATEGORY_COLORS: Record<string, string> = {
   ml: '#ec4899',
   security: '#ef4444',
   mobile: '#f97316',
+  ios: '#a855f7',
+  android: '#22c55e',
   qa: '#84cc16',
   sre: '#e11d48',
   platform: '#14b8a6',
   cloud: '#6366f1',
+  network: '#0ea5e9',
+  blockchain: '#f59e0b',
+  game_dev: '#f43f5e',
+  tech_lead: '#8b5cf6',
+  staff: '#7c3aed',
+  principal: '#6d28d9',
+  em: '#0891b2',
+  architect: '#2563eb',
+  tpm: '#0d9488',
+  product_manager: '#d946ef',
   embedded: '#a855f7',
 };
 
@@ -350,23 +379,46 @@ export default function JobsPage() {
   }, []);
 
   // Map user's onboarding role to job filter category
+  // Covers all 30 roles from OnboardingPage (JOB_ROLES + MORE_ROLES)
   const getUserCategory = (): string => {
     const roles = user?.job_roles;
     if (!roles || roles.length === 0) return 'all';
     const r = (Array.isArray(roles) ? roles[0] : roles).toLowerCase();
+    // Direct ID matches from onboarding
+    const roleMap: Record<string, string> = {
+      backend: 'backend', frontend: 'frontend', fullstack: 'fullstack',
+      devops: 'devops', data: 'data', ml: 'ml', mobile: 'mobile',
+      qa: 'qa', em: 'em', architect: 'architect',
+      cloud: 'cloud', platform: 'platform', security: 'security',
+      sre: 'sre', data_scientist: 'data', data_analyst: 'data',
+      tech_lead: 'tech_lead', staff: 'staff', principal: 'principal',
+      tpm: 'tpm', product_manager: 'product_manager',
+      ios: 'ios', android: 'android', blockchain: 'blockchain',
+      game_dev: 'game_dev', embedded: 'embedded', dba: 'data',
+      network: 'network', ai_researcher: 'ml', devsecops: 'devops',
+    };
+    if (roleMap[r]) return roleMap[r];
+    // Fuzzy fallback for free-text roles
     if (r.includes('devops') || r.includes('dev ops')) return 'devops';
     if (r.includes('sre') || r.includes('site reliability')) return 'sre';
-    if (r.includes('security') || r.includes('appsec') || r.includes('infosec')) return 'security';
+    if (r.includes('security')) return 'security';
     if (r.includes('ml') || r.includes('ai') || r.includes('machine learning')) return 'ml';
     if (r.includes('data')) return 'data';
-    if (r.includes('mobile') || r.includes('ios') || r.includes('android')) return 'mobile';
-    if (r.includes('qa') || r.includes('test') || r.includes('sdet')) return 'qa';
-    if (r.includes('embedded') || r.includes('firmware') || r.includes('hardware')) return 'embedded';
-    if (r.includes('full stack') || r.includes('fullstack')) return 'fullstack';
+    if (r.includes('ios')) return 'ios';
+    if (r.includes('android')) return 'android';
+    if (r.includes('mobile')) return 'mobile';
+    if (r.includes('qa') || r.includes('test')) return 'qa';
+    if (r.includes('embedded') || r.includes('firmware')) return 'embedded';
+    if (r.includes('fullstack') || r.includes('full stack')) return 'fullstack';
     if (r.includes('frontend') || r.includes('front')) return 'frontend';
     if (r.includes('backend') || r.includes('back')) return 'backend';
     if (r.includes('platform')) return 'platform';
     if (r.includes('cloud') || r.includes('infrastructure')) return 'cloud';
+    if (r.includes('manager')) return 'em';
+    if (r.includes('lead')) return 'tech_lead';
+    if (r.includes('architect')) return 'architect';
+    if (r.includes('blockchain') || r.includes('web3')) return 'blockchain';
+    if (r.includes('game')) return 'game_dev';
     return 'all';
   };
 
