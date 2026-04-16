@@ -988,18 +988,9 @@ export default function JobsPage() {
                   <label className="jobs-filter-label">Location</label>
                   <select value={locationFilter} onChange={(e) => setLocationFilter(e.target.value)} className="jobs-filter-select">
                     <option value="">All Locations</option>
-                    {availableLocations.some(l => /remote/i.test(l.name)) && (
-                      <optgroup label="Remote / Hybrid">
-                        {availableLocations.filter(l => /remote|hybrid/i.test(l.name)).map((l) => (
-                          <option key={l.name} value={l.name}>{l.name} ({l.count})</option>
-                        ))}
-                      </optgroup>
-                    )}
-                    <optgroup label="Cities">
-                      {availableLocations.filter(l => !/remote|hybrid/i.test(l.name)).slice(0, 60).map((l) => (
-                        <option key={l.name} value={l.name}>{l.name} ({l.count})</option>
-                      ))}
-                    </optgroup>
+                    {availableLocations.map((l) => (
+                      <option key={l.name} value={l.name}>{l.name} ({l.count})</option>
+                    ))}
                   </select>
                 </div>
 
