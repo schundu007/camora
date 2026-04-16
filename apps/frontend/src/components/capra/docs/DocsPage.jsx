@@ -308,7 +308,7 @@ export default function DocsPage({ onBack }) {
       activePage === 'low-level' ? [...lldTopics, ...lldProblems] :
       activePage === 'microservices' ? microservicesPatterns :
       activePage === 'databases' ? databaseTopics :
-      activePage === 'sql' ? sqlTopics :
+      activePage === 'sql' ? [...databaseTopics, ...sqlTopics] :
       activePage === 'projects' ? projectTopics :
       activePage === 'roadmaps' ? roadmapTopics :
       activePage === 'eng-blogs' ? engBlogTopics :
@@ -386,9 +386,8 @@ export default function DocsPage({ onBack }) {
     { id: 'coding', label: 'Data Structures & Algorithms', icon: 'code' },
     { id: 'system-design', label: 'System Design', icon: 'systemDesign' },
     { id: 'microservices', label: 'Microservices', icon: 'grid' },
-    { id: 'databases', label: 'Database Internals', icon: 'database' },
-    { id: 'sql', label: 'SQL for Interviews', icon: 'terminal' },
-    { id: 'low-level', label: 'Low-Level Design', icon: 'puzzle' },
+    { id: 'databases', label: 'Databases & SQL', icon: 'database' },
+    { id: 'low-level', label: 'Low Level Design', icon: 'puzzle' },
     { id: 'behavioral', label: 'Behavioral', icon: 'users' },
   ];
 
@@ -406,7 +405,6 @@ export default function DocsPage({ onBack }) {
       'behavioral': 'behavioral',
       'microservices': 'microservices',
       'databases': 'databases',
-      'sql': 'sql',
     };
     const key = pageToKey[page];
     if (!key) return null;
@@ -424,8 +422,7 @@ export default function DocsPage({ onBack }) {
     else if (activePage === 'low-level') topics = lldTopics;
     else if (activePage === 'behavioral') topics = behavioralTopics;
     else if (activePage === 'microservices') topics = microservicesPatterns;
-    else if (activePage === 'databases') topics = databaseTopics;
-    else if (activePage === 'sql') topics = sqlTopics;
+    else if (activePage === 'databases') topics = [...databaseTopics, ...sqlTopics];
     else if (activePage === 'projects') topics = projectTopics;
     else if (activePage === 'roadmaps') topics = roadmapTopics;
     else if (activePage === 'eng-blogs') topics = engBlogTopics;
@@ -462,11 +459,11 @@ export default function DocsPage({ onBack }) {
       case 'overview': return { title: 'Overview', color: '#6366f1' };
       case 'coding': return { title: 'Data Structures & Algorithms', color: '#6366f1' };
       case 'system-design': return { title: 'System Design', color: '#3b82f6' };
-      case 'low-level': return { title: 'Low-Level Design', color: '#ec4899' };
+      case 'low-level': return { title: 'Low Level Design', color: '#ec4899' };
       case 'behavioral': return { title: 'Behavioral Interviews', color: '#a855f7' };
       case 'microservices': return { title: 'Microservices Patterns', color: '#8b5cf6' };
-      case 'databases': return { title: 'Database Internals', color: '#f59e0b' };
-      case 'sql': return { title: 'SQL for Interviews', color: '#06b6d4' };
+      case 'databases': return { title: 'Databases & SQL', color: '#f59e0b' };
+      case 'sql': return { title: 'Databases & SQL', color: '#06b6d4' };
       case 'projects': return { title: 'Projects', color: '#10b981' };
       case 'roadmaps': return { title: 'Roadmaps', color: '#f97316' };
       case 'eng-blogs': return { title: 'Engineering Blogs', color: '#ef4444' };
@@ -515,9 +512,8 @@ export default function DocsPage({ onBack }) {
       { id: 'coding', href: 'coding', title: 'DSA & Algorithms', icon: 'cpu', color: '#6366f1', grad: 'linear-gradient(135deg, #6366f1, #818cf8)', topics: codingTopics },
       { id: 'system-design', href: 'system-design', title: 'System Design', icon: 'systemDesign', color: '#3b82f6', grad: 'linear-gradient(135deg, #3b82f6, #60a5fa)', topics: [...systemDesignTopics, ...systemDesigns, ...concurrencyTopics, ...systemDesignPatterns, ...microservicesPatterns, ...systemDesignTradeoffs, ...scalableSystemsTopics] },
       { id: 'microservices', href: 'microservices', title: 'Microservices', icon: 'grid', color: '#8b5cf6', grad: 'linear-gradient(135deg, #8b5cf6, #a78bfa)', topics: microservicesPatterns },
-      { id: 'databases', href: 'databases', title: 'Database Internals', icon: 'database', color: '#f59e0b', grad: 'linear-gradient(135deg, #f59e0b, #fbbf24)', topics: databaseTopics },
-      { id: 'sql', href: 'sql', title: 'SQL for Interviews', icon: 'database', color: '#06b6d4', grad: 'linear-gradient(135deg, #06b6d4, #22d3ee)', topics: sqlTopics },
-      { id: 'low-level', href: 'low-level-design', title: 'Low-Level Design', icon: 'layers', color: '#ec4899', grad: 'linear-gradient(135deg, #ec4899, #f472b6)', topics: [...lldTopics, ...lldProblems] },
+      { id: 'databases', href: 'databases', title: 'Databases & SQL', icon: 'database', color: '#f59e0b', grad: 'linear-gradient(135deg, #f59e0b, #fbbf24)', topics: [...databaseTopics, ...sqlTopics] },
+      { id: 'low-level', href: 'low-level-design', title: 'Low Level Design', icon: 'layers', color: '#ec4899', grad: 'linear-gradient(135deg, #ec4899, #f472b6)', topics: [...lldTopics, ...lldProblems] },
       { id: 'projects', href: 'projects', title: 'Projects', icon: 'code', color: '#10b981', grad: 'linear-gradient(135deg, #10b981, #34d399)', topics: projectTopics },
       { id: 'roadmaps', href: 'roadmaps', title: 'Roadmaps', icon: 'trendingUp', color: '#f97316', grad: 'linear-gradient(135deg, #f97316, #fb923c)', topics: roadmapTopics },
       { id: 'eng-blogs', href: 'eng-blogs', title: 'Eng Blogs', icon: 'bookOpen', color: '#ef4444', grad: 'linear-gradient(135deg, #ef4444, #f87171)', topics: engBlogTopics },
@@ -730,7 +726,7 @@ export default function DocsPage({ onBack }) {
                           {[
                             { step: 1, title: 'DSA Fundamentals', desc: 'Arrays, strings, trees, graphs', href: '/capra/prepare/coding', icon: 'cpu', color: '#6366f1' },
                             { step: 2, title: 'System Design', desc: 'Scalability, databases, caching', href: '/capra/prepare/system-design', icon: 'systemDesign', color: '#3b82f6' },
-                            { step: 3, title: 'Low-Level Design', desc: 'OOP, SOLID, design patterns', href: '/capra/prepare/low-level-design', icon: 'layers', color: '#ec4899' },
+                            { step: 3, title: 'Low Level Design', desc: 'OOP, SOLID, design patterns', href: '/capra/prepare/low-level-design', icon: 'layers', color: '#ec4899' },
                             { step: 4, title: 'Behavioral', desc: 'STAR method, leadership stories', href: '/capra/prepare/behavioral', icon: 'users', color: '#a855f7' },
                           ].map((phase, idx) => (
                             <Link key={phase.step} to={phase.href} className="group relative">
@@ -886,7 +882,7 @@ export default function DocsPage({ onBack }) {
                     <div className="inline-flex items-center gap-2 px-4 py-1.5 border border-[var(--border)] bg-[var(--accent-subtle)] rounded-full mb-4">
                       <span className="w-2 h-2 bg-[var(--accent)] rounded-full animate-pulse" />
                       <span className="text-xs landing-mono text-[var(--accent-hover)] tracking-wide">
-                        {activePage === 'coding' ? 'Algorithms' : activePage === 'system-design' ? 'Architecture' : activePage === 'low-level' ? 'OOP & Patterns' : activePage === 'microservices' ? 'Microservices' : activePage === 'databases' ? 'Database Internals' : activePage === 'sql' ? 'SQL Mastery' : activePage === 'projects' ? 'Hands-On' : activePage === 'roadmaps' ? 'Learning Paths' : activePage === 'eng-blogs' ? 'Real-World' : 'Soft Skills'}
+                        {activePage === 'coding' ? 'Algorithms' : activePage === 'system-design' ? 'Architecture' : activePage === 'low-level' ? 'OOP & Patterns' : activePage === 'microservices' ? 'Microservices' : activePage === 'databases' ? 'Databases & SQL' : activePage === 'sql' ? 'Databases & SQL' : activePage === 'projects' ? 'Hands-On' : activePage === 'roadmaps' ? 'Learning Paths' : activePage === 'eng-blogs' ? 'Real-World' : 'Soft Skills'}
                       </span>
                     </div>
                     <h1 className="landing-display font-extrabold text-3xl md:text-4xl lg:text-5xl tracking-tight text-[var(--text-primary)] mb-2">
@@ -895,8 +891,8 @@ export default function DocsPage({ onBack }) {
                       {activePage === 'low-level' && <>Master Object-Oriented{' '}<span className="bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent">Design</span></>}
                       {activePage === 'behavioral' && <>Tell Your{' '}<span className="bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent">Best Story</span></>}
                       {activePage === 'microservices' && <>Microservices{' '}<span className="bg-gradient-to-r from-purple-500 to-indigo-500 bg-clip-text text-transparent">Patterns</span></>}
-                      {activePage === 'databases' && <>Database{' '}<span className="bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">Internals</span></>}
-                      {activePage === 'sql' && <>SQL for{' '}<span className="bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent">Interviews</span></>}
+                      {activePage === 'databases' && <>Databases{' '}<span className="bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">{'&'} SQL</span></>}
+                      {activePage === 'sql' && <>Databases{' '}<span className="bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent">{'&'} SQL</span></>}
                       {activePage === 'projects' && <>Build Real{' '}<span className="bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent">Projects</span></>}
                       {activePage === 'roadmaps' && <>Follow the{' '}<span className="bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">Roadmap</span></>}
                       {activePage === 'eng-blogs' && <>Engineering{' '}<span className="bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent">Blogs</span></>}
@@ -1324,11 +1320,11 @@ export default function DocsPage({ onBack }) {
                   {/* Gradient Divider */}
                   <div className="h-px bg-[var(--border)] mb-6" />
 
-                  {/* Low-Level Design Problems Section */}
+                  {/* Low Level Design Problems Section */}
                   <div className="mb-6">
                     <div className="mb-4">
                       <span className="landing-mono text-xs text-[var(--accent)] tracking-widest uppercase">Object-Oriented</span>
-                      <h2 className="landing-display font-bold text-xl mt-1 tracking-tight text-[var(--text-primary)]">Low-Level Design</h2>
+                      <h2 className="landing-display font-bold text-xl mt-1 tracking-tight text-[var(--text-primary)]">Low Level Design</h2>
                       <p className="text-sm text-[var(--text-muted)] landing-body mt-1">Class diagrams, design patterns, and OOP implementations</p>
                     </div>
                     <div className="space-y-3">
@@ -1657,7 +1653,7 @@ export default function DocsPage({ onBack }) {
                 </>
               )}
 
-              {/* Low-Level Design Content */}
+              {/* Low Level Design Content */}
               {activePage === 'low-level' && (
                 <>
                   {/* LLD Learning Topics - Grouped by Category */}
@@ -2073,13 +2069,13 @@ export default function DocsPage({ onBack }) {
                 </>
               )}
 
-              {/* Database Internals Content */}
+              {/* Databases & SQL Content */}
               {activePage === 'databases' && (
                 <>
                   <div className="mb-6">
                     <div className="mb-4">
                       <span className="landing-mono text-xs text-[var(--text-muted)] tracking-widest uppercase">Deep Dive</span>
-                      <h2 className="landing-display font-bold text-xl mt-1 tracking-tight text-[var(--text-primary)]">Database Internals</h2>
+                      <h2 className="landing-display font-bold text-xl mt-1 tracking-tight text-[var(--text-primary)]">Databases & SQL</h2>
                     </div>
                     <div className="space-y-3">
                     {databaseCategories.map((category) => {
@@ -2127,8 +2123,8 @@ export default function DocsPage({ onBack }) {
                 </>
               )}
 
-              {/* SQL for Interviews Content */}
-              {activePage === 'sql' && (
+              {/* Databases & SQL Content */}
+              {(activePage === 'databases' || activePage === 'sql') && (
                 <>
                   <div className="mb-6">
                     <div className="mb-4">

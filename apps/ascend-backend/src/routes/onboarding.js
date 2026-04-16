@@ -7,7 +7,7 @@ const router = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } }); // 5MB
 
 // Upload resume file — extract text and store
-router.post('/upload-resume', authenticate, upload.single('file'), async (req, res) => {
+router.post('/upload-resume', authenticate, upload.single('resume'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
