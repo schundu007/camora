@@ -897,29 +897,22 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                     {/* ── ACTIVE SOLUTION APPROACH ── */}
                     {(() => {
                       const activeSol = sd.solutions?.[activeSolutionIdx];
-                      const solColors = [
-                        { bg: 'bg-indigo-50/50', border: 'border-indigo-100', text: 'text-indigo-700', badge: 'bg-indigo-100 text-indigo-600' },
-                        { bg: 'bg-blue-50/50', border: 'border-blue-100', text: 'text-blue-700', badge: 'bg-blue-100 text-blue-600' },
-                        { bg: 'bg-violet-50/50', border: 'border-violet-100', text: 'text-violet-700', badge: 'bg-violet-100 text-violet-600' },
-                      ];
-                      const sc = solColors[activeSolutionIdx % solColors.length];
-
                       if (activeSol) return (
-                        <div className={`rounded-xl border ${sc.border} bg-white overflow-hidden shadow-sm`}>
-                          <div className={`flex items-center gap-2 px-3 py-2.5 ${sc.bg} border-b ${sc.border}`}>
-                            <div className={`w-5 h-5 rounded-md ${sc.badge} flex items-center justify-center text-[10px] font-bold`}>{activeSolutionIdx + 1}</div>
-                            <h4 className={`text-[10px] md:text-xs font-bold ${sc.text} uppercase tracking-wider`}>{activeSol.name}</h4>
+                        <div className="rounded-xl overflow-hidden" style={{ background: t.cardBg, border: `1px solid ${t.cardBorder}` }}>
+                          <div className="flex items-center gap-2 px-3 py-2.5" style={{ background: t.headerBg, borderBottom: `1px solid ${t.cardBorder}` }}>
+                            <div className="w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-bold" style={{ background: t.badgeBg, color: t.badgeText }}>{activeSolutionIdx + 1}</div>
+                            <h4 className="text-[10px] md:text-xs font-bold uppercase tracking-wider" style={{ color: t.headerText }}>{activeSol.name}</h4>
                             {activeSol.complexity && (
                               <div className="ml-auto flex gap-1.5">
-                                <span className="text-[9px] font-mono text-cyan-600 bg-cyan-50 border border-cyan-200 rounded-full px-1.5 py-0.5">{activeSol.complexity.time}</span>
-                                <span className="text-[9px] font-mono text-violet-600 bg-violet-50 border border-violet-200 rounded-full px-1.5 py-0.5">{activeSol.complexity.space}</span>
+                                <span className="text-[9px] font-mono rounded-full px-1.5 py-0.5" style={{ color: t.badgeText, background: t.badgeBg, border: `1px solid ${t.cardBorder}` }}>{activeSol.complexity.time}</span>
+                                <span className="text-[9px] font-mono rounded-full px-1.5 py-0.5" style={{ color: t.badgeText, background: t.badgeBg, border: `1px solid ${t.cardBorder}` }}>{activeSol.complexity.space}</span>
                               </div>
                             )}
                           </div>
                           <div className="p-3 space-y-2">
-                            {activeSol.approach && <p className="text-xs text-gray-600 leading-relaxed">{activeSol.approach}</p>}
+                            {activeSol.approach && <p className="text-xs leading-relaxed" style={{ color: t.textMuted }}>{activeSol.approach}</p>}
                             {activeSol.explanations?.length > 0 && (
-                              <div className="space-y-1 pt-1 border-t border-gray-100">
+                              <div className="space-y-1 pt-1" style={{ borderTop: `1px solid ${t.cardBorder}` }}>
                                 {activeSol.explanations.map((ex: any, j: number) => (
                                   <div key={j} className="flex items-start gap-2 text-[10px] md:text-[11px]">
                                     <code className="font-mono text-gray-800 bg-gray-50 px-1 py-0.5 rounded shrink-0">{ex.code}</code>
@@ -990,20 +983,20 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
 
                     {/* ── TRADEOFFS ── */}
                     {sd.pitch?.tradeoffs?.length > 0 && (
-                      <div className="rounded-xl border border-amber-100 bg-white overflow-hidden shadow-sm">
-                        <div className="flex items-center gap-2 px-3 py-2 bg-amber-50/50 border-b border-amber-100">
-                          <svg className="w-3.5 h-3.5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className="rounded-xl overflow-hidden" style={{ background: t.cardBg, border: `1px solid ${t.cardBorder}` }}>
+                        <div className="flex items-center gap-2 px-3 py-2" style={{ background: t.headerBg, borderBottom: `1px solid ${t.cardBorder}` }}>
+                          <svg className="w-3.5 h-3.5" style={{ color: t.headerText }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
                           </svg>
-                          <span className="text-[10px] font-bold text-amber-700 uppercase tracking-wider">Tradeoffs</span>
+                          <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: t.headerText }}>Tradeoffs</span>
                         </div>
                         <ul className="p-3 space-y-1.5">
-                          {sd.pitch.tradeoffs.map((t: string, i: number) => (
-                            <li key={i} className="text-xs text-gray-600 flex items-start gap-2 leading-relaxed">
-                              <svg className="w-3 h-3 text-amber-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          {sd.pitch.tradeoffs.map((tr: string, i: number) => (
+                            <li key={i} className="text-xs flex items-start gap-2 leading-relaxed" style={{ color: t.textMuted }}>
+                              <svg className="w-3 h-3 shrink-0 mt-0.5" style={{ color: t.dotColor }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                               </svg>
-                              {t}
+                              {tr}
                             </li>
                           ))}
                         </ul>
@@ -1012,17 +1005,17 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
 
                     {/* ── EDGE CASES ── */}
                     {sd.pitch?.edgeCases?.length > 0 && (
-                      <div className="rounded-xl border border-rose-100 bg-white overflow-hidden shadow-sm">
-                        <div className="flex items-center gap-2 px-3 py-2 bg-rose-50/50 border-b border-rose-100">
-                          <svg className="w-3.5 h-3.5 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className="rounded-xl overflow-hidden" style={{ background: t.cardBg, border: `1px solid ${t.cardBorder}` }}>
+                        <div className="flex items-center gap-2 px-3 py-2" style={{ background: t.headerBg, borderBottom: `1px solid ${t.cardBorder}` }}>
+                          <svg className="w-3.5 h-3.5" style={{ color: t.headerText }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
                           </svg>
-                          <span className="text-[10px] font-bold text-rose-700 uppercase tracking-wider">Edge Cases</span>
+                          <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: t.headerText }}>Edge Cases</span>
                         </div>
                         <ul className="p-3 space-y-1.5">
                           {sd.pitch.edgeCases.map((e: string, i: number) => (
-                            <li key={i} className="text-xs text-gray-600 flex items-start gap-2 leading-relaxed">
-                              <span className="w-1.5 h-1.5 rounded-full bg-rose-300 shrink-0 mt-1.5" />
+                            <li key={i} className="text-xs flex items-start gap-2 leading-relaxed" style={{ color: t.textMuted }}>
+                              <span className="w-1.5 h-1.5 rounded-full shrink-0 mt-1.5" style={{ background: t.dotColor }} />
                               {e}
                             </li>
                           ))}
