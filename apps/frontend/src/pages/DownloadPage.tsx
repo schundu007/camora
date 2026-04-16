@@ -455,6 +455,32 @@ export default function DownloadPage() {
                     Add-on for your Annual plan &middot; Cancel anytime
                   </span>
                 </>
+              ) : !isAuthenticated ? (
+                <>
+                  <Link
+                    to="/login?redirect=/download"
+                    className="group inline-flex items-center gap-3 px-8 py-4 rounded-2xl text-base font-bold transition-all duration-200 no-underline"
+                    style={{
+                      background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                      color: '#ffffff',
+                      boxShadow: '0 4px 24px rgba(16,185,129,0.35), 0 0 0 1px rgba(255,255,255,0.1) inset',
+                    }}
+                    onMouseEnter={e => {
+                      (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 40px rgba(16,185,129,0.5), 0 0 0 1px rgba(255,255,255,0.15) inset';
+                      (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)';
+                    }}
+                    onMouseLeave={e => {
+                      (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 24px rgba(16,185,129,0.35), 0 0 0 1px rgba(255,255,255,0.1) inset';
+                      (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
+                    }}
+                  >
+                    <LockIcon size={20} />
+                    Sign In to Download
+                  </Link>
+                  <span className="text-xs" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                    Included with Pro plan &middot; Annual users can add for $29/mo
+                  </span>
+                </>
               ) : (
                 <>
                   <button
@@ -478,7 +504,7 @@ export default function DownloadPage() {
                     }}
                   >
                     <LockIcon size={20} />
-                    {proLoading ? 'Redirecting...' : !isAuthenticated ? 'Sign In to Download' : 'Upgrade to Pro — $49/mo'}
+                    {proLoading ? 'Redirecting...' : 'Upgrade to Pro — $49/mo'}
                   </button>
                   <span className="text-xs" style={{ color: 'rgba(255,255,255,0.45)' }}>
                     Included with Pro plan &middot; Annual users can add for $29/mo
@@ -611,6 +637,27 @@ export default function DownloadPage() {
                         <DownloadIcon size={14} />
                         Add $29/mo
                       </button>
+                    ) : !isAuthenticated ? (
+                      <Link
+                        to="/login?redirect=/download"
+                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 no-underline"
+                        style={{
+                          background: 'rgba(255,255,255,0.06)',
+                          color: 'rgba(255,255,255,0.5)',
+                          border: '1px solid rgba(255,255,255,0.1)',
+                        }}
+                        onMouseEnter={e => {
+                          (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.1)';
+                          (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.7)';
+                        }}
+                        onMouseLeave={e => {
+                          (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)';
+                          (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.5)';
+                        }}
+                      >
+                        <LockIcon size={14} />
+                        Sign In
+                      </Link>
                     ) : (
                       <button
                         onClick={handleProCheckout}
