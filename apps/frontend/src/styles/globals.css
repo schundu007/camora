@@ -532,13 +532,68 @@ main, [role="main"] { animation: fadeUp 0.15s ease-out; }
 .lumora-dark-embed .border-indigo-100 { border-color: rgba(99,102,241,0.2) !important; }
 .lumora-dark-embed .text-indigo-700,
 .lumora-dark-embed .text-indigo-600 { color: #a5b4fc !important; }
-.lumora-dark-embed .bg-amber-50 { background-color: rgba(245,158,11,0.1) !important; }
-.lumora-dark-embed .border-amber-100 { border-color: rgba(245,158,11,0.2) !important; }
-.lumora-dark-embed .bg-rose-50 { background-color: rgba(244,63,94,0.1) !important; }
-.lumora-dark-embed .border-rose-100 { border-color: rgba(244,63,94,0.2) !important; }
-.lumora-dark-embed .bg-red-50 { background-color: rgba(239,68,68,0.1) !important; }
-.lumora-dark-embed .border-red-200 { border-color: rgba(239,68,68,0.2) !important; }
-.lumora-dark-embed .text-red-600 { color: #fca5a5 !important; }
+/* Standardize ALL colored headers/badges to indigo accent in dark mode */
+.lumora-dark-embed .bg-amber-50,
+.lumora-dark-embed .bg-amber-50\/50,
+.lumora-dark-embed .bg-rose-50,
+.lumora-dark-embed .bg-rose-50\/50,
+.lumora-dark-embed .bg-cyan-50,
+.lumora-dark-embed .bg-cyan-50\/50,
+.lumora-dark-embed .bg-blue-50,
+.lumora-dark-embed .bg-blue-50\/50,
+.lumora-dark-embed .bg-violet-50,
+.lumora-dark-embed .bg-violet-50\/50,
+.lumora-dark-embed .bg-emerald-50,
+.lumora-dark-embed .bg-emerald-50\/50,
+.lumora-dark-embed .bg-emerald-100,
+.lumora-dark-embed .bg-red-50,
+.lumora-dark-embed .bg-red-50\/50,
+.lumora-dark-embed .bg-red-100 { background-color: rgba(99,102,241,0.08) !important; }
+
+.lumora-dark-embed .border-amber-100,
+.lumora-dark-embed .border-amber-200,
+.lumora-dark-embed .border-rose-100,
+.lumora-dark-embed .border-cyan-100,
+.lumora-dark-embed .border-cyan-200,
+.lumora-dark-embed .border-blue-100,
+.lumora-dark-embed .border-violet-100,
+.lumora-dark-embed .border-violet-200,
+.lumora-dark-embed .border-emerald-200,
+.lumora-dark-embed .border-red-100,
+.lumora-dark-embed .border-red-200 { border-color: rgba(255,255,255,0.06) !important; }
+
+.lumora-dark-embed .text-amber-600,
+.lumora-dark-embed .text-amber-700,
+.lumora-dark-embed .text-rose-700,
+.lumora-dark-embed .text-cyan-600,
+.lumora-dark-embed .text-cyan-700,
+.lumora-dark-embed .text-blue-700,
+.lumora-dark-embed .text-violet-600,
+.lumora-dark-embed .text-violet-700,
+.lumora-dark-embed .text-red-600,
+.lumora-dark-embed .text-red-700,
+.lumora-dark-embed .text-emerald-700 { color: #818cf8 !important; }
+
+.lumora-dark-embed .text-amber-400,
+.lumora-dark-embed .text-amber-500,
+.lumora-dark-embed .text-rose-300 { color: #6C6B7B !important; }
+
+.lumora-dark-embed .bg-amber-100,
+.lumora-dark-embed .bg-blue-100,
+.lumora-dark-embed .bg-violet-100,
+.lumora-dark-embed .bg-cyan-100 { background-color: rgba(99,102,241,0.12) !important; }
+
+.lumora-dark-embed .text-amber-500.shrink-0,
+.lumora-dark-embed .text-indigo-600 { color: #818cf8 !important; }
+
+/* Test result cards — keep green/red semantic but muted */
+.lumora-dark-embed .bg-emerald-500 { background-color: #16a34a !important; }
+.lumora-dark-embed .bg-red-500 { background-color: #dc2626 !important; }
+.lumora-dark-embed .bg-emerald-50\/50,
+.lumora-dark-embed .border-emerald-200 { background-color: #16141F !important; border-color: rgba(255,255,255,0.06) !important; }
+.lumora-dark-embed .bg-red-50\/50,
+.lumora-dark-embed .border-red-200 { background-color: #16141F !important; border-color: rgba(255,255,255,0.06) !important; }
+
 .lumora-dark-embed .shadow-sm { box-shadow: 0 1px 3px rgba(0,0,0,0.3) !important; }
 .lumora-dark-embed .placeholder\:text-gray-400::placeholder,
 .lumora-dark-embed .placeholder\:text-gray-300::placeholder { color: #545260 !important; }
