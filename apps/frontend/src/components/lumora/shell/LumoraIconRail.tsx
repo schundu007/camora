@@ -10,6 +10,18 @@ interface LumoraIconRailProps {
   onToggleSessions: () => void;
 }
 
+/* ── Color tokens (standardized) ── */
+const C = {
+  base: '#0D0C14',
+  surface: '#16141F',
+  elevated: '#1E1C28',
+  text: '#F2F1F3',
+  muted: '#6C6B7B',
+  accent: '#818cf8',
+  accentBg: 'rgba(99,102,241,0.12)',
+  border: 'rgba(255,255,255,0.06)',
+};
+
 export function LumoraIconRail({ activeTab, sessionsOpen, onToggleSessions }: LumoraIconRailProps) {
   const [showMore, setShowMore] = useState(false);
 
@@ -34,54 +46,48 @@ export function LumoraIconRail({ activeTab, sessionsOpen, onToggleSessions }: Lu
   ];
 
   return (
-    <nav className="hidden md:flex flex-col items-center w-[68px] shrink-0 py-3 gap-0.5" style={{ background: '#0c0b15', borderRight: '1px solid rgba(255,255,255,0.06)' }}>
-      {/* Logo */}
+    <nav className="hidden md:flex flex-col items-center w-[68px] shrink-0 py-3 gap-0.5" style={{ background: C.base, borderRight: `1px solid ${C.border}` }}>
       <Link to="/" className="flex items-center justify-center w-full h-10 mb-3" title="Camora">
         <CamoraLogo size={26} />
       </Link>
 
-      {/* Nav items */}
       {navItems.map((item) => {
         const isActive = (item.id === activeTab) || (item.id === 'sessions' && sessionsOpen);
         const isButton = !!item.onClick;
-
         const content = (
           <>
-            {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-indigo-400" />}
-            <span className="transition-colors group-hover:text-white/80">{item.icon}</span>
+            {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full" style={{ background: C.accent }} />}
+            <span>{item.icon}</span>
             <span className="text-[9px] font-semibold mt-0.5" style={{ fontFamily: 'var(--font-sans)' }}>{item.label}</span>
           </>
         );
-
-        const className = "flex flex-col items-center justify-center w-[58px] h-[52px] rounded-xl transition-all group relative";
-        const style = isActive ? { background: 'rgba(99,102,241,0.12)', color: '#818cf8' } : { color: 'rgba(255,255,255,0.45)' };
+        const cls = "flex flex-col items-center justify-center w-[58px] h-[52px] rounded-xl transition-all group relative";
+        const sty = isActive ? { background: C.accentBg, color: C.accent } : { color: C.muted };
 
         return isButton ? (
-          <button key={item.id} onClick={item.onClick} className={className} style={style} title={item.label}>
-            {content}
-          </button>
+          <button key={item.id} onClick={item.onClick} className={cls} style={sty} title={item.label}>{content}</button>
         ) : (
-          <Link key={item.id} to={item.path!} className={className} style={style} title={item.label}>
-            {content}
-          </Link>
+          <Link key={item.id} to={item.path!} className={cls} style={sty} title={item.label}>{content}</Link>
         );
       })}
 
-      {/* More popover */}
       <div className="relative">
         <button onClick={() => setShowMore(!showMore)}
           className="flex flex-col items-center justify-center w-[58px] h-[52px] rounded-xl transition-all group"
-          style={showMore ? { background: 'rgba(99,102,241,0.12)', color: '#818cf8' } : { color: 'rgba(255,255,255,0.45)' }}>
+          style={showMore ? { background: C.accentBg, color: C.accent } : { color: C.muted }}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="1" /><circle cx="19" cy="12" r="1" /><circle cx="5" cy="12" r="1" /></svg>
           <span className="text-[9px] font-semibold mt-0.5" style={{ fontFamily: 'var(--font-sans)' }}>More</span>
         </button>
         {showMore && (
           <>
             <div className="fixed inset-0 z-40" onClick={() => setShowMore(false)} />
-            <div className="absolute left-full top-0 ml-2 w-[200px] rounded-xl shadow-2xl z-50 p-3 grid grid-cols-3 gap-1" style={{ background: '#1a1926', border: '1px solid rgba(255,255,255,0.1)' }}>
+            <div className="absolute left-full top-0 ml-2 w-[200px] rounded-xl shadow-2xl z-50 p-3 grid grid-cols-3 gap-1" style={{ background: C.elevated, border: `1px solid ${C.border}` }}>
               {moreItems.map(mi => (
                 <Link key={mi.label} to={mi.path} onClick={() => setShowMore(false)}
-                  className="flex flex-col items-center gap-1.5 p-2.5 rounded-lg hover:bg-white/5 transition-colors text-white/50 hover:text-white/80">
+                  className="flex flex-col items-center gap-1.5 p-2.5 rounded-lg transition-colors"
+                  style={{ color: C.muted }}
+                  onMouseEnter={e => { e.currentTarget.style.color = C.text; e.currentTarget.style.background = C.surface; }}
+                  onMouseLeave={e => { e.currentTarget.style.color = C.muted; e.currentTarget.style.background = 'transparent'; }}>
                   {mi.icon}
                   <span className="text-[9px] font-medium" style={{ fontFamily: 'var(--font-sans)' }}>{mi.label}</span>
                 </Link>
@@ -93,8 +99,7 @@ export function LumoraIconRail({ activeTab, sessionsOpen, onToggleSessions }: Lu
 
       <div className="flex-1" />
 
-      {/* Settings */}
-      <Link to="/capra/prepare" className="flex items-center justify-center w-10 h-10 rounded-xl transition-all hover:bg-white/5" style={{ color: 'rgba(255,255,255,0.3)' }} title="Dashboard">
+      <Link to="/capra/prepare" className="flex items-center justify-center w-10 h-10 rounded-xl transition-all" style={{ color: C.muted }} title="Dashboard">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" /></svg>
       </Link>
     </nav>
