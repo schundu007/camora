@@ -778,16 +778,20 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                 {/* Streaming state */}
                 {(isStreaming || (isLoading && !sd && !parsedBlocks?.length)) && !sd && (
                   <div className="space-y-3">
-                    <div className="flex items-center gap-2 p-3 bg-indigo-50 border border-indigo-100 rounded-xl">
-                      <div className="relative w-5 h-5">
-                        <div className="absolute inset-0 border-2 border-indigo-200 rounded-full" />
-                        <div className="absolute inset-0 border-2 border-transparent border-t-indigo-500 rounded-full animate-spin" />
+                    <div className="flex items-center gap-3 p-4 rounded-xl" style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.15)' }}>
+                      <div className="relative w-5 h-5 shrink-0">
+                        <div className="absolute inset-0 border-2 border-indigo-400/30 rounded-full" />
+                        <div className="absolute inset-0 border-2 border-transparent border-t-indigo-400 rounded-full animate-spin" />
                       </div>
-                      <span className="text-xs font-semibold text-indigo-700">Analyzing problem & generating solution...</span>
+                      <div>
+                        <span className="text-xs font-semibold text-indigo-300">Analyzing problem & generating solution...</span>
+                        <div className="flex gap-1 mt-2">
+                          {['Problem', 'Approach', 'Code', 'Tests'].map((step, i) => (
+                            <span key={step} className="text-[9px] px-2 py-0.5 rounded-full font-medium animate-pulse" style={{ background: 'rgba(99,102,241,0.1)', color: 'rgba(165,180,252,0.6)', animationDelay: `${i * 200}ms` }}>{step}</span>
+                          ))}
+                        </div>
+                      </div>
                     </div>
-                    {streamingSolution && (
-                      <pre className="p-2 text-[10px] text-gray-400 font-mono whitespace-pre-wrap leading-relaxed max-h-60 overflow-auto">{streamingSolution}</pre>
-                    )}
                   </div>
                 )}
 
