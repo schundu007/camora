@@ -917,17 +917,17 @@ export function DesignLayout({ onBack, initialProblem, embedded }: DesignLayoutP
                   </section>
                 )}
                 {sd.requirements?.nonFunctional && sd.requirements.nonFunctional.length > 0 && (
-                  <section className="rounded-2xl border border-cyan-200 bg-white overflow-hidden" style={{boxShadow: '0 2px 8px rgba(0,0,0,0.04)'}}>
-                    <div className="flex items-center gap-2.5 px-4 py-2.5">
-                      <div className="w-1.5 h-5 rounded-full bg-gradient-to-b from-cyan-500 to-blue-500" />
-                      <h2 className="text-sm font-bold text-cyan-800">Non-Functional</h2>
-                      <span className="ml-auto text-[10px] font-mono text-cyan-500 bg-cyan-50 border border-cyan-200 rounded-full px-2 py-0.5">{sd.requirements.nonFunctional.length}</span>
+                  <section className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${t.cardBorder}`, background: t.cardBg, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+                    <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: t.headerBg }}>
+                      <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, ${t.dotColor}, #3b82f6)` }} />
+                      <h2 className="text-sm font-bold" style={{ color: t.headerText }}>Non-Functional</h2>
+                      <span className="ml-auto text-[10px] font-mono rounded-full px-2 py-0.5" style={{ color: t.badgeText, background: t.badgeBg, border: `1px solid ${t.headerBorder}` }}>{sd.requirements.nonFunctional.length}</span>
                     </div>
                     <div className="px-4 py-3">
                       <div className="grid grid-cols-1 gap-y-1">
                         {sd.requirements.nonFunctional.map((r, i) => (
-                          <div key={i} className="flex items-start gap-2 text-sm text-gray-700 leading-snug py-0.5">
-                            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shrink-0 mt-1.5" />{r}
+                          <div key={i} className="flex items-start gap-2 text-sm leading-snug py-0.5" style={{ color: t.text }}>
+                            <span className="w-1.5 h-1.5 rounded-full shrink-0 mt-1.5" style={{ background: t.dotColor }} />{r}
                           </div>
                         ))}
                       </div>
@@ -938,20 +938,20 @@ export function DesignLayout({ onBack, initialProblem, embedded }: DesignLayoutP
 
               {/* ── SCALE ESTIMATES ── */}
               {sd.scaleEstimates && Object.entries(sd.scaleEstimates).filter(([, v]) => v && v.trim()).length > 0 && (
-                <section className="rounded-2xl border border-violet-200 bg-white overflow-hidden" style={{boxShadow: '0 2px 8px rgba(0,0,0,0.04)'}}>
-                  <div className="flex items-center gap-2.5 px-4 py-2.5">
-                    <div className="w-1.5 h-5 rounded-full bg-gradient-to-b from-violet-500 to-purple-500" />
-                    <h2 className="text-sm font-bold text-violet-800">Scale Estimates</h2>
+                <section className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${t.cardBorder}`, background: t.cardBg, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+                  <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: t.headerBg }}>
+                    <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, #8b5cf6, ${t.dotColor})` }} />
+                    <h2 className="text-sm font-bold" style={{ color: t.headerText }}>Scale Estimates</h2>
                   </div>
                   <div className="px-4 py-3">
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                       {Object.entries(sd.scaleEstimates).filter(([, v]) => v && v.trim()).map(([key, val]) => {
                         const highlight = parseMetricHighlight(val);
                         return (
-                          <div key={key} className="rounded-lg bg-violet-50/50 border border-violet-100 px-3 py-3">
-                            <div className="font-bold text-violet-600 font-mono text-sm">{highlight ? highlight.number : val}</div>
-                            <div className="text-sm text-gray-700 font-medium mt-1">{key}</div>
-                            {highlight?.rest && <div className="text-xs text-gray-500 mt-1">{highlight.rest}</div>}
+                          <div key={key} className="rounded-lg px-3 py-3" style={{ background: t.sectionBg, border: `1px solid ${t.cardBorder}` }}>
+                            <div className="font-bold font-mono text-sm" style={{ color: t.headerText }}>{highlight ? highlight.number : val}</div>
+                            <div className="text-sm font-medium mt-1" style={{ color: t.text }}>{key}</div>
+                            {highlight?.rest && <div className="text-xs mt-1" style={{ color: t.textMuted }}>{highlight.rest}</div>}
                           </div>
                         );
                       })}
@@ -962,30 +962,27 @@ export function DesignLayout({ onBack, initialProblem, embedded }: DesignLayoutP
 
               {/* ── SCALABILITY TIERS ── */}
               {sd.techJustifications && sd.techJustifications.length > 0 && (
-                <section className="rounded-2xl border border-violet-200 bg-white overflow-hidden" style={{boxShadow: '0 2px 8px rgba(0,0,0,0.04)'}}>
-                  <div className="flex items-center gap-2.5 px-4 py-2.5">
-                    <div className="w-1.5 h-5 rounded-full bg-gradient-to-b from-violet-500 to-indigo-500" />
-                    <h2 className="text-sm font-bold text-violet-800">Scalability Tiers</h2>
+                <section className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${t.cardBorder}`, background: t.cardBg, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+                  <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: t.headerBg }}>
+                    <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, #8b5cf6, ${t.dotColor})` }} />
+                    <h2 className="text-sm font-bold" style={{ color: t.headerText }}>Scalability Tiers</h2>
                   </div>
                   <div className="px-4 py-3">
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                      {sd.techJustifications.map((tier, i) => {
-                        const color = tierColors[i % tierColors.length];
-                        return (
-                          <div key={i} className="rounded-lg border border-gray-100 p-2 text-center">
+                      {sd.techJustifications.map((tier, i) => (
+                          <div key={i} className="rounded-lg p-2 text-center" style={{ border: `1px solid ${t.cardBorder}`, background: t.sectionBg }}>
                             <div className={`text-xs font-bold text-white bg-gradient-to-r ${
                               ['from-indigo-500 to-violet-500', 'from-blue-500 to-indigo-500', 'from-violet-500 to-purple-500',
                                'from-amber-500 to-orange-500', 'from-cyan-500 to-blue-500', 'from-rose-500 to-pink-500',
                                'from-indigo-500 to-blue-500', 'from-violet-500 to-indigo-500'][i % 8]
                             } rounded px-2 py-1 mb-1`}>{tier.tech}</div>
                             {tier.details.length > 0 && (
-                              <div className="text-xs text-gray-600 leading-relaxed text-left mt-1">
+                              <div className="text-xs leading-relaxed text-left mt-1" style={{ color: t.textMuted }}>
                                 {tier.details.map((d, j) => <div key={j} title={d}>- {d}</div>)}
                               </div>
                             )}
                           </div>
-                        );
-                      })}
+                        ))}
                     </div>
                   </div>
                 </section>
@@ -995,20 +992,20 @@ export function DesignLayout({ onBack, initialProblem, embedded }: DesignLayoutP
               {((sd.tradeoffs && sd.tradeoffs.length > 0) || (sd.edgeCases && sd.edgeCases.length > 0)) && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
                   {sd.tradeoffs && sd.tradeoffs.length > 0 && (
-                    <section className="rounded-2xl border border-rose-200 bg-white overflow-hidden" style={{boxShadow: '0 2px 8px rgba(0,0,0,0.04)'}}>
-                      <div className="flex items-center gap-2.5 px-4 py-2.5">
-                        <div className="w-1.5 h-5 rounded-full bg-gradient-to-b from-rose-500 to-pink-500" />
-                        <h2 className="text-sm font-bold text-rose-800">Tradeoffs</h2>
+                    <section className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${t.cardBorder}`, background: t.cardBg, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+                      <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: t.headerBg }}>
+                        <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, ${t.dotColor}, #ec4899)` }} />
+                        <h2 className="text-sm font-bold" style={{ color: t.headerText }}>Tradeoffs</h2>
                       </div>
                       <div className="px-4 py-3">
                         <div className="grid grid-cols-1 gap-2">
-                          {sd.tradeoffs.map((t, i) => (
-                            <div key={i} className="rounded-lg bg-gray-50/80 border border-gray-100 px-3 py-2">
-                              <div className="flex items-start gap-2 text-sm text-gray-700 leading-snug">
-                                <span className="text-rose-500 font-bold shrink-0 mt-0.5">
+                          {sd.tradeoffs.map((tr, i) => (
+                            <div key={i} className="rounded-lg px-3 py-2" style={{ background: t.sectionBg, border: `1px solid ${t.cardBorder}` }}>
+                              <div className="flex items-start gap-2 text-sm leading-snug" style={{ color: t.text }}>
+                                <span className="font-bold shrink-0 mt-0.5" style={{ color: t.dotColor }}>
                                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
                                 </span>
-                                {t}
+                                {tr}
                               </div>
                             </div>
                           ))}
@@ -1017,17 +1014,17 @@ export function DesignLayout({ onBack, initialProblem, embedded }: DesignLayoutP
                     </section>
                   )}
                   {sd.edgeCases && sd.edgeCases.length > 0 && (
-                    <section className="rounded-2xl border border-amber-200 bg-white overflow-hidden" style={{boxShadow: '0 2px 8px rgba(0,0,0,0.04)'}}>
-                      <div className="flex items-center gap-2.5 px-4 py-2.5">
-                        <div className="w-1.5 h-5 rounded-full bg-gradient-to-b from-amber-500 to-orange-500" />
-                        <h2 className="text-sm font-bold text-amber-800">Edge Cases</h2>
+                    <section className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${t.cardBorder}`, background: t.cardBg, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+                      <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: t.headerBg }}>
+                        <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, ${t.dotColor}, #f59e0b)` }} />
+                        <h2 className="text-sm font-bold" style={{ color: t.headerText }}>Edge Cases</h2>
                       </div>
                       <div className="px-4 py-3">
                         <div className="grid grid-cols-1 gap-2">
                           {sd.edgeCases.map((e, i) => (
-                            <div key={i} className="rounded-lg bg-gray-50/80 border border-gray-100 px-3 py-2">
-                              <div className="flex items-start gap-2 text-sm text-gray-700 leading-snug">
-                                <span className="text-amber-500 font-bold shrink-0 mt-0.5">
+                            <div key={i} className="rounded-lg px-3 py-2" style={{ background: t.sectionBg, border: `1px solid ${t.cardBorder}` }}>
+                              <div className="flex items-start gap-2 text-sm leading-snug" style={{ color: t.text }}>
+                                <span className="font-bold shrink-0 mt-0.5" style={{ color: t.dotColor }}>
                                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01" /></svg>
                                 </span>
                                 {e}
@@ -1043,21 +1040,21 @@ export function DesignLayout({ onBack, initialProblem, embedded }: DesignLayoutP
 
               {/* ── FOLLOW-UP Q&A ── */}
               {sd.followups && sd.followups.length > 0 && (
-                <section className="rounded-2xl border border-orange-200 bg-white overflow-hidden" style={{boxShadow: '0 2px 8px rgba(0,0,0,0.04)'}}>
-                  <div className="flex items-center gap-2.5 px-4 py-2.5">
-                    <div className="w-1.5 h-5 rounded-full bg-gradient-to-b from-orange-500 to-amber-500" />
-                    <h2 className="text-sm font-bold text-orange-800">Follow-up Q&A</h2>
-                    <span className="ml-auto text-[10px] font-mono text-orange-400 bg-orange-50 border border-orange-200 rounded-full px-2 py-0.5">{sd.followups.length}</span>
+                <section className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${t.cardBorder}`, background: t.cardBg, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+                  <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: t.headerBg }}>
+                    <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, ${t.dotColor}, #f59e0b)` }} />
+                    <h2 className="text-sm font-bold" style={{ color: t.headerText }}>Follow-up Q&A</h2>
+                    <span className="ml-auto text-[10px] font-mono rounded-full px-2 py-0.5" style={{ color: t.badgeText, background: t.badgeBg, border: `1px solid ${t.headerBorder}` }}>{sd.followups.length}</span>
                   </div>
                   <div className="px-4 py-3">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                       {sd.followups.map((f, i) => (
-                        <div key={i} className="rounded-lg border border-gray-100 p-2.5">
+                        <div key={i} className="rounded-lg p-2.5" style={{ border: `1px solid ${t.cardBorder}`, background: t.sectionBg }}>
                           <div className="flex items-start gap-1.5 mb-1">
-                            <span className="text-xs font-mono font-bold text-indigo-600 shrink-0">Q{i + 1}</span>
-                            <span className="text-xs font-semibold text-gray-900">{f.question}</span>
+                            <span className="text-xs font-mono font-bold shrink-0" style={{ color: t.headerText }}>Q{i + 1}</span>
+                            <span className="text-xs font-semibold" style={{ color: t.text }}>{f.question}</span>
                           </div>
-                          <p className="text-xs text-gray-500 leading-relaxed pl-5">{f.answer}</p>
+                          <p className="text-xs leading-relaxed pl-5" style={{ color: t.textMuted }}>{f.answer}</p>
                         </div>
                       ))}
                     </div>
