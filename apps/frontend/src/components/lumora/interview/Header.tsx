@@ -164,7 +164,7 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
         <div data-tour="tabs" className="flex items-center h-full shrink-0 px-1" style={{ borderRight: '1px solid rgba(255,255,255,0.04)' }}>
           <Link to="/capra/prepare" className="flex items-center gap-1 px-2 py-1 mx-0.5 rounded-md text-[11px] transition-all" style={{ color: 'rgba(255,255,255,0.4)', fontFamily: "'Source Sans 3', sans-serif", fontWeight: 700 }} title="Prepare">
             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
-            <span className="hidden xl:inline">Prepare</span>
+            <span className="hidden xl:inline">Dashboard</span>
           </Link>
           {TABS.map((tab) => (
             <button key={tab.id} onClick={() => handleTabClick(tab.id)}
