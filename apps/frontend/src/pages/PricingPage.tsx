@@ -59,6 +59,7 @@ const PLANS = [
       'Speaker voice filtering',
       'Priority AI responses',
       'Desktop app included',
+      'Mobile app (iOS & Android)',
     ],
     cta: 'Get Pro',
     ctaHref: '/lumora',
@@ -97,6 +98,7 @@ const COMPARISON = [
   { feature: 'Combined prep plus live tool', camora: true, finalround: false, lockedin: false, solver: false, sensei: false, techprep: false, algomaster: false, designgurus: false, aiapply: 'Partial', offergoose: 'Partial', parakeet: false, unique: true },
   { feature: 'Voice transcription', camora: true, finalround: true, lockedin: true, solver: true, sensei: true, techprep: false, algomaster: false, designgurus: false, aiapply: true, offergoose: true, parakeet: true },
   { feature: 'Desktop app', camora: true, finalround: true, lockedin: true, solver: true, sensei: false, techprep: false, algomaster: false, designgurus: false, aiapply: true, offergoose: true, parakeet: true },
+  { feature: 'Mobile app (iOS & Android)', camora: true, finalround: true, lockedin: false, solver: false, sensei: false, techprep: false, algomaster: false, designgurus: false, aiapply: true, offergoose: false, parakeet: false },
 ];
 
 export default function PricingPage() {
