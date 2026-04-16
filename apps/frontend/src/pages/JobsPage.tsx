@@ -1386,6 +1386,10 @@ export default function JobsPage() {
                         Apply
                         <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" /></svg>
                       </a>
+                      <Link to={`/capra/resume?company=${encodeURIComponent(job.company_name)}&role=${encodeURIComponent(job.title)}&url=${encodeURIComponent(job.job_url)}`} className="jobs-action-link-resume" style={{ fontSize: '12px', fontWeight: 600, color: '#8b5cf6', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        Resume
+                        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
+                      </Link>
                       <Link to={`/jobs/${job.id}/prepare`} className="jobs-action-link-gray" style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
                         Prepare
                         <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" /></svg>
@@ -1529,6 +1533,9 @@ export default function JobsPage() {
         }
         .jobs-action-link-gray:hover {
           color: var(--text-primary) !important;
+        }
+        .jobs-action-link-resume:hover {
+          color: #a78bfa !important;
         }
 
         /* Footer link hover */
