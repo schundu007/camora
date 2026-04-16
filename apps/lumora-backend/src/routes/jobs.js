@@ -84,16 +84,21 @@ router.get('/filters', async (req, res, next) => {
       ),
     ]);
 
-    // Extract city/region parts with aggregated counts
+    // Extract real city/country locations — skip remote/hybrid variations
+    const remotePattern = /\b(remote|hybrid|work from home|wfh|telecommute)\b/i;
     const locationCounts = new Map(); // normalized key → { display, count }
     for (const row of locationsResult.rows) {
       const loc = row.location;
       const rowCount = parseInt(row.count, 10);
       if (!loc) continue;
-      const parts = loc.split(/[•;|]/);
+      const parts = loc.split(/[•;|,]/);
       for (const part of parts) {
-        const trimmed = part.trim();
+        let trimmed = part.trim();
         if (!trimmed) continue;
+        // Skip pure remote/hybrid entries — those belong in Work Type filter
+        if (remotePattern.test(trimmed)) continue;
+        // Skip generic country-only entries like "United States" that are too broad
+        // but keep "City, State" or "City, Country" formats
         const key = trimmed.toLowerCase();
         const existing = locationCounts.get(key);
         if (existing) {
@@ -104,13 +109,8 @@ router.get('/filters', async (req, res, next) => {
       }
     }
 
-    // Sort by count descending, group remote first
-    const allLocs = Array.from(locationCounts.values());
-    const remoteLocs = allLocs
-      .filter((l) => /remote/i.test(l.name))
-      .sort((a, b) => b.count - a.count);
-    const cityLocs = allLocs
-      .filter((l) => !/remote/i.test(l.name))
+    // Sort by count descending — only real cities/regions
+    const cityLocs = Array.from(locationCounts.values())
       .sort((a, b) => b.count - a.count);
 
     res.json({
@@ -118,7 +118,7 @@ router.get('/filters', async (req, res, next) => {
         name: r.source,
         count: parseInt(r.count, 10),
       })),
-      locations: [...remoteLocs, ...cityLocs].slice(0, 150),
+      locations: cityLocs.slice(0, 100),
       departments: departmentsResult.rows.map((r) => ({
         name: r.department,
         count: parseInt(r.count, 10),
