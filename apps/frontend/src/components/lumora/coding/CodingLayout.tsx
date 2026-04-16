@@ -736,7 +736,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
 
                       {/* Input Areas */}
                       {inputMode === 'paste' && (
-                        <textarea
+                        <textarea id="problem-text"
                           value={problemText}
                           onChange={(e) => setProblemText(e.target.value)}
                           onDrop={handleDrop}
@@ -748,7 +748,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
 
                       {inputMode === 'url' && (
                         <div className="flex gap-2">
-                          <input type="url" value={problemUrl} onChange={(e) => setProblemUrl(e.target.value)}
+                          <input type="url" id="problem-url" name="problem-url" value={problemUrl} onChange={(e) => setProblemUrl(e.target.value)}
                             placeholder="https://leetcode.com/problems/two-sum/"
                             className="flex-1 bg-white border border-gray-200 rounded-lg px-3 py-2 text-gray-900 text-xs md:text-sm placeholder:text-gray-400 focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/20 focus:outline-none transition-all" />
                           <button onClick={handleFetchFromUrl} disabled={isProcessing || !problemUrl.trim()}
@@ -762,7 +762,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                         <div className="space-y-2">
                           <div onClick={() => fileInputRef.current?.click()} onDrop={handleDrop} onDragOver={(e) => e.preventDefault()}
                             className="border-2 border-dashed border-gray-200 rounded-lg p-6 text-center cursor-pointer hover:border-indigo-400/50 hover:bg-indigo-50/30 transition-all">
-                            <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
+                            <input ref={fileInputRef} type="file" id="problem-image" name="problem-image" accept="image/*" onChange={handleImageSelect} className="hidden" />
                             {imagePreview ? (
                               <img src={imagePreview} alt="Problem" className="max-h-32 mx-auto rounded-lg" />
                             ) : (
@@ -1075,7 +1075,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
           {/* Editor Header */}
           <div className="flex items-center justify-between px-3 py-1.5 bg-gray-50 border-b border-gray-100">
             <div className="flex items-center gap-2">
-              <select value={language} onChange={(e) => handleLanguageChange(e.target.value)}
+              <select id="language-select" name="language" value={language} onChange={(e) => handleLanguageChange(e.target.value)}
                 className="bg-white border border-gray-200 rounded-md px-2 py-1 text-gray-900 text-xs font-mono focus:border-indigo-400 focus:outline-none cursor-pointer">
                 {LANGUAGES.map(l => <option key={l.id} value={l.id}>{l.label}</option>)}
               </select>
