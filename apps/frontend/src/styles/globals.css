@@ -498,9 +498,13 @@ main, [role="main"] { animation: fadeUp 0.15s ease-out; }
 }
 
 /* Light panel inside Lumora — for result/code panels that need light bg */
+/* Monaco editor is excluded so vs-dark theme renders correctly */
 .lumora-light-panel {
   background: #ffffff !important; color: #111827 !important;
 }
+.lumora-light-panel .monaco-editor { color: unset !important; background: unset !important; }
+.lumora-light-panel .monaco-editor .view-line span { color: unset !important; }
+.lumora-light-panel .monaco-editor .margin { color: unset !important; background: unset !important; }
 .lumora-light-panel .text-gray-900 { color: #111827 !important; }
 .lumora-light-panel .text-gray-800 { color: #1f2937 !important; }
 .lumora-light-panel .text-gray-700 { color: #374151 !important; }
