@@ -386,6 +386,17 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
     }
   }, [parsedBlocks]);
 
+  // Sync code from jsonSolution when it's set but code is still default
+  useEffect(() => {
+    if (jsonSolution && code === getDefaultCode(language)) {
+      if (jsonSolution.solutions?.length > 0) {
+        setCode(jsonSolution.solutions[activeSolutionIdx || 0]?.code || jsonSolution.solutions[0].code);
+      } else if (jsonSolution.code) {
+        setCode(jsonSolution.code);
+      }
+    }
+  }, [jsonSolution]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // JSON repair from stream
   useEffect(() => {
     if (!isStreaming && streamChunks.length > 0 && !jsonSolution) {
