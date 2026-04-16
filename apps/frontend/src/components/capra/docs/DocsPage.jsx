@@ -30,7 +30,7 @@ import { roadmapCategories, roadmapCategoryMap, roadmapTopics } from '../../../d
 import { engBlogCategories, engBlogCategoryMap, engBlogTopics } from '../../../data/capra/topics/engBlogsTopics.js';
 import { companyPrep } from '../../../data/capra/topics/companyPrep.js';
 import { interviewCheatsheet } from '../../../data/capra/topics/techInterviewHandbook';
-import { ROLE_TOPIC_MAP } from '../../../data/capra/jobRoleTopicMapping';
+import { ROLE_TOPIC_MAP, ONBOARDING_ROLE_TO_TOPIC_KEY } from '../../../data/capra/jobRoleTopicMapping';
 
 // Merge extra topics into base arrays
 const codingCategoryMap = { ..._codingCategoryMap, ...extraCodingCategoryMap };
@@ -101,6 +101,27 @@ export default function DocsPage({ onBack }) {
     return null;
   });
 
+  // "Show All Content" toggle — bypasses role filtering
+  const [showAllContent, setShowAllContent] = useState(false);
+
+  // Auto-set jobContext from user's onboarding roles when no URL role is provided
+  useEffect(() => {
+    if (jobContext || showAllContent) return; // URL role takes priority, or user chose "show all"
+    if (!user?.job_roles?.length) return;
+    const primaryRole = user.job_roles[0];
+    const topicKey = ONBOARDING_ROLE_TO_TOPIC_KEY[primaryRole];
+    if (topicKey && topicKey !== 'general' && ROLE_TOPIC_MAP[topicKey]) {
+      setJobContext({
+        role: topicKey,
+        focus: null,
+        jobTitle: ROLE_TOPIC_MAP[topicKey]?.label || primaryRole,
+        company: null,
+        analysis: null,
+        fromProfile: true, // Flag so we know this came from user profile, not URL
+      });
+    }
+  }, [user?.job_roles]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // React to URL changes from sidebar navigation
   useEffect(() => {
     const pathSegment = routerLocation.pathname.replace('/capra/prepare', '').replace(/^\//, '');
@@ -118,8 +139,10 @@ export default function DocsPage({ onBack }) {
 
     if (role) {
       setJobContext({ role, focus, jobTitle, company });
+      setShowAllContent(false);
     } else {
-      setJobContext(null);
+      // Don't clear profile-based filter when no URL role
+      setJobContext((prev) => prev?.fromProfile ? prev : null);
     }
   }, [routerLocation.pathname, routerLocation.search]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -129,7 +152,8 @@ export default function DocsPage({ onBack }) {
     const params = new URLSearchParams();
     if (activePage && activePage !== 'overview') params.set('page', activePage);
     if (selectedTopic) params.set('topic', selectedTopic);
-    if (jobContext) {
+    // Don't persist profile-based jobContext to URL (it auto-applies from user profile)
+    if (jobContext && !jobContext.fromProfile) {
       if (jobContext.role) params.set('role', jobContext.role);
       if (jobContext.focus) params.set('focus', jobContext.focus);
       if (jobContext.jobTitle) params.set('jobTitle', jobContext.jobTitle);
@@ -188,7 +212,17 @@ export default function DocsPage({ onBack }) {
 
   // Clear job-role filter
   const clearJobFilter = () => {
-    setJobContext(null);
+    if (jobContext?.fromProfile) {
+      // Profile-based filter: toggle "show all" mode (keep jobContext for easy re-enable)
+      setShowAllContent(true);
+    } else {
+      // URL-based filter: fully clear
+      setJobContext(null);
+    }
+  };
+
+  const reEnableRoleFilter = () => {
+    setShowAllContent(false);
   };
 
   const setSelectedTopic = (topic) => {
@@ -400,6 +434,7 @@ export default function DocsPage({ onBack }) {
   // Filter and sort topics based on active page
   // Get role-filtered topic IDs (if job context is active)
   const getRoleFilteredIds = (page) => {
+    if (showAllContent) return null; // User chose to see all content
     if (!jobContext?.role) return null;
     const roleConfig = ROLE_TOPIC_MAP[jobContext.role];
     if (!roleConfig) return null;
@@ -926,7 +961,25 @@ export default function DocsPage({ onBack }) {
                   </div>
                   )}
                   {/* Job Context Banner — shown when navigating from a job prep page or URL analysis */}
-                  {jobContext && activePage !== 'overview' && (() => {
+                  {/* Show All Content banner — lets user re-enable role filter */}
+                  {showAllContent && jobContext?.fromProfile && activePage !== 'overview' && (
+                    <div className="mb-4 rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] overflow-hidden">
+                      <div className="px-4 py-3 flex items-center justify-between gap-3">
+                        <p className="text-sm text-[var(--text-secondary)] landing-body">
+                          Showing all topics across all roles
+                        </p>
+                        <button
+                          onClick={reEnableRoleFilter}
+                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[var(--accent)] bg-[var(--accent-subtle)] border border-[var(--accent)]/20 rounded-lg hover:bg-[var(--accent-subtle)] transition-colors flex-shrink-0 landing-body"
+                        >
+                          <Icon name="target" size={12} />
+                          Filter for {ROLE_TOPIC_MAP[jobContext.role]?.label || 'my role'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {jobContext && !showAllContent && activePage !== 'overview' && (() => {
                     const analysis = jobContext.analysis;
                     // Pick the right focus tags from analysis based on current page
                     const focusTags = analysis ? (
@@ -1258,7 +1311,7 @@ export default function DocsPage({ onBack }) {
                     </div>
                     <div className="space-y-3">
                     {systemDesignProblemCategories.map((category) => {
-                      const roleSDProblemIds = jobContext?.role && ROLE_TOPIC_MAP[jobContext.role]?.systemDesignProblems?.length > 0
+                      const roleSDProblemIds = !showAllContent && jobContext?.role && ROLE_TOPIC_MAP[jobContext.role]?.systemDesignProblems?.length > 0
                         ? new Set(ROLE_TOPIC_MAP[jobContext.role].systemDesignProblems)
                         : null;
                       const filteredDesigns = roleSDProblemIds
