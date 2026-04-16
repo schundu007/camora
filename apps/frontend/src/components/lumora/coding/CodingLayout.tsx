@@ -712,14 +712,16 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
             <button
               onClick={() => setProblemTab('description')}
               className={`px-3 py-1 text-xs font-semibold rounded-md transition-all ${
-                problemTab === 'description' ? 'bg-indigo-500 text-white shadow-sm' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                problemTab === 'description' ? 'bg-indigo-500 text-white shadow-sm' : ''
               }`}
+              style={problemTab !== 'description' ? { color: t.tabText } : undefined}
             >Description</button>
             <button
               onClick={() => setProblemTab('solution')}
               className={`px-3 py-1 text-xs font-semibold rounded-md transition-all flex items-center gap-1.5 ${
-                problemTab === 'solution' ? 'bg-indigo-500 text-white shadow-sm' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                problemTab === 'solution' ? 'bg-indigo-500 text-white shadow-sm' : ''
               }`}
+              style={problemTab !== 'solution' ? { color: t.tabText } : undefined}
             >
               Solution
               {isStreaming && <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />}
@@ -870,7 +872,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
 
                     {/* ── SOLUTION TABS (when multiple solutions) ── */}
                     {sd.solutions?.length > 1 && (
-                      <div className="flex items-center gap-0.5 p-0.5 bg-gray-100 rounded-lg">
+                      <div className="flex items-center gap-0.5 p-0.5 rounded-lg" style={{ background: t.sectionBg }}>
                         {sd.solutions.map((sol: any, i: number) => {
                           const solColors = ['indigo', 'blue', 'violet', 'amber', 'cyan'];
                           const c = solColors[i % solColors.length];
@@ -883,14 +885,13 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                                 if (solCode) setCode(solCode);
                               }}
                               className={`flex-1 px-2 py-1.5 text-[10px] md:text-xs font-semibold rounded-md transition-all text-center ${
-                                activeSolutionIdx === i
-                                  ? `bg-white text-gray-900 shadow-sm`
-                                  : 'text-gray-500 hover:text-gray-700'
+                                activeSolutionIdx === i ? 'shadow-sm' : ''
                               }`}
+                              style={activeSolutionIdx === i ? { background: t.inputBg, color: t.text } : { color: t.textMuted }}
                             >
                               <div className="truncate">{sol.name || `Solution ${i + 1}`}</div>
                               {sol.complexity && (
-                                <div className={`text-[9px] font-mono mt-0.5 ${activeSolutionIdx === i ? 'text-gray-400' : 'text-gray-400'}`}>
+                                <div className="text-[9px] font-mono mt-0.5" style={{ color: t.textDim }}>
                                   {sol.complexity.time}
                                 </div>
                               )}
@@ -1031,21 +1032,21 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
 
                     {/* ── LINE-BY-LINE WALKTHROUGH ── */}
                     {sd.explanations?.length > 0 && (
-                      <div className="rounded-xl border border-indigo-100 bg-white overflow-hidden shadow-sm">
-                        <div className="flex items-center gap-2 px-3 py-2 bg-indigo-50/50 border-b border-indigo-100">
-                          <svg className="w-3.5 h-3.5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className="rounded-xl overflow-hidden shadow-sm" style={{ background: t.cardBg, border: `1px solid ${t.cardBorder}` }}>
+                        <div className="flex items-center gap-2 px-3 py-2" style={{ background: t.headerBg, borderBottom: `1px solid ${t.cardBorder}` }}>
+                          <svg className="w-3.5 h-3.5" style={{ color: t.headerText }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
                           </svg>
-                          <span className="text-[10px] font-bold text-indigo-700 uppercase tracking-wider">Code Walkthrough</span>
-                          <span className="ml-auto text-[9px] font-mono text-indigo-500 bg-indigo-50 border border-indigo-200 rounded-full px-1.5 py-0.5">{sd.explanations.length} lines</span>
+                          <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: t.headerText }}>Code Walkthrough</span>
+                          <span className="ml-auto text-[9px] font-mono rounded-full px-1.5 py-0.5" style={{ color: t.badgeText, background: t.badgeBg, border: `1px solid ${t.cardBorder}` }}>{sd.explanations.length} lines</span>
                         </div>
-                        <div className="divide-y divide-gray-50">
+                        <div className="divide-y" style={{ borderColor: t.cardBorder }}>
                           {sd.explanations.map((ex: any, i: number) => (
-                            <div key={i} className="flex items-start gap-2 px-3 py-2 hover:bg-indigo-50/30 transition-colors">
-                              <span className="flex items-center justify-center w-5 h-5 rounded bg-indigo-50 text-indigo-600 text-[9px] font-bold font-mono shrink-0 mt-0.5">L{ex.line}</span>
+                            <div key={i} className="flex items-start gap-2 px-3 py-2 transition-colors">
+                              <span className="flex items-center justify-center w-5 h-5 rounded text-[9px] font-bold font-mono shrink-0 mt-0.5" style={{ background: t.badgeBg, color: t.badgeText }}>L{ex.line}</span>
                               <div className="min-w-0">
-                                {ex.code && <code className="text-[10px] font-mono text-gray-800 block truncate">{ex.code}</code>}
-                                <span className="text-[10px] md:text-xs text-gray-500 leading-relaxed">{ex.explanation}</span>
+                                {ex.code && <code className="text-[10px] font-mono block truncate" style={{ color: t.codeText }}>{ex.code}</code>}
+                                <span className="text-[10px] md:text-xs leading-relaxed" style={{ color: t.textMuted }}>{ex.explanation}</span>
                               </div>
                             </div>
                           ))}
@@ -1081,12 +1082,12 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                 {/* Empty state */}
                 {!sd && !(parsedBlocks && Array.isArray(parsedBlocks) && parsedBlocks.length > 0) && !streamingSolution && !isLoading && (
                   <div className="text-center py-12">
-                    <div className="w-12 h-12 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-3">
-                      <svg className="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="w-12 h-12 mx-auto rounded-full flex items-center justify-center mb-3" style={{ background: t.sectionBg }}>
+                      <svg className="w-6 h-6" style={{ color: t.textDim }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                       </svg>
                     </div>
-                    <p className="text-gray-400 text-xs">Enter a problem and generate a solution</p>
+                    <p className="text-xs" style={{ color: t.textDim }}>Enter a problem and generate a solution</p>
                   </div>
                 )}
               </div>
@@ -1101,12 +1102,12 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
         </div>
 
         {/* ── RIGHT PANEL: Code Editor + Output ── */}
-        <div className="flex-1 flex flex-col min-w-0" style={{ background: 'var(--bg-surface)', color: 'var(--text-primary)' }}>
+        <div className="flex-1 flex flex-col min-w-0" style={{ background: t.surfaceBg, color: t.text }}>
           {/* Editor Header */}
-          <div className="flex items-center justify-between px-3 py-1.5" style={{ background: 'var(--bg-elevated)', borderBottom: '1px solid var(--border)' }}>
+          <div className="flex items-center justify-between px-3 py-1.5" style={{ background: t.sectionBg, borderBottom: `1px solid ${t.cardBorder}` }}>
             <div className="flex items-center gap-2">
               <select id="language-select" name="language" value={language} onChange={(e) => handleLanguageChange(e.target.value)}
-                className="rounded-md px-2 py-1 text-xs font-mono focus:outline-none cursor-pointer" style={{ background: 'var(--bg-app)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}>
+                className="rounded-md px-2 py-1 text-xs font-mono focus:outline-none cursor-pointer" style={{ background: t.inputBg, border: `1px solid ${t.inputBorder}`, color: t.inputText }}>
                 {LANGUAGES.map(l => <option key={l.id} value={l.id}>{l.label}</option>)}
               </select>
               <button onClick={handleRun} disabled={isRunning}
@@ -1120,12 +1121,12 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
               </button>
             </div>
             <div className="flex items-center gap-1">
-              <button onClick={handleReset} className="p-1.5 rounded-md transition-colors" style={{ color: 'var(--text-muted)' }} title="Reset">
+              <button onClick={handleReset} className="p-1.5 rounded-md transition-colors" style={{ color: t.textMuted }} title="Reset">
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
               </button>
-              <button onClick={handleCopyCode} className={`p-1.5 rounded-md transition-colors ${copyFeedback ? 'text-indigo-500 bg-indigo-50' : 'text-gray-400 hover:text-gray-700 hover:bg-gray-100'}`} title="Copy code">
+              <button onClick={handleCopyCode} className="p-1.5 rounded-md transition-colors" style={copyFeedback ? { color: '#6366f1', background: t.badgeBg } : { color: t.textDim }} title="Copy code">
                 {copyFeedback ? (
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
                 ) : (
@@ -1152,35 +1153,40 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
           {/* ── Vertical Resize Handle ── */}
           {!isOutputCollapsed && (
             <div onMouseDown={() => setIsResizingV(true)}
-              className="h-1.5 bg-gray-100 hover:bg-indigo-200 cursor-row-resize transition-colors flex justify-center items-center group">
-              <div className="w-8 h-0.5 bg-gray-300 group-hover:bg-indigo-500 rounded-full transition-colors" />
+              className="h-1.5 hover:bg-indigo-200 cursor-row-resize transition-colors flex justify-center items-center group"
+              style={{ background: t.sectionBg }}>
+              <div className="w-8 h-0.5 group-hover:bg-indigo-500 rounded-full transition-colors" style={{ background: t.textDim }} />
             </div>
           )}
 
           {/* ═══ BOTTOM PANEL: Test Cases / Output ═══ */}
-          <div className="border-t border-gray-200 flex flex-col bg-white shrink-0" style={{ height: isOutputCollapsed ? 36 : outputPanelHeight }}>
+          <div className="border-t flex flex-col shrink-0" style={{ borderColor: t.cardBorder, background: t.surfaceBg, height: isOutputCollapsed ? 36 : outputPanelHeight }}>
             {/* Header */}
-            <div className="flex items-center justify-between px-3 py-1 bg-gray-50 border-b border-gray-100 shrink-0">
+            <div className="flex items-center justify-between px-3 py-1 border-b shrink-0" style={{ background: t.sectionBg, borderColor: t.cardBorder }}>
               <div className="flex items-center gap-1">
                 <button onClick={() => { setOutputTab('testcases'); setIsOutputCollapsed(false); }}
                   className={`px-2.5 py-1 text-[10px] md:text-xs font-semibold rounded-md transition-colors ${
-                    outputTab === 'testcases' && !isOutputCollapsed ? 'bg-indigo-500 text-white' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'
-                  }`}>Test Cases</button>
+                    outputTab === 'testcases' && !isOutputCollapsed ? 'bg-indigo-500 text-white' : ''
+                  }`}
+                  style={!(outputTab === 'testcases' && !isOutputCollapsed) ? { color: t.tabText } : undefined}>Test Cases</button>
                 <button onClick={() => { setOutputTab('output'); setIsOutputCollapsed(false); }}
                   className={`px-2.5 py-1 text-[10px] md:text-xs font-semibold rounded-md transition-colors flex items-center gap-1.5 ${
-                    outputTab === 'output' && !isOutputCollapsed ? 'bg-indigo-500 text-white' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'
-                  }`}>
+                    outputTab === 'output' && !isOutputCollapsed ? 'bg-indigo-500 text-white' : ''
+                  }`}
+                  style={!(outputTab === 'output' && !isOutputCollapsed) ? { color: t.tabText } : undefined}>
                   Output
                   {totalTests > 0 && (
-                    <span className={`text-[9px] font-mono px-1.5 py-0.5 rounded-full ${
-                      passedCount === totalTests ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
-                    }`}>{passedCount}/{totalTests}</span>
+                    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-full"
+                      style={passedCount === totalTests
+                        ? { background: t.passedBg, color: t.passedText }
+                        : { background: t.failedBg, color: t.failedText }
+                      }>{passedCount}/{totalTests}</span>
                   )}
                 </button>
               </div>
               <div className="flex items-center gap-1.5">
                 <button onClick={() => setIsOutputCollapsed(!isOutputCollapsed)}
-                  className="p-1 text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] rounded transition-colors">
+                  className="p-1 rounded transition-colors" style={{ color: t.textMuted }}>
                   <svg className={`w-3 h-3 transition-transform ${isOutputCollapsed ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                   </svg>
@@ -1194,32 +1200,35 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                 {outputTab === 'testcases' && (
                   <div className="space-y-2">
                     {testCases.map((tc, i) => (
-                      <div key={i} className="rounded-lg border border-gray-100 bg-gray-50/50 p-2">
+                      <div key={i} className="rounded-lg p-2" style={{ border: `1px solid ${t.cardBorder}`, background: t.sectionBg }}>
                         <div className="flex items-center justify-between mb-1.5">
-                          <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Case {i + 1}</span>
+                          <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: t.textMuted }}>Case {i + 1}</span>
                           {testCases.length > 1 && (
-                            <button onClick={() => removeTestCase(i)} className="text-[10px] text-gray-400 hover:text-red-500 transition-colors">Remove</button>
+                            <button onClick={() => removeTestCase(i)} className="text-[10px] hover:text-red-500 transition-colors" style={{ color: t.textDim }}>Remove</button>
                           )}
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                           <div>
-                            <label className="block text-[9px] font-medium text-gray-400 mb-0.5 uppercase">Input</label>
+                            <label className="block text-[9px] font-medium mb-0.5 uppercase" style={{ color: t.textDim }}>Input</label>
                             <textarea value={tc.input} onChange={(e) => updateTestCase(i, 'input', e.target.value)}
                               placeholder="nums = [2,7], target = 9"
-                              className="w-full h-10 bg-white border border-gray-200 rounded-md p-1.5 text-xs text-gray-900 placeholder:text-gray-300 resize-none focus:border-indigo-400 focus:outline-none font-mono" />
+                              className="w-full h-10 rounded-md p-1.5 text-xs placeholder:text-gray-300 resize-none focus:border-indigo-400 focus:outline-none font-mono"
+                              style={{ background: t.inputBg, borderWidth: 1, borderStyle: 'solid', borderColor: t.inputBorder, color: t.inputText }} />
                           </div>
                           <div>
-                            <label className="block text-[9px] font-medium text-gray-400 mb-0.5 uppercase">Expected</label>
+                            <label className="block text-[9px] font-medium mb-0.5 uppercase" style={{ color: t.textDim }}>Expected</label>
                             <textarea value={tc.expected} onChange={(e) => updateTestCase(i, 'expected', e.target.value)}
                               placeholder="[0, 1]"
-                              className="w-full h-10 bg-white border border-gray-200 rounded-md p-1.5 text-xs text-gray-900 placeholder:text-gray-300 resize-none focus:border-indigo-400 focus:outline-none font-mono" />
+                              className="w-full h-10 rounded-md p-1.5 text-xs placeholder:text-gray-300 resize-none focus:border-indigo-400 focus:outline-none font-mono"
+                              style={{ background: t.inputBg, borderWidth: 1, borderStyle: 'solid', borderColor: t.inputBorder, color: t.inputText }} />
                           </div>
                         </div>
                       </div>
                     ))}
                     {testCases.length < MAX_TEST_CASES && (
                       <button onClick={addTestCase}
-                        className="w-full py-1.5 border border-dashed border-gray-200 text-gray-400 text-[10px] font-semibold rounded-lg hover:border-indigo-300 hover:text-indigo-500 transition-colors">
+                        className="w-full py-1.5 border border-dashed text-[10px] font-semibold rounded-lg hover:border-indigo-300 hover:text-indigo-500 transition-colors"
+                        style={{ borderColor: t.inputBorder, color: t.textDim }}>
                         + Add Test Case ({testCases.length}/{MAX_TEST_CASES})
                       </button>
                     )}
@@ -1232,9 +1241,11 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                     {testResults.length > 0 && (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {testResults.map((r, i) => (
-                          <div key={i} className={`rounded-lg border p-2 text-xs transition-all ${
-                            r.passed ? 'border-emerald-200 bg-emerald-50/50' : 'border-red-200 bg-red-50/50'
-                          }`}>
+                          <div key={i} className="rounded-lg border p-2 text-xs transition-all"
+                            style={r.passed
+                              ? { borderColor: t.passedBorder, background: t.passedBg }
+                              : { borderColor: t.failedBorder, background: t.failedBg }
+                            }>
                             <div className="flex items-center gap-1.5 mb-1.5">
                               {r.passed ? (
                                 <div className="w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center">
@@ -1249,12 +1260,12 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                                   </svg>
                                 </div>
                               )}
-                              <span className={`font-bold ${r.passed ? 'text-emerald-700' : 'text-red-700'}`}>Test {i + 1}</span>
+                              <span className="font-bold" style={{ color: r.passed ? t.passedText : t.failedText }}>Test {i + 1}</span>
                             </div>
                             <div className="space-y-0.5 font-mono text-[10px]">
-                              <div><span className="text-gray-400">In:</span> <span className="text-gray-700">{r.input}</span></div>
-                              <div><span className="text-gray-400">Exp:</span> <span className="text-gray-700">{r.expected}</span></div>
-                              <div><span className="text-gray-400">Out:</span> <span className={r.passed ? 'text-emerald-700' : 'text-red-700'}>{r.output}</span></div>
+                              <div><span style={{ color: t.textDim }}>In:</span> <span style={{ color: t.text }}>{r.input}</span></div>
+                              <div><span style={{ color: t.textDim }}>Exp:</span> <span style={{ color: t.text }}>{r.expected}</span></div>
+                              <div><span style={{ color: t.textDim }}>Out:</span> <span style={{ color: r.passed ? t.passedText : t.failedText }}>{r.output}</span></div>
                               {r.error && <div className="text-red-500 mt-1">{r.error}</div>}
                             </div>
                           </div>
@@ -1284,16 +1295,16 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
 
                     {/* Raw output */}
                     {output && !testResults.length && (
-                      <pre className="font-mono text-xs text-gray-700 whitespace-pre-wrap bg-gray-50 p-2 rounded-lg border border-gray-100 min-h-[40px]">{output}</pre>
+                      <pre className="font-mono text-xs whitespace-pre-wrap p-2 rounded-lg min-h-[40px]" style={{ color: t.text, background: t.sectionBg, border: `1px solid ${t.cardBorder}` }}>{output}</pre>
                     )}
                     {output && testResults.length > 0 && output.includes('─') && (
-                      <pre className="font-mono text-[10px] text-gray-500 whitespace-pre-wrap bg-gray-50 p-2 rounded-lg border border-gray-100">
+                      <pre className="font-mono text-[10px] whitespace-pre-wrap p-2 rounded-lg" style={{ color: t.textMuted, background: t.sectionBg, border: `1px solid ${t.cardBorder}` }}>
                         {output.split('─'.repeat(40))[1]?.trim()}
                       </pre>
                     )}
                     {!output && !testResults.length && (
-                      <div className="text-center py-4 text-gray-400 text-xs">
-                        Click <span className="font-bold">Run</span> to execute your code <span className="text-gray-300 font-mono">(Ctrl+Enter)</span>
+                      <div className="text-center py-4 text-xs" style={{ color: t.textDim }}>
+                        Click <span className="font-bold">Run</span> to execute your code <span className="font-mono" style={{ color: t.textDim }}>(Ctrl+Enter)</span>
                       </div>
                     )}
                   </div>
