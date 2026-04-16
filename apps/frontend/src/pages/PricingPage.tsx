@@ -58,6 +58,8 @@ const PLANS = [
       'Company-specific prep material',
       'Speaker voice filtering',
       'Priority AI responses',
+      'Desktop app included',
+      'Mobile app (iOS & Android)',
     ],
     cta: 'Get Pro',
     ctaHref: '/lumora',
@@ -74,6 +76,7 @@ const PLANS = [
       'Save 61% vs monthly',
       'Locked-in pricing',
       'Priority support',
+      'Desktop app add-on: +$29/mo',
     ],
     cta: 'Get Annual',
     ctaHref: '/lumora',
@@ -94,7 +97,8 @@ const COMPARISON = [
   { feature: 'Speaker voice filtering', camora: true, finalround: false, lockedin: false, solver: false, sensei: false, techprep: false, algomaster: false, designgurus: false, aiapply: false, offergoose: false, parakeet: false, unique: true },
   { feature: 'Combined prep plus live tool', camora: true, finalround: false, lockedin: false, solver: false, sensei: false, techprep: false, algomaster: false, designgurus: false, aiapply: 'Partial', offergoose: 'Partial', parakeet: false, unique: true },
   { feature: 'Voice transcription', camora: true, finalround: true, lockedin: true, solver: true, sensei: true, techprep: false, algomaster: false, designgurus: false, aiapply: true, offergoose: true, parakeet: true },
-  { feature: 'Desktop app', camora: 'Soon', finalround: true, lockedin: true, solver: true, sensei: false, techprep: false, algomaster: false, designgurus: false, aiapply: true, offergoose: true, parakeet: true },
+  { feature: 'Desktop app', camora: true, finalround: true, lockedin: true, solver: true, sensei: false, techprep: false, algomaster: false, designgurus: false, aiapply: true, offergoose: true, parakeet: true },
+  { feature: 'Mobile app (iOS & Android)', camora: true, finalround: true, lockedin: false, solver: false, sensei: false, techprep: false, algomaster: false, designgurus: false, aiapply: true, offergoose: false, parakeet: false },
 ];
 
 export default function PricingPage() {
@@ -160,229 +164,298 @@ export default function PricingPage() {
         </h1>
       </section>
 
+      {/* Plans */}
+      <section className="w-full lg:max-w-[70%] mx-auto px-6 py-14">
+        <div className="mb-10 text-center">
+          <span className="text-xs font-bold uppercase tracking-[0.2em]" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6, #a78bfa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Plans</span>
+          <h2 className="mt-3 text-3xl md:text-4xl font-extrabold tracking-tight" style={{ color: 'var(--text-primary)' }}>
+            Choose your path.
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-4 items-stretch">
+          {PLANS.map((plan) => {
+            const isPro = plan.popular;
+            const isAnnual = plan.name === 'Annual';
+            const isFree = plan.name === 'Free';
+            const isStarter = plan.name === 'Starter';
+
+            const accent = isPro
+              ? { from: '#6366f1', via: '#8b5cf6', to: '#a78bfa', glow: 'rgba(99,102,241,0.4)', checkColor: '#a5b4fc' }
+              : isAnnual
+              ? { from: '#f59e0b', via: '#fbbf24', to: '#fde68a', glow: 'rgba(245,158,11,0.3)', checkColor: '#fbbf24' }
+              : isStarter
+              ? { from: '#6366f1', via: '#818cf8', to: '#a5b4fc', glow: 'rgba(99,102,241,0.15)', checkColor: '#818cf8' }
+              : { from: '#475569', via: '#64748b', to: '#94a3b8', glow: 'rgba(100,116,139,0.1)', checkColor: '#4ade80' };
+
+            return (
+              <div key={plan.name} className={`pricing-card group relative flex flex-col rounded-[22px] overflow-visible ${isPro ? 'lg:-mt-4 lg:mb-[-16px]' : ''}`} style={{ zIndex: isPro ? 2 : 1 }}>
+                <div className="absolute -inset-[1px] rounded-[22px] pointer-events-none" style={{ background: isPro ? `linear-gradient(135deg, ${accent.from}, ${accent.via}, ${accent.to}, ${accent.from})` : isAnnual ? `linear-gradient(135deg, ${accent.from}, ${accent.via}, ${accent.to}, ${accent.from})` : isStarter ? 'linear-gradient(135deg, rgba(99,102,241,0.3), rgba(139,92,246,0.15), rgba(99,102,241,0.3))' : 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04), rgba(255,255,255,0.08))', backgroundSize: isPro || isAnnual ? '300% 300%' : '100% 100%', animation: isPro || isAnnual ? 'borderShimmer 4s ease infinite' : 'none', opacity: isPro ? 0.8 : isAnnual ? 0.7 : 1 }} />
+                <div className="relative flex flex-col flex-1 rounded-[21px] overflow-hidden" style={{ background: isPro ? 'linear-gradient(168deg, rgba(30,27,60,0.98) 0%, rgba(15,14,28,0.99) 100%)' : isAnnual ? 'linear-gradient(168deg, rgba(40,30,15,0.95) 0%, rgba(15,14,22,0.99) 100%)' : isStarter ? 'linear-gradient(168deg, rgba(22,20,40,0.98) 0%, rgba(13,12,22,0.99) 100%)' : 'linear-gradient(168deg, rgba(20,19,30,0.98) 0%, rgba(12,11,20,0.99) 100%)', backdropFilter: 'blur(20px)' }}>
+                  {isPro && (<><div className="absolute -top-24 -right-24 w-72 h-72 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.18) 0%, transparent 60%)', filter: 'blur(40px)' }} /><div className="absolute -bottom-16 -left-16 w-48 h-48 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.12) 0%, transparent 60%)', filter: 'blur(30px)' }} /></>)}
+                  {isAnnual && (<div className="absolute -top-16 -right-16 w-56 h-56 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(245,158,11,0.12) 0%, transparent 60%)', filter: 'blur(35px)' }} />)}
+
+                  <div className="relative p-7 pb-0 flex flex-col flex-1">
+                    <div className="flex items-center justify-between mb-6">
+                      <h3 className="text-[13px] font-bold uppercase tracking-[0.12em]" style={{ color: isPro ? '#c7d2fe' : isAnnual ? '#fde68a' : isStarter ? '#a5b4fc' : 'rgba(255,255,255,0.5)' }}>{plan.name}</h3>
+                      {isPro && <span className="px-3 py-1 rounded-full text-[9px] font-extrabold uppercase tracking-[0.12em]" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: '#fff', boxShadow: '0 2px 12px rgba(99,102,241,0.5), 0 0 20px rgba(99,102,241,0.2)' }}>Most Popular</span>}
+                      {isAnnual && <span className="px-3 py-1 rounded-full text-[9px] font-extrabold uppercase tracking-[0.12em]" style={{ background: 'linear-gradient(135deg, #fbbf24, #f59e0b)', color: '#451a03', boxShadow: '0 2px 12px rgba(245,158,11,0.45), 0 0 20px rgba(245,158,11,0.15)' }}>Best Value</span>}
+                    </div>
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="font-extrabold leading-none tracking-tight" style={{ fontSize: isPro ? '52px' : '46px', ...(isPro ? { background: 'linear-gradient(145deg, #e0e7ff, #c7d2fe, #a5b4fc)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', filter: 'drop-shadow(0 0 20px rgba(99,102,241,0.3))' } : isAnnual ? { background: 'linear-gradient(145deg, #fef3c7, #fde68a, #fbbf24)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', filter: 'drop-shadow(0 0 16px rgba(245,158,11,0.25))' } : isStarter ? { background: 'linear-gradient(145deg, rgba(255,255,255,0.95), rgba(255,255,255,0.7))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' } : { color: 'rgba(255,255,255,0.85)' }) }}>{plan.price}</span>
+                      {plan.period && <span className="text-base font-medium" style={{ color: 'rgba(255,255,255,0.3)' }}>{plan.period}</span>}
+                    </div>
+                    <p className="mt-2.5 text-[13px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.4)' }}>{plan.description}</p>
+                    <div className="my-6 h-px" style={{ background: `linear-gradient(90deg, transparent 0%, ${isPro ? 'rgba(99,102,241,0.35)' : isAnnual ? 'rgba(245,158,11,0.25)' : 'rgba(255,255,255,0.08)'} 50%, transparent 100%)` }} />
+                    <ul className="space-y-3.5 flex-1 mb-7">
+                      {plan.features.map((f, i) => (
+                        <li key={i} className="flex items-start gap-3 text-[13px] leading-snug">
+                          <span className="w-[18px] h-[18px] mt-[1px] rounded-full flex items-center justify-center flex-shrink-0" style={{ background: `${accent.checkColor}15`, border: `1px solid ${accent.checkColor}30` }}>
+                            <svg className="w-[10px] h-[10px]" viewBox="0 0 12 12" fill="none" style={{ color: accent.checkColor }}><path d="M10 3L4.5 8.5L2 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                          </span>
+                          <span style={{ color: 'rgba(255,255,255,0.65)' }}>{f}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="p-7 pt-0">
+                    <button onClick={() => handleCheckout(plan)} disabled={loading === plan.name} className="pricing-cta w-full py-4 text-sm font-bold rounded-[14px] cursor-pointer transition-all duration-300 disabled:opacity-50 flex items-center justify-center gap-2" style={isPro ? { background: 'linear-gradient(135deg, #6366f1, #7c3aed, #8b5cf6)', color: '#fff', boxShadow: '0 6px 24px rgba(99,102,241,0.45), 0 0 40px rgba(99,102,241,0.15), inset 0 1px 0 rgba(255,255,255,0.15)' } : isAnnual ? { background: 'linear-gradient(135deg, #fbbf24, #f59e0b, #d97706)', color: '#451a03', boxShadow: '0 6px 24px rgba(245,158,11,0.4), 0 0 40px rgba(245,158,11,0.1), inset 0 1px 0 rgba(255,255,255,0.25)' } : isStarter ? { background: 'linear-gradient(135deg, rgba(99,102,241,0.18), rgba(139,92,246,0.12))', color: '#c7d2fe', border: '1px solid rgba(99,102,241,0.35)', boxShadow: '0 2px 12px rgba(99,102,241,0.1)' } : { background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                      {loading === plan.name ? (<span className="flex items-center justify-center gap-2"><svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>Processing...</span>) : (<>{plan.cta}<svg className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-0.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 8h10M9 4l4 4-4 4" /></svg></>)}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <style>{`
+          @keyframes borderShimmer { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+          .pricing-card { transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), filter 0.5s ease; }
+          .pricing-card:hover { transform: translateY(-8px); }
+          .pricing-card:hover .pricing-cta { filter: brightness(1.1); }
+        `}</style>
+      </section>
+
       {/* Competitor comparison */}
       <section className="px-6 pt-4 pb-16">
         <div className="w-full lg:max-w-[70%] mx-auto">
           <div className="mb-10 text-center">
             <span className="text-xs font-bold uppercase tracking-[0.2em]" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6, #a78bfa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Why Camora Wins</span>
             <h2 className="mt-3 text-3xl md:text-4xl font-extrabold tracking-tight" style={{ color: 'var(--text-primary)' }}>
-              See how we compare.
             </h2>
           </div>
 
           <div
-            className="overflow-x-auto"
+            className="relative overflow-hidden rounded-[22px]"
             style={{
-              background: 'var(--bg-surface)',
-              borderRadius: '16px',
-              boxShadow: '0 4px 24px rgba(0,0,0,0.3)',
-              padding: '12px 16px',
-              border: '1px solid var(--border)',
+              background: 'linear-gradient(168deg, #1a1730 0%, #0e0d18 100%)',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.7), 0 0 0 1px rgba(99,102,241,0.15)',
             }}
           >
-            <table className="w-full text-[13px]">
-              <thead>
-                <tr style={{ borderBottom: '2px solid var(--border)', verticalAlign: 'bottom' }}>
-                  <th className="text-left py-3 px-4 font-mono text-[10px] uppercase tracking-wider min-w-[120px] sm:min-w-[200px]" style={{ color: 'var(--text-secondary)' }}>Feature</th>
-                  {[
-                    { name: 'Camora', price: 'FREE', unit: '', highlight: true },
-                    { name: 'Final Round', price: '$100', unit: '/mo' },
-                    { name: 'LockedIn', price: '$55-120', unit: '/mo' },
-                    { name: 'Solver', price: '$39', unit: '/mo', hide: 'md' },
-                    { name: 'Sensei', price: '$24-89', unit: '/mo', hide: 'md' },
-                    { name: 'TechPrep', price: '$39', unit: '/mo', hide: 'lg' },
-                    { name: 'AlgoMaster', price: '$29', unit: '/mo', hide: 'lg' },
-                    { name: 'DesignGurus', price: '$98-197', unit: '/course', hide: 'lg' },
-                    { name: 'AIApply', price: '$29-200', unit: '/mo', hide: 'xl' },
-                    { name: 'OfferGoose', price: '$89-200', unit: '/mo', hide: 'xl' },
-                    { name: 'Parakeet', price: '$100-200', unit: '/mo', hide: 'xl' },
-                  ].map((col) => (
-                    <th
-                      key={col.name}
-                      className={`py-3 px-2 text-center whitespace-nowrap ${col.hide ? `hidden ${col.hide}:table-cell` : ''}`}
-                      style={col.highlight ? { background: 'rgba(99,102,241,0.1)', borderRadius: '14px 14px 0 0', boxShadow: 'inset 0 -2px 0 #6366f1' } : {}}
-                    >
-                      <div className="text-[11px] font-medium" style={col.highlight ? { background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontSize: '13px', fontWeight: 800 } : { color: 'var(--text-secondary)' }}>
-                        {col.name}
-                      </div>
-                      <div className="text-sm font-extrabold mt-0.5" style={col.highlight ? { color: '#6366f1' } : { background: 'linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                        {col.price}<span className="text-[9px] font-normal" style={{ color: 'var(--text-muted)' }}>{col.unit}</span>
-                      </div>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {COMPARISON.map((row, i) => {
-                  const Cell = ({ val }: { val: boolean | string }) => {
-                    if (val === true) return <span style={{ color: 'var(--text-muted)' }}>&#10003;</span>;
-                    if (val === false) return <span style={{ color: 'var(--text-muted)' }}>-</span>;
-                    return <span className="text-[10px] text-amber-400 font-mono">{val}</span>;
-                  };
-                  return (
-                    <tr key={i} style={{ borderBottom: '1px solid var(--border)' }}>
-                      <td className={`py-3 px-4 text-sm ${row.unique ? 'text-indigo-400 font-semibold' : ''}`} style={!row.unique ? { color: 'var(--text-secondary)' } : {}}>
-                        {row.feature}
-                      </td>
-                      <td className="py-3 px-3 text-center" style={{ background: 'rgba(99,102,241,0.08)' }}>
-                        {row.camora === true
-                          ? <span className="text-indigo-500 font-bold text-base">&#10003;</span>
-                          : <Cell val={row.camora} />
-                        }
-                      </td>
-                      <td className="py-2.5 px-3 text-center"><Cell val={row.finalround} /></td>
-                      <td className="py-2.5 px-3 text-center"><Cell val={row.lockedin} /></td>
-                      <td className="py-2.5 px-3 text-center hidden md:table-cell"><Cell val={row.solver} /></td>
-                      <td className="py-2.5 px-3 text-center hidden md:table-cell"><Cell val={row.sensei} /></td>
-                      <td className="py-2.5 px-3 text-center hidden lg:table-cell"><Cell val={row.techprep} /></td>
-                      <td className="py-2.5 px-3 text-center hidden lg:table-cell"><Cell val={row.algomaster} /></td>
-                      <td className="py-2.5 px-3 text-center hidden lg:table-cell"><Cell val={row.designgurus} /></td>
-                      <td className="py-2.5 px-3 text-center hidden xl:table-cell"><Cell val={row.aiapply} /></td>
-                      <td className="py-2.5 px-3 text-center hidden xl:table-cell"><Cell val={row.offergoose} /></td>
-                      <td className="py-2.5 px-3 text-center hidden xl:table-cell"><Cell val={row.parakeet} /></td>
+            {/* Vivid gradient border */}
+            <div className="absolute -inset-[1px] rounded-[22px] pointer-events-none" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6, #a78bfa, #6366f1)', backgroundSize: '300% 300%', animation: 'borderShimmer 4s ease infinite', opacity: 0.4 }} />
+
+            <div className="relative rounded-[21px] overflow-x-auto" style={{ background: 'linear-gradient(168deg, #1a1730 0%, #0e0d18 100%)' }}>
+              {/* Top accent bar */}
+              <div className="h-[3px] w-full" style={{ background: 'linear-gradient(90deg, #10b981, #6366f1, #8b5cf6, #ec4899, #6366f1, #10b981)' }} />
+
+              {/* Ambient glow */}
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-40 pointer-events-none" style={{ background: 'radial-gradient(ellipse, rgba(99,102,241,0.15) 0%, transparent 70%)', filter: 'blur(30px)' }} />
+
+              <div className="p-5 sm:p-8">
+                <table className="w-full text-[13px]" style={{ borderCollapse: 'separate', borderSpacing: 0 }}>
+                  <thead>
+                    <tr style={{ verticalAlign: 'bottom' }}>
+                      <th className="text-left py-5 px-4 text-[11px] font-extrabold uppercase tracking-[0.18em] min-w-[120px] sm:min-w-[200px]" style={{ color: 'rgba(255,255,255,0.5)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>Feature</th>
+                      {[
+                        { name: 'Camora', price: 'FREE', unit: '', highlight: true },
+                        { name: 'Final Round', price: '$100', unit: '/mo' },
+                        { name: 'LockedIn', price: '$55-120', unit: '/mo' },
+                        { name: 'Solver', price: '$39', unit: '/mo', hide: 'md' },
+                        { name: 'Sensei', price: '$24-89', unit: '/mo', hide: 'md' },
+                        { name: 'TechPrep', price: '$39', unit: '/mo', hide: 'lg' },
+                        { name: 'AlgoMaster', price: '$29', unit: '/mo', hide: 'lg' },
+                        { name: 'DesignGurus', price: '$98-197', unit: '/course', hide: 'lg' },
+                        { name: 'AIApply', price: '$29-200', unit: '/mo', hide: 'xl' },
+                        { name: 'OfferGoose', price: '$89-200', unit: '/mo', hide: 'xl' },
+                        { name: 'Parakeet', price: '$100-200', unit: '/mo', hide: 'xl' },
+                      ].map((col) => (
+                        <th
+                          key={col.name}
+                          className={`py-5 px-2 text-center whitespace-nowrap ${col.hide ? `hidden ${col.hide}:table-cell` : ''}`}
+                          style={{
+                            borderBottom: '1px solid rgba(255,255,255,0.08)',
+                            ...(col.highlight ? {
+                              background: 'linear-gradient(180deg, rgba(99,102,241,0.22) 0%, rgba(99,102,241,0.08) 100%)',
+                              borderRadius: '16px 16px 0 0',
+                              boxShadow: 'inset 0 3px 0 #6366f1, inset 1px 0 0 rgba(99,102,241,0.3), inset -1px 0 0 rgba(99,102,241,0.3)',
+                              position: 'relative' as const,
+                            } : {}),
+                          }}
+                        >
+                          <div
+                            className="font-extrabold"
+                            style={col.highlight
+                              ? { background: 'linear-gradient(135deg, #e0e7ff, #fff)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontSize: '15px', letterSpacing: '0.02em' }
+                              : { color: 'rgba(255,255,255,0.45)', fontSize: '11px', fontWeight: 700, letterSpacing: '0.04em' }
+                            }
+                          >
+                            {col.name}
+                          </div>
+                          <div
+                            className="mt-1.5 font-black"
+                            style={col.highlight
+                              ? { background: 'linear-gradient(135deg, #a5b4fc, #818cf8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontSize: '20px', filter: 'drop-shadow(0 0 12px rgba(99,102,241,0.5))' }
+                              : { color: 'rgba(255,255,255,0.25)', fontSize: '13px' }
+                            }
+                          >
+                            {col.price}
+                            <span className="text-[9px] font-medium" style={{ color: col.highlight ? undefined : 'rgba(255,255,255,0.2)' }}>{col.unit}</span>
+                          </div>
+                        </th>
+                      ))}
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      {/* Divider */}
-      <div className="w-full lg:max-w-[70%] mx-auto px-6">
-        <div className="h-px bg-indigo-100/30" />
-      </div>
-
-      {/* Plans */}
-      <section className="w-full lg:max-w-[70%] mx-auto px-6 py-10">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {PLANS.map((plan) => (
-            <div
-              key={plan.name}
-              className={`relative p-6 flex flex-col rounded-2xl overflow-hidden card-glow ${plan.popular ? 'border-2 border-indigo-400' : plan.name === 'Annual' ? 'border-2 border-amber-400' : ''}`}
-              style={{
-                background: 'var(--bg-surface)',
-                border: plan.popular ? '2px solid #818cf8' : plan.name === 'Annual' ? '2px solid #fbbf24' : '1px solid var(--border)',
-                boxShadow: plan.popular ? '0 20px 60px rgba(99,102,241,0.2)' : plan.name === 'Annual' ? '0 4px 24px rgba(245,158,11,0.1)' : '0 4px 24px rgba(0,0,0,0.2)',
-              }}
-            >
-              <div className="mb-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{plan.name}</h3>
-                  {plan.popular && (
-                    <span className="px-3 py-0.5 rounded-full text-[9px] font-bold text-white uppercase tracking-wider" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>Popular</span>
-                  )}
-                  {plan.name === 'Annual' && (
-                    <span className="px-3 py-0.5 rounded-full text-[9px] font-bold text-white uppercase tracking-wider" style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}>Best Value</span>
-                  )}
-                </div>
-                <div className="mt-2 flex items-baseline gap-0.5">
-                  <span className="text-3xl font-semibold" style={{ color: 'var(--text-primary)' }}>{plan.price}</span>
-                  <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>{plan.period}</span>
-                </div>
-                <p className="mt-1 text-[13px]" style={{ color: 'var(--text-secondary)' }}>{plan.description}</p>
+                  </thead>
+                  <tbody>
+                    {COMPARISON.map((row, i) => {
+                      const isLast = i === COMPARISON.length - 1;
+                      const isEven = i % 2 === 0;
+                      const CellIcon = ({ val }: { val: boolean | string }) => {
+                        if (val === true) return (
+                          <svg className="w-4 h-4 mx-auto" viewBox="0 0 12 12" fill="none" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                            <path d="M10 3L4.5 8.5L2 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        );
+                        if (val === false) return <span style={{ color: 'rgba(255,255,255,0.12)', fontSize: '16px', lineHeight: 1 }}>—</span>;
+                        return <span className="text-[9px] font-bold px-2.5 py-0.5 rounded-full" style={{ background: 'rgba(245,158,11,0.15)', color: '#fbbf24', border: '1px solid rgba(245,158,11,0.3)' }}>{val}</span>;
+                      };
+                      return (
+                        <tr
+                          key={i}
+                          className="comparison-row transition-all duration-150"
+                          style={{ background: isEven ? 'rgba(255,255,255,0.025)' : 'transparent' }}
+                        >
+                          <td className="py-4 px-4 text-[13px]" style={{ color: row.unique ? '#c7d2fe' : 'rgba(255,255,255,0.75)', fontWeight: row.unique ? 700 : 500, borderBottom: isLast ? 'none' : '1px solid rgba(255,255,255,0.06)' }}>
+                            <span className="flex items-center gap-2.5">
+                              {row.unique && (
+                                <span className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.3), rgba(139,92,246,0.25))', boxShadow: '0 0 8px rgba(99,102,241,0.3)' }}>
+                                  <svg className="w-[10px] h-[10px]" viewBox="0 0 12 12" fill="none">
+                                    <path d="M6 1l1.545 3.13L11 4.635 8.5 7.07l.59 3.44L6 8.885 2.91 10.51l.59-3.44L1 4.635l3.455-.505L6 1z" fill="#a5b4fc" />
+                                  </svg>
+                                </span>
+                              )}
+                              {row.feature}
+                            </span>
+                          </td>
+                          {/* Camora column — vivid */}
+                          <td
+                            className="py-4 px-3 text-center"
+                            style={{
+                              background: isEven ? 'rgba(99,102,241,0.12)' : 'rgba(99,102,241,0.07)',
+                              boxShadow: 'inset 1px 0 0 rgba(99,102,241,0.2), inset -1px 0 0 rgba(99,102,241,0.2)',
+                              borderBottom: isLast ? 'none' : '1px solid rgba(99,102,241,0.1)',
+                              ...(isLast ? { borderRadius: '0 0 16px 16px', boxShadow: 'inset 1px 0 0 rgba(99,102,241,0.2), inset -1px 0 0 rgba(99,102,241,0.2), inset 0 -3px 0 #6366f1' } : {}),
+                            }}
+                          >
+                            {row.camora === true
+                              ? (
+                                <span className="inline-flex items-center justify-center w-8 h-8 rounded-full" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', boxShadow: '0 0 16px rgba(99,102,241,0.5), 0 4px 12px rgba(99,102,241,0.3)' }}>
+                                  <svg className="w-4 h-4" viewBox="0 0 12 12" fill="none" style={{ color: '#fff' }}>
+                                    <path d="M10 3L4.5 8.5L2 6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                                  </svg>
+                                </span>
+                              )
+                              : <CellIcon val={row.camora} />
+                            }
+                          </td>
+                          {/* Competitor columns */}
+                          {[row.finalround, row.lockedin].map((val, j) => (
+                            <td key={j} className="py-3.5 px-3 text-center" style={{ borderBottom: isLast ? 'none' : '1px solid rgba(255,255,255,0.04)' }}><CellIcon val={val} /></td>
+                          ))}
+                          <td className="py-3.5 px-3 text-center hidden md:table-cell" style={{ borderBottom: isLast ? 'none' : '1px solid rgba(255,255,255,0.04)' }}><CellIcon val={row.solver} /></td>
+                          <td className="py-3.5 px-3 text-center hidden md:table-cell" style={{ borderBottom: isLast ? 'none' : '1px solid rgba(255,255,255,0.04)' }}><CellIcon val={row.sensei} /></td>
+                          <td className="py-3.5 px-3 text-center hidden lg:table-cell" style={{ borderBottom: isLast ? 'none' : '1px solid rgba(255,255,255,0.04)' }}><CellIcon val={row.techprep} /></td>
+                          <td className="py-3.5 px-3 text-center hidden lg:table-cell" style={{ borderBottom: isLast ? 'none' : '1px solid rgba(255,255,255,0.04)' }}><CellIcon val={row.algomaster} /></td>
+                          <td className="py-3.5 px-3 text-center hidden lg:table-cell" style={{ borderBottom: isLast ? 'none' : '1px solid rgba(255,255,255,0.04)' }}><CellIcon val={row.designgurus} /></td>
+                          <td className="py-3.5 px-3 text-center hidden xl:table-cell" style={{ borderBottom: isLast ? 'none' : '1px solid rgba(255,255,255,0.04)' }}><CellIcon val={row.aiapply} /></td>
+                          <td className="py-3.5 px-3 text-center hidden xl:table-cell" style={{ borderBottom: isLast ? 'none' : '1px solid rgba(255,255,255,0.04)' }}><CellIcon val={row.offergoose} /></td>
+                          <td className="py-3.5 px-3 text-center hidden xl:table-cell" style={{ borderBottom: isLast ? 'none' : '1px solid rgba(255,255,255,0.04)' }}><CellIcon val={row.parakeet} /></td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
-
-              <ul className="space-y-2.5 flex-1 mb-6">
-                {plan.features.map((f, i) => (
-                  <li key={i} className="flex items-start gap-2 text-[13px]" style={{ color: 'var(--text-muted)' }}>
-                    <span className="w-1 h-1 bg-indigo-400/60 mt-2 shrink-0" />
-                    {f}
-                  </li>
-                ))}
-              </ul>
-
-              <button
-                onClick={() => handleCheckout(plan)}
-                disabled={loading === plan.name}
-                className={`w-full py-3 text-sm font-semibold rounded-xl cursor-pointer transition-all duration-200 ${
-                  plan.popular
-                    ? 'text-white hover:opacity-90'
-                    : plan.name === 'Annual'
-                    ? 'text-white hover:opacity-90'
-                    : 'border-2 border-[var(--border)] hover:border-indigo-400 hover:text-indigo-400 hover:shadow-md'
-                } disabled:opacity-50`}
-                style={plan.popular ? {
-                  background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-                  boxShadow: '0 4px 14px rgba(99,102,241,0.3)',
-                } : plan.name === 'Annual' ? {
-                  background: 'linear-gradient(135deg, #fbbf24, #f59e0b, #d97706)',
-                  boxShadow: '0 4px 14px rgba(245,158,11,0.3)',
-                } : {}}
-              >
-                {loading === plan.name ? 'Loading...' : plan.cta}
-              </button>
             </div>
-          ))}
+
+            <style>{`
+              .comparison-row:hover {
+                background: rgba(99,102,241,0.08) !important;
+              }
+              .comparison-row:hover td:first-child {
+                color: #fff !important;
+              }
+            `}</style>
+          </div>
         </div>
       </section>
 
-      {/* Top-Up Packs */}
-      <section className="px-6 py-16">
-        <div className="w-full lg:max-w-[70%] mx-auto">
-          <div className="mb-10 text-center">
-            <span className="section-label">Need More Credits?</span>
-            <h2 className="heading-2 mt-3">Top-Up Packs</h2>
-          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {[
-              { name: '20 AI Questions', price: '$5', desc: 'Includes 3 bonus diagrams', packId: 'questions_20' },
-              { name: '50 AI Questions', price: '$10', desc: 'Includes 8 bonus diagrams', packId: 'questions_50' },
-              { name: '5 Live Sessions', price: '$15', desc: '90 minutes per session', packId: 'sessions_5' },
-            ].map((pack) => (
-              <div key={pack.packId} className="rounded-2xl p-4 flex items-center justify-between gap-4" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', boxShadow: '0 4px 24px rgba(0,0,0,0.2)' }}>
-                <div>
-                  <h3 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{pack.name}</h3>
-                  <div className="flex items-baseline gap-1 mt-0.5">
-                    <span className="text-lg font-bold text-indigo-400">{pack.price}</span>
-                    <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>one-time</span>
-                  </div>
-                  <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-muted)' }}>{pack.desc}</p>
-                </div>
-                <button
-                  onClick={async () => {
-                    if (!token) { navigate('/login'); return; }
-                    try {
-                      const resp = await fetch(`${API_URL}/api/v1/usage/topup`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                        body: JSON.stringify({
-                          pack_id: pack.packId,
-                          success_url: `${window.location.origin}/pricing?topup=success`,
-                          cancel_url: `${window.location.origin}/pricing`,
-                        }),
-                      });
-                      const data = await resp.json();
-                      if (data.url) window.location.href = data.url;
-                    } catch { /* ignore */ }
-                  }}
-                  className="shrink-0 px-4 py-2 text-white text-xs font-semibold rounded-lg transition-colors" style={{ background: 'var(--accent)' }}
-                >
-                  Buy
-                </button>
+      {/* Desktop App + Top-Up Packs — compact row */}
+      <section className="px-6 py-8">
+        <div className="max-w-3xl mx-auto space-y-4">
+          {/* Desktop App */}
+          <div className="rounded-xl p-4 flex items-center justify-between gap-4" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.15))', color: '#818cf8' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="3" width="20" height="14" rx="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" />
+                </svg>
               </div>
-            ))}
+              <div>
+                <h3 className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>Desktop App</h3>
+                <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>Stealth mode, screen-share safe</p>
+              </div>
+            </div>
+            <a href="https://github.com/schundu007/camora/releases/latest" target="_blank" rel="noopener noreferrer" className="shrink-0 px-4 py-1.5 text-white text-[11px] font-semibold rounded-lg" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
+              Download
+            </a>
           </div>
-        </div>
-      </section>
 
-      {/* Divider */}
-      <div className="w-full lg:max-w-[70%] mx-auto px-6">
-        <div className="h-px bg-indigo-100/30" />
-      </div>
-
-
-      {/* CTA buttons */}
-      <section className="px-6 py-10 text-center">
-        <div className="flex items-center justify-center gap-4">
-          <Link to="/lumora" className="btn-primary">
-            Start Free
-          </Link>
-          <Link to="/capra/prepare" className="btn-secondary">
-            Browse Topics
-          </Link>
+          {/* Top-Up Packs */}
+          <div>
+            <h3 className="text-xs font-bold uppercase tracking-wider text-center mb-3" style={{ color: 'var(--text-muted)' }}>Top-Up Packs</h3>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { name: '20 AI Questions', price: '$5', desc: '+ 3 diagrams', packId: 'questions_20' },
+                { name: '50 AI Questions', price: '$10', desc: '+ 8 diagrams', packId: 'questions_50' },
+                { name: '5 Live Sessions', price: '$15', desc: '90 min each', packId: 'sessions_5' },
+              ].map((pack) => (
+                <div key={pack.packId} className="rounded-xl p-3 flex flex-col items-center text-center" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+                  <span className="text-[11px] font-semibold" style={{ color: 'var(--text-primary)' }}>{pack.name}</span>
+                  <span className="text-base font-bold text-indigo-400 mt-0.5">{pack.price}</span>
+                  <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>{pack.desc}</span>
+                  <button
+                    onClick={async () => {
+                      if (!token) { navigate('/login'); return; }
+                      try {
+                        const resp = await fetch(`${API_URL}/api/v1/usage/topup`, {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                          body: JSON.stringify({ pack_id: pack.packId, success_url: `${window.location.origin}/pricing?topup=success`, cancel_url: `${window.location.origin}/pricing` }),
+                        });
+                        const data = await resp.json();
+                        if (data.url) window.location.href = data.url;
+                      } catch { /* ignore */ }
+                    }}
+                    className="mt-2 px-3 py-1 text-white text-[10px] font-semibold rounded-md cursor-pointer" style={{ background: 'var(--accent)' }}
+                  >
+                    Buy
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
