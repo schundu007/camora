@@ -195,6 +195,7 @@ export function App() {
           <Route path="/capra/resume" element={<ShellRoute><ResumePage /></ShellRoute>} />
 
           {/* ── Also accessible via old Capra paths ────── */}
+          <Route path="/resume" element={<ShellRoute><ResumePage /></ShellRoute>} />
           <Route path="/prepare/*" element={<ShellRoute><CapraPrepare /></ShellRoute>} />
           <Route path="/practice" element={<ShellRoute><CapraPractice /></ShellRoute>} />
           <Route path="/handbook" element={<ShellRoute><Blind75Page /></ShellRoute>} />
