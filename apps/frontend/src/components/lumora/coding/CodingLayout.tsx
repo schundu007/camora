@@ -386,16 +386,34 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
     }
   }, [parsedBlocks]);
 
-  // Sync code from jsonSolution when it's set but code is still default
+  // Sync code from jsonSolution — try every possible source
   useEffect(() => {
-    if (jsonSolution && code === getDefaultCode(language)) {
-      if (jsonSolution.solutions?.length > 0) {
-        setCode(jsonSolution.solutions[activeSolutionIdx || 0]?.code || jsonSolution.solutions[0].code);
-      } else if (jsonSolution.code) {
-        setCode(jsonSolution.code);
-      }
+    if (!jsonSolution) return;
+    const isDefault = code === getDefaultCode(language) || !code || code.trim().length < 10;
+    if (!isDefault) return;
+
+    const idx = activeSolutionIdx || 0;
+    const sol = jsonSolution.solutions?.[idx] || jsonSolution.solutions?.[0];
+
+    // Try: sol.code, sol.implementation, sol.solution, nested code blocks
+    const extracted = sol?.code || sol?.implementation || sol?.solution
+      || jsonSolution.code || jsonSolution.implementation
+      || (() => {
+        // Last resort: extract code from streamText using regex
+        const raw = streamChunks.join('');
+        const codeMatch = raw.match(/```(?:python|java|cpp|javascript|typescript|go|rust)?\n([\s\S]*?)```/);
+        if (codeMatch?.[1]?.trim()) return codeMatch[1].trim();
+        // Try CODE block format
+        const blockMatch = raw.match(/CODE\n([\s\S]*?)(?:\/CODE|COMPLEXITY|WALKTHROUGH|TESTCASES|SUMMARY)/);
+        if (blockMatch?.[1]?.trim()) return blockMatch[1].trim();
+        return null;
+      })();
+
+    if (extracted) {
+      console.log('[Coding] Setting code from solution, length:', extracted.length);
+      setCode(extracted);
     }
-  }, [jsonSolution]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [jsonSolution, activeSolutionIdx]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // JSON repair from stream
   useEffect(() => {
@@ -818,7 +836,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                           const c = solColors[i % solColors.length];
                           return (
                             <button key={i}
-                              onClick={() => { setActiveSolutionIdx(i); setCode(sol.code); }}
+                              onClick={() => { setActiveSolutionIdx(i); setCode(sol.code || sol.implementation || sol.solution || code); }}
                               className={`flex-1 px-2 py-1.5 text-[10px] md:text-xs font-semibold rounded-md transition-all text-center ${
                                 activeSolutionIdx === i
                                   ? `bg-white text-gray-900 shadow-sm`
