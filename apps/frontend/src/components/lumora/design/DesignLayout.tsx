@@ -691,7 +691,7 @@ export function DesignLayout({ onBack, initialProblem, embedded }: DesignLayoutP
           {/* Input area - collapsible */}
           <div className={`flex flex-col p-3 gap-2 ${inputCollapsed ? 'hidden' : ''}`}>
             {inputTab === 'text' && (
-              <textarea
+              <textarea id="design-prompt"
                 ref={textareaRef}
                 value={problemText}
                 onChange={(e) => setProblemText(e.target.value)}

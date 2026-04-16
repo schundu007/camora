@@ -185,7 +185,7 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
 
         {/* Platform — monospace badge style */}
         <div data-tour="platform" className="hidden lg:flex items-center px-2 h-full shrink-0" style={{ borderRight: '1px solid rgba(255,255,255,0.04)' }}>
-          <select className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-1 rounded-md cursor-pointer focus:outline-none"
+          <select id="platform-select" name="platform" className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-1 rounded-md cursor-pointer focus:outline-none"
             style={{ background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.06)' }} defaultValue="general">
             <option value="general">General</option>
             <option value="zoom">Zoom</option>
