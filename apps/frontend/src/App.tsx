@@ -36,6 +36,7 @@ const Blind75Page = lazy(() => import('./pages/Blind75Page'));
 const Blind75PracticePage = lazy(() => import('./pages/Blind75PracticePage'));
 const InterviewQuestionsPage = lazy(() => import('./pages/InterviewQuestionsPage'));
 const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage'));
+const DownloadPage = lazy(() => import('./pages/DownloadPage'));
 
 function Loading() {
   return (
@@ -161,7 +162,7 @@ export function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/premium" element={<PricingPage />} />
-          <Route path="/download" element={<ShellRoute><CapraDashboard /></ShellRoute>} />
+          <Route path="/download" element={<DownloadPage />} />
 
           {/* ── Jobs: Apply ──────────────────────────────── */}
           <Route path="/jobs" element={<ShellRoute><JobsPage /></ShellRoute>} />
