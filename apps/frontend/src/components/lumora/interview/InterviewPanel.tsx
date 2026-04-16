@@ -83,11 +83,11 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
   const showEmptyState = !question && !isStreaming && parsedBlocks.length === 0 && history.length === 0;
 
   return (
-    <main className="flex-1 min-h-0 overflow-hidden flex flex-col p-2 md:p-3 gap-1.5">
+    <main className="flex-1 min-h-0 overflow-y-auto flex flex-col p-2 md:p-3 gap-1.5">
       {showEmptyState ? (
         <EmptyState onAskQuestion={onAskQuestion} onSwitchToCoding={onSwitchToCoding} onSwitchToDesign={onSwitchToDesign} />
       ) : (
-        <div className="flex-1 flex flex-col gap-1.5 min-h-0 overflow-hidden w-full mx-auto" style={{ maxWidth: '95%' }}>
+        <div className="flex-1 flex flex-col gap-1.5 min-h-0 overflow-y-auto w-full mx-auto" style={{ maxWidth: '95%' }}>
           {/* Vertical Q&A list — all questions visible, click to expand/collapse answers */}
           {history.length > 0 && history.map((entry, idx) => (
             <div key={idx} className="shrink-0">
@@ -158,7 +158,7 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
 
               {/* Show latest history entry when not streaming */}
               {!isStreaming && history.length > 0 && (
-                <div className="flex-1 flex flex-col gap-1.5 min-h-0 overflow-hidden">
+                <div className="flex-1 flex flex-col gap-1.5 min-h-0 overflow-y-auto">
                   <div className="flex items-center gap-3 px-4 py-3 rounded-xl shrink-0" style={{ background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.15)' }}>
                     <span className="flex items-center justify-center w-6 h-6 rounded-md bg-indigo-500/20 text-indigo-300 text-[10px] font-bold font-mono shrink-0">
                       {history.length}
