@@ -262,15 +262,17 @@ export default function DownloadPage() {
 
   const LUMORA_API = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
 
-  const handleAddonCheckout = async () => {
-    if (!token) return;
-    setAddonLoading(true);
+  const [proLoading, setProLoading] = useState(false);
+
+  const handleStripeCheckout = async (priceId: string, setLoadingFn: (v: boolean) => void) => {
+    if (!token) { navigate('/login?redirect=/download'); return; }
+    setLoadingFn(true);
     try {
       const res = await fetch(`${LUMORA_API}/api/v1/billing/checkout`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({
-          price_id: import.meta.env.VITE_STRIPE_PRICE_DESKTOP_ADDON || '',
+          price_id: priceId,
           success_url: `${window.location.origin}/download?checkout=success`,
           cancel_url: `${window.location.origin}/download`,
         }),
@@ -280,8 +282,14 @@ export default function DownloadPage() {
         if (data.url) window.location.href = data.url;
       }
     } catch { /* checkout failed */ }
-    setAddonLoading(false);
+    setLoadingFn(false);
   };
+
+  const handleAddonCheckout = () =>
+    handleStripeCheckout(import.meta.env.VITE_STRIPE_PRICE_DESKTOP_ADDON || '', setAddonLoading);
+
+  const handleProCheckout = () =>
+    handleStripeCheckout('price_1THhzhITUCNxtMxl1QSxi4Kj', setProLoading);
 
   useEffect(() => {
     document.title = 'Download Camora Desktop — AI Interview Co-Pilot';
@@ -448,12 +456,15 @@ export default function DownloadPage() {
                 </>
               ) : (
                 <>
-                  <Link
-                    to={isAuthenticated ? '/pricing' : '/login?redirect=/download'}
-                    className="group inline-flex items-center gap-3 px-8 py-4 rounded-2xl text-base font-bold transition-all duration-200"
+                  <button
+                    onClick={handleProCheckout}
+                    disabled={proLoading}
+                    className="group inline-flex items-center gap-3 px-8 py-4 rounded-2xl text-base font-bold transition-all duration-200 disabled:opacity-60"
                     style={{
                       background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                       color: '#ffffff',
+                      border: 'none',
+                      cursor: proLoading ? 'wait' : 'pointer',
                       boxShadow: '0 4px 24px rgba(16,185,129,0.35), 0 0 0 1px rgba(255,255,255,0.1) inset',
                     }}
                     onMouseEnter={e => {
@@ -466,8 +477,8 @@ export default function DownloadPage() {
                     }}
                   >
                     <LockIcon size={20} />
-                    {!isAuthenticated ? 'Sign In to Download' : 'Upgrade to Pro — $49/mo'}
-                  </Link>
+                    {proLoading ? 'Redirecting...' : !isAuthenticated ? 'Sign In to Download' : 'Upgrade to Pro — $49/mo'}
+                  </button>
                   <span className="text-xs" style={{ color: 'rgba(255,255,255,0.45)' }}>
                     Included with Pro plan &middot; Annual users can add for $29/mo
                   </span>
@@ -600,13 +611,15 @@ export default function DownloadPage() {
                         Add $29/mo
                       </button>
                     ) : (
-                      <Link
-                        to={isAuthenticated ? '/pricing' : '/login?redirect=/download'}
-                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200"
+                      <button
+                        onClick={handleProCheckout}
+                        disabled={proLoading}
+                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 disabled:opacity-60"
                         style={{
                           background: 'rgba(255,255,255,0.06)',
                           color: 'rgba(255,255,255,0.5)',
                           border: '1px solid rgba(255,255,255,0.1)',
+                          cursor: proLoading ? 'wait' : 'pointer',
                         }}
                         onMouseEnter={e => {
                           (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.1)';
@@ -618,8 +631,8 @@ export default function DownloadPage() {
                         }}
                       >
                         <LockIcon size={14} />
-                        Upgrade to Pro
-                      </Link>
+                        {proLoading ? 'Redirecting...' : 'Upgrade to Pro'}
+                      </button>
                     )}
                   </div>
                 </FadeInSection>
