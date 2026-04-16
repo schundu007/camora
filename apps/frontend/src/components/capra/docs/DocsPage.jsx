@@ -456,6 +456,19 @@ export default function DocsPage({ onBack }) {
     return new Set(ids);
   };
 
+  // Always returns role IDs (ignores showAllContent toggle) — for counter display
+  const getRoleIdsForCount = (page) => {
+    if (!jobContext?.role) return null;
+    const roleConfig = ROLE_TOPIC_MAP[jobContext.role];
+    if (!roleConfig) return null;
+    const pageToKey = { 'coding': 'coding', 'system-design': 'systemDesign', 'behavioral': 'behavioral', 'microservices': 'microservices', 'databases': 'databases', 'sql': 'sql' };
+    const key = pageToKey[page];
+    if (!key) return null;
+    const ids = roleConfig[key];
+    if (!ids || ids.length === 0) return null;
+    return new Set(ids);
+  };
+
   const getFilteredTopics = () => {
     let topics = [];
     if (activePage === 'coding') topics = codingTopics;
@@ -961,87 +974,115 @@ export default function DocsPage({ onBack }) {
                   </div>
                   )}
                   {/* Job Context Banner — shown when navigating from a job prep page or URL analysis */}
-                  {/* Show All Content banner — lets user re-enable role filter */}
-                  {showAllContent && jobContext?.fromProfile && activePage !== 'overview' && (
-                    <div className="mb-4 rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] overflow-hidden">
-                      <div className="px-4 py-3 flex items-center justify-between gap-3">
-                        <p className="text-sm text-[var(--text-secondary)] landing-body">
-                          Showing all topics across all roles
-                        </p>
-                        <button
-                          onClick={reEnableRoleFilter}
-                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[var(--accent)] bg-[var(--accent-subtle)] border border-[var(--accent)]/20 rounded-lg hover:bg-[var(--accent-subtle)] transition-colors flex-shrink-0 landing-body"
-                        >
-                          <Icon name="target" size={12} />
-                          Filter for {ROLE_TOPIC_MAP[jobContext.role]?.label || 'my role'}
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {jobContext && !showAllContent && activePage !== 'overview' && (() => {
-                    const analysis = jobContext.analysis;
-                    // Pick the right focus tags from analysis based on current page
+                  {/* ── Role Filter / Show All toggle banner ── */}
+                  {jobContext && activePage !== 'overview' && (() => {
+                    const analysis = !showAllContent ? jobContext.analysis : null;
                     const focusTags = analysis ? (
                       activePage === 'coding' ? analysis.coding_focus :
                       activePage === 'system-design' ? analysis.system_design_focus :
                       activePage === 'behavioral' ? analysis.behavioral_focus :
                       null
                     ) : null;
+                    const roleLabel = ROLE_TOPIC_MAP[jobContext.role]?.label || 'Your Role';
+                    // Calculate role-filtered count for current page (always, ignoring toggle)
+                    const roleIds = getRoleIdsForCount(activePage);
+                    const allTopicsForPage = (() => {
+                      if (activePage === 'coding') return codingTopics;
+                      if (activePage === 'system-design') return systemDesignTopics;
+                      if (activePage === 'behavioral') return behavioralTopics;
+                      if (activePage === 'databases') return databaseTopics;
+                      if (activePage === 'sql') return sqlTopics;
+                      if (activePage === 'microservices') return microservicesPatterns;
+                      if (activePage === 'low-level') return lldTopics;
+                      return [];
+                    })();
+                    const totalCount = allTopicsForPage.length;
+                    const roleCount = roleIds ? allTopicsForPage.filter(t => roleIds.has(t.id)).length : totalCount;
 
                     return (
-                    <div className="mb-4 rounded-xl border border-[var(--border)] bg-[var(--accent-subtle)] overflow-hidden">
-                      <div className="px-4 py-3 flex items-center justify-between gap-3 flex-wrap">
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div className="w-8 h-8 rounded-lg bg-[var(--accent-subtle)] flex items-center justify-center flex-shrink-0">
-                            <Icon name="target" size={16} className="text-[var(--accent)]" />
-                          </div>
-                          <div>
-                            <p className="text-sm font-semibold text-[var(--text-primary)] landing-display truncate">
-                              Filtered for: {jobContext.jobTitle || ROLE_TOPIC_MAP[jobContext.role]?.label || 'Your Role'}
-                              {jobContext.company && <span className="font-normal text-[var(--text-muted)]"> at {jobContext.company}</span>}
-                            </p>
-                            <p className="text-xs text-[var(--text-muted)] landing-body">
-                              Showing {filteredTopics.length} most relevant topics{jobContext.focus ? ` \u2014 ${jobContext.focus}` : ''}
-                            </p>
-                          </div>
-                        </div>
+                    <div className="mb-4 rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)', background: showAllContent ? 'var(--bg-surface)' : 'var(--accent-subtle)' }}>
+                      {/* Toggle tabs — Role vs All */}
+                      <div className="px-4 pt-3 pb-2 flex items-center gap-2">
                         <button
-                          onClick={clearJobFilter}
-                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)] bg-[var(--bg-surface)] border border-[var(--border)] rounded-lg hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)] transition-colors flex-shrink-0 landing-body"
+                          onClick={() => { if (showAllContent) reEnableRoleFilter(); }}
+                          className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all landing-body"
+                          style={!showAllContent ? {
+                            background: 'var(--accent)',
+                            color: '#fff',
+                            boxShadow: '0 2px 8px rgba(16,185,129,0.3)',
+                          } : {
+                            background: 'var(--bg-elevated)',
+                            color: 'var(--text-secondary)',
+                            border: '1px solid var(--border)',
+                          }}
                         >
-                          <Icon name="x" size={12} />
-                          Show all topics
+                          <Icon name="target" size={14} />
+                          {roleLabel}
+                          <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold" style={!showAllContent ? { background: 'rgba(255,255,255,0.2)', color: '#fff' } : { background: 'var(--bg-app)', color: 'var(--text-muted)' }}>
+                            {roleCount}
+                          </span>
+                        </button>
+                        <button
+                          onClick={() => { if (!showAllContent) clearJobFilter(); }}
+                          className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all landing-body"
+                          style={showAllContent ? {
+                            background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                            color: '#fff',
+                            boxShadow: '0 2px 8px rgba(99,102,241,0.3)',
+                          } : {
+                            background: 'var(--bg-elevated)',
+                            color: 'var(--text-secondary)',
+                            border: '1px solid var(--border)',
+                          }}
+                        >
+                          <Icon name="layers" size={14} />
+                          All Topics
+                          <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold" style={showAllContent ? { background: 'rgba(255,255,255,0.2)', color: '#fff' } : { background: 'var(--bg-app)', color: 'var(--text-muted)' }}>
+                            {totalCount}
+                          </span>
                         </button>
                       </div>
-                      {/* Quick section tabs — switch between coding/design/behavioral in filtered mode */}
-                      <div className="px-4 pb-2 flex gap-2 flex-wrap">
-                        {[
-                          { key: 'coding', label: 'Coding', icon: 'code' },
-                          { key: 'system-design', label: 'System Design', icon: 'systemDesign' },
-                          { key: 'behavioral', label: 'Behavioral', icon: 'users' },
-                          { key: 'databases', label: 'Databases', icon: 'database' },
-                        ].map((tab) => (
-                          <button
-                            key={tab.key}
-                            onClick={() => { setActivePageState(tab.key); setSelectedTopicState(null); }}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors landing-body ${activePage === tab.key ? 'bg-[var(--accent)] text-white' : 'bg-[var(--bg-surface)] text-[var(--text-secondary)] border border-[var(--border)] hover:bg-[var(--bg-elevated)]'}`}
-                          >
-                            <Icon name={tab.icon} size={12} />
-                            {tab.label}
-                          </button>
-                        ))}
+
+                      {/* Info line */}
+                      <div className="px-4 pb-2">
+                        <p className="text-[11px] landing-body" style={{ color: 'var(--text-muted)' }}>
+                          {showAllContent
+                            ? `Browsing all ${totalCount} topics. Switch to "${roleLabel}" to see ${roleCount} role-specific topics.`
+                            : `Showing ${filteredTopics.length} topics tailored for ${roleLabel}. Switch to "All Topics" to explore everything.`
+                          }
+                        </p>
                       </div>
-                      {/* AI-detected focus areas from job analysis */}
+
+                      {/* Quick section tabs in role-filtered mode */}
+                      {!showAllContent && (
+                        <div className="px-4 pb-2 flex gap-2 flex-wrap">
+                          {[
+                            { key: 'coding', label: 'Coding', icon: 'code' },
+                            { key: 'system-design', label: 'System Design', icon: 'systemDesign' },
+                            { key: 'behavioral', label: 'Behavioral', icon: 'users' },
+                            { key: 'databases', label: 'Databases', icon: 'database' },
+                          ].map((tab) => (
+                            <button
+                              key={tab.key}
+                              onClick={() => { setActivePageState(tab.key); setSelectedTopicState(null); }}
+                              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors landing-body ${activePage === tab.key ? 'bg-[var(--accent)] text-white' : 'bg-[var(--bg-surface)] text-[var(--text-secondary)] border border-[var(--border)] hover:bg-[var(--bg-elevated)]'}`}
+                            >
+                              <Icon name={tab.icon} size={12} />
+                              {tab.label}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* AI focus areas */}
                       {focusTags && focusTags.length > 0 && (
                         <div className="px-4 pb-3 flex flex-wrap gap-1.5 items-center">
-                          <span className="text-[10px] text-[var(--accent-hover)] font-semibold uppercase tracking-wider landing-mono mr-1">Focus areas:</span>
+                          <span className="text-[10px] text-[var(--accent-hover)] font-semibold uppercase tracking-wider landing-mono mr-1">Focus:</span>
                           {focusTags.map((tag) => (
                             <span key={tag} className="text-xs px-2 py-0.5 rounded-md bg-[var(--bg-surface)] border border-[var(--border)] text-[var(--accent-hover)] landing-body font-medium">{tag}</span>
                           ))}
                         </div>
                       )}
-                      {/* Summary from AI analysis */}
                       {analysis?.summary && (
                         <div className="px-4 pb-3">
                           <p className="text-xs text-[var(--text-secondary)] landing-body leading-relaxed">{analysis.summary}</p>
