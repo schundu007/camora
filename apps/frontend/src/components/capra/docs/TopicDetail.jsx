@@ -698,37 +698,41 @@ export default function TopicDetail({
               <div className="rounded-lg bg-[var(--bg-elevated)] h-28 w-full" />
             </div>
 
-            <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'linear-gradient(180deg, transparent 0%, var(--bg-app) 40%)' }}>
-              <div className="max-w-2xl w-full px-4">
-                <div className="text-center mb-5">
-                  <div className="w-12 h-12 mx-auto mb-3 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #10b981, #3b82f6, #8b5cf6)' }}>
-                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+            <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'linear-gradient(180deg, transparent 0%, var(--bg-primary) 30%)' }}>
+              <div className="max-w-4xl w-full px-4">
+                <div className="text-center mb-6">
+                  <div className="w-14 h-14 mx-auto mb-4 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #10b981, #3b82f6, #8b5cf6)', boxShadow: '0 8px 24px rgba(99,102,241,0.3)' }}>
+                    <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                   </div>
-                  <h3 className="text-lg font-bold text-[var(--text-primary)] mb-1 landing-display">Upgrade to unlock all topics</h3>
-                  <p className="text-xs text-[var(--text-muted)] landing-body">Choose a plan to access {activePage === 'coding' ? '36+' : activePage === 'system-design' ? '300+' : '50+'} topics with full content</p>
+                  <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2 landing-display">Upgrade to unlock all topics</h3>
+                  <p className="text-sm text-[var(--text-muted)] landing-body">Choose a plan to access {activePage === 'coding' ? '36+' : activePage === 'system-design' ? '300+' : '50+'} topics with full content</p>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                   {[
-                    { name: 'Starter', price: '$29', period: '/mo', features: ['Unlimited topics', '10 live sessions/mo', 'AI explanations'], priceId: 'price_1THhzGITUCNxtMxll78umJSX' },
-                    { name: 'Pro', price: '$49', period: '/mo', features: ['Everything in Starter', 'Unlimited sessions', 'Company-specific prep'], popular: true, priceId: 'price_1THhzhITUCNxtMxl1QSxi4Kj' },
-                    { name: 'Annual', price: '$19', period: '/mo', features: ['Everything in Pro', 'Save 61%', 'Priority support'], best: true, priceId: 'price_1THiBUITUCNxtMxlAHUvPut7' },
+                    { name: 'Starter', price: '$29', period: '/mo', features: ['Unlimited topics', '10 live sessions/mo', 'AI explanations', 'Coding solutions'], priceId: 'price_1THhzGITUCNxtMxll78umJSX' },
+                    { name: 'Pro', price: '$49', period: '/mo', features: ['Everything in Starter', 'Unlimited live sessions', 'Company-specific prep', 'Desktop + Mobile app', 'Speaker voice filtering'], popular: true, priceId: 'price_1THhzhITUCNxtMxl1QSxi4Kj' },
+                    { name: 'Annual', price: '$19', period: '/mo', subtitle: 'Billed $228/year', features: ['Everything in Pro', 'Save 61% vs monthly', 'Locked-in pricing', 'Priority support'], best: true, priceId: 'price_1THiBUITUCNxtMxlAHUvPut7' },
+                    { name: 'Desktop App', price: '$29', period: '/mo', subtitle: 'Add-on for Annual', features: ['Native macOS & Windows', 'Screen-share safe', 'Faster performance', 'Always-on assistant'], addon: true, priceId: import.meta.env.VITE_STRIPE_PRICE_DESKTOP_ADDON || '' },
                   ].map(plan => (
-                    <div key={plan.name} className="rounded-xl p-3 flex flex-col" style={{
-                      border: plan.popular ? '2px solid #10b981' : plan.best ? '2px solid #f59e0b' : '1.5px solid var(--border)',
+                    <div key={plan.name} className="rounded-2xl p-5 flex flex-col" style={{
+                      border: plan.popular ? '2px solid #10b981' : plan.best ? '2px solid #f59e0b' : plan.addon ? '2px solid #8b5cf6' : '1.5px solid var(--border)',
                       background: 'var(--bg-surface)',
+                      boxShadow: plan.popular ? '0 8px 32px rgba(16,185,129,0.15)' : plan.best ? '0 8px 32px rgba(245,158,11,0.15)' : plan.addon ? '0 8px 32px rgba(139,92,246,0.15)' : '0 4px 16px rgba(0,0,0,0.1)',
                     }}>
-                      <div className="flex items-center justify-between">
-                        <h4 className="text-xs font-bold text-[var(--text-primary)]">{plan.name}</h4>
-                        {plan.popular && <span className="px-2 py-0.5 rounded-full text-[8px] font-bold text-white uppercase" style={{ background: 'linear-gradient(135deg, #10b981, #06b6d4)' }}>Popular</span>}
-                        {plan.best && <span className="px-2 py-0.5 rounded-full text-[8px] font-bold text-white uppercase" style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}>Best Value</span>}
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="text-sm font-bold text-[var(--text-primary)]">{plan.name}</h4>
+                        {plan.popular && <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold text-white uppercase tracking-wider" style={{ background: 'linear-gradient(135deg, #10b981, #06b6d4)' }}>Popular</span>}
+                        {plan.best && <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold text-white uppercase tracking-wider" style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}>Best Value</span>}
+                        {plan.addon && <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold text-white uppercase tracking-wider" style={{ background: 'linear-gradient(135deg, #8b5cf6, #6366f1)' }}>Add-on</span>}
                       </div>
-                      <div className="flex items-baseline gap-0.5 mt-0.5">
-                        <span className="text-lg font-bold text-[var(--text-primary)]">{plan.price}</span>
-                        <span className="text-[10px] text-[var(--text-muted)]">{plan.period}</span>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-2xl font-extrabold text-[var(--text-primary)]">{plan.price}</span>
+                        <span className="text-xs text-[var(--text-muted)]">{plan.period}</span>
                       </div>
-                      <ul className="mt-2 space-y-1 flex-1">
+                      {plan.subtitle && <p className="text-[10px] text-[var(--text-muted)] mt-0.5">{plan.subtitle}</p>}
+                      <ul className="mt-3 space-y-1.5 flex-1">
                         {plan.features.map(f => (
-                          <li key={f} className="flex items-start gap-1 text-[10px] text-[var(--text-secondary)]"><span className="text-emerald-500 flex-shrink-0">✓</span>{f}</li>
+                          <li key={f} className="flex items-start gap-1.5 text-xs text-[var(--text-secondary)]"><span className="text-emerald-500 flex-shrink-0 mt-0.5">✓</span>{f}</li>
                         ))}
                       </ul>
                       <button
@@ -746,10 +750,10 @@ export default function TopicDetail({
                             else navigate('/pricing');
                           } catch { navigate('/pricing'); }
                         }}
-                        className={`mt-2 w-full py-1.5 rounded-lg text-[10px] font-semibold cursor-pointer transition-all ${plan.popular ? 'text-white' : plan.best ? 'text-white' : 'text-[var(--text-secondary)] border border-[var(--border)] hover:border-gray-400'}`}
-                        style={plan.popular ? { background: 'linear-gradient(135deg, #10b981, #06b6d4)' } : plan.best ? { background: 'linear-gradient(135deg, #f59e0b, #d97706)' } : {}}
+                        className={`mt-3 w-full py-2.5 rounded-xl text-xs font-bold cursor-pointer transition-all hover:opacity-90 ${plan.popular || plan.best || plan.addon ? 'text-white' : 'text-[var(--text-secondary)] border border-[var(--border)] hover:border-gray-400'}`}
+                        style={plan.popular ? { background: 'linear-gradient(135deg, #10b981, #06b6d4)' } : plan.best ? { background: 'linear-gradient(135deg, #f59e0b, #d97706)' } : plan.addon ? { background: 'linear-gradient(135deg, #8b5cf6, #6366f1)' } : {}}
                       >
-                        Get {plan.name}
+                        {plan.addon ? 'Add Desktop App' : `Get ${plan.name}`}
                       </button>
                     </div>
                   ))}
