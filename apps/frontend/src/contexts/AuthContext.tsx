@@ -25,6 +25,7 @@ interface AuthContextType {
   isLoading: boolean;
   user: AuthUser | null;
   onboardingCompleted: boolean | null;
+  hasResume: boolean | null;
   subscription: SubscriptionInfo | null;
   subscriptionLoading: boolean;
   logout: () => void;
@@ -37,6 +38,7 @@ const AuthContext = createContext<AuthContextType>({
   isLoading: true,
   user: null,
   onboardingCompleted: null,
+  hasResume: null,
   subscription: null,
   subscriptionLoading: true,
   logout: () => {},
@@ -56,6 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<AuthUser | null>(null);
   const [onboardingCompleted, setOnboardingCompleted] = useState<boolean | null>(null);
+  const [hasResume, setHasResume] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [subscription, setSubscription] = useState<SubscriptionInfo | null>(null);
   const [subscriptionLoading, setSubscriptionLoading] = useState(true);
@@ -128,6 +131,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             if (onbRes.ok) {
               const data = await onbRes.json();
               setOnboardingCompleted(data.onboarding_completed);
+              setHasResume(data.has_resume ?? null);
             }
           } catch { /* capra backend may not be available */ }
 
@@ -167,6 +171,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (onboardingRes.ok) {
             const data = await onboardingRes.json();
             setOnboardingCompleted(data.onboarding_completed);
+            setHasResume(data.has_resume ?? null);
           }
         } catch { /* capra backend may not be available */ }
       }
@@ -218,13 +223,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setToken(null);
     setUser(null);
     setOnboardingCompleted(null);
+    setHasResume(null);
     setSubscription(null);
     clearCookie('cariara_sso');
     window.location.href = ASCEND_URL;
   }, []);
 
   return (
-    <AuthContext.Provider value={{ token, isAuthenticated: !!token, isLoading, user, onboardingCompleted, subscription, subscriptionLoading, logout, refreshSubscription }}>
+    <AuthContext.Provider value={{ token, isAuthenticated: !!token, isLoading, user, onboardingCompleted, hasResume, subscription, subscriptionLoading, logout, refreshSubscription }}>
       {children}
     </AuthContext.Provider>
   );

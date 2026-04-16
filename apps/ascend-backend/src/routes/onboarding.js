@@ -7,7 +7,7 @@ const router = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } }); // 5MB
 
 // Upload resume file — extract text and store
-router.post('/upload-resume', authenticate, upload.single('file'), async (req, res) => {
+router.post('/upload-resume', authenticate, upload.single('resume'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
@@ -51,15 +51,17 @@ router.post('/upload-resume', authenticate, upload.single('file'), async (req, r
 router.get('/status', authenticate, async (req, res) => {
   try {
     const result = await query(
-      'SELECT onboarding_completed, job_roles FROM users WHERE id = $1',
+      'SELECT onboarding_completed, job_roles, resume_text FROM users WHERE id = $1',
       [req.user.id]
     );
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'User not found' });
     }
+    const row = result.rows[0];
     res.json({
-      onboarding_completed: result.rows[0].onboarding_completed || false,
-      job_roles: result.rows[0].job_roles || [],
+      onboarding_completed: row.onboarding_completed || false,
+      job_roles: row.job_roles || [],
+      has_resume: !!(row.resume_text && row.resume_text.trim().length > 0),
     });
   } catch (error) {
     console.error('Onboarding status error:', error);
@@ -76,15 +78,27 @@ router.post('/complete', authenticate, async (req, res) => {
       return res.status(400).json({ error: 'At least one job role is required' });
     }
 
-    await query(
-      `UPDATE users SET
-        onboarding_completed = true,
-        job_roles = $1,
-        resume_text = $2,
-        technical_context = $3
-      WHERE id = $4`,
-      [JSON.stringify(job_roles), resume_text || null, technical_context || null, req.user.id]
-    );
+    // If new resume text provided, update it; otherwise preserve existing
+    if (resume_text && resume_text.trim()) {
+      await query(
+        `UPDATE users SET
+          onboarding_completed = true,
+          job_roles = $1,
+          resume_text = $2,
+          technical_context = $3
+        WHERE id = $4`,
+        [JSON.stringify(job_roles), resume_text, technical_context || null, req.user.id]
+      );
+    } else {
+      await query(
+        `UPDATE users SET
+          onboarding_completed = true,
+          job_roles = $1,
+          technical_context = $2
+        WHERE id = $3`,
+        [JSON.stringify(job_roles), technical_context || null, req.user.id]
+      );
+    }
 
     res.json({
       success: true,

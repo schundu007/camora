@@ -168,8 +168,33 @@ export default function OnboardingPage() {
   const [submitting, setSubmitting] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [error, setError] = useState('');
+  const [isReturningUser, setIsReturningUser] = useState(false);
 
   const fileInputRef = useRef(null);
+
+  // Fetch existing onboarding data for returning users
+  useEffect(() => {
+    if (!accessToken) return;
+    (async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/onboarding/status`, {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.job_roles && data.job_roles.length > 0) {
+            setSelectedRoles(data.job_roles);
+            setIsReturningUser(true);
+          }
+          if (data.has_resume) {
+            setUploadedFileName('Previously uploaded resume');
+            setResumeText('__existing__');
+            setIsReturningUser(true);
+          }
+        }
+      } catch { /* ignore */ }
+    })();
+  }, [accessToken]);
 
   const toggleRole = useCallback((roleId) => {
     setSelectedRoles((prev) =>
@@ -266,7 +291,7 @@ export default function OnboardingPage() {
         },
         body: JSON.stringify({
           job_roles: selectedRoles,
-          resume_text: resumeText || null,
+          resume_text: resumeText === '__existing__' ? null : (resumeText || null),
         }),
       });
 
@@ -314,7 +339,7 @@ export default function OnboardingPage() {
               <div className="animate-fadeIn">
                 <div className="text-center mb-8">
                   <h1 className="text-2xl font-bold text-[var(--text-primary)] mb-2">
-                    What roles are you interviewing for?
+                    {isReturningUser ? 'Update your target roles' : 'What roles are you interviewing for?'}
                   </h1>
                   <p className="text-[var(--text-secondary)]">
                     Select all that apply — we'll tailor your preparation
@@ -369,10 +394,12 @@ export default function OnboardingPage() {
               <div className="animate-fadeIn">
                 <div className="text-center mb-8">
                   <h1 className="text-2xl font-bold text-[var(--text-primary)] mb-2">
-                    Upload your resume
+                    {isReturningUser ? 'Update your resume' : 'Upload your resume'}
                   </h1>
                   <p className="text-[var(--text-secondary)]">
-                    We'll use this to personalize your interview prep
+                    {isReturningUser
+                      ? 'Upload your latest resume to keep your prep up to date'
+                      : "We'll use this to personalize your interview prep"}
                   </p>
                 </div>
 
@@ -503,8 +530,14 @@ export default function OnboardingPage() {
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                       </svg>
                     )}
-                    {submitting ? 'Setting up...' : 'Complete Setup'}
+                    {submitting ? 'Saving...' : isReturningUser ? 'Save Changes' : 'Complete Setup'}
                   </button>
+
+                  {!uploadedFileName && !resumeText.trim() && (
+                    <p className="text-xs text-center text-amber-500">
+                      Uploading your resume helps us personalize your interview prep
+                    </p>
+                  )}
 
                   <div className="flex items-center justify-between">
                     <button
@@ -516,13 +549,15 @@ export default function OnboardingPage() {
                       </svg>
                       Back
                     </button>
-                    <button
-                      onClick={handleComplete}
-                      disabled={submitting}
-                      className="text-sm text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
-                    >
-                      Skip for now
-                    </button>
+                    {!isReturningUser && (
+                      <button
+                        onClick={handleComplete}
+                        disabled={submitting}
+                        className="text-sm text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
+                      >
+                        Skip for now
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

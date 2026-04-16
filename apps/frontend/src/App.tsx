@@ -123,9 +123,11 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   if (!isAuthenticated) {
     return <Navigate to={`/login?redirect=${encodeURIComponent(location.pathname)}`} replace />;
   }
-  // Only enforce onboarding for Capra routes
-  if (location.pathname.startsWith('/capra') && onboardingCompleted === false && location.pathname !== '/capra/onboarding') {
-    return <Navigate to="/capra/onboarding" replace />;
+  // Enforce onboarding (role selection) — skip for the onboarding page itself
+  if (location.pathname !== '/capra/onboarding' && location.pathname !== '/onboarding') {
+    if (onboardingCompleted === false) {
+      return <Navigate to="/capra/onboarding" replace />;
+    }
   }
   return <>{children}</>;
 }
