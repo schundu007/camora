@@ -142,7 +142,7 @@ interface FilterOption {
 
 interface FiltersResponse {
   sources: FilterOption[];
-  locations: string[];
+  locations: FilterOption[];
   departments: FilterOption[];
   companies: FilterOption[];
   salary_range: { min: number | null; max: number | null };
@@ -347,7 +347,7 @@ export default function JobsPage() {
 
   // Filter options from API
   const [availableSources, setAvailableSources] = useState<FilterOption[]>([]);
-  const [availableLocations, setAvailableLocations] = useState<string[]>([]);
+  const [availableLocations, setAvailableLocations] = useState<FilterOption[]>([]);
   const [availableDepartments, setAvailableDepartments] = useState<FilterOption[]>([]);
   const [availableCompanies, setAvailableCompanies] = useState<FilterOption[]>([]);
   const [salaryRange, setSalaryRange] = useState<{ min: number | null; max: number | null }>({ min: null, max: null });
@@ -964,17 +964,21 @@ export default function JobsPage() {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '14px', marginBottom: '14px' }}>
                 <div>
                   <label className="jobs-filter-label">Location</label>
-                  <input
-                    type="text"
-                    placeholder="City, state, or remote..."
-                    value={locationFilter}
-                    onChange={(e) => setLocationFilter(e.target.value)}
-                    list="location-options"
-                    className="jobs-filter-input"
-                  />
-                  <datalist id="location-options">
-                    {availableLocations.map((loc) => <option key={loc} value={loc} />)}
-                  </datalist>
+                  <select value={locationFilter} onChange={(e) => setLocationFilter(e.target.value)} className="jobs-filter-select">
+                    <option value="">All Locations</option>
+                    {availableLocations.some(l => /remote/i.test(l.name)) && (
+                      <optgroup label="Remote / Hybrid">
+                        {availableLocations.filter(l => /remote|hybrid/i.test(l.name)).map((l) => (
+                          <option key={l.name} value={l.name}>{l.name} ({l.count})</option>
+                        ))}
+                      </optgroup>
+                    )}
+                    <optgroup label="Cities">
+                      {availableLocations.filter(l => !/remote|hybrid/i.test(l.name)).slice(0, 60).map((l) => (
+                        <option key={l.name} value={l.name}>{l.name} ({l.count})</option>
+                      ))}
+                    </optgroup>
+                  </select>
                 </div>
 
                 <div>

@@ -63,9 +63,9 @@ router.get('/filters', async (req, res, next) => {
          GROUP BY source ORDER BY count DESC`,
       ),
       queryJobs(
-        `SELECT DISTINCT location FROM jobs
+        `SELECT location, COUNT(*) AS count FROM jobs
          WHERE is_active = true AND location IS NOT NULL AND location != ''
-         ORDER BY location`,
+         GROUP BY location ORDER BY count DESC`,
       ),
       queryJobs(
         `SELECT department, COUNT(*) AS count
@@ -84,28 +84,41 @@ router.get('/filters', async (req, res, next) => {
       ),
     ]);
 
-    // Extract unique city/region values from locations
-    const locationSet = new Set();
+    // Extract city/region parts with aggregated counts
+    const locationCounts = new Map(); // normalized key → { display, count }
     for (const row of locationsResult.rows) {
       const loc = row.location;
+      const rowCount = parseInt(row.count, 10);
       if (!loc) continue;
-      const parts = loc.split(/[•;]/);
+      const parts = loc.split(/[•;|]/);
       for (const part of parts) {
         const trimmed = part.trim();
-        if (trimmed) locationSet.add(trimmed);
+        if (!trimmed) continue;
+        const key = trimmed.toLowerCase();
+        const existing = locationCounts.get(key);
+        if (existing) {
+          existing.count += rowCount;
+        } else {
+          locationCounts.set(key, { name: trimmed, count: rowCount });
+        }
       }
     }
 
-    const allLocations = Array.from(locationSet).sort();
-    const remote = allLocations.filter((l) => /remote/i.test(l));
-    const nonRemote = allLocations.filter((l) => !/remote/i.test(l));
+    // Sort by count descending, group remote first
+    const allLocs = Array.from(locationCounts.values());
+    const remoteLocs = allLocs
+      .filter((l) => /remote/i.test(l.name))
+      .sort((a, b) => b.count - a.count);
+    const cityLocs = allLocs
+      .filter((l) => !/remote/i.test(l.name))
+      .sort((a, b) => b.count - a.count);
 
     res.json({
       sources: sourcesResult.rows.map((r) => ({
         name: r.source,
         count: parseInt(r.count, 10),
       })),
-      locations: [...remote, ...nonRemote].slice(0, 200),
+      locations: [...remoteLocs, ...cityLocs].slice(0, 150),
       departments: departmentsResult.rows.map((r) => ({
         name: r.department,
         count: parseInt(r.count, 10),
