@@ -10,6 +10,7 @@ interface AICompanionPanelProps {
   onSubmit: () => void;
   isStreaming: boolean;
   onAskQuestion: (q: string) => void;
+  activeTab: 'interview' | 'coding' | 'design';
 }
 
 function safeBlocks(blocks: any): any[] {
@@ -26,7 +27,7 @@ function safeBlocks(blocks: any): any[] {
   return [];
 }
 
-export function AICompanionPanel({ inputValue, setInputValue, onSubmit, isStreaming, onAskQuestion }: AICompanionPanelProps) {
+export function AICompanionPanel({ inputValue, setInputValue, onSubmit, isStreaming, onAskQuestion, activeTab }: AICompanionPanelProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const { history, question, streamChunks, isDesignQuestion, isCodingQuestion, parsedBlocks } = useInterviewStore();
@@ -38,7 +39,8 @@ export function AICompanionPanel({ inputValue, setInputValue, onSubmit, isStream
     }
   }, [streamChunks, isStreaming]);
 
-  const hasContent = isStreaming || parsedBlocks.length > 0 || history.length > 0;
+  // Only show Q&A content on the interview tab — coding/design tabs handle their own answers
+  const hasContent = activeTab === 'interview' && (isStreaming || parsedBlocks.length > 0 || history.length > 0);
 
   const SUGGESTIONS = [
     { text: 'What are some tips for system design interviews?' },
