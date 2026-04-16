@@ -643,7 +643,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
 
         {/* ── LEFT PANEL: Problem / Solution ── */}
-        <div className="w-full md:w-auto flex flex-col bg-white md:border-r border-b md:border-b-0 border-gray-200 coding-left-panel lumora-light-panel max-h-[40vh] md:max-h-none overflow-auto" style={{ ['--left-w' as any]: `${leftPanelWidth}%` }}>
+        <div className={`w-full md:w-auto flex flex-col md:border-r border-b md:border-b-0 coding-left-panel max-h-[40vh] md:max-h-none overflow-auto ${embedded ? 'border-[var(--border)]' : 'bg-white border-gray-200 lumora-light-panel'}`} style={{ ['--left-w' as any]: `${leftPanelWidth}%` }}>
           {/* Tabs */}
           <div className="flex items-center gap-1 px-3 py-1.5 bg-gray-50/50 border-b border-gray-100">
             <button
@@ -1034,7 +1034,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
         </div>
 
         {/* ── RIGHT PANEL: Code Editor + Output ── */}
-        <div className="flex-1 flex flex-col bg-white min-w-0 lumora-light-panel">
+        <div className={`flex-1 flex flex-col min-w-0 ${embedded ? '' : 'bg-white lumora-light-panel'}`}>
           {/* Editor Header */}
           <div className="flex items-center justify-between px-3 py-1.5 bg-gray-50 border-b border-gray-100">
             <div className="flex items-center gap-2">
