@@ -44,6 +44,15 @@ export function LumoraShellPage() {
     }
   }, [activeTab, mountedTabs]);
 
+  // Trigger Monaco editor resize when switching to coding/design tab
+  useEffect(() => {
+    if (activeTab === 'coding' || activeTab === 'design') {
+      // Monaco needs a resize event to recalculate layout after display:none → flex
+      const timer = setTimeout(() => window.dispatchEvent(new Event('resize')), 100);
+      return () => clearTimeout(timer);
+    }
+  }, [activeTab]);
+
   // Document title
   useEffect(() => {
     const titles: Record<LumoraTab, string> = {
