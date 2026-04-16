@@ -11,8 +11,23 @@ import { extractSalary } from '../services/salaryExtractor.js';
 
 const router = Router();
 
+// Cache last_updated timestamp — refresh every 5 minutes
+let cachedLastUpdated = null;
+let lastUpdatedAt = 0;
+async function refreshLastUpdated() {
+  if (Date.now() - lastUpdatedAt < 5 * 60 * 1000 && cachedLastUpdated) return;
+  try {
+    const result = await queryJobs('SELECT GREATEST(MAX(date_found), MAX(posted_date)) AS last_updated FROM jobs WHERE is_active = true');
+    cachedLastUpdated = result.rows[0]?.last_updated || null;
+    lastUpdatedAt = Date.now();
+  } catch { /* ignore */ }
+}
+
 // All routes require authentication
 router.use(authenticate);
+
+// Warm up the cache on first request
+router.use(async (_req, _res, next) => { refreshLastUpdated(); next(); });
 
 /**
  * GET /stats — Job statistics.
@@ -169,33 +184,30 @@ router.get('/', async (req, res, next) => {
       // Category-specific keyword expansion — matches real-world job titles
       const categoryKeywords = {
         // Core engineering roles
-        devops: ['devops', 'dev ops', 'devsecops', 'release engineer', 'build engineer', 'ci/cd', 'ci cd', 'deployment engineer', 'automation engineer', 'infrastructure automation', 'gitops', 'kubernetes', 'terraform', 'ansible', 'jenkins', 'docker'],
-        sre: ['sre', 'site reliability', 'reliability engineer', 'production engineer', 'observability', 'on-call', 'incident', 'chaos engineer'],
-        security: ['security engineer', 'security analyst', 'appsec', 'application security', 'infosec', 'information security', 'cybersecurity', 'cyber security', 'penetration test', 'red team', 'blue team', 'threat', 'vulnerability', 'soc analyst', 'security architect', 'identity engineer', 'iam engineer', 'devsecops'],
-        ml: ['machine learning', 'ml engineer', 'ml ops', 'deep learning', 'nlp', 'natural language', 'artificial intelligence', 'ai engineer', 'ai research', 'computer vision', 'generative ai', 'applied scientist', 'research scientist', 'research engineer', 'ai researcher', 'llm', 'transformer'],
-        data: ['data engineer', 'data scientist', 'data analyst', 'analytics engineer', 'analytics', 'etl', 'data platform', 'data infrastructure', 'business intelligence', 'bi engineer', 'bi developer', 'data architect', 'database engineer', 'dba', 'data governance', 'data warehouse', 'database administrator', 'data ops'],
-        mobile: ['mobile engineer', 'mobile developer', 'ios engineer', 'ios developer', 'android engineer', 'android developer', 'swift developer', 'kotlin developer', 'react native', 'flutter', 'mobile architect'],
-        qa: ['qa engineer', 'qa analyst', 'quality assurance', 'test engineer', 'sdet', 'automation test', 'test automation', 'quality engineer', 'software test', 'testing engineer', 'performance test', 'load test'],
-        embedded: ['embedded', 'firmware', 'hardware engineer', 'fpga', 'rtos', 'iot engineer', 'robotics engineer', 'embedded systems', 'asic', 'chip design', 'silicon', 'microcontroller'],
-        fullstack: ['full stack', 'fullstack', 'full-stack', 'software engineer', 'software developer', 'application engineer', 'web developer'],
-        frontend: ['frontend', 'front-end', 'front end', 'ui engineer', 'ui developer', 'ux engineer', 'react', 'vue', 'angular', 'javascript engineer', 'typescript engineer', 'web engineer'],
-        backend: ['backend', 'back-end', 'back end', 'server engineer', 'api engineer', 'api developer', 'golang', 'java developer', 'python developer', 'ruby developer', 'node.js', 'systems engineer', 'distributed systems'],
-        platform: ['platform engineer', 'platform developer', 'platform architect', 'developer experience', 'developer tools', 'dx engineer', 'internal tools', 'tooling engineer', 'developer productivity'],
-        cloud: ['cloud engineer', 'cloud architect', 'cloud developer', 'aws', 'azure', 'gcp', 'infrastructure engineer', 'infra engineer', 'infrastructure architect', 'network engineer', 'solutions architect', 'cloud security', 'cloud operations'],
-        // Leadership & management roles
-        tech_lead: ['tech lead', 'technical lead', 'team lead', 'engineering lead', 'lead engineer', 'lead developer', 'lead software'],
-        staff: ['staff engineer', 'staff software', 'staff developer', 'senior staff'],
-        principal: ['principal engineer', 'principal software', 'principal developer', 'distinguished engineer', 'fellow'],
-        em: ['engineering manager', 'eng manager', 'software manager', 'development manager', 'director of engineering', 'vp engineering', 'head of engineering', 'cto'],
-        tpm: ['technical program manager', 'tpm', 'program manager', 'technical project manager'],
-        product_manager: ['product manager', 'product owner', 'technical product', 'group product manager'],
-        architect: ['solutions architect', 'software architect', 'system architect', 'enterprise architect', 'cloud architect', 'technical architect'],
-        // Specialized roles
-        blockchain: ['blockchain', 'web3', 'smart contract', 'solidity', 'ethereum', 'defi', 'crypto engineer'],
-        game_dev: ['game developer', 'game engineer', 'game programmer', 'unity developer', 'unreal', 'gameplay engineer', 'graphics engineer'],
-        ios: ['ios engineer', 'ios developer', 'swift developer', 'ios architect', 'apple developer'],
-        android: ['android engineer', 'android developer', 'kotlin developer', 'android architect'],
-        network: ['network engineer', 'network architect', 'network operations', 'noc', 'network security', 'network admin'],
+        devops: ['devops', 'dev ops', 'devsecops', 'release engineer', 'build engineer', 'ci/cd', 'deployment engineer'],
+        sre: ['sre', 'site reliability', 'reliability engineer', 'production engineer'],
+        security: ['security engineer', 'security analyst', 'appsec', 'infosec', 'cybersecurity', 'penetration test', 'security architect', 'iam engineer'],
+        ml: ['machine learning', 'ml engineer', 'deep learning', 'nlp', 'ai engineer', 'ai research', 'computer vision', 'applied scientist', 'research scientist'],
+        data: ['data engineer', 'data scientist', 'data analyst', 'analytics engineer', 'etl', 'data platform', 'bi engineer', 'data architect', 'data warehouse'],
+        mobile: ['mobile engineer', 'mobile developer', 'ios engineer', 'ios developer', 'android engineer', 'android developer', 'react native', 'flutter'],
+        qa: ['qa engineer', 'quality assurance', 'test engineer', 'sdet', 'test automation', 'quality engineer'],
+        embedded: ['embedded', 'firmware', 'hardware engineer', 'fpga', 'rtos', 'iot engineer', 'robotics'],
+        fullstack: ['full stack', 'fullstack', 'full-stack', 'software engineer', 'software developer'],
+        frontend: ['frontend', 'front-end', 'front end', 'ui engineer', 'ui developer', 'ux engineer'],
+        backend: ['backend', 'back-end', 'back end', 'server engineer', 'api engineer', 'systems engineer', 'distributed systems'],
+        platform: ['platform engineer', 'platform architect', 'developer experience', 'developer tools', 'internal tools'],
+        cloud: ['cloud engineer', 'cloud architect', 'infrastructure engineer', 'infra engineer', 'solutions architect', 'network engineer'],
+        tech_lead: ['tech lead', 'technical lead', 'lead engineer', 'lead developer'],
+        staff: ['staff engineer', 'staff software', 'senior staff'],
+        principal: ['principal engineer', 'distinguished engineer'],
+        em: ['engineering manager', 'director of engineering', 'vp engineering', 'head of engineering'],
+        tpm: ['technical program manager', 'tpm', 'program manager'],
+        architect: ['solutions architect', 'software architect', 'system architect', 'enterprise architect'],
+        blockchain: ['blockchain', 'web3', 'smart contract', 'solidity'],
+        game_dev: ['game developer', 'game engineer', 'unity developer', 'unreal'],
+        ios: ['ios engineer', 'ios developer', 'swift developer'],
+        android: ['android engineer', 'android developer', 'kotlin developer'],
+        network: ['network engineer', 'network architect', 'network security'],
       };
       const role = req.query.role.toLowerCase();
       const keywords = categoryKeywords[role];
@@ -342,17 +354,23 @@ router.get('/', async (req, res, next) => {
       WHERE ${whereClause}
     `;
 
-    // Run data query, count query, and last-updated query in parallel
-    const [dataResult, countResult, lastUpdatedResult] = await Promise.all([
-      queryJobs(sql, params),
-      queryJobs(countSql, params.slice(0, -2)), // exclude limit/offset
-      queryJobs('SELECT GREATEST(MAX(date_found), MAX(posted_date)) AS last_updated FROM jobs WHERE is_active = true'),
-    ]);
+    // Run data query first, count only if needed (offset=0)
+    const dataResult = await queryJobs(sql, params);
+
+    // Only run count on first page — skip the expensive COUNT on subsequent pages
+    let total = 0;
+    if (offset === 0) {
+      const countResult = await queryJobs(countSql, params.slice(0, -2));
+      total = parseInt(countResult.rows[0].total, 10);
+    } else {
+      // Estimate: if we got a full page, there's likely more
+      total = offset + dataResult.rows.length + (dataResult.rows.length === limit ? limit : 0);
+    }
 
     res.json({
       jobs: dataResult.rows,
-      total: parseInt(countResult.rows[0].total, 10),
-      last_updated: lastUpdatedResult.rows[0]?.last_updated || null,
+      total,
+      last_updated: cachedLastUpdated,
       limit,
       offset,
     });
