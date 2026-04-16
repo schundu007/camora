@@ -1079,6 +1079,15 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                 className="bg-white border border-gray-200 rounded-md px-2 py-1 text-gray-900 text-xs font-mono focus:border-indigo-400 focus:outline-none cursor-pointer">
                 {LANGUAGES.map(l => <option key={l.id} value={l.id}>{l.label}</option>)}
               </select>
+              <button onClick={handleRun} disabled={isRunning}
+                className="flex items-center gap-1.5 px-3 py-1 bg-indigo-500 text-white text-xs font-bold rounded-md hover:bg-indigo-600 disabled:opacity-50 transition-colors shadow-sm"
+                title="Run (Ctrl+Enter)">
+                {isRunning ? (
+                  <><div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />Running...</>
+                ) : (
+                  <><svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>Run</>
+                )}
+              </button>
             </div>
             <div className="flex items-center gap-1">
               <button onClick={handleReset} className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors" title="Reset">
