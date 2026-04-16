@@ -177,26 +177,25 @@ export default function PricingPage() {
           <div
             className="relative overflow-hidden rounded-[22px]"
             style={{
-              background: 'linear-gradient(168deg, rgba(22,20,42,0.98) 0%, rgba(12,11,20,0.99) 100%)',
-              boxShadow: '0 12px 48px rgba(0,0,0,0.5), 0 0 0 1px rgba(99,102,241,0.08), inset 0 1px 0 rgba(255,255,255,0.03)',
+              background: 'linear-gradient(168deg, #1a1730 0%, #0e0d18 100%)',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.7), 0 0 0 1px rgba(99,102,241,0.15)',
             }}
           >
-            {/* Animated gradient border */}
-            <div className="absolute -inset-[1px] rounded-[22px] pointer-events-none" style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.25), rgba(139,92,246,0.1), rgba(99,102,241,0.15), rgba(139,92,246,0.08))', backgroundSize: '300% 300%', animation: 'borderShimmer 6s ease infinite', opacity: 0.6 }} />
+            {/* Vivid gradient border */}
+            <div className="absolute -inset-[1px] rounded-[22px] pointer-events-none" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6, #a78bfa, #6366f1)', backgroundSize: '300% 300%', animation: 'borderShimmer 4s ease infinite', opacity: 0.4 }} />
 
-            {/* Inner container */}
-            <div className="relative rounded-[21px] overflow-x-auto" style={{ background: 'linear-gradient(168deg, rgba(22,20,42,0.99) 0%, rgba(12,11,20,1) 100%)' }}>
-              {/* Decorative top gradient bar */}
-              <div className="h-[2px] w-full" style={{ background: 'linear-gradient(90deg, transparent 10%, #6366f1, #8b5cf6, #a78bfa, #8b5cf6, #6366f1, transparent 90%)' }} />
+            <div className="relative rounded-[21px] overflow-x-auto" style={{ background: 'linear-gradient(168deg, #1a1730 0%, #0e0d18 100%)' }}>
+              {/* Top accent bar */}
+              <div className="h-[3px] w-full" style={{ background: 'linear-gradient(90deg, #10b981, #6366f1, #8b5cf6, #ec4899, #6366f1, #10b981)' }} />
 
               {/* Ambient glow */}
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-32 pointer-events-none" style={{ background: 'radial-gradient(ellipse, rgba(99,102,241,0.08) 0%, transparent 70%)', filter: 'blur(20px)' }} />
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-40 pointer-events-none" style={{ background: 'radial-gradient(ellipse, rgba(99,102,241,0.15) 0%, transparent 70%)', filter: 'blur(30px)' }} />
 
-              <div className="p-5 sm:p-7">
+              <div className="p-5 sm:p-8">
                 <table className="w-full text-[13px]" style={{ borderCollapse: 'separate', borderSpacing: 0 }}>
                   <thead>
                     <tr style={{ verticalAlign: 'bottom' }}>
-                      <th className="text-left py-5 px-4 text-[10px] font-bold uppercase tracking-[0.18em] min-w-[120px] sm:min-w-[200px]" style={{ color: 'rgba(255,255,255,0.3)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>Feature</th>
+                      <th className="text-left py-5 px-4 text-[11px] font-extrabold uppercase tracking-[0.18em] min-w-[120px] sm:min-w-[200px]" style={{ color: 'rgba(255,255,255,0.5)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>Feature</th>
                       {[
                         { name: 'Camora', price: 'FREE', unit: '', highlight: true },
                         { name: 'Final Round', price: '$100', unit: '/mo' },
@@ -214,33 +213,33 @@ export default function PricingPage() {
                           key={col.name}
                           className={`py-5 px-2 text-center whitespace-nowrap ${col.hide ? `hidden ${col.hide}:table-cell` : ''}`}
                           style={{
-                            borderBottom: '1px solid rgba(255,255,255,0.05)',
+                            borderBottom: '1px solid rgba(255,255,255,0.08)',
                             ...(col.highlight ? {
-                              background: 'linear-gradient(180deg, rgba(99,102,241,0.15) 0%, rgba(99,102,241,0.05) 100%)',
-                              borderRadius: '14px 14px 0 0',
-                              boxShadow: 'inset 0 2px 0 rgba(99,102,241,0.6), inset 1px 0 0 rgba(99,102,241,0.2), inset -1px 0 0 rgba(99,102,241,0.2)',
+                              background: 'linear-gradient(180deg, rgba(99,102,241,0.22) 0%, rgba(99,102,241,0.08) 100%)',
+                              borderRadius: '16px 16px 0 0',
+                              boxShadow: 'inset 0 3px 0 #6366f1, inset 1px 0 0 rgba(99,102,241,0.3), inset -1px 0 0 rgba(99,102,241,0.3)',
                               position: 'relative' as const,
                             } : {}),
                           }}
                         >
                           <div
-                            className="font-bold"
+                            className="font-extrabold"
                             style={col.highlight
-                              ? { background: 'linear-gradient(135deg, #c7d2fe, #e0e7ff)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontSize: '14px', fontWeight: 800, letterSpacing: '0.03em' }
-                              : { color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: 600, letterSpacing: '0.05em' }
+                              ? { background: 'linear-gradient(135deg, #e0e7ff, #fff)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontSize: '15px', letterSpacing: '0.02em' }
+                              : { color: 'rgba(255,255,255,0.45)', fontSize: '11px', fontWeight: 700, letterSpacing: '0.04em' }
                             }
                           >
                             {col.name}
                           </div>
                           <div
-                            className="mt-1.5 font-extrabold"
+                            className="mt-1.5 font-black"
                             style={col.highlight
-                              ? { background: 'linear-gradient(135deg, #818cf8, #6366f1)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontSize: '18px', filter: 'drop-shadow(0 0 8px rgba(99,102,241,0.4))' }
-                              : { color: 'rgba(255,255,255,0.18)', fontSize: '12px' }
+                              ? { background: 'linear-gradient(135deg, #a5b4fc, #818cf8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontSize: '20px', filter: 'drop-shadow(0 0 12px rgba(99,102,241,0.5))' }
+                              : { color: 'rgba(255,255,255,0.25)', fontSize: '13px' }
                             }
                           >
                             {col.price}
-                            <span className="text-[8px] font-normal" style={{ color: 'rgba(255,255,255,0.15)' }}>{col.unit}</span>
+                            <span className="text-[9px] font-medium" style={{ color: col.highlight ? undefined : 'rgba(255,255,255,0.2)' }}>{col.unit}</span>
                           </div>
                         </th>
                       ))}
@@ -252,62 +251,64 @@ export default function PricingPage() {
                       const isEven = i % 2 === 0;
                       const CellIcon = ({ val }: { val: boolean | string }) => {
                         if (val === true) return (
-                          <svg className="w-[14px] h-[14px] mx-auto" viewBox="0 0 12 12" fill="none" style={{ color: 'rgba(255,255,255,0.18)' }}>
-                            <path d="M10 3L4.5 8.5L2 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                          <svg className="w-4 h-4 mx-auto" viewBox="0 0 12 12" fill="none" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                            <path d="M10 3L4.5 8.5L2 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                           </svg>
                         );
-                        if (val === false) return <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.08)' }}>--</span>;
-                        return <span className="text-[9px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(245,158,11,0.12)', color: '#fbbf24', border: '1px solid rgba(245,158,11,0.2)' }}>{val}</span>;
+                        if (val === false) return <span style={{ color: 'rgba(255,255,255,0.12)', fontSize: '16px', lineHeight: 1 }}>—</span>;
+                        return <span className="text-[9px] font-bold px-2.5 py-0.5 rounded-full" style={{ background: 'rgba(245,158,11,0.15)', color: '#fbbf24', border: '1px solid rgba(245,158,11,0.3)' }}>{val}</span>;
                       };
                       return (
                         <tr
                           key={i}
-                          className="comparison-row transition-all duration-200"
-                          style={{ background: isEven ? 'rgba(255,255,255,0.015)' : 'transparent' }}
+                          className="comparison-row transition-all duration-150"
+                          style={{ background: isEven ? 'rgba(255,255,255,0.025)' : 'transparent' }}
                         >
-                          <td className="py-4 px-4 text-[13px]" style={{ color: row.unique ? '#a5b4fc' : 'rgba(255,255,255,0.5)', fontWeight: row.unique ? 600 : 400, borderBottom: isLast ? 'none' : '1px solid rgba(255,255,255,0.03)' }}>
+                          <td className="py-4 px-4 text-[13px]" style={{ color: row.unique ? '#c7d2fe' : 'rgba(255,255,255,0.75)', fontWeight: row.unique ? 700 : 500, borderBottom: isLast ? 'none' : '1px solid rgba(255,255,255,0.06)' }}>
                             <span className="flex items-center gap-2.5">
                               {row.unique && (
-                                <span className="w-[18px] h-[18px] rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(99,102,241,0.15)', border: '1px solid rgba(99,102,241,0.25)' }}>
+                                <span className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.3), rgba(139,92,246,0.25))', boxShadow: '0 0 8px rgba(99,102,241,0.3)' }}>
                                   <svg className="w-[10px] h-[10px]" viewBox="0 0 12 12" fill="none">
-                                    <path d="M6 1l1.545 3.13L11 4.635 8.5 7.07l.59 3.44L6 8.885 2.91 10.51l.59-3.44L1 4.635l3.455-.505L6 1z" fill="#818cf8" />
+                                    <path d="M6 1l1.545 3.13L11 4.635 8.5 7.07l.59 3.44L6 8.885 2.91 10.51l.59-3.44L1 4.635l3.455-.505L6 1z" fill="#a5b4fc" />
                                   </svg>
                                 </span>
                               )}
                               {row.feature}
                             </span>
                           </td>
+                          {/* Camora column — vivid */}
                           <td
                             className="py-4 px-3 text-center"
                             style={{
-                              background: isEven ? 'rgba(99,102,241,0.08)' : 'rgba(99,102,241,0.05)',
-                              boxShadow: 'inset 1px 0 0 rgba(99,102,241,0.12), inset -1px 0 0 rgba(99,102,241,0.12)',
-                              borderBottom: isLast ? 'none' : '1px solid rgba(99,102,241,0.06)',
-                              ...(isLast ? { borderRadius: '0 0 14px 14px', boxShadow: 'inset 1px 0 0 rgba(99,102,241,0.12), inset -1px 0 0 rgba(99,102,241,0.12), inset 0 -2px 0 rgba(99,102,241,0.4)' } : {}),
+                              background: isEven ? 'rgba(99,102,241,0.12)' : 'rgba(99,102,241,0.07)',
+                              boxShadow: 'inset 1px 0 0 rgba(99,102,241,0.2), inset -1px 0 0 rgba(99,102,241,0.2)',
+                              borderBottom: isLast ? 'none' : '1px solid rgba(99,102,241,0.1)',
+                              ...(isLast ? { borderRadius: '0 0 16px 16px', boxShadow: 'inset 1px 0 0 rgba(99,102,241,0.2), inset -1px 0 0 rgba(99,102,241,0.2), inset 0 -3px 0 #6366f1' } : {}),
                             }}
                           >
                             {row.camora === true
                               ? (
-                                <span className="inline-flex items-center justify-center w-7 h-7 rounded-full" style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.25), rgba(139,92,246,0.2))', boxShadow: '0 0 12px rgba(99,102,241,0.3), inset 0 1px 0 rgba(255,255,255,0.1)' }}>
-                                  <svg className="w-[14px] h-[14px]" viewBox="0 0 12 12" fill="none" style={{ color: '#a5b4fc' }}>
-                                    <path d="M10 3L4.5 8.5L2 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                <span className="inline-flex items-center justify-center w-8 h-8 rounded-full" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', boxShadow: '0 0 16px rgba(99,102,241,0.5), 0 4px 12px rgba(99,102,241,0.3)' }}>
+                                  <svg className="w-4 h-4" viewBox="0 0 12 12" fill="none" style={{ color: '#fff' }}>
+                                    <path d="M10 3L4.5 8.5L2 6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
                                   </svg>
                                 </span>
                               )
                               : <CellIcon val={row.camora} />
                             }
                           </td>
+                          {/* Competitor columns */}
                           {[row.finalround, row.lockedin].map((val, j) => (
-                            <td key={j} className="py-3.5 px-3 text-center" style={{ borderBottom: isLast ? 'none' : '1px solid rgba(255,255,255,0.02)' }}><CellIcon val={val} /></td>
+                            <td key={j} className="py-3.5 px-3 text-center" style={{ borderBottom: isLast ? 'none' : '1px solid rgba(255,255,255,0.04)' }}><CellIcon val={val} /></td>
                           ))}
-                          <td className="py-3.5 px-3 text-center hidden md:table-cell" style={{ borderBottom: isLast ? 'none' : '1px solid rgba(255,255,255,0.02)' }}><CellIcon val={row.solver} /></td>
-                          <td className="py-3.5 px-3 text-center hidden md:table-cell" style={{ borderBottom: isLast ? 'none' : '1px solid rgba(255,255,255,0.02)' }}><CellIcon val={row.sensei} /></td>
-                          <td className="py-3.5 px-3 text-center hidden lg:table-cell" style={{ borderBottom: isLast ? 'none' : '1px solid rgba(255,255,255,0.02)' }}><CellIcon val={row.techprep} /></td>
-                          <td className="py-3.5 px-3 text-center hidden lg:table-cell" style={{ borderBottom: isLast ? 'none' : '1px solid rgba(255,255,255,0.02)' }}><CellIcon val={row.algomaster} /></td>
-                          <td className="py-3.5 px-3 text-center hidden lg:table-cell" style={{ borderBottom: isLast ? 'none' : '1px solid rgba(255,255,255,0.02)' }}><CellIcon val={row.designgurus} /></td>
-                          <td className="py-3.5 px-3 text-center hidden xl:table-cell" style={{ borderBottom: isLast ? 'none' : '1px solid rgba(255,255,255,0.02)' }}><CellIcon val={row.aiapply} /></td>
-                          <td className="py-3.5 px-3 text-center hidden xl:table-cell" style={{ borderBottom: isLast ? 'none' : '1px solid rgba(255,255,255,0.02)' }}><CellIcon val={row.offergoose} /></td>
-                          <td className="py-3.5 px-3 text-center hidden xl:table-cell" style={{ borderBottom: isLast ? 'none' : '1px solid rgba(255,255,255,0.02)' }}><CellIcon val={row.parakeet} /></td>
+                          <td className="py-3.5 px-3 text-center hidden md:table-cell" style={{ borderBottom: isLast ? 'none' : '1px solid rgba(255,255,255,0.04)' }}><CellIcon val={row.solver} /></td>
+                          <td className="py-3.5 px-3 text-center hidden md:table-cell" style={{ borderBottom: isLast ? 'none' : '1px solid rgba(255,255,255,0.04)' }}><CellIcon val={row.sensei} /></td>
+                          <td className="py-3.5 px-3 text-center hidden lg:table-cell" style={{ borderBottom: isLast ? 'none' : '1px solid rgba(255,255,255,0.04)' }}><CellIcon val={row.techprep} /></td>
+                          <td className="py-3.5 px-3 text-center hidden lg:table-cell" style={{ borderBottom: isLast ? 'none' : '1px solid rgba(255,255,255,0.04)' }}><CellIcon val={row.algomaster} /></td>
+                          <td className="py-3.5 px-3 text-center hidden lg:table-cell" style={{ borderBottom: isLast ? 'none' : '1px solid rgba(255,255,255,0.04)' }}><CellIcon val={row.designgurus} /></td>
+                          <td className="py-3.5 px-3 text-center hidden xl:table-cell" style={{ borderBottom: isLast ? 'none' : '1px solid rgba(255,255,255,0.04)' }}><CellIcon val={row.aiapply} /></td>
+                          <td className="py-3.5 px-3 text-center hidden xl:table-cell" style={{ borderBottom: isLast ? 'none' : '1px solid rgba(255,255,255,0.04)' }}><CellIcon val={row.offergoose} /></td>
+                          <td className="py-3.5 px-3 text-center hidden xl:table-cell" style={{ borderBottom: isLast ? 'none' : '1px solid rgba(255,255,255,0.04)' }}><CellIcon val={row.parakeet} /></td>
                         </tr>
                       );
                     })}
@@ -318,10 +319,10 @@ export default function PricingPage() {
 
             <style>{`
               .comparison-row:hover {
-                background: rgba(99,102,241,0.04) !important;
+                background: rgba(99,102,241,0.08) !important;
               }
               .comparison-row:hover td:first-child {
-                color: rgba(255,255,255,0.9) !important;
+                color: #fff !important;
               }
             `}</style>
           </div>
