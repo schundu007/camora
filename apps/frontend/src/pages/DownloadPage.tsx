@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 /* ══════════════════════════════════════════════════════════════
@@ -251,6 +251,7 @@ function LockIcon({ size = 16 }: { size?: number }) {
 }
 
 export default function DownloadPage() {
+  const navigate = useNavigate();
   const [detectedOS, setDetectedOS] = useState<OSType>('mac-arm');
   const [addonLoading, setAddonLoading] = useState(false);
   const { subscription, subscriptionLoading, isAuthenticated, token } = useAuth();
