@@ -46,7 +46,7 @@ export async function streamResponse(options: StreamOptions): Promise<AbortContr
   }
 
   const endpoint = conversationId
-    ? `/api/v1/conversations/${conversationId}/stream`
+    ? `/api/v1/inference/conversations/${conversationId}/stream`
     : '/api/v1/stream';
 
   try {

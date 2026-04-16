@@ -123,47 +123,20 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
             </div>
           ))}
 
-          {/* Current streaming question */}
-          {expandedIdx === null && (
-            <>
-              {isStreaming && question && (
-                <div className="flex items-center gap-3 px-4 py-3.5 rounded-xl shrink-0" style={{ background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.15)' }}>
-                  <div className="relative flex items-center justify-center w-7 h-7 shrink-0">
-                    <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-indigo-500/20 text-indigo-300 text-[11px] font-bold" style={{ fontFamily: 'var(--font-code)' }}>
-                      {history.length + 1}
-                    </span>
-                    <div className="absolute inset-0 border-2 border-transparent border-t-indigo-400 rounded-lg animate-spin" />
-                  </div>
-                  <span className="text-sm font-medium text-white/90 leading-snug flex-1" style={{ fontFamily: 'var(--font-sans)' }}>
-                    {question}
-                  </span>
-                  <span className="text-[10px] text-indigo-400 shrink-0 animate-pulse font-medium" style={{ fontFamily: 'var(--font-code)' }}>analyzing</span>
-                </div>
-              )}
-
-              {isStreaming && (
-                <StreamingAnswer chunks={streamChunks} isDesign={isDesignQuestion} isCoding={isCodingQuestion} />
-              )}
-
-              {!isStreaming && history.length > 0 && (
-                <div className="flex-1 flex flex-col gap-2 overflow-auto">
-                  <div className="flex items-center gap-3 px-4 py-3.5 rounded-xl shrink-0" style={{ background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.15)' }}>
-                    <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-indigo-500/20 text-indigo-300 text-[11px] font-bold shrink-0" style={{ fontFamily: 'var(--font-code)' }}>
-                      {history.length}
-                    </span>
-                    <span className="text-sm font-medium text-white/90 leading-snug flex-1" style={{ fontFamily: 'var(--font-sans)' }}>
-                      {history[history.length - 1].question}
-                    </span>
-                  </div>
-                  <AnswerBlocks
-                    blocks={safeBlocks(history[history.length - 1].blocks)}
-                    isDesign={isDesignBlocks(history[history.length - 1].blocks)}
-                    isCoding={isCodingBlocks(history[history.length - 1].blocks)}
-                    question={history[history.length - 1].question}
-                  />
-                </div>
-              )}
-            </>
+          {/* Current streaming question — shown as a row in the list (answer renders in AI Companion panel) */}
+          {isStreaming && question && expandedIdx === null && (
+            <div className="flex items-center gap-3 px-4 py-3.5 rounded-xl shrink-0" style={{ background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.15)' }}>
+              <div className="relative flex items-center justify-center w-7 h-7 shrink-0">
+                <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-indigo-500/20 text-indigo-300 text-[11px] font-bold" style={{ fontFamily: 'var(--font-code)' }}>
+                  {history.length + 1}
+                </span>
+                <div className="absolute inset-0 border-2 border-transparent border-t-indigo-400 rounded-lg animate-spin" />
+              </div>
+              <span className="text-sm font-medium text-white/90 leading-snug flex-1" style={{ fontFamily: 'var(--font-sans)' }}>
+                {question}
+              </span>
+              <span className="text-[10px] text-indigo-400 shrink-0 animate-pulse font-medium" style={{ fontFamily: 'var(--font-code)' }}>analyzing → AI Companion</span>
+            </div>
           )}
 
           {/* Cross-sell */}
