@@ -1113,13 +1113,16 @@ export default function DocsPage({ onBack }) {
                               </div>
                             );
                           })()}
+                          {(() => {
+                            const topicLocked = contentAccess.isTopicLocked(activePage, topic.id);
+                            return (
                           <div
                             onClick={() => setSelectedTopic(topic.id)}
-                            className="px-4 py-2.5 flex items-center justify-between cursor-pointer hover:border-[var(--border-hover)] transition-all group border-b border-r border-[var(--border)]"
+                            className={`px-4 py-2.5 flex items-center justify-between cursor-pointer hover:border-[var(--border-hover)] transition-all group border-b border-r border-[var(--border)] ${topicLocked ? 'opacity-75' : ''}`}
                           >
                             <div className="flex items-center gap-2.5">
                               <div className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0" style={{ background: completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : `${topic.color}12` }}>
-                                {completedTopics[topic.id] ? <Icon name="check" size={10} className="text-emerald-600" /> : <Icon name={topic.icon} size={10} style={{ color: topic.color }} />}
+                                {completedTopics[topic.id] ? <Icon name="check" size={10} className="text-emerald-600" /> : topicLocked ? <Icon name="lock" size={10} className="text-[var(--text-muted)]" /> : <Icon name={topic.icon} size={10} style={{ color: topic.color }} />}
                               </div>
                               <span className={`text-sm landing-body font-medium group-hover:text-[var(--accent-hover)] transition-colors ${completedTopics[topic.id] ? 'text-[var(--text-muted)] line-through' : 'text-[var(--text-primary)]'}`}>{topic.title}</span>
                             </div>
@@ -1141,9 +1144,12 @@ export default function DocsPage({ onBack }) {
                                   {topic.keyQuestions?.length || 0}Q
                                 </span>
                               )}
+                              {topicLocked && <Icon name="lock" size={10} className="text-[var(--text-muted)]" />}
                               <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-all" />
                             </div>
                           </div>
+                            );
+                          })()}
                         </div>
                       );
                     })}
