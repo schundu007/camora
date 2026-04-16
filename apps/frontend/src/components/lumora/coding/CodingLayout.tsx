@@ -358,7 +358,10 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
       // New multi-solution format
       if (jsonData.solutions?.length > 0) {
         setActiveSolutionIdx(0);
-        setCode(jsonData.solutions[0].code);
+        const firstSol = jsonData.solutions[0];
+        const solCode = firstSol.code || firstSol.implementation
+          || (firstSol.explanations?.length > 0 ? firstSol.explanations.map((ex: any) => ex.code).filter(Boolean).join('\n') : null);
+        if (solCode) setCode(solCode);
       } else if (jsonData.code) {
         setCode(jsonData.code);
       }
@@ -386,31 +389,31 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
     }
   }, [parsedBlocks]);
 
-  // Sync code from jsonSolution — try every possible source
+  // Sync code from jsonSolution — reconstruct from explanations if sol.code missing
   useEffect(() => {
     if (!jsonSolution) return;
-    const isDefault = code === getDefaultCode(language) || !code || code.trim().length < 10;
-    if (!isDefault) return;
 
     const idx = activeSolutionIdx || 0;
     const sol = jsonSolution.solutions?.[idx] || jsonSolution.solutions?.[0];
+    if (!sol) return;
 
-    // Try: sol.code, sol.implementation, sol.solution, nested code blocks
-    const extracted = sol?.code || sol?.implementation || sol?.solution
-      || jsonSolution.code || jsonSolution.implementation
-      || (() => {
-        // Last resort: extract code from streamText using regex
-        const raw = streamChunks.join('');
-        const codeMatch = raw.match(/```(?:python|java|cpp|javascript|typescript|go|rust)?\n([\s\S]*?)```/);
-        if (codeMatch?.[1]?.trim()) return codeMatch[1].trim();
-        // Try CODE block format
-        const blockMatch = raw.match(/CODE\n([\s\S]*?)(?:\/CODE|COMPLEXITY|WALKTHROUGH|TESTCASES|SUMMARY)/);
-        if (blockMatch?.[1]?.trim()) return blockMatch[1].trim();
-        return null;
-      })();
+    // Try direct code field first
+    let extracted = sol.code || sol.implementation || sol.solution
+      || jsonSolution.code || jsonSolution.implementation;
 
-    if (extracted) {
-      console.log('[Coding] Setting code from solution, length:', extracted.length);
+    // If no direct code field, reconstruct from explanations (the actual format)
+    if (!extracted && sol.explanations?.length > 0) {
+      extracted = sol.explanations.map((ex: any) => ex.code).filter(Boolean).join('\n');
+    }
+
+    // Last resort: extract from raw stream
+    if (!extracted) {
+      const raw = streamChunks.join('');
+      const codeMatch = raw.match(/```(?:python|java|cpp|javascript|typescript|go|rust)?\n([\s\S]*?)```/);
+      if (codeMatch?.[1]?.trim()) extracted = codeMatch[1].trim();
+    }
+
+    if (extracted && extracted.trim().length > 5) {
       setCode(extracted);
     }
   }, [jsonSolution, activeSolutionIdx]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -617,9 +620,9 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
           {/* Timer */}
           {timerDuration > 0 ? (
             <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-xs font-mono font-bold transition-colors ${
-              timerUrgent ? 'bg-red-50 border-red-200 text-red-600' :
+              timerUrgent ? 'bg-red-500/15 border-red-500/30 text-red-300' :
               timerSeconds === 0 ? 'bg-white/10 border-white/20 text-white/70' :
-              'bg-indigo-50 border-indigo-200 text-indigo-700'
+              'bg-indigo-500/15 border-indigo-500/30 text-indigo-300'
             }`}>
               <div className="relative w-4 h-4">
                 <svg className="w-4 h-4 -rotate-90" viewBox="0 0 20 20">
@@ -639,7 +642,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
             <div className="flex items-center">
               {[15, 30, 45, 60].map(m => (
                 <button key={m} onClick={() => startTimer(m)}
-                  className="px-1.5 py-0.5 text-[10px] font-mono text-white/50 hover:text-white hover:bg-white/10 rounded transition-colors"
+                  className="px-1.5 py-0.5 text-[10px] font-mono text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
                   title={`${m} min timer`}>
                   {m}m
                 </button>
@@ -678,13 +681,13 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
             <button
               onClick={() => setProblemTab('description')}
               className={`px-3 py-1 text-xs font-semibold rounded-md transition-all ${
-                problemTab === 'description' ? 'bg-indigo-500 text-white shadow-sm' : 'text-white/50 hover:text-white hover:bg-white/10'
+                problemTab === 'description' ? 'bg-indigo-500 text-white shadow-sm' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
               }`}
             >Description</button>
             <button
               onClick={() => setProblemTab('solution')}
               className={`px-3 py-1 text-xs font-semibold rounded-md transition-all flex items-center gap-1.5 ${
-                problemTab === 'solution' ? 'bg-indigo-500 text-white shadow-sm' : 'text-white/50 hover:text-white hover:bg-white/10'
+                problemTab === 'solution' ? 'bg-indigo-500 text-white shadow-sm' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
               }`}
             >
               Solution
@@ -836,7 +839,12 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                           const c = solColors[i % solColors.length];
                           return (
                             <button key={i}
-                              onClick={() => { setActiveSolutionIdx(i); setCode(sol.code || sol.implementation || sol.solution || code); }}
+                              onClick={() => {
+                                setActiveSolutionIdx(i);
+                                const solCode = sol.code || sol.implementation || sol.solution
+                                  || (sol.explanations?.length > 0 ? sol.explanations.map((ex: any) => ex.code).filter(Boolean).join('\n') : null);
+                                if (solCode) setCode(solCode);
+                              }}
                               className={`flex-1 px-2 py-1.5 text-[10px] md:text-xs font-semibold rounded-md transition-all text-center ${
                                 activeSolutionIdx === i
                                   ? `bg-white text-gray-900 shadow-sm`
