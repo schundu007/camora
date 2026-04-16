@@ -31,7 +31,7 @@ import { roadmapCategories, roadmapCategoryMap, roadmapTopics } from '../../../d
 import { engBlogCategories, engBlogCategoryMap, engBlogTopics } from '../../../data/capra/topics/engBlogsTopics.js';
 import { companyPrep } from '../../../data/capra/topics/companyPrep.js';
 import { interviewCheatsheet } from '../../../data/capra/topics/techInterviewHandbook';
-import { ROLE_TOPIC_MAP } from '../../../data/capra/jobRoleTopicMapping';
+import { ROLE_TOPIC_MAP, ONBOARDING_ROLE_TO_TOPIC_KEY } from '../../../data/capra/jobRoleTopicMapping';
 
 // Merge extra topics into base arrays
 const codingCategoryMap = { ..._codingCategoryMap, ...extraCodingCategoryMap };
@@ -103,6 +103,24 @@ export default function DocsPage({ onBack }) {
     return null;
   });
 
+  // "Show All Content" toggle — bypasses role filtering
+  const [showAllContent, setShowAllContent] = useState(false);
+
+  // Auto-set jobContext from user's onboarding roles when no URL role
+  useEffect(() => {
+    if (jobContext || showAllContent) return;
+    if (!user?.job_roles?.length) return;
+    const primaryRole = user.job_roles[0];
+    const topicKey = ONBOARDING_ROLE_TO_TOPIC_KEY[primaryRole];
+    if (topicKey && topicKey !== 'general' && ROLE_TOPIC_MAP[topicKey]) {
+      setJobContext({
+        role: topicKey, focus: null,
+        jobTitle: ROLE_TOPIC_MAP[topicKey]?.label || primaryRole,
+        company: null, analysis: null, fromProfile: true,
+      });
+    }
+  }, [user?.job_roles]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // React to URL changes from AppShell sidebar navigation
   useEffect(() => {
     const pathSegment = routerLocation.pathname.replace('/capra/prepare', '').replace(/^\//, '');
@@ -120,8 +138,9 @@ export default function DocsPage({ onBack }) {
     setActiveSection(page);
     if (role) {
       setJobContext({ role, focus, jobTitle, company });
+      setShowAllContent(false);
     } else {
-      setJobContext(null);
+      setJobContext((prev) => prev?.fromProfile ? prev : null);
     }
   }, [routerLocation.pathname, routerLocation.search]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -131,7 +150,7 @@ export default function DocsPage({ onBack }) {
     const params = new URLSearchParams();
     if (activePage && activePage !== 'overview') params.set('page', activePage);
     if (selectedTopic) params.set('topic', selectedTopic);
-    if (jobContext) {
+    if (jobContext && !jobContext.fromProfile) {
       if (jobContext.role) params.set('role', jobContext.role);
       if (jobContext.focus) params.set('focus', jobContext.focus);
       if (jobContext.jobTitle) params.set('jobTitle', jobContext.jobTitle);
@@ -186,7 +205,15 @@ export default function DocsPage({ onBack }) {
 
   // Clear job-role filter
   const clearJobFilter = () => {
-    setJobContext(null);
+    if (jobContext?.fromProfile) {
+      setShowAllContent(true);
+    } else {
+      setJobContext(null);
+    }
+  };
+
+  const reEnableRoleFilter = () => {
+    setShowAllContent(false);
   };
 
   const setSelectedTopic = (topic) => {
@@ -395,6 +422,7 @@ export default function DocsPage({ onBack }) {
   // Filter and sort topics based on active page
   // Get role-filtered topic IDs (if job context is active)
   const getRoleFilteredIds = (page) => {
+    if (showAllContent) return null;
     if (!jobContext?.role) return null;
     const roleConfig = ROLE_TOPIC_MAP[jobContext.role];
     if (!roleConfig) return null;
@@ -1244,7 +1272,7 @@ export default function DocsPage({ onBack }) {
                     </div>
                     <div className="space-y-3">
                     {systemDesignProblemCategories.map((category) => {
-                      const roleSDProblemIds = jobContext?.role && ROLE_TOPIC_MAP[jobContext.role]?.systemDesignProblems?.length > 0
+                      const roleSDProblemIds = !showAllContent && jobContext?.role && ROLE_TOPIC_MAP[jobContext.role]?.systemDesignProblems?.length > 0
                         ? new Set(ROLE_TOPIC_MAP[jobContext.role].systemDesignProblems)
                         : null;
                       const filteredDesigns = roleSDProblemIds
