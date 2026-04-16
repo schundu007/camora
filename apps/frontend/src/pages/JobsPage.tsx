@@ -135,14 +135,17 @@ interface JobsResponse {
   last_updated?: string;
 }
 
-interface FilterSource {
+interface FilterOption {
   name: string;
   count: number;
 }
 
 interface FiltersResponse {
-  sources: FilterSource[];
+  sources: FilterOption[];
   locations: string[];
+  departments: FilterOption[];
+  companies: FilterOption[];
+  salary_range: { min: number | null; max: number | null };
 }
 
 const WORK_TYPES = [
@@ -150,6 +153,26 @@ const WORK_TYPES = [
   { value: 'remote', label: 'Remote' },
   { value: 'hybrid', label: 'Hybrid' },
   { value: 'onsite', label: 'Onsite' },
+];
+
+const EXPERIENCE_LEVELS = [
+  { value: '', label: 'All Levels' },
+  { value: 'intern', label: 'Intern' },
+  { value: 'entry', label: 'Entry Level' },
+  { value: 'mid', label: 'Mid Level' },
+  { value: 'senior', label: 'Senior' },
+  { value: 'staff', label: 'Staff' },
+  { value: 'principal', label: 'Principal+' },
+  { value: 'lead', label: 'Lead / Manager' },
+];
+
+const POSTED_WITHIN = [
+  { value: '', label: 'Any Time' },
+  { value: '1', label: 'Today' },
+  { value: '3', label: 'Past 3 Days' },
+  { value: '7', label: 'Past Week' },
+  { value: '14', label: 'Past 2 Weeks' },
+  { value: '30', label: 'Past Month' },
 ];
 
 /* ──────────────────────────────── Helpers ──────────────────────────────── */
@@ -314,11 +337,20 @@ export default function JobsPage() {
   const [locationFilter, setLocationFilter] = useState('');
   const [sourceFilter, setSourceFilter] = useState('');
   const [workTypeFilter, setWorkTypeFilter] = useState('');
+  const [departmentFilter, setDepartmentFilter] = useState('');
+  const [companyFilter, setCompanyFilter] = useState('');
+  const [experienceFilter, setExperienceFilter] = useState('');
+  const [postedWithinFilter, setPostedWithinFilter] = useState('');
+  const [salaryMinFilter, setSalaryMinFilter] = useState('');
+  const [salaryMaxFilter, setSalaryMaxFilter] = useState('');
   const [showFilters, setShowFilters] = useState(false);
 
   // Filter options from API
-  const [availableSources, setAvailableSources] = useState<FilterSource[]>([]);
+  const [availableSources, setAvailableSources] = useState<FilterOption[]>([]);
   const [availableLocations, setAvailableLocations] = useState<string[]>([]);
+  const [availableDepartments, setAvailableDepartments] = useState<FilterOption[]>([]);
+  const [availableCompanies, setAvailableCompanies] = useState<FilterOption[]>([]);
+  const [salaryRange, setSalaryRange] = useState<{ min: number | null; max: number | null }>({ min: null, max: null });
 
   // Set role from user profile once auth loads
   useEffect(() => {
@@ -428,10 +460,16 @@ export default function JobsPage() {
     if (locationFilter) params.set('location', locationFilter);
     if (sourceFilter) params.set('source', sourceFilter);
     if (workTypeFilter) params.set('work_type', workTypeFilter);
+    if (departmentFilter) params.set('department', departmentFilter);
+    if (companyFilter) params.set('company', companyFilter);
+    if (experienceFilter) params.set('experience', experienceFilter);
+    if (postedWithinFilter) params.set('posted_within', postedWithinFilter);
+    if (salaryMinFilter) params.set('min_salary', salaryMinFilter);
+    if (salaryMaxFilter) params.set('max_salary', salaryMaxFilter);
     params.set('limit', String(PAGE_SIZE));
     if (extraOffset) params.set('offset', String(extraOffset));
     return params;
-  }, [search, role, locationFilter, sourceFilter, workTypeFilter]);
+  }, [search, role, locationFilter, sourceFilter, workTypeFilter, departmentFilter, companyFilter, experienceFilter, postedWithinFilter, salaryMinFilter, salaryMaxFilter]);
 
   /* ── Fetch filter options on mount ── */
   useEffect(() => {
@@ -444,6 +482,9 @@ export default function JobsPage() {
         const data: FiltersResponse = await res.json();
         setAvailableSources(data.sources || []);
         setAvailableLocations(data.locations || []);
+        setAvailableDepartments(data.departments || []);
+        setAvailableCompanies(data.companies || []);
+        if (data.salary_range) setSalaryRange(data.salary_range);
       } catch {
         // filter options are optional — fail silently
       }
@@ -501,7 +542,13 @@ export default function JobsPage() {
     }
   }, [buildJobParams, token, offset, loadingMore, hasMore]);
 
-  const activeFilterCount = [locationFilter, sourceFilter, workTypeFilter].filter(Boolean).length;
+  const activeFilterCount = [locationFilter, sourceFilter, workTypeFilter, departmentFilter, companyFilter, experienceFilter, postedWithinFilter, salaryMinFilter, salaryMaxFilter].filter(Boolean).length;
+
+  const clearAllFilters = () => {
+    setLocationFilter(''); setSourceFilter(''); setWorkTypeFilter('');
+    setDepartmentFilter(''); setCompanyFilter(''); setExperienceFilter('');
+    setPostedWithinFilter(''); setSalaryMinFilter(''); setSalaryMaxFilter('');
+  };
 
   /* ── Debounced fetch on filter change ── */
   useEffect(() => {
@@ -850,8 +897,9 @@ export default function JobsPage() {
           </div>
         </div>
 
-        {/* ── Filter Bar ── */}
+        {/* ── Advanced Filter Bar ── */}
         <div className="w-full lg:max-w-[70%] mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: '12px' }}>
+          {/* Toggle + active pills row */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
             <button
               onClick={() => setShowFilters(!showFilters)}
@@ -874,123 +922,155 @@ export default function JobsPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
               </svg>
               Filters{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
+              <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5} style={{ transform: showFilters ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+              </svg>
             </button>
 
             {/* Active filter pills */}
-            {locationFilter && (
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '6px 10px', fontSize: '12px', fontWeight: 600, color: 'var(--accent)', background: 'rgba(99,102,241,0.1)', borderRadius: '6px' }}>
-                {locationFilter}
-                <button onClick={() => setLocationFilter('')} style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', padding: '0 2px', fontSize: '14px', lineHeight: 1 }}>&times;</button>
+            {[
+              { val: locationFilter, set: setLocationFilter, label: locationFilter, color: '#6366f1' },
+              { val: sourceFilter, set: setSourceFilter, label: sourceFilter, color: '#10b981' },
+              { val: workTypeFilter, set: setWorkTypeFilter, label: WORK_TYPES.find(w => w.value === workTypeFilter)?.label, color: '#f59e0b' },
+              { val: departmentFilter, set: setDepartmentFilter, label: departmentFilter, color: '#8b5cf6' },
+              { val: companyFilter, set: setCompanyFilter, label: companyFilter, color: '#3b82f6' },
+              { val: experienceFilter, set: setExperienceFilter, label: EXPERIENCE_LEVELS.find(e => e.value === experienceFilter)?.label, color: '#ec4899' },
+              { val: postedWithinFilter, set: setPostedWithinFilter, label: POSTED_WITHIN.find(p => p.value === postedWithinFilter)?.label, color: '#06b6d4' },
+              { val: salaryMinFilter, set: setSalaryMinFilter, label: `Min $${Math.round(Number(salaryMinFilter) / 1000)}K`, color: '#14b8a6' },
+              { val: salaryMaxFilter, set: setSalaryMaxFilter, label: `Max $${Math.round(Number(salaryMaxFilter) / 1000)}K`, color: '#14b8a6' },
+            ].filter(f => f.val).map((f, i) => (
+              <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '5px 10px', fontSize: '12px', fontWeight: 600, color: f.color, background: `${f.color}15`, borderRadius: '6px', border: `1px solid ${f.color}30` }}>
+                {f.label}
+                <button onClick={() => f.set('')} style={{ background: 'none', border: 'none', color: f.color, cursor: 'pointer', padding: '0 2px', fontSize: '14px', lineHeight: 1 }}>&times;</button>
               </span>
-            )}
-            {sourceFilter && (
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '6px 10px', fontSize: '12px', fontWeight: 600, color: '#10b981', background: 'rgba(16,185,129,0.1)', borderRadius: '6px' }}>
-                {sourceFilter}
-                <button onClick={() => setSourceFilter('')} style={{ background: 'none', border: 'none', color: '#10b981', cursor: 'pointer', padding: '0 2px', fontSize: '14px', lineHeight: 1 }}>&times;</button>
-              </span>
-            )}
-            {workTypeFilter && (
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '6px 10px', fontSize: '12px', fontWeight: 600, color: '#f59e0b', background: 'rgba(245,158,11,0.1)', borderRadius: '6px' }}>
-                {WORK_TYPES.find(w => w.value === workTypeFilter)?.label}
-                <button onClick={() => setWorkTypeFilter('')} style={{ background: 'none', border: 'none', color: '#f59e0b', cursor: 'pointer', padding: '0 2px', fontSize: '14px', lineHeight: 1 }}>&times;</button>
-              </span>
-            )}
+            ))}
             {activeFilterCount > 0 && (
-              <button
-                onClick={() => { setLocationFilter(''); setSourceFilter(''); setWorkTypeFilter(''); }}
-                style={{ fontSize: '12px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: '6px 8px', textDecoration: 'underline' }}
-              >
+              <button onClick={clearAllFilters} style={{ fontSize: '12px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: '6px 8px' }}>
                 Clear all
               </button>
             )}
           </div>
 
-          {/* Expandable filter dropdowns */}
+          {/* Expandable advanced filter panel */}
           {showFilters && (
             <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-              gap: '12px',
               marginTop: '12px',
-              padding: '16px',
+              padding: '20px',
               background: 'var(--bg-surface)',
               border: '1px solid var(--border)',
               borderRadius: '12px',
             }}>
-              {/* Location */}
-              <div>
-                <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>Location</label>
-                <input
-                  type="text"
-                  placeholder="Type city or region..."
-                  value={locationFilter}
-                  onChange={(e) => setLocationFilter(e.target.value)}
-                  list="location-options"
-                  style={{
-                    width: '100%',
-                    padding: '8px 12px',
-                    fontSize: '13px',
-                    color: 'var(--text-primary)',
-                    background: 'var(--bg-elevated)',
-                    border: '1px solid var(--border)',
-                    borderRadius: '8px',
-                    outline: 'none',
-                  }}
-                />
-                <datalist id="location-options">
-                  {availableLocations.map((loc) => (
-                    <option key={loc} value={loc} />
-                  ))}
-                </datalist>
+              {/* Row 1: Location, Work Type, Experience, Posted */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '14px', marginBottom: '14px' }}>
+                <div>
+                  <label className="jobs-filter-label">Location</label>
+                  <input
+                    type="text"
+                    placeholder="City, state, or remote..."
+                    value={locationFilter}
+                    onChange={(e) => setLocationFilter(e.target.value)}
+                    list="location-options"
+                    className="jobs-filter-input"
+                  />
+                  <datalist id="location-options">
+                    {availableLocations.map((loc) => <option key={loc} value={loc} />)}
+                  </datalist>
+                </div>
+
+                <div>
+                  <label className="jobs-filter-label">Work Type</label>
+                  <select value={workTypeFilter} onChange={(e) => setWorkTypeFilter(e.target.value)} className="jobs-filter-select">
+                    {WORK_TYPES.map((wt) => <option key={wt.value} value={wt.value}>{wt.label}</option>)}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="jobs-filter-label">Experience Level</label>
+                  <select value={experienceFilter} onChange={(e) => setExperienceFilter(e.target.value)} className="jobs-filter-select">
+                    {EXPERIENCE_LEVELS.map((el) => <option key={el.value} value={el.value}>{el.label}</option>)}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="jobs-filter-label">Date Posted</label>
+                  <select value={postedWithinFilter} onChange={(e) => setPostedWithinFilter(e.target.value)} className="jobs-filter-select">
+                    {POSTED_WITHIN.map((pw) => <option key={pw.value} value={pw.value}>{pw.label}</option>)}
+                  </select>
+                </div>
               </div>
 
-              {/* Source / Platform */}
-              <div>
-                <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>Job Platform</label>
-                <select
-                  value={sourceFilter}
-                  onChange={(e) => setSourceFilter(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '8px 12px',
-                    fontSize: '13px',
-                    color: 'var(--text-primary)',
-                    background: 'var(--bg-elevated)',
-                    border: '1px solid var(--border)',
-                    borderRadius: '8px',
-                    outline: 'none',
-                    cursor: 'pointer',
-                  }}
-                >
-                  <option value="">All Platforms</option>
-                  {availableSources.map((s) => (
-                    <option key={s.name} value={s.name}>{s.name} ({s.count})</option>
-                  ))}
-                </select>
+              {/* Row 2: Platform, Department, Company */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '14px', marginBottom: '14px' }}>
+                <div>
+                  <label className="jobs-filter-label">Job Platform</label>
+                  <select value={sourceFilter} onChange={(e) => setSourceFilter(e.target.value)} className="jobs-filter-select">
+                    <option value="">All Platforms</option>
+                    {availableSources.map((s) => <option key={s.name} value={s.name}>{s.name} ({s.count})</option>)}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="jobs-filter-label">Department</label>
+                  <select value={departmentFilter} onChange={(e) => setDepartmentFilter(e.target.value)} className="jobs-filter-select">
+                    <option value="">All Departments</option>
+                    {availableDepartments.map((d) => <option key={d.name} value={d.name}>{d.name} ({d.count})</option>)}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="jobs-filter-label">Company</label>
+                  <input
+                    type="text"
+                    placeholder="Search companies..."
+                    value={companyFilter}
+                    onChange={(e) => setCompanyFilter(e.target.value)}
+                    list="company-options"
+                    className="jobs-filter-input"
+                  />
+                  <datalist id="company-options">
+                    {availableCompanies.map((c) => <option key={c.name} value={c.name}>{`${c.name} (${c.count})`}</option>)}
+                  </datalist>
+                </div>
+
+                {/* Salary Range */}
+                <div>
+                  <label className="jobs-filter-label">
+                    Salary Range
+                    {salaryRange.min != null && <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}> (${Math.round(salaryRange.min / 1000)}K–${Math.round((salaryRange.max || 0) / 1000)}K)</span>}
+                  </label>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <input
+                      type="number"
+                      placeholder="Min"
+                      value={salaryMinFilter}
+                      onChange={(e) => setSalaryMinFilter(e.target.value)}
+                      className="jobs-filter-input"
+                      style={{ width: '50%' }}
+                      step={10000}
+                    />
+                    <input
+                      type="number"
+                      placeholder="Max"
+                      value={salaryMaxFilter}
+                      onChange={(e) => setSalaryMaxFilter(e.target.value)}
+                      className="jobs-filter-input"
+                      style={{ width: '50%' }}
+                      step={10000}
+                    />
+                  </div>
+                </div>
               </div>
 
-              {/* Work Type */}
-              <div>
-                <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>Work Type</label>
-                <select
-                  value={workTypeFilter}
-                  onChange={(e) => setWorkTypeFilter(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '8px 12px',
-                    fontSize: '13px',
-                    color: 'var(--text-primary)',
-                    background: 'var(--bg-elevated)',
-                    border: '1px solid var(--border)',
-                    borderRadius: '8px',
-                    outline: 'none',
-                    cursor: 'pointer',
-                  }}
-                >
-                  {WORK_TYPES.map((wt) => (
-                    <option key={wt.value} value={wt.value}>{wt.label}</option>
-                  ))}
-                </select>
+              {/* Result count + clear */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '8px', borderTop: '1px solid var(--border)' }}>
+                <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+                  {total} job{total !== 1 ? 's' : ''} found
+                </span>
+                {activeFilterCount > 0 && (
+                  <button onClick={clearAllFilters} style={{ fontSize: '13px', fontWeight: 600, color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 8px' }}>
+                    Clear all filters
+                  </button>
+                )}
               </div>
             </div>
           )}
@@ -1261,6 +1341,56 @@ export default function JobsPage() {
         }
         @media (max-width: 640px) {
           .jobs-grid { column-count: 1; }
+        }
+
+        /* Filter form controls */
+        .jobs-filter-label {
+          display: block;
+          font-size: 11px;
+          font-weight: 700;
+          color: var(--text-muted);
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          margin-bottom: 6px;
+        }
+        .jobs-filter-input,
+        .jobs-filter-select {
+          width: 100%;
+          padding: 8px 12px;
+          font-size: 13px;
+          color: var(--text-primary);
+          background: var(--bg-elevated);
+          border: 1px solid var(--border);
+          border-radius: 8px;
+          outline: none;
+          transition: border-color 0.15s;
+        }
+        .jobs-filter-input:focus,
+        .jobs-filter-select:focus {
+          border-color: var(--accent);
+          box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+        }
+        .jobs-filter-select {
+          cursor: pointer;
+          -webkit-appearance: none;
+          appearance: none;
+          background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.5' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M19.5 8.25l-7.5 7.5-7.5-7.5'/%3E%3C/svg%3E");
+          background-repeat: no-repeat;
+          background-position: right 10px center;
+          padding-right: 32px;
+        }
+        .jobs-filter-input::placeholder {
+          color: var(--text-muted);
+          opacity: 0.6;
+        }
+        /* Remove number input spinners */
+        .jobs-filter-input[type="number"]::-webkit-inner-spin-button,
+        .jobs-filter-input[type="number"]::-webkit-outer-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+        .jobs-filter-input[type="number"] {
+          -moz-appearance: textfield;
         }
 
         /* Search bar focus-within */
