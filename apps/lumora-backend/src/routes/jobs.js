@@ -166,17 +166,21 @@ router.get('/', async (req, res, next) => {
     let paramIdx = 1;
 
     if (req.query.role) {
-      // Category-specific keyword expansion for broader matching
+      // Category-specific keyword expansion — matches real-world job titles
       const categoryKeywords = {
-        devops: ['devops', 'dev ops', 'devsecops', 'release engineer', 'build engineer', 'ci/cd', 'ci cd'],
-        sre: ['sre', 'site reliability', 'reliability engineer'],
-        ml: ['machine learning', 'ml engineer', 'deep learning', 'nlp', 'artificial intelligence', 'ai engineer', 'ai research', 'computer vision'],
-        data: ['data engineer', 'data scientist', 'data analyst', 'analytics', 'etl', 'data platform', 'data infrastructure', 'business intelligence', 'bi engineer'],
-        fullstack: ['full stack', 'fullstack', 'full-stack'],
-        frontend: ['frontend', 'front-end', 'front end', 'ui engineer', 'ui developer', 'react engineer', 'react developer'],
-        backend: ['backend', 'back-end', 'back end', 'server engineer', 'api engineer', 'api developer'],
-        platform: ['platform engineer', 'platform developer', 'platform architect', 'developer experience', 'developer tools', 'dx engineer'],
-        cloud: ['cloud engineer', 'cloud architect', 'aws engineer', 'azure engineer', 'gcp engineer', 'infrastructure engineer', 'infra engineer'],
+        devops: ['devops', 'dev ops', 'devsecops', 'release engineer', 'build engineer', 'ci/cd', 'ci cd', 'deployment engineer', 'automation engineer'],
+        sre: ['sre', 'site reliability', 'reliability engineer', 'production engineer', 'observability'],
+        security: ['security engineer', 'security analyst', 'appsec', 'application security', 'infosec', 'information security', 'cybersecurity', 'cyber security', 'penetration test', 'red team', 'blue team', 'threat', 'vulnerability', 'soc analyst', 'security architect', 'identity engineer', 'iam engineer'],
+        ml: ['machine learning', 'ml engineer', 'ml ops', 'deep learning', 'nlp', 'natural language', 'artificial intelligence', 'ai engineer', 'ai research', 'computer vision', 'generative ai', 'applied scientist', 'research scientist', 'research engineer'],
+        data: ['data engineer', 'data scientist', 'data analyst', 'analytics engineer', 'analytics', 'etl', 'data platform', 'data infrastructure', 'business intelligence', 'bi engineer', 'bi developer', 'data architect', 'database engineer', 'dba', 'data governance', 'data warehouse'],
+        mobile: ['mobile engineer', 'mobile developer', 'ios engineer', 'ios developer', 'android engineer', 'android developer', 'swift developer', 'kotlin developer', 'react native', 'flutter'],
+        qa: ['qa engineer', 'qa analyst', 'quality assurance', 'test engineer', 'sdet', 'automation test', 'test automation', 'quality engineer', 'software test', 'testing engineer'],
+        embedded: ['embedded', 'firmware', 'hardware engineer', 'fpga', 'rtos', 'iot engineer', 'robotics engineer', 'embedded systems', 'asic', 'chip design', 'silicon'],
+        fullstack: ['full stack', 'fullstack', 'full-stack', 'software engineer', 'software developer', 'application engineer', 'web developer'],
+        frontend: ['frontend', 'front-end', 'front end', 'ui engineer', 'ui developer', 'ux engineer', 'react', 'vue', 'angular', 'javascript engineer', 'typescript engineer', 'web engineer'],
+        backend: ['backend', 'back-end', 'back end', 'server engineer', 'api engineer', 'api developer', 'golang', 'java developer', 'python developer', 'ruby developer', 'node.js', 'systems engineer', 'distributed systems'],
+        platform: ['platform engineer', 'platform developer', 'platform architect', 'developer experience', 'developer tools', 'dx engineer', 'internal tools', 'tooling engineer'],
+        cloud: ['cloud engineer', 'cloud architect', 'cloud developer', 'aws', 'azure', 'gcp', 'infrastructure engineer', 'infra engineer', 'infrastructure architect', 'network engineer', 'solutions architect', 'cloud security'],
       };
       const role = req.query.role.toLowerCase();
       const keywords = categoryKeywords[role];
@@ -243,11 +247,13 @@ router.get('/', async (req, res, next) => {
     if (req.query.work_type) {
       const wt = req.query.work_type.toLowerCase();
       if (wt === 'remote') {
-        conditions.push(`j.location ILIKE '%remote%'`);
+        // Match jobs explicitly tagged as remote (not hybrid)
+        conditions.push(`(j.location ILIKE '%remote%' AND j.location NOT ILIKE '%hybrid%')`);
       } else if (wt === 'hybrid') {
         conditions.push(`j.location ILIKE '%hybrid%'`);
       } else if (wt === 'onsite') {
-        conditions.push(`j.location NOT ILIKE '%remote%' AND j.location NOT ILIKE '%hybrid%'`);
+        // Onsite = no remote or hybrid mention, and must have a real location
+        conditions.push(`j.location NOT ILIKE '%remote%' AND j.location NOT ILIKE '%hybrid%' AND j.location IS NOT NULL AND j.location != ''`);
       }
     }
 
@@ -259,21 +265,24 @@ router.get('/', async (req, res, next) => {
 
     if (req.query.posted_within) {
       const days = parseInt(req.query.posted_within, 10);
-      if (!isNaN(days) && days > 0) {
-        conditions.push(`(j.posted_date >= NOW() - INTERVAL '${days} days' OR j.date_found >= NOW() - INTERVAL '${days} days')`);
+      // Only allow known safe values to prevent SQL injection
+      if ([1, 3, 7, 14, 30, 60, 90].includes(days)) {
+        conditions.push(`(j.posted_date >= NOW() - $${paramIdx}::interval OR j.date_found >= NOW() - $${paramIdx}::interval)`);
+        params.push(`${days} days`);
+        paramIdx++;
       }
     }
 
     if (req.query.experience) {
       const exp = req.query.experience.toLowerCase();
       const expKeywords = {
-        intern: ['intern', 'internship'],
-        entry: ['entry', 'junior', 'associate', 'new grad', 'graduate'],
-        mid: ['mid level', 'intermediate'],
-        senior: ['senior', 'sr.', 'sr '],
-        staff: ['staff'],
-        principal: ['principal', 'distinguished', 'fellow'],
-        lead: ['lead', 'manager', 'director', 'head of', 'vp'],
+        intern: ['intern', 'internship', 'co-op', 'coop'],
+        entry: ['entry level', 'entry-level', 'junior', 'associate', 'new grad', 'graduate', 'early career', 'i ', ' i,', ' 1 ', ' 1,'],
+        mid: ['mid level', 'mid-level', 'intermediate', 'ii ', ' ii,', ' 2 ', ' 2,', ' iii', ' 3 '],
+        senior: ['senior', 'sr.', 'sr ', ' iv', ' 4 ', 'level 4', 'level 5'],
+        staff: ['staff', ' v ', 'level 5', 'level 6', 'ic5', 'ic6'],
+        principal: ['principal', 'distinguished', 'fellow', 'level 7', 'ic7'],
+        lead: ['lead', 'manager', 'director', 'head of', 'vp ', 'vice president', 'engineering manager'],
       };
       const keywords = expKeywords[exp];
       if (keywords) {

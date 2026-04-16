@@ -93,9 +93,13 @@ const CATEGORIES = [
   { value: 'fullstack', label: 'Full Stack' },
   { value: 'data', label: 'Data' },
   { value: 'ml', label: 'ML/AI' },
+  { value: 'security', label: 'Security' },
+  { value: 'mobile', label: 'Mobile' },
+  { value: 'qa', label: 'QA/Test' },
   { value: 'sre', label: 'SRE' },
   { value: 'platform', label: 'Platform' },
   { value: 'cloud', label: 'Cloud' },
+  { value: 'embedded', label: 'Embedded' },
 ];
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -105,9 +109,13 @@ const CATEGORY_COLORS: Record<string, string> = {
   fullstack: '#3b82f6',
   data: '#f59e0b',
   ml: '#ec4899',
-  sre: '#ef4444',
+  security: '#ef4444',
+  mobile: '#f97316',
+  qa: '#84cc16',
+  sre: '#e11d48',
   platform: '#14b8a6',
   cloud: '#6366f1',
+  embedded: '#a855f7',
 };
 
 const DEFAULT_COLOR = '#6b7280';
@@ -210,16 +218,22 @@ function timeAgo(dateStr?: string): string | null {
 
 function detectCategory(title: string): string {
   const t = title.toLowerCase();
-  if (t.includes('devops') || t.includes('dev ops')) return 'devops';
-  if (t.includes('sre') || t.includes('site reliability')) return 'sre';
-  if (t.includes('ml') || t.includes('machine learning') || t.includes('ai ') || t.includes('artificial intelligence') || t.includes('deep learning') || t.includes('nlp')) return 'ml';
-  if (t.includes('data') || t.includes('analytics') || t.includes('etl')) return 'data';
+  // Order matters — more specific categories first
+  if (t.includes('devops') || t.includes('dev ops') || t.includes('devsecops') || t.includes('release engineer') || t.includes('build engineer') || t.includes('ci/cd')) return 'devops';
+  if (t.includes('sre') || t.includes('site reliability') || t.includes('production engineer') || t.includes('observability')) return 'sre';
+  if (t.includes('security') || t.includes('appsec') || t.includes('infosec') || t.includes('cybersecurity') || t.includes('penetration') || t.includes('threat') || t.includes('vulnerability') || t.includes('soc analyst') || t.includes('security engineer')) return 'security';
+  if (t.includes('machine learning') || t.includes('ml ') || t.includes('ml ops') || t.includes('deep learning') || t.includes('nlp') || t.includes('natural language') || t.includes('artificial intelligence') || t.includes('ai engineer') || t.includes('ai research') || t.includes('computer vision') || t.includes('generative ai') || t.includes('applied scientist') || t.includes('research scientist') || t.includes('research engineer')) return 'ml';
+  if (t.includes('data engineer') || t.includes('data scientist') || t.includes('data analyst') || t.includes('analytics') || t.includes('etl') || t.includes('data platform') || t.includes('data architect') || t.includes('database') || t.includes('dba') || t.includes('data warehouse') || t.includes('business intelligence') || t.includes('bi ')) return 'data';
+  if (t.includes('mobile') || t.includes('ios') || t.includes('android') || t.includes('swift') || t.includes('kotlin') || t.includes('react native') || t.includes('flutter')) return 'mobile';
+  if (t.includes('qa') || t.includes('quality assurance') || t.includes('test engineer') || t.includes('sdet') || t.includes('automation test') || t.includes('test automation') || t.includes('quality engineer')) return 'qa';
+  if (t.includes('embedded') || t.includes('firmware') || t.includes('hardware') || t.includes('fpga') || t.includes('rtos') || t.includes('iot engineer') || t.includes('robotics')) return 'embedded';
   if (t.includes('full stack') || t.includes('fullstack') || t.includes('full-stack')) return 'fullstack';
-  if (t.includes('frontend') || t.includes('front-end') || t.includes('front end') || t.includes('react') || t.includes('vue') || t.includes('angular') || t.includes('ui engineer')) return 'frontend';
-  if (t.includes('backend') || t.includes('back-end') || t.includes('back end') || t.includes('server') || t.includes('api engineer')) return 'backend';
-  if (t.includes('platform')) return 'platform';
-  if (t.includes('cloud') || t.includes('aws') || t.includes('azure') || t.includes('gcp') || t.includes('infrastructure')) return 'cloud';
-  return 'backend'; // default fallback
+  if (t.includes('frontend') || t.includes('front-end') || t.includes('front end') || t.includes('ui engineer') || t.includes('ui developer') || t.includes('ux engineer') || t.includes('javascript engineer') || t.includes('typescript engineer') || t.includes('web engineer')) return 'frontend';
+  if (t.includes('platform engineer') || t.includes('platform architect') || t.includes('developer experience') || t.includes('developer tools') || t.includes('dx engineer') || t.includes('internal tools')) return 'platform';
+  if (t.includes('cloud engineer') || t.includes('cloud architect') || t.includes('infrastructure engineer') || t.includes('infra engineer') || t.includes('network engineer') || t.includes('solutions architect')) return 'cloud';
+  if (t.includes('backend') || t.includes('back-end') || t.includes('back end') || t.includes('server engineer') || t.includes('api engineer') || t.includes('distributed systems') || t.includes('systems engineer')) return 'backend';
+  if (t.includes('software engineer') || t.includes('software developer') || t.includes('application engineer') || t.includes('web developer')) return 'fullstack';
+  return 'fullstack';
 }
 
 function getCategoryColor(category: string): string {
@@ -342,8 +356,12 @@ export default function JobsPage() {
     const r = (Array.isArray(roles) ? roles[0] : roles).toLowerCase();
     if (r.includes('devops') || r.includes('dev ops')) return 'devops';
     if (r.includes('sre') || r.includes('site reliability')) return 'sre';
-    if (r.includes('ml') || r.includes('ai')) return 'ml';
+    if (r.includes('security') || r.includes('appsec') || r.includes('infosec')) return 'security';
+    if (r.includes('ml') || r.includes('ai') || r.includes('machine learning')) return 'ml';
     if (r.includes('data')) return 'data';
+    if (r.includes('mobile') || r.includes('ios') || r.includes('android')) return 'mobile';
+    if (r.includes('qa') || r.includes('test') || r.includes('sdet')) return 'qa';
+    if (r.includes('embedded') || r.includes('firmware') || r.includes('hardware')) return 'embedded';
     if (r.includes('full stack') || r.includes('fullstack')) return 'fullstack';
     if (r.includes('frontend') || r.includes('front')) return 'frontend';
     if (r.includes('backend') || r.includes('back')) return 'backend';
