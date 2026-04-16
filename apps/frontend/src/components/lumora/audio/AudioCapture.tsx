@@ -435,8 +435,8 @@ export function SystemAudioButton({ onTranscription, disabled }: { onTranscripti
         if (e.data.size > 0 && token) {
           try {
             const blob = new Blob([e.data], { type: 'audio/webm' });
-            // Never filter system audio — this IS the interviewer's voice
-            const result = await transcriptionAPI.transcribe(token, blob, 'system-audio.webm', false);
+            const shouldFilter = voiceEnrolled && voiceFilterEnabled;
+            const result = await transcriptionAPI.transcribe(token, blob, 'system-audio.webm', shouldFilter);
             if (result.text?.trim() && !result.skipped) {
               onTranscription?.(result.text.trim());
             }
@@ -471,7 +471,7 @@ export function SystemAudioButton({ onTranscription, disabled }: { onTranscripti
         style={capturing
           ? { background: 'rgba(255,255,255,0.1)', color: '#fff', border: '1px solid rgba(255,255,255,0.15)' }
           : { color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.08)' }}
-        title={capturing ? 'Stop capturing interviewer audio' : 'Capture interviewer audio — share the tab running Zoom/Meet/Teams'}
+        title={capturing ? 'Stop capturing interviewer audio' : 'Capture interviewer audio — share a browser tab with Zoom/Meet'}
       >
         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15.536a5 5 0 010-7.072m-2.828 9.9a9 9 0 010-12.728" />

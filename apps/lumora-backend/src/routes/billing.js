@@ -123,7 +123,7 @@ router.post('/checkout', authenticate, async (req, res) => {
     return res.status(400).json({ error: 'Invalid redirect URL domain' });
   }
 
-  const validPrices = [PRICE_MONTHLY(), PRICE_LIFETIME(), process.env.STRIPE_PRICE_STARTER, process.env.STRIPE_PRICE_YEARLY, process.env.STRIPE_PRICE_DESKTOP_ADDON].filter(Boolean);
+  const validPrices = [PRICE_MONTHLY(), PRICE_LIFETIME(), process.env.STRIPE_PRICE_STARTER, process.env.STRIPE_PRICE_YEARLY].filter(Boolean);
   if (!validPrices.includes(price_id)) {
     return res.status(400).json({ error: 'Invalid price ID' });
   }
@@ -164,15 +164,6 @@ router.post('/checkout', authenticate, async (req, res) => {
     // Determine payment mode — all plans are subscriptions except lifetime/8-pack
     const isSubscription = price_id !== PRICE_LIFETIME();
 
-    // Map price to plan type
-    let plan = 'pro';
-    let purchaseType = 'subscription';
-    if (price_id === process.env.STRIPE_PRICE_STARTER) plan = 'starter';
-    else if (price_id === PRICE_MONTHLY()) plan = 'pro';
-    else if (price_id === process.env.STRIPE_PRICE_YEARLY) plan = 'annual';
-    else if (price_id === PRICE_LIFETIME()) plan = 'lifetime';
-    else if (price_id === process.env.STRIPE_PRICE_DESKTOP_ADDON) purchaseType = 'desktop_addon';
-
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       payment_method_types: ['card'],
@@ -182,8 +173,7 @@ router.post('/checkout', authenticate, async (req, res) => {
       cancel_url,
       metadata: {
         user_id: String(userId),
-        plan,
-        type: purchaseType,
+        plan: isSubscription ? 'pro' : 'lifetime',
       },
     });
 
@@ -243,22 +233,16 @@ router.post('/portal', authenticate, async (req, res) => {
 router.get('/subscription', authenticate, async (req, res) => {
   try {
     const result = await query(
-      'SELECT plan_type, plan_status, desktop_addon_status FROM users WHERE id = $1',
+      'SELECT plan_type, plan_status FROM users WHERE id = $1',
       [req.user.id],
     );
     const row = result.rows[0];
-    const plan = row?.plan_type || 'free';
-    const desktopAddon = row?.desktop_addon_status || null;
-    // Desktop access: Pro plan includes it, Annual needs active addon
-    const hasDesktopAccess = plan === 'pro' || (plan === 'annual' && desktopAddon === 'active');
     return res.json({
-      plan,
+      plan: row?.plan_type || 'free',
       status: row?.plan_status || 'active',
-      desktop_addon_status: desktopAddon,
-      has_desktop_access: hasDesktopAccess,
     });
   } catch (_err) {
-    return res.json({ plan: 'free', status: 'active', has_desktop_access: false });
+    return res.json({ plan: 'free', status: 'active' });
   }
 });
 
@@ -343,16 +327,6 @@ router.post(
             break;
           }
 
-          // --- Desktop addon activation ----------------------------------------
-          if (data.metadata?.type === 'desktop_addon' && userId) {
-            await query(
-              "UPDATE users SET desktop_addon_status = 'active' WHERE id = $1",
-              [userId],
-            );
-            console.log(`Desktop addon activated for user ${userId}`);
-            break;
-          }
-
           // --- Plan activation -----------------------------------------------
           const plan = data.metadata?.plan || 'pro';
           if (userId) {
@@ -371,24 +345,11 @@ router.post(
           const status = data.status; // active | past_due | canceled | unpaid
           // Derive plan_type from the subscription's price
           const subPriceId = data.items?.data?.[0]?.price?.id;
+          const PRICE_M = process.env.STRIPE_PRICE_MONTHLY;
+          const PRICE_L = process.env.STRIPE_PRICE_LIFETIME;
           let planType = null;
-          if (subPriceId === process.env.STRIPE_PRICE_STARTER) planType = 'starter';
-          else if (subPriceId === process.env.STRIPE_PRICE_MONTHLY) planType = 'pro';
-          else if (subPriceId === process.env.STRIPE_PRICE_YEARLY) planType = 'annual';
-          else if (subPriceId === process.env.STRIPE_PRICE_LIFETIME) planType = 'lifetime';
-
-          // Check if this is a desktop addon subscription (don't change main plan)
-          const isDesktopAddon = subPriceId === process.env.STRIPE_PRICE_DESKTOP_ADDON;
-          if (isDesktopAddon && customerId) {
-            const addonStatus = (status === 'active') ? 'active' : 'canceled';
-            await query(
-              'UPDATE users SET desktop_addon_status = $1 WHERE stripe_customer_id = $2',
-              [addonStatus, customerId],
-            );
-            console.log(`Desktop addon updated to ${addonStatus} for customer ${customerId}`);
-            break;
-          }
-
+          if (subPriceId === PRICE_M) planType = 'monthly';
+          else if (subPriceId === PRICE_L) planType = 'lifetime';
           if (customerId) {
             if (planType) {
               await query(
@@ -409,17 +370,7 @@ router.post(
         // ---- Subscription deleted (revert to free) -----------------------
         case 'customer.subscription.deleted': {
           const customerId = data.customer;
-          // Check if the deleted subscription is the desktop addon
-          const deletedPriceId = data.items?.data?.[0]?.price?.id;
-          const isAddonDeletion = deletedPriceId === process.env.STRIPE_PRICE_DESKTOP_ADDON;
-
-          if (customerId && isAddonDeletion) {
-            await query(
-              "UPDATE users SET desktop_addon_status = 'canceled' WHERE stripe_customer_id = $1",
-              [customerId],
-            );
-            console.log(`Desktop addon canceled for customer ${customerId}`);
-          } else if (customerId) {
+          if (customerId) {
             await query(
               "UPDATE users SET plan_type = 'free', plan_status = 'canceled' WHERE stripe_customer_id = $1",
               [customerId],

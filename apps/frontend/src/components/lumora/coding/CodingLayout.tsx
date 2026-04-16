@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect, forwardRef, useImperativeHandle } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useInterviewStore } from '@/stores/interview-store';
 import { useAuth } from '@/contexts/AuthContext';
 import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
@@ -104,12 +104,11 @@ interface CodingLayoutProps {
   isLoading?: boolean;
   onBack: () => void;
   initialProblem?: string;
-  hideHeader?: boolean;
 }
 
 // ── Main Component ───────────────────────────────────────────────────────────
 
-export const CodingLayout = forwardRef<{ setProblemText?: (t: string) => void }, CodingLayoutProps>(function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, hideHeader }, ref) {
+export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem }: CodingLayoutProps) {
   const { token } = useAuth();
 
   // Core state
@@ -118,12 +117,6 @@ export const CodingLayout = forwardRef<{ setProblemText?: (t: string) => void },
   const [outputTab, setOutputTab] = useState<OutputTab>('testcases');
   const [inputMode, setInputMode] = useState<InputMode>('paste');
   const [problemText, setProblemText] = useState(initialProblem || '');
-
-  useImperativeHandle(ref, () => ({
-    setProblemText,
-    getLanguage: () => language,
-    submit: () => { if (problemText.trim()) onSubmit(problemText.trim(), language); },
-  }), [language, problemText, onSubmit]);
   const [problemUrl, setProblemUrl] = useState('');
   const [code, setCode] = useState(getDefaultCode('python'));
   const [output, setOutput] = useState('');
@@ -569,9 +562,9 @@ export const CodingLayout = forwardRef<{ setProblemText?: (t: string) => void },
   // ── Render ──────────────────────────────────────────────────────────────
 
   return (
-    <div className={`${hideHeader ? 'flex-1' : 'h-screen'} w-full flex flex-col lumora-app-bg`}>
+    <div className="h-screen w-full flex flex-col lumora-app-bg">
       {/* ═══ HEADER ═══ */}
-      {!hideHeader && <header className="flex items-center justify-between h-11 px-3 shrink-0" style={{ background: 'linear-gradient(135deg, rgba(15,23,42,0.98) 0%, rgba(30,27,75,0.96) 50%, rgba(15,23,42,0.98) 100%)', borderBottom: '1px solid rgba(99,102,241,0.12)' }}>
+      <header className="flex items-center justify-between h-11 px-3 shrink-0" style={{ background: 'linear-gradient(135deg, rgba(15,23,42,0.98) 0%, rgba(30,27,75,0.96) 50%, rgba(15,23,42,0.98) 100%)', borderBottom: '1px solid rgba(99,102,241,0.12)' }}>
         <div className="flex items-center gap-2 md:gap-3">
           <button onClick={onBack} className="flex items-center gap-1 px-1.5 py-1 text-xs md:text-sm font-bold text-white/70 hover:text-white rounded transition-colors">
             <svg className="w-3 h-3 md:w-3.5 md:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -640,13 +633,13 @@ export const CodingLayout = forwardRef<{ setProblemText?: (t: string) => void },
             autoStart={false}
           />
         </div>
-      </header>}
+      </header>
 
       {/* ═══ MAIN CONTENT ═══ */}
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
 
         {/* ── LEFT PANEL: Problem / Solution ── */}
-        <div className="w-full md:w-auto flex flex-col bg-white md:border-r border-b md:border-b-0 border-gray-200 coding-left-panel lumora-light-panel max-h-[50vh] sm:max-h-[45vh] md:max-h-none overflow-auto" style={{ ['--left-w' as any]: `${leftPanelWidth}%` }}>
+        <div className="w-full md:w-auto flex flex-col bg-white md:border-r border-b md:border-b-0 border-gray-200 coding-left-panel lumora-light-panel max-h-[40vh] md:max-h-none overflow-auto" style={{ ['--left-w' as any]: `${leftPanelWidth}%` }}>
           {/* Tabs */}
           <div className="flex items-center gap-1 px-3 py-1.5 bg-gray-50/50 border-b border-gray-100">
             <button
@@ -1038,7 +1031,7 @@ export const CodingLayout = forwardRef<{ setProblemText?: (t: string) => void },
           <div className="flex items-center justify-between px-3 py-1.5 bg-gray-50 border-b border-gray-100">
             <div className="flex items-center gap-2">
               <select value={language} onChange={(e) => handleLanguageChange(e.target.value)}
-                className="bg-white border border-gray-200 rounded-md px-2 py-1 min-h-[36px] text-gray-900 text-xs font-mono focus:border-indigo-400 focus:outline-none cursor-pointer">
+                className="bg-white border border-gray-200 rounded-md px-2 py-1 text-gray-900 text-xs font-mono focus:border-indigo-400 focus:outline-none cursor-pointer">
                 {LANGUAGES.map(l => <option key={l.id} value={l.id}>{l.label}</option>)}
               </select>
             </div>
@@ -1235,7 +1228,7 @@ export const CodingLayout = forwardRef<{ setProblemText?: (t: string) => void },
       </div>
     </div>
   );
-});
+}
 
 // ── Legacy Solution Cards (for tag-based responses) ──────────────────────────
 
