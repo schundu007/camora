@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, lazy, Suspense } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { LumoraIconRail } from '../../components/lumora/shell/LumoraIconRail';
 import { LumoraTopBar } from '../../components/lumora/shell/LumoraTopBar';
-import { AICompanionPanel } from '../../components/lumora/shell/AICompanionPanel';
+import { AICompanionPanel, AICompanionToggle } from '../../components/lumora/shell/AICompanionPanel';
 import { InterviewPanel } from '../../components/lumora/interview/InterviewPanel';
 import { SessionSidebar } from '../../components/lumora/interview/SessionSidebar';
 import { ErrorBoundary } from '../../components/shared/ui/ErrorBoundary';
@@ -22,6 +22,7 @@ export function LumoraShellPage() {
   const [inputValue, setInputValue] = useState('');
   const [blanked, setBlanked] = useState(false);
   const [sessionsOpen, setSessionsOpen] = useState(false);
+  const [copilotOpen, setCopilotOpen] = useState(false);
   const [focusedEntry, setFocusedEntry] = useState<number | null>(null);
   const { handleSubmit, handleCodingSubmit } = useStreamingInterview();
   const { isStreaming, history, question, parsedBlocks, useSearch, setUseSearch, clearHistory } = useInterviewStore();
@@ -171,15 +172,22 @@ export function LumoraShellPage() {
         </div>
       </div>
 
-      {/* Right AI Companion panel */}
+      {/* AI Copilot — floating popup + toggle button */}
       <AICompanionPanel
+        isOpen={copilotOpen}
+        onClose={() => setCopilotOpen(false)}
         inputValue={inputValue}
         setInputValue={setInputValue}
         onSubmit={handleInputSubmit}
         isStreaming={isStreaming}
         onAskQuestion={handleSubmit}
-        activeTab={activeTab}
       />
+      {!copilotOpen && (
+        <AICompanionToggle
+          onClick={() => setCopilotOpen(true)}
+          hasActivity={isStreaming || history.length > 0}
+        />
+      )}
     </div>
   );
 }
