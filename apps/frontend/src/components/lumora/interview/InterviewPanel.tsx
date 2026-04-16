@@ -19,7 +19,6 @@ function isCodingBlocks(blocks: any): boolean {
 }
 function safeBlocks(blocks: any): any[] {
   if (Array.isArray(blocks)) return blocks;
-  // Convert JSON design response to ParsedBlock[] format
   if (blocks && typeof blocks === 'object') {
     const result: any[] = [];
     if (blocks.systemDesign) {
@@ -58,7 +57,6 @@ interface InterviewPanelProps {
 export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesign, focusedEntry, onClearFocus }: InterviewPanelProps) {
   const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
 
-  // When sidebar clicks an entry, expand it
   useEffect(() => {
     if (focusedEntry !== null && focusedEntry !== undefined) {
       setExpandedIdx(focusedEntry);
@@ -79,44 +77,41 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
     setError,
   } = useInterviewStore();
 
-  // Show empty state when no question has been asked
   const showEmptyState = !question && !isStreaming && parsedBlocks.length === 0 && history.length === 0;
 
   return (
-    <main className="flex-1 min-h-0 overflow-auto flex flex-col p-2 md:p-4 gap-2">
+    <main className="flex-1 min-h-0 overflow-auto flex flex-col">
       {showEmptyState ? (
         <EmptyState onAskQuestion={onAskQuestion} onSwitchToCoding={onSwitchToCoding} onSwitchToDesign={onSwitchToDesign} />
       ) : (
-        <div className="flex-1 flex flex-col gap-2 min-h-0 overflow-auto w-full mx-auto" style={{ maxWidth: '90%' }}>
-          {/* Vertical Q&A list — all questions visible, click to expand/collapse answers */}
+        <div className="flex-1 flex flex-col gap-2 min-h-0 overflow-auto w-full mx-auto p-4" style={{ maxWidth: '860px' }}>
+          {/* Q&A history */}
           {history.length > 0 && history.map((entry, idx) => (
             <div key={idx} className="shrink-0">
-              {/* Question header — always visible, click to toggle answer */}
               <button
                 onClick={() => setExpandedIdx(expandedIdx === idx ? null : idx)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${
-                  expandedIdx === idx
-                    ? 'border border-indigo-500/20'
-                    : 'hover:bg-[var(--bg-surface)]/[0.03] border border-transparent'
-                }`}
-                style={expandedIdx === idx ? { background: 'rgba(99,102,241,0.06)', backdropFilter: 'blur(4px)' } : {}}
+                className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-left transition-all duration-200 group"
+                style={expandedIdx === idx
+                  ? { background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)' }
+                  : { background: 'transparent', border: '1px solid transparent' }}
+                onMouseEnter={(e) => { if (expandedIdx !== idx) e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; }}
+                onMouseLeave={(e) => { if (expandedIdx !== idx) e.currentTarget.style.background = 'transparent'; }}
               >
-                <span className={`flex items-center justify-center w-6 h-6 rounded-md text-[10px] font-bold font-mono shrink-0 ${
-                  expandedIdx === idx ? 'bg-indigo-500/20 text-indigo-300' : 'bg-[var(--bg-surface)]/5 text-white/40'
-                }`}>
+                <span className={`flex items-center justify-center w-7 h-7 rounded-lg text-[11px] font-bold shrink-0 ${
+                  expandedIdx === idx ? 'bg-indigo-500/20 text-indigo-300' : 'bg-white/5 text-white/30'
+                }`} style={{ fontFamily: 'var(--font-code)' }}>
                   {idx + 1}
                 </span>
-                <span className="text-sm font-medium text-white/80 leading-snug flex-1 truncate" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
+                <span className="text-sm font-medium text-white/80 leading-snug flex-1 truncate" style={{ fontFamily: 'var(--font-sans)' }}>
                   {entry.question}
                 </span>
-                <svg className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 ${expandedIdx === idx ? 'rotate-180' : ''}`} style={{ color: 'rgba(255,255,255,0.15)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                <svg className={`w-4 h-4 shrink-0 transition-transform duration-200 ${expandedIdx === idx ? 'rotate-180' : ''}`} style={{ color: 'rgba(255,255,255,0.15)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
 
-              {/* Answer — shown when expanded */}
               {expandedIdx === idx && (
-                <div className="mt-2 ml-10">
+                <div className="mt-2 ml-10 animate-[fadeIn_200ms_ease-out]">
                   <AnswerBlocks
                     blocks={safeBlocks(entry.blocks)}
                     isDesign={isDesignBlocks(entry.blocks)}
@@ -128,42 +123,35 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
             </div>
           ))}
 
-          {/* Current question - only show if not viewing history */}
+          {/* Current streaming question */}
           {expandedIdx === null && (
             <>
-              {/* Current streaming question header */}
               {isStreaming && question && (
-                <div className="flex items-center gap-3 px-4 py-3 rounded-xl shrink-0" style={{ background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.15)' }}>
-                  <div className="relative flex items-center justify-center w-6 h-6 shrink-0">
-                    <span className="flex items-center justify-center w-6 h-6 rounded-md bg-indigo-500/20 text-indigo-300 text-[10px] font-bold font-mono">
+                <div className="flex items-center gap-3 px-4 py-3.5 rounded-xl shrink-0" style={{ background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.15)' }}>
+                  <div className="relative flex items-center justify-center w-7 h-7 shrink-0">
+                    <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-indigo-500/20 text-indigo-300 text-[11px] font-bold" style={{ fontFamily: 'var(--font-code)' }}>
                       {history.length + 1}
                     </span>
-                    <div className="absolute inset-0 border-2 border-transparent border-t-indigo-400 rounded-md animate-spin" />
+                    <div className="absolute inset-0 border-2 border-transparent border-t-indigo-400 rounded-lg animate-spin" />
                   </div>
-                  <span className="text-sm font-medium text-white/90 leading-snug flex-1" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
+                  <span className="text-sm font-medium text-white/90 leading-snug flex-1" style={{ fontFamily: 'var(--font-sans)' }}>
                     {question}
                   </span>
-                  <span className="text-[10px] font-mono text-indigo-400 shrink-0 animate-pulse">analyzing</span>
+                  <span className="text-[10px] text-indigo-400 shrink-0 animate-pulse font-medium" style={{ fontFamily: 'var(--font-code)' }}>analyzing</span>
                 </div>
               )}
 
-              {/* Streaming indicator */}
               {isStreaming && (
-                <StreamingAnswer
-                  chunks={streamChunks}
-                  isDesign={isDesignQuestion}
-                  isCoding={isCodingQuestion}
-                />
+                <StreamingAnswer chunks={streamChunks} isDesign={isDesignQuestion} isCoding={isCodingQuestion} />
               )}
 
-              {/* Show latest history entry when not streaming */}
               {!isStreaming && history.length > 0 && (
                 <div className="flex-1 flex flex-col gap-2 overflow-auto">
-                  <div className="flex items-center gap-3 px-4 py-3 rounded-xl shrink-0" style={{ background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.15)' }}>
-                    <span className="flex items-center justify-center w-6 h-6 rounded-md bg-indigo-500/20 text-indigo-300 text-[10px] font-bold font-mono shrink-0">
+                  <div className="flex items-center gap-3 px-4 py-3.5 rounded-xl shrink-0" style={{ background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.15)' }}>
+                    <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-indigo-500/20 text-indigo-300 text-[11px] font-bold shrink-0" style={{ fontFamily: 'var(--font-code)' }}>
                       {history.length}
                     </span>
-                    <span className="text-sm font-medium text-white/90 leading-snug flex-1" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
+                    <span className="text-sm font-medium text-white/90 leading-snug flex-1" style={{ fontFamily: 'var(--font-sans)' }}>
                       {history[history.length - 1].question}
                     </span>
                   </div>
@@ -178,36 +166,31 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
             </>
           )}
 
-          {/* Cross-sell: Ascend preparation */}
+          {/* Cross-sell */}
           {history.length > 0 && history.length % 3 === 0 && (
-            <div className="flex items-center gap-3 p-3 rounded-2xl border border-amber-500/20 bg-amber-500/5">
-              <div className="w-8 h-8 rounded-xl bg-amber-500/15 flex items-center justify-center shrink-0">
-                <svg className="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
+            <div className="flex items-center gap-3 p-4 rounded-xl" style={{ background: 'rgba(245,158,11,0.05)', border: '1px solid rgba(245,158,11,0.15)' }}>
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(245,158,11,0.12)' }}>
+                <svg className="w-4.5 h-4.5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-display font-semibold text-amber-300">Want deeper preparation?</p>
-                <p className="text-xs font-display text-amber-400/70">Ascend has 300+ DSA topics, system design problems, and mock interviews.</p>
+                <p className="text-sm font-semibold text-amber-300" style={{ fontFamily: 'var(--font-sans)' }}>Want deeper preparation?</p>
+                <p className="text-xs text-amber-400/60" style={{ fontFamily: 'var(--font-sans)' }}>300+ DSA topics, system design, and mock interviews.</p>
               </div>
-              <Link to="/capra/prepare" className="shrink-0 px-3 py-1.5 text-white text-xs font-display font-bold rounded-xl hover:opacity-90 transition-all" style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}>
-                Prepare →
+              <Link to="/capra/prepare" className="shrink-0 px-4 py-2 text-white text-xs font-bold rounded-xl hover:opacity-90 transition-all" style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}>
+                Prepare
               </Link>
             </div>
           )}
 
-          {/* Error display */}
+          {/* Error */}
           {error && (
-            <div className="flex items-start gap-2 p-3 rounded-2xl border border-red-500/20 bg-red-500/5 text-sm">
+            <div className="flex items-start gap-3 p-4 rounded-xl" style={{ background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.15)' }}>
               <svg className="w-4 h-4 text-red-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
               </svg>
               <div className="flex-1 min-w-0">
-                <p className="text-red-300 font-display font-medium">{error}</p>
-                <button
-                  onClick={() => setError(null)}
-                  className="mt-1.5 text-xs text-red-400 hover:text-red-300 font-code hover:underline"
-                >
-                  Dismiss
-                </button>
+                <p className="text-sm text-red-300 font-medium" style={{ fontFamily: 'var(--font-sans)' }}>{error}</p>
+                <button onClick={() => setError(null)} className="mt-1.5 text-xs text-red-400 hover:text-red-300 hover:underline" style={{ fontFamily: 'var(--font-code)' }}>Dismiss</button>
               </div>
             </div>
           )}
@@ -217,61 +200,112 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
   );
 }
 
-function EmptyState({ onAskQuestion }: { onAskQuestion?: (question: string) => void; onSwitchToCoding?: (problem?: string) => void; onSwitchToDesign?: (problem?: string) => void }) {
+/* ─── Zoom-style Empty State ─────────────────────────────── */
+function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
+  onAskQuestion?: (question: string) => void;
+  onSwitchToCoding?: (problem?: string) => void;
+  onSwitchToDesign?: (problem?: string) => void;
+}) {
+  const [time, setTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const timeStr = time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+  const dateStr = time.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' });
+
+  const ACTIONS = [
+    {
+      icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a3 3 0 00-3 3v7a3 3 0 006 0V5a3 3 0 00-3-3z" /><path d="M19 10v2a7 7 0 01-14 0v-2" /><line x1="12" y1="19" x2="12" y2="22" /></svg>,
+      label: 'Start Session',
+      color: '#6366f1',
+      onClick: () => {},
+    },
+    {
+      icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6" /></svg>,
+      label: 'Coding',
+      color: '#3b82f6',
+      onClick: () => onSwitchToCoding?.(),
+    },
+    {
+      icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18M9 21V9" /></svg>,
+      label: 'System Design',
+      color: '#0ea5e9',
+      onClick: () => onSwitchToDesign?.(),
+    },
+    {
+      icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /></svg>,
+      label: 'Upload Doc',
+      color: '#8b5cf6',
+      onClick: () => {},
+    },
+  ];
 
   const PROMPTS = [
-    { text: 'Design a URL shortener like TinyURL', category: 'System Design', color: '#06b6d4' },
-    { text: 'Implement LRU Cache in Python', category: 'Coding', color: '#8b5cf6' },
-    { text: 'Tell me about a time you led a failing project', category: 'Behavioral', color: '#f59e0b' },
-    { text: 'Explain consistent hashing', category: 'Concepts', color: '#6366f1' },
-    { text: 'Design Instagram news feed at scale', category: 'System Design', color: '#06b6d4' },
-    { text: 'Find median of two sorted arrays', category: 'Coding', color: '#8b5cf6' },
+    { text: 'What are some tips for system design interviews?', color: '#06b6d4' },
+    { text: 'Practice a coding problem with me', color: '#8b5cf6' },
+    { text: 'Help me prepare for behavioral questions', color: '#f59e0b' },
+    { text: 'Tell me what I can do with AI Companion', color: '#6366f1' },
   ];
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center py-8 lumora-empty-mesh">
-      <div className="relative z-10 w-full max-w-2xl px-4 text-center">
-        {/* Animated logo mark */}
-        <div className="relative w-16 h-16 mx-auto mb-6">
-          <div className="absolute inset-0 rounded-2xl animate-pulse" style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.1))', filter: 'blur(12px)' }} />
-          <div className="relative w-16 h-16 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', boxShadow: '0 4px 24px rgba(99,102,241,0.25)' }}>
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-            </svg>
-          </div>
-        </div>
-
-        {/* Headline */}
-        <h1 className="text-2xl font-bold text-white mb-2 tracking-tight" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
-          What are you preparing for?
+    <div className="flex-1 flex flex-col items-center justify-center px-6">
+      {/* Large clock — Zoom style */}
+      <div className="text-center mb-10">
+        <h1 className="text-6xl md:text-7xl font-bold tracking-tight text-white/90 tabular-nums" style={{ fontFamily: 'var(--font-sans)', fontWeight: 800, letterSpacing: '-0.03em' }}>
+          {timeStr}
         </h1>
-        <p className="text-sm text-white/35 mb-8 max-w-md mx-auto">
-          Ask any interview question — system design, coding, behavioral. Get structured answers in seconds.
-        </p>
+        <p className="text-sm text-white/35 mt-2 font-medium" style={{ fontFamily: 'var(--font-sans)' }}>{dateStr}</p>
+      </div>
 
-        {/* Prompt pills */}
-        <div className="flex flex-wrap justify-center gap-2 max-w-xl mx-auto">
-          {PROMPTS.map(prompt => (
+      {/* Action buttons — Zoom-style colored circles */}
+      <div className="flex items-center gap-6 mb-10">
+        {ACTIONS.map((action) => (
+          <button key={action.label} onClick={action.onClick} className="flex flex-col items-center gap-2.5 group">
+            <div className="w-14 h-14 rounded-2xl flex items-center justify-center transition-all group-hover:scale-105 group-hover:shadow-lg"
+              style={{ background: action.color, boxShadow: `0 4px 16px ${action.color}30` }}>
+              {action.icon}
+            </div>
+            <span className="text-[11px] font-medium text-white/50 group-hover:text-white/70 transition-colors" style={{ fontFamily: 'var(--font-sans)' }}>{action.label}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* Divider */}
+      <div className="w-full max-w-2xl h-px bg-white/6 mb-8" />
+
+      {/* AI Companion suggestions — 2x2 grid like Zoom */}
+      <div className="w-full max-w-lg">
+        <div className="flex items-center gap-2 mb-4 justify-center">
+          {/* AI sparkle icon */}
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+          </svg>
+          <span className="text-sm font-semibold text-white/60" style={{ fontFamily: 'var(--font-sans)' }}>AI Interview Companion</span>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          {PROMPTS.map((prompt) => (
             <button
               key={prompt.text}
               onClick={() => onAskQuestion?.(prompt.text)}
-              className="group flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm text-white/60 transition-all duration-200 hover:text-white hover:scale-[1.02]"
-              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}
-              onMouseEnter={(e) => { e.currentTarget.style.borderColor = `${prompt.color}40`; e.currentTarget.style.background = `${prompt.color}08`; }}
-              onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'; e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
+              className="text-left px-4 py-3.5 rounded-xl text-[13px] text-white/50 transition-all hover:text-white/80 hover:bg-white/5 leading-snug"
+              style={{ fontFamily: 'var(--font-sans)', border: '1px solid rgba(255,255,255,0.06)' }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = `${prompt.color}30`; }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'; }}
             >
-              <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: prompt.color }} />
-              <span className="truncate">{prompt.text}</span>
+              {prompt.text}
             </button>
           ))}
         </div>
+      </div>
 
-        {/* Keyboard hints */}
-        <div className="mt-8 flex items-center justify-center gap-4 text-[11px] font-code text-white/20">
-          <span><kbd className="px-1.5 py-0.5 rounded border border-white/10 bg-[var(--bg-surface)]/3 text-white/35">⌘K</kbd> focus input</span>
-          <span><kbd className="px-1.5 py-0.5 rounded border border-white/10 bg-[var(--bg-surface)]/3 text-white/35">⌘M</kbd> mic toggle</span>
-          <span><kbd className="px-1.5 py-0.5 rounded border border-white/10 bg-[var(--bg-surface)]/3 text-white/35">⌘S</kbd> web search</span>
-        </div>
+      {/* Keyboard hints */}
+      <div className="mt-8 flex items-center justify-center gap-4 text-[10px] text-white/15" style={{ fontFamily: 'var(--font-code)' }}>
+        <span><kbd className="px-1.5 py-0.5 rounded border border-white/8 bg-white/3 text-white/25">⌘K</kbd> focus</span>
+        <span><kbd className="px-1.5 py-0.5 rounded border border-white/8 bg-white/3 text-white/25">⌘M</kbd> mic</span>
+        <span><kbd className="px-1.5 py-0.5 rounded border border-white/8 bg-white/3 text-white/25">⌘S</kbd> search</span>
       </div>
     </div>
   );
