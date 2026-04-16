@@ -532,55 +532,6 @@ export default function PricingPage() {
         `}</style>
       </section>
 
-      {/* Top-Up Packs */}
-      <section className="px-6 py-16">
-        <div className="w-full lg:max-w-[70%] mx-auto">
-          <div className="mb-10 text-center">
-            <span className="section-label">Need More Credits?</span>
-            <h2 className="heading-2 mt-3">Top-Up Packs</h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {[
-              { name: '20 AI Questions', price: '$5', desc: 'Includes 3 bonus diagrams', packId: 'questions_20' },
-              { name: '50 AI Questions', price: '$10', desc: 'Includes 8 bonus diagrams', packId: 'questions_50' },
-              { name: '5 Live Sessions', price: '$15', desc: '90 minutes per session', packId: 'sessions_5' },
-            ].map((pack) => (
-              <div key={pack.packId} className="rounded-2xl p-4 flex items-center justify-between gap-4" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', boxShadow: '0 4px 24px rgba(0,0,0,0.2)' }}>
-                <div>
-                  <h3 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{pack.name}</h3>
-                  <div className="flex items-baseline gap-1 mt-0.5">
-                    <span className="text-lg font-bold text-indigo-400">{pack.price}</span>
-                    <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>one-time</span>
-                  </div>
-                  <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-muted)' }}>{pack.desc}</p>
-                </div>
-                <button
-                  onClick={async () => {
-                    if (!token) { navigate('/login'); return; }
-                    try {
-                      const resp = await fetch(`${API_URL}/api/v1/usage/topup`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                        body: JSON.stringify({
-                          pack_id: pack.packId,
-                          success_url: `${window.location.origin}/pricing?topup=success`,
-                          cancel_url: `${window.location.origin}/pricing`,
-                        }),
-                      });
-                      const data = await resp.json();
-                      if (data.url) window.location.href = data.url;
-                    } catch { /* ignore */ }
-                  }}
-                  className="shrink-0 px-4 py-2 text-white text-xs font-semibold rounded-lg transition-colors" style={{ background: 'var(--accent)' }}
-                >
-                  Buy
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* Desktop App Download */}
       <section className="px-6 py-10">
