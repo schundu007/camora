@@ -624,7 +624,7 @@ export default function DocsPage({ onBack }) {
                     <span>Back</span>
                   </button>
                 )}
-                <Link to="/capra/prepare" className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors cursor-pointer landing-body font-medium no-underline">Prepare</Link>
+                <Link to="/capra/prepare" className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors cursor-pointer landing-body font-medium no-underline">Dashboard</Link>
                 <Icon name="chevronRight" size={14} className="text-[var(--text-muted)]" />
                 {selectedTopic && topicDetails ? (
                   <>
