@@ -101,8 +101,6 @@ async function runMigrations() {
         type VARCHAR(100),
         created_at TIMESTAMPTZ DEFAULT NOW()
       )`,
-      // Add desktop_addon_status column to users table
-      `ALTER TABLE users ADD COLUMN IF NOT EXISTS desktop_addon_status VARCHAR(20) DEFAULT NULL`,
       // Indexes
       'CREATE INDEX IF NOT EXISTS idx_coding_usage_user_date ON coding_usage(user_id, created_at)',
       'CREATE INDEX IF NOT EXISTS idx_lumora_conversations_user ON lumora_conversations(user_id)',
@@ -170,37 +168,6 @@ const PORT = config.port;
 runMigrations().then(() => {
   const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`Lumora backend running on port ${PORT}`);
-
-    // Background: backfill missing salary data from job descriptions
-    if (process.env.JOBS_DATABASE_URL) {
-      import('./services/salaryExtractor.js').then(({ extractSalary }) => {
-        import('./services/jobsDb.js').then(async ({ queryJobs }) => {
-          try {
-            const result = await queryJobs(
-              `SELECT id, job_description FROM jobs
-               WHERE salary_min IS NULL AND salary_max IS NULL
-                 AND job_description IS NOT NULL AND LENGTH(job_description) > 100
-                 AND is_active = true
-               LIMIT 1000`
-            );
-            let updated = 0;
-            for (const row of result.rows) {
-              const salary = extractSalary(row.job_description);
-              if (salary && (salary.min || salary.max)) {
-                await queryJobs(
-                  'UPDATE jobs SET salary_min = $1, salary_max = $2 WHERE id = $3',
-                  [salary.min, salary.max, row.id]
-                );
-                updated++;
-              }
-            }
-            if (updated > 0) console.log(`[Salary Backfill] Updated ${updated}/${result.rows.length} jobs with extracted salary data`);
-          } catch (err) {
-            console.error('[Salary Backfill] Error:', err.message);
-          }
-        });
-      });
-    }
   });
 
   // Graceful shutdown

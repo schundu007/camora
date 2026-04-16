@@ -64,12 +64,6 @@ async function getOrCreateProfile(userId) {
 // ---------------------------------------------------------------------------
 router.post('/sync', async (req, res) => {
   try {
-    // Internal-only endpoint — require API key to prevent open user creation
-    const apiKey = req.headers['x-api-key'];
-    if (!process.env.INTERNAL_API_KEY || apiKey !== process.env.INTERNAL_API_KEY) {
-      return res.status(403).json({ error: 'Forbidden' });
-    }
-
     const { email, name, image, provider, provider_id } = req.body;
 
     if (!email || !provider || !provider_id) {

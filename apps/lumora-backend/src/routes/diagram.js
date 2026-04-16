@@ -99,7 +99,6 @@ router.post('/generate', checkUsage('diagrams'), async (req, res) => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
-      signal: AbortSignal.timeout(60000),
     });
 
     if (!upstream.ok) {

@@ -310,8 +310,7 @@ async function recordCodingUsage(userId, language, inputTokens, outputTokens, la
 // ---------------------------------------------------------------------------
 
 // /stream alias for backwards compatibility with frontend
-// No middleware here — the request re-enters the router and hits /solve which already has them
-router.post('/stream', (req, res, next) => {
+router.post('/stream', authenticate, checkUsage('questions'), async (req, res, next) => {
   req.url = '/solve';
   next();
 });
@@ -552,22 +551,6 @@ router.post('/fetch-problem', authenticate, async (req, res) => {
   try {
     const { url } = req.body;
     if (!url) return res.status(400).json({ error: 'URL is required' });
-
-    // SSRF protection: validate URL scheme and block private/internal hosts
-    let parsed;
-    try {
-      parsed = new URL(url);
-    } catch {
-      return res.status(400).json({ error: 'Invalid URL' });
-    }
-    if (!['http:', 'https:'].includes(parsed.protocol)) {
-      return res.status(400).json({ error: 'Only HTTP/HTTPS URLs are allowed' });
-    }
-    const blockedHosts = ['localhost', '127.0.0.1', '0.0.0.0', '[::1]', 'metadata.google.internal'];
-    const blockedPrefixes = ['10.', '172.16.', '172.17.', '172.18.', '172.19.', '172.20.', '172.21.', '172.22.', '172.23.', '172.24.', '172.25.', '172.26.', '172.27.', '172.28.', '172.29.', '172.30.', '172.31.', '192.168.', '169.254.'];
-    if (blockedHosts.includes(parsed.hostname) || blockedPrefixes.some(p => parsed.hostname.startsWith(p))) {
-      return res.status(400).json({ error: 'Internal URLs are not allowed' });
-    }
 
     const response = await fetch(url, {
       headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Camora/1.0)' },
