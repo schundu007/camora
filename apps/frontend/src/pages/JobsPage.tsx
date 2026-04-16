@@ -135,6 +135,23 @@ interface JobsResponse {
   last_updated?: string;
 }
 
+interface FilterSource {
+  name: string;
+  count: number;
+}
+
+interface FiltersResponse {
+  sources: FilterSource[];
+  locations: string[];
+}
+
+const WORK_TYPES = [
+  { value: '', label: 'All Types' },
+  { value: 'remote', label: 'Remote' },
+  { value: 'hybrid', label: 'Hybrid' },
+  { value: 'onsite', label: 'Onsite' },
+];
+
 /* ──────────────────────────────── Helpers ──────────────────────────────── */
 
 function formatSalary(min?: number, max?: number): string {
@@ -294,6 +311,14 @@ export default function JobsPage() {
   const [search, setSearch] = useState('');
   const [role, setRole] = useState('all');
   const [roleInitialized, setRoleInitialized] = useState(false);
+  const [locationFilter, setLocationFilter] = useState('');
+  const [sourceFilter, setSourceFilter] = useState('');
+  const [workTypeFilter, setWorkTypeFilter] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+
+  // Filter options from API
+  const [availableSources, setAvailableSources] = useState<FilterSource[]>([]);
+  const [availableLocations, setAvailableLocations] = useState<string[]>([]);
 
   // Set role from user profile once auth loads
   useEffect(() => {
@@ -395,6 +420,36 @@ export default function JobsPage() {
 
   const PAGE_SIZE = 50;
 
+  /* ── Build common query params for all job fetches ── */
+  const buildJobParams = useCallback((extraOffset?: number) => {
+    const params = new URLSearchParams();
+    if (search) params.set('search', search);
+    if (role !== 'all') params.set('role', role);
+    if (locationFilter) params.set('location', locationFilter);
+    if (sourceFilter) params.set('source', sourceFilter);
+    if (workTypeFilter) params.set('work_type', workTypeFilter);
+    params.set('limit', String(PAGE_SIZE));
+    if (extraOffset) params.set('offset', String(extraOffset));
+    return params;
+  }, [search, role, locationFilter, sourceFilter, workTypeFilter]);
+
+  /* ── Fetch filter options on mount ── */
+  useEffect(() => {
+    (async () => {
+      try {
+        const headers: Record<string, string> = {};
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        const res = await fetch(`${API_URL}/api/v1/jobs/filters`, { headers });
+        if (!res.ok) return;
+        const data: FiltersResponse = await res.json();
+        setAvailableSources(data.sources || []);
+        setAvailableLocations(data.locations || []);
+      } catch {
+        // filter options are optional — fail silently
+      }
+    })();
+  }, [token]);
+
   /* ── Fetch jobs ── */
   const fetchJobs = useCallback(async () => {
     setLoading(true);
@@ -402,11 +457,7 @@ export default function JobsPage() {
     setOffset(0);
     setHasMore(true);
     try {
-      const params = new URLSearchParams();
-      if (search) params.set('search', search);
-      if (role !== 'all') params.set('role', role);
-      params.set('limit', String(PAGE_SIZE));
-
+      const params = buildJobParams();
       const headers: Record<string, string> = {};
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
@@ -425,19 +476,14 @@ export default function JobsPage() {
     } finally {
       setLoading(false);
     }
-  }, [search, role, token]);
+  }, [buildJobParams, token]);
 
   /* ── Load more jobs ── */
   const loadMore = useCallback(async () => {
     if (loadingMore || !hasMore) return;
     setLoadingMore(true);
     try {
-      const params = new URLSearchParams();
-      if (search) params.set('search', search);
-      if (role !== 'all') params.set('role', role);
-      params.set('limit', String(PAGE_SIZE));
-      params.set('offset', String(offset));
-
+      const params = buildJobParams(offset);
       const headers: Record<string, string> = {};
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
@@ -453,7 +499,9 @@ export default function JobsPage() {
     } finally {
       setLoadingMore(false);
     }
-  }, [search, role, token, offset, loadingMore, hasMore]);
+  }, [buildJobParams, token, offset, loadingMore, hasMore]);
+
+  const activeFilterCount = [locationFilter, sourceFilter, workTypeFilter].filter(Boolean).length;
 
   /* ── Debounced fetch on filter change ── */
   useEffect(() => {
@@ -800,6 +848,152 @@ export default function JobsPage() {
               })}
             </div>
           </div>
+        </div>
+
+        {/* ── Filter Bar ── */}
+        <div className="w-full lg:max-w-[70%] mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '8px 14px',
+                fontSize: '13px',
+                fontWeight: 600,
+                color: activeFilterCount > 0 ? 'var(--accent)' : 'var(--text-secondary)',
+                background: activeFilterCount > 0 ? 'rgba(99,102,241,0.1)' : 'var(--bg-elevated)',
+                border: `1px solid ${activeFilterCount > 0 ? 'var(--accent)' : 'var(--border)'}`,
+                borderRadius: '8px',
+                cursor: 'pointer',
+                transition: 'all 0.15s',
+              }}
+            >
+              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
+              </svg>
+              Filters{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
+            </button>
+
+            {/* Active filter pills */}
+            {locationFilter && (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '6px 10px', fontSize: '12px', fontWeight: 600, color: 'var(--accent)', background: 'rgba(99,102,241,0.1)', borderRadius: '6px' }}>
+                {locationFilter}
+                <button onClick={() => setLocationFilter('')} style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', padding: '0 2px', fontSize: '14px', lineHeight: 1 }}>&times;</button>
+              </span>
+            )}
+            {sourceFilter && (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '6px 10px', fontSize: '12px', fontWeight: 600, color: '#10b981', background: 'rgba(16,185,129,0.1)', borderRadius: '6px' }}>
+                {sourceFilter}
+                <button onClick={() => setSourceFilter('')} style={{ background: 'none', border: 'none', color: '#10b981', cursor: 'pointer', padding: '0 2px', fontSize: '14px', lineHeight: 1 }}>&times;</button>
+              </span>
+            )}
+            {workTypeFilter && (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '6px 10px', fontSize: '12px', fontWeight: 600, color: '#f59e0b', background: 'rgba(245,158,11,0.1)', borderRadius: '6px' }}>
+                {WORK_TYPES.find(w => w.value === workTypeFilter)?.label}
+                <button onClick={() => setWorkTypeFilter('')} style={{ background: 'none', border: 'none', color: '#f59e0b', cursor: 'pointer', padding: '0 2px', fontSize: '14px', lineHeight: 1 }}>&times;</button>
+              </span>
+            )}
+            {activeFilterCount > 0 && (
+              <button
+                onClick={() => { setLocationFilter(''); setSourceFilter(''); setWorkTypeFilter(''); }}
+                style={{ fontSize: '12px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: '6px 8px', textDecoration: 'underline' }}
+              >
+                Clear all
+              </button>
+            )}
+          </div>
+
+          {/* Expandable filter dropdowns */}
+          {showFilters && (
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+              gap: '12px',
+              marginTop: '12px',
+              padding: '16px',
+              background: 'var(--bg-surface)',
+              border: '1px solid var(--border)',
+              borderRadius: '12px',
+            }}>
+              {/* Location */}
+              <div>
+                <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>Location</label>
+                <input
+                  type="text"
+                  placeholder="Type city or region..."
+                  value={locationFilter}
+                  onChange={(e) => setLocationFilter(e.target.value)}
+                  list="location-options"
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    fontSize: '13px',
+                    color: 'var(--text-primary)',
+                    background: 'var(--bg-elevated)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '8px',
+                    outline: 'none',
+                  }}
+                />
+                <datalist id="location-options">
+                  {availableLocations.map((loc) => (
+                    <option key={loc} value={loc} />
+                  ))}
+                </datalist>
+              </div>
+
+              {/* Source / Platform */}
+              <div>
+                <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>Job Platform</label>
+                <select
+                  value={sourceFilter}
+                  onChange={(e) => setSourceFilter(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    fontSize: '13px',
+                    color: 'var(--text-primary)',
+                    background: 'var(--bg-elevated)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '8px',
+                    outline: 'none',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <option value="">All Platforms</option>
+                  {availableSources.map((s) => (
+                    <option key={s.name} value={s.name}>{s.name} ({s.count})</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Work Type */}
+              <div>
+                <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>Work Type</label>
+                <select
+                  value={workTypeFilter}
+                  onChange={(e) => setWorkTypeFilter(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    fontSize: '13px',
+                    color: 'var(--text-primary)',
+                    background: 'var(--bg-elevated)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '8px',
+                    outline: 'none',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {WORK_TYPES.map((wt) => (
+                    <option key={wt.value} value={wt.value}>{wt.label}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* ── Job Cards Grid ── */}
