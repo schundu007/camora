@@ -344,7 +344,7 @@ function SystemDesignView({ blocks, question }: { blocks: ParsedBlock[]; questio
       )}
 
       {/* 3-column layout: Diagram | Cards Col 1 | Cards Col 2 */}
-      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)] gap-1.5 flex-1 min-h-0">
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)] gap-1.5 lg:flex-1 lg:min-h-0">
         {/* COL 1: Architecture diagram */}
         <div className="min-h-0 flex flex-col">
           <ArchitectureCard
@@ -434,7 +434,7 @@ function GridCard({
         )}
       </button>
       {!collapsed && (
-        <div className={`${compact ? 'p-2' : 'p-4'} overflow-y-auto overflow-x-auto flex-1 ${hasFullHeight ? '' : compact ? 'max-h-[180px]' : 'max-h-[420px]'}`}>
+        <div className={`${compact ? 'p-2' : 'p-4'} overflow-y-auto overflow-x-auto flex-1 ${hasFullHeight ? '' : compact ? 'max-h-[50vh] md:max-h-[180px]' : 'max-h-[70vh] md:max-h-[420px]'}`}>
           {children}
         </div>
       )}

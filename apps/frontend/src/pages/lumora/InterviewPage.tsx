@@ -92,7 +92,7 @@ export function InterviewPage() {
       />
 
       {/* Sidebar + Main content area */}
-      <div className="flex-1 flex min-h-0 overflow-hidden relative">
+      <div className="flex-1 flex min-h-0 overflow-y-auto md:overflow-hidden relative">
         <SessionSidebar
           isOpen={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
