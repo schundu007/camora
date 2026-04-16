@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 /* ══════════════════════════════════════════════════════════════
    CONSTANTS
@@ -240,8 +241,20 @@ function FadeInSection({ children, className = '', delay = 0 }: { children: Reac
    MAIN COMPONENT
    ══════════════════════════════════════════════════════════════ */
 
+function LockIcon({ size = 16 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+    </svg>
+  );
+}
+
 export default function DownloadPage() {
   const [detectedOS, setDetectedOS] = useState<OSType>('mac-arm');
+  const { subscription, subscriptionLoading, isAuthenticated } = useAuth();
+
+  const isPaid = !subscriptionLoading && subscription?.plan && subscription.plan !== 'free';
 
   useEffect(() => {
     document.title = 'Download Camora Desktop — AI Interview Co-Pilot';
@@ -347,29 +360,61 @@ export default function DownloadPage() {
           {/* Primary download button */}
           <FadeInSection delay={0.3}>
             <div className="mt-10 flex flex-col items-center gap-3">
-              <a
-                href={primary.url}
-                className="group inline-flex items-center gap-3 px-8 py-4 rounded-2xl text-base font-bold transition-all duration-200"
-                style={{
-                  background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-                  color: '#ffffff',
-                  boxShadow: '0 4px 24px rgba(99,102,241,0.35), 0 0 0 1px rgba(255,255,255,0.1) inset',
-                }}
-                onMouseEnter={e => {
-                  (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 40px rgba(99,102,241,0.5), 0 0 0 1px rgba(255,255,255,0.15) inset';
-                  (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)';
-                }}
-                onMouseLeave={e => {
-                  (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 24px rgba(99,102,241,0.35), 0 0 0 1px rgba(255,255,255,0.1) inset';
-                  (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
-                }}
-              >
-                <DownloadIcon size={22} />
-                Download for {primary.label}
-              </a>
-              <span className="text-xs font-mono" style={{ color: 'rgba(255,255,255,0.35)' }}>
-                v{APP_VERSION} &middot; {primary.fileType} &middot; {primary.size}
-              </span>
+              {subscriptionLoading ? (
+                <div className="w-6 h-6 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" />
+              ) : isPaid ? (
+                <>
+                  <a
+                    href={primary.url}
+                    className="group inline-flex items-center gap-3 px-8 py-4 rounded-2xl text-base font-bold transition-all duration-200"
+                    style={{
+                      background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                      color: '#ffffff',
+                      boxShadow: '0 4px 24px rgba(99,102,241,0.35), 0 0 0 1px rgba(255,255,255,0.1) inset',
+                    }}
+                    onMouseEnter={e => {
+                      (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 40px rgba(99,102,241,0.5), 0 0 0 1px rgba(255,255,255,0.15) inset';
+                      (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)';
+                    }}
+                    onMouseLeave={e => {
+                      (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 24px rgba(99,102,241,0.35), 0 0 0 1px rgba(255,255,255,0.1) inset';
+                      (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
+                    }}
+                  >
+                    <DownloadIcon size={22} />
+                    Download for {primary.label}
+                  </a>
+                  <span className="text-xs font-mono" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                    v{APP_VERSION} &middot; {primary.fileType} &middot; {primary.size}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <Link
+                    to={isAuthenticated ? '/pricing' : '/login?redirect=/download'}
+                    className="group inline-flex items-center gap-3 px-8 py-4 rounded-2xl text-base font-bold transition-all duration-200"
+                    style={{
+                      background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                      color: '#ffffff',
+                      boxShadow: '0 4px 24px rgba(16,185,129,0.35), 0 0 0 1px rgba(255,255,255,0.1) inset',
+                    }}
+                    onMouseEnter={e => {
+                      (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 40px rgba(16,185,129,0.5), 0 0 0 1px rgba(255,255,255,0.15) inset';
+                      (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)';
+                    }}
+                    onMouseLeave={e => {
+                      (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 24px rgba(16,185,129,0.35), 0 0 0 1px rgba(255,255,255,0.1) inset';
+                      (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
+                    }}
+                  >
+                    <LockIcon size={20} />
+                    {isAuthenticated ? 'Upgrade to Download' : 'Sign In to Download'}
+                  </Link>
+                  <span className="text-xs" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                    Available on Starter, Pro, and Annual plans
+                  </span>
+                </>
+              )}
             </div>
           </FadeInSection>
         </div>
@@ -454,34 +499,57 @@ export default function DownloadPage() {
                     </div>
 
                     {/* Download button */}
-                    <a
-                      href={p.url}
-                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200"
-                      style={{
-                        background: isRecommended
-                          ? 'linear-gradient(135deg, #6366f1, #8b5cf6)'
-                          : 'rgba(255,255,255,0.06)',
-                        color: isRecommended ? '#fff' : 'rgba(255,255,255,0.7)',
-                        border: isRecommended
-                          ? 'none'
-                          : '1px solid rgba(255,255,255,0.1)',
-                      }}
-                      onMouseEnter={e => {
-                        if (!isRecommended) {
+                    {isPaid ? (
+                      <a
+                        href={p.url}
+                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200"
+                        style={{
+                          background: isRecommended
+                            ? 'linear-gradient(135deg, #6366f1, #8b5cf6)'
+                            : 'rgba(255,255,255,0.06)',
+                          color: isRecommended ? '#fff' : 'rgba(255,255,255,0.7)',
+                          border: isRecommended
+                            ? 'none'
+                            : '1px solid rgba(255,255,255,0.1)',
+                        }}
+                        onMouseEnter={e => {
+                          if (!isRecommended) {
+                            (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.1)';
+                            (e.currentTarget as HTMLElement).style.color = '#fff';
+                          }
+                        }}
+                        onMouseLeave={e => {
+                          if (!isRecommended) {
+                            (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)';
+                            (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.7)';
+                          }
+                        }}
+                      >
+                        <DownloadIcon size={16} />
+                        Download
+                      </a>
+                    ) : (
+                      <Link
+                        to={isAuthenticated ? '/pricing' : '/login?redirect=/download'}
+                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200"
+                        style={{
+                          background: 'rgba(255,255,255,0.06)',
+                          color: 'rgba(255,255,255,0.5)',
+                          border: '1px solid rgba(255,255,255,0.1)',
+                        }}
+                        onMouseEnter={e => {
                           (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.1)';
-                          (e.currentTarget as HTMLElement).style.color = '#fff';
-                        }
-                      }}
-                      onMouseLeave={e => {
-                        if (!isRecommended) {
-                          (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)';
                           (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.7)';
-                        }
-                      }}
-                    >
-                      <DownloadIcon size={16} />
-                      Download
-                    </a>
+                        }}
+                        onMouseLeave={e => {
+                          (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)';
+                          (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.5)';
+                        }}
+                      >
+                        <LockIcon size={14} />
+                        Upgrade
+                      </Link>
+                    )}
                   </div>
                 </FadeInSection>
               );

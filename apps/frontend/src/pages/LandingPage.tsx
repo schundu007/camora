@@ -348,6 +348,77 @@ const COMP_BARS = [
   { name: 'Solver', count: 12, color: '#6b7280', suffix: '' },
 ];
 
+/* ── Desktop Download Buttons (paywall-gated) ────────────── */
+function DesktopDownloadButtons({ primaryUrl, primaryIcon, primaryLabel, urls, os, isMac, RELEASES, AppleIcon, WindowsIcon }: any) {
+  const { subscription, subscriptionLoading, isAuthenticated } = useAuth();
+  const isPaid = !subscriptionLoading && subscription?.plan && subscription.plan !== 'free';
+
+  if (subscriptionLoading) {
+    return (
+      <div className="flex items-center justify-center py-3">
+        <div className="w-5 h-5 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!isPaid) {
+    return (
+      <div className="flex flex-col items-center gap-2 flex-shrink-0">
+        <Link
+          to={isAuthenticated ? '/pricing' : '/login?redirect=/download'}
+          className="inline-flex items-center gap-2.5 px-6 py-3 text-sm font-semibold text-white rounded-xl transition-all duration-200 hover:opacity-90"
+          style={{ background: 'linear-gradient(135deg, #10b981, #059669)', boxShadow: '0 4px 14px rgba(16,185,129,0.3)' }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+          </svg>
+          {isAuthenticated ? 'Upgrade to Download' : 'Sign In to Download'}
+        </Link>
+        <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Paid plans only</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col items-center gap-2 flex-shrink-0">
+      <a
+        href={primaryUrl}
+        className="inline-flex items-center gap-2.5 px-6 py-3 text-sm font-semibold text-white rounded-xl transition-all duration-200 hover:opacity-90"
+        style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', boxShadow: '0 4px 14px rgba(99,102,241,0.3)' }}
+      >
+        {primaryIcon}
+        {primaryLabel}
+      </a>
+      <div className="flex items-center gap-3 text-xs" style={{ color: 'var(--text-muted)' }}>
+        {isMac ? (
+          <>
+            <a href={urls[os === 'mac-arm' ? 'mac-intel' : 'mac-arm']} className="hover:text-indigo-400 transition-colors underline underline-offset-2">
+              {os === 'mac-arm' ? 'Intel Mac' : 'Apple Silicon'}
+            </a>
+            <span style={{ color: 'var(--border)' }}>|</span>
+            <a href={urls['windows']} className="inline-flex items-center gap-1 hover:text-indigo-400 transition-colors underline underline-offset-2">
+              <WindowsIcon /> Windows
+            </a>
+          </>
+        ) : (
+          <>
+            <a href={urls['mac-arm']} className="inline-flex items-center gap-1 hover:text-indigo-400 transition-colors underline underline-offset-2">
+              <AppleIcon /> Mac (Apple Silicon)
+            </a>
+            <span style={{ color: 'var(--border)' }}>|</span>
+            <a href={urls['mac-intel']} className="inline-flex items-center gap-1 hover:text-indigo-400 transition-colors underline underline-offset-2">
+              <AppleIcon /> Mac (Intel)
+            </a>
+          </>
+        )}
+        <span style={{ color: 'var(--border)' }}>|</span>
+        <a href={RELEASES} className="hover:text-indigo-400 transition-colors underline underline-offset-2">All releases</a>
+      </div>
+    </div>
+  );
+}
+
 /* ── Desktop Download Section ─────────────────────────────── */
 function DesktopDownload() {
   const getOS = (): 'mac-arm' | 'mac-intel' | 'windows' => {
@@ -405,42 +476,18 @@ function DesktopDownload() {
           </p>
         </div>
 
-        {/* Download buttons */}
-        <div className="flex flex-col items-center gap-2 flex-shrink-0">
-          <a
-            href={primaryUrl}
-            className="inline-flex items-center gap-2.5 px-6 py-3 text-sm font-semibold text-white rounded-xl transition-all duration-200 hover:opacity-90"
-            style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', boxShadow: '0 4px 14px rgba(99,102,241,0.3)' }}
-          >
-            {primaryIcon}
-            {primaryLabel}
-          </a>
-          <div className="flex items-center gap-3 text-xs" style={{ color: 'var(--text-muted)' }}>
-            {isMac ? (
-              <>
-                <a href={urls[os === 'mac-arm' ? 'mac-intel' : 'mac-arm']} className="hover:text-indigo-400 transition-colors underline underline-offset-2">
-                  {os === 'mac-arm' ? 'Intel Mac' : 'Apple Silicon'}
-                </a>
-                <span style={{ color: 'var(--border)' }}>|</span>
-                <a href={urls['windows']} className="inline-flex items-center gap-1 hover:text-indigo-400 transition-colors underline underline-offset-2">
-                  <WindowsIcon /> Windows
-                </a>
-              </>
-            ) : (
-              <>
-                <a href={urls['mac-arm']} className="inline-flex items-center gap-1 hover:text-indigo-400 transition-colors underline underline-offset-2">
-                  <AppleIcon /> Mac (Apple Silicon)
-                </a>
-                <span style={{ color: 'var(--border)' }}>|</span>
-                <a href={urls['mac-intel']} className="inline-flex items-center gap-1 hover:text-indigo-400 transition-colors underline underline-offset-2">
-                  <AppleIcon /> Mac (Intel)
-                </a>
-              </>
-            )}
-            <span style={{ color: 'var(--border)' }}>|</span>
-            <a href={RELEASES} className="hover:text-indigo-400 transition-colors underline underline-offset-2">All releases</a>
-          </div>
-        </div>
+        {/* Download buttons — paid users only */}
+        <DesktopDownloadButtons
+          primaryUrl={primaryUrl}
+          primaryIcon={primaryIcon}
+          primaryLabel={primaryLabel}
+          urls={urls}
+          os={os}
+          isMac={isMac}
+          RELEASES={RELEASES}
+          AppleIcon={AppleIcon}
+          WindowsIcon={WindowsIcon}
+        />
       </div>
     </div>
   );
