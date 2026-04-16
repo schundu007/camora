@@ -141,6 +141,29 @@ const JOB_ROLES = [
   },
 ];
 
+const MORE_ROLES = [
+  { id: 'cloud', label: 'Cloud Engineer' },
+  { id: 'platform', label: 'Platform Engineer' },
+  { id: 'security', label: 'Security Engineer' },
+  { id: 'sre', label: 'Site Reliability Engineer' },
+  { id: 'data_scientist', label: 'Data Scientist' },
+  { id: 'data_analyst', label: 'Data Analyst' },
+  { id: 'tech_lead', label: 'Technical Lead' },
+  { id: 'staff', label: 'Staff Engineer' },
+  { id: 'principal', label: 'Principal Engineer' },
+  { id: 'tpm', label: 'Technical Program Manager' },
+  { id: 'product_manager', label: 'Product Manager (Technical)' },
+  { id: 'ios', label: 'iOS Developer' },
+  { id: 'android', label: 'Android Developer' },
+  { id: 'blockchain', label: 'Blockchain / Web3 Developer' },
+  { id: 'game_dev', label: 'Game Developer' },
+  { id: 'embedded', label: 'Embedded Systems Engineer' },
+  { id: 'dba', label: 'Database Administrator' },
+  { id: 'network', label: 'Network Engineer' },
+  { id: 'ai_researcher', label: 'AI / ML Researcher' },
+  { id: 'devsecops', label: 'DevSecOps Engineer' },
+];
+
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_TYPES = {
   'application/pdf': '.pdf',
@@ -169,6 +192,7 @@ export default function OnboardingPage() {
   const [dragOver, setDragOver] = useState(false);
   const [error, setError] = useState('');
   const [isReturningUser, setIsReturningUser] = useState(false);
+  const [showMoreRoles, setShowMoreRoles] = useState(false);
 
   const fileInputRef = useRef(null);
 
@@ -373,6 +397,49 @@ export default function OnboardingPage() {
                       </button>
                     );
                   })}
+                </div>
+
+                {/* More Roles expandable */}
+                <div className="mb-6">
+                  <button
+                    onClick={() => setShowMoreRoles((v) => !v)}
+                    className="flex items-center gap-2 mx-auto text-sm font-medium transition-colors text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
+                  >
+                    <svg
+                      className={`w-4 h-4 transition-transform duration-200 ${showMoreRoles ? 'rotate-180' : ''}`}
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                    {showMoreRoles ? 'Show fewer roles' : `More roles (${MORE_ROLES.length})`}
+                  </button>
+
+                  {showMoreRoles && (
+                    <div className="mt-3 flex flex-wrap gap-2 justify-center animate-fadeIn">
+                      {MORE_ROLES.map((role) => {
+                        const selected = selectedRoles.includes(role.id);
+                        return (
+                          <button
+                            key={role.id}
+                            onClick={() => toggleRole(role.id)}
+                            className={`px-3.5 py-2 rounded-lg border text-xs font-medium transition-all duration-200 cursor-pointer
+                              ${selected
+                                ? 'border-[var(--accent)] bg-[var(--accent-subtle)] text-[var(--accent)]'
+                                : 'border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border-hover)] hover:bg-[var(--bg-app)]'
+                              }`}
+                          >
+                            {selected && (
+                              <svg className="w-3 h-3 inline-block mr-1 -mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                              </svg>
+                            )}
+                            {role.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
 
                 <button
