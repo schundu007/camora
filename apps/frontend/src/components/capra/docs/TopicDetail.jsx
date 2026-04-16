@@ -594,10 +594,10 @@ export default function TopicDetail({
         </div>
       </div>
 
-      {/* ── LOCKED CONTENT OVERLAY ── */}
+      {/* ── LOCKED CONTENT — show ~40% preview then paywall ── */}
       {isLocked && (
         <div className="relative">
-          {/* Preview: show introduction first paragraph */}
+          {/* Preview: full introduction */}
           {topicDetails.introduction && (
             <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)] mb-3">
               <div className="px-3 py-1.5 border-b border-[var(--border)] bg-[var(--bg-elevated)] flex items-center gap-2">
@@ -605,24 +605,68 @@ export default function TopicDetail({
                 <h2 className="text-sm font-bold text-[var(--text-primary)] landing-display">Introduction</h2>
               </div>
               <div className="p-3">
-                <p className="text-[var(--text-secondary)] text-sm landing-body leading-relaxed">
-                  {topicDetails.introduction.split('\n')[0]}
-                </p>
+                <div className="text-[var(--text-secondary)] text-sm landing-body leading-relaxed">
+                  <FormattedContent content={topicDetails.introduction} color="emerald" />
+                </div>
               </div>
             </div>
           )}
 
-          {/* Blur skeleton + upgrade CTA */}
-          {/* Blur skeleton + inline pricing cards */}
+          {/* Preview: key concepts */}
+          {topicDetails.concepts && topicDetails.concepts.length > 0 && (
+            <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)] mb-3">
+              <div className="px-3 py-1.5 border-b border-[var(--border)] bg-[var(--bg-elevated)] flex items-center gap-2">
+                <Icon name="puzzle" size={14} style={{ color: topicDetails.color }} />
+                <h2 className="text-sm font-bold text-[var(--text-primary)] landing-display">Key Concepts</h2>
+              </div>
+              <div className="p-3 flex flex-wrap gap-1.5">
+                {topicDetails.concepts.map((concept, i) => (
+                  <span key={i} className="px-2.5 py-1.5 rounded-lg text-xs landing-mono font-medium" style={{ background: `${topicDetails.color || '#10b981'}12`, color: topicDetails.color || '#10b981', border: `1px solid ${topicDetails.color || '#10b981'}20` }}>
+                    {concept}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Preview: first 40% of questions */}
+          {topicDetails.keyQuestions && topicDetails.keyQuestions.length > 0 && (() => {
+            const previewCount = Math.max(2, Math.ceil(topicDetails.keyQuestions.length * 0.4));
+            const previewQuestions = topicDetails.keyQuestions.slice(0, previewCount);
+            return (
+              <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)] mb-3">
+                <div className="px-3 py-1.5 border-b border-[var(--border)] bg-[var(--bg-elevated)] flex items-center gap-2">
+                  <Icon name="helpCircle" size={14} className="text-[var(--text-secondary)]" />
+                  <h2 className="text-sm font-bold text-[var(--text-primary)] landing-display">Key Questions</h2>
+                  <span className="text-[10px] text-[var(--text-muted)] ml-1">({previewCount} of {topicDetails.keyQuestions.length})</span>
+                </div>
+                <div className="divide-y divide-[var(--border)]">
+                  {previewQuestions.map((qa, i) => (
+                    <div key={i} className="px-3 py-2.5">
+                      <div className="flex items-start gap-2">
+                        <span className="w-5 h-5 rounded-md bg-[var(--bg-elevated)] border border-[var(--border)] flex items-center justify-center flex-shrink-0 mt-0.5 text-[10px] font-bold text-[var(--text-secondary)]">{i + 1}</span>
+                        <span className="text-sm font-semibold text-[var(--text-primary)]">{qa.question}</span>
+                      </div>
+                      {i === 0 && qa.answer && (
+                        <div className="mt-2 ml-7 text-sm text-[var(--text-secondary)] leading-relaxed">
+                          <FormattedContent content={qa.answer} color="emerald" />
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Fade-out + paywall */}
           <div className="relative rounded-xl overflow-hidden">
             <div className="space-y-3 filter blur-sm pointer-events-none select-none" aria-hidden="true">
-              <div className="rounded-lg bg-[var(--bg-elevated)] h-24 w-full" />
-              <div className="rounded-lg bg-[var(--bg-elevated)] h-32 w-full" />
               <div className="rounded-lg bg-[var(--bg-elevated)] h-20 w-full" />
               <div className="rounded-lg bg-[var(--bg-elevated)] h-28 w-full" />
             </div>
 
-            <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.95) 35%, rgba(255,255,255,1) 100%)' }}>
+            <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'linear-gradient(180deg, transparent 0%, var(--bg-app) 40%)' }}>
               <div className="max-w-2xl w-full px-4">
                 <div className="text-center mb-5">
                   <div className="w-12 h-12 mx-auto mb-3 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #10b981, #3b82f6, #8b5cf6)' }}>

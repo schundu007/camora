@@ -465,6 +465,22 @@ export const ROLE_TOPIC_MAP: Record<RoleKey, RoleTopics> = {
 };
 
 /**
+ * Maps onboarding role IDs to ROLE_TOPIC_MAP keys for content filtering.
+ */
+export const ONBOARDING_ROLE_TO_TOPIC_KEY: Record<string, RoleKey> = {
+  backend: 'backend', frontend: 'frontend', fullstack: 'fullstack',
+  devops: 'devops', data: 'data', ml: 'ml', mobile: 'mobile',
+  qa: 'backend', em: 'general', architect: 'backend',
+  cloud: 'cloud', platform: 'platform', security: 'security',
+  sre: 'sre', data_scientist: 'data', data_analyst: 'data',
+  tech_lead: 'backend', staff: 'backend', principal: 'backend',
+  tpm: 'general', product_manager: 'general',
+  ios: 'mobile', android: 'mobile', blockchain: 'backend',
+  game_dev: 'fullstack', embedded: 'backend', dba: 'data',
+  network: 'cloud', ai_researcher: 'ml', devsecops: 'devops',
+};
+
+/**
  * Get the page key for the DocsPage based on a focus area from the study path.
  */
 export function getPageKeyForFocus(focus: string): string {

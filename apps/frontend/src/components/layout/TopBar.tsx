@@ -204,8 +204,12 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
             </svg>
           </button>
 
-          {/* Avatar */}
-          <div className="flex items-center gap-2">
+          {/* Avatar — links to onboarding/profile */}
+          <Link
+            to="/capra/onboarding"
+            className="flex items-center gap-2 no-underline rounded-md px-1.5 py-1 transition-colors hover:bg-[var(--bg-elevated)]"
+            title="Update role & resume"
+          >
             {user?.image ? (
               <img
                 src={user.image}
@@ -230,7 +234,7 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
             >
               {user?.name}
             </span>
-          </div>
+          </Link>
 
           {/* Sign out */}
           <button
