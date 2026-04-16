@@ -110,8 +110,39 @@ interface CodingLayoutProps {
 
 // ── Main Component ───────────────────────────────────────────────────────────
 
+// ── Theme tokens — dark when embedded, light when standalone ──
+function useTheme(dark: boolean) {
+  if (dark) return {
+    cardBg: '#16141F', cardBorder: 'rgba(255,255,255,0.06)',
+    headerBg: 'rgba(99,102,241,0.08)', headerBorder: 'rgba(255,255,255,0.06)',
+    headerText: '#818cf8', badgeBg: 'rgba(99,102,241,0.12)', badgeText: '#818cf8',
+    text: '#F2F1F3', textMuted: '#6C6B7B', textDim: '#545260',
+    codeBg: '#1E1C28', codeText: '#F2F1F3',
+    inputBg: '#1E1C28', inputBorder: 'rgba(255,255,255,0.06)', inputText: '#F2F1F3',
+    sectionBg: '#16141F', surfaceBg: '#0D0C14',
+    tabActive: '#6366f1', tabActiveBg: 'rgba(99,102,241,0.15)', tabText: '#6C6B7B',
+    dotColor: '#818cf8',
+    passedBg: '#16141F', passedBorder: 'rgba(255,255,255,0.06)', passedText: '#22c55e',
+    failedBg: '#16141F', failedBorder: 'rgba(255,255,255,0.06)', failedText: '#ef4444',
+  };
+  return {
+    cardBg: '#ffffff', cardBorder: '#e5e7eb',
+    headerBg: 'rgba(99,102,241,0.05)', headerBorder: '#e0e7ff',
+    headerText: '#4338ca', badgeBg: '#e0e7ff', badgeText: '#4338ca',
+    text: '#111827', textMuted: '#6b7280', textDim: '#9ca3af',
+    codeBg: '#f9fafb', codeText: '#1f2937',
+    inputBg: '#ffffff', inputBorder: '#e5e7eb', inputText: '#111827',
+    sectionBg: '#f9fafb', surfaceBg: '#ffffff',
+    tabActive: '#6366f1', tabActiveBg: '#ffffff', tabText: '#6b7280',
+    dotColor: '#6366f1',
+    passedBg: '#f0fdf4', passedBorder: '#bbf7d0', passedText: '#16a34a',
+    failedBg: '#fef2f2', failedBorder: '#fecaca', failedText: '#dc2626',
+  };
+}
+
 export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embedded }: CodingLayoutProps) {
   const { token } = useAuth();
+  const t = useTheme(!!embedded);
 
   // Core state
   const [language, setLanguage] = useState('python');
