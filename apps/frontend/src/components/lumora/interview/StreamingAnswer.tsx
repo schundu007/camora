@@ -131,7 +131,7 @@ function StreamingAnswerList({ content, isComplete }: { content: string; isCompl
 }
 
 function StreamingCodingView({ blocks }: { blocks: Record<string, ParsedBlock> }) {
-  const lang = blocks.CODE?.content.match(/lang=(\w+)/)?.[1] || 'python';
+  const lang = (blocks.CODE as any)?.lang || blocks.CODE?.content.match(/lang=(\w+)/)?.[1] || 'python';
 
   return (
     <div className="flex flex-col gap-2">
