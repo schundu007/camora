@@ -14,6 +14,7 @@ export function checkUsage(type) {
   return async (req, res, next) => {
     try {
       if (!req.user?.id) return next(); // No auth = skip (other middleware handles auth)
+      if (req.user.is_admin) return next(); // Admins bypass usage limits
 
       const result = await checkLimit(req.user.id, type);
       if (!result.allowed) {
