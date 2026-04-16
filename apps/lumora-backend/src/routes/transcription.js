@@ -183,8 +183,30 @@ router.post(
       }
 
       // ── Transcribe ───────────────────────────────────────────────────
-      const text = await transcribe(file.buffer, file.originalname || 'audio.webm');
+      const rawText = await transcribe(file.buffer, file.originalname || 'audio.webm');
       const latencyMs = Math.round(performance.now() - start);
+
+      // ── Filter Whisper hallucinations ─────────────────────────────
+      // Whisper generates these phantom phrases on silence/low audio
+      const HALLUCINATION_PATTERNS = [
+        /^thank(s| you)?\s*(for)?\s*(watching|listening|viewing|tuning in)/i,
+        /^(please\s+)?(like\s+and\s+)?subscribe/i,
+        /^(bye|goodbye|see you)\s*(next time|later|soon)?\.?$/i,
+        /^(okay|ok)\.?\s*$/i,
+        /^\.+$/,
+        /^(\s*thank you\.?\s*)+$/i,
+        /^(you|you're welcome)\.?$/i,
+        /^\s*$/,
+      ];
+
+      const trimmed = rawText.trim();
+      const isHallucination = HALLUCINATION_PATTERNS.some(p => p.test(trimmed));
+      const text = isHallucination ? '' : trimmed;
+
+      if (isHallucination) {
+        console.info(`[Whisper] Filtered hallucination for ${req.user.email}: "${trimmed}"`);
+        return res.json({ text: '', latency_ms: latencyMs, skipped: true, reason: 'hallucination_filtered' });
+      }
 
       console.info(
         `Transcribed audio for user ${req.user.email}: ` +
