@@ -12,6 +12,8 @@ const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.
 interface DesignLayoutProps {
   onBack: () => void;
   initialProblem?: string;
+  /** When true, hides internal header and uses flex-1 instead of h-screen (for embedding in LumoraShell) */
+  embedded?: boolean;
 }
 
 interface SystemDesign {
@@ -266,7 +268,7 @@ function formatTime(seconds: number): string {
   return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 }
 
-export function DesignLayout({ onBack, initialProblem }: DesignLayoutProps) {
+export function DesignLayout({ onBack, initialProblem, embedded }: DesignLayoutProps) {
   const { token } = useAuth();
   const { setStatus } = useInterviewStore();
 
@@ -556,8 +558,9 @@ export function DesignLayout({ onBack, initialProblem }: DesignLayoutProps) {
   const sd = result?.systemDesign;
 
   return (
-    <div className="h-screen w-full flex flex-col lumora-app-bg">
-      {/* Header — matching coding page enterprise style */}
+    <div className={embedded ? 'flex-1 flex flex-col min-h-0' : 'h-screen w-full flex flex-col lumora-app-bg'}>
+      {/* Header — hidden when embedded in LumoraShell */}
+      {!embedded && (
       <header className="flex items-center justify-between h-11 px-3 shrink-0" style={{ background: 'linear-gradient(135deg, rgba(15,23,42,0.98) 0%, rgba(30,27,75,0.96) 50%, rgba(15,23,42,0.98) 100%)', borderBottom: '1px solid rgba(99,102,241,0.12)' }}>
         <div className="flex items-center gap-2 md:gap-3">
           <button onClick={onBack} className="flex items-center gap-1 px-1.5 py-1 text-xs md:text-sm font-bold text-white/70 hover:text-white rounded transition-colors">
@@ -653,6 +656,7 @@ export function DesignLayout({ onBack, initialProblem }: DesignLayoutProps) {
           />
         </div>
       </header>
+      )}
 
       {/* Main content - vertical on mobile, horizontal on desktop */}
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden" ref={mainRef}>
