@@ -173,80 +173,144 @@ export default function PricingPage() {
           </div>
 
           <div
-            className="overflow-x-auto"
+            className="relative overflow-x-auto rounded-[20px]"
             style={{
-              background: 'var(--bg-surface)',
-              borderRadius: '16px',
-              boxShadow: '0 4px 24px rgba(0,0,0,0.3)',
-              padding: '12px 16px',
-              border: '1px solid var(--border)',
+              background: 'linear-gradient(168deg, rgba(99,102,241,0.06) 0%, rgba(15,14,25,0.95) 100%)',
+              boxShadow: '0 8px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(99,102,241,0.1), inset 0 1px 0 rgba(255,255,255,0.04)',
+              border: '1px solid rgba(255,255,255,0.06)',
             }}
           >
-            <table className="w-full text-[13px]">
-              <thead>
-                <tr style={{ borderBottom: '2px solid var(--border)', verticalAlign: 'bottom' }}>
-                  <th className="text-left py-3 px-4 font-mono text-[10px] uppercase tracking-wider min-w-[120px] sm:min-w-[200px]" style={{ color: 'var(--text-secondary)' }}>Feature</th>
-                  {[
-                    { name: 'Camora', price: 'FREE', unit: '', highlight: true },
-                    { name: 'Final Round', price: '$100', unit: '/mo' },
-                    { name: 'LockedIn', price: '$55-120', unit: '/mo' },
-                    { name: 'Solver', price: '$39', unit: '/mo', hide: 'md' },
-                    { name: 'Sensei', price: '$24-89', unit: '/mo', hide: 'md' },
-                    { name: 'TechPrep', price: '$39', unit: '/mo', hide: 'lg' },
-                    { name: 'AlgoMaster', price: '$29', unit: '/mo', hide: 'lg' },
-                    { name: 'DesignGurus', price: '$98-197', unit: '/course', hide: 'lg' },
-                    { name: 'AIApply', price: '$29-200', unit: '/mo', hide: 'xl' },
-                    { name: 'OfferGoose', price: '$89-200', unit: '/mo', hide: 'xl' },
-                    { name: 'Parakeet', price: '$100-200', unit: '/mo', hide: 'xl' },
-                  ].map((col) => (
-                    <th
-                      key={col.name}
-                      className={`py-3 px-2 text-center whitespace-nowrap ${col.hide ? `hidden ${col.hide}:table-cell` : ''}`}
-                      style={col.highlight ? { background: 'rgba(99,102,241,0.1)', borderRadius: '14px 14px 0 0', boxShadow: 'inset 0 -2px 0 #6366f1' } : {}}
-                    >
-                      <div className="text-[11px] font-medium" style={col.highlight ? { background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontSize: '13px', fontWeight: 800 } : { color: 'var(--text-secondary)' }}>
-                        {col.name}
-                      </div>
-                      <div className="text-sm font-extrabold mt-0.5" style={col.highlight ? { color: '#6366f1' } : { background: 'linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                        {col.price}<span className="text-[9px] font-normal" style={{ color: 'var(--text-muted)' }}>{col.unit}</span>
-                      </div>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {COMPARISON.map((row, i) => {
-                  const Cell = ({ val }: { val: boolean | string }) => {
-                    if (val === true) return <span style={{ color: 'var(--text-muted)' }}>&#10003;</span>;
-                    if (val === false) return <span style={{ color: 'var(--text-muted)' }}>-</span>;
-                    return <span className="text-[10px] text-amber-400 font-mono">{val}</span>;
-                  };
-                  return (
-                    <tr key={i} style={{ borderBottom: '1px solid var(--border)' }}>
-                      <td className={`py-3 px-4 text-sm ${row.unique ? 'text-indigo-400 font-semibold' : ''}`} style={!row.unique ? { color: 'var(--text-secondary)' } : {}}>
-                        {row.feature}
-                      </td>
-                      <td className="py-3 px-3 text-center" style={{ background: 'rgba(99,102,241,0.08)' }}>
-                        {row.camora === true
-                          ? <span className="text-indigo-500 font-bold text-base">&#10003;</span>
-                          : <Cell val={row.camora} />
-                        }
-                      </td>
-                      <td className="py-2.5 px-3 text-center"><Cell val={row.finalround} /></td>
-                      <td className="py-2.5 px-3 text-center"><Cell val={row.lockedin} /></td>
-                      <td className="py-2.5 px-3 text-center hidden md:table-cell"><Cell val={row.solver} /></td>
-                      <td className="py-2.5 px-3 text-center hidden md:table-cell"><Cell val={row.sensei} /></td>
-                      <td className="py-2.5 px-3 text-center hidden lg:table-cell"><Cell val={row.techprep} /></td>
-                      <td className="py-2.5 px-3 text-center hidden lg:table-cell"><Cell val={row.algomaster} /></td>
-                      <td className="py-2.5 px-3 text-center hidden lg:table-cell"><Cell val={row.designgurus} /></td>
-                      <td className="py-2.5 px-3 text-center hidden xl:table-cell"><Cell val={row.aiapply} /></td>
-                      <td className="py-2.5 px-3 text-center hidden xl:table-cell"><Cell val={row.offergoose} /></td>
-                      <td className="py-2.5 px-3 text-center hidden xl:table-cell"><Cell val={row.parakeet} /></td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+            {/* Decorative top gradient bar */}
+            <div className="h-[2px] w-full" style={{ background: 'linear-gradient(90deg, transparent, #6366f1, #8b5cf6, #6366f1, transparent)' }} />
+
+            <div className="p-4 sm:p-6">
+              <table className="w-full text-[13px]" style={{ borderCollapse: 'separate', borderSpacing: 0 }}>
+                <thead>
+                  <tr style={{ verticalAlign: 'bottom' }}>
+                    <th className="text-left py-4 px-4 text-[10px] font-bold uppercase tracking-[0.15em] min-w-[120px] sm:min-w-[200px]" style={{ color: 'rgba(255,255,255,0.35)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>Feature</th>
+                    {[
+                      { name: 'Camora', price: 'FREE', unit: '', highlight: true },
+                      { name: 'Final Round', price: '$100', unit: '/mo' },
+                      { name: 'LockedIn', price: '$55-120', unit: '/mo' },
+                      { name: 'Solver', price: '$39', unit: '/mo', hide: 'md' },
+                      { name: 'Sensei', price: '$24-89', unit: '/mo', hide: 'md' },
+                      { name: 'TechPrep', price: '$39', unit: '/mo', hide: 'lg' },
+                      { name: 'AlgoMaster', price: '$29', unit: '/mo', hide: 'lg' },
+                      { name: 'DesignGurus', price: '$98-197', unit: '/course', hide: 'lg' },
+                      { name: 'AIApply', price: '$29-200', unit: '/mo', hide: 'xl' },
+                      { name: 'OfferGoose', price: '$89-200', unit: '/mo', hide: 'xl' },
+                      { name: 'Parakeet', price: '$100-200', unit: '/mo', hide: 'xl' },
+                    ].map((col) => (
+                      <th
+                        key={col.name}
+                        className={`py-4 px-2 text-center whitespace-nowrap ${col.hide ? `hidden ${col.hide}:table-cell` : ''}`}
+                        style={{
+                          borderBottom: '1px solid rgba(255,255,255,0.06)',
+                          ...(col.highlight ? {
+                            background: 'linear-gradient(180deg, rgba(99,102,241,0.12) 0%, rgba(99,102,241,0.04) 100%)',
+                            borderRadius: '12px 12px 0 0',
+                            boxShadow: 'inset 0 2px 0 rgba(99,102,241,0.5), inset 1px 0 0 rgba(99,102,241,0.15), inset -1px 0 0 rgba(99,102,241,0.15)',
+                          } : {}),
+                        }}
+                      >
+                        <div
+                          className="text-[11px] font-semibold"
+                          style={col.highlight
+                            ? { background: 'linear-gradient(135deg, #a5b4fc, #c7d2fe)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontSize: '13px', fontWeight: 800, letterSpacing: '0.02em' }
+                            : { color: 'rgba(255,255,255,0.4)', fontSize: '10px' }
+                          }
+                        >
+                          {col.name}
+                        </div>
+                        <div
+                          className="mt-1 font-extrabold"
+                          style={col.highlight
+                            ? { background: 'linear-gradient(135deg, #818cf8, #6366f1)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontSize: '16px' }
+                            : { color: 'rgba(255,255,255,0.25)', fontSize: '13px' }
+                          }
+                        >
+                          {col.price}
+                          <span className="text-[9px] font-normal" style={{ color: 'rgba(255,255,255,0.2)' }}>{col.unit}</span>
+                        </div>
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {COMPARISON.map((row, i) => {
+                    const isLast = i === COMPARISON.length - 1;
+                    const CellIcon = ({ val }: { val: boolean | string }) => {
+                      if (val === true) return (
+                        <span className="inline-flex items-center justify-center w-5 h-5 rounded-full" style={{ background: 'rgba(255,255,255,0.04)' }}>
+                          <svg className="w-3 h-3" viewBox="0 0 12 12" fill="none" style={{ color: 'rgba(255,255,255,0.25)' }}>
+                            <path d="M10 3L4.5 8.5L2 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        </span>
+                      );
+                      if (val === false) return <span className="text-[11px]" style={{ color: 'rgba(255,255,255,0.12)' }}>--</span>;
+                      return <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded" style={{ background: 'rgba(245,158,11,0.1)', color: '#fbbf24' }}>{val}</span>;
+                    };
+                    return (
+                      <tr
+                        key={i}
+                        className="comparison-row transition-colors duration-200"
+                        style={{ borderBottom: isLast ? 'none' : '1px solid rgba(255,255,255,0.04)' }}
+                      >
+                        <td className="py-3.5 px-4 text-[13px]" style={{ color: row.unique ? '#a5b4fc' : 'rgba(255,255,255,0.55)', fontWeight: row.unique ? 600 : 400 }}>
+                          <span className="flex items-center gap-2">
+                            {row.unique && (
+                              <svg className="w-3 h-3 flex-shrink-0" viewBox="0 0 12 12" fill="none">
+                                <path d="M6 1l1.545 3.13L11 4.635 8.5 7.07l.59 3.44L6 8.885 2.91 10.51l.59-3.44L1 4.635l3.455-.505L6 1z" fill="#818cf8" />
+                              </svg>
+                            )}
+                            {row.feature}
+                          </span>
+                        </td>
+                        <td
+                          className="py-3.5 px-3 text-center"
+                          style={{
+                            background: 'rgba(99,102,241,0.06)',
+                            boxShadow: 'inset 1px 0 0 rgba(99,102,241,0.1), inset -1px 0 0 rgba(99,102,241,0.1)',
+                            ...(isLast ? { borderRadius: '0 0 12px 12px', boxShadow: 'inset 1px 0 0 rgba(99,102,241,0.1), inset -1px 0 0 rgba(99,102,241,0.1), inset 0 -2px 0 rgba(99,102,241,0.3)' } : {}),
+                          }}
+                        >
+                          {row.camora === true
+                            ? (
+                              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full" style={{ background: 'rgba(99,102,241,0.2)', boxShadow: '0 0 8px rgba(99,102,241,0.3)' }}>
+                                <svg className="w-3.5 h-3.5" viewBox="0 0 12 12" fill="none" style={{ color: '#818cf8' }}>
+                                  <path d="M10 3L4.5 8.5L2 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                              </span>
+                            )
+                            : <CellIcon val={row.camora} />
+                          }
+                        </td>
+                        <td className="py-3 px-3 text-center"><CellIcon val={row.finalround} /></td>
+                        <td className="py-3 px-3 text-center"><CellIcon val={row.lockedin} /></td>
+                        <td className="py-3 px-3 text-center hidden md:table-cell"><CellIcon val={row.solver} /></td>
+                        <td className="py-3 px-3 text-center hidden md:table-cell"><CellIcon val={row.sensei} /></td>
+                        <td className="py-3 px-3 text-center hidden lg:table-cell"><CellIcon val={row.techprep} /></td>
+                        <td className="py-3 px-3 text-center hidden lg:table-cell"><CellIcon val={row.algomaster} /></td>
+                        <td className="py-3 px-3 text-center hidden lg:table-cell"><CellIcon val={row.designgurus} /></td>
+                        <td className="py-3 px-3 text-center hidden xl:table-cell"><CellIcon val={row.aiapply} /></td>
+                        <td className="py-3 px-3 text-center hidden xl:table-cell"><CellIcon val={row.offergoose} /></td>
+                        <td className="py-3 px-3 text-center hidden xl:table-cell"><CellIcon val={row.parakeet} /></td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Hover row styles */}
+            <style>{`
+              .comparison-row:hover {
+                background: rgba(255,255,255,0.02);
+              }
+              .comparison-row:hover td:first-child {
+                color: rgba(255,255,255,0.85) !important;
+              }
+            `}</style>
           </div>
         </div>
       </section>
