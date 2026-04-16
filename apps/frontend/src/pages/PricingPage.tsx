@@ -164,6 +164,78 @@ export default function PricingPage() {
         </h1>
       </section>
 
+      {/* Plans */}
+      <section className="w-full lg:max-w-[70%] mx-auto px-6 py-14">
+        <div className="mb-10 text-center">
+          <span className="text-xs font-bold uppercase tracking-[0.2em]" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6, #a78bfa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Plans</span>
+          <h2 className="mt-3 text-3xl md:text-4xl font-extrabold tracking-tight" style={{ color: 'var(--text-primary)' }}>
+            Choose your path.
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-4 items-stretch">
+          {PLANS.map((plan) => {
+            const isPro = plan.popular;
+            const isAnnual = plan.name === 'Annual';
+            const isFree = plan.name === 'Free';
+            const isStarter = plan.name === 'Starter';
+
+            const accent = isPro
+              ? { from: '#6366f1', via: '#8b5cf6', to: '#a78bfa', glow: 'rgba(99,102,241,0.4)', checkColor: '#a5b4fc' }
+              : isAnnual
+              ? { from: '#f59e0b', via: '#fbbf24', to: '#fde68a', glow: 'rgba(245,158,11,0.3)', checkColor: '#fbbf24' }
+              : isStarter
+              ? { from: '#6366f1', via: '#818cf8', to: '#a5b4fc', glow: 'rgba(99,102,241,0.15)', checkColor: '#818cf8' }
+              : { from: '#475569', via: '#64748b', to: '#94a3b8', glow: 'rgba(100,116,139,0.1)', checkColor: '#4ade80' };
+
+            return (
+              <div key={plan.name} className={`pricing-card group relative flex flex-col rounded-[22px] overflow-visible ${isPro ? 'lg:-mt-4 lg:mb-[-16px]' : ''}`} style={{ zIndex: isPro ? 2 : 1 }}>
+                <div className="absolute -inset-[1px] rounded-[22px] pointer-events-none" style={{ background: isPro ? `linear-gradient(135deg, ${accent.from}, ${accent.via}, ${accent.to}, ${accent.from})` : isAnnual ? `linear-gradient(135deg, ${accent.from}, ${accent.via}, ${accent.to}, ${accent.from})` : isStarter ? 'linear-gradient(135deg, rgba(99,102,241,0.3), rgba(139,92,246,0.15), rgba(99,102,241,0.3))' : 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04), rgba(255,255,255,0.08))', backgroundSize: isPro || isAnnual ? '300% 300%' : '100% 100%', animation: isPro || isAnnual ? 'borderShimmer 4s ease infinite' : 'none', opacity: isPro ? 0.8 : isAnnual ? 0.7 : 1 }} />
+                <div className="relative flex flex-col flex-1 rounded-[21px] overflow-hidden" style={{ background: isPro ? 'linear-gradient(168deg, rgba(30,27,60,0.98) 0%, rgba(15,14,28,0.99) 100%)' : isAnnual ? 'linear-gradient(168deg, rgba(40,30,15,0.95) 0%, rgba(15,14,22,0.99) 100%)' : isStarter ? 'linear-gradient(168deg, rgba(22,20,40,0.98) 0%, rgba(13,12,22,0.99) 100%)' : 'linear-gradient(168deg, rgba(20,19,30,0.98) 0%, rgba(12,11,20,0.99) 100%)', backdropFilter: 'blur(20px)' }}>
+                  {isPro && (<><div className="absolute -top-24 -right-24 w-72 h-72 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.18) 0%, transparent 60%)', filter: 'blur(40px)' }} /><div className="absolute -bottom-16 -left-16 w-48 h-48 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.12) 0%, transparent 60%)', filter: 'blur(30px)' }} /></>)}
+                  {isAnnual && (<div className="absolute -top-16 -right-16 w-56 h-56 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(245,158,11,0.12) 0%, transparent 60%)', filter: 'blur(35px)' }} />)}
+
+                  <div className="relative p-7 pb-0 flex flex-col flex-1">
+                    <div className="flex items-center justify-between mb-6">
+                      <h3 className="text-[13px] font-bold uppercase tracking-[0.12em]" style={{ color: isPro ? '#c7d2fe' : isAnnual ? '#fde68a' : isStarter ? '#a5b4fc' : 'rgba(255,255,255,0.5)' }}>{plan.name}</h3>
+                      {isPro && <span className="px-3 py-1 rounded-full text-[9px] font-extrabold uppercase tracking-[0.12em]" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: '#fff', boxShadow: '0 2px 12px rgba(99,102,241,0.5), 0 0 20px rgba(99,102,241,0.2)' }}>Most Popular</span>}
+                      {isAnnual && <span className="px-3 py-1 rounded-full text-[9px] font-extrabold uppercase tracking-[0.12em]" style={{ background: 'linear-gradient(135deg, #fbbf24, #f59e0b)', color: '#451a03', boxShadow: '0 2px 12px rgba(245,158,11,0.45), 0 0 20px rgba(245,158,11,0.15)' }}>Best Value</span>}
+                    </div>
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="font-extrabold leading-none tracking-tight" style={{ fontSize: isPro ? '52px' : '46px', ...(isPro ? { background: 'linear-gradient(145deg, #e0e7ff, #c7d2fe, #a5b4fc)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', filter: 'drop-shadow(0 0 20px rgba(99,102,241,0.3))' } : isAnnual ? { background: 'linear-gradient(145deg, #fef3c7, #fde68a, #fbbf24)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', filter: 'drop-shadow(0 0 16px rgba(245,158,11,0.25))' } : isStarter ? { background: 'linear-gradient(145deg, rgba(255,255,255,0.95), rgba(255,255,255,0.7))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' } : { color: 'rgba(255,255,255,0.85)' }) }}>{plan.price}</span>
+                      {plan.period && <span className="text-base font-medium" style={{ color: 'rgba(255,255,255,0.3)' }}>{plan.period}</span>}
+                    </div>
+                    <p className="mt-2.5 text-[13px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.4)' }}>{plan.description}</p>
+                    <div className="my-6 h-px" style={{ background: `linear-gradient(90deg, transparent 0%, ${isPro ? 'rgba(99,102,241,0.35)' : isAnnual ? 'rgba(245,158,11,0.25)' : 'rgba(255,255,255,0.08)'} 50%, transparent 100%)` }} />
+                    <ul className="space-y-3.5 flex-1 mb-7">
+                      {plan.features.map((f, i) => (
+                        <li key={i} className="flex items-start gap-3 text-[13px] leading-snug">
+                          <span className="w-[18px] h-[18px] mt-[1px] rounded-full flex items-center justify-center flex-shrink-0" style={{ background: `${accent.checkColor}15`, border: `1px solid ${accent.checkColor}30` }}>
+                            <svg className="w-[10px] h-[10px]" viewBox="0 0 12 12" fill="none" style={{ color: accent.checkColor }}><path d="M10 3L4.5 8.5L2 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                          </span>
+                          <span style={{ color: 'rgba(255,255,255,0.65)' }}>{f}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="p-7 pt-0">
+                    <button onClick={() => handleCheckout(plan)} disabled={loading === plan.name} className="pricing-cta w-full py-4 text-sm font-bold rounded-[14px] cursor-pointer transition-all duration-300 disabled:opacity-50 flex items-center justify-center gap-2" style={isPro ? { background: 'linear-gradient(135deg, #6366f1, #7c3aed, #8b5cf6)', color: '#fff', boxShadow: '0 6px 24px rgba(99,102,241,0.45), 0 0 40px rgba(99,102,241,0.15), inset 0 1px 0 rgba(255,255,255,0.15)' } : isAnnual ? { background: 'linear-gradient(135deg, #fbbf24, #f59e0b, #d97706)', color: '#451a03', boxShadow: '0 6px 24px rgba(245,158,11,0.4), 0 0 40px rgba(245,158,11,0.1), inset 0 1px 0 rgba(255,255,255,0.25)' } : isStarter ? { background: 'linear-gradient(135deg, rgba(99,102,241,0.18), rgba(139,92,246,0.12))', color: '#c7d2fe', border: '1px solid rgba(99,102,241,0.35)', boxShadow: '0 2px 12px rgba(99,102,241,0.1)' } : { background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                      {loading === plan.name ? (<span className="flex items-center justify-center gap-2"><svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>Processing...</span>) : (<>{plan.cta}<svg className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-0.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 8h10M9 4l4 4-4 4" /></svg></>)}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <style>{`
+          @keyframes borderShimmer { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+          .pricing-card { transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), filter 0.5s ease; }
+          .pricing-card:hover { transform: translateY(-8px); }
+          .pricing-card:hover .pricing-cta { filter: brightness(1.1); }
+        `}</style>
+      </section>
+
       {/* Competitor comparison */}
       <section className="px-6 pt-4 pb-16">
         <div className="w-full lg:max-w-[70%] mx-auto">
@@ -328,210 +400,6 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* Divider */}
-      <div className="w-full lg:max-w-[70%] mx-auto px-6">
-        <div className="h-px bg-indigo-100/30" />
-      </div>
-
-      {/* Plans */}
-      <section className="w-full lg:max-w-[70%] mx-auto px-6 py-14">
-        {/* Section header */}
-        <div className="mb-10 text-center">
-          <span className="text-xs font-bold uppercase tracking-[0.2em]" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6, #a78bfa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Plans</span>
-          <h2 className="mt-3 text-3xl md:text-4xl font-extrabold tracking-tight" style={{ color: 'var(--text-primary)' }}>
-            Choose your path.
-          </h2>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-4 items-stretch">
-          {PLANS.map((plan) => {
-            const isPro = plan.popular;
-            const isAnnual = plan.name === 'Annual';
-            const isFree = plan.name === 'Free';
-            const isStarter = plan.name === 'Starter';
-
-            const accent = isPro
-              ? { from: '#6366f1', via: '#8b5cf6', to: '#a78bfa', glow: 'rgba(99,102,241,0.4)', checkColor: '#a5b4fc' }
-              : isAnnual
-              ? { from: '#f59e0b', via: '#fbbf24', to: '#fde68a', glow: 'rgba(245,158,11,0.3)', checkColor: '#fbbf24' }
-              : isStarter
-              ? { from: '#6366f1', via: '#818cf8', to: '#a5b4fc', glow: 'rgba(99,102,241,0.15)', checkColor: '#818cf8' }
-              : { from: '#475569', via: '#64748b', to: '#94a3b8', glow: 'rgba(100,116,139,0.1)', checkColor: '#4ade80' };
-
-            return (
-              <div
-                key={plan.name}
-                className={`pricing-card group relative flex flex-col rounded-[22px] overflow-visible ${isPro ? 'lg:-mt-4 lg:mb-[-16px]' : ''}`}
-                style={{ zIndex: isPro ? 2 : 1 }}
-              >
-                {/* Animated gradient border wrapper */}
-                <div
-                  className="absolute -inset-[1px] rounded-[22px] pointer-events-none"
-                  style={{
-                    background: isPro
-                      ? `linear-gradient(135deg, ${accent.from}, ${accent.via}, ${accent.to}, ${accent.from})`
-                      : isAnnual
-                      ? `linear-gradient(135deg, ${accent.from}, ${accent.via}, ${accent.to}, ${accent.from})`
-                      : isStarter
-                      ? `linear-gradient(135deg, rgba(99,102,241,0.3), rgba(139,92,246,0.15), rgba(99,102,241,0.3))`
-                      : 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04), rgba(255,255,255,0.08))',
-                    backgroundSize: isPro || isAnnual ? '300% 300%' : '100% 100%',
-                    animation: isPro || isAnnual ? 'borderShimmer 4s ease infinite' : 'none',
-                    opacity: isPro ? 0.8 : isAnnual ? 0.7 : 1,
-                  }}
-                />
-
-                {/* Card body */}
-                <div
-                  className="relative flex flex-col flex-1 rounded-[21px] overflow-hidden"
-                  style={{
-                    background: isPro
-                      ? 'linear-gradient(168deg, rgba(30,27,60,0.98) 0%, rgba(15,14,28,0.99) 100%)'
-                      : isAnnual
-                      ? 'linear-gradient(168deg, rgba(40,30,15,0.95) 0%, rgba(15,14,22,0.99) 100%)'
-                      : isStarter
-                      ? 'linear-gradient(168deg, rgba(22,20,40,0.98) 0%, rgba(13,12,22,0.99) 100%)'
-                      : 'linear-gradient(168deg, rgba(20,19,30,0.98) 0%, rgba(12,11,20,0.99) 100%)',
-                    backdropFilter: 'blur(20px)',
-                  }}
-                >
-                  {/* Ambient glow orbs */}
-                  {isPro && (
-                    <>
-                      <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.18) 0%, transparent 60%)', filter: 'blur(40px)' }} />
-                      <div className="absolute -bottom-16 -left-16 w-48 h-48 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.12) 0%, transparent 60%)', filter: 'blur(30px)' }} />
-                    </>
-                  )}
-                  {isAnnual && (
-                    <div className="absolute -top-16 -right-16 w-56 h-56 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(245,158,11,0.12) 0%, transparent 60%)', filter: 'blur(35px)' }} />
-                  )}
-
-                  <div className="relative p-7 pb-0 flex flex-col flex-1">
-                    {/* Header: name + badge */}
-                    <div className="flex items-center justify-between mb-6">
-                      <h3
-                        className="text-[13px] font-bold uppercase tracking-[0.12em]"
-                        style={{ color: isPro ? '#c7d2fe' : isAnnual ? '#fde68a' : isStarter ? '#a5b4fc' : 'rgba(255,255,255,0.5)' }}
-                      >
-                        {plan.name}
-                      </h3>
-                      {isPro && (
-                        <span className="px-3 py-1 rounded-full text-[9px] font-extrabold uppercase tracking-[0.12em]" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: '#fff', boxShadow: '0 2px 12px rgba(99,102,241,0.5), 0 0 20px rgba(99,102,241,0.2)' }}>
-                          Most Popular
-                        </span>
-                      )}
-                      {isAnnual && (
-                        <span className="px-3 py-1 rounded-full text-[9px] font-extrabold uppercase tracking-[0.12em]" style={{ background: 'linear-gradient(135deg, #fbbf24, #f59e0b)', color: '#451a03', boxShadow: '0 2px 12px rgba(245,158,11,0.45), 0 0 20px rgba(245,158,11,0.15)' }}>
-                          Best Value
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Price */}
-                    <div className="flex items-baseline gap-1.5">
-                      <span
-                        className="font-extrabold leading-none tracking-tight"
-                        style={{
-                          fontSize: isPro ? '52px' : '46px',
-                          ...(isPro
-                            ? { background: 'linear-gradient(145deg, #e0e7ff, #c7d2fe, #a5b4fc)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', filter: 'drop-shadow(0 0 20px rgba(99,102,241,0.3))' }
-                            : isAnnual
-                            ? { background: 'linear-gradient(145deg, #fef3c7, #fde68a, #fbbf24)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', filter: 'drop-shadow(0 0 16px rgba(245,158,11,0.25))' }
-                            : isStarter
-                            ? { background: 'linear-gradient(145deg, rgba(255,255,255,0.95), rgba(255,255,255,0.7))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }
-                            : { color: 'rgba(255,255,255,0.85)' }),
-                        }}
-                      >
-                        {plan.price}
-                      </span>
-                      {plan.period && (
-                        <span className="text-base font-medium" style={{ color: 'rgba(255,255,255,0.3)' }}>
-                          {plan.period}
-                        </span>
-                      )}
-                    </div>
-                    <p className="mt-2.5 text-[13px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                      {plan.description}
-                    </p>
-
-                    {/* Separator */}
-                    <div className="my-6 h-px" style={{ background: `linear-gradient(90deg, transparent 0%, ${isPro ? 'rgba(99,102,241,0.35)' : isAnnual ? 'rgba(245,158,11,0.25)' : 'rgba(255,255,255,0.08)'} 50%, transparent 100%)` }} />
-
-                    {/* Features */}
-                    <ul className="space-y-3.5 flex-1 mb-7">
-                      {plan.features.map((f, i) => (
-                        <li key={i} className="flex items-start gap-3 text-[13px] leading-snug">
-                          <span
-                            className="w-[18px] h-[18px] mt-[1px] rounded-full flex items-center justify-center flex-shrink-0"
-                            style={{ background: `${accent.checkColor}15`, border: `1px solid ${accent.checkColor}30` }}
-                          >
-                            <svg className="w-[10px] h-[10px]" viewBox="0 0 12 12" fill="none" style={{ color: accent.checkColor }}>
-                              <path d="M10 3L4.5 8.5L2 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                          </span>
-                          <span style={{ color: 'rgba(255,255,255,0.65)' }}>{f}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  {/* CTA button */}
-                  <div className="p-7 pt-0">
-                    <button
-                      onClick={() => handleCheckout(plan)}
-                      disabled={loading === plan.name}
-                      className="pricing-cta w-full py-4 text-sm font-bold rounded-[14px] cursor-pointer transition-all duration-300 disabled:opacity-50 flex items-center justify-center gap-2"
-                      style={
-                        isPro
-                          ? { background: 'linear-gradient(135deg, #6366f1, #7c3aed, #8b5cf6)', color: '#fff', boxShadow: '0 6px 24px rgba(99,102,241,0.45), 0 0 40px rgba(99,102,241,0.15), inset 0 1px 0 rgba(255,255,255,0.15)' }
-                          : isAnnual
-                          ? { background: 'linear-gradient(135deg, #fbbf24, #f59e0b, #d97706)', color: '#451a03', boxShadow: '0 6px 24px rgba(245,158,11,0.4), 0 0 40px rgba(245,158,11,0.1), inset 0 1px 0 rgba(255,255,255,0.25)' }
-                          : isStarter
-                          ? { background: 'linear-gradient(135deg, rgba(99,102,241,0.18), rgba(139,92,246,0.12))', color: '#c7d2fe', border: '1px solid rgba(99,102,241,0.35)', boxShadow: '0 2px 12px rgba(99,102,241,0.1)' }
-                          : { background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.1)' }
-                      }
-                    >
-                      {loading === plan.name ? (
-                        <span className="flex items-center justify-center gap-2">
-                          <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                          </svg>
-                          Processing...
-                        </span>
-                      ) : (
-                        <>
-                          {plan.cta}
-                          <svg className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-0.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M3 8h10M9 4l4 4-4 4" />
-                          </svg>
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        <style>{`
-          @keyframes borderShimmer {
-            0%, 100% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-          }
-          .pricing-card {
-            transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), filter 0.5s ease;
-          }
-          .pricing-card:hover {
-            transform: translateY(-8px);
-          }
-          .pricing-card:hover .pricing-cta {
-            filter: brightness(1.1);
-          }
-        `}</style>
-      </section>
-
 
       {/* Desktop App Download */}
       <section className="px-6 py-10">
@@ -564,21 +432,49 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* Divider */}
-      <div className="w-full lg:max-w-[70%] mx-auto px-6">
-        <div className="h-px bg-indigo-100/30" />
-      </div>
-
-
-      {/* CTA buttons */}
-      <section className="px-6 py-10 text-center">
-        <div className="flex items-center justify-center gap-4">
-          <Link to="/lumora" className="btn-primary">
-            Start Free
-          </Link>
-          <Link to="/capra/prepare" className="btn-secondary">
-            Browse Topics
-          </Link>
+      {/* Top-Up Packs */}
+      <section className="px-6 py-10">
+        <div className="w-full lg:max-w-[70%] mx-auto">
+          <h2 className="heading-2 mb-6 text-center">Top-Up Packs</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {[
+              { name: '20 AI Questions', price: '$5', desc: 'Includes 3 bonus diagrams', packId: 'questions_20' },
+              { name: '50 AI Questions', price: '$10', desc: 'Includes 8 bonus diagrams', packId: 'questions_50' },
+              { name: '5 Live Sessions', price: '$15', desc: '90 minutes per session', packId: 'sessions_5' },
+            ].map((pack) => (
+              <div key={pack.packId} className="rounded-2xl p-4 flex items-center justify-between gap-4" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', boxShadow: '0 4px 24px rgba(0,0,0,0.2)' }}>
+                <div>
+                  <h3 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{pack.name}</h3>
+                  <div className="flex items-baseline gap-1 mt-0.5">
+                    <span className="text-lg font-bold text-indigo-400">{pack.price}</span>
+                    <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>one-time</span>
+                  </div>
+                  <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-muted)' }}>{pack.desc}</p>
+                </div>
+                <button
+                  onClick={async () => {
+                    if (!token) { navigate('/login'); return; }
+                    try {
+                      const resp = await fetch(`${API_URL}/api/v1/usage/topup`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({
+                          pack_id: pack.packId,
+                          success_url: `${window.location.origin}/pricing?topup=success`,
+                          cancel_url: `${window.location.origin}/pricing`,
+                        }),
+                      });
+                      const data = await resp.json();
+                      if (data.url) window.location.href = data.url;
+                    } catch { /* ignore */ }
+                  }}
+                  className="shrink-0 px-4 py-2 text-white text-xs font-semibold rounded-lg transition-colors" style={{ background: 'var(--accent)' }}
+                >
+                  Buy
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
