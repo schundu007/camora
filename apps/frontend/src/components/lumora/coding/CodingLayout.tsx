@@ -706,9 +706,9 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
 
         {/* ── LEFT PANEL: Problem / Solution ── */}
-        <div className={`w-full md:w-auto flex flex-col md:border-r border-b md:border-b-0 coding-left-panel max-h-[40vh] md:max-h-none overflow-auto ${embedded ? 'border-[var(--border)]' : 'bg-white border-gray-200 lumora-light-panel'}`} style={{ ['--left-w' as any]: `${leftPanelWidth}%` }}>
+        <div className={`w-full md:w-auto flex flex-col md:border-r border-b md:border-b-0 coding-left-panel max-h-[40vh] md:max-h-none overflow-auto ${embedded ? 'border-[var(--border)]' : 'lumora-light-panel'}`} style={{ ['--left-w' as any]: `${leftPanelWidth}%`, background: t.surfaceBg, borderColor: t.cardBorder }}>
           {/* Tabs */}
-          <div className="flex items-center gap-1 px-3 py-1.5 bg-gray-50/50 border-b border-gray-100">
+          <div className="flex items-center gap-1 px-3 py-1.5 border-b" style={{ background: t.sectionBg, borderColor: t.cardBorder }}>
             <button
               onClick={() => setProblemTab('description')}
               className={`px-3 py-1 text-xs font-semibold rounded-md transition-all ${
@@ -731,11 +731,12 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
             {problemTab === 'description' && (
               <div className="p-3 md:p-4 space-y-3">
                 {/* Collapsible Input Section */}
-                <div className="border border-gray-200 rounded-lg overflow-hidden">
+                <div className="rounded-lg overflow-hidden" style={{ border: `1px solid ${t.inputBorder}` }}>
                   {/* Collapse/Expand Header */}
                   <button
                     onClick={() => setIsInputCollapsed(!isInputCollapsed)}
-                    className="w-full flex items-center justify-between px-3 py-2 bg-gray-50 hover:bg-gray-100 transition-colors"
+                    className="w-full flex items-center justify-between px-3 py-2 transition-colors"
+                    style={{ background: t.sectionBg }}
                   >
                     <div className="flex items-center gap-2">
                       <svg className={`w-3.5 h-3.5 text-gray-500 transition-transform duration-200 ${isInputCollapsed ? '' : 'rotate-90'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1095,12 +1096,12 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
         </div>
 
         {/* ── RIGHT PANEL: Code Editor + Output ── */}
-        <div className={`flex-1 flex flex-col min-w-0 ${embedded ? '' : 'bg-white lumora-light-panel'}`}>
+        <div className="flex-1 flex flex-col min-w-0" style={{ background: 'var(--bg-surface)', color: 'var(--text-primary)' }}>
           {/* Editor Header */}
-          <div className="flex items-center justify-between px-3 py-1.5 bg-gray-50 border-b border-gray-100">
+          <div className="flex items-center justify-between px-3 py-1.5" style={{ background: 'var(--bg-elevated)', borderBottom: '1px solid var(--border)' }}>
             <div className="flex items-center gap-2">
               <select id="language-select" name="language" value={language} onChange={(e) => handleLanguageChange(e.target.value)}
-                className="bg-white border border-gray-200 rounded-md px-2 py-1 text-gray-900 text-xs font-mono focus:border-indigo-400 focus:outline-none cursor-pointer">
+                className="rounded-md px-2 py-1 text-xs font-mono focus:outline-none cursor-pointer" style={{ background: 'var(--bg-app)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}>
                 {LANGUAGES.map(l => <option key={l.id} value={l.id}>{l.label}</option>)}
               </select>
               <button onClick={handleRun} disabled={isRunning}
@@ -1114,7 +1115,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
               </button>
             </div>
             <div className="flex items-center gap-1">
-              <button onClick={handleReset} className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors" title="Reset">
+              <button onClick={handleReset} className="p-1.5 rounded-md transition-colors" style={{ color: 'var(--text-muted)' }} title="Reset">
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
@@ -1172,7 +1173,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
               </div>
               <div className="flex items-center gap-1.5">
                 <button onClick={() => setIsOutputCollapsed(!isOutputCollapsed)}
-                  className="p-1 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors">
+                  className="p-1 text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] rounded transition-colors">
                   <svg className={`w-3 h-3 transition-transform ${isOutputCollapsed ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                   </svg>
