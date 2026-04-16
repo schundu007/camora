@@ -268,7 +268,33 @@ function formatTime(seconds: number): string {
   return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 }
 
+function useTheme(dark: boolean) {
+  if (dark) return {
+    cardBg: '#16141F', cardBorder: 'rgba(255,255,255,0.06)',
+    headerBg: 'rgba(99,102,241,0.08)', headerBorder: 'rgba(255,255,255,0.06)',
+    headerText: '#818cf8', badgeBg: 'rgba(99,102,241,0.12)', badgeText: '#818cf8',
+    text: '#F2F1F3', textMuted: '#6C6B7B', textDim: '#545260',
+    codeBg: '#1E1C28', codeText: '#F2F1F3',
+    inputBg: '#1E1C28', inputBorder: 'rgba(255,255,255,0.06)', inputText: '#F2F1F3',
+    sectionBg: '#16141F', surfaceBg: '#0D0C14',
+    tabActive: '#6366f1', tabActiveBg: 'rgba(99,102,241,0.15)', tabText: '#6C6B7B',
+    dotColor: '#818cf8',
+  };
+  return {
+    cardBg: '#ffffff', cardBorder: '#e5e7eb',
+    headerBg: 'rgba(99,102,241,0.05)', headerBorder: '#e0e7ff',
+    headerText: '#4338ca', badgeBg: '#e0e7ff', badgeText: '#4338ca',
+    text: '#111827', textMuted: '#6b7280', textDim: '#9ca3af',
+    codeBg: '#f9fafb', codeText: '#1f2937',
+    inputBg: '#ffffff', inputBorder: '#e5e7eb', inputText: '#111827',
+    sectionBg: '#f9fafb', surfaceBg: '#ffffff',
+    tabActive: '#6366f1', tabActiveBg: '#ffffff', tabText: '#6b7280',
+    dotColor: '#6366f1',
+  };
+}
+
 export function DesignLayout({ onBack, initialProblem, embedded }: DesignLayoutProps) {
+  const t = useTheme(!!embedded);
   const { token } = useAuth();
   const { setStatus } = useInterviewStore();
 
@@ -811,32 +837,32 @@ export function DesignLayout({ onBack, initialProblem, embedded }: DesignLayoutP
           <div className="w-0.5 h-8 bg-[var(--border)] group-hover:bg-indigo-500 rounded-full transition-colors" />
         </div>
 
-        {/* Right: Design Result — light panel, exempt from dark overrides */}
-        <div className="flex-1 min-h-0 min-w-0 overflow-auto lumora-light-panel">
+        {/* Right: Design Result — light panel when standalone, themed when embedded */}
+        <div className={`flex-1 min-h-0 min-w-0 overflow-auto ${embedded ? '' : 'lumora-light-panel'}`} style={{ background: t.surfaceBg }}>
 
           {!result && !isLoading && !streamingText && !errorMsg && (
-            <div className="flex flex-col items-center justify-center h-full text-gray-400">
-              <div className="w-14 h-14 rounded-xl bg-gray-50 flex items-center justify-center mb-4">
-                <svg className="w-7 h-7 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="flex flex-col items-center justify-center h-full" style={{ color: t.textDim }}>
+              <div className="w-14 h-14 rounded-xl flex items-center justify-center mb-4" style={{ background: t.sectionBg }}>
+                <svg className="w-7 h-7" style={{ color: t.textDim }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                 </svg>
               </div>
-              <p className="text-sm font-mono text-gray-500">Enter a system design question to get started</p>
-              <p className="text-xs font-mono text-gray-400 mt-1">Press ⌘+Enter to submit</p>
+              <p className="text-sm font-mono" style={{ color: t.textMuted }}>Enter a system design question to get started</p>
+              <p className="text-xs font-mono mt-1" style={{ color: t.textDim }}>Press ⌘+Enter to submit</p>
             </div>
           )}
 
           {isLoading && !sd && (
             <div className="flex flex-col h-full p-3 md:p-5">
-              <div className="flex items-center gap-3 p-3 bg-indigo-50 border border-indigo-100 rounded-xl mb-4 shrink-0">
+              <div className="flex items-center gap-3 p-3 rounded-xl mb-4 shrink-0" style={{ background: t.headerBg, border: `1px solid ${t.headerBorder}` }}>
                 <div className="relative w-5 h-5">
-                  <div className="absolute inset-0 border-2 border-indigo-200 rounded-full" />
-                  <div className="absolute inset-0 border-2 border-transparent border-t-indigo-500 rounded-full animate-spin" />
+                  <div className="absolute inset-0 border-2 rounded-full" style={{ borderColor: t.cardBorder }} />
+                  <div className="absolute inset-0 border-2 border-transparent rounded-full animate-spin" style={{ borderTopColor: t.dotColor }} />
                 </div>
-                <span className="text-xs font-semibold text-indigo-700">Analyzing and designing system architecture...</span>
+                <span className="text-xs font-semibold" style={{ color: t.headerText }}>Analyzing and designing system architecture...</span>
               </div>
               {streamingText && (
-                <pre className="flex-1 overflow-auto text-[10px] text-gray-400 font-mono whitespace-pre-wrap leading-relaxed max-h-60">{streamingText}</pre>
+                <pre className="flex-1 overflow-auto text-[10px] font-mono whitespace-pre-wrap leading-relaxed max-h-60" style={{ color: t.textDim }}>{streamingText}</pre>
               )}
             </div>
           )}
@@ -846,26 +872,26 @@ export function DesignLayout({ onBack, initialProblem, embedded }: DesignLayoutP
 
               {/* ── OVERVIEW ── */}
               {sd.overview && (
-                <section className="rounded-2xl border border-indigo-200 bg-white overflow-hidden" style={{boxShadow: '0 2px 8px rgba(0,0,0,0.04)'}}>
-                  <div className="flex items-center gap-2.5 px-4 py-2.5">
-                    <div className="w-1.5 h-5 rounded-full bg-gradient-to-b from-indigo-500 to-violet-500" />
-                    <h2 className="text-sm font-bold text-indigo-800">Overview</h2>
+                <section className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${t.cardBorder}`, background: t.cardBg, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+                  <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: t.headerBg }}>
+                    <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, ${t.dotColor}, #8b5cf6)` }} />
+                    <h2 className="text-sm font-bold" style={{ color: t.headerText }}>Overview</h2>
                   </div>
                   <div className="px-4 py-3">
-                    <p className="text-sm text-gray-700 leading-relaxed">{sd.overview}</p>
+                    <p className="text-sm leading-relaxed" style={{ color: t.text }}>{sd.overview}</p>
                   </div>
                 </section>
               )}
 
               {/* ── EXPLANATION ── */}
               {result?.pitch && result.pitch !== sd.overview && (
-                <section className="rounded-2xl border border-blue-200 bg-white overflow-hidden" style={{boxShadow: '0 2px 8px rgba(0,0,0,0.04)'}}>
-                  <div className="flex items-center gap-2.5 px-4 py-2.5">
-                    <div className="w-1.5 h-5 rounded-full bg-gradient-to-b from-blue-500 to-indigo-500" />
-                    <h2 className="text-sm font-bold text-blue-800">Explanation</h2>
+                <section className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${t.cardBorder}`, background: t.cardBg, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+                  <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: t.headerBg }}>
+                    <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, ${t.dotColor}, #6366f1)` }} />
+                    <h2 className="text-sm font-bold" style={{ color: t.headerText }}>Explanation</h2>
                   </div>
                   <div className="px-4 py-3">
-                    <p className="text-sm text-gray-700 leading-relaxed italic">&ldquo;{result.pitch}&rdquo;</p>
+                    <p className="text-sm leading-relaxed italic" style={{ color: t.text }}>&ldquo;{result.pitch}&rdquo;</p>
                   </div>
                 </section>
               )}
@@ -873,17 +899,17 @@ export function DesignLayout({ onBack, initialProblem, embedded }: DesignLayoutP
               {/* ── REQUIREMENTS: Functional + Non-Functional ── */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 items-start">
                 {sd.requirements?.functional && sd.requirements.functional.length > 0 && (
-                  <section className="rounded-2xl border border-indigo-200 bg-white overflow-hidden" style={{boxShadow: '0 2px 8px rgba(0,0,0,0.04)'}}>
-                    <div className="flex items-center gap-2.5 px-4 py-2.5">
-                      <div className="w-1.5 h-5 rounded-full bg-gradient-to-b from-indigo-500 to-violet-500" />
-                      <h2 className="text-sm font-bold text-indigo-800">Functional</h2>
-                      <span className="ml-auto text-[10px] font-mono text-indigo-500 bg-indigo-50 border border-indigo-200 rounded-full px-2 py-0.5">{sd.requirements.functional.length}</span>
+                  <section className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${t.cardBorder}`, background: t.cardBg, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+                    <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: t.headerBg }}>
+                      <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, ${t.dotColor}, #8b5cf6)` }} />
+                      <h2 className="text-sm font-bold" style={{ color: t.headerText }}>Functional</h2>
+                      <span className="ml-auto text-[10px] font-mono rounded-full px-2 py-0.5" style={{ color: t.badgeText, background: t.badgeBg, border: `1px solid ${t.headerBorder}` }}>{sd.requirements.functional.length}</span>
                     </div>
                     <div className="px-4 py-3">
                       <div className="grid grid-cols-1 gap-y-1">
                         {sd.requirements.functional.map((r, i) => (
-                          <div key={i} className="flex items-start gap-2 text-sm text-gray-700 leading-snug py-0.5">
-                            <span className="font-bold text-indigo-600 shrink-0">{i + 1}.</span>{r}
+                          <div key={i} className="flex items-start gap-2 text-sm leading-snug py-0.5" style={{ color: t.text }}>
+                            <span className="font-bold shrink-0" style={{ color: t.headerText }}>{i + 1}.</span>{r}
                           </div>
                         ))}
                       </div>
