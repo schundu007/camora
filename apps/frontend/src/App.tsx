@@ -10,9 +10,7 @@ const LandingPage = lazy(() => import('./pages/LandingPage'));
 const PricingPage = lazy(() => import('./pages/PricingPage'));
 
 // ── Lumora pages (live interview) ───────────────────────
-const LumoraInterviewPage = lazy(() => import('./pages/lumora/InterviewPage'));
-const LumoraCodingPage = lazy(() => import('./pages/lumora/CodingPage'));
-const LumoraDesignPage = lazy(() => import('./pages/lumora/DesignPage'));
+const LumoraShellPage = lazy(() => import('./pages/lumora/LumoraShellPage'));
 
 // ── Capra pages (preparation) ───────────────────────────
 const CapraDashboard = lazy(() => import('./pages/capra/DashboardPage'));
@@ -168,15 +166,15 @@ export function App() {
           <Route path="/jobs" element={<ShellRoute><JobsPage /></ShellRoute>} />
           <Route path="/jobs/:id/prepare" element={<ShellRoute><JobPrepPage /></ShellRoute>} />
 
-          {/* ── Lumora: Live Interview (full-screen, NO shell — has its own Header) ── */}
-          <Route path="/lumora" element={<ProtectedRoute><LumoraInterviewPage /></ProtectedRoute>} />
-          <Route path="/lumora/coding" element={<ProtectedRoute><LumoraCodingPage /></ProtectedRoute>} />
-          <Route path="/lumora/design" element={<ProtectedRoute><LumoraDesignPage /></ProtectedRoute>} />
+          {/* ── Lumora: Live Interview (Zoom-style shell — all tabs share one layout) ── */}
+          <Route path="/lumora" element={<ProtectedRoute><LumoraShellPage /></ProtectedRoute>} />
+          <Route path="/lumora/coding" element={<ProtectedRoute><LumoraShellPage /></ProtectedRoute>} />
+          <Route path="/lumora/design" element={<ProtectedRoute><LumoraShellPage /></ProtectedRoute>} />
 
           {/* ── Also accessible via /app paths ──────────── */}
-          <Route path="/app" element={<ProtectedRoute><LumoraInterviewPage /></ProtectedRoute>} />
-          <Route path="/app/coding" element={<ProtectedRoute><LumoraCodingPage /></ProtectedRoute>} />
-          <Route path="/app/design" element={<ProtectedRoute><LumoraDesignPage /></ProtectedRoute>} />
+          <Route path="/app" element={<ProtectedRoute><LumoraShellPage /></ProtectedRoute>} />
+          <Route path="/app/coding" element={<ProtectedRoute><LumoraShellPage /></ProtectedRoute>} />
+          <Route path="/app/design" element={<ProtectedRoute><LumoraShellPage /></ProtectedRoute>} />
 
           {/* ── Capra: Preparation ─────────────────────── */}
           <Route path="/capra" element={<ShellRoute><CapraDashboard /></ShellRoute>} />

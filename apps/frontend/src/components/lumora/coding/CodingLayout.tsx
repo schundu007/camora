@@ -104,11 +104,13 @@ interface CodingLayoutProps {
   isLoading?: boolean;
   onBack: () => void;
   initialProblem?: string;
+  /** When true, hides internal header and uses flex-1 instead of h-screen (for embedding in LumoraShell) */
+  embedded?: boolean;
 }
 
 // ── Main Component ───────────────────────────────────────────────────────────
 
-export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem }: CodingLayoutProps) {
+export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embedded }: CodingLayoutProps) {
   const { token } = useAuth();
 
   // Core state
@@ -562,8 +564,9 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem }: Co
   // ── Render ──────────────────────────────────────────────────────────────
 
   return (
-    <div className="h-screen w-full flex flex-col lumora-app-bg">
-      {/* ═══ HEADER ═══ */}
+    <div className={embedded ? 'flex-1 flex flex-col min-h-0' : 'h-screen w-full flex flex-col lumora-app-bg'}>
+      {/* ═══ HEADER — hidden when embedded in LumoraShell ═══ */}
+      {!embedded && (
       <header className="flex items-center justify-between h-11 px-3 shrink-0" style={{ background: 'linear-gradient(135deg, rgba(15,23,42,0.98) 0%, rgba(30,27,75,0.96) 50%, rgba(15,23,42,0.98) 100%)', borderBottom: '1px solid rgba(99,102,241,0.12)' }}>
         <div className="flex items-center gap-2 md:gap-3">
           <button onClick={onBack} className="flex items-center gap-1 px-1.5 py-1 text-xs md:text-sm font-bold text-white/70 hover:text-white rounded transition-colors">
@@ -634,6 +637,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem }: Co
           />
         </div>
       </header>
+      )}
 
       {/* ═══ MAIN CONTENT ═══ */}
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
