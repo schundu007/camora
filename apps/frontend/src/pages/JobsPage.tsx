@@ -585,10 +585,8 @@ export default function JobsPage() {
     window.scrollTo(0, 0);
   }, []);
 
-  /* ── Filtered jobs by selected category pill ── */
-  const filteredJobs = role === 'all'
-    ? jobs
-    : jobs.filter((job) => detectCategory(job.title) === role);
+  /* ── Jobs from API — backend handles category filtering ── */
+  const filteredJobs = jobs;
 
   return (
     <div style={{ background: 'transparent', minHeight: '100vh' }}>

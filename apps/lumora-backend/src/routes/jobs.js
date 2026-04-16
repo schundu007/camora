@@ -165,9 +165,34 @@ router.get('/', async (req, res, next) => {
     let paramIdx = 1;
 
     if (req.query.role) {
-      conditions.push(`j.title ILIKE $${paramIdx}`);
-      params.push(`%${req.query.role}%`);
-      paramIdx++;
+      // Category-specific keyword expansion for broader matching
+      const categoryKeywords = {
+        devops: ['devops', 'dev ops', 'devsecops', 'release engineer', 'build engineer', 'ci/cd', 'ci cd'],
+        sre: ['sre', 'site reliability', 'reliability engineer'],
+        ml: ['machine learning', 'ml engineer', 'deep learning', 'nlp', 'artificial intelligence', 'ai engineer', 'ai research', 'computer vision'],
+        data: ['data engineer', 'data scientist', 'data analyst', 'analytics', 'etl', 'data platform', 'data infrastructure', 'business intelligence', 'bi engineer'],
+        fullstack: ['full stack', 'fullstack', 'full-stack'],
+        frontend: ['frontend', 'front-end', 'front end', 'ui engineer', 'ui developer', 'react engineer', 'react developer'],
+        backend: ['backend', 'back-end', 'back end', 'server engineer', 'api engineer', 'api developer'],
+        platform: ['platform engineer', 'platform developer', 'platform architect', 'developer experience', 'developer tools', 'dx engineer'],
+        cloud: ['cloud engineer', 'cloud architect', 'aws engineer', 'azure engineer', 'gcp engineer', 'infrastructure engineer', 'infra engineer'],
+      };
+      const role = req.query.role.toLowerCase();
+      const keywords = categoryKeywords[role];
+      if (keywords) {
+        const roleConds = keywords.map((kw) => {
+          const cond = `j.title ILIKE $${paramIdx}`;
+          params.push(`%${kw}%`);
+          paramIdx++;
+          return cond;
+        });
+        conditions.push(`(${roleConds.join(' OR ')})`);
+      } else {
+        // Fallback for unknown roles — plain ILIKE
+        conditions.push(`j.title ILIKE $${paramIdx}`);
+        params.push(`%${req.query.role}%`);
+        paramIdx++;
+      }
     }
 
     if (req.query.location) {
