@@ -7,25 +7,26 @@ import * as pythonDiagrams from '../services/pythonDiagrams.js';
 import { AppError, ErrorCode } from '../middleware/errorHandler.js';
 import * as freeUsageService from '../services/freeUsageService.js';
 import { query } from '../lib/shared-db.js';
-import { cacheGet, cacheSet } from '../services/redis.js';
 
 const router = Router();
 
-// Daily diagram cap for paid users to prevent abuse (persists in Redis across restarts/instances)
+// Daily diagram cap for paid users to prevent abuse
 const PAID_DIAGRAM_DAILY_LIMIT = 50;
+const dailyDiagramUsage = new Map();
 
-async function checkDailyDiagramLimit(userId) {
+function checkDailyDiagramLimit(userId) {
   const today = new Date().toISOString().slice(0, 10);
-  const key = `daily_diagram:${userId}:${today}`;
-  const count = (await cacheGet(key)) || 0;
-  return count < PAID_DIAGRAM_DAILY_LIMIT;
-}
-
-async function incrementDailyDiagramCount(userId) {
-  const today = new Date().toISOString().slice(0, 10);
-  const key = `daily_diagram:${userId}:${today}`;
-  const count = (await cacheGet(key)) || 0;
-  await cacheSet(key, count + 1, 86400);
+  const key = `${userId}:${today}`;
+  const count = dailyDiagramUsage.get(key) || 0;
+  if (count >= PAID_DIAGRAM_DAILY_LIMIT) return false;
+  dailyDiagramUsage.set(key, count + 1);
+  // Clean old entries daily
+  if (dailyDiagramUsage.size > 10000) {
+    for (const [k] of dailyDiagramUsage) {
+      if (!k.endsWith(today)) dailyDiagramUsage.delete(k);
+    }
+  }
+  return true;
 }
 
 /** Hash a problem description into a stable cache key */
@@ -70,16 +71,15 @@ router.post('/eraser', async (req, res, next) => {
       // Cache lookup failed (table might not exist yet) — fall through to generate
     }
 
-    // 2. Check free usage (authenticate middleware guarantees req.user)
-    const userId = req.user.id;
-    let userHasSubscription = false;
-    if (!req.user.is_admin) {
+    // 2. Check free usage
+    const userId = req.user?.id;
+    const isAdmin = req.user?.is_admin;
+    if (userId && !isAdmin) {
       const canUse = await freeUsageService.canUseFeature(userId, 'design');
       if (!canUse.allowed) {
         return res.status(429).json({ error: canUse.reason || 'Free trial exhausted.', subscriptionRequired: true });
       }
-      userHasSubscription = canUse.hasSubscription;
-      if (canUse.hasSubscription && !(await checkDailyDiagramLimit(userId))) {
+      if (canUse.hasSubscription && !checkDailyDiagramLimit(userId)) {
         return res.status(429).json({ error: `Daily diagram limit reached (${PAID_DIAGRAM_DAILY_LIMIT}/day). Try again tomorrow.`, dailyLimitReached: true });
       }
     }
@@ -108,7 +108,6 @@ router.post('/eraser', async (req, res, next) => {
       console.warn('[DiagramCache] Failed to save:', err.message);
     }
 
-    if (userHasSubscription) incrementDailyDiagramCount(userId).catch(() => {});
     res.json(result);
   } catch (error) {
     if (error instanceof AppError) {
@@ -167,15 +166,14 @@ router.post('/generate', async (req, res, next) => {
     } catch { /* table might not exist yet */ }
 
     // 2. Check free usage — only for cache misses (actual generation costs money)
-    const userId = req.user.id;
-    let userHasSubscription = false;
-    if (!req.user.is_admin) {
+    const userId = req.user?.id;
+    const isAdmin = req.user?.is_admin;
+    if (userId && !isAdmin) {
       const canUse = await freeUsageService.canUseFeature(userId, 'design');
       if (!canUse.allowed) {
         return res.status(429).json({ error: canUse.reason || 'Free trial exhausted.', subscriptionRequired: true });
       }
-      userHasSubscription = canUse.hasSubscription;
-      if (canUse.hasSubscription && !(await checkDailyDiagramLimit(userId))) {
+      if (canUse.hasSubscription && !checkDailyDiagramLimit(userId)) {
         return res.status(429).json({ error: `Daily diagram limit reached (${PAID_DIAGRAM_DAILY_LIMIT}/day). Try again tomorrow.`, dailyLimitReached: true });
       }
     }
@@ -231,7 +229,6 @@ router.post('/generate', async (req, res, next) => {
           console.warn('[DiagramCache] Failed to cache mermaid code:', cacheErr.message);
         }
 
-        if (userHasSubscription) incrementDailyDiagramCount(userId).catch(() => {});
         return res.json({
           success: true,
           type: 'mermaid',
@@ -263,11 +260,9 @@ router.post('/generate', async (req, res, next) => {
     } catch (err) {
       console.warn('[DiagramCache] Failed to persist image:', err.message);
       // Fall back to temp file URL if DB storage fails
-      if (userHasSubscription) incrementDailyDiagramCount(userId).catch(() => {});
       return res.json({ ...pythonResult, cloud_provider: provider });
     }
 
-    if (userHasSubscription) incrementDailyDiagramCount(userId).catch(() => {});
     res.json({ success: true, image_url: imageUrl, cloud_provider: provider, cached: false });
   } catch (error) {
     if (error instanceof AppError) {

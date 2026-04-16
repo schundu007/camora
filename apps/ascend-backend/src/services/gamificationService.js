@@ -94,7 +94,7 @@ async function checkAndAwardBadges(userId) {
 
     // Count designs, mocks, preps, referrals from various tables
     const [designsR, mocksR, prepsR, referralsR] = await Promise.all([
-      query('SELECT COALESCE(design_used, 0) as cnt FROM ascend_free_usage WHERE user_id = $1', [userId]).catch(() => ({ rows: [{ cnt: 0 }] })),
+      query("SELECT COUNT(*) as cnt FROM ascend_diagram_cache WHERE problem_hash LIKE '%' || $1::TEXT || '%'", [userId]).catch(() => ({ rows: [{ cnt: 0 }] })),
       query('SELECT sessions_used as cnt FROM usage_tracking WHERE user_id = $1 ORDER BY period DESC LIMIT 1', [userId]).catch(() => ({ rows: [{ cnt: 0 }] })),
       query('SELECT COUNT(*) as cnt FROM ascend_company_preps WHERE user_id = $1', [userId]).catch(() => ({ rows: [{ cnt: 0 }] })),
       query("SELECT COUNT(*) as cnt FROM ascend_referrals WHERE referrer_id = $1 AND status = 'rewarded'", [userId]).catch(() => ({ rows: [{ cnt: 0 }] })),

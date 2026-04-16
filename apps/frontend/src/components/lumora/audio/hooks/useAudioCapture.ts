@@ -26,7 +26,7 @@ export function useAudioCapture(options: AudioCaptureOptions = {}) {
     silenceThreshold = 0.01,
     silenceDuration = 1200, // ms of silence before stopping
     minSpeechDuration = 400, // ms minimum speech
-    maxRecordingDuration = 20000, // max 20s recording as safety fallback
+    maxRecordingDuration = 45000, // max 45s recording as safety fallback
     deviceId = null,
   } = options;
 
@@ -46,7 +46,6 @@ export function useAudioCapture(options: AudioCaptureOptions = {}) {
   const speechStartTimeRef = useRef<number | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const maxRecordingTimerRef = useRef<number | null>(null);
-  const noSpeechTimerRef = useRef<number | null>(null);
 
   const cleanup = useCallback(() => {
     if (animationFrameRef.current) {
@@ -57,9 +56,6 @@ export function useAudioCapture(options: AudioCaptureOptions = {}) {
     }
     if (maxRecordingTimerRef.current) {
       clearTimeout(maxRecordingTimerRef.current);
-    }
-    if (noSpeechTimerRef.current) {
-      clearTimeout(noSpeechTimerRef.current);
     }
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       mediaRecorderRef.current.stop();
@@ -172,21 +168,6 @@ export function useAudioCapture(options: AudioCaptureOptions = {}) {
         }, maxRecordingDuration);
       }
 
-      // No-speech timeout: if VAD never detects speech within 8s, force-stop
-      // This handles virtual audio devices (BlackHole) and low-gain mics
-      noSpeechTimerRef.current = window.setTimeout(() => {
-        if (!speechStartTimeRef.current && mediaRecorderRef.current?.state === 'recording') {
-          console.log('[VAD] No speech detected after 8s — force-stopping with collected audio');
-          speechStartTimeRef.current = Date.now() - minSpeechDuration - 100;
-          mediaRecorderRef.current.stop();
-          setState(prev => ({ ...prev, isRecording: false, audioLevel: 0 }));
-          onRecordingStop?.();
-          if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
-          if (audioContextRef.current?.state !== 'closed') audioContextRef.current?.close();
-          streamRef.current?.getTracks().forEach(t => t.stop());
-        }
-      }, 8000);
-
       // Start audio level monitoring
       const monitorAudioLevel = () => {
         if (!analyserRef.current) return;
@@ -210,11 +191,6 @@ export function useAudioCapture(options: AudioCaptureOptions = {}) {
           if (!speechStartTimeRef.current) {
             speechStartTimeRef.current = Date.now();
             console.log(`[VAD] Speech detected, rms=${rms.toFixed(4)}, threshold=${silenceThreshold}`);
-            // Cancel no-speech timeout since we detected speech
-            if (noSpeechTimerRef.current) {
-              clearTimeout(noSpeechTimerRef.current);
-              noSpeechTimerRef.current = null;
-            }
           }
           if (silenceTimerRef.current) {
             clearTimeout(silenceTimerRef.current);

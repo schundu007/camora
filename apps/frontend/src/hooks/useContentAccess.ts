@@ -4,9 +4,6 @@ import { useAuth } from '../contexts/AuthContext';
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 const STORAGE_KEY = 'camora_topics_read';
 const FREE_TOPICS_PER_CATEGORY = 1;
-// All prepare pages share a single quota so users can't bypass the paywall
-// by switching categories. The category param is normalized to 'prepare'.
-const SHARED_CATEGORY = 'prepare';
 
 type Category = string;
 
@@ -36,19 +33,18 @@ export function useContentAccess() {
     return plan !== 'free' && plan !== null && plan !== undefined && plan !== '';
   }, [subscription, subscriptionLoading]);
 
-  /** Lazy-fetch read topics from server (once per session) */
+  /** Lazy-fetch read topics for a category from server (once per category per session) */
   const ensureLoaded = useCallback((category: Category) => {
-    const cat = SHARED_CATEGORY; // normalize — all pages share one quota
-    if (!token || isPaidUser || fetchedRef.current.has(cat)) return;
-    fetchedRef.current.add(cat);
-    fetch(`${API_URL}/api/topic-reads?category=${encodeURIComponent(cat)}`, {
+    if (!token || isPaidUser || fetchedRef.current.has(category)) return;
+    fetchedRef.current.add(category);
+    fetch(`${API_URL}/api/topic-reads?category=${encodeURIComponent(category)}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(r => r.ok ? r.json() : null)
       .then(data => {
         if (data?.readTopics) {
           setTopicsMap(prev => {
-            const updated = { ...prev, [cat]: data.readTopics };
+            const updated = { ...prev, [category]: data.readTopics };
             saveCachedTopics(updated);
             return updated;
           });
@@ -59,7 +55,7 @@ export function useContentAccess() {
 
   const getReadTopicIds = useCallback((category: Category): string[] => {
     ensureLoaded(category);
-    return topicsMap[SHARED_CATEGORY] || [];
+    return topicsMap[category] || [];
   }, [topicsMap, ensureLoaded]);
 
   const getReadCount = useCallback((category: Category): number => {
@@ -73,10 +69,8 @@ export function useContentAccess() {
   const canReadTopic = useCallback((category: Category, topicId: string): boolean => {
     if (isPaidUser) return true;
     ensureLoaded(category);
-    const readList = topicsMap[SHARED_CATEGORY] || [];
-    // topicId includes the category prefix to avoid collisions across pages
-    const fullId = `${category}:${topicId}`;
-    if (readList.includes(fullId)) return true;
+    const readList = topicsMap[category] || [];
+    if (readList.includes(topicId)) return true;
     return readList.length < FREE_TOPICS_PER_CATEGORY;
   }, [isPaidUser, topicsMap, ensureLoaded]);
 
@@ -86,14 +80,13 @@ export function useContentAccess() {
 
   const markTopicRead = useCallback((category: Category, topicId: string) => {
     if (isPaidUser) return;
-    const fullId = `${category}:${topicId}`;
 
     // Optimistic local update
     setTopicsMap(prev => {
-      const list = prev[SHARED_CATEGORY] || [];
-      if (list.includes(fullId)) return prev;
+      const list = prev[category] || [];
+      if (list.includes(topicId)) return prev;
       if (list.length >= FREE_TOPICS_PER_CATEGORY) return prev; // at limit
-      const updated = { ...prev, [SHARED_CATEGORY]: [...list, fullId] };
+      const updated = { ...prev, [category]: [...list, topicId] };
       saveCachedTopics(updated);
       return updated;
     });
@@ -103,7 +96,7 @@ export function useContentAccess() {
       fetch(`${API_URL}/api/topic-reads`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ category: SHARED_CATEGORY, topicId: fullId }),
+        body: JSON.stringify({ category, topicId }),
       }).catch(() => {}); // fire-and-forget
     }
   }, [token, isPaidUser]);

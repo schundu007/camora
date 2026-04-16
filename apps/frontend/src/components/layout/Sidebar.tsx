@@ -142,59 +142,21 @@ const icons = {
       <path d="M4 2l4 4-4 4" />
     </svg>
   ),
-  // SQL — table/grid with rows
-  table: (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="1" y="2" width="14" height="12" rx="1.5" />
-      <path d="M1 6h14" />
-      <path d="M1 10h14" />
-      <path d="M6 6v8" />
-    </svg>
-  ),
-  // Analytics — bar chart
-  barChart: (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M4 14V9" />
-      <path d="M8 14V4" />
-      <path d="M12 14V7" />
-    </svg>
-  ),
-  // My Plan — clipboard checklist
-  clipboard: (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="2" width="10" height="13" rx="1.5" />
-      <path d="M6 1h4v2H6V1z" />
-      <path d="M6 7h4" />
-      <path d="M6 10h4" />
-    </svg>
-  ),
-  // Design Solver — pen tool / bezier
-  penTool: (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M8 1L3 11h10L8 1z" />
-      <circle cx="8" cy="13" r="1.5" />
-      <path d="M8 11v.5" />
-    </svg>
-  ),
 };
 
 /* ─── Navigation sections ────────────────────────────────────── */
 
 const sections: NavSection[] = [
   {
-    title: 'Apply',
-    items: [
-      { label: 'Jobs', path: '/jobs', icon: icons.briefcase },
-    ],
-  },
-  {
     title: 'Prepare',
     items: [
+      { label: 'Overview', path: '/capra/prepare', icon: icons.home },
       { label: 'DSA', path: '/capra/prepare/coding', icon: icons.cpu },
       { label: 'System Design', path: '/capra/prepare/system-design', icon: icons.layers },
       { label: 'Microservices', path: '/capra/prepare/microservices', icon: icons.grid },
       { label: 'Databases', path: '/capra/prepare/databases', icon: icons.database },
-      { label: 'Low Level Design', path: '/capra/prepare/low-level-design', icon: icons.code },
+      { label: 'SQL', path: '/capra/prepare/sql', icon: icons.database },
+      { label: 'Low-Level', path: '/capra/prepare/low-level-design', icon: icons.code },
       { label: 'Projects', path: '/capra/prepare/projects', icon: icons.folder },
       { label: 'Roadmaps', path: '/capra/prepare/roadmaps', icon: icons.map },
       { label: 'Eng Blogs', path: '/capra/prepare/eng-blogs', icon: icons.book },
@@ -206,17 +168,16 @@ const sections: NavSection[] = [
     items: [
       { label: 'Practice', path: '/capra/practice', icon: icons.play },
       { label: 'Blind 75', path: '/handbook', icon: icons.star },
-      { label: 'My Plan', path: '/capra/plan', icon: icons.clipboard },
-      { label: 'Analytics', path: '/analytics', icon: icons.barChart },
       { label: 'Achievements', path: '/capra/achievements', icon: icons.trophy },
     ],
   },
   {
-    title: 'Attend',
+    title: 'Tools',
     items: [
       { label: 'Live Interview', path: '/lumora', icon: icons.mic },
-      { label: 'Code Solver', path: '/capra/coding', icon: icons.layout },
-      { label: 'Design Solver', path: '/capra/design', icon: icons.penTool },
+      { label: 'Jobs', path: '/jobs', icon: icons.briefcase },
+      { label: 'Code Solver', path: '/capra', icon: icons.layout },
+      { label: 'Design Solver', path: '/capra/design', icon: icons.layers },
     ],
   },
 ];
@@ -227,12 +188,10 @@ function SidebarSection({
   section,
   pathname,
   collapsed,
-  onNavigate,
 }: {
   section: NavSection;
   pathname: string;
   collapsed: boolean;
-  onNavigate?: () => void;
 }) {
   const [open, setOpen] = useState(true);
 
@@ -285,7 +244,7 @@ function SidebarSection({
               borderRadius: '8px',
               transition: 'background 0.12s, color 0.12s',
             } : {
-              minHeight: '40px',
+              height: '32px',
               fontSize: '13px',
               fontWeight: 500,
               color: active ? 'var(--text-primary)' : 'var(--text-secondary)',
@@ -308,7 +267,6 @@ function SidebarSection({
                     href={item.path}
                     target="_blank"
                     rel="noopener noreferrer"
-                    onClick={onNavigate}
                     className={collapsed ? 'flex rounded-md no-underline sidebar-item' : 'flex items-center gap-2.5 px-2.5 rounded-md no-underline sidebar-item'}
                     style={linkStyles}
                     title={collapsed ? item.label : undefined}
@@ -324,7 +282,6 @@ function SidebarSection({
               <li key={item.path}>
                 <Link
                   to={item.path}
-                  onClick={onNavigate}
                   className={collapsed ? 'flex rounded-md no-underline sidebar-item' : 'flex items-center gap-2.5 px-2.5 rounded-md no-underline sidebar-item'}
                   style={linkStyles}
                   title={collapsed ? item.label : undefined}
@@ -361,10 +318,9 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const { pathname } = useLocation();
   const [collapsed, setCollapsed] = useState(() => {
     if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('camora-sidebar-collapsed');
-      return stored === null ? false : stored === 'true';
+      return localStorage.getItem('camora-sidebar-collapsed') !== 'false';
     }
-    return false; // expanded by default for new users
+    return true; // collapsed by default
   });
 
   useEffect(() => {
@@ -373,86 +329,54 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
   const sidebarWidth = collapsed ? '56px' : '240px';
 
-  /* Render sidebar nav content — `isExpanded` overrides collapsed for mobile */
-  function renderSidebarContent(isExpanded: boolean, handleNavigate?: () => void) {
-    const isCollapsedView = !isExpanded;
-    const overviewActive = pathname === '/capra/prepare';
-    const overviewStyle: React.CSSProperties = isCollapsedView ? {
-      height: '36px', width: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-      margin: '2px auto', color: overviewActive ? 'var(--accent)' : 'var(--text-muted)',
-      background: overviewActive ? 'var(--accent-subtle)' : 'transparent', borderRadius: '8px', transition: 'background 0.12s, color 0.12s',
-    } : {
-      minHeight: '40px', fontSize: '13px', fontWeight: 500,
-      color: overviewActive ? 'var(--text-primary)' : 'var(--text-secondary)',
-      background: overviewActive ? 'var(--accent-subtle)' : 'transparent',
-      borderLeft: overviewActive ? '2px solid var(--accent)' : '2px solid transparent',
-      borderRadius: '6px', transition: 'background 0.12s, color 0.12s',
-    };
+  const sidebarContent = (
+    <div className="flex flex-col h-full">
+      {/* Scrollable nav */}
+      <nav className={`flex-1 overflow-y-auto ${collapsed ? 'px-1.5' : 'px-3'} py-3 no-scrollbar`}>
+        {sections.map((section) => (
+          <SidebarSection
+            key={section.title}
+            section={section}
+            pathname={pathname}
+            collapsed={collapsed}
+          />
+        ))}
+      </nav>
 
-    return (
-      <div className="flex flex-col h-full">
-        {/* Scrollable nav */}
-        <nav className={`flex-1 overflow-y-auto ${isCollapsedView ? 'px-1.5' : 'px-3'} py-3 no-scrollbar`} style={{ WebkitOverflowScrolling: 'touch' }}>
-          {/* Overview — standalone item */}
-          <div className="mb-2">
-            <Link
-              to="/capra/prepare"
-              onClick={handleNavigate}
-              className={isCollapsedView ? 'flex rounded-md no-underline sidebar-item' : 'flex items-center gap-2.5 px-2.5 rounded-md no-underline sidebar-item'}
-              style={overviewStyle}
-              title={isCollapsedView ? 'Overview' : undefined}
-            >
-              <span className="flex-shrink-0" style={{ color: overviewActive ? 'var(--accent)' : 'var(--text-muted)' }}>{icons.home}</span>
-              {!isCollapsedView && 'Overview'}
-            </Link>
-          </div>
-          {sections.map((section) => (
-            <SidebarSection
-              key={section.title}
-              section={section}
-              pathname={pathname}
-              collapsed={isCollapsedView}
-              onNavigate={handleNavigate}
-            />
-          ))}
-        </nav>
-
-        {/* Bottom section — collapse toggle only on desktop */}
-        <div
-          className={`${isCollapsedView ? 'px-1.5' : 'px-3'} py-3 flex flex-col gap-2 items-center`}
-          style={{ borderTop: '1px solid var(--border)' }}
+      {/* Bottom section */}
+      <div
+        className={`${collapsed ? 'px-1.5' : 'px-3'} py-3 flex flex-col gap-2 items-center`}
+        style={{ borderTop: '1px solid var(--border)' }}
+      >
+        {/* Expand/Collapse toggle */}
+        <button
+          onClick={() => setCollapsed(c => !c)}
+          className="sidebar-item flex items-center justify-center rounded-md"
+          style={{
+            width: collapsed ? '36px' : '100%',
+            height: '32px',
+            color: 'var(--text-muted)',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            fontSize: '13px',
+            fontWeight: 500,
+          }}
+          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
-          {!handleNavigate && (
-            <button
-              onClick={() => setCollapsed(c => !c)}
-              className="sidebar-item flex items-center justify-center rounded-md"
-              style={{
-                width: isCollapsedView ? '36px' : '100%',
-                height: '32px',
-                color: 'var(--text-muted)',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                fontSize: '13px',
-                fontWeight: 500,
-              }}
-              title={isCollapsedView ? 'Expand sidebar' : 'Collapse sidebar'}
-            >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ transform: isCollapsedView ? 'rotate(0deg)' : 'rotate(180deg)', transition: 'transform 0.2s' }}>
-                <path d="M6 3l5 5-5 5" />
-              </svg>
-              {!isCollapsedView && <span className="ml-2">Collapse</span>}
-            </button>
-          )}
-          {!isCollapsedView && (
-            <span className="px-2.5 block" style={{ fontSize: '10px', color: 'var(--text-dimmed)' }}>
-              &copy; 2026 Cariara
-            </span>
-          )}
-        </div>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ transform: collapsed ? 'rotate(0deg)' : 'rotate(180deg)', transition: 'transform 0.2s' }}>
+            <path d="M6 3l5 5-5 5" />
+          </svg>
+          {!collapsed && <span className="ml-2">Collapse</span>}
+        </button>
+        {!collapsed && (
+          <span className="px-2.5 block" style={{ fontSize: '10px', color: 'var(--text-dimmed)' }}>
+            &copy; 2026 Cariara
+          </span>
+        )}
       </div>
-    );
-  }
+    </div>
+  );
 
   return (
     <>
@@ -469,7 +393,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           borderRight: '1px solid var(--border)',
         }}
       >
-        {renderSidebarContent(!collapsed)}
+        {sidebarContent}
       </aside>
 
       {/* ── Mobile overlay ──────────────────────────────────── */}
@@ -483,21 +407,19 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             aria-hidden="true"
           />
 
-          {/* Drawer — icons only on mobile */}
+          {/* Drawer */}
           <aside
             className="fixed top-0 left-0 z-50 flex flex-col md:hidden"
             style={{
-              width: '60px',
-              height: '100dvh',
+              width: '280px',
+              height: '100vh',
               paddingTop: 'var(--topbar-height, 48px)',
-              paddingBottom: 'max(env(safe-area-inset-bottom), 8px)',
-              paddingLeft: 'env(safe-area-inset-left, 0px)',
               background: 'var(--bg-app)',
               borderRight: '1px solid var(--border)',
-              boxShadow: '4px 0 24px rgba(0,0,0,0.3)',
+              boxShadow: 'var(--shadow-xl)',
             }}
           >
-            {renderSidebarContent(false, onClose)}
+            {sidebarContent}
           </aside>
         </>
       )}

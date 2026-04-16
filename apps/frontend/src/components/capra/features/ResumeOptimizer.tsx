@@ -15,20 +15,13 @@ const COMPANIES = [
   'Other',
 ] as const;
 
-interface ResumeOptimizerProps {
-  initialCompany?: string;
-  initialRole?: string;
-  initialJobDescription?: string;
-  initialJobUrl?: string;
-}
-
-export default function ResumeOptimizer({ initialCompany, initialRole, initialJobDescription, initialJobUrl }: ResumeOptimizerProps = {}) {
+export default function ResumeOptimizer() {
   // Input state
-  const [jobDescription, setJobDescription] = useState(initialJobDescription || '');
-  const [jobUrl, setJobUrl] = useState(initialJobUrl || '');
+  const [jobDescription, setJobDescription] = useState('');
+  const [jobUrl, setJobUrl] = useState('');
   const [resume, setResume] = useState('');
-  const [company, setCompany] = useState<string>(initialCompany || 'Google');
-  const [role, setRole] = useState(initialRole || '');
+  const [company, setCompany] = useState<string>('Google');
+  const [role, setRole] = useState('');
 
   // Output state
   const [activeTab, setActiveTab] = useState<OutputTab>('resume');

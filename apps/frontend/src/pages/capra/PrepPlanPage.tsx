@@ -1,454 +1,326 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
-import { Icon } from '../../components/shared/Icons.jsx';
-import { codingTopics } from '../../data/capra/topics/codingTopics.js';
-import { systemDesignTopics } from '../../data/capra/topics/systemDesignTopics.js';
-import { lldTopics } from '../../data/capra/topics/lldTopics.js';
-import { databaseTopics } from '../../data/capra/topics/databaseTopics.js';
-import { sqlTopics } from '../../data/capra/topics/sqlTopics.js';
-import { behavioralTopics } from '../../data/capra/topics/behavioralTopics.js';
-import { projectTopics } from '../../data/capra/topics/projectTopics.js';
-import { microservicesPatterns } from '../../data/capra/topics/microservicesPatterns.js';
-import { getAuthHeaders } from '../../utils/authHeaders';
+import { Link, useNavigate } from 'react-router-dom';
+import { getAuthHeaders } from '../../utils/authHeaders.js';
 
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
-/* ─── Category definitions ─────────────────────────────────── */
-
-const CATEGORIES = [
-  { id: 'coding', label: 'DSA & Algorithms', iconName: 'cpu', color: '#10b981', href: '/capra/prepare/coding', topics: codingTopics },
-  { id: 'system-design', label: 'System Design', iconName: 'systemDesign', color: '#6366f1', href: '/capra/prepare/system-design', topics: systemDesignTopics },
-  { id: 'microservices', label: 'Microservices', iconName: 'grid', color: '#8b5cf6', href: '/capra/prepare/microservices', topics: microservicesPatterns },
-  { id: 'databases', label: 'Databases', iconName: 'database', color: '#f59e0b', href: '/capra/prepare/databases', topics: databaseTopics },
-  { id: 'sql', label: 'SQL', iconName: 'database', color: '#06b6d4', href: '/capra/prepare/sql', topics: sqlTopics },
-  { id: 'low-level', label: 'Low-Level Design', iconName: 'layers', color: '#ec4899', href: '/capra/prepare/low-level-design', topics: lldTopics },
-  { id: 'projects', label: 'Projects', iconName: 'code', color: '#8b5cf6', href: '/capra/prepare/projects', topics: projectTopics },
-  { id: 'behavioral', label: 'Behavioral', iconName: 'users', color: '#14b8a6', href: '/capra/prepare/behavioral', topics: behavioralTopics },
-];
-
-/* ─── Local storage helpers ─────────────────────────────────── */
-
-function getCompleted(): Record<string, boolean> {
-  try { return JSON.parse(localStorage.getItem('ascend_completed_topics') || '{}'); } catch { return {}; }
+interface Task {
+  id: string;
+  title: string;
+  type: string;
+  completed: boolean;
+  link?: string;
 }
 
-function getStarred(): Record<string, boolean> {
-  try { return JSON.parse(localStorage.getItem('ascend_starred_topics') || '{}'); } catch { return {}; }
+interface DayPlan {
+  day: number;
+  focus: string;
+  tasks: Task[];
 }
 
-/* ─── Interview countdown types ────────────────────────────── */
-
-interface CountdownData {
-  has_interview: boolean;
-  interview_date?: string;
-  target_company?: string;
-  target_role?: string;
-  days_remaining?: number;
-  completion_pct?: number;
+interface PlanData {
+  interview_date: string;
+  target_company: string;
+  target_role: string;
+  days_remaining: number;
+  total_tasks: number;
+  completed_tasks: number;
+  completion_pct: number;
+  plan: DayPlan[];
 }
-
-/* ─── Component ────────────────────────────────────────────── */
 
 export default function PrepPlanPage() {
   useEffect(() => {
-    document.title = 'My Plan | Camora';
+    document.title = 'Prep Plan | Camora';
     return () => { document.title = 'Camora'; };
   }, []);
 
-  const [completed, setCompleted] = useState(getCompleted);
-  const [starred] = useState(getStarred);
+  const [data, setData] = useState<PlanData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [clearing, setClearing] = useState(false);
+  const [togglingTask, setTogglingTask] = useState<string | null>(null);
+  const navigate = useNavigate();
 
-  // Interview countdown state
-  const [countdown, setCountdown] = useState<CountdownData | null>(null);
-  const [countdownLoading, setCountdownLoading] = useState(true);
-  const [showSetup, setShowSetup] = useState(false);
-  const [interviewDate, setInterviewDate] = useState('');
-  const [targetCompany, setTargetCompany] = useState('');
-  const [targetRole, setTargetRole] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-
-  // Listen for storage changes from other tabs
-  useEffect(() => {
-    const handler = () => setCompleted(getCompleted());
-    window.addEventListener('storage', handler);
-    return () => window.removeEventListener('storage', handler);
-  }, []);
-
-  // Fetch interview countdown
-  const fetchCountdown = useCallback(async () => {
+  const fetchPlan = useCallback(async () => {
     try {
-      const res = await fetch(`${API_URL}/api/interview/countdown`, {
+      const res = await fetch(`${API_URL}/api/interview/plan`, {
         headers: { ...getAuthHeaders() },
       });
-      if (!res.ok) { setCountdown(null); return; }
+      if (!res.ok) {
+        if (res.status === 404) {
+          setData(null);
+          return;
+        }
+        throw new Error('Failed to load plan');
+      }
       const json = await res.json();
-      setCountdown(json.has_interview ? json : null);
-    } catch {
-      setCountdown(null);
+      setData(json);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Something went wrong');
     } finally {
-      setCountdownLoading(false);
+      setLoading(false);
     }
   }, []);
 
-  useEffect(() => { fetchCountdown(); }, [fetchCountdown]);
+  useEffect(() => {
+    fetchPlan();
+  }, [fetchPlan]);
 
-  async function handleSetup(e: React.FormEvent) {
-    e.preventDefault();
-    if (!interviewDate || !targetCompany.trim()) return;
-    setSubmitting(true);
+  async function toggleTask(taskId: string) {
+    if (togglingTask) return;
+    setTogglingTask(taskId);
+
     try {
-      const res = await fetch(`${API_URL}/api/interview/setup`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-        body: JSON.stringify({
-          interview_date: interviewDate,
-          target_company: targetCompany.trim(),
-          target_role: targetRole.trim() || undefined,
-        }),
+      const res = await fetch(`${API_URL}/api/interview/progress`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+        body: JSON.stringify({ task_id: taskId }),
       });
-      if (!res.ok) throw new Error('Setup failed');
-      setShowSetup(false);
-      setInterviewDate('');
-      setTargetCompany('');
-      setTargetRole('');
-      setCountdownLoading(true);
-      fetchCountdown();
-    } catch { /* keep form open */ }
-    finally { setSubmitting(false); }
+      if (!res.ok) throw new Error('Failed to update progress');
+
+      // Optimistically toggle the task locally, then refresh
+      setData((prev) => {
+        if (!prev) return prev;
+        const updated = { ...prev };
+        updated.plan = updated.plan.map((day) => ({
+          ...day,
+          tasks: day.tasks.map((t) =>
+            t.id === taskId ? { ...t, completed: !t.completed } : t
+          ),
+        }));
+        // Recalculate counts
+        let completed = 0;
+        let total = 0;
+        updated.plan.forEach((day) => {
+          day.tasks.forEach((t) => {
+            total++;
+            if (t.completed) completed++;
+          });
+        });
+        updated.completed_tasks = completed;
+        updated.total_tasks = total;
+        updated.completion_pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+        return updated;
+      });
+    } catch {
+      // Refresh on error to get server state
+      fetchPlan();
+    } finally {
+      setTogglingTask(null);
+    }
   }
 
-  async function clearCountdown() {
-    if (!confirm('Clear your interview date and prep plan tasks?')) return;
+  async function clearPlan() {
+    if (!confirm('Are you sure you want to clear your prep plan? This cannot be undone.')) return;
+    setClearing(true);
     try {
-      await fetch(`${API_URL}/api/interview/plan`, {
+      const res = await fetch(`${API_URL}/api/interview/plan`, {
         method: 'DELETE',
         headers: { ...getAuthHeaders() },
       });
-      setCountdown(null);
-    } catch { /* ignore */ }
+      if (!res.ok) throw new Error('Failed to clear plan');
+      navigate('/capra/prepare');
+    } catch {
+      setClearing(false);
+    }
   }
 
-  // Compute stats
-  const allTopics = CATEGORIES.flatMap(c => c.topics);
-  const totalTopics = allTopics.length;
-  const completedCount = allTopics.filter(t => completed[t.id]).length;
-  const overallPct = totalTopics > 0 ? Math.round((completedCount / totalTopics) * 100) : 0;
-  const starredIds = Object.keys(starred).filter(k => starred[k]);
-  const starredTopics = allTopics.filter(t => starredIds.includes(t.id));
+  // Map task types to practice page links
+  function getTaskLink(task: Task): string | undefined {
+    if (task.link) return task.link;
+    const typeMap: Record<string, string> = {
+      coding: '/capra/practice',
+      'system-design': '/capra/prepare/system-design',
+      behavioral: '/capra/prepare/behavioral',
+      databases: '/capra/prepare/databases',
+      sql: '/capra/prepare/sql',
+      microservices: '/capra/prepare/microservices',
+      'low-level-design': '/capra/prepare/low-level-design',
+    };
+    return typeMap[task.type];
+  }
 
-  // Next uncompleted topics per category
-  const nextTopics = CATEGORIES.map(cat => {
-    const next = cat.topics.find(t => !completed[t.id]);
-    return next ? { category: cat, topic: next } : null;
-  }).filter(Boolean).slice(0, 4);
+  if (loading) {
+    return (
+      <div className="min-h-screen">
+        <div className="pt-20 pb-12 px-4 max-w-3xl mx-auto">
+          <div className="animate-pulse space-y-6">
+            <div className="h-6 bg-[var(--bg-elevated)] rounded w-64" />
+            <div className="h-4 bg-[var(--bg-elevated)] rounded w-40" />
+            <div className="h-32 bg-[var(--bg-elevated)] rounded-2xl" />
+            <div className="h-32 bg-[var(--bg-elevated)] rounded-2xl" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-  // Progress ring
-  const radius = 44;
-  const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (overallPct / 100) * circumference;
+  if (error) {
+    return (
+      <div className="min-h-screen">
+        <div className="pt-20 pb-12 px-4 max-w-3xl mx-auto text-center">
+          <p className="text-sm text-red-500 mt-8">{error}</p>
+          <Link to="/capra/prepare" className="text-sm text-[var(--accent)] hover:underline mt-4 inline-block">
+            Back to dashboard
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
-  const today = new Date().toISOString().split('T')[0];
+  if (!data) {
+    return (
+      <div className="min-h-screen">
+        <div className="pt-20 pb-12 px-4 max-w-3xl mx-auto text-center">
+          <div className="mt-16">
+            <p className="text-[var(--text-secondary)] text-sm">No prep plan set up yet.</p>
+            <Link
+              to="/capra/prepare"
+              className="inline-block mt-4 px-5 py-2.5 bg-[var(--accent)] text-white text-sm font-semibold rounded-xl hover:bg-[var(--accent-hover)] transition-colors"
+            >
+              Go to Dashboard
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const { interview_date, target_company, target_role, days_remaining, completion_pct, completed_tasks, total_tasks, plan } = data;
+  const formattedDate = new Date(interview_date + 'T00:00:00').toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  });
 
   return (
     <div className="min-h-screen flex flex-col">
-      <main className="flex-1 py-4 sm:py-8 px-3 sm:px-4">
-        <div className="max-w-4xl mx-auto">
-          {/* ── Header ───────────────────────────────────── */}
-          <div className="mb-8">
-            <h1 className="text-2xl font-bold text-[var(--text-primary)] tracking-tight">My Plan</h1>
-            <p className="text-sm text-[var(--text-secondary)] mt-1">
-              Your personalized interview preparation tracker.
-            </p>
+      <main className="flex-1 pt-20 pb-12 px-4">
+        <div className="max-w-3xl mx-auto">
+          {/* Header */}
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+            <div>
+              <h1 className="text-xl font-bold text-[var(--text-primary)] tracking-tight">
+                {target_company} Interview Prep
+              </h1>
+              <p className="text-sm text-[var(--text-secondary)] mt-1">
+                {target_role ? `${target_role} \u2022 ` : ''}{formattedDate}
+              </p>
+            </div>
+            <button
+              onClick={clearPlan}
+              disabled={clearing}
+              className="px-3 py-1.5 text-xs font-medium text-red-500 hover:text-red-600 hover:bg-red-500/10 rounded-lg transition-colors disabled:opacity-50"
+            >
+              {clearing ? 'Clearing...' : 'Clear plan'}
+            </button>
           </div>
 
-          {/* ── Interview Countdown / Setup ───────────────── */}
-          {!countdownLoading && (
-            countdown ? (
-              /* Active countdown */
-              <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-2xl p-5 mb-6">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center">
-                      <svg className="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-[var(--text-primary)]">
-                        {countdown.target_company} Interview
-                      </p>
-                      <p className="text-xs text-[var(--text-muted)]">
-                        {countdown.target_role ? `${countdown.target_role} \u2022 ` : ''}
-                        {countdown.interview_date
-                          ? new Date(countdown.interview_date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
-                          : ''}
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={clearCountdown}
-                    className="text-xs text-[var(--text-muted)] hover:text-red-400 transition-colors"
-                  >
-                    Clear
-                  </button>
-                </div>
-                <div className="flex items-center gap-4">
-                  <div className="flex items-baseline gap-1.5">
-                    <span className="text-3xl font-bold text-indigo-500">{countdown.days_remaining}</span>
-                    <span className="text-sm text-[var(--text-muted)]">{countdown.days_remaining === 1 ? 'day' : 'days'} left</span>
-                  </div>
-                  {(countdown.days_remaining ?? 0) <= 7 && (
-                    <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500">
-                      Final stretch!
-                    </span>
-                  )}
-                  {(countdown.days_remaining ?? 0) === 0 && (
-                    <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600">
-                      Interview day!
-                    </span>
-                  )}
-                </div>
-              </div>
-            ) : !showSetup ? (
-              /* No countdown — CTA to set one */
-              <button
-                onClick={() => setShowSetup(true)}
-                className="w-full bg-[var(--bg-surface)] border border-dashed border-[var(--border)] rounded-2xl p-5 mb-6 text-left hover:border-indigo-500/40 hover:bg-[var(--bg-elevated)] transition-all group"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center">
-                      <svg className="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-[var(--text-primary)]">Set Your Interview Date</p>
-                      <p className="text-xs text-[var(--text-muted)]">Add a countdown timer to track your preparation</p>
-                    </div>
-                  </div>
-                  <span className="text-sm font-medium text-indigo-500 group-hover:translate-x-0.5 transition-transform">
-                    Set date &rarr;
-                  </span>
-                </div>
-              </button>
-            ) : (
-              /* Inline setup form */
-              <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-2xl p-5 mb-6">
-                <div className="flex items-center justify-between mb-4">
-                  <p className="text-sm font-semibold text-[var(--text-primary)]">Set Your Interview Date</p>
-                  <button onClick={() => setShowSetup(false)} className="text-xs text-[var(--text-muted)] hover:text-[var(--text-secondary)]">Cancel</button>
-                </div>
-                <form onSubmit={handleSetup} className="flex flex-col sm:flex-row sm:flex-wrap gap-3 items-stretch sm:items-end">
-                  <div className="flex-1">
-                    <label htmlFor="plan-date" className="block text-xs font-medium text-[var(--text-muted)] mb-1">Date</label>
-                    <input id="plan-date" type="date" min={today} value={interviewDate} onChange={e => setInterviewDate(e.target.value)}
-                      className="w-full px-3 py-2 border border-[var(--border)] rounded-xl text-sm text-[var(--text-primary)] bg-[var(--bg-elevated)] focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-colors" required />
-                  </div>
-                  <div className="flex-1">
-                    <label htmlFor="plan-company" className="block text-xs font-medium text-[var(--text-muted)] mb-1">Company</label>
-                    <input id="plan-company" type="text" placeholder="e.g. Google" value={targetCompany} onChange={e => setTargetCompany(e.target.value)}
-                      className="w-full px-3 py-2 border border-[var(--border)] rounded-xl text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] bg-[var(--bg-elevated)] focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-colors" required />
-                  </div>
-                  <div className="flex-1">
-                    <label htmlFor="plan-role" className="block text-xs font-medium text-[var(--text-muted)] mb-1">Role (optional)</label>
-                    <input id="plan-role" type="text" placeholder="e.g. Senior SDE" value={targetRole} onChange={e => setTargetRole(e.target.value)}
-                      className="w-full px-3 py-2 border border-[var(--border)] rounded-xl text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] bg-[var(--bg-elevated)] focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-colors" />
-                  </div>
-                  <button type="submit" disabled={submitting}
-                    className="px-5 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 disabled:opacity-50 transition-colors whitespace-nowrap">
-                    {submitting ? 'Saving...' : 'Set Date'}
-                  </button>
-                </form>
-              </div>
-            )
-          )}
-
-          {/* ── Overall Progress ──────────────────────────── */}
-          <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-2xl p-6 mb-6">
-            <div className="flex items-center gap-4 sm:gap-8 flex-wrap">
-              {/* Progress ring */}
-              <div className="relative flex-shrink-0">
-                <svg width="104" height="104" viewBox="0 0 104 104">
-                  <circle cx="52" cy="52" r={radius} fill="none" stroke="var(--border)" strokeWidth="6" />
-                  <circle
-                    cx="52" cy="52" r={radius}
-                    fill="none"
-                    stroke={overallPct === 100 ? '#10b981' : '#6366f1'}
-                    strokeWidth="6" strokeLinecap="round"
-                    strokeDasharray={circumference}
-                    strokeDashoffset={strokeDashoffset}
-                    transform="rotate(-90 52 52)"
-                    className="transition-all duration-700"
-                  />
-                </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-2xl font-bold" style={{ color: overallPct === 100 ? '#10b981' : 'var(--accent)' }}>{overallPct}%</span>
-                  <span className="text-[10px] text-[var(--text-muted)]">complete</span>
-                </div>
+          {/* Progress summary */}
+          <div className="mt-6 bg-[var(--bg-surface)] border-0 rounded-2xl p-5 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
+            <div className="flex items-center gap-6 flex-wrap">
+              {/* Days remaining */}
+              <div className="text-center">
+                <p className="text-3xl font-bold text-[var(--accent)]">{days_remaining}</p>
+                <p className="text-xs text-[var(--text-secondary)] mt-0.5">{days_remaining === 1 ? 'day left' : 'days left'}</p>
               </div>
 
-              {/* Stats + progress bar */}
+              {/* Progress bar */}
               <div className="flex-1 min-w-[200px]">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-semibold text-[var(--text-primary)]">Overall Progress</span>
-                  <span className="text-sm text-[var(--text-muted)]">{completedCount} / {totalTopics} topics</span>
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-sm font-medium text-[var(--text-primary)]">Overall Progress</span>
+                  <span className="text-sm font-semibold text-[var(--accent)]">{completion_pct}%</span>
                 </div>
-                <div className="h-3 bg-[var(--bg-elevated)] rounded-full overflow-hidden mb-4">
+                <div className="h-2.5 bg-[var(--bg-elevated)] rounded-full overflow-hidden">
                   <div
-                    className="h-full rounded-full transition-all duration-500"
-                    style={{ width: `${overallPct}%`, background: overallPct === 100 ? '#10b981' : 'linear-gradient(90deg, #6366f1, #818cf8)' }}
+                    className="h-full bg-emerald-500 rounded-full transition-all duration-500"
+                    style={{ width: `${completion_pct}%` }}
                   />
                 </div>
-                {/* Mini stat row */}
-                <div className="flex gap-6">
-                  <div>
-                    <p className="text-xl font-bold text-emerald-500">{completedCount}</p>
-                    <p className="text-xs text-[var(--text-muted)]">Done</p>
-                  </div>
-                  <div>
-                    <p className="text-xl font-bold text-[var(--text-primary)]">{totalTopics - completedCount}</p>
-                    <p className="text-xs text-[var(--text-muted)]">Remaining</p>
-                  </div>
-                  <div>
-                    <p className="text-xl font-bold text-amber-500">{starredIds.length}</p>
-                    <p className="text-xs text-[var(--text-muted)]">Starred</p>
-                  </div>
-                </div>
+                <p className="text-xs text-[var(--text-muted)] mt-1">{completed_tasks} of {total_tasks} tasks completed</p>
               </div>
             </div>
-
-            {overallPct === 100 && (
-              <div className="mt-5 flex items-center gap-2 px-4 py-2.5 bg-emerald-500/10 rounded-xl">
-                <Icon name="trophy" size={18} className="text-amber-500" />
-                <span className="text-sm font-semibold text-emerald-600">All topics complete — you're ready!</span>
-              </div>
-            )}
           </div>
 
-          {/* ── Continue Studying ─────────────────────────── */}
-          {nextTopics.length > 0 && (
-            <div className="mb-6">
-              <h2 className="text-sm font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-3">Continue Studying</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {nextTopics.map((item: any) => (
-                  <Link
-                    key={item.topic.id}
-                    to={`${item.category.href}?topic=${item.topic.id}`}
-                    className="flex items-center gap-3 p-4 bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl hover:border-indigo-500/30 hover:bg-[var(--bg-elevated)] transition-all no-underline group"
-                  >
-                    <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `${item.category.color}15` }}>
-                      <Icon name={item.category.iconName} size={16} style={{ color: item.category.color }} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-[var(--text-primary)] truncate group-hover:text-[var(--accent)] transition-colors">{item.topic.title}</p>
-                      <p className="text-xs text-[var(--text-muted)]">{item.category.label}</p>
-                    </div>
-                    <svg className="w-4 h-4 text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-all flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* ── Category Progress ─────────────────────────── */}
-          <h2 className="text-sm font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-3">Progress by Category</h2>
-          <div className="space-y-2 mb-6">
-            {CATEGORIES.map(cat => {
-              const catTotal = cat.topics.length;
-              const catDone = cat.topics.filter(t => completed[t.id]).length;
-              const catPct = catTotal > 0 ? Math.round((catDone / catTotal) * 100) : 0;
+          {/* Day sections */}
+          <div className="mt-8 space-y-5">
+            {plan.map((day) => {
+              const dayCompleted = day.tasks.filter((t) => t.completed).length;
+              const dayTotal = day.tasks.length;
+              const allDone = dayCompleted === dayTotal && dayTotal > 0;
 
               return (
-                <Link
-                  key={cat.id}
-                  to={cat.href}
-                  className="flex items-center gap-4 p-4 bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl hover:border-[var(--border)] hover:bg-[var(--bg-elevated)] transition-all no-underline group"
-                >
-                  <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `${cat.color}15` }}>
-                    <Icon name={cat.iconName} size={16} style={{ color: cat.color }} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-sm font-medium text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors">{cat.label}</span>
-                      <span className="text-xs text-[var(--text-muted)]">{catDone}/{catTotal}</span>
+                <div key={day.day} className="bg-[var(--bg-surface)] border-0 rounded-2xl overflow-hidden shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
+                  {/* Day header */}
+                  <div className={`px-5 py-3 border-b border-[var(--border)] flex items-center justify-between ${allDone ? 'bg-emerald-500/10' : 'bg-[var(--bg-elevated)]'}`}>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-sm font-bold ${allDone ? 'text-emerald-700' : 'text-[var(--text-primary)]'}`}>
+                        Day {day.day}
+                      </span>
+                      <span className="text-sm text-[var(--text-secondary)]">&mdash; {day.focus}</span>
                     </div>
-                    <div className="h-2 bg-[var(--bg-elevated)] rounded-full overflow-hidden">
-                      <div className="h-full rounded-full transition-all duration-500" style={{ width: `${catPct}%`, background: cat.color }} />
-                    </div>
+                    <span className="text-xs text-[var(--text-muted)]">{dayCompleted}/{dayTotal}</span>
                   </div>
-                  <span className="text-xs font-semibold w-10 text-right" style={{ color: catPct === 100 ? '#10b981' : 'var(--text-muted)' }}>
-                    {catPct}%
-                  </span>
-                </Link>
+
+                  {/* Tasks */}
+                  <div className="divide-y divide-[var(--border)]">
+                    {day.tasks.map((task) => {
+                      const link = getTaskLink(task);
+                      return (
+                        <div
+                          key={task.id}
+                          className="flex items-center gap-3 px-5 py-3 hover:bg-[var(--bg-elevated)] transition-colors"
+                        >
+                          {/* Checkbox */}
+                          <button
+                            onClick={() => toggleTask(task.id)}
+                            disabled={togglingTask === task.id}
+                            className={`flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
+                              task.completed
+                                ? 'bg-emerald-500 border-emerald-500'
+                                : 'border-[var(--border)] hover:border-emerald-400'
+                            } ${togglingTask === task.id ? 'opacity-50' : ''}`}
+                            aria-label={task.completed ? `Mark "${task.title}" incomplete` : `Mark "${task.title}" complete`}
+                          >
+                            {task.completed && (
+                              <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                              </svg>
+                            )}
+                          </button>
+
+                          {/* Title */}
+                          <span className={`flex-1 text-sm ${task.completed ? 'text-[var(--text-muted)] line-through' : 'text-[var(--text-primary)]'}`}>
+                            {task.title}
+                          </span>
+
+                          {/* Practice link */}
+                          {link && (
+                            <Link
+                              to={link}
+                              className="text-xs font-medium text-[var(--accent)] hover:text-[var(--accent-hover)] transition-colors flex-shrink-0"
+                            >
+                              Practice &rarr;
+                            </Link>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               );
             })}
           </div>
 
-          {/* ── Starred Topics ────────────────────────────── */}
-          {starredTopics.length > 0 && (
-            <div className="mb-6">
-              <h2 className="text-sm font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-3">Starred Topics</h2>
-              <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl divide-y divide-[var(--border)]">
-                {starredTopics.slice(0, 10).map(topic => {
-                  const cat = CATEGORIES.find(c => c.topics.some(t => t.id === topic.id));
-                  return (
-                    <Link
-                      key={topic.id}
-                      to={cat ? `${cat.href}?topic=${topic.id}` : '/capra/prepare'}
-                      className="flex items-center gap-3 px-4 py-3 hover:bg-[var(--bg-elevated)] transition-colors no-underline group"
-                    >
-                      <Icon name="star5" size={14} className="text-amber-500" />
-                      <span className={`flex-1 text-sm ${completed[topic.id] ? 'text-[var(--text-muted)] line-through' : 'text-[var(--text-primary)]'} group-hover:text-[var(--accent)] transition-colors`}>
-                        {topic.title}
-                      </span>
-                      {cat && <span className="text-xs text-[var(--text-muted)]">{cat.label}</span>}
-                      {completed[topic.id] && (
-                        <span className="text-xs text-emerald-500 font-medium">Done</span>
-                      )}
-                    </Link>
-                  );
-                })}
-                {starredTopics.length > 10 && (
-                  <div className="px-4 py-2 text-xs text-[var(--text-muted)] text-center">
-                    +{starredTopics.length - 10} more starred topics
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* ── Quick Actions ─────────────────────────────── */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            <Link
-              to="/capra/practice"
-              className="flex items-center gap-3 p-4 bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl hover:border-emerald-500/30 transition-all no-underline group"
-            >
-              <Icon name="target" size={18} className="text-emerald-500" />
-              <div>
-                <p className="text-sm font-medium text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors">Practice Problems</p>
-                <p className="text-xs text-[var(--text-muted)]">Solve coding challenges</p>
-              </div>
-            </Link>
-            <Link
-              to="/capra/achievements"
-              className="flex items-center gap-3 p-4 bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl hover:border-amber-500/30 transition-all no-underline group"
-            >
-              <Icon name="trophy" size={18} className="text-amber-500" />
-              <div>
-                <p className="text-sm font-medium text-[var(--text-primary)] group-hover:text-amber-500 transition-colors">Achievements</p>
-                <p className="text-xs text-[var(--text-muted)]">View your badges</p>
-              </div>
-            </Link>
-            <Link
-              to="/capra/prepare"
-              className="flex items-center gap-3 p-4 bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl hover:border-indigo-500/30 transition-all no-underline group"
-            >
-              <Icon name="bookOpen" size={18} className="text-indigo-500" />
-              <div>
-                <p className="text-sm font-medium text-[var(--text-primary)] group-hover:text-indigo-500 transition-colors">All Topics</p>
-                <p className="text-xs text-[var(--text-muted)]">Browse study material</p>
-              </div>
+          {/* Back link */}
+          <div className="mt-8 text-center">
+            <Link to="/capra/prepare" className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
+              &larr; Back to dashboard
             </Link>
           </div>
         </div>

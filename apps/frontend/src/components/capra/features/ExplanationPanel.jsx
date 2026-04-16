@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { getAuthHeaders } from '../../../utils/authHeaders';
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
 
@@ -176,7 +175,6 @@ export default function ExplanationPanel({ explanations, highlightedLine, pitch,
 
       const response = await fetch(API_URL + '/api/transcribe', {
         method: 'POST',
-        headers: { ...getAuthHeaders() },
         body: formData,
       });
 

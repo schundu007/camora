@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { authenticate } from '../middleware/authenticate.js';
+import { optionalAuth } from '../middleware/authenticate.js';
 
 const router = Router();
 
@@ -36,7 +36,7 @@ router.get('/events', (req, res) => {
 });
 
 // Endpoint to receive problems from Chrome extension
-router.post('/problem', authenticate, (req, res) => {
+router.post('/problem', optionalAuth, (req, res) => {
   const { url, platform, problemType, problemText, timestamp } = req.body;
 
   if (!url) {
@@ -79,24 +79,22 @@ router.post('/problem', authenticate, (req, res) => {
 const platformCookies = {};
 
 // Endpoint to receive cookies from Chrome extension
-router.post('/cookies', authenticate, (req, res) => {
+router.post('/cookies', optionalAuth, (req, res) => {
   const { platform, cookies, timestamp } = req.body;
 
   if (!platform || !cookies) {
     return res.status(400).json({ error: 'Platform and cookies are required' });
   }
 
-  const key = `${req.user.id}:${platform}`;
-  platformCookies[key] = cookies;
-  console.log(`[Extension] Received cookies for ${platform} (user ${req.user.id}), length: ${cookies.length}`);
+  platformCookies[platform] = cookies;
+  console.log(`[Extension] Received cookies for ${platform}, length: ${cookies.length}`);
 
   res.json({ success: true, platform, timestamp });
 });
 
 // Export function to get cookies (used by fetch route)
-export function getExtensionPlatformCookies(platform, userId) {
-  if (!userId) return platformCookies[platform] || null;
-  return platformCookies[`${userId}:${platform}`] || null;
+export function getExtensionPlatformCookies(platform) {
+  return platformCookies[platform] || null;
 }
 
 // Health check

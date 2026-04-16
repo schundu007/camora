@@ -14,7 +14,6 @@ import {
   PatternCardGrid, StaticDiagramGrid, FlowchartCard, ChartCard
 } from './TopicVisuals.jsx';
 import TopicComments from './TopicComments';
-import RoadmapFlowDiagram from './RoadmapFlowDiagram';
 
 /**
  * Simple regex-based syntax highlighter for Python code.
@@ -582,17 +581,6 @@ export default function TopicDetail({
             <Icon name="sparkles" size={16} />
             <span className="hidden sm:inline">Ask AI</span>
           </button>
-          {/* Generate Tutorial — projects only */}
-          {activePage === 'projects' && (
-            <button
-              onClick={() => handleAskAI(`Generate a complete step-by-step tutorial for building: ${topicDetails?.title || ''}\n\nTech stack: ${(topicDetails?.techStack || []).join(', ')}\nDifficulty: ${topicDetails?.difficulty || ''}\nDescription: ${topicDetails?.description || ''}\n\nProvide:\n1. Project setup and file structure\n2. Each implementation step with complete code snippets\n3. Key architectural decisions and why\n4. Testing guidance\n5. Deployment instructions\n\nMake it practical and implementation-focused.`)}
-              className="flex items-center gap-2 px-2 sm:px-3 py-2 rounded-lg text-sm font-medium text-white transition-all landing-body border border-emerald-500/30"
-              style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}
-            >
-              <Icon name="zap" size={16} />
-              <span className="hidden sm:inline">Generate Tutorial</span>
-            </button>
-          )}
           {/* Course Roadmap — hide on tabs that ARE roadmaps/projects/blogs */}
           {activePage !== 'roadmaps' && activePage !== 'projects' && activePage !== 'eng-blogs' && (
             <button
@@ -606,10 +594,10 @@ export default function TopicDetail({
         </div>
       </div>
 
-      {/* ── LOCKED CONTENT — show ~40% preview then paywall ── */}
+      {/* ── LOCKED CONTENT OVERLAY ── */}
       {isLocked && (
         <div className="relative">
-          {/* Preview: show full introduction */}
+          {/* Preview: show introduction first paragraph */}
           {topicDetails.introduction && (
             <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)] mb-3">
               <div className="px-3 py-1.5 border-b border-[var(--border)] bg-[var(--bg-elevated)] flex items-center gap-2">
@@ -617,117 +605,54 @@ export default function TopicDetail({
                 <h2 className="text-sm font-bold text-[var(--text-primary)] landing-display">Introduction</h2>
               </div>
               <div className="p-3">
-                <div className="text-[var(--text-secondary)] text-sm landing-body leading-relaxed">
-                  <FormattedContent content={topicDetails.introduction} color="emerald" />
-                </div>
+                <p className="text-[var(--text-secondary)] text-sm landing-body leading-relaxed">
+                  {topicDetails.introduction.split('\n')[0]}
+                </p>
               </div>
             </div>
           )}
 
-          {/* Preview: show key concepts if available */}
-          {topicDetails.concepts && topicDetails.concepts.length > 0 && (
-            <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)] mb-3">
-              <div className="px-3 py-1.5 border-b border-[var(--border)] bg-[var(--bg-elevated)] flex items-center gap-2">
-                <Icon name="puzzle" size={14} style={{ color: topicDetails.color }} />
-                <h2 className="text-sm font-bold text-[var(--text-primary)] landing-display">Key Concepts</h2>
-              </div>
-              <div className="p-3 flex flex-wrap gap-1.5">
-                {topicDetails.concepts.map((concept, i) => (
-                  <span key={i} className="px-2.5 py-1.5 rounded-lg text-xs landing-mono font-medium" style={{ background: `${topicDetails.color || '#10b981'}12`, color: topicDetails.color || '#10b981', border: `1px solid ${topicDetails.color || '#10b981'}20` }}>
-                    {concept}
-                  </span>
-                ))}
-              </div>
+          {/* Blur skeleton + upgrade CTA */}
+          {/* Blur skeleton + inline pricing cards */}
+          <div className="relative rounded-xl overflow-hidden">
+            <div className="space-y-3 filter blur-sm pointer-events-none select-none" aria-hidden="true">
+              <div className="rounded-lg bg-[var(--bg-elevated)] h-24 w-full" />
+              <div className="rounded-lg bg-[var(--bg-elevated)] h-32 w-full" />
+              <div className="rounded-lg bg-[var(--bg-elevated)] h-20 w-full" />
+              <div className="rounded-lg bg-[var(--bg-elevated)] h-28 w-full" />
             </div>
-          )}
 
-          {/* Preview: show first 40% of key questions/tips (collapsed, questions only) */}
-          {topicDetails.keyQuestions && topicDetails.keyQuestions.length > 0 && (() => {
-            const previewCount = Math.max(2, Math.ceil(topicDetails.keyQuestions.length * 0.4));
-            const previewQuestions = topicDetails.keyQuestions.slice(0, previewCount);
-            return (
-              <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)] mb-3">
-                <div className="px-3 py-1.5 border-b border-[var(--border)] bg-[var(--bg-elevated)] flex items-center gap-2">
-                  <Icon name="helpCircle" size={14} className="text-[var(--text-secondary)]" />
-                  <h2 className="text-sm font-bold text-[var(--text-primary)] landing-display">Key Questions</h2>
-                  <span className="text-[10px] text-[var(--text-muted)] ml-1">({previewCount} of {topicDetails.keyQuestions.length})</span>
-                </div>
-                <div className="divide-y divide-[var(--border)]">
-                  {previewQuestions.map((qa, i) => (
-                    <div key={i} className="px-3 py-2.5">
-                      <div className="flex items-start gap-2">
-                        <span className="w-5 h-5 rounded-md bg-[var(--bg-elevated)] border border-[var(--border)] flex items-center justify-center flex-shrink-0 mt-0.5 text-[10px] font-bold text-[var(--text-secondary)]">
-                          {i + 1}
-                        </span>
-                        <span className="text-sm font-semibold text-[var(--text-primary)]">{qa.question}</span>
-                      </div>
-                      {i === 0 && qa.answer && (
-                        <div className="mt-2 ml-7 text-sm text-[var(--text-secondary)] leading-relaxed">
-                          <FormattedContent content={qa.answer} color="emerald" />
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            );
-          })()}
-
-          {/* Preview: show tips if available (first 2) */}
-          {topicDetails.tips && topicDetails.tips.length > 0 && (
-            <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)] mb-3">
-              <div className="px-3 py-1.5 border-b border-[var(--border)] bg-[var(--bg-elevated)] flex items-center gap-2">
-                <Icon name="lightbulb" size={14} className="text-amber-400" />
-                <h2 className="text-sm font-bold text-[var(--text-primary)] landing-display">Tips</h2>
-              </div>
-              <div className="p-3 space-y-2">
-                {topicDetails.tips.slice(0, 2).map((tip, i) => (
-                  <div key={i} className="flex items-start gap-2 text-sm text-[var(--text-secondary)]">
-                    <span className="text-amber-400 flex-shrink-0 mt-0.5">&#9679;</span>
-                    <span>{tip}</span>
+            <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.95) 35%, rgba(255,255,255,1) 100%)' }}>
+              <div className="max-w-2xl w-full px-4">
+                <div className="text-center mb-5">
+                  <div className="w-12 h-12 mx-auto mb-3 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #10b981, #3b82f6, #8b5cf6)' }}>
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Fade-out gradient + upgrade CTA */}
-          <div className="relative rounded-xl">
-            <div className="flex items-center justify-center py-8" style={{ minHeight: '420px' }}>
-              <div className="max-w-4xl w-full px-4">
-                <div className="text-center mb-6">
-                  <div className="w-14 h-14 mx-auto mb-4 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #10b981, #3b82f6, #8b5cf6)', boxShadow: '0 8px 24px rgba(99,102,241,0.3)' }}>
-                    <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
-                  </div>
-                  <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2 landing-display">Upgrade to unlock all topics</h3>
-                  <p className="text-sm text-[var(--text-muted)] landing-body">Choose a plan to access {activePage === 'coding' ? '36+' : activePage === 'system-design' ? '300+' : '50+'} topics with full content</p>
+                  <h3 className="text-lg font-bold text-[var(--text-primary)] mb-1 landing-display">Upgrade to unlock all topics</h3>
+                  <p className="text-xs text-[var(--text-muted)] landing-body">Choose a plan to access {activePage === 'coding' ? '36+' : activePage === 'system-design' ? '300+' : '50+'} topics with full content</p>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                   {[
-                    { name: 'Starter', price: '$29', period: '/mo', features: ['Unlimited topics', '10 live sessions/mo', 'AI explanations', 'Coding solutions'], priceId: 'price_1THhzGITUCNxtMxll78umJSX' },
-                    { name: 'Pro', price: '$49', period: '/mo', features: ['Everything in Starter', 'Unlimited live sessions', 'Company-specific prep', 'Desktop + Mobile app', 'Speaker voice filtering'], popular: true, priceId: 'price_1THhzhITUCNxtMxl1QSxi4Kj' },
-                    { name: 'Annual', price: '$19', period: '/mo', subtitle: 'Billed $228/year', features: ['Everything in Pro', 'Save 61% vs monthly', 'Locked-in pricing', 'Priority support'], best: true, priceId: 'price_1THiBUITUCNxtMxlAHUvPut7' },
-                    { name: 'Desktop App', price: '$29', period: '/mo', subtitle: 'Add-on for Annual', features: ['Native macOS & Windows', 'Screen-share safe', 'Faster performance', 'Always-on assistant'], addon: true, priceId: import.meta.env.VITE_STRIPE_PRICE_DESKTOP_ADDON || '' },
+                    { name: 'Starter', price: '$29', period: '/mo', features: ['Unlimited topics', '10 live sessions/mo', 'AI explanations'], priceId: 'price_1THhzGITUCNxtMxll78umJSX' },
+                    { name: 'Pro', price: '$49', period: '/mo', features: ['Everything in Starter', 'Unlimited sessions', 'Company-specific prep'], popular: true, priceId: 'price_1THhzhITUCNxtMxl1QSxi4Kj' },
+                    { name: 'Annual', price: '$19', period: '/mo', features: ['Everything in Pro', 'Save 61%', 'Priority support'], best: true, priceId: 'price_1THiBUITUCNxtMxlAHUvPut7' },
                   ].map(plan => (
-                    <div key={plan.name} className="rounded-2xl p-5 flex flex-col" style={{
-                      border: plan.popular ? '2px solid #10b981' : plan.best ? '2px solid #f59e0b' : plan.addon ? '2px solid #8b5cf6' : '1.5px solid var(--border)',
+                    <div key={plan.name} className="rounded-xl p-3 flex flex-col" style={{
+                      border: plan.popular ? '2px solid #10b981' : plan.best ? '2px solid #f59e0b' : '1.5px solid var(--border)',
                       background: 'var(--bg-surface)',
-                      boxShadow: plan.popular ? '0 8px 32px rgba(16,185,129,0.15)' : plan.best ? '0 8px 32px rgba(245,158,11,0.15)' : plan.addon ? '0 8px 32px rgba(139,92,246,0.15)' : '0 4px 16px rgba(0,0,0,0.1)',
                     }}>
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="text-sm font-bold text-[var(--text-primary)]">{plan.name}</h4>
-                        {plan.popular && <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold text-white uppercase tracking-wider" style={{ background: 'linear-gradient(135deg, #10b981, #06b6d4)' }}>Popular</span>}
-                        {plan.best && <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold text-white uppercase tracking-wider" style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}>Best Value</span>}
-                        {plan.addon && <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold text-white uppercase tracking-wider" style={{ background: 'linear-gradient(135deg, #8b5cf6, #6366f1)' }}>Add-on</span>}
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-xs font-bold text-[var(--text-primary)]">{plan.name}</h4>
+                        {plan.popular && <span className="px-2 py-0.5 rounded-full text-[8px] font-bold text-white uppercase" style={{ background: 'linear-gradient(135deg, #10b981, #06b6d4)' }}>Popular</span>}
+                        {plan.best && <span className="px-2 py-0.5 rounded-full text-[8px] font-bold text-white uppercase" style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}>Best Value</span>}
                       </div>
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-2xl font-extrabold text-[var(--text-primary)]">{plan.price}</span>
-                        <span className="text-xs text-[var(--text-muted)]">{plan.period}</span>
+                      <div className="flex items-baseline gap-0.5 mt-0.5">
+                        <span className="text-lg font-bold text-[var(--text-primary)]">{plan.price}</span>
+                        <span className="text-[10px] text-[var(--text-muted)]">{plan.period}</span>
                       </div>
-                      {plan.subtitle && <p className="text-[10px] text-[var(--text-muted)] mt-0.5">{plan.subtitle}</p>}
-                      <ul className="mt-3 space-y-1.5 flex-1">
+                      <ul className="mt-2 space-y-1 flex-1">
                         {plan.features.map(f => (
-                          <li key={f} className="flex items-start gap-1.5 text-xs text-[var(--text-secondary)]"><span className="text-emerald-500 flex-shrink-0 mt-0.5">✓</span>{f}</li>
+                          <li key={f} className="flex items-start gap-1 text-[10px] text-[var(--text-secondary)]"><span className="text-emerald-500 flex-shrink-0">✓</span>{f}</li>
                         ))}
                       </ul>
                       <button
@@ -745,10 +670,10 @@ export default function TopicDetail({
                             else navigate('/pricing');
                           } catch { navigate('/pricing'); }
                         }}
-                        className={`mt-3 w-full py-2.5 rounded-xl text-xs font-bold cursor-pointer transition-all hover:opacity-90 ${plan.popular || plan.best || plan.addon ? 'text-white' : 'text-[var(--text-secondary)] border border-[var(--border)] hover:border-gray-400'}`}
-                        style={plan.popular ? { background: 'linear-gradient(135deg, #10b981, #06b6d4)' } : plan.best ? { background: 'linear-gradient(135deg, #f59e0b, #d97706)' } : plan.addon ? { background: 'linear-gradient(135deg, #8b5cf6, #6366f1)' } : {}}
+                        className={`mt-2 w-full py-1.5 rounded-lg text-[10px] font-semibold cursor-pointer transition-all ${plan.popular ? 'text-white' : plan.best ? 'text-white' : 'text-[var(--text-secondary)] border border-[var(--border)] hover:border-gray-400'}`}
+                        style={plan.popular ? { background: 'linear-gradient(135deg, #10b981, #06b6d4)' } : plan.best ? { background: 'linear-gradient(135deg, #f59e0b, #d97706)' } : {}}
                       >
-                        {plan.addon ? 'Add Desktop App' : `Get ${plan.name}`}
+                        Get {plan.name}
                       </button>
                     </div>
                   ))}
@@ -924,15 +849,6 @@ export default function TopicDetail({
             </div>
           )}
 
-          {/* Flow Diagram — visual overview of all phases */}
-          {topicDetails.phases && topicDetails.phases.length > 0 && (
-            <RoadmapFlowDiagram
-              title={topicDetails.title}
-              phases={topicDetails.phases}
-              color={topicDetails.color}
-            />
-          )}
-
           {/* Visual Roadmap — dark spine with branching topics */}
           {topicDetails.phases && topicDetails.phases.length > 0 && (
             <div id="roadmap-phases" className="rounded-xl overflow-hidden scroll-mt-24 border border-[var(--border)]">
@@ -1080,149 +996,15 @@ export default function TopicDetail({
             </div>
           )}
 
-          {/* Implementation Steps — phased build guide */}
-          {topicDetails.implementationSteps && topicDetails.implementationSteps.length > 0 && (
-            <div id="implementation-steps" className="rounded-xl overflow-hidden scroll-mt-24 border border-[var(--border)]">
-              <div className="px-4 py-2.5 border-b border-[var(--border)] bg-[var(--bg-surface)]/80 flex items-center gap-2">
-                <Icon name="list" size={14} className="text-[var(--accent)]" />
-                <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">Implementation Guide</h3>
-                <span className="text-[10px] landing-mono text-[var(--text-muted)] bg-[var(--bg-elevated)] px-1.5 py-0.5 rounded">{topicDetails.implementationSteps.length} phases</span>
+          {/* Interview Relevance */}
+          {topicDetails.interviewRelevance && (
+            <div id="interview-relevance" className="rounded-xl overflow-hidden scroll-mt-24 border border-emerald-500/20 bg-[var(--accent)]/10/50">
+              <div className="px-4 py-2.5 border-b border-emerald-500/20 bg-[var(--accent)]/10/50 flex items-center gap-2">
+                <Icon name="briefcase" size={14} className="text-[var(--accent)]" />
+                <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">Interview Relevance</h3>
               </div>
-              <div className="p-3 space-y-2">
-                {topicDetails.implementationSteps.map((step, i) => (
-                  <div key={i} className="rounded-lg border border-[var(--border)] overflow-hidden">
-                    <button
-                      onClick={() => setExpandedTheoryQuestions(prev => ({ ...prev, [`step-${i}`]: !prev[`step-${i}`] }))}
-                      className="w-full flex items-center gap-3 px-4 py-3 bg-[var(--bg-surface)] hover:bg-[var(--bg-elevated)] transition-colors text-left"
-                    >
-                      <span className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0 text-white landing-mono" style={{ background: topicDetails.color || '#8b5cf6' }}>
-                        {step.phase}
-                      </span>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="text-sm font-bold text-[var(--text-primary)] landing-display">{step.title}</h4>
-                        <p className="text-xs text-[var(--text-muted)] landing-body mt-0.5 truncate">{step.description}</p>
-                      </div>
-                      <span className="text-[10px] landing-mono text-[var(--text-muted)] bg-[var(--bg-elevated)] px-1.5 py-0.5 rounded">{step.tasks.length}</span>
-                      <Icon name={expandedTheoryQuestions[`step-${i}`] ? 'chevronUp' : 'chevronDown'} size={14} className="text-[var(--text-muted)] shrink-0" />
-                    </button>
-                    {expandedTheoryQuestions[`step-${i}`] && (
-                      <div className="px-4 pb-3 pt-1 border-t border-[var(--border)]">
-                        <div className="ml-10 space-y-1.5">
-                          {step.tasks.map((task, j) => (
-                            <div key={j} className="flex items-start gap-2.5 text-sm">
-                              <span className="w-5 h-5 rounded-md bg-[var(--accent)]/10 border border-emerald-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                <span className="text-[10px] font-bold text-[var(--accent)] landing-mono">{j + 1}</span>
-                              </span>
-                              <span className="text-[var(--text-secondary)] landing-body leading-relaxed">{task}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* File Structure */}
-          {topicDetails.fileStructure && (
-            <div id="file-structure" className="rounded-xl overflow-hidden scroll-mt-24 border border-[var(--border)]">
-              <div className="px-4 py-2.5 border-b border-[var(--border)] bg-[var(--bg-surface)]/80 flex items-center gap-2">
-                <Icon name="folder" size={14} className="text-[var(--text-secondary)]" />
-                <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">Project Structure</h3>
-              </div>
-              <div className="bg-[#0d1117] overflow-x-auto">
-                <pre className="p-4 text-sm leading-6 text-gray-300 landing-mono" style={{ whiteSpace: 'pre', margin: 0 }}>{topicDetails.fileStructure}</pre>
-              </div>
-            </div>
-          )}
-
-          {/* Architecture Layers */}
-          {topicDetails.architectureLayers && (
-            <div id="architecture-layers" className="rounded-xl overflow-hidden scroll-mt-24 border border-[var(--border)]">
-              <div className="px-4 py-2.5 border-b border-[var(--border)] bg-[var(--bg-surface)]/80 flex items-center gap-2">
-                <Icon name="layers" size={14} style={{ color: topicDetails.color || '#14b8a6' }} />
-                <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">Architecture Layers</h3>
-              </div>
-              <div className="p-3 space-y-1.5">
-                {topicDetails.architectureLayers.map((layer, i) => {
-                  const LAYER_COLORS = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ef4444', '#06b6d4', '#ec4899', '#6366f1'];
-                  const lc = LAYER_COLORS[i % LAYER_COLORS.length];
-                  return (
-                    <div key={i} className="flex items-start gap-3 p-2.5 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)]">
-                      <span className="w-6 h-6 rounded-md flex items-center justify-center text-xs font-bold flex-shrink-0 text-white" style={{ background: lc }}>{i + 1}</span>
-                      <div>
-                        <span className="text-sm font-bold text-[var(--text-primary)] landing-display">{layer.name}</span>
-                        <div className="text-[var(--text-secondary)] text-xs landing-body leading-relaxed mt-0.5">
-                          <FormattedContent content={layer.description} color="teal" />
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* API Design + Data Model */}
-          {(topicDetails.apiDesign?.endpoints || topicDetails.dataModel) && (
-            <div className={`grid gap-3 scroll-mt-24 ${topicDetails.apiDesign?.endpoints && topicDetails.dataModel ? '' : 'grid-cols-1'}`}>
-              {topicDetails.apiDesign && topicDetails.apiDesign.endpoints && (
-                <div id="api-design" className="rounded-xl overflow-hidden scroll-mt-24 border border-[var(--border)]">
-                  <div className="px-4 py-2.5 border-b border-[var(--border)] bg-[var(--bg-surface)]/80 flex items-center gap-2">
-                    <Icon name="code" size={14} className="text-[var(--text-secondary)]" />
-                    <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">API Design</h3>
-                    <span className="ml-auto text-[10px] landing-mono text-[var(--text-muted)] bg-[var(--bg-elevated)] px-1.5 py-0.5 rounded">{topicDetails.apiDesign.endpoints.length} endpoints</span>
-                  </div>
-                  <div className="p-3 grid grid-cols-1 gap-2">
-                    {topicDetails.apiDesign.endpoints.map((endpoint, i) => (
-                      <div key={i} className="rounded-lg p-3 bg-[var(--bg-surface)] border border-[var(--border)] hover:shadow-md transition-all">
-                        <div className="flex items-center gap-2.5 mb-2">
-                          <span className={`text-[11px] landing-mono px-2.5 py-1 rounded-full font-bold uppercase tracking-wide ${
-                            endpoint.method === 'GET' ? 'bg-[var(--accent)]/10 text-[var(--accent)] border border-emerald-500/20' :
-                            endpoint.method === 'POST' ? 'bg-[var(--bg-elevated)] text-[var(--text-secondary)] border border-[var(--border)]' :
-                            endpoint.method === 'PUT' || endpoint.method === 'PATCH' ? 'bg-[var(--bg-elevated)] text-[var(--text-secondary)] border border-[var(--border)]' :
-                            'bg-red-500/10 text-red-400 border border-red-500/20'
-                          }`}>{endpoint.method}</span>
-                          <code className="text-[var(--text-primary)] landing-mono text-sm font-medium">{endpoint.path}</code>
-                        </div>
-                        {endpoint.response && (
-                          <div className="rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] px-3 py-2 overflow-x-auto">
-                            <code className="text-xs landing-mono text-[var(--text-secondary)] whitespace-pre-wrap leading-5">{endpoint.response}</code>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {topicDetails.dataModel && (
-                <DataModelSection schema={topicDetails.dataModel.schema} />
-              )}
-            </div>
-          )}
-
-          {/* Code Examples */}
-          {topicDetails.codeExamples && typeof topicDetails.codeExamples === 'object' && !Array.isArray(topicDetails.codeExamples) && (
-            <div id="code-examples" className="rounded-xl overflow-hidden scroll-mt-24 border border-[var(--border)]">
-              <div className="px-4 py-2.5 border-b border-[var(--border)] bg-[var(--bg-surface)]/80 flex items-center gap-2">
-                <Icon name="code" size={14} className="text-[var(--accent)]" />
-                <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">Implementation Code</h3>
-              </div>
-              <div className="p-3 grid grid-cols-1 gap-2">
-                {Object.entries(topicDetails.codeExamples).map(([lang, code], i) => (
-                  <div key={i} className="rounded-lg border border-[var(--border)] overflow-hidden">
-                    <div className="flex items-center justify-between px-3 py-1.5 bg-gray-900">
-                      <div className="flex items-center gap-2">
-                        <div className="flex gap-1"><div className="w-2 h-2 rounded-full bg-red-400" /><div className="w-2 h-2 rounded-full bg-amber-400" /><div className="w-2 h-2 rounded-full bg-emerald-400" /></div>
-                        <span className="text-xs font-bold text-gray-400 landing-mono uppercase">{lang}</span>
-                      </div>
-                      <button onClick={() => navigator.clipboard.writeText(code)} className="text-xs text-gray-400 hover:text-gray-300 px-2 py-0.5 border border-gray-700 rounded hover:border-gray-500 transition-colors landing-mono">Copy</button>
-                    </div>
-                    <pre className="p-3 bg-[#0d1117] overflow-x-auto max-h-80 overflow-y-auto"><code className="text-sm landing-mono text-gray-300 leading-relaxed whitespace-pre">{code}</code></pre>
-                  </div>
-                ))}
+              <div className="p-4">
+                <p className="text-sm text-[var(--text-secondary)] landing-body leading-relaxed">{topicDetails.interviewRelevance}</p>
               </div>
             </div>
           )}
@@ -1239,16 +1021,16 @@ export default function TopicDetail({
                 {topicDetails.keyQuestions.map((qa, i) => (
                   <div key={i} className="px-4 py-3">
                     <button
-                      onClick={() => setExpandedTheoryQuestions(prev => ({ ...prev, [`kq-${i}`]: !prev[`kq-${i}`] }))}
+                      onClick={() => setExpandedTheoryQuestions(prev => ({ ...prev, [i]: !prev[i] }))}
                       className="w-full flex items-start gap-3 text-left group"
                     >
                       <span className="w-6 h-6 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] flex items-center justify-center flex-shrink-0 mt-0.5 text-xs font-bold text-[var(--text-secondary)] landing-mono">
                         {i + 1}
                       </span>
                       <span className="flex-1 text-sm font-semibold text-[var(--text-primary)] landing-display">{qa.question}</span>
-                      <Icon name={expandedTheoryQuestions[`kq-${i}`] ? 'chevronUp' : 'chevronDown'} size={14} className="text-[var(--text-muted)] mt-1 shrink-0" />
+                      <Icon name={expandedTheoryQuestions[i] ? 'chevronUp' : 'chevronDown'} size={14} className="text-[var(--text-muted)] mt-1 shrink-0" />
                     </button>
-                    {expandedTheoryQuestions[`kq-${i}`] && (
+                    {expandedTheoryQuestions[i] && (
                       <div className="mt-2 ml-9 text-sm text-[var(--text-secondary)] landing-body leading-relaxed">
                         <FormattedContent content={qa.answer} color="blue" />
                       </div>
@@ -1259,177 +1041,17 @@ export default function TopicDetail({
             </div>
           )}
 
-          {/* Deep Dive Topics */}
-          {topicDetails.deepDiveTopics && topicDetails.deepDiveTopics.length > 0 && (
-            <div id="deep-dives" className="rounded-xl overflow-hidden scroll-mt-24 border border-[var(--border)]">
-              <div className="px-4 py-2.5 border-b border-[var(--border)] bg-[var(--bg-surface)]/80 flex items-center gap-2">
-                <Icon name="search" size={14} className="text-[var(--text-secondary)]" />
-                <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">Deep Dive Topics</h3>
-              </div>
-              <div className="p-3 grid grid-cols-1 gap-2">
-                {topicDetails.deepDiveTopics.map((item, i) => (
-                  <div key={i} className="p-3 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)]">
-                    <h4 className="text-sm font-bold text-[var(--text-primary)] mb-1 landing-display">{item.topic}</h4>
-                    <div className="text-[var(--text-secondary)] text-xs landing-body leading-relaxed">
-                      <FormattedContent content={item.detail} color="sky" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Trade-off Decisions */}
-          {topicDetails.tradeoffDecisions && topicDetails.tradeoffDecisions.length > 0 && (
-            <div id="tradeoffs" className="rounded-xl overflow-hidden scroll-mt-24 border border-[var(--border)]">
-              <div className="px-4 py-2.5 border-b border-[var(--border)] bg-[var(--bg-surface)]/80 flex items-center gap-2">
-                <Icon name="gitBranch" size={14} className="text-[var(--text-secondary)]" />
-                <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">Trade-off Decisions</h3>
-              </div>
-              <div className="p-3 grid grid-cols-1 gap-2">
-                {topicDetails.tradeoffDecisions.map((d, i) => (
-                  <div key={i} className="p-3 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)]">
-                    <div className="flex items-center gap-1.5 mb-1 flex-wrap">
-                      <span className="text-xs font-bold text-[var(--text-secondary)] landing-mono">{d.choice}</span>
-                      <span className="text-[var(--text-muted)]">→</span>
-                      <span className="text-xs font-bold text-[var(--accent)] landing-mono">{d.picked}</span>
-                    </div>
-                    <div className="text-[var(--text-secondary)] text-xs landing-body leading-relaxed">
-                      <FormattedContent content={d.reason} color="rose" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Common Pitfalls */}
-          {topicDetails.commonPitfalls && topicDetails.commonPitfalls.length > 0 && (
-            <div id="pitfalls" className="rounded-xl overflow-hidden scroll-mt-24 border border-[var(--border)]">
-              <div className="px-4 py-2.5 border-b border-[var(--border)] bg-[var(--bg-surface)]/80 flex items-center gap-2">
-                <Icon name="alertTriangle" size={14} className="text-red-400" />
-                <h3 className="text-sm font-bold text-red-400 landing-display">Common Pitfalls</h3>
-                <span className="text-[10px] landing-mono text-[var(--text-muted)] bg-[var(--bg-elevated)] px-1.5 py-0.5 rounded">{topicDetails.commonPitfalls.length}</span>
-              </div>
-              <div className="p-3 space-y-2">
-                {topicDetails.commonPitfalls.map((p, i) => (
-                  <div key={i} className="rounded-lg border border-red-500/15 bg-red-500/5 overflow-hidden">
-                    <div className="px-4 py-3">
-                      <div className="flex items-center gap-2.5 mb-1.5">
-                        <span className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 bg-red-500/10 border border-red-500/20">
-                          <span className="text-[10px] font-bold text-red-400 landing-mono">{i + 1}</span>
-                        </span>
-                        <h4 className="text-[var(--text-primary)] font-semibold text-sm landing-display">{p.pitfall}</h4>
-                      </div>
-                      <p className="text-[var(--text-secondary)] text-xs leading-relaxed ml-8 landing-body">{p.why}</p>
-                      <div className="ml-8 mt-2 px-3 py-2 rounded-lg bg-[var(--accent)]/10 border border-emerald-500/20">
-                        <span className="text-[10px] font-bold text-[var(--accent)] uppercase tracking-wider landing-mono">Solution</span>
-                        <p className="text-[var(--accent)] text-xs leading-relaxed mt-0.5 landing-body">{p.solution}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Edge Cases */}
-          {topicDetails.edgeCases && topicDetails.edgeCases.length > 0 && (
-            <div id="edge-cases" className="rounded-xl overflow-hidden scroll-mt-24 border border-[var(--border)]">
-              <div className="px-4 py-2.5 border-b border-[var(--border)] bg-[var(--bg-surface)]/80 flex items-center gap-2">
-                <Icon name="alertTriangle" size={14} className="text-[var(--text-secondary)]" />
-                <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">Edge Cases</h3>
-                <span className="text-[10px] landing-mono text-[var(--text-muted)] bg-[var(--bg-elevated)] px-1.5 py-0.5 rounded">{topicDetails.edgeCases.length}</span>
-              </div>
-              <div className="p-3 space-y-2">
-                {topicDetails.edgeCases.map((ec, i) => (
-                  <div key={i} className="rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] overflow-hidden">
-                    <div className="px-4 py-3">
-                      <div className="flex items-center gap-2.5 mb-1.5">
-                        <span className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 bg-[var(--bg-elevated)] border border-[var(--border)]">
-                          <span className="text-[10px] font-bold text-[var(--text-secondary)] landing-mono">{i + 1}</span>
-                        </span>
-                        <h4 className="text-[var(--text-primary)] font-semibold text-sm landing-display">{ec.scenario}</h4>
-                      </div>
-                      <p className="text-[var(--text-secondary)] text-xs leading-relaxed ml-8 landing-body">{ec.impact}</p>
-                      <div className="ml-8 mt-2 px-3 py-2 rounded-lg bg-[var(--accent)]/10 border border-emerald-500/20">
-                        <span className="text-[10px] font-bold text-[var(--accent)] uppercase tracking-wider landing-mono">Mitigation</span>
-                        <p className="text-[var(--accent)] text-xs leading-relaxed mt-0.5 landing-body">{ec.mitigation}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Interview Relevance */}
-          {topicDetails.interviewRelevance && (
-            <div id="interview-relevance" className="rounded-xl overflow-hidden scroll-mt-24 border border-emerald-500/20">
-              <div className="px-4 py-2.5 border-b border-emerald-500/20 bg-[var(--accent)]/10 flex items-center gap-2">
-                <Icon name="briefcase" size={14} className="text-[var(--accent)]" />
-                <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">Interview Relevance</h3>
-              </div>
-              <div className="p-4">
-                <p className="text-sm text-[var(--text-secondary)] landing-body leading-relaxed">{topicDetails.interviewRelevance}</p>
-              </div>
-            </div>
-          )}
-
-          {/* Interview Follow-ups */}
-          {topicDetails.interviewFollowups && topicDetails.interviewFollowups.length > 0 && (
-            <div id="followups" className="rounded-xl overflow-hidden scroll-mt-24 border border-[var(--border)]">
-              <div className="px-4 py-2.5 border-b border-[var(--border)] bg-[var(--bg-surface)]/80 flex items-center gap-2">
-                <Icon name="helpCircle" size={14} className="text-[var(--text-secondary)]" />
-                <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">Common Follow-up Questions</h3>
-              </div>
-              <div className="p-3 grid grid-cols-1 gap-2">
-                {topicDetails.interviewFollowups.map((item, i) => (
-                  <div key={i} className="rounded-lg border border-[var(--border)] overflow-hidden">
-                    <div className="flex items-start gap-2 px-3 py-2 bg-[var(--bg-elevated)] border-b border-[var(--border)]">
-                      <span className="text-xs font-bold text-[var(--text-secondary)] landing-mono flex-shrink-0">Q{i + 1}</span>
-                      <span className="text-sm font-semibold text-[var(--text-primary)] landing-display">{item.question}</span>
-                    </div>
-                    <div className="px-3 py-2 pl-7 text-[var(--text-secondary)] text-xs landing-body leading-relaxed">
-                      <FormattedContent content={item.answer} color="orange" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Extension Ideas */}
-          {topicDetails.extensionIdeas && topicDetails.extensionIdeas.length > 0 && (
-            <div id="extensions" className="rounded-xl overflow-hidden scroll-mt-24 border border-[var(--border)]">
-              <div className="px-4 py-2.5 border-b border-[var(--border)] bg-[var(--bg-surface)]/80 flex items-center gap-2">
-                <Icon name="zap" size={14} style={{ color: topicDetails.color || '#8b5cf6' }} />
-                <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">Extension Ideas</h3>
-                <span className="text-[10px] landing-mono text-[var(--text-muted)] bg-[var(--bg-elevated)] px-1.5 py-0.5 rounded">Level Up</span>
-              </div>
-              <div className="p-3 grid grid-cols-1 gap-2">
-                {topicDetails.extensionIdeas.map((ext, i) => (
-                  <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)]">
-                    <span className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 mt-0.5" style={{ background: `${topicDetails.color || '#8b5cf6'}15` }}>
-                      <Icon name="zap" size={12} style={{ color: topicDetails.color || '#8b5cf6' }} />
-                    </span>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-0.5">
-                        <span className="text-sm font-bold text-[var(--text-primary)] landing-display">{ext.idea}</span>
-                        <span className={`text-[10px] landing-mono px-1.5 py-0.5 rounded-full font-bold ${
-                          ext.difficulty === 'beginner' ? 'bg-[var(--accent)]/15 text-[var(--accent)]' :
-                          ext.difficulty === 'intermediate' ? 'bg-[var(--bg-elevated)] text-[var(--text-secondary)] border border-[var(--border)]' :
-                          'bg-red-500/10 text-red-400'
-                        }`}>{ext.difficulty}</span>
-                      </div>
-                      <p className="text-xs text-[var(--text-secondary)] landing-body leading-relaxed">{ext.description}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
+          {/* Generate Tutorial — compact button only */}
+          <div id="generate-tutorial" className="scroll-mt-24">
+            <button
+              onClick={() => handleAskAI(`Generate a complete step-by-step tutorial for building: ${topicDetails.title}\n\nTech stack: ${(topicDetails.techStack || []).join(', ')}\nDifficulty: ${topicDetails.difficulty}\nDescription: ${topicDetails.description}\n\nProvide:\n1. Project setup and file structure\n2. Each implementation step with complete code snippets\n3. Key architectural decisions and why\n4. Testing guidance\n5. Deployment instructions\n\nMake it practical and implementation-focused.`)}
+              className="inline-flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-bold text-white transition-all hover:opacity-90"
+              style={{ background: 'linear-gradient(135deg, #10b981, #059669)', boxShadow: '0 2px 8px rgba(16,185,129,0.25)' }}
+            >
+              <Icon name="zap" size={14} />
+              Generate Tutorial
+            </button>
+          </div>
         </div>
       )}
 
@@ -1491,7 +1113,7 @@ export default function TopicDetail({
 
           {/* 2. Time + Space Complexity — side by side cards */}
           {(topicDetails.timeComplexity || topicDetails.spaceComplexity) && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3">
               {topicDetails.timeComplexity && (
                 <div className="rounded-xl overflow-hidden bg-[var(--bg-surface)] border border-[var(--border)] shadow-sm flex">
                   <div className="w-1 bg-emerald-400 flex-shrink-0" />

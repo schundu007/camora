@@ -132,17 +132,31 @@ router.get('/google/callback', async (req, res) => {
           return;
         }
 
-        // Use ipapi.co (HTTPS) for GeoIP lookup
+        // Try ip-api.com first (HTTP only for free tier)
         let loc = null;
         try {
-          const r = await fetch(`https://ipapi.co/${ip}/json/`);
+          const r = await fetch(`http://ip-api.com/json/${ip}?fields=status,city,regionName,country`);
           const geo = await r.json();
-          console.log('[GeoIP] ipapi.co response:', JSON.stringify(geo));
-          if (geo.city || geo.country_name) {
-            loc = [geo.city, geo.region, geo.country_name].filter(Boolean).join(', ');
+          console.log('[GeoIP] ip-api response:', JSON.stringify(geo));
+          if (geo.status === 'success' && (geo.city || geo.country)) {
+            loc = [geo.city, geo.regionName, geo.country].filter(Boolean).join(', ');
           }
         } catch (e) {
-          console.log('[GeoIP] ipapi.co failed:', e.message);
+          console.log('[GeoIP] ip-api failed:', e.message);
+        }
+
+        // Fallback to ipapi.co (HTTPS)
+        if (!loc) {
+          try {
+            const r = await fetch(`https://ipapi.co/${ip}/json/`);
+            const geo = await r.json();
+            console.log('[GeoIP] ipapi.co response:', JSON.stringify(geo));
+            if (geo.city || geo.country_name) {
+              loc = [geo.city, geo.region, geo.country_name].filter(Boolean).join(', ');
+            }
+          } catch (e) {
+            console.log('[GeoIP] ipapi.co failed:', e.message);
+          }
         }
 
         if (loc) {
@@ -179,7 +193,7 @@ router.get('/google/callback', async (req, res) => {
  * POST /api/auth/refresh
  * Accepts an expired access token and issues a fresh one with the same claims.
  */
-router.post('/refresh', authLimiter, async (req, res) => {
+router.post('/refresh', async (req, res) => {
   const authHeader = req.headers.authorization;
   if (!authHeader?.startsWith('Bearer ')) {
     return res.status(401).json({ error: 'No token provided' });
@@ -200,12 +214,6 @@ router.post('/refresh', authLimiter, async (req, res) => {
 
     if (!payload.sub || payload.type !== 'access') {
       return res.status(401).json({ error: 'Invalid token' });
-    }
-
-    // Verify user still exists and is active before issuing new token
-    const userCheck = await query('SELECT id, is_active FROM users WHERE id = $1', [parseInt(payload.sub, 10)]);
-    if (!userCheck.rows[0] || userCheck.rows[0].is_active === false) {
-      return res.status(401).json({ error: 'Account not found or inactive' });
     }
 
     // Issue fresh token via shared-auth
@@ -264,7 +272,7 @@ router.get('/me', authenticate, async (req, res) => {
  * Grant admin subscription to a user (admin secret required)
  * POST /api/auth/admin/grant-subscription
  */
-router.post('/admin/grant-subscription', authLimiter, async (req, res) => {
+router.post('/admin/grant-subscription', async (req, res) => {
   const { email, adminSecret } = req.body;
 
   // Require admin secret from environment (no default — must be explicitly configured)
@@ -295,14 +303,14 @@ router.post('/admin/grant-subscription', authLimiter, async (req, res) => {
       [userId]
     );
 
-    // Reset free usage counters (limits stay at normal free tier — subscription handles access)
+    // Reset free usage limits to max
     await query(
       `INSERT INTO ascend_free_usage (user_id, coding_used, coding_limit, design_used, design_limit, company_prep_used, company_prep_limit)
-       VALUES ($1, 0, 1, 0, 1, 0, 1)
+       VALUES ($1, 0, 9999, 0, 9999, 0, 9999)
        ON CONFLICT (user_id) DO UPDATE SET
-         coding_used = 0, coding_limit = 1,
-         design_used = 0, design_limit = 1,
-         company_prep_used = 0, company_prep_limit = 1`,
+         coding_used = 0, coding_limit = 9999,
+         design_used = 0, design_limit = 9999,
+         company_prep_used = 0, company_prep_limit = 9999`,
       [userId]
     );
 
@@ -327,7 +335,7 @@ router.post('/admin/grant-subscription', authLimiter, async (req, res) => {
     });
   } catch (error) {
     logger.error({ error: error.message, email }, 'Grant subscription failed');
-    res.status(500).json({ error: 'Failed to grant subscription' });
+    res.status(500).json({ error: error.message });
   }
 });
 

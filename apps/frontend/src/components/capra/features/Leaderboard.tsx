@@ -12,7 +12,11 @@ interface LeaderboardEntry {
   problems_solved: number;
 }
 
-const RANK_ICONS: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉' };
+const RANK_STYLES: Record<number, { bg: string; text: string; icon: string }> = {
+  1: { bg: 'bg-amber-500/10', text: 'text-amber-400', icon: '🥇' },
+  2: { bg: 'bg-[var(--bg-elevated)]', text: 'text-[var(--text-muted)]', icon: '🥈' },
+  3: { bg: 'bg-orange-500/10', text: 'text-orange-400', icon: '🥉' },
+};
 
 export default function Leaderboard() {
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
@@ -23,11 +27,20 @@ export default function Leaderboard() {
   useEffect(() => {
     async function fetchLeaderboard() {
       try {
+        // Decode user_id from JWT for highlighting
         const token = document.cookie.match(/(^| )cariara_sso=([^;]+)/)?.[2];
         if (token) {
-          try { setCurrentUserId(JSON.parse(atob(token.split('.')[1])).sub || null); } catch { /* ignore */ }
+          try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            setCurrentUserId(payload.sub || null);
+          } catch {
+            // ignore decode errors
+          }
         }
-        const res = await fetch(`${API_URL}/api/gamification/leaderboard`, { headers: { ...getAuthHeaders() } });
+
+        const res = await fetch(`${API_URL}/api/gamification/leaderboard`, {
+          headers: { ...getAuthHeaders() },
+        });
         if (!res.ok) throw new Error('Failed to load leaderboard');
         const json = await res.json();
         setEntries(json.leaderboard || []);
@@ -42,13 +55,14 @@ export default function Leaderboard() {
 
   if (loading) {
     return (
-      <div className="rounded-xl p-5" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+      <div className="bg-[var(--bg-surface)] border-0 rounded-2xl p-6 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
         <div className="animate-pulse space-y-3">
-          <div className="h-4 rounded w-32" style={{ background: 'var(--bg-elevated)' }} />
-          {[1,2,3].map(i => (
+          <div className="h-5 bg-[var(--bg-elevated)] rounded w-40" />
+          {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="flex items-center gap-3">
-              <div className="w-7 h-7 rounded-full" style={{ background: 'var(--bg-elevated)' }} />
-              <div className="h-3 rounded flex-1" style={{ background: 'var(--bg-elevated)' }} />
+              <div className="h-8 w-8 bg-[var(--bg-elevated)] rounded-full" />
+              <div className="h-4 bg-[var(--bg-elevated)] rounded flex-1" />
+              <div className="h-4 bg-[var(--bg-elevated)] rounded w-16" />
             </div>
           ))}
         </div>
@@ -58,65 +72,109 @@ export default function Leaderboard() {
 
   if (error) {
     return (
-      <div className="rounded-xl p-5" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-        <p className="text-sm text-red-400">{error}</p>
+      <div className="bg-[var(--bg-surface)] border-0 rounded-2xl p-6 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
+        <p className="text-sm text-red-500">{error}</p>
+      </div>
+    );
+  }
+
+  if (entries.length === 0) {
+    return (
+      <div className="bg-[var(--bg-surface)] border-0 rounded-2xl p-6 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
+        <h3 className="text-lg font-bold text-[var(--text-primary)] tracking-tight">Weekly Leaderboard</h3>
+        <p className="text-sm text-[var(--text-muted)] mt-2">No activity this week yet. Be the first!</p>
       </div>
     );
   }
 
   return (
-    <div className="rounded-xl p-5 space-y-4" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+    <div className="bg-[var(--bg-surface)] border-0 rounded-2xl p-6 space-y-5 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
       <div>
-        <h3 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Weekly Leaderboard</h3>
-        <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-muted)' }}>Top performers this week</p>
+        <h3 className="text-lg font-bold text-[var(--text-primary)] tracking-tight">Weekly Leaderboard</h3>
+        <p className="text-sm text-[var(--text-muted)] mt-1">Top performers this week</p>
       </div>
 
-      {entries.length === 0 ? (
-        <p className="text-xs py-4 text-center" style={{ color: 'var(--text-muted)' }}>No activity yet. Be the first!</p>
-      ) : (
-        <div className="space-y-1.5">
-          {entries.map(entry => {
-            const isMe = currentUserId && entry.user_id === currentUserId;
-            return (
-              <div key={entry.user_id}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors"
-                style={{
-                  background: isMe ? 'var(--accent-subtle)' : 'transparent',
-                  border: isMe ? '1px solid rgba(99,102,241,0.2)' : '1px solid transparent',
-                }}
-              >
-                {/* Rank */}
-                <span className="w-6 text-center text-sm font-bold shrink-0" style={{ color: entry.rank <= 3 ? '#f59e0b' : 'var(--text-muted)' }}>
-                  {RANK_ICONS[entry.rank] || entry.rank}
-                </span>
+      <div className="rounded-lg overflow-hidden border border-[var(--border)]">
+        <table className="w-full text-left">
+          <thead>
+            <tr className="bg-[var(--bg-elevated)] text-xs font-medium text-[var(--text-muted)] uppercase tracking-wide">
+              <th className="px-4 py-3 w-14">Rank</th>
+              <th className="px-4 py-3">Name</th>
+              <th className="px-4 py-3 text-right">XP</th>
+              <th className="px-4 py-3 text-right">Solved</th>
+            </tr>
+          </thead>
+          <tbody>
+            {entries.map((entry, idx) => {
+              const isCurrentUser = currentUserId && entry.user_id === currentUserId;
+              const rankStyle = RANK_STYLES[entry.rank];
 
-                {/* Avatar */}
-                {entry.avatar ? (
-                  <img src={entry.avatar} alt="" className="w-7 h-7 rounded-full object-cover shrink-0" />
-                ) : (
-                  <div className="w-7 h-7 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold"
-                    style={{ background: 'var(--accent-subtle)', color: 'var(--accent)' }}>
-                    {(entry.name || '?').charAt(0).toUpperCase()}
-                  </div>
-                )}
+              return (
+                <tr
+                  key={entry.user_id}
+                  className={`border-t border-[var(--border)] transition-colors ${
+                    isCurrentUser
+                      ? 'bg-[var(--accent)]/10'
+                      : idx % 2 === 0
+                        ? 'bg-[var(--bg-surface)]'
+                        : 'bg-[var(--bg-elevated)]/50'
+                  }`}
+                >
+                  {/* Rank */}
+                  <td className="px-4 py-3">
+                    {rankStyle ? (
+                      <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-sm font-bold ${rankStyle.bg} ${rankStyle.text}`}>
+                        {rankStyle.icon}
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center justify-center w-7 h-7 rounded-full text-sm font-semibold text-[var(--text-muted)] bg-[var(--bg-elevated)]">
+                        {entry.rank}
+                      </span>
+                    )}
+                  </td>
 
-                {/* Name */}
-                <div className="flex-1 min-w-0">
-                  <span className="text-xs font-medium truncate block" style={{ color: isMe ? 'var(--accent)' : 'var(--text-primary)' }}>
-                    {entry.name}
-                    {isMe && <span className="ml-1 text-[9px] font-bold uppercase" style={{ color: 'var(--accent)' }}>you</span>}
-                  </span>
-                </div>
+                  {/* Avatar + Name */}
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      {entry.avatar ? (
+                        <img
+                          src={entry.avatar}
+                          alt=""
+                          className="w-8 h-8 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-[var(--accent)]/15 flex items-center justify-center text-[var(--accent)] text-xs font-bold">
+                          {(entry.name || '?').charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                      <span className={`text-sm font-medium ${isCurrentUser ? 'text-[var(--accent)]' : 'text-[var(--text-primary)]'}`}>
+                        {entry.name}
+                        {isCurrentUser && (
+                          <span className="ml-1.5 text-[10px] font-bold text-[var(--accent)] uppercase">You</span>
+                        )}
+                      </span>
+                    </div>
+                  </td>
 
-                {/* XP */}
-                <span className="text-xs font-bold tabular-nums shrink-0" style={{ color: 'var(--accent)' }}>
-                  {entry.xp_earned.toLocaleString()}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      )}
+                  {/* XP */}
+                  <td className="px-4 py-3 text-right">
+                    <span className={`text-sm font-semibold ${rankStyle ? rankStyle.text : 'text-[var(--text-secondary)]'}`}>
+                      {entry.xp_earned.toLocaleString()}
+                    </span>
+                  </td>
+
+                  {/* Problems Solved */}
+                  <td className="px-4 py-3 text-right">
+                    <span className="text-sm text-[var(--text-secondary)]">
+                      {entry.problems_solved}
+                    </span>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

@@ -43,7 +43,7 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
   return (
     <>
       <header
-        className="flex items-center justify-between px-4 shrink-0 z-30"
+        className="flex items-center justify-between px-4 shrink-0 z-40"
         style={{
           height: 'var(--topbar-height, 48px)',
           background: 'var(--bg-surface)',
@@ -56,7 +56,7 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
           <button
             type="button"
             onClick={onToggleSidebar}
-            className="md:hidden flex items-center justify-center w-10 h-10 rounded-md transition-colors"
+            className="md:hidden flex items-center justify-center w-8 h-8 rounded-md transition-colors"
             style={{ color: 'var(--text-secondary)' }}
             aria-label={sidebarOpen ? 'Close sidebar' : 'Open sidebar'}
           >
@@ -145,7 +145,7 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
           <button
             type="button"
             onClick={toggleTheme}
-            className="flex items-center justify-center w-10 h-10 rounded-md transition-colors"
+            className="flex items-center justify-center w-7 h-7 rounded-md transition-colors"
             style={{ color: 'var(--text-muted)' }}
             aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
             title={theme === 'dark' ? 'Light mode' : 'Dark mode'}
@@ -186,7 +186,7 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
           <button
             type="button"
             onClick={() => setCmdOpen(true)}
-            className="sm:hidden flex items-center justify-center w-10 h-10 rounded-md transition-colors"
+            className="sm:hidden flex items-center justify-center w-7 h-7 rounded-md transition-colors"
             style={{ color: 'var(--text-muted)' }}
             aria-label="Search"
           >
@@ -204,12 +204,8 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
             </svg>
           </button>
 
-          {/* Avatar — links to profile/onboarding */}
-          <Link
-            to="/capra/onboarding"
-            className="flex items-center gap-2 no-underline rounded-md px-1.5 py-1 transition-colors hover:bg-[var(--bg-elevated)]"
-            title="Update role & resume"
-          >
+          {/* Avatar */}
+          <div className="flex items-center gap-2">
             {user?.image ? (
               <img
                 src={user.image}
@@ -234,13 +230,13 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
             >
               {user?.name}
             </span>
-          </Link>
+          </div>
 
           {/* Sign out */}
           <button
             type="button"
             onClick={logout}
-            className="flex items-center justify-center w-10 h-10 rounded-md transition-colors"
+            className="flex items-center justify-center w-7 h-7 rounded-md transition-colors"
             style={{ color: 'var(--text-muted)' }}
             aria-label="Sign out"
             title="Sign out"

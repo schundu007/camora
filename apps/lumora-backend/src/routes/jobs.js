@@ -7,27 +7,11 @@
 import { Router } from 'express';
 import { queryJobs } from '../services/jobsDb.js';
 import { authenticate } from '../middleware/authenticate.js';
-import { extractSalary } from '../services/salaryExtractor.js';
 
 const router = Router();
 
-// Cache last_updated timestamp — refresh every 5 minutes
-let cachedLastUpdated = null;
-let lastUpdatedAt = 0;
-async function refreshLastUpdated() {
-  if (Date.now() - lastUpdatedAt < 5 * 60 * 1000 && cachedLastUpdated) return;
-  try {
-    const result = await queryJobs('SELECT GREATEST(MAX(date_found), MAX(posted_date)) AS last_updated FROM jobs WHERE is_active = true');
-    cachedLastUpdated = result.rows[0]?.last_updated || null;
-    lastUpdatedAt = Date.now();
-  } catch { /* ignore */ }
-}
-
 // All routes require authentication
 router.use(authenticate);
-
-// Warm up the cache on first request
-router.use(async (_req, _res, next) => { refreshLastUpdated(); next(); });
 
 /**
  * GET /stats — Job statistics.
@@ -66,113 +50,16 @@ router.get('/stats', async (req, res, next) => {
 });
 
 /**
- * GET /filters — Available filter values for dropdowns.
- *
- * Returns distinct sources, locations, departments, companies, and salary range.
- */
-router.get('/filters', async (req, res, next) => {
-  try {
-    const [sourcesResult, locationsResult, departmentsResult, companiesResult, salaryResult] = await Promise.all([
-      queryJobs(
-        `SELECT source, COUNT(*) AS count
-         FROM jobs WHERE is_active = true AND source IS NOT NULL
-         GROUP BY source ORDER BY count DESC`,
-      ),
-      queryJobs(
-        `SELECT location, COUNT(*) AS count FROM jobs
-         WHERE is_active = true AND location IS NOT NULL AND location != ''
-         GROUP BY location ORDER BY count DESC`,
-      ),
-      queryJobs(
-        `SELECT department, COUNT(*) AS count
-         FROM jobs WHERE is_active = true AND department IS NOT NULL AND department != ''
-         GROUP BY department ORDER BY count DESC LIMIT 50`,
-      ),
-      queryJobs(
-        `SELECT c.name, COUNT(*) AS count
-         FROM jobs j JOIN companies c ON j.company_id = c.id
-         WHERE j.is_active = true
-         GROUP BY c.name ORDER BY count DESC LIMIT 100`,
-      ),
-      queryJobs(
-        `SELECT MIN(salary_min) AS min, MAX(salary_max) AS max
-         FROM jobs WHERE is_active = true AND salary_min IS NOT NULL`,
-      ),
-    ]);
-
-    // Extract real city/country locations — skip remote/hybrid variations
-    const remotePattern = /\b(remote|hybrid|work from home|wfh|telecommute)\b/i;
-    const locationCounts = new Map(); // normalized key → { display, count }
-    for (const row of locationsResult.rows) {
-      const loc = row.location;
-      const rowCount = parseInt(row.count, 10);
-      if (!loc) continue;
-      const parts = loc.split(/[•;|,]/);
-      for (const part of parts) {
-        let trimmed = part.trim();
-        if (!trimmed) continue;
-        // Skip pure remote/hybrid entries — those belong in Work Type filter
-        if (remotePattern.test(trimmed)) continue;
-        // Skip generic country-only entries like "United States" that are too broad
-        // but keep "City, State" or "City, Country" formats
-        const key = trimmed.toLowerCase();
-        const existing = locationCounts.get(key);
-        if (existing) {
-          existing.count += rowCount;
-        } else {
-          locationCounts.set(key, { name: trimmed, count: rowCount });
-        }
-      }
-    }
-
-    // Sort by count descending — only real cities/regions
-    const cityLocs = Array.from(locationCounts.values())
-      .sort((a, b) => b.count - a.count);
-
-    res.json({
-      sources: sourcesResult.rows.map((r) => ({
-        name: r.source,
-        count: parseInt(r.count, 10),
-      })),
-      locations: cityLocs.slice(0, 100),
-      departments: departmentsResult.rows.map((r) => ({
-        name: r.department,
-        count: parseInt(r.count, 10),
-      })),
-      companies: companiesResult.rows.map((r) => ({
-        name: r.name,
-        count: parseInt(r.count, 10),
-      })),
-      salary_range: {
-        min: salaryResult.rows[0]?.min ? parseInt(salaryResult.rows[0].min, 10) : null,
-        max: salaryResult.rows[0]?.max ? parseInt(salaryResult.rows[0].max, 10) : null,
-      },
-    });
-  } catch (err) {
-    if (err.message === 'Jobs database not configured') {
-      return res.status(503).json({ detail: 'Jobs database not configured' });
-    }
-    next(err);
-  }
-});
-
-/**
- * GET / — List jobs with advanced filters.
+ * GET / — List jobs with filters.
  *
  * Query params:
- *   role          — filter by title (ILIKE)
- *   location      — filter by location (ILIKE)
- *   min_salary    — minimum salary_min value
- *   max_salary    — maximum salary_max value
- *   search        — search title or job_description (ILIKE)
- *   company       — filter by company name (ILIKE)
- *   source        — filter by job source (exact match)
- *   work_type     — filter by remote/hybrid/onsite (location-based)
- *   department    — filter by department (ILIKE)
- *   posted_within — days since posted (e.g. 1, 7, 14, 30)
- *   experience    — experience level keyword (e.g. senior, staff, principal)
- *   limit         — results per page (default 50, max 200)
- *   offset        — pagination offset (default 0)
+ *   role       — filter by title (ILIKE)
+ *   location   — filter by location (ILIKE)
+ *   min_salary — minimum salary_min value
+ *   search     — search title or job_description (ILIKE)
+ *   company    — filter by company name (ILIKE)
+ *   limit      — results per page (default 50, max 200)
+ *   offset     — pagination offset (default 0)
  */
 router.get('/', async (req, res, next) => {
   try {
@@ -181,51 +68,9 @@ router.get('/', async (req, res, next) => {
     let paramIdx = 1;
 
     if (req.query.role) {
-      // Category-specific keyword expansion — matches real-world job titles
-      const categoryKeywords = {
-        // Core engineering roles
-        devops: ['devops', 'dev ops', 'devsecops', 'release engineer', 'build engineer', 'ci/cd', 'deployment engineer'],
-        sre: ['sre', 'site reliability', 'reliability engineer', 'production engineer'],
-        security: ['security engineer', 'security analyst', 'appsec', 'infosec', 'cybersecurity', 'penetration test', 'security architect', 'iam engineer'],
-        ml: ['machine learning', 'ml engineer', 'deep learning', 'nlp', 'ai engineer', 'ai research', 'computer vision', 'applied scientist', 'research scientist'],
-        data: ['data engineer', 'data scientist', 'data analyst', 'analytics engineer', 'etl', 'data platform', 'bi engineer', 'data architect', 'data warehouse'],
-        mobile: ['mobile engineer', 'mobile developer', 'ios engineer', 'ios developer', 'android engineer', 'android developer', 'react native', 'flutter'],
-        qa: ['qa engineer', 'quality assurance', 'test engineer', 'sdet', 'test automation', 'quality engineer'],
-        embedded: ['embedded', 'firmware', 'hardware engineer', 'fpga', 'rtos', 'iot engineer', 'robotics'],
-        fullstack: ['full stack', 'fullstack', 'full-stack', 'software engineer', 'software developer'],
-        frontend: ['frontend', 'front-end', 'front end', 'ui engineer', 'ui developer', 'ux engineer'],
-        backend: ['backend', 'back-end', 'back end', 'server engineer', 'api engineer', 'systems engineer', 'distributed systems'],
-        platform: ['platform engineer', 'platform architect', 'developer experience', 'developer tools', 'internal tools'],
-        cloud: ['cloud engineer', 'cloud architect', 'infrastructure engineer', 'infra engineer', 'solutions architect', 'network engineer'],
-        tech_lead: ['tech lead', 'technical lead', 'lead engineer', 'lead developer'],
-        staff: ['staff engineer', 'staff software', 'senior staff'],
-        principal: ['principal engineer', 'distinguished engineer'],
-        em: ['engineering manager', 'director of engineering', 'vp engineering', 'head of engineering'],
-        tpm: ['technical program manager', 'tpm', 'program manager'],
-        architect: ['solutions architect', 'software architect', 'system architect', 'enterprise architect'],
-        blockchain: ['blockchain', 'web3', 'smart contract', 'solidity'],
-        game_dev: ['game developer', 'game engineer', 'unity developer', 'unreal'],
-        ios: ['ios engineer', 'ios developer', 'swift developer'],
-        android: ['android engineer', 'android developer', 'kotlin developer'],
-        network: ['network engineer', 'network architect', 'network security'],
-      };
-      const role = req.query.role.toLowerCase();
-      const keywords = categoryKeywords[role];
-      if (keywords) {
-        const roleConds = keywords.map((kw) => {
-          // Search both title AND description — many DevOps/SRE/Platform roles
-          // have generic titles but role-specific descriptions
-          const cond = `(j.title ILIKE $${paramIdx} OR j.job_description ILIKE $${paramIdx})`;
-          params.push(`%${kw}%`);
-          paramIdx++;
-          return cond;
-        });
-        conditions.push(`(${roleConds.join(' OR ')})`);
-      } else {
-        conditions.push(`(j.title ILIKE $${paramIdx} OR j.job_description ILIKE $${paramIdx})`);
-        params.push(`%${req.query.role}%`);
-        paramIdx++;
-      }
+      conditions.push(`j.title ILIKE $${paramIdx}`);
+      params.push(`%${req.query.role}%`);
+      paramIdx++;
     }
 
     if (req.query.location) {
@@ -243,15 +88,6 @@ router.get('/', async (req, res, next) => {
       }
     }
 
-    if (req.query.max_salary) {
-      const maxSalary = parseInt(req.query.max_salary, 10);
-      if (!isNaN(maxSalary)) {
-        conditions.push(`(j.salary_max <= $${paramIdx} OR (j.salary_max IS NULL AND j.salary_min <= $${paramIdx}))`);
-        params.push(maxSalary);
-        paramIdx++;
-      }
-    }
-
     if (req.query.search) {
       conditions.push(
         `(j.title ILIKE $${paramIdx} OR j.job_description ILIKE $${paramIdx})`,
@@ -264,64 +100,6 @@ router.get('/', async (req, res, next) => {
       conditions.push(`c.name ILIKE $${paramIdx}`);
       params.push(`%${req.query.company}%`);
       paramIdx++;
-    }
-
-    if (req.query.source) {
-      conditions.push(`j.source = $${paramIdx}`);
-      params.push(req.query.source);
-      paramIdx++;
-    }
-
-    if (req.query.work_type) {
-      const wt = req.query.work_type.toLowerCase();
-      if (wt === 'remote') {
-        // Match jobs explicitly tagged as remote (not hybrid)
-        conditions.push(`(j.location ILIKE '%remote%' AND j.location NOT ILIKE '%hybrid%')`);
-      } else if (wt === 'hybrid') {
-        conditions.push(`j.location ILIKE '%hybrid%'`);
-      } else if (wt === 'onsite') {
-        // Onsite = no remote or hybrid mention, and must have a real location
-        conditions.push(`j.location NOT ILIKE '%remote%' AND j.location NOT ILIKE '%hybrid%' AND j.location IS NOT NULL AND j.location != ''`);
-      }
-    }
-
-    if (req.query.department) {
-      conditions.push(`j.department ILIKE $${paramIdx}`);
-      params.push(`%${req.query.department}%`);
-      paramIdx++;
-    }
-
-    if (req.query.posted_within) {
-      const days = parseInt(req.query.posted_within, 10);
-      // Only allow known safe values to prevent SQL injection
-      if ([1, 3, 7, 14, 30, 60, 90].includes(days)) {
-        conditions.push(`(j.posted_date >= NOW() - $${paramIdx}::interval OR j.date_found >= NOW() - $${paramIdx}::interval)`);
-        params.push(`${days} days`);
-        paramIdx++;
-      }
-    }
-
-    if (req.query.experience) {
-      const exp = req.query.experience.toLowerCase();
-      const expKeywords = {
-        intern: ['intern', 'internship', 'co-op', 'coop'],
-        entry: ['entry level', 'entry-level', 'junior', 'associate', 'new grad', 'graduate', 'early career', 'i ', ' i,', ' 1 ', ' 1,'],
-        mid: ['mid level', 'mid-level', 'intermediate', 'ii ', ' ii,', ' 2 ', ' 2,', ' iii', ' 3 '],
-        senior: ['senior', 'sr.', 'sr ', ' iv', ' 4 ', 'level 4', 'level 5'],
-        staff: ['staff', ' v ', 'level 5', 'level 6', 'ic5', 'ic6'],
-        principal: ['principal', 'distinguished', 'fellow', 'level 7', 'ic7'],
-        lead: ['lead', 'manager', 'director', 'head of', 'vp ', 'vice president', 'engineering manager'],
-      };
-      const keywords = expKeywords[exp];
-      if (keywords) {
-        const expConds = keywords.map((kw) => {
-          const cond = `j.title ILIKE $${paramIdx}`;
-          params.push(`%${kw}%`);
-          paramIdx++;
-          return cond;
-        });
-        conditions.push(`(${expConds.join(' OR ')})`);
-      }
     }
 
     let limit = parseInt(req.query.limit, 10) || 50;
@@ -354,23 +132,15 @@ router.get('/', async (req, res, next) => {
       WHERE ${whereClause}
     `;
 
-    // Run data query first, count only if needed (offset=0)
-    const dataResult = await queryJobs(sql, params);
-
-    // Only run count on first page — skip the expensive COUNT on subsequent pages
-    let total = 0;
-    if (offset === 0) {
-      const countResult = await queryJobs(countSql, params.slice(0, -2));
-      total = parseInt(countResult.rows[0].total, 10);
-    } else {
-      // Estimate: if we got a full page, there's likely more
-      total = offset + dataResult.rows.length + (dataResult.rows.length === limit ? limit : 0);
-    }
+    // Run data query and count query in parallel
+    const [dataResult, countResult] = await Promise.all([
+      queryJobs(sql, params),
+      queryJobs(countSql, params.slice(0, -2)), // exclude limit/offset
+    ]);
 
     res.json({
       jobs: dataResult.rows,
-      total,
-      last_updated: cachedLastUpdated,
+      total: parseInt(countResult.rows[0].total, 10),
       limit,
       offset,
     });
@@ -410,69 +180,7 @@ router.get('/:id', async (req, res, next) => {
       return res.status(404).json({ detail: 'Job not found' });
     }
 
-    const job = result.rows[0];
-
-    // Lazy backfill: extract salary from description if missing
-    if (!job.salary_min && !job.salary_max && job.job_description) {
-      const salary = extractSalary(job.job_description);
-      if (salary && (salary.min || salary.max)) {
-        try {
-          await queryJobs(
-            'UPDATE jobs SET salary_min = COALESCE(salary_min, $1), salary_max = COALESCE(salary_max, $2) WHERE id = $3',
-            [salary.min, salary.max, job.id],
-          );
-          job.salary_min = salary.min;
-          job.salary_max = salary.max;
-        } catch { /* ignore update failure */ }
-      }
-    }
-
-    res.json(job);
-  } catch (err) {
-    if (err.message === 'Jobs database not configured') {
-      return res.status(503).json({ detail: 'Jobs database not configured' });
-    }
-    next(err);
-  }
-});
-
-/**
- * POST /backfill-salaries — Extract salaries from job descriptions in bulk.
- *
- * Finds jobs with NULL salary_min and a non-empty description,
- * runs salary extraction, and updates the database.
- * Returns count of updated jobs.
- */
-router.post('/backfill-salaries', async (req, res, next) => {
-  try {
-    const batchSize = Math.min(parseInt(req.query.limit) || 500, 2000);
-
-    const result = await queryJobs(
-      `SELECT id, job_description FROM jobs
-       WHERE salary_min IS NULL AND salary_max IS NULL
-         AND job_description IS NOT NULL AND LENGTH(job_description) > 100
-         AND is_active = true
-       LIMIT $1`,
-      [batchSize],
-    );
-
-    let updated = 0;
-    for (const row of result.rows) {
-      const salary = extractSalary(row.job_description);
-      if (salary && (salary.min || salary.max)) {
-        await queryJobs(
-          'UPDATE jobs SET salary_min = $1, salary_max = $2 WHERE id = $3',
-          [salary.min, salary.max, row.id],
-        );
-        updated++;
-      }
-    }
-
-    res.json({
-      processed: result.rows.length,
-      updated,
-      remaining: result.rows.length === batchSize ? 'more jobs may exist, run again' : 0,
-    });
+    res.json(result.rows[0]);
   } catch (err) {
     if (err.message === 'Jobs database not configured') {
       return res.status(503).json({ detail: 'Jobs database not configured' });

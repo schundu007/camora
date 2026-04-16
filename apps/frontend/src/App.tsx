@@ -22,7 +22,6 @@ const CapraOnboarding = lazy(() => import('./pages/capra/OnboardingPage'));
 const CapraLanding = lazy(() => import('./pages/capra/CapraLandingPage'));
 const CompanyPrepPage = lazy(() => import('./pages/capra/CompanyPrepPage'));
 const AchievementsPage = lazy(() => import('./pages/capra/AchievementsPage'));
-const ResumePage = lazy(() => import('./pages/capra/ResumePage'));
 const PrepPlanPage = lazy(() => import('./pages/capra/PrepPlanPage'));
 const JobsPage = lazy(() => import('./pages/JobsPage'));
 const JobPrepPage = lazy(() => import('./pages/JobPrepPage'));
@@ -37,7 +36,6 @@ const Blind75Page = lazy(() => import('./pages/Blind75Page'));
 const Blind75PracticePage = lazy(() => import('./pages/Blind75PracticePage'));
 const InterviewQuestionsPage = lazy(() => import('./pages/InterviewQuestionsPage'));
 const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage'));
-const DownloadPage = lazy(() => import('./pages/DownloadPage'));
 
 function Loading() {
   return (
@@ -124,11 +122,9 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   if (!isAuthenticated) {
     return <Navigate to={`/login?redirect=${encodeURIComponent(location.pathname)}`} replace />;
   }
-  // Enforce onboarding (role selection) — skip for the onboarding page itself
-  if (location.pathname !== '/capra/onboarding' && location.pathname !== '/onboarding') {
-    if (onboardingCompleted === false) {
-      return <Navigate to="/capra/onboarding" replace />;
-    }
+  // Only enforce onboarding for Capra routes
+  if (location.pathname.startsWith('/capra') && onboardingCompleted === false && location.pathname !== '/capra/onboarding') {
+    return <Navigate to="/capra/onboarding" replace />;
   }
   return <>{children}</>;
 }
@@ -165,7 +161,7 @@ export function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/premium" element={<PricingPage />} />
-          <Route path="/download" element={<DownloadPage />} />
+          <Route path="/download" element={<ShellRoute><CapraDashboard /></ShellRoute>} />
 
           {/* ── Jobs: Apply ──────────────────────────────── */}
           <Route path="/jobs" element={<ShellRoute><JobsPage /></ShellRoute>} />
@@ -192,10 +188,8 @@ export function App() {
           <Route path="/capra/onboarding" element={<ProtectedRoute><CapraOnboarding /></ProtectedRoute>} />
           <Route path="/capra/landing" element={<CapraLanding />} />
           <Route path="/capra/achievements" element={<ShellRoute><AchievementsPage /></ShellRoute>} />
-          <Route path="/capra/resume" element={<ShellRoute><ResumePage /></ShellRoute>} />
 
           {/* ── Also accessible via old Capra paths ────── */}
-          <Route path="/resume" element={<ShellRoute><ResumePage /></ShellRoute>} />
           <Route path="/prepare/*" element={<ShellRoute><CapraPrepare /></ShellRoute>} />
           <Route path="/practice" element={<ShellRoute><CapraPractice /></ShellRoute>} />
           <Route path="/handbook" element={<ShellRoute><Blind75Page /></ShellRoute>} />
