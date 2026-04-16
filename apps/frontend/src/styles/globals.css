@@ -512,6 +512,41 @@ main, [role="main"] { animation: fadeUp 0.15s ease-out; }
 .lumora-light-panel .border-gray-200 { border-color: #e5e7eb !important; }
 .lumora-light-panel .shadow-sm { box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important; }
 
+/* Dark panel override — for CodingLayout/DesignLayout embedded in dark shell */
+.lumora-dark-embed .lumora-light-panel,
+.lumora-dark-embed .bg-white { background-color: #16141F !important; color: #F2F1F3 !important; }
+.lumora-dark-embed .bg-gray-50,
+.lumora-dark-embed .bg-gray-50\/50,
+.lumora-dark-embed .bg-gray-100 { background-color: #1E1C28 !important; }
+.lumora-dark-embed .text-gray-900,
+.lumora-dark-embed .text-gray-800 { color: #F2F1F3 !important; }
+.lumora-dark-embed .text-gray-700 { color: #A1A0AB !important; }
+.lumora-dark-embed .text-gray-600,
+.lumora-dark-embed .text-gray-500 { color: #6C6B7B !important; }
+.lumora-dark-embed .text-gray-400,
+.lumora-dark-embed .text-gray-300 { color: #545260 !important; }
+.lumora-dark-embed .border-gray-200,
+.lumora-dark-embed .border-gray-100 { border-color: #2A2833 !important; }
+.lumora-dark-embed .bg-indigo-50 { background-color: rgba(99,102,241,0.1) !important; }
+.lumora-dark-embed .border-indigo-200,
+.lumora-dark-embed .border-indigo-100 { border-color: rgba(99,102,241,0.2) !important; }
+.lumora-dark-embed .text-indigo-700,
+.lumora-dark-embed .text-indigo-600 { color: #a5b4fc !important; }
+.lumora-dark-embed .bg-amber-50 { background-color: rgba(245,158,11,0.1) !important; }
+.lumora-dark-embed .border-amber-100 { border-color: rgba(245,158,11,0.2) !important; }
+.lumora-dark-embed .bg-rose-50 { background-color: rgba(244,63,94,0.1) !important; }
+.lumora-dark-embed .border-rose-100 { border-color: rgba(244,63,94,0.2) !important; }
+.lumora-dark-embed .bg-red-50 { background-color: rgba(239,68,68,0.1) !important; }
+.lumora-dark-embed .border-red-200 { border-color: rgba(239,68,68,0.2) !important; }
+.lumora-dark-embed .text-red-600 { color: #fca5a5 !important; }
+.lumora-dark-embed .shadow-sm { box-shadow: 0 1px 3px rgba(0,0,0,0.3) !important; }
+.lumora-dark-embed .placeholder\:text-gray-400::placeholder,
+.lumora-dark-embed .placeholder\:text-gray-300::placeholder { color: #545260 !important; }
+.lumora-dark-embed input,
+.lumora-dark-embed textarea,
+.lumora-dark-embed select { background-color: #1E1C28 !important; color: #F2F1F3 !important; border-color: #2A2833 !important; }
+.lumora-dark-embed pre { background-color: #1E1C28 !important; color: #F2F1F3 !important; }
+
 /* Enterprise status bar */
 .status-bar {
   @apply flex items-center justify-between px-3 border-t shrink-0;
