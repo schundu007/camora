@@ -308,6 +308,9 @@ export default function JobsPage() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [total, setTotal] = useState(0);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+  const [offset, setOffset] = useState(0);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -390,15 +393,19 @@ export default function JobsPage() {
     navigate('/jobs/url/prepare');
   };
 
+  const PAGE_SIZE = 50;
+
   /* ── Fetch jobs ── */
   const fetchJobs = useCallback(async () => {
     setLoading(true);
     setError(null);
+    setOffset(0);
+    setHasMore(true);
     try {
       const params = new URLSearchParams();
       if (search) params.set('search', search);
       if (role !== 'all') params.set('role', role);
-      params.set('limit', '50');
+      params.set('limit', String(PAGE_SIZE));
 
       const headers: Record<string, string> = {};
       if (token) headers['Authorization'] = `Bearer ${token}`;
@@ -406,8 +413,11 @@ export default function JobsPage() {
       const res = await fetch(`${API_URL}/api/v1/jobs?${params}`, { headers });
       if (!res.ok) throw new Error(`Failed to fetch jobs (${res.status})`);
       const data: JobsResponse = await res.json();
-      setJobs(data.jobs || []);
+      const fetched = data.jobs || [];
+      setJobs(fetched);
       setTotal(data.total || 0);
+      setOffset(fetched.length);
+      setHasMore(fetched.length < (data.total || 0));
       if (data.last_updated) setLastUpdated(data.last_updated);
     } catch (err: any) {
       setError(err.message || 'Failed to load jobs');
@@ -416,6 +426,34 @@ export default function JobsPage() {
       setLoading(false);
     }
   }, [search, role, token]);
+
+  /* ── Load more jobs ── */
+  const loadMore = useCallback(async () => {
+    if (loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    try {
+      const params = new URLSearchParams();
+      if (search) params.set('search', search);
+      if (role !== 'all') params.set('role', role);
+      params.set('limit', String(PAGE_SIZE));
+      params.set('offset', String(offset));
+
+      const headers: Record<string, string> = {};
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const res = await fetch(`${API_URL}/api/v1/jobs?${params}`, { headers });
+      if (!res.ok) throw new Error(`Failed to load more jobs`);
+      const data: JobsResponse = await res.json();
+      const fetched = data.jobs || [];
+      setJobs((prev) => [...prev, ...fetched]);
+      setOffset((prev) => prev + fetched.length);
+      setHasMore(offset + fetched.length < (data.total || 0));
+    } catch {
+      // silently fail — user can retry
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [search, role, token, offset, loadingMore, hasMore]);
 
   /* ── Debounced fetch on filter change ── */
   useEffect(() => {
@@ -960,6 +998,32 @@ export default function JobsPage() {
                   </div>
                 );
               })}
+            </div>
+          )}
+
+          {/* Load more button */}
+          {!loading && hasMore && filteredJobs.length > 0 && (
+            <div style={{ textAlign: 'center', padding: '32px 0 16px' }}>
+              <button
+                onClick={loadMore}
+                disabled={loadingMore}
+                style={{
+                  padding: '12px 32px',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  color: '#fff',
+                  background: 'var(--accent)',
+                  border: 'none',
+                  borderRadius: '10px',
+                  cursor: loadingMore ? 'wait' : 'pointer',
+                  opacity: loadingMore ? 0.7 : 1,
+                  transition: 'all 0.15s',
+                }}
+                onMouseEnter={(e) => { if (!loadingMore) e.currentTarget.style.background = 'var(--accent-hover)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--accent)'; }}
+              >
+                {loadingMore ? 'Loading...' : `Load more jobs (${filteredJobs.length} of ${total})`}
+              </button>
             </div>
           )}
         </div>
