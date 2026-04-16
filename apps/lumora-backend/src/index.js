@@ -101,6 +101,8 @@ async function runMigrations() {
         type VARCHAR(100),
         created_at TIMESTAMPTZ DEFAULT NOW()
       )`,
+      // Add desktop_addon_status column to users table
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS desktop_addon_status VARCHAR(20) DEFAULT NULL`,
       // Indexes
       'CREATE INDEX IF NOT EXISTS idx_coding_usage_user_date ON coding_usage(user_id, created_at)',
       'CREATE INDEX IF NOT EXISTS idx_lumora_conversations_user ON lumora_conversations(user_id)',

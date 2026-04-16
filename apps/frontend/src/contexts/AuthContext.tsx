@@ -17,6 +17,8 @@ interface AuthUser {
 interface SubscriptionInfo {
   plan: string;
   status?: string;
+  hasDesktopAccess?: boolean;
+  desktopAddonStatus?: string | null;
 }
 
 interface AuthContextType {
@@ -188,12 +190,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
       if (res.ok) {
         const data = await res.json();
-        setSubscription({ plan: data.plan || data.plan_type || 'free', status: data.status });
+        setSubscription({
+          plan: data.plan || data.plan_type || 'free',
+          status: data.status,
+          hasDesktopAccess: data.has_desktop_access ?? false,
+          desktopAddonStatus: data.desktop_addon_status ?? null,
+        });
       } else {
-        setSubscription({ plan: 'free' });
+        setSubscription({ plan: 'free', hasDesktopAccess: false });
       }
     } catch {
-      setSubscription({ plan: 'free' });
+      setSubscription({ plan: 'free', hasDesktopAccess: false });
     }
     setSubscriptionLoading(false);
   }, []);
