@@ -133,10 +133,10 @@ export default function SharedDiagram({
           </div>
           {imageUrl && (
             <div className="flex items-center gap-1">
-              <button onClick={() => setScale(s => Math.min(s + 0.25, 4))} className="px-2.5 py-1.5 text-xs min-h-[36px] border rounded text-gray-500">+</button>
+              <button onClick={() => setScale(s => Math.min(s + 0.25, 4))} className="px-1.5 py-0.5 text-xs border rounded text-gray-500">+</button>
               <span className="text-xs text-gray-400 min-w-[3ch] text-center">{Math.round(scale * 100)}%</span>
-              <button onClick={() => setScale(s => Math.max(s - 0.25, 0.3))} className="px-2.5 py-1.5 text-xs min-h-[36px] border rounded text-gray-500">-</button>
-              <button onClick={resetView} className="px-2.5 py-1.5 text-xs min-h-[36px] border rounded text-gray-500 ml-1">Fit</button>
+              <button onClick={() => setScale(s => Math.max(s - 0.25, 0.3))} className="px-1.5 py-0.5 text-xs border rounded text-gray-500">-</button>
+              <button onClick={resetView} className="px-1.5 py-0.5 text-xs border rounded text-gray-500 ml-1">Fit</button>
             </div>
           )}
         </div>
@@ -174,7 +174,7 @@ export default function SharedDiagram({
 
       {imageUrl && !loading && !generating && (
         <div className="rounded-lg select-none flex items-center justify-center"
-          style={{ cursor: dragging ? 'grabbing' : 'grab', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)', flex: '1 1 0', minHeight: 0 }}
+          style={{ cursor: dragging ? 'grabbing' : 'grab', overflow: 'hidden', minHeight: 250, border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}
           onWheel={e => { e.preventDefault(); setScale(s => Math.min(Math.max(0.3, s + (e.deltaY > 0 ? -0.1 : 0.1)), 4)); }}
           onMouseDown={e => { if (e.button !== 0) return; setDragging(true); dragStart.current = { x: e.clientX, y: e.clientY }; transStart.current = { ...translate }; }}
           onMouseMove={e => { if (!dragging) return; setTranslate({ x: transStart.current.x + (e.clientX - dragStart.current.x), y: transStart.current.y + (e.clientY - dragStart.current.y) }); }}

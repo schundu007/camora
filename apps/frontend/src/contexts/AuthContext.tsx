@@ -17,8 +17,6 @@ interface AuthUser {
 interface SubscriptionInfo {
   plan: string;
   status?: string;
-  hasDesktopAccess?: boolean;
-  desktopAddonStatus?: string | null;
 }
 
 interface AuthContextType {
@@ -27,11 +25,9 @@ interface AuthContextType {
   isLoading: boolean;
   user: AuthUser | null;
   onboardingCompleted: boolean | null;
-  hasResume: boolean | null;
   subscription: SubscriptionInfo | null;
   subscriptionLoading: boolean;
   logout: () => void;
-  refreshSubscription: () => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -40,11 +36,9 @@ const AuthContext = createContext<AuthContextType>({
   isLoading: true,
   user: null,
   onboardingCompleted: null,
-  hasResume: null,
   subscription: null,
   subscriptionLoading: true,
   logout: () => {},
-  refreshSubscription: () => {},
 });
 
 function getCookie(name: string): string | null {
@@ -60,7 +54,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<AuthUser | null>(null);
   const [onboardingCompleted, setOnboardingCompleted] = useState<boolean | null>(null);
-  const [hasResume, setHasResume] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [subscription, setSubscription] = useState<SubscriptionInfo | null>(null);
   const [subscriptionLoading, setSubscriptionLoading] = useState(true);
@@ -133,7 +126,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             if (onbRes.ok) {
               const data = await onbRes.json();
               setOnboardingCompleted(data.onboarding_completed);
-              setHasResume(data.has_resume ?? null);
             }
           } catch { /* capra backend may not be available */ }
 
@@ -173,7 +165,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (onboardingRes.ok) {
             const data = await onboardingRes.json();
             setOnboardingCompleted(data.onboarding_completed);
-            setHasResume(data.has_resume ?? null);
           }
         } catch { /* capra backend may not be available */ }
       }
@@ -190,17 +181,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
       if (res.ok) {
         const data = await res.json();
-        setSubscription({
-          plan: data.plan || data.plan_type || 'free',
-          status: data.status,
-          hasDesktopAccess: data.has_desktop_access ?? false,
-          desktopAddonStatus: data.desktop_addon_status ?? null,
-        });
+        setSubscription({ plan: data.plan || data.plan_type || 'free', status: data.status });
       } else {
-        setSubscription({ plan: 'free', hasDesktopAccess: false });
+        setSubscription({ plan: 'free' });
       }
     } catch {
-      setSubscription({ plan: 'free', hasDesktopAccess: false });
+      setSubscription({ plan: 'free' });
     }
     setSubscriptionLoading(false);
   }, []);
@@ -230,14 +216,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setToken(null);
     setUser(null);
     setOnboardingCompleted(null);
-    setHasResume(null);
     setSubscription(null);
     clearCookie('cariara_sso');
     window.location.href = ASCEND_URL;
   }, []);
 
   return (
-    <AuthContext.Provider value={{ token, isAuthenticated: !!token, isLoading, user, onboardingCompleted, hasResume, subscription, subscriptionLoading, logout, refreshSubscription }}>
+    <AuthContext.Provider value={{ token, isAuthenticated: !!token, isLoading, user, onboardingCompleted, subscription, subscriptionLoading, logout, refreshSubscription }}>
       {children}
     </AuthContext.Provider>
   );

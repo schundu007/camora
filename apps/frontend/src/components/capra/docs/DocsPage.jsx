@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { useIsMobile } from '../../../hooks/capra/useIsMobile';
+import { useAppShell } from '../layout/AppShellContext';
 import { useAuth } from '../../../contexts/AuthContext';
 import { Icon } from '../../shared/Icons.jsx';
 import { CompanyLogo, getCompanyLogoSrc } from '../../shared/CompanyLogo.tsx';
@@ -30,7 +31,7 @@ import { roadmapCategories, roadmapCategoryMap, roadmapTopics } from '../../../d
 import { engBlogCategories, engBlogCategoryMap, engBlogTopics } from '../../../data/capra/topics/engBlogsTopics.js';
 import { companyPrep } from '../../../data/capra/topics/companyPrep.js';
 import { interviewCheatsheet } from '../../../data/capra/topics/techInterviewHandbook';
-import { ROLE_TOPIC_MAP, ONBOARDING_ROLE_TO_TOPIC_KEY } from '../../../data/capra/jobRoleTopicMapping';
+import { ROLE_TOPIC_MAP } from '../../../data/capra/jobRoleTopicMapping';
 
 // Merge extra topics into base arrays
 const codingCategoryMap = { ..._codingCategoryMap, ...extraCodingCategoryMap };
@@ -57,6 +58,7 @@ const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.co
  */
 export default function DocsPage({ onBack }) {
   const { isMobile } = useIsMobile();
+  const { setActiveSection } = useAppShell();
   const { user } = useAuth();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const contentAccess = useContentAccess();
@@ -101,28 +103,7 @@ export default function DocsPage({ onBack }) {
     return null;
   });
 
-  // "Show All Content" toggle — bypasses role filtering
-  const [showAllContent, setShowAllContent] = useState(false);
-
-  // Auto-set jobContext from user's onboarding roles when no URL role is provided
-  useEffect(() => {
-    if (jobContext || showAllContent) return; // URL role takes priority, or user chose "show all"
-    if (!user?.job_roles?.length) return;
-    const primaryRole = user.job_roles[0];
-    const topicKey = ONBOARDING_ROLE_TO_TOPIC_KEY[primaryRole];
-    if (topicKey && topicKey !== 'general' && ROLE_TOPIC_MAP[topicKey]) {
-      setJobContext({
-        role: topicKey,
-        focus: null,
-        jobTitle: ROLE_TOPIC_MAP[topicKey]?.label || primaryRole,
-        company: null,
-        analysis: null,
-        fromProfile: true, // Flag so we know this came from user profile, not URL
-      });
-    }
-  }, [user?.job_roles]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // React to URL changes from sidebar navigation
+  // React to URL changes from AppShell sidebar navigation
   useEffect(() => {
     const pathSegment = routerLocation.pathname.replace('/capra/prepare', '').replace(/^\//, '');
     const params = new URLSearchParams(routerLocation.search);
@@ -136,13 +117,11 @@ export default function DocsPage({ onBack }) {
     const company = params.get('company') || null;
     setActivePageState(page);
     setSelectedTopicState(topic);
-
+    setActiveSection(page);
     if (role) {
       setJobContext({ role, focus, jobTitle, company });
-      setShowAllContent(false);
     } else {
-      // Don't clear profile-based filter when no URL role
-      setJobContext((prev) => prev?.fromProfile ? prev : null);
+      setJobContext(null);
     }
   }, [routerLocation.pathname, routerLocation.search]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -152,8 +131,7 @@ export default function DocsPage({ onBack }) {
     const params = new URLSearchParams();
     if (activePage && activePage !== 'overview') params.set('page', activePage);
     if (selectedTopic) params.set('topic', selectedTopic);
-    // Don't persist profile-based jobContext to URL (it auto-applies from user profile)
-    if (jobContext && !jobContext.fromProfile) {
+    if (jobContext) {
       if (jobContext.role) params.set('role', jobContext.role);
       if (jobContext.focus) params.set('focus', jobContext.focus);
       if (jobContext.jobTitle) params.set('jobTitle', jobContext.jobTitle);
@@ -185,12 +163,8 @@ export default function DocsPage({ onBack }) {
       const page = pageAliases[rawPage] || rawPage;
       setActivePageState(page);
       setSelectedTopicState(topic);
-  
-      if (topic) {
-        const el = document.getElementById('app-scroll-container') || document.querySelector('main');
-        if (el) el.scrollTo({ top: 0, behavior: 'smooth' });
-        else window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
+      setActiveSection(page);
+      if (topic) window.scrollTo({ top: 0, behavior: 'smooth' });
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
@@ -200,7 +174,7 @@ export default function DocsPage({ onBack }) {
   const setActivePage = (page) => {
     setActivePageState(page);
     setSelectedTopicState(null);
-
+    setActiveSection(page);
     // Clear job context when user manually navigates via sidebar
     // (they can always get back to the filtered view from JobPrepPage)
     setJobContext(null);
@@ -212,17 +186,7 @@ export default function DocsPage({ onBack }) {
 
   // Clear job-role filter
   const clearJobFilter = () => {
-    if (jobContext?.fromProfile) {
-      // Profile-based filter: toggle "show all" mode (keep jobContext for easy re-enable)
-      setShowAllContent(true);
-    } else {
-      // URL-based filter: fully clear
-      setJobContext(null);
-    }
-  };
-
-  const reEnableRoleFilter = () => {
-    setShowAllContent(false);
+    setJobContext(null);
   };
 
   const setSelectedTopic = (topic) => {
@@ -232,10 +196,8 @@ export default function DocsPage({ onBack }) {
     setAiAnswer('');
     setShowAskAI(false);
     if (topic) {
-      // Scroll the nearest scrollable container (RootShell <main>) to top
-      const el = document.getElementById('app-scroll-container') || document.querySelector('main');
-      if (el) el.scrollTo({ top: 0, behavior: 'smooth' });
-      else window.scrollTo({ top: 0, behavior: 'smooth' });
+      /* sidebar close handled by AppShell */;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
@@ -346,7 +308,7 @@ export default function DocsPage({ onBack }) {
       activePage === 'low-level' ? [...lldTopics, ...lldProblems] :
       activePage === 'microservices' ? microservicesPatterns :
       activePage === 'databases' ? databaseTopics :
-      activePage === 'sql' ? [...databaseTopics, ...sqlTopics] :
+      activePage === 'sql' ? sqlTopics :
       activePage === 'projects' ? projectTopics :
       activePage === 'roadmaps' ? roadmapTopics :
       activePage === 'eng-blogs' ? engBlogTopics :
@@ -424,8 +386,9 @@ export default function DocsPage({ onBack }) {
     { id: 'coding', label: 'Data Structures & Algorithms', icon: 'code' },
     { id: 'system-design', label: 'System Design', icon: 'systemDesign' },
     { id: 'microservices', label: 'Microservices', icon: 'grid' },
-    { id: 'databases', label: 'Databases & SQL', icon: 'database' },
-    { id: 'low-level', label: 'Low Level Design', icon: 'puzzle' },
+    { id: 'databases', label: 'Database Internals', icon: 'database' },
+    { id: 'sql', label: 'SQL for Interviews', icon: 'terminal' },
+    { id: 'low-level', label: 'Low-Level Design', icon: 'puzzle' },
     { id: 'behavioral', label: 'Behavioral', icon: 'users' },
   ];
 
@@ -433,7 +396,6 @@ export default function DocsPage({ onBack }) {
   // Filter and sort topics based on active page
   // Get role-filtered topic IDs (if job context is active)
   const getRoleFilteredIds = (page) => {
-    if (showAllContent) return null; // User chose to see all content
     if (!jobContext?.role) return null;
     const roleConfig = ROLE_TOPIC_MAP[jobContext.role];
     if (!roleConfig) return null;
@@ -444,28 +406,13 @@ export default function DocsPage({ onBack }) {
       'behavioral': 'behavioral',
       'microservices': 'microservices',
       'databases': 'databases',
+      'sql': 'sql',
     };
     const key = pageToKey[page];
     if (!key) return null;
 
-    // For databases page, merge both databases and sql role IDs
-    let ids = roleConfig[key] || [];
-    if (page === 'databases' && roleConfig.sql) {
-      ids = [...ids, ...roleConfig.sql];
-    }
-    if (!ids || ids.length === 0) return null;
-    return new Set(ids);
-  };
-
-  // Always returns role IDs (ignores showAllContent toggle) — for counter display
-  const getRoleIdsForCount = (page) => {
-    if (!jobContext?.role) return null;
-    const roleConfig = ROLE_TOPIC_MAP[jobContext.role];
-    if (!roleConfig) return null;
-    const pageToKey = { 'coding': 'coding', 'system-design': 'systemDesign', 'behavioral': 'behavioral', 'microservices': 'microservices', 'databases': 'databases' };
-    const key = pageToKey[page];
-    if (!key) return null;
     const ids = roleConfig[key];
+    // Empty array for 'general' role means show all
     if (!ids || ids.length === 0) return null;
     return new Set(ids);
   };
@@ -477,7 +424,8 @@ export default function DocsPage({ onBack }) {
     else if (activePage === 'low-level') topics = lldTopics;
     else if (activePage === 'behavioral') topics = behavioralTopics;
     else if (activePage === 'microservices') topics = microservicesPatterns;
-    else if (activePage === 'databases') topics = [...databaseTopics, ...sqlTopics];
+    else if (activePage === 'databases') topics = databaseTopics;
+    else if (activePage === 'sql') topics = sqlTopics;
     else if (activePage === 'projects') topics = projectTopics;
     else if (activePage === 'roadmaps') topics = roadmapTopics;
     else if (activePage === 'eng-blogs') topics = engBlogTopics;
@@ -514,11 +462,11 @@ export default function DocsPage({ onBack }) {
       case 'overview': return { title: 'Overview', color: '#6366f1' };
       case 'coding': return { title: 'Data Structures & Algorithms', color: '#6366f1' };
       case 'system-design': return { title: 'System Design', color: '#3b82f6' };
-      case 'low-level': return { title: 'Low Level Design', color: '#ec4899' };
+      case 'low-level': return { title: 'Low-Level Design', color: '#ec4899' };
       case 'behavioral': return { title: 'Behavioral Interviews', color: '#a855f7' };
       case 'microservices': return { title: 'Microservices Patterns', color: '#8b5cf6' };
-      case 'databases': return { title: 'Databases & SQL', color: '#f59e0b' };
-      case 'sql': return { title: 'Databases & SQL', color: '#06b6d4' }; // redirects to databases
+      case 'databases': return { title: 'Database Internals', color: '#f59e0b' };
+      case 'sql': return { title: 'SQL for Interviews', color: '#06b6d4' };
       case 'projects': return { title: 'Projects', color: '#10b981' };
       case 'roadmaps': return { title: 'Roadmaps', color: '#f97316' };
       case 'eng-blogs': return { title: 'Engineering Blogs', color: '#ef4444' };
@@ -567,8 +515,9 @@ export default function DocsPage({ onBack }) {
       { id: 'coding', href: 'coding', title: 'DSA & Algorithms', icon: 'cpu', color: '#6366f1', grad: 'linear-gradient(135deg, #6366f1, #818cf8)', topics: codingTopics },
       { id: 'system-design', href: 'system-design', title: 'System Design', icon: 'systemDesign', color: '#3b82f6', grad: 'linear-gradient(135deg, #3b82f6, #60a5fa)', topics: [...systemDesignTopics, ...systemDesigns, ...concurrencyTopics, ...systemDesignPatterns, ...microservicesPatterns, ...systemDesignTradeoffs, ...scalableSystemsTopics] },
       { id: 'microservices', href: 'microservices', title: 'Microservices', icon: 'grid', color: '#8b5cf6', grad: 'linear-gradient(135deg, #8b5cf6, #a78bfa)', topics: microservicesPatterns },
-      { id: 'databases', href: 'databases', title: 'Databases & SQL', icon: 'database', color: '#f59e0b', grad: 'linear-gradient(135deg, #f59e0b, #fbbf24)', topics: [...databaseTopics, ...sqlTopics] },
-      { id: 'low-level', href: 'low-level-design', title: 'Low Level Design', icon: 'layers', color: '#ec4899', grad: 'linear-gradient(135deg, #ec4899, #f472b6)', topics: [...lldTopics, ...lldProblems] },
+      { id: 'databases', href: 'databases', title: 'Database Internals', icon: 'database', color: '#f59e0b', grad: 'linear-gradient(135deg, #f59e0b, #fbbf24)', topics: databaseTopics },
+      { id: 'sql', href: 'sql', title: 'SQL for Interviews', icon: 'database', color: '#06b6d4', grad: 'linear-gradient(135deg, #06b6d4, #22d3ee)', topics: sqlTopics },
+      { id: 'low-level', href: 'low-level-design', title: 'Low-Level Design', icon: 'layers', color: '#ec4899', grad: 'linear-gradient(135deg, #ec4899, #f472b6)', topics: [...lldTopics, ...lldProblems] },
       { id: 'projects', href: 'projects', title: 'Projects', icon: 'code', color: '#10b981', grad: 'linear-gradient(135deg, #10b981, #34d399)', topics: projectTopics },
       { id: 'roadmaps', href: 'roadmaps', title: 'Roadmaps', icon: 'trendingUp', color: '#f97316', grad: 'linear-gradient(135deg, #f97316, #fb923c)', topics: roadmapTopics },
       { id: 'eng-blogs', href: 'eng-blogs', title: 'Eng Blogs', icon: 'bookOpen', color: '#ef4444', grad: 'linear-gradient(135deg, #ef4444, #f87171)', topics: engBlogTopics },
@@ -623,7 +572,7 @@ export default function DocsPage({ onBack }) {
                     <span>Back</span>
                   </button>
                 )}
-                <Link to="/capra/prepare" className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors cursor-pointer landing-body font-medium no-underline">Dashboard</Link>
+                <Link to="/capra/prepare" className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors cursor-pointer landing-body font-medium no-underline">Prepare</Link>
                 <Icon name="chevronRight" size={14} className="text-[var(--text-muted)]" />
                 {selectedTopic && topicDetails ? (
                   <>
@@ -781,7 +730,7 @@ export default function DocsPage({ onBack }) {
                           {[
                             { step: 1, title: 'DSA Fundamentals', desc: 'Arrays, strings, trees, graphs', href: '/capra/prepare/coding', icon: 'cpu', color: '#6366f1' },
                             { step: 2, title: 'System Design', desc: 'Scalability, databases, caching', href: '/capra/prepare/system-design', icon: 'systemDesign', color: '#3b82f6' },
-                            { step: 3, title: 'Low Level Design', desc: 'OOP, SOLID, design patterns', href: '/capra/prepare/low-level-design', icon: 'layers', color: '#ec4899' },
+                            { step: 3, title: 'Low-Level Design', desc: 'OOP, SOLID, design patterns', href: '/capra/prepare/low-level-design', icon: 'layers', color: '#ec4899' },
                             { step: 4, title: 'Behavioral', desc: 'STAR method, leadership stories', href: '/capra/prepare/behavioral', icon: 'users', color: '#a855f7' },
                           ].map((phase, idx) => (
                             <Link key={phase.step} to={phase.href} className="group relative">
@@ -937,7 +886,7 @@ export default function DocsPage({ onBack }) {
                     <div className="inline-flex items-center gap-2 px-4 py-1.5 border border-[var(--border)] bg-[var(--accent-subtle)] rounded-full mb-4">
                       <span className="w-2 h-2 bg-[var(--accent)] rounded-full animate-pulse" />
                       <span className="text-xs landing-mono text-[var(--accent-hover)] tracking-wide">
-                        {activePage === 'coding' ? 'Algorithms' : activePage === 'system-design' ? 'Architecture' : activePage === 'low-level' ? 'OOP & Patterns' : activePage === 'microservices' ? 'Microservices' : activePage === 'databases' ? 'Databases & SQL' : activePage === 'projects' ? 'Hands-On' : activePage === 'roadmaps' ? 'Learning Paths' : activePage === 'eng-blogs' ? 'Real-World' : 'Soft Skills'}
+                        {activePage === 'coding' ? 'Algorithms' : activePage === 'system-design' ? 'Architecture' : activePage === 'low-level' ? 'OOP & Patterns' : activePage === 'microservices' ? 'Microservices' : activePage === 'databases' ? 'Database Internals' : activePage === 'sql' ? 'SQL Mastery' : activePage === 'projects' ? 'Hands-On' : activePage === 'roadmaps' ? 'Learning Paths' : activePage === 'eng-blogs' ? 'Real-World' : 'Soft Skills'}
                       </span>
                     </div>
                     <h1 className="landing-display font-extrabold text-3xl md:text-4xl lg:text-5xl tracking-tight text-[var(--text-primary)] mb-2">
@@ -946,141 +895,90 @@ export default function DocsPage({ onBack }) {
                       {activePage === 'low-level' && <>Master Object-Oriented{' '}<span className="bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent">Design</span></>}
                       {activePage === 'behavioral' && <>Tell Your{' '}<span className="bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent">Best Story</span></>}
                       {activePage === 'microservices' && <>Microservices{' '}<span className="bg-gradient-to-r from-purple-500 to-indigo-500 bg-clip-text text-transparent">Patterns</span></>}
-                      {activePage === 'databases' && <>Databases{' '}<span className="bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">& SQL</span></>}
-                      {activePage === 'sql' && <>Databases{' '}<span className="bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">& SQL</span></>}
+                      {activePage === 'databases' && <>Database{' '}<span className="bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">Internals</span></>}
+                      {activePage === 'sql' && <>SQL for{' '}<span className="bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent">Interviews</span></>}
                       {activePage === 'projects' && <>Build Real{' '}<span className="bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent">Projects</span></>}
                       {activePage === 'roadmaps' && <>Follow the{' '}<span className="bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">Roadmap</span></>}
                       {activePage === 'eng-blogs' && <>Engineering{' '}<span className="bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent">Blogs</span></>}
                     </h1>
-                    <div className="flex flex-wrap gap-2 mt-3">
-                      {(activePage === 'coding' ? ['Data Structures', 'Algorithms', 'Technical Interviews', 'Top Companies']
-                        : activePage === 'system-design' ? ['Distributed Systems', 'Scalability', 'Architecture Trade-offs', 'Real-World Designs']
-                        : activePage === 'low-level' ? ['OOP Principles', 'SOLID Design', 'UML Diagrams', 'Design Patterns']
-                        : activePage === 'behavioral' ? ['STAR Framework', 'Storytelling', 'Leadership', 'Conflict Resolution']
-                        : activePage === 'microservices' ? ['Service Communication', 'Resilience Patterns', 'Data Management', 'Deployment Strategies']
-                        : activePage === 'databases' ? ['Storage Engines', 'Indexing', 'Transactions', 'Replication', 'Sharding', 'SQL', 'Joins', 'Window Functions']
-                        : activePage === 'projects' ? ['Portfolio Projects', 'Take-Home', 'Full-Stack Builds', 'Step-by-Step Tutorials']
-                        : activePage === 'roadmaps' ? ['Learning Paths', 'Beginner to Advanced', 'Visual Flow Diagrams', 'Optimal Order']
-                        : activePage === 'eng-blogs' ? ['35+ Companies', 'Real Systems at Scale', 'Search & Recommendations', 'Infrastructure']
-                        : []
-                      ).map(tag => (
-                        <span key={tag} className="px-3 py-1 rounded-full text-xs font-medium landing-mono border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-secondary)]">
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
+                    <p className="text-base md:text-lg text-[var(--text-muted)] max-w-2xl leading-relaxed landing-body">
+                      {activePage === 'coding' && 'Master the fundamental data structures and algorithms needed to ace technical interviews at top tech companies.'}
+                      {activePage === 'system-design' && 'Master distributed systems, scalability patterns, and architecture trade-offs. From fundamentals to real-world designs at top companies.'}
+                      {activePage === 'low-level' && 'OOP principles, SOLID design, UML diagrams, and all 23 Gang of Four design patterns. Build clean, extensible object-oriented systems.'}
+                      {activePage === 'behavioral' && 'Prepare compelling stories and answers for behavioral interviews using proven frameworks like STAR.'}
+                      {activePage === 'microservices' && 'Service communication, resilience patterns, data management, and deployment strategies for distributed microservices architectures.'}
+                      {activePage === 'databases' && 'Storage engines, indexing, transactions, replication, sharding, and consensus algorithms. Deep dive into how databases really work.'}
+                      {activePage === 'sql' && 'From fundamentals to window functions. Master SQL queries, joins, subqueries, and complex interview problems.'}
+                      {activePage === 'projects' && 'Portfolio projects, take-home assignments, and full-stack builds. Get AI-generated step-by-step tutorials for each project.'}
+                      {activePage === 'roadmaps' && 'Structured learning paths from beginner to advanced. Each roadmap shows the optimal order to learn topics with visual flow diagrams.'}
+                      {activePage === 'eng-blogs' && 'Curated engineering articles from 35 top tech companies. Learn how real systems are built at scale — from search and recommendations to distributed infrastructure.'}
+                    </p>
                   </div>
                   )}
                   {/* Job Context Banner — shown when navigating from a job prep page or URL analysis */}
-                  {/* ── Role Filter / Show All toggle banner ── */}
                   {jobContext && activePage !== 'overview' && (() => {
-                    const analysis = !showAllContent ? jobContext.analysis : null;
+                    const analysis = jobContext.analysis;
+                    // Pick the right focus tags from analysis based on current page
                     const focusTags = analysis ? (
                       activePage === 'coding' ? analysis.coding_focus :
                       activePage === 'system-design' ? analysis.system_design_focus :
                       activePage === 'behavioral' ? analysis.behavioral_focus :
                       null
                     ) : null;
-                    const roleLabel = ROLE_TOPIC_MAP[jobContext.role]?.label || 'Your Role';
-                    // Calculate role-filtered count for current page (always, ignoring toggle)
-                    const roleIds = getRoleIdsForCount(activePage);
-                    const allTopicsForPage = (() => {
-                      if (activePage === 'coding') return codingTopics;
-                      if (activePage === 'system-design') return systemDesignTopics;
-                      if (activePage === 'behavioral') return behavioralTopics;
-                      if (activePage === 'databases') return databaseTopics;
-                      if (activePage === 'sql') return [...databaseTopics, ...sqlTopics];
-                      if (activePage === 'microservices') return microservicesPatterns;
-                      if (activePage === 'low-level') return lldTopics;
-                      return [];
-                    })();
-                    const totalCount = allTopicsForPage.length;
-                    const roleCount = roleIds ? allTopicsForPage.filter(t => roleIds.has(t.id)).length : totalCount;
 
                     return (
-                    <div className="mb-4 rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)', background: showAllContent ? 'var(--bg-surface)' : 'var(--accent-subtle)' }}>
-                      {/* Toggle tabs — Role vs All */}
-                      <div className="px-4 pt-3 pb-2 flex items-center gap-2">
-                        <button
-                          onClick={() => { if (showAllContent) reEnableRoleFilter(); }}
-                          className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all landing-body"
-                          style={!showAllContent ? {
-                            background: 'var(--accent)',
-                            color: '#fff',
-                            boxShadow: '0 2px 8px rgba(16,185,129,0.3)',
-                          } : {
-                            background: 'var(--bg-elevated)',
-                            color: 'var(--text-secondary)',
-                            border: '1px solid var(--border)',
-                          }}
-                        >
-                          <Icon name="target" size={14} />
-                          {roleLabel}
-                          <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold" style={!showAllContent ? { background: 'rgba(255,255,255,0.2)', color: '#fff' } : { background: 'var(--bg-app)', color: 'var(--text-muted)' }}>
-                            {roleCount}
-                          </span>
-                        </button>
-                        <button
-                          onClick={() => { if (!showAllContent) clearJobFilter(); }}
-                          className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all landing-body"
-                          style={showAllContent ? {
-                            background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-                            color: '#fff',
-                            boxShadow: '0 2px 8px rgba(99,102,241,0.3)',
-                          } : {
-                            background: 'var(--bg-elevated)',
-                            color: 'var(--text-secondary)',
-                            border: '1px solid var(--border)',
-                          }}
-                        >
-                          <Icon name="layers" size={14} />
-                          All Topics
-                          <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold" style={showAllContent ? { background: 'rgba(255,255,255,0.2)', color: '#fff' } : { background: 'var(--bg-app)', color: 'var(--text-muted)' }}>
-                            {totalCount}
-                          </span>
-                        </button>
-                      </div>
-
-                      {/* Info line */}
-                      <div className="px-4 pb-2">
-                        <p className="text-[11px] landing-body" style={{ color: 'var(--text-muted)' }}>
-                          {showAllContent
-                            ? `Browsing all ${totalCount} topics. Switch to "${roleLabel}" to see ${roleCount} role-specific topics.`
-                            : `Showing ${filteredTopics.length} topics tailored for ${roleLabel}. Switch to "All Topics" to explore everything.`
-                          }
-                        </p>
-                      </div>
-
-                      {/* Quick section tabs in role-filtered mode */}
-                      {!showAllContent && (
-                        <div className="px-4 pb-2 flex gap-2 flex-wrap">
-                          {[
-                            { key: 'coding', label: 'Coding', icon: 'code' },
-                            { key: 'system-design', label: 'System Design', icon: 'systemDesign' },
-                            { key: 'behavioral', label: 'Behavioral', icon: 'users' },
-                            { key: 'databases', label: 'Databases', icon: 'database' },
-                          ].map((tab) => (
-                            <button
-                              key={tab.key}
-                              onClick={() => { setActivePageState(tab.key); setSelectedTopicState(null); }}
-                              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors landing-body ${activePage === tab.key ? 'bg-[var(--accent)] text-white' : 'bg-[var(--bg-surface)] text-[var(--text-secondary)] border border-[var(--border)] hover:bg-[var(--bg-elevated)]'}`}
-                            >
-                              <Icon name={tab.icon} size={12} />
-                              {tab.label}
-                            </button>
-                          ))}
+                    <div className="mb-4 rounded-xl border border-[var(--border)] bg-[var(--accent-subtle)] overflow-hidden">
+                      <div className="px-4 py-3 flex items-center justify-between gap-3 flex-wrap">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-8 h-8 rounded-lg bg-[var(--accent-subtle)] flex items-center justify-center flex-shrink-0">
+                            <Icon name="target" size={16} className="text-[var(--accent)]" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold text-[var(--text-primary)] landing-display truncate">
+                              Filtered for: {jobContext.jobTitle || ROLE_TOPIC_MAP[jobContext.role]?.label || 'Your Role'}
+                              {jobContext.company && <span className="font-normal text-[var(--text-muted)]"> at {jobContext.company}</span>}
+                            </p>
+                            <p className="text-xs text-[var(--text-muted)] landing-body">
+                              Showing {filteredTopics.length} most relevant topics{jobContext.focus ? ` \u2014 ${jobContext.focus}` : ''}
+                            </p>
+                          </div>
                         </div>
-                      )}
-
-                      {/* AI focus areas */}
+                        <button
+                          onClick={clearJobFilter}
+                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)] bg-[var(--bg-surface)] border border-[var(--border)] rounded-lg hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)] transition-colors flex-shrink-0 landing-body"
+                        >
+                          <Icon name="x" size={12} />
+                          Show all topics
+                        </button>
+                      </div>
+                      {/* Quick section tabs — switch between coding/design/behavioral in filtered mode */}
+                      <div className="px-4 pb-2 flex gap-2 flex-wrap">
+                        {[
+                          { key: 'coding', label: 'Coding', icon: 'code' },
+                          { key: 'system-design', label: 'System Design', icon: 'systemDesign' },
+                          { key: 'behavioral', label: 'Behavioral', icon: 'users' },
+                          { key: 'databases', label: 'Databases', icon: 'database' },
+                        ].map((tab) => (
+                          <button
+                            key={tab.key}
+                            onClick={() => { setActivePageState(tab.key); setSelectedTopicState(null); setActiveSection(tab.key); }}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors landing-body ${activePage === tab.key ? 'bg-[var(--accent)] text-white' : 'bg-[var(--bg-surface)] text-[var(--text-secondary)] border border-[var(--border)] hover:bg-[var(--bg-elevated)]'}`}
+                          >
+                            <Icon name={tab.icon} size={12} />
+                            {tab.label}
+                          </button>
+                        ))}
+                      </div>
+                      {/* AI-detected focus areas from job analysis */}
                       {focusTags && focusTags.length > 0 && (
                         <div className="px-4 pb-3 flex flex-wrap gap-1.5 items-center">
-                          <span className="text-[10px] text-[var(--accent-hover)] font-semibold uppercase tracking-wider landing-mono mr-1">Focus:</span>
+                          <span className="text-[10px] text-[var(--accent-hover)] font-semibold uppercase tracking-wider landing-mono mr-1">Focus areas:</span>
                           {focusTags.map((tag) => (
                             <span key={tag} className="text-xs px-2 py-0.5 rounded-md bg-[var(--bg-surface)] border border-[var(--border)] text-[var(--accent-hover)] landing-body font-medium">{tag}</span>
                           ))}
                         </div>
                       )}
+                      {/* Summary from AI analysis */}
                       {analysis?.summary && (
                         <div className="px-4 pb-3">
                           <p className="text-xs text-[var(--text-secondary)] landing-body leading-relaxed">{analysis.summary}</p>
@@ -1152,16 +1050,13 @@ export default function DocsPage({ onBack }) {
                               </div>
                             );
                           })()}
-                          {(() => {
-                            const topicLocked = contentAccess.isTopicLocked(activePage, topic.id);
-                            return (
                           <div
                             onClick={() => setSelectedTopic(topic.id)}
-                            className={`px-4 py-2.5 flex items-center justify-between cursor-pointer hover:border-[var(--border-hover)] transition-all group border-b border-r border-[var(--border)] ${topicLocked ? 'opacity-75' : ''}`}
+                            className="px-4 py-2.5 flex items-center justify-between cursor-pointer hover:border-[var(--border-hover)] transition-all group border-b border-r border-[var(--border)]"
                           >
                             <div className="flex items-center gap-2.5">
                               <div className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0" style={{ background: completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : `${topic.color}12` }}>
-                                {completedTopics[topic.id] ? <Icon name="check" size={10} className="text-emerald-600" /> : topicLocked ? <Icon name="lock" size={10} className="text-[var(--text-muted)]" /> : <Icon name={topic.icon} size={10} style={{ color: topic.color }} />}
+                                {completedTopics[topic.id] ? <Icon name="check" size={10} className="text-emerald-600" /> : <Icon name={topic.icon} size={10} style={{ color: topic.color }} />}
                               </div>
                               <span className={`text-sm landing-body font-medium group-hover:text-[var(--accent-hover)] transition-colors ${completedTopics[topic.id] ? 'text-[var(--text-muted)] line-through' : 'text-[var(--text-primary)]'}`}>{topic.title}</span>
                             </div>
@@ -1183,12 +1078,9 @@ export default function DocsPage({ onBack }) {
                                   {topic.keyQuestions?.length || 0}Q
                                 </span>
                               )}
-                              {topicLocked && <Icon name="lock" size={10} className="text-[var(--text-muted)]" />}
                               <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-all" />
                             </div>
                           </div>
-                            );
-                          })()}
                         </div>
                       );
                     })}
@@ -1314,7 +1206,7 @@ export default function DocsPage({ onBack }) {
                             })()}
                           </div>
                           {/* Topics in Category */}
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)]">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)] overflow-hidden">
                             {categoryTopics.map((topic) => (
                               <div
                                 key={topic.id}
@@ -1356,7 +1248,7 @@ export default function DocsPage({ onBack }) {
                     </div>
                     <div className="space-y-3">
                     {systemDesignProblemCategories.map((category) => {
-                      const roleSDProblemIds = !showAllContent && jobContext?.role && ROLE_TOPIC_MAP[jobContext.role]?.systemDesignProblems?.length > 0
+                      const roleSDProblemIds = jobContext?.role && ROLE_TOPIC_MAP[jobContext.role]?.systemDesignProblems?.length > 0
                         ? new Set(ROLE_TOPIC_MAP[jobContext.role].systemDesignProblems)
                         : null;
                       const filteredDesigns = roleSDProblemIds
@@ -1380,7 +1272,7 @@ export default function DocsPage({ onBack }) {
                             <span className="text-[10px] landing-mono text-[var(--text-muted)]">{categoryDesigns.length} systems</span>
                           </div>
                           {/* Designs in Category */}
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)]">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)] overflow-hidden">
                             {categoryDesigns.map((design) => {
                               const diffStyle = difficultyStyles[design.difficulty] || difficultyStyles['Medium'];
                               const designProblem = `Design ${design.title}. ${design.description || design.subtitle || ''}`;
@@ -1432,11 +1324,11 @@ export default function DocsPage({ onBack }) {
                   {/* Gradient Divider */}
                   <div className="h-px bg-[var(--border)] mb-6" />
 
-                  {/* Low Level Design Problems Section */}
+                  {/* Low-Level Design Problems Section */}
                   <div className="mb-6">
                     <div className="mb-4">
                       <span className="landing-mono text-xs text-[var(--accent)] tracking-widest uppercase">Object-Oriented</span>
-                      <h2 className="landing-display font-bold text-xl mt-1 tracking-tight text-[var(--text-primary)]">Low Level Design</h2>
+                      <h2 className="landing-display font-bold text-xl mt-1 tracking-tight text-[var(--text-primary)]">Low-Level Design</h2>
                       <p className="text-sm text-[var(--text-muted)] landing-body mt-1">Class diagrams, design patterns, and OOP implementations</p>
                     </div>
                     <div className="space-y-3">
@@ -1453,7 +1345,7 @@ export default function DocsPage({ onBack }) {
                             <h3 className="text-sm font-semibold text-[var(--text-primary)] landing-display">{category.name}</h3>
                             <span className="text-[10px] landing-mono text-[var(--text-muted)]">{categoryProblems.length} problems</span>
                           </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)]">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)] overflow-hidden">
                             {categoryProblems.map((problem) => {
                               const diffStyle = { Easy: 'text-emerald-600 bg-emerald-500/10 border border-emerald-500/20', Medium: 'text-[var(--text-muted)] bg-[var(--bg-elevated)] border border-[var(--border)]', Hard: 'text-red-600 bg-red-500/10 border border-red-500/20' }[problem.difficulty] || 'text-[var(--text-muted)] bg-[var(--bg-elevated)] border border-[var(--border)]';
                               return (
@@ -1515,7 +1407,7 @@ export default function DocsPage({ onBack }) {
                             <h3 className="text-sm font-semibold text-[var(--text-primary)] landing-display">{category.name}</h3>
                             <span className="text-[10px] landing-mono text-[var(--text-muted)]">{categoryTopics.length} patterns</span>
                           </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)]">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)] overflow-hidden">
                             {categoryTopics.map((topic) => (
                               <div
                                 key={topic.id}
@@ -1566,7 +1458,7 @@ export default function DocsPage({ onBack }) {
                             <h3 className="text-sm font-semibold text-[var(--text-primary)] landing-display">{category.name}</h3>
                             <span className="text-[10px] landing-mono text-[var(--text-muted)]">{categoryTopics.length} patterns</span>
                           </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)]">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)] overflow-hidden">
                             {categoryTopics.map((topic) => (
                               <div
                                 key={topic.id}
@@ -1617,7 +1509,7 @@ export default function DocsPage({ onBack }) {
                             <h3 className="text-sm font-semibold text-[var(--text-primary)] landing-display">{category.name}</h3>
                             <span className="text-[10px] landing-mono text-[var(--text-muted)]">{categoryTopics.length} topics</span>
                           </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)]">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)] overflow-hidden">
                             {categoryTopics.map((topic) => (
                               <div
                                 key={topic.id}
@@ -1668,7 +1560,7 @@ export default function DocsPage({ onBack }) {
                             <h3 className="text-sm font-semibold text-[var(--text-primary)] landing-display">{category.name}</h3>
                             <span className="text-[10px] landing-mono text-[var(--text-muted)]">{categoryTopics.length} topics</span>
                           </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)]">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)] overflow-hidden">
                             {categoryTopics.map((topic) => (
                               <div
                                 key={topic.id}
@@ -1707,7 +1599,7 @@ export default function DocsPage({ onBack }) {
                       <p className="text-sm text-[var(--text-muted)] landing-body mt-1">Thread-safe programming, synchronization, and classic problems</p>
                     </div>
                     <div className="rounded-2xl overflow-hidden border-0 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)]">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)] overflow-hidden">
                         {concurrencyTopics.map((topic) => (
                           <div
                             key={topic.id}
@@ -1765,7 +1657,7 @@ export default function DocsPage({ onBack }) {
                 </>
               )}
 
-              {/* Low Level Design Content */}
+              {/* Low-Level Design Content */}
               {activePage === 'low-level' && (
                 <>
                   {/* LLD Learning Topics - Grouped by Category */}
@@ -1787,7 +1679,7 @@ export default function DocsPage({ onBack }) {
                             <h3 className="text-sm font-semibold text-[var(--text-primary)] landing-display">{category.name}</h3>
                             <span className="text-[10px] landing-mono text-[var(--text-muted)]">{categoryTopics.length} topics</span>
                           </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)]">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)] overflow-hidden">
                             {categoryTopics.map((topic) => (
                               <div
                                 key={topic.id}
@@ -1841,7 +1733,7 @@ export default function DocsPage({ onBack }) {
                             <h3 className="text-sm font-semibold text-[var(--text-primary)] landing-display">{category.name}</h3>
                             <span className="text-[10px] landing-mono text-[var(--text-muted)]">{categoryProblems.length} problems</span>
                           </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)]">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)] overflow-hidden">
                             {categoryProblems.map((problem) => {
                               const diffStyle = { Easy: 'text-emerald-600 bg-emerald-500/10 border border-emerald-500/20', Medium: 'text-[var(--text-muted)] bg-[var(--bg-elevated)] border border-[var(--border)]', Hard: 'text-red-600 bg-red-500/10 border border-red-500/20' }[problem.difficulty] || 'text-[var(--text-muted)] bg-[var(--bg-elevated)] border border-[var(--border)]';
                               return (
@@ -2009,7 +1901,7 @@ export default function DocsPage({ onBack }) {
                             </div>
                           </div>
                           {/* Topics in Category */}
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)]">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)] overflow-hidden">
                             {categoryTopics.map((topic) => (
                               <div
                                 key={topic.id}
@@ -2148,7 +2040,7 @@ export default function DocsPage({ onBack }) {
                             <h3 className="text-sm font-semibold text-[var(--text-primary)] landing-display">{category.name}</h3>
                             <span className="text-[10px] landing-mono text-[var(--text-muted)]">{categoryTopics.length} patterns</span>
                           </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)]">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)] overflow-hidden">
                             {categoryTopics.map((topic) => (
                               <div
                                 key={topic.id}
@@ -2181,13 +2073,13 @@ export default function DocsPage({ onBack }) {
                 </>
               )}
 
-              {/* Databases & SQL Content */}
+              {/* Database Internals Content */}
               {activePage === 'databases' && (
                 <>
                   <div className="mb-6">
                     <div className="mb-4">
                       <span className="landing-mono text-xs text-[var(--text-muted)] tracking-widest uppercase">Deep Dive</span>
-                      <h2 className="landing-display font-bold text-xl mt-1 tracking-tight text-[var(--text-primary)]">Database Topics</h2>
+                      <h2 className="landing-display font-bold text-xl mt-1 tracking-tight text-[var(--text-primary)]">Database Internals</h2>
                     </div>
                     <div className="space-y-3">
                     {databaseCategories.map((category) => {
@@ -2202,7 +2094,7 @@ export default function DocsPage({ onBack }) {
                             <h3 className="text-sm font-semibold text-[var(--text-primary)] landing-display">{category.name}</h3>
                             <span className="text-[10px] landing-mono text-[var(--text-muted)]">{categoryTopics.length} topics</span>
                           </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)]">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)] overflow-hidden">
                             {categoryTopics.map((topic) => (
                               <div
                                 key={topic.id}
@@ -2235,8 +2127,8 @@ export default function DocsPage({ onBack }) {
                 </>
               )}
 
-              {/* SQL Topics — shown within Databases page */}
-              {(activePage === 'databases' || activePage === 'sql') && (
+              {/* SQL for Interviews Content */}
+              {activePage === 'sql' && (
                 <>
                   <div className="mb-6">
                     <div className="mb-4">
@@ -2256,7 +2148,7 @@ export default function DocsPage({ onBack }) {
                             <h3 className="text-sm font-semibold text-[var(--text-primary)] landing-display">{category.name}</h3>
                             <span className="text-[10px] landing-mono text-[var(--text-muted)]">{categoryTopics.length} topics</span>
                           </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)]">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)] overflow-hidden">
                             {categoryTopics.map((topic) => (
                               <div
                                 key={topic.id}

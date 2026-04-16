@@ -78,7 +78,7 @@ export default function MobileTabView({ tabs, activeTab, onTabChange, children, 
             key={tab.id}
             data-tab-id={tab.id}
             onClick={() => setActive(tab.id)}
-            className={`flex-1 py-3 text-xs font-semibold uppercase tracking-wider transition-colors duration-200 min-h-[48px] flex items-center justify-center
+            className={`flex-1 py-3 text-xs font-semibold uppercase tracking-wider transition-colors duration-200
               ${active === tab.id ? 'text-emerald-600' : 'text-[var(--text-muted)] active:text-[var(--text-secondary)]'}`}
           >
             <span className="flex items-center justify-center gap-1.5">

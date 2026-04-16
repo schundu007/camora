@@ -7,12 +7,6 @@
 /* ── Design Tokens ──────────────────────────────────────────── */
 @layer base {
   :root {
-    /* Safe area insets */
-    --sai-top: env(safe-area-inset-top, 0px);
-    --sai-right: env(safe-area-inset-right, 0px);
-    --sai-bottom: env(safe-area-inset-bottom, 0px);
-    --sai-left: env(safe-area-inset-left, 0px);
-
     /* Backgrounds (Railway-derived) */
     --bg-app: #0D0C14;
     --bg-surface: #16141F;
@@ -109,7 +103,6 @@
 
   *, *::before, *::after {
     box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent;
   }
 
   html {
@@ -117,8 +110,6 @@
     overflow-x: hidden;
     width: 100%;
     color-scheme: dark;
-    -webkit-text-size-adjust: 100%;
-    text-size-adjust: 100%;
   }
 
   body {
@@ -272,17 +263,6 @@
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-/* Body scroll lock (applied via JS when menus/modals are open) */
-body.scroll-locked { overflow: hidden !important; position: fixed; width: 100%; top: 0; left: 0; }
-
-/* iOS momentum scrolling for all scrollable containers */
-.overflow-x-auto, .overflow-auto, .overflow-y-auto, pre { -webkit-overflow-scrolling: touch; }
-
-/* Prevent iOS auto-zoom on focused inputs (font < 16px triggers zoom) */
-@media screen and (max-width: 767px) {
-  input, select, textarea { font-size: 16px !important; }
-}
-
 /* ══════════════════════════════════════════════════════════════
    BLOCK COMPONENTS (answer rendering — used by Lumora)
    ══════════════════════════════════════════════════════════════ */
@@ -344,7 +324,6 @@ body.scroll-locked { overflow: hidden !important; position: fixed; width: 100%; 
   .diagram-art {
     @apply text-sm leading-snug whitespace-pre overflow-x-auto;
     color: #22d3ee; font-family: var(--font-mono);
-    -webkit-overflow-scrolling: touch;
   }
 
   /* Code block */
@@ -360,7 +339,6 @@ body.scroll-locked { overflow: hidden !important; position: fixed; width: 100%; 
   .code-content {
     @apply p-3 font-mono text-sm leading-snug overflow-x-auto;
     background-color: var(--bg-app);
-    -webkit-overflow-scrolling: touch;
   }
 
   /* Follow-up card */

@@ -9,25 +9,26 @@ import { query } from '../lib/shared-db.js';
 import * as freeUsageService from '../services/freeUsageService.js';
 import { logger } from '../middleware/requestLogger.js';
 import { awardXP } from '../services/gamificationService.js';
-import { cacheGet, cacheSet } from '../services/redis.js';
 
 const router = Router();
 
-// Daily solve cap for paid users to prevent abuse (persists in Redis across restarts/instances)
+// Daily solve cap for paid users to prevent abuse
 const PAID_DAILY_LIMIT = 15;
+const dailySolveUsage = new Map();
 
-async function checkDailySolveLimit(userId) {
+function checkDailySolveLimit(userId) {
   const today = new Date().toISOString().slice(0, 10);
-  const key = `daily_solve:${userId}:${today}`;
-  const count = (await cacheGet(key)) || 0;
-  return count < PAID_DAILY_LIMIT;
-}
-
-async function incrementDailySolveCount(userId) {
-  const today = new Date().toISOString().slice(0, 10);
-  const key = `daily_solve:${userId}:${today}`;
-  const count = (await cacheGet(key)) || 0;
-  await cacheSet(key, count + 1, 86400);
+  const key = `${userId}:${today}`;
+  const count = dailySolveUsage.get(key) || 0;
+  if (count >= PAID_DAILY_LIMIT) return false;
+  dailySolveUsage.set(key, count + 1);
+  // Clean old entries daily
+  if (dailySolveUsage.size > 10000) {
+    for (const [k] of dailySolveUsage) {
+      if (!k.endsWith(today)) dailySolveUsage.delete(k);
+    }
+  }
+  return true;
 }
 
 // In-memory cache for coding solutions to avoid repeated Claude API calls
@@ -46,20 +47,22 @@ router.post('/', validate('solve'), async (req, res, next) => {
   try {
     const { problem, provider = 'claude', language = 'auto', fast = true, model } = req.body;
 
-    // Check free usage (authenticate middleware guarantees req.user)
-    const userId = req.user.id;
-    const canUse = await freeUsageService.canUseFeature(userId, 'coding');
-    if (!canUse.allowed) {
-      return res.status(429).json({ error: canUse.reason || 'Free trial exhausted.', subscriptionRequired: true });
-    }
-    // Paid users: daily cap to prevent abuse
-    if (canUse.hasSubscription && !(await checkDailySolveLimit(userId))) {
-      return res.status(429).json({ error: 'Daily solve limit reached (15/day). Try again tomorrow.', dailyLimitReached: true });
+    // Check free usage for webapp users
+    const userId = req.user?.id;
+    if (userId) {
+      const canUse = await freeUsageService.canUseFeature(userId, 'coding');
+      if (!canUse.allowed) {
+        return res.status(429).json({ error: canUse.reason || 'Free trial exhausted.', subscriptionRequired: true });
+      }
+      // Paid users: daily cap to prevent abuse
+      if (canUse.hasSubscription && !checkDailySolveLimit(userId)) {
+        return res.status(429).json({ error: 'Daily solve limit reached (15/day). Try again tomorrow.', dailyLimitReached: true });
+      }
     }
 
     // Select model based on user plan — free users get Haiku, paid users get Sonnet
     let userModel = model;
-    if (!userModel && provider === 'claude') {
+    if (!userModel && userId && provider === 'claude') {
       const subStatus = await freeUsageService.getSubscriptionStatus(userId);
       userModel = (subStatus.hasSubscription)
         ? 'claude-sonnet-4-20250514'
@@ -84,7 +87,6 @@ router.post('/', validate('solve'), async (req, res, next) => {
     }
     solutionCache.set(cacheKey, { data: result, timestamp: Date.now() });
 
-    if (canUse.hasSubscription) incrementDailySolveCount(userId).catch(() => {});
     if (userId) awardXP(userId, 'coding_solve').catch(() => {});
 
     res.json(result);
@@ -106,7 +108,6 @@ router.post('/stream', validate('solve'), async (req, res, next) => {
 
     // Check for webapp user (JWT auth) and verify subscription + usage allowance
     let webappUserId = null;
-    let webappHasSubscription = false;
     const authHeader = req.headers.authorization;
 
     if (authHeader && authHeader.startsWith('Bearer ')) {
@@ -137,7 +138,7 @@ router.post('/stream', validate('solve'), async (req, res, next) => {
             return;
           }
           // Paid users: daily cap to prevent abuse
-          if (canUseResult.hasSubscription && !(await checkDailySolveLimit(webappUserId))) {
+          if (canUseResult.hasSubscription && !checkDailySolveLimit(webappUserId)) {
             logger.info({ userId: webappUserId }, 'Daily solve limit reached');
             res.setHeader('Content-Type', 'text/event-stream');
             res.write(`data: ${JSON.stringify({
@@ -148,7 +149,6 @@ router.post('/stream', validate('solve'), async (req, res, next) => {
             return;
           }
 
-          webappHasSubscription = canUseResult.hasSubscription;
           logger.debug({
             userId: webappUserId,
             hasSubscription: canUseResult.hasSubscription,
@@ -357,7 +357,6 @@ router.post('/stream', validate('solve'), async (req, res, next) => {
         }
       }
 
-      if (webappHasSubscription) incrementDailySolveCount(webappUserId).catch(() => {});
       if (webappUserId) awardXP(webappUserId, 'coding_solve').catch(() => {});
 
       res.write(`data: ${JSON.stringify({ done: true, result })}\n\n`);

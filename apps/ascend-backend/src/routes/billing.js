@@ -277,7 +277,7 @@ router.get('/download-access', jwtAuth, async (req, res) => {
     // Get download links from environment or use defaults
     const version = process.env.DESKTOP_VERSION || '1.0.0';
     const baseUrl = process.env.DESKTOP_DOWNLOAD_URL ||
-      'https://github.com/schundu007/camora/releases/download';
+      'https://github.com/schundu007/capra/releases/download';
 
     res.json({
       hasAccess: true,
@@ -286,21 +286,21 @@ router.get('/download-access', jwtAuth, async (req, res) => {
       downloads: {
         mac: {
           arm64: {
-            url: `${baseUrl}/v${version}/Camora-${version}-arm64.dmg`,
+            url: `${baseUrl}/v${version}/Ascend-${version}-arm64.dmg`,
             label: 'Mac (Apple Silicon)',
-            size: '~85 MB'
+            size: '~120 MB'
           },
           x64: {
-            url: `${baseUrl}/v${version}/Camora-${version}-x64.dmg`,
+            url: `${baseUrl}/v${version}/Ascend-${version}-x64.dmg`,
             label: 'Mac (Intel)',
-            size: '~85 MB'
+            size: '~125 MB'
           }
         },
         windows: {
           x64: {
-            url: `${baseUrl}/v${version}/Camora-${version}-Setup.exe`,
+            url: `${baseUrl}/v${version}/Ascend-${version}-Setup.exe`,
             label: 'Windows (64-bit)',
-            size: '~95 MB'
+            size: '~100 MB'
           }
         }
       }
@@ -383,58 +383,53 @@ router.post('/webhook', async (req, res) => {
       return res.json({ received: true });
     }
 
-    // Handle event — if handler fails, remove idempotency row so Stripe can retry
-    try {
-      switch (event.type) {
-        case 'checkout.session.completed': {
-          const session = event.data.object;
-          await handleCheckoutComplete(session);
-          break;
-        }
-
-        case 'invoice.paid': {
-          const invoice = event.data.object;
-          await handleInvoicePaid(invoice);
-          break;
-        }
-
-        case 'customer.subscription.updated': {
-          const subscription = event.data.object;
-          await handleSubscriptionUpdated(subscription);
-          break;
-        }
-
-        case 'customer.subscription.deleted': {
-          const subscription = event.data.object;
-          await handleSubscriptionDeleted(subscription);
-          break;
-        }
-
-        case 'invoice.payment_failed': {
-          const invoice = event.data.object;
-          const customerId = invoice.customer;
-          const userResult = await query(
-            'SELECT user_id FROM ascend_subscriptions WHERE stripe_customer_id = $1',
-            [customerId]
-          );
-          if (userResult.rows.length > 0) {
-            const userId = userResult.rows[0].user_id;
-            await query(
-              "UPDATE ascend_subscriptions SET status = 'past_due' WHERE user_id = $1",
-              [userId]
-            );
-            logger.info({ userId, customerId }, 'Subscription marked past_due due to failed payment');
-          }
-          break;
-        }
-
-        default:
-          logger.info({ type: event.type }, 'Unhandled webhook event');
+    // Handle event
+    switch (event.type) {
+      case 'checkout.session.completed': {
+        const session = event.data.object;
+        await handleCheckoutComplete(session);
+        break;
       }
-    } catch (handlerError) {
-      // Handler failed — remove idempotency row so Stripe retries this event
-      await query('DELETE FROM ascend_stripe_events WHERE id = $1', [event.id]).catch(() => {});
-      throw handlerError;
+
+      case 'invoice.paid': {
+        const invoice = event.data.object;
+        await handleInvoicePaid(invoice);
+        break;
+      }
+
+      case 'customer.subscription.updated': {
+        const subscription = event.data.object;
+        await handleSubscriptionUpdated(subscription);
+        break;
+      }
+
+      case 'customer.subscription.deleted': {
+        const subscription = event.data.object;
+        await handleSubscriptionDeleted(subscription);
+        break;
+      }
+
+      case 'invoice.payment_failed': {
+        const invoice = event.data.object;
+        const customerId = invoice.customer;
+        // Find user by stripe_customer_id
+        const userResult = await query(
+          'SELECT user_id FROM ascend_subscriptions WHERE stripe_customer_id = $1',
+          [customerId]
+        );
+        if (userResult.rows.length > 0) {
+          const userId = userResult.rows[0].user_id;
+          await query(
+            "UPDATE ascend_subscriptions SET status = 'past_due' WHERE user_id = $1",
+            [userId]
+          );
+          logger.info({ userId, customerId }, 'Subscription marked past_due due to failed payment');
+        }
+        break;
+      }
+
+      default:
+        logger.info({ type: event.type }, 'Unhandled webhook event');
     }
 
     res.json({ received: true });

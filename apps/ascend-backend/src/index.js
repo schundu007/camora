@@ -415,7 +415,7 @@ app.get('/health', (req, res) => {
 // ─── Public routes (no authentication) ───
 
 // Visitor counter — lightweight, no auth required
-app.post('/api/visitors/track', apiLimiter, async (req, res) => {
+app.post('/api/visitors/track', async (req, res) => {
   try {
     await query(`INSERT INTO site_visitors (visit_date, count) VALUES (CURRENT_DATE, 1)
       ON CONFLICT (visit_date) DO UPDATE SET count = site_visitors.count + 1`);
@@ -432,7 +432,7 @@ app.get('/api/visitors/count', async (req, res) => {
 });
 
 // Universal page-view tracker — no auth required
-app.post('/api/visitors/pageview', apiLimiter, async (req, res) => {
+app.post('/api/visitors/pageview', async (req, res) => {
   try {
     const { path, email, referrer } = req.body || {};
     if (!path) return res.status(400).json({ error: 'path required' });
@@ -494,10 +494,9 @@ app.get('/api/visitors/pageview-stats', authenticate, async (req, res) => {
       `SELECT path, COUNT(*) as views, COUNT(DISTINCT ip) as unique_visitors FROM page_views ${where} GROUP BY path ORDER BY views DESC LIMIT 50`,
       params
     );
-    const byDayParams = [...params, dayLimit];
     const byDay = await query(
-      `SELECT DATE(created_at) as date, COUNT(*) as views, COUNT(DISTINCT ip) as unique_visitors FROM page_views ${where} GROUP BY DATE(created_at) ORDER BY date DESC LIMIT $${byDayParams.length}`,
-      byDayParams
+      `SELECT DATE(created_at) as date, COUNT(*) as views, COUNT(DISTINCT ip) as unique_visitors FROM page_views ${where} GROUP BY DATE(created_at) ORDER BY date DESC LIMIT ${dayLimit}`,
+      params
     );
 
     res.json({
@@ -564,13 +563,10 @@ app.post('/api/admin/grant-trial', authenticate, async (req, res) => {
     if (!admin.rows[0]?.is_admin) return res.status(403).json({ error: 'Admin access required' });
 
     const { userId, days } = req.body;
-    const daysInt = parseInt(days, 10);
-    if (!userId || !Number.isFinite(daysInt) || daysInt < 1 || daysInt > 365) {
-      return res.status(400).json({ error: 'userId required; days must be 1-365' });
-    }
+    if (!userId || !days) return res.status(400).json({ error: 'userId and days required' });
 
     const trialEnd = new Date();
-    trialEnd.setDate(trialEnd.getDate() + daysInt);
+    trialEnd.setDate(trialEnd.getDate() + parseInt(days));
 
     await query(
       'UPDATE ascend_subscriptions SET trial_ends_at = $1 WHERE user_id = $2',
@@ -582,7 +578,7 @@ app.post('/api/admin/grant-trial', authenticate, async (req, res) => {
 
     // Send trial notification email (non-blocking)
     if (email) {
-      sendTrialEmail({ to: email, name, days: daysInt, trialEndsAt: trialEnd.toISOString() })
+      sendTrialEmail({ to: email, name, days: parseInt(days), trialEndsAt: trialEnd.toISOString() })
         .catch(err => console.error('[Admin GrantTrial] Email error:', err.message));
     }
 

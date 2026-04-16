@@ -49,7 +49,7 @@ type Tab = 'analytics' | 'users' | 'emails';
 function RefreshBtn({ onClick, loading }: { onClick: () => void; loading: boolean }) {
   return (
     <button onClick={onClick} disabled={loading}
-      className="ml-auto px-3 py-1.5 rounded-lg text-xs font-medium bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)] transition-all disabled:opacity-50 flex items-center gap-1.5">
+      className="ml-auto px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-800 text-gray-300 hover:bg-gray-700 transition-all disabled:opacity-50 flex items-center gap-1.5">
       <svg className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
       </svg>
@@ -216,35 +216,35 @@ export default function AnalyticsPage() {
   // Loading admin check
   if (isAdmin === null) {
     return (
-      <div className="min-h-screen bg-[var(--bg-app)] text-[var(--text-primary)] flex items-center justify-center">
+      <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
   if (isAdmin === false) {
     return (
-      <div className="min-h-screen bg-[var(--bg-app)] text-[var(--text-primary)]" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
+      <div className="min-h-screen bg-gray-950 text-white" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
         <div className="flex items-center justify-center py-32">
-          <p className="text-[var(--text-muted)] text-lg">You don't have access to this page.</p>
+          <p className="text-gray-400 text-lg">You don't have access to this page.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[var(--bg-app)] text-[var(--text-primary)]" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
-      <div className="max-w-6xl mx-auto px-4 py-6 sm:py-12">
+    <div className="min-h-screen bg-gray-950 text-white" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
+      <div className="max-w-6xl mx-auto px-4 py-12">
         <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
-        <p className="text-[var(--text-muted)] mb-6">Analytics, user management & emails</p>
+        <p className="text-gray-400 mb-6">Analytics, user management & emails</p>
 
         {/* Tabs */}
-        <div className="flex flex-wrap gap-1 mb-8 bg-[var(--bg-surface)] rounded-lg p-1 w-fit">
+        <div className="flex gap-1 mb-8 bg-gray-900 rounded-lg p-1 w-fit">
           {(['analytics', 'users', 'emails'] as Tab[]).map(t => (
             <button
               key={t}
               onClick={() => setTab(t)}
               className={`px-5 py-2 rounded-md text-sm font-medium capitalize transition-all ${
-                tab === t ? 'bg-emerald-500 text-white' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
+                tab === t ? 'bg-emerald-500 text-white' : 'text-gray-400 hover:text-white'
               }`}
             >
               {t === 'users' ? `Users (${totalUsers})` : t === 'emails' ? `Emails (${emails.length})` : t}
@@ -261,7 +261,7 @@ export default function AnalyticsPage() {
                   key={d}
                   onClick={() => setDays(d)}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                    days === d ? 'bg-emerald-500 text-white' : 'bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)]'
+                    days === d ? 'bg-emerald-500 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
                   }`}
                 >
                   {d === '' ? 'All time' : `Last ${d} days`}
@@ -277,21 +277,21 @@ export default function AnalyticsPage() {
             ) : stats ? (
               <>
                 <div className="grid grid-cols-2 gap-4 mb-10">
-                  <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl p-6">
-                    <p className="text-[var(--text-muted)] text-sm">Total Page Views</p>
+                  <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
+                    <p className="text-gray-400 text-sm">Total Page Views</p>
                     <p className="text-4xl font-bold mt-1">{stats.total_views.toLocaleString()}</p>
                   </div>
-                  <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl p-6">
-                    <p className="text-[var(--text-muted)] text-sm">Unique Visitors</p>
+                  <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
+                    <p className="text-gray-400 text-sm">Unique Visitors</p>
                     <p className="text-4xl font-bold mt-1 text-emerald-400">{stats.unique_visitors.toLocaleString()}</p>
                   </div>
                 </div>
 
                 <h2 className="text-xl font-semibold mb-4">By Page</h2>
-                <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl overflow-hidden mb-10">
+                <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden mb-10">
                   <table className="w-full text-left">
                     <thead>
-                      <tr className="border-b border-[var(--border)] text-[var(--text-muted)] text-sm">
+                      <tr className="border-b border-gray-800 text-gray-400 text-sm">
                         <th className="px-5 py-3">Path</th>
                         <th className="px-5 py-3 text-right">Views</th>
                         <th className="px-5 py-3 text-right">Unique Visitors</th>
@@ -299,24 +299,24 @@ export default function AnalyticsPage() {
                     </thead>
                     <tbody>
                       {stats.by_path.map(row => (
-                        <tr key={row.path} className="border-b border-[var(--border)]/50 hover:bg-[var(--bg-elevated)]/30">
+                        <tr key={row.path} className="border-b border-gray-800/50 hover:bg-gray-800/30">
                           <td className="px-5 py-3 font-mono text-sm text-emerald-300">{row.path}</td>
                           <td className="px-5 py-3 text-right">{parseInt(row.views).toLocaleString()}</td>
                           <td className="px-5 py-3 text-right font-semibold">{parseInt(row.unique_visitors).toLocaleString()}</td>
                         </tr>
                       ))}
                       {stats.by_path.length === 0 && (
-                        <tr><td colSpan={3} className="px-5 py-8 text-center text-[var(--text-muted)]">No data yet</td></tr>
+                        <tr><td colSpan={3} className="px-5 py-8 text-center text-gray-500">No data yet</td></tr>
                       )}
                     </tbody>
                   </table>
                 </div>
 
                 <h2 className="text-xl font-semibold mb-4">By Day</h2>
-                <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl overflow-hidden">
+                <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
                   <table className="w-full text-left">
                     <thead>
-                      <tr className="border-b border-[var(--border)] text-[var(--text-muted)] text-sm">
+                      <tr className="border-b border-gray-800 text-gray-400 text-sm">
                         <th className="px-5 py-3">Date</th>
                         <th className="px-5 py-3 text-right">Views</th>
                         <th className="px-5 py-3 text-right">Unique Visitors</th>
@@ -328,12 +328,12 @@ export default function AnalyticsPage() {
                         const maxViews = Math.max(...stats.by_day.map(d => parseInt(d.views)));
                         const pct = maxViews > 0 ? (parseInt(row.views) / maxViews) * 100 : 0;
                         return (
-                          <tr key={row.date} className="border-b border-[var(--border)]/50 hover:bg-[var(--bg-elevated)]/30">
+                          <tr key={row.date} className="border-b border-gray-800/50 hover:bg-gray-800/30">
                             <td className="px-5 py-3 text-sm">{new Date(row.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</td>
                             <td className="px-5 py-3 text-right">{parseInt(row.views).toLocaleString()}</td>
                             <td className="px-5 py-3 text-right font-semibold">{parseInt(row.unique_visitors).toLocaleString()}</td>
                             <td className="px-5 py-3">
-                              <div className="w-full bg-[var(--bg-elevated)] rounded-full h-2">
+                              <div className="w-full bg-gray-800 rounded-full h-2">
                                 <div className="bg-emerald-500 h-2 rounded-full transition-all" style={{ width: `${pct}%` }} />
                               </div>
                             </td>
@@ -341,14 +341,14 @@ export default function AnalyticsPage() {
                         );
                       })}
                       {stats.by_day.length === 0 && (
-                        <tr><td colSpan={4} className="px-5 py-8 text-center text-[var(--text-muted)]">No data yet</td></tr>
+                        <tr><td colSpan={4} className="px-5 py-8 text-center text-gray-500">No data yet</td></tr>
                       )}
                     </tbody>
                   </table>
                 </div>
               </>
             ) : (
-              <p className="text-[var(--text-muted)]">Failed to load analytics. Backend may need redeployment.</p>
+              <p className="text-gray-400">Failed to load analytics. Backend may need redeployment.</p>
             )}
           </>
         )}
@@ -358,19 +358,19 @@ export default function AnalyticsPage() {
           <>
             {/* Summary cards */}
             {usersLoaded && (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
+              <div className="grid grid-cols-5 gap-3 mb-6">
                 {[
-                  { label: 'Total Users', value: totalUsers, color: 'text-[var(--text-primary)]', filter: '' },
+                  { label: 'Total Users', value: totalUsers, color: 'text-white', filter: '' },
                   { label: 'Paid', value: paidUsers, color: 'text-emerald-400', filter: 'paid' },
                   { label: 'Trial', value: trialUsers, color: 'text-blue-400', filter: 'trial' },
                   { label: 'Challenger', value: challengerUsers, color: 'text-purple-400', filter: 'challenger' },
-                  { label: 'Free', value: freeUsers, color: 'text-[var(--text-muted)]', filter: 'free' },
+                  { label: 'Free', value: freeUsers, color: 'text-gray-400', filter: 'free' },
                 ].map(c => (
                   <button key={c.label} onClick={() => setPlanFilter(planFilter === c.filter ? '' : c.filter)}
-                    className={`bg-[var(--bg-surface)] border rounded-xl p-4 text-left transition-all ${
-                      planFilter === c.filter ? 'border-emerald-500 ring-1 ring-emerald-500/30' : 'border-[var(--border)] hover:border-[var(--border)]'
+                    className={`bg-gray-900 border rounded-xl p-4 text-left transition-all ${
+                      planFilter === c.filter ? 'border-emerald-500 ring-1 ring-emerald-500/30' : 'border-gray-800 hover:border-gray-700'
                     }`}>
-                    <p className="text-[var(--text-muted)] text-xs">{c.label}</p>
+                    <p className="text-gray-400 text-xs">{c.label}</p>
                     <p className={`text-2xl font-bold mt-1 ${c.color}`}>{c.value}</p>
                   </button>
                 ))}
@@ -380,7 +380,7 @@ export default function AnalyticsPage() {
             {/* Search + Refresh */}
             <div className="flex items-center gap-3 mb-4">
               <div className="relative flex-1 max-w-sm">
-                <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
                 <input
@@ -388,7 +388,7 @@ export default function AnalyticsPage() {
                   placeholder="Search by name, email, location, company..."
                   value={search}
                   onChange={e => setSearch(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2 bg-[var(--bg-surface)] border border-[var(--border)] rounded-lg text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-emerald-500"
+                  className="w-full pl-9 pr-4 py-2 bg-gray-900 border border-gray-800 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500"
                 />
               </div>
               <RefreshBtn onClick={() => { setUsersLoaded(false); fetchUsers(); }} loading={usersLoading} />
@@ -406,11 +406,11 @@ export default function AnalyticsPage() {
               <p className="text-red-400">{usersError}</p>
             ) : (
               <>
-                <p className="text-[var(--text-muted)] text-xs mb-2">{filteredUsers.length} of {users.length} users{search && ` matching "${search}"`}</p>
-                <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl overflow-x-auto">
+                <p className="text-gray-500 text-xs mb-2">{filteredUsers.length} of {users.length} users{search && ` matching "${search}"`}</p>
+                <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-x-auto">
                   <table className="w-full text-left text-sm">
                     <thead>
-                      <tr className="border-b border-[var(--border)] text-[var(--text-muted)]">
+                      <tr className="border-b border-gray-800 text-gray-400">
                         <th className="px-4 py-3">User</th>
                         <th className="px-4 py-3">Email</th>
                         <th className="px-4 py-3">Plan</th>
@@ -423,23 +423,23 @@ export default function AnalyticsPage() {
                     </thead>
                     <tbody>
                       {filteredUsers.map(u => (
-                        <tr key={u.id} className="border-b border-[var(--border)]/50 hover:bg-[var(--bg-elevated)]/30">
+                        <tr key={u.id} className="border-b border-gray-800/50 hover:bg-gray-800/30">
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-3">
                               {u.avatar ? (
                                 <img src={u.avatar} alt="" className="w-8 h-8 rounded-full" />
                               ) : (
-                                <div className="w-8 h-8 rounded-full bg-[var(--bg-elevated)] flex items-center justify-center text-xs font-bold">
+                                <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-xs font-bold">
                                   {(u.name || u.email)[0].toUpperCase()}
                                 </div>
                               )}
                               <div>
                                 <p className="font-medium">{u.name || '—'}</p>
-                                {u.username && <p className="text-[var(--text-muted)] text-xs">@{u.username}</p>}
+                                {u.username && <p className="text-gray-500 text-xs">@{u.username}</p>}
                               </div>
                             </div>
                           </td>
-                          <td className="px-4 py-3 text-[var(--text-secondary)]">{u.email}</td>
+                          <td className="px-4 py-3 text-gray-300">{u.email}</td>
                           <td className="px-4 py-3">
                             {(() => {
                               const cat = getUserPlanCategory(u);
@@ -449,7 +449,7 @@ export default function AnalyticsPage() {
                                     cat === 'paid' ? 'bg-emerald-500/20 text-emerald-400'
                                       : cat === 'challenger' ? 'bg-purple-500/20 text-purple-400'
                                       : cat === 'trial' ? 'bg-blue-500/20 text-blue-400'
-                                      : 'bg-[var(--bg-elevated)] text-[var(--text-muted)]'
+                                      : 'bg-gray-700 text-gray-400'
                                   }`}>
                                     {cat === 'paid' ? u.sub_plan : cat}
                                   </span>
@@ -462,16 +462,16 @@ export default function AnalyticsPage() {
                               );
                             })()}
                           </td>
-                          <td className="px-4 py-3 text-[var(--text-muted)] text-xs">{u.location || '—'}</td>
-                          <td className="px-4 py-3 text-[var(--text-muted)] text-xs">
+                          <td className="px-4 py-3 text-gray-400 text-xs">{u.location || '—'}</td>
+                          <td className="px-4 py-3 text-gray-400 text-xs">
                             {u.target_company || u.target_role
                               ? `${u.target_role || ''} ${u.target_company ? `@ ${u.target_company}` : ''}`.trim()
                               : '—'}
                           </td>
-                          <td className="px-4 py-3 text-[var(--text-muted)] text-xs">
+                          <td className="px-4 py-3 text-gray-400 text-xs">
                             {u.last_login_at ? new Date(u.last_login_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '—'}
                           </td>
-                          <td className="px-4 py-3 text-[var(--text-muted)] text-xs">
+                          <td className="px-4 py-3 text-gray-400 text-xs">
                             {new Date(u.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                           </td>
                           <td className="px-4 py-3">
@@ -491,7 +491,7 @@ export default function AnalyticsPage() {
                         </tr>
                       ))}
                       {filteredUsers.length === 0 && (
-                        <tr><td colSpan={8} className="px-4 py-8 text-center text-[var(--text-muted)]">
+                        <tr><td colSpan={8} className="px-4 py-8 text-center text-gray-500">
                           {search ? `No users matching "${search}"` : 'No users found'}
                         </td></tr>
                       )}
@@ -517,11 +517,11 @@ export default function AnalyticsPage() {
               <p className="text-red-400">{emailsError}</p>
             ) : (
               <>
-                <p className="text-[var(--text-muted)] text-xs mb-2">{emails.length} emails sent</p>
-                <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl overflow-x-auto">
+                <p className="text-gray-500 text-xs mb-2">{emails.length} emails sent</p>
+                <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-x-auto">
                   <table className="w-full text-left text-sm">
                     <thead>
-                      <tr className="border-b border-[var(--border)] text-[var(--text-muted)]">
+                      <tr className="border-b border-gray-800 text-gray-400">
                         <th className="px-4 py-3">To</th>
                         <th className="px-4 py-3">Subject</th>
                         <th className="px-4 py-3">Status</th>
@@ -530,9 +530,9 @@ export default function AnalyticsPage() {
                     </thead>
                     <tbody>
                       {emails.map(e => (
-                        <tr key={e.id} className="border-b border-[var(--border)]/50 hover:bg-[var(--bg-elevated)]/30">
-                          <td className="px-4 py-3 text-[var(--text-secondary)]">{e.to.join(', ')}</td>
-                          <td className="px-4 py-3 text-[var(--text-primary)] font-medium">{e.subject}</td>
+                        <tr key={e.id} className="border-b border-gray-800/50 hover:bg-gray-800/30">
+                          <td className="px-4 py-3 text-gray-300">{e.to.join(', ')}</td>
+                          <td className="px-4 py-3 text-white font-medium">{e.subject}</td>
                           <td className="px-4 py-3">
                             <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
                               e.last_event === 'delivered' ? 'bg-emerald-500/20 text-emerald-400'
@@ -540,18 +540,18 @@ export default function AnalyticsPage() {
                                 : e.last_event === 'clicked' ? 'bg-purple-500/20 text-purple-400'
                                 : e.last_event === 'bounced' ? 'bg-red-500/20 text-red-400'
                                 : e.last_event === 'complained' ? 'bg-orange-500/20 text-orange-400'
-                                : 'bg-[var(--bg-elevated)] text-[var(--text-muted)]'
+                                : 'bg-gray-700 text-gray-400'
                             }`}>
                               {e.last_event || 'sent'}
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-[var(--text-muted)] text-xs">
+                          <td className="px-4 py-3 text-gray-400 text-xs">
                             {new Date(e.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
                           </td>
                         </tr>
                       ))}
                       {emails.length === 0 && (
-                        <tr><td colSpan={4} className="px-4 py-8 text-center text-[var(--text-muted)]">No emails sent yet</td></tr>
+                        <tr><td colSpan={4} className="px-4 py-8 text-center text-gray-500">No emails sent yet</td></tr>
                       )}
                     </tbody>
                   </table>

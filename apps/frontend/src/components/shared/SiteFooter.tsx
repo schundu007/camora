@@ -16,7 +16,7 @@ export default function SiteFooter() {
           ))}
           <a href="mailto:support@cariara.com" className="text-[11px] text-white font-bold hover:text-white/70 transition-colors">Support</a>
         </div>
-        <p className="text-[10px] font-bold text-white/80" style={{ fontFamily: "var(--font-mono)" }}>&copy; {new Date().getFullYear()} Cariara</p>
+        <p className="text-[10px] font-bold text-white/80" style={{ fontFamily: "'Source Code Pro', monospace" }}>&copy; {new Date().getFullYear()} Cariara</p>
       </div>
     </footer>
   );

@@ -9,8 +9,8 @@ import SiteFooter from '../components/shared/SiteFooter';
 /* ── APPA steps data ───────────────────────────────────── */
 const APPA = [
   { num: '01', label: 'Apply', desc: 'Discover engineering roles matched to your skills, experience, and salary goals across 1 000+ companies.', href: '/jobs', color: '#34d399' },
-  { num: '02', label: 'Prepare', desc: 'Study 800+ curated topics spanning system design, DSA, behavioral, databases, and cloud architecture.', href: '/capra/prepare', color: '#818cf8' },
-  { num: '03', label: 'Practice', desc: 'Solve 850+ coding problems with AI explanations, run mock interviews, and build confidence before the real thing.', href: '/capra/practice', color: '#38bdf8' },
+  { num: '02', label: 'Prepare', desc: 'Study 300+ curated topics spanning system design, DSA, behavioral, databases, and cloud architecture.', href: '/capra/prepare', color: '#818cf8' },
+  { num: '03', label: 'Practice', desc: 'Solve problems with AI explanations, run mock interviews, and build confidence before the real thing.', href: '/capra/practice', color: '#38bdf8' },
   { num: '04', label: 'Attend', desc: 'Get real-time AI answers during your live technical interview — system design, coding, and behavioral.', href: '/lumora', color: '#fbbf24' },
 ];
 
@@ -27,7 +27,7 @@ const PROCESS_STEPS = [
     ),
   },
   {
-    label: 'Prepare with 800+ Topics',
+    label: 'Prepare with 415+ Topics',
     desc: 'Study system design, DSA, microservices, databases, SQL, low-level design, and behavioral topics with AI-powered explanations and architecture diagrams.',
     color: '#818cf8',
     icon: (
@@ -185,22 +185,41 @@ function ProcessAccordion() {
 }
 
 /* ── Browser Chrome wrapper ────────────────────────────── */
+function BrowserChrome({ url, children, className = '' }: { url: string; children: React.ReactNode; className?: string }) {
+  return (
+    <div className={`rounded-2xl overflow-hidden ${className}`} style={{ border: '1px solid var(--border)', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.4)' }}>
+      <div className="flex items-center gap-2.5 px-4 py-3" style={{ background: 'var(--bg-elevated)', borderBottom: '1px solid var(--border)' }}>
+        <div className="flex gap-[6px]">
+          <div className="w-[11px] h-[11px] rounded-full bg-[#ff5f57]" />
+          <div className="w-[11px] h-[11px] rounded-full bg-[#febc2e]" />
+          <div className="w-[11px] h-[11px] rounded-full bg-[#28c840]" />
+        </div>
+        <div className="flex-1 flex justify-center">
+          <div className="px-4 py-1 rounded-lg text-xs font-code" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}>
+            {url}
+          </div>
+        </div>
+      </div>
+      {children}
+    </div>
+  );
+}
+
 /* ── Prep Showcase (animated donut + topic cards) ──────── */
 function PrepShowcase() {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: '-80px' });
 
   const TOPIC_CATEGORIES = [
-    { name: 'DSA & Algorithms', count: 65, problems: 854, color: '#34d399' },
-    { name: 'System Design', count: 420, problems: 318, color: '#06b6d4' },
-    { name: 'Microservices', count: 27, problems: 0, color: '#818cf8' },
-    { name: 'Database Internals', count: 16, problems: 112, color: '#f97316' },
-    { name: 'SQL for Interviews', count: 15, problems: 85, color: '#fbbf24' },
-    { name: 'Low-Level Design', count: 112, problems: 268, color: '#a78bfa' },
-    { name: 'Behavioral', count: 64, problems: 230, color: '#f472b6' },
+    { name: 'DSA & Algorithms', count: 57, color: '#34d399' },
+    { name: 'System Design', count: 163, color: '#06b6d4' },
+    { name: 'Microservices', count: 12, color: '#818cf8' },
+    { name: 'Database Internals', count: 12, color: '#f97316' },
+    { name: 'SQL for Interviews', count: 8, color: '#fbbf24' },
+    { name: 'Low-Level Design', count: 106, color: '#a78bfa' },
+    { name: 'Behavioral', count: 57, color: '#f472b6' },
   ];
-  const TOTAL = 808;
-  const TOTAL_PROBLEMS = 1867;
+  const TOTAL = 415;
   const RADIUS = 72;
   const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
@@ -231,10 +250,8 @@ function PrepShowcase() {
                 strokeDashoffset={seg.offset} strokeLinecap="butt"
                 style={{ transition: `stroke-dasharray 1.2s ease ${i * 100 + 300}ms` }} />
             ))}
-            <text x="100" y="85" textAnchor="middle" fill="var(--text-primary)" fontSize="26" fontWeight="bold" fontFamily="inherit">800+</text>
-            <text x="100" y="104" textAnchor="middle" fill="var(--text-muted)" fontSize="11" fontWeight="500" fontFamily="inherit">Topics</text>
-            <text x="100" y="122" textAnchor="middle" fill="var(--accent)" fontSize="16" fontWeight="bold" fontFamily="inherit">1,850+</text>
-            <text x="100" y="137" textAnchor="middle" fill="var(--text-muted)" fontSize="10" fontWeight="500" fontFamily="inherit">Problems</text>
+            <text x="100" y="93" textAnchor="middle" fill="var(--text-primary)" fontSize="28" fontWeight="bold" fontFamily="inherit">415+</text>
+            <text x="100" y="116" textAnchor="middle" fill="var(--text-muted)" fontSize="12" fontWeight="500" fontFamily="inherit">Total Topics</text>
           </svg>
         </div>
         <div className="flex flex-wrap gap-x-6 gap-y-3">
@@ -245,7 +262,6 @@ function PrepShowcase() {
               <span className="flex-shrink-0 w-3 h-3 rounded-full" style={{ background: cat.color }} />
               <span className="text-sm font-medium whitespace-nowrap" style={{ color: 'var(--text-secondary)' }}>{cat.name}</span>
               <span className="text-sm font-code font-semibold" style={{ color: 'var(--text-muted)' }}>{cat.count}</span>
-              {cat.problems > 0 && <span className="text-xs font-code" style={{ color: 'var(--text-dimmed)' }}>({cat.problems} problems)</span>}
             </div>
           ))}
         </div>
@@ -322,7 +338,7 @@ const FEATURE_GROUPS = [
     features: [
       { title: 'Job URL AI Analysis', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m9.86-4.122a4.5 4.5 0 00-6.364-6.364L4.5 6.1" /><path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25" /></svg> },
       { title: 'Role-Filtered Study Paths', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="6" /><circle cx="12" cy="12" r="2" /></svg> },
-      { title: '800+ Study Topics', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></svg> },
+      { title: '415+ Study Topics', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></svg> },
       { title: 'Company-Specific Prep', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 7V5a4 4 0 0 0-8 0v2" /></svg> },
       { title: 'Mock Interview Simulator', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg> },
       { title: 'AI-Powered Explanations', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg> },
@@ -347,174 +363,6 @@ const COMP_BARS = [
   { name: 'Sensei', count: 15, color: '#6b7280', suffix: '' },
   { name: 'Solver', count: 12, color: '#6b7280', suffix: '' },
 ];
-
-/* ── Desktop Download Buttons (paywall-gated) ────────────── */
-function DesktopDownloadButtons({ primaryUrl, primaryIcon, primaryLabel, urls, os, isMac, RELEASES, AppleIcon, WindowsIcon }: any) {
-  const { subscription, subscriptionLoading, isAuthenticated } = useAuth();
-  const hasDesktopAccess = subscription?.hasDesktopAccess ?? false;
-  const plan = subscription?.plan || 'free';
-  const isAnnualWithoutAddon = plan === 'annual' && !hasDesktopAccess;
-
-  if (subscriptionLoading) {
-    return (
-      <div className="flex items-center justify-center py-3">
-        <div className="w-5 h-5 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  // Annual users without addon — direct them to download page for addon checkout
-  if (isAnnualWithoutAddon) {
-    return (
-      <div className="flex flex-col items-center gap-2 flex-shrink-0">
-        <Link
-          to="/download"
-          className="inline-flex items-center gap-2.5 px-6 py-3 text-sm font-semibold text-white rounded-xl transition-all duration-200 hover:opacity-90"
-          style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', boxShadow: '0 4px 14px rgba(99,102,241,0.3)' }}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-            <polyline points="7 10 12 15 17 10" />
-            <line x1="12" y1="15" x2="12" y2="3" />
-          </svg>
-          Add Desktop — $29/mo
-        </Link>
-        <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Add-on for Annual plan</span>
-      </div>
-    );
-  }
-
-  if (!hasDesktopAccess) {
-    return (
-      <div className="flex flex-col items-center gap-2 flex-shrink-0">
-        <Link
-          to={isAuthenticated ? '/pricing' : '/login?redirect=/download'}
-          className="inline-flex items-center gap-2.5 px-6 py-3 text-sm font-semibold text-white rounded-xl transition-all duration-200 hover:opacity-90"
-          style={{ background: 'linear-gradient(135deg, #10b981, #059669)', boxShadow: '0 4px 14px rgba(16,185,129,0.3)' }}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-          </svg>
-          {!isAuthenticated ? 'Sign In to Download' : 'Upgrade to Pro — $49/mo'}
-        </Link>
-        <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Included with Pro &middot; Annual + $29/mo</span>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex flex-col items-center gap-2 flex-shrink-0">
-      <a
-        href={primaryUrl}
-        className="inline-flex items-center gap-2.5 px-6 py-3 text-sm font-semibold text-white rounded-xl transition-all duration-200 hover:opacity-90"
-        style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', boxShadow: '0 4px 14px rgba(99,102,241,0.3)' }}
-      >
-        {primaryIcon}
-        {primaryLabel}
-      </a>
-      <div className="flex items-center gap-3 text-xs" style={{ color: 'var(--text-muted)' }}>
-        {isMac ? (
-          <>
-            <a href={urls[os === 'mac-arm' ? 'mac-intel' : 'mac-arm']} className="hover:text-indigo-400 transition-colors underline underline-offset-2">
-              {os === 'mac-arm' ? 'Intel Mac' : 'Apple Silicon'}
-            </a>
-            <span style={{ color: 'var(--border)' }}>|</span>
-            <a href={urls['windows']} className="inline-flex items-center gap-1 hover:text-indigo-400 transition-colors underline underline-offset-2">
-              <WindowsIcon /> Windows
-            </a>
-          </>
-        ) : (
-          <>
-            <a href={urls['mac-arm']} className="inline-flex items-center gap-1 hover:text-indigo-400 transition-colors underline underline-offset-2">
-              <AppleIcon /> Mac (Apple Silicon)
-            </a>
-            <span style={{ color: 'var(--border)' }}>|</span>
-            <a href={urls['mac-intel']} className="inline-flex items-center gap-1 hover:text-indigo-400 transition-colors underline underline-offset-2">
-              <AppleIcon /> Mac (Intel)
-            </a>
-          </>
-        )}
-        <span style={{ color: 'var(--border)' }}>|</span>
-        <a href={RELEASES} className="hover:text-indigo-400 transition-colors underline underline-offset-2">All releases</a>
-      </div>
-    </div>
-  );
-}
-
-/* ── Desktop Download Section ─────────────────────────────── */
-function DesktopDownload() {
-  const getOS = (): 'mac-arm' | 'mac-intel' | 'windows' => {
-    const ua = navigator.userAgent;
-    const platform = (navigator as any).platform || '';
-    if (/Mac/i.test(platform) || /Macintosh/i.test(ua)) {
-      // Apple Silicon detection: M1+ Macs report arm in userAgent or via userAgentData
-      if (/arm64/i.test(ua) || (navigator as any).userAgentData?.architecture === 'arm') return 'mac-arm';
-      // Fallback: newer macOS versions are almost always Apple Silicon
-      return 'mac-arm';
-    }
-    return 'windows';
-  };
-
-  const os = getOS();
-  const RELEASES = 'https://github.com/schundu007/camora/releases/latest';
-  const urls = {
-    'mac-arm': `${RELEASES}/download/Camora-1.0.0-arm64.dmg`,
-    'mac-intel': `${RELEASES}/download/Camora-1.0.0-x64.dmg`,
-    'windows': `${RELEASES}/download/Camora-1.0.0-Setup.exe`,
-  };
-
-  const AppleIcon = () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
-    </svg>
-  );
-
-  const WindowsIcon = () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M3 12V6.75l6-1.32v6.48L3 12zm6.37.18l8.63-.12V3.75l-8.63 1.9v6.53zM18 12.08l-8.63.12v6.39l8.63 1.91v-8.42zM9 12.27l-6 .09v5.34l6 1.33v-6.76z"/>
-    </svg>
-  );
-
-  const isMac = os === 'mac-arm' || os === 'mac-intel';
-  const primaryUrl = isMac ? urls[os] : urls['windows'];
-  const primaryLabel = isMac ? (os === 'mac-arm' ? 'Download for Mac (Apple Silicon)' : 'Download for Mac (Intel)') : 'Download for Windows';
-  const primaryIcon = isMac ? <AppleIcon /> : <WindowsIcon />;
-
-  return (
-    <div className="card rounded-2xl overflow-hidden" style={{ padding: 0 }}>
-      <div className="px-6 py-6 md:px-10 md:py-8 flex flex-col md:flex-row items-center gap-6 md:gap-10">
-        {/* Icon + text */}
-        <div className="flex-1 text-center md:text-left">
-          <div className="flex items-center justify-center md:justify-start gap-3 mb-2">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.15))', color: '#818cf8' }}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-                <rect x="2" y="3" width="20" height="14" rx="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-bold font-display" style={{ color: 'var(--text-primary)' }}>Desktop App</h3>
-          </div>
-          <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-            Stealth mode, screen-share safe, always on top. Runs natively on macOS and Windows.
-          </p>
-        </div>
-
-        {/* Download buttons — paid users only */}
-        <DesktopDownloadButtons
-          primaryUrl={primaryUrl}
-          primaryIcon={primaryIcon}
-          primaryLabel={primaryLabel}
-          urls={urls}
-          os={os}
-          isMac={isMac}
-          RELEASES={RELEASES}
-          AppleIcon={AppleIcon}
-          WindowsIcon={WindowsIcon}
-        />
-      </div>
-    </div>
-  );
-}
 
 /* ════════════════════════════════════════════════════════════
    LANDING PAGE
@@ -609,12 +457,9 @@ export default function LandingPage() {
             <Link to={isAuthenticated ? "/capra/prepare" : "/signup"} className="shimmer-btn px-6 py-3 text-base font-semibold rounded-xl text-white transition-colors" style={{ background: 'linear-gradient(135deg, #10b981, #3b82f6, #8b5cf6)' }}>
               {isAuthenticated ? 'Go to Dashboard' : 'Get Started Free'}
             </Link>
-            <Link to="/download" className="inline-flex items-center gap-2 px-6 py-3 text-base font-semibold rounded-xl text-white/90 hover:text-white transition-all" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                <rect x="2" y="3" width="20" height="14" rx="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" />
-              </svg>
-              Desktop App
-            </Link>
+            <a href="#process" className="btn-secondary px-6 py-3 text-base rounded-xl transition-colors">
+              See How It Works
+            </a>
           </motion.div>
 
           {/* Visitor Count */}
@@ -634,35 +479,10 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── PRODUCT STORYBOARD — Interactive Platform Demo ── */}
-      <section className="px-6 py-10 md:py-16" style={{ zIndex: 1 }}>
-        <div className="w-full lg:max-w-[70%] mx-auto">
-          <FadeIn delay={0.15}>
-            <div
-              className="relative rounded-2xl overflow-hidden mx-auto"
-              style={{
-                maxWidth: '960px',
-                background: '#0D0C14',
-                border: '1px solid rgba(99,102,241,0.15)',
-                boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(99,102,241,0.08), 0 0 80px rgba(99,102,241,0.06)',
-              }}
-            >
-              <iframe
-                src="/camora_storyboard_v3.html"
-                title="Camora Platform Storyboard"
-                className="w-full block"
-                style={{ border: 'none', height: 480, background: '#0D0C14' }}
-                loading="lazy"
-              />
-            </div>
-          </FadeIn>
-        </div>
-      </section>
-
       {/* ── APPA STEP CARDS — Visual summary ── */}
       <section className="px-6 py-10 md:py-14" style={{ zIndex: 1 }}>
         <div className="w-full lg:max-w-[70%] mx-auto">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {APPA.map((step, i) => (
               <FadeIn key={step.label} delay={i * 0.08}>
                 <Link to={step.href}
@@ -752,6 +572,40 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ── DEMO — Videos ── */}
+      <section className="px-6 pb-10 md:pb-16" style={{ zIndex: 1 }}>
+        <FadeIn className="w-full lg:max-w-[70%] mx-auto">
+          <BrowserChrome url="camora.cariara.com/lumora">
+            <div className="aspect-video" style={{ background: 'var(--bg-elevated)' }}>
+              <video src="/demo-lumora.mp4" autoPlay loop muted playsInline title="Lumora live interview demo" className="w-full h-full object-cover" />
+            </div>
+          </BrowserChrome>
+        </FadeIn>
+        <div className="w-full lg:max-w-[70%] mx-auto mt-6 grid md:grid-cols-3 gap-4">
+          {[
+            { url: 'camora.cariara.com/capra', src: '/demo-capra.mp4', label: 'Dashboard' },
+            { url: 'camora.cariara.com/capra/prepare', src: '/demo-capra-topic.mp4', label: 'Study Topics' },
+            { url: 'camora.cariara.com/lumora/design', src: '/demo-design.mp4', label: 'Design Mode' },
+          ].map((demo, i) => (
+            <FadeIn key={demo.url} delay={0.1 * (i + 1)}>
+              <div className="card rounded-2xl overflow-hidden hover:-translate-y-0.5 hover:shadow-md transition-all duration-300 group" style={{ padding: 0 }}>
+                <div className="flex items-center gap-2 px-3 py-2" style={{ background: 'var(--bg-elevated)', borderBottom: '1px solid var(--border)' }}>
+                  <div className="flex gap-1">
+                    <div className="w-2 h-2 rounded-full bg-[#ff5f57]" /><div className="w-2 h-2 rounded-full bg-[#febc2e]" /><div className="w-2 h-2 rounded-full bg-[#28c840]" />
+                  </div>
+                  <span className="text-[10px] truncate font-code" style={{ color: 'var(--text-muted)' }}>{demo.url}</span>
+                </div>
+                <div className="aspect-[4/3] relative" style={{ background: 'var(--bg-elevated)' }}>
+                  <video src={demo.src} autoPlay loop muted playsInline className="w-full h-full object-cover" />
+                  <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent px-4 py-3">
+                    <span className="text-sm font-semibold text-white">{demo.label}</span>
+                  </div>
+                </div>
+              </div>
+            </FadeIn>
+          ))}
+        </div>
+      </section>
 
       {/* ── JOB URL ANALYSIS — Highlighted Feature ── */}
       <section className="px-6 py-12 md:py-16" style={{ zIndex: 1 }}>
@@ -905,15 +759,6 @@ export default function LandingPage() {
                 <p className="section-label text-center font-code tracking-wide">FEATURES COMPARISON</p>
               </div>
             </div>
-          </FadeIn>
-        </div>
-      </section>
-
-      {/* ── DESKTOP APP DOWNLOAD ── */}
-      <section className="px-6 py-12 md:py-16" style={{ zIndex: 1 }}>
-        <div className="w-full lg:max-w-[70%] mx-auto">
-          <FadeIn>
-            <DesktopDownload />
           </FadeIn>
         </div>
       </section>

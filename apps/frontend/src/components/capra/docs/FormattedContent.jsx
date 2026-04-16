@@ -173,7 +173,7 @@ export default function FormattedContent({ content, color = 'emerald' }) {
         <div key={`diagram-${blockIdx}`} className="my-1 rounded-lg border border-[var(--border)] overflow-x-auto bg-[var(--bg-elevated)]">
           <pre
             className="p-4 text-sm leading-7 landing-mono text-[var(--accent)]"
-            style={{ whiteSpace: 'pre', tabSize: 4, margin: 0, minWidth: 'min-content' }}
+            style={{ whiteSpace: 'pre', tabSize: 4, margin: 0, overflow: 'visible' }}
           >
             {block.lines.join('\n')}
           </pre>

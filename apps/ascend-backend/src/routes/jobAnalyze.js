@@ -377,11 +377,13 @@ async function analyzeJobDescription(jobText, pageTitle) {
  * Returns: structured job analysis with role-specific prep recommendations
  */
 router.post('/', async (req, res) => {
-  // Check free usage limits (authenticate middleware guarantees req.user)
-  const userId = req.user.id;
-  const canUse = await freeUsageService.canUseFeature(userId, 'company_prep');
-  if (!canUse.allowed) {
-    return res.status(429).json({ error: canUse.reason || 'Free trial exhausted.', subscriptionRequired: true });
+  // Check free usage limits
+  const userId = req.user?.id;
+  if (userId) {
+    const canUse = await freeUsageService.canUseFeature(userId, 'company_prep');
+    if (!canUse.allowed) {
+      return res.status(429).json({ error: canUse.reason || 'Free trial exhausted.', subscriptionRequired: true });
+    }
   }
 
   const { url } = req.body;
@@ -437,7 +439,7 @@ router.post('/', async (req, res) => {
     const analysis = await analyzeJobDescription(jobText, pageTitle);
 
     // Deduct free usage on success
-    await freeUsageService.useFreeAllowance(userId, 'company_prep');
+    if (userId) await freeUsageService.useFreeAllowance(userId, 'company_prep');
 
     return res.json({
       success: true,
@@ -468,11 +470,13 @@ router.post('/', async (req, res) => {
  * Returns: same structured analysis, for when URL scraping doesn't work
  */
 router.post('/text', async (req, res) => {
-  // Check free usage limits (authenticate middleware guarantees req.user)
-  const userId = req.user.id;
-  const canUse = await freeUsageService.canUseFeature(userId, 'company_prep');
-  if (!canUse.allowed) {
-    return res.status(429).json({ error: canUse.reason || 'Free trial exhausted.', subscriptionRequired: true });
+  // Check free usage limits
+  const userId = req.user?.id;
+  if (userId) {
+    const canUse = await freeUsageService.canUseFeature(userId, 'company_prep');
+    if (!canUse.allowed) {
+      return res.status(429).json({ error: canUse.reason || 'Free trial exhausted.', subscriptionRequired: true });
+    }
   }
 
   const { text, title } = req.body;
@@ -480,15 +484,12 @@ router.post('/text', async (req, res) => {
   if (!text || typeof text !== 'string' || text.trim().length < 50) {
     return res.status(400).json({ error: 'Please provide at least 50 characters of job description text.' });
   }
-  if (text.length > 50000) {
-    return res.status(400).json({ error: 'Text too long (max 50,000 characters)' });
-  }
 
   try {
     const jobText = cleanText(text);
     const analysis = await analyzeJobDescription(jobText, title || '');
     // Deduct free usage on success
-    await freeUsageService.useFreeAllowance(userId, 'company_prep');
+    if (userId) await freeUsageService.useFreeAllowance(userId, 'company_prep');
     return res.json({ success: true, source: 'text', ...analysis });
   } catch (err) {
     console.error('[job-analyze/text] Error:', err.message);

@@ -141,29 +141,6 @@ const JOB_ROLES = [
   },
 ];
 
-const MORE_ROLES = [
-  { id: 'cloud', label: 'Cloud Engineer' },
-  { id: 'platform', label: 'Platform Engineer' },
-  { id: 'security', label: 'Security Engineer' },
-  { id: 'sre', label: 'Site Reliability Engineer' },
-  { id: 'data_scientist', label: 'Data Scientist' },
-  { id: 'data_analyst', label: 'Data Analyst' },
-  { id: 'tech_lead', label: 'Technical Lead' },
-  { id: 'staff', label: 'Staff Engineer' },
-  { id: 'principal', label: 'Principal Engineer' },
-  { id: 'tpm', label: 'Technical Program Manager' },
-  { id: 'product_manager', label: 'Product Manager (Technical)' },
-  { id: 'ios', label: 'iOS Developer' },
-  { id: 'android', label: 'Android Developer' },
-  { id: 'blockchain', label: 'Blockchain / Web3 Developer' },
-  { id: 'game_dev', label: 'Game Developer' },
-  { id: 'embedded', label: 'Embedded Systems Engineer' },
-  { id: 'dba', label: 'Database Administrator' },
-  { id: 'network', label: 'Network Engineer' },
-  { id: 'ai_researcher', label: 'AI / ML Researcher' },
-  { id: 'devsecops', label: 'DevSecOps Engineer' },
-];
-
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_TYPES = {
   'application/pdf': '.pdf',
@@ -191,34 +168,8 @@ export default function OnboardingPage() {
   const [submitting, setSubmitting] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [error, setError] = useState('');
-  const [isReturningUser, setIsReturningUser] = useState(false);
-  const [showMoreRoles, setShowMoreRoles] = useState(false);
 
   const fileInputRef = useRef(null);
-
-  // Fetch existing onboarding data for returning users
-  useEffect(() => {
-    if (!accessToken) return;
-    (async () => {
-      try {
-        const res = await fetch(`${API_URL}/api/onboarding/status`, {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        });
-        if (res.ok) {
-          const data = await res.json();
-          if (data.job_roles && data.job_roles.length > 0) {
-            setSelectedRoles(data.job_roles);
-            setIsReturningUser(true);
-          }
-          if (data.has_resume) {
-            setUploadedFileName('Previously uploaded resume');
-            setResumeText('__existing__');
-            setIsReturningUser(true);
-          }
-        }
-      } catch { /* ignore */ }
-    })();
-  }, [accessToken]);
 
   const toggleRole = useCallback((roleId) => {
     setSelectedRoles((prev) =>
@@ -315,7 +266,7 @@ export default function OnboardingPage() {
         },
         body: JSON.stringify({
           job_roles: selectedRoles,
-          resume_text: resumeText === '__existing__' ? null : (resumeText || null),
+          resume_text: resumeText || null,
         }),
       });
 
@@ -363,7 +314,7 @@ export default function OnboardingPage() {
               <div className="animate-fadeIn">
                 <div className="text-center mb-8">
                   <h1 className="text-2xl font-bold text-[var(--text-primary)] mb-2">
-                    {isReturningUser ? 'Update your target roles' : 'What roles are you interviewing for?'}
+                    What roles are you interviewing for?
                   </h1>
                   <p className="text-[var(--text-secondary)]">
                     Select all that apply — we'll tailor your preparation
@@ -399,49 +350,6 @@ export default function OnboardingPage() {
                   })}
                 </div>
 
-                {/* More Roles expandable */}
-                <div className="mb-6">
-                  <button
-                    onClick={() => setShowMoreRoles((v) => !v)}
-                    className="flex items-center gap-2 mx-auto text-sm font-medium transition-colors text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
-                  >
-                    <svg
-                      className={`w-4 h-4 transition-transform duration-200 ${showMoreRoles ? 'rotate-180' : ''}`}
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                    >
-                      <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                    </svg>
-                    {showMoreRoles ? 'Show fewer roles' : `More roles (${MORE_ROLES.length})`}
-                  </button>
-
-                  {showMoreRoles && (
-                    <div className="mt-3 flex flex-wrap gap-2 justify-center animate-fadeIn">
-                      {MORE_ROLES.map((role) => {
-                        const selected = selectedRoles.includes(role.id);
-                        return (
-                          <button
-                            key={role.id}
-                            onClick={() => toggleRole(role.id)}
-                            className={`px-3.5 py-2 rounded-lg border text-xs font-medium transition-all duration-200 cursor-pointer
-                              ${selected
-                                ? 'border-[var(--accent)] bg-[var(--accent-subtle)] text-[var(--accent)]'
-                                : 'border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border-hover)] hover:bg-[var(--bg-app)]'
-                              }`}
-                          >
-                            {selected && (
-                              <svg className="w-3 h-3 inline-block mr-1 -mt-0.5" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                              </svg>
-                            )}
-                            {role.label}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-
                 <button
                   onClick={() => setStep(2)}
                   disabled={selectedRoles.length === 0}
@@ -461,12 +369,10 @@ export default function OnboardingPage() {
               <div className="animate-fadeIn">
                 <div className="text-center mb-8">
                   <h1 className="text-2xl font-bold text-[var(--text-primary)] mb-2">
-                    {isReturningUser ? 'Update your resume' : 'Upload your resume'}
+                    Upload your resume
                   </h1>
                   <p className="text-[var(--text-secondary)]">
-                    {isReturningUser
-                      ? 'Upload your latest resume to keep your prep up to date'
-                      : "We'll use this to personalize your interview prep"}
+                    We'll use this to personalize your interview prep
                   </p>
                 </div>
 
@@ -597,14 +503,8 @@ export default function OnboardingPage() {
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                       </svg>
                     )}
-                    {submitting ? 'Saving...' : isReturningUser ? 'Save Changes' : 'Complete Setup'}
+                    {submitting ? 'Setting up...' : 'Complete Setup'}
                   </button>
-
-                  {!uploadedFileName && !resumeText.trim() && (
-                    <p className="text-xs text-center text-amber-500">
-                      Uploading your resume helps us personalize your interview prep
-                    </p>
-                  )}
 
                   <div className="flex items-center justify-between">
                     <button
@@ -616,15 +516,13 @@ export default function OnboardingPage() {
                       </svg>
                       Back
                     </button>
-                    {!isReturningUser && (
-                      <button
-                        onClick={handleComplete}
-                        disabled={submitting}
-                        className="text-sm text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
-                      >
-                        Skip for now
-                      </button>
-                    )}
+                    <button
+                      onClick={handleComplete}
+                      disabled={submitting}
+                      className="text-sm text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
+                    >
+                      Skip for now
+                    </button>
                   </div>
                 </div>
               </div>
