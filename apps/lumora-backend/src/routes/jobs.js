@@ -186,15 +186,16 @@ router.get('/', async (req, res, next) => {
       const keywords = categoryKeywords[role];
       if (keywords) {
         const roleConds = keywords.map((kw) => {
-          const cond = `j.title ILIKE $${paramIdx}`;
+          // Search both title AND description — many DevOps/SRE/Platform roles
+          // have generic titles but role-specific descriptions
+          const cond = `(j.title ILIKE $${paramIdx} OR j.job_description ILIKE $${paramIdx})`;
           params.push(`%${kw}%`);
           paramIdx++;
           return cond;
         });
         conditions.push(`(${roleConds.join(' OR ')})`);
       } else {
-        // Fallback for unknown roles — plain ILIKE
-        conditions.push(`j.title ILIKE $${paramIdx}`);
+        conditions.push(`(j.title ILIKE $${paramIdx} OR j.job_description ILIKE $${paramIdx})`);
         params.push(`%${req.query.role}%`);
         paramIdx++;
       }
