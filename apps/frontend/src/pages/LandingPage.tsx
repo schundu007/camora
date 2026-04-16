@@ -351,7 +351,9 @@ const COMP_BARS = [
 /* ── Desktop Download Buttons (paywall-gated) ────────────── */
 function DesktopDownloadButtons({ primaryUrl, primaryIcon, primaryLabel, urls, os, isMac, RELEASES, AppleIcon, WindowsIcon }: any) {
   const { subscription, subscriptionLoading, isAuthenticated } = useAuth();
-  const isPaid = !subscriptionLoading && subscription?.plan && subscription.plan !== 'free';
+  const hasDesktopAccess = subscription?.hasDesktopAccess ?? false;
+  const plan = subscription?.plan || 'free';
+  const isAnnualWithoutAddon = plan === 'annual' && !hasDesktopAccess;
 
   if (subscriptionLoading) {
     return (
@@ -361,7 +363,28 @@ function DesktopDownloadButtons({ primaryUrl, primaryIcon, primaryLabel, urls, o
     );
   }
 
-  if (!isPaid) {
+  // Annual users without addon — direct them to download page for addon checkout
+  if (isAnnualWithoutAddon) {
+    return (
+      <div className="flex flex-col items-center gap-2 flex-shrink-0">
+        <Link
+          to="/download"
+          className="inline-flex items-center gap-2.5 px-6 py-3 text-sm font-semibold text-white rounded-xl transition-all duration-200 hover:opacity-90"
+          style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', boxShadow: '0 4px 14px rgba(99,102,241,0.3)' }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
+          </svg>
+          Add Desktop — $29/mo
+        </Link>
+        <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Add-on for Annual plan</span>
+      </div>
+    );
+  }
+
+  if (!hasDesktopAccess) {
     return (
       <div className="flex flex-col items-center gap-2 flex-shrink-0">
         <Link
@@ -373,9 +396,9 @@ function DesktopDownloadButtons({ primaryUrl, primaryIcon, primaryLabel, urls, o
             <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
             <path d="M7 11V7a5 5 0 0 1 10 0v4" />
           </svg>
-          {isAuthenticated ? 'Upgrade to Download' : 'Sign In to Download'}
+          {!isAuthenticated ? 'Sign In to Download' : 'Upgrade to Pro — $49/mo'}
         </Link>
-        <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Paid plans only</span>
+        <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Included with Pro &middot; Annual + $29/mo</span>
       </div>
     );
   }

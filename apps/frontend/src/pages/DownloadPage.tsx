@@ -252,9 +252,36 @@ function LockIcon({ size = 16 }: { size?: number }) {
 
 export default function DownloadPage() {
   const [detectedOS, setDetectedOS] = useState<OSType>('mac-arm');
-  const { subscription, subscriptionLoading, isAuthenticated } = useAuth();
+  const [addonLoading, setAddonLoading] = useState(false);
+  const { subscription, subscriptionLoading, isAuthenticated, token } = useAuth();
 
-  const isPaid = !subscriptionLoading && subscription?.plan && subscription.plan !== 'free';
+  const plan = subscription?.plan || 'free';
+  const hasDesktopAccess = subscription?.hasDesktopAccess ?? false;
+  const isAnnualWithoutAddon = plan === 'annual' && !hasDesktopAccess;
+  const isPaid = hasDesktopAccess; // Only Pro or Annual+addon get downloads
+
+  const LUMORA_API = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
+
+  const handleAddonCheckout = async () => {
+    if (!token) return;
+    setAddonLoading(true);
+    try {
+      const res = await fetch(`${LUMORA_API}/api/v1/billing/checkout`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          price_id: import.meta.env.VITE_STRIPE_PRICE_DESKTOP_ADDON || '',
+          success_url: `${window.location.origin}/download?checkout=success`,
+          cancel_url: `${window.location.origin}/download`,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.url) window.location.href = data.url;
+      }
+    } catch { /* checkout failed */ }
+    setAddonLoading(false);
+  };
 
   useEffect(() => {
     document.title = 'Download Camora Desktop — AI Interview Co-Pilot';
@@ -388,6 +415,37 @@ export default function DownloadPage() {
                     v{APP_VERSION} &middot; {primary.fileType} &middot; {primary.size}
                   </span>
                 </>
+              ) : isAnnualWithoutAddon ? (
+                <>
+                  <button
+                    onClick={handleAddonCheckout}
+                    disabled={addonLoading}
+                    className="group inline-flex items-center gap-3 px-8 py-4 rounded-2xl text-base font-bold transition-all duration-200 disabled:opacity-60"
+                    style={{
+                      background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                      color: '#ffffff',
+                      boxShadow: '0 4px 24px rgba(99,102,241,0.35), 0 0 0 1px rgba(255,255,255,0.1) inset',
+                    }}
+                    onMouseEnter={e => {
+                      (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 40px rgba(99,102,241,0.5), 0 0 0 1px rgba(255,255,255,0.15) inset';
+                      (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)';
+                    }}
+                    onMouseLeave={e => {
+                      (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 24px rgba(99,102,241,0.35), 0 0 0 1px rgba(255,255,255,0.1) inset';
+                      (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
+                    }}
+                  >
+                    {addonLoading ? (
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <DownloadIcon size={22} />
+                    )}
+                    Add Desktop App — $29/mo
+                  </button>
+                  <span className="text-xs" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                    Add-on for your Annual plan &middot; Cancel anytime
+                  </span>
+                </>
               ) : (
                 <>
                   <Link
@@ -408,10 +466,10 @@ export default function DownloadPage() {
                     }}
                   >
                     <LockIcon size={20} />
-                    {isAuthenticated ? 'Upgrade to Download' : 'Sign In to Download'}
+                    {!isAuthenticated ? 'Sign In to Download' : 'Upgrade to Pro — $49/mo'}
                   </Link>
                   <span className="text-xs" style={{ color: 'rgba(255,255,255,0.45)' }}>
-                    Available on Starter, Pro, and Annual plans
+                    Included with Pro plan &middot; Annual users can add for $29/mo
                   </span>
                 </>
               )}
@@ -528,6 +586,19 @@ export default function DownloadPage() {
                         <DownloadIcon size={16} />
                         Download
                       </a>
+                    ) : isAnnualWithoutAddon ? (
+                      <button
+                        onClick={handleAddonCheckout}
+                        disabled={addonLoading}
+                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 disabled:opacity-60"
+                        style={{
+                          background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                          color: '#fff',
+                        }}
+                      >
+                        <DownloadIcon size={14} />
+                        Add $29/mo
+                      </button>
                     ) : (
                       <Link
                         to={isAuthenticated ? '/pricing' : '/login?redirect=/download'}
@@ -547,7 +618,7 @@ export default function DownloadPage() {
                         }}
                       >
                         <LockIcon size={14} />
-                        Upgrade
+                        Upgrade to Pro
                       </Link>
                     )}
                   </div>
