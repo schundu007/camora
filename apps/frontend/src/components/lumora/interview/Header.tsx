@@ -162,9 +162,9 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
 
         {/* Navigation — pill tabs with icon+label, Jakarta Sans bold */}
         <div data-tour="tabs" className="flex items-center h-full shrink-0 px-1" style={{ borderRight: '1px solid rgba(255,255,255,0.04)' }}>
-          <Link to="/capra/prepare" className="flex items-center gap-1.5 px-3 py-1.5 mx-0.5 rounded-lg text-[11px] transition-all hover:opacity-90" style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.2), rgba(139,92,246,0.15))', color: '#a5b4fc', fontFamily: "'Source Sans 3', sans-serif", fontWeight: 700, border: '1px solid rgba(99,102,241,0.25)' }} title="Dashboard">
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1" /></svg>
-            <span>Dashboard</span>
+          <Link to="/capra/prepare" className="flex items-center gap-1 px-2 py-1 mx-0.5 rounded-md text-[11px] transition-all" style={{ color: 'rgba(255,255,255,0.4)', fontFamily: "'Source Sans 3', sans-serif", fontWeight: 700 }} title="Prepare">
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
+            <span className="hidden xl:inline">Prepare</span>
           </Link>
           {TABS.map((tab) => (
             <button key={tab.id} onClick={() => handleTabClick(tab.id)}
@@ -185,7 +185,7 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
 
         {/* Platform — monospace badge style */}
         <div data-tour="platform" className="hidden lg:flex items-center px-2 h-full shrink-0" style={{ borderRight: '1px solid rgba(255,255,255,0.04)' }}>
-          <select className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-2 rounded-md cursor-pointer focus:outline-none"
+          <select className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-1 rounded-md cursor-pointer focus:outline-none"
             style={{ background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.06)' }} defaultValue="general">
             <option value="general">General</option>
             <option value="zoom">Zoom</option>
@@ -220,7 +220,7 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
             status.state === 'listen' || status.state === 'write' ? 'bg-emerald-400 animate-pulse' :
             'bg-white/20'
           }`} style={status.state === 'ready' ? { boxShadow: '0 0 6px rgba(52,211,153,0.5)' } : {}} />
-          <span className="text-[10px] font-mono font-medium tracking-wide truncate max-w-[90px] sm:max-w-[140px]" style={{ color: 'rgba(255,255,255,0.35)' }}>
+          <span className="text-[10px] font-mono font-medium tracking-wide truncate max-w-[90px]" style={{ color: 'rgba(255,255,255,0.35)' }}>
             {status.message}
           </span>
         </div>
