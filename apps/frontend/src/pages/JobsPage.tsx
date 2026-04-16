@@ -123,8 +123,12 @@ interface Job {
   salary_max?: number;
   job_url: string;
   source?: string;
-  posted_at?: string;
+  posted_date?: string;
+  date_found?: string;
   ai_tech_stack?: string[];
+  ai_summary?: string;
+  department?: string;
+  company_industry?: string;
   description?: string;
 }
 
@@ -177,13 +181,31 @@ const POSTED_WITHIN = [
 
 /* ──────────────────────────────── Helpers ──────────────────────────────── */
 
-function formatSalary(min?: number, max?: number): string {
-  if (!min && !max) return 'Salary: Not disclosed';
+function formatSalary(min?: number, max?: number): string | null {
+  if (!min && !max) return null;
   const fmt = (n: number) => `$${Math.round(n / 1000)}K`;
-  if (min && max) return `${fmt(min)} - ${fmt(max)}`;
+  if (min && max) return `${fmt(min)} – ${fmt(max)}`;
   if (min) return `${fmt(min)}+`;
   if (max) return `Up to ${fmt(max)}`;
-  return 'Salary: Not disclosed';
+  return null;
+}
+
+function timeAgo(dateStr?: string): string | null {
+  if (!dateStr) return null;
+  const now = Date.now();
+  const then = new Date(dateStr).getTime();
+  if (isNaN(then)) return null;
+  const diffMs = now - then;
+  const mins = Math.floor(diffMs / 60000);
+  if (mins < 60) return 'Just now';
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days === 1) return '1d ago';
+  if (days < 7) return `${days}d ago`;
+  if (days < 30) return `${Math.floor(days / 7)}w ago`;
+  if (days < 365) return `${Math.floor(days / 30)}mo ago`;
+  return `${Math.floor(days / 365)}y ago`;
 }
 
 function detectCategory(title: string): string {
@@ -1240,38 +1262,75 @@ export default function JobsPage() {
                       </div>
                     </div>
 
-                    {/* Expandable details — pushes only cards below in same column */}
-                    <div className="jobs-card-details" style={{ maxHeight: '0', overflow: 'hidden', transition: 'max-height 0.35s ease, padding 0.35s ease', padding: '0 16px' }}>
-                      {/* Location + Work Type */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '12px', fontSize: '13px', color: 'var(--text-secondary)' }}>
+                    {/* Card details */}
+                    <div style={{ padding: '12px 16px 0' }}>
+                      {/* Location + Work Type + Posted */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', fontSize: '12px', color: 'var(--text-secondary)' }}>
                         {job.location && (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            <svg width="13" height="13" fill="none" stroke="var(--text-muted)" viewBox="0 0 24 24" strokeWidth={1.8}>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '3px', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            <svg width="12" height="12" fill="none" stroke="var(--text-muted)" viewBox="0 0 24 24" strokeWidth={1.8}>
                               <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
                               <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
                             </svg>
-                            <span>{job.location}</span>
-                          </div>
+                            {job.location.length > 35 ? job.location.slice(0, 35) + '...' : job.location}
+                          </span>
                         )}
-                        <span style={{ fontSize: '11px', fontWeight: 600, color: workType === 'Remote' ? '#059669' : workType === 'Hybrid' ? '#d97706' : 'var(--text-muted)', background: workType === 'Remote' ? '#ecfdf5' : workType === 'Hybrid' ? '#fffbeb' : 'var(--bg-elevated)', padding: '2px 8px', borderRadius: '9999px' }}>{workType}</span>
+                        <span style={{ fontSize: '10px', fontWeight: 600, color: workType === 'Remote' ? '#059669' : workType === 'Hybrid' ? '#d97706' : 'var(--text-muted)', background: workType === 'Remote' ? 'rgba(5,150,105,0.1)' : workType === 'Hybrid' ? 'rgba(217,119,6,0.1)' : 'var(--bg-elevated)', padding: '2px 7px', borderRadius: '9999px' }}>{workType}</span>
                       </div>
 
-                      {/* Salary */}
-                      <p style={{ fontSize: '14px', fontWeight: 600, color: (job.salary_min || job.salary_max) ? 'var(--text-primary)' : 'var(--text-muted)', margin: '10px 0 0 0' }}>
-                        {salary}
-                      </p>
-
-                      {/* Action links */}
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid var(--border)', paddingTop: '12px', marginTop: '12px', paddingBottom: '14px' }}>
-                        <a href={job.job_url} target="_blank" rel="noopener noreferrer" className="jobs-action-link" style={{ fontSize: '13px', fontWeight: 600, color: 'var(--accent)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          Apply Now
-                          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" /></svg>
-                        </a>
-                        <Link to={`/jobs/${job.id}/prepare`} className="jobs-action-link-gray" style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          Prepare
-                          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" /></svg>
-                        </Link>
+                      {/* Salary + Posted date row */}
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '8px' }}>
+                        {salary ? (
+                          <span style={{ fontSize: '13px', fontWeight: 700, color: '#10b981' }}>{salary}</span>
+                        ) : (
+                          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Salary not listed</span>
+                        )}
+                        {timeAgo(job.posted_date || job.date_found) && (
+                          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{timeAgo(job.posted_date || job.date_found)}</span>
+                        )}
                       </div>
+
+                      {/* Department + Source */}
+                      {(job.department || job.source) && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '8px', flexWrap: 'wrap' }}>
+                          {job.department && (
+                            <span style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-secondary)', background: 'var(--bg-elevated)', padding: '2px 7px', borderRadius: '4px' }}>
+                              {job.department.length > 25 ? job.department.slice(0, 25) + '...' : job.department}
+                            </span>
+                          )}
+                          {job.source && (
+                            <span style={{ fontSize: '10px', fontWeight: 500, color: 'var(--text-muted)' }}>
+                              via {job.source}
+                            </span>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Tech stack tags */}
+                      {job.ai_tech_stack && job.ai_tech_stack.length > 0 && (
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '8px' }}>
+                          {(Array.isArray(job.ai_tech_stack) ? job.ai_tech_stack : []).slice(0, 5).map((tech) => (
+                            <span key={tech} style={{ fontSize: '10px', fontWeight: 600, color: 'var(--accent)', background: 'rgba(99,102,241,0.08)', padding: '2px 7px', borderRadius: '4px', border: '1px solid rgba(99,102,241,0.15)' }}>
+                              {tech}
+                            </span>
+                          ))}
+                          {job.ai_tech_stack.length > 5 && (
+                            <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>+{job.ai_tech_stack.length - 5}</span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Action links */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid var(--border)', padding: '10px 16px', marginTop: '10px' }}>
+                      <a href={job.job_url} target="_blank" rel="noopener noreferrer" className="jobs-action-link" style={{ fontSize: '12px', fontWeight: 600, color: 'var(--accent)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        Apply
+                        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" /></svg>
+                      </a>
+                      <Link to={`/jobs/${job.id}/prepare`} className="jobs-action-link-gray" style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        Prepare
+                        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" /></svg>
+                      </Link>
                     </div>
                   </div>
                 );
@@ -1331,10 +1390,6 @@ export default function JobsPage() {
           box-shadow: 0 12px 40px rgba(0,0,0,0.15) !important;
           border-color: #7c8db5 !important;
           z-index: 10;
-        }
-        .jobs-card:hover .jobs-card-details {
-          max-height: 200px !important;
-          padding: 0 16px !important;
         }
         .jobs-grid { column-count: 4; }
         @media (max-width: 1280px) {
