@@ -7,6 +7,7 @@
 import { Router } from 'express';
 import { queryJobs } from '../services/jobsDb.js';
 import { authenticate } from '../middleware/authenticate.js';
+import { extractSalary } from '../services/salaryExtractor.js';
 
 const router = Router();
 
@@ -366,7 +367,69 @@ router.get('/:id', async (req, res, next) => {
       return res.status(404).json({ detail: 'Job not found' });
     }
 
-    res.json(result.rows[0]);
+    const job = result.rows[0];
+
+    // Lazy backfill: extract salary from description if missing
+    if (!job.salary_min && !job.salary_max && job.job_description) {
+      const salary = extractSalary(job.job_description);
+      if (salary && (salary.min || salary.max)) {
+        try {
+          await queryJobs(
+            'UPDATE jobs SET salary_min = COALESCE(salary_min, $1), salary_max = COALESCE(salary_max, $2) WHERE id = $3',
+            [salary.min, salary.max, job.id],
+          );
+          job.salary_min = salary.min;
+          job.salary_max = salary.max;
+        } catch { /* ignore update failure */ }
+      }
+    }
+
+    res.json(job);
+  } catch (err) {
+    if (err.message === 'Jobs database not configured') {
+      return res.status(503).json({ detail: 'Jobs database not configured' });
+    }
+    next(err);
+  }
+});
+
+/**
+ * POST /backfill-salaries — Extract salaries from job descriptions in bulk.
+ *
+ * Finds jobs with NULL salary_min and a non-empty description,
+ * runs salary extraction, and updates the database.
+ * Returns count of updated jobs.
+ */
+router.post('/backfill-salaries', async (req, res, next) => {
+  try {
+    const batchSize = Math.min(parseInt(req.query.limit) || 500, 2000);
+
+    const result = await queryJobs(
+      `SELECT id, job_description FROM jobs
+       WHERE salary_min IS NULL AND salary_max IS NULL
+         AND job_description IS NOT NULL AND LENGTH(job_description) > 100
+         AND is_active = true
+       LIMIT $1`,
+      [batchSize],
+    );
+
+    let updated = 0;
+    for (const row of result.rows) {
+      const salary = extractSalary(row.job_description);
+      if (salary && (salary.min || salary.max)) {
+        await queryJobs(
+          'UPDATE jobs SET salary_min = $1, salary_max = $2 WHERE id = $3',
+          [salary.min, salary.max, row.id],
+        );
+        updated++;
+      }
+    }
+
+    res.json({
+      processed: result.rows.length,
+      updated,
+      remaining: result.rows.length === batchSize ? 'more jobs may exist, run again' : 0,
+    });
   } catch (err) {
     if (err.message === 'Jobs database not configured') {
       return res.status(503).json({ detail: 'Jobs database not configured' });
