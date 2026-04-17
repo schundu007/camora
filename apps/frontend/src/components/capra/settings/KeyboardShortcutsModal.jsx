@@ -48,7 +48,7 @@ export default function KeyboardShortcutsModal({ onClose }) {
         <div className="px-4 py-4 space-y-4 overflow-y-auto" style={{ maxHeight: 'calc(80vh - 52px)' }}>
           {shortcuts.map((section) => (
             <div key={section.category}>
-              <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: '#8b5cf6' }}>
+              <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: '#91C733' }}>
                 {section.category}
               </p>
               <div className="space-y-1.5">

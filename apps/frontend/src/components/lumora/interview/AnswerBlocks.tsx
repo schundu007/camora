@@ -45,7 +45,7 @@ function Block({ block, delay }: { block: ParsedBlock; delay: number }) {
     case 'HEADLINE':
       return (
         <div className="relative rounded-xl overflow-hidden animate-fade-up" style={{...style, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(8px)'}}>
-          <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: 'linear-gradient(90deg, #6366f1, #8b5cf6, #a5b4fc)' }} />
+          <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: 'linear-gradient(90deg, #76B900, #91C733, #a5b4fc)' }} />
           <div className="p-5">
             <p className="text-[15px] text-white/90 leading-relaxed font-medium" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>{cleanText(block.content)}</p>
           </div>
@@ -60,7 +60,7 @@ function Block({ block, delay }: { block: ParsedBlock; delay: number }) {
       return (
         <div className="rounded-xl overflow-hidden animate-fade-up" style={{...style, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)'}}>
           <div className="flex items-center gap-2 px-4 py-2.5 border-b border-white/6">
-            <svg className="w-3.5 h-3.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            <svg className="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
             <h4 className="text-[10px] font-mono font-bold text-white/50 uppercase tracking-widest">Key Points</h4>
             <span className="ml-auto text-[10px] font-mono text-white/30 border border-white/10 rounded-full px-2 py-0.5">{lines.length}</span>
           </div>
@@ -72,7 +72,7 @@ function Block({ block, delay }: { block: ParsedBlock; delay: number }) {
               const text = hasLabel ? line.slice(colonIdx + 1).trim() : line;
               return (
                 <div key={i} className="flex items-start gap-3">
-                  <span className="flex items-center justify-center w-5 h-5 rounded-md bg-indigo-500/15 text-indigo-300 text-[10px] font-bold shrink-0 mt-0.5 font-mono">{i + 1}</span>
+                  <span className="flex items-center justify-center w-5 h-5 rounded-md bg-emerald-600/15 text-emerald-300 text-[10px] font-bold shrink-0 mt-0.5 font-mono">{i + 1}</span>
                   <div className="text-[13px] text-white/70 leading-relaxed">
                     {label && <span className="font-semibold text-white/90">{label}: </span>}
                     {text}
@@ -102,7 +102,7 @@ function Block({ block, delay }: { block: ParsedBlock; delay: number }) {
           <div className="flex items-center justify-between px-4 py-2 border-b border-white/6">
             <div className="flex items-center gap-2">
               <div className="flex gap-1"><div className="w-2 h-2 rounded-full bg-red-400/40" /><div className="w-2 h-2 rounded-full bg-amber-400/40" /><div className="w-2 h-2 rounded-full bg-emerald-400/40" /></div>
-              <span className="font-mono text-[10px] font-bold text-indigo-400/80 uppercase tracking-widest">{lang}</span>
+              <span className="font-mono text-[10px] font-bold text-emerald-400/80 uppercase tracking-widest">{lang}</span>
             </div>
             <button className="text-[10px] font-mono text-white/30 hover:text-white/70 px-2 py-0.5 border border-white/10 rounded hover:border-white/25 transition-all opacity-0 group-hover:opacity-100"
               onClick={() => navigator.clipboard.writeText(block.content)}>Copy</button>
@@ -490,7 +490,7 @@ function RequirementsList({ content, type }: { content: string; type: 'functiona
       {items.map((item, i) => (
         <li key={i} className="flex items-start gap-2.5 text-sm text-text-muted leading-relaxed">
           {type === 'functional' ? (
-            <svg className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+            <svg className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
               <circle cx="10" cy="10" r="4" />
             </svg>
           ) : (
@@ -523,7 +523,7 @@ function ScaleMathList({ content }: { content: string }) {
     <div className="space-y-3">
       <div className="grid grid-cols-2 gap-2">
         {metrics.map((m, i) => (
-          <div key={i} className="rounded-lg border border-indigo-500/15 bg-indigo-500/[0.04] p-3">
+          <div key={i} className="rounded-lg border border-emerald-500/15 bg-emerald-600/[0.04] p-3">
             <div className="font-mono text-[10px] font-bold text-text-dim uppercase tracking-wider mb-1.5">
               {m.label}
             </div>
@@ -580,7 +580,7 @@ function DeepDesignList({ content }: { content: string }) {
             <div className="space-y-0.5 pl-7">
               {layer.bullets.map((bullet, j) => (
                 <div key={j} className="flex items-start gap-1.5">
-                  <svg className="w-3.5 h-3.5 text-indigo-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                  <svg className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
                   <span className="text-[12px] text-text-muted leading-relaxed">{bullet}</span>
@@ -700,7 +700,7 @@ function FollowupList({ content }: { content: string }) {
             </span>
             <span className="text-sm font-semibold text-text leading-relaxed">{pair.question}</span>
           </div>
-          <div className="ml-9 border-l-2 border-indigo-500/30 pl-4 py-1">
+          <div className="ml-9 border-l-2 border-emerald-500/30 pl-4 py-1">
             <span className="text-[13px] text-text-muted leading-relaxed">{pair.answer}</span>
           </div>
         </div>

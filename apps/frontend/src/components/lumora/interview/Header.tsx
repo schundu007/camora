@@ -292,7 +292,7 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
               onKeyDown={handleTextareaKeyDown}
               placeholder="Paste a coding problem or system design prompt... (Cmd+Enter to send)"
               rows={4}
-              className="font-code flex-1 bg-gray-900/80 border border-gray-700/50 rounded-lg px-3 py-2 text-sm text-white placeholder:text-gray-500 resize-y outline-none focus:ring-1 focus:ring-indigo-500/50 focus:border-indigo-500/50 min-h-[80px] max-h-[300px]"
+              className="font-code flex-1 bg-gray-900/80 border border-gray-700/50 rounded-lg px-3 py-2 text-sm text-white placeholder:text-gray-500 resize-y outline-none focus:ring-1 focus:ring-emerald-500/50 focus:border-emerald-500/50 min-h-[80px] max-h-[300px]"
             />
             <div className="flex flex-col gap-1.5 shrink-0">
               <button

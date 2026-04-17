@@ -7,12 +7,12 @@ const isElectron = false; // Electron removed in unified frontend
 const CODING_PLATFORMS = {
   hackerrank: { name: 'HackerRank', color: '#1ba94c', url: 'hackerrank.com' },
   leetcode: { name: 'LeetCode', color: '#f97316', url: 'leetcode.com' },
-  coderpad: { name: 'CoderPad', color: '#6366f1', url: 'coderpad.io' },
+  coderpad: { name: 'CoderPad', color: '#76B900', url: 'coderpad.io' },
   codesignal: { name: 'CodeSignal', color: '#3b82f6', url: 'codesignal.com' },
 };
 
 const PREP_PLATFORMS = {
-  techprep: { name: 'TechPrep', color: '#8b5cf6', url: 'techprep.app' },
+  techprep: { name: 'TechPrep', color: '#91C733', url: 'techprep.app' },
   algomaster: { name: 'AlgoMaster', color: '#76B900', url: 'algomaster.io' },
   neetcode: { name: 'NeetCode', color: '#f43f5e', url: 'neetcode.io' },
   designgurus: { name: 'DesignGurus', color: '#0ea5e9', url: 'designgurus.io' },

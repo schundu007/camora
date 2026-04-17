@@ -6,8 +6,8 @@ export default function CamoraLogo({ size = 36 }: { size?: number }) {
     <svg width={size} height={size} viewBox="0 0 48 48" fill="none">
       <defs>
         <linearGradient id={`${id}-g`} x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#818cf8" />
-          <stop offset="100%" stopColor="#6366f1" />
+          <stop offset="0%" stopColor="#91C733" />
+          <stop offset="100%" stopColor="#76B900" />
         </linearGradient>
       </defs>
 

@@ -447,8 +447,8 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
           </h4>
           <div className="flex items-center gap-1.5 flex-wrap">
             <div className="flex rounded border border-[var(--border)] overflow-hidden">
-              <button onClick={() => handleGenerateDiagram('overview', diagramDirection)} className={`px-2 py-1 text-[10px] font-semibold transition-colors ${diagramDetailLevel === 'overview' ? 'bg-indigo-500 text-white' : 'bg-[var(--bg-surface)] text-[var(--text-muted)] hover:bg-[var(--bg-elevated)]'}`}>Overview</button>
-              <button onClick={() => handleGenerateDiagram('detailed', diagramDirection)} className={`px-2 py-1 text-[10px] font-semibold transition-colors ${diagramDetailLevel === 'detailed' ? 'bg-indigo-500 text-white' : 'bg-[var(--bg-surface)] text-[var(--text-muted)] hover:bg-[var(--bg-elevated)]'}`}>Detailed</button>
+              <button onClick={() => handleGenerateDiagram('overview', diagramDirection)} className={`px-2 py-1 text-[10px] font-semibold transition-colors ${diagramDetailLevel === 'overview' ? 'bg-emerald-600 text-white' : 'bg-[var(--bg-surface)] text-[var(--text-muted)] hover:bg-[var(--bg-elevated)]'}`}>Overview</button>
+              <button onClick={() => handleGenerateDiagram('detailed', diagramDirection)} className={`px-2 py-1 text-[10px] font-semibold transition-colors ${diagramDetailLevel === 'detailed' ? 'bg-emerald-600 text-white' : 'bg-[var(--bg-surface)] text-[var(--text-muted)] hover:bg-[var(--bg-elevated)]'}`}>Detailed</button>
             </div>
             <div className="flex rounded border border-[var(--border)] overflow-hidden">
               <button onClick={() => handleGenerateDiagram(diagramDetailLevel, 'LR')} className={`px-2 py-1 text-[10px] font-semibold transition-colors ${diagramDirection === 'LR' ? 'bg-blue-500 text-white' : 'bg-[var(--bg-surface)] text-[var(--text-muted)] hover:bg-[var(--bg-elevated)]'}`} title="Left to Right">L→R</button>
@@ -483,7 +483,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
               <>
                 {!diagramImgLoaded && (
                   <div className="flex flex-col items-center justify-center h-full text-[var(--text-muted)]">
-                    <svg className="w-6 h-6 animate-spin text-indigo-400 mb-2" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" /></svg>
+                    <svg className="w-6 h-6 animate-spin text-emerald-400 mb-2" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" /></svg>
                     <span className="text-xs">Loading diagram...</span>
                   </div>
                 )}
@@ -496,7 +496,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
             ) : null
           ) : generatingDiagram ? (
             <div className="flex flex-col items-center justify-center h-full text-[var(--text-muted)]">
-              <svg className="w-6 h-6 animate-spin text-indigo-400 mb-2" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" /></svg>
+              <svg className="w-6 h-6 animate-spin text-emerald-400 mb-2" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" /></svg>
               <span className="text-xs">Generating diagram...</span>
             </div>
           ) : diagramError ? (
@@ -508,7 +508,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
                   </div>
                   <p className="text-sm font-semibold text-[var(--text-primary)] mb-1">Free diagrams used up</p>
                   <p className="text-xs text-[var(--text-muted)] mb-4 text-center max-w-xs">Upgrade to Premium for unlimited architecture diagram generation.</p>
-                  <Link to="/pricing" className="px-4 py-2 bg-indigo-500 text-white text-xs font-bold rounded-lg hover:bg-indigo-600 transition-colors">View Plans</Link>
+                  <Link to="/pricing" className="px-4 py-2 bg-emerald-600 text-white text-xs font-bold rounded-lg hover:bg-emerald-700 transition-colors">View Plans</Link>
                 </>
               ) : (
                 <>

@@ -127,7 +127,7 @@ export default function InterviewQuestionsPage() {
               return (
                 <div
                   key={i}
-                  className={`relative bg-[var(--bg-surface)] border-0 rounded-xl p-5 shadow-[0_4px_24px_rgba(99,102,241,0.12)] ${isBlurred ? 'select-none' : ''}`}
+                  className={`relative bg-[var(--bg-surface)] border-0 rounded-xl p-5 shadow-[0_4px_24px_rgba(118,185,0,0.12)] ${isBlurred ? 'select-none' : ''}`}
                 >
                   {isBlurred && (
                     <div className="absolute inset-0 backdrop-blur-sm bg-[var(--bg-surface)]/60 rounded-xl z-10 flex items-center justify-center">
@@ -159,7 +159,7 @@ export default function InterviewQuestionsPage() {
           <h2 className="text-xl font-bold text-[var(--text-primary)] mb-5">Interview Tips</h2>
           <div className="grid gap-3 sm:grid-cols-3">
             {company.tips.map((tip, i) => (
-              <div key={i} className="bg-[var(--bg-surface)] border-0 rounded-xl p-5 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
+              <div key={i} className="bg-[var(--bg-surface)] border-0 rounded-xl p-5 shadow-[0_4px_24px_rgba(118,185,0,0.12)]">
                 <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 text-sm font-bold mb-3">
                   {i + 1}
                 </span>
@@ -170,7 +170,7 @@ export default function InterviewQuestionsPage() {
         </section>
 
         {/* CTA */}
-        <section className="text-center bg-[var(--bg-surface)] border-0 rounded-2xl p-8 shadow-[0_4px_24px_rgba(99,102,241,0.12)]">
+        <section className="text-center bg-[var(--bg-surface)] border-0 rounded-2xl p-8 shadow-[0_4px_24px_rgba(118,185,0,0.12)]">
           <h2 className="text-xl font-bold text-[var(--text-primary)]">
             Start preparing for {company.name} interviews
           </h2>
@@ -196,7 +196,7 @@ export default function InterviewQuestionsPage() {
                 <Link
                   key={relSlug}
                   to={`/interview-questions/${relSlug}`}
-                  className="bg-[var(--bg-surface)] border-0 rounded-xl p-4 text-center shadow-[0_4px_24px_rgba(99,102,241,0.12)] hover:shadow-[0_20px_60px_rgba(99,102,241,0.28)] transition-all"
+                  className="bg-[var(--bg-surface)] border-0 rounded-xl p-4 text-center shadow-[0_4px_24px_rgba(118,185,0,0.12)] hover:shadow-[0_20px_60px_rgba(118,185,0,0.28)] transition-all"
                 >
                   <img src={rel.logo} alt={rel.name} className="w-10 h-10 rounded-lg object-contain mx-auto" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                   <p className="mt-1.5 text-sm font-semibold text-[var(--text-primary)]">{rel.name}</p>

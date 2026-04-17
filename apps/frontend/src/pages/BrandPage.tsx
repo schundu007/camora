@@ -6,7 +6,7 @@ import SiteNav from '../components/shared/SiteNav';
 /* ── APPA Colors ─────────────────────────────────────────── */
 const C = {
   emerald: '#34d399',
-  indigo: '#818cf8',
+  indigo: '#91C733',
   cyan: '#38bdf8',
   amber: '#fbbf24',
   dark: '#0a0b14',

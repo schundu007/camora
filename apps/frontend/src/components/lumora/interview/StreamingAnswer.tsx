@@ -462,7 +462,7 @@ function ScaleMathList({ content, isComplete }: { content: string; isComplete: b
     <div className="space-y-3">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         {metrics.map((m, i) => (
-          <div key={i} className="rounded-lg border border-indigo-500/15 bg-indigo-500/[0.04] p-3">
+          <div key={i} className="rounded-lg border border-emerald-500/15 bg-emerald-600/[0.04] p-3">
             <div className="font-mono text-[10px] font-bold text-text-dim uppercase tracking-wider mb-1.5">
               {m.label}
             </div>

@@ -241,25 +241,25 @@ const SectionIcon = ({ type }: { type: string }) => {
 
 /** Scalability tier colors for visual variety */
 const tierColors = [
-  { bg: 'bg-indigo-50', border: 'border-indigo-200', text: 'text-indigo-700', dot: 'bg-indigo-500' },
+  { bg: 'bg-indigo-50', border: 'border-indigo-200', text: 'text-indigo-700', dot: 'bg-emerald-600' },
   { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-700', dot: 'bg-blue-500' },
   { bg: 'bg-violet-50', border: 'border-violet-200', text: 'text-violet-700', dot: 'bg-violet-500' },
   { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700', dot: 'bg-amber-500' },
   { bg: 'bg-cyan-50', border: 'border-cyan-200', text: 'text-cyan-700', dot: 'bg-cyan-500' },
   { bg: 'bg-rose-50', border: 'border-rose-200', text: 'text-rose-700', dot: 'bg-rose-500' },
-  { bg: 'bg-indigo-50', border: 'border-indigo-200', text: 'text-indigo-700', dot: 'bg-indigo-500' },
+  { bg: 'bg-indigo-50', border: 'border-indigo-200', text: 'text-indigo-700', dot: 'bg-emerald-600' },
   { bg: 'bg-violet-50', border: 'border-violet-200', text: 'text-violet-700', dot: 'bg-violet-500' },
 ];
 
 /** Architecture layer accent colors */
 const layerAccents = [
-  { accent: '#4f46e5', bg: 'rgba(79,70,229,0.04)', border: 'rgba(79,70,229,0.15)' },
+  { accent: '#5E9400', bg: 'rgba(79,70,229,0.04)', border: 'rgba(79,70,229,0.15)' },
   { accent: '#2563eb', bg: 'rgba(37,99,235,0.04)', border: 'rgba(37,99,235,0.15)' },
   { accent: '#7c3aed', bg: 'rgba(124,58,237,0.04)', border: 'rgba(124,58,237,0.15)' },
   { accent: '#d97706', bg: 'rgba(217,119,6,0.04)', border: 'rgba(217,119,6,0.15)' },
   { accent: '#0891b2', bg: 'rgba(8,145,178,0.04)', border: 'rgba(8,145,178,0.15)' },
   { accent: '#dc2626', bg: 'rgba(220,38,38,0.04)', border: 'rgba(220,38,38,0.15)' },
-  { accent: '#4f46e5', bg: 'rgba(79,70,229,0.04)', border: 'rgba(79,70,229,0.15)' },
+  { accent: '#5E9400', bg: 'rgba(79,70,229,0.04)', border: 'rgba(79,70,229,0.15)' },
   { accent: '#0d9488', bg: 'rgba(13,148,136,0.04)', border: 'rgba(13,148,136,0.15)' },
 ];
 
@@ -601,7 +601,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
           </button>
           <div className="h-4 w-px bg-white/10" />
           <div className="flex items-center gap-1.5">
-            <div className="w-5 h-5 md:w-6 md:h-6 rounded flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
+            <div className="w-5 h-5 md:w-6 md:h-6 rounded flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #76B900, #91C733)' }}>
               <span className="text-white text-[10px] md:text-xs font-extrabold">L</span>
             </div>
             <span className="text-white font-extrabold text-xs md:text-sm" style={{ fontFamily: "'Source Sans 3', sans-serif" }}>System Design</span>
@@ -662,8 +662,8 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
 
           {isLoading && (
             <div className="flex items-center gap-1.5 px-2 py-0.5 bg-indigo-50 border border-indigo-200 rounded-lg">
-              <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse" />
-              <span className="text-indigo-600 text-[10px] md:text-xs font-medium">Generating...</span>
+              <div className="w-1.5 h-1.5 bg-emerald-600 rounded-full animate-pulse" />
+              <span className="text-emerald-600 text-[10px] md:text-xs font-medium">Generating...</span>
             </div>
           )}
 
@@ -756,7 +756,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                       setErrorMsg(`Failed to fetch URL: ${err.message}`);
                     }
                   }}
-                  className="px-4 py-2 bg-indigo-500 text-white text-xs font-semibold rounded-lg hover:bg-indigo-600 disabled:opacity-50 transition-colors"
+                  className="px-4 py-2 bg-emerald-600 text-white text-xs font-semibold rounded-lg hover:bg-emerald-700 disabled:opacity-50 transition-colors"
                 >
                   Fetch
                 </button>
@@ -838,7 +838,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
           className="hidden md:flex w-1.5 bg-[var(--bg-elevated)] hover:bg-indigo-200 cursor-col-resize transition-colors items-center justify-center group shrink-0"
           onMouseDown={handleDividerMouseDown}
         >
-          <div className="w-0.5 h-8 bg-[var(--border)] group-hover:bg-indigo-500 rounded-full transition-colors" />
+          <div className="w-0.5 h-8 bg-[var(--border)] group-hover:bg-emerald-600 rounded-full transition-colors" />
         </div>
 
         {/* Right: Design Result — light panel when standalone, themed when embedded */}
@@ -878,7 +878,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
               {sd.overview && (
                 <section className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${t.cardBorder}`, background: t.cardBg, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
                   <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: t.headerBg }}>
-                    <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, ${t.dotColor}, #8b5cf6)` }} />
+                    <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, ${t.dotColor}, #91C733)` }} />
                     <h2 className="text-sm font-bold" style={{ color: t.headerText }}>Overview</h2>
                   </div>
                   <div className="px-4 py-3">
@@ -891,7 +891,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
               {result?.pitch && result.pitch !== sd.overview && (
                 <section className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${t.cardBorder}`, background: t.cardBg, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
                   <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: t.headerBg }}>
-                    <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, ${t.dotColor}, #6366f1)` }} />
+                    <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, ${t.dotColor}, #76B900)` }} />
                     <h2 className="text-sm font-bold" style={{ color: t.headerText }}>Explanation</h2>
                   </div>
                   <div className="px-4 py-3">
@@ -905,7 +905,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                 {sd.requirements?.functional && sd.requirements.functional.length > 0 && (
                   <section className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${t.cardBorder}`, background: t.cardBg, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
                     <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: t.headerBg }}>
-                      <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, ${t.dotColor}, #8b5cf6)` }} />
+                      <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, ${t.dotColor}, #91C733)` }} />
                       <h2 className="text-sm font-bold" style={{ color: t.headerText }}>Functional</h2>
                       <span className="ml-auto text-[10px] font-mono rounded-full px-2 py-0.5" style={{ color: t.badgeText, background: t.badgeBg, border: `1px solid ${t.headerBorder}` }}>{sd.requirements.functional.length}</span>
                     </div>
@@ -944,7 +944,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
               {sd.scaleEstimates && Object.entries(sd.scaleEstimates).filter(([, v]) => v && v.trim()).length > 0 && (
                 <section className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${t.cardBorder}`, background: t.cardBg, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
                   <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: t.headerBg }}>
-                    <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, #8b5cf6, ${t.dotColor})` }} />
+                    <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, #91C733, ${t.dotColor})` }} />
                     <h2 className="text-sm font-bold" style={{ color: t.headerText }}>Scale Estimates</h2>
                   </div>
                   <div className="px-4 py-3">
@@ -968,7 +968,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
               {sd.techJustifications && sd.techJustifications.length > 0 && (
                 <section className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${t.cardBorder}`, background: t.cardBg, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
                   <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: t.headerBg }}>
-                    <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, #8b5cf6, ${t.dotColor})` }} />
+                    <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, #91C733, ${t.dotColor})` }} />
                     <h2 className="text-sm font-bold" style={{ color: t.headerText }}>Scalability Tiers</h2>
                   </div>
                   <div className="px-4 py-3">
@@ -976,9 +976,9 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                       {sd.techJustifications.map((tier, i) => (
                           <div key={i} className="rounded-lg p-2 text-center" style={{ border: `1px solid ${t.cardBorder}`, background: t.sectionBg }}>
                             <div className={`text-xs font-bold text-white bg-gradient-to-r ${
-                              ['from-indigo-500 to-violet-500', 'from-blue-500 to-indigo-500', 'from-violet-500 to-purple-500',
+                              ['from-emerald-500 to-violet-500', 'from-blue-500 to-emerald-500', 'from-violet-500 to-emerald-500',
                                'from-amber-500 to-orange-500', 'from-cyan-500 to-blue-500', 'from-rose-500 to-pink-500',
-                               'from-indigo-500 to-blue-500', 'from-violet-500 to-indigo-500'][i % 8]
+                               'from-emerald-500 to-blue-500', 'from-violet-500 to-emerald-500'][i % 8]
                             } rounded px-2 py-1 mb-1`}>{tier.tech}</div>
                             {tier.details.length > 0 && (
                               <div className="text-xs leading-relaxed text-left mt-1" style={{ color: t.textMuted }}>

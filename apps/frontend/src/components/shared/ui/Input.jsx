@@ -7,7 +7,7 @@ const inputVariants = cva(
   {
     variants: {
       variant: {
-        default: ['bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text-primary)]', 'hover:border-[var(--border-hover)]', 'focus:border-[var(--accent)] focus:ring-2 focus:ring-[rgba(99,102,241,0.15)]'],
+        default: ['bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text-primary)]', 'hover:border-[var(--border-hover)]', 'focus:border-[var(--accent)] focus:ring-2 focus:ring-[rgba(118,185,0,0.15)]'],
         filled: ['bg-[var(--bg-elevated)] border-2 border-transparent text-[var(--text-primary)]', 'hover:bg-[var(--bg-elevated)]', 'focus:border-[var(--accent)]'],
         ghost: ['bg-transparent border-0 text-[var(--text-primary)]', 'hover:bg-[var(--bg-elevated)]', 'focus:bg-[var(--bg-elevated)]'],
         underline: ['bg-transparent border-0 border-b-2 border-[var(--border)] rounded-none text-[var(--text-primary)]', 'hover:border-[var(--border-hover)]', 'focus:border-[var(--accent)]', 'px-0'],

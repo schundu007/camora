@@ -48,7 +48,7 @@ const SIDEBAR_SECTIONS = [
   { id: 'coding', label: 'Coding', color: '#10b981' },
   { id: 'system-design', label: 'System Design', color: '#76B900' },
   { id: 'behavioral', label: 'Behavioral', color: '#f97316' },
-  { id: 'techstack', label: 'Tech Stack', color: '#8b5cf6' },
+  { id: 'techstack', label: 'Tech Stack', color: '#91C733' },
 ];
 
 /** Store prep content as JSON string for rich rendering */
@@ -137,7 +137,7 @@ function PrepContentRenderer({ content }: { content: string }) {
       {/* Tech Stack */}
       {data.techStack && Array.isArray(data.techStack) && (
         <div>
-          <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: '#8b5cf6' }}>Tech Stack ({data.techStack.length})</div>
+          <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: '#91C733' }}>Tech Stack ({data.techStack.length})</div>
           <div className="overflow-x-auto rounded-lg" style={{ border: '1px solid #e2e8f0' }}>
             <table className="w-full text-xs">
               <thead><tr style={{ background: '#f1f5f9' }}>
@@ -148,7 +148,7 @@ function PrepContentRenderer({ content }: { content: string }) {
               </tr></thead>
               <tbody>{data.techStack.map((t: any, i: number) => (
                 <tr key={i} style={{ borderTop: '1px solid #e2e8f0' }}>
-                  <td className="px-3 py-2 font-semibold" style={{ color: '#8b5cf6' }}>{t.technology || t.name}</td>
+                  <td className="px-3 py-2 font-semibold" style={{ color: '#91C733' }}>{t.technology || t.name}</td>
                   <td className="px-3 py-2" style={{ color: '#94a3b8' }}>{t.category}</td>
                   <td className="px-3 py-2" style={{ color: '#475569' }}>{t.experience}</td>
                   <td className="px-3 py-2" style={{ color: '#475569' }}>{t.relevance}</td>
@@ -182,14 +182,14 @@ function PrepContentRenderer({ content }: { content: string }) {
         ))}</div></div>)}
 
       {/* Talking Points */}
-      {data.talkingPoints && (<div><div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: '#6366f1' }}>Talking Points</div>
+      {data.talkingPoints && (<div><div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: '#76B900' }}>Talking Points</div>
         <ul className="space-y-1">{(Array.isArray(data.talkingPoints) ? data.talkingPoints : [data.talkingPoints]).map((p: string, i: number) => (
           <li key={i} className="text-sm" style={{ color: '#475569' }}>• {p}</li>
         ))}</ul></div>)}
 
       {/* Delivery Tips */}
-      {data.deliveryTips && (<div className="rounded-lg p-3" style={{ background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.15)' }}>
-        <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: '#6366f1' }}>Delivery Tips</div>
+      {data.deliveryTips && (<div className="rounded-lg p-3" style={{ background: 'rgba(118,185,0,0.06)', border: '1px solid rgba(118,185,0,0.15)' }}>
+        <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: '#76B900' }}>Delivery Tips</div>
         <p className="text-sm leading-relaxed" style={{ color: '#475569' }}>{Array.isArray(data.deliveryTips) ? data.deliveryTips.join(' ') : data.deliveryTips}</p>
       </div>)}
     </div>
