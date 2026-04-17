@@ -733,9 +733,17 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
             </div>
             <div className="flex-1 overflow-auto p-6">
               {sectionStatus[activeSection] === 'generating' ? (
-                <div className="flex items-center gap-3 p-4 rounded-lg" style={{ background: 'var(--accent-subtle)', border: '1px solid var(--border)' }}>
-                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" style={{ color: 'var(--accent)' }} />
-                  <span className="text-xs font-medium" style={{ color: 'var(--accent)' }}>Generating {SIDEBAR_SECTIONS.find(s => s.id === activeSection)?.label}...</span>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3 p-3 rounded-lg" style={{ background: 'var(--accent-subtle)', border: '1px solid var(--border)' }}>
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" style={{ color: 'var(--accent)' }} />
+                    <span className="text-xs font-medium" style={{ color: 'var(--accent)' }}>Generating {SIDEBAR_SECTIONS.find(s => s.id === activeSection)?.label}...</span>
+                  </div>
+                  {streamingText && (
+                    <div className="rounded-lg p-4 text-sm leading-relaxed whitespace-pre-wrap font-mono overflow-auto max-h-[70vh]" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-secondary)' }}>
+                      {streamingText}
+                      <span className="inline-block w-1.5 h-4 bg-indigo-400 animate-pulse ml-0.5" />
+                    </div>
+                  )}
                 </div>
               ) : state.sections[activeSection] ? (
                 <PrepContentRenderer content={state.sections[activeSection]} />
