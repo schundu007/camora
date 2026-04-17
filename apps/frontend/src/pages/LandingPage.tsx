@@ -354,8 +354,8 @@ export default function LandingPage() {
       <section className="px-6 py-8 overflow-hidden">
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
           <p className="text-center text-xs font-bold uppercase tracking-[0.2em] mb-6" style={{ color: L.muted }}>Prepare for interviews at</p>
-          <div className="relative overflow-hidden" style={{ maskImage: 'linear-gradient(90deg, transparent, black 10%, black 90%, transparent)' }}>
-            <div className="flex items-center gap-12" style={{ animation: 'scroll-logos 30s linear infinite', width: 'max-content' }}>
+          <div className="relative overflow-hidden rounded-2xl py-5" style={{ border: `1px solid ${L.border}`, background: L.surface, maskImage: 'linear-gradient(90deg, transparent 2%, black 10%, black 90%, transparent 98%)' }}>
+            <div className="flex items-center gap-12 px-4" style={{ animation: 'scroll-logos 30s linear infinite', width: 'max-content' }}>
               {[...COMPANIES, ...COMPANIES].map((c, i) => (
                 <img key={`${c}-${i}`} src={`https://img.logo.dev/${c}.com?token=${LOGO_TOKEN}&size=80&format=png`}
                   alt={c} className="h-7 object-contain" loading="lazy"
