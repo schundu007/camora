@@ -948,16 +948,16 @@ export default function DocsPage({ onBack }) {
 
                       {/* SQL Playground toggle */}
                       {activePage === 'databases' && (
-                        <div className="flex items-center gap-2 mt-4">
+                        <div className="flex items-center gap-2 mt-5 p-1 rounded-xl w-fit" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}>
                           <button onClick={() => setSqlPlaygroundOpen(false)}
-                            className="px-4 py-2 text-xs font-bold rounded-lg transition-all"
-                            style={!sqlPlaygroundOpen ? { background: 'var(--accent)', color: '#fff' } : { background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}>
-                            Topics
+                            className="px-5 py-2.5 text-sm font-bold rounded-lg transition-all"
+                            style={!sqlPlaygroundOpen ? { background: '#76B900', color: '#fff', boxShadow: '0 2px 8px rgba(118,185,0,0.3)' } : { color: 'rgba(255,255,255,0.5)' }}>
+                            📚 Topics
                           </button>
                           <button onClick={() => setSqlPlaygroundOpen(true)}
-                            className="px-4 py-2 text-xs font-bold rounded-lg transition-all"
-                            style={sqlPlaygroundOpen ? { background: 'var(--accent)', color: '#fff' } : { background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}>
-                            SQL Playground
+                            className="px-5 py-2.5 text-sm font-bold rounded-lg transition-all"
+                            style={sqlPlaygroundOpen ? { background: '#76B900', color: '#fff', boxShadow: '0 2px 8px rgba(118,185,0,0.3)' } : { color: 'rgba(255,255,255,0.5)' }}>
+                            ⚡ SQL Playground
                           </button>
                         </div>
                       )}
