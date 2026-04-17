@@ -3,10 +3,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { streamResponse } from '@/lib/sse-client';
 import { transcriptionAPI } from '@/lib/api-client';
 
+/* White background copilot — black text */
 const C = {
-  base: '#0A0A0F', surface: '#12121A', elevated: '#0D9488',
-  text: '#ffffff', muted: 'rgba(255,255,255,0.7)', accent: '#34d399',
-  accentBg: 'rgba(52,211,153,0.15)', border: 'rgba(255,255,255,0.12)',
+  base: '#FFFFFF', surface: '#F8FAFC', elevated: '#76B900',
+  text: '#0F172A', muted: '#64748B', accent: '#76B900',
+  accentBg: 'rgba(118,185,0,0.08)', border: '#E2E8F0',
 };
 
 /* ── Types ── */
@@ -93,18 +94,18 @@ function RichText({ text }: { text: string }) {
 
   const renderInline = (s: string) => {
     return s
-      .replace(/\*\*(.*?)\*\*/g, '<strong style="color:#ffffff;font-weight:700;font-family:\'Clash Display\',sans-serif">$1</strong>')
-      .replace(/`([^`]+)`/g, '<code style="background:rgba(52,211,153,0.12);color:#34d399;padding:1px 5px;border-radius:3px;font-size:10px;font-family:\'JetBrains Mono\',monospace">$1</code>')
-      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" style="color:#93c5fd;text-decoration:underline">$1</a>');
+      .replace(/\*\*(.*?)\*\*/g, '<strong style="color:#0F172A;font-weight:700;font-family:\'Clash Display\',sans-serif">$1</strong>')
+      .replace(/`([^`]+)`/g, '<code style="background:#F1F5F9;color:#0F766E;padding:1px 5px;border-radius:3px;font-size:10px;font-family:\'JetBrains Mono\',monospace;border:1px solid #E2E8F0">$1</code>')
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" style="color:#76B900;text-decoration:underline">$1</a>');
   };
 
   const renderCodeBlock = (content: string, lang?: string, key?: number | string) => (
-    <div key={key} className="rounded-lg overflow-hidden my-1.5" style={{ border: '1px solid rgba(255,255,255,0.1)' }}>
-      <div className="flex items-center justify-between px-3 py-1" style={{ background: 'rgba(255,255,255,0.06)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-        <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: C.muted }}>{lang || 'code'}</span>
-        <button onClick={() => navigator.clipboard.writeText(content)} className="text-[9px] px-1.5 py-0.5 rounded transition-colors hover:bg-white/10" style={{ color: C.muted }}>Copy</button>
+    <div key={key} className="rounded overflow-hidden my-1.5" style={{ border: '1px solid #E2E8F0' }}>
+      <div className="flex items-center justify-between px-3 py-1" style={{ background: '#F8FAFC', borderBottom: '1px solid #E2E8F0' }}>
+        <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: '#64748B' }}>{lang || 'code'}</span>
+        <button onClick={() => navigator.clipboard.writeText(content)} className="text-[9px] px-1.5 py-0.5 rounded transition-colors hover:bg-gray-100" style={{ color: '#64748B' }}>Copy</button>
       </div>
-      <pre className="px-3 py-2 overflow-x-auto" style={{ background: '#020e24', color: '#93c5fd', fontSize: '11px', lineHeight: '1.6', fontFamily: "'JetBrains Mono', monospace" }}><code>{content}</code></pre>
+      <pre className="px-3 py-2 overflow-x-auto" style={{ background: '#0F172A', color: '#A5F3FC', fontSize: '11px', lineHeight: '1.6', fontFamily: "'JetBrains Mono', monospace" }}><code>{content}</code></pre>
     </div>
   );
 
@@ -130,7 +131,7 @@ function RichText({ text }: { text: string }) {
     const stepMatch = t.match(/^(Step\s+\d+)[:\s]+\s*(.*)/i);
     if (stepMatch) return (
       <div key={key} className="flex gap-2 pl-1 mt-0.5">
-        <span className="text-[9px] font-bold shrink-0 px-1.5 py-0.5 rounded" style={{ background: 'rgba(255,255,255,0.06)', color: C.muted }}>{stepMatch[1]}</span>
+        <span className="text-[9px] font-bold shrink-0 px-1.5 py-0.5 rounded" style={{ background: '#F1F5F9', color: '#475569' }}>{stepMatch[1]}</span>
         <span style={{ fontSize: '11px', color: C.text, fontFamily: "'JetBrains Mono', monospace" }}>{stepMatch[2]}</span>
       </div>
     );
@@ -154,7 +155,7 @@ function RichText({ text }: { text: string }) {
 
     // Arrow patterns (Input: X -> Output: Y)
     if (/^(Input|Output)[:\s]/.test(t)) return (
-      <div key={key} className="mt-0.5 px-2 py-1 rounded" style={{ background: 'rgba(255,255,255,0.04)', fontFamily: "'JetBrains Mono', monospace", fontSize: '10px', color: C.text }}>
+      <div key={key} className="mt-0.5 px-2 py-1 rounded" style={{ background: '#F1F5F9', fontFamily: "'JetBrains Mono', monospace", fontSize: '10px', color: '#0F172A', border: '1px solid #E2E8F0' }}>
         {t}
       </div>
     );
@@ -302,29 +303,29 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
       {!minimized && (
         <div
           className="w-[5px] h-full cursor-col-resize flex items-center justify-center group shrink-0 hover:bg-blue-400/20 transition-colors"
-          style={{ background: isResizing ? 'rgba(52,211,153,0.3)' : '#0A0A0F' }}
+          style={{ background: isResizing ? 'rgba(118,185,0,0.2)' : '#E2E8F0' }}
           onMouseDown={(e) => { setIsResizing(true); resizeRef.current = { startX: e.clientX, startW: panelWidth }; }}
         >
-          <div className="w-[3px] h-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: '#34d399' }} />
+          <div className="w-[3px] h-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: '#76B900' }} />
         </div>
       )}
 
-      <div className="flex-1 flex flex-col min-w-0" style={{ background: 'linear-gradient(180deg, #0D9488 0%, #0A0A0F 100%)' }}>
+      <div className="flex-1 flex flex-col min-w-0" style={{ background: '#FFFFFF', borderLeft: '1px solid #E2E8F0' }}>
       {/* Header */}
-      <div className="flex items-center justify-between h-14 px-3 shrink-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+      <div className="flex items-center justify-between h-14 px-3 shrink-0" style={{ borderBottom: '1px solid #E2E8F0' }}>
         {minimized ? (
-          <button onClick={() => setMinimized(false)} className="w-full flex items-center justify-center p-1.5 rounded-lg transition-colors hover:bg-white/5" style={{ color: C.accent }} title="Expand AI Copilot">
+          <button onClick={() => setMinimized(false)} className="w-full flex items-center justify-center p-1.5 rounded-lg transition-colors hover:bg-gray-100" style={{ color: C.accent }} title="Expand AI Copilot">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
           </button>
         ) : (
           <>
             <div className="flex items-center gap-1">
               <button onClick={() => { if (messages.length > 0 && confirm('Clear chat history?')) setMessages([]); }}
-                className="p-1.5 rounded-lg transition-colors hover:bg-white/5" style={{ color: C.muted }} title="Clear history">
+                className="p-1.5 rounded-lg transition-colors hover:bg-gray-100" style={{ color: C.muted }} title="Clear history">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" /></svg>
               </button>
               <button onClick={() => setMessages([])}
-                className="p-1.5 rounded-lg transition-colors hover:bg-white/5" style={{ color: C.muted }} title="New chat">
+                className="p-1.5 rounded-lg transition-colors hover:bg-gray-100" style={{ color: C.muted }} title="New chat">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
               </button>
             </div>
@@ -332,7 +333,7 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
             <div className="flex items-center gap-1">
               <span className="text-[9px] px-1.5 py-0.5 rounded" style={{ color: C.muted }}>{messages.filter(m => m.role === 'user').length}</span>
               <button onClick={() => setMinimized(true)}
-                className="p-1.5 rounded-lg transition-colors hover:bg-white/5" style={{ color: C.muted }} title="Minimize">
+                className="p-1.5 rounded-lg transition-colors hover:bg-gray-100" style={{ color: C.muted }} title="Minimize">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 12h16" /></svg>
               </button>
             </div>
@@ -342,8 +343,8 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
 
       {/* Answer Mode Toggle — Short / Detailed */}
       {!minimized && (
-        <div className="flex items-center px-3 py-2 shrink-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-          <div className="flex items-center w-full rounded-lg p-0.5" style={{ background: 'rgba(255,255,255,0.06)' }}>
+        <div className="flex items-center px-3 py-2 shrink-0" style={{ borderBottom: '1px solid #E2E8F0' }}>
+          <div className="flex items-center w-full rounded-lg p-0.5" style={{ background: '#F1F5F9' }}>
             {(['short', 'detailed'] as AnswerMode[]).map(mode => (
               <button
                 key={mode}
@@ -355,8 +356,8 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
                   fontFamily: "'Clash Display', sans-serif",
                   letterSpacing: '0.05em',
                   textTransform: 'uppercase',
-                  color: answerMode === mode ? '#ffffff' : 'rgba(255,255,255,0.4)',
-                  background: answerMode === mode ? 'rgba(11,92,255,0.5)' : 'transparent',
+                  color: answerMode === mode ? '#FFFFFF' : '#94A3B8',
+                  background: answerMode === mode ? '#76B900' : 'transparent',
                 }}
               >
                 {mode === 'short' ? 'Short' : 'Detailed'}
@@ -385,8 +386,8 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
               {['Design a URL shortener', 'Explain TCP vs UDP', 'Tell me about a conflict', 'Detect cycle in linked list'].map(s => (
                 <button key={s} onClick={() => ask(s)} className="text-left px-2.5 py-2 rounded-lg transition-all"
                   style={{ border: `1px solid ${C.border}`, fontSize: '10px', fontFamily: "'Satoshi', sans-serif", color: C.muted, lineHeight: '1.4' }}
-                  onMouseEnter={e => { e.currentTarget.style.color = '#ffffff'; e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.65)'; e.currentTarget.style.background = 'transparent'; }}>
+                  onMouseEnter={e => { e.currentTarget.style.color = '#0F172A'; e.currentTarget.style.background = '#F1F5F9'; }}
+                  onMouseLeave={e => { e.currentTarget.style.color = '#64748B'; e.currentTarget.style.background = 'transparent'; }}>
                   {s}
                 </button>
               ))}
@@ -428,7 +429,7 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
 
       {/* Input */}
       <div className="px-3 pb-3 pt-1 shrink-0">
-        <div className="flex items-center gap-1.5 px-2 h-10 rounded-xl" style={{ background: C.elevated, border: `1px solid ${C.border}` }}>
+        <div className="flex items-center gap-1.5 px-2 h-10 rounded-xl" style={{ background: '#F8FAFC', border: '1px solid #E2E8F0' }}>
           <MicButton onResult={(text) => ask(text)} disabled={streaming} />
           <input ref={inputRef} type="text" value={input} onChange={e => setInput(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter' && input.trim()) handleSubmit(); }}
@@ -436,7 +437,7 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
             className="flex-1 bg-transparent focus:outline-none min-w-0 placeholder:opacity-40"
             style={{ fontFamily: "'Satoshi', sans-serif", color: C.text, fontSize: '10px' }} disabled={streaming} />
           {input.trim() && !streaming && (
-            <button onClick={handleSubmit} className="w-6 h-6 rounded-full flex items-center justify-center shrink-0" style={{ background: '#0D9488' }}>
+            <button onClick={handleSubmit} className="w-6 h-6 rounded-full flex items-center justify-center shrink-0" style={{ background: '#76B900' }}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
             </button>
           )}
@@ -453,7 +454,7 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
 
 export function AICompanionToggle({ onClick, hasActivity }: { onClick: () => void; hasActivity: boolean }) {
   return (
-    <button onClick={onClick} className="fixed bottom-6 right-6 z-30 w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105" style={{ background: '#0D9488' }} title="AI Copilot">
+    <button onClick={onClick} className="fixed bottom-6 right-6 z-30 w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105" style={{ background: '#76B900' }} title="AI Copilot">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
       {hasActivity && <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2" style={{ borderColor: C.base }} />}
     </button>

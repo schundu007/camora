@@ -616,7 +616,7 @@ export default function JobPrepPage() {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
                 {urlAnalysis.coding_focus?.length > 0 && (
                   <div style={{ background: '#f0fdf4', borderRadius: '8px', padding: '12px' }}>
-                    <p style={{ fontSize: '11px', fontWeight: 700, color: '#0D9488', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px' }}>Coding Focus</p>
+                    <p style={{ fontSize: '11px', fontWeight: 700, color: '#76B900', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px' }}>Coding Focus</p>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                       {urlAnalysis.coding_focus.map((t: string) => (
                         <span key={t} style={{ fontSize: '12px', color: '#065f46', background: '#dcfce7', padding: '2px 8px', borderRadius: '4px' }}>{t}</span>
@@ -728,7 +728,7 @@ export default function JobPrepPage() {
                   transition: 'background 0.15s',
                   fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
                 }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#0D9488'; }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#76B900'; }}
                 onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '#10b981'; }}
               >
                 <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -866,7 +866,7 @@ export default function JobPrepPage() {
                             justifyContent: 'center',
                             flexShrink: 0,
                           }}>
-                            <svg width="14" height="14" fill="none" stroke="#0D9488" viewBox="0 0 24 24" strokeWidth={2.5}>
+                            <svg width="14" height="14" fill="none" stroke="#76B900" viewBox="0 0 24 24" strokeWidth={2.5}>
                               <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                             </svg>
                           </div>
@@ -999,7 +999,7 @@ export default function JobPrepPage() {
                   textDecoration: 'none',
                   transition: 'background 0.15s',
                 }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#0D9488'; }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#76B900'; }}
                 onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '#10b981'; }}
               >
                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
@@ -1183,7 +1183,7 @@ function StudyItem({ label, href, reason }: { label: string; href: string; reaso
 const S = {
   h2: { fontSize: '18px', fontWeight: 700 as const, color: '#000', margin: '0 0 12px', borderBottom: '2px solid #d1fae5', paddingBottom: '6px' },
   h3: { fontSize: '15px', fontWeight: 700 as const, color: 'var(--text-primary)', margin: '20px 0 8px', paddingLeft: '10px', borderLeft: '3px solid #6ee7b7' },
-  h4: { fontSize: '12px', fontWeight: 600 as const, color: '#0D9488', textTransform: 'uppercase' as const, letterSpacing: '0.08em', margin: '14px 0 6px 20px' },
+  h4: { fontSize: '12px', fontWeight: 600 as const, color: '#76B900', textTransform: 'uppercase' as const, letterSpacing: '0.08em', margin: '14px 0 6px 20px' },
   p: { fontSize: '14px', color: '#1f2937', lineHeight: 1.8, margin: '0 0 8px 20px', whiteSpace: 'pre-wrap' as const },
   li: { fontSize: '14px', color: '#1f2937', lineHeight: 1.7, marginBottom: '4px' },
   ul: { margin: '0 0 8px', paddingLeft: '38px' },
@@ -1272,7 +1272,7 @@ function PrepSectionContent({ sectionKey, data }: { sectionKey: string; data: an
         {Array.isArray(questions) && questions.length > 0 && questions.map((q: any, i: number) => (
           <div key={i} style={{ marginBottom: '24px' }}>
             <h3 style={S.h3}>
-              <span style={{ color: '#0D9488', marginRight: '6px' }}>Q{i + 1}.</span>
+              <span style={{ color: '#76B900', marginRight: '6px' }}>Q{i + 1}.</span>
               {q.question || q.q || (typeof q === 'string' ? q : '')}
             </h3>
             {q.whyTheyAsk && <p style={{ ...S.p, fontSize: '13px', color: 'var(--text-muted)', fontStyle: 'italic' }}>Why they ask this: {q.whyTheyAsk}</p>}
@@ -1286,10 +1286,10 @@ function PrepSectionContent({ sectionKey, data }: { sectionKey: string; data: an
             {sectionKey === 'behavioral' && (q.situation || q.task || q.action || q.result) && (
               <div style={{ marginLeft: '20px', marginTop: '10px' }}>
                 <h4 style={{ ...S.h4, margin: '0 0 8px 0' }}>STAR Framework</h4>
-                {q.situation && <p style={S.p}><strong style={{ color: '#0D9488' }}>Situation:</strong> {q.situation}</p>}
-                {q.task && <p style={S.p}><strong style={{ color: '#0D9488' }}>Task:</strong> {q.task}</p>}
-                {q.action && <p style={S.p}><strong style={{ color: '#0D9488' }}>Action:</strong> {q.action}</p>}
-                {q.result && <p style={S.p}><strong style={{ color: '#0D9488' }}>Result:</strong> {q.result}</p>}
+                {q.situation && <p style={S.p}><strong style={{ color: '#76B900' }}>Situation:</strong> {q.situation}</p>}
+                {q.task && <p style={S.p}><strong style={{ color: '#76B900' }}>Task:</strong> {q.task}</p>}
+                {q.action && <p style={S.p}><strong style={{ color: '#76B900' }}>Action:</strong> {q.action}</p>}
+                {q.result && <p style={S.p}><strong style={{ color: '#76B900' }}>Result:</strong> {q.result}</p>}
               </div>
             )}
             {i < questions.length - 1 && <div style={S.divider} />}
@@ -1338,7 +1338,7 @@ function PrepSectionContent({ sectionKey, data }: { sectionKey: string; data: an
         {Array.isArray(problems) && problems.map((p: any, i: number) => (
           <div key={i} style={{ marginBottom: '28px' }}>
             <h3 style={S.h3}>
-              <span style={S.badge((p.difficulty || '').toLowerCase() === 'hard' ? '#dc2626' : (p.difficulty || '').toLowerCase() === 'medium' ? '#d97706' : '#0D9488')}>{p.difficulty || 'Medium'}</span>
+              <span style={S.badge((p.difficulty || '').toLowerCase() === 'hard' ? '#dc2626' : (p.difficulty || '').toLowerCase() === 'medium' ? '#d97706' : '#76B900')}>{p.difficulty || 'Medium'}</span>
               <span style={{ marginLeft: '8px' }}>{p.title || p.name || `Problem ${i + 1}`}</span>
               {p.frequency && <span style={{ fontSize: '12px', fontWeight: 400, color: 'var(--text-muted)', marginLeft: '8px' }}>({p.frequency})</span>}
             </h3>
@@ -1366,7 +1366,7 @@ function PrepSectionContent({ sectionKey, data }: { sectionKey: string; data: an
                   <div style={{ marginLeft: '20px' }}>
                     <h4 style={{ ...S.h4, fontSize: '11px' }}>Line-by-Line Explanation</h4>
                     {a.lineByLine.map((l: any, k: number) => (
-                      <p key={k} style={{ ...S.p, fontSize: '12px', margin: '0 0 3px' }}><code style={{ color: '#0D9488' }}>{l.line}</code> — {l.explanation}</p>
+                      <p key={k} style={{ ...S.p, fontSize: '12px', margin: '0 0 3px' }}><code style={{ color: '#76B900' }}>{l.line}</code> — {l.explanation}</p>
                     ))}
                   </div>
                 )}
@@ -1453,7 +1453,7 @@ function PrepSectionContent({ sectionKey, data }: { sectionKey: string; data: an
                       <tbody>{q.capacityEstimation.calculations.map((c: any, j: number) => (
                         <tr key={j} style={{ borderBottom: '1px solid #f3f4f6' }}>
                           <td style={{ padding: '6px 12px', fontWeight: 600, color: 'var(--text-primary)' }}>{c.metric}</td>
-                          <td style={{ padding: '6px 12px', fontFamily: 'monospace', color: '#0D9488', fontWeight: 600 }}>{c.result}</td>
+                          <td style={{ padding: '6px 12px', fontFamily: 'monospace', color: '#76B900', fontWeight: 600 }}>{c.result}</td>
                           <td style={{ padding: '6px 12px', color: 'var(--text-muted)' }}>{c.calculation}</td>
                         </tr>
                       ))}</tbody>

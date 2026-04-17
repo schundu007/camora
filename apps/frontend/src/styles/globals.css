@@ -16,7 +16,7 @@
     /* Borders */
     --border: #2A2833;
     --border-hover: #3B3947;
-    --border-focus: #0D9488;
+    --border-focus: #76B900;
 
     /* Text */
     --text-primary: #F2F1F3;
@@ -24,17 +24,17 @@
     --text-muted: #6C6B7B;
     --text-dimmed: #545260;
 
-    /* Accent (Camora Teal — deep, sophisticated, premium on dark) */
-    --accent: #0D9488;
-    --accent-hover: #14B8A6;
-    --accent-subtle: rgba(13,148,136,0.12);
-    --accent-text: #5EEAD4;
+    /* Accent (NVIDIA Green — bold, sharp, unmistakable) */
+    --accent: #76B900;
+    --accent-hover: #91C733;
+    --accent-subtle: rgba(118,185,0,0.12);
+    --accent-text: #CFFF40;
 
     /* Semantic */
-    --success: #34D399;
+    --success: #76B900;
     --warning: #FFC53D;
     --danger: #E5484D;
-    --info: #0D9488;
+    --info: #76B900;
 
     /* Fonts — Camora custom (Clash Display + Satoshi) */
     --font-sans: 'Satoshi', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
