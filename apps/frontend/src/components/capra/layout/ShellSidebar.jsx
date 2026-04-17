@@ -251,7 +251,7 @@ export default function ShellSidebar() {
             className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium text-amber-600 hover:bg-amber-50 transition-all"
           >
             <Icon name="microphone" size={15} className="text-amber-500" />
-            <span>Camora — Live AI</span>
+            <span>Live AI Interview</span>
           </Link>
         )}
 

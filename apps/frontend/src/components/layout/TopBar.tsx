@@ -72,17 +72,8 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
           </button>
 
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 no-underline">
-            <CamoraLogo size={24} />
-            <span
-              className="text-sm font-bold tracking-wide hidden sm:inline"
-              style={{
-                fontFamily: 'var(--font-brand)',
-                color: 'var(--text-primary)',
-              }}
-            >
-              Camora
-            </span>
+          <Link to="/" className="flex items-center no-underline">
+            <CamoraLogo size={28} />
           </Link>
         </div>
 
