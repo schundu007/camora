@@ -45,16 +45,16 @@ const APPA_STEPS = [
   },
   {
     key: 'prepare', label: 'Prepare', href: '/capra/prepare',
-    headline: 'Study 389 curated interview topics',
+    headline: 'Study 800+ curated interview topics',
     desc: 'System design, DSA, behavioral, databases, microservices, and low-level design. AI-powered explanations with architecture diagrams.',
-    features: ['389 Study Topics', 'Architecture Diagrams', 'AI Explanations', 'Role-Based Paths'],
+    features: ['800+ Study Topics', 'Architecture Diagrams', 'AI Explanations', 'Role-Based Paths'],
     icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></svg>,
   },
   {
     key: 'practice', label: 'Practice', href: '/capra/practice',
-    headline: 'Solve problems with instant AI feedback',
+    headline: 'Solve 850+ problems with instant AI feedback',
     desc: 'Real interview problems with multi-approach solutions. Timed mock interviews. Run code in 50+ languages with auto-fix and debugging.',
-    features: ['Mock Interviews', '50+ Languages', 'Multi-Approach Solutions', 'Auto-Fix & Debug'],
+    features: ['850+ Problems', '50+ Languages', 'Multi-Approach Solutions', 'Mock Interviews'],
     icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /><line x1="14.5" y1="4" x2="9.5" y2="20" /></svg>,
   },
   {
@@ -88,20 +88,20 @@ const PLATFORM_FEATURES = [
 
 /* ── Stats ─────────────────────────────────────────────── */
 const STATS = [
-  { value: '389', label: 'Study Topics' },
-  { value: '50+', label: 'Languages' },
+  { value: '800+', label: 'Study Topics' },
+  { value: '1,850+', label: 'Problems' },
   { value: '1,000+', label: 'Companies' },
-  { value: '6', label: 'Topic Categories' },
+  { value: '50+', label: 'Languages' },
 ];
 
-/* ── Topic Data (real counts) ─────────────────────────── */
+/* ── Topic Data (counts from v5) ──────────────────────── */
 const TOPICS = [
-  { name: 'System Design', count: 235, color: '#0B5CFF' },
-  { name: 'Behavioral', count: 53, color: '#64748B' },
-  { name: 'Low Level Design', count: 46, color: '#334155' },
-  { name: 'DSA & Algorithms', count: 23, color: '#0F172A' },
-  { name: 'Databases & SQL', count: 20, color: '#94A3B8' },
-  { name: 'Microservices', count: 12, color: '#CBD5E1' },
+  { name: 'System Design', count: 420, problems: 318, color: '#0B5CFF' },
+  { name: 'Low-Level Design', count: 112, problems: 268, color: '#334155' },
+  { name: 'DSA & Algorithms', count: 65, problems: 854, color: '#0F172A' },
+  { name: 'Behavioral', count: 64, problems: 230, color: '#64748B' },
+  { name: 'Microservices', count: 27, problems: 0, color: '#94A3B8' },
+  { name: 'Database & SQL', count: 31, problems: 197, color: '#CBD5E1' },
 ];
 
 /* ── Visitor Count Hook ───────────────────────────────── */
@@ -247,7 +247,7 @@ function ProductTabs() {
 function TopicDonut() {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: '-80px' });
-  const TOTAL = 389;
+  const TOTAL = 808;
   const RADIUS = 68;
   const CIRC = 2 * Math.PI * RADIUS;
 
@@ -274,8 +274,10 @@ function TopicDonut() {
               strokeDashoffset={s.offset} strokeLinecap="butt"
               style={{ transition: `stroke-dasharray 1s ease ${i * 80 + 200}ms` }} />
           ))}
-          <text x="100" y="95" textAnchor="middle" fill={L.text} fontSize="26" fontWeight="700" fontFamily={F.display}>389</text>
-          <text x="100" y="115" textAnchor="middle" fill={L.muted} fontSize="11" fontWeight="500" fontFamily={F.body}>Topics</text>
+          <text x="100" y="88" textAnchor="middle" fill={L.text} fontSize="26" fontWeight="700" fontFamily={F.display}>800+</text>
+          <text x="100" y="106" textAnchor="middle" fill={L.muted} fontSize="10" fontWeight="500" fontFamily={F.body}>Topics</text>
+          <text x="100" y="122" textAnchor="middle" fill={L.blue} fontSize="14" fontWeight="700" fontFamily={F.display}>1,850+</text>
+          <text x="100" y="135" textAnchor="middle" fill={L.muted} fontSize="9" fontWeight="500" fontFamily={F.body}>Problems</text>
         </svg>
       </div>
       <div className="grid grid-cols-2 gap-x-8 gap-y-3">
@@ -288,6 +290,7 @@ function TopicDonut() {
             <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: t.color }} />
             <span className="text-sm font-medium whitespace-nowrap" style={{ color: L.secondary, fontFamily: F.body }}>{t.name}</span>
             <span className="text-sm font-semibold" style={{ color: L.muted, fontFamily: F.mono }}>{t.count}</span>
+            {t.problems > 0 && <span className="text-xs" style={{ color: L.dimmed, fontFamily: F.mono }}>({t.problems})</span>}
           </div>
         ))}
       </div>
@@ -588,7 +591,7 @@ export default function LandingPage() {
               Everything you need to prepare.
             </h2>
             <p className="mt-4 text-lg max-w-xl mx-auto" style={{ color: L.secondary }}>
-              389 topics across 6 categories — system design, DSA, behavioral, LLD, databases, and microservices.
+              800+ topics and 1,850+ problems across 7 categories — system design, DSA, behavioral, LLD, databases, SQL, and microservices.
             </p>
           </Reveal>
           <TopicDonut />

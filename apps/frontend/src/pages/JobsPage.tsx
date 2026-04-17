@@ -87,15 +87,36 @@ const CAPRA_API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cari
 
 const CATEGORIES = [
   { value: 'all', label: 'All' },
-  { value: 'devops', label: 'DevOps' },
+  // Core engineering
   { value: 'backend', label: 'Backend' },
   { value: 'frontend', label: 'Frontend' },
   { value: 'fullstack', label: 'Full Stack' },
+  { value: 'mobile', label: 'Mobile' },
+  { value: 'ios', label: 'iOS' },
+  { value: 'android', label: 'Android' },
+  // Infrastructure & Ops
+  { value: 'devops', label: 'DevOps' },
+  { value: 'sre', label: 'SRE' },
+  { value: 'cloud', label: 'Cloud' },
+  { value: 'platform', label: 'Platform' },
+  { value: 'network', label: 'Network' },
+  // Data & AI
   { value: 'data', label: 'Data' },
   { value: 'ml', label: 'ML/AI' },
-  { value: 'sre', label: 'SRE' },
-  { value: 'platform', label: 'Platform' },
-  { value: 'cloud', label: 'Cloud' },
+  // Specialized
+  { value: 'security', label: 'Security' },
+  { value: 'qa', label: 'QA/Test' },
+  { value: 'embedded', label: 'Embedded' },
+  { value: 'blockchain', label: 'Web3' },
+  { value: 'game_dev', label: 'Gaming' },
+  // Leadership
+  { value: 'tech_lead', label: 'Tech Lead' },
+  { value: 'staff', label: 'Staff' },
+  { value: 'principal', label: 'Principal' },
+  { value: 'em', label: 'Eng Manager' },
+  { value: 'architect', label: 'Architect' },
+  { value: 'tpm', label: 'TPM' },
+  { value: 'product_manager', label: 'Product' },
 ];
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -105,9 +126,25 @@ const CATEGORY_COLORS: Record<string, string> = {
   fullstack: '#3b82f6',
   data: '#f59e0b',
   ml: '#ec4899',
-  sre: '#ef4444',
+  security: '#ef4444',
+  mobile: '#f97316',
+  ios: '#a855f7',
+  android: '#22c55e',
+  qa: '#84cc16',
+  sre: '#e11d48',
   platform: '#14b8a6',
   cloud: '#6366f1',
+  network: '#0ea5e9',
+  blockchain: '#f59e0b',
+  game_dev: '#f43f5e',
+  tech_lead: '#8b5cf6',
+  staff: '#7c3aed',
+  principal: '#6d28d9',
+  em: '#0891b2',
+  architect: '#2563eb',
+  tpm: '#0d9488',
+  product_manager: '#d946ef',
+  embedded: '#a855f7',
 };
 
 const DEFAULT_COLOR = '#6b7280';
@@ -123,8 +160,12 @@ interface Job {
   salary_max?: number;
   job_url: string;
   source?: string;
-  posted_at?: string;
+  posted_date?: string;
+  date_found?: string;
   ai_tech_stack?: string[];
+  ai_summary?: string;
+  department?: string;
+  company_industry?: string;
   description?: string;
 }
 
@@ -132,31 +173,96 @@ interface JobsResponse {
   jobs: Job[];
   total: number;
   companies_count?: number;
+  last_updated?: string;
 }
+
+interface FilterOption {
+  name: string;
+  count: number;
+}
+
+interface FiltersResponse {
+  sources: FilterOption[];
+  locations: FilterOption[];
+  departments: FilterOption[];
+  companies: FilterOption[];
+  salary_range: { min: number | null; max: number | null };
+}
+
+const WORK_TYPES = [
+  { value: '', label: 'All Types' },
+  { value: 'remote', label: 'Remote' },
+  { value: 'hybrid', label: 'Hybrid' },
+  { value: 'onsite', label: 'Onsite' },
+];
+
+const EXPERIENCE_LEVELS = [
+  { value: '', label: 'All Levels' },
+  { value: 'intern', label: 'Intern' },
+  { value: 'entry', label: 'Entry Level' },
+  { value: 'mid', label: 'Mid Level' },
+  { value: 'senior', label: 'Senior' },
+  { value: 'staff', label: 'Staff' },
+  { value: 'principal', label: 'Principal+' },
+  { value: 'lead', label: 'Lead / Manager' },
+];
+
+const POSTED_WITHIN = [
+  { value: '', label: 'Any Time' },
+  { value: '1', label: 'Today' },
+  { value: '3', label: 'Past 3 Days' },
+  { value: '7', label: 'Past Week' },
+  { value: '14', label: 'Past 2 Weeks' },
+  { value: '30', label: 'Past Month' },
+];
 
 /* ──────────────────────────────── Helpers ──────────────────────────────── */
 
-function formatSalary(min?: number, max?: number): string {
-  if (!min && !max) return 'Salary: Not disclosed';
+function formatSalary(min?: number, max?: number): string | null {
+  if (!min && !max) return null;
   const fmt = (n: number) => `$${Math.round(n / 1000)}K`;
-  if (min && max) return `${fmt(min)} - ${fmt(max)}`;
+  if (min && max) return `${fmt(min)} – ${fmt(max)}`;
   if (min) return `${fmt(min)}+`;
   if (max) return `Up to ${fmt(max)}`;
-  return 'Salary: Not disclosed';
+  return null;
+}
+
+function timeAgo(dateStr?: string): string | null {
+  if (!dateStr) return null;
+  const now = Date.now();
+  const then = new Date(dateStr).getTime();
+  if (isNaN(then)) return null;
+  const diffMs = now - then;
+  const mins = Math.floor(diffMs / 60000);
+  if (mins < 60) return 'Just now';
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days === 1) return '1d ago';
+  if (days < 7) return `${days}d ago`;
+  if (days < 30) return `${Math.floor(days / 7)}w ago`;
+  if (days < 365) return `${Math.floor(days / 30)}mo ago`;
+  return `${Math.floor(days / 365)}y ago`;
 }
 
 function detectCategory(title: string): string {
   const t = title.toLowerCase();
-  if (t.includes('devops') || t.includes('dev ops')) return 'devops';
-  if (t.includes('sre') || t.includes('site reliability')) return 'sre';
-  if (t.includes('ml') || t.includes('machine learning') || t.includes('ai ') || t.includes('artificial intelligence') || t.includes('deep learning') || t.includes('nlp')) return 'ml';
-  if (t.includes('data') || t.includes('analytics') || t.includes('etl')) return 'data';
+  // Order matters — more specific categories first
+  if (t.includes('devops') || t.includes('dev ops') || t.includes('devsecops') || t.includes('release engineer') || t.includes('build engineer') || t.includes('ci/cd')) return 'devops';
+  if (t.includes('sre') || t.includes('site reliability') || t.includes('production engineer') || t.includes('observability')) return 'sre';
+  if (t.includes('security') || t.includes('appsec') || t.includes('infosec') || t.includes('cybersecurity') || t.includes('penetration') || t.includes('threat') || t.includes('vulnerability') || t.includes('soc analyst') || t.includes('security engineer')) return 'security';
+  if (t.includes('machine learning') || t.includes('ml ') || t.includes('ml ops') || t.includes('deep learning') || t.includes('nlp') || t.includes('natural language') || t.includes('artificial intelligence') || t.includes('ai engineer') || t.includes('ai research') || t.includes('computer vision') || t.includes('generative ai') || t.includes('applied scientist') || t.includes('research scientist') || t.includes('research engineer')) return 'ml';
+  if (t.includes('data engineer') || t.includes('data scientist') || t.includes('data analyst') || t.includes('analytics') || t.includes('etl') || t.includes('data platform') || t.includes('data architect') || t.includes('database') || t.includes('dba') || t.includes('data warehouse') || t.includes('business intelligence') || t.includes('bi ')) return 'data';
+  if (t.includes('mobile') || t.includes('ios') || t.includes('android') || t.includes('swift') || t.includes('kotlin') || t.includes('react native') || t.includes('flutter')) return 'mobile';
+  if (t.includes('qa') || t.includes('quality assurance') || t.includes('test engineer') || t.includes('sdet') || t.includes('automation test') || t.includes('test automation') || t.includes('quality engineer')) return 'qa';
+  if (t.includes('embedded') || t.includes('firmware') || t.includes('hardware') || t.includes('fpga') || t.includes('rtos') || t.includes('iot engineer') || t.includes('robotics')) return 'embedded';
   if (t.includes('full stack') || t.includes('fullstack') || t.includes('full-stack')) return 'fullstack';
-  if (t.includes('frontend') || t.includes('front-end') || t.includes('front end') || t.includes('react') || t.includes('vue') || t.includes('angular') || t.includes('ui engineer')) return 'frontend';
-  if (t.includes('backend') || t.includes('back-end') || t.includes('back end') || t.includes('server') || t.includes('api engineer')) return 'backend';
-  if (t.includes('platform')) return 'platform';
-  if (t.includes('cloud') || t.includes('aws') || t.includes('azure') || t.includes('gcp') || t.includes('infrastructure')) return 'cloud';
-  return 'backend'; // default fallback
+  if (t.includes('frontend') || t.includes('front-end') || t.includes('front end') || t.includes('ui engineer') || t.includes('ui developer') || t.includes('ux engineer') || t.includes('javascript engineer') || t.includes('typescript engineer') || t.includes('web engineer')) return 'frontend';
+  if (t.includes('platform engineer') || t.includes('platform architect') || t.includes('developer experience') || t.includes('developer tools') || t.includes('dx engineer') || t.includes('internal tools')) return 'platform';
+  if (t.includes('cloud engineer') || t.includes('cloud architect') || t.includes('infrastructure engineer') || t.includes('infra engineer') || t.includes('network engineer') || t.includes('solutions architect')) return 'cloud';
+  if (t.includes('backend') || t.includes('back-end') || t.includes('back end') || t.includes('server engineer') || t.includes('api engineer') || t.includes('distributed systems') || t.includes('systems engineer')) return 'backend';
+  if (t.includes('software engineer') || t.includes('software developer') || t.includes('application engineer') || t.includes('web developer')) return 'fullstack';
+  return 'fullstack';
 }
 
 function getCategoryColor(category: string): string {
@@ -273,19 +379,46 @@ export default function JobsPage() {
   }, []);
 
   // Map user's onboarding role to job filter category
+  // Covers all 30 roles from OnboardingPage (JOB_ROLES + MORE_ROLES)
   const getUserCategory = (): string => {
     const roles = user?.job_roles;
     if (!roles || roles.length === 0) return 'all';
     const r = (Array.isArray(roles) ? roles[0] : roles).toLowerCase();
+    // Direct ID matches from onboarding
+    const roleMap: Record<string, string> = {
+      backend: 'backend', frontend: 'frontend', fullstack: 'fullstack',
+      devops: 'devops', data: 'data', ml: 'ml', mobile: 'mobile',
+      qa: 'qa', em: 'em', architect: 'architect',
+      cloud: 'cloud', platform: 'platform', security: 'security',
+      sre: 'sre', data_scientist: 'data', data_analyst: 'data',
+      tech_lead: 'tech_lead', staff: 'staff', principal: 'principal',
+      tpm: 'tpm', product_manager: 'product_manager',
+      ios: 'ios', android: 'android', blockchain: 'blockchain',
+      game_dev: 'game_dev', embedded: 'embedded', dba: 'data',
+      network: 'network', ai_researcher: 'ml', devsecops: 'devops',
+    };
+    if (roleMap[r]) return roleMap[r];
+    // Fuzzy fallback for free-text roles
     if (r.includes('devops') || r.includes('dev ops')) return 'devops';
     if (r.includes('sre') || r.includes('site reliability')) return 'sre';
-    if (r.includes('ml') || r.includes('ai')) return 'ml';
+    if (r.includes('security')) return 'security';
+    if (r.includes('ml') || r.includes('ai') || r.includes('machine learning')) return 'ml';
     if (r.includes('data')) return 'data';
-    if (r.includes('full stack') || r.includes('fullstack')) return 'fullstack';
+    if (r.includes('ios')) return 'ios';
+    if (r.includes('android')) return 'android';
+    if (r.includes('mobile')) return 'mobile';
+    if (r.includes('qa') || r.includes('test')) return 'qa';
+    if (r.includes('embedded') || r.includes('firmware')) return 'embedded';
+    if (r.includes('fullstack') || r.includes('full stack')) return 'fullstack';
     if (r.includes('frontend') || r.includes('front')) return 'frontend';
     if (r.includes('backend') || r.includes('back')) return 'backend';
     if (r.includes('platform')) return 'platform';
     if (r.includes('cloud') || r.includes('infrastructure')) return 'cloud';
+    if (r.includes('manager')) return 'em';
+    if (r.includes('lead')) return 'tech_lead';
+    if (r.includes('architect')) return 'architect';
+    if (r.includes('blockchain') || r.includes('web3')) return 'blockchain';
+    if (r.includes('game')) return 'game_dev';
     return 'all';
   };
 
@@ -293,6 +426,23 @@ export default function JobsPage() {
   const [search, setSearch] = useState('');
   const [role, setRole] = useState('all');
   const [roleInitialized, setRoleInitialized] = useState(false);
+  const [locationFilter, setLocationFilter] = useState('');
+  const [sourceFilter, setSourceFilter] = useState('');
+  const [workTypeFilter, setWorkTypeFilter] = useState('');
+  const [departmentFilter, setDepartmentFilter] = useState('');
+  const [companyFilter, setCompanyFilter] = useState('');
+  const [experienceFilter, setExperienceFilter] = useState('');
+  const [postedWithinFilter, setPostedWithinFilter] = useState('');
+  const [salaryMinFilter, setSalaryMinFilter] = useState('');
+  const [salaryMaxFilter, setSalaryMaxFilter] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+
+  // Filter options from API
+  const [availableSources, setAvailableSources] = useState<FilterOption[]>([]);
+  const [availableLocations, setAvailableLocations] = useState<FilterOption[]>([]);
+  const [availableDepartments, setAvailableDepartments] = useState<FilterOption[]>([]);
+  const [availableCompanies, setAvailableCompanies] = useState<FilterOption[]>([]);
+  const [salaryRange, setSalaryRange] = useState<{ min: number | null; max: number | null }>({ min: null, max: null });
 
   // Set role from user profile once auth loads
   useEffect(() => {
@@ -306,6 +456,10 @@ export default function JobsPage() {
   // Data
   const [jobs, setJobs] = useState<Job[]>([]);
   const [total, setTotal] = useState(0);
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+  const [offset, setOffset] = useState(0);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -388,31 +542,105 @@ export default function JobsPage() {
     navigate('/jobs/url/prepare');
   };
 
+  const PAGE_SIZE = 50;
+
+  /* ── Build common query params for all job fetches ── */
+  const buildJobParams = useCallback((extraOffset?: number) => {
+    const params = new URLSearchParams();
+    if (search) params.set('search', search);
+    if (role !== 'all') params.set('role', role);
+    if (locationFilter) params.set('location', locationFilter);
+    if (sourceFilter) params.set('source', sourceFilter);
+    if (workTypeFilter) params.set('work_type', workTypeFilter);
+    if (departmentFilter) params.set('department', departmentFilter);
+    if (companyFilter) params.set('company', companyFilter);
+    if (experienceFilter) params.set('experience', experienceFilter);
+    if (postedWithinFilter) params.set('posted_within', postedWithinFilter);
+    if (salaryMinFilter) params.set('min_salary', salaryMinFilter);
+    if (salaryMaxFilter) params.set('max_salary', salaryMaxFilter);
+    params.set('limit', String(PAGE_SIZE));
+    if (extraOffset) params.set('offset', String(extraOffset));
+    return params;
+  }, [search, role, locationFilter, sourceFilter, workTypeFilter, departmentFilter, companyFilter, experienceFilter, postedWithinFilter, salaryMinFilter, salaryMaxFilter]);
+
+  /* ── Fetch filter options on mount ── */
+  useEffect(() => {
+    (async () => {
+      try {
+        const headers: Record<string, string> = {};
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        const res = await fetch(`${API_URL}/api/v1/jobs/filters`, { headers });
+        if (!res.ok) return;
+        const data: FiltersResponse = await res.json();
+        setAvailableSources(data.sources || []);
+        setAvailableLocations(data.locations || []);
+        setAvailableDepartments(data.departments || []);
+        setAvailableCompanies(data.companies || []);
+        if (data.salary_range) setSalaryRange(data.salary_range);
+      } catch {
+        // filter options are optional — fail silently
+      }
+    })();
+  }, [token]);
+
   /* ── Fetch jobs ── */
   const fetchJobs = useCallback(async () => {
     setLoading(true);
     setError(null);
+    setOffset(0);
+    setHasMore(true);
     try {
-      const params = new URLSearchParams();
-      if (search) params.set('search', search);
-      if (role !== 'all') params.set('role', role);
-      params.set('limit', '50');
-
+      const params = buildJobParams();
       const headers: Record<string, string> = {};
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
       const res = await fetch(`${API_URL}/api/v1/jobs?${params}`, { headers });
       if (!res.ok) throw new Error(`Failed to fetch jobs (${res.status})`);
       const data: JobsResponse = await res.json();
-      setJobs(data.jobs || []);
+      const fetched = data.jobs || [];
+      setJobs(fetched);
       setTotal(data.total || 0);
+      setOffset(fetched.length);
+      setHasMore(fetched.length < (data.total || 0));
+      if (data.last_updated) setLastUpdated(data.last_updated);
     } catch (err: any) {
       setError(err.message || 'Failed to load jobs');
       setJobs([]);
     } finally {
       setLoading(false);
     }
-  }, [search, role, token]);
+  }, [buildJobParams, token]);
+
+  /* ── Load more jobs ── */
+  const loadMore = useCallback(async () => {
+    if (loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    try {
+      const params = buildJobParams(offset);
+      const headers: Record<string, string> = {};
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const res = await fetch(`${API_URL}/api/v1/jobs?${params}`, { headers });
+      if (!res.ok) throw new Error(`Failed to load more jobs`);
+      const data: JobsResponse = await res.json();
+      const fetched = data.jobs || [];
+      setJobs((prev) => [...prev, ...fetched]);
+      setOffset((prev) => prev + fetched.length);
+      setHasMore(offset + fetched.length < (data.total || 0));
+    } catch {
+      // silently fail — user can retry
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [buildJobParams, token, offset, loadingMore, hasMore]);
+
+  const activeFilterCount = [locationFilter, sourceFilter, workTypeFilter, departmentFilter, companyFilter, experienceFilter, postedWithinFilter, salaryMinFilter, salaryMaxFilter].filter(Boolean).length;
+
+  const clearAllFilters = () => {
+    setLocationFilter(''); setSourceFilter(''); setWorkTypeFilter('');
+    setDepartmentFilter(''); setCompanyFilter(''); setExperienceFilter('');
+    setPostedWithinFilter(''); setSalaryMinFilter(''); setSalaryMaxFilter('');
+  };
 
   /* ── Debounced fetch on filter change ── */
   useEffect(() => {
@@ -427,10 +655,8 @@ export default function JobsPage() {
     window.scrollTo(0, 0);
   }, []);
 
-  /* ── Filtered jobs by selected category pill ── */
-  const filteredJobs = role === 'all'
-    ? jobs
-    : jobs.filter((job) => detectCategory(job.title) === role);
+  /* ── Jobs from API — backend handles category filtering ── */
+  const filteredJobs = jobs;
 
   return (
     <div style={{ background: 'transparent', minHeight: '100vh' }}>
@@ -528,7 +754,11 @@ export default function JobsPage() {
                 <strong style={{ color: 'var(--text-primary)' }}>{total}</strong> active jobs
               </span>
               <span style={{ color: 'var(--border)' }}>|</span>
-              <span>Updated daily</span>
+              <span>
+                {lastUpdated
+                  ? `Updated ${new Date(lastUpdated).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })}`
+                  : 'Updated daily'}
+              </span>
             </div>
           </div>
         </div>
@@ -757,6 +987,180 @@ export default function JobsPage() {
           </div>
         </div>
 
+        {/* ── Advanced Filter Bar ── */}
+        <div className="w-full lg:max-w-[70%] mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: '12px' }}>
+          {/* Toggle + active pills row */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '8px 14px',
+                fontSize: '13px',
+                fontWeight: 600,
+                color: activeFilterCount > 0 ? 'var(--accent)' : 'var(--text-secondary)',
+                background: activeFilterCount > 0 ? 'rgba(99,102,241,0.1)' : 'var(--bg-elevated)',
+                border: `1px solid ${activeFilterCount > 0 ? 'var(--accent)' : 'var(--border)'}`,
+                borderRadius: '8px',
+                cursor: 'pointer',
+                transition: 'all 0.15s',
+              }}
+            >
+              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
+              </svg>
+              Filters{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
+              <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5} style={{ transform: showFilters ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+              </svg>
+            </button>
+
+            {/* Active filter pills */}
+            {[
+              { val: locationFilter, set: setLocationFilter, label: locationFilter, color: '#6366f1' },
+              { val: sourceFilter, set: setSourceFilter, label: sourceFilter, color: '#10b981' },
+              { val: workTypeFilter, set: setWorkTypeFilter, label: WORK_TYPES.find(w => w.value === workTypeFilter)?.label, color: '#f59e0b' },
+              { val: departmentFilter, set: setDepartmentFilter, label: departmentFilter, color: '#8b5cf6' },
+              { val: companyFilter, set: setCompanyFilter, label: companyFilter, color: '#3b82f6' },
+              { val: experienceFilter, set: setExperienceFilter, label: EXPERIENCE_LEVELS.find(e => e.value === experienceFilter)?.label, color: '#ec4899' },
+              { val: postedWithinFilter, set: setPostedWithinFilter, label: POSTED_WITHIN.find(p => p.value === postedWithinFilter)?.label, color: '#06b6d4' },
+              { val: salaryMinFilter, set: setSalaryMinFilter, label: `Min $${Math.round(Number(salaryMinFilter) / 1000)}K`, color: '#14b8a6' },
+              { val: salaryMaxFilter, set: setSalaryMaxFilter, label: `Max $${Math.round(Number(salaryMaxFilter) / 1000)}K`, color: '#14b8a6' },
+            ].filter(f => f.val).map((f, i) => (
+              <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '5px 10px', fontSize: '12px', fontWeight: 600, color: f.color, background: `${f.color}15`, borderRadius: '6px', border: `1px solid ${f.color}30` }}>
+                {f.label}
+                <button onClick={() => f.set('')} style={{ background: 'none', border: 'none', color: f.color, cursor: 'pointer', padding: '0 2px', fontSize: '14px', lineHeight: 1 }}>&times;</button>
+              </span>
+            ))}
+            {activeFilterCount > 0 && (
+              <button onClick={clearAllFilters} style={{ fontSize: '12px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: '6px 8px' }}>
+                Clear all
+              </button>
+            )}
+          </div>
+
+          {/* Expandable advanced filter panel */}
+          {showFilters && (
+            <div style={{
+              marginTop: '12px',
+              padding: '20px',
+              background: 'var(--bg-surface)',
+              border: '1px solid var(--border)',
+              borderRadius: '12px',
+            }}>
+              {/* Row 1: Location, Work Type, Experience, Posted */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '14px', marginBottom: '14px' }}>
+                <div>
+                  <label className="jobs-filter-label">Location</label>
+                  <select value={locationFilter} onChange={(e) => setLocationFilter(e.target.value)} className="jobs-filter-select">
+                    <option value="">All Locations</option>
+                    {availableLocations.map((l) => (
+                      <option key={l.name} value={l.name}>{l.name} ({l.count})</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="jobs-filter-label">Work Type</label>
+                  <select value={workTypeFilter} onChange={(e) => setWorkTypeFilter(e.target.value)} className="jobs-filter-select">
+                    {WORK_TYPES.map((wt) => <option key={wt.value} value={wt.value}>{wt.label}</option>)}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="jobs-filter-label">Experience Level</label>
+                  <select value={experienceFilter} onChange={(e) => setExperienceFilter(e.target.value)} className="jobs-filter-select">
+                    {EXPERIENCE_LEVELS.map((el) => <option key={el.value} value={el.value}>{el.label}</option>)}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="jobs-filter-label">Date Posted</label>
+                  <select value={postedWithinFilter} onChange={(e) => setPostedWithinFilter(e.target.value)} className="jobs-filter-select">
+                    {POSTED_WITHIN.map((pw) => <option key={pw.value} value={pw.value}>{pw.label}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              {/* Row 2: Platform, Department, Company */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '14px', marginBottom: '14px' }}>
+                <div>
+                  <label className="jobs-filter-label">Job Platform</label>
+                  <select value={sourceFilter} onChange={(e) => setSourceFilter(e.target.value)} className="jobs-filter-select">
+                    <option value="">All Platforms</option>
+                    {availableSources.map((s) => <option key={s.name} value={s.name}>{s.name} ({s.count})</option>)}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="jobs-filter-label">Department</label>
+                  <select value={departmentFilter} onChange={(e) => setDepartmentFilter(e.target.value)} className="jobs-filter-select">
+                    <option value="">All Departments</option>
+                    {availableDepartments.map((d) => <option key={d.name} value={d.name}>{d.name} ({d.count})</option>)}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="jobs-filter-label">Company</label>
+                  <input
+                    type="text"
+                    placeholder="Search companies..."
+                    value={companyFilter}
+                    onChange={(e) => setCompanyFilter(e.target.value)}
+                    list="company-options"
+                    className="jobs-filter-input"
+                  />
+                  <datalist id="company-options">
+                    {availableCompanies.map((c) => <option key={c.name} value={c.name}>{`${c.name} (${c.count})`}</option>)}
+                  </datalist>
+                </div>
+
+                {/* Salary Range */}
+                <div>
+                  <label className="jobs-filter-label">
+                    Salary Range
+                    {salaryRange.min != null && <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}> (${Math.round(salaryRange.min / 1000)}K–${Math.round((salaryRange.max || 0) / 1000)}K)</span>}
+                  </label>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <input
+                      type="number"
+                      placeholder="Min"
+                      value={salaryMinFilter}
+                      onChange={(e) => setSalaryMinFilter(e.target.value)}
+                      className="jobs-filter-input"
+                      style={{ width: '50%' }}
+                      step={10000}
+                    />
+                    <input
+                      type="number"
+                      placeholder="Max"
+                      value={salaryMaxFilter}
+                      onChange={(e) => setSalaryMaxFilter(e.target.value)}
+                      className="jobs-filter-input"
+                      style={{ width: '50%' }}
+                      step={10000}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Result count + clear */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '8px', borderTop: '1px solid var(--border)' }}>
+                <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+                  {total} job{total !== 1 ? 's' : ''} found
+                </span>
+                {activeFilterCount > 0 && (
+                  <button onClick={clearAllFilters} style={{ fontSize: '13px', fontWeight: 600, color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 8px' }}>
+                    Clear all filters
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* ── Job Cards Grid ── */}
         <div className="w-full lg:max-w-[70%] mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
           {loading ? (
@@ -917,42 +1321,109 @@ export default function JobsPage() {
                       </div>
                     </div>
 
-                    {/* Expandable details — pushes only cards below in same column */}
-                    <div className="jobs-card-details" style={{ maxHeight: '0', overflow: 'hidden', transition: 'max-height 0.35s ease, padding 0.35s ease', padding: '0 16px' }}>
-                      {/* Location + Work Type */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '12px', fontSize: '13px', color: 'var(--text-secondary)' }}>
+                    {/* Card details */}
+                    <div style={{ padding: '12px 16px 0' }}>
+                      {/* Location + Work Type + Posted */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', fontSize: '12px', color: 'var(--text-secondary)' }}>
                         {job.location && (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            <svg width="13" height="13" fill="none" stroke="var(--text-muted)" viewBox="0 0 24 24" strokeWidth={1.8}>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '3px', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            <svg width="12" height="12" fill="none" stroke="var(--text-muted)" viewBox="0 0 24 24" strokeWidth={1.8}>
                               <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
                               <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
                             </svg>
-                            <span>{job.location}</span>
-                          </div>
+                            {job.location.length > 35 ? job.location.slice(0, 35) + '...' : job.location}
+                          </span>
                         )}
-                        <span style={{ fontSize: '11px', fontWeight: 600, color: workType === 'Remote' ? '#059669' : workType === 'Hybrid' ? '#d97706' : 'var(--text-muted)', background: workType === 'Remote' ? '#ecfdf5' : workType === 'Hybrid' ? '#fffbeb' : 'var(--bg-elevated)', padding: '2px 8px', borderRadius: '9999px' }}>{workType}</span>
+                        <span style={{ fontSize: '10px', fontWeight: 600, color: workType === 'Remote' ? '#059669' : workType === 'Hybrid' ? '#d97706' : 'var(--text-muted)', background: workType === 'Remote' ? 'rgba(5,150,105,0.1)' : workType === 'Hybrid' ? 'rgba(217,119,6,0.1)' : 'var(--bg-elevated)', padding: '2px 7px', borderRadius: '9999px' }}>{workType}</span>
                       </div>
 
-                      {/* Salary */}
-                      <p style={{ fontSize: '14px', fontWeight: 600, color: (job.salary_min || job.salary_max) ? 'var(--text-primary)' : 'var(--text-muted)', margin: '10px 0 0 0' }}>
-                        {salary}
-                      </p>
-
-                      {/* Action links */}
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid var(--border)', paddingTop: '12px', marginTop: '12px', paddingBottom: '14px' }}>
-                        <a href={job.job_url} target="_blank" rel="noopener noreferrer" className="jobs-action-link" style={{ fontSize: '13px', fontWeight: 600, color: 'var(--accent)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          Apply Now
-                          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" /></svg>
-                        </a>
-                        <Link to={`/jobs/${job.id}/prepare`} className="jobs-action-link-gray" style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          Prepare
-                          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" /></svg>
-                        </Link>
+                      {/* Salary + Posted date row */}
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '8px' }}>
+                        {salary ? (
+                          <span style={{ fontSize: '13px', fontWeight: 700, color: '#10b981' }}>{salary}</span>
+                        ) : (
+                          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Salary not listed</span>
+                        )}
+                        {timeAgo(job.posted_date || job.date_found) && (
+                          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{timeAgo(job.posted_date || job.date_found)}</span>
+                        )}
                       </div>
+
+                      {/* Department + Source */}
+                      {(job.department || job.source) && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '8px', flexWrap: 'wrap' }}>
+                          {job.department && (
+                            <span style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-secondary)', background: 'var(--bg-elevated)', padding: '2px 7px', borderRadius: '4px' }}>
+                              {job.department.length > 25 ? job.department.slice(0, 25) + '...' : job.department}
+                            </span>
+                          )}
+                          {job.source && (
+                            <span style={{ fontSize: '10px', fontWeight: 500, color: 'var(--text-muted)' }}>
+                              via {job.source}
+                            </span>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Tech stack tags */}
+                      {job.ai_tech_stack && job.ai_tech_stack.length > 0 && (
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '8px' }}>
+                          {(Array.isArray(job.ai_tech_stack) ? job.ai_tech_stack : []).slice(0, 5).map((tech) => (
+                            <span key={tech} style={{ fontSize: '10px', fontWeight: 600, color: 'var(--accent)', background: 'rgba(99,102,241,0.08)', padding: '2px 7px', borderRadius: '4px', border: '1px solid rgba(99,102,241,0.15)' }}>
+                              {tech}
+                            </span>
+                          ))}
+                          {job.ai_tech_stack.length > 5 && (
+                            <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>+{job.ai_tech_stack.length - 5}</span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Action links */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid var(--border)', padding: '10px 16px', marginTop: '10px' }}>
+                      <a href={job.job_url} target="_blank" rel="noopener noreferrer" className="jobs-action-link" style={{ fontSize: '12px', fontWeight: 600, color: 'var(--accent)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        Apply
+                        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" /></svg>
+                      </a>
+                      <Link to={`/capra/resume?company=${encodeURIComponent(job.company_name)}&role=${encodeURIComponent(job.title)}&url=${encodeURIComponent(job.job_url)}`} className="jobs-action-link-resume" style={{ fontSize: '12px', fontWeight: 600, color: '#8b5cf6', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        Resume
+                        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
+                      </Link>
+                      <Link to={`/jobs/${job.id}/prepare`} className="jobs-action-link-gray" style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        Prepare
+                        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" /></svg>
+                      </Link>
                     </div>
                   </div>
                 );
               })}
+            </div>
+          )}
+
+          {/* Load more button */}
+          {!loading && hasMore && filteredJobs.length > 0 && (
+            <div style={{ textAlign: 'center', padding: '32px 0 16px' }}>
+              <button
+                onClick={loadMore}
+                disabled={loadingMore}
+                style={{
+                  padding: '12px 32px',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  color: '#fff',
+                  background: 'var(--accent)',
+                  border: 'none',
+                  borderRadius: '10px',
+                  cursor: loadingMore ? 'wait' : 'pointer',
+                  opacity: loadingMore ? 0.7 : 1,
+                  transition: 'all 0.15s',
+                }}
+                onMouseEnter={(e) => { if (!loadingMore) e.currentTarget.style.background = 'var(--accent-hover)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--accent)'; }}
+              >
+                {loadingMore ? 'Loading...' : `Load more jobs (${filteredJobs.length} of ${total})`}
+              </button>
             </div>
           )}
         </div>
@@ -983,10 +1454,6 @@ export default function JobsPage() {
           border-color: #7c8db5 !important;
           z-index: 10;
         }
-        .jobs-card:hover .jobs-card-details {
-          max-height: 200px !important;
-          padding: 0 16px !important;
-        }
         .jobs-grid { column-count: 4; }
         @media (max-width: 1280px) {
           .jobs-grid { column-count: 3; }
@@ -996,6 +1463,56 @@ export default function JobsPage() {
         }
         @media (max-width: 640px) {
           .jobs-grid { column-count: 1; }
+        }
+
+        /* Filter form controls */
+        .jobs-filter-label {
+          display: block;
+          font-size: 11px;
+          font-weight: 700;
+          color: var(--text-muted);
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          margin-bottom: 6px;
+        }
+        .jobs-filter-input,
+        .jobs-filter-select {
+          width: 100%;
+          padding: 8px 12px;
+          font-size: 13px;
+          color: var(--text-primary);
+          background: var(--bg-elevated);
+          border: 1px solid var(--border);
+          border-radius: 8px;
+          outline: none;
+          transition: border-color 0.15s;
+        }
+        .jobs-filter-input:focus,
+        .jobs-filter-select:focus {
+          border-color: var(--accent);
+          box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+        }
+        .jobs-filter-select {
+          cursor: pointer;
+          -webkit-appearance: none;
+          appearance: none;
+          background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.5' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M19.5 8.25l-7.5 7.5-7.5-7.5'/%3E%3C/svg%3E");
+          background-repeat: no-repeat;
+          background-position: right 10px center;
+          padding-right: 32px;
+        }
+        .jobs-filter-input::placeholder {
+          color: var(--text-muted);
+          opacity: 0.6;
+        }
+        /* Remove number input spinners */
+        .jobs-filter-input[type="number"]::-webkit-inner-spin-button,
+        .jobs-filter-input[type="number"]::-webkit-outer-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+        .jobs-filter-input[type="number"] {
+          -moz-appearance: textfield;
         }
 
         /* Search bar focus-within */
@@ -1016,6 +1533,9 @@ export default function JobsPage() {
         }
         .jobs-action-link-gray:hover {
           color: var(--text-primary) !important;
+        }
+        .jobs-action-link-resume:hover {
+          color: #a78bfa !important;
         }
 
         /* Footer link hover */
