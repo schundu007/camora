@@ -147,24 +147,12 @@ export function LumoraSettings({ isOpen, onClose }: LumoraSettingsProps) {
                 ) : (
                   <div>
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="text-xs font-bold uppercase tracking-wider" style={{ color: '#76B900' }}>How it works</span>
+                      <span className="text-xs font-bold uppercase tracking-wider" style={{ color: '#76B900' }}>Step 1</span>
+                      <span className="text-xs" style={{ color: '#64748b' }}>Enroll your voice (5-second sample)</span>
                     </div>
-                    <ol className="space-y-2 text-xs" style={{ color: '#475569' }}>
-                      <li className="flex gap-2">
-                        <span className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 text-[10px] font-bold" style={{ background: '#76B90010', color: '#76B900' }}>1</span>
-                        <span>Start recording — Camora captures and enrolls your voice automatically from the first audio chunk</span>
-                      </li>
-                      <li className="flex gap-2">
-                        <span className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 text-[10px] font-bold" style={{ background: '#76B90010', color: '#76B900' }}>2</span>
-                        <span>Your voice is filtered out — only the interviewer's questions are transcribed</span>
-                      </li>
-                      <li className="flex gap-2">
-                        <span className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 text-[10px] font-bold" style={{ background: '#76B90010', color: '#76B900' }}>3</span>
-                        <span>AI generates answers for each interviewer question automatically</span>
-                      </li>
-                    </ol>
-                    <p className="text-[10px] mt-3" style={{ color: '#94a3b8' }}>
-                      No manual voice enrollment needed — just start recording and speak naturally for the first few seconds.
+                    <VoiceEnrollment disabled={false} variant="light" />
+                    <p className="text-[10px] mt-2" style={{ color: '#94a3b8' }}>
+                      Once enrolled, your voice is filtered out during recording. Only the interviewer's questions are transcribed and answered by AI.
                     </p>
                   </div>
                 )}
