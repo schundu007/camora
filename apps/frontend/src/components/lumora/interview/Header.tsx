@@ -131,7 +131,7 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
   };
 
   return (
-    <header className="z-50 shrink-0" style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #EC4899 100%)', borderBottom: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 1px 8px rgba(0,0,0,0.15)', fontFamily: "'Satoshi', sans-serif" }}>
+    <header className="z-50 shrink-0" style={{ background: 'linear-gradient(135deg, #059669 0%, #0D9488 100%)', borderBottom: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 1px 8px rgba(0,0,0,0.15)', fontFamily: "'Satoshi', sans-serif" }}>
       {/* Row 1: Nav + Audio + Controls — horizontally scrollable */}
       <div className="flex items-center h-[42px] overflow-x-auto no-scrollbar">
         {/* Sidebar toggle */}
@@ -268,7 +268,7 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
             <button
               onClick={onSubmit}
               className="font-display flex items-center gap-1.5 px-4 py-1.5 text-white text-xs font-bold rounded-lg hover:opacity-90 transition-all ml-2"
-              style={{ background: 'linear-gradient(135deg, #7C3AED, #EC4899)', boxShadow: '0 2px 12px rgba(11,92,255,0.3)' }}
+              style={{ background: 'linear-gradient(135deg, #059669, #0D9488)', boxShadow: '0 2px 12px rgba(11,92,255,0.3)' }}
             >
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
@@ -299,7 +299,7 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
                 onClick={handleTextareaSubmit}
                 disabled={!inputValue}
                 className="font-display flex items-center gap-1.5 px-4 py-2 text-white text-xs font-bold rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90"
-                style={{ background: 'linear-gradient(135deg, #7C3AED, #EC4899)', boxShadow: '0 2px 12px rgba(11,92,255,0.3)' }}
+                style={{ background: 'linear-gradient(135deg, #059669, #0D9488)', boxShadow: '0 2px 12px rgba(11,92,255,0.3)' }}
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
@@ -338,7 +338,7 @@ function UserBadge() {
         {user.image ? (
           <img src={user.image} alt="" className="w-6 h-6 rounded-full" />
         ) : (
-          <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[9px] font-bold" style={{ background: 'linear-gradient(135deg, #7C3AED, #EC4899)' }}>
+          <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[9px] font-bold" style={{ background: 'linear-gradient(135deg, #059669, #0D9488)' }}>
             {initials}
           </div>
         )}
@@ -350,7 +350,7 @@ function UserBadge() {
       {showMenu && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
-          <div className="absolute right-0 top-full mt-1 w-48 rounded-2xl shadow-xl border z-50 py-1 overflow-hidden" style={{ background: 'linear-gradient(180deg, #7C3AED 0%, #150D25 100%)', borderColor: 'rgba(255,255,255,0.12)' }}>
+          <div className="absolute right-0 top-full mt-1 w-48 rounded-2xl shadow-xl border z-50 py-1 overflow-hidden" style={{ background: 'linear-gradient(180deg, #059669 0%, #12121A 100%)', borderColor: 'rgba(255,255,255,0.12)' }}>
             <div className="px-3 py-2 border-b border-white/10">
               <p className="font-display text-sm font-semibold text-white truncate">{user.name || 'User'}</p>
               <p className="font-code text-xs text-white/50 truncate">{user.email}</p>
