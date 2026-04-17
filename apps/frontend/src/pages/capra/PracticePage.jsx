@@ -158,7 +158,7 @@ function getDailyCategory(challenge) {
 }
 
 function scoreColor(s) {
-  if (s >= 70) return '#0D9488';
+  if (s >= 70) return '#76B900';
   if (s >= 40) return '#d97706';
   return '#dc2626';
 }
@@ -170,7 +170,7 @@ function scoreBg(s) {
 }
 
 function diffColor(d) {
-  if (d === 'easy') return { bg: 'rgba(5,150,105,0.12)', text: '#0D9488' };
+  if (d === 'easy') return { bg: 'rgba(5,150,105,0.12)', text: '#76B900' };
   if (d === 'medium') return { bg: 'rgba(217,119,6,0.12)', text: '#d97706' };
   return { bg: 'rgba(220,38,38,0.12)', text: '#dc2626' };
 }
@@ -1282,7 +1282,7 @@ export default function PracticePage() {
                     <div key={i} style={{ borderBottom: i < questions.length - 1 ? '1px solid var(--border)' : 'none' }}>
                       <button onClick={() => setExpandedHistory(isExpanded ? null : `result-${i}`)} style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 24px', background: isExpanded ? 'var(--bg-elevated)' : 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left', transition: 'background 0.15s' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                          <div style={{ width: 26, height: 26, borderRadius: 8, background: pass ? 'rgba(5,150,105,0.12)' : 'rgba(220,38,38,0.12)', color: pass ? '#0D9488' : '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, flexShrink: 0 }}>{i + 1}</div>
+                          <div style={{ width: 26, height: 26, borderRadius: 8, background: pass ? 'rgba(5,150,105,0.12)' : 'rgba(220,38,38,0.12)', color: pass ? '#76B900' : '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, flexShrink: 0 }}>{i + 1}</div>
                           <div>
                             <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>{q.q}</span>
                             {q.difficulty && <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', marginLeft: 8, textTransform: 'capitalize' }}>{q.difficulty}</span>}

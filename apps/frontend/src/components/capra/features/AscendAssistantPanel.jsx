@@ -1604,7 +1604,7 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
                     className="h-full transition-all duration-75 rounded-full"
                     style={{
                       width: `${Math.min(audioLevel * 100 * 3, 100)}%`,
-                      background: isSpeaking ? 'linear-gradient(90deg, #10b981, #0D9488)' : '#64748b'
+                      background: isSpeaking ? 'linear-gradient(90deg, #10b981, #76B900)' : '#64748b'
                     }}
                   />
                 </div>

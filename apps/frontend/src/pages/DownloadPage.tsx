@@ -461,7 +461,7 @@ export default function DownloadPage() {
                     to="/login?redirect=/download"
                     className="group inline-flex items-center gap-3 px-8 py-4 rounded-2xl text-base font-bold transition-all duration-200 no-underline"
                     style={{
-                      background: 'linear-gradient(135deg, #10b981 0%, #0D9488 100%)',
+                      background: 'linear-gradient(135deg, #10b981 0%, #76B900 100%)',
                       color: '#ffffff',
                       boxShadow: '0 4px 24px rgba(16,185,129,0.35), 0 0 0 1px rgba(255,255,255,0.1) inset',
                     }}
@@ -488,7 +488,7 @@ export default function DownloadPage() {
                     disabled={proLoading}
                     className="group inline-flex items-center gap-3 px-8 py-4 rounded-2xl text-base font-bold transition-all duration-200 disabled:opacity-60"
                     style={{
-                      background: 'linear-gradient(135deg, #10b981 0%, #0D9488 100%)',
+                      background: 'linear-gradient(135deg, #10b981 0%, #76B900 100%)',
                       color: '#ffffff',
                       border: 'none',
                       cursor: proLoading ? 'wait' : 'pointer',

@@ -269,7 +269,7 @@ const PLACEHOLDER_CODE: Record<Language, string> = {
 };
 
 const DIFFICULTY_COLORS: Record<string, { bg: string; text: string; border: string }> = {
-  Easy: { bg: 'rgba(5,150,105,0.12)', text: '#0D9488', border: 'rgba(5,150,105,0.3)' },
+  Easy: { bg: 'rgba(5,150,105,0.12)', text: '#76B900', border: 'rgba(5,150,105,0.3)' },
   Medium: { bg: 'rgba(217,119,6,0.12)', text: '#d97706', border: 'rgba(217,119,6,0.3)' },
   Hard: { bg: 'rgba(220,38,38,0.12)', text: '#dc2626', border: 'rgba(220,38,38,0.3)' },
 };
@@ -1188,7 +1188,7 @@ export default function Blind75Page() {
                       padding: '3px 10px',
                       borderRadius: '20px',
                       background: 'rgba(5,150,105,0.08)',
-                      color: '#0D9488',
+                      color: '#76B900',
                       border: '1px solid rgba(16,185,129,0.3)',
                       whiteSpace: 'nowrap',
                     }}>
@@ -1247,7 +1247,7 @@ export default function Blind75Page() {
                                     <td style={{ padding: '6px 12px', borderBottom: '1px solid var(--border)', color: 'var(--text-secondary)', fontWeight: 500 }}>
                                       {key.replace(/([A-Z])/g, ' $1').replace(/^./, (s: string) => s.toUpperCase())}
                                     </td>
-                                    <td style={{ padding: '6px 12px', borderBottom: '1px solid var(--border)', color: '#0D9488', fontFamily: "'JetBrains Mono', monospace", fontWeight: 600 }}>
+                                    <td style={{ padding: '6px 12px', borderBottom: '1px solid var(--border)', color: '#76B900', fontFamily: "'JetBrains Mono', monospace", fontWeight: 600 }}>
                                       {String(value)}
                                     </td>
                                   </tr>
@@ -1425,7 +1425,7 @@ export default function Blind75Page() {
               <span style={{ fontSize: '13px', fontWeight: 600, color: '#10b981' }}>{practicedInSection}/{totalInSection} practiced ({progressPct}%)</span>
             </div>
             <div style={{ height: '8px', borderRadius: '4px', background: 'var(--bg-elevated)', overflow: 'hidden' }}>
-              <div style={{ height: '100%', borderRadius: '4px', background: 'linear-gradient(90deg, #10b981, #0D9488)', width: `${progressPct}%`, transition: 'width 0.3s ease' }} />
+              <div style={{ height: '100%', borderRadius: '4px', background: 'linear-gradient(90deg, #10b981, #76B900)', width: `${progressPct}%`, transition: 'width 0.3s ease' }} />
             </div>
           </div>
 
@@ -1456,7 +1456,7 @@ export default function Blind75Page() {
                     {/* Green numbered badge */}
                     <span style={{
                       width: '32px', height: '32px', borderRadius: '8px',
-                      background: isPracticed ? '#0D9488' : '#10b981', color: 'var(--bg-surface)',
+                      background: isPracticed ? '#76B900' : '#10b981', color: 'var(--bg-surface)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontSize: '13px', fontWeight: 700, flexShrink: 0,
                     }}>
@@ -1605,7 +1605,7 @@ export default function Blind75Page() {
                           {item.tips.map((tip: string, ti: number) => (
                             <div key={ti} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
                               <span style={{
-                                width: '22px', height: '22px', borderRadius: '6px', background: 'rgba(16,185,129,0.15)', color: '#0D9488',
+                                width: '22px', height: '22px', borderRadius: '6px', background: 'rgba(16,185,129,0.15)', color: '#76B900',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                                 fontSize: '11px', fontWeight: 700, flexShrink: 0, marginTop: '1px',
                               }}>{ti + 1}</span>
@@ -1653,11 +1653,11 @@ export default function Blind75Page() {
                 alignItems: 'center',
                 gap: '10px',
               }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0D9488" strokeWidth={2}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#76B900" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#10b981', margin: 0 }}>Before the Interview</h3>
-                <span style={{ fontSize: '12px', color: '#0D9488', fontWeight: 500, marginLeft: 'auto' }}>
+                <span style={{ fontSize: '12px', color: '#76B900', fontWeight: 500, marginLeft: 'auto' }}>
                   {interviewCheatsheet.before.length} items
                 </span>
               </div>
