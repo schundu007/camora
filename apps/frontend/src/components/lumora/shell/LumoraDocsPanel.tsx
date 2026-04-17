@@ -111,6 +111,7 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
   const [activeSection, setActiveSection] = useState('input');
   const [generating, setGenerating] = useState(false);
   const [genProgress, setGenProgress] = useState('');
+  const [sectionStatus, setSectionStatus] = useState<Record<string, 'pending' | 'generating' | 'done' | 'error'>>({});
   const [showNewCompany, setShowNewCompany] = useState(false);
   const [newCompanyName, setNewCompanyName] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
@@ -185,13 +186,25 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
     return `[Uploaded: ${file.name}]`;
   }, [token]);
 
+  const GENERATE_SECTIONS = ['pitch', 'hr', 'hiring-manager', 'coding', 'system-design', 'behavioral', 'techstack'];
+
   const handleGenerate = useCallback(async () => {
     if (!state.jd.trim() || !state.resume.trim() || !token) return;
     setGenerating(true);
+
+    // Initialize all sections as pending
+    const initStatus: Record<string, 'pending' | 'generating' | 'done' | 'error'> = {};
+    GENERATE_SECTIONS.forEach(s => { initStatus[s] = 'pending'; });
+    setSectionStatus(initStatus);
+
     const newSections: Record<string, string> = {};
 
-    for (const section of ['pitch', 'hr', 'hiring-manager', 'coding', 'system-design', 'behavioral', 'techstack']) {
-      setGenProgress(`Generating ${SIDEBAR_SECTIONS.find(s => s.id === section)?.label || section}...`);
+    for (let i = 0; i < GENERATE_SECTIONS.length; i++) {
+      const section = GENERATE_SECTIONS[i];
+      const label = SIDEBAR_SECTIONS.find(s => s.id === section)?.label || section;
+      setGenProgress(`${i + 1}/${GENERATE_SECTIONS.length} — ${label}`);
+      setSectionStatus(prev => ({ ...prev, [section]: 'generating' }));
+
       try {
         const res = await fetch(`${API_URL}/api/ascend/prep/section`, {
           method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
@@ -209,13 +222,19 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
             }
           }
           newSections[section] = text;
+          setSectionStatus(prev => ({ ...prev, [section]: 'done' }));
+          // Save progressively so user can see completed sections
+          setState(prev => ({ ...prev, sections: { ...prev.sections, [section]: text } }));
+        } else {
+          setSectionStatus(prev => ({ ...prev, [section]: 'error' }));
+          newSections[section] = `Error: ${res.status}`;
         }
       } catch (err) {
+        setSectionStatus(prev => ({ ...prev, [section]: 'error' }));
         newSections[section] = `Error generating ${section}`;
       }
     }
 
-    setState(prev => ({ ...prev, sections: { ...prev.sections, ...newSections } }));
     setGenerating(false);
     setGenProgress('');
   }, [state.jd, state.resume, state.coverLetter, state.prepMaterials, token]);
@@ -292,22 +311,52 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
                   color: isActive ? 'var(--accent)' : 'var(--text-secondary)',
                   borderLeft: isActive ? `3px solid var(--accent)` : '3px solid transparent',
                 }}>
-                <div className="w-2 h-2 rounded-full shrink-0" style={{ background: hasContent ? s.color : 'var(--border)' }} />
-                {s.label}
+                {/* Status indicator */}
+                {sectionStatus[s.id] === 'generating' ? (
+                  <div className="w-3 h-3 border-2 border-t-transparent rounded-full animate-spin shrink-0" style={{ borderColor: s.color, borderTopColor: 'transparent' }} />
+                ) : sectionStatus[s.id] === 'done' || hasContent ? (
+                  <div className="w-3 h-3 rounded-full shrink-0 flex items-center justify-center" style={{ background: s.color }}>
+                    <svg className="w-2 h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
+                  </div>
+                ) : sectionStatus[s.id] === 'error' ? (
+                  <div className="w-3 h-3 rounded-full shrink-0" style={{ background: '#ef4444' }} />
+                ) : (
+                  <div className="w-2 h-2 rounded-full shrink-0" style={{ background: 'var(--border)' }} />
+                )}
+                <span className="flex-1">{s.label}</span>
+                {sectionStatus[s.id] === 'pending' && generating && (
+                  <span className="text-[8px] px-1 py-0.5 rounded" style={{ background: 'var(--bg-elevated)', color: 'var(--text-muted)' }}>queued</span>
+                )}
               </button>
             );
           })}
         </div>
 
-        {/* Generate button */}
+        {/* Generate button + progress */}
         <div className="p-3" style={{ borderTop: '1px solid var(--border)' }}>
+          {generating && (
+            <div className="mb-2">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[9px] font-medium" style={{ color: 'var(--text-muted)' }}>{genProgress}</span>
+                <span className="text-[9px] font-bold" style={{ color: 'var(--accent)' }}>
+                  {Object.values(sectionStatus).filter(s => s === 'done').length}/{GENERATE_SECTIONS.length}
+                </span>
+              </div>
+              <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--bg-elevated)' }}>
+                <div className="h-full rounded-full transition-all duration-500" style={{
+                  width: `${(Object.values(sectionStatus).filter(s => s === 'done').length / GENERATE_SECTIONS.length) * 100}%`,
+                  background: 'var(--accent)',
+                }} />
+              </div>
+            </div>
+          )}
           <button onClick={handleGenerate} disabled={!hasRequiredDocs || generating}
             className="w-full py-2.5 text-xs font-bold rounded-lg transition-colors disabled:opacity-40"
             style={{ background: 'var(--accent)', color: '#fff' }}>
-            {generating ? genProgress || 'Generating...' : `Generate (${SIDEBAR_SECTIONS.length - 1})`}
+            {generating ? 'Generating...' : `Generate (${GENERATE_SECTIONS.length})`}
           </button>
           {!hasRequiredDocs && <p className="text-[9px] mt-1.5 text-center" style={{ color: 'var(--text-muted)' }}>Add JD & Resume to start</p>}
-          <button onClick={() => { setState(INITIAL_STATE); setActiveSection('input'); }}
+          <button onClick={() => { setState({ ...EMPTY_DOC } as any); setSectionStatus({}); setActiveSection('input'); }}
             className="w-full py-1.5 mt-1.5 text-[10px] font-medium rounded-lg" style={{ color: 'var(--text-muted)' }}>Clear</button>
         </div>
       </div>
