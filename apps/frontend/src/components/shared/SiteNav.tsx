@@ -114,14 +114,18 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
           </div>
         </div>
       )}
-      {/* Challenge Campaign Ticker — all pages including /challenge */}
+      {/* Challenge Campaign Ticker */}
       {new Date() < CHALLENGE_END && (
-        <Link to="/challenge" className="block overflow-hidden" style={{ background: 'linear-gradient(90deg, #10b981, #6366f1, #0ea5e9, #f59e0b)', height: TICKER_HEIGHT }}>
+        <Link to="/challenge" className="block overflow-hidden" style={{
+          background: isLight ? '#F8FAFC' : 'linear-gradient(90deg, #10b981, #6366f1, #0ea5e9, #f59e0b)',
+          height: TICKER_HEIGHT,
+          borderTop: isLight ? '1px solid rgba(0,0,0,0.06)' : 'none',
+        }}>
           <div className="challenge-ticker flex items-center h-full whitespace-nowrap">
             {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, i) => (
-              <span key={i} className="inline-flex items-center px-6 text-[10px] font-bold text-white tracking-wide">
+              <span key={i} className="inline-flex items-center px-6 text-[10px] font-bold tracking-wide" style={{ color: isLight ? '#475569' : '#FFFFFF' }}>
                 {item}
-                <span className="mx-5 w-1 h-1 rounded-full bg-white/40" />
+                <span className="mx-5 w-1 h-1 rounded-full" style={{ background: isLight ? 'rgba(0,0,0,0.15)' : 'rgba(255,255,255,0.4)' }} />
               </span>
             ))}
           </div>
