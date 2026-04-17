@@ -50,9 +50,11 @@ interface InterviewState {
   useSearch: boolean;
 
   // Voice enrollment
+  voiceMode: 'filter-candidate' | 'record-interviewer';
   voiceEnrolled: boolean;
   voiceFilterEnabled: boolean;
   isEnrolling: boolean;
+  autoEnrollPending: boolean; // true when record-interviewer is waiting for first audio chunk
 
   // Actions
   setConversationId: (id: string | null) => void;
@@ -77,9 +79,11 @@ interface InterviewState {
   removeHistoryEntry: (index: number) => void;
   clearHistory: () => void;
   setUseSearch: (useSearch: boolean) => void;
+  setVoiceMode: (mode: 'filter-candidate' | 'record-interviewer') => void;
   setVoiceEnrolled: (enrolled: boolean) => void;
   setVoiceFilterEnabled: (enabled: boolean) => void;
   setIsEnrolling: (enrolling: boolean) => void;
+  setAutoEnrollPending: (pending: boolean) => void;
   reset: () => void;
 }
 
@@ -106,9 +110,11 @@ const initialState = {
   answerDuration: 0,
   history: [],
   useSearch: false,
+  voiceMode: 'filter-candidate' as const,
   voiceEnrolled: false,
   voiceFilterEnabled: true, // Enable by default when enrolled
   isEnrolling: false,
+  autoEnrollPending: false,
 };
 
 export const useInterviewStore = create<InterviewState>()(
@@ -189,11 +195,15 @@ export const useInterviewStore = create<InterviewState>()(
 
   setUseSearch: (useSearch) => set({ useSearch }),
 
+  setVoiceMode: (mode) => set({ voiceMode: mode }),
+
   setVoiceEnrolled: (enrolled) => set({ voiceEnrolled: enrolled }),
 
   setVoiceFilterEnabled: (enabled) => set({ voiceFilterEnabled: enabled }),
 
   setIsEnrolling: (enrolling) => set({ isEnrolling: enrolling }),
+
+  setAutoEnrollPending: (pending) => set({ autoEnrollPending: pending }),
 
   reset: () => set(initialState),
     }),
@@ -205,6 +215,7 @@ export const useInterviewStore = create<InterviewState>()(
         threshold: state.threshold,
         conversationId: state.conversationId,
         history: state.history,
+        voiceMode: state.voiceMode,
       }),
       migrate: () => ({ useSearch: false, threshold: 0.015 }), // fresh start
       skipHydration: true,
