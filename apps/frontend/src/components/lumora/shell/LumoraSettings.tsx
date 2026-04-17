@@ -135,7 +135,7 @@ export function LumoraSettings({ isOpen, onClose }: LumoraSettingsProps) {
                 {voiceMode === 'filter-candidate' ? (
                   <div>
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="text-xs font-bold uppercase tracking-wider" style={{ color: '#0D9488' }}>Step 1</span>
+                      <span className="text-xs font-bold uppercase tracking-wider" style={{ color: '#76B900' }}>Step 1</span>
                       <span className="text-xs" style={{ color: '#64748b' }}>Enroll your voice (5-second sample)</span>
                     </div>
                     <VoiceEnrollment disabled={false} />
@@ -146,19 +146,19 @@ export function LumoraSettings({ isOpen, onClose }: LumoraSettingsProps) {
                 ) : (
                   <div>
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="text-xs font-bold uppercase tracking-wider" style={{ color: '#0D9488' }}>How it works</span>
+                      <span className="text-xs font-bold uppercase tracking-wider" style={{ color: '#76B900' }}>How it works</span>
                     </div>
                     <ol className="space-y-2 text-xs" style={{ color: '#475569' }}>
                       <li className="flex gap-2">
-                        <span className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 text-[10px] font-bold" style={{ background: '#0D948810', color: '#0D9488' }}>1</span>
+                        <span className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 text-[10px] font-bold" style={{ background: '#76B90010', color: '#76B900' }}>1</span>
                         <span>Start the interview normally — Camora listens to both voices</span>
                       </li>
                       <li className="flex gap-2">
-                        <span className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 text-[10px] font-bold" style={{ background: '#0D948810', color: '#0D9488' }}>2</span>
+                        <span className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 text-[10px] font-bold" style={{ background: '#76B90010', color: '#76B900' }}>2</span>
                         <span>After 2-3 questions, Camora learns the interviewer's voice pattern</span>
                       </li>
                       <li className="flex gap-2">
-                        <span className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 text-[10px] font-bold" style={{ background: '#0D948810', color: '#0D9488' }}>3</span>
+                        <span className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 text-[10px] font-bold" style={{ background: '#76B90010', color: '#76B900' }}>3</span>
                         <span>From then on, only interviewer questions are transcribed → AI generates answers for you</span>
                       </li>
                     </ol>
@@ -204,10 +204,10 @@ function SettingCard({ icon, title, description, children }: {
 }) {
   return (
     <div className="p-4 rounded-xl transition-all hover:shadow-sm" style={{ background: '#ffffff', border: '1px solid #e2e8f0' }}>
-      <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3" style={{ background: '#f1f5f9', color: '#0D9488' }}>
+      <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3" style={{ background: '#f1f5f9', color: '#76B900' }}>
         {icon}
       </div>
-      <h4 className="text-sm font-bold mb-1" style={{ color: '#0D9488', fontFamily: "'Satoshi', sans-serif" }}>{title}</h4>
+      <h4 className="text-sm font-bold mb-1" style={{ color: '#76B900', fontFamily: "'Satoshi', sans-serif" }}>{title}</h4>
       <p className="text-xs leading-relaxed" style={{ color: '#64748b' }}>{description}</p>
       {children}
     </div>
@@ -223,25 +223,25 @@ function VoiceModeCard({ active, onClick, icon, title, description, badge }: {
       onClick={onClick}
       className="p-5 rounded-xl text-left transition-all relative"
       style={{
-        background: active ? '#0D948808' : '#ffffff',
-        border: active ? '2px solid #0D9488' : '1.5px solid #e2e8f0',
-        boxShadow: active ? '0 4px 20px rgba(13,148,136,0.1)' : 'none',
+        background: active ? '#76B90008' : '#ffffff',
+        border: active ? '2px solid #76B900' : '1.5px solid #e2e8f0',
+        boxShadow: active ? '0 4px 20px rgba(118,185,0,0.1)' : 'none',
       }}
     >
       {badge && (
         <span className="absolute top-3 right-3 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
-          style={{ background: '#0D948815', color: '#0D9488' }}>
+          style={{ background: '#76B90015', color: '#76B900' }}>
           {badge}
         </span>
       )}
       {/* Radio indicator */}
       <div className="flex items-start gap-3">
         <div className="mt-0.5 w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0"
-          style={{ borderColor: active ? '#0D9488' : '#cbd5e1' }}>
-          {active && <div className="w-2 h-2 rounded-full" style={{ background: '#0D9488' }} />}
+          style={{ borderColor: active ? '#76B900' : '#cbd5e1' }}>
+          {active && <div className="w-2 h-2 rounded-full" style={{ background: '#76B900' }} />}
         </div>
         <div>
-          <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3" style={{ background: active ? '#0D948815' : '#f1f5f9', color: active ? '#0D9488' : '#94a3b8' }}>
+          <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3" style={{ background: active ? '#76B90015' : '#f1f5f9', color: active ? '#76B900' : '#94a3b8' }}>
             {icon}
           </div>
           <h4 className="text-sm font-bold mb-1" style={{ color: '#0f172a', fontFamily: "'Satoshi', sans-serif" }}>{title}</h4>
