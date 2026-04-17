@@ -41,7 +41,7 @@ export function LumoraShellPage() {
   const activeTab: LumoraTab =
     location.pathname.includes('/coding') ? 'coding' :
     location.pathname.includes('/design') ? 'design' :
-    location.pathname.includes('/prepkit') ? 'docs' :
+    location.pathname.includes('/prepkit') ? 'prepkit' :
     location.pathname.includes('/calendar') ? 'calendar' : 'interview';
 
   // Lazy-mount tabs on first activation
