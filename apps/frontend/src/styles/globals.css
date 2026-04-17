@@ -16,7 +16,7 @@
     /* Borders */
     --border: #2A2833;
     --border-hover: #3B3947;
-    --border-focus: #6366f1;
+    --border-focus: #7C3AED;
 
     /* Text */
     --text-primary: #F2F1F3;
@@ -24,22 +24,23 @@
     --text-muted: #6C6B7B;
     --text-dimmed: #545260;
 
-    /* Accent (Camora indigo) */
-    --accent: #6366f1;
-    --accent-hover: #818cf8;
-    --accent-subtle: rgba(99,102,241,0.12);
-    --accent-text: #BFA5FF;
+    /* Accent (Camora Violet) */
+    --accent: #7C3AED;
+    --accent-hover: #8B5CF6;
+    --accent-subtle: rgba(124,58,237,0.12);
+    --accent-text: #C4B5FD;
 
     /* Semantic */
-    --success: #46A758;
+    --success: #34D399;
     --warning: #FFC53D;
     --danger: #E5484D;
-    --info: #306EE8;
+    --info: #7C3AED;
 
-    /* Fonts */
-    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    /* Fonts — Camora custom (Clash Display + Satoshi) */
+    --font-sans: 'Satoshi', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-display: 'Clash Display', 'Satoshi', sans-serif;
     --font-mono: 'JetBrains Mono', 'IBM Plex Mono', ui-monospace, monospace;
-    --font-brand: 'Comfortaa', sans-serif;
+    --font-brand: 'Clash Display', sans-serif;
 
     /* Shadows (dark mode) */
     --shadow-xs: 0 1px 2px rgba(0,0,0,0.4);

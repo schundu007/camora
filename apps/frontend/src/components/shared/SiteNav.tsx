@@ -7,7 +7,7 @@ const TICKER_HEIGHT = 36;
 const TICKER_ITEMS = [
   { text: 'The Camora Challenge', highlight: '$21,812 in prizes', color: '#10b981' },
   { text: 'Find bugs, build features', highlight: 'join the founding team', color: '#6366f1' },
-  { text: '5 Founding Engineer', highlight: '+ 10 Core Engineer positions', color: '#0B5CFF' },
+  { text: '5 Founding Engineer', highlight: '+ 10 Core Engineer positions', color: '#7C3AED' },
   { text: 'Bug Bounty:', highlight: 'Critical = 10 pts, Security = 8 pts', color: '#f59e0b' },
   { text: 'Open to all developers worldwide', highlight: 'remote-first', color: '#ec4899' },
 ];

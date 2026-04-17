@@ -132,7 +132,7 @@ export function InterviewPage() {
                         <button onClick={() => setIsExpanded(false)} className="text-xs text-slate-400 hover:text-slate-600 transition-colors px-2 py-1">Collapse</button>
                         <button onClick={handleInputSubmit} disabled={!inputValue.trim() || isStreaming}
                           className="px-4 py-1.5 rounded-lg text-xs font-bold text-white disabled:opacity-30 transition-all"
-                          style={{ background: inputValue.trim() ? 'linear-gradient(-81deg, #34d399, #0B5CFF)' : '#e2e8f0' }}>
+                          style={{ background: inputValue.trim() ? 'linear-gradient(135deg, #7C3AED, #EC4899)' : '#e2e8f0' }}>
                           Send
                         </button>
                       </div>
@@ -165,7 +165,7 @@ export function InterviewPage() {
                     {inputValue.trim() && !isStreaming && (
                       <button onClick={handleInputSubmit}
                         className="p-1.5 rounded-lg transition-all shrink-0"
-                        style={{ background: 'linear-gradient(-81deg, #34d399, #0B5CFF)', boxShadow: '0 2px 8px rgba(11,92,255,0.3)' }}>
+                        style={{ background: 'linear-gradient(135deg, #7C3AED, #EC4899)', boxShadow: '0 2px 8px rgba(11,92,255,0.3)' }}>
                         <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M12 5l7 7-7 7" />
                         </svg>
