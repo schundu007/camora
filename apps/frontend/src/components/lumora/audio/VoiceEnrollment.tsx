@@ -6,9 +6,11 @@ import { useAudioDevices } from './hooks/useAudioDevices';
 
 interface VoiceEnrollmentProps {
   disabled?: boolean;
+  variant?: 'dark' | 'light';
 }
 
-export function VoiceEnrollment({ disabled }: VoiceEnrollmentProps) {
+export function VoiceEnrollment({ disabled, variant = 'dark' }: VoiceEnrollmentProps) {
+  const isLight = variant === 'light';
   const { token } = useAuth();
   const { selectedDeviceId } = useAudioDevices();
   const {
@@ -210,55 +212,94 @@ export function VoiceEnrollment({ disabled }: VoiceEnrollmentProps) {
 
   if (!voiceEnrolled) {
     return (
-      <div className="flex items-center gap-2 shrink-0">
+      <div className="flex flex-col gap-2 shrink-0">
         <button
           onClick={handleEnroll}
           disabled={isEnrolling || disabled}
-          className="flex items-center gap-1 px-2 py-1 text-[11px] font-bold rounded-lg transition-all shrink-0"
-          style={{ color: isRecording ? '#fff' : 'rgba(255,255,255,0.6)', background: isRecording ? 'rgba(255,255,255,0.08)' : 'transparent', border: '1px solid rgba(255,255,255,0.08)' }}
+          className="flex items-center justify-center gap-2 px-4 py-2.5 font-bold rounded-lg transition-all shrink-0"
+          style={isLight ? {
+            fontSize: '13px',
+            color: isRecording ? '#ffffff' : '#000000',
+            background: isRecording ? '#FF0000' : '#76B900',
+            border: 'none',
+          } : {
+            fontSize: '11px',
+            color: isRecording ? '#fff' : 'rgba(255,255,255,0.6)',
+            background: isRecording ? 'rgba(255,255,255,0.08)' : 'transparent',
+            border: '1px solid rgba(255,255,255,0.08)',
+          }}
           title="Enroll your voice so the app can filter it out during interviews"
         >
           {isRecording ? (
             <>
               <RecordingIcon />
-              <span className="hidden xl:inline">{Math.round(recordingProgress)}%</span>
+              <span>Recording... {Math.round(recordingProgress)}%</span>
             </>
           ) : isEnrolling ? (
             <>
               <Spinner />
-              <span className="hidden xl:inline">Processing...</span>
+              <span>Processing...</span>
             </>
           ) : (
             <>
               <VoiceIcon />
-              <span className="hidden xl:inline">My Voice</span>
+              <span>Enroll My Voice</span>
             </>
           )}
         </button>
-        {error && <span className="text-xs text-rose-light max-w-[200px] truncate" title={error}>{error}</span>}
+        {isRecording && (
+          <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ background: isLight ? '#e5e7eb' : 'rgba(255,255,255,0.1)' }}>
+            <div className="h-full rounded-full transition-all" style={{ width: `${recordingProgress}%`, background: '#FF0000' }} />
+          </div>
+        )}
+        {error && <span className="text-xs max-w-full truncate" style={{ color: '#FF0000' }} title={error}>{error}</span>}
       </div>
     );
   }
 
   return (
-    <div className="flex items-center gap-1 shrink-0">
+    <div className={isLight ? 'flex flex-col gap-2 shrink-0' : 'flex items-center gap-1 shrink-0'}>
       <button
         onClick={handleToggleFilter}
         disabled={disabled}
-        className="flex items-center gap-1 px-2 py-1 text-[11px] font-bold rounded-lg transition-all shrink-0"
-        style={{ color: voiceFilterEnabled ? '#a5b4fc' : 'rgba(255,255,255,0.6)', background: voiceFilterEnabled ? 'rgba(118,185,0,0.08)' : 'transparent', border: '1px solid rgba(255,255,255,0.08)' }}
+        className="flex items-center justify-center gap-2 font-bold rounded-lg transition-all shrink-0"
+        style={isLight ? {
+          fontSize: '13px',
+          padding: '10px 16px',
+          color: '#ffffff',
+          background: voiceFilterEnabled ? '#76B900' : '#000000',
+          border: 'none',
+        } : {
+          fontSize: '11px',
+          padding: '4px 8px',
+          color: voiceFilterEnabled ? '#a5b4fc' : 'rgba(255,255,255,0.6)',
+          background: voiceFilterEnabled ? 'rgba(118,185,0,0.08)' : 'transparent',
+          border: '1px solid rgba(255,255,255,0.08)',
+        }}
         title={voiceFilterEnabled ? 'Voice filter active - only interviewer is transcribed' : 'Voice filter disabled'}
       >
         <VoiceIcon filled={voiceFilterEnabled} />
-        <span className="hidden xl:inline">{voiceFilterEnabled ? 'Filter On' : 'Filter Off'}</span>
+        <span>{voiceFilterEnabled ? 'Filter On' : 'Filter Off'}</span>
       </button>
       <button
         onClick={handleUnenroll}
         disabled={isEnrolling || disabled}
-        className="px-1.5 py-1 text-xs font-bold text-white/80 hover:text-rose-400 border border-gray-500 rounded transition-colors"
+        className="font-bold rounded-lg transition-colors"
+        style={isLight ? {
+          fontSize: '12px',
+          padding: '8px 16px',
+          color: '#FF0000',
+          background: 'transparent',
+          border: '1.5px solid #FF0000',
+        } : {
+          fontSize: '12px',
+          padding: '4px 6px',
+          color: 'rgba(255,255,255,0.8)',
+          border: '1px solid rgba(107,114,128,1)',
+        }}
         title="Remove voice enrollment"
       >
-        <XIcon />
+        {isLight ? 'Remove Enrollment' : <XIcon />}
       </button>
     </div>
   );

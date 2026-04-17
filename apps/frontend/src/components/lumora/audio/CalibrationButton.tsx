@@ -4,10 +4,12 @@ import { useInterviewStore } from '@/stores/interview-store';
 interface CalibrationButtonProps {
   deviceId?: string | null;
   disabled?: boolean;
+  variant?: 'dark' | 'light';
 }
 
-export function CalibrationButton({ deviceId, disabled }: CalibrationButtonProps) {
-  const { setThreshold, setStatus } = useInterviewStore();
+export function CalibrationButton({ deviceId, disabled, variant = 'dark' }: CalibrationButtonProps) {
+  const isLight = variant === 'light';
+  const { setThreshold, setStatus, vadThreshold } = useInterviewStore();
 
   const { isCalibrating, error, calibrate } = useCalibration({
     deviceId,
@@ -24,28 +26,46 @@ export function CalibrationButton({ deviceId, disabled }: CalibrationButtonProps
   };
 
   return (
-    <button
-      onClick={handleCalibrate}
-      disabled={isCalibrating || disabled}
-      className="flex items-center gap-1 px-2 py-1 text-[11px] font-bold rounded-lg transition-all shrink-0"
-      style={{ color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.08)' }}
-      title="Calibrate VAD threshold based on ambient noise"
-    >
-      {isCalibrating ? (
-        <>
-          <Spinner />
-          <span className="hidden lg:inline">Calibrating...</span>
-        </>
-      ) : (
-        <>
-          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75" />
-          </svg>
-          <span className="hidden xl:inline">Calibrate</span>
-        </>
+    <div className="flex flex-col gap-2">
+      <button
+        onClick={handleCalibrate}
+        disabled={isCalibrating || disabled}
+        className="flex items-center justify-center gap-2 font-bold rounded-lg transition-all shrink-0"
+        style={isLight ? {
+          fontSize: '13px',
+          padding: '10px 16px',
+          color: '#ffffff',
+          background: isCalibrating ? '#000000' : '#76B900',
+          border: 'none',
+        } : {
+          fontSize: '11px',
+          padding: '4px 8px',
+          color: 'rgba(255,255,255,0.6)',
+          border: '1px solid rgba(255,255,255,0.08)',
+        }}
+        title="Calibrate VAD threshold based on ambient noise"
+      >
+        {isCalibrating ? (
+          <>
+            <Spinner />
+            <span>Calibrating...</span>
+          </>
+        ) : (
+          <>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75" />
+            </svg>
+            <span>{isLight ? 'Calibrate Now' : <span className="hidden xl:inline">Calibrate</span>}</span>
+          </>
+        )}
+      </button>
+      {isLight && vadThreshold > 0 && (
+        <span className="text-xs font-medium" style={{ color: '#76B900' }}>
+          Current threshold: {vadThreshold.toFixed(4)}
+        </span>
       )}
-      {error && <span className="text-rose-light ml-1">!</span>}
-    </button>
+      {error && <span className="text-xs" style={{ color: '#FF0000' }}>{isLight ? error : '!'}</span>}
+    </div>
   );
 }
 

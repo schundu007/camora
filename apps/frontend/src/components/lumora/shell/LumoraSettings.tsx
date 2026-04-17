@@ -92,10 +92,10 @@ export function LumoraSettings({ isOpen, onClose }: LumoraSettingsProps) {
                 <SettingCard
                   icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 21v-7m0 0V3m0 11h4m12 7v-4m0 0V3m0 14h-4M12 21V11m0 0V3m0 8h4" /></svg>}
                   title="Calibrate"
-                  description={vadThreshold ? `Threshold: ${vadThreshold.toFixed(4)}` : 'Measure ambient noise for better voice detection.'}
+                  description="Measure ambient noise for better voice detection."
                 >
                   <div className="mt-3">
-                    <CalibrationButton deviceId={selectedDeviceId} disabled={false} />
+                    <CalibrationButton deviceId={selectedDeviceId} disabled={false} variant="light" />
                   </div>
                 </SettingCard>
               </div>
@@ -120,13 +120,15 @@ export function LumoraSettings({ isOpen, onClose }: LumoraSettingsProps) {
                   badge="Recommended"
                 />
 
-                {/* Mode 2: Record Interviewer */}
+                {/* Mode 2: Record Interviewer — not yet implemented */}
                 <VoiceModeCard
                   active={voiceMode === 'record-interviewer'}
                   onClick={() => setVoiceMode('record-interviewer')}
                   icon={<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 00-3-3.87" /><path d="M16 3.13a4 4 0 010 7.75" /></svg>}
                   title="Record Interviewer"
                   description="Capture the interviewer's voice in the first few minutes. Then only their voice is transcribed — their questions trigger AI answers automatically."
+                  badge="Coming Soon"
+                  disabled
                 />
               </div>
 
@@ -138,7 +140,7 @@ export function LumoraSettings({ isOpen, onClose }: LumoraSettingsProps) {
                       <span className="text-xs font-bold uppercase tracking-wider" style={{ color: '#76B900' }}>Step 1</span>
                       <span className="text-xs" style={{ color: '#64748b' }}>Enroll your voice (5-second sample)</span>
                     </div>
-                    <VoiceEnrollment disabled={false} />
+                    <VoiceEnrollment disabled={false} variant="light" />
                     <p className="text-[10px] mt-2" style={{ color: '#94a3b8' }}>
                       Once enrolled, your voice will be filtered out during recording. Toggle filter on/off anytime from the header.
                     </p>
@@ -215,22 +217,24 @@ function SettingCard({ icon, title, description, children }: {
 }
 
 /* ── Voice Mode Card ── */
-function VoiceModeCard({ active, onClick, icon, title, description, badge }: {
-  active: boolean; onClick: () => void; icon: React.ReactNode; title: string; description: string; badge?: string;
+function VoiceModeCard({ active, onClick, icon, title, description, badge, disabled }: {
+  active: boolean; onClick: () => void; icon: React.ReactNode; title: string; description: string; badge?: string; disabled?: boolean;
 }) {
   return (
     <button
-      onClick={onClick}
+      onClick={disabled ? undefined : onClick}
       className="p-5 rounded-xl text-left transition-all relative"
       style={{
         background: active ? '#76B90008' : '#ffffff',
         border: active ? '2px solid #76B900' : '1.5px solid #e2e8f0',
         boxShadow: active ? '0 4px 20px rgba(118,185,0,0.1)' : 'none',
+        opacity: disabled ? 0.5 : 1,
+        cursor: disabled ? 'not-allowed' : 'pointer',
       }}
     >
       {badge && (
         <span className="absolute top-3 right-3 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
-          style={{ background: '#76B90015', color: '#76B900' }}>
+          style={{ background: disabled ? '#00000010' : '#76B90015', color: disabled ? '#000000' : '#76B900' }}>
           {badge}
         </span>
       )}
