@@ -81,7 +81,7 @@ export function LumoraCalendar({ onClose }: { onClose: () => void }) {
   const getTypeColor = (type: string) => EVENT_TYPES.find(t => t.id === type)?.color || '#6b7280';
 
   return (
-    <div className="h-full flex flex-col" style={{ background: '#0D0C14', borderRight: '1px solid rgba(255,255,255,0.06)', width: 300 }}>
+    <div className="h-full flex flex-col" style={{ background: '#0D0C14', borderRight: '1px solid rgba(255,255,255,0.06)', width: '100%' }}>
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
         <span className="text-sm font-bold" style={{ color: '#F2F1F3' }}>Interview Calendar</span>

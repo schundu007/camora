@@ -40,7 +40,9 @@ export function LumoraShellPage() {
   // Derive active tab from URL
   const activeTab: LumoraTab =
     location.pathname.includes('/coding') ? 'coding' :
-    location.pathname.includes('/design') ? 'design' : 'interview';
+    location.pathname.includes('/design') ? 'design' :
+    location.pathname.includes('/docs') ? 'docs' :
+    location.pathname.includes('/calendar') ? 'calendar' : 'interview';
 
   // Lazy-mount tabs on first activation
   useEffect(() => {
@@ -126,11 +128,7 @@ export function LumoraShellPage() {
       <LumoraIconRail
         activeTab={activeTab}
         sessionsOpen={sessionsOpen}
-        onToggleSessions={() => { setSessionsOpen(prev => !prev); setDocsOpen(false); }}
-        docsOpen={docsOpen}
-        onToggleDocs={() => { setDocsOpen(prev => !prev); setSessionsOpen(false); setCalendarOpen(false); }}
-        calendarOpen={calendarOpen}
-        onToggleCalendar={() => { setCalendarOpen(prev => !prev); setSessionsOpen(false); setDocsOpen(false); }}
+        onToggleSessions={() => setSessionsOpen(prev => !prev)}
       />
 
       {/* Sessions sidebar */}
@@ -140,11 +138,6 @@ export function LumoraShellPage() {
         onSelectEntry={(idx) => setFocusedEntry(idx)}
       />
 
-      {/* Docs sidebar */}
-      {docsOpen && <LumoraDocsPanel onClose={() => setDocsOpen(false)} />}
-
-      {/* Calendar sidebar */}
-      {calendarOpen && <LumoraCalendar onClose={() => setCalendarOpen(false)} />}
 
       {/* Center main area */}
       <div className="flex-1 flex flex-col min-h-0 min-w-0">
@@ -198,6 +191,20 @@ export function LumoraShellPage() {
                   />
                 </Suspense>
               </ErrorBoundary>
+            </div>
+          )}
+
+          {/* Docs tab */}
+          {activeTab === 'docs' && (
+            <div className="flex-1 flex flex-col min-h-0 absolute inset-0">
+              <LumoraDocsPanel />
+            </div>
+          )}
+
+          {/* Calendar tab */}
+          {activeTab === 'calendar' && (
+            <div className="flex-1 flex flex-col min-h-0 absolute inset-0" style={{ background: 'var(--bg-app)' }}>
+              <LumoraCalendar onClose={() => navigate('/lumora')} />
             </div>
           )}
         </div>
