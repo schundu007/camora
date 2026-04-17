@@ -5,11 +5,11 @@ import CamoraLogo from './CamoraLogo';
 import { NAV_LINKS, CHALLENGE_END } from '../../lib/constants';
 const TICKER_HEIGHT = 36;
 const TICKER_ITEMS = [
-  'The Camora Challenge — $21,812 in prizes',
-  'Find bugs, build features, join the founding team',
-  '5 Founding Engineer + 10 Core Engineer positions',
-  'Bug Bounty: Critical bugs = 10 pts, Security = 8 pts',
-  'Open to all developers worldwide — remote-first',
+  { text: 'The Camora Challenge', highlight: '$21,812 in prizes', color: '#10b981' },
+  { text: 'Find bugs, build features', highlight: 'join the founding team', color: '#6366f1' },
+  { text: '5 Founding Engineer', highlight: '+ 10 Core Engineer positions', color: '#0B5CFF' },
+  { text: 'Bug Bounty:', highlight: 'Critical = 10 pts, Security = 8 pts', color: '#f59e0b' },
+  { text: 'Open to all developers worldwide', highlight: 'remote-first', color: '#ec4899' },
 ];
 
 export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dark' }) {
@@ -117,16 +117,20 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
       {/* Challenge Campaign Ticker */}
       {new Date() < CHALLENGE_END && (
         <Link to="/challenge" className="block overflow-hidden" style={{
-          background: isLight ? '#F8FAFC' : 'linear-gradient(90deg, #10b981, #6366f1, #0ea5e9, #f59e0b)',
+          background: isLight
+            ? 'linear-gradient(90deg, rgba(16,185,129,0.06) 0%, rgba(99,102,241,0.06) 25%, rgba(14,165,233,0.06) 50%, rgba(245,158,11,0.06) 75%, rgba(16,185,129,0.06) 100%)'
+            : 'linear-gradient(90deg, #10b981, #6366f1, #0ea5e9, #f59e0b)',
           height: TICKER_HEIGHT,
-          borderTop: isLight ? '1px solid rgba(0,0,0,0.06)' : 'none',
+          borderTop: `1px solid ${isLight ? 'rgba(0,0,0,0.06)' : 'transparent'}`,
+          borderBottom: `1px solid ${isLight ? 'rgba(0,0,0,0.04)' : 'transparent'}`,
         }}>
           <div className="w-full lg:max-w-[70%] mx-auto px-4 sm:px-6 overflow-hidden h-full">
             <div className="challenge-ticker flex items-center h-full whitespace-nowrap">
               {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, i) => (
-                <span key={i} className="inline-flex items-center px-6 text-[11px] font-bold tracking-wide" style={{ color: isLight ? '#475569' : '#FFFFFF' }}>
-                  {item}
-                  <span className="mx-5 w-1.5 h-1.5 rounded-full" style={{ background: isLight ? 'rgba(0,0,0,0.15)' : 'rgba(255,255,255,0.4)' }} />
+                <span key={i} className="inline-flex items-center px-6 text-[11px] font-bold tracking-wide" style={{ color: isLight ? '#334155' : '#FFFFFF' }}>
+                  {item.text}{' '}
+                  <span className="ml-1" style={{ color: isLight ? item.color : '#FFFFFF' }}>{item.highlight}</span>
+                  <span className="mx-5 w-1.5 h-1.5 rounded-full" style={{ background: isLight ? item.color : 'rgba(255,255,255,0.4)' }} />
                 </span>
               ))}
             </div>
