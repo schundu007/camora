@@ -178,10 +178,10 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
 
   // Panel resize
   const [leftPanelWidth, setLeftPanelWidth] = useState(42);
-  const [outputPanelHeight, setOutputPanelHeight] = useState(220);
+  const [outputPanelHeight, setOutputPanelHeight] = useState(180);
   const [isResizingH, setIsResizingH] = useState(false);
   const [isResizingV, setIsResizingV] = useState(false);
-  const [isOutputCollapsed, setIsOutputCollapsed] = useState(false);
+  const [isOutputCollapsed, setIsOutputCollapsed] = useState(true); // Start collapsed — expands when test cases arrive
 
   // Expanded follow-up
   const [expandedFollowup, setExpandedFollowup] = useState<number | null>(null);
@@ -531,8 +531,11 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
 
   const handleGenerateSolution = () => {
     if (!problemText.trim()) { setError('Please enter a problem first'); return; }
+    // Clear entire previous session
     setError(null);
     setTestResults([]);
+    setTestCases([]);
+    setOutput('');
     setShowFixPrompt(false);
     clearStreamChunks();
     setParsedBlocks([]);
@@ -540,6 +543,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
     setCode(getDefaultCode(language));
     setCollapsedCards(new Set());
     setActiveSolutionIdx(0);
+    setIsOutputCollapsed(true); // Collapse test panel — auto-expands when new tests arrive
     onSubmit(problemText.trim(), language);
   };
 
@@ -549,6 +553,10 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
       onVoiceProblemRef.current = (text: string) => {
         setProblemText(text);
         setProblemTab('solution');
+        setTestCases([]);
+        setTestResults([]);
+        setOutput('');
+        setIsOutputCollapsed(true);
         clearStreamChunks();
         setParsedBlocks([]);
         setJsonSolution(null);
