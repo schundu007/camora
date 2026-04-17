@@ -5,7 +5,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
 
-const STORAGE_KEY = 'lumora_docs';
+const STORAGE_KEY = 'lumora_docs_v2'; // v2: interview-specific docs with emojis
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
 interface DocItem {
