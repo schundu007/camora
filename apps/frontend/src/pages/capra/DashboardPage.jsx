@@ -735,19 +735,14 @@ export default function DashboardPage() {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
-        <Header
-          ascendMode={ascendMode}
-          onModeChange={handleModeChange}
-          showSidebar={false}
-          onToggleSidebar={toggleSidebar}
-          isLoading={isLoading}
-          isMobile={isMobile}
-          onSettingsClick={() => setShowSettings(true)}
-          onAssistantClick={() => setShowAscendAssistant(!showAscendAssistant)}
-          showAscendAssistant={showAscendAssistant}
-          user={user}
-        />
+        {/* Mode selector + Assistant toggle — compact bar, no duplicate header */}
+        <div className="flex items-center justify-between px-4 py-2 border-b border-[var(--border)]" style={{ background: 'var(--bg-surface)' }}>
+          <AscendModeSelector mode={ascendMode} onModeChange={handleModeChange} />
+          <button onClick={() => setShowAscendAssistant(!showAscendAssistant)} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${showAscendAssistant ? 'text-[var(--accent)] bg-[var(--accent-subtle)]' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)]'}`}>
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
+            <span className="hidden sm:inline">Assistant</span>
+          </button>
+        </div>
 
         {/* Quick Nav Pills — mobile only */}
         {isMobile && (
