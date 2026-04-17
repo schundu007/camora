@@ -192,20 +192,22 @@ function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
 
   const ACTIONS = [
     { icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a3 3 0 00-3 3v7a3 3 0 006 0V5a3 3 0 00-3-3z" /><path d="M19 10v2a7 7 0 01-14 0v-2" /><line x1="12" y1="19" x2="12" y2="22" /></svg>,
-      label: 'Start Session', onClick: () => {} },
+      label: 'Start Session', onClick: () => onAskQuestion?.('I\'m starting an interview session. Help me warm up with a quick practice question.') },
     { icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6" /></svg>,
       label: 'Coding', onClick: () => onSwitchToCoding?.() },
     { icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18M9 21V9" /></svg>,
       label: 'System Design', onClick: () => onSwitchToDesign?.() },
     { icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /></svg>,
-      label: 'Upload Doc', onClick: () => {} },
+      label: 'Upload Doc', onClick: () => { document.querySelector<HTMLButtonElement>('[data-tour="audio"] button[title*="Upload"], [data-tour="audio"] button[title*="Doc"]')?.click(); } },
   ];
 
   const PROMPTS = [
-    'What are some tips for system design interviews?',
-    'Practice a coding problem with me',
-    'Help me prepare for behavioral questions',
-    'Tell me what I can do with AI Companion',
+    'Design a URL shortener like bit.ly that handles 100M links/month',
+    'Explain the difference between TCP and UDP with real-world examples',
+    'Walk me through how you would handle a conflict with a teammate',
+    'Implement a function to detect a cycle in a linked list',
+    'What happens when you type google.com in a browser?',
+    'Tell me about a time you had to make a decision with incomplete data',
   ];
 
   return (
@@ -234,15 +236,10 @@ function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
       {/* Divider */}
       <div className="w-full max-w-2xl h-px mb-8" style={{ background: 'rgba(255,255,255,0.06)' }} />
 
-      {/* AI Companion suggestions */}
-      <div className="w-full max-w-lg">
-        <div className="flex items-center gap-2 mb-4 justify-center">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-          </svg>
-          <span className="text-sm font-semibold" style={{ fontFamily: 'var(--font-sans)', color: '#6C6B7B' }}>AI Interview Companion</span>
-        </div>
-        <div className="grid grid-cols-2 gap-2">
+      {/* Quick-start prompts */}
+      <div className="w-full max-w-2xl">
+        <p className="text-xs font-medium mb-3 text-center" style={{ fontFamily: 'var(--font-sans)', color: '#6C6B7B' }}>Try asking</p>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
           {PROMPTS.map((prompt) => (
             <button key={prompt} onClick={() => onAskQuestion?.(prompt)}
               className="text-left px-4 py-3.5 rounded-xl text-[13px] leading-snug transition-all"
