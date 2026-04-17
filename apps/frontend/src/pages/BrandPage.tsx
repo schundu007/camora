@@ -424,7 +424,7 @@ export default function BrandPage() {
               <div className="flex items-center justify-between px-8 py-4 border-t border-b border-white/[0.06]" style={{ background: 'rgba(10,11,20,0.8)' }}>
                 <div className="flex items-center gap-3">
                   {(() => { const L = LOGOS[selectedLogo].Component; return <L size={32} />; })()}
-                  <span className="text-base font-bold" style={{ fontFamily: "'Clash Display', sans-serif", background: 'linear-gradient(135deg, #76B900, #2d8a1e)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Camora</span>
+                  {(() => { const W = WORDMARKS[selectedWordmark].Component; return <W dark={true} />; })()}
                 </div>
                 <div className="flex items-center gap-6">
                   {['Apply', 'Prepare', 'Practice', 'Attend', 'Pricing'].map((l) => (

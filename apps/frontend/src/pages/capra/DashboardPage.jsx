@@ -945,7 +945,6 @@ function Header({ ascendMode, onModeChange, showSidebar, onToggleSidebar, isLoad
       <div className="flex items-center gap-3">
         <Link to="/" className="flex items-center gap-2">
           <CamoraLogo size={36} />
-          <span className="text-sm font-bold hidden sm:inline" style={{ fontFamily: "'Clash Display', sans-serif", background: 'linear-gradient(135deg, #76B900, #2d8a1e)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Camora</span>
         </Link>
         <div className="w-px h-5 bg-gray-200 hidden sm:block" />
         <div className="flex items-center gap-1.5">

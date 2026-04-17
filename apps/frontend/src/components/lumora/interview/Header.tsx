@@ -157,7 +157,6 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
         {/* Logo — brand identity, Comfortaa font */}
         <Link to="/" className="flex items-center gap-2 px-4 h-full shrink-0" style={{ borderRight: '1px solid rgba(255,255,255,0.04)' }}>
           <CamoraLogo size={24} />
-          <span className="hidden lg:block text-sm font-bold tracking-tight" style={{ fontFamily: "'Clash Display', sans-serif", background: 'linear-gradient(135deg, #76B900, #2d8a1e)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Camora</span>
         </Link>
 
         {/* Navigation — pill tabs with icon+label, Jakarta Sans bold */}
