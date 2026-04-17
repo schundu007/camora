@@ -339,8 +339,8 @@ export default function LandingPage() {
         }
       `}</style>
 
-      {/* ── NAV ── */}
-      <SiteNav />
+      {/* ── NAV (light variant for white landing page) ── */}
+      <SiteNav variant="light" />
 
       {/* ── HERO ── */}
       <section className="relative pt-28 pb-16 md:pt-36 md:pb-20 px-6">
@@ -667,8 +667,8 @@ export default function LandingPage() {
         </Reveal>
       </section>
 
-      {/* ── FOOTER ── */}
-      <SiteFooter />
+      {/* ── FOOTER (light variant) ── */}
+      <SiteFooter variant="light" />
     </div>
   );
 }
