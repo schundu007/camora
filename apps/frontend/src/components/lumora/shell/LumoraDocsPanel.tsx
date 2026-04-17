@@ -354,6 +354,51 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
     setGenProgress('');
   }, [state.jd, state.resume, state.coverLetter, state.prepMaterials, token]);
 
+  // Re-generate a single section
+  const regenerateSection = useCallback(async (section: string) => {
+    if (!state.jd.trim() || !state.resume.trim() || !token) return;
+    setSectionStatus(prev => ({ ...prev, [section]: 'generating' }));
+    try {
+      const res = await fetch(`${API_URL}/api/ascend/prep/section`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ section, jobDescription: state.jd, resume: state.resume, coverLetter: state.coverLetter, prepMaterial: state.prepMaterials }),
+      });
+      if (res.ok) {
+        const reader = res.body?.getReader();
+        const decoder = new TextDecoder();
+        let jsonStr = '';
+        if (reader) {
+          let buffer = '';
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || '';
+            for (const line of lines) {
+              const trimmed = line.trim();
+              if (!trimmed || !trimmed.startsWith('data: ')) continue;
+              const jsonPart = trimmed.slice(6);
+              if (jsonPart === '[DONE]') continue;
+              try { const p = JSON.parse(jsonPart); if (p.chunk) jsonStr += p.chunk; } catch {}
+            }
+          }
+          if (buffer.trim().startsWith('data: ')) {
+            try { const p = JSON.parse(buffer.trim().slice(6)); if (p.chunk) jsonStr += p.chunk; } catch {}
+          }
+        }
+        let displayText = jsonStr;
+        try { displayText = formatPrepContent(JSON.parse(jsonStr)); } catch { displayText = jsonStr.replace(/^data:\s*/gm, ''); }
+        setState(prev => ({ ...prev, sections: { ...prev.sections, [section]: displayText } }));
+        setSectionStatus(prev => ({ ...prev, [section]: 'done' }));
+      } else {
+        setSectionStatus(prev => ({ ...prev, [section]: 'error' }));
+      }
+    } catch {
+      setSectionStatus(prev => ({ ...prev, [section]: 'error' }));
+    }
+  }, [state.jd, state.resume, state.coverLetter, state.prepMaterials, token]);
+
   const hasRequiredDocs = state.jd.trim().length > 0 && state.resume.trim().length > 0;
 
   return (
@@ -537,12 +582,33 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
               <h3 className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
                 {SIDEBAR_SECTIONS.find(s => s.id === activeSection)?.label}
               </h3>
-              {state.sections[activeSection] && (
-                <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'var(--accent-subtle)', color: 'var(--accent)' }}>Generated</span>
-              )}
+              <div className="flex items-center gap-2">
+                {state.sections[activeSection] && (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'var(--accent-subtle)', color: 'var(--accent)' }}>Generated</span>
+                )}
+                {hasRequiredDocs && (
+                  <button
+                    onClick={() => regenerateSection(activeSection)}
+                    disabled={sectionStatus[activeSection] === 'generating'}
+                    className="flex items-center gap-1 px-2.5 py-1 text-[10px] font-semibold rounded-lg transition-colors disabled:opacity-40"
+                    style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}>
+                    {sectionStatus[activeSection] === 'generating' ? (
+                      <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                    )}
+                    {state.sections[activeSection] ? 'Re-generate' : 'Generate'}
+                  </button>
+                )}
+              </div>
             </div>
             <div className="flex-1 overflow-auto p-6">
-              {state.sections[activeSection] ? (
+              {sectionStatus[activeSection] === 'generating' ? (
+                <div className="flex items-center gap-3 p-4 rounded-lg" style={{ background: 'var(--accent-subtle)', border: '1px solid var(--border)' }}>
+                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" style={{ color: 'var(--accent)' }} />
+                  <span className="text-xs font-medium" style={{ color: 'var(--accent)' }}>Generating {SIDEBAR_SECTIONS.find(s => s.id === activeSection)?.label}...</span>
+                </div>
+              ) : state.sections[activeSection] ? (
                 <div className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: 'var(--text-secondary)' }}>
                   {state.sections[activeSection]}
                 </div>
@@ -550,7 +616,7 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
                 <div className="flex flex-col items-center justify-center h-full">
                   <p className="text-sm mb-2" style={{ color: 'var(--text-muted)' }}>No content yet</p>
                   <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                    {hasRequiredDocs ? 'Click Generate to create prep material' : 'Add JD & Resume first, then Generate'}
+                    {hasRequiredDocs ? 'Click Generate or Re-generate above' : 'Add JD & Resume first'}
                   </p>
                 </div>
               )}

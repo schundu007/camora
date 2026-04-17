@@ -212,17 +212,11 @@ export function LumoraShellPage() {
         </div>
       </div>
 
-      {/* AI Copilot — independent right sidebar */}
+      {/* AI Copilot — always-visible right sidebar (like Zoom AI Companion) */}
       <AICompanionPanel
-        isOpen={copilotOpen}
-        onClose={() => setCopilotOpen(false)}
+        isOpen={true}
+        onClose={() => {}}
       />
-      {!copilotOpen && (
-        <AICompanionToggle
-          onClick={() => setCopilotOpen(true)}
-          hasActivity={isStreaming || history.length > 0}
-        />
-      )}
     </div>
   );
 }

@@ -138,8 +138,6 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
     if (input.trim()) { ask(input); setInput(''); }
   }, [input, ask]);
 
-  if (!isOpen) return null;
-
   return (
     <div className="hidden lg:flex flex-col w-[340px] shrink-0 h-full" style={{ background: C.surface, borderLeft: `1px solid ${C.border}` }}>
       {/* Header */}
