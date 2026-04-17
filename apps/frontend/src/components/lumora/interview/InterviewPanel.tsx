@@ -94,17 +94,17 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
                 onClick={() => onViewAnswer ? onViewAnswer(idx) : setExpandedIdx(expandedIdx === idx ? null : idx)}
                 className="w-full flex items-center gap-2 px-3 py-2.5 rounded-lg text-left transition-all duration-200 group"
                 style={{ background: 'transparent', border: '1px solid transparent' }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = '#16141F'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = '#f1f5f9'; e.currentTarget.style.borderColor = '#e2e8f0'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'transparent'; }}
               >
                 <span className="flex items-center justify-center w-6 h-6 rounded text-[10px] font-bold shrink-0"
-                  style={{ background: '#201E2C', color: '#9896A3', fontFamily: 'var(--font-code)' }}>
+                  style={{ background: '#e0e7ff', color: '#3b82f6', fontFamily: 'var(--font-code)' }}>
                   {idx + 1}
                 </span>
-                <span className="text-[13px] font-medium leading-snug flex-1 truncate" style={{ fontFamily: 'var(--font-sans)', color: '#F2F1F3' }}>
+                <span className="text-[13px] font-medium leading-snug flex-1 truncate" style={{ fontFamily: 'var(--font-sans)', color: '#1e293b' }}>
                   {entry.question}
                 </span>
-                <svg className="w-3.5 h-3.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: '#a5b4fc' }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                <svg className="w-3.5 h-3.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: '#3b82f6' }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                 </svg>
               </button>
@@ -113,25 +113,25 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
 
           {/* Current streaming question */}
           {isStreaming && question && (
-            <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg shrink-0" style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(255,255,255,0.12)' }}>
+            <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg shrink-0" style={{ background: 'rgba(37,99,235,0.06)', border: '1px solid #dbeafe' }}>
               <div className="relative flex items-center justify-center w-6 h-6 shrink-0">
-                <span className="flex items-center justify-center w-6 h-6 rounded text-[10px] font-bold" style={{ background: 'rgba(99,102,241,0.15)', color: '#a5b4fc', fontFamily: 'var(--font-code)' }}>
+                <span className="flex items-center justify-center w-6 h-6 rounded text-[10px] font-bold" style={{ background: '#dbeafe', color: '#2563eb', fontFamily: 'var(--font-code)' }}>
                   {history.length + 1}
                 </span>
-                <div className="absolute inset-0 border-2 border-transparent rounded animate-spin" style={{ borderTopColor: '#a5b4fc' }} />
+                <div className="absolute inset-0 border-2 border-transparent rounded animate-spin" style={{ borderTopColor: '#2563eb' }} />
               </div>
-              <span className="text-[13px] font-medium leading-snug flex-1 truncate" style={{ fontFamily: 'var(--font-sans)', color: '#F2F1F3' }}>
+              <span className="text-[13px] font-medium leading-snug flex-1 truncate" style={{ fontFamily: 'var(--font-sans)', color: '#1e293b' }}>
                 {question}
               </span>
-              <span className="text-[9px] shrink-0 animate-pulse font-medium" style={{ fontFamily: 'var(--font-code)', color: '#a5b4fc' }}>generating...</span>
+              <span className="text-[9px] shrink-0 animate-pulse font-medium" style={{ fontFamily: 'var(--font-code)', color: '#2563eb' }}>generating...</span>
             </div>
           )}
 
           {/* Cross-sell */}
           {history.length > 0 && history.length % 3 === 0 && (
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: '#16141F', border: '1px solid rgba(255,255,255,0.12)' }}>
-              <span className="text-xs" style={{ color: '#9896A3' }}>Want deeper prep?</span>
-              <Link to="/capra/prepare" className="text-xs font-bold hover:opacity-90 transition-all" style={{ color: '#a5b4fc' }}>
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: '#f8fafc', border: '1px solid #e2e8f0' }}>
+              <span className="text-xs" style={{ color: '#64748b' }}>Want deeper prep?</span>
+              <Link to="/capra/prepare" className="text-xs font-bold hover:opacity-90 transition-all" style={{ color: '#2563eb' }}>
                 Explore 300+ topics →
               </Link>
             </div>
@@ -139,12 +139,12 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
 
           {/* Error — red is semantic, kept minimal */}
           {error && (
-            <div className="flex items-start gap-3 p-4 rounded-xl" style={{ background: '#16141F', border: '1px solid rgba(255,255,255,0.12)' }}>
+            <div className="flex items-start gap-3 p-4 rounded-xl" style={{ background: '#fef2f2', border: '1px solid #fecaca' }}>
               <svg className="w-4 h-4 text-red-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
               </svg>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium" style={{ fontFamily: 'var(--font-sans)', color: '#F2F1F3' }}>{error}</p>
+                <p className="text-sm font-medium" style={{ fontFamily: 'var(--font-sans)', color: '#991b1b' }}>{error}</p>
                 <button onClick={() => setError(null)} className="mt-1.5 text-xs text-red-400 hover:underline" style={{ fontFamily: 'var(--font-code)' }}>Dismiss</button>
               </div>
             </div>
@@ -197,10 +197,10 @@ function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
     <div className="flex-1 flex flex-col items-center justify-center px-6">
       {/* Large clock */}
       <div className="text-center mb-10">
-        <h1 className="text-6xl md:text-7xl font-bold tracking-tight tabular-nums" style={{ fontFamily: 'var(--font-sans)', fontWeight: 800, letterSpacing: '-0.03em', color: '#F2F1F3' }}>
+        <h1 className="text-6xl md:text-7xl font-bold tracking-tight tabular-nums" style={{ fontFamily: 'var(--font-sans)', fontWeight: 800, letterSpacing: '-0.03em', color: '#0f172a' }}>
           {timeStr}
         </h1>
-        <p className="text-sm mt-2 font-medium" style={{ fontFamily: 'var(--font-sans)', color: '#9896A3' }}>{dateStr}</p>
+        <p className="text-sm mt-2 font-medium" style={{ fontFamily: 'var(--font-sans)', color: '#64748b' }}>{dateStr}</p>
       </div>
 
       {/* Action buttons — all use single accent color */}
@@ -211,24 +211,24 @@ function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
               style={{ background: accent }}>
               {action.icon}
             </div>
-            <span className="text-[11px] font-medium transition-colors" style={{ fontFamily: 'var(--font-sans)', color: '#9896A3' }}>{action.label}</span>
+            <span className="text-[11px] font-medium transition-colors" style={{ fontFamily: 'var(--font-sans)', color: '#64748b' }}>{action.label}</span>
           </button>
         ))}
       </div>
 
       {/* Divider */}
-      <div className="w-full max-w-2xl h-px mb-8" style={{ background: 'rgba(255,255,255,0.12)' }} />
+      <div className="w-full max-w-2xl h-px mb-8" style={{ background: '#e2e8f0' }} />
 
       {/* Quick-start prompts */}
       <div className="w-full max-w-2xl">
-        <p className="text-xs font-medium mb-3 text-center" style={{ fontFamily: 'var(--font-sans)', color: '#9896A3' }}>Try asking</p>
+        <p className="text-xs font-medium mb-3 text-center" style={{ fontFamily: 'var(--font-sans)', color: '#64748b' }}>Try asking</p>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
           {PROMPTS.map((prompt) => (
             <button key={prompt} onClick={() => onAskQuestion?.(prompt)}
               className="text-left px-4 py-3.5 rounded-xl text-[13px] leading-snug transition-all"
-              style={{ fontFamily: 'var(--font-sans)', border: '1px solid rgba(255,255,255,0.12)', color: '#9896A3' }}
-              onMouseEnter={e => { e.currentTarget.style.color = '#F2F1F3'; e.currentTarget.style.background = '#16141F'; }}
-              onMouseLeave={e => { e.currentTarget.style.color = '#9896A3'; e.currentTarget.style.background = 'transparent'; }}>
+              style={{ fontFamily: 'var(--font-sans)', border: '1px solid #e2e8f0', color: '#64748b' }}
+              onMouseEnter={e => { e.currentTarget.style.color = '#0f172a'; e.currentTarget.style.background = '#f1f5f9'; }}
+              onMouseLeave={e => { e.currentTarget.style.color = '#64748b'; e.currentTarget.style.background = 'transparent'; }}>
               {prompt}
             </button>
           ))}
@@ -236,10 +236,10 @@ function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
       </div>
 
       {/* Keyboard hints */}
-      <div className="mt-8 flex items-center justify-center gap-4 text-[10px]" style={{ fontFamily: 'var(--font-code)', color: '#9896A3' }}>
-        <span><kbd className="px-1.5 py-0.5 rounded" style={{ border: '1px solid rgba(255,255,255,0.12)', background: '#201E2C' }}>⌘K</kbd> focus</span>
-        <span><kbd className="px-1.5 py-0.5 rounded" style={{ border: '1px solid rgba(255,255,255,0.12)', background: '#201E2C' }}>⌘M</kbd> mic</span>
-        <span><kbd className="px-1.5 py-0.5 rounded" style={{ border: '1px solid rgba(255,255,255,0.12)', background: '#201E2C' }}>⌘S</kbd> search</span>
+      <div className="mt-8 flex items-center justify-center gap-4 text-[10px]" style={{ fontFamily: 'var(--font-code)', color: '#94a3b8' }}>
+        <span><kbd className="px-1.5 py-0.5 rounded" style={{ border: '1px solid #e2e8f0', background: '#f1f5f9' }}>⌘K</kbd> focus</span>
+        <span><kbd className="px-1.5 py-0.5 rounded" style={{ border: '1px solid #e2e8f0', background: '#f1f5f9' }}>⌘M</kbd> mic</span>
+        <span><kbd className="px-1.5 py-0.5 rounded" style={{ border: '1px solid #e2e8f0', background: '#f1f5f9' }}>⌘S</kbd> search</span>
       </div>
     </div>
   );

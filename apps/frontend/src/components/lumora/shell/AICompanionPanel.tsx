@@ -4,9 +4,9 @@ import { streamResponse } from '@/lib/sse-client';
 import { transcriptionAPI } from '@/lib/api-client';
 
 const C = {
-  base: '#0D0C14', surface: '#16141F', elevated: '#201E2C',
-  text: '#F2F1F3', muted: '#9896A3', accent: '#a5b4fc',
-  accentBg: 'rgba(99,102,241,0.15)', border: 'rgba(255,255,255,0.12)',
+  base: '#0f2b5b', surface: '#122d54', elevated: '#1a3a6b',
+  text: '#ffffff', muted: 'rgba(255,255,255,0.65)', accent: '#60a5fa',
+  accentBg: 'rgba(96,165,250,0.15)', border: 'rgba(255,255,255,0.08)',
 };
 
 /* ── Types ── */
@@ -49,9 +49,9 @@ function RichText({ text }: { text: string }) {
   const renderInline = (s: string) => {
     // Bold, inline code, links
     return s
-      .replace(/\*\*(.*?)\*\*/g, '<strong style="color:#F2F1F3;font-weight:700">$1</strong>')
-      .replace(/`([^`]+)`/g, '<code style="background:rgba(99,102,241,0.15);color:#a5b4fc;padding:1px 4px;border-radius:3px;font-size:12px">$1</code>')
-      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" style="color:#818cf8;text-decoration:underline">$1</a>');
+      .replace(/\*\*(.*?)\*\*/g, '<strong style="color:#ffffff;font-weight:700">$1</strong>')
+      .replace(/`([^`]+)`/g, '<code style="background:rgba(96,165,250,0.15);color:#60a5fa;padding:1px 4px;border-radius:3px;font-size:12px">$1</code>')
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" style="color:#93c5fd;text-decoration:underline">$1</a>');
   };
 
   return (
@@ -60,11 +60,11 @@ function RichText({ text }: { text: string }) {
         if (block.type === 'code') {
           return (
             <div key={bi} className="rounded-lg overflow-hidden my-1" style={{ border: '1px solid rgba(255,255,255,0.1)' }}>
-              <div className="flex items-center justify-between px-3 py-1.5" style={{ background: 'rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+              <div className="flex items-center justify-between px-3 py-1.5" style={{ background: 'rgba(255,255,255,0.06)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
                 <span className="text-[9px] font-bold uppercase" style={{ color: C.muted }}>{block.lang}</span>
                 <button onClick={() => navigator.clipboard.writeText(block.content)} className="text-[9px] px-1.5 py-0.5 rounded" style={{ color: C.muted }}>Copy</button>
               </div>
-              <pre className="px-3 py-2 overflow-x-auto text-xs leading-relaxed" style={{ background: '#0D0C14', color: '#a5b4fc' }}><code>{block.content}</code></pre>
+              <pre className="px-3 py-2 overflow-x-auto text-xs leading-relaxed" style={{ background: '#0a1e3d', color: '#93c5fd' }}><code>{block.content}</code></pre>
             </div>
           );
         }
@@ -231,15 +231,15 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
       {/* Resize handle */}
       {!minimized && (
         <div
-          className="w-[5px] h-full cursor-col-resize flex items-center justify-center group shrink-0 hover:bg-indigo-500/20 transition-colors"
-          style={{ background: isResizing ? 'rgba(99,102,241,0.2)' : '#0D0C14' }}
+          className="w-[5px] h-full cursor-col-resize flex items-center justify-center group shrink-0 hover:bg-blue-400/20 transition-colors"
+          style={{ background: isResizing ? 'rgba(96,165,250,0.2)' : '#0f2b5b' }}
           onMouseDown={(e) => { setIsResizing(true); resizeRef.current = { startX: e.clientX, startW: panelWidth }; }}
         >
-          <div className="w-[3px] h-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: '#6366f1' }} />
+          <div className="w-[3px] h-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: '#60a5fa' }} />
         </div>
       )}
 
-      <div className="flex-1 flex flex-col min-w-0" style={{ background: C.surface }}>
+      <div className="flex-1 flex flex-col min-w-0" style={{ background: 'linear-gradient(180deg, #153a6b 0%, #0d2445 100%)' }}>
       {/* Header */}
       <div className="flex items-center justify-between h-14 px-3 shrink-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
         {minimized ? (
@@ -288,8 +288,8 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
               {['Design a URL shortener', 'Explain TCP vs UDP', 'Tell me about a conflict', 'Detect cycle in linked list'].map(s => (
                 <button key={s} onClick={() => ask(s)} className="text-left px-3 py-2.5 rounded-lg text-xs leading-snug transition-all"
                   style={{ border: `1px solid ${C.border}`, fontFamily: 'var(--font-sans)', color: C.muted }}
-                  onMouseEnter={e => { e.currentTarget.style.color = C.text; e.currentTarget.style.background = C.elevated; }}
-                  onMouseLeave={e => { e.currentTarget.style.color = C.muted; e.currentTarget.style.background = 'transparent'; }}>
+                  onMouseEnter={e => { e.currentTarget.style.color = '#ffffff'; e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.65)'; e.currentTarget.style.background = 'transparent'; }}>
                   {s}
                 </button>
               ))}
@@ -339,7 +339,7 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
             className="flex-1 bg-transparent text-[12px] focus:outline-none min-w-0 placeholder:opacity-40"
             style={{ fontFamily: 'var(--font-sans)', color: C.text }} disabled={streaming} />
           {input.trim() && !streaming && (
-            <button onClick={handleSubmit} className="w-6 h-6 rounded-full flex items-center justify-center shrink-0" style={{ background: '#6366f1' }}>
+            <button onClick={handleSubmit} className="w-6 h-6 rounded-full flex items-center justify-center shrink-0" style={{ background: '#3b82f6' }}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
             </button>
           )}
@@ -354,7 +354,7 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
 
 export function AICompanionToggle({ onClick, hasActivity }: { onClick: () => void; hasActivity: boolean }) {
   return (
-    <button onClick={onClick} className="fixed bottom-6 right-6 z-30 w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105" style={{ background: '#6366f1' }} title="AI Copilot">
+    <button onClick={onClick} className="fixed bottom-6 right-6 z-30 w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105" style={{ background: '#2563eb' }} title="AI Copilot">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
       {hasActivity && <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2" style={{ borderColor: C.base }} />}
     </button>

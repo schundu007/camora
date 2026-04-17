@@ -12,14 +12,14 @@ interface LumoraIconRailProps {
 
 /* ── Color tokens (standardized) ── */
 const C = {
-  base: '#0D0C14',
-  surface: '#16141F',
-  elevated: '#201E2C',
-  text: '#F2F1F3',
-  muted: '#9896A3',
-  accent: '#a5b4fc',
-  accentBg: 'rgba(99,102,241,0.15)',
-  border: 'rgba(255,255,255,0.12)',
+  base: '#0f2b5b',
+  surface: '#122d54',
+  elevated: '#1a3a6b',
+  text: '#ffffff',
+  muted: 'rgba(255,255,255,0.65)',
+  accent: '#60a5fa',
+  accentBg: 'rgba(96,165,250,0.15)',
+  border: 'rgba(255,255,255,0.08)',
 };
 
 export function LumoraIconRail({ activeTab, sessionsOpen, onToggleSessions }: LumoraIconRailProps) {
@@ -48,7 +48,7 @@ export function LumoraIconRail({ activeTab, sessionsOpen, onToggleSessions }: Lu
   ];
 
   return (
-    <nav className="hidden md:flex flex-col items-center w-[68px] shrink-0 py-3 gap-0.5" style={{ background: C.base, borderRight: `1px solid ${C.border}` }}>
+    <nav className="hidden md:flex flex-col items-center w-[68px] shrink-0 py-3 gap-0.5" style={{ background: 'linear-gradient(180deg, #153a6b 0%, #0d2445 100%)', borderRight: '1px solid rgba(255,255,255,0.06)', boxShadow: '1px 0 8px rgba(0,0,0,0.15), inset -1px 0 0 rgba(255,255,255,0.04)' }}>
       <Link to="/" className="flex items-center justify-center w-full h-10 mb-3" title="Camora">
         <CamoraLogo size={26} />
       </Link>
@@ -83,7 +83,7 @@ export function LumoraIconRail({ activeTab, sessionsOpen, onToggleSessions }: Lu
         {showMore && (
           <>
             <div className="fixed inset-0 z-40" onClick={() => setShowMore(false)} />
-            <div className="absolute left-full top-0 ml-2 w-[200px] rounded-xl shadow-2xl z-50 p-3 grid grid-cols-3 gap-1" style={{ background: C.elevated, border: `1px solid ${C.border}` }}>
+            <div className="absolute left-full top-0 ml-2 w-[200px] rounded-xl shadow-2xl z-50 p-3 grid grid-cols-3 gap-1" style={{ background: 'linear-gradient(180deg, #1a3a6b 0%, #122d54 100%)', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }}>
               {moreItems.map(mi => (
                 <Link key={mi.label} to={mi.path} onClick={() => setShowMore(false)}
                   className="flex flex-col items-center gap-1.5 p-2.5 rounded-lg transition-colors"

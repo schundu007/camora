@@ -447,55 +447,51 @@ main, [role="main"] { animation: fadeUp 0.15s ease-out; }
    LUMORA — Live Interview Dark Theme
    ══════════════════════════════════════════════════════════════ */
 
-/* Lumora pages ALWAYS use dark theme (live interview = dark screen).
-   Force dark tokens regardless of light-theme class. */
+/* Lumora pages use white-content + blue-sidebar light theme. */
 .lumora-app-bg {
-  --bg-app: #0D0C14;
-  --bg-surface: #16141F;
-  --bg-elevated: #201E2C;
-  --border: #363347;
-  --border-hover: #3B3947;
-  --text-primary: #F2F1F3;
-  --text-secondary: #A1A0AB;
-  --text-muted: #9896A3;
-  --text-dimmed: #6C6B7B;
-  background: #0D0C14;
-  color: #F2F1F3;
-  color-scheme: dark;
+  --bg-app: #ffffff;
+  --bg-surface: #f8fafc;
+  --bg-elevated: #f1f5f9;
+  --border: #e2e8f0;
+  --border-hover: #cbd5e1;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --text-dimmed: #94a3b8;
+  background: #ffffff;
+  color: #0f172a;
+  color-scheme: light;
   position: relative;
 }
 .lumora-app-bg::before {
   content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
   background:
-    radial-gradient(ellipse 80% 60% at 20% 30%, rgba(99,102,241,0.06) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 50% at 80% 20%, rgba(139,92,246,0.05) 0%, transparent 60%),
-    radial-gradient(ellipse 50% 40% at 50% 80%, rgba(6,182,212,0.04) 0%, transparent 60%);
-  animation: lumora-mesh-shift 12s ease-in-out infinite alternate;
-}
-@keyframes lumora-mesh-shift {
-  0% { transform: scale(1) translate(0, 0); }
-  100% { transform: scale(1.05) translate(-2%, 1%); }
+    radial-gradient(ellipse 80% 60% at 20% 30%, rgba(37,99,235,0.03) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 20%, rgba(96,165,250,0.02) 0%, transparent 60%);
 }
 
 .lumora-grid-overlay {
   position: fixed; inset: 0; pointer-events: none; z-index: 0;
-  background-image: linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+  background-image: linear-gradient(rgba(0,0,0,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.02) 1px, transparent 1px);
   background-size: 48px 48px;
   mask-image: radial-gradient(ellipse 60% 50% at 50% 40%, black 20%, transparent 70%);
 }
 
 .lumora-status-bar {
-  background: linear-gradient(90deg, var(--bg-app) 0%, rgba(99,102,241,0.04) 50%, var(--bg-app) 100%);
-  border-top: 1px solid var(--border); box-shadow: 0 -1px 8px rgba(0,0,0,0.3);
+  background: linear-gradient(90deg, #ffffff 0%, rgba(37,99,235,0.03) 50%, #ffffff 100%);
+  border-top: 1px solid #e2e8f0; box-shadow: 0 -1px 4px rgba(0,0,0,0.04);
 }
 
 .lumora-empty-mesh { position: relative; }
 .lumora-empty-mesh::before {
   content: ''; position: absolute; inset: 0; border-radius: 1.5rem; pointer-events: none; z-index: 0;
   background:
-    radial-gradient(ellipse 50% 40% at 20% 20%, rgba(99,102,241,0.06) 0%, transparent 70%),
-    radial-gradient(ellipse 40% 50% at 80% 80%, rgba(6,182,212,0.04) 0%, transparent 70%);
+    radial-gradient(ellipse 50% 40% at 20% 20%, rgba(37,99,235,0.04) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 50% at 80% 80%, rgba(96,165,250,0.03) 0%, transparent 70%);
 }
+.lumora-app-bg ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); }
+.lumora-app-bg ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.2); }
+.lumora-app-bg select { color-scheme: light; }
 
 /* Light panel inside Lumora — for solution/description panels that need light bg */
 .lumora-light-panel {
