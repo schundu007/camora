@@ -45,15 +45,15 @@ function UserAvatarMenu() {
       {showMenu && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
-          <div className="absolute left-full bottom-0 ml-2 w-52 rounded-xl shadow-2xl z-50 overflow-hidden"
-            style={{ background: C.elevated, border: `1px solid ${C.border}` }}>
-            <div className="px-4 py-3" style={{ borderBottom: `1px solid ${C.border}` }}>
-              <p className="text-sm font-semibold truncate" style={{ color: C.text }}>{user.name || 'User'}</p>
-              <p className="text-xs truncate mt-0.5" style={{ color: C.muted }}>{user.email}</p>
+          <div className="absolute left-full bottom-0 ml-2 w-52 rounded-xl z-50 overflow-hidden"
+            style={{ background: '#111827', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 12px 40px rgba(0,0,0,0.5)' }}>
+            <div className="px-4 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+              <p className="text-sm font-semibold truncate" style={{ color: '#f8fafc', fontFamily: "'Satoshi', sans-serif" }}>{user.name || 'User'}</p>
+              <p className="text-xs truncate mt-0.5" style={{ color: 'rgba(255,255,255,0.45)' }}>{user.email}</p>
             </div>
-            <Link to="/pricing" onClick={() => setShowMenu(false)} className="block px-4 py-2.5 text-sm transition-colors hover:bg-white/5" style={{ color: C.muted }}>Pricing</Link>
-            <Link to="/capra/prepare" onClick={() => setShowMenu(false)} className="block px-4 py-2.5 text-sm transition-colors hover:bg-white/5" style={{ color: C.muted }}>Dashboard</Link>
-            <Link to="/analytics" onClick={() => setShowMenu(false)} className="block px-4 py-2.5 text-sm transition-colors hover:bg-white/5" style={{ color: C.muted }}>Analytics</Link>
+            <Link to="/pricing" onClick={() => setShowMenu(false)} className="block px-4 py-2.5 text-sm transition-colors hover:bg-white/5" style={{ color: 'rgba(255,255,255,0.65)' }}>Pricing</Link>
+            <Link to="/capra/prepare" onClick={() => setShowMenu(false)} className="block px-4 py-2.5 text-sm transition-colors hover:bg-white/5" style={{ color: 'rgba(255,255,255,0.65)' }}>Dashboard</Link>
+            <Link to="/analytics" onClick={() => setShowMenu(false)} className="block px-4 py-2.5 text-sm transition-colors hover:bg-white/5" style={{ color: 'rgba(255,255,255,0.65)' }}>Analytics</Link>
             <button onClick={() => { logout(); setShowMenu(false); }} className="w-full text-left px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 transition-colors">Sign Out</button>
           </div>
         </>
