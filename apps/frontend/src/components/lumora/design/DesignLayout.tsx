@@ -14,6 +14,8 @@ interface DesignLayoutProps {
   initialProblem?: string;
   /** When true, hides internal header and uses flex-1 instead of h-screen (for embedding in LumoraShell) */
   embedded?: boolean;
+  /** Ref that parent sets to receive voice transcriptions as problem input */
+  onVoiceProblemRef?: React.MutableRefObject<((text: string) => void) | null>;
 }
 
 interface SystemDesign {
@@ -293,7 +295,7 @@ function useTheme(dark: boolean) {
   };
 }
 
-export function DesignLayout({ onBack, initialProblem, embedded }: DesignLayoutProps) {
+export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemRef }: DesignLayoutProps) {
   const t = useTheme(!!embedded);
   const { token } = useAuth();
   const { setStatus } = useInterviewStore();
@@ -544,6 +546,22 @@ export function DesignLayout({ onBack, initialProblem, embedded }: DesignLayoutP
       handleSubmit();
     }
   }, [initialProblem, token, isLoading, problemText, handleSubmit]);
+
+  // Register voice problem handler for parent shell
+  useEffect(() => {
+    if (onVoiceProblemRef) {
+      onVoiceProblemRef.current = (text: string) => {
+        setProblemText(text);
+        // Auto-submit after setting problem text
+        setTimeout(() => {
+          if (text.trim() && token && !isLoading) {
+            handleSubmit();
+          }
+        }, 100);
+      };
+    }
+    return () => { if (onVoiceProblemRef) onVoiceProblemRef.current = null; };
+  }, [onVoiceProblemRef, token, isLoading, handleSubmit]);
 
   // Auto-submit after voice input sets problemText
   useEffect(() => {

@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, lazy, Suspense } from 'react';
+import { useState, useCallback, useEffect, useRef, lazy, Suspense } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { LumoraIconRail } from '../../components/lumora/shell/LumoraIconRail';
 import { LumoraTopBar } from '../../components/lumora/shell/LumoraTopBar';
@@ -107,9 +107,20 @@ export function LumoraShellPage() {
     }
   }, [inputValue, handleSubmit]);
 
+  // Refs for coding/design problem setters — set by child layouts
+  const codingProblemRef = useRef<((text: string) => void) | null>(null);
+  const designProblemRef = useRef<((text: string) => void) | null>(null);
+
   const handleTranscription = useCallback((text: string) => {
-    if (text.trim()) handleSubmit(text);
-  }, [handleSubmit]);
+    if (!text.trim()) return;
+    if (activeTab === 'coding' && codingProblemRef.current) {
+      codingProblemRef.current(text);
+    } else if (activeTab === 'design' && designProblemRef.current) {
+      designProblemRef.current(text);
+    } else {
+      handleSubmit(text);
+    }
+  }, [handleSubmit, activeTab]);
 
   // Blank screen (Cmd+B)
   if (blanked) {
@@ -168,6 +179,7 @@ export function LumoraShellPage() {
                     isLoading={isStreaming}
                     onBack={() => navigate('/lumora')}
                     initialProblem={activeTab === 'coding' ? new URLSearchParams(location.search).get('problem') || '' : ''}
+                    onVoiceProblemRef={codingProblemRef}
                   />
                 </Suspense>
               </ErrorBoundary>
@@ -183,6 +195,7 @@ export function LumoraShellPage() {
                     embedded
                     onBack={() => navigate('/lumora')}
                     initialProblem={activeTab === 'design' ? new URLSearchParams(location.search).get('problem') || '' : ''}
+                    onVoiceProblemRef={designProblemRef}
                   />
                 </Suspense>
               </ErrorBoundary>
