@@ -244,10 +244,11 @@ export function useAudioCapture(options: AudioCaptureOptions = {}) {
   const stopRecording = useCallback(() => {
     manualStopRef.current = true; // Flag: user clicked stop — always send audio
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-      mediaRecorderRef.current.stop();
+      mediaRecorderRef.current.stop(); // triggers async onstop → creates blob → calls onAudioData
     }
     setState(prev => ({ ...prev, isRecording: false }));
-    cleanup();
+    // Delay cleanup to let onstop fire and process the audio blob first
+    setTimeout(() => cleanup(), 500);
   }, [cleanup]);
 
   return {
