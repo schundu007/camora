@@ -74,20 +74,11 @@ const TOPICS = [
   { name: 'Microservices', count: 27, problems: 0, color: '#CBD5E1' },
 ];
 
-/* ── Company logos (using clearbit for free logos) ───────────────────── */
+/* ── Company logos (logo.dev) ───────────────────── */
+const LOGO_TOKEN = 'pk_VzK1OM-OQSCUuysDpOCzKw';
 const COMPANIES = [
-  { name: 'Google', domain: 'google.com' },
-  { name: 'Amazon', domain: 'amazon.com' },
-  { name: 'Meta', domain: 'meta.com' },
-  { name: 'Apple', domain: 'apple.com' },
-  { name: 'Netflix', domain: 'netflix.com' },
-  { name: 'Microsoft', domain: 'microsoft.com' },
-  { name: 'Uber', domain: 'uber.com' },
-  { name: 'Stripe', domain: 'stripe.com' },
-  { name: 'Airbnb', domain: 'airbnb.com' },
-  { name: 'Nvidia', domain: 'nvidia.com' },
-  { name: 'Spotify', domain: 'spotify.com' },
-  { name: 'Salesforce', domain: 'salesforce.com' },
+  'google', 'amazon', 'meta', 'apple', 'netflix', 'microsoft',
+  'uber', 'stripe', 'airbnb', 'nvidia', 'spotify', 'salesforce',
 ];
 
 /* ── Unique Features (only on Camora) ─────────────────── */
@@ -360,8 +351,8 @@ export default function LandingPage() {
           <div className="relative overflow-hidden" style={{ maskImage: 'linear-gradient(90deg, transparent, black 10%, black 90%, transparent)' }}>
             <div className="flex items-center gap-12" style={{ animation: 'scroll-logos 30s linear infinite', width: 'max-content' }}>
               {[...COMPANIES, ...COMPANIES].map((c, i) => (
-                <img key={`${c.name}-${i}`} src={`https://logo.clearbit.com/${c.domain}`}
-                  alt={c.name} className="h-7 object-contain grayscale opacity-40 hover:grayscale-0 hover:opacity-100 transition-all" loading="lazy"
+                <img key={`${c}-${i}`} src={`https://img.logo.dev/${c}.com?token=${LOGO_TOKEN}&size=80&format=png`}
+                  alt={c} className="h-7 object-contain grayscale opacity-40 hover:grayscale-0 hover:opacity-100 transition-all" loading="lazy"
                   onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
               ))}
             </div>
