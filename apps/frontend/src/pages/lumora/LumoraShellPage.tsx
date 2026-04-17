@@ -23,6 +23,7 @@ export function LumoraShellPage() {
   const [blanked, setBlanked] = useState(false);
   const [sessionsOpen, setSessionsOpen] = useState(false);
   const [copilotOpen, setCopilotOpen] = useState(false);
+  const [copilotViewIdx, setCopilotViewIdx] = useState<number | null>(null);
   const [focusedEntry, setFocusedEntry] = useState<number | null>(null);
   const { handleSubmit, handleCodingSubmit } = useStreamingInterview();
   const { isStreaming, history, question, parsedBlocks, useSearch, setUseSearch, clearHistory } = useInterviewStore();
@@ -43,6 +44,14 @@ export function LumoraShellPage() {
       setMountedTabs(prev => new Set(prev).add(activeTab));
     }
   }, [activeTab, mountedTabs]);
+
+  // Auto-open copilot when AI starts streaming on the interview tab
+  useEffect(() => {
+    if (isStreaming && activeTab === 'interview') {
+      setCopilotOpen(true);
+      setCopilotViewIdx(null); // show latest/streaming
+    }
+  }, [isStreaming, activeTab]);
 
   // Trigger Monaco editor resize when switching to coding/design tab
   useEffect(() => {
@@ -143,6 +152,7 @@ export function LumoraShellPage() {
                 onClearFocus={() => setFocusedEntry(null)}
                 onSwitchToCoding={(p) => navigate(p ? `/lumora/coding?problem=${encodeURIComponent(p)}` : '/lumora/coding')}
                 onSwitchToDesign={(p) => navigate(p ? `/lumora/design?problem=${encodeURIComponent(p)}` : '/lumora/design')}
+                onViewAnswer={(idx) => { setCopilotViewIdx(idx); setCopilotOpen(true); }}
               />
             </ErrorBoundary>
           </div>
@@ -184,12 +194,13 @@ export function LumoraShellPage() {
       {/* AI Copilot — floating popup + toggle button */}
       <AICompanionPanel
         isOpen={copilotOpen}
-        onClose={() => setCopilotOpen(false)}
+        onClose={() => { setCopilotOpen(false); setCopilotViewIdx(null); }}
         inputValue={inputValue}
         setInputValue={setInputValue}
         onSubmit={handleInputSubmit}
         isStreaming={isStreaming}
         onAskQuestion={handleSubmit}
+        viewingIdx={copilotViewIdx}
       />
       {!copilotOpen && (
         <AICompanionToggle
