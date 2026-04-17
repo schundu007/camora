@@ -121,7 +121,7 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
           height: TICKER_HEIGHT,
           borderTop: isLight ? '1px solid rgba(0,0,0,0.06)' : 'none',
         }}>
-          <div className="w-[80%] mx-auto overflow-hidden h-full">
+          <div className="w-full lg:max-w-[70%] mx-auto px-4 sm:px-6 overflow-hidden h-full">
             <div className="challenge-ticker flex items-center h-full whitespace-nowrap">
               {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, i) => (
                 <span key={i} className="inline-flex items-center px-6 text-[11px] font-bold tracking-wide" style={{ color: isLight ? '#475569' : '#FFFFFF' }}>
