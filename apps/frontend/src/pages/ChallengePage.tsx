@@ -57,7 +57,7 @@ const TECH_STACK = [
 
 const STEPS = [
   { num: '01', title: 'Sign up free', desc: 'Create your Camora account.', color: '#10b981' },
-  { num: '02', title: 'Get GitHub access', desc: 'Full monorepo access after launch.', color: '#10b981' },
+  { num: '02', title: 'Get GitHub access', desc: 'Full monorepo access starting May 7.', color: '#10b981' },
   { num: '03', title: 'Find & build', desc: 'Hunt bugs, fix issues, build features.', color: '#76B900' },
   { num: '04', title: 'Submit findings', desc: 'Detailed docs with your work.', color: '#76B900' },
   { num: '05', title: 'Team review', desc: 'Top submissions reviewed by founders.', color: '#f59e0b' },
@@ -76,7 +76,7 @@ const SCORING = [
 const FAQS = [
   { q: 'Do I need to be a full-time developer?', a: 'No — open to all levels: students, bootcamp grads, career changers, and senior engineers.' },
   { q: 'Can I participate from any country?', a: 'Yes. Remote-first, globally distributed prizes.' },
-  { q: 'What tech stack does Camora use?', a: 'React 19, Express 5, PostgreSQL, Python (FastAPI), Vercel + Railway.' },
+  { q: 'What tech stack does Camora use?', a: 'React 19, Vite 8, Express 5, PostgreSQL, Python (FastAPI), Vercel + Railway.' },
   { q: 'When do I get GitHub access?', a: 'After creating your account and the challenge officially starts May 7, 2026.' },
   { q: 'Can I work on multiple categories?', a: 'Yes — more high-quality findings means a higher score.' },
   { q: 'Is destructive testing allowed?', a: 'No. All testing must be non-destructive. No DDoS, data deletion, or production attacks.' },
@@ -138,7 +138,7 @@ export default function ChallengePage() {
   const timerRef = useRef<any>(null);
 
   useEffect(() => {
-    document.title = 'Daily Challenge | Camora';
+    document.title = 'The Camora Challenge | Camora';
     return () => { document.title = 'Camora'; };
   }, []);
 
@@ -280,7 +280,7 @@ export default function ChallengePage() {
           {/* Countdown */}
           <div className="mt-10 flex items-center gap-4">
             {challengeEnded ? (
-              <p className="text-base font-semibold text-white/40">Challenge ended. Winners announced soon.</p>
+              <p className="text-base font-semibold text-white/40">Challenge ended. Winners announced October 22.</p>
             ) : challengeActive ? (
               <p className="text-base font-bold text-emerald-400">Challenge is LIVE. Submit findings now.</p>
             ) : (
@@ -613,7 +613,7 @@ export default function ChallengePage() {
           <div className="ch-section-head">
             <span className="ch-section-tag" style={{ color: '#f59e0b' }}>Rankings</span>
             <h2 className="ch-section-title">Leaderboard</h2>
-            <p className="ch-section-sub">{challengeActive ? 'Live standings.' : 'Rankings appear May 7, 2026.'}</p>
+            <p className="ch-section-sub">{challengeActive ? 'Live standings.' : challengeEnded ? 'Final standings.' : 'Rankings appear when the challenge starts May 7, 2026.'}</p>
           </div>
           <div className="ch-glass-card overflow-hidden p-0">
             <div className="grid grid-cols-12 gap-2 px-5 py-3 text-base font-bold text-white/20 uppercase tracking-wider border-b border-white/5">
