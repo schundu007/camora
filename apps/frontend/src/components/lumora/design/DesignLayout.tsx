@@ -424,21 +424,23 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
     }
   }, [token]);
 
-  const handleSubmit = useCallback(async () => {
-    if (!problemText.trim() || !token || isLoading) return;
+  const handleSubmit = useCallback(async (overrideText?: string) => {
+    const text = overrideText || problemText;
+    if (!text.trim() || !token || isLoading) return;
 
     setIsLoading(true);
     setResult(null);
     setStreamingText('');
     setErrorMsg(null);
-    setQuestion(problemText.trim());
+    setProblemText(text.trim());
+    setQuestion(text.trim());
     setStatus('write', 'Generating design...');
 
     const chunks: string[] = [];
 
     try {
       await streamResponse({
-        question: `[SYSTEM DESIGN] ${problemText.trim()}`,
+        question: `[SYSTEM DESIGN] ${text.trim()}`,
         useSearch: false,
         token,
         onToken: (data) => {
@@ -552,12 +554,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
     if (onVoiceProblemRef) {
       onVoiceProblemRef.current = (text: string) => {
         setProblemText(text);
-        // Auto-submit after setting problem text
-        setTimeout(() => {
-          if (text.trim() && token && !isLoading) {
-            handleSubmit();
-          }
-        }, 100);
+        handleSubmit(text);
       };
     }
     return () => { if (onVoiceProblemRef) onVoiceProblemRef.current = null; };

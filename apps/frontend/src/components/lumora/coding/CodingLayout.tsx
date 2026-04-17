@@ -548,17 +548,12 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
     if (onVoiceProblemRef) {
       onVoiceProblemRef.current = (text: string) => {
         setProblemText(text);
-        setProblemTab('description');
-        // Auto-generate after setting problem
-        setTimeout(() => {
-          if (text.trim()) {
-            clearStreamChunks();
-            setParsedBlocks([]);
-            setJsonSolution(null);
-            setCode(getDefaultCode(language));
-            onSubmit(text.trim(), language);
-          }
-        }, 100);
+        setProblemTab('solution');
+        clearStreamChunks();
+        setParsedBlocks([]);
+        setJsonSolution(null);
+        setCode(getDefaultCode(language));
+        onSubmit(text.trim(), language);
       };
     }
     return () => { if (onVoiceProblemRef) onVoiceProblemRef.current = null; };
