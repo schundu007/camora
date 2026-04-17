@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useInterviewStore } from '@/stores/interview-store';
 import { AudioCapture, SystemAudioButton } from '@/components/lumora/audio/AudioCapture';
+import { VoiceEnrollment } from '@/components/lumora/audio/VoiceEnrollment';
 import { LumoraSettings } from './LumoraSettings';
 import type { LumoraTab } from './LumoraIconRail';
 
@@ -40,8 +41,11 @@ export function LumoraTopBar({ activeTab, onTranscription }: LumoraTopBarProps) 
         </div>
       </div>
 
-      {/* Right: status + settings */}
+      {/* Right: voice + status + settings */}
       <div className="flex items-center gap-2 min-w-[120px] justify-end">
+        {/* Voice enrollment / filter toggle */}
+        <VoiceEnrollment disabled={false} />
+
         {/* Status */}
         <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}>
           <div className={`w-2 h-2 rounded-full ${
