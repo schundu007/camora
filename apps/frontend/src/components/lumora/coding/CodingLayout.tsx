@@ -870,20 +870,19 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                 {/* Streaming state */}
                 {(isStreaming || (isLoading && !sd && !parsedBlocks?.length)) && !sd && (
                   <div className="space-y-3">
-                    <div className="flex items-center gap-3 p-4 rounded-xl" style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.15)' }}>
-                      <div className="relative w-5 h-5 shrink-0">
-                        <div className="absolute inset-0 border-2 border-indigo-400/30 rounded-full" />
+                    <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.15)' }}>
+                      <div className="relative w-4 h-4 shrink-0">
                         <div className="absolute inset-0 border-2 border-transparent border-t-indigo-400 rounded-full animate-spin" />
                       </div>
-                      <div>
-                        <span className="text-xs font-semibold text-indigo-300">Analyzing problem & generating solution...</span>
-                        <div className="flex gap-1 mt-2">
-                          {['Problem', 'Approach', 'Code', 'Tests'].map((step, i) => (
-                            <span key={step} className="text-[9px] px-2 py-0.5 rounded-full font-medium animate-pulse" style={{ background: 'rgba(99,102,241,0.1)', color: 'rgba(165,180,252,0.6)', animationDelay: `${i * 200}ms` }}>{step}</span>
-                          ))}
-                        </div>
-                      </div>
+                      <span className="text-xs font-semibold text-indigo-300">Generating solution...</span>
                     </div>
+                    {/* Live streaming preview */}
+                    {streamingSolution && (
+                      <div className="rounded-xl p-4 overflow-auto max-h-[60vh] text-xs leading-relaxed font-mono whitespace-pre-wrap" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.7)' }}>
+                        {streamingSolution}
+                        <span className="inline-block w-1.5 h-4 bg-indigo-400 animate-pulse ml-0.5" />
+                      </div>
+                    )}
                   </div>
                 )}
 
