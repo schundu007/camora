@@ -118,13 +118,28 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
 
   useEffect(() => { savePrepData(prepData); }, [prepData]);
 
+  // Auto-create default company if none exists
+  useEffect(() => {
+    if (prepData.companies.length === 0) {
+      setPrepData(prev => ({
+        ...prev,
+        companies: ['My Interview'],
+        activeCompany: 'My Interview',
+        data: { ...prev.data, 'My Interview': { ...EMPTY_DOC } },
+      }));
+    } else if (!prepData.activeCompany && prepData.companies.length > 0) {
+      setPrepData(prev => ({ ...prev, activeCompany: prev.companies[0] }));
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Get active company's doc state
   const state = prepData.activeCompany ? (prepData.data[prepData.activeCompany] || EMPTY_DOC) : EMPTY_DOC;
   const setState = (updater: DocState | ((prev: DocState) => DocState)) => {
-    if (!prepData.activeCompany) return;
+    const company = prepData.activeCompany;
+    if (!company) return;
     setPrepData(prev => {
-      const newState = typeof updater === 'function' ? updater(prev.data[prev.activeCompany!] || EMPTY_DOC) : updater;
-      return { ...prev, data: { ...prev.data, [prev.activeCompany!]: newState } };
+      const newState = typeof updater === 'function' ? updater(prev.data[company] || EMPTY_DOC) : updater;
+      return { ...prev, data: { ...prev.data, [company]: newState } };
     });
   };
 
