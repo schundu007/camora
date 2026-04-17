@@ -193,7 +193,7 @@ router.get('/google/callback', async (req, res) => {
  * POST /api/auth/refresh
  * Accepts an expired access token and issues a fresh one with the same claims.
  */
-router.post('/refresh', async (req, res) => {
+router.post('/refresh', authLimiter, async (req, res) => {
   const authHeader = req.headers.authorization;
   if (!authHeader?.startsWith('Bearer ')) {
     return res.status(401).json({ error: 'No token provided' });
@@ -214,6 +214,12 @@ router.post('/refresh', async (req, res) => {
 
     if (!payload.sub || payload.type !== 'access') {
       return res.status(401).json({ error: 'Invalid token' });
+    }
+
+    // Verify user still exists and is active before issuing new token
+    const userCheck = await query('SELECT id, is_active FROM users WHERE id = $1', [parseInt(payload.sub, 10)]);
+    if (!userCheck.rows[0] || userCheck.rows[0].is_active === false) {
+      return res.status(401).json({ error: 'Account not found or inactive' });
     }
 
     // Issue fresh token via shared-auth
@@ -272,7 +278,7 @@ router.get('/me', authenticate, async (req, res) => {
  * Grant admin subscription to a user (admin secret required)
  * POST /api/auth/admin/grant-subscription
  */
-router.post('/admin/grant-subscription', async (req, res) => {
+router.post('/admin/grant-subscription', authLimiter, async (req, res) => {
   const { email, adminSecret } = req.body;
 
   // Require admin secret from environment (no default — must be explicitly configured)
@@ -303,14 +309,14 @@ router.post('/admin/grant-subscription', async (req, res) => {
       [userId]
     );
 
-    // Reset free usage limits to max
+    // Reset free usage counters (paid plan bypasses limits, so keep defaults)
     await query(
       `INSERT INTO ascend_free_usage (user_id, coding_used, coding_limit, design_used, design_limit, company_prep_used, company_prep_limit)
-       VALUES ($1, 0, 9999, 0, 9999, 0, 9999)
+       VALUES ($1, 0, 1, 0, 1, 0, 1)
        ON CONFLICT (user_id) DO UPDATE SET
-         coding_used = 0, coding_limit = 9999,
-         design_used = 0, design_limit = 9999,
-         company_prep_used = 0, company_prep_limit = 9999`,
+         coding_used = 0, coding_limit = 1,
+         design_used = 0, design_limit = 1,
+         company_prep_used = 0, company_prep_limit = 1`,
       [userId]
     );
 
@@ -330,12 +336,11 @@ router.post('/admin/grant-subscription', async (req, res) => {
       message: `Subscription granted to ${email}`,
       userId,
       subscription: 'quarterly_pro',
-      freeLimit: 9999,
       creditsAdded: 10000,
     });
   } catch (error) {
     logger.error({ error: error.message, email }, 'Grant subscription failed');
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to grant subscription' });
   }
 });
 

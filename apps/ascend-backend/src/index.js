@@ -7,7 +7,7 @@ import config from './config/index.js';
 import requestId from './middleware/requestId.js';
 import { requestLogger, logger } from './middleware/requestLogger.js';
 import { errorHandler } from './middleware/errorHandler.js';
-import { aiLimiter, apiLimiter, paymentLimiter } from './middleware/rateLimiter.js';
+import { authLimiter, aiLimiter, apiLimiter, paymentLimiter } from './middleware/rateLimiter.js';
 import { setupGracefulShutdown, trackConnection } from './utils/shutdown.js';
 import { query } from './config/database.js';
 import { isStripeConfigured } from './config/stripe.js';
@@ -415,7 +415,7 @@ app.get('/health', (req, res) => {
 // ─── Public routes (no authentication) ───
 
 // Visitor counter — lightweight, no auth required
-app.post('/api/visitors/track', async (req, res) => {
+app.post('/api/visitors/track', apiLimiter, async (req, res) => {
   try {
     await query(`INSERT INTO site_visitors (visit_date, count) VALUES (CURRENT_DATE, 1)
       ON CONFLICT (visit_date) DO UPDATE SET count = site_visitors.count + 1`);
@@ -432,7 +432,7 @@ app.get('/api/visitors/count', async (req, res) => {
 });
 
 // Universal page-view tracker — no auth required
-app.post('/api/visitors/pageview', async (req, res) => {
+app.post('/api/visitors/pageview', apiLimiter, async (req, res) => {
   try {
     const { path, email, referrer } = req.body || {};
     if (!path) return res.status(400).json({ error: 'path required' });
@@ -494,9 +494,10 @@ app.get('/api/visitors/pageview-stats', authenticate, async (req, res) => {
       `SELECT path, COUNT(*) as views, COUNT(DISTINCT ip) as unique_visitors FROM page_views ${where} GROUP BY path ORDER BY views DESC LIMIT 50`,
       params
     );
+    const byDayParams = [...params, dayLimit];
     const byDay = await query(
-      `SELECT DATE(created_at) as date, COUNT(*) as views, COUNT(DISTINCT ip) as unique_visitors FROM page_views ${where} GROUP BY DATE(created_at) ORDER BY date DESC LIMIT ${dayLimit}`,
-      params
+      `SELECT DATE(created_at) as date, COUNT(*) as views, COUNT(DISTINCT ip) as unique_visitors FROM page_views ${where} GROUP BY DATE(created_at) ORDER BY date DESC LIMIT $${byDayParams.length}`,
+      byDayParams
     );
 
     res.json({
