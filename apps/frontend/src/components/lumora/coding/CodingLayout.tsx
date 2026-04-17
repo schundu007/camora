@@ -106,6 +106,8 @@ interface CodingLayoutProps {
   initialProblem?: string;
   /** When true, hides internal header and uses flex-1 instead of h-screen (for embedding in LumoraShell) */
   embedded?: boolean;
+  /** Ref that parent sets to receive voice transcriptions as problem input */
+  onVoiceProblemRef?: React.MutableRefObject<((text: string) => void) | null>;
 }
 
 // ── Main Component ───────────────────────────────────────────────────────────
@@ -140,7 +142,7 @@ function useTheme(dark: boolean) {
   };
 }
 
-export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embedded }: CodingLayoutProps) {
+export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embedded, onVoiceProblemRef }: CodingLayoutProps) {
   const { token } = useAuth();
   const t = useTheme(!!embedded);
 
@@ -540,6 +542,27 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
     setActiveSolutionIdx(0);
     onSubmit(problemText.trim(), language);
   };
+
+  // Register voice problem handler for parent shell
+  useEffect(() => {
+    if (onVoiceProblemRef) {
+      onVoiceProblemRef.current = (text: string) => {
+        setProblemText(text);
+        setProblemTab('description');
+        // Auto-generate after setting problem
+        setTimeout(() => {
+          if (text.trim()) {
+            clearStreamChunks();
+            setParsedBlocks([]);
+            setJsonSolution(null);
+            setCode(getDefaultCode(language));
+            onSubmit(text.trim(), language);
+          }
+        }, 100);
+      };
+    }
+    return () => { if (onVoiceProblemRef) onVoiceProblemRef.current = null; };
+  }, [onVoiceProblemRef, language, onSubmit, clearStreamChunks, setParsedBlocks]);
 
   const handleFetchFromUrl = async () => {
     if (!problemUrl.trim()) { setError('Please enter a URL'); return; }
