@@ -120,8 +120,8 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
             ? 'linear-gradient(90deg, rgba(16,185,129,0.06) 0%, rgba(118,185,0,0.06) 25%, rgba(14,165,233,0.06) 50%, rgba(245,158,11,0.06) 75%, rgba(16,185,129,0.06) 100%)'
             : 'linear-gradient(90deg, #10b981, #76B900, #0ea5e9, #f59e0b)',
           height: TICKER_HEIGHT,
-          borderTop: `1px solid ${isLight ? 'rgba(0,0,0,0.06)' : 'transparent'}`,
-          borderBottom: `1px solid ${isLight ? 'rgba(0,0,0,0.04)' : 'transparent'}`,
+          borderTop: `1px solid ${isLight ? '#e2e8f0' : 'rgba(255,255,255,0.15)'}`,
+          borderBottom: `1px solid ${isLight ? '#e2e8f0' : 'rgba(255,255,255,0.15)'}`,
         }}>
           <div className="w-full lg:max-w-[70%] mx-auto px-4 sm:px-6 overflow-hidden h-full">
             <div className="challenge-ticker flex items-center h-full whitespace-nowrap">
