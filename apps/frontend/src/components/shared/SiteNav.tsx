@@ -38,7 +38,6 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2.5">
           <CamoraLogo size={36} />
-          <span className="text-sm font-bold tracking-tight" style={{ fontFamily: "'Clash Display', sans-serif", background: 'linear-gradient(135deg, #76B900, #2d8a1e)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Camora</span>
         </Link>
 
         {/* Desktop links */}

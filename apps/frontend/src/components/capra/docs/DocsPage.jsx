@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { useIsMobile } from '../../../hooks/capra/useIsMobile';
 import { useAppShell } from '../layout/AppShellContext';
@@ -8,6 +8,7 @@ import { CompanyLogo, getCompanyLogoSrc } from '../../shared/CompanyLogo.tsx';
 import CamoraLogo from '../../shared/CamoraLogo';
 
 import { getAuthHeaders } from '../../../utils/authHeaders.js';
+const SQLPlayground = lazy(() => import('../sql/SQLPlayground'));
 import { useContentAccess } from '../../../hooks/useContentAccess';
 import ResumeOptimizer from '../features/ResumeOptimizer';
 import { codingCategories, codingCategoryMap as _codingCategoryMap, codingTopics as _codingTopics } from '../../../data/capra/topics/codingTopics.js';
@@ -85,6 +86,7 @@ export default function DocsPage({ onBack }) {
 
   const initialState = getInitialState();
   const [activePage, setActivePageState] = useState(initialState.page);
+  const [sqlPlaygroundOpen, setSqlPlaygroundOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOrder, setSortOrder] = useState('a-z');
   const [selectedTopic, setSelectedTopicState] = useState(initialState.topic);
@@ -943,6 +945,22 @@ export default function DocsPage({ onBack }) {
                       {activePage === 'roadmaps' && 'Structured learning paths from beginner to advanced. Each roadmap shows the optimal order to learn topics with visual flow diagrams.'}
                       {activePage === 'eng-blogs' && 'Curated engineering articles from 35 top tech companies. Learn how real systems are built at scale — from search and recommendations to distributed infrastructure.'}
                     </p>
+
+                      {/* SQL Playground toggle */}
+                      {activePage === 'databases' && (
+                        <div className="flex items-center gap-2 mt-4">
+                          <button onClick={() => setSqlPlaygroundOpen(false)}
+                            className="px-4 py-2 text-xs font-bold rounded-lg transition-all"
+                            style={!sqlPlaygroundOpen ? { background: 'var(--accent)', color: '#fff' } : { background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}>
+                            Topics
+                          </button>
+                          <button onClick={() => setSqlPlaygroundOpen(true)}
+                            className="px-4 py-2 text-xs font-bold rounded-lg transition-all"
+                            style={sqlPlaygroundOpen ? { background: 'var(--accent)', color: '#fff' } : { background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}>
+                            SQL Playground
+                          </button>
+                        </div>
+                      )}
                   </div>
                   )}
                   {/* Job Context Banner — shown when navigating from a job prep page or URL analysis */}
@@ -2103,8 +2121,15 @@ export default function DocsPage({ onBack }) {
                 </>
               )}
 
+              {/* SQL Playground — full screen when active */}
+              {activePage === 'databases' && sqlPlaygroundOpen && (
+                <Suspense fallback={<div className="flex items-center justify-center py-20"><div className="w-6 h-6 border-2 border-current border-t-transparent rounded-full animate-spin" style={{ color: 'var(--accent)' }} /></div>}>
+                  <SQLPlayground />
+                </Suspense>
+              )}
+
               {/* Databases & SQL Content */}
-              {activePage === 'databases' && (
+              {activePage === 'databases' && !sqlPlaygroundOpen && (
                 <>
                   <div className="mb-6">
                     <div className="mb-4">
@@ -2157,8 +2182,8 @@ export default function DocsPage({ onBack }) {
                 </>
               )}
 
-              {/* Databases & SQL Content */}
-              {(activePage === 'databases' || activePage === 'sql') && (
+              {/* SQL Topics */}
+              {((activePage === 'databases' && !sqlPlaygroundOpen) || activePage === 'sql') && (
                 <>
                   <div className="mb-6">
                     <div className="mb-4">
