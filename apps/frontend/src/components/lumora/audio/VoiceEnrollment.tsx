@@ -40,9 +40,8 @@ export function VoiceEnrollment({ disabled, variant = 'dark' }: VoiceEnrollmentP
       speakerAPI.getStatus(token).then((result) => {
         setVoiceEnrolled(result.enrolled);
       }).catch(() => {
-        // Speaker service unavailable (404/502/etc) - silently assume not enrolled.
-        // This is expected when ai-services is not running.
-        setVoiceEnrolled(false);
+        // Speaker service unavailable — keep existing state (don't reset to false
+        // if user already enrolled, since voiceEnrolled is persisted in store)
       });
     }
   }, [token, setVoiceEnrolled]);
