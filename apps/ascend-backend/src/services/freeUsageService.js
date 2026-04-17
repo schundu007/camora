@@ -36,7 +36,7 @@ export async function useFreeAllowance(userId, featureType) {
     return result.rows[0]?.success || false;
   } catch (error) {
     console.error('Error using free allowance:', error);
-    return false;
+    throw error;
   }
 }
 

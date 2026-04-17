@@ -383,53 +383,60 @@ router.post('/webhook', async (req, res) => {
       return res.json({ received: true });
     }
 
-    // Handle event
-    switch (event.type) {
-      case 'checkout.session.completed': {
-        const session = event.data.object;
-        await handleCheckoutComplete(session);
-        break;
-      }
-
-      case 'invoice.paid': {
-        const invoice = event.data.object;
-        await handleInvoicePaid(invoice);
-        break;
-      }
-
-      case 'customer.subscription.updated': {
-        const subscription = event.data.object;
-        await handleSubscriptionUpdated(subscription);
-        break;
-      }
-
-      case 'customer.subscription.deleted': {
-        const subscription = event.data.object;
-        await handleSubscriptionDeleted(subscription);
-        break;
-      }
-
-      case 'invoice.payment_failed': {
-        const invoice = event.data.object;
-        const customerId = invoice.customer;
-        // Find user by stripe_customer_id
-        const userResult = await query(
-          'SELECT user_id FROM ascend_subscriptions WHERE stripe_customer_id = $1',
-          [customerId]
-        );
-        if (userResult.rows.length > 0) {
-          const userId = userResult.rows[0].user_id;
-          await query(
-            "UPDATE ascend_subscriptions SET status = 'past_due' WHERE user_id = $1",
-            [userId]
-          );
-          logger.info({ userId, customerId }, 'Subscription marked past_due due to failed payment');
+    // Handle event — wrapped in try/catch to clean up idempotency row on failure
+    try {
+      switch (event.type) {
+        case 'checkout.session.completed': {
+          const session = event.data.object;
+          await handleCheckoutComplete(session);
+          break;
         }
-        break;
-      }
 
-      default:
-        logger.info({ type: event.type }, 'Unhandled webhook event');
+        case 'invoice.paid': {
+          const invoice = event.data.object;
+          await handleInvoicePaid(invoice);
+          break;
+        }
+
+        case 'customer.subscription.updated': {
+          const subscription = event.data.object;
+          await handleSubscriptionUpdated(subscription);
+          break;
+        }
+
+        case 'customer.subscription.deleted': {
+          const subscription = event.data.object;
+          await handleSubscriptionDeleted(subscription);
+          break;
+        }
+
+        case 'invoice.payment_failed': {
+          const invoice = event.data.object;
+          const customerId = invoice.customer;
+          // Find user by stripe_customer_id
+          const userResult = await query(
+            'SELECT user_id FROM ascend_subscriptions WHERE stripe_customer_id = $1',
+            [customerId]
+          );
+          if (userResult.rows.length > 0) {
+            const userId = userResult.rows[0].user_id;
+            await query(
+              "UPDATE ascend_subscriptions SET status = 'past_due' WHERE user_id = $1",
+              [userId]
+            );
+            logger.info({ userId, customerId }, 'Subscription marked past_due due to failed payment');
+          }
+          break;
+        }
+
+        default:
+          logger.info({ type: event.type }, 'Unhandled webhook event');
+      }
+    } catch (handlerError) {
+      // Delete idempotency row so Stripe can retry this event
+      await query('DELETE FROM ascend_stripe_events WHERE id = $1', [event.id]);
+      logger.error({ error: handlerError.message, eventId: event.id }, 'Webhook handler failed, idempotency row removed for retry');
+      return res.status(500).json({ error: 'Webhook handler failed' });
     }
 
     res.json({ received: true });
