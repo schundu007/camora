@@ -35,25 +35,41 @@ export function LumoraTopBar({ activeTab, onTranscription, onToggleSessions, ses
   const tabLabel = activeTab === 'coding' ? 'Coding' : activeTab === 'design' ? 'System Design' : 'Interview';
 
   return (
-    <header className="flex items-center h-12 px-4 shrink-0 z-30" style={{ background: C.surface, borderBottom: `1px solid ${C.border}` }}>
+    <header className="flex items-center h-14 px-5 shrink-0 z-30" style={{ background: C.surface, borderBottom: `1px solid rgba(255,255,255,0.1)` }}>
       {/* Left: brand */}
-      <div className="flex items-center gap-2 min-w-[140px]">
-        <span className="text-[13px] font-bold" style={{ fontFamily: 'var(--font-sans)', color: C.text }}>{tabLabel}</span>
+      <div className="flex items-center gap-3 min-w-[120px]">
+        <span className="text-sm font-extrabold tracking-tight" style={{ fontFamily: 'var(--font-sans)', color: C.text }}>{tabLabel}</span>
       </div>
 
       {/* Center: audio controls */}
       <div data-tour="audio" className="flex-1 flex items-center justify-center">
-        <div className="flex items-center gap-1 px-3 py-1.5 rounded-xl" style={{ background: C.elevated, border: `1px solid ${C.border}` }}>
+        <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl" style={{ background: C.elevated, border: `1px solid rgba(255,255,255,0.1)` }}>
+          {/* Mic selector */}
           <MicrophoneSelector disabled={false} />
-          <div className="w-px h-4 mx-1" style={{ background: C.border }} />
+          <div className="w-px h-5 mx-1" style={{ background: 'rgba(255,255,255,0.1)' }} />
+
+          {/* Platform selector — next to mic */}
+          <select id="platform-select" name="platform" className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md cursor-pointer focus:outline-none"
+            style={{ background: 'rgba(255,255,255,0.06)', color: C.muted, border: `1px solid rgba(255,255,255,0.1)` }} defaultValue="general">
+            <option value="general">General</option>
+            <option value="zoom">Zoom</option>
+            <option value="meet">Meet</option>
+            <option value="teams">Teams</option>
+            <option value="hackerrank">HackerRank</option>
+            <option value="coderpad">CoderPad</option>
+          </select>
+          <div className="w-px h-5 mx-1" style={{ background: 'rgba(255,255,255,0.1)' }} />
+
+          {/* Audio controls */}
           <AudioCapture onTranscription={onTranscription} />
-          <div className="w-px h-4 mx-1" style={{ background: C.border }} />
+          <div className="w-px h-5 mx-1" style={{ background: 'rgba(255,255,255,0.1)' }} />
           <SystemAudioButton onTranscription={onTranscription} disabled={false} />
-          {/* Sessions toggle — next to Interviewer */}
+
+          {/* Sessions toggle */}
           {onToggleSessions && (
             <>
-              <div className="w-px h-4 mx-1" style={{ background: C.border }} />
-              <button onClick={onToggleSessions} className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium transition-all"
+              <div className="w-px h-5 mx-1" style={{ background: 'rgba(255,255,255,0.1)' }} />
+              <button onClick={onToggleSessions} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all"
                 style={sessionsOpen ? { background: C.accentBg, color: C.accent } : { color: C.muted }}
                 title="Q&A History">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
@@ -64,32 +80,18 @@ export function LumoraTopBar({ activeTab, onTranscription, onToggleSessions, ses
         </div>
       </div>
 
-      {/* Right: status + actions + user */}
-      <div className="flex items-center gap-2 min-w-[140px] justify-end">
+      {/* Right: status + user */}
+      <div className="flex items-center gap-3 min-w-[120px] justify-end">
         {/* Status */}
-        <div className="hidden lg:flex items-center gap-1.5 px-2 py-1 rounded-lg" style={{ background: C.elevated }}>
-          <div className={`w-1.5 h-1.5 rounded-full ${
+        <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg" style={{ background: C.elevated, border: `1px solid rgba(255,255,255,0.06)` }}>
+          <div className={`w-2 h-2 rounded-full ${
             status.state === 'ready' ? 'bg-emerald-400' :
             status.state === 'error' ? 'bg-red-400' :
             status.state === 'warn' ? 'bg-amber-400' :
             (status.state === 'listen' || status.state === 'write') ? 'bg-emerald-400 animate-pulse' :
             ''
-          }`} style={!(status.state === 'listen' || status.state === 'write') ? {} : {}} />
-          <span className="text-[10px] font-medium" style={{ fontFamily: 'var(--font-sans)', color: C.muted }}>{status.message}</span>
-        </div>
-
-        {/* Platform */}
-        <div data-tour="platform" className="hidden xl:flex items-center">
-          <select className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-1 rounded-md cursor-pointer focus:outline-none"
-            style={{ background: C.elevated, color: C.muted, border: `1px solid ${C.border}` }} defaultValue="general">
-            <option value="general">General</option>
-            <option value="zoom">Zoom</option>
-            <option value="meet">Meet</option>
-            <option value="teams">Teams</option>
-            <option value="hackerrank">HackerRank</option>
-            <option value="coderpad">CoderPad</option>
-            <option value="codility">Codility</option>
-          </select>
+          }`} />
+          <span className="text-[10px] font-semibold" style={{ fontFamily: 'var(--font-sans)', color: C.muted }}>{status.message}</span>
         </div>
 
         {/* User */}
