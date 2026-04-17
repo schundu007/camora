@@ -5,6 +5,8 @@ import { LumoraTopBar } from '../../components/lumora/shell/LumoraTopBar';
 import { AICompanionPanel, AICompanionToggle } from '../../components/lumora/shell/AICompanionPanel';
 import { InterviewPanel } from '../../components/lumora/interview/InterviewPanel';
 import { SessionSidebar } from '../../components/lumora/interview/SessionSidebar';
+import { LumoraDocsPanel } from '../../components/lumora/shell/LumoraDocsPanel';
+import { LumoraCalendar } from '../../components/lumora/shell/LumoraCalendar';
 import { ErrorBoundary } from '../../components/shared/ui/ErrorBoundary';
 import { useStreamingInterview } from '../../hooks/useStreamingInterview';
 import { useInterviewStore } from '../../stores/interview-store';
@@ -22,6 +24,8 @@ export function LumoraShellPage() {
   const [inputValue, setInputValue] = useState('');
   const [blanked, setBlanked] = useState(false);
   const [sessionsOpen, setSessionsOpen] = useState(false);
+  const [docsOpen, setDocsOpen] = useState(false);
+  const [calendarOpen, setCalendarOpen] = useState(false);
   const [copilotOpen, setCopilotOpen] = useState(false);
   const [copilotViewIdx, setCopilotViewIdx] = useState<number | null>(null);
   const [focusedEntry, setFocusedEntry] = useState<number | null>(null);
@@ -137,7 +141,11 @@ export function LumoraShellPage() {
       <LumoraIconRail
         activeTab={activeTab}
         sessionsOpen={sessionsOpen}
-        onToggleSessions={() => setSessionsOpen(prev => !prev)}
+        onToggleSessions={() => { setSessionsOpen(prev => !prev); setDocsOpen(false); }}
+        docsOpen={docsOpen}
+        onToggleDocs={() => { setDocsOpen(prev => !prev); setSessionsOpen(false); setCalendarOpen(false); }}
+        calendarOpen={calendarOpen}
+        onToggleCalendar={() => { setCalendarOpen(prev => !prev); setSessionsOpen(false); setDocsOpen(false); }}
       />
 
       {/* Sessions sidebar */}
@@ -146,6 +154,12 @@ export function LumoraShellPage() {
         onClose={() => setSessionsOpen(false)}
         onSelectEntry={(idx) => setFocusedEntry(idx)}
       />
+
+      {/* Docs sidebar */}
+      {docsOpen && <LumoraDocsPanel onClose={() => setDocsOpen(false)} />}
+
+      {/* Calendar sidebar */}
+      {calendarOpen && <LumoraCalendar onClose={() => setCalendarOpen(false)} />}
 
       {/* Center main area */}
       <div className="flex-1 flex flex-col min-h-0 min-w-0">
