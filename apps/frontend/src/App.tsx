@@ -170,7 +170,7 @@ export function App() {
           <Route path="/lumora" element={<ProtectedRoute><LumoraShellPage /></ProtectedRoute>} />
           <Route path="/lumora/coding" element={<ProtectedRoute><LumoraShellPage /></ProtectedRoute>} />
           <Route path="/lumora/design" element={<ProtectedRoute><LumoraShellPage /></ProtectedRoute>} />
-          <Route path="/lumora/docs" element={<ProtectedRoute><LumoraShellPage /></ProtectedRoute>} />
+          <Route path="/lumora/prepkit" element={<ProtectedRoute><LumoraShellPage /></ProtectedRoute>} />
           <Route path="/lumora/calendar" element={<ProtectedRoute><LumoraShellPage /></ProtectedRoute>} />
 
           {/* ── Also accessible via /app paths ──────────── */}
