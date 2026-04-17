@@ -1476,7 +1476,7 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
                   className="h-full rounded-full transition-all duration-300"
                   style={{
                     width: `${(completedSections / sections.length) * 100}%`,
-                    background: 'linear-gradient(90deg, #10b981 0%, #059669 100%)'
+                    background: 'linear-gradient(90deg, #10b981 0%, #36B24E 100%)'
                   }}
                 />
               </div>
@@ -1782,7 +1782,7 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
             {/* Gradient Header Bar - Draggable */}
             <div
               className="h-2 cursor-move"
-              style={{ background: 'linear-gradient(90deg, #10b981 0%, #059669 50%, #06b6d4 100%)' }}
+              style={{ background: 'linear-gradient(90deg, #10b981 0%, #36B24E 50%, #06b6d4 100%)' }}
               onMouseDown={(e) => {
                 e.preventDefault();
                 setIsDraggingJD(true);
@@ -1803,7 +1803,7 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
               <div className="flex items-center gap-4">
                 <div
                   className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg"
-                  style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}
+                  style={{ background: 'linear-gradient(135deg, #10b981 0%, #36B24E 100%)' }}
                 >
                   <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -1866,7 +1866,7 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
                     <button
                       onClick={() => { setShowJDPopup(false); setActiveTab('input'); }}
                       className="px-4 py-2 rounded-lg text-sm font-medium text-white transition-all hover:opacity-90 landing-body"
-                      style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}
+                      style={{ background: 'linear-gradient(135deg, #10b981 0%, #36B24E 100%)' }}
                     >
                       Add Job Description
                     </button>
