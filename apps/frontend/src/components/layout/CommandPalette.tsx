@@ -232,7 +232,7 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-start justify-center pt-[15vh]"
+      className="fixed inset-0 z-[100] flex items-start justify-center px-4 pt-[10vh] sm:pt-[15vh]"
       style={{ background: 'rgba(0,0,0,0.5)' }}
       onClick={onClose}
     >

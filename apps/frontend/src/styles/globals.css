@@ -111,6 +111,9 @@
     overflow-x: hidden;
     width: 100%;
     color-scheme: dark;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
   }
 
   body {
@@ -149,6 +152,25 @@
     outline: 2px solid rgba(118,185,0,0.5);
     outline-offset: 2px;
     border-radius: 4px;
+  }
+
+  /* Mobile: iOS momentum scrolling */
+  .overflow-x-auto, .overflow-auto, .overflow-y-auto { -webkit-overflow-scrolling: touch; }
+
+  /* Mobile: prevent auto-zoom on input focus */
+  @media screen and (max-width: 767px) {
+    input, select, textarea { font-size: 16px !important; }
+  }
+
+  /* Mobile: scroll lock for sidebar overlay */
+  body.scroll-locked { overflow: hidden !important; position: fixed; width: 100%; top: 0; left: 0; }
+
+  /* Safe area insets for notched devices */
+  :root {
+    --sai-top: env(safe-area-inset-top, 0px);
+    --sai-bottom: env(safe-area-inset-bottom, 0px);
+    --sai-left: env(safe-area-inset-left, 0px);
+    --sai-right: env(safe-area-inset-right, 0px);
   }
 }
 

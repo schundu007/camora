@@ -24,7 +24,7 @@ export default function MobileBottomNav({
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-fixed flex items-stretch justify-around bg-[var(--bg-surface)]/95 border-t border-[var(--border)] backdrop-blur-md safe-bottom"
+    <nav className="fixed bottom-0 left-0 right-0 z-50 flex items-stretch justify-around bg-[var(--bg-surface)]/95 border-t border-[var(--border)] backdrop-blur-md safe-bottom"
       style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 4px)' }}
     >
       {items.map(({ id, label, icon: Icon, active }) => {
