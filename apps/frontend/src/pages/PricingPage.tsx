@@ -42,7 +42,7 @@ const PLANS = [
     cta: 'Get Starter',
     ctaHref: '/lumora',
     popular: false,
-    priceId: 'price_1THhzGITUCNxtMxll78umJSX',
+    priceId: '__MONTHLY__',
   },
   {
     name: 'Pro',
@@ -64,7 +64,7 @@ const PLANS = [
     cta: 'Get Pro',
     ctaHref: '/lumora',
     popular: true,
-    priceId: 'price_1THhzhITUCNxtMxl1QSxi4Kj',
+    priceId: '__QUARTERLY_PRO__',
   },
   {
     name: 'Annual',
@@ -81,7 +81,7 @@ const PLANS = [
     cta: 'Get Annual',
     ctaHref: '/lumora',
     popular: false,
-    priceId: 'price_1THiBUITUCNxtMxlAHUvPut7',
+    priceId: '__ANNUAL__',
   },
 ];
 
@@ -105,6 +105,19 @@ export default function PricingPage() {
   const { token } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState('');
+
+  const [backendPrices, setBackendPrices] = useState<any>(null);
+  useEffect(() => {
+    fetch(`${API_URL}/api/v1/billing/prices`).then(r => r.json()).then(setBackendPrices).catch(() => {});
+  }, []);
+
+  const plans = PLANS.map(p => ({
+    ...p,
+    priceId: p.priceId === '__MONTHLY__' ? (backendPrices?.monthly?.priceId || '')
+      : p.priceId === '__QUARTERLY_PRO__' ? (backendPrices?.quarterly_pro?.priceId || '')
+      : p.priceId === '__ANNUAL__' ? (backendPrices?.annual?.priceId || '')
+      : p.priceId,
+  }));
 
   useEffect(() => {
     document.title = 'Pricing | Camora';
@@ -174,7 +187,7 @@ export default function PricingPage() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-4 items-stretch">
-          {PLANS.map((plan) => {
+          {plans.map((plan) => {
             const isPro = plan.popular;
             const isAnnual = plan.name === 'Annual';
             const isFree = plan.name === 'Free';

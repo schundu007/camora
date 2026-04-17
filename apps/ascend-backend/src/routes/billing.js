@@ -48,7 +48,7 @@ router.get('/prices', (req, res) => {
     },
     quarterly_pro: {
       priceId: STRIPE_PRICES.QUARTERLY_PRO,
-      amount: 5900, // $59.00 — FAANG Track
+      amount: 4900, // $49.00 — Pro
       currency: 'usd',
       interval: 'month',
       credits: CREDITS_PER_PLAN.quarterly_pro,
