@@ -98,6 +98,21 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
 
+  // Resize handlers
+  useEffect(() => {
+    if (!isResizing) return;
+    const handleMove = (e: MouseEvent) => {
+      if (!resizeRef.current) return;
+      const delta = resizeRef.current.startX - e.clientX;
+      const newW = Math.min(Math.max(200, resizeRef.current.startW + delta), 700);
+      setPanelWidth(newW);
+    };
+    const handleUp = () => { setIsResizing(false); resizeRef.current = null; };
+    window.addEventListener('mousemove', handleMove);
+    window.addEventListener('mouseup', handleUp);
+    return () => { window.removeEventListener('mousemove', handleMove); window.removeEventListener('mouseup', handleUp); };
+  }, [isResizing]);
+
   // Auto-scroll
   useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight; }, [messages, streamText, isOpen]);
   useEffect(() => { if (isOpen) setTimeout(() => inputRef.current?.focus(), 100); }, [isOpen]);
@@ -143,10 +158,21 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
   }, [input, ask]);
 
   return (
-    <div className="hidden lg:flex flex-col shrink-0 h-full transition-all duration-200"
-      style={{ width: minimized ? '48px' : '340px', background: C.surface, borderLeft: `1px solid ${C.border}` }}>
+    <div className="hidden lg:flex shrink-0 h-full transition-all duration-200" style={{ width: minimized ? 48 : panelWidth }}>
+      {/* Resize handle */}
+      {!minimized && (
+        <div
+          className="w-[5px] h-full cursor-col-resize flex items-center justify-center group shrink-0 hover:bg-indigo-500/20 transition-colors"
+          style={{ background: isResizing ? 'rgba(99,102,241,0.2)' : '#0D0C14' }}
+          onMouseDown={(e) => { setIsResizing(true); resizeRef.current = { startX: e.clientX, startW: panelWidth }; }}
+        >
+          <div className="w-[3px] h-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: '#6366f1' }} />
+        </div>
+      )}
+
+      <div className="flex-1 flex flex-col min-w-0" style={{ background: C.surface }}>
       {/* Header */}
-      <div className="flex items-center justify-between h-12 px-2 shrink-0" style={{ borderBottom: `1px solid ${C.border}` }}>
+      <div className="flex items-center justify-between h-14 px-3 shrink-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
         {minimized ? (
           /* Minimized: just the expand button */
           <button onClick={() => setMinimized(false)} className="w-full flex items-center justify-center p-1.5 rounded-lg transition-colors hover:bg-white/5" style={{ color: C.accent }} title="Expand AI Copilot">
@@ -252,6 +278,7 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
         <p className="text-[9px] mt-1 text-center" style={{ color: C.muted }}>AI can make mistakes. Review for accuracy.</p>
       </div>
       </>)}
+      </div>
     </div>
   );
 }
