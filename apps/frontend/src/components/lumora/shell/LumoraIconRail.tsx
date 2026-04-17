@@ -38,7 +38,8 @@ export function LumoraIconRail({ activeTab, sessionsOpen, onToggleSessions }: Lu
       icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /><rect x="8" y="14" width="3" height="3" rx="0.5" /></svg> },
   ];
 
-  const moreItems = [
+  const moreItems: { label: string; path?: string; onClick?: () => void; icon: React.ReactNode }[] = [
+    { label: 'Sessions', onClick: onToggleSessions, icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg> },
     { label: 'Prepare', path: '/capra/prepare', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg> },
     { label: 'Practice', path: '/capra/practice', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><polygon points="5 3 19 12 5 21 5 3" /></svg> },
     { label: 'Jobs', path: '/jobs', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2" /></svg> },
@@ -84,16 +85,25 @@ export function LumoraIconRail({ activeTab, sessionsOpen, onToggleSessions }: Lu
           <>
             <div className="fixed inset-0 z-40" onClick={() => setShowMore(false)} />
             <div className="absolute left-full top-0 ml-2 w-[200px] rounded-xl shadow-2xl z-50 p-3 grid grid-cols-3 gap-1" style={{ background: '#111111', border: '1px solid #333', boxShadow: '0 8px 32px rgba(0,0,0,0.6)' }}>
-              {moreItems.map(mi => (
-                <Link key={mi.label} to={mi.path} onClick={() => setShowMore(false)}
-                  className="flex flex-col items-center gap-1.5 p-2.5 rounded-lg transition-colors"
-                  style={{ color: C.muted }}
-                  onMouseEnter={e => { e.currentTarget.style.color = C.text; e.currentTarget.style.background = C.surface; }}
-                  onMouseLeave={e => { e.currentTarget.style.color = C.muted; e.currentTarget.style.background = 'transparent'; }}>
-                  {mi.icon}
-                  <span className="text-[9px] font-medium" style={{ fontFamily: 'var(--font-sans)' }}>{mi.label}</span>
-                </Link>
-              ))}
+              {moreItems.map(mi => {
+                const cls = "flex flex-col items-center gap-1.5 p-2.5 rounded-lg transition-colors";
+                const sty = mi.label === 'Sessions' && sessionsOpen ? { color: C.accent, background: C.accentBg } : { color: C.muted };
+                const hover = {
+                  onMouseEnter: (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.color = C.text; e.currentTarget.style.background = C.surface; },
+                  onMouseLeave: (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.color = sty.color; e.currentTarget.style.background = sty.background || 'transparent'; },
+                };
+                return mi.onClick ? (
+                  <button key={mi.label} onClick={() => { mi.onClick!(); setShowMore(false); }} className={cls} style={sty} {...hover}>
+                    {mi.icon}
+                    <span className="text-[9px] font-medium" style={{ fontFamily: 'var(--font-sans)' }}>{mi.label}</span>
+                  </button>
+                ) : (
+                  <Link key={mi.label} to={mi.path!} onClick={() => setShowMore(false)} className={cls} style={sty} {...hover}>
+                    {mi.icon}
+                    <span className="text-[9px] font-medium" style={{ fontFamily: 'var(--font-sans)' }}>{mi.label}</span>
+                  </Link>
+                );
+              })}
             </div>
           </>
         )}

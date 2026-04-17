@@ -21,11 +21,9 @@ const C = {
 interface LumoraTopBarProps {
   activeTab: LumoraTab;
   onTranscription?: (text: string) => void;
-  onToggleSessions?: () => void;
-  sessionsOpen?: boolean;
 }
 
-export function LumoraTopBar({ activeTab, onTranscription, onToggleSessions, sessionsOpen }: LumoraTopBarProps) {
+export function LumoraTopBar({ activeTab, onTranscription }: LumoraTopBarProps) {
   const { user, logout } = useAuth();
   const { status } = useInterviewStore();
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -44,19 +42,6 @@ export function LumoraTopBar({ activeTab, onTranscription, onToggleSessions, ses
           <AudioCapture onTranscription={onTranscription} />
           <div className="w-px h-5 mx-1" style={{ background: 'rgba(255,255,255,0.1)' }} />
           <SystemAudioButton onTranscription={onTranscription} disabled={false} />
-
-          {/* Sessions toggle */}
-          {onToggleSessions && (
-            <>
-              <div className="w-px h-5 mx-1" style={{ background: 'rgba(255,255,255,0.1)' }} />
-              <button onClick={onToggleSessions} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all"
-                style={sessionsOpen ? { background: C.accentBg, color: C.accent } : { color: C.muted }}
-                title="Q&A History">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
-                <span className="hidden xl:inline">Sessions</span>
-              </button>
-            </>
-          )}
         </div>
       </div>
 
