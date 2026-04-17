@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import CamoraLogo from './CamoraLogo';
 import { NAV_LINKS, CHALLENGE_END } from '../../lib/constants';
-const TICKER_HEIGHT = 26;
+const TICKER_HEIGHT = 36;
 const TICKER_ITEMS = [
   'The Camora Challenge — $21,812 in prizes',
   'Find bugs, build features, join the founding team',
@@ -121,13 +121,15 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
           height: TICKER_HEIGHT,
           borderTop: isLight ? '1px solid rgba(0,0,0,0.06)' : 'none',
         }}>
-          <div className="challenge-ticker flex items-center h-full whitespace-nowrap">
-            {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, i) => (
-              <span key={i} className="inline-flex items-center px-6 text-[10px] font-bold tracking-wide" style={{ color: isLight ? '#475569' : '#FFFFFF' }}>
-                {item}
-                <span className="mx-5 w-1 h-1 rounded-full" style={{ background: isLight ? 'rgba(0,0,0,0.15)' : 'rgba(255,255,255,0.4)' }} />
-              </span>
-            ))}
+          <div className="w-[80%] mx-auto overflow-hidden h-full">
+            <div className="challenge-ticker flex items-center h-full whitespace-nowrap">
+              {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, i) => (
+                <span key={i} className="inline-flex items-center px-6 text-[11px] font-bold tracking-wide" style={{ color: isLight ? '#475569' : '#FFFFFF' }}>
+                  {item}
+                  <span className="mx-5 w-1.5 h-1.5 rounded-full" style={{ background: isLight ? 'rgba(0,0,0,0.15)' : 'rgba(255,255,255,0.4)' }} />
+                </span>
+              ))}
+            </div>
           </div>
           <style>{`
             .challenge-ticker { animation: ticker-scroll 28s linear infinite; }
