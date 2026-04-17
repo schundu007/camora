@@ -4,7 +4,7 @@ import { streamResponse } from '@/lib/sse-client';
 import { transcriptionAPI } from '@/lib/api-client';
 
 const C = {
-  base: '#041838', surface: '#062452', elevated: '#0B5CFF',
+  base: '#0C0515', surface: '#150D25', elevated: '#7C3AED',
   text: '#ffffff', muted: 'rgba(255,255,255,0.7)', accent: '#34d399',
   accentBg: 'rgba(52,211,153,0.15)', border: 'rgba(255,255,255,0.12)',
 };
@@ -258,8 +258,8 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
   const ask = useCallback(async (question: string) => {
     if (!question.trim() || !token || streaming) return;
 
-    // Prefix with mode hint for backend
-    const modePrefix = answerMode === 'short' ? '[SHORT] ' : '';
+    // Copilot ALWAYS uses SHORT mode — it's a sidebar, must be glanceable
+    const modePrefix = '[SHORT] ';
 
     setMessages(prev => [...prev, { role: 'user', text: question.trim(), time: new Date() }]);
     setStreaming(true);
@@ -302,14 +302,14 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
       {!minimized && (
         <div
           className="w-[5px] h-full cursor-col-resize flex items-center justify-center group shrink-0 hover:bg-blue-400/20 transition-colors"
-          style={{ background: isResizing ? 'rgba(52,211,153,0.3)' : '#041838' }}
+          style={{ background: isResizing ? 'rgba(52,211,153,0.3)' : '#0C0515' }}
           onMouseDown={(e) => { setIsResizing(true); resizeRef.current = { startX: e.clientX, startW: panelWidth }; }}
         >
           <div className="w-[3px] h-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: '#34d399' }} />
         </div>
       )}
 
-      <div className="flex-1 flex flex-col min-w-0" style={{ background: 'linear-gradient(180deg, #0B5CFF 0%, #041838 100%)' }}>
+      <div className="flex-1 flex flex-col min-w-0" style={{ background: 'linear-gradient(180deg, #7C3AED 0%, #0C0515 100%)' }}>
       {/* Header */}
       <div className="flex items-center justify-between h-14 px-3 shrink-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
         {minimized ? (
@@ -436,7 +436,7 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
             className="flex-1 bg-transparent focus:outline-none min-w-0 placeholder:opacity-40"
             style={{ fontFamily: "'Satoshi', sans-serif", color: C.text, fontSize: '10px' }} disabled={streaming} />
           {input.trim() && !streaming && (
-            <button onClick={handleSubmit} className="w-6 h-6 rounded-full flex items-center justify-center shrink-0" style={{ background: '#0B5CFF' }}>
+            <button onClick={handleSubmit} className="w-6 h-6 rounded-full flex items-center justify-center shrink-0" style={{ background: '#7C3AED' }}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
             </button>
           )}
@@ -453,7 +453,7 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
 
 export function AICompanionToggle({ onClick, hasActivity }: { onClick: () => void; hasActivity: boolean }) {
   return (
-    <button onClick={onClick} className="fixed bottom-6 right-6 z-30 w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105" style={{ background: '#0B5CFF' }} title="AI Copilot">
+    <button onClick={onClick} className="fixed bottom-6 right-6 z-30 w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105" style={{ background: '#7C3AED' }} title="AI Copilot">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
       {hasActivity && <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2" style={{ borderColor: C.base }} />}
     </button>
