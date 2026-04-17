@@ -52,9 +52,11 @@ interface InterviewPanelProps {
   onSwitchToDesign?: (problem?: string) => void;
   focusedEntry?: number | null;
   onClearFocus?: () => void;
+  /** Called when user clicks a history entry — opens copilot with that answer */
+  onViewAnswer?: (idx: number) => void;
 }
 
-export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesign, focusedEntry, onClearFocus }: InterviewPanelProps) {
+export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesign, focusedEntry, onClearFocus, onViewAnswer }: InterviewPanelProps) {
   const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
 
   useEffect(() => {
@@ -84,72 +86,53 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
       {showEmptyState ? (
         <EmptyState onAskQuestion={onAskQuestion} onSwitchToCoding={onSwitchToCoding} onSwitchToDesign={onSwitchToDesign} />
       ) : (
-        <div className="flex-1 flex flex-col gap-2 min-h-0 overflow-auto w-full mx-auto p-4" style={{ maxWidth: '860px' }}>
+        <div className="flex-1 flex flex-col gap-1 min-h-0 overflow-auto w-full mx-auto px-3 py-2" style={{ maxWidth: '700px' }}>
           {/* Q&A history */}
           {history.length > 0 && history.map((entry, idx) => (
             <div key={idx} className="shrink-0">
               <button
-                onClick={() => setExpandedIdx(expandedIdx === idx ? null : idx)}
-                className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-left transition-all duration-200 group"
-                style={expandedIdx === idx
-                  ? { background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(255,255,255,0.06)' }
-                  : { background: 'transparent', border: '1px solid transparent' }}
-                onMouseEnter={(e) => { if (expandedIdx !== idx) e.currentTarget.style.background = '#16141F'; }}
-                onMouseLeave={(e) => { if (expandedIdx !== idx) e.currentTarget.style.background = 'transparent'; }}
+                onClick={() => onViewAnswer ? onViewAnswer(idx) : setExpandedIdx(expandedIdx === idx ? null : idx)}
+                className="w-full flex items-center gap-2 px-3 py-2.5 rounded-lg text-left transition-all duration-200 group"
+                style={{ background: 'transparent', border: '1px solid transparent' }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = '#16141F'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'transparent'; }}
               >
-                <span className="flex items-center justify-center w-7 h-7 rounded-lg text-[11px] font-bold shrink-0"
-                  style={expandedIdx === idx ? { background: 'rgba(99,102,241,0.12)', color: '#818cf8', fontFamily: 'var(--font-code)' } : { background: '#1E1C28', color: '#6C6B7B', fontFamily: 'var(--font-code)' }}>
+                <span className="flex items-center justify-center w-6 h-6 rounded text-[10px] font-bold shrink-0"
+                  style={{ background: '#1E1C28', color: '#6C6B7B', fontFamily: 'var(--font-code)' }}>
                   {idx + 1}
                 </span>
-                <span className="text-sm font-medium leading-snug flex-1 truncate" style={{ fontFamily: 'var(--font-sans)', color: '#F2F1F3' }}>
+                <span className="text-[13px] font-medium leading-snug flex-1 truncate" style={{ fontFamily: 'var(--font-sans)', color: '#F2F1F3' }}>
                   {entry.question}
                 </span>
-                <svg className={`w-4 h-4 shrink-0 transition-transform duration-200 ${expandedIdx === idx ? 'rotate-180' : ''}`} style={{ color: '#6C6B7B' }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                <svg className="w-3.5 h-3.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: '#818cf8' }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                 </svg>
               </button>
-
-              {expandedIdx === idx && (
-                <div className="mt-2 ml-10 animate-[fadeIn_200ms_ease-out]">
-                  <AnswerBlocks
-                    blocks={safeBlocks(entry.blocks)}
-                    isDesign={isDesignBlocks(entry.blocks)}
-                    isCoding={isCodingBlocks(entry.blocks)}
-                    question={entry.question}
-                  />
-                </div>
-              )}
             </div>
           ))}
 
           {/* Current streaming question */}
-          {isStreaming && question && expandedIdx === null && (
-            <div className="flex items-center gap-3 px-4 py-3.5 rounded-xl shrink-0" style={{ background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(255,255,255,0.06)' }}>
-              <div className="relative flex items-center justify-center w-7 h-7 shrink-0">
-                <span className="flex items-center justify-center w-7 h-7 rounded-lg text-[11px] font-bold" style={{ background: 'rgba(99,102,241,0.12)', color: '#818cf8', fontFamily: 'var(--font-code)' }}>
+          {isStreaming && question && (
+            <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg shrink-0" style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <div className="relative flex items-center justify-center w-6 h-6 shrink-0">
+                <span className="flex items-center justify-center w-6 h-6 rounded text-[10px] font-bold" style={{ background: 'rgba(99,102,241,0.12)', color: '#818cf8', fontFamily: 'var(--font-code)' }}>
                   {history.length + 1}
                 </span>
-                <div className="absolute inset-0 border-2 border-transparent rounded-lg animate-spin" style={{ borderTopColor: '#818cf8' }} />
+                <div className="absolute inset-0 border-2 border-transparent rounded animate-spin" style={{ borderTopColor: '#818cf8' }} />
               </div>
-              <span className="text-sm font-medium leading-snug flex-1" style={{ fontFamily: 'var(--font-sans)', color: '#F2F1F3' }}>
+              <span className="text-[13px] font-medium leading-snug flex-1 truncate" style={{ fontFamily: 'var(--font-sans)', color: '#F2F1F3' }}>
                 {question}
               </span>
-              <span className="text-[10px] shrink-0 animate-pulse font-medium" style={{ fontFamily: 'var(--font-code)', color: '#818cf8' }}>analyzing → AI Companion</span>
+              <span className="text-[9px] shrink-0 animate-pulse font-medium" style={{ fontFamily: 'var(--font-code)', color: '#818cf8' }}>generating...</span>
             </div>
           )}
 
-          {/* Cross-sell — uses accent color only */}
+          {/* Cross-sell */}
           {history.length > 0 && history.length % 3 === 0 && (
-            <div className="flex items-center gap-3 p-4 rounded-xl" style={{ background: '#16141F', border: '1px solid rgba(255,255,255,0.06)' }}>
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(99,102,241,0.12)' }}>
-                <svg className="w-4.5 h-4.5" style={{ color: '#818cf8' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold" style={{ fontFamily: 'var(--font-sans)', color: '#F2F1F3' }}>Want deeper preparation?</p>
-                <p className="text-xs" style={{ fontFamily: 'var(--font-sans)', color: '#6C6B7B' }}>300+ DSA topics, system design, and mock interviews.</p>
-              </div>
-              <Link to="/capra/prepare" className="shrink-0 px-4 py-2 text-xs font-bold rounded-xl hover:opacity-90 transition-all" style={{ background: '#6366f1', color: '#F2F1F3' }}>
-                Prepare
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: '#16141F', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <span className="text-xs" style={{ color: '#6C6B7B' }}>Want deeper prep?</span>
+              <Link to="/capra/prepare" className="text-xs font-bold hover:opacity-90 transition-all" style={{ color: '#818cf8' }}>
+                Explore 300+ topics →
               </Link>
             </div>
           )}

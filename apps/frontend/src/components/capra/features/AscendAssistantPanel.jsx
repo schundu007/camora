@@ -211,7 +211,7 @@ function renderMarkdown(text) {
 
 // getAuthHeaders is now imported from utils/authHeaders.js
 
-export default function AscendAssistantPanel({ onClose, provider, model, isDedicatedWindow = false }) {
+export default function AscendAssistantPanel({ onClose, provider, model, isDedicatedWindow = false, context = null }) {
   const [isRecording, setIsRecording] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [transcription, setTranscription] = useState('');
@@ -1034,6 +1034,13 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
     let fullAnswer = ''; // Track full answer for history
 
     try {
+      // Build context string from current problem/solution if available
+      const contextStr = context ? [
+        context.problem ? `[Current ${context.mode === 'system-design' ? 'System Design' : 'Coding'} Problem]: ${context.problem}` : '',
+        context.solution ? `[Solution Summary]: ${context.solution}` : '',
+        context.code ? `[Code]:\n${context.code}` : '',
+      ].filter(Boolean).join('\n\n') : '';
+
       const response = await fetch(`${API_URL}/api/ascend/answer`, {
         method: 'POST',
         headers: {
@@ -1046,7 +1053,7 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
           model,
           jobDescription,
           resume,
-          prepMaterial,
+          prepMaterial: [prepMaterial, contextStr].filter(Boolean).join('\n\n---\n\n'),
         }),
       });
 
@@ -1126,6 +1133,12 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
     const questionText = transcription; // Capture before it might change
 
     try {
+      const contextStr2 = context ? [
+        context.problem ? `[Current ${context.mode === 'system-design' ? 'System Design' : 'Coding'} Problem]: ${context.problem}` : '',
+        context.solution ? `[Solution Summary]: ${context.solution}` : '',
+        context.code ? `[Code]:\n${context.code}` : '',
+      ].filter(Boolean).join('\n\n') : '';
+
       const response = await fetch(`${API_URL}/api/ascend/answer`, {
         method: 'POST',
         headers: {
@@ -1136,6 +1149,7 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
           question: transcription,
           provider,
           model,
+          prepMaterial: contextStr2 || undefined,
         }),
       });
 
@@ -1266,6 +1280,25 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
           </button>
         </div>
       </div>
+
+      {/* Context Banner — shows when copilot has problem/solution context */}
+      {context?.problem && (
+        <div className="px-3 py-2 border-b border-[var(--border)]" style={{ background: 'var(--accent-subtle)' }}>
+          <div className="flex items-center gap-2">
+            <svg className="w-3.5 h-3.5 flex-shrink-0" style={{ color: 'var(--accent)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            <div className="min-w-0">
+              <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--accent)' }}>
+                {context.mode === 'system-design' ? 'System Design' : 'Coding'} Context Loaded
+              </span>
+              <p className="text-[11px] truncate" style={{ color: 'var(--text-secondary)' }}>
+                {context.problem.slice(0, 80)}{context.problem.length > 80 ? '...' : ''}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Conversation History Panel */}
       {showHistory && (
