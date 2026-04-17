@@ -196,7 +196,7 @@ export default function OAuthLogin() {
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
           <Link to="/" className="flex items-center gap-2">
             <CamoraLogo size={24} />
-            <span className="landing-display font-bold text-sm text-white" style={{ fontFamily: "'Comfortaa', sans-serif" }}>Camora</span>
+            <span className="font-bold text-sm" style={{ fontFamily: "'Clash Display', sans-serif", background: 'linear-gradient(135deg, #76B900, #2d8a1e)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Camora</span>
           </Link>
           <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
             {[

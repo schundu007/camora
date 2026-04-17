@@ -16,7 +16,7 @@ export default function SiteFooter({ variant = 'dark' }: { variant?: 'light' | '
       <div className="w-full lg:max-w-[70%] mx-auto h-full flex items-center justify-between">
         <div className="flex items-center gap-2">
           <CamoraLogo size={22} />
-          <span className="text-xs font-extrabold" style={{ fontFamily: "var(--font-sans)", color: textColor }}>Camora</span>
+          <span className="text-xs font-bold" style={{ fontFamily: "'Clash Display', sans-serif", background: 'linear-gradient(135deg, #76B900, #2d8a1e)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Camora</span>
         </div>
         <div className="flex items-center gap-4">
           {NAV_LINKS.map((link) => (

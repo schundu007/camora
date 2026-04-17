@@ -71,7 +71,7 @@ function LoginPage() {
         <div className="w-full max-w-sm rounded-2xl p-8" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', boxShadow: '0 4px 24px rgba(0,0,0,0.3)' }}>
 
           {/* Header */}
-          <h1 className="text-xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>Sign in to Camora</h1>
+          <h1 className="text-xl font-bold tracking-tight" style={{ fontFamily: "'Clash Display', sans-serif", color: 'var(--text-primary)' }}>Sign in to <span style={{ background: 'linear-gradient(135deg, #76B900, #2d8a1e)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Camora</span></h1>
           <p className="mt-1 text-sm" style={{ color: 'var(--text-secondary)' }}>Apply. Prepare. Practice. Attend.</p>
 
           {/* Social login buttons */}
