@@ -86,7 +86,7 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
       {showEmptyState ? (
         <EmptyState onAskQuestion={onAskQuestion} onSwitchToCoding={onSwitchToCoding} onSwitchToDesign={onSwitchToDesign} />
       ) : (
-        <div className="flex-1 flex flex-col gap-1 min-h-0 overflow-auto w-full mx-auto px-3 py-2" style={{ maxWidth: '700px' }}>
+        <div className="flex-1 flex flex-col gap-1 min-h-0 overflow-auto w-full mx-auto px-2 sm:px-3 py-2" style={{ maxWidth: 'min(700px, 100%)' }}>
           {/* Q&A history */}
           {history.length > 0 && history.map((entry, idx) => (
             <div key={idx} className="shrink-0">
