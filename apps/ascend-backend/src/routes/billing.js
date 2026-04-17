@@ -54,6 +54,13 @@ router.get('/prices', (req, res) => {
       credits: CREDITS_PER_PLAN.quarterly_pro,
       features: ['unlimited_ai', 'all_companies', 'lumora_3_sessions'],
     },
+    annual: {
+      priceId: STRIPE_PRICES.ANNUAL,
+      amount: 22800, // $228/year ($19/mo)
+      currency: 'usd',
+      interval: 'year',
+      features: ['unlimited_ai', 'all_companies', 'lumora_3_sessions', 'priority_support'],
+    },
     desktop_monthly: {
       priceId: STRIPE_PRICES.DESKTOP_MONTHLY,
       amount: 2900, // $29.00/mo — Desktop App add-on
@@ -100,6 +107,7 @@ router.post('/checkout', jwtAuth, async (req, res) => {
     const validPrices = [
       STRIPE_PRICES.MONTHLY,
       STRIPE_PRICES.QUARTERLY_PRO,
+      STRIPE_PRICES.ANNUAL,
       STRIPE_PRICES.DESKTOP_MONTHLY,
       STRIPE_PRICES.DESKTOP_ANNUAL,
       STRIPE_PRICES.DESKTOP_LIFETIME, // legacy
