@@ -28,7 +28,7 @@ interface LumoraTopBarProps {
 
 export function LumoraTopBar({ activeTab, onTranscription, onToggleSessions, sessionsOpen }: LumoraTopBarProps) {
   const { user, logout } = useAuth();
-  const { status, useSearch, setUseSearch, clearHistory } = useInterviewStore();
+  const { status } = useInterviewStore();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const initials = (user?.name || user?.email || '?').slice(0, 2).toUpperCase();
 
@@ -91,17 +91,6 @@ export function LumoraTopBar({ activeTab, onTranscription, onToggleSessions, ses
             <option value="codility">Codility</option>
           </select>
         </div>
-
-        {/* Search */}
-        <button onClick={() => setUseSearch(!useSearch)} className="p-1.5 rounded-lg transition-all"
-          style={useSearch ? { background: C.accentBg, color: C.accent } : { color: C.muted }} title="Web Search (⌘S)">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" /></svg>
-        </button>
-
-        {/* Reset */}
-        <button onClick={() => { if (confirm('Clear all history?')) clearHistory(); }} className="p-1.5 rounded-lg transition-all" style={{ color: C.muted }} title="Reset (⌘⌫)">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 4v6h6" /><path d="M23 20v-6h-6" /><path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15" /></svg>
-        </button>
 
         {/* User */}
         <div className="relative">
