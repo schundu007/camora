@@ -1,8 +1,18 @@
 import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
 import type { SqlProblem } from '@/data/capra/sqlProblems';
 import { SQL_PROBLEMS, SQL_CATEGORIES } from '@/data/capra/sqlProblems';
-// Dynamic import for sql.js — loaded at runtime, not bundled
-const loadSqlJs = () => import('sql.js').then(m => m.default || m);
+// Load sql.js from CDN — bypasses Vite bundling entirely
+const SQL_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3';
+const loadSqlJs = (): Promise<any> => {
+  return new Promise((resolve, reject) => {
+    if ((window as any).initSqlJs) { resolve((window as any).initSqlJs); return; }
+    const script = document.createElement('script');
+    script.src = `${SQL_CDN}/sql-wasm.js`;
+    script.onload = () => resolve((window as any).initSqlJs);
+    script.onerror = () => reject(new Error('Failed to load sql.js'));
+    document.head.appendChild(script);
+  });
+};
 
 const SharedCodeEditor = lazy(
   () => import('@/components/shared/code/SharedCodeEditor')
@@ -218,10 +228,9 @@ export function SQLPlayground({ onClose }: SQLPlaygroundProps) {
   // ── Initialize sql.js WASM ──────────────────────────────────────────────
   useEffect(() => {
     let cancelled = false;
-    const WASM_URL = 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.wasm';
 
-    loadSqlJs().then((initSqlJs: any) => {
-      return initSqlJs({ locateFile: () => WASM_URL });
+    loadSqlJs().then((initFn: any) => {
+      return initFn({ locateFile: () => `${SQL_CDN}/sql-wasm.wasm` });
     }).then((SQL: { Database: new () => SqlJsDatabase }) => {
       if (cancelled) return;
       const database = new SQL.Database();
@@ -230,19 +239,8 @@ export function SQLPlayground({ onClose }: SQLPlaygroundProps) {
       setDbReady(true);
     }).catch((err: Error) => {
       console.error('sql.js init failed:', err);
-      // Fallback: try local WASM
-      loadSqlJs().then((initSqlJs: any) => {
-        return initSqlJs({ locateFile: (f: string) => `/${f}` });
-      }).then((SQL: { Database: new () => SqlJsDatabase }) => {
-        if (cancelled) return;
-        const database = new SQL.Database();
-        dbRef.current = database;
-        setDb(database);
-        setDbReady(true);
-      }).catch((err2: Error) => {
-        console.error('sql.js fallback also failed:', err2);
-      });
     });
+
     return () => {
       cancelled = true;
       dbRef.current?.close();
