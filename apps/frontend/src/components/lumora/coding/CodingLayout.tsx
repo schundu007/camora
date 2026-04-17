@@ -293,9 +293,21 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
         // Offer auto-fix instead of doing it silently
         const allPassed = data.results.every((r: TestResult) => r.passed);
         if (!allPassed) {
-          const firstError = data.results.find((r: TestResult) => r.error)?.error ||
-                             data.results.find((r: TestResult) => !r.passed)?.output || 'Test failed';
-          setFixError(firstError);
+          // Collect ALL failing test details so the AI can diagnose every issue
+          const failingDetails = data.results
+            .map((r: TestResult, i: number) => {
+              if (r.passed) return null;
+              const tc = testCases[i];
+              const parts = [`Test ${i + 1}`];
+              if (tc?.input) parts.push(`Input: ${tc.input}`);
+              if (tc?.expected) parts.push(`Expected: ${tc.expected}`);
+              if (r.output) parts.push(`Got: ${r.output}`);
+              if (r.error) parts.push(`Error: ${r.error}`);
+              return parts.join(' | ');
+            })
+            .filter(Boolean)
+            .join('\n');
+          setFixError(failingDetails);
           setShowFixPrompt(true);
         }
       } else if (data.direct_output !== undefined && data.direct_output !== null) {
