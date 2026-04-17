@@ -17,6 +17,8 @@ interface AICompanionPanelProps {
   onClose: () => void;
 }
 
+type AnswerMode = 'short' | 'detailed';
+
 /* ── Text formatting ── */
 function extractAnswer(parsed: any): string {
   if (!parsed) return '';
@@ -30,12 +32,13 @@ function cleanTags(text: string): string {
   return text.replace(/\[\/?(?:FOLLOWUP|HEADLINE|ANSWER|CODE|DIAGRAM|REQUIREMENTS|SCALEMATH|DEEPDESIGN|EDGECASES|TRADEOFFS)\]/gi, '').replace(/\n{3,}/g, '\n\n').trim();
 }
 
+/* ── RichText — renders markdown with proper code blocks ── */
 function RichText({ text }: { text: string }) {
   if (!text) return null;
 
   // Split into blocks: code blocks vs regular text
   const blocks: { type: 'code' | 'text'; lang?: string; content: string }[] = [];
-  const codeRegex = /```(\w*)\n([\s\S]*?)```/g;
+  const codeRegex = /```(\w*)\n?([\s\S]*?)```/g;
   let lastIdx = 0;
   let match;
 
@@ -47,43 +50,42 @@ function RichText({ text }: { text: string }) {
   if (lastIdx < text.length) blocks.push({ type: 'text', content: text.slice(lastIdx) });
 
   const renderInline = (s: string) => {
-    // Bold, inline code, links
     return s
-      .replace(/\*\*(.*?)\*\*/g, '<strong style="color:#ffffff;font-weight:700;font-family:Clash Display,sans-serif">$1</strong>')
-      .replace(/`([^`]+)`/g, '<code style="background:rgba(96,165,250,0.15);color:#60a5fa;padding:1px 4px;border-radius:3px;font-size:12px">$1</code>')
+      .replace(/\*\*(.*?)\*\*/g, '<strong style="color:#ffffff;font-weight:700;font-family:\'Clash Display\',sans-serif;font-size:10px">$1</strong>')
+      .replace(/`([^`]+)`/g, '<code style="background:rgba(96,165,250,0.15);color:#60a5fa;padding:1px 4px;border-radius:3px;font-size:10px;font-family:\'JetBrains Mono\',monospace">$1</code>')
       .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" style="color:#93c5fd;text-decoration:underline">$1</a>');
   };
 
   return (
-    <div className="text-[11px] leading-relaxed flex flex-col gap-1" style={{ fontFamily: "'Satoshi', sans-serif" }}>
+    <div className="flex flex-col gap-0.5" style={{ fontFamily: "'Satoshi', sans-serif", fontSize: '10px', lineHeight: '1.5' }}>
       {blocks.map((block, bi) => {
         if (block.type === 'code') {
           return (
-            <div key={bi} className="rounded-lg overflow-hidden my-1" style={{ border: '1px solid rgba(255,255,255,0.1)' }}>
-              <div className="flex items-center justify-between px-3 py-1.5" style={{ background: 'rgba(255,255,255,0.06)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-                <span className="text-[9px] font-bold uppercase" style={{ color: C.muted }}>{block.lang}</span>
-                <button onClick={() => navigator.clipboard.writeText(block.content)} className="text-[9px] px-1.5 py-0.5 rounded" style={{ color: C.muted }}>Copy</button>
+            <div key={bi} className="rounded-lg overflow-hidden my-1.5" style={{ border: '1px solid rgba(255,255,255,0.1)' }}>
+              <div className="flex items-center justify-between px-3 py-1" style={{ background: 'rgba(255,255,255,0.06)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: C.muted }}>{block.lang}</span>
+                <button onClick={() => navigator.clipboard.writeText(block.content)} className="text-[9px] px-1.5 py-0.5 rounded transition-colors hover:bg-white/10" style={{ color: C.muted }}>Copy</button>
               </div>
-              <pre className="px-3 py-2 overflow-x-auto text-xs leading-relaxed" style={{ background: '#041838', color: '#93c5fd' }}><code>{block.content}</code></pre>
+              <pre className="px-3 py-2 overflow-x-auto" style={{ background: '#020e24', color: '#93c5fd', fontSize: '10px', lineHeight: '1.55', fontFamily: "'JetBrains Mono', monospace" }}><code>{block.content}</code></pre>
             </div>
           );
         }
 
         return block.content.split('\n').map((line, i) => {
           const t = line.trim();
-          if (!t) return <div key={`${bi}-${i}`} className="h-1" />;
+          if (!t) return <div key={`${bi}-${i}`} className="h-0.5" />;
 
-          // Headers
-          if (t.startsWith('### ')) return <h4 key={`${bi}-${i}`} className="text-[11px] font-bold mt-2 mb-0.5" style={{ color: C.text, fontFamily: "'Clash Display', sans-serif" }}>{t.slice(4)}</h4>;
-          if (t.startsWith('## ')) return <h3 key={`${bi}-${i}`} className="text-xs font-bold mt-2 mb-0.5" style={{ color: C.text, fontFamily: "'Clash Display', sans-serif" }}>{t.slice(3)}</h3>;
-          if (t.startsWith('# ')) return <h2 key={`${bi}-${i}`} className="text-sm font-bold mt-2 mb-1" style={{ color: C.text, fontFamily: "'Clash Display', sans-serif" }}>{t.slice(2)}</h2>;
+          // Headers — bold with Clash Display
+          if (t.startsWith('### ')) return <h4 key={`${bi}-${i}`} className="mt-2 mb-0.5" style={{ fontSize: '10px', fontWeight: 700, color: C.text, fontFamily: "'Clash Display', sans-serif" }}>{t.slice(4)}</h4>;
+          if (t.startsWith('## ')) return <h3 key={`${bi}-${i}`} className="mt-2 mb-0.5" style={{ fontSize: '11px', fontWeight: 700, color: C.text, fontFamily: "'Clash Display', sans-serif" }}>{t.slice(3)}</h3>;
+          if (t.startsWith('# ')) return <h2 key={`${bi}-${i}`} className="mt-2 mb-1" style={{ fontSize: '12px', fontWeight: 700, color: C.text, fontFamily: "'Clash Display', sans-serif" }}>{t.slice(2)}</h2>;
 
           // STAR labels
           const starMatch = t.match(/^(SITUATION|TASK|ACTION|RESULT|LEARNING|SUMMARY|TIP|NOTE|WARNING|Q\d+|A\d+):\s*(.*)/i);
           if (starMatch) return (
-            <div key={`${bi}-${i}`} className="flex gap-2 mt-1.5">
-              <span className="text-[9px] font-bold shrink-0 px-1.5 py-0.5 rounded mt-0.5" style={{ background: C.accentBg, color: C.accent }}>{starMatch[1].toUpperCase()}</span>
-              <span className="text-[11px]" style={{ color: C.text }} dangerouslySetInnerHTML={{ __html: renderInline(starMatch[2]) }} />
+            <div key={`${bi}-${i}`} className="flex gap-2 mt-1">
+              <span className="text-[8px] font-bold shrink-0 px-1.5 py-0.5 rounded mt-0.5" style={{ background: C.accentBg, color: C.accent }}>{starMatch[1].toUpperCase()}</span>
+              <span style={{ fontSize: '10px', color: C.text }} dangerouslySetInnerHTML={{ __html: renderInline(starMatch[2]) }} />
             </div>
           );
 
@@ -91,8 +93,8 @@ function RichText({ text }: { text: string }) {
           const numMatch = t.match(/^(\d+)\.\s+(.*)/);
           if (numMatch) return (
             <div key={`${bi}-${i}`} className="flex gap-2 pl-1">
-              <span className="text-[9px] font-bold shrink-0 mt-0.5 w-4 h-4 rounded flex items-center justify-center" style={{ background: C.accentBg, color: C.accent }}>{numMatch[1]}</span>
-              <span className="text-[11px]" style={{ color: C.text }} dangerouslySetInnerHTML={{ __html: renderInline(numMatch[2]) }} />
+              <span className="text-[8px] font-bold shrink-0 mt-0.5 w-3.5 h-3.5 rounded flex items-center justify-center" style={{ background: C.accentBg, color: C.accent }}>{numMatch[1]}</span>
+              <span style={{ fontSize: '10px', color: C.text }} dangerouslySetInnerHTML={{ __html: renderInline(numMatch[2]) }} />
             </div>
           );
 
@@ -100,15 +102,15 @@ function RichText({ text }: { text: string }) {
           if (t.startsWith('- ') || t.startsWith('• ') || t.startsWith('* ')) return (
             <div key={`${bi}-${i}`} className="flex gap-2 pl-2">
               <span className="shrink-0 mt-1.5 w-1 h-1 rounded-full" style={{ background: C.accent }} />
-              <span className="text-[11px]" style={{ color: C.text }} dangerouslySetInnerHTML={{ __html: renderInline(t.slice(2)) }} />
+              <span style={{ fontSize: '10px', color: C.text }} dangerouslySetInnerHTML={{ __html: renderInline(t.slice(2)) }} />
             </div>
           );
 
           // Horizontal rule
-          if (t === '---' || t === '***') return <div key={`${bi}-${i}`} className="my-2 h-px" style={{ background: C.border }} />;
+          if (t === '---' || t === '***') return <div key={`${bi}-${i}`} className="my-1.5 h-px" style={{ background: C.border }} />;
 
           // Regular paragraph
-          return <p key={`${bi}-${i}`} className="text-[11px]" style={{ color: C.text }} dangerouslySetInnerHTML={{ __html: renderInline(t) }} />;
+          return <p key={`${bi}-${i}`} style={{ fontSize: '10px', color: C.text }} dangerouslySetInnerHTML={{ __html: renderInline(t) }} />;
         });
       })}
     </div>
@@ -152,7 +154,7 @@ function MicButton({ onResult, disabled }: { onResult: (text: string) => void; d
   );
 }
 
-/* ═══ AI Copilot Panel — FULLY INDEPENDENT from interview store ═══ */
+/* ═══ AI Copilot Panel ═══ */
 export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
   const { token } = useAuth();
   const [messages, setMessages] = useState<CopilotMessage[]>([]);
@@ -162,6 +164,7 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
   const [minimized, setMinimized] = useState(false);
   const [panelWidth, setPanelWidth] = useState(360);
   const [isResizing, setIsResizing] = useState(false);
+  const [answerMode, setAnswerMode] = useState<AnswerMode>('short');
   const resizeRef = useRef<{ startX: number; startW: number } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -190,14 +193,16 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
   const ask = useCallback(async (question: string) => {
     if (!question.trim() || !token || streaming) return;
 
-    // Add user message
+    // Prefix with mode hint for backend
+    const modePrefix = answerMode === 'short' ? '[SHORT] ' : '';
+
     setMessages(prev => [...prev, { role: 'user', text: question.trim(), time: new Date() }]);
     setStreaming(true);
     setStreamText('');
 
     try {
       await streamResponse({
-        question: question.trim(),
+        question: modePrefix + question.trim(),
         token,
         useSearch: false,
         onToken: (data) => {
@@ -220,7 +225,7 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
       setStreamText('');
       setStreaming(false);
     }
-  }, [token, streaming]);
+  }, [token, streaming, answerMode]);
 
   const handleSubmit = useCallback(() => {
     if (input.trim()) { ask(input); setInput(''); }
@@ -243,12 +248,10 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
       {/* Header */}
       <div className="flex items-center justify-between h-14 px-3 shrink-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
         {minimized ? (
-          /* Minimized: just the expand button */
           <button onClick={() => setMinimized(false)} className="w-full flex items-center justify-center p-1.5 rounded-lg transition-colors hover:bg-white/5" style={{ color: C.accent }} title="Expand AI Copilot">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
           </button>
         ) : (
-          /* Expanded: full header */
           <>
             <div className="flex items-center gap-1">
               <button onClick={() => { if (messages.length > 0 && confirm('Clear chat history?')) setMessages([]); }}
@@ -260,9 +263,9 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
               </button>
             </div>
-            <span className="text-sm font-bold tracking-tight" style={{ fontFamily: "'Clash Display', sans-serif", color: C.text }}>AI Copilot</span>
+            <span className="text-xs font-bold tracking-tight" style={{ fontFamily: "'Clash Display', sans-serif", color: C.text }}>AI Copilot</span>
             <div className="flex items-center gap-1">
-              <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ color: C.muted }}>{messages.filter(m => m.role === 'user').length}</span>
+              <span className="text-[9px] px-1.5 py-0.5 rounded" style={{ color: C.muted }}>{messages.filter(m => m.role === 'user').length}</span>
               <button onClick={() => setMinimized(true)}
                 className="p-1.5 rounded-lg transition-colors hover:bg-white/5" style={{ color: C.muted }} title="Minimize">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 12h16" /></svg>
@@ -272,22 +275,51 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
         )}
       </div>
 
+      {/* Answer Mode Toggle — Short / Detailed */}
+      {!minimized && (
+        <div className="flex items-center px-3 py-2 shrink-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          <div className="flex items-center w-full rounded-lg p-0.5" style={{ background: 'rgba(255,255,255,0.06)' }}>
+            {(['short', 'detailed'] as AnswerMode[]).map(mode => (
+              <button
+                key={mode}
+                onClick={() => setAnswerMode(mode)}
+                className="flex-1 py-1.5 text-center rounded-md transition-all"
+                style={{
+                  fontSize: '10px',
+                  fontWeight: 700,
+                  fontFamily: "'Clash Display', sans-serif",
+                  letterSpacing: '0.05em',
+                  textTransform: 'uppercase',
+                  color: answerMode === mode ? '#ffffff' : 'rgba(255,255,255,0.4)',
+                  background: answerMode === mode ? 'rgba(11,92,255,0.5)' : 'transparent',
+                }}
+              >
+                {mode === 'short' ? 'Short' : 'Detailed'}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {minimized ? (
         <div className="flex-1 flex items-center justify-center">
           <span className="text-[10px] font-bold tracking-widest uppercase" style={{ color: C.muted, writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>AI Copilot</span>
         </div>
       ) : (<>
       {/* Chat */}
-      <div ref={scrollRef} className="flex-1 overflow-auto px-4 py-3">
+      <div ref={scrollRef} className="flex-1 overflow-auto px-3 py-3">
         {messages.length === 0 && !streaming ? (
           <div className="flex flex-col items-center justify-center h-full py-6">
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="1" className="mb-4 opacity-40">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="1" className="mb-4 opacity-40">
               <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
             </svg>
-            <div className="grid grid-cols-2 gap-2 w-full">
+            <p className="text-[9px] mb-3 text-center" style={{ color: C.muted }}>
+              {answerMode === 'short' ? 'Short mode — concise bullet points for live interviews' : 'Detailed mode — comprehensive explanations with code'}
+            </p>
+            <div className="grid grid-cols-2 gap-1.5 w-full">
               {['Design a URL shortener', 'Explain TCP vs UDP', 'Tell me about a conflict', 'Detect cycle in linked list'].map(s => (
-                <button key={s} onClick={() => ask(s)} className="text-left px-3 py-2.5 rounded-lg text-xs leading-snug transition-all"
-                  style={{ border: `1px solid ${C.border}`, fontFamily: 'var(--font-sans)', color: C.muted }}
+                <button key={s} onClick={() => ask(s)} className="text-left px-2.5 py-2 rounded-lg transition-all"
+                  style={{ border: `1px solid ${C.border}`, fontSize: '10px', fontFamily: "'Satoshi', sans-serif", color: C.muted, lineHeight: '1.4' }}
                   onMouseEnter={e => { e.currentTarget.style.color = '#ffffff'; e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; }}
                   onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.65)'; e.currentTarget.style.background = 'transparent'; }}>
                   {s}
@@ -296,17 +328,17 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
             </div>
           </div>
         ) : (
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-3">
             {messages.map((msg, i) => msg.role === 'user' ? (
               <div key={i} className="flex flex-col items-end">
-                <div className="rounded-xl px-3 py-2 max-w-[90%]" style={{ background: C.accentBg }}>
-                  <p className="text-[11px]" style={{ fontFamily: "'Satoshi', sans-serif", color: C.text }}>{msg.text}</p>
+                <div className="rounded-xl px-2.5 py-1.5 max-w-[90%]" style={{ background: C.accentBg }}>
+                  <p style={{ fontSize: '10px', fontFamily: "'Satoshi', sans-serif", color: C.text }}>{msg.text}</p>
                 </div>
-                <span className="text-[9px] mt-0.5 mr-1" style={{ color: C.muted }}>{msg.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                <span className="text-[8px] mt-0.5 mr-1" style={{ color: C.muted }}>{msg.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
               </div>
             ) : (
-              <div key={i} className="flex gap-2 items-start">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="1.5" className="shrink-0 mt-0.5">
+              <div key={i} className="flex gap-1.5 items-start">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="1.5" className="shrink-0 mt-0.5">
                   <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
                 </svg>
                 <div className="flex-1 min-w-0"><RichText text={msg.text} /></div>
@@ -315,13 +347,13 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
 
             {/* Streaming */}
             {streaming && (
-              <div className="flex gap-2 items-start">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="1.5" className="shrink-0 mt-0.5 animate-pulse">
+              <div className="flex gap-1.5 items-start">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="1.5" className="shrink-0 mt-0.5 animate-pulse">
                   <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
                 </svg>
                 <div className="flex-1">
                   {streamText ? <><RichText text={cleanTags(streamText)} /><span className="inline-block w-1.5 h-3 ml-0.5 animate-pulse rounded-sm" style={{ background: C.accent }} /></>
-                    : <span className="text-[12px] animate-pulse" style={{ color: C.muted }}>Thinking...</span>}
+                    : <span className="animate-pulse" style={{ fontSize: '10px', color: C.muted }}>Thinking...</span>}
                 </div>
               </div>
             )}
@@ -335,16 +367,18 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
           <MicButton onResult={(text) => ask(text)} disabled={streaming} />
           <input ref={inputRef} type="text" value={input} onChange={e => setInput(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter' && input.trim()) handleSubmit(); }}
-            placeholder="Write a message or type / for more"
-            className="flex-1 bg-transparent text-[11px] focus:outline-none min-w-0 placeholder:opacity-40"
-            style={{ fontFamily: "'Satoshi', sans-serif", color: C.text }} disabled={streaming} />
+            placeholder={answerMode === 'short' ? 'Ask — short answer mode' : 'Ask — detailed answer mode'}
+            className="flex-1 bg-transparent focus:outline-none min-w-0 placeholder:opacity-40"
+            style={{ fontFamily: "'Satoshi', sans-serif", color: C.text, fontSize: '10px' }} disabled={streaming} />
           {input.trim() && !streaming && (
             <button onClick={handleSubmit} className="w-6 h-6 rounded-full flex items-center justify-center shrink-0" style={{ background: '#0B5CFF' }}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
             </button>
           )}
         </div>
-        <p className="text-[9px] mt-1 text-center" style={{ color: C.muted }}>AI can make mistakes. Review for accuracy.</p>
+        <p className="text-[8px] mt-1 text-center" style={{ color: C.muted }}>
+          {answerMode === 'short' ? 'Short mode — 3-5 bullet points only' : 'Detailed mode — full explanations with code'}
+        </p>
       </div>
       </>)}
       </div>
