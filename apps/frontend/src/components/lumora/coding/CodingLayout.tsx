@@ -639,12 +639,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
             <span className="hidden sm:inline">Back</span>
           </button>
           <div className="h-4 w-px bg-white/10" />
-          <div className="flex items-center gap-1.5">
-            <div className="w-5 h-5 md:w-6 md:h-6 rounded flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
-              <span className="text-white text-[10px] md:text-xs font-extrabold">L</span>
-            </div>
-            <span className="text-white font-extrabold text-xs md:text-sm" style={{ fontFamily: "'Source Sans 3', sans-serif" }}>Coding</span>
-          </div>
+          <span className="text-white font-extrabold text-xs md:text-sm" style={{ fontFamily: "'Source Sans 3', sans-serif" }}>Coding</span>
         </div>
 
         <div className="flex items-center gap-1.5 md:gap-2">
