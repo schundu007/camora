@@ -74,6 +74,10 @@ export async function authenticate(req, res, next) {
       return res.status(401).json({ error: 'User account inactive' });
     }
 
+    // Set admin flag for usage bypass
+    const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || 'chundubabu@gmail.com').split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
+    user.is_admin = ADMIN_EMAILS.includes(user.email?.toLowerCase());
+
     req.user = user;
     next();
   } catch (err) {
