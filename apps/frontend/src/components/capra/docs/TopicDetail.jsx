@@ -680,7 +680,7 @@ export default function TopicDetail({
                     { name: 'Starter', price: '$29', period: '/mo', features: ['Unlimited topics', '10 live sessions/mo', 'AI explanations', 'Coding solutions'], priceId: 'price_1THhzGITUCNxtMxll78umJSX' },
                     { name: 'Pro', price: '$49', period: '/mo', features: ['Everything in Starter', 'Unlimited live sessions', 'Company-specific prep', 'Desktop + Mobile app', 'Speaker voice filtering'], popular: true, priceId: 'price_1THhzhITUCNxtMxl1QSxi4Kj' },
                     { name: 'Annual', price: '$19', period: '/mo', subtitle: 'Billed $228/year', features: ['Everything in Pro', 'Save 61% vs monthly', 'Locked-in pricing', 'Priority support'], best: true, priceId: 'price_1THiBUITUCNxtMxlAHUvPut7' },
-                    { name: 'Desktop App', price: '$29', period: '/mo', subtitle: 'Or $99/year', features: ['Native macOS & Windows', 'Screen-share safe', 'Faster performance', 'Always-on assistant'], addon: true, priceId: import.meta.env.VITE_STRIPE_PRICE_DESKTOP_MONTHLY || '' },
+                    { name: 'Desktop App', price: '$29', period: '/mo', subtitle: 'Or $99/year', features: ['Native macOS & Windows', 'Screen-share safe', 'Faster performance', 'Always-on assistant'], addon: true, priceId: '' },
                   ].map(plan => (
                     <div key={plan.name} className="rounded-2xl p-5 flex flex-col" style={{
                       border: plan.popular ? '2px solid #10b981' : plan.best ? '2px solid #f59e0b' : plan.addon ? '2px solid #91C733' : '1.5px solid var(--border)',

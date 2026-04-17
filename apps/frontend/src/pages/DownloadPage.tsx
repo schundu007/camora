@@ -288,11 +288,17 @@ export default function DownloadPage() {
 
   const [annualLoading, setAnnualLoading] = useState(false);
 
+  const [prices, setPrices] = useState<any>(null);
+  useEffect(() => {
+    const LUMORA = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
+    fetch(`${LUMORA}/api/v1/billing/prices`).then(r => r.json()).then(setPrices).catch(() => {});
+  }, []);
+
   const handleMonthlyAddon = () =>
-    handleStripeCheckout(import.meta.env.VITE_STRIPE_PRICE_DESKTOP_MONTHLY || '', setAddonLoading);
+    handleStripeCheckout(prices?.desktop_monthly?.priceId || '', setAddonLoading);
 
   const handleAnnualAddon = () =>
-    handleStripeCheckout(import.meta.env.VITE_STRIPE_PRICE_DESKTOP_ANNUAL || '', setAnnualLoading);
+    handleStripeCheckout(prices?.desktop_annual?.priceId || '', setAnnualLoading);
 
   const handleProCheckout = () =>
     handleStripeCheckout('price_1THhzhITUCNxtMxl1QSxi4Kj', setProLoading);
