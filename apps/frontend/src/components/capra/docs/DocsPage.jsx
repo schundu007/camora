@@ -948,15 +948,15 @@ export default function DocsPage({ onBack }) {
 
                       {/* SQL Playground toggle */}
                       {activePage === 'databases' && (
-                        <div className="flex items-center gap-2 mt-5 p-1 rounded-xl w-fit" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                        <div className="flex items-center gap-1 mt-5 p-1 rounded-xl w-fit" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
                           <button onClick={() => setSqlPlaygroundOpen(false)}
                             className="px-5 py-2.5 text-sm font-bold rounded-lg transition-all"
-                            style={!sqlPlaygroundOpen ? { background: '#76B900', color: '#fff', boxShadow: '0 2px 8px rgba(118,185,0,0.3)' } : { color: 'rgba(255,255,255,0.5)' }}>
+                            style={!sqlPlaygroundOpen ? { background: '#76B900', color: '#fff', boxShadow: '0 2px 8px rgba(118,185,0,0.3)' } : { color: 'var(--text-secondary)' }}>
                             Topics
                           </button>
                           <button onClick={() => setSqlPlaygroundOpen(true)}
                             className="px-5 py-2.5 text-sm font-bold rounded-lg transition-all"
-                            style={sqlPlaygroundOpen ? { background: '#76B900', color: '#fff', boxShadow: '0 2px 8px rgba(118,185,0,0.3)' } : { color: 'rgba(255,255,255,0.5)' }}>
+                            style={sqlPlaygroundOpen ? { background: '#76B900', color: '#fff', boxShadow: '0 2px 8px rgba(118,185,0,0.3)' } : { color: 'var(--text-secondary)' }}>
                             SQL Playground
                           </button>
                         </div>
