@@ -29,6 +29,7 @@ interface AICompanionPanelProps {
 function extractText(blocks: any): string {
   if (!blocks) return '';
   if (Array.isArray(blocks)) {
+    if (blocks.length === 0) return '';
     return blocks
       .filter((b: any) => b.content && typeof b.content === 'string')
       .map((b: any) => {
@@ -149,7 +150,7 @@ function MicButton({ onTranscription, disabled }: { onTranscription: (text: stri
 export function AICompanionPanel({ isOpen, onClose, inputValue, setInputValue, onSubmit, isStreaming, onAskQuestion, viewingIdx }: AICompanionPanelProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const { history, question, streamChunks } = useInterviewStore();
+  const { history, question, streamChunks, parsedBlocks } = useInterviewStore();
 
   // Auto-scroll on new content
   useEffect(() => {
@@ -236,7 +237,15 @@ export function AICompanionPanel({ isOpen, onClose, inputValue, setInputValue, o
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
                     </div>
                     <div className="flex-1">
-                      <RichText text={extractText(entry.blocks)} />
+                      {(() => {
+                        // Try entry blocks first, then parsedBlocks from store (for coding/design JSON responses)
+                        let text = extractText(entry.blocks);
+                        if (!text && idx === history.length - 1) {
+                          text = extractText(parsedBlocks);
+                        }
+                        if (!text) text = 'Answer generated — view in the Coding or Design tab for full details.';
+                        return <RichText text={text} />;
+                      })()}
                     </div>
                   </div>
                 </div>
