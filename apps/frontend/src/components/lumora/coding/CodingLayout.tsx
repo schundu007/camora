@@ -177,7 +177,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Panel resize
-  const [leftPanelWidth, setLeftPanelWidth] = useState(42);
+  const [leftPanelWidth, setLeftPanelWidth] = useState(25);
   const [outputPanelHeight, setOutputPanelHeight] = useState(180);
   const [isResizingH, setIsResizingH] = useState(false);
   const [isResizingV, setIsResizingV] = useState(false);
