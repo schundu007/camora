@@ -219,13 +219,27 @@ export function SQLPlayground({ onClose }: SQLPlaygroundProps) {
   useEffect(() => {
     let cancelled = false;
     initSqlJs({
-      locateFile: (file: string) => `https://sql.js.org/dist/${file}`,
+      locateFile: (file: string) => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/${file}`,
     }).then((SQL: { Database: new () => SqlJsDatabase }) => {
       if (cancelled) return;
       const database = new SQL.Database();
       dbRef.current = database;
       setDb(database);
       setDbReady(true);
+    }).catch((err: Error) => {
+      console.error('sql.js init failed:', err);
+      // Fallback: try local WASM
+      initSqlJs({
+        locateFile: (file: string) => `/${file}`,
+      }).then((SQL: { Database: new () => SqlJsDatabase }) => {
+        if (cancelled) return;
+        const database = new SQL.Database();
+        dbRef.current = database;
+        setDb(database);
+        setDbReady(true);
+      }).catch((err2: Error) => {
+        console.error('sql.js fallback also failed:', err2);
+      });
     });
     return () => {
       cancelled = true;

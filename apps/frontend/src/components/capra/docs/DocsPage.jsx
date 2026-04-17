@@ -963,6 +963,16 @@ export default function DocsPage({ onBack }) {
                       )}
                   </div>
                   )}
+
+                  {/* SQL Playground — takes over entire content area */}
+                  {activePage === 'databases' && sqlPlaygroundOpen && (
+                    <Suspense fallback={<div className="flex items-center justify-center py-20"><div className="w-6 h-6 border-2 border-current border-t-transparent rounded-full animate-spin" style={{ color: 'var(--accent)' }} /></div>}>
+                      <div style={{ margin: '0 -24px', minHeight: 'calc(100vh - 200px)' }}>
+                        <SQLPlayground />
+                      </div>
+                    </Suspense>
+                  )}
+
                   {/* Job Context Banner — shown when navigating from a job prep page or URL analysis */}
                   {jobContext && activePage !== 'overview' && (() => {
                     const analysis = jobContext.analysis;
@@ -1037,10 +1047,10 @@ export default function DocsPage({ onBack }) {
                   })()}
 
                   {/* Gradient Divider */}
-                  {activePage !== 'overview' && <div className="h-px bg-[var(--border)] mb-6" />}
+                  {activePage !== 'overview' && !(activePage === 'databases' && sqlPlaygroundOpen) && <div className="h-px bg-[var(--border)] mb-6" />}
 
-                  {/* Search and Filters */}
-                  {activePage !== 'overview' && (
+                  {/* Search and Filters — hidden when SQL Playground is active */}
+                  {activePage !== 'overview' && !(activePage === 'databases' && sqlPlaygroundOpen) && (
                   <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
                     <div className="relative flex-1 sm:max-w-md">
                       <Icon name="search" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
@@ -2119,13 +2129,6 @@ export default function DocsPage({ onBack }) {
                     </div>
                   </div>
                 </>
-              )}
-
-              {/* SQL Playground — full screen when active */}
-              {activePage === 'databases' && sqlPlaygroundOpen && (
-                <Suspense fallback={<div className="flex items-center justify-center py-20"><div className="w-6 h-6 border-2 border-current border-t-transparent rounded-full animate-spin" style={{ color: 'var(--accent)' }} /></div>}>
-                  <SQLPlayground />
-                </Suspense>
               )}
 
               {/* Databases & SQL Content */}
