@@ -62,12 +62,14 @@ export function LumoraShellPage() {
 
   // Document title
   useEffect(() => {
-    const titles: Record<LumoraTab, string> = {
+    const titles: Record<string, string> = {
       interview: 'Live Interview | Camora',
       coding: 'Coding Interview | Camora',
       design: 'Design Interview | Camora',
+      docs: 'Interview Docs | Camora',
+      calendar: 'Calendar | Camora',
     };
-    document.title = titles[activeTab];
+    document.title = titles[activeTab] || 'Camora';
     return () => { document.title = 'Camora'; };
   }, [activeTab]);
 
