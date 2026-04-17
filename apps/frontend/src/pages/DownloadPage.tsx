@@ -286,8 +286,13 @@ export default function DownloadPage() {
     setLoadingFn(false);
   };
 
-  const handleAddonCheckout = () =>
-    handleStripeCheckout(import.meta.env.VITE_STRIPE_PRICE_DESKTOP_ADDON || '', setAddonLoading);
+  const [annualLoading, setAnnualLoading] = useState(false);
+
+  const handleMonthlyAddon = () =>
+    handleStripeCheckout(import.meta.env.VITE_STRIPE_PRICE_DESKTOP_MONTHLY || '', setAddonLoading);
+
+  const handleAnnualAddon = () =>
+    handleStripeCheckout(import.meta.env.VITE_STRIPE_PRICE_DESKTOP_ANNUAL || '', setAnnualLoading);
 
   const handleProCheckout = () =>
     handleStripeCheckout('price_1THhzhITUCNxtMxl1QSxi4Kj', setProLoading);
@@ -426,33 +431,44 @@ export default function DownloadPage() {
                 </>
               ) : isAnnualWithoutAddon ? (
                 <>
-                  <button
-                    onClick={handleAddonCheckout}
-                    disabled={addonLoading}
-                    className="group inline-flex items-center gap-3 px-8 py-4 rounded-2xl text-base font-bold transition-all duration-200 disabled:opacity-60"
-                    style={{
-                      background: 'linear-gradient(135deg, #76B900 0%, #91C733 100%)',
-                      color: '#ffffff',
-                      boxShadow: '0 4px 24px rgba(118,185,0,0.35), 0 0 0 1px rgba(255,255,255,0.1) inset',
-                    }}
-                    onMouseEnter={e => {
-                      (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 40px rgba(118,185,0,0.5), 0 0 0 1px rgba(255,255,255,0.15) inset';
-                      (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)';
-                    }}
-                    onMouseLeave={e => {
-                      (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 24px rgba(118,185,0,0.35), 0 0 0 1px rgba(255,255,255,0.1) inset';
-                      (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
-                    }}
-                  >
-                    {addonLoading ? (
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <DownloadIcon size={22} />
-                    )}
-                    Add Desktop App — $29/mo
-                  </button>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={handleMonthlyAddon}
+                      disabled={addonLoading}
+                      className="group inline-flex items-center gap-3 px-6 py-3.5 rounded-2xl text-sm font-bold transition-all duration-200 disabled:opacity-60"
+                      style={{
+                        background: 'linear-gradient(135deg, #76B900 0%, #91C733 100%)',
+                        color: '#ffffff',
+                        boxShadow: '0 4px 24px rgba(118,185,0,0.35)',
+                      }}
+                    >
+                      {addonLoading ? (
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <DownloadIcon size={20} />
+                      )}
+                      $29/mo
+                    </button>
+                    <button
+                      onClick={handleAnnualAddon}
+                      disabled={annualLoading}
+                      className="group inline-flex items-center gap-3 px-6 py-3.5 rounded-2xl text-sm font-bold transition-all duration-200 disabled:opacity-60"
+                      style={{
+                        background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
+                        color: '#ffffff',
+                        boxShadow: '0 4px 24px rgba(139,92,246,0.35)',
+                      }}
+                    >
+                      {annualLoading ? (
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <DownloadIcon size={20} />
+                      )}
+                      $99/year
+                    </button>
+                  </div>
                   <span className="text-xs" style={{ color: 'rgba(255,255,255,0.45)' }}>
-                    Add-on for your Annual plan &middot; Cancel anytime
+                    Desktop App add-on &middot; Cancel anytime
                   </span>
                 </>
               ) : !isAuthenticated ? (
@@ -625,18 +641,18 @@ export default function DownloadPage() {
                         Download
                       </a>
                     ) : isAnnualWithoutAddon ? (
-                      <button
-                        onClick={handleAddonCheckout}
-                        disabled={addonLoading}
-                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 disabled:opacity-60"
-                        style={{
-                          background: 'linear-gradient(135deg, #76B900, #91C733)',
-                          color: '#fff',
-                        }}
-                      >
-                        <DownloadIcon size={14} />
-                        Add $29/mo
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button onClick={handleMonthlyAddon} disabled={addonLoading}
+                          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition-all disabled:opacity-60"
+                          style={{ background: 'linear-gradient(135deg, #76B900, #91C733)', color: '#fff' }}>
+                          <DownloadIcon size={12} />$29/mo
+                        </button>
+                        <button onClick={handleAnnualAddon} disabled={annualLoading}
+                          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition-all disabled:opacity-60"
+                          style={{ background: 'linear-gradient(135deg, #8b5cf6, #6366f1)', color: '#fff' }}>
+                          <DownloadIcon size={12} />$99/yr
+                        </button>
+                      </div>
                     ) : !isAuthenticated ? (
                       <Link
                         to="/login?redirect=/download"
