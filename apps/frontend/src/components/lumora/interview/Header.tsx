@@ -131,7 +131,7 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
   };
 
   return (
-    <header className="z-50 shrink-0" style={{ background: 'linear-gradient(135deg, rgba(15,23,42,0.95) 0%, rgba(30,27,75,0.93) 40%, rgba(20,20,60,0.95) 70%, rgba(15,23,42,0.95) 100%)', borderBottom: '1px solid rgba(99,102,241,0.15)', boxShadow: '0 1px 12px rgba(0,0,0,0.3), 0 1px 0 rgba(99,102,241,0.08)', fontFamily: "'Source Sans 3', sans-serif" }}>
+    <header className="z-50 shrink-0" style={{ background: 'linear-gradient(90deg, #122d54 0%, #163966 50%, #122d54 100%)', borderBottom: '1px solid rgba(255,255,255,0.06)', boxShadow: '0 1px 8px rgba(0,0,0,0.15), inset 0 -1px 0 rgba(255,255,255,0.04)', fontFamily: "'Source Sans 3', sans-serif" }}>
       {/* Row 1: Nav + Audio + Controls — horizontally scrollable */}
       <div className="flex items-center h-[42px] overflow-x-auto no-scrollbar">
         {/* Sidebar toggle */}
@@ -139,9 +139,9 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
           <button
             onClick={onToggleSidebar}
             className="flex items-center justify-center w-10 h-full shrink-0 transition-colors"
-            style={{ color: sidebarOpen ? '#a5b4fc' : 'rgba(255,255,255,0.35)', borderRight: '1px solid rgba(255,255,255,0.12)' }}
-            onMouseEnter={(e) => { if (!sidebarOpen) e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; }}
-            onMouseLeave={(e) => { if (!sidebarOpen) e.currentTarget.style.color = 'rgba(255,255,255,0.35)'; }}
+            style={{ color: sidebarOpen ? '#93c5fd' : 'rgba(255,255,255,0.5)', borderRight: '1px solid rgba(255,255,255,0.06)' }}
+            onMouseEnter={(e) => { if (!sidebarOpen) e.currentTarget.style.color = 'rgba(255,255,255,0.85)'; }}
+            onMouseLeave={(e) => { if (!sidebarOpen) e.currentTarget.style.color = 'rgba(255,255,255,0.5)'; }}
             title={sidebarOpen ? 'Close history' : 'Open history'}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -170,7 +170,7 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
             <button key={tab.id} onClick={() => handleTabClick(tab.id)}
               className="flex items-center gap-1.5 px-2.5 py-1 mx-0.5 rounded-md text-[11px] font-bold transition-all"
               style={currentTab === tab.id
-                ? { background: 'rgba(99,102,241,0.15)', color: '#a5b4fc', fontFamily: "'Source Sans 3', sans-serif", boxShadow: 'inset 0 0 0 1px rgba(99,102,241,0.25)' }
+                ? { background: 'rgba(96,165,250,0.15)', color: '#93c5fd', fontFamily: "'Source Sans 3', sans-serif", boxShadow: 'inset 0 0 0 1px rgba(96,165,250,0.25)' }
                 : { color: 'rgba(255,255,255,0.45)', fontFamily: "'Source Sans 3', sans-serif" }}>
               <span className="hidden md:inline">{TAB_ICONS[tab.id]}</span>
               <span>{tab.label}</span>
@@ -186,7 +186,7 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
         {/* Platform — monospace badge style */}
         <div data-tour="platform" className="hidden lg:flex items-center px-2 h-full shrink-0" style={{ borderRight: '1px solid rgba(255,255,255,0.04)' }}>
           <select id="platform-select" name="platform" className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-1 rounded-md cursor-pointer focus:outline-none"
-            style={{ background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.12)' }} defaultValue="general">
+            style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.65)', border: '1px solid rgba(255,255,255,0.08)' }} defaultValue="general">
             <option value="general">General</option>
             <option value="zoom">Zoom</option>
             <option value="meet">Meet</option>
@@ -228,7 +228,7 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
         {/* Actions — icon-only, subtle */}
         <div className="flex items-center gap-0.5 px-1.5 h-full shrink-0" style={{ borderLeft: '1px solid rgba(255,255,255,0.04)' }}>
           <button onClick={() => setUseSearch(!useSearch)} className="p-1.5 rounded-md transition-all"
-            style={useSearch ? { background: 'rgba(99,102,241,0.15)', color: '#a5b4fc' } : { color: 'rgba(255,255,255,0.3)' }} title="Search (⌘S)">
+            style={useSearch ? { background: 'rgba(96,165,250,0.15)', color: '#93c5fd' } : { color: 'rgba(255,255,255,0.3)' }} title="Search (⌘S)">
             <SearchIcon />
           </button>
           <button className="p-1.5 rounded-md transition-all" style={{ color: 'rgba(255,255,255,0.3)' }} onClick={() => clearHistory()} title="Reset (⌘⌫)">
@@ -243,7 +243,7 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
       </div>
 
       {/* Row 2: Input bar with subtle emerald accent — hidden when showInputBar=false (composer moved to page bottom) */}
-      {showInputBar && <div data-tour="input" className="flex items-center h-[36px]" style={{ borderTop: '1px solid rgba(99,102,241,0.08)', background: 'rgba(99,102,241,0.03)' }}>
+      {showInputBar && <div data-tour="input" className="flex items-center h-[36px]" style={{ borderTop: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.04)' }}>
         <div className="flex-1 flex items-center justify-center px-3 min-w-0">
           <input
             ref={inputRef}
@@ -257,7 +257,7 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
           <button
             onClick={toggleExpand}
             className="p-1.5 rounded-lg transition-all duration-200 ml-1 shrink-0"
-            style={isExpanded ? { color: '#a5b4fc', background: 'rgba(99,102,241,0.15)' } : { color: 'rgba(255,255,255,0.25)' }}
+            style={isExpanded ? { color: '#93c5fd', background: 'rgba(96,165,250,0.15)' } : { color: 'rgba(255,255,255,0.4)' }}
             onMouseEnter={(e) => { if (!isExpanded) { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = 'rgba(255,255,255,0.12)'; }}}
             onMouseLeave={(e) => { if (!isExpanded) { e.currentTarget.style.color = 'rgba(255,255,255,0.25)'; e.currentTarget.style.background = 'transparent'; }}}
             title={isExpanded ? 'Collapse textarea' : 'Expand for multi-line input'}
@@ -268,7 +268,7 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
             <button
               onClick={onSubmit}
               className="font-display flex items-center gap-1.5 px-4 py-1.5 text-white text-xs font-bold rounded-lg hover:opacity-90 transition-all ml-2"
-              style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', boxShadow: '0 2px 12px rgba(99,102,241,0.35), inset 0 1px 0 rgba(255,255,255,0.1)' }}
+              style={{ background: 'linear-gradient(135deg, #2563eb, #3b82f6)', boxShadow: '0 2px 12px rgba(37,99,235,0.35), inset 0 1px 0 rgba(255,255,255,0.1)' }}
             >
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
@@ -299,7 +299,7 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
                 onClick={handleTextareaSubmit}
                 disabled={!inputValue}
                 className="font-display flex items-center gap-1.5 px-4 py-2 text-white text-xs font-bold rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90"
-                style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', boxShadow: '0 2px 8px rgba(99, 102, 241, 0.3)' }}
+                style={{ background: 'linear-gradient(135deg, #2563eb, #3b82f6)', boxShadow: '0 2px 12px rgba(37,99,235,0.35), inset 0 1px 0 rgba(255,255,255,0.1)' }}
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
@@ -338,7 +338,7 @@ function UserBadge() {
         {user.image ? (
           <img src={user.image} alt="" className="w-6 h-6 rounded-full" />
         ) : (
-          <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[9px] font-bold" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
+          <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[9px] font-bold" style={{ background: 'linear-gradient(135deg, #2563eb, #3b82f6)' }}>
             {initials}
           </div>
         )}
@@ -350,7 +350,7 @@ function UserBadge() {
       {showMenu && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
-          <div className="absolute right-0 top-full mt-1 w-48 bg-gray-900 rounded-2xl shadow-xl border border-white/10 z-50 py-1 overflow-hidden">
+          <div className="absolute right-0 top-full mt-1 w-48 rounded-2xl shadow-xl border z-50 py-1 overflow-hidden" style={{ background: 'linear-gradient(180deg, #1a3a6b 0%, #122d54 100%)', borderColor: 'rgba(255,255,255,0.1)' }}>
             <div className="px-3 py-2 border-b border-white/10">
               <p className="font-display text-sm font-semibold text-white truncate">{user.name || 'User'}</p>
               <p className="font-code text-xs text-white/50 truncate">{user.email}</p>

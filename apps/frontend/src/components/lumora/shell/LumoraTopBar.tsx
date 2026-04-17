@@ -9,14 +9,14 @@ import type { LumoraTab } from './LumoraIconRail';
 
 /* ── Color tokens (standardized) ── */
 const C = {
-  base: '#0D0C14',
-  surface: '#16141F',
-  elevated: '#201E2C',
-  text: '#F2F1F3',
-  muted: '#9896A3',
-  accent: '#a5b4fc',
-  accentBg: 'rgba(99,102,241,0.15)',
-  border: 'rgba(255,255,255,0.12)',
+  base: '#0f2b5b',
+  surface: '#122d54',
+  elevated: '#1a3a6b',
+  text: '#ffffff',
+  muted: 'rgba(255,255,255,0.65)',
+  accent: '#60a5fa',
+  accentBg: 'rgba(96,165,250,0.15)',
+  border: 'rgba(255,255,255,0.08)',
 };
 
 interface LumoraTopBarProps {
@@ -35,13 +35,13 @@ export function LumoraTopBar({ activeTab, onTranscription, onToggleSessions, ses
   const tabLabel = activeTab === 'coding' ? 'Coding' : activeTab === 'design' ? 'System Design' : 'Interview';
 
   return (
-    <header className="flex items-center h-14 px-5 shrink-0 z-30" style={{ background: C.surface, borderBottom: `1px solid rgba(255,255,255,0.1)` }}>
+    <header className="flex items-center h-14 px-5 shrink-0 z-30" style={{ background: 'linear-gradient(90deg, #122d54 0%, #163966 50%, #122d54 100%)', borderBottom: '1px solid rgba(255,255,255,0.06)', boxShadow: '0 1px 8px rgba(0,0,0,0.15), inset 0 -1px 0 rgba(255,255,255,0.04)' }}>
       {/* Left: spacer (tab label removed — sidebar shows active tab) */}
       <div className="min-w-[20px]" />
 
       {/* Center: audio controls */}
       <div data-tour="audio" className="flex-1 flex items-center justify-center">
-        <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl" style={{ background: C.elevated, border: `1px solid rgba(255,255,255,0.1)` }}>
+        <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(8px)' }}>
           {/* Mic selector */}
           <MicrophoneSelector disabled={false} />
           <div className="w-px h-5 mx-1" style={{ background: 'rgba(255,255,255,0.1)' }} />
@@ -81,7 +81,7 @@ export function LumoraTopBar({ activeTab, onTranscription, onToggleSessions, ses
       {/* Right: status + user */}
       <div className="flex items-center gap-3 min-w-[120px] justify-end">
         {/* Status */}
-        <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg" style={{ background: C.elevated, border: `1px solid rgba(255,255,255,0.06)` }}>
+        <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}>
           <div className={`w-2 h-2 rounded-full ${
             status.state === 'ready' ? 'bg-emerald-400' :
             status.state === 'error' ? 'bg-red-400' :
@@ -101,7 +101,7 @@ export function LumoraTopBar({ activeTab, onTranscription, onToggleSessions, ses
           {showUserMenu && (
             <>
               <div className="fixed inset-0 z-40" onClick={() => setShowUserMenu(false)} />
-              <div className="absolute right-0 top-full mt-2 w-52 rounded-xl shadow-2xl z-50 overflow-hidden" style={{ background: C.elevated, border: `1px solid ${C.border}` }}>
+              <div className="absolute right-0 top-full mt-2 w-52 rounded-xl shadow-2xl z-50 overflow-hidden" style={{ background: 'linear-gradient(180deg, #1a3a6b 0%, #122d54 100%)', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }}>
                 <div className="px-4 py-3" style={{ borderBottom: `1px solid ${C.border}` }}>
                   <p className="text-sm font-semibold truncate" style={{ color: C.text }}>{user?.name || 'User'}</p>
                   <p className="text-xs truncate mt-0.5" style={{ color: C.muted }}>{user?.email}</p>
