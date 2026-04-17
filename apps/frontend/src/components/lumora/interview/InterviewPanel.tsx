@@ -94,7 +94,7 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
                 onClick={() => onViewAnswer ? onViewAnswer(idx) : setExpandedIdx(expandedIdx === idx ? null : idx)}
                 className="w-full flex items-center gap-2 px-3 py-2.5 rounded-lg text-left transition-all duration-200 group"
                 style={{ background: 'transparent', border: '1px solid transparent' }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = '#16141F'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'; }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = '#16141F'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'transparent'; }}
               >
                 <span className="flex items-center justify-center w-6 h-6 rounded text-[10px] font-bold shrink-0"

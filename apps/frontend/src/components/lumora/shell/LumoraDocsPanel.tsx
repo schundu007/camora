@@ -5,7 +5,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
 
-const STORAGE_KEY = 'lumora_prep_v5'; // v5: fixed SSE parsing
+const STORAGE_KEY = 'lumora_prep_v6'; // v6: rich content renderer
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
 interface DocState {
@@ -51,88 +51,150 @@ const SIDEBAR_SECTIONS = [
   { id: 'techstack', label: 'Tech Stack', color: '#8b5cf6' },
 ];
 
-/** Format parsed prep JSON into readable text */
+/** Store prep content as JSON string for rich rendering */
 function formatPrepContent(content: any): string {
-  if (!content || typeof content !== 'object') return String(content || '');
-  const lines: string[] = [];
-
-  // Summary
-  if (content.summary) {
-    lines.push('SUMMARY', '─'.repeat(40), content.summary, '');
+  if (typeof content === 'string') {
+    // Strip markdown fences and data: prefixes
+    let cleaned = content.replace(/^```json\s*/m, '').replace(/```\s*$/m, '').replace(/^RAWCONTENT:\s*/m, '').replace(/^data:\s*/gm, '').trim();
+    // Try to parse as JSON
+    try { JSON.parse(cleaned); return cleaned; } catch {}
+    // If it's an error message, return as-is
+    return JSON.stringify({ summary: cleaned });
   }
+  return JSON.stringify(content);
+}
 
-  // Pitch sections
-  if (content.pitchSections || content.chSections) {
-    const sections = content.pitchSections || content.chSections;
-    if (Array.isArray(sections)) {
-      sections.forEach((s: any) => {
-        lines.push(`■ ${s.title || 'Section'}${s.duration ? ` (${s.duration})` : ''}${s.context ? ` — ${s.context}` : ''}`);
-        if (s.bullets) s.bullets.forEach((b: string) => lines.push(`  • ${b}`));
-        lines.push('');
-      });
-    }
-  }
+/** Rich content renderer for prep sections */
+function PrepContentRenderer({ content }: { content: string }) {
+  let data: any;
+  try { data = JSON.parse(content); } catch { return <div className="text-sm whitespace-pre-wrap" style={{ color: 'var(--text-secondary)' }}>{content}</div>; }
+  if (!data || typeof data !== 'object') return <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>{String(data)}</div>;
 
-  // Company insights
-  if (content.companyInsights) {
-    const ci = content.companyInsights;
-    lines.push('COMPANY INSIGHTS', '─'.repeat(40));
-    if (ci.interviewFormat) lines.push(`Interview Format: ${ci.interviewFormat}`);
-    if (ci.culture) lines.push(`Culture: ${ci.culture}`);
-    if (ci.values) lines.push(`Values: ${Array.isArray(ci.values) ? ci.values.join(', ') : ci.values}`);
-    lines.push('');
-  }
+  return (
+    <div className="space-y-4">
+      {/* Summary */}
+      {data.summary && (
+        <div className="rounded-lg p-4" style={{ background: 'var(--accent-subtle)', border: '1px solid var(--border)' }}>
+          <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--accent)' }}>Summary</div>
+          <p className="text-sm leading-relaxed" style={{ color: 'var(--text-primary)' }}>{data.summary}</p>
+        </div>
+      )}
 
-  // Questions
-  if (content.questions && Array.isArray(content.questions)) {
-    lines.push('QUESTIONS', '─'.repeat(40));
-    content.questions.forEach((q: any, i: number) => {
-      lines.push(`Q${i + 1}: ${q.question || q.title || q.text || ''}`);
-      if (q.answer) lines.push(`Answer: ${q.answer}`);
-      if (q.tips) lines.push(`Tips: ${Array.isArray(q.tips) ? q.tips.join('; ') : q.tips}`);
-      if (q.diagramUrl) lines.push(`Diagram: ${q.diagramUrl}`);
-      lines.push('');
-    });
-  }
+      {/* Pitch Sections */}
+      {(data.pitchSections || data.chSections) && (
+        <div className="space-y-2">
+          {(data.pitchSections || data.chSections).map((s: any, i: number) => (
+            <div key={i} className="rounded-lg overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+              <div className="px-4 py-2 flex items-center justify-between" style={{ background: 'var(--bg-elevated)' }}>
+                <span className="text-xs font-bold" style={{ color: 'var(--text-primary)' }}>{s.title}</span>
+                <div className="flex gap-2">
+                  {s.duration && <span className="text-[9px] px-2 py-0.5 rounded-full" style={{ background: 'var(--accent-subtle)', color: 'var(--accent)' }}>{s.duration}</span>}
+                  {s.context && <span className="text-[9px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(245,158,11,0.1)', color: '#f59e0b' }}>{s.context}</span>}
+                </div>
+              </div>
+              <div className="px-4 py-3 space-y-1.5">
+                {s.bullets?.map((b: string, j: number) => (
+                  <p key={j} className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{b}</p>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
-  // Key points / talking points
-  if (content.keyPoints) {
-    lines.push('KEY POINTS', '─'.repeat(40));
-    (Array.isArray(content.keyPoints) ? content.keyPoints : [content.keyPoints]).forEach((p: string) => lines.push(`• ${p}`));
-    lines.push('');
-  }
-  if (content.talkingPoints) {
-    lines.push('TALKING POINTS', '─'.repeat(40));
-    (Array.isArray(content.talkingPoints) ? content.talkingPoints : [content.talkingPoints]).forEach((p: string) => lines.push(`• ${p}`));
-    lines.push('');
-  }
+      {/* Company Insights */}
+      {data.companyInsights && (
+        <div className="rounded-lg p-4" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+          <div className="text-[10px] font-bold uppercase tracking-wider mb-3" style={{ color: '#06b6d4' }}>Company Insights</div>
+          <div className="grid grid-cols-1 gap-2">
+            {data.companyInsights.interviewFormat && <div><span className="text-[10px] font-bold" style={{ color: 'var(--text-muted)' }}>FORMAT:</span><p className="text-sm mt-0.5" style={{ color: 'var(--text-secondary)' }}>{data.companyInsights.interviewFormat}</p></div>}
+            {data.companyInsights.culture && <div><span className="text-[10px] font-bold" style={{ color: 'var(--text-muted)' }}>CULTURE:</span><p className="text-sm mt-0.5" style={{ color: 'var(--text-secondary)' }}>{data.companyInsights.culture}</p></div>}
+            {data.companyInsights.values && <div><span className="text-[10px] font-bold" style={{ color: 'var(--text-muted)' }}>VALUES:</span><p className="text-sm mt-0.5" style={{ color: 'var(--text-secondary)' }}>{Array.isArray(data.companyInsights.values) ? data.companyInsights.values.join(', ') : data.companyInsights.values}</p></div>}
+          </div>
+        </div>
+      )}
 
-  // Tips
-  if (content.tips) {
-    lines.push('TIPS', '─'.repeat(40));
-    (Array.isArray(content.tips) ? content.tips : [content.tips]).forEach((t: string) => lines.push(`• ${t}`));
-    lines.push('');
-  }
+      {/* Questions */}
+      {data.questions?.length > 0 && (
+        <div className="space-y-3">
+          <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color: '#f59e0b' }}>Questions ({data.questions.length})</div>
+          {data.questions.map((q: any, i: number) => (
+            <div key={i} className="rounded-lg overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+              <div className="px-4 py-2 flex items-center gap-2" style={{ background: 'var(--bg-elevated)' }}>
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: 'var(--accent-subtle)', color: 'var(--accent)' }}>Q{i + 1}</span>
+                <span className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>{q.question || q.title || q.text}</span>
+              </div>
+              <div className="px-4 py-3">
+                {q.answer && <p className="text-sm leading-relaxed mb-2" style={{ color: 'var(--text-secondary)' }}>{q.answer}</p>}
+                {q.sampleAnswer && <p className="text-sm leading-relaxed mb-2" style={{ color: 'var(--text-secondary)' }}>{q.sampleAnswer}</p>}
+                {q.tips && <div className="text-[10px] mt-2 p-2 rounded" style={{ background: 'rgba(245,158,11,0.08)', color: '#f59e0b' }}>Tip: {Array.isArray(q.tips) ? q.tips.join(' ') : q.tips}</div>}
+                {q.followUp && <div className="text-[10px] mt-1 italic" style={{ color: 'var(--text-muted)' }}>Follow-up: {q.followUp}</div>}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
-  // Abbreviations
-  if (content.abbreviations && Array.isArray(content.abbreviations)) {
-    lines.push('ABBREVIATIONS', '─'.repeat(40));
-    content.abbreviations.forEach((a: any) => lines.push(`${a.term || a.abbr}: ${a.definition || a.full}`));
-    lines.push('');
-  }
+      {/* Tech Stack */}
+      {data.techStack && Array.isArray(data.techStack) && (
+        <div>
+          <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: '#8b5cf6' }}>Tech Stack ({data.techStack.length})</div>
+          <div className="overflow-x-auto rounded-lg" style={{ border: '1px solid var(--border)' }}>
+            <table className="w-full text-xs">
+              <thead><tr style={{ background: 'var(--bg-elevated)' }}>
+                <th className="text-left px-3 py-2 font-bold" style={{ color: 'var(--text-primary)' }}>Technology</th>
+                <th className="text-left px-3 py-2 font-bold" style={{ color: 'var(--text-primary)' }}>Category</th>
+                <th className="text-left px-3 py-2 font-bold" style={{ color: 'var(--text-primary)' }}>Experience</th>
+                <th className="text-left px-3 py-2 font-bold" style={{ color: 'var(--text-primary)' }}>Relevance</th>
+              </tr></thead>
+              <tbody>{data.techStack.map((t: any, i: number) => (
+                <tr key={i} style={{ borderTop: '1px solid var(--border)' }}>
+                  <td className="px-3 py-2 font-semibold" style={{ color: '#8b5cf6' }}>{t.technology || t.name}</td>
+                  <td className="px-3 py-2" style={{ color: 'var(--text-muted)' }}>{t.category}</td>
+                  <td className="px-3 py-2" style={{ color: 'var(--text-secondary)' }}>{t.experience}</td>
+                  <td className="px-3 py-2" style={{ color: 'var(--text-secondary)' }}>{t.relevance}</td>
+                </tr>
+              ))}</tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
-  // Fallback: stringify remaining keys
-  const handled = new Set(['summary', 'pitchSections', 'chSections', 'companyInsights', 'questions', 'keyPoints', 'talkingPoints', 'tips', 'abbreviations']);
-  for (const [key, val] of Object.entries(content)) {
-    if (handled.has(key) || !val) continue;
-    if (typeof val === 'string') lines.push(`${key.toUpperCase()}: ${val}`);
-    else if (Array.isArray(val)) {
-      lines.push(`${key.toUpperCase()}:`);
-      val.forEach((v: any) => lines.push(`  • ${typeof v === 'string' ? v : JSON.stringify(v)}`));
-    }
-  }
+      {/* Key Points */}
+      {data.keyPoints && (<div><div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: '#10b981' }}>Key Points</div>
+        <ul className="space-y-1">{(Array.isArray(data.keyPoints) ? data.keyPoints : [data.keyPoints]).map((p: string, i: number) => (
+          <li key={i} className="flex items-start gap-2 text-sm" style={{ color: 'var(--text-secondary)' }}><span style={{ color: '#10b981' }}>•</span>{p}</li>
+        ))}</ul></div>)}
 
-  return lines.join('\n').trim() || JSON.stringify(content, null, 2);
+      {/* Tips */}
+      {data.tips && (<div className="rounded-lg p-3" style={{ background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.15)' }}>
+        <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: '#f59e0b' }}>Tips</div>
+        <ul className="space-y-1">{(Array.isArray(data.tips) ? data.tips : [data.tips]).map((t: string, i: number) => (
+          <li key={i} className="text-sm" style={{ color: 'var(--text-secondary)' }}>• {t}</li>
+        ))}</ul></div>)}
+
+      {/* Abbreviations */}
+      {data.abbreviations?.length > 0 && (<div>
+        <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-muted)' }}>Abbreviations</div>
+        <div className="flex flex-wrap gap-1.5">{data.abbreviations.map((a: any, i: number) => (
+          <span key={i} className="text-[10px] px-2 py-1 rounded" style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}>
+            <strong>{a.term || a.abbr}</strong>: {a.definition || a.full}
+          </span>
+        ))}</div></div>)}
+
+      {/* Talking Points */}
+      {data.talkingPoints && (<div><div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: '#6366f1' }}>Talking Points</div>
+        <ul className="space-y-1">{(Array.isArray(data.talkingPoints) ? data.talkingPoints : [data.talkingPoints]).map((p: string, i: number) => (
+          <li key={i} className="text-sm" style={{ color: 'var(--text-secondary)' }}>• {p}</li>
+        ))}</ul></div>)}
+
+      {/* Delivery Tips */}
+      {data.deliveryTips && (<div className="rounded-lg p-3" style={{ background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.15)' }}>
+        <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: '#6366f1' }}>Delivery Tips</div>
+        <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{Array.isArray(data.deliveryTips) ? data.deliveryTips.join(' ') : data.deliveryTips}</p>
+      </div>)}
+    </div>
+  );
 }
 
 function loadPrepData(): PrepData {
@@ -646,9 +708,7 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
                   <span className="text-xs font-medium" style={{ color: 'var(--accent)' }}>Generating {SIDEBAR_SECTIONS.find(s => s.id === activeSection)?.label}...</span>
                 </div>
               ) : state.sections[activeSection] ? (
-                <div className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: 'var(--text-secondary)' }}>
-                  {state.sections[activeSection]}
-                </div>
+                <PrepContentRenderer content={state.sections[activeSection]} />
               ) : (
                 <div className="flex flex-col items-center justify-center h-full">
                   <p className="text-sm mb-2" style={{ color: 'var(--text-muted)' }}>No content yet</p>

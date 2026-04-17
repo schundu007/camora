@@ -14,12 +14,12 @@ interface LumoraIconRailProps {
 const C = {
   base: '#0D0C14',
   surface: '#16141F',
-  elevated: '#1E1C28',
+  elevated: '#201E2C',
   text: '#F2F1F3',
-  muted: '#6C6B7B',
-  accent: '#818cf8',
-  accentBg: 'rgba(99,102,241,0.12)',
-  border: 'rgba(255,255,255,0.06)',
+  muted: '#9896A3',
+  accent: '#a5b4fc',
+  accentBg: 'rgba(99,102,241,0.15)',
+  border: 'rgba(255,255,255,0.12)',
 };
 
 export function LumoraIconRail({ activeTab, sessionsOpen, onToggleSessions }: LumoraIconRailProps) {
