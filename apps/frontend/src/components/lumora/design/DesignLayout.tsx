@@ -272,15 +272,15 @@ function formatTime(seconds: number): string {
 
 function useTheme(dark: boolean) {
   if (dark) return {
-    cardBg: '#16141F', cardBorder: 'rgba(255,255,255,0.06)',
-    headerBg: 'rgba(99,102,241,0.08)', headerBorder: 'rgba(255,255,255,0.06)',
-    headerText: '#818cf8', badgeBg: 'rgba(99,102,241,0.12)', badgeText: '#818cf8',
-    text: '#F2F1F3', textMuted: '#6C6B7B', textDim: '#545260',
-    codeBg: '#1E1C28', codeText: '#F2F1F3',
-    inputBg: '#1E1C28', inputBorder: 'rgba(255,255,255,0.06)', inputText: '#F2F1F3',
+    cardBg: '#16141F', cardBorder: 'rgba(255,255,255,0.12)',
+    headerBg: 'rgba(99,102,241,0.08)', headerBorder: 'rgba(255,255,255,0.12)',
+    headerText: '#a5b4fc', badgeBg: 'rgba(99,102,241,0.15)', badgeText: '#a5b4fc',
+    text: '#F2F1F3', textMuted: '#9896A3', textDim: '#6C6B7B',
+    codeBg: '#201E2C', codeText: '#F2F1F3',
+    inputBg: '#201E2C', inputBorder: 'rgba(255,255,255,0.12)', inputText: '#F2F1F3',
     sectionBg: '#16141F', surfaceBg: '#0D0C14',
     tabActive: '#6366f1', tabActiveBg: 'rgba(99,102,241,0.15)', tabText: '#6C6B7B',
-    dotColor: '#818cf8',
+    dotColor: '#a5b4fc',
   };
   return {
     cardBg: '#ffffff', cardBorder: '#e5e7eb',

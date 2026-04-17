@@ -452,13 +452,13 @@ main, [role="main"] { animation: fadeUp 0.15s ease-out; }
 .lumora-app-bg {
   --bg-app: #0D0C14;
   --bg-surface: #16141F;
-  --bg-elevated: #1E1C28;
-  --border: #2A2833;
+  --bg-elevated: #201E2C;
+  --border: #363347;
   --border-hover: #3B3947;
   --text-primary: #F2F1F3;
   --text-secondary: #A1A0AB;
-  --text-muted: #6C6B7B;
-  --text-dimmed: #545260;
+  --text-muted: #9896A3;
+  --text-dimmed: #6C6B7B;
   background: #0D0C14;
   color: #F2F1F3;
   color-scheme: dark;

@@ -55,13 +55,13 @@ export function SessionSidebar({ isOpen, onClose, onSelectEntry }: SessionSideba
         }`}
         style={{
           background: 'rgba(10,10,15,0.98)',
-          borderRight: isOpen ? '1px solid rgba(255,255,255,0.06)' : 'none',
+          borderRight: isOpen ? '1px solid rgba(255,255,255,0.12)' : 'none',
         }}
       >
         {isOpen && (
           <div className="flex flex-col h-full w-[280px] overflow-hidden">
             {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-white/6 shrink-0">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-white/12 shrink-0">
               <span className="text-xs font-mono font-bold text-white/40 uppercase tracking-widest">History</span>
               <div className="flex items-center gap-1">
                 {history.length > 0 && (
@@ -136,7 +136,7 @@ export function SessionSidebar({ isOpen, onClose, onSelectEntry }: SessionSideba
 
             {/* Footer — Q&A count */}
             {history.length > 0 && (
-              <div className="px-4 py-2.5 border-t border-white/6 shrink-0">
+              <div className="px-4 py-2.5 border-t border-white/12 shrink-0">
                 <span className="text-[10px] font-mono text-white/15">{history.length} question{history.length !== 1 ? 's' : ''}</span>
               </div>
             )}

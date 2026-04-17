@@ -303,7 +303,7 @@ function FormattedJD({ text }: { text: string }) {
         <div key={i} className="rounded-xl overflow-hidden" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
           {sec.title && (
             <div className="px-4 py-2.5" style={{ background: 'rgba(99,102,241,0.08)', borderBottom: '1px solid var(--border)' }}>
-              <h4 className="text-[11px] font-bold uppercase tracking-wider" style={{ color: '#818cf8' }}>{sec.title}</h4>
+              <h4 className="text-[11px] font-bold uppercase tracking-wider" style={{ color: '#a5b4fc' }}>{sec.title}</h4>
             </div>
           )}
           <div className="px-4 py-3 flex flex-col gap-1.5">
@@ -314,7 +314,7 @@ function FormattedJD({ text }: { text: string }) {
               }
               return (
                 <div key={j} className="flex gap-2 items-start">
-                  <span className="w-1 h-1 rounded-full shrink-0 mt-2" style={{ background: '#818cf8' }} />
+                  <span className="w-1 h-1 rounded-full shrink-0 mt-2" style={{ background: '#a5b4fc' }} />
                   <span className="text-[13px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{item}</span>
                 </div>
               );
@@ -331,6 +331,7 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
   const [prepData, setPrepData] = useState<PrepData>(loadPrepData);
   const [activeSection, setActiveSection] = useState('input');
   const [generating, setGenerating] = useState(false);
+  const [streamingText, setStreamingText] = useState('');
   const [genProgress, setGenProgress] = useState('');
   const [sectionStatus, setSectionStatus] = useState<Record<string, 'pending' | 'generating' | 'done' | 'error'>>({});
   const [showNewCompany, setShowNewCompany] = useState(false);
@@ -432,20 +433,35 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
           body: JSON.stringify({ section, jobDescription: state.jd, resume: state.resume, coverLetter: state.coverLetter, prepMaterial: state.prepMaterials }),
         });
         if (res.ok) {
-          const text = await res.text();
-          // Parse SSE: extract final {done:true, result:{...}} or accumulate chunks
-          let result = null;
+          // Stream SSE in real-time
+          const reader = res.body?.getReader();
+          const decoder = new TextDecoder();
+          let result: any = null;
           let chunks = '';
-          for (const line of text.split('\n')) {
-            const t = line.trim();
-            if (!t.startsWith('data: ')) continue;
-            try {
-              const parsed = JSON.parse(t.slice(6));
-              if (parsed.done && parsed.result) { result = parsed.result; break; }
-              if (parsed.chunk) chunks += parsed.chunk;
-            } catch {}
+          let buffer = '';
+          setStreamingText('');
+          setActiveSection(section); // Show the section being generated
+
+          if (reader) {
+            while (true) {
+              const { done: rdone, value } = await reader.read();
+              if (rdone) break;
+              buffer += decoder.decode(value, { stream: true });
+              const lines = buffer.split('\n');
+              buffer = lines.pop() || '';
+              for (const line of lines) {
+                const t = line.trim();
+                if (!t.startsWith('data: ')) continue;
+                try {
+                  const parsed = JSON.parse(t.slice(6));
+                  if (parsed.done && parsed.result) { result = parsed.result; }
+                  else if (parsed.chunk) { chunks += parsed.chunk; setStreamingText(chunks); }
+                } catch {}
+              }
+            }
           }
-          const displayText = result ? formatPrepContent(result) : (chunks ? (() => { try { return formatPrepContent(JSON.parse(chunks)); } catch { return chunks; } })() : text);
+          const displayText = result ? formatPrepContent(result) : (chunks ? (() => { try { return formatPrepContent(JSON.parse(chunks)); } catch { return chunks; } })() : '');
+          setStreamingText('');
           newSections[section] = displayText;
           setSectionStatus(prev => ({ ...prev, [section]: 'done' }));
           // Save progressively so user can see completed sections
@@ -474,19 +490,33 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
         body: JSON.stringify({ section, jobDescription: state.jd, resume: state.resume, coverLetter: state.coverLetter, prepMaterial: state.prepMaterials }),
       });
       if (res.ok) {
-        const rawText = await res.text();
-        let result = null;
+        const reader = res.body?.getReader();
+        const decoder = new TextDecoder();
+        let result: any = null;
         let chunks = '';
-        for (const line of rawText.split('\n')) {
-          const t = line.trim();
-          if (!t.startsWith('data: ')) continue;
-          try {
-            const parsed = JSON.parse(t.slice(6));
-            if (parsed.done && parsed.result) { result = parsed.result; break; }
-            if (parsed.chunk) chunks += parsed.chunk;
-          } catch {}
+        let buffer = '';
+        setStreamingText('');
+
+        if (reader) {
+          while (true) {
+            const { done: rdone, value } = await reader.read();
+            if (rdone) break;
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || '';
+            for (const line of lines) {
+              const t = line.trim();
+              if (!t.startsWith('data: ')) continue;
+              try {
+                const parsed = JSON.parse(t.slice(6));
+                if (parsed.done && parsed.result) { result = parsed.result; }
+                else if (parsed.chunk) { chunks += parsed.chunk; setStreamingText(chunks); }
+              } catch {}
+            }
+          }
         }
-        const displayText = result ? formatPrepContent(result) : (chunks ? (() => { try { return formatPrepContent(JSON.parse(chunks)); } catch { return chunks; } })() : rawText);
+        const displayText = result ? formatPrepContent(result) : (chunks ? (() => { try { return formatPrepContent(JSON.parse(chunks)); } catch { return chunks; } })() : '');
+        setStreamingText('');
         setState(prev => ({ ...prev, sections: { ...prev.sections, [section]: displayText } }));
         setSectionStatus(prev => ({ ...prev, [section]: 'done' }));
       } else {
