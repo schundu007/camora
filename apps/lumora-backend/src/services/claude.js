@@ -290,8 +290,13 @@ export async function* streamResponse(question, history, options = {}) {
   } = options;
 
   const startTime = performance.now();
-  const isDesign = isDesignQuestion(question);
-  const isCoding = !isDesign && isCodingQuestion(question);
+
+  // Detect short mode prefix from copilot
+  const isShortMode = question.startsWith('[SHORT] ');
+  const cleanQuestion = isShortMode ? question.slice(8) : question;
+
+  const isDesign = isDesignQuestion(cleanQuestion);
+  const isCoding = !isDesign && isCodingQuestion(cleanQuestion);
 
   // Resolve context
   const resume = resumeContext || getDefaultResumeContext();
@@ -300,16 +305,53 @@ export async function* streamResponse(question, history, options = {}) {
   // Select system prompt and max_tokens
   let systemPrompt;
   let maxTokens;
-  if (isCoding) {
-    systemPrompt = CODING_SYSTEM_PROMPT;
+
+  if (isShortMode) {
+    // Ultra-concise mode for live interviews
+    systemPrompt = `You are a LIVE interview copilot. Candidate is in an ACTIVE interview and needs to glance at your answer in 5 SECONDS.
+
+RULES:
+- MAXIMUM 3-5 bullet points. No exceptions.
+- Each bullet: ONE sentence, under 12 words.
+- NO code blocks unless explicitly asked for code.
+- NO paragraphs, NO essays, NO lengthy explanations.
+- For coding questions: give the approach name + time complexity only, NO full code.
+- For design questions: 3-4 key components + 1 trade-off only.
+- For behavioral: STAR format with 1 sentence each.
+- Think "sticky note" not "textbook".
+
+${resume ? `MY BACKGROUND: ${resume}` : ''}
+
+FORMAT:
+**Key Point** (bold the answer in one line)
+- Bullet 1
+- Bullet 2
+- Bullet 3`;
+    maxTokens = 500;
+  } else if (isCoding) {
+    systemPrompt = CODING_SYSTEM_PROMPT + `
+
+IMPORTANT CODE FORMATTING RULE:
+- ALL code MUST be wrapped in triple backtick code blocks with language identifier.
+- Example: \`\`\`python\\ncode here\\n\`\`\`
+- NEVER put code outside of code blocks.
+- Separate explanatory text from code blocks clearly.`;
     maxTokens = MAX_TOKENS_DESIGN;
   } else if (isDesign) {
     systemPrompt = buildInterviewDesignPrompt(resume, technical);
     maxTokens = MAX_TOKENS_DESIGN;
   } else {
-    systemPrompt = buildGeneralPrompt(resume, technical);
+    systemPrompt = buildGeneralPrompt(resume, technical) + `
+
+IMPORTANT CODE FORMATTING RULE:
+- If your answer includes ANY code, it MUST be in triple backtick code blocks with language identifier.
+- Example: \`\`\`python\\ncode here\\n\`\`\`
+- NEVER mix code with regular text. Always use separate code blocks.`;
     maxTokens = MAX_TOKENS_QUICK;
   }
+
+  // Use clean question (without [SHORT] prefix) for the actual API call
+  question = cleanQuestion;
 
   // Build messages with history window
   let finalQuestion = question;
