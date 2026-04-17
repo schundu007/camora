@@ -543,6 +543,72 @@ router.post('/execute', authenticate, async (req, res) => {
   }
 });
 
+// ---------------------------------------------------------------------------
+// POST /fix — Auto-fix code based on failing test feedback
+// ---------------------------------------------------------------------------
+
+router.post('/fix', authenticate, async (req, res) => {
+  const { code, language, error: feedback, problem } = req.body;
+
+  if (!code || !language || !feedback) {
+    return res.status(400).json({ error: 'Missing code, language, or error feedback' });
+  }
+
+  const problemContext = problem ? `\nORIGINAL PROBLEM:\n${problem}\n` : '';
+  const model = getModelForUser(req);
+
+  try {
+    const client = new Anthropic();
+    const response = await client.messages.create({
+      model,
+      max_tokens: 2048,
+      messages: [
+        {
+          role: 'user',
+          content: `Fix this ${language} code. ALL of the following test failures must be resolved.
+${problemContext}
+CODE:
+\`\`\`${language}
+${code}
+\`\`\`
+
+FAILING TESTS:
+${feedback}
+
+Return ONLY a JSON object (no markdown fences) with:
+{
+  "code": "the complete fixed code as a string",
+  "explanation": "brief summary of what was wrong and how you fixed it"
+}
+
+IMPORTANT:
+- Fix ALL failing tests, not just the first one
+- Do NOT add comments in the code
+- Return the COMPLETE function, not a partial snippet
+- Keep the same function signature`,
+        },
+      ],
+    });
+
+    const content = response.content[0]?.type === 'text' ? response.content[0].text : '';
+
+    try {
+      const jsonMatch = content.match(/```json\s*([\s\S]*?)\s*```/) ||
+                        content.match(/```\s*([\s\S]*?)\s*```/);
+      const jsonStr = jsonMatch ? jsonMatch[1] : content;
+      const parsed = JSON.parse(jsonStr);
+      return res.json(parsed);
+    } catch {
+      const codeMatch = content.match(/```(?:\w+)?\s*([\s\S]*?)\s*```/);
+      const fixedCode = codeMatch ? codeMatch[1] : content;
+      return res.json({ code: fixedCode.trim(), explanation: '' });
+    }
+  } catch (err) {
+    console.error('Auto-fix error:', err.message);
+    return res.status(500).json({ error: 'Auto-fix failed: ' + err.message });
+  }
+});
+
 /**
  * POST /fetch-problem
  * Fetch a coding problem from a URL (LeetCode, HackerRank, etc.)
