@@ -94,7 +94,7 @@ export function LumoraTopBar({ activeTab, onTranscription, onToggleSessions, ses
 
         {/* User */}
         <div className="relative">
-          <button onClick={() => setShowUserMenu(!showUserMenu)} className="w-8 h-8 rounded-full overflow-hidden transition-all" title={user?.email || ''}>
+          <button onClick={() => setShowUserMenu(!showUserMenu)} className="w-8 h-8 rounded-full overflow-hidden transition-all" title={`${user?.name || 'User'}\n${user?.email || ''}`}>
             {user?.image ? <img src={user.image} alt="" className="w-8 h-8 rounded-full object-cover" referrerPolicy="no-referrer" />
               : <div className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold" style={{ background: '#6366f1', color: C.text }}>{initials}</div>}
           </button>
