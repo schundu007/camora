@@ -54,13 +54,21 @@ router.get('/prices', (req, res) => {
       credits: CREDITS_PER_PLAN.quarterly_pro,
       features: ['unlimited_ai', 'all_companies', 'lumora_3_sessions'],
     },
-    desktop_lifetime: {
-      priceId: STRIPE_PRICES.DESKTOP_LIFETIME,
-      amount: 9900, // $99.00 — Elite
+    desktop_monthly: {
+      priceId: STRIPE_PRICES.DESKTOP_MONTHLY,
+      amount: 2900, // $29.00/mo — Desktop App add-on
       currency: 'usd',
       interval: 'month',
-      credits: CREDITS_PER_PLAN.desktop_lifetime,
-      features: ['everything_faang', 'lumora_5_sessions', 'custom_plan', 'resume_review'],
+      addon: true,
+      features: ['native_desktop', 'screen_share_safe', 'faster_performance', 'always_on'],
+    },
+    desktop_annual: {
+      priceId: STRIPE_PRICES.DESKTOP_ANNUAL,
+      amount: 9900, // $99.00/year — Desktop App add-on
+      currency: 'usd',
+      interval: 'year',
+      addon: true,
+      features: ['native_desktop', 'screen_share_safe', 'faster_performance', 'always_on'],
     },
   });
 });
@@ -92,7 +100,9 @@ router.post('/checkout', jwtAuth, async (req, res) => {
     const validPrices = [
       STRIPE_PRICES.MONTHLY,
       STRIPE_PRICES.QUARTERLY_PRO,
-      STRIPE_PRICES.DESKTOP_LIFETIME,
+      STRIPE_PRICES.DESKTOP_MONTHLY,
+      STRIPE_PRICES.DESKTOP_ANNUAL,
+      STRIPE_PRICES.DESKTOP_LIFETIME, // legacy
     ].filter(Boolean); // Filter out undefined prices
 
     if (!validPrices.includes(priceId)) {
@@ -127,7 +137,7 @@ router.post('/checkout', jwtAuth, async (req, res) => {
     }
 
     // All three plans (Interview Ready, FAANG Track, Elite) are monthly subscriptions
-    const isOneTime = false;
+    const isOneTime = purchaseType === 'desktop_annual';
 
     // For subscriptions, don't allow if already subscribed
     if (!isOneTime) {
@@ -147,8 +157,10 @@ router.post('/checkout', jwtAuth, async (req, res) => {
 
     // Determine purchase type for metadata
     let purchaseType = 'subscription';
-    if (priceId === STRIPE_PRICES.DESKTOP_LIFETIME) {
-      purchaseType = 'desktop_lifetime';
+    const isDesktopAddon = [STRIPE_PRICES.DESKTOP_MONTHLY, STRIPE_PRICES.DESKTOP_ANNUAL, STRIPE_PRICES.DESKTOP_LIFETIME].includes(priceId);
+    if (isDesktopAddon) {
+      purchaseType = priceId === STRIPE_PRICES.DESKTOP_ANNUAL || priceId === STRIPE_PRICES.DESKTOP_LIFETIME
+        ? 'desktop_annual' : 'desktop_monthly';
     }
 
     // Create checkout session
@@ -262,10 +274,10 @@ router.get('/download-access', jwtAuth, async (req, res) => {
   try {
     const userId = req.user.id;
 
-    // Check if user has purchased desktop_lifetime
+    // Check if user has purchased any desktop plan
     const result = await query(
       `SELECT created_at FROM ascend_credit_transactions
-       WHERE user_id = $1 AND type = 'desktop_lifetime'
+       WHERE user_id = $1 AND type IN ('desktop_lifetime', 'desktop_annual', 'desktop_monthly')
        ORDER BY created_at DESC LIMIT 1`,
       [userId]
     );
@@ -461,11 +473,20 @@ async function handleCheckoutComplete(session) {
 
   logger.info({ userId, priceId, type }, 'Processing checkout completion');
 
-  if (type === 'subscription' || type === 'desktop_lifetime') {
-    // Immediately activate plan on checkout completion (don't wait for subscription.updated)
+  const isDesktopPurchase = ['desktop_monthly', 'desktop_annual', 'desktop_lifetime'].includes(type);
+
+  if (isDesktopPurchase) {
+    // Desktop add-on — record the purchase for download access
+    await query(
+      `INSERT INTO ascend_credit_transactions (user_id, type, amount, description)
+       VALUES ($1, $2, 0, $3)`,
+      [userId, type, `Desktop App ${type === 'desktop_monthly' ? '($29/mo)' : '($99/year)'}`]
+    );
+    logger.info({ userId, type, sessionId: session.id }, 'Desktop addon activated');
+  } else if (type === 'subscription') {
+    // Regular subscription — activate plan
     let planType = 'monthly'; // Interview Ready
     if (priceId === STRIPE_PRICES.QUARTERLY_PRO) planType = 'quarterly_pro'; // FAANG Track
-    else if (priceId === STRIPE_PRICES.DESKTOP_LIFETIME) planType = 'quarterly_pro'; // Elite maps to quarterly_pro features
 
     await query(
       `UPDATE ascend_subscriptions SET plan_type = $1, status = 'active' WHERE user_id = $2`,
@@ -546,8 +567,8 @@ async function handleSubscriptionUpdated(subscription) {
     planType = 'monthly'; // Interview Ready
   } else if (priceId === STRIPE_PRICES.QUARTERLY_PRO) {
     planType = 'quarterly_pro'; // FAANG Track
-  } else if (priceId === STRIPE_PRICES.DESKTOP_LIFETIME) {
-    planType = 'quarterly_pro'; // Elite maps to quarterly_pro features
+  } else if (priceId === STRIPE_PRICES.DESKTOP_MONTHLY) {
+    return; // Desktop add-on subscription — don't change main plan
   }
 
   // Map Stripe status to our status
