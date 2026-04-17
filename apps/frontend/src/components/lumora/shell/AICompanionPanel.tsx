@@ -207,27 +207,34 @@ function MicButtonLarge({ onResult, disabled }: { onResult: (text: string) => vo
         audioConstraints.deviceId = { exact: selectedDeviceId };
       }
       const stream = await navigator.mediaDevices.getUserMedia({ audio: audioConstraints });
-      const mr = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+      // Use codecs=opus for better compatibility with Whisper
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+        ? 'audio/webm;codecs=opus' : 'audio/webm';
+      const mr = new MediaRecorder(stream, { mimeType });
       chunks.current = [];
       mr.ondataavailable = e => { if (e.data.size > 0) chunks.current.push(e.data); };
       mr.onstop = async () => {
         stream.getTracks().forEach(t => t.stop());
-        const blob = new Blob(chunks.current, { type: 'audio/webm' });
-        if (blob.size < 1000) { setError('Recording too short'); return; }
+        const blob = new Blob(chunks.current, { type: mimeType });
+        if (blob.size < 500) { setError('Recording too short — speak longer'); return; }
         setBusy(true);
         try {
           const r = await transcriptionAPI.transcribe(token, blob, 'audio.webm', false);
-          if (r.text?.trim()) {
+          if (r.skipped && r.reason === 'hallucination_filtered') {
+            setError('No clear speech — try again');
+          } else if (r.text?.trim()) {
             onResult(r.text.trim());
           } else {
-            setError('No speech detected');
+            setError('No speech detected — speak louder or longer');
           }
         } catch (err: any) {
           setError(err.message || 'Transcription failed');
         }
         setBusy(false);
       };
-      mrRef.current = mr; mr.start(); setRec(true);
+      mrRef.current = mr;
+      mr.start(500); // Collect data every 500ms for reliable chunk capture
+      setRec(true);
     } catch (err: any) {
       setError(err.name === 'NotAllowedError' ? 'Microphone access denied' : (err.message || 'Mic error'));
     }
