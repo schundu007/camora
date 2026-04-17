@@ -216,6 +216,7 @@ export const useInterviewStore = create<InterviewState>()(
         conversationId: state.conversationId,
         history: state.history,
         voiceMode: state.voiceMode,
+        voiceEnrolled: state.voiceEnrolled,
       }),
       migrate: () => ({ useSearch: false, threshold: 0.015 }), // fresh start
       skipHydration: true,
