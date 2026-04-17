@@ -91,6 +91,9 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
   const [streamText, setStreamText] = useState('');
   const [input, setInput] = useState('');
   const [minimized, setMinimized] = useState(false);
+  const [panelWidth, setPanelWidth] = useState(360);
+  const [isResizing, setIsResizing] = useState(false);
+  const resizeRef = useRef<{ startX: number; startW: number } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -248,6 +251,7 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
         </div>
         <p className="text-[9px] mt-1 text-center" style={{ color: C.muted }}>AI can make mistakes. Review for accuracy.</p>
       </div>
+      </>)}
     </div>
   );
 }
