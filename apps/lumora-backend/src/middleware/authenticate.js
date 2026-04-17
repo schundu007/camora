@@ -63,7 +63,9 @@ export async function authenticate(req, res, next) {
       const insertResult = await query(
         `INSERT INTO users (email, name, image, provider, provider_id, is_active)
          VALUES ($1, $2, $3, 'ascend_sso', $4, true)
-         ON CONFLICT (email) DO UPDATE SET email = EXCLUDED.email
+         ON CONFLICT (email) DO UPDATE SET
+           name = COALESCE(EXCLUDED.name, users.name),
+           image = COALESCE(EXCLUDED.image, users.image)
          RETURNING *`,
         [email, name, image, providerId],
       );
