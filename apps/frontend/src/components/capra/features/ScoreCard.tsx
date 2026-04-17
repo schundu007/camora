@@ -113,13 +113,7 @@ export default function ScoreCard({
       {/* Header with branding */}
       <div className="px-6 pt-5 pb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <CamoraLogo size={28} />
-          <span
-            className="text-sm font-bold text-[var(--text-primary)] tracking-tight"
-            style={{ fontFamily: "'Comfortaa', sans-serif" }}
-          >
-            Camora
-          </span>
+          <CamoraLogo size={32} />
         </div>
         <span className="text-[11px] font-medium text-[var(--text-muted)] uppercase tracking-wider">
           Score Card
