@@ -113,20 +113,7 @@ interface CodingLayoutProps {
 // ── Main Component ───────────────────────────────────────────────────────────
 
 // ── Theme tokens — dark when embedded, light when standalone ──
-function useTheme(dark: boolean) {
-  if (dark) return {
-    cardBg: '#16141F', cardBorder: 'rgba(255,255,255,0.12)',
-    headerBg: 'rgba(99,102,241,0.08)', headerBorder: 'rgba(255,255,255,0.12)',
-    headerText: '#a5b4fc', badgeBg: 'rgba(99,102,241,0.15)', badgeText: '#a5b4fc',
-    text: '#F2F1F3', textMuted: '#9896A3', textDim: '#9896A3',
-    codeBg: '#201E2C', codeText: '#F2F1F3',
-    inputBg: '#201E2C', inputBorder: 'rgba(255,255,255,0.12)', inputText: '#F2F1F3',
-    sectionBg: '#16141F', surfaceBg: '#0D0C14',
-    tabActive: '#6366f1', tabActiveBg: 'rgba(99,102,241,0.15)', tabText: '#9896A3',
-    dotColor: '#a5b4fc',
-    passedBg: '#16141F', passedBorder: 'rgba(255,255,255,0.12)', passedText: '#22c55e',
-    failedBg: '#16141F', failedBorder: 'rgba(255,255,255,0.12)', failedText: '#ef4444',
-  };
+function useTheme(_dark: boolean) {
   return {
     cardBg: '#ffffff', cardBorder: '#e5e7eb',
     headerBg: 'rgba(99,102,241,0.05)', headerBorder: '#e0e7ff',
@@ -656,7 +643,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
     <div className={embedded ? 'flex-1 flex flex-col min-h-0' : 'h-screen w-full flex flex-col lumora-app-bg'}>
       {/* ═══ HEADER — hidden when embedded in LumoraShell ═══ */}
       {!embedded && (
-      <header className="flex items-center justify-between h-11 px-3 shrink-0" style={{ background: 'linear-gradient(135deg, rgba(15,23,42,0.98) 0%, rgba(30,27,75,0.96) 50%, rgba(15,23,42,0.98) 100%)', borderBottom: '1px solid rgba(99,102,241,0.15)' }}>
+      <header className="flex items-center justify-between h-11 px-3 shrink-0" style={{ background: 'linear-gradient(90deg, #1e3a8a 0%, #2563eb 50%, #1e3a8a 100%)', borderBottom: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 1px 8px rgba(0,0,0,0.15)' }}>
         <div className="flex items-center gap-2 md:gap-3">
           <button onClick={onBack} className="flex items-center gap-1 px-1.5 py-1 text-xs md:text-sm font-bold text-white/70 hover:text-white rounded transition-colors">
             <svg className="w-3 h-3 md:w-3.5 md:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -870,15 +857,15 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                 {/* Streaming state */}
                 {(isStreaming || (isLoading && !sd && !parsedBlocks?.length)) && !sd && (
                   <div className="space-y-3">
-                    <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.15)' }}>
+                    <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'rgba(99,102,241,0.06)', border: '1px solid #e0e7ff' }}>
                       <div className="relative w-4 h-4 shrink-0">
                         <div className="absolute inset-0 border-2 border-transparent border-t-indigo-400 rounded-full animate-spin" />
                       </div>
-                      <span className="text-xs font-semibold text-indigo-300">Generating solution...</span>
+                      <span className="text-xs font-semibold text-indigo-600">Generating solution...</span>
                     </div>
                     {/* Live streaming preview */}
                     {streamingSolution && (
-                      <div className="rounded-xl p-4 overflow-auto max-h-[60vh] text-xs leading-relaxed font-mono whitespace-pre-wrap" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.7)' }}>
+                      <div className="rounded-xl p-4 overflow-auto max-h-[60vh] text-xs leading-relaxed font-mono whitespace-pre-wrap" style={{ background: '#f8fafc', border: '1px solid #e2e8f0', color: '#334155' }}>
                         {streamingSolution}
                         <span className="inline-block w-1.5 h-4 bg-indigo-400 animate-pulse ml-0.5" />
                       </div>

@@ -164,7 +164,7 @@ export function LumoraShellPage() {
 
           {/* Coding tab — lazy mounted, dark theme override */}
           {mountedTabs.has('coding') && (
-            <div style={{ display: activeTab === 'coding' ? 'flex' : 'none' }} className="lumora-dark-embed flex-1 flex flex-col min-h-0 absolute inset-0">
+            <div style={{ display: activeTab === 'coding' ? 'flex' : 'none' }} className="flex-1 flex flex-col min-h-0 absolute inset-0">
               <ErrorBoundary>
                 <Suspense fallback={<TabLoading label="Coding" />}>
                   <CodingLayout
@@ -182,7 +182,7 @@ export function LumoraShellPage() {
 
           {/* Design tab — lazy mounted, dark theme override */}
           {mountedTabs.has('design') && (
-            <div style={{ display: activeTab === 'design' ? 'flex' : 'none' }} className="lumora-dark-embed flex-1 flex flex-col min-h-0 absolute inset-0">
+            <div style={{ display: activeTab === 'design' ? 'flex' : 'none' }} className="flex-1 flex flex-col min-h-0 absolute inset-0">
               <ErrorBoundary>
                 <Suspense fallback={<TabLoading label="Design" />}>
                   <DesignLayout

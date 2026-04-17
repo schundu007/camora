@@ -131,7 +131,7 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
   };
 
   return (
-    <header className="z-50 shrink-0" style={{ background: 'linear-gradient(90deg, #122d54 0%, #163966 50%, #122d54 100%)', borderBottom: '1px solid rgba(255,255,255,0.06)', boxShadow: '0 1px 8px rgba(0,0,0,0.15), inset 0 -1px 0 rgba(255,255,255,0.04)', fontFamily: "'Source Sans 3', sans-serif" }}>
+    <header className="z-50 shrink-0" style={{ background: 'linear-gradient(90deg, #1e3a8a 0%, #2563eb 50%, #1e3a8a 100%)', borderBottom: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 1px 12px rgba(0,0,0,0.25), inset 0 -1px 0 rgba(255,255,255,0.06)', fontFamily: "'Source Sans 3', sans-serif" }}>
       {/* Row 1: Nav + Audio + Controls — horizontally scrollable */}
       <div className="flex items-center h-[42px] overflow-x-auto no-scrollbar">
         {/* Sidebar toggle */}
@@ -350,7 +350,7 @@ function UserBadge() {
       {showMenu && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
-          <div className="absolute right-0 top-full mt-1 w-48 rounded-2xl shadow-xl border z-50 py-1 overflow-hidden" style={{ background: 'linear-gradient(180deg, #1a3a6b 0%, #122d54 100%)', borderColor: 'rgba(255,255,255,0.1)' }}>
+          <div className="absolute right-0 top-full mt-1 w-48 rounded-2xl shadow-xl border z-50 py-1 overflow-hidden" style={{ background: 'linear-gradient(180deg, #1e40af 0%, #172554 100%)', borderColor: 'rgba(255,255,255,0.12)' }}>
             <div className="px-3 py-2 border-b border-white/10">
               <p className="font-display text-sm font-semibold text-white truncate">{user.name || 'User'}</p>
               <p className="font-code text-xs text-white/50 truncate">{user.email}</p>
