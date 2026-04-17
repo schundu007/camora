@@ -1287,17 +1287,21 @@ function CodingLayout({
             </div>
           </Allotment.Pane>
 
-          {/* RIGHT PANEL — Design details (requirements, tradeoffs, components, etc.) */}
+          {/* RIGHT PANEL — Design details OR AI Copilot (full right side) */}
           <Allotment.Pane minSize={300}>
             {showAscendAssistant ? (
-              <Allotment defaultSizes={[60, 40]}>
-                <Allotment.Pane minSize={220}>
-                  {designPane}
-                </Allotment.Pane>
-                <Allotment.Pane minSize={220}>
-                  <AscendAssistantPanel onClose={onCloseAscendAssistant} provider={provider} model={model} />
-                </Allotment.Pane>
-              </Allotment>
+              <AscendAssistantPanel
+                onClose={onCloseAscendAssistant}
+                provider={provider}
+                model={model}
+                context={{
+                  mode: 'system-design',
+                  problem: currentProblem || loadedProblem || '',
+                  solution: streamingContent?.pitch || '',
+                  code: '',
+                  designData: systemDesign,
+                }}
+              />
             ) : designPane}
           </Allotment.Pane>
         </Allotment>
@@ -1307,20 +1311,29 @@ function CodingLayout({
 
   return (
     <div className="h-full bg-[var(--bg-surface)]">
-      <Allotment defaultSizes={showAscendAssistant ? [30, 40, 30] : [30, 70]}>
+      <Allotment defaultSizes={showAscendAssistant ? [30, 70] : [30, 70]}>
         <Allotment.Pane minSize={220}>
           {problemPane}
         </Allotment.Pane>
         <Allotment.Pane minSize={300}>
-          <div className="h-full bg-[var(--bg-elevated)] border-l border-[var(--border)]">
-            {codePane}
-          </div>
+          {showAscendAssistant ? (
+            <AscendAssistantPanel
+              onClose={onCloseAscendAssistant}
+              provider={provider}
+              model={model}
+              context={{
+                mode: 'coding',
+                problem: currentProblem || loadedProblem || '',
+                solution: streamingContent?.pitch || '',
+                code: streamingContent?.code || '',
+              }}
+            />
+          ) : (
+            <div className="h-full bg-[var(--bg-elevated)] border-l border-[var(--border)]">
+              {codePane}
+            </div>
+          )}
         </Allotment.Pane>
-        {showAscendAssistant && (
-          <Allotment.Pane minSize={300}>
-            <AscendAssistantPanel onClose={onCloseAscendAssistant} provider={provider} model={model} />
-          </Allotment.Pane>
-        )}
       </Allotment>
 
       <style>{`

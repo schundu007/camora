@@ -23,6 +23,8 @@ interface AICompanionPanelProps {
   onSubmit: () => void;
   isStreaming: boolean;
   onAskQuestion: (q: string) => void;
+  /** When set, show this specific history entry's answer */
+  viewingIdx?: number | null;
 }
 
 function safeBlocks(blocks: any): any[] {
@@ -36,7 +38,7 @@ function safeBlocks(blocks: any): any[] {
   return [];
 }
 
-export function AICompanionPanel({ isOpen, onClose, inputValue, setInputValue, onSubmit, isStreaming, onAskQuestion }: AICompanionPanelProps) {
+export function AICompanionPanel({ isOpen, onClose, inputValue, setInputValue, onSubmit, isStreaming, onAskQuestion, viewingIdx }: AICompanionPanelProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const { history, question, streamChunks, isDesignQuestion, isCodingQuestion, parsedBlocks } = useInterviewStore();
