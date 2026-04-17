@@ -1,6 +1,4 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
 import { useInterviewStore } from '@/stores/interview-store';
 import { AudioCapture, SystemAudioButton } from '@/components/lumora/audio/AudioCapture';
 import { LumoraSettings } from './LumoraSettings';
@@ -24,11 +22,8 @@ interface LumoraTopBarProps {
 }
 
 export function LumoraTopBar({ activeTab, onTranscription }: LumoraTopBarProps) {
-  const { user, logout } = useAuth();
   const { status } = useInterviewStore();
-  const [showUserMenu, setShowUserMenu] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const initials = (user?.name || user?.email || '?').slice(0, 2).toUpperCase();
 
   return (
     <header className="flex items-center h-14 px-5 shrink-0 z-30" style={{ background: '#000000', borderBottom: '1px solid #333' }}>
@@ -45,7 +40,7 @@ export function LumoraTopBar({ activeTab, onTranscription }: LumoraTopBarProps) 
         </div>
       </div>
 
-      {/* Right: status + settings + user */}
+      {/* Right: status + settings */}
       <div className="flex items-center gap-2 min-w-[120px] justify-end">
         {/* Status */}
         <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}>
@@ -66,27 +61,6 @@ export function LumoraTopBar({ activeTab, onTranscription }: LumoraTopBarProps) 
           </svg>
         </button>
 
-        {/* User */}
-        <div className="relative">
-          <button onClick={() => setShowUserMenu(!showUserMenu)} className="w-8 h-8 rounded-full overflow-hidden transition-all" title={`${user?.name || 'User'}\n${user?.email || ''}`}>
-            {user?.image ? <img src={user.image} alt="" className="w-8 h-8 rounded-full object-cover" referrerPolicy="no-referrer" />
-              : <div className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold" style={{ background: '#76B900', color: C.text }}>{initials}</div>}
-          </button>
-          {showUserMenu && (
-            <>
-              <div className="fixed inset-0 z-40" onClick={() => setShowUserMenu(false)} />
-              <div className="absolute right-0 top-full mt-2 w-52 rounded-xl shadow-2xl z-50 overflow-hidden" style={{ background: '#111111', border: '1px solid #333', boxShadow: '0 8px 32px rgba(0,0,0,0.6)' }}>
-                <div className="px-4 py-3" style={{ borderBottom: `1px solid ${C.border}` }}>
-                  <p className="text-sm font-semibold truncate" style={{ color: C.text }}>{user?.name || 'User'}</p>
-                  <p className="text-xs truncate mt-0.5" style={{ color: C.muted }}>{user?.email}</p>
-                </div>
-                <Link to="/pricing" onClick={() => setShowUserMenu(false)} className="block px-4 py-2.5 text-sm transition-colors" style={{ color: C.muted }}>Pricing</Link>
-                <Link to="/capra/prepare" onClick={() => setShowUserMenu(false)} className="block px-4 py-2.5 text-sm transition-colors" style={{ color: C.muted }}>Dashboard</Link>
-                <button onClick={() => { logout(); setShowUserMenu(false); }} className="w-full text-left px-4 py-2.5 text-sm text-red-400 transition-colors">Sign Out</button>
-              </div>
-            </>
-          )}
-        </div>
       </div>
 
       {/* Settings modal */}
