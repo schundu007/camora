@@ -36,8 +36,7 @@ export function LumoraTopBar({ activeTab, onTranscription }: LumoraTopBarProps) 
     <header className="flex items-center h-12 px-4 shrink-0 z-30" style={{ background: C.surface, borderBottom: `1px solid ${C.border}` }}>
       {/* Left: brand */}
       <div className="flex items-center gap-2 min-w-[140px]">
-        <span className="text-[13px] font-bold" style={{ fontFamily: 'var(--font-sans)', color: C.text }}>Lumora</span>
-        <span className="text-[9px] px-1.5 py-0.5 rounded font-bold" style={{ background: C.accentBg, color: C.accent }}>{tabLabel.toUpperCase()}</span>
+        <span className="text-[13px] font-bold" style={{ fontFamily: 'var(--font-sans)', color: C.text }}>{tabLabel}</span>
       </div>
 
       {/* Center: audio controls */}
