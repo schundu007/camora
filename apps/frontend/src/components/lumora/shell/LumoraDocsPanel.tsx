@@ -51,6 +51,90 @@ const SIDEBAR_SECTIONS = [
   { id: 'techstack', label: 'Tech Stack', color: '#8b5cf6' },
 ];
 
+/** Format parsed prep JSON into readable text */
+function formatPrepContent(content: any): string {
+  if (!content || typeof content !== 'object') return String(content || '');
+  const lines: string[] = [];
+
+  // Summary
+  if (content.summary) {
+    lines.push('SUMMARY', '─'.repeat(40), content.summary, '');
+  }
+
+  // Pitch sections
+  if (content.pitchSections || content.chSections) {
+    const sections = content.pitchSections || content.chSections;
+    if (Array.isArray(sections)) {
+      sections.forEach((s: any) => {
+        lines.push(`■ ${s.title || 'Section'}${s.duration ? ` (${s.duration})` : ''}${s.context ? ` — ${s.context}` : ''}`);
+        if (s.bullets) s.bullets.forEach((b: string) => lines.push(`  • ${b}`));
+        lines.push('');
+      });
+    }
+  }
+
+  // Company insights
+  if (content.companyInsights) {
+    const ci = content.companyInsights;
+    lines.push('COMPANY INSIGHTS', '─'.repeat(40));
+    if (ci.interviewFormat) lines.push(`Interview Format: ${ci.interviewFormat}`);
+    if (ci.culture) lines.push(`Culture: ${ci.culture}`);
+    if (ci.values) lines.push(`Values: ${Array.isArray(ci.values) ? ci.values.join(', ') : ci.values}`);
+    lines.push('');
+  }
+
+  // Questions
+  if (content.questions && Array.isArray(content.questions)) {
+    lines.push('QUESTIONS', '─'.repeat(40));
+    content.questions.forEach((q: any, i: number) => {
+      lines.push(`Q${i + 1}: ${q.question || q.title || q.text || ''}`);
+      if (q.answer) lines.push(`Answer: ${q.answer}`);
+      if (q.tips) lines.push(`Tips: ${Array.isArray(q.tips) ? q.tips.join('; ') : q.tips}`);
+      if (q.diagramUrl) lines.push(`Diagram: ${q.diagramUrl}`);
+      lines.push('');
+    });
+  }
+
+  // Key points / talking points
+  if (content.keyPoints) {
+    lines.push('KEY POINTS', '─'.repeat(40));
+    (Array.isArray(content.keyPoints) ? content.keyPoints : [content.keyPoints]).forEach((p: string) => lines.push(`• ${p}`));
+    lines.push('');
+  }
+  if (content.talkingPoints) {
+    lines.push('TALKING POINTS', '─'.repeat(40));
+    (Array.isArray(content.talkingPoints) ? content.talkingPoints : [content.talkingPoints]).forEach((p: string) => lines.push(`• ${p}`));
+    lines.push('');
+  }
+
+  // Tips
+  if (content.tips) {
+    lines.push('TIPS', '─'.repeat(40));
+    (Array.isArray(content.tips) ? content.tips : [content.tips]).forEach((t: string) => lines.push(`• ${t}`));
+    lines.push('');
+  }
+
+  // Abbreviations
+  if (content.abbreviations && Array.isArray(content.abbreviations)) {
+    lines.push('ABBREVIATIONS', '─'.repeat(40));
+    content.abbreviations.forEach((a: any) => lines.push(`${a.term || a.abbr}: ${a.definition || a.full}`));
+    lines.push('');
+  }
+
+  // Fallback: stringify remaining keys
+  const handled = new Set(['summary', 'pitchSections', 'chSections', 'companyInsights', 'questions', 'keyPoints', 'talkingPoints', 'tips', 'abbreviations']);
+  for (const [key, val] of Object.entries(content)) {
+    if (handled.has(key) || !val) continue;
+    if (typeof val === 'string') lines.push(`${key.toUpperCase()}: ${val}`);
+    else if (Array.isArray(val)) {
+      lines.push(`${key.toUpperCase()}:`);
+      val.forEach((v: any) => lines.push(`  • ${typeof v === 'string' ? v : JSON.stringify(v)}`));
+    }
+  }
+
+  return lines.join('\n').trim() || JSON.stringify(content, null, 2);
+}
+
 function loadPrepData(): PrepData {
   try { const r = localStorage.getItem(STORAGE_KEY); return r ? JSON.parse(r) : INITIAL_STATE; } catch { return INITIAL_STATE; }
 }
@@ -213,15 +297,46 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
         if (res.ok) {
           const reader = res.body?.getReader();
           const decoder = new TextDecoder();
-          let text = '';
+          let jsonStr = '';
           if (reader) {
+            let buffer = '';
             while (true) {
               const { done, value } = await reader.read();
               if (done) break;
-              text += decoder.decode(value, { stream: true });
+              buffer += decoder.decode(value, { stream: true });
+              // Parse SSE lines: "data: {"chunk":"..."}"
+              const lines = buffer.split('\n');
+              buffer = lines.pop() || ''; // keep incomplete line
+              for (const line of lines) {
+                const trimmed = line.trim();
+                if (!trimmed || !trimmed.startsWith('data: ')) continue;
+                const jsonPart = trimmed.slice(6); // remove "data: "
+                if (jsonPart === '[DONE]') continue;
+                try {
+                  const parsed = JSON.parse(jsonPart);
+                  if (parsed.chunk) jsonStr += parsed.chunk;
+                } catch { /* partial JSON, skip */ }
+              }
+            }
+            // Process remaining buffer
+            if (buffer.trim().startsWith('data: ')) {
+              try {
+                const parsed = JSON.parse(buffer.trim().slice(6));
+                if (parsed.chunk) jsonStr += parsed.chunk;
+              } catch {}
             }
           }
-          newSections[section] = text;
+          // Try to parse the accumulated JSON content
+          let displayText = jsonStr;
+          try {
+            const content = JSON.parse(jsonStr);
+            // Format the parsed content into readable text
+            displayText = formatPrepContent(content);
+          } catch {
+            // If not valid JSON, use raw text (strip any remaining data: prefixes)
+            displayText = jsonStr.replace(/^data:\s*/gm, '');
+          }
+          newSections[section] = displayText;
           setSectionStatus(prev => ({ ...prev, [section]: 'done' }));
           // Save progressively so user can see completed sections
           setState(prev => ({ ...prev, sections: { ...prev.sections, [section]: text } }));
