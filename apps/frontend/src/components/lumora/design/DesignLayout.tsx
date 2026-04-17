@@ -274,13 +274,13 @@ function useTheme(_dark: boolean) {
   return {
     cardBg: '#ffffff', cardBorder: '#e5e7eb',
     headerBg: 'rgba(11,92,255,0.05)', headerBorder: '#e0e7ff',
-    headerText: '#0B5CFF', badgeBg: '#0B5CFF10', badgeText: '#0B5CFF',
+    headerText: '#7C3AED', badgeBg: '#7C3AED10', badgeText: '#7C3AED',
     text: '#111827', textMuted: '#6b7280', textDim: '#9ca3af',
     codeBg: '#f9fafb', codeText: '#1f2937',
     inputBg: '#ffffff', inputBorder: '#e5e7eb', inputText: '#111827',
     sectionBg: '#f9fafb', surfaceBg: '#ffffff',
-    tabActive: '#0B5CFF', tabActiveBg: '#ffffff', tabText: '#6b7280',
-    dotColor: '#0B5CFF',
+    tabActive: '#7C3AED', tabActiveBg: '#ffffff', tabText: '#6b7280',
+    dotColor: '#7C3AED',
   };
 }
 
@@ -702,7 +702,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                   className={`px-2.5 py-1 text-[10px] md:text-xs font-bold rounded-md transition-all ${
                     inputTab === tab ? 'text-white' : 'text-slate-500 hover:text-slate-700'
                   }`}
-                  style={inputTab === tab ? { background: '#0B5CFF', color: '#ffffff', boxShadow: '0 1px 4px rgba(0,0,0,0.1)' } : {}}
+                  style={inputTab === tab ? { background: '#7C3AED', color: '#ffffff', boxShadow: '0 1px 4px rgba(0,0,0,0.1)' } : {}}
                 >
                   {tab === 'text' ? 'Text' : tab === 'url' ? 'URL' : 'Image'}
                 </button>
@@ -809,7 +809,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
             <button
               onClick={handleSubmit}
               disabled={!problemText.trim() || isLoading}
-              className="w-full py-2.5 text-white text-sm font-bold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2" style={{ background: 'linear-gradient(-81deg, #34d399, #0B5CFF)', borderRadius: '10px' }}
+              className="w-full py-2.5 text-white text-sm font-bold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2" style={{ background: 'linear-gradient(135deg, #7C3AED, #EC4899)', borderRadius: '10px' }}
             >
               {isLoading ? (
                 <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Generating...</>
