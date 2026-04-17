@@ -110,7 +110,7 @@ export default function SharedDiagram({
         <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
           <div className="flex items-center gap-2">
             <select value={provider} onChange={e => setProvider(e.target.value)}
-              className="text-xs font-mono bg-transparent border border-gray-200 rounded px-1.5 py-0.5 text-gray-500">
+              className="text-xs font-mono bg-transparent border border-gray-200 rounded px-2.5 py-1.5 min-h-[36px] text-gray-500">
               <option value="auto">Auto</option>
               <option value="aws">AWS</option>
               <option value="azure">Azure</option>
@@ -119,24 +119,24 @@ export default function SharedDiagram({
             <div className="flex border border-gray-200 rounded overflow-hidden">
               {(['LR', 'TB'] as const).map(d => (
                 <button key={d} onClick={() => setDirection(d)}
-                  className={`px-1.5 py-0.5 text-xs font-mono ${d !== 'LR' ? 'border-l border-gray-200' : ''} ${
+                  className={`px-2.5 py-1.5 min-h-[36px] text-xs font-mono ${d !== 'LR' ? 'border-l border-gray-200' : ''} ${
                     direction === d ? 'bg-emerald-500 text-white' : 'text-gray-500'}`}>{d}</button>
               ))}
             </div>
             <div className="flex border border-gray-200 rounded overflow-hidden">
               {(['overview', 'detailed'] as const).map(d => (
                 <button key={d} onClick={() => setDetail(d)}
-                  className={`px-2 py-0.5 text-xs font-mono capitalize ${d !== 'overview' ? 'border-l border-gray-200' : ''} ${
+                  className={`px-2.5 py-1.5 min-h-[36px] text-xs font-mono capitalize ${d !== 'overview' ? 'border-l border-gray-200' : ''} ${
                     detail === d ? 'bg-emerald-500 text-white' : 'text-gray-500'}`}>{d}</button>
               ))}
             </div>
           </div>
           {imageUrl && (
             <div className="flex items-center gap-1">
-              <button onClick={() => setScale(s => Math.min(s + 0.25, 4))} className="px-1.5 py-0.5 text-xs border rounded text-gray-500">+</button>
+              <button onClick={() => setScale(s => Math.min(s + 0.25, 4))} className="px-2.5 py-1.5 min-h-[36px] text-xs border rounded text-gray-500">+</button>
               <span className="text-xs text-gray-400 min-w-[3ch] text-center">{Math.round(scale * 100)}%</span>
-              <button onClick={() => setScale(s => Math.max(s - 0.25, 0.3))} className="px-1.5 py-0.5 text-xs border rounded text-gray-500">-</button>
-              <button onClick={resetView} className="px-1.5 py-0.5 text-xs border rounded text-gray-500 ml-1">Fit</button>
+              <button onClick={() => setScale(s => Math.max(s - 0.25, 0.3))} className="px-2.5 py-1.5 min-h-[36px] text-xs border rounded text-gray-500">-</button>
+              <button onClick={resetView} className="px-2.5 py-1.5 min-h-[36px] text-xs border rounded text-gray-500 ml-1">Fit</button>
             </div>
           )}
         </div>

@@ -71,7 +71,7 @@ export function InterviewPage() {
   const showEmptyState = !question && !isStreaming && parsedBlocks.length === 0 && history.length === 0;
 
   return (
-    <div className="h-screen w-full flex flex-col overflow-hidden lumora-app-bg">
+    <div className="h-screen w-full flex flex-col overflow-y-auto md:overflow-hidden lumora-app-bg">
       <div className="lumora-grid-overlay" />
 
       {/* Header — shared component with tabs, audio, controls */}
