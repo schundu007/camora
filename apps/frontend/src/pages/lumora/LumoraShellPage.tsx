@@ -21,13 +21,13 @@ const DesignLayout = lazy(() => import('../../components/lumora/design/DesignLay
 export function LumoraShellPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [inputValue, setInputValue] = useState('');
+  // inputValue removed — copilot now manages its own state
   const [blanked, setBlanked] = useState(false);
   const [sessionsOpen, setSessionsOpen] = useState(false);
   const [docsOpen, setDocsOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [copilotOpen, setCopilotOpen] = useState(false);
-  const [copilotViewIdx, setCopilotViewIdx] = useState<number | null>(null);
+  // copilotViewIdx removed — copilot now manages its own state
   const [focusedEntry, setFocusedEntry] = useState<number | null>(null);
   const { handleSubmit, handleCodingSubmit } = useStreamingInterview();
   const { isStreaming, history, question, parsedBlocks, useSearch, setUseSearch, clearHistory } = useInterviewStore();
@@ -48,14 +48,6 @@ export function LumoraShellPage() {
       setMountedTabs(prev => new Set(prev).add(activeTab));
     }
   }, [activeTab, mountedTabs]);
-
-  // Auto-open copilot when AI starts streaming on the interview tab
-  useEffect(() => {
-    if (isStreaming && activeTab === 'interview') {
-      setCopilotOpen(true);
-      setCopilotViewIdx(null); // show latest/streaming
-    }
-  }, [isStreaming, activeTab]);
 
   // Trigger Monaco editor resize when switching to coding/design tab
   useEffect(() => {
@@ -103,13 +95,6 @@ export function LumoraShellPage() {
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, [useSearch, setUseSearch, clearHistory]);
-
-  const handleInputSubmit = useCallback(() => {
-    if (inputValue.trim()) {
-      handleSubmit(inputValue);
-      setInputValue('');
-    }
-  }, [inputValue, handleSubmit]);
 
   // Refs for coding/design problem setters — set by child layouts
   const codingProblemRef = useRef<((text: string) => void) | null>(null);
@@ -218,16 +203,10 @@ export function LumoraShellPage() {
         </div>
       </div>
 
-      {/* AI Copilot — floating popup + toggle button */}
+      {/* AI Copilot — independent right sidebar */}
       <AICompanionPanel
         isOpen={copilotOpen}
-        onClose={() => { setCopilotOpen(false); setCopilotViewIdx(null); }}
-        inputValue={inputValue}
-        setInputValue={setInputValue}
-        onSubmit={handleInputSubmit}
-        isStreaming={isStreaming}
-        onAskQuestion={handleSubmit}
-        viewingIdx={copilotViewIdx}
+        onClose={() => setCopilotOpen(false)}
       />
       {!copilotOpen && (
         <AICompanionToggle
