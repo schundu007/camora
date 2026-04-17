@@ -75,7 +75,7 @@ export default function ShellSidebar() {
               <Icon name="ascend" size={16} className="text-white" />
             </div>
             <div>
-              <span className="font-bold text-base tracking-tight text-[var(--text-primary)]" style={{ fontFamily: "'Comfortaa', sans-serif" }}>Camora</span>
+              <span className="font-bold text-base tracking-tight" style={{ fontFamily: "'Clash Display', sans-serif", background: 'linear-gradient(135deg, #76B900, #2d8a1e)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Camora</span>
               <span className="block text-[9px] font-mono uppercase tracking-[0.2em] text-emerald-600 -mt-0.5">Apply · Prepare · Practice · Attend</span>
             </div>
           </Link>
