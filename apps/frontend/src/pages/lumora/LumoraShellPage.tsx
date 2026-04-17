@@ -150,7 +150,7 @@ export function LumoraShellPage() {
       {/* Center main area */}
       <div className="flex-1 flex flex-col min-h-0 min-w-0">
         {/* Top bar with audio controls */}
-        <LumoraTopBar activeTab={activeTab} onTranscription={handleTranscription} />
+        <LumoraTopBar activeTab={activeTab} onTranscription={handleTranscription} onToggleSessions={() => setSessionsOpen(prev => !prev)} sessionsOpen={sessionsOpen} />
 
         {/* Tab content — display toggling preserves state */}
         <div className="flex-1 min-h-0 overflow-hidden relative">
