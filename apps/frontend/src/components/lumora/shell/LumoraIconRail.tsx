@@ -28,8 +28,6 @@ export function LumoraIconRail({ activeTab, sessionsOpen, onToggleSessions }: Lu
   const navItems: { id: string; label: string; path?: string; onClick?: () => void; icon: React.ReactNode }[] = [
     { id: 'interview', label: 'Home', path: '/lumora',
       icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg> },
-    { id: 'sessions', label: 'Sessions', onClick: onToggleSessions,
-      icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg> },
     { id: 'coding', label: 'Coding', path: '/lumora/coding',
       icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6" /></svg> },
     { id: 'design', label: 'Design', path: '/lumora/design',
