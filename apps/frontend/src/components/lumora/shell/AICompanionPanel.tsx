@@ -25,54 +25,89 @@ interface AICompanionPanelProps {
   viewingIdx?: number | null;
 }
 
-/** Extract plain text from any block format */
+/** Clean and extract text from any block format */
 function extractText(blocks: any): string {
   if (!blocks) return '';
+  let raw = '';
   if (Array.isArray(blocks)) {
     if (blocks.length === 0) return '';
-    return blocks
+    raw = blocks
       .filter((b: any) => b.content && typeof b.content === 'string')
-      .map((b: any) => {
-        const label = b.type && b.type !== 'ANSWER' && b.type !== 'HEADLINE' ? `**${b.type}**\n` : '';
-        return label + b.content;
-      })
+      .map((b: any) => b.content)
       .join('\n\n');
-  }
-  if (typeof blocks === 'object') {
+  } else if (typeof blocks === 'object') {
     const parts: string[] = [];
     if (blocks.systemDesign) {
       const sd = blocks.systemDesign;
       if (sd.overview) parts.push(sd.overview);
-      if (sd.requirements?.functional) parts.push('**Functional Requirements**\n' + sd.requirements.functional.map((r: string) => `• ${r}`).join('\n'));
-      if (sd.requirements?.nonFunctional) parts.push('**Non-Functional Requirements**\n' + sd.requirements.nonFunctional.map((r: string) => `• ${r}`).join('\n'));
+      if (sd.requirements?.functional) parts.push('**Functional**\n' + sd.requirements.functional.map((r: string) => `• ${r}`).join('\n'));
+      if (sd.requirements?.nonFunctional) parts.push('**Non-Functional**\n' + sd.requirements.nonFunctional.map((r: string) => `• ${r}`).join('\n'));
       if (sd.tradeoffs) parts.push('**Trade-offs**\n' + sd.tradeoffs.map((t: string) => `• ${t}`).join('\n'));
       if (sd.edgeCases) parts.push('**Edge Cases**\n' + sd.edgeCases.map((e: string) => `• ${e}`).join('\n'));
     }
     if (blocks.pitch) {
-      const p = typeof blocks.pitch === 'string' ? blocks.pitch : (blocks.pitch.opener ? blocks.pitch.opener + '\n\n' + (blocks.pitch.approach || '') : blocks.pitch.approach || '');
+      const p = typeof blocks.pitch === 'string' ? blocks.pitch : (blocks.pitch.opener || blocks.pitch.approach || '');
       if (p) parts.push(p);
-      if (blocks.pitch?.keyPoints) parts.push('**Key Points**\n' + blocks.pitch.keyPoints.map((k: string) => `• ${k}`).join('\n'));
+      if (blocks.pitch?.keyPoints) parts.push(blocks.pitch.keyPoints.map((k: string) => `• ${k}`).join('\n'));
     }
     if (blocks.solutions) {
       blocks.solutions.forEach((sol: any, i: number) => {
         parts.push(`**${sol.name || `Solution ${i + 1}`}**\n${sol.approach || ''}`);
       });
     }
-    return parts.join('\n\n');
+    raw = parts.join('\n\n');
+  } else {
+    raw = String(blocks);
   }
-  return String(blocks);
+  // Strip leftover tags like [FOLLOWUP], [/FOLLOWUP], [HEADLINE], etc.
+  raw = raw.replace(/\[\/?(?:FOLLOWUP|HEADLINE|ANSWER|CODE|DIAGRAM|REQUIREMENTS|SCALEMATH|DEEPDESIGN|EDGECASES|TRADEOFFS)\]/gi, '');
+  // Clean up excessive blank lines
+  raw = raw.replace(/\n{3,}/g, '\n\n').trim();
+  return raw;
 }
 
-/** Render text with **bold** markdown */
+/** Render answer text with structured formatting */
 function RichText({ text }: { text: string }) {
   if (!text) return null;
+
+  // Split into lines and render with structure
+  const lines = text.split('\n');
+
   return (
-    <div className="text-[13px] leading-relaxed whitespace-pre-wrap" style={{ fontFamily: 'var(--font-sans)', color: C.text }}>
-      {text.split(/\*\*(.+?)\*\*/g).map((part, i) =>
-        i % 2 === 1
-          ? <strong key={i} className="block mt-3 mb-1 text-[11px] font-bold uppercase tracking-wider" style={{ color: C.accent }}>{part}</strong>
-          : <span key={i}>{part}</span>
-      )}
+    <div className="text-[13px] leading-relaxed flex flex-col gap-0.5" style={{ fontFamily: 'var(--font-sans)' }}>
+      {lines.map((line, i) => {
+        const trimmed = line.trim();
+        if (!trimmed) return <div key={i} className="h-2" />;
+
+        // **Bold headers**
+        if (trimmed.startsWith('**') && trimmed.endsWith('**')) {
+          return <div key={i} className="text-[11px] font-bold uppercase tracking-wider mt-2 mb-0.5" style={{ color: C.accent }}>{trimmed.replace(/\*\*/g, '')}</div>;
+        }
+
+        // STAR labels: SITUATION:, TASK:, ACTION:, RESULT:, LEARNING:
+        const starMatch = trimmed.match(/^(SITUATION|TASK|ACTION|RESULT|LEARNING|Q\d|A\d):\s*(.*)/);
+        if (starMatch) {
+          return (
+            <div key={i} className="flex gap-2 mt-1">
+              <span className="text-[10px] font-bold shrink-0 px-1.5 py-0.5 rounded mt-0.5" style={{ background: C.accentBg, color: C.accent }}>{starMatch[1]}</span>
+              <span style={{ color: C.text }}>{starMatch[2]}</span>
+            </div>
+          );
+        }
+
+        // Bullet points: - or •
+        if (trimmed.startsWith('- ') || trimmed.startsWith('• ')) {
+          return (
+            <div key={i} className="flex gap-2 pl-1">
+              <span className="shrink-0 mt-2 w-1 h-1 rounded-full" style={{ background: C.accent }} />
+              <span style={{ color: C.text }}>{trimmed.slice(2)}</span>
+            </div>
+          );
+        }
+
+        // Regular text
+        return <div key={i} style={{ color: C.text }}>{trimmed}</div>;
+      })}
     </div>
   );
 }
@@ -264,9 +299,11 @@ export function AICompanionPanel({ isOpen, onClose, inputValue, setInputValue, o
                     <div className="w-6 h-6 rounded-full shrink-0 flex items-center justify-center animate-pulse" style={{ background: C.accentBg }}>
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
                     </div>
-                    <div className="flex-1 text-[13px] leading-relaxed whitespace-pre-wrap" style={{ fontFamily: 'var(--font-sans)', color: C.text }}>
-                      {streamChunks.join('') || <span style={{ color: C.muted }}>Thinking...</span>}
-                      <span className="inline-block w-1.5 h-4 ml-0.5 animate-pulse rounded-sm" style={{ background: C.accent }} />
+                    <div className="flex-1">
+                      {streamChunks.length > 0
+                        ? <><RichText text={streamChunks.join('').replace(/\[\/?(?:FOLLOWUP|HEADLINE|ANSWER|CODE|DIAGRAM|REQUIREMENTS|SCALEMATH|DEEPDESIGN|EDGECASES|TRADEOFFS)\]/gi, '')} /><span className="inline-block w-1.5 h-3 ml-0.5 animate-pulse rounded-sm" style={{ background: C.accent }} /></>
+                        : <span className="text-[13px] animate-pulse" style={{ color: C.muted, fontFamily: 'var(--font-sans)' }}>Thinking...</span>
+                      }
                     </div>
                   </div>
                 </div>
