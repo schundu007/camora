@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { MicrophoneSelector } from '@/components/lumora/audio/MicrophoneSelector';
 import { VoiceEnrollment } from '@/components/lumora/audio/VoiceEnrollment';
 import { CalibrationButton } from '@/components/lumora/audio/CalibrationButton';
+import { useAudioDevices } from '@/components/lumora/audio/hooks/useAudioDevices';
 import { useInterviewStore } from '@/stores/interview-store';
 
 type VoiceMode = 'filter-candidate' | 'record-interviewer';
@@ -25,6 +26,7 @@ export function LumoraSettings({ isOpen, onClose }: LumoraSettingsProps) {
   const [voiceMode, setVoiceMode] = useState<VoiceMode>('filter-candidate');
   const [platform, setPlatform] = useState('general');
   const { vadThreshold } = useInterviewStore();
+  const { selectedDeviceId } = useAudioDevices();
 
   if (!isOpen) return null;
 
@@ -93,7 +95,7 @@ export function LumoraSettings({ isOpen, onClose }: LumoraSettingsProps) {
                   description={vadThreshold ? `Threshold: ${vadThreshold.toFixed(4)}` : 'Measure ambient noise for better voice detection.'}
                 >
                   <div className="mt-3">
-                    <CalibrationButton disabled={false} />
+                    <CalibrationButton deviceId={selectedDeviceId} disabled={false} />
                   </div>
                 </SettingCard>
               </div>

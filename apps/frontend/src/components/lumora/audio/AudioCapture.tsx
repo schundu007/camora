@@ -4,8 +4,6 @@ import { useAudioDevices } from './hooks/useAudioDevices';
 import { useInterviewStore } from '@/stores/interview-store';
 import { transcriptionAPI } from '@/lib/api-client';
 import { MicrophoneSelector } from './MicrophoneSelector';
-import { CalibrationButton } from './CalibrationButton';
-import { VoiceEnrollment } from './VoiceEnrollment';
 import { useAuth } from '@/contexts/AuthContext';
 
 // Keyboard shortcuts — use Cmd/Ctrl+M to avoid conflict with typing
@@ -369,15 +367,7 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
         </button>
       )}
 
-      {/* Voice filter */}
-      <VoiceEnrollment disabled={storeIsRecording} />
-
-      {/* Calibrate — Manual only */}
-      {!continuousMode && (
-        <CalibrationButton deviceId={selectedDeviceId} disabled={storeIsRecording} />
-      )}
-
-      {/* Interviewer moved to Header */}
+      {/* Voice enrollment + Calibrate moved to Settings (gear icon) */}
     </div>
   );
 }
