@@ -352,7 +352,7 @@ export default function LandingPage() {
             <div className="flex items-center gap-12" style={{ animation: 'scroll-logos 30s linear infinite', width: 'max-content' }}>
               {[...COMPANIES, ...COMPANIES].map((c, i) => (
                 <img key={`${c}-${i}`} src={`https://img.logo.dev/${c}.com?token=${LOGO_TOKEN}&size=80&format=png`}
-                  alt={c} className="h-7 object-contain grayscale opacity-40 hover:grayscale-0 hover:opacity-100 transition-all" loading="lazy"
+                  alt={c} className="h-7 object-contain" loading="lazy"
                   onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
               ))}
             </div>
