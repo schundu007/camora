@@ -58,8 +58,12 @@ function DifficultyBadge({ difficulty }: { difficulty: string }) {
 }
 
 function normalizeValue(v: unknown): string {
-  if (v === null || v === undefined) return 'NULL';
-  return String(v);
+  if (v === null || v === undefined) return 'null';
+  return String(v).trim().toLowerCase();
+}
+
+function rowToKey(row: (string | number | null)[]): string {
+  return row.map(normalizeValue).join('|');
 }
 
 function rowsMatch(
@@ -67,10 +71,13 @@ function rowsMatch(
   expected: (string | number | null)[][]
 ): boolean {
   if (actual.length !== expected.length) return false;
-  for (let i = 0; i < actual.length; i++) {
-    if (actual[i].length !== expected[i].length) return false;
-    for (let j = 0; j < actual[i].length; j++) {
-      if (normalizeValue(actual[i][j]) !== normalizeValue(expected[i][j])) return false;
+  // Sort both by stringified row to ignore ORDER BY differences
+  const sortedActual = [...actual].sort((a, b) => rowToKey(a).localeCompare(rowToKey(b)));
+  const sortedExpected = [...expected].sort((a, b) => rowToKey(a).localeCompare(rowToKey(b)));
+  for (let i = 0; i < sortedActual.length; i++) {
+    if (sortedActual[i].length !== sortedExpected[i].length) return false;
+    for (let j = 0; j < sortedActual[i].length; j++) {
+      if (normalizeValue(sortedActual[i][j]) !== normalizeValue(sortedExpected[i][j])) return false;
     }
   }
   return true;
@@ -79,7 +86,7 @@ function rowsMatch(
 function columnsMatch(actual: string[], expected: string[]): boolean {
   if (actual.length !== expected.length) return false;
   for (let i = 0; i < actual.length; i++) {
-    if (actual[i].toLowerCase() !== expected[i].toLowerCase()) return false;
+    if (actual[i].trim().toLowerCase() !== expected[i].trim().toLowerCase()) return false;
   }
   return true;
 }
