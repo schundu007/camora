@@ -9,7 +9,7 @@ import SiteFooter from '../components/shared/SiteFooter';
 /* ── APPA steps data ───────────────────────────────────── */
 const APPA = [
   { num: '01', label: 'Apply', desc: 'Discover engineering roles matched to your skills, experience, and salary goals across 1 000+ companies.', href: '/jobs', color: '#34d399' },
-  { num: '02', label: 'Prepare', desc: 'Study 415+ curated topics spanning system design, DSA, behavioral, databases, and cloud architecture.', href: '/capra/prepare', color: '#818cf8' },
+  { num: '02', label: 'Prepare', desc: 'Study 389 curated topics spanning system design, DSA, behavioral, databases, and cloud architecture.', href: '/capra/prepare', color: '#818cf8' },
   { num: '03', label: 'Practice', desc: 'Solve problems with AI explanations, run mock interviews, and build confidence before the real thing.', href: '/capra/practice', color: '#38bdf8' },
   { num: '04', label: 'Attend', desc: 'Get real-time AI answers during your live technical interview — system design, coding, and behavioral.', href: '/lumora', color: '#fbbf24' },
 ];
@@ -27,7 +27,7 @@ const PROCESS_STEPS = [
     ),
   },
   {
-    label: 'Prepare with 415+ Topics',
+    label: 'Prepare with 389 Topics',
     desc: 'Study system design, DSA, microservices, databases, SQL, low-level design, and behavioral topics with AI-powered explanations and architecture diagrams.',
     color: '#818cf8',
     icon: (
@@ -184,41 +184,20 @@ function ProcessAccordion() {
   );
 }
 
-/* ── Browser Chrome wrapper ────────────────────────────── */
-function BrowserChrome({ url, children, className = '' }: { url: string; children: React.ReactNode; className?: string }) {
-  return (
-    <div className={`rounded-2xl overflow-hidden ${className}`} style={{ border: '1px solid var(--border)', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.4)' }}>
-      <div className="flex items-center gap-2.5 px-4 py-3" style={{ background: 'var(--bg-elevated)', borderBottom: '1px solid var(--border)' }}>
-        <div className="flex gap-[6px]">
-          <div className="w-[11px] h-[11px] rounded-full bg-[#ff5f57]" />
-          <div className="w-[11px] h-[11px] rounded-full bg-[#febc2e]" />
-          <div className="w-[11px] h-[11px] rounded-full bg-[#28c840]" />
-        </div>
-        <div className="flex-1 flex justify-center">
-          <div className="px-4 py-1 rounded-lg text-xs font-code" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}>
-            {url}
-          </div>
-        </div>
-      </div>
-      {children}
-    </div>
-  );
-}
-
 /* ── Prep Showcase (animated donut + topic cards) ──────── */
 function PrepShowcase() {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: '-80px' });
 
   const TOPIC_CATEGORIES = [
-    { name: 'DSA & Algorithms', count: 57, color: '#34d399' },
-    { name: 'System Design', count: 163, color: '#06b6d4' },
-    { name: 'Low Level Design', count: 106, color: '#a78bfa' },
-    { name: 'Behavioral', count: 57, color: '#f472b6' },
+    { name: 'System Design', count: 235, color: '#06b6d4' },
+    { name: 'Behavioral', count: 53, color: '#f472b6' },
+    { name: 'Low Level Design', count: 46, color: '#a78bfa' },
+    { name: 'DSA & Algorithms', count: 23, color: '#34d399' },
     { name: 'Databases & SQL', count: 20, color: '#f97316' },
     { name: 'Microservices', count: 12, color: '#818cf8' },
   ];
-  const TOTAL = 415;
+  const TOTAL = 389;
   const RADIUS = 72;
   const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
@@ -249,7 +228,7 @@ function PrepShowcase() {
                 strokeDashoffset={seg.offset} strokeLinecap="butt"
                 style={{ transition: `stroke-dasharray 1.2s ease ${i * 100 + 300}ms` }} />
             ))}
-            <text x="100" y="93" textAnchor="middle" fill="var(--text-primary)" fontSize="28" fontWeight="bold" fontFamily="inherit">415+</text>
+            <text x="100" y="93" textAnchor="middle" fill="var(--text-primary)" fontSize="28" fontWeight="bold" fontFamily="inherit">389</text>
             <text x="100" y="116" textAnchor="middle" fill="var(--text-muted)" fontSize="12" fontWeight="500" fontFamily="inherit">Total Topics</text>
           </svg>
         </div>
@@ -297,7 +276,7 @@ const FEATURE_GROUPS = [
     features: [
       { title: 'Job URL AI Analysis', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m9.86-4.122a4.5 4.5 0 00-6.364-6.364L4.5 6.1" /><path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25" /></svg> },
       { title: 'Role-Filtered Study Paths', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="6" /><circle cx="12" cy="12" r="2" /></svg> },
-      { title: '415+ Study Topics', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></svg> },
+      { title: '389 Study Topics', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></svg> },
       { title: 'Company-Specific Prep', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 7V5a4 4 0 0 0-8 0v2" /></svg> },
       { title: 'Mock Interview Simulator', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg> },
       { title: 'AI-Powered Explanations', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg> },
@@ -312,15 +291,6 @@ const FEATURE_GROUPS = [
       { title: 'Screenshot Problem Extraction', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg> },
     ],
   },
-];
-
-/* ── Competitor bar chart data ──────────────────────────── */
-const COMP_BARS = [
-  { name: 'Camora', count: 42, color: '#34d399', suffix: '+' },
-  { name: 'LockedIn', count: 22, color: '#6b7280', suffix: '' },
-  { name: 'Final Round', count: 18, color: '#6b7280', suffix: '' },
-  { name: 'Sensei', count: 15, color: '#6b7280', suffix: '' },
-  { name: 'Solver', count: 12, color: '#6b7280', suffix: '' },
 ];
 
 /* ════════════════════════════════════════════════════════════
@@ -472,40 +442,6 @@ export default function LandingPage() {
       </section>
 
 
-      {/* ── DEMO — Videos ── */}
-      <section className="px-6 pb-10 md:pb-16" style={{ zIndex: 1 }}>
-        <FadeIn className="w-full lg:max-w-[70%] mx-auto">
-          <BrowserChrome url="camora.cariara.com/lumora">
-            <div className="aspect-video" style={{ background: 'var(--bg-elevated)' }}>
-              <video src="/demo-lumora.mp4" autoPlay loop muted playsInline title="Lumora live interview demo" className="w-full h-full object-cover" />
-            </div>
-          </BrowserChrome>
-        </FadeIn>
-        <div className="w-full lg:max-w-[70%] mx-auto mt-6 grid md:grid-cols-3 gap-4">
-          {[
-            { url: 'camora.cariara.com/capra', src: '/demo-capra.mp4', label: 'Dashboard' },
-            { url: 'camora.cariara.com/capra/prepare', src: '/demo-capra-topic.mp4', label: 'Study Topics' },
-            { url: 'camora.cariara.com/lumora/design', src: '/demo-design.mp4', label: 'Design Mode' },
-          ].map((demo, i) => (
-            <FadeIn key={demo.url} delay={0.1 * (i + 1)}>
-              <div className="card rounded-2xl overflow-hidden hover:-translate-y-0.5 hover:shadow-md transition-all duration-300 group" style={{ padding: 0 }}>
-                <div className="flex items-center gap-2 px-3 py-2" style={{ background: 'var(--bg-elevated)', borderBottom: '1px solid var(--border)' }}>
-                  <div className="flex gap-1">
-                    <div className="w-2 h-2 rounded-full bg-[#ff5f57]" /><div className="w-2 h-2 rounded-full bg-[#febc2e]" /><div className="w-2 h-2 rounded-full bg-[#28c840]" />
-                  </div>
-                  <span className="text-[10px] truncate font-code" style={{ color: 'var(--text-muted)' }}>{demo.url}</span>
-                </div>
-                <div className="aspect-[4/3] relative" style={{ background: 'var(--bg-elevated)' }}>
-                  <video src={demo.src} autoPlay loop muted playsInline className="w-full h-full object-cover" />
-                  <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent px-4 py-3">
-                    <span className="text-sm font-semibold text-white">{demo.label}</span>
-                  </div>
-                </div>
-              </div>
-            </FadeIn>
-          ))}
-        </div>
-      </section>
 
       {/* ── JOB URL ANALYSIS — Highlighted Feature ── */}
       <section className="px-6 py-12 md:py-16" style={{ zIndex: 1 }}>
