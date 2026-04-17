@@ -116,14 +116,14 @@ interface CodingLayoutProps {
 function useTheme(_dark: boolean) {
   return {
     cardBg: '#ffffff', cardBorder: '#e5e7eb',
-    headerBg: 'rgba(99,102,241,0.05)', headerBorder: '#e0e7ff',
-    headerText: '#4338ca', badgeBg: '#e0e7ff', badgeText: '#4338ca',
+    headerBg: 'rgba(11,92,255,0.05)', headerBorder: '#e0e7ff',
+    headerText: '#0B5CFF', badgeBg: '#0B5CFF10', badgeText: '#0B5CFF',
     text: '#111827', textMuted: '#6b7280', textDim: '#9ca3af',
     codeBg: '#f9fafb', codeText: '#1f2937',
     inputBg: '#ffffff', inputBorder: '#e5e7eb', inputText: '#111827',
     sectionBg: '#f9fafb', surfaceBg: '#ffffff',
-    tabActive: '#6366f1', tabActiveBg: '#ffffff', tabText: '#6b7280',
-    dotColor: '#6366f1',
+    tabActive: '#0B5CFF', tabActiveBg: '#ffffff', tabText: '#6b7280',
+    dotColor: '#0B5CFF',
     passedBg: '#f0fdf4', passedBorder: '#bbf7d0', passedText: '#16a34a',
     failedBg: '#fef2f2', failedBorder: '#fecaca', failedText: '#dc2626',
   };
@@ -841,7 +841,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
 
                 {/* Generate Button */}
                 <button onClick={handleGenerateSolution} disabled={isLoading || !problemText.trim()}
-                  className="w-full py-2.5 bg-gradient-to-r from-indigo-500 to-violet-500 text-white text-sm font-bold rounded-lg hover:from-indigo-600 hover:to-violet-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 shadow-sm">
+                  className="w-full py-2.5 text-white text-sm font-bold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2" style={{ background: 'linear-gradient(-81deg, #34d399, #0B5CFF)', borderRadius: '10px' }}>
                   {isLoading ? (
                     <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Generating...</>
                   ) : (
@@ -1118,7 +1118,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                 {LANGUAGES.map(l => <option key={l.id} value={l.id}>{l.label}</option>)}
               </select>
               <button onClick={handleRun} disabled={isRunning}
-                className="flex items-center gap-1.5 px-3 py-1 bg-indigo-500 text-white text-xs font-bold rounded-md hover:bg-indigo-600 disabled:opacity-50 transition-colors shadow-sm"
+                className="flex items-center gap-1.5 px-3 py-1 text-white text-xs font-bold rounded-md disabled:opacity-50 transition-colors shadow-sm" style={{ background: '#0B5CFF' }}
                 title="Run (Ctrl+Enter)">
                 {isRunning ? (
                   <><div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />Running...</>
