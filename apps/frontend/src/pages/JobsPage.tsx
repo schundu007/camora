@@ -73,7 +73,7 @@ function getCompanyLogoPath(companyName: string): string | null {
 
 /** Generate a deterministic color from company name for the initial fallback */
 function getCompanyColor(name: string): string {
-  const colors = ['#6366f1', '#8b5cf6', '#3b82f6', '#06b6d4', '#ec4899', '#f97316', '#10b981', '#ef4444', '#f59e0b', '#a855f7'];
+  const colors = ['#76B900', '#91C733', '#3b82f6', '#06b6d4', '#ec4899', '#f97316', '#10b981', '#ef4444', '#f59e0b', '#a855f7'];
   let hash = 0;
   for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
   return colors[Math.abs(hash) % colors.length];
@@ -122,7 +122,7 @@ const CATEGORIES = [
 const CATEGORY_COLORS: Record<string, string> = {
   devops: '#06b6d4',
   backend: '#10b981',
-  frontend: '#8b5cf6',
+  frontend: '#91C733',
   fullstack: '#3b82f6',
   data: '#f59e0b',
   ml: '#ec4899',
@@ -133,11 +133,11 @@ const CATEGORY_COLORS: Record<string, string> = {
   qa: '#84cc16',
   sre: '#e11d48',
   platform: '#14b8a6',
-  cloud: '#6366f1',
+  cloud: '#76B900',
   network: '#0ea5e9',
   blockchain: '#f59e0b',
   game_dev: '#f43f5e',
-  tech_lead: '#8b5cf6',
+  tech_lead: '#91C733',
   staff: '#7c3aed',
   principal: '#6d28d9',
   em: '#0891b2',
@@ -1001,7 +1001,7 @@ export default function JobsPage() {
                 fontSize: '13px',
                 fontWeight: 600,
                 color: activeFilterCount > 0 ? 'var(--accent)' : 'var(--text-secondary)',
-                background: activeFilterCount > 0 ? 'rgba(99,102,241,0.1)' : 'var(--bg-elevated)',
+                background: activeFilterCount > 0 ? 'rgba(118,185,0,0.1)' : 'var(--bg-elevated)',
                 border: `1px solid ${activeFilterCount > 0 ? 'var(--accent)' : 'var(--border)'}`,
                 borderRadius: '8px',
                 cursor: 'pointer',
@@ -1019,10 +1019,10 @@ export default function JobsPage() {
 
             {/* Active filter pills */}
             {[
-              { val: locationFilter, set: setLocationFilter, label: locationFilter, color: '#6366f1' },
+              { val: locationFilter, set: setLocationFilter, label: locationFilter, color: '#76B900' },
               { val: sourceFilter, set: setSourceFilter, label: sourceFilter, color: '#10b981' },
               { val: workTypeFilter, set: setWorkTypeFilter, label: WORK_TYPES.find(w => w.value === workTypeFilter)?.label, color: '#f59e0b' },
-              { val: departmentFilter, set: setDepartmentFilter, label: departmentFilter, color: '#8b5cf6' },
+              { val: departmentFilter, set: setDepartmentFilter, label: departmentFilter, color: '#91C733' },
               { val: companyFilter, set: setCompanyFilter, label: companyFilter, color: '#3b82f6' },
               { val: experienceFilter, set: setExperienceFilter, label: EXPERIENCE_LEVELS.find(e => e.value === experienceFilter)?.label, color: '#ec4899' },
               { val: postedWithinFilter, set: setPostedWithinFilter, label: POSTED_WITHIN.find(p => p.value === postedWithinFilter)?.label, color: '#06b6d4' },
@@ -1273,8 +1273,8 @@ export default function JobsPage() {
                       display: 'flex',
                       flexDirection: 'column',
                       cursor: 'default',
-                      boxShadow: '0 4px 24px rgba(99,102,241,0.12)',
-                      '--glow-hover': '0 20px 60px rgba(99,102,241,0.22)',
+                      boxShadow: '0 4px 24px rgba(118,185,0,0.12)',
+                      '--glow-hover': '0 20px 60px rgba(118,185,0,0.22)',
                     } as React.CSSProperties}
                   >
                     {/* Compact colored strip + title row */}
@@ -1369,7 +1369,7 @@ export default function JobsPage() {
                       {job.ai_tech_stack && job.ai_tech_stack.length > 0 && (
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '8px' }}>
                           {(Array.isArray(job.ai_tech_stack) ? job.ai_tech_stack : []).slice(0, 5).map((tech) => (
-                            <span key={tech} style={{ fontSize: '10px', fontWeight: 600, color: 'var(--accent)', background: 'rgba(99,102,241,0.08)', padding: '2px 7px', borderRadius: '4px', border: '1px solid rgba(99,102,241,0.15)' }}>
+                            <span key={tech} style={{ fontSize: '10px', fontWeight: 600, color: 'var(--accent)', background: 'rgba(118,185,0,0.08)', padding: '2px 7px', borderRadius: '4px', border: '1px solid rgba(118,185,0,0.15)' }}>
                               {tech}
                             </span>
                           ))}
@@ -1386,7 +1386,7 @@ export default function JobsPage() {
                         Apply
                         <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" /></svg>
                       </a>
-                      <Link to={`/capra/resume?company=${encodeURIComponent(job.company_name)}&role=${encodeURIComponent(job.title)}&url=${encodeURIComponent(job.job_url)}`} className="jobs-action-link-resume" style={{ fontSize: '12px', fontWeight: 600, color: '#8b5cf6', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <Link to={`/capra/resume?company=${encodeURIComponent(job.company_name)}&role=${encodeURIComponent(job.title)}&url=${encodeURIComponent(job.job_url)}`} className="jobs-action-link-resume" style={{ fontSize: '12px', fontWeight: 600, color: '#91C733', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
                         Resume
                         <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
                       </Link>

@@ -661,7 +661,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
             <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-xs font-mono font-bold transition-colors ${
               timerUrgent ? 'bg-red-500/15 border-red-500/30 text-red-300' :
               timerSeconds === 0 ? 'bg-white/10 border-white/20 text-white/70' :
-              'bg-indigo-500/15 border-indigo-500/30 text-indigo-300'
+              'bg-emerald-600/15 border-emerald-500/30 text-emerald-300'
             }`}>
               <div className="relative w-4 h-4">
                 <svg className="w-4 h-4 -rotate-90" viewBox="0 0 20 20">
@@ -691,8 +691,8 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
 
           {isLoading && (
             <div className="flex items-center gap-1.5 px-2 py-0.5 bg-indigo-50 border border-indigo-200 rounded-lg">
-              <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse" />
-              <span className="text-indigo-600 text-[10px] md:text-xs font-medium">Generating...</span>
+              <div className="w-1.5 h-1.5 bg-emerald-600 rounded-full animate-pulse" />
+              <span className="text-emerald-600 text-[10px] md:text-xs font-medium">Generating...</span>
             </div>
           )}
 
@@ -720,14 +720,14 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
             <button
               onClick={() => setProblemTab('description')}
               className={`px-3 py-1 text-xs font-semibold rounded-md transition-all ${
-                problemTab === 'description' ? 'bg-indigo-500 text-white shadow-sm' : ''
+                problemTab === 'description' ? 'bg-emerald-600 text-white shadow-sm' : ''
               }`}
               style={problemTab !== 'description' ? { color: t.tabText } : undefined}
             >Description</button>
             <button
               onClick={() => setProblemTab('solution')}
               className={`px-3 py-1 text-xs font-semibold rounded-md transition-all flex items-center gap-1.5 ${
-                problemTab === 'solution' ? 'bg-indigo-500 text-white shadow-sm' : ''
+                problemTab === 'solution' ? 'bg-emerald-600 text-white shadow-sm' : ''
               }`}
               style={problemTab !== 'solution' ? { color: t.tabText } : undefined}
             >
@@ -785,7 +785,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                           onDrop={handleDrop}
                           onDragOver={(e) => e.preventDefault()}
                           placeholder="Paste your coding problem here...&#10;&#10;Example: Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target."
-                          className="w-full h-[180px] md:h-[220px] rounded-lg p-3 text-xs md:text-sm leading-relaxed placeholder:text-gray-400 resize-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/20 focus:outline-none transition-all"
+                          className="w-full h-[180px] md:h-[220px] rounded-lg p-3 text-xs md:text-sm leading-relaxed placeholder:text-gray-400 resize-none focus:border-emerald-400 focus:ring-1 focus:ring-indigo-400/20 focus:outline-none transition-all"
                           style={{ background: t.inputBg, borderWidth: 1, borderStyle: 'solid', borderColor: t.inputBorder, color: t.inputText }}
                         />
                       )}
@@ -794,10 +794,10 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                         <div className="flex gap-2">
                           <input type="url" id="problem-url" name="problem-url" value={problemUrl} onChange={(e) => setProblemUrl(e.target.value)}
                             placeholder="https://leetcode.com/problems/two-sum/"
-                            className="flex-1 rounded-lg px-3 py-2 text-xs md:text-sm placeholder:text-gray-400 focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/20 focus:outline-none transition-all"
+                            className="flex-1 rounded-lg px-3 py-2 text-xs md:text-sm placeholder:text-gray-400 focus:border-emerald-400 focus:ring-1 focus:ring-indigo-400/20 focus:outline-none transition-all"
                             style={{ background: t.inputBg, borderWidth: 1, borderStyle: 'solid', borderColor: t.inputBorder, color: t.inputText }} />
                           <button onClick={handleFetchFromUrl} disabled={isProcessing || !problemUrl.trim()}
-                            className="px-4 py-2 bg-indigo-500 text-white text-xs font-semibold rounded-lg hover:bg-indigo-600 disabled:opacity-50 transition-colors">
+                            className="px-4 py-2 bg-emerald-600 text-white text-xs font-semibold rounded-lg hover:bg-emerald-700 disabled:opacity-50 transition-colors">
                             {isProcessing ? 'Loading...' : 'Fetch'}
                           </button>
                         </div>
@@ -806,7 +806,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                       {inputMode === 'image' && (
                         <div className="space-y-2">
                           <div onClick={() => fileInputRef.current?.click()} onDrop={handleDrop} onDragOver={(e) => e.preventDefault()}
-                            className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:border-indigo-400/50 transition-all"
+                            className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:border-emerald-400/50 transition-all"
                             style={{ borderColor: t.inputBorder }}>
                             <input ref={fileInputRef} type="file" id="problem-image" name="problem-image" accept="image/*" onChange={handleImageSelect} className="hidden" />
                             {imagePreview ? (
@@ -857,11 +857,11 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                 {/* Streaming state */}
                 {(isStreaming || (isLoading && !sd && !parsedBlocks?.length)) && !sd && (
                   <div className="space-y-3">
-                    <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'rgba(99,102,241,0.06)', border: '1px solid #e0e7ff' }}>
+                    <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'rgba(118,185,0,0.06)', border: '1px solid #e0e7ff' }}>
                       <div className="relative w-4 h-4 shrink-0">
                         <div className="absolute inset-0 border-2 border-transparent border-t-indigo-400 rounded-full animate-spin" />
                       </div>
-                      <span className="text-xs font-semibold text-indigo-600">Generating solution...</span>
+                      <span className="text-xs font-semibold text-emerald-600">Generating solution...</span>
                     </div>
                     {/* Live streaming preview */}
                     {streamingSolution && (
@@ -1105,7 +1105,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
         {/* ── Horizontal Resize Handle (desktop only) ── */}
         <div onMouseDown={() => setIsResizingH(true)}
           className="hidden md:flex w-1.5 bg-[var(--bg-elevated)] hover:bg-indigo-200 cursor-col-resize transition-colors items-center justify-center group shrink-0">
-          <div className="w-0.5 h-8 bg-[var(--border)] group-hover:bg-indigo-500 rounded-full transition-colors" />
+          <div className="w-0.5 h-8 bg-[var(--border)] group-hover:bg-emerald-600 rounded-full transition-colors" />
         </div>
 
         {/* ── RIGHT PANEL: Code Editor + Output ── */}
@@ -1141,7 +1141,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
               </button>
-              <button onClick={handleCopyCode} className="p-1.5 rounded-md transition-colors" style={copyFeedback ? { color: '#6366f1', background: t.badgeBg } : { color: t.textDim }} title="Copy code">
+              <button onClick={handleCopyCode} className="p-1.5 rounded-md transition-colors" style={copyFeedback ? { color: '#76B900', background: t.badgeBg } : { color: t.textDim }} title="Copy code">
                 {copyFeedback ? (
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
                 ) : (
@@ -1170,7 +1170,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
             <div onMouseDown={() => setIsResizingV(true)}
               className="h-1.5 hover:bg-indigo-200 cursor-row-resize transition-colors flex justify-center items-center group"
               style={{ background: t.sectionBg }}>
-              <div className="w-8 h-0.5 group-hover:bg-indigo-500 rounded-full transition-colors" style={{ background: t.textDim }} />
+              <div className="w-8 h-0.5 group-hover:bg-emerald-600 rounded-full transition-colors" style={{ background: t.textDim }} />
             </div>
           )}
 
@@ -1181,12 +1181,12 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
               <div className="flex items-center gap-1">
                 <button onClick={() => { setOutputTab('testcases'); setIsOutputCollapsed(false); }}
                   className={`px-2.5 py-1 text-[10px] md:text-xs font-semibold rounded-md transition-colors ${
-                    outputTab === 'testcases' && !isOutputCollapsed ? 'bg-indigo-500 text-white' : ''
+                    outputTab === 'testcases' && !isOutputCollapsed ? 'bg-emerald-600 text-white' : ''
                   }`}
                   style={!(outputTab === 'testcases' && !isOutputCollapsed) ? { color: t.tabText } : undefined}>Test Cases</button>
                 <button onClick={() => { setOutputTab('output'); setIsOutputCollapsed(false); }}
                   className={`px-2.5 py-1 text-[10px] md:text-xs font-semibold rounded-md transition-colors flex items-center gap-1.5 ${
-                    outputTab === 'output' && !isOutputCollapsed ? 'bg-indigo-500 text-white' : ''
+                    outputTab === 'output' && !isOutputCollapsed ? 'bg-emerald-600 text-white' : ''
                   }`}
                   style={!(outputTab === 'output' && !isOutputCollapsed) ? { color: t.tabText } : undefined}>
                   Output
@@ -1227,14 +1227,14 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                             <label className="block text-[9px] font-medium mb-0.5 uppercase" style={{ color: t.textDim }}>Input</label>
                             <textarea value={tc.input} onChange={(e) => updateTestCase(i, 'input', e.target.value)}
                               placeholder="nums = [2,7], target = 9"
-                              className="w-full h-10 rounded-md p-1.5 text-xs placeholder:text-gray-300 resize-none focus:border-indigo-400 focus:outline-none font-mono"
+                              className="w-full h-10 rounded-md p-1.5 text-xs placeholder:text-gray-300 resize-none focus:border-emerald-400 focus:outline-none font-mono"
                               style={{ background: t.inputBg, borderWidth: 1, borderStyle: 'solid', borderColor: t.inputBorder, color: t.inputText }} />
                           </div>
                           <div>
                             <label className="block text-[9px] font-medium mb-0.5 uppercase" style={{ color: t.textDim }}>Expected</label>
                             <textarea value={tc.expected} onChange={(e) => updateTestCase(i, 'expected', e.target.value)}
                               placeholder="[0, 1]"
-                              className="w-full h-10 rounded-md p-1.5 text-xs placeholder:text-gray-300 resize-none focus:border-indigo-400 focus:outline-none font-mono"
+                              className="w-full h-10 rounded-md p-1.5 text-xs placeholder:text-gray-300 resize-none focus:border-emerald-400 focus:outline-none font-mono"
                               style={{ background: t.inputBg, borderWidth: 1, borderStyle: 'solid', borderColor: t.inputBorder, color: t.inputText }} />
                           </div>
                         </div>
@@ -1394,7 +1394,7 @@ function LegacySolutionCards({ blocks, collapsedCards, onToggle, onTestCaseClick
                       if (arrowMatch) {
                         return (
                           <button key={i} onClick={() => onTestCaseClick(arrowMatch[1].trim(), arrowMatch[2].trim())}
-                            className="w-full text-left px-2 py-1 bg-amber-50 border border-amber-100 rounded-md hover:border-indigo-300 text-[10px] text-gray-600 font-mono hover:text-indigo-600 transition-colors">
+                            className="w-full text-left px-2 py-1 bg-amber-50 border border-amber-100 rounded-md hover:border-indigo-300 text-[10px] text-gray-600 font-mono hover:text-emerald-600 transition-colors">
                             {line}
                           </button>
                         );

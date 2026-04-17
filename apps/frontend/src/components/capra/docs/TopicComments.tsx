@@ -34,7 +34,7 @@ function timeAgo(date: string): string {
 
 function Avatar({ name, image, size = 28 }: { name: string | null; image: string | null; size?: number }) {
   const initial = (name || '?')[0].toUpperCase();
-  const colors = ['#6366f1', '#8b5cf6', '#a855f7', '#ec4899', '#f43f5e', '#ef4444', '#f97316', '#eab308', '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6'];
+  const colors = ['#76B900', '#91C733', '#a855f7', '#ec4899', '#f43f5e', '#ef4444', '#f97316', '#eab308', '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6'];
   const colorIndex = (name || '').split('').reduce((acc, c) => acc + c.charCodeAt(0), 0) % colors.length;
 
   if (image) {
@@ -198,7 +198,7 @@ export default function TopicComments({ topicId }: TopicCommentsProps) {
             onChange={e => setContent(e.target.value)}
             placeholder="Share your thoughts..."
             rows={3}
-            className="w-full rounded-lg px-3 py-2.5 text-sm landing-body resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-shadow"
+            className="w-full rounded-lg px-3 py-2.5 text-sm landing-body resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500/40 transition-shadow"
             style={{
               background: 'var(--bg-elevated)',
               border: '1px solid var(--border)',

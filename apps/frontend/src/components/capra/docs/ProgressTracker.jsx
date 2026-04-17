@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 const CATEGORIES = [
   { id: 'coding', name: 'DSA', total: 57, color: '#10b981' },
   { id: 'system-design', name: 'System Design', total: 163, color: '#06b6d4' },
-  { id: 'microservices', name: 'Micro', total: 12, color: '#818cf8' },
+  { id: 'microservices', name: 'Micro', total: 12, color: '#91C733' },
   { id: 'databases', name: 'DB', total: 12, color: '#f97316' },
   { id: 'sql', name: 'SQL', total: 8, color: '#fbbf24' },
   { id: 'low-level', name: 'LLD', total: 106, color: '#a78bfa' },
@@ -32,7 +32,7 @@ export default function ProgressTracker() {
     { value: completed, label: 'Done', color: '#10b981' },
     { value: TOTAL, label: 'Total', color: 'var(--text-primary)' },
     { value: CATEGORIES.length, label: 'Categories', color: '#3b82f6' },
-    { value: `${pct}%`, label: 'Complete', color: '#8b5cf6' },
+    { value: `${pct}%`, label: 'Complete', color: '#91C733' },
   ];
 
   return (

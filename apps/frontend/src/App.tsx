@@ -42,7 +42,7 @@ function Loading() {
       className="min-h-screen flex flex-col items-center justify-center gap-4"
       style={{ background: 'var(--bg-app)' }}
     >
-      <div className="w-12 h-12 border-4 border-indigo-900 border-t-indigo-400 rounded-full animate-spin" />
+      <div className="w-12 h-12 border-4 border-emerald-900 border-t-indigo-400 rounded-full animate-spin" />
     </div>
   );
 }
@@ -104,7 +104,7 @@ function LoginPage() {
           <div className="mt-6 pt-4 text-center" style={{ borderTop: '1px solid var(--border)' }}>
             <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
               Don't have an account?{' '}
-              <Link to="/signup" className="text-indigo-400 hover:text-indigo-300 font-semibold">Create one</Link>
+              <Link to="/signup" className="text-emerald-400 hover:text-emerald-300 font-semibold">Create one</Link>
             </p>
           </div>
         </div>
