@@ -183,8 +183,8 @@ function RichText({ text }: { text: string }) {
   );
 }
 
-/* ── Mic Button ── */
-function MicButton({ onResult, disabled }: { onResult: (text: string) => void; disabled: boolean }) {
+/* ── Mic Button (centered, prominent) ── */
+function MicButtonLarge({ onResult, disabled }: { onResult: (text: string) => void; disabled: boolean }) {
   const { token } = useAuth();
   const [rec, setRec] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -210,17 +210,29 @@ function MicButton({ onResult, disabled }: { onResult: (text: string) => void; d
   }, [token, onResult]);
   const stop = useCallback(() => { mrRef.current?.state === 'recording' && mrRef.current.stop(); setRec(false); }, []);
 
-  if (busy) return <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: C.accentBg }}><div className="w-3.5 h-3.5 border-2 rounded-full animate-spin" style={{ borderColor: C.muted, borderTopColor: C.accent }} /></div>;
+  if (busy) return (
+    <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ background: C.accentBg }}>
+      <div className="w-5 h-5 border-2 rounded-full animate-spin" style={{ borderColor: C.muted, borderTopColor: C.accent }} />
+    </div>
+  );
   return (
-    <button onClick={rec ? stop : start} disabled={disabled} className="w-8 h-8 rounded-full flex items-center justify-center transition-all disabled:opacity-40"
-      style={rec ? { background: '#ef4444' } : { background: C.elevated }}>
-      {rec ? <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><rect x="6" y="6" width="12" height="12" rx="2" /></svg>
-        : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.muted} strokeWidth="1.5"><path d="M12 2a3 3 0 00-3 3v7a3 3 0 006 0V5a3 3 0 00-3-3z" /><path d="M19 10v2a7 7 0 01-14 0v-2" /><line x1="12" y1="19" x2="12" y2="22" /></svg>}
+    <button onClick={rec ? stop : start} disabled={disabled}
+      className="w-14 h-14 rounded-full flex items-center justify-center transition-all disabled:opacity-40 shadow-md hover:shadow-lg hover:scale-105"
+      style={rec
+        ? { background: '#ef4444', boxShadow: '0 0 0 4px rgba(239,68,68,0.2)' }
+        : { background: C.elevated, boxShadow: '0 0 0 4px rgba(118,185,0,0.15)' }
+      }
+      title={rec ? 'Stop recording' : 'Voice input'}
+    >
+      {rec
+        ? <svg width="22" height="22" viewBox="0 0 24 24" fill="white"><rect x="6" y="6" width="12" height="12" rx="2" /></svg>
+        : <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M12 2a3 3 0 00-3 3v7a3 3 0 006 0V5a3 3 0 00-3-3z" /><path d="M19 10v2a7 7 0 01-14 0v-2" /><line x1="12" y1="19" x2="12" y2="22" /></svg>
+      }
     </button>
   );
 }
 
-/* ═══ AI Copilot Panel ═══ */
+/* ═══ Camo Panel ═══ */
 export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
   const { token } = useAuth();
   const [messages, setMessages] = useState<CopilotMessage[]>([]);
@@ -314,7 +326,7 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
       {/* Header */}
       <div className="flex items-center justify-between h-14 px-3 shrink-0" style={{ borderBottom: '1px solid #E2E8F0' }}>
         {minimized ? (
-          <button onClick={() => setMinimized(false)} className="w-full flex items-center justify-center p-1.5 rounded-lg transition-colors hover:bg-gray-100" style={{ color: C.accent }} title="Expand AI Copilot">
+          <button onClick={() => setMinimized(false)} className="w-full flex items-center justify-center p-1.5 rounded-lg transition-colors hover:bg-gray-100" style={{ color: C.accent }} title="Expand Camo">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
           </button>
         ) : (
@@ -329,7 +341,7 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
               </button>
             </div>
-            <span className="text-xs font-bold tracking-tight" style={{ fontFamily: "'Clash Display', sans-serif", color: C.text }}>AI Copilot</span>
+            <span className="text-xs font-bold tracking-tight" style={{ fontFamily: "'Clash Display', sans-serif", color: C.text }}>Camo</span>
             <div className="flex items-center gap-1">
               <span className="text-[9px] px-1.5 py-0.5 rounded" style={{ color: C.muted }}>{messages.filter(m => m.role === 'user').length}</span>
               <button onClick={() => setMinimized(true)}
@@ -369,7 +381,7 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
 
       {minimized ? (
         <div className="flex-1 flex items-center justify-center">
-          <span className="text-[10px] font-bold tracking-widest uppercase" style={{ color: C.muted, writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>AI Copilot</span>
+          <span className="text-[10px] font-bold tracking-widest uppercase" style={{ color: C.muted, writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>Camo</span>
         </div>
       ) : (<>
       {/* Chat */}
@@ -428,12 +440,14 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
       </div>
 
       {/* Input */}
-      <div className="px-3 pb-3 pt-1 shrink-0">
-        <div className="flex items-center gap-1.5 px-2 h-10 rounded-xl" style={{ background: '#F8FAFC', border: '1px solid #E2E8F0' }}>
-          <MicButton onResult={(text) => ask(text)} disabled={streaming} />
+      <div className="px-3 pb-3 pt-2 shrink-0 flex flex-col items-center gap-2">
+        {/* Prominent centered mic button */}
+        <MicButtonLarge onResult={(text) => ask(text)} disabled={streaming} />
+        {/* Text input row */}
+        <div className="flex items-center gap-1.5 px-2 h-9 rounded-xl w-full" style={{ background: '#F8FAFC', border: '1px solid #E2E8F0' }}>
           <input ref={inputRef} type="text" value={input} onChange={e => setInput(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter' && input.trim()) handleSubmit(); }}
-            placeholder={answerMode === 'short' ? 'Ask — short answer mode' : 'Ask — detailed answer mode'}
+            placeholder={answerMode === 'short' ? 'Type a question...' : 'Type a question...'}
             className="flex-1 bg-transparent focus:outline-none min-w-0 placeholder:opacity-40"
             style={{ fontFamily: "'Satoshi', sans-serif", color: C.text, fontSize: '10px' }} disabled={streaming} />
           {input.trim() && !streaming && (
@@ -442,9 +456,6 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
             </button>
           )}
         </div>
-        <p className="text-[8px] mt-1 text-center" style={{ color: C.muted }}>
-          {answerMode === 'short' ? 'Short mode — 3-5 bullet points only' : 'Detailed mode — full explanations with code'}
-        </p>
       </div>
       </>)}
       </div>
@@ -454,7 +465,7 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
 
 export function AICompanionToggle({ onClick, hasActivity }: { onClick: () => void; hasActivity: boolean }) {
   return (
-    <button onClick={onClick} className="fixed bottom-6 right-6 z-30 w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105" style={{ background: '#76B900' }} title="AI Copilot">
+    <button onClick={onClick} className="fixed bottom-6 right-6 z-30 w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105" style={{ background: '#76B900' }} title="Camo">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
       {hasActivity && <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2" style={{ borderColor: C.base }} />}
     </button>
