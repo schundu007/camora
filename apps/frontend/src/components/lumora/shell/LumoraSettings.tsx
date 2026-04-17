@@ -1,11 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { MicrophoneSelector } from '@/components/lumora/audio/MicrophoneSelector';
 import { VoiceEnrollment } from '@/components/lumora/audio/VoiceEnrollment';
 import { CalibrationButton } from '@/components/lumora/audio/CalibrationButton';
 import { useAudioDevices } from '@/components/lumora/audio/hooks/useAudioDevices';
 import { useInterviewStore } from '@/stores/interview-store';
-
-type VoiceMode = 'filter-candidate' | 'record-interviewer';
 
 interface LumoraSettingsProps {
   isOpen: boolean;
@@ -23,9 +21,8 @@ const PLATFORMS = [
 ];
 
 export function LumoraSettings({ isOpen, onClose }: LumoraSettingsProps) {
-  const [voiceMode, setVoiceMode] = useState<VoiceMode>('filter-candidate');
   const [platform, setPlatform] = useState('general');
-  const { vadThreshold } = useInterviewStore();
+  const { voiceMode, setVoiceMode, setAutoEnrollPending, setVoiceFilterEnabled } = useInterviewStore();
   const { selectedDeviceId } = useAudioDevices();
 
   if (!isOpen) return null;
@@ -120,15 +117,17 @@ export function LumoraSettings({ isOpen, onClose }: LumoraSettingsProps) {
                   badge="Recommended"
                 />
 
-                {/* Mode 2: Record Interviewer — not yet implemented */}
+                {/* Mode 2: Record Interviewer */}
                 <VoiceModeCard
                   active={voiceMode === 'record-interviewer'}
-                  onClick={() => setVoiceMode('record-interviewer')}
+                  onClick={() => {
+                    setVoiceMode('record-interviewer');
+                    setAutoEnrollPending(true);
+                    setVoiceFilterEnabled(true);
+                  }}
                   icon={<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 00-3-3.87" /><path d="M16 3.13a4 4 0 010 7.75" /></svg>}
                   title="Record Interviewer"
-                  description="Capture the interviewer's voice in the first few minutes. Then only their voice is transcribed — their questions trigger AI answers automatically."
-                  badge="Coming Soon"
-                  disabled
+                  description="No setup needed. Start the interview and Camora auto-learns your voice from the first recording, then filters it out so only the interviewer is transcribed."
                 />
               </div>
 
@@ -153,19 +152,19 @@ export function LumoraSettings({ isOpen, onClose }: LumoraSettingsProps) {
                     <ol className="space-y-2 text-xs" style={{ color: '#475569' }}>
                       <li className="flex gap-2">
                         <span className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 text-[10px] font-bold" style={{ background: '#76B90010', color: '#76B900' }}>1</span>
-                        <span>Start the interview normally — Camora listens to both voices</span>
+                        <span>Start recording — Camora captures and enrolls your voice automatically from the first audio chunk</span>
                       </li>
                       <li className="flex gap-2">
                         <span className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 text-[10px] font-bold" style={{ background: '#76B90010', color: '#76B900' }}>2</span>
-                        <span>After 2-3 questions, Camora learns the interviewer's voice pattern</span>
+                        <span>Your voice is filtered out — only the interviewer's questions are transcribed</span>
                       </li>
                       <li className="flex gap-2">
                         <span className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 text-[10px] font-bold" style={{ background: '#76B90010', color: '#76B900' }}>3</span>
-                        <span>From then on, only interviewer questions are transcribed → AI generates answers for you</span>
+                        <span>AI generates answers for each interviewer question automatically</span>
                       </li>
                     </ol>
                     <p className="text-[10px] mt-3" style={{ color: '#94a3b8' }}>
-                      This mode works best with system audio capture (interviewer on speakers/headphones).
+                      No manual voice enrollment needed — just start recording and speak naturally for the first few seconds.
                     </p>
                   </div>
                 )}

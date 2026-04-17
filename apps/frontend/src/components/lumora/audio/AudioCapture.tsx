@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAudioCapture } from './hooks/useAudioCapture';
 import { useAudioDevices } from './hooks/useAudioDevices';
 import { useInterviewStore } from '@/stores/interview-store';
-import { transcriptionAPI } from '@/lib/api-client';
+import { transcriptionAPI, speakerAPI } from '@/lib/api-client';
 import { MicrophoneSelector } from './MicrophoneSelector';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -37,8 +37,14 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
     setError,
     startListenTimer,
     stopListenTimer,
+    voiceMode,
     voiceEnrolled,
     voiceFilterEnabled,
+    autoEnrollPending,
+    setAutoEnrollPending,
+    setVoiceEnrolled,
+    setVoiceFilterEnabled,
+    setIsEnrolling,
   } = useInterviewStore();
 
   // Get selected audio device
@@ -74,8 +80,41 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
     }, 2000);
   }, [flushAccumulatedText]);
 
+  // Auto-enroll user's voice from first audio chunk in record-interviewer mode
+  const autoEnrollRef = useRef(false);
+  const handleAutoEnroll = useCallback(async (blob: Blob) => {
+    if (autoEnrollRef.current) return; // prevent double-fire
+    autoEnrollRef.current = true;
+    setIsEnrolling(true);
+    setStatus('transcribe', 'Learning your voice...');
+    try {
+      const result = await speakerAPI.enroll(token!, blob, 'auto-enroll.webm');
+      if (result.success) {
+        setVoiceEnrolled(true);
+        setVoiceFilterEnabled(true);
+        setAutoEnrollPending(false);
+        setStatus('listen', 'Voice learned — now filtering your voice');
+      } else {
+        setStatus('warn', 'Voice enrollment failed — transcribing everything');
+        setAutoEnrollPending(false);
+      }
+    } catch (err: any) {
+      console.error('[AutoEnroll] Failed:', err.message);
+      setStatus('warn', 'Voice service unavailable — transcribing everything');
+      setAutoEnrollPending(false);
+    } finally {
+      setIsEnrolling(false);
+    }
+  }, [token, setIsEnrolling, setVoiceEnrolled, setVoiceFilterEnabled, setAutoEnrollPending, setStatus]);
+
   const handleAudioData = useCallback(async (blob: Blob) => {
     if (!token) { setError('Not authenticated'); return; }
+
+    // Record Interviewer: auto-enroll user's voice from first chunk
+    if (autoEnrollPending && !voiceEnrolled && voiceMode === 'record-interviewer') {
+      handleAutoEnroll(blob);
+      // Also transcribe this first chunk (no filtering yet)
+    }
 
     const shouldFilterVoice = voiceEnrolled && voiceFilterEnabled;
     const isLiveMode = continuousModeRef.current;
@@ -145,7 +184,7 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
         }
       }
     }
-  }, [token, setStatus, setError, onTranscription, voiceEnrolled, voiceFilterEnabled, scheduleQuestionCheck]);
+  }, [token, setStatus, setError, onTranscription, voiceEnrolled, voiceFilterEnabled, voiceMode, autoEnrollPending, handleAutoEnroll, scheduleQuestionCheck]);
 
   const handleAudioLevel = useCallback((level: number) => {
     setAudioLevel(level);
