@@ -186,9 +186,9 @@ function Wordmark1({ dark = true }: { dark?: boolean }) {
       <div className={`${textColor} tracking-[-0.04em] leading-none`}
            style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 32, fontWeight: 800 }}>
         <span style={{ color: C.emerald }}>C</span>
-        <span style={{ color: dark ? C.emerald : '#059669' }}>a</span>
+        <span style={{ color: dark ? C.emerald : '#36B24E' }}>a</span>
         mor
-        <span style={{ color: dark ? C.emerald : '#059669' }}>a</span>
+        <span style={{ color: dark ? C.emerald : '#36B24E' }}>a</span>
       </div>
       <div className={`${subColor} mt-1.5`}
            style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, fontWeight: 500, letterSpacing: '0.2em', textTransform: 'uppercase' }}>

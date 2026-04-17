@@ -79,7 +79,7 @@ function formatTime(seconds: number): string {
 /** Color-code complexity notation from best (green) to worst (red) */
 function getComplexityColor(notation: string): string {
   const n = notation.toLowerCase().replace(/\s+/g, '');
-  if (/o\(1\)/.test(n)) return '#059669';           // O(1) - best
+  if (/o\(1\)/.test(n)) return '#36B24E';           // O(1) - best
   if (/o\(log/.test(n) && !/o\(n/.test(n)) return '#0891b2'; // O(log n) - great
   if (/o\(n\)$/.test(n)) return '#2563eb';           // O(n) - good
   if (/o\(n\s*log\s*n\)|o\(nlogn\)/.test(notation.toLowerCase())) return '#7c3aed'; // O(n log n)
@@ -117,13 +117,13 @@ function useTheme(_dark: boolean) {
   return {
     cardBg: '#ffffff', cardBorder: '#e5e7eb',
     headerBg: 'rgba(11,92,255,0.05)', headerBorder: '#e0e7ff',
-    headerText: '#059669', badgeBg: '#05966910', badgeText: '#059669',
+    headerText: '#36B24E', badgeBg: '#36B24E10', badgeText: '#36B24E',
     text: '#111827', textMuted: '#6b7280', textDim: '#9ca3af',
     codeBg: '#f9fafb', codeText: '#1f2937',
     inputBg: '#ffffff', inputBorder: '#e5e7eb', inputText: '#111827',
     sectionBg: '#f9fafb', surfaceBg: '#ffffff',
-    tabActive: '#059669', tabActiveBg: '#ffffff', tabText: '#6b7280',
-    dotColor: '#059669',
+    tabActive: '#36B24E', tabActiveBg: '#ffffff', tabText: '#6b7280',
+    dotColor: '#36B24E',
     passedBg: '#f0fdf4', passedBorder: '#bbf7d0', passedText: '#16a34a',
     failedBg: '#fef2f2', failedBorder: '#fecaca', failedText: '#dc2626',
   };
@@ -841,7 +841,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
 
                 {/* Generate Button */}
                 <button onClick={handleGenerateSolution} disabled={isLoading || !problemText.trim()}
-                  className="w-full py-2.5 text-white text-sm font-bold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2" style={{ background: 'linear-gradient(135deg, #059669, #0D9488)', borderRadius: '10px' }}>
+                  className="w-full py-2.5 text-white text-sm font-bold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2" style={{ background: 'linear-gradient(135deg, #36B24E, #0D9488)', borderRadius: '10px' }}>
                   {isLoading ? (
                     <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Generating...</>
                   ) : (
@@ -1118,7 +1118,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                 {LANGUAGES.map(l => <option key={l.id} value={l.id}>{l.label}</option>)}
               </select>
               <button onClick={handleRun} disabled={isRunning}
-                className="flex items-center gap-1.5 px-3 py-1 text-white text-xs font-bold rounded-md disabled:opacity-50 transition-colors shadow-sm" style={{ background: '#059669' }}
+                className="flex items-center gap-1.5 px-3 py-1 text-white text-xs font-bold rounded-md disabled:opacity-50 transition-colors shadow-sm" style={{ background: '#36B24E' }}
                 title="Run (Ctrl+Enter)">
                 {isRunning ? (
                   <><div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />Running...</>

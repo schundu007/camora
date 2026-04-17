@@ -5641,7 +5641,7 @@ const PROBLEMS: Record<string, { title: string; difficulty: string; category: st
   '75': { title: 'Longest Common Subsequence', difficulty: 'Medium', category: 'Advanced', leetcode: 'https://leetcode.com/problems/longest-common-subsequence/', description: 'Given two strings text1 and text2, return the length of their longest common subsequence. If there is no common subsequence, return 0.', examples: ['Input: text1 = "abcde", text2 = "ace"\nOutput: 3'] },
 };
 
-const DIFF_COLORS: Record<string, string> = { Easy: '#059669', Medium: '#d97706', Hard: '#dc2626' };
+const DIFF_COLORS: Record<string, string> = { Easy: '#36B24E', Medium: '#d97706', Hard: '#dc2626' };
 
 const STARTER_CODE: Record<Language, (title: string) => string> = {
   python: (t) => `# ${t}\n# Write your solution here\n\ndef solution():\n    pass\n\n# Test\nprint(solution())\n`,

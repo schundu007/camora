@@ -13,7 +13,7 @@ const CODING_PLATFORMS = {
 
 const PREP_PLATFORMS = {
   techprep: { name: 'TechPrep', color: '#8b5cf6', url: 'techprep.app' },
-  algomaster: { name: 'AlgoMaster', color: '#059669', url: 'algomaster.io' },
+  algomaster: { name: 'AlgoMaster', color: '#36B24E', url: 'algomaster.io' },
   neetcode: { name: 'NeetCode', color: '#f43f5e', url: 'neetcode.io' },
   designgurus: { name: 'DesignGurus', color: '#0ea5e9', url: 'designgurus.io' },
   educative: { name: 'Educative', color: '#22c55e', url: 'educative.io' },
@@ -369,7 +369,7 @@ export default function PrepTab({ isOpen, onClose }) {
                       <p style={{ color: '#dc2626' }}>{fetchedContent.error}</p>
                     ) : (
                       <>
-                        <div className="font-medium mb-1" style={{ color: '#059669' }}>{fetchedContent.title}</div>
+                        <div className="font-medium mb-1" style={{ color: '#36B24E' }}>{fetchedContent.title}</div>
                         <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
                           Problem extracted! Close this and use the URL tab in Problem Input to solve it.
                         </p>

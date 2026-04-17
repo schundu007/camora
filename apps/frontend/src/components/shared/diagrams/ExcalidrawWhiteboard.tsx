@@ -148,7 +148,7 @@ export default function ExcalidrawWhiteboard({
                 padding: '6px 14px',
                 fontSize: 12,
                 fontWeight: 600,
-                color: loadingAI ? '#9ca3af' : '#059669',
+                color: loadingAI ? '#9ca3af' : '#36B24E',
                 background: loadingAI ? '#f3f4f6' : '#ecfdf5',
                 border: `1px solid ${loadingAI ? '#d1d5db' : '#a7f3d0'}`,
                 borderRadius: 8,

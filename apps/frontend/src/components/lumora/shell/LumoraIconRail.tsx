@@ -14,7 +14,7 @@ interface LumoraIconRailProps {
 const C = {
   base: '#0A0A0F',
   surface: '#12121A',
-  elevated: '#059669',
+  elevated: '#36B24E',
   text: '#ffffff',
   muted: 'rgba(255,255,255,0.7)',
   accent: '#34d399',
@@ -48,7 +48,7 @@ export function LumoraIconRail({ activeTab, sessionsOpen, onToggleSessions }: Lu
   ];
 
   return (
-    <nav className="hidden md:flex flex-col items-center w-[68px] shrink-0 py-3 gap-0.5" style={{ background: 'linear-gradient(180deg, #059669 0%, #0A0A0F 100%)', borderRight: '1px solid rgba(255,255,255,0.1)', boxShadow: '1px 0 12px rgba(0,0,0,0.2)' }}>
+    <nav className="hidden md:flex flex-col items-center w-[68px] shrink-0 py-3 gap-0.5" style={{ background: 'linear-gradient(180deg, #36B24E 0%, #0A0A0F 100%)', borderRight: '1px solid rgba(255,255,255,0.1)', boxShadow: '1px 0 12px rgba(0,0,0,0.2)' }}>
       <Link to="/" className="flex items-center justify-center w-full h-10 mb-3" title="Camora">
         <CamoraLogo size={26} />
       </Link>
@@ -83,7 +83,7 @@ export function LumoraIconRail({ activeTab, sessionsOpen, onToggleSessions }: Lu
         {showMore && (
           <>
             <div className="fixed inset-0 z-40" onClick={() => setShowMore(false)} />
-            <div className="absolute left-full top-0 ml-2 w-[200px] rounded-xl shadow-2xl z-50 p-3 grid grid-cols-3 gap-1" style={{ background: 'linear-gradient(180deg, #059669 0%, #12121A 100%)', border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 8px 32px rgba(0,0,0,0.4)' }}>
+            <div className="absolute left-full top-0 ml-2 w-[200px] rounded-xl shadow-2xl z-50 p-3 grid grid-cols-3 gap-1" style={{ background: 'linear-gradient(180deg, #36B24E 0%, #12121A 100%)', border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 8px 32px rgba(0,0,0,0.4)' }}>
               {moreItems.map(mi => (
                 <Link key={mi.label} to={mi.path} onClick={() => setShowMore(false)}
                   className="flex flex-col items-center gap-1.5 p-2.5 rounded-lg transition-colors"

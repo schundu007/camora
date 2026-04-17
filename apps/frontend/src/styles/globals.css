@@ -16,7 +16,7 @@
     /* Borders */
     --border: #2A2833;
     --border-hover: #3B3947;
-    --border-focus: #059669;
+    --border-focus: #36B24E;
 
     /* Text */
     --text-primary: #F2F1F3;
@@ -24,17 +24,17 @@
     --text-muted: #6C6B7B;
     --text-dimmed: #545260;
 
-    /* Accent (Camora Emerald — success, growth, career) */
-    --accent: #059669;
-    --accent-hover: #10B981;
-    --accent-subtle: rgba(5,150,105,0.12);
-    --accent-text: #6EE7B7;
+    /* Accent (Camora Green — NVIDIA warmth + emerald depth) */
+    --accent: #36B24E;
+    --accent-hover: #45C55E;
+    --accent-subtle: rgba(54,178,78,0.12);
+    --accent-text: #86EFAC;
 
     /* Semantic */
     --success: #34D399;
     --warning: #FFC53D;
     --danger: #E5484D;
-    --info: #059669;
+    --info: #36B24E;
 
     /* Fonts — Camora custom (Clash Display + Satoshi) */
     --font-sans: 'Satoshi', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;

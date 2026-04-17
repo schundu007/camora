@@ -20,8 +20,8 @@ const L = {
   bg: '#FFFFFF', surface: '#F8FAFC', elevated: '#F1F5F9',
   border: '#E2E8F0', text: '#0F172A', secondary: '#475569',
   muted: '#94A3B8', dimmed: '#CBD5E1',
-  gradient: 'linear-gradient(135deg, #059669 0%, #0D9488 100%)',
-  primary: '#059669', emerald: '#10b981', radius: '10px',
+  gradient: 'linear-gradient(135deg, #36B24E 0%, #0D9488 100%)',
+  primary: '#36B24E', emerald: '#10b981', radius: '10px',
 };
 
 /* ── APPA Steps ───────────────────────────────────────── */
@@ -66,7 +66,7 @@ const STATS = [
 
 /* ── Topic Data ───────────────────────────────────────── */
 const TOPICS = [
-  { name: 'System Design', count: 420, problems: 318, color: '#059669' },
+  { name: 'System Design', count: 420, problems: 318, color: '#36B24E' },
   { name: 'Low-Level Design', count: 112, problems: 268, color: '#334155' },
   { name: 'DSA & Algorithms', count: 65, problems: 854, color: '#0F172A' },
   { name: 'Behavioral', count: 64, problems: 230, color: '#64748B' },
