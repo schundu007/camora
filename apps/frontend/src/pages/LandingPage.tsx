@@ -69,11 +69,11 @@ const STATS = [
 /* ── Topic Data ───────────────────────────────────────── */
 const TOPICS = [
   { name: 'System Design', count: 420, problems: 318, color: '#76B900' },
-  { name: 'Low-Level Design', count: 112, problems: 268, color: '#4ADE80' },
+  { name: 'Low-Level Design', count: 112, problems: 268, color: '#3B82F6' },
   { name: 'DSA & Algorithms', count: 65, problems: 854, color: '#FFFFFF' },
-  { name: 'Behavioral', count: 64, problems: 230, color: 'rgba(255,255,255,0.6)' },
-  { name: 'Database & SQL', count: 31, problems: 197, color: 'rgba(255,255,255,0.35)' },
-  { name: 'Microservices', count: 27, problems: 0, color: 'rgba(255,255,255,0.15)' },
+  { name: 'Behavioral', count: 64, problems: 230, color: '#F59E0B' },
+  { name: 'Database & SQL', count: 31, problems: 197, color: '#EC4899' },
+  { name: 'Microservices', count: 27, problems: 0, color: '#8B5CF6' },
 ];
 
 /* ── Company logos (logo.dev) ───────────────────── */
