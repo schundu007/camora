@@ -33,7 +33,7 @@ function cleanTags(text: string): string {
 function RichText({ text }: { text: string }) {
   if (!text) return null;
   return (
-    <div className="text-[13px] leading-relaxed flex flex-col gap-0.5" style={{ fontFamily: 'var(--font-sans)' }}>
+    <div className="text-sm leading-relaxed flex flex-col gap-0.5" style={{ fontFamily: 'var(--font-sans)' }}>
       {text.split('\n').map((line, i) => {
         const t = line.trim();
         if (!t) return <div key={i} className="h-1.5" />;
@@ -90,6 +90,7 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
   const [streaming, setStreaming] = useState(false);
   const [streamText, setStreamText] = useState('');
   const [input, setInput] = useState('');
+  const [minimized, setMinimized] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -139,25 +140,45 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
   }, [input, ask]);
 
   return (
-    <div className="hidden lg:flex flex-col w-[340px] shrink-0 h-full" style={{ background: C.surface, borderLeft: `1px solid ${C.border}` }}>
+    <div className="hidden lg:flex flex-col shrink-0 h-full transition-all duration-200"
+      style={{ width: minimized ? '48px' : '340px', background: C.surface, borderLeft: `1px solid ${C.border}` }}>
       {/* Header */}
-      <div className="flex items-center justify-between h-12 px-4 shrink-0" style={{ borderBottom: `1px solid ${C.border}` }}>
-        <div className="flex items-center gap-2">
-          <button onClick={() => { if (messages.length > 0 && confirm('Clear chat history?')) setMessages([]); }}
-            className="p-1.5 rounded-lg transition-colors hover:bg-white/5" style={{ color: C.muted }} title="Clear history">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" /></svg>
+      <div className="flex items-center justify-between h-12 px-2 shrink-0" style={{ borderBottom: `1px solid ${C.border}` }}>
+        {minimized ? (
+          /* Minimized: just the expand button */
+          <button onClick={() => setMinimized(false)} className="w-full flex items-center justify-center p-1.5 rounded-lg transition-colors hover:bg-white/5" style={{ color: C.accent }} title="Expand AI Copilot">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
           </button>
-          <button onClick={() => setMessages([])}
-            className="p-1.5 rounded-lg transition-colors hover:bg-white/5" style={{ color: C.muted }} title="New chat">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
-          </button>
-        </div>
-        <span className="text-[13px] font-semibold" style={{ fontFamily: 'var(--font-sans)', color: C.text }}>AI Copilot</span>
-        <div className="flex items-center gap-1">
-          <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ color: C.muted }}>{messages.filter(m => m.role === 'user').length} Q&A</span>
-        </div>
+        ) : (
+          /* Expanded: full header */
+          <>
+            <div className="flex items-center gap-1">
+              <button onClick={() => { if (messages.length > 0 && confirm('Clear chat history?')) setMessages([]); }}
+                className="p-1.5 rounded-lg transition-colors hover:bg-white/5" style={{ color: C.muted }} title="Clear history">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" /></svg>
+              </button>
+              <button onClick={() => setMessages([])}
+                className="p-1.5 rounded-lg transition-colors hover:bg-white/5" style={{ color: C.muted }} title="New chat">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
+              </button>
+            </div>
+            <span className="text-sm font-extrabold tracking-tight" style={{ fontFamily: "var(--font-sans)", color: C.text }}>AI Copilot</span>
+            <div className="flex items-center gap-1">
+              <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ color: C.muted }}>{messages.filter(m => m.role === 'user').length}</span>
+              <button onClick={() => setMinimized(true)}
+                className="p-1.5 rounded-lg transition-colors hover:bg-white/5" style={{ color: C.muted }} title="Minimize">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 12h16" /></svg>
+              </button>
+            </div>
+          </>
+        )}
       </div>
 
+      {minimized ? (
+        <div className="flex-1 flex items-center justify-center">
+          <span className="text-[10px] font-bold tracking-widest uppercase" style={{ color: C.muted, writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>AI Copilot</span>
+        </div>
+      ) : (<>
       {/* Chat */}
       <div ref={scrollRef} className="flex-1 overflow-auto px-4 py-3">
         {messages.length === 0 && !streaming ? (
@@ -167,7 +188,7 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
             </svg>
             <div className="grid grid-cols-2 gap-2 w-full">
               {['Design a URL shortener', 'Explain TCP vs UDP', 'Tell me about a conflict', 'Detect cycle in linked list'].map(s => (
-                <button key={s} onClick={() => ask(s)} className="text-left px-3 py-2.5 rounded-lg text-[11px] leading-snug transition-all"
+                <button key={s} onClick={() => ask(s)} className="text-left px-3 py-2.5 rounded-lg text-xs leading-snug transition-all"
                   style={{ border: `1px solid ${C.border}`, fontFamily: 'var(--font-sans)', color: C.muted }}
                   onMouseEnter={e => { e.currentTarget.style.color = C.text; e.currentTarget.style.background = C.elevated; }}
                   onMouseLeave={e => { e.currentTarget.style.color = C.muted; e.currentTarget.style.background = 'transparent'; }}>

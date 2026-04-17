@@ -36,10 +36,8 @@ export function LumoraTopBar({ activeTab, onTranscription, onToggleSessions, ses
 
   return (
     <header className="flex items-center h-14 px-5 shrink-0 z-30" style={{ background: C.surface, borderBottom: `1px solid rgba(255,255,255,0.1)` }}>
-      {/* Left: brand */}
-      <div className="flex items-center gap-3 min-w-[120px]">
-        <span className="text-sm font-extrabold tracking-tight" style={{ fontFamily: 'var(--font-sans)', color: C.text }}>{tabLabel}</span>
-      </div>
+      {/* Left: spacer (tab label removed — sidebar shows active tab) */}
+      <div className="min-w-[20px]" />
 
       {/* Center: audio controls */}
       <div data-tour="audio" className="flex-1 flex items-center justify-center">
