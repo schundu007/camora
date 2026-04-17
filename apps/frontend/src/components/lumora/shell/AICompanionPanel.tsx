@@ -32,15 +32,84 @@ function cleanTags(text: string): string {
 
 function RichText({ text }: { text: string }) {
   if (!text) return null;
+
+  // Split into blocks: code blocks vs regular text
+  const blocks: { type: 'code' | 'text'; lang?: string; content: string }[] = [];
+  const codeRegex = /```(\w*)\n([\s\S]*?)```/g;
+  let lastIdx = 0;
+  let match;
+
+  while ((match = codeRegex.exec(text)) !== null) {
+    if (match.index > lastIdx) blocks.push({ type: 'text', content: text.slice(lastIdx, match.index) });
+    blocks.push({ type: 'code', lang: match[1] || 'text', content: match[2].trim() });
+    lastIdx = match.index + match[0].length;
+  }
+  if (lastIdx < text.length) blocks.push({ type: 'text', content: text.slice(lastIdx) });
+
+  const renderInline = (s: string) => {
+    // Bold, inline code, links
+    return s
+      .replace(/\*\*(.*?)\*\*/g, '<strong style="color:#F2F1F3;font-weight:700">$1</strong>')
+      .replace(/`([^`]+)`/g, '<code style="background:rgba(99,102,241,0.15);color:#a5b4fc;padding:1px 4px;border-radius:3px;font-size:12px">$1</code>')
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" style="color:#818cf8;text-decoration:underline">$1</a>');
+  };
+
   return (
-    <div className="text-sm leading-relaxed flex flex-col gap-0.5" style={{ fontFamily: 'var(--font-sans)' }}>
-      {text.split('\n').map((line, i) => {
-        const t = line.trim();
-        if (!t) return <div key={i} className="h-1.5" />;
-        const starMatch = t.match(/^(SITUATION|TASK|ACTION|RESULT|LEARNING|Q\d|A\d):\s*(.*)/);
-        if (starMatch) return <div key={i} className="flex gap-2 mt-1"><span className="text-[9px] font-bold shrink-0 px-1 py-0.5 rounded" style={{ background: C.accentBg, color: C.accent }}>{starMatch[1]}</span><span style={{ color: C.text }}>{starMatch[2]}</span></div>;
-        if (t.startsWith('- ') || t.startsWith('• ')) return <div key={i} className="flex gap-2 pl-1"><span className="shrink-0 mt-2 w-1 h-1 rounded-full" style={{ background: C.accent }} /><span style={{ color: C.text }}>{t.slice(2)}</span></div>;
-        return <div key={i} style={{ color: C.text }}>{t}</div>;
+    <div className="text-sm leading-relaxed flex flex-col gap-1" style={{ fontFamily: 'var(--font-sans)' }}>
+      {blocks.map((block, bi) => {
+        if (block.type === 'code') {
+          return (
+            <div key={bi} className="rounded-lg overflow-hidden my-1" style={{ border: '1px solid rgba(255,255,255,0.1)' }}>
+              <div className="flex items-center justify-between px-3 py-1.5" style={{ background: 'rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                <span className="text-[9px] font-bold uppercase" style={{ color: C.muted }}>{block.lang}</span>
+                <button onClick={() => navigator.clipboard.writeText(block.content)} className="text-[9px] px-1.5 py-0.5 rounded" style={{ color: C.muted }}>Copy</button>
+              </div>
+              <pre className="px-3 py-2 overflow-x-auto text-xs leading-relaxed" style={{ background: '#0D0C14', color: '#a5b4fc' }}><code>{block.content}</code></pre>
+            </div>
+          );
+        }
+
+        return block.content.split('\n').map((line, i) => {
+          const t = line.trim();
+          if (!t) return <div key={`${bi}-${i}`} className="h-1" />;
+
+          // Headers
+          if (t.startsWith('### ')) return <h4 key={`${bi}-${i}`} className="text-xs font-extrabold mt-2 mb-0.5" style={{ color: C.text }}>{t.slice(4)}</h4>;
+          if (t.startsWith('## ')) return <h3 key={`${bi}-${i}`} className="text-sm font-extrabold mt-2 mb-0.5" style={{ color: C.text }}>{t.slice(3)}</h3>;
+          if (t.startsWith('# ')) return <h2 key={`${bi}-${i}`} className="text-base font-extrabold mt-2 mb-1" style={{ color: C.text }}>{t.slice(2)}</h2>;
+
+          // STAR labels
+          const starMatch = t.match(/^(SITUATION|TASK|ACTION|RESULT|LEARNING|SUMMARY|TIP|NOTE|WARNING|Q\d+|A\d+):\s*(.*)/i);
+          if (starMatch) return (
+            <div key={`${bi}-${i}`} className="flex gap-2 mt-1.5">
+              <span className="text-[9px] font-bold shrink-0 px-1.5 py-0.5 rounded mt-0.5" style={{ background: C.accentBg, color: C.accent }}>{starMatch[1].toUpperCase()}</span>
+              <span className="text-sm" style={{ color: C.text }} dangerouslySetInnerHTML={{ __html: renderInline(starMatch[2]) }} />
+            </div>
+          );
+
+          // Numbered list
+          const numMatch = t.match(/^(\d+)\.\s+(.*)/);
+          if (numMatch) return (
+            <div key={`${bi}-${i}`} className="flex gap-2 pl-1">
+              <span className="text-[10px] font-bold shrink-0 mt-0.5 w-5 h-5 rounded flex items-center justify-center" style={{ background: C.accentBg, color: C.accent }}>{numMatch[1]}</span>
+              <span className="text-sm" style={{ color: C.text }} dangerouslySetInnerHTML={{ __html: renderInline(numMatch[2]) }} />
+            </div>
+          );
+
+          // Bullets
+          if (t.startsWith('- ') || t.startsWith('• ') || t.startsWith('* ')) return (
+            <div key={`${bi}-${i}`} className="flex gap-2 pl-2">
+              <span className="shrink-0 mt-2 w-1.5 h-1.5 rounded-full" style={{ background: C.accent }} />
+              <span className="text-sm" style={{ color: C.text }} dangerouslySetInnerHTML={{ __html: renderInline(t.slice(2)) }} />
+            </div>
+          );
+
+          // Horizontal rule
+          if (t === '---' || t === '***') return <div key={`${bi}-${i}`} className="my-2 h-px" style={{ background: C.border }} />;
+
+          // Regular paragraph
+          return <p key={`${bi}-${i}`} className="text-sm" style={{ color: C.text }} dangerouslySetInnerHTML={{ __html: renderInline(t) }} />;
+        });
       })}
     </div>
   );
