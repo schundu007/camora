@@ -44,6 +44,7 @@ export function useAudioCapture(options: AudioCaptureOptions = {}) {
   const chunksRef = useRef<Blob[]>([]);
   const silenceTimerRef = useRef<number | null>(null);
   const speechStartTimeRef = useRef<number | null>(null);
+  const manualStopRef = useRef(false); // When true, always send audio (skip VAD check)
   const animationFrameRef = useRef<number | null>(null);
   const maxRecordingTimerRef = useRef<number | null>(null);
 
@@ -127,14 +128,21 @@ export function useAudioCapture(options: AudioCaptureOptions = {}) {
 
       mediaRecorder.onstop = () => {
         const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
-        if (blob.size > 0 && speechStartTimeRef.current) {
-          const speechDuration = Date.now() - speechStartTimeRef.current;
-          if (speechDuration >= minSpeechDuration) {
+        if (blob.size > 0) {
+          if (manualStopRef.current) {
+            // Manual stop: always send audio regardless of VAD
             onAudioData?.(blob);
+          } else if (speechStartTimeRef.current) {
+            // VAD stop: only send if speech was detected and long enough
+            const speechDuration = Date.now() - speechStartTimeRef.current;
+            if (speechDuration >= minSpeechDuration) {
+              onAudioData?.(blob);
+            }
           }
         }
         chunksRef.current = [];
         speechStartTimeRef.current = null;
+        manualStopRef.current = false;
       };
 
       mediaRecorder.start();
@@ -234,6 +242,7 @@ export function useAudioCapture(options: AudioCaptureOptions = {}) {
   }, [state.isSupported, cleanup, onAudioData, onAudioLevel, onRecordingStop, silenceThreshold, silenceDuration, minSpeechDuration, maxRecordingDuration, deviceId]);
 
   const stopRecording = useCallback(() => {
+    manualStopRef.current = true; // Flag: user clicked stop — always send audio
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
       mediaRecorderRef.current.stop();
     }
