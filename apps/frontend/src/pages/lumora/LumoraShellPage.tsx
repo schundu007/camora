@@ -41,7 +41,7 @@ export function LumoraShellPage() {
   const activeTab: LumoraTab =
     location.pathname.includes('/coding') ? 'coding' :
     location.pathname.includes('/design') ? 'design' :
-    location.pathname.includes('/docs') ? 'docs' :
+    location.pathname.includes('/prepkit') ? 'docs' :
     location.pathname.includes('/calendar') ? 'calendar' : 'interview';
 
   // Lazy-mount tabs on first activation
@@ -66,7 +66,7 @@ export function LumoraShellPage() {
       interview: 'Live Interview | Camora',
       coding: 'Coding Interview | Camora',
       design: 'Design Interview | Camora',
-      docs: 'Interview Docs | Camora',
+      prepkit: 'Prep Kit | Camora',
       calendar: 'Calendar | Camora',
     };
     document.title = titles[activeTab] || 'Camora';
@@ -197,7 +197,7 @@ export function LumoraShellPage() {
           )}
 
           {/* Docs tab */}
-          {activeTab === 'docs' && (
+          {activeTab === 'prepkit' && (
             <div className="flex-1 flex flex-col min-h-0 absolute inset-0">
               <LumoraDocsPanel />
             </div>
