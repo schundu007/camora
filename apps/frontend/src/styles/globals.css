@@ -16,7 +16,7 @@
     /* Borders */
     --border: #2A2833;
     --border-hover: #3B3947;
-    --border-focus: #7C3AED;
+    --border-focus: #059669;
 
     /* Text */
     --text-primary: #F2F1F3;
@@ -24,17 +24,17 @@
     --text-muted: #6C6B7B;
     --text-dimmed: #545260;
 
-    /* Accent (Camora Violet) */
-    --accent: #7C3AED;
-    --accent-hover: #8B5CF6;
-    --accent-subtle: rgba(124,58,237,0.12);
-    --accent-text: #C4B5FD;
+    /* Accent (Camora Emerald — success, growth, career) */
+    --accent: #059669;
+    --accent-hover: #10B981;
+    --accent-subtle: rgba(5,150,105,0.12);
+    --accent-text: #6EE7B7;
 
     /* Semantic */
     --success: #34D399;
     --warning: #FFC53D;
     --danger: #E5484D;
-    --info: #7C3AED;
+    --info: #059669;
 
     /* Fonts — Camora custom (Clash Display + Satoshi) */
     --font-sans: 'Satoshi', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;

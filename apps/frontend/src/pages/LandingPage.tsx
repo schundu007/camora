@@ -20,8 +20,8 @@ const L = {
   bg: '#FFFFFF', surface: '#F8FAFC', elevated: '#F1F5F9',
   border: '#E2E8F0', text: '#0F172A', secondary: '#475569',
   muted: '#94A3B8', dimmed: '#CBD5E1',
-  gradient: 'linear-gradient(135deg, #7C3AED 0%, #EC4899 100%)',
-  violet: '#7C3AED', emerald: '#10b981', radius: '10px',
+  gradient: 'linear-gradient(135deg, #059669 0%, #0D9488 100%)',
+  primary: '#059669', emerald: '#10b981', radius: '10px',
 };
 
 /* ── APPA Steps ───────────────────────────────────────── */
@@ -66,7 +66,7 @@ const STATS = [
 
 /* ── Topic Data ───────────────────────────────────────── */
 const TOPICS = [
-  { name: 'System Design', count: 420, problems: 318, color: '#7C3AED' },
+  { name: 'System Design', count: 420, problems: 318, color: '#059669' },
   { name: 'Low-Level Design', count: 112, problems: 268, color: '#334155' },
   { name: 'DSA & Algorithms', count: 65, problems: 854, color: '#0F172A' },
   { name: 'Behavioral', count: 64, problems: 230, color: '#64748B' },
@@ -202,7 +202,7 @@ function ProductTabs() {
               style={{ borderRadius: L.radius, background: isActive ? L.surface : 'transparent', fontFamily: F.display }}>
               {isActive && <div className="absolute left-0 top-2 bottom-2 w-[3px] rounded-full" style={{ background: L.gradient }} />}
               <div className="w-9 h-9 flex items-center justify-center flex-shrink-0"
-                style={{ borderRadius: L.radius, background: isActive ? `${L.violet}10` : L.elevated, color: isActive ? L.violet : L.muted }}>
+                style={{ borderRadius: L.radius, background: isActive ? `${L.primary}10` : L.elevated, color: isActive ? L.primary : L.muted }}>
                 {s.icon}
               </div>
               <span className="text-sm lg:text-base font-semibold" style={{ color: isActive ? L.text : L.muted }}>{s.label}</span>
@@ -265,7 +265,7 @@ function TopicDonut() {
           ))}
           <text x="100" y="88" textAnchor="middle" fill={L.text} fontSize="26" fontWeight="700" fontFamily={F.display}>800+</text>
           <text x="100" y="106" textAnchor="middle" fill={L.muted} fontSize="10" fontWeight="500" fontFamily={F.body}>Topics</text>
-          <text x="100" y="122" textAnchor="middle" fill={L.violet} fontSize="14" fontWeight="700" fontFamily={F.display}>1,850+</text>
+          <text x="100" y="122" textAnchor="middle" fill={L.primary} fontSize="14" fontWeight="700" fontFamily={F.display}>1,850+</text>
           <text x="100" y="135" textAnchor="middle" fill={L.muted} fontSize="9" fontWeight="500" fontFamily={F.body}>Problems</text>
         </svg>
       </div>
@@ -341,7 +341,7 @@ export default function LandingPage() {
           {visitorCount !== null && visitorCount > 0 && (
             <motion.div className="mt-10 flex items-center justify-center gap-3" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6, delay: 0.5 }}>
               <div className="flex -space-x-1.5">
-                {[L.violet, '#64748B', '#94A3B8', '#CBD5E1'].map((c, i) => (
+                {[L.primary, '#64748B', '#94A3B8', '#CBD5E1'].map((c, i) => (
                   <div key={i} className="w-6 h-6 rounded-full" style={{ background: c, border: `2px solid ${L.bg}` }} />
                 ))}
               </div>
@@ -401,7 +401,7 @@ export default function LandingPage() {
                   <div className="w-11 h-11 flex items-center justify-center mb-4" style={{ borderRadius: L.radius, background: L.surface, color: L.secondary }}>{step.icon}</div>
                   <h3 className="text-lg font-bold mb-2" style={{ fontFamily: F.display }}>{step.label}</h3>
                   <p className="text-sm leading-relaxed flex-1" style={{ color: L.secondary }}>{step.desc.split('.')[0]}.</p>
-                  <div className="mt-4 flex items-center gap-1 text-xs font-semibold group-hover:gap-2 transition-all" style={{ color: L.violet }}>
+                  <div className="mt-4 flex items-center gap-1 text-xs font-semibold group-hover:gap-2 transition-all" style={{ color: L.primary }}>
                     <span>Learn more</span>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} className="transition-transform group-hover:translate-x-0.5"><path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" /></svg>
                   </div>
@@ -417,7 +417,7 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto">
           <Reveal className="text-center mb-14">
             <span className="inline-block text-[11px] font-bold tracking-[0.18em] uppercase px-4 py-1.5 mb-5"
-              style={{ borderRadius: '999px', background: `${L.violet}0A`, border: `1px solid ${L.violet}20`, color: L.violet, fontFamily: F.mono }}>How it works</span>
+              style={{ borderRadius: '999px', background: `${L.primary}0A`, border: `1px solid ${L.primary}20`, color: L.primary, fontFamily: F.mono }}>How it works</span>
             <h2 className="text-3xl md:text-4xl lg:text-[44px] font-bold tracking-tight" style={{ fontFamily: F.display }}>See what Camora can do.</h2>
           </Reveal>
           <ProductTabs />
@@ -504,8 +504,8 @@ export default function LandingPage() {
               </div>
               <div className="px-6 py-6">
                 <div className="flex items-center gap-2 mb-5">
-                  <span className="w-2 h-2 rounded-full" style={{ background: L.violet }} />
-                  <span className="text-[11px] font-bold tracking-wider uppercase" style={{ fontFamily: F.mono, color: L.violet }}>Analysis Complete</span>
+                  <span className="w-2 h-2 rounded-full" style={{ background: L.primary }} />
+                  <span className="text-[11px] font-bold tracking-wider uppercase" style={{ fontFamily: F.mono, color: L.primary }}>Analysis Complete</span>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   {[
@@ -562,7 +562,7 @@ export default function LandingPage() {
                 <div className="p-6 h-full" style={{ borderRadius: '16px', background: L.bg, border: `1px solid ${L.border}` }}>
                   <div className="flex items-center justify-between mb-4">
                     <div className="w-10 h-10 flex items-center justify-center" style={{ borderRadius: L.radius, background: L.surface, color: L.secondary }}>{f.icon}</div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1" style={{ borderRadius: '6px', background: `${L.violet}08`, color: L.violet, fontFamily: F.mono }}>{f.tag}</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1" style={{ borderRadius: '6px', background: `${L.primary}08`, color: L.primary, fontFamily: F.mono }}>{f.tag}</span>
                   </div>
                   <h3 className="text-base font-bold mb-2" style={{ fontFamily: F.display }}>{f.title}</h3>
                   <p className="text-sm leading-relaxed" style={{ color: L.secondary }}>{f.desc}</p>
@@ -599,7 +599,7 @@ export default function LandingPage() {
               <Reveal key={plan.name} delay={i * 0.06}>
                 <div className="relative p-7 h-full flex flex-col" style={{
                   borderRadius: '16px', background: L.bg,
-                  border: plan.popular ? `2px solid ${L.violet}` : `1px solid ${L.border}`,
+                  border: plan.popular ? `2px solid ${L.primary}` : `1px solid ${L.border}`,
                 }}>
                   {plan.popular && (
                     <span className="absolute -top-3 left-1/2 -translate-x-1/2 text-[10px] font-bold uppercase tracking-wider px-3 py-1 text-white cm-gradient-btn"

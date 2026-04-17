@@ -41,12 +41,12 @@ const INITIAL_STATE: PrepData = {
 
 const SIDEBAR_SECTIONS = [
   { id: 'input', label: 'Input Materials', color: '#10b981' },
-  { id: 'jd-view', label: 'Job Description', color: '#7C3AED' },
+  { id: 'jd-view', label: 'Job Description', color: '#059669' },
   { id: 'pitch', label: 'Elevator Pitch', color: '#ec4899' },
   { id: 'hr', label: 'HR Questions', color: '#f59e0b' },
   { id: 'hiring-manager', label: 'Hiring Manager', color: '#06b6d4' },
   { id: 'coding', label: 'Coding', color: '#10b981' },
-  { id: 'system-design', label: 'System Design', color: '#7C3AED' },
+  { id: 'system-design', label: 'System Design', color: '#059669' },
   { id: 'behavioral', label: 'Behavioral', color: '#f97316' },
   { id: 'techstack', label: 'Tech Stack', color: '#8b5cf6' },
 ];
@@ -73,8 +73,8 @@ function PrepContentRenderer({ content }: { content: string }) {
     <div className="space-y-4">
       {/* Summary */}
       {data.summary && (
-        <div className="rounded-lg p-4" style={{ background: '#7C3AED08', border: '1px solid #e2e8f0' }}>
-          <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: '#7C3AED' }}>Summary</div>
+        <div className="rounded-lg p-4" style={{ background: '#05966908', border: '1px solid #e2e8f0' }}>
+          <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: '#059669' }}>Summary</div>
           <p className="text-sm leading-relaxed" style={{ color: '#0f172a' }}>{data.summary}</p>
         </div>
       )}
@@ -87,7 +87,7 @@ function PrepContentRenderer({ content }: { content: string }) {
               <div className="px-4 py-2 flex items-center justify-between" style={{ background: '#f1f5f9' }}>
                 <span className="text-xs font-bold" style={{ color: '#0f172a' }}>{s.title}</span>
                 <div className="flex gap-2">
-                  {s.duration && <span className="text-[9px] px-2 py-0.5 rounded-full" style={{ background: '#7C3AED08', color: '#7C3AED' }}>{s.duration}</span>}
+                  {s.duration && <span className="text-[9px] px-2 py-0.5 rounded-full" style={{ background: '#05966908', color: '#059669' }}>{s.duration}</span>}
                   {s.context && <span className="text-[9px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(245,158,11,0.1)', color: '#f59e0b' }}>{s.context}</span>}
                 </div>
               </div>
@@ -120,7 +120,7 @@ function PrepContentRenderer({ content }: { content: string }) {
           {data.questions.map((q: any, i: number) => (
             <div key={i} className="rounded-lg overflow-hidden" style={{ border: '1px solid #e2e8f0' }}>
               <div className="px-4 py-2 flex items-center gap-2" style={{ background: '#f1f5f9' }}>
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: '#7C3AED08', color: '#7C3AED' }}>Q{i + 1}</span>
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: '#05966908', color: '#059669' }}>Q{i + 1}</span>
                 <span className="text-xs font-semibold" style={{ color: '#0f172a' }}>{q.question || q.title || q.text}</span>
               </div>
               <div className="px-4 py-3">
@@ -218,8 +218,8 @@ function UploadZone({ label, required, value, fileName, onUpload, onPaste }: {
 
   return (
     <div
-      className={`rounded-xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-all min-h-[120px] ${dragOver ? 'ring-2 ring-[#7C3AED]' : ''}`}
-      style={{ background: value ? '#7C3AED08' : '#f8fafc', border: `1px solid ${value ? '#7C3AED' : '#e2e8f0'}` }}
+      className={`rounded-xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-all min-h-[120px] ${dragOver ? 'ring-2 ring-[#059669]' : ''}`}
+      style={{ background: value ? '#05966908' : '#f8fafc', border: `1px solid ${value ? '#059669' : '#e2e8f0'}` }}
       onClick={() => ref.current?.click()}
       onDrop={handleDrop}
       onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
@@ -229,10 +229,10 @@ function UploadZone({ label, required, value, fileName, onUpload, onPaste }: {
         onChange={(e) => { const f = e.target.files?.[0]; if (f) onUpload(f); e.target.value = ''; }} />
       {value ? (
         <>
-          <div className="w-8 h-8 rounded-full flex items-center justify-center mb-2" style={{ background: '#7C3AED', color: '#fff' }}>
+          <div className="w-8 h-8 rounded-full flex items-center justify-center mb-2" style={{ background: '#059669', color: '#fff' }}>
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
           </div>
-          <span className="text-xs font-semibold" style={{ color: '#7C3AED' }}>{fileName || 'Content added'}</span>
+          <span className="text-xs font-semibold" style={{ color: '#059669' }}>{fileName || 'Content added'}</span>
           <span className="text-[10px] mt-1" style={{ color: '#94a3b8' }}>{value.length.toLocaleString()} characters</span>
         </>
       ) : (
@@ -301,8 +301,8 @@ function FormattedJD({ text }: { text: string }) {
       {sections.map((sec, i) => (
         <div key={i} className="rounded-xl overflow-hidden" style={{ background: '#f8fafc', border: '1px solid #e2e8f0' }}>
           {sec.title && (
-            <div className="px-4 py-2.5" style={{ background: '#7C3AED08', borderBottom: '1px solid #e2e8f0' }}>
-              <h4 className="text-[11px] font-bold uppercase tracking-wider" style={{ color: '#7C3AED' }}>{sec.title}</h4>
+            <div className="px-4 py-2.5" style={{ background: '#05966908', borderBottom: '1px solid #e2e8f0' }}>
+              <h4 className="text-[11px] font-bold uppercase tracking-wider" style={{ color: '#059669' }}>{sec.title}</h4>
             </div>
           )}
           <div className="px-4 py-3 flex flex-col gap-1.5">
@@ -313,7 +313,7 @@ function FormattedJD({ text }: { text: string }) {
               }
               return (
                 <div key={j} className="flex gap-2 items-start">
-                  <span className="w-1 h-1 rounded-full shrink-0 mt-2" style={{ background: '#7C3AED' }} />
+                  <span className="w-1 h-1 rounded-full shrink-0 mt-2" style={{ background: '#059669' }} />
                   <span className="text-[13px] leading-relaxed" style={{ color: '#475569' }}>{item}</span>
                 </div>
               );
@@ -552,7 +552,7 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
                     {prepData.companies.map(c => (
                       <button key={c} onClick={() => switchCompany(c)}
                         className="w-full flex items-center justify-between px-3 py-2 text-xs text-left transition-colors"
-                        style={{ color: c === prepData.activeCompany ? '#7C3AED' : '#475569', background: c === prepData.activeCompany ? '#7C3AED08' : 'transparent' }}>
+                        style={{ color: c === prepData.activeCompany ? '#059669' : '#475569', background: c === prepData.activeCompany ? '#05966908' : 'transparent' }}>
                         <span className="truncate">{c}</span>
                         {prepData.companies.length > 1 && (
                           <button onClick={(e) => { e.stopPropagation(); deleteCompany(c); }}
@@ -563,7 +563,7 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
                       </button>
                     ))}
                     <button onClick={() => { setShowDropdown(false); setShowNewCompany(true); setTimeout(() => newCompanyRef.current?.focus(), 100); }}
-                      className="w-full px-3 py-2 text-xs font-medium text-left" style={{ color: '#7C3AED', borderTop: '1px solid #e2e8f0' }}>
+                      className="w-full px-3 py-2 text-xs font-medium text-left" style={{ color: '#059669', borderTop: '1px solid #e2e8f0' }}>
                       + Add Company
                     </button>
                   </div>
@@ -577,13 +577,13 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
                 placeholder="e.g. Nvidia Devops" className="w-full px-2.5 py-1.5 rounded-lg text-xs focus:outline-none"
                 style={{ background: '#f1f5f9', border: '1px solid #e2e8f0', color: '#0f172a' }} />
               <div className="flex gap-1.5">
-                <button onClick={addCompany} className="flex-1 py-1 text-[10px] font-bold rounded" style={{ background: '#7C3AED', color: '#fff' }}>Create</button>
+                <button onClick={addCompany} className="flex-1 py-1 text-[10px] font-bold rounded" style={{ background: '#059669', color: '#fff' }}>Create</button>
                 <button onClick={() => setShowNewCompany(false)} className="px-2 py-1 text-[10px] rounded" style={{ color: '#94a3b8' }}>Cancel</button>
               </div>
             </div>
           ) : (
             <button onClick={() => { setShowNewCompany(true); setTimeout(() => newCompanyRef.current?.focus(), 100); }}
-              className="w-full py-2 text-xs font-bold rounded-lg" style={{ background: '#7C3AED', color: '#fff' }}>
+              className="w-full py-2 text-xs font-bold rounded-lg" style={{ background: '#059669', color: '#fff' }}>
               + Add Company
             </button>
           )}
@@ -596,9 +596,9 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
               <button key={s.id} onClick={() => setActiveSection(s.id)}
                 className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition-colors text-xs font-medium"
                 style={{
-                  background: isActive ? '#7C3AED08' : 'transparent',
-                  color: isActive ? '#7C3AED' : '#475569',
-                  borderLeft: isActive ? `3px solid #7C3AED` : '3px solid transparent',
+                  background: isActive ? '#05966908' : 'transparent',
+                  color: isActive ? '#059669' : '#475569',
+                  borderLeft: isActive ? `3px solid #059669` : '3px solid transparent',
                 }}>
                 {/* Status indicator */}
                 {sectionStatus[s.id] === 'generating' ? (
@@ -627,21 +627,21 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
             <div className="mb-2">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-[9px] font-medium" style={{ color: '#94a3b8' }}>{genProgress}</span>
-                <span className="text-[9px] font-bold" style={{ color: '#7C3AED' }}>
+                <span className="text-[9px] font-bold" style={{ color: '#059669' }}>
                   {Object.values(sectionStatus).filter(s => s === 'done').length}/{GENERATE_SECTIONS.length}
                 </span>
               </div>
               <div className="h-1.5 rounded-full overflow-hidden" style={{ background: '#f1f5f9' }}>
                 <div className="h-full rounded-full transition-all duration-500" style={{
                   width: `${(Object.values(sectionStatus).filter(s => s === 'done').length / GENERATE_SECTIONS.length) * 100}%`,
-                  background: '#7C3AED',
+                  background: '#059669',
                 }} />
               </div>
             </div>
           )}
           <button onClick={handleGenerate} disabled={!hasRequiredDocs || generating}
             className="w-full py-2.5 text-xs font-bold rounded-lg transition-colors disabled:opacity-40"
-            style={{ background: '#7C3AED', color: '#fff' }}>
+            style={{ background: '#059669', color: '#fff' }}>
             {generating ? 'Generating...' : `Generate (${GENERATE_SECTIONS.length})`}
           </button>
           {!hasRequiredDocs && <p className="text-[9px] mt-1.5 text-center" style={{ color: '#94a3b8' }}>Add JD & Resume to start</p>}
@@ -679,7 +679,7 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
             {/* Study Materials */}
             <div>
               <div className="flex items-center gap-2 mb-3">
-                <div className="w-2 h-2 rounded-full" style={{ background: '#7C3AED' }} />
+                <div className="w-2 h-2 rounded-full" style={{ background: '#059669' }} />
                 <span className="text-xs font-bold uppercase tracking-wider" style={{ color: '#475569' }}>Study Materials</span>
               </div>
               <UploadZone label="Drop files or click" value={state.studyMaterials} fileName={state.studyMaterialsFile}
@@ -699,7 +699,7 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
           <div className="flex-1 flex flex-col">
             <div className="px-6 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid #e2e8f0' }}>
               <h3 className="text-sm font-bold" style={{ color: '#0f172a' }}>Job Description</h3>
-              <button onClick={() => setActiveSection('input')} className="text-[10px] font-medium px-2 py-1 rounded-lg" style={{ color: '#7C3AED', background: '#7C3AED08' }}>Edit</button>
+              <button onClick={() => setActiveSection('input')} className="text-[10px] font-medium px-2 py-1 rounded-lg" style={{ color: '#059669', background: '#05966908' }}>Edit</button>
             </div>
             <div className="flex-1 overflow-auto p-6">
               <FormattedJD text={state.jd} />
@@ -714,7 +714,7 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
               </h3>
               <div className="flex items-center gap-2">
                 {state.sections[activeSection] && (
-                  <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: '#7C3AED08', color: '#7C3AED' }}>Generated</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: '#05966908', color: '#059669' }}>Generated</span>
                 )}
                 {hasRequiredDocs && (
                   <button
@@ -735,14 +735,14 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
             <div className="flex-1 overflow-auto p-6">
               {sectionStatus[activeSection] === 'generating' ? (
                 <div className="space-y-3">
-                  <div className="flex items-center gap-3 p-3 rounded-lg" style={{ background: '#7C3AED08', border: '1px solid #e2e8f0' }}>
-                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" style={{ color: '#7C3AED' }} />
-                    <span className="text-xs font-medium" style={{ color: '#7C3AED' }}>Generating {SIDEBAR_SECTIONS.find(s => s.id === activeSection)?.label}...</span>
+                  <div className="flex items-center gap-3 p-3 rounded-lg" style={{ background: '#05966908', border: '1px solid #e2e8f0' }}>
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" style={{ color: '#059669' }} />
+                    <span className="text-xs font-medium" style={{ color: '#059669' }}>Generating {SIDEBAR_SECTIONS.find(s => s.id === activeSection)?.label}...</span>
                   </div>
                   {streamingText && (
                     <div className="rounded-lg p-4 text-sm leading-relaxed whitespace-pre-wrap font-mono overflow-auto max-h-[70vh]" style={{ background: '#f1f5f9', border: '1px solid #e2e8f0', color: '#475569' }}>
                       {streamingText}
-                      <span className="inline-block w-1.5 h-4 bg-[#7C3AED] animate-pulse ml-0.5" />
+                      <span className="inline-block w-1.5 h-4 bg-[#059669] animate-pulse ml-0.5" />
                     </div>
                   )}
                 </div>
