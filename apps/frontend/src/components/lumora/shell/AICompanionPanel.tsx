@@ -1,8 +1,5 @@
 import { useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { useInterviewStore } from '@/stores/interview-store';
-import { StreamingAnswer } from '@/components/lumora/interview/StreamingAnswer';
-import { AnswerBlocks } from '@/components/lumora/interview/AnswerBlocks';
 
 const C = {
   base: '#0D0C14',
@@ -27,15 +24,43 @@ interface AICompanionPanelProps {
   viewingIdx?: number | null;
 }
 
-function safeBlocks(blocks: any): any[] {
-  if (Array.isArray(blocks)) return blocks;
-  if (blocks && typeof blocks === 'object') {
-    const result: any[] = [];
-    if (blocks.systemDesign?.overview) result.push({ type: 'HEADLINE', content: blocks.systemDesign.overview });
-    if (blocks.pitch) result.push({ type: 'ANSWER', content: typeof blocks.pitch === 'string' ? blocks.pitch : blocks.pitch.approach || '' });
-    if (result.length > 0) return result;
+/** Extract plain text from any block format for simple Q&A display */
+function extractText(blocks: any): string {
+  if (!blocks) return '';
+  // Array of parsed blocks (tag-based)
+  if (Array.isArray(blocks)) {
+    return blocks
+      .filter((b: any) => b.content && typeof b.content === 'string')
+      .map((b: any) => {
+        const label = b.type && b.type !== 'ANSWER' && b.type !== 'HEADLINE' ? `**${b.type}**\n` : '';
+        return label + b.content;
+      })
+      .join('\n\n');
   }
-  return [];
+  // JSON object (system design, coding)
+  if (typeof blocks === 'object') {
+    const parts: string[] = [];
+    if (blocks.systemDesign) {
+      const sd = blocks.systemDesign;
+      if (sd.overview) parts.push(sd.overview);
+      if (sd.requirements?.functional) parts.push('**Functional Requirements**\n' + sd.requirements.functional.map((r: string) => `• ${r}`).join('\n'));
+      if (sd.requirements?.nonFunctional) parts.push('**Non-Functional Requirements**\n' + sd.requirements.nonFunctional.map((r: string) => `• ${r}`).join('\n'));
+      if (sd.tradeoffs) parts.push('**Trade-offs**\n' + sd.tradeoffs.map((t: string) => `• ${t}`).join('\n'));
+      if (sd.edgeCases) parts.push('**Edge Cases**\n' + sd.edgeCases.map((e: string) => `• ${e}`).join('\n'));
+    }
+    if (blocks.pitch) {
+      const p = typeof blocks.pitch === 'string' ? blocks.pitch : (blocks.pitch.opener ? blocks.pitch.opener + '\n\n' + (blocks.pitch.approach || '') : blocks.pitch.approach || '');
+      if (p) parts.push(p);
+      if (blocks.pitch?.keyPoints) parts.push('**Key Points**\n' + blocks.pitch.keyPoints.map((k: string) => `• ${k}`).join('\n'));
+    }
+    if (blocks.solutions) {
+      blocks.solutions.forEach((sol: any, i: number) => {
+        parts.push(`**${sol.name || `Solution ${i + 1}`}**\n${sol.approach || ''}`);
+      });
+    }
+    return parts.join('\n\n');
+  }
+  return String(blocks);
 }
 
 export function AICompanionPanel({ isOpen, onClose, inputValue, setInputValue, onSubmit, isStreaming, onAskQuestion, viewingIdx }: AICompanionPanelProps) {
@@ -111,38 +136,49 @@ export function AICompanionPanel({ isOpen, onClose, inputValue, setInputValue, o
               </div>
             </div>
           ) : (
-            <div className="flex flex-col gap-3">
-              {/* Show specific entry or latest */}
+            <div className="flex flex-col gap-4">
+              {/* Show specific entry or latest — simple Q&A chat format */}
               {(() => {
                 const showIdx = viewingIdx != null ? viewingIdx : history.length - 1;
                 const entry = history[showIdx];
                 if (!entry && !isStreaming) return null;
                 return entry ? (
-                  <div className="flex flex-col gap-2">
+                  <>
+                    {/* Question */}
                     <div className="flex items-start gap-2">
-                      <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-0.5" style={{ background: C.accentBg }}>
-                        <span className="text-[10px] font-bold" style={{ color: C.accent }}>{showIdx + 1}</span>
-                      </div>
+                      <span className="text-[10px] font-bold shrink-0 mt-1 w-5 h-5 rounded flex items-center justify-center" style={{ background: C.accentBg, color: C.accent }}>Q</span>
                       <p className="text-[13px] font-medium leading-snug" style={{ fontFamily: 'var(--font-sans)', color: C.text }}>{entry.question}</p>
                     </div>
-                    <AnswerBlocks blocks={safeBlocks(entry.blocks)} isDesign={false} isCoding={false} question={entry.question} />
-                  </div>
+                    {/* Answer — plain text */}
+                    <div className="flex items-start gap-2">
+                      <span className="text-[10px] font-bold shrink-0 mt-1 w-5 h-5 rounded flex items-center justify-center" style={{ background: C.elevated, color: C.muted }}>A</span>
+                      <div className="text-[13px] leading-relaxed whitespace-pre-wrap" style={{ fontFamily: 'var(--font-sans)', color: C.text }}>
+                        {extractText(entry.blocks).split(/\*\*(.+?)\*\*/g).map((part, i) =>
+                          i % 2 === 1
+                            ? <strong key={i} className="block mt-3 mb-1 text-[11px] font-bold uppercase tracking-wider" style={{ color: C.accent }}>{part}</strong>
+                            : <span key={i}>{part}</span>
+                        )}
+                      </div>
+                    </div>
+                  </>
                 ) : null;
               })()}
 
-              {/* Current streaming */}
+              {/* Current streaming — show raw chunks as text */}
               {isStreaming && question && (
-                <div className="flex flex-col gap-2">
+                <>
                   <div className="flex items-start gap-2">
-                    <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-0.5" style={{ background: C.accentBg }}>
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+                    <span className="text-[10px] font-bold shrink-0 mt-1 w-5 h-5 rounded flex items-center justify-center" style={{ background: C.accentBg, color: C.accent }}>Q</span>
+                    <p className="text-[13px] font-medium leading-snug" style={{ fontFamily: 'var(--font-sans)', color: C.text }}>{question}</p>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="text-[10px] font-bold shrink-0 mt-1 w-5 h-5 rounded flex items-center justify-center animate-pulse" style={{ background: C.accentBg, color: C.accent }}>A</span>
+                    <div className="text-[13px] leading-relaxed whitespace-pre-wrap" style={{ fontFamily: 'var(--font-sans)', color: C.text }}>
+                      {streamChunks.join('') || <span className="animate-pulse" style={{ color: C.muted }}>Thinking...</span>}
+                      <span className="inline-block w-1.5 h-4 ml-0.5 animate-pulse" style={{ background: C.accent }} />
                     </div>
-                    <p className="text-sm leading-relaxed" style={{ fontFamily: 'var(--font-sans)', color: C.text }}>{question}</p>
                   </div>
-                  <div className="ml-8">
-                    <StreamingAnswer chunks={streamChunks} isDesign={isDesignQuestion} isCoding={isCodingQuestion} />
-                  </div>
-                </div>
+                </>
               )}
             </div>
           )}
