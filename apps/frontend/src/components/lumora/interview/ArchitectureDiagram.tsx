@@ -176,7 +176,7 @@ export function ArchitectureDiagram({ question, className = '' }: ArchitectureDi
 
       {/* No cached diagram — show generate button */}
       {noCache && !loading && !generating && (
-        <div className="flex flex-col items-center justify-center p-6 rounded-lg text-center" style={{ border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
+        <div className="flex flex-col items-center justify-center p-6 rounded-lg text-center" style={{ border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.02)' }}>
           <button onClick={handleGenerate}
             className="px-5 py-2.5 text-sm font-bold text-white rounded-lg transition-all hover:opacity-90"
             style={{ background: 'linear-gradient(135deg, #10b981, #059669)', boxShadow: '0 2px 12px rgba(16,185,129,0.3)' }}>
@@ -210,7 +210,7 @@ export function ArchitectureDiagram({ question, className = '' }: ArchitectureDi
       {imageUrl && !loading && !generating && (
         <div ref={containerRef}
           className="rounded-lg select-none flex items-center justify-center"
-          style={{ cursor: isDragging ? 'grabbing' : 'grab', overflow: 'hidden', minHeight: '300px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}
+          style={{ cursor: isDragging ? 'grabbing' : 'grab', overflow: 'hidden', minHeight: '300px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.12)' }}
           onWheel={handleWheel} onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}>
           <img src={imageUrl} alt={`Architecture: ${question.slice(0, 50)}`} draggable={false}
             style={{

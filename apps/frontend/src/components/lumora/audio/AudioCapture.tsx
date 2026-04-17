@@ -331,8 +331,8 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
           onClick={() => { if (continuousMode) handleModeToggle(); }}
           className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold transition-all"
           style={!continuousMode
-            ? { background: 'rgba(255,255,255,0.1)', color: '#fff', borderLeft: '1px solid rgba(255,255,255,0.06)' }
-            : { color: 'rgba(255,255,255,0.35)', borderLeft: '1px solid rgba(255,255,255,0.06)' }}
+            ? { background: 'rgba(255,255,255,0.1)', color: '#fff', borderLeft: '1px solid rgba(255,255,255,0.12)' }
+            : { color: 'rgba(255,255,255,0.35)', borderLeft: '1px solid rgba(255,255,255,0.12)' }}
           title="Manual: press Cmd+M to start/stop"
         >
           <MicIcon isActive={!continuousMode && storeIsRecording} />

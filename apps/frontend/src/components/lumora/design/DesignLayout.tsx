@@ -275,11 +275,11 @@ function useTheme(dark: boolean) {
     cardBg: '#16141F', cardBorder: 'rgba(255,255,255,0.12)',
     headerBg: 'rgba(99,102,241,0.08)', headerBorder: 'rgba(255,255,255,0.12)',
     headerText: '#a5b4fc', badgeBg: 'rgba(99,102,241,0.15)', badgeText: '#a5b4fc',
-    text: '#F2F1F3', textMuted: '#9896A3', textDim: '#6C6B7B',
+    text: '#F2F1F3', textMuted: '#9896A3', textDim: '#9896A3',
     codeBg: '#201E2C', codeText: '#F2F1F3',
     inputBg: '#201E2C', inputBorder: 'rgba(255,255,255,0.12)', inputText: '#F2F1F3',
     sectionBg: '#16141F', surfaceBg: '#0D0C14',
-    tabActive: '#6366f1', tabActiveBg: 'rgba(99,102,241,0.15)', tabText: '#6C6B7B',
+    tabActive: '#6366f1', tabActiveBg: 'rgba(99,102,241,0.15)', tabText: '#9896A3',
     dotColor: '#a5b4fc',
   };
   return {
@@ -602,7 +602,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
     <div className={embedded ? 'flex-1 flex flex-col min-h-0' : 'h-screen w-full flex flex-col lumora-app-bg'}>
       {/* Header — hidden when embedded in LumoraShell */}
       {!embedded && (
-      <header className="flex items-center justify-between h-11 px-3 shrink-0" style={{ background: 'linear-gradient(135deg, rgba(15,23,42,0.98) 0%, rgba(30,27,75,0.96) 50%, rgba(15,23,42,0.98) 100%)', borderBottom: '1px solid rgba(99,102,241,0.12)' }}>
+      <header className="flex items-center justify-between h-11 px-3 shrink-0" style={{ background: 'linear-gradient(135deg, rgba(15,23,42,0.98) 0%, rgba(30,27,75,0.96) 50%, rgba(15,23,42,0.98) 100%)', borderBottom: '1px solid rgba(99,102,241,0.15)' }}>
         <div className="flex items-center gap-2 md:gap-3">
           <button onClick={onBack} className="flex items-center gap-1 px-1.5 py-1 text-xs md:text-sm font-bold text-white/70 hover:text-white rounded transition-colors">
             <svg className="w-3 h-3 md:w-3.5 md:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -704,7 +704,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
         {/* Left: Problem Input - full width on mobile */}
         <div className="w-full md:shrink-0 flex flex-col border-b md:border-b-0 md:border-r border-[var(--border)] design-left-panel max-h-[35vh] md:max-h-none overflow-auto" style={{ ['--left-w' as any]: `${leftWidth}%` }}>
           {/* Input Tab Header */}
-          <div className="flex items-center justify-between px-3 py-1.5" style={{ background: 'rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          <div className="flex items-center justify-between px-3 py-1.5" style={{ background: 'rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.12)' }}>
             <div className="flex items-center gap-0.5 p-0.5 rounded-lg" style={{ background: 'rgba(255,255,255,0.08)' }}>
               {(['text', 'url', 'image'] as const).map(tab => (
                 <button
@@ -738,7 +738,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                 onChange={(e) => setProblemText(e.target.value)}
                 placeholder="Describe your system design problem...&#10;&#10;Example: Design a URL shortener like bit.ly that handles 100M links/month"
                 className="w-full h-[100px] rounded-lg p-3 text-xs md:text-sm leading-relaxed resize-none focus:ring-1 focus:ring-indigo-400/30 focus:outline-none transition-all font-mono"
-                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: '#f1f5f9' }}
+                style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.12)', color: '#f1f5f9' }}
               />
             )}
             {inputTab === 'url' && (
@@ -749,7 +749,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                   onChange={(e) => setUrlInput(e.target.value)}
                   placeholder="https://leetcode.com/problems/..."
                   className="flex-1 rounded-lg px-3 py-2 text-xs md:text-sm focus:ring-1 focus:ring-indigo-400/30 focus:outline-none transition-all font-mono"
-                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: '#f1f5f9' }}
+                  style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.12)', color: '#f1f5f9' }}
                 />
                 <button
                   onClick={async () => {

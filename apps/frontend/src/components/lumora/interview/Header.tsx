@@ -131,7 +131,7 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
   };
 
   return (
-    <header className="z-50 shrink-0" style={{ background: 'linear-gradient(135deg, rgba(15,23,42,0.95) 0%, rgba(30,27,75,0.93) 40%, rgba(20,20,60,0.95) 70%, rgba(15,23,42,0.95) 100%)', borderBottom: '1px solid rgba(99,102,241,0.12)', boxShadow: '0 1px 12px rgba(0,0,0,0.3), 0 1px 0 rgba(99,102,241,0.08)', fontFamily: "'Source Sans 3', sans-serif" }}>
+    <header className="z-50 shrink-0" style={{ background: 'linear-gradient(135deg, rgba(15,23,42,0.95) 0%, rgba(30,27,75,0.93) 40%, rgba(20,20,60,0.95) 70%, rgba(15,23,42,0.95) 100%)', borderBottom: '1px solid rgba(99,102,241,0.15)', boxShadow: '0 1px 12px rgba(0,0,0,0.3), 0 1px 0 rgba(99,102,241,0.08)', fontFamily: "'Source Sans 3', sans-serif" }}>
       {/* Row 1: Nav + Audio + Controls — horizontally scrollable */}
       <div className="flex items-center h-[42px] overflow-x-auto no-scrollbar">
         {/* Sidebar toggle */}
@@ -139,7 +139,7 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
           <button
             onClick={onToggleSidebar}
             className="flex items-center justify-center w-10 h-full shrink-0 transition-colors"
-            style={{ color: sidebarOpen ? '#818cf8' : 'rgba(255,255,255,0.35)', borderRight: '1px solid rgba(255,255,255,0.06)' }}
+            style={{ color: sidebarOpen ? '#a5b4fc' : 'rgba(255,255,255,0.35)', borderRight: '1px solid rgba(255,255,255,0.12)' }}
             onMouseEnter={(e) => { if (!sidebarOpen) e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; }}
             onMouseLeave={(e) => { if (!sidebarOpen) e.currentTarget.style.color = 'rgba(255,255,255,0.35)'; }}
             title={sidebarOpen ? 'Close history' : 'Open history'}
@@ -186,7 +186,7 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
         {/* Platform — monospace badge style */}
         <div data-tour="platform" className="hidden lg:flex items-center px-2 h-full shrink-0" style={{ borderRight: '1px solid rgba(255,255,255,0.04)' }}>
           <select id="platform-select" name="platform" className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-1 rounded-md cursor-pointer focus:outline-none"
-            style={{ background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.06)' }} defaultValue="general">
+            style={{ background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.12)' }} defaultValue="general">
             <option value="general">General</option>
             <option value="zoom">Zoom</option>
             <option value="meet">Meet</option>
@@ -257,8 +257,8 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
           <button
             onClick={toggleExpand}
             className="p-1.5 rounded-lg transition-all duration-200 ml-1 shrink-0"
-            style={isExpanded ? { color: '#a5b4fc', background: 'rgba(99,102,241,0.12)' } : { color: 'rgba(255,255,255,0.25)' }}
-            onMouseEnter={(e) => { if (!isExpanded) { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}}
+            style={isExpanded ? { color: '#a5b4fc', background: 'rgba(99,102,241,0.15)' } : { color: 'rgba(255,255,255,0.25)' }}
+            onMouseEnter={(e) => { if (!isExpanded) { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = 'rgba(255,255,255,0.12)'; }}}
             onMouseLeave={(e) => { if (!isExpanded) { e.currentTarget.style.color = 'rgba(255,255,255,0.25)'; e.currentTarget.style.background = 'transparent'; }}}
             title={isExpanded ? 'Collapse textarea' : 'Expand for multi-line input'}
           >

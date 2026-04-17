@@ -132,7 +132,7 @@ export function InterviewPage() {
                         <button onClick={() => setIsExpanded(false)} className="text-xs text-white/40 hover:text-white/70 transition-colors px-2 py-1">Collapse</button>
                         <button onClick={handleInputSubmit} disabled={!inputValue.trim() || isStreaming}
                           className="px-4 py-1.5 rounded-lg text-xs font-bold text-white disabled:opacity-30 transition-all"
-                          style={{ background: inputValue.trim() ? 'linear-gradient(135deg, #6366f1, #4f46e5)' : 'rgba(255,255,255,0.06)' }}>
+                          style={{ background: inputValue.trim() ? 'linear-gradient(135deg, #6366f1, #4f46e5)' : 'rgba(255,255,255,0.12)' }}>
                           Send
                         </button>
                       </div>
