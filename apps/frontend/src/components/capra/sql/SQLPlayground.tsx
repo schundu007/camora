@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
 import type { SqlProblem } from '@/data/capra/sqlProblems';
 import { SQL_PROBLEMS, SQL_CATEGORIES } from '@/data/capra/sqlProblems';
-// @ts-expect-error — sql.js ships without type declarations
-import initSqlJs from 'sql.js';
+// Dynamic import for sql.js — loaded at runtime, not bundled
+const loadSqlJs = () => import('sql.js').then(m => m.default || m);
 
 const SharedCodeEditor = lazy(
   () => import('@/components/shared/code/SharedCodeEditor')
@@ -218,8 +218,10 @@ export function SQLPlayground({ onClose }: SQLPlaygroundProps) {
   // ── Initialize sql.js WASM ──────────────────────────────────────────────
   useEffect(() => {
     let cancelled = false;
-    initSqlJs({
-      locateFile: (file: string) => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/${file}`,
+    const WASM_URL = 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.wasm';
+
+    loadSqlJs().then((initSqlJs: any) => {
+      return initSqlJs({ locateFile: () => WASM_URL });
     }).then((SQL: { Database: new () => SqlJsDatabase }) => {
       if (cancelled) return;
       const database = new SQL.Database();
@@ -229,8 +231,8 @@ export function SQLPlayground({ onClose }: SQLPlaygroundProps) {
     }).catch((err: Error) => {
       console.error('sql.js init failed:', err);
       // Fallback: try local WASM
-      initSqlJs({
-        locateFile: (file: string) => `/${file}`,
+      loadSqlJs().then((initSqlJs: any) => {
+        return initSqlJs({ locateFile: (f: string) => `/${f}` });
       }).then((SQL: { Database: new () => SqlJsDatabase }) => {
         if (cancelled) return;
         const database = new SQL.Database();
