@@ -1826,7 +1826,7 @@ export default function DocsPage({ onBack }) {
                               className="h-full rounded-full transition-all duration-700 ease-out"
                               style={{
                                 width: `${readinessPercent}%`,
-                                background: readinessPercent < 25 ? '#f59e0b' : readinessPercent < 75 ? '#10b981' : '#36B24E',
+                                background: readinessPercent < 25 ? '#f59e0b' : readinessPercent < 75 ? '#10b981' : '#0D9488',
                               }}
                             />
                           </div>
@@ -1915,12 +1915,12 @@ export default function DocsPage({ onBack }) {
                             <span className="text-[10px] landing-mono text-[var(--text-muted)]">{categoryTopics.length} topics</span>
                             <div className="ml-auto flex items-center gap-2">
                               {catCompleted > 0 && (
-                                <span className="text-[10px] landing-mono font-medium" style={{ color: catPercent === 100 ? '#36B24E' : category.color }}>
+                                <span className="text-[10px] landing-mono font-medium" style={{ color: catPercent === 100 ? '#0D9488' : category.color }}>
                                   {catCompleted}/{categoryTopics.length}
                                 </span>
                               )}
                               <div className="w-16 h-1.5 rounded-full bg-[var(--bg-elevated)] overflow-hidden">
-                                <div className="h-full rounded-full transition-all duration-500" style={{ width: `${catPercent}%`, background: catPercent === 100 ? '#36B24E' : category.color }} />
+                                <div className="h-full rounded-full transition-all duration-500" style={{ width: `${catPercent}%`, background: catPercent === 100 ? '#0D9488' : category.color }} />
                               </div>
                             </div>
                           </div>

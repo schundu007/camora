@@ -54,7 +54,7 @@ export function SessionSidebar({ isOpen, onClose, onSelectEntry }: SessionSideba
           isOpen ? 'translate-x-0 w-[280px]' : '-translate-x-full lg:translate-x-0 w-0 lg:w-0'
         }`}
         style={{
-          background: 'linear-gradient(180deg, #36B24E 0%, #0A0A0F 100%)',
+          background: 'linear-gradient(180deg, #0D9488 0%, #0A0A0F 100%)',
           borderRight: isOpen ? '1px solid rgba(255,255,255,0.06)' : 'none',
           boxShadow: isOpen ? '2px 0 12px rgba(0,0,0,0.2)' : 'none',
         }}

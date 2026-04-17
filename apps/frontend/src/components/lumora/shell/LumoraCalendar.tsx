@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 const C = {
   base: '#ffffff', surface: '#f8fafc', elevated: '#f1f5f9',
-  text: '#0f172a', muted: '#64748b', accent: '#36B24E',
+  text: '#0f172a', muted: '#64748b', accent: '#0D9488',
   accentBg: 'rgba(11,92,255,0.08)', border: '#e2e8f0',
 };
 
@@ -75,7 +75,7 @@ export function LumoraCalendar({ onClose }: { onClose: () => void }) {
             Sign in to view your interview schedule
           </p>
           <a href="https://calendar.google.com" target="_blank" rel="noopener noreferrer"
-            className="px-4 py-2 rounded-xl text-xs font-bold transition-all" style={{ background: '#36B24E', color: '#fff' }}>
+            className="px-4 py-2 rounded-xl text-xs font-bold transition-all" style={{ background: '#0D9488', color: '#fff' }}>
             Open Google Calendar
           </a>
         </div>
