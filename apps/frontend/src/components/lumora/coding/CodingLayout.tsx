@@ -1140,6 +1140,14 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                   <><svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>Run</>
                 )}
               </button>
+              {showFixPrompt && (
+                <button onClick={handleAutoFix}
+                  className="flex items-center gap-1.5 px-3 py-1 bg-amber-500 text-white text-xs font-bold rounded-md hover:bg-amber-600 transition-colors shadow-sm"
+                  title="Auto-fix failed tests">
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                  Auto-Fix
+                </button>
+              )}
             </div>
             <div className="flex items-center gap-1">
               <button onClick={handleReset} className="p-1.5 rounded-md transition-colors" style={{ color: t.textMuted }} title="Reset">
@@ -1294,25 +1302,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                       </div>
                     )}
 
-                    {/* Auto-fix prompt */}
-                    {showFixPrompt && (
-                      <div className="flex items-center gap-2 p-2 bg-amber-50 border border-amber-200 rounded-lg">
-                        <svg className="w-4 h-4 text-amber-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                        </svg>
-                        <span className="text-xs text-amber-700">Some tests failed.</span>
-                        <button onClick={handleAutoFix}
-                          className="ml-auto px-3 py-1 bg-amber-500 text-white text-[10px] font-bold rounded-md hover:bg-amber-600 transition-colors">
-                          Auto-Fix
-                        </button>
-                        <button onClick={() => setShowFixPrompt(false)}
-                          className="text-amber-400 hover:text-amber-600 transition-colors">
-                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
-                      </div>
-                    )}
+                    {/* Auto-fix prompt — moved to header next to Run button */}
 
                     {/* Raw output */}
                     {output && !testResults.length && (
