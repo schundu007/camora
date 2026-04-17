@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useInterviewStore } from '@/stores/interview-store';
+import SiteFooter from '@/components/shared/SiteFooter';
 import { DESIGN_BLOCK_TYPES, CODING_BLOCK_TYPES } from '@/lib/constants';
 import { AnswerBlocks } from './AnswerBlocks';
 import { StreamingAnswer } from './StreamingAnswer';
@@ -194,7 +195,8 @@ function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
   ];
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center px-6 select-none">
+    <div className="flex-1 flex flex-col items-center px-6 select-none overflow-auto">
+      <div className="flex-1" />
       {/* Large clock */}
       <div className="text-center mb-10">
         <h1 className="text-6xl md:text-7xl font-bold tracking-tight tabular-nums" style={{ fontFamily: "'Clash Display', sans-serif", fontWeight: 700, letterSpacing: '-0.03em', color: '#0f172a' }}>
@@ -240,6 +242,11 @@ function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
         <span><kbd className="px-1.5 py-0.5 rounded" style={{ border: '1px solid #e2e8f0', background: '#f1f5f9' }}>⌘K</kbd> focus</span>
         <span><kbd className="px-1.5 py-0.5 rounded" style={{ border: '1px solid #e2e8f0', background: '#f1f5f9' }}>⌘M</kbd> mic</span>
         <span><kbd className="px-1.5 py-0.5 rounded" style={{ border: '1px solid #e2e8f0', background: '#f1f5f9' }}>⌘S</kbd> search</span>
+      </div>
+
+      {/* Footer */}
+      <div className="mt-auto pt-6">
+        <SiteFooter variant="light" />
       </div>
     </div>
   );
