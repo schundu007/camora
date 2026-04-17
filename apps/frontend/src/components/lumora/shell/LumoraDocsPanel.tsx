@@ -5,7 +5,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
 
-const STORAGE_KEY = 'lumora_prep_v4';
+const STORAGE_KEY = 'lumora_prep_v5'; // v5: fixed SSE parsing
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
 interface DocState {
@@ -295,51 +295,24 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
           body: JSON.stringify({ section, jobDescription: state.jd, resume: state.resume, coverLetter: state.coverLetter, prepMaterial: state.prepMaterials }),
         });
         if (res.ok) {
-          const reader = res.body?.getReader();
-          const decoder = new TextDecoder();
-          let jsonStr = '';
-          if (reader) {
-            let buffer = '';
-            while (true) {
-              const { done, value } = await reader.read();
-              if (done) break;
-              buffer += decoder.decode(value, { stream: true });
-              // Parse SSE lines: "data: {"chunk":"..."}"
-              const lines = buffer.split('\n');
-              buffer = lines.pop() || ''; // keep incomplete line
-              for (const line of lines) {
-                const trimmed = line.trim();
-                if (!trimmed || !trimmed.startsWith('data: ')) continue;
-                const jsonPart = trimmed.slice(6); // remove "data: "
-                if (jsonPart === '[DONE]') continue;
-                try {
-                  const parsed = JSON.parse(jsonPart);
-                  if (parsed.chunk) jsonStr += parsed.chunk;
-                } catch { /* partial JSON, skip */ }
-              }
-            }
-            // Process remaining buffer
-            if (buffer.trim().startsWith('data: ')) {
-              try {
-                const parsed = JSON.parse(buffer.trim().slice(6));
-                if (parsed.chunk) jsonStr += parsed.chunk;
-              } catch {}
-            }
+          const text = await res.text();
+          // Parse SSE: extract final {done:true, result:{...}} or accumulate chunks
+          let result = null;
+          let chunks = '';
+          for (const line of text.split('\n')) {
+            const t = line.trim();
+            if (!t.startsWith('data: ')) continue;
+            try {
+              const parsed = JSON.parse(t.slice(6));
+              if (parsed.done && parsed.result) { result = parsed.result; break; }
+              if (parsed.chunk) chunks += parsed.chunk;
+            } catch {}
           }
-          // Try to parse the accumulated JSON content
-          let displayText = jsonStr;
-          try {
-            const content = JSON.parse(jsonStr);
-            // Format the parsed content into readable text
-            displayText = formatPrepContent(content);
-          } catch {
-            // If not valid JSON, use raw text (strip any remaining data: prefixes)
-            displayText = jsonStr.replace(/^data:\s*/gm, '');
-          }
+          const displayText = result ? formatPrepContent(result) : (chunks ? (() => { try { return formatPrepContent(JSON.parse(chunks)); } catch { return chunks; } })() : text);
           newSections[section] = displayText;
           setSectionStatus(prev => ({ ...prev, [section]: 'done' }));
           // Save progressively so user can see completed sections
-          setState(prev => ({ ...prev, sections: { ...prev.sections, [section]: text } }));
+          setState(prev => ({ ...prev, sections: { ...prev.sections, [section]: displayText } }));
         } else {
           setSectionStatus(prev => ({ ...prev, [section]: 'error' }));
           newSections[section] = `Error: ${res.status}`;
@@ -364,31 +337,19 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
         body: JSON.stringify({ section, jobDescription: state.jd, resume: state.resume, coverLetter: state.coverLetter, prepMaterial: state.prepMaterials }),
       });
       if (res.ok) {
-        const reader = res.body?.getReader();
-        const decoder = new TextDecoder();
-        let jsonStr = '';
-        if (reader) {
-          let buffer = '';
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            buffer += decoder.decode(value, { stream: true });
-            const lines = buffer.split('\n');
-            buffer = lines.pop() || '';
-            for (const line of lines) {
-              const trimmed = line.trim();
-              if (!trimmed || !trimmed.startsWith('data: ')) continue;
-              const jsonPart = trimmed.slice(6);
-              if (jsonPart === '[DONE]') continue;
-              try { const p = JSON.parse(jsonPart); if (p.chunk) jsonStr += p.chunk; } catch {}
-            }
-          }
-          if (buffer.trim().startsWith('data: ')) {
-            try { const p = JSON.parse(buffer.trim().slice(6)); if (p.chunk) jsonStr += p.chunk; } catch {}
-          }
+        const rawText = await res.text();
+        let result = null;
+        let chunks = '';
+        for (const line of rawText.split('\n')) {
+          const t = line.trim();
+          if (!t.startsWith('data: ')) continue;
+          try {
+            const parsed = JSON.parse(t.slice(6));
+            if (parsed.done && parsed.result) { result = parsed.result; break; }
+            if (parsed.chunk) chunks += parsed.chunk;
+          } catch {}
         }
-        let displayText = jsonStr;
-        try { displayText = formatPrepContent(JSON.parse(jsonStr)); } catch { displayText = jsonStr.replace(/^data:\s*/gm, ''); }
+        const displayText = result ? formatPrepContent(result) : (chunks ? (() => { try { return formatPrepContent(JSON.parse(chunks)); } catch { return chunks; } })() : rawText);
         setState(prev => ({ ...prev, sections: { ...prev.sections, [section]: displayText } }));
         setSectionStatus(prev => ({ ...prev, [section]: 'done' }));
       } else {
