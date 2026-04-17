@@ -98,13 +98,13 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
                 onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'transparent'; }}
               >
                 <span className="flex items-center justify-center w-6 h-6 rounded text-[10px] font-bold shrink-0"
-                  style={{ background: '#e0e7ff', color: '#3b82f6', fontFamily: 'var(--font-code)' }}>
+                  style={{ background: '#0B5CFF10', color: '#0B5CFF', fontFamily: 'var(--font-code)' }}>
                   {idx + 1}
                 </span>
                 <span className="text-[13px] font-medium leading-snug flex-1 truncate" style={{ fontFamily: 'var(--font-sans)', color: '#1e293b' }}>
                   {entry.question}
                 </span>
-                <svg className="w-3.5 h-3.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: '#3b82f6' }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                <svg className="w-3.5 h-3.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: '#0B5CFF' }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                 </svg>
               </button>
@@ -113,9 +113,9 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
 
           {/* Current streaming question */}
           {isStreaming && question && (
-            <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg shrink-0" style={{ background: 'rgba(37,99,235,0.06)', border: '1px solid #dbeafe' }}>
+            <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg shrink-0" style={{ background: '#0B5CFF08', border: '1px solid #0B5CFF20' }}>
               <div className="relative flex items-center justify-center w-6 h-6 shrink-0">
-                <span className="flex items-center justify-center w-6 h-6 rounded text-[10px] font-bold" style={{ background: '#dbeafe', color: '#2563eb', fontFamily: 'var(--font-code)' }}>
+                <span className="flex items-center justify-center w-6 h-6 rounded text-[10px] font-bold" style={{ background: '#0B5CFF15', color: '#0B5CFF', fontFamily: 'var(--font-code)' }}>
                   {history.length + 1}
                 </span>
                 <div className="absolute inset-0 border-2 border-transparent rounded animate-spin" style={{ borderTopColor: '#2563eb' }} />
@@ -123,7 +123,7 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
               <span className="text-[13px] font-medium leading-snug flex-1 truncate" style={{ fontFamily: 'var(--font-sans)', color: '#1e293b' }}>
                 {question}
               </span>
-              <span className="text-[9px] shrink-0 animate-pulse font-medium" style={{ fontFamily: 'var(--font-code)', color: '#2563eb' }}>generating...</span>
+              <span className="text-[9px] shrink-0 animate-pulse font-medium" style={{ fontFamily: 'var(--font-code)', color: '#0B5CFF' }}>generating...</span>
             </div>
           )}
 
@@ -131,7 +131,7 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
           {history.length > 0 && history.length % 3 === 0 && (
             <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: '#f8fafc', border: '1px solid #e2e8f0' }}>
               <span className="text-xs" style={{ color: '#64748b' }}>Want deeper prep?</span>
-              <Link to="/capra/prepare" className="text-xs font-bold hover:opacity-90 transition-all" style={{ color: '#2563eb' }}>
+              <Link to="/capra/prepare" className="text-xs font-bold hover:opacity-90 transition-all" style={{ color: '#0B5CFF' }}>
                 Explore 300+ topics →
               </Link>
             </div>
@@ -171,7 +171,7 @@ function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
   const timeStr = time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
   const dateStr = time.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' });
 
-  const accent = '#6366f1';
+  const accent = '#0B5CFF';
 
   const ACTIONS = [
     { icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a3 3 0 00-3 3v7a3 3 0 006 0V5a3 3 0 00-3-3z" /><path d="M19 10v2a7 7 0 01-14 0v-2" /><line x1="12" y1="19" x2="12" y2="22" /></svg>,
@@ -197,10 +197,10 @@ function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
     <div className="flex-1 flex flex-col items-center justify-center px-6">
       {/* Large clock */}
       <div className="text-center mb-10">
-        <h1 className="text-6xl md:text-7xl font-bold tracking-tight tabular-nums" style={{ fontFamily: 'var(--font-sans)', fontWeight: 800, letterSpacing: '-0.03em', color: '#0f172a' }}>
+        <h1 className="text-6xl md:text-7xl font-bold tracking-tight tabular-nums" style={{ fontFamily: "'Clash Display', sans-serif", fontWeight: 700, letterSpacing: '-0.03em', color: '#0f172a' }}>
           {timeStr}
         </h1>
-        <p className="text-sm mt-2 font-medium" style={{ fontFamily: 'var(--font-sans)', color: '#64748b' }}>{dateStr}</p>
+        <p className="text-sm mt-2 font-medium" style={{ fontFamily: "'Satoshi', sans-serif", color: '#64748b' }}>{dateStr}</p>
       </div>
 
       {/* Action buttons — all use single accent color */}
@@ -211,7 +211,7 @@ function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
               style={{ background: accent }}>
               {action.icon}
             </div>
-            <span className="text-[11px] font-medium transition-colors" style={{ fontFamily: 'var(--font-sans)', color: '#64748b' }}>{action.label}</span>
+            <span className="text-[11px] font-medium transition-colors" style={{ fontFamily: "'Satoshi', sans-serif", color: '#64748b' }}>{action.label}</span>
           </button>
         ))}
       </div>
@@ -221,12 +221,12 @@ function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
 
       {/* Quick-start prompts */}
       <div className="w-full max-w-2xl">
-        <p className="text-xs font-medium mb-3 text-center" style={{ fontFamily: 'var(--font-sans)', color: '#64748b' }}>Try asking</p>
+        <p className="text-xs font-medium mb-3 text-center" style={{ fontFamily: "'Satoshi', sans-serif", color: '#64748b' }}>Try asking</p>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
           {PROMPTS.map((prompt) => (
             <button key={prompt} onClick={() => onAskQuestion?.(prompt)}
               className="text-left px-4 py-3.5 rounded-xl text-[13px] leading-snug transition-all"
-              style={{ fontFamily: 'var(--font-sans)', border: '1px solid #e2e8f0', color: '#64748b' }}
+              style={{ fontFamily: "'Satoshi', sans-serif", border: '1px solid #e2e8f0', color: '#64748b', borderRadius: '10px' }}
               onMouseEnter={e => { e.currentTarget.style.color = '#0f172a'; e.currentTarget.style.background = '#f1f5f9'; }}
               onMouseLeave={e => { e.currentTarget.style.color = '#64748b'; e.currentTarget.style.background = 'transparent'; }}>
               {prompt}

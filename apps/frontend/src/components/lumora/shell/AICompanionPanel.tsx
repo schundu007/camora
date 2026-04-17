@@ -4,9 +4,9 @@ import { streamResponse } from '@/lib/sse-client';
 import { transcriptionAPI } from '@/lib/api-client';
 
 const C = {
-  base: '#0a1628', surface: '#0f1d36', elevated: '#1e3a8a',
-  text: '#ffffff', muted: 'rgba(255,255,255,0.65)', accent: '#60a5fa',
-  accentBg: 'rgba(96,165,250,0.15)', border: 'rgba(255,255,255,0.08)',
+  base: '#041838', surface: '#062452', elevated: '#0B5CFF',
+  text: '#ffffff', muted: 'rgba(255,255,255,0.7)', accent: '#34d399',
+  accentBg: 'rgba(52,211,153,0.15)', border: 'rgba(255,255,255,0.12)',
 };
 
 /* ── Types ── */
@@ -64,7 +64,7 @@ function RichText({ text }: { text: string }) {
                 <span className="text-[9px] font-bold uppercase" style={{ color: C.muted }}>{block.lang}</span>
                 <button onClick={() => navigator.clipboard.writeText(block.content)} className="text-[9px] px-1.5 py-0.5 rounded" style={{ color: C.muted }}>Copy</button>
               </div>
-              <pre className="px-3 py-2 overflow-x-auto text-xs leading-relaxed" style={{ background: '#0a1628', color: '#93c5fd' }}><code>{block.content}</code></pre>
+              <pre className="px-3 py-2 overflow-x-auto text-xs leading-relaxed" style={{ background: '#041838', color: '#93c5fd' }}><code>{block.content}</code></pre>
             </div>
           );
         }
@@ -232,14 +232,14 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
       {!minimized && (
         <div
           className="w-[5px] h-full cursor-col-resize flex items-center justify-center group shrink-0 hover:bg-blue-400/20 transition-colors"
-          style={{ background: isResizing ? 'rgba(96,165,250,0.3)' : '#0a1628' }}
+          style={{ background: isResizing ? 'rgba(52,211,153,0.3)' : '#041838' }}
           onMouseDown={(e) => { setIsResizing(true); resizeRef.current = { startX: e.clientX, startW: panelWidth }; }}
         >
-          <div className="w-[3px] h-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: '#60a5fa' }} />
+          <div className="w-[3px] h-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: '#34d399' }} />
         </div>
       )}
 
-      <div className="flex-1 flex flex-col min-w-0" style={{ background: 'linear-gradient(180deg, #1e40af 0%, #0a1628 100%)' }}>
+      <div className="flex-1 flex flex-col min-w-0" style={{ background: 'linear-gradient(180deg, #0B5CFF 0%, #041838 100%)' }}>
       {/* Header */}
       <div className="flex items-center justify-between h-14 px-3 shrink-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
         {minimized ? (
@@ -339,7 +339,7 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
             className="flex-1 bg-transparent text-[12px] focus:outline-none min-w-0 placeholder:opacity-40"
             style={{ fontFamily: 'var(--font-sans)', color: C.text }} disabled={streaming} />
           {input.trim() && !streaming && (
-            <button onClick={handleSubmit} className="w-6 h-6 rounded-full flex items-center justify-center shrink-0" style={{ background: '#3b82f6' }}>
+            <button onClick={handleSubmit} className="w-6 h-6 rounded-full flex items-center justify-center shrink-0" style={{ background: '#0B5CFF' }}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
             </button>
           )}
@@ -354,7 +354,7 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
 
 export function AICompanionToggle({ onClick, hasActivity }: { onClick: () => void; hasActivity: boolean }) {
   return (
-    <button onClick={onClick} className="fixed bottom-6 right-6 z-30 w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105" style={{ background: '#2563eb' }} title="AI Copilot">
+    <button onClick={onClick} className="fixed bottom-6 right-6 z-30 w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105" style={{ background: '#0B5CFF' }} title="AI Copilot">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
       {hasActivity && <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2" style={{ borderColor: C.base }} />}
     </button>
