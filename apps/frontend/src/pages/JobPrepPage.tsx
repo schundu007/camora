@@ -270,6 +270,12 @@ export default function JobPrepPage() {
   const { isPaidUser } = useContentAccess();
   const [showPaywall, setShowPaywall] = useState(false);
 
+  const [prices, setPrices] = useState<any>(null);
+  useEffect(() => {
+    const API = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
+    fetch(`${API}/api/v1/billing/prices`).then(r => r.json()).then(setPrices).catch(() => {});
+  }, []);
+
   const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -1075,9 +1081,9 @@ export default function JobPrepPage() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
               {[
-                { name: 'Starter', price: '$29', period: '/mo', features: ['Unlimited prep & practice', '10 live sessions/mo', 'AI explanations', 'System design diagrams'], priceId: 'price_1THhzGITUCNxtMxll78umJSX' },
-                { name: 'Pro', price: '$49', period: '/mo', features: ['Everything in Starter', 'Unlimited live sessions', 'Job matching & auto apply', 'Company-specific prep'], popular: true, priceId: 'price_1THhzhITUCNxtMxl1QSxi4Kj' },
-                { name: 'Annual', price: '$19', period: '/mo', features: ['Everything in Pro', 'Save 61% vs monthly', 'Locked-in pricing', 'Priority support'], best: true, priceId: 'price_1THiBUITUCNxtMxlAHUvPut7' },
+                { name: 'Starter', price: '$29', period: '/mo', features: ['Unlimited prep & practice', '10 live sessions/mo', 'AI explanations', 'System design diagrams'], priceId: prices?.monthly?.priceId || '' },
+                { name: 'Pro', price: '$49', period: '/mo', features: ['Everything in Starter', 'Unlimited live sessions', 'Job matching & auto apply', 'Company-specific prep'], popular: true, priceId: prices?.quarterly_pro?.priceId || '' },
+                { name: 'Annual', price: '$19', period: '/mo', features: ['Everything in Pro', 'Save 61% vs monthly', 'Locked-in pricing', 'Priority support'], best: true, priceId: prices?.annual?.priceId || '' },
               ].map(plan => (
                 <div key={plan.name} className="rounded-2xl p-4 flex flex-col" style={{
                   border: plan.popular ? '2px solid #10b981' : plan.best ? '2px solid #f59e0b' : '1.5px solid var(--border)',

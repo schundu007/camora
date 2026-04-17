@@ -191,8 +191,8 @@ export default function OnboardingModal({ isOpen, onComplete, onOpenPricing }) {
               className="p-4 rounded-lg text-center relative overflow-hidden bg-cyan-50 border border-cyan-200"
             >
               <div className="absolute top-1 right-1 px-1.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500 text-white landing-mono">POPULAR</div>
-              <div className="text-2xl font-bold text-[var(--text-primary)] landing-display">$59</div>
-              <div className="text-sm font-medium text-cyan-500 landing-body">FAANG Track</div>
+              <div className="text-2xl font-bold text-[var(--text-primary)] landing-display">$49</div>
+              <div className="text-sm font-medium text-cyan-500 landing-body">Pro</div>
               <div className="text-xs mt-2 text-[var(--text-muted)] landing-body">/month</div>
             </div>
             <div

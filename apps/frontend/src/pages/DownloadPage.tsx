@@ -301,7 +301,7 @@ export default function DownloadPage() {
     handleStripeCheckout(prices?.desktop_annual?.priceId || '', setAnnualLoading);
 
   const handleProCheckout = () =>
-    handleStripeCheckout('price_1THhzhITUCNxtMxl1QSxi4Kj', setProLoading);
+    handleStripeCheckout(prices?.quarterly_pro?.priceId || '', setProLoading);
 
   useEffect(() => {
     document.title = 'Download Camora Desktop — AI Interview Co-Pilot';

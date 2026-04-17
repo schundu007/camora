@@ -12,7 +12,7 @@ export const stripe = stripeSecretKey
 // Price IDs from Stripe Dashboard
 export const STRIPE_PRICES = {
   MONTHLY: process.env.STRIPE_PRICE_MONTHLY,              // $29/mo — Interview Ready
-  QUARTERLY_PRO: process.env.STRIPE_PRICE_QUARTERLY_PRO,  // $59/mo — FAANG Track (includes 3 Lumora sessions)
+  QUARTERLY_PRO: process.env.STRIPE_PRICE_QUARTERLY_PRO,  // $49/mo — Pro (includes 3 Lumora sessions)
   ANNUAL: process.env.STRIPE_PRICE_ANNUAL,                // $19/mo billed $228/year — Annual
   DESKTOP_MONTHLY: process.env.STRIPE_PRICE_DESKTOP_MONTHLY,  // $29/mo — Desktop App add-on (monthly)
   DESKTOP_ANNUAL: process.env.STRIPE_PRICE_DESKTOP_ANNUAL,    // $99/year — Desktop App add-on (annual)
