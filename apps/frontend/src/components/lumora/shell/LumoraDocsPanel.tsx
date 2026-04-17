@@ -5,7 +5,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
 
-const STORAGE_KEY = 'lumora_docs_v3';
+const STORAGE_KEY = 'lumora_prep_v4';
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
 interface DocState {
@@ -19,13 +19,24 @@ interface DocState {
   prepMaterialsFile?: string;
   studyMaterials: string;
   studyMaterialsFile?: string;
-  // Generated sections
   sections: Record<string, string>;
 }
 
-const INITIAL_STATE: DocState = {
+interface PrepData {
+  companies: string[];
+  activeCompany: string | null;
+  data: Record<string, DocState>;
+}
+
+const EMPTY_DOC: DocState = {
   jd: '', resume: '', coverLetter: '', prepMaterials: '', studyMaterials: '',
   sections: {},
+};
+
+const INITIAL_STATE: PrepData = {
+  companies: [],
+  activeCompany: null,
+  data: {},
 };
 
 const SIDEBAR_SECTIONS = [
@@ -40,10 +51,10 @@ const SIDEBAR_SECTIONS = [
   { id: 'techstack', label: 'Tech Stack', color: '#8b5cf6' },
 ];
 
-function loadState(): DocState {
+function loadPrepData(): PrepData {
   try { const r = localStorage.getItem(STORAGE_KEY); return r ? JSON.parse(r) : INITIAL_STATE; } catch { return INITIAL_STATE; }
 }
-function saveState(s: DocState) {
+function savePrepData(s: PrepData) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch {}
 }
 
@@ -96,12 +107,55 @@ function UploadZone({ label, required, value, fileName, onUpload, onPaste }: {
 
 export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
   const { token } = useAuth();
-  const [state, setState] = useState<DocState>(loadState);
+  const [prepData, setPrepData] = useState<PrepData>(loadPrepData);
   const [activeSection, setActiveSection] = useState('input');
   const [generating, setGenerating] = useState(false);
   const [genProgress, setGenProgress] = useState('');
+  const [showNewCompany, setShowNewCompany] = useState(false);
+  const [newCompanyName, setNewCompanyName] = useState('');
+  const [showDropdown, setShowDropdown] = useState(false);
+  const newCompanyRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => { saveState(state); }, [state]);
+  useEffect(() => { savePrepData(prepData); }, [prepData]);
+
+  // Get active company's doc state
+  const state = prepData.activeCompany ? (prepData.data[prepData.activeCompany] || EMPTY_DOC) : EMPTY_DOC;
+  const setState = (updater: DocState | ((prev: DocState) => DocState)) => {
+    if (!prepData.activeCompany) return;
+    setPrepData(prev => {
+      const newState = typeof updater === 'function' ? updater(prev.data[prev.activeCompany!] || EMPTY_DOC) : updater;
+      return { ...prev, data: { ...prev.data, [prev.activeCompany!]: newState } };
+    });
+  };
+
+  const addCompany = () => {
+    const name = newCompanyName.trim();
+    if (!name) return;
+    setPrepData(prev => ({
+      ...prev,
+      companies: [...prev.companies, name],
+      activeCompany: name,
+      data: { ...prev.data, [name]: { ...EMPTY_DOC } },
+    }));
+    setNewCompanyName('');
+    setShowNewCompany(false);
+    setActiveSection('input');
+  };
+
+  const switchCompany = (name: string) => {
+    setPrepData(prev => ({ ...prev, activeCompany: name }));
+    setShowDropdown(false);
+    setActiveSection('input');
+  };
+
+  const deleteCompany = (name: string) => {
+    setPrepData(prev => {
+      const newCompanies = prev.companies.filter(c => c !== name);
+      const newData = { ...prev.data };
+      delete newData[name];
+      return { ...prev, companies: newCompanies, activeCompany: newCompanies[0] || null, data: newData };
+    });
+  };
 
   const extractFile = useCallback(async (file: File): Promise<string> => {
     if (file.type === 'text/plain' || file.name.endsWith('.txt') || file.name.endsWith('.md')) {
@@ -124,7 +178,7 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
     for (const section of ['pitch', 'hr', 'hiring-manager', 'coding', 'system-design', 'behavioral', 'techstack']) {
       setGenProgress(`Generating ${SIDEBAR_SECTIONS.find(s => s.id === section)?.label || section}...`);
       try {
-        const res = await fetch(`${API_URL}/api/v1/prep/section`, {
+        const res = await fetch(`${API_URL}/api/ascend/prep/section`, {
           method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
           body: JSON.stringify({ section, jobDescription: state.jd, resume: state.resume, coverLetter: state.coverLetter, prepMaterial: state.prepMaterials }),
         });
@@ -157,8 +211,59 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
     <div className="h-full flex" style={{ background: 'var(--bg-app)' }}>
       {/* Sidebar */}
       <div className="w-[180px] flex flex-col shrink-0" style={{ borderRight: '1px solid var(--border)', background: 'var(--bg-surface)' }}>
+        {/* Company selector */}
         <div className="px-3 py-3" style={{ borderBottom: '1px solid var(--border)' }}>
-          <h2 className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Interview Prep</h2>
+          <h2 className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-muted)' }}>Interview Prep</h2>
+          {prepData.activeCompany ? (
+            <div className="relative">
+              <button onClick={() => setShowDropdown(!showDropdown)}
+                className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-semibold"
+                style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}>
+                <span className="truncate">{prepData.activeCompany}</span>
+                <svg className="w-3 h-3 shrink-0 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+              </button>
+              {showDropdown && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setShowDropdown(false)} />
+                  <div className="absolute left-0 right-0 top-full mt-1 z-50 rounded-lg shadow-xl overflow-hidden" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+                    {prepData.companies.map(c => (
+                      <button key={c} onClick={() => switchCompany(c)}
+                        className="w-full flex items-center justify-between px-3 py-2 text-xs text-left transition-colors"
+                        style={{ color: c === prepData.activeCompany ? 'var(--accent)' : 'var(--text-secondary)', background: c === prepData.activeCompany ? 'var(--accent-subtle)' : 'transparent' }}>
+                        <span className="truncate">{c}</span>
+                        {prepData.companies.length > 1 && (
+                          <button onClick={(e) => { e.stopPropagation(); deleteCompany(c); }}
+                            className="p-0.5 rounded" style={{ color: 'var(--text-muted)' }}>
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                          </button>
+                        )}
+                      </button>
+                    ))}
+                    <button onClick={() => { setShowDropdown(false); setShowNewCompany(true); setTimeout(() => newCompanyRef.current?.focus(), 100); }}
+                      className="w-full px-3 py-2 text-xs font-medium text-left" style={{ color: 'var(--accent)', borderTop: '1px solid var(--border)' }}>
+                      + Add Company
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          ) : showNewCompany ? (
+            <div className="space-y-1.5">
+              <input ref={newCompanyRef} value={newCompanyName} onChange={(e) => setNewCompanyName(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') addCompany(); if (e.key === 'Escape') setShowNewCompany(false); }}
+                placeholder="e.g. Nvidia Devops" className="w-full px-2.5 py-1.5 rounded-lg text-xs focus:outline-none"
+                style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }} />
+              <div className="flex gap-1.5">
+                <button onClick={addCompany} className="flex-1 py-1 text-[10px] font-bold rounded" style={{ background: 'var(--accent)', color: '#fff' }}>Create</button>
+                <button onClick={() => setShowNewCompany(false)} className="px-2 py-1 text-[10px] rounded" style={{ color: 'var(--text-muted)' }}>Cancel</button>
+              </div>
+            </div>
+          ) : (
+            <button onClick={() => { setShowNewCompany(true); setTimeout(() => newCompanyRef.current?.focus(), 100); }}
+              className="w-full py-2 text-xs font-bold rounded-lg" style={{ background: 'var(--accent)', color: '#fff' }}>
+              + Add Company
+            </button>
+          )}
         </div>
         <div className="flex-1 overflow-y-auto py-1">
           {SIDEBAR_SECTIONS.map((s) => {
