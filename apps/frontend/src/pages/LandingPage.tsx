@@ -299,7 +299,7 @@ export default function LandingPage() {
 
       {/* ── 1. HERO ── */}
       <section className="relative pt-28 pb-14 md:pt-36 md:pb-20 px-6">
-        <div className="max-w-4xl mx-auto text-center">
+        <div className="w-[80%] max-w-7xl mx-auto text-center">
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <span className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold tracking-[0.12em] uppercase"
               style={{ borderRadius: '999px', background: L.surface, border: `1px solid ${L.border}`, color: L.secondary, fontFamily: F.mono }}>
@@ -346,7 +346,7 @@ export default function LandingPage() {
 
       {/* ── 2. COMPANY LOGOS — "Prepare for interviews at" ── */}
       <section className="px-6 py-8 overflow-hidden">
-        <div className="max-w-5xl mx-auto">
+        <div className="w-[80%] max-w-7xl mx-auto">
           <p className="text-center text-xs font-bold uppercase tracking-[0.2em] mb-6" style={{ color: L.muted }}>Prepare for interviews at</p>
           <div className="relative overflow-hidden" style={{ maskImage: 'linear-gradient(90deg, transparent, black 10%, black 90%, transparent)' }}>
             <div className="flex items-center gap-12" style={{ animation: 'scroll-logos 30s linear infinite', width: 'max-content' }}>
@@ -362,7 +362,7 @@ export default function LandingPage() {
 
       {/* ── 3. STATS BAR ── */}
       <section className="px-6 py-10">
-        <div className="max-w-4xl mx-auto">
+        <div className="w-[80%] max-w-7xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 px-8 py-8" style={{ borderRadius: '16px', background: L.surface, border: `1px solid ${L.border}` }}>
             {STATS.map((s, i) => (
               <Reveal key={s.label} delay={i * 0.06}>
@@ -378,7 +378,7 @@ export default function LandingPage() {
 
       {/* ── 4. APPA CARDS ── */}
       <section className="px-6 py-14 md:py-20">
-        <div className="max-w-5xl mx-auto">
+        <div className="w-[80%] max-w-7xl mx-auto">
           <Reveal className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl lg:text-[44px] font-bold tracking-tight" style={{ fontFamily: F.display }}>
               One platform, four steps to your offer.
@@ -405,7 +405,7 @@ export default function LandingPage() {
 
       {/* ── 5. TABBED PRODUCT SHOWCASE ── */}
       <section className="px-6 py-14 md:py-20" id="process" style={{ background: L.surface }}>
-        <div className="max-w-5xl mx-auto">
+        <div className="w-[80%] max-w-7xl mx-auto">
           <Reveal className="text-center mb-14">
             <span className="inline-block text-[11px] font-bold tracking-[0.18em] uppercase px-4 py-1.5 mb-5"
               style={{ borderRadius: '999px', background: `${L.primary}0A`, border: `1px solid ${L.primary}20`, color: L.primary, fontFamily: F.mono }}>How it works</span>
@@ -417,7 +417,7 @@ export default function LandingPage() {
 
       {/* ── 6. LIVE AI DEMO — Simulated Q&A ── */}
       <section className="px-6 py-14 md:py-20">
-        <div className="max-w-4xl mx-auto">
+        <div className="w-[80%] max-w-7xl mx-auto">
           <Reveal className="text-center mb-10">
             <span className="inline-flex items-center gap-2 text-[11px] font-bold tracking-[0.15em] uppercase px-4 py-1.5"
               style={{ borderRadius: '999px', background: L.surface, border: `1px solid ${L.border}`, color: L.secondary, fontFamily: F.mono }}>
@@ -474,7 +474,7 @@ export default function LandingPage() {
 
       {/* ── 7. JOB URL ANALYSIS ── */}
       <section className="px-6 py-14 md:py-20" style={{ background: L.surface }}>
-        <div className="max-w-4xl mx-auto">
+        <div className="w-[80%] max-w-7xl mx-auto">
           <Reveal className="text-center mb-10">
             <h2 className="text-3xl md:text-4xl lg:text-[44px] font-bold tracking-tight" style={{ fontFamily: F.display }}>
               Paste a job URL. Get a prep plan.
@@ -530,7 +530,7 @@ export default function LandingPage() {
 
       {/* ── 8. PREPARATION AT SCALE — Donut ── */}
       <section className="px-6 py-14 md:py-20">
-        <div className="max-w-4xl mx-auto">
+        <div className="w-[80%] max-w-7xl mx-auto">
           <Reveal className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl lg:text-[44px] font-bold tracking-tight" style={{ fontFamily: F.display }}>Everything you need to prepare.</h2>
             <p className="mt-4 text-lg max-w-xl mx-auto" style={{ color: L.secondary }}>800+ topics and 1,850+ problems across 7 categories.</p>
@@ -541,7 +541,7 @@ export default function LandingPage() {
 
       {/* ── 9. UNIQUE FEATURES GRID ── */}
       <section className="px-6 py-14 md:py-20" style={{ background: L.surface }}>
-        <div className="max-w-5xl mx-auto">
+        <div className="w-[80%] max-w-7xl mx-auto">
           <Reveal className="text-center mb-14">
             <span className="inline-block text-[11px] font-bold tracking-[0.18em] uppercase px-4 py-1.5 mb-5"
               style={{ borderRadius: '999px', background: `${L.emerald}0A`, border: `1px solid ${L.emerald}20`, color: L.emerald, fontFamily: F.mono }}>Only on Camora</span>
@@ -566,7 +566,7 @@ export default function LandingPage() {
 
       {/* ── 10. INTEGRATIONS BAR ── */}
       <section className="px-6 py-14 md:py-16">
-        <div className="max-w-4xl mx-auto text-center">
+        <div className="w-[80%] max-w-7xl mx-auto text-center">
           <Reveal>
             <p className="text-xs font-bold uppercase tracking-[0.2em] mb-6" style={{ color: L.muted }}>Works seamlessly with</p>
             <div className="flex flex-wrap items-center justify-center gap-3">
@@ -580,7 +580,7 @@ export default function LandingPage() {
 
       {/* ── 11. PRICING PREVIEW ── */}
       <section className="px-6 py-14 md:py-20" style={{ background: L.surface }}>
-        <div className="max-w-4xl mx-auto">
+        <div className="w-[80%] max-w-7xl mx-auto">
           <Reveal className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl lg:text-[44px] font-bold tracking-tight" style={{ fontFamily: F.display }}>Simple, transparent pricing.</h2>
             <p className="mt-4 text-lg" style={{ color: L.secondary }}>Start free. Upgrade when you're ready.</p>
@@ -622,7 +622,7 @@ export default function LandingPage() {
 
       {/* ── 12. FINAL CTA ── */}
       <section className="px-6 py-20 md:py-28">
-        <Reveal className="max-w-3xl mx-auto">
+        <Reveal className="w-[80%] max-w-7xl mx-auto">
           <div className="relative px-8 py-16 md:px-16 md:py-20 text-center overflow-hidden" style={{ borderRadius: '20px', background: L.surface, border: `1px solid ${L.border}` }}>
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[50%] h-[2px]" style={{ background: L.gradient }} />
             <div className="relative z-10">
