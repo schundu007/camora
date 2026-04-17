@@ -8,13 +8,19 @@ import * as freeUsageService from '../services/freeUsageService.js';
 
 const router = Router();
 
-// Daily prep cap: 1/day free, 3/day paid
+// Admin emails bypass all limits
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || 'chundubabu@gmail.com').split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
+
+// Daily prep cap: 1/day free, 3/day paid, unlimited for admins
 const PREP_DAILY_LIMIT_FREE = 1;
 const PREP_DAILY_LIMIT_PAID = 3;
 
 const prepDailyUsage = new Map();
 
-function checkPrepDailyLimit(userId, isPaid) {
+function checkPrepDailyLimit(userId, isPaid, email) {
+  // Admin bypass
+  if (email && ADMIN_EMAILS.includes(email.toLowerCase())) return true;
+
   const today = new Date().toISOString().slice(0, 10);
   const limit = isPaid ? PREP_DAILY_LIMIT_PAID : PREP_DAILY_LIMIT_FREE;
   const entry = prepDailyUsage.get(userId);
@@ -57,6 +63,15 @@ async function checkFeatureAccess(req, res, featureType = 'design') {
       return false;
     }
 
+    // Admin bypass — unlimited access
+    const userEmail = decoded.email?.toLowerCase();
+    if (userEmail && ADMIN_EMAILS.includes(userEmail)) {
+      req.userId = decoded.id;
+      req.userEmail = userEmail;
+      req.featureAccess = { allowed: true, hasSubscription: true, isAdmin: true };
+      return true;
+    }
+
     // Check subscription OR free usage (freemium model)
     const canUseResult = await freeUsageService.canUseFeature(decoded.id, featureType);
     console.log('[AscendPrep] Feature access check:', canUseResult);
@@ -84,6 +99,7 @@ async function checkFeatureAccess(req, res, featureType = 'design') {
     });
 
     req.userId = decoded.id;
+    req.userEmail = decoded.email;
     req.featureAccess = canUseResult;
     return true;
   } catch (err) {
@@ -150,7 +166,7 @@ router.post('/stream', async (req, res) => {
 
   // Check daily prep limit
   const isPaid = req.featureAccess?.hasSubscription || false;
-  if (!checkPrepDailyLimit(req.userId, isPaid)) {
+  if (!checkPrepDailyLimit(req.userId, isPaid, req.userEmail || req.user?.email)) {
     const limit = isPaid ? PREP_DAILY_LIMIT_PAID : PREP_DAILY_LIMIT_FREE;
     res.setHeader('Content-Type', 'text/event-stream');
     res.write(`data: ${JSON.stringify({
@@ -214,7 +230,7 @@ router.post('/section', async (req, res) => {
 
   // Check daily prep limit
   const isPaidSection = req.featureAccess?.hasSubscription || false;
-  if (!checkPrepDailyLimit(req.userId, isPaidSection)) {
+  if (!checkPrepDailyLimit(req.userId, isPaidSection, req.userEmail || req.user?.email)) {
     const limit = isPaidSection ? PREP_DAILY_LIMIT_PAID : PREP_DAILY_LIMIT_FREE;
     res.setHeader('Content-Type', 'text/event-stream');
     res.write(`data: ${JSON.stringify({

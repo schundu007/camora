@@ -189,6 +189,81 @@ function UploadZone({ label, required, value, fileName, onUpload, onPaste }: {
   );
 }
 
+/** Parse JD text into structured sections and render beautifully */
+function FormattedJD({ text }: { text: string }) {
+  if (!text?.trim()) return <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No job description added yet.</p>;
+
+  // Detect section headers — lines that look like titles (short, no bullet, often Title Case)
+  const SECTION_PATTERNS = [
+    /^(about\s+(the\s+)?(company|role|team|position|us))/i,
+    /^(what\s+you'?ll?\s+(be\s+)?do(ing)?)/i,
+    /^(what\s+we\s+(need|are\s+looking|expect|require|want)\s+to\s+see)/i,
+    /^(responsibilities|key\s+responsibilities)/i,
+    /^(requirements|qualifications|minimum\s+qualifications)/i,
+    /^(preferred|nice\s+to\s+have|bonus|ways?\s+to\s+stand\s+out)/i,
+    /^(benefits|perks|compensation|what\s+we\s+offer)/i,
+    /^(tech\s+stack|technologies|tools)/i,
+    /^(who\s+you\s+are|ideal\s+candidate)/i,
+    /^(experience|skills)/i,
+  ];
+
+  const isHeader = (line: string): boolean => {
+    const t = line.trim();
+    if (!t || t.length > 80) return false;
+    if (SECTION_PATTERNS.some(p => p.test(t))) return true;
+    // Title-case short lines without punctuation at end
+    if (t.length < 50 && !t.endsWith('.') && !t.endsWith(',') && !t.startsWith('-') && !t.startsWith('•') && /^[A-Z]/.test(t) && !/^\d/.test(t)) {
+      const words = t.split(/\s+/);
+      if (words.length <= 8 && words.filter(w => /^[A-Z]/.test(w)).length >= words.length * 0.5) return true;
+    }
+    return false;
+  };
+
+  const lines = text.split('\n');
+  const sections: { title: string | null; items: string[] }[] = [];
+  let current: { title: string | null; items: string[] } = { title: null, items: [] };
+
+  for (const line of lines) {
+    const t = line.trim();
+    if (!t) continue;
+    if (isHeader(t)) {
+      if (current.items.length > 0 || current.title) sections.push(current);
+      current = { title: t, items: [] };
+    } else {
+      current.items.push(t.replace(/^[-•]\s*/, ''));
+    }
+  }
+  if (current.items.length > 0 || current.title) sections.push(current);
+
+  return (
+    <div className="flex flex-col gap-4">
+      {sections.map((sec, i) => (
+        <div key={i} className="rounded-xl overflow-hidden" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+          {sec.title && (
+            <div className="px-4 py-2.5" style={{ background: 'rgba(99,102,241,0.08)', borderBottom: '1px solid var(--border)' }}>
+              <h4 className="text-[11px] font-bold uppercase tracking-wider" style={{ color: '#818cf8' }}>{sec.title}</h4>
+            </div>
+          )}
+          <div className="px-4 py-3 flex flex-col gap-1.5">
+            {sec.items.map((item, j) => {
+              // First section without title is likely the company description — render as paragraph
+              if (i === 0 && !sec.title) {
+                return <p key={j} className="text-[13px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{item}</p>;
+              }
+              return (
+                <div key={j} className="flex gap-2 items-start">
+                  <span className="w-1 h-1 rounded-full shrink-0 mt-2" style={{ background: '#818cf8' }} />
+                  <span className="text-[13px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{item}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
   const { token } = useAuth();
   const [prepData, setPrepData] = useState<PrepData>(loadPrepData);
@@ -527,14 +602,15 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
             </div>
           </div>
         ) : activeSection === 'jd-view' ? (
-          /* JD viewer/editor */
+          /* JD formatted viewer */
           <div className="flex-1 flex flex-col">
-            <div className="px-6 py-4" style={{ borderBottom: '1px solid var(--border)' }}>
+            <div className="px-6 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid var(--border)' }}>
               <h3 className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Job Description</h3>
+              <button onClick={() => setActiveSection('input')} className="text-[10px] font-medium px-2 py-1 rounded-lg" style={{ color: 'var(--accent)', background: 'var(--accent-subtle)' }}>Edit</button>
             </div>
-            <textarea value={state.jd} onChange={(e) => setState(p => ({ ...p, jd: e.target.value }))}
-              placeholder="Paste your job description here..." className="flex-1 p-6 text-sm leading-relaxed resize-none focus:outline-none"
-              style={{ background: 'transparent', color: 'var(--text-secondary)' }} />
+            <div className="flex-1 overflow-auto p-6">
+              <FormattedJD text={state.jd} />
+            </div>
           </div>
         ) : (
           /* Generated section content */
