@@ -88,11 +88,16 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
       try {
         const result = await transcriptionAPI.transcribe(token, blob, 'audio.webm', shouldFilterVoice);
         if (result.skipped) {
-          const ratio = result.interviewer_ratio;
-          const msg = ratio !== undefined
-            ? `Your voice (${Math.round((1 - ratio) * 100)}%) - filtering...`
-            : 'Your voice detected - filtering...';
-          setStatus('listen', msg);
+          if (result.reason === 'hallucination_filtered') {
+            // Whisper hallucination — silently restart
+            setStatus('listen', 'Listening...');
+          } else {
+            const ratio = result.interviewer_ratio;
+            const msg = ratio !== undefined
+              ? `Your voice (${Math.round((1 - ratio) * 100)}%) - filtering...`
+              : 'Your voice detected - filtering...';
+            setStatus('listen', msg);
+          }
           setShouldRestart(true);
           return;
         }
@@ -114,13 +119,17 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
       try {
         const result = await transcriptionAPI.transcribe(token, blob, 'audio.webm', shouldFilterVoice);
         if (result.skipped) {
-          const ratio = result.interviewer_ratio;
-          const msg = ratio !== undefined
-            ? `Your voice (${Math.round((1 - ratio) * 100)}%) - filtering...`
-            : 'Your voice detected - filtering...';
-          setStatus('listen', msg);
-          setShouldRestart(true);
-          return;
+          if (result.reason === 'hallucination_filtered') {
+            setStatus('ready', 'No speech detected - try again');
+          } else {
+            const ratio = result.interviewer_ratio;
+            const msg = ratio !== undefined
+              ? `Your voice (${Math.round((1 - ratio) * 100)}%) - filtering...`
+              : 'Your voice detected - filtering...';
+            setStatus('listen', msg);
+            setShouldRestart(true);
+            return;
+          }
         }
         if (result.text) {
           onTranscription?.(result.text);
