@@ -112,20 +112,23 @@ export function AICompanionPanel({ isOpen, onClose, inputValue, setInputValue, o
             </div>
           ) : (
             <div className="flex flex-col gap-3">
-              {/* Show all Q&A history in the copilot */}
-              {history.map((entry, idx) => (
-                <div key={idx} className="flex flex-col gap-2">
-                  <div className="flex items-start gap-2">
-                    <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-0.5" style={{ background: C.accentBg }}>
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+              {/* Show specific entry or latest */}
+              {(() => {
+                const showIdx = viewingIdx != null ? viewingIdx : history.length - 1;
+                const entry = history[showIdx];
+                if (!entry && !isStreaming) return null;
+                return entry ? (
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-start gap-2">
+                      <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-0.5" style={{ background: C.accentBg }}>
+                        <span className="text-[10px] font-bold" style={{ color: C.accent }}>{showIdx + 1}</span>
+                      </div>
+                      <p className="text-[13px] font-medium leading-snug" style={{ fontFamily: 'var(--font-sans)', color: C.text }}>{entry.question}</p>
                     </div>
-                    <p className="text-sm leading-relaxed" style={{ fontFamily: 'var(--font-sans)', color: C.text }}>{entry.question}</p>
-                  </div>
-                  <div className="ml-8">
                     <AnswerBlocks blocks={safeBlocks(entry.blocks)} isDesign={false} isCoding={false} question={entry.question} />
                   </div>
-                </div>
-              ))}
+                ) : null;
+              })()}
 
               {/* Current streaming */}
               {isStreaming && question && (
