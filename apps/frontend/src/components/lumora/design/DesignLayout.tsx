@@ -357,7 +357,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
   const timerUrgent = timerDuration > 0 && timerSeconds < 300 && timerSeconds > 0;
 
   // Resizable left panel
-  const [leftWidth, setLeftWidth] = useState(35); // percentage
+  const [leftWidth, setLeftWidth] = useState(25); // percentage — 25% problem, 75% design
   const isResizing = useRef(false);
 
   const handleDividerMouseDown = useCallback((e: React.MouseEvent) => {
