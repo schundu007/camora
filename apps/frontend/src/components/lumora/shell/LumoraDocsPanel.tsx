@@ -18,12 +18,16 @@ interface DocItem {
 }
 
 const DEFAULT_DOCS: DocItem[] = [
-  { id: 'jd', label: 'Job Description', icon: '📋', description: 'Paste or upload the job description for your target role', content: '' },
-  { id: 'resume', label: 'Resume / CV', icon: '📄', description: 'Your resume — AI uses this to personalize answers', content: '' },
-  { id: 'prep', label: 'Prep Notes', icon: '📝', description: 'Key points, talking points, STAR stories', content: '' },
-  { id: 'company', label: 'Company Research', icon: '🏢', description: 'Company info, culture, recent news, tech stack', content: '' },
-  { id: 'questions', label: 'Expected Questions', icon: '❓', description: 'Likely interview questions and your prepared answers', content: '' },
-  { id: 'cheatsheet', label: 'Cheat Sheet', icon: '⚡', description: 'Quick reference — formulas, patterns, complexity', content: '' },
+  { id: 'jd', label: 'Job Description', icon: '🎯', description: 'The JD for your target role — AI tailors all answers to this', content: '' },
+  { id: 'resume', label: 'Resume / CV', icon: '📄', description: 'Your resume — used to personalize behavioral and pitch answers', content: '' },
+  { id: 'pitch', label: 'Elevator Pitch', icon: '🎤', description: '2-min pitch: opening hook, key achievements, why this company', content: '' },
+  { id: 'prep', label: 'Interview Prep', icon: '📝', description: 'Generated prep material from Camora Prepare — paste or upload', content: '' },
+  { id: 'behavioral', label: 'STAR Stories', icon: '⭐', description: 'Your STAR-format stories: Situation, Task, Action, Result', content: '' },
+  { id: 'techstack', label: 'Tech Stack Notes', icon: '🔧', description: 'Key technologies from the JD — concepts, patterns, gotchas', content: '' },
+  { id: 'system-design', label: 'System Design Notes', icon: '🏗️', description: 'Architecture patterns, capacity estimates, trade-off frameworks', content: '' },
+  { id: 'coding', label: 'Coding Patterns', icon: '💻', description: 'DSA patterns, complexity cheat sheet, common algorithms', content: '' },
+  { id: 'company', label: 'Company Intel', icon: '🏢', description: 'Culture, values, recent news, engineering blog highlights', content: '' },
+  { id: 'salary', label: 'Salary & Negotiation', icon: '💰', description: 'Target range, competing offers, negotiation talking points', content: '' },
 ];
 
 function loadDocs(): DocItem[] {
