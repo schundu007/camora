@@ -952,12 +952,12 @@ export default function DocsPage({ onBack }) {
                           <button onClick={() => setSqlPlaygroundOpen(false)}
                             className="px-5 py-2.5 text-sm font-bold rounded-lg transition-all"
                             style={!sqlPlaygroundOpen ? { background: '#76B900', color: '#fff', boxShadow: '0 2px 8px rgba(118,185,0,0.3)' } : { color: 'rgba(255,255,255,0.5)' }}>
-                            📚 Topics
+                            Topics
                           </button>
                           <button onClick={() => setSqlPlaygroundOpen(true)}
                             className="px-5 py-2.5 text-sm font-bold rounded-lg transition-all"
                             style={sqlPlaygroundOpen ? { background: '#76B900', color: '#fff', boxShadow: '0 2px 8px rgba(118,185,0,0.3)' } : { color: 'rgba(255,255,255,0.5)' }}>
-                            ⚡ SQL Playground
+                            SQL Playground
                           </button>
                         </div>
                       )}
