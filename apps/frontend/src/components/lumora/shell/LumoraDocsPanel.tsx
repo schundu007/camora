@@ -1,220 +1,275 @@
 /**
- * Interview Docs — full-page document manager for interview context.
- * Upload or paste: JD, Resume, Prep Notes, Company Research, etc.
+ * Interview Prep — matches capra.cariara.com/app/prep layout.
+ * Sidebar sections + upload zones + Generate button.
  */
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
 
-const STORAGE_KEY = 'lumora_docs_v2'; // v2: interview-specific docs with emojis
+const STORAGE_KEY = 'lumora_docs_v3';
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
-interface DocItem {
-  id: string;
-  label: string;
-  icon: string;
-  description: string;
-  content: string;
-  fileName?: string;
+interface DocState {
+  jd: string;
+  jdFile?: string;
+  resume: string;
+  resumeFile?: string;
+  coverLetter: string;
+  coverLetterFile?: string;
+  prepMaterials: string;
+  prepMaterialsFile?: string;
+  studyMaterials: string;
+  studyMaterialsFile?: string;
+  // Generated sections
+  sections: Record<string, string>;
 }
 
-const DEFAULT_DOCS: DocItem[] = [
-  { id: 'jd', label: 'Job Description', icon: '🎯', description: 'The JD for your target role — AI tailors all answers to this', content: '' },
-  { id: 'resume', label: 'Resume / CV', icon: '📄', description: 'Your resume — used to personalize behavioral and pitch answers', content: '' },
-  { id: 'pitch', label: 'Elevator Pitch', icon: '🎤', description: '2-min pitch: opening hook, key achievements, why this company', content: '' },
-  { id: 'prep', label: 'Interview Prep', icon: '📝', description: 'Generated prep material from Camora Prepare — paste or upload', content: '' },
-  { id: 'behavioral', label: 'STAR Stories', icon: '⭐', description: 'Your STAR-format stories: Situation, Task, Action, Result', content: '' },
-  { id: 'techstack', label: 'Tech Stack Notes', icon: '🔧', description: 'Key technologies from the JD — concepts, patterns, gotchas', content: '' },
-  { id: 'system-design', label: 'System Design Notes', icon: '🏗️', description: 'Architecture patterns, capacity estimates, trade-off frameworks', content: '' },
-  { id: 'coding', label: 'Coding Patterns', icon: '💻', description: 'DSA patterns, complexity cheat sheet, common algorithms', content: '' },
-  { id: 'company', label: 'Company Intel', icon: '🏢', description: 'Culture, values, recent news, engineering blog highlights', content: '' },
-  { id: 'salary', label: 'Salary & Negotiation', icon: '💰', description: 'Target range, competing offers, negotiation talking points', content: '' },
+const INITIAL_STATE: DocState = {
+  jd: '', resume: '', coverLetter: '', prepMaterials: '', studyMaterials: '',
+  sections: {},
+};
+
+const SIDEBAR_SECTIONS = [
+  { id: 'input', label: 'Input Materials', color: '#10b981' },
+  { id: 'jd-view', label: 'Job Description', color: '#6366f1' },
+  { id: 'pitch', label: 'Elevator Pitch', color: '#ec4899' },
+  { id: 'hr', label: 'HR Questions', color: '#f59e0b' },
+  { id: 'hiring-manager', label: 'Hiring Manager', color: '#06b6d4' },
+  { id: 'coding', label: 'Coding', color: '#10b981' },
+  { id: 'system-design', label: 'System Design', color: '#3b82f6' },
+  { id: 'behavioral', label: 'Behavioral', color: '#f97316' },
+  { id: 'techstack', label: 'Tech Stack', color: '#8b5cf6' },
 ];
 
-function loadDocs(): DocItem[] {
-  try { const r = localStorage.getItem(STORAGE_KEY); return r ? JSON.parse(r) : DEFAULT_DOCS; } catch { return DEFAULT_DOCS; }
+function loadState(): DocState {
+  try { const r = localStorage.getItem(STORAGE_KEY); return r ? JSON.parse(r) : INITIAL_STATE; } catch { return INITIAL_STATE; }
 }
-function saveDocs(docs: DocItem[]) {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(docs)); } catch {}
+function saveState(s: DocState) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch {}
+}
+
+function UploadZone({ label, required, value, fileName, onUpload, onPaste }: {
+  label: string; required?: boolean; value: string; fileName?: string;
+  onUpload: (file: File) => void; onPaste: (text: string) => void;
+}) {
+  const ref = useRef<HTMLInputElement>(null);
+  const [dragOver, setDragOver] = useState(false);
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault(); setDragOver(false);
+    const file = e.dataTransfer?.files?.[0];
+    if (file) onUpload(file);
+  };
+
+  return (
+    <div
+      className={`rounded-xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-all min-h-[120px] ${dragOver ? 'ring-2 ring-indigo-500' : ''}`}
+      style={{ background: value ? 'var(--accent-subtle)' : 'var(--bg-surface)', border: `1px solid ${value ? 'var(--accent)' : 'var(--border)'}` }}
+      onClick={() => ref.current?.click()}
+      onDrop={handleDrop}
+      onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+      onDragLeave={() => setDragOver(false)}
+    >
+      <input ref={ref} type="file" accept=".pdf,.docx,.doc,.txt,.md" className="hidden"
+        onChange={(e) => { const f = e.target.files?.[0]; if (f) onUpload(f); e.target.value = ''; }} />
+      {value ? (
+        <>
+          <div className="w-8 h-8 rounded-full flex items-center justify-center mb-2" style={{ background: 'var(--accent)', color: '#fff' }}>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
+          </div>
+          <span className="text-xs font-semibold" style={{ color: 'var(--accent)' }}>{fileName || 'Content added'}</span>
+          <span className="text-[10px] mt-1" style={{ color: 'var(--text-muted)' }}>{value.length.toLocaleString()} characters</span>
+        </>
+      ) : (
+        <>
+          <svg className="w-6 h-6 mb-2" style={{ color: 'var(--text-muted)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+          </svg>
+          <span className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>
+            {label}{required && <span style={{ color: '#ef4444' }}>*</span>}
+          </span>
+          <span className="text-[10px] mt-0.5" style={{ color: 'var(--text-muted)' }}>Drop or click</span>
+        </>
+      )}
+    </div>
+  );
 }
 
 export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
   const { token } = useAuth();
-  const [docs, setDocs] = useState<DocItem[]>(loadDocs);
-  const [activeDoc, setActiveDoc] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [state, setState] = useState<DocState>(loadState);
+  const [activeSection, setActiveSection] = useState('input');
+  const [generating, setGenerating] = useState(false);
+  const [genProgress, setGenProgress] = useState('');
 
-  useEffect(() => { saveDocs(docs); }, [docs]);
+  useEffect(() => { saveState(state); }, [state]);
 
-  const activeItem = docs.find(d => d.id === activeDoc);
-  const filledCount = docs.filter(d => d.content.trim().length > 0).length;
-
-  const updateContent = (id: string, content: string, fileName?: string) => {
-    setDocs(prev => prev.map(d => d.id === id ? { ...d, content, fileName: fileName || d.fileName } : d));
-  };
-
-  const handleFileUpload = async (file: File) => {
-    if (!activeDoc || !token) return;
-    setUploading(true);
+  const extractFile = useCallback(async (file: File): Promise<string> => {
+    if (file.type === 'text/plain' || file.name.endsWith('.txt') || file.name.endsWith('.md')) {
+      return await file.text();
+    }
+    if (!token) return `[Uploaded: ${file.name}]`;
     try {
-      // Try to extract text from the file
-      if (file.type === 'text/plain') {
-        const text = await file.text();
-        updateContent(activeDoc, text, file.name);
-      } else if (file.type === 'application/pdf' || file.name.endsWith('.pdf') || file.name.endsWith('.docx') || file.name.endsWith('.doc')) {
-        // Send to backend for text extraction
-        const formData = new FormData();
-        formData.append('file', file);
-        const res = await fetch(`${API_URL}/api/extract`, {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${token}` },
-          body: formData,
+      const fd = new FormData(); fd.append('file', file);
+      const res = await fetch(`${API_URL}/api/extract`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: fd });
+      if (res.ok) { const d = await res.json(); return d.text || `[${file.name}]`; }
+    } catch {}
+    return `[Uploaded: ${file.name}]`;
+  }, [token]);
+
+  const handleGenerate = useCallback(async () => {
+    if (!state.jd.trim() || !state.resume.trim() || !token) return;
+    setGenerating(true);
+    const newSections: Record<string, string> = {};
+
+    for (const section of ['pitch', 'hr', 'hiring-manager', 'coding', 'system-design', 'behavioral', 'techstack']) {
+      setGenProgress(`Generating ${SIDEBAR_SECTIONS.find(s => s.id === section)?.label || section}...`);
+      try {
+        const res = await fetch(`${API_URL}/api/v1/prep/section`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ section, jobDescription: state.jd, resume: state.resume, coverLetter: state.coverLetter, prepMaterial: state.prepMaterials }),
         });
         if (res.ok) {
-          const data = await res.json();
-          updateContent(activeDoc, data.text || `[Uploaded: ${file.name}]`, file.name);
-        } else {
-          // Fallback: store filename reference
-          updateContent(activeDoc, `[Uploaded: ${file.name}]`, file.name);
+          const reader = res.body?.getReader();
+          const decoder = new TextDecoder();
+          let text = '';
+          if (reader) {
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              text += decoder.decode(value, { stream: true });
+            }
+          }
+          newSections[section] = text;
         }
-      } else {
-        const text = await file.text();
-        updateContent(activeDoc, text, file.name);
+      } catch (err) {
+        newSections[section] = `Error generating ${section}`;
       }
-    } catch {
-      updateContent(activeDoc, `[Uploaded: ${file.name}]`, file.name);
     }
-    setUploading(false);
-  };
+
+    setState(prev => ({ ...prev, sections: { ...prev.sections, ...newSections } }));
+    setGenerating(false);
+    setGenProgress('');
+  }, [state.jd, state.resume, state.coverLetter, state.prepMaterials, token]);
+
+  const hasRequiredDocs = state.jd.trim().length > 0 && state.resume.trim().length > 0;
 
   return (
     <div className="h-full flex" style={{ background: 'var(--bg-app)' }}>
-      {/* Left sidebar — document list */}
-      <div className="w-[240px] flex flex-col shrink-0" style={{ borderRight: '1px solid var(--border)', background: 'var(--bg-surface)' }}>
-        <div className="px-4 py-4" style={{ borderBottom: '1px solid var(--border)' }}>
-          <h2 className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Interview Docs</h2>
-          <p className="text-[10px] mt-1" style={{ color: 'var(--text-muted)' }}>{filledCount}/{docs.length} documents ready</p>
-          {/* Progress bar */}
-          <div className="mt-2 h-1 rounded-full" style={{ background: 'var(--bg-elevated)' }}>
-            <div className="h-full rounded-full transition-all" style={{ width: `${(filledCount / docs.length) * 100}%`, background: 'var(--accent)' }} />
-          </div>
+      {/* Sidebar */}
+      <div className="w-[180px] flex flex-col shrink-0" style={{ borderRight: '1px solid var(--border)', background: 'var(--bg-surface)' }}>
+        <div className="px-3 py-3" style={{ borderBottom: '1px solid var(--border)' }}>
+          <h2 className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Interview Prep</h2>
         </div>
-
         <div className="flex-1 overflow-y-auto py-1">
-          {docs.map((doc) => {
-            const isActive = doc.id === activeDoc;
-            const hasFilled = doc.content.trim().length > 0;
+          {SIDEBAR_SECTIONS.map((s) => {
+            const isActive = s.id === activeSection;
+            const hasContent = s.id === 'input' ? hasRequiredDocs : !!state.sections[s.id];
             return (
-              <button
-                key={doc.id}
-                onClick={() => setActiveDoc(doc.id)}
-                className="w-full flex items-center gap-3 px-4 py-3 text-left transition-colors"
+              <button key={s.id} onClick={() => setActiveSection(s.id)}
+                className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition-colors text-xs font-medium"
                 style={{
                   background: isActive ? 'var(--accent-subtle)' : 'transparent',
-                  borderLeft: isActive ? '3px solid var(--accent)' : '3px solid transparent',
-                }}
-              >
-                <span className="text-base">{doc.icon}</span>
-                <div className="flex-1 min-w-0">
-                  <div className="text-xs font-medium" style={{ color: isActive ? 'var(--accent)' : 'var(--text-primary)' }}>{doc.label}</div>
-                  <div className="text-[10px] mt-0.5" style={{ color: 'var(--text-muted)' }}>
-                    {hasFilled ? (doc.fileName || `${doc.content.length} chars`) : 'Empty'}
-                  </div>
-                </div>
-                {hasFilled && <div className="w-2 h-2 rounded-full shrink-0" style={{ background: 'var(--accent)' }} />}
+                  color: isActive ? 'var(--accent)' : 'var(--text-secondary)',
+                  borderLeft: isActive ? `3px solid var(--accent)` : '3px solid transparent',
+                }}>
+                <div className="w-2 h-2 rounded-full shrink-0" style={{ background: hasContent ? s.color : 'var(--border)' }} />
+                {s.label}
               </button>
             );
           })}
         </div>
+
+        {/* Generate button */}
+        <div className="p-3" style={{ borderTop: '1px solid var(--border)' }}>
+          <button onClick={handleGenerate} disabled={!hasRequiredDocs || generating}
+            className="w-full py-2.5 text-xs font-bold rounded-lg transition-colors disabled:opacity-40"
+            style={{ background: 'var(--accent)', color: '#fff' }}>
+            {generating ? genProgress || 'Generating...' : `Generate (${SIDEBAR_SECTIONS.length - 1})`}
+          </button>
+          {!hasRequiredDocs && <p className="text-[9px] mt-1.5 text-center" style={{ color: 'var(--text-muted)' }}>Add JD & Resume to start</p>}
+          <button onClick={() => { setState(INITIAL_STATE); setActiveSection('input'); }}
+            className="w-full py-1.5 mt-1.5 text-[10px] font-medium rounded-lg" style={{ color: 'var(--text-muted)' }}>Clear</button>
+        </div>
       </div>
 
-      {/* Right panel — document editor */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {activeItem ? (
-          <>
-            {/* Editor header */}
-            <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: '1px solid var(--border)' }}>
-              <div>
-                <h3 className="text-sm font-bold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
-                  <span className="text-lg">{activeItem.icon}</span>
-                  {activeItem.label}
-                </h3>
-                <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-muted)' }}>{activeItem.description}</p>
+      {/* Main content */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-auto">
+        {activeSection === 'input' ? (
+          <div className="p-6 max-w-4xl">
+            {/* Materials */}
+            <div className="mb-6">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-2 h-2 rounded-full" style={{ background: '#10b981' }} />
+                <span className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Materials</span>
               </div>
-              <div className="flex items-center gap-2">
-                <input ref={fileInputRef} type="file" accept=".pdf,.docx,.doc,.txt,.md" className="hidden"
-                  onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFileUpload(f); e.target.value = ''; }} />
-                <button onClick={() => fileInputRef.current?.click()} disabled={uploading}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors"
-                  style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}>
-                  {uploading ? (
-                    <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
-                  )}
-                  Upload File
-                </button>
-                {activeItem.content && (
-                  <button onClick={() => updateContent(activeDoc!, '', undefined)}
-                    className="px-3 py-1.5 text-xs font-medium rounded-lg transition-colors"
-                    style={{ color: 'var(--text-muted)' }}>
-                    Clear
-                  </button>
-                )}
+              <div className="grid grid-cols-2 gap-3">
+                <UploadZone label="Job Description" required value={state.jd} fileName={state.jdFile}
+                  onUpload={async (f) => { const t = await extractFile(f); setState(p => ({ ...p, jd: t, jdFile: f.name })); }}
+                  onPaste={(t) => setState(p => ({ ...p, jd: t }))} />
+                <UploadZone label="Resume" required value={state.resume} fileName={state.resumeFile}
+                  onUpload={async (f) => { const t = await extractFile(f); setState(p => ({ ...p, resume: t, resumeFile: f.name })); }}
+                  onPaste={(t) => setState(p => ({ ...p, resume: t }))} />
+                <UploadZone label="Cover Letter" value={state.coverLetter} fileName={state.coverLetterFile}
+                  onUpload={async (f) => { const t = await extractFile(f); setState(p => ({ ...p, coverLetter: t, coverLetterFile: f.name })); }}
+                  onPaste={(t) => setState(p => ({ ...p, coverLetter: t }))} />
+                <UploadZone label="Prep Materials" value={state.prepMaterials} fileName={state.prepMaterialsFile}
+                  onUpload={async (f) => { const t = await extractFile(f); setState(p => ({ ...p, prepMaterials: t, prepMaterialsFile: f.name })); }}
+                  onPaste={(t) => setState(p => ({ ...p, prepMaterials: t }))} />
               </div>
             </div>
 
-            {/* Editor body */}
-            <div className="flex-1 min-h-0 flex flex-col">
-              {activeItem.fileName && (
-                <div className="flex items-center gap-2 px-6 py-2" style={{ background: 'var(--bg-elevated)', borderBottom: '1px solid var(--border)' }}>
-                  <svg className="w-3.5 h-3.5" style={{ color: 'var(--accent)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                  <span className="text-[11px] font-medium" style={{ color: 'var(--text-secondary)' }}>{activeItem.fileName}</span>
+            {/* Study Materials */}
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-2 h-2 rounded-full" style={{ background: '#6366f1' }} />
+                <span className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Study Materials</span>
+              </div>
+              <UploadZone label="Drop files or click" value={state.studyMaterials} fileName={state.studyMaterialsFile}
+                onUpload={async (f) => { const t = await extractFile(f); setState(p => ({ ...p, studyMaterials: t, studyMaterialsFile: f.name })); }}
+                onPaste={(t) => setState(p => ({ ...p, studyMaterials: t }))} />
+            </div>
+
+            {/* Status */}
+            <div className="mt-6 text-center">
+              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                {hasRequiredDocs ? 'Ready to generate — click Generate in the sidebar' : 'Add JD & Resume to start'}
+              </p>
+            </div>
+          </div>
+        ) : activeSection === 'jd-view' ? (
+          /* JD viewer/editor */
+          <div className="flex-1 flex flex-col">
+            <div className="px-6 py-4" style={{ borderBottom: '1px solid var(--border)' }}>
+              <h3 className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Job Description</h3>
+            </div>
+            <textarea value={state.jd} onChange={(e) => setState(p => ({ ...p, jd: e.target.value }))}
+              placeholder="Paste your job description here..." className="flex-1 p-6 text-sm leading-relaxed resize-none focus:outline-none"
+              style={{ background: 'transparent', color: 'var(--text-secondary)' }} />
+          </div>
+        ) : (
+          /* Generated section content */
+          <div className="flex-1 flex flex-col">
+            <div className="px-6 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid var(--border)' }}>
+              <h3 className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
+                {SIDEBAR_SECTIONS.find(s => s.id === activeSection)?.label}
+              </h3>
+              {state.sections[activeSection] && (
+                <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'var(--accent-subtle)', color: 'var(--accent)' }}>Generated</span>
+              )}
+            </div>
+            <div className="flex-1 overflow-auto p-6">
+              {state.sections[activeSection] ? (
+                <div className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: 'var(--text-secondary)' }}>
+                  {state.sections[activeSection]}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full">
+                  <p className="text-sm mb-2" style={{ color: 'var(--text-muted)' }}>No content yet</p>
+                  <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                    {hasRequiredDocs ? 'Click Generate to create prep material' : 'Add JD & Resume first, then Generate'}
+                  </p>
                 </div>
               )}
-              <textarea
-                value={activeItem.content}
-                onChange={(e) => updateContent(activeDoc!, e.target.value)}
-                placeholder={`Paste your ${activeItem.label.toLowerCase()} here, or upload a file (PDF, DOCX, TXT).\n\nThis content will be used by the AI Copilot to give more relevant, personalized answers during your interview.`}
-                className="flex-1 p-6 text-sm leading-relaxed resize-none focus:outline-none"
-                style={{ background: 'transparent', color: 'var(--text-secondary)', border: 'none' }}
-              />
-            </div>
-
-            {/* Footer */}
-            <div className="px-6 py-2 flex items-center justify-between" style={{ borderTop: '1px solid var(--border)', background: 'var(--bg-surface)' }}>
-              <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
-                {activeItem.content.length > 0 ? `${activeItem.content.length.toLocaleString()} characters` : 'No content yet'}
-              </span>
-              <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>Auto-saved to browser</span>
-            </div>
-          </>
-        ) : (
-          /* Empty state */
-          <div className="flex-1 flex flex-col items-center justify-center p-8">
-            <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ background: 'var(--accent-subtle)' }}>
-              <svg className="w-8 h-8" style={{ color: 'var(--accent)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Interview Documents</h3>
-            <p className="text-sm text-center max-w-sm mb-6" style={{ color: 'var(--text-muted)' }}>
-              Add your job description, resume, and prep notes. The AI Copilot uses these to give personalized, context-aware answers during your interview.
-            </p>
-            <div className="grid grid-cols-2 gap-2 max-w-md">
-              {docs.map(d => (
-                <button key={d.id} onClick={() => setActiveDoc(d.id)}
-                  className="flex items-center gap-2 px-4 py-3 rounded-xl text-left transition-colors"
-                  style={{ background: d.content ? 'var(--accent-subtle)' : 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-                  <span>{d.icon}</span>
-                  <div>
-                    <div className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>{d.label}</div>
-                    <div className="text-[10px]" style={{ color: d.content ? 'var(--accent)' : 'var(--text-muted)' }}>
-                      {d.content ? 'Ready' : 'Add'}
-                    </div>
-                  </div>
-                </button>
-              ))}
             </div>
           </div>
         )}
