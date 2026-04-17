@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 import CamoraLogo from '../../shared/CamoraLogo';
 
 export type LumoraTab = 'interview' | 'coding' | 'design' | 'prepkit' | 'docs' | 'calendar';
@@ -21,6 +22,45 @@ const C = {
   accentBg: 'rgba(118,185,0,0.15)',
   border: '#333333',
 };
+
+function UserAvatarMenu() {
+  const { user, logout } = useAuth();
+  const [showMenu, setShowMenu] = useState(false);
+  if (!user) return null;
+
+  const initials = (user.name || user.email || '?').slice(0, 2).toUpperCase();
+
+  return (
+    <div className="relative mb-2">
+      <button onClick={() => setShowMenu(!showMenu)}
+        className="w-10 h-10 rounded-full overflow-hidden mx-auto flex items-center justify-center transition-all hover:ring-2 hover:ring-white/20"
+        title={`${user.name || 'User'}\n${user.email || ''}`}>
+        {user.image ? (
+          <img src={user.image} alt="" className="w-10 h-10 rounded-full object-cover" referrerPolicy="no-referrer" />
+        ) : (
+          <div className="w-10 h-10 rounded-full flex items-center justify-center text-[11px] font-bold"
+            style={{ background: C.accent, color: '#fff' }}>{initials}</div>
+        )}
+      </button>
+      {showMenu && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
+          <div className="absolute left-full bottom-0 ml-2 w-52 rounded-xl shadow-2xl z-50 overflow-hidden"
+            style={{ background: C.elevated, border: `1px solid ${C.border}` }}>
+            <div className="px-4 py-3" style={{ borderBottom: `1px solid ${C.border}` }}>
+              <p className="text-sm font-semibold truncate" style={{ color: C.text }}>{user.name || 'User'}</p>
+              <p className="text-xs truncate mt-0.5" style={{ color: C.muted }}>{user.email}</p>
+            </div>
+            <Link to="/pricing" onClick={() => setShowMenu(false)} className="block px-4 py-2.5 text-sm transition-colors hover:bg-white/5" style={{ color: C.muted }}>Pricing</Link>
+            <Link to="/capra/prepare" onClick={() => setShowMenu(false)} className="block px-4 py-2.5 text-sm transition-colors hover:bg-white/5" style={{ color: C.muted }}>Dashboard</Link>
+            <Link to="/analytics" onClick={() => setShowMenu(false)} className="block px-4 py-2.5 text-sm transition-colors hover:bg-white/5" style={{ color: C.muted }}>Analytics</Link>
+            <button onClick={() => { logout(); setShowMenu(false); }} className="w-full text-left px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 transition-colors">Sign Out</button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
 
 export function LumoraIconRail({ activeTab, sessionsOpen, onToggleSessions }: LumoraIconRailProps) {
   const [showMore, setShowMore] = useState(false);
@@ -110,6 +150,9 @@ export function LumoraIconRail({ activeTab, sessionsOpen, onToggleSessions }: Lu
       </div>
 
       <div className="flex-1" />
+
+      {/* User avatar + menu at bottom */}
+      <UserAvatarMenu />
     </nav>
   );
 }
