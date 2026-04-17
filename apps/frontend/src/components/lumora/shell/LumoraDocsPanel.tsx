@@ -5,7 +5,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
 
-const STORAGE_KEY = 'lumora_prep_v6'; // v6: rich content renderer
+const STORAGE_KEY = 'lumora_prep_v7'; // v7: handle SSE error events
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
 interface DocState {
@@ -53,15 +53,14 @@ const SIDEBAR_SECTIONS = [
 
 /** Store prep content as JSON string for rich rendering */
 function formatPrepContent(content: any): string {
+  if (!content) return JSON.stringify({ summary: 'No content generated' });
   if (typeof content === 'string') {
-    // Strip markdown fences and data: prefixes
     let cleaned = content.replace(/^```json\s*/m, '').replace(/```\s*$/m, '').replace(/^RAWCONTENT:\s*/m, '').replace(/^data:\s*/gm, '').trim();
-    // Try to parse as JSON
-    try { JSON.parse(cleaned); return cleaned; } catch {}
-    // If it's an error message, return as-is
+    try { const parsed = JSON.parse(cleaned); return JSON.stringify(parsed); } catch {}
     return JSON.stringify({ summary: cleaned });
   }
-  return JSON.stringify(content);
+  // content is already an object — stringify it
+  try { return JSON.stringify(content); } catch { return JSON.stringify({ summary: String(content) }); }
 }
 
 /** Rich content renderer for prep sections */
@@ -454,13 +453,14 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
                 if (!t.startsWith('data: ')) continue;
                 try {
                   const parsed = JSON.parse(t.slice(6));
-                  if (parsed.done && parsed.result) { result = parsed.result; }
+                  if (parsed.error) { chunks = `Error: ${parsed.error}`; setStreamingText(chunks); }
+                  else if (parsed.done && parsed.result) { result = parsed.result; }
                   else if (parsed.chunk) { chunks += parsed.chunk; setStreamingText(chunks); }
                 } catch {}
               }
             }
           }
-          const displayText = result ? formatPrepContent(result) : (chunks ? (() => { try { return formatPrepContent(JSON.parse(chunks)); } catch { return chunks; } })() : '');
+          const displayText = result ? formatPrepContent(result) : (chunks ? (() => { try { return formatPrepContent(JSON.parse(chunks)); } catch { return formatPrepContent(chunks); } })() : JSON.stringify({ summary: 'Generation completed but no content received' }));
           setStreamingText('');
           newSections[section] = displayText;
           setSectionStatus(prev => ({ ...prev, [section]: 'done' }));
@@ -509,13 +509,14 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
               if (!t.startsWith('data: ')) continue;
               try {
                 const parsed = JSON.parse(t.slice(6));
-                if (parsed.done && parsed.result) { result = parsed.result; }
+                if (parsed.error) { chunks = `Error: ${parsed.error}`; setStreamingText(chunks); }
+                else if (parsed.done && parsed.result) { result = parsed.result; }
                 else if (parsed.chunk) { chunks += parsed.chunk; setStreamingText(chunks); }
               } catch {}
             }
           }
         }
-        const displayText = result ? formatPrepContent(result) : (chunks ? (() => { try { return formatPrepContent(JSON.parse(chunks)); } catch { return chunks; } })() : '');
+        const displayText = result ? formatPrepContent(result) : (chunks ? (() => { try { return formatPrepContent(JSON.parse(chunks)); } catch { return formatPrepContent(chunks); } })() : JSON.stringify({ summary: 'No content received' }));
         setStreamingText('');
         setState(prev => ({ ...prev, sections: { ...prev.sections, [section]: displayText } }));
         setSectionStatus(prev => ({ ...prev, [section]: 'done' }));
