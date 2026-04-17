@@ -4,7 +4,7 @@ import { streamResponse } from '@/lib/sse-client';
 import { transcriptionAPI } from '@/lib/api-client';
 
 const C = {
-  base: '#0f2b5b', surface: '#122d54', elevated: '#1a3a6b',
+  base: '#0a1628', surface: '#0f1d36', elevated: '#1e3a8a',
   text: '#ffffff', muted: 'rgba(255,255,255,0.65)', accent: '#60a5fa',
   accentBg: 'rgba(96,165,250,0.15)', border: 'rgba(255,255,255,0.08)',
 };
@@ -64,7 +64,7 @@ function RichText({ text }: { text: string }) {
                 <span className="text-[9px] font-bold uppercase" style={{ color: C.muted }}>{block.lang}</span>
                 <button onClick={() => navigator.clipboard.writeText(block.content)} className="text-[9px] px-1.5 py-0.5 rounded" style={{ color: C.muted }}>Copy</button>
               </div>
-              <pre className="px-3 py-2 overflow-x-auto text-xs leading-relaxed" style={{ background: '#0a1e3d', color: '#93c5fd' }}><code>{block.content}</code></pre>
+              <pre className="px-3 py-2 overflow-x-auto text-xs leading-relaxed" style={{ background: '#0a1628', color: '#93c5fd' }}><code>{block.content}</code></pre>
             </div>
           );
         }
@@ -232,14 +232,14 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
       {!minimized && (
         <div
           className="w-[5px] h-full cursor-col-resize flex items-center justify-center group shrink-0 hover:bg-blue-400/20 transition-colors"
-          style={{ background: isResizing ? 'rgba(96,165,250,0.2)' : '#0f2b5b' }}
+          style={{ background: isResizing ? 'rgba(96,165,250,0.3)' : '#0a1628' }}
           onMouseDown={(e) => { setIsResizing(true); resizeRef.current = { startX: e.clientX, startW: panelWidth }; }}
         >
           <div className="w-[3px] h-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: '#60a5fa' }} />
         </div>
       )}
 
-      <div className="flex-1 flex flex-col min-w-0" style={{ background: 'linear-gradient(180deg, #153a6b 0%, #0d2445 100%)' }}>
+      <div className="flex-1 flex flex-col min-w-0" style={{ background: 'linear-gradient(180deg, #1e40af 0%, #0a1628 100%)' }}>
       {/* Header */}
       <div className="flex items-center justify-between h-14 px-3 shrink-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
         {minimized ? (

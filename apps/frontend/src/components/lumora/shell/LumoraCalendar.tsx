@@ -6,9 +6,9 @@ import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 
 const C = {
-  base: '#0D0C14', surface: '#16141F', elevated: '#201E2C',
-  text: '#F2F1F3', muted: '#9896A3', accent: '#a5b4fc',
-  accentBg: 'rgba(99,102,241,0.15)', border: 'rgba(255,255,255,0.12)',
+  base: '#ffffff', surface: '#f8fafc', elevated: '#f1f5f9',
+  text: '#0f172a', muted: '#64748b', accent: '#2563eb',
+  accentBg: 'rgba(37,99,235,0.08)', border: '#e2e8f0',
 };
 
 export function LumoraCalendar({ onClose }: { onClose: () => void }) {
@@ -18,7 +18,7 @@ export function LumoraCalendar({ onClose }: { onClose: () => void }) {
   // Google Calendar embed URL — uses the authenticated user's email
   const email = user?.email || '';
   const calendarSrc = email
-    ? `https://calendar.google.com/calendar/embed?src=${encodeURIComponent(email)}&mode=${view === 'week' ? 'WEEK' : 'MONTH'}&showTitle=0&showNav=1&showPrint=0&showTabs=0&showCalendars=0&bgcolor=%230D0C14&color=%236366f1`
+    ? `https://calendar.google.com/calendar/embed?src=${encodeURIComponent(email)}&mode=${view === 'week' ? 'WEEK' : 'MONTH'}&showTitle=0&showNav=1&showPrint=0&showTabs=0&showCalendars=0&bgcolor=%23ffffff&color=%232563eb`
     : '';
 
   return (
@@ -58,7 +58,7 @@ export function LumoraCalendar({ onClose }: { onClose: () => void }) {
           <iframe
             src={calendarSrc}
             className="w-full h-full border-0"
-            style={{ colorScheme: 'dark' }}
+            style={{ colorScheme: 'light' }}
             title="Google Calendar"
           />
         </div>
@@ -75,7 +75,7 @@ export function LumoraCalendar({ onClose }: { onClose: () => void }) {
             Sign in to view your interview schedule
           </p>
           <a href="https://calendar.google.com" target="_blank" rel="noopener noreferrer"
-            className="px-4 py-2 rounded-xl text-xs font-bold transition-all" style={{ background: '#6366f1', color: '#fff' }}>
+            className="px-4 py-2 rounded-xl text-xs font-bold transition-all" style={{ background: '#2563eb', color: '#fff' }}>
             Open Google Calendar
           </a>
         </div>

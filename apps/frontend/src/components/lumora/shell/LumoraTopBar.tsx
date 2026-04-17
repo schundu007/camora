@@ -9,9 +9,9 @@ import type { LumoraTab } from './LumoraIconRail';
 
 /* ── Color tokens (standardized) ── */
 const C = {
-  base: '#0f2b5b',
-  surface: '#122d54',
-  elevated: '#1a3a6b',
+  base: '#0a1628',
+  surface: '#0f1d36',
+  elevated: '#1e3a8a',
   text: '#ffffff',
   muted: 'rgba(255,255,255,0.65)',
   accent: '#60a5fa',
@@ -35,7 +35,7 @@ export function LumoraTopBar({ activeTab, onTranscription, onToggleSessions, ses
   const tabLabel = activeTab === 'coding' ? 'Coding' : activeTab === 'design' ? 'System Design' : 'Interview';
 
   return (
-    <header className="flex items-center h-14 px-5 shrink-0 z-30" style={{ background: 'linear-gradient(90deg, #122d54 0%, #163966 50%, #122d54 100%)', borderBottom: '1px solid rgba(255,255,255,0.06)', boxShadow: '0 1px 8px rgba(0,0,0,0.15), inset 0 -1px 0 rgba(255,255,255,0.04)' }}>
+    <header className="flex items-center h-14 px-5 shrink-0 z-30" style={{ background: 'linear-gradient(90deg, #1e3a8a 0%, #2563eb 50%, #1e3a8a 100%)', borderBottom: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 1px 12px rgba(0,0,0,0.25), inset 0 -1px 0 rgba(255,255,255,0.06)' }}>
       {/* Left: spacer (tab label removed — sidebar shows active tab) */}
       <div className="min-w-[20px]" />
 
@@ -101,7 +101,7 @@ export function LumoraTopBar({ activeTab, onTranscription, onToggleSessions, ses
           {showUserMenu && (
             <>
               <div className="fixed inset-0 z-40" onClick={() => setShowUserMenu(false)} />
-              <div className="absolute right-0 top-full mt-2 w-52 rounded-xl shadow-2xl z-50 overflow-hidden" style={{ background: 'linear-gradient(180deg, #1a3a6b 0%, #122d54 100%)', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }}>
+              <div className="absolute right-0 top-full mt-2 w-52 rounded-xl shadow-2xl z-50 overflow-hidden" style={{ background: 'linear-gradient(180deg, #1e40af 0%, #172554 100%)', border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 8px 32px rgba(0,0,0,0.4)' }}>
                 <div className="px-4 py-3" style={{ borderBottom: `1px solid ${C.border}` }}>
                   <p className="text-sm font-semibold truncate" style={{ color: C.text }}>{user?.name || 'User'}</p>
                   <p className="text-xs truncate mt-0.5" style={{ color: C.muted }}>{user?.email}</p>
