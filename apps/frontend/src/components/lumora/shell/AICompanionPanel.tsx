@@ -2,6 +2,7 @@ import { useRef, useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { streamResponse } from '@/lib/sse-client';
 import { transcriptionAPI } from '@/lib/api-client';
+import { useAudioDevices } from '@/components/lumora/audio/hooks/useAudioDevices';
 
 /* White background copilot — black text */
 const C = {
@@ -186,6 +187,7 @@ function RichText({ text }: { text: string }) {
 /* ── Mic Button (centered, prominent) ── */
 function MicButtonLarge({ onResult, disabled }: { onResult: (text: string) => void; disabled: boolean }) {
   const { token } = useAuth();
+  const { selectedDeviceId } = useAudioDevices();
   const [rec, setRec] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -196,7 +198,15 @@ function MicButtonLarge({ onResult, disabled }: { onResult: (text: string) => vo
     if (!token) { setError('Not authenticated'); return; }
     setError('');
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const audioConstraints: MediaTrackConstraints = {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true,
+      };
+      if (selectedDeviceId) {
+        audioConstraints.deviceId = { exact: selectedDeviceId };
+      }
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: audioConstraints });
       const mr = new MediaRecorder(stream, { mimeType: 'audio/webm' });
       chunks.current = [];
       mr.ondataavailable = e => { if (e.data.size > 0) chunks.current.push(e.data); };
@@ -221,7 +231,7 @@ function MicButtonLarge({ onResult, disabled }: { onResult: (text: string) => vo
     } catch (err: any) {
       setError(err.name === 'NotAllowedError' ? 'Microphone access denied' : (err.message || 'Mic error'));
     }
-  }, [token, onResult]);
+  }, [token, onResult, selectedDeviceId]);
   const stop = useCallback(() => { mrRef.current?.state === 'recording' && mrRef.current.stop(); setRec(false); }, []);
 
   return (
