@@ -51,7 +51,7 @@ export function SessionSidebar({ isOpen, onClose, onSelectEntry }: SessionSideba
       {/* Sidebar */}
       <aside
         className={`fixed lg:relative top-0 left-0 h-full z-50 lg:z-auto flex flex-col transition-all duration-300 ease-out ${
-          isOpen ? 'translate-x-0 w-[280px]' : '-translate-x-full lg:translate-x-0 w-0 lg:w-0'
+          isOpen ? 'translate-x-0 w-[75vw] sm:w-[280px]' : '-translate-x-full lg:translate-x-0 w-0 lg:w-0'
         }`}
         style={{
           background: 'linear-gradient(180deg, #76B900 0%, #000000 100%)',
@@ -60,7 +60,7 @@ export function SessionSidebar({ isOpen, onClose, onSelectEntry }: SessionSideba
         }}
       >
         {isOpen && (
-          <div className="flex flex-col h-full w-[280px] overflow-hidden">
+          <div className="flex flex-col h-full w-full overflow-hidden">
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-white/8 shrink-0">
               <span className="text-xs font-mono font-bold text-white/60 uppercase tracking-widest">History</span>

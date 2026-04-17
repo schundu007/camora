@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef, lazy, Suspense } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { LumoraIconRail } from '../../components/lumora/shell/LumoraIconRail';
 import { LumoraTopBar } from '../../components/lumora/shell/LumoraTopBar';
 import { AICompanionPanel, AICompanionToggle } from '../../components/lumora/shell/AICompanionPanel';
@@ -142,7 +142,7 @@ export function LumoraShellPage() {
 
 
       {/* Center main area */}
-      <div className="flex-1 flex flex-col min-h-0 min-w-0">
+      <div className="flex-1 flex flex-col min-h-0 min-w-0 pb-14 md:pb-0">
         {/* Top bar with audio controls */}
         <LumoraTopBar activeTab={activeTab} onTranscription={handleTranscription} />
 
@@ -217,6 +217,27 @@ export function LumoraShellPage() {
         isOpen={true}
         onClose={() => {}}
       />
+
+      {/* Mobile bottom navigation — visible only on small screens */}
+      <div className="flex md:hidden fixed bottom-0 left-0 right-0 h-14 z-40 items-center justify-around"
+        style={{ background: '#000000', borderTop: '1px solid #333' }}>
+        {[
+          { id: 'interview', label: 'Home', path: '/lumora', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg> },
+          { id: 'coding', label: 'Code', path: '/lumora/coding', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6" /></svg> },
+          { id: 'design', label: 'Design', path: '/lumora/design', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18M9 21V9" /></svg> },
+          { id: 'prepkit', label: 'Prep', path: '/lumora/prepkit', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg> },
+          { id: 'calendar', label: 'Cal', path: '/lumora/calendar', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg> },
+        ].map(tab => {
+          const isActive = activeTab === tab.id;
+          return (
+            <Link key={tab.id} to={tab.path} className="flex flex-col items-center justify-center gap-0.5 flex-1 py-1"
+              style={{ color: isActive ? '#76B900' : 'rgba(255,255,255,0.4)' }}>
+              {tab.icon}
+              <span className="text-[9px] font-semibold">{tab.label}</span>
+            </Link>
+          );
+        })}
+      </div>
     </div>
   );
 }

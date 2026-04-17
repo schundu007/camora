@@ -531,9 +531,9 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
   const hasRequiredDocs = state.jd.trim().length > 0 && state.resume.trim().length > 0;
 
   return (
-    <div className="h-full flex" style={{ background: '#ffffff' }}>
+    <div className="h-full flex flex-col sm:flex-row" style={{ background: '#ffffff' }}>
       {/* Sidebar */}
-      <div className="w-[180px] flex flex-col shrink-0" style={{ borderRight: '1px solid #e2e8f0', background: '#f8fafc' }}>
+      <div className="w-full sm:w-[180px] flex flex-col shrink-0 sm:shrink-0" style={{ borderRight: '1px solid #e2e8f0', background: '#f8fafc' }}>
         {/* Company selector */}
         <div className="px-3 py-3" style={{ borderBottom: '1px solid #e2e8f0' }}>
           <h2 className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: '#94a3b8', fontFamily: "'Satoshi', sans-serif" }}>Interview Prep</h2>

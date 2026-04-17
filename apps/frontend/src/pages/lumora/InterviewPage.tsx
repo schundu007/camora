@@ -112,7 +112,7 @@ export function InterviewPage() {
           <div className="shrink-0 relative z-20">
             <div className="absolute -top-8 left-0 right-0 h-8 pointer-events-none" style={{ background: 'linear-gradient(to top, #ffffff, transparent)' }} />
             <div className="px-3 sm:px-4 pb-3 pt-1">
-              <div className="mx-auto" style={{ maxWidth: '90%' }}>
+              <div className="mx-auto" style={{ maxWidth: 'min(90%, 100% - 16px)' }}>
                 {isExpanded ? (
                   <div className="rounded-2xl overflow-hidden" style={{ background: '#f8fafc', border: '1px solid #e2e8f0', boxShadow: '0 -2px 12px rgba(0,0,0,0.06)' }}>
                     <textarea
@@ -139,7 +139,7 @@ export function InterviewPage() {
                     </div>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-2 rounded-2xl px-4 h-12 transition-all focus-within:shadow-[0_0_0_2px_rgba(11,92,255,0.3)]"
+                  <div className="flex items-center gap-2 rounded-2xl px-3 sm:px-4 h-12 sm:h-12 transition-all focus-within:shadow-[0_0_0_2px_rgba(11,92,255,0.3)]"
                     style={{ background: '#f8fafc', border: '1px solid #e2e8f0', boxShadow: '0 -2px 12px rgba(0,0,0,0.06)' }}>
                     {isStreaming && (
                       <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" style={{ boxShadow: '0 0 8px rgba(52,211,153,0.4)' }} />

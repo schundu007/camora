@@ -36,14 +36,14 @@ export function LumoraSettings({ isOpen, onClose }: LumoraSettingsProps) {
       <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm" onClick={onClose} />
 
       {/* Modal */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-6" onClick={onClose}>
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6" onClick={onClose}>
         <div
           className="w-full max-w-3xl max-h-[85vh] overflow-auto rounded-2xl"
           style={{ background: '#ffffff', boxShadow: '0 24px 80px rgba(0,0,0,0.2)' }}
           onClick={e => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-8 py-5 border-b border-slate-200">
+          <div className="flex items-center justify-between px-4 sm:px-6 md:px-8 py-4 sm:py-5 border-b border-slate-200">
             <h2 className="text-xl font-bold" style={{ fontFamily: "'Clash Display', sans-serif", color: '#0f172a' }}>
               Settings
             </h2>
@@ -52,7 +52,7 @@ export function LumoraSettings({ isOpen, onClose }: LumoraSettingsProps) {
             </button>
           </div>
 
-          <div className="px-8 py-6 space-y-8">
+          <div className="px-4 sm:px-6 md:px-8 py-4 sm:py-6 space-y-6 sm:space-y-8">
             {/* ── Audio Settings ── */}
             <section>
               <h3 className="text-sm font-bold uppercase tracking-wider mb-4" style={{ fontFamily: "'Satoshi', sans-serif", color: '#94a3b8' }}>
