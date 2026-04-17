@@ -78,7 +78,7 @@ export default function OAuthLogin() {
         <div className="max-w-5xl mx-auto">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 pt-6 px-2">
             {[
-              { label: 'Apply', href: '/jobs', icon: 'briefcase', desc: 'Find your role', bg: '#ecfdf5', bgEnd: '#d1fae5', border: '#6ee7b7', borderEnd: '#34d399', badge: '#36B24E', iconColor: '#36B24E', glowColor: '16,185,129', slideFrom: 'left' },
+              { label: 'Apply', href: '/jobs', icon: 'briefcase', desc: 'Find your role', bg: '#ecfdf5', bgEnd: '#d1fae5', border: '#6ee7b7', borderEnd: '#34d399', badge: '#0D9488', iconColor: '#0D9488', glowColor: '16,185,129', slideFrom: 'left' },
               { label: 'Prepare', href: '/capra/prepare', icon: 'book', desc: 'Study & review', bg: '#ecfeff', bgEnd: '#cffafe', border: '#67e8f9', borderEnd: '#22d3ee', badge: '#0891b2', iconColor: '#0891b2', glowColor: '8,145,178', slideFrom: 'bottom' },
               { label: 'Practice', href: '/capra/practice', icon: 'code', desc: 'Solve problems', bg: '#f5f3ff', bgEnd: '#ede9fe', border: '#c4b5fd', borderEnd: '#a78bfa', badge: '#7c3aed', iconColor: '#7c3aed', glowColor: '124,58,237', slideFrom: 'bottom' },
               { label: 'Attend', href: '/lumora', icon: 'microphone', desc: 'Ace the interview', bg: '#fffbeb', bgEnd: '#fef3c7', border: '#fcd34d', borderEnd: '#fbbf24', badge: '#d97706', iconColor: '#d97706', glowColor: '217,119,6', slideFrom: 'right' },

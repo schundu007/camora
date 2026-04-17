@@ -850,7 +850,7 @@ export default function ChallengePage() {
           display: inline-flex; align-items: center; justify-content: center;
           padding: 14px 32px; border-radius: 12px;
           font-size: 16px; font-weight: 700; color: #fff;
-          background: linear-gradient(135deg, #10b981, #36B24E);
+          background: linear-gradient(135deg, #10b981, #0D9488);
           border: none; cursor: pointer;
           box-shadow: 0 0 24px rgba(16,185,129,0.25), 0 4px 12px rgba(0,0,0,0.3);
           transition: all 0.2s;

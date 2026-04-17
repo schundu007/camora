@@ -1090,7 +1090,7 @@ export default function TopicDetail({
             <button
               onClick={() => handleAskAI(`Generate a complete step-by-step tutorial for building: ${topicDetails.title}\n\nTech stack: ${(topicDetails.techStack || []).join(', ')}\nDifficulty: ${topicDetails.difficulty}\nDescription: ${topicDetails.description}\n\nProvide:\n1. Project setup and file structure\n2. Each implementation step with complete code snippets\n3. Key architectural decisions and why\n4. Testing guidance\n5. Deployment instructions\n\nMake it practical and implementation-focused.`)}
               className="inline-flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-bold text-white transition-all hover:opacity-90"
-              style={{ background: 'linear-gradient(135deg, #10b981, #36B24E)', boxShadow: '0 2px 8px rgba(16,185,129,0.25)' }}
+              style={{ background: 'linear-gradient(135deg, #10b981, #0D9488)', boxShadow: '0 2px 8px rgba(16,185,129,0.25)' }}
             >
               <Icon name="zap" size={14} />
               Generate Tutorial
@@ -2798,7 +2798,7 @@ export default function TopicDetail({
                   <Icon name="target" size={12} className="text-white" />
                 </div>
                 <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">STAR Framework Example</h3>
-                <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full landing-mono" style={{ background: 'linear-gradient(135deg, #3b82f620, #10b98120)', color: '#36B24E' }}>4 steps</span>
+                <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full landing-mono" style={{ background: 'linear-gradient(135deg, #3b82f620, #10b98120)', color: '#0D9488' }}>4 steps</span>
               </div>
               <div className="p-4">
                 <div className="relative">
