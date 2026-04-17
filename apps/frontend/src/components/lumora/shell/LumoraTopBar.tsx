@@ -49,18 +49,6 @@ export function LumoraTopBar({ activeTab, onTranscription, onToggleSessions, ses
           <AudioCapture onTranscription={onTranscription} />
           <div className="w-px h-4 mx-1" style={{ background: C.border }} />
           <SystemAudioButton onTranscription={onTranscription} disabled={false} />
-          <div className="w-px h-4 mx-1" style={{ background: C.border }} />
-          <DocumentUpload />
-          <div className="w-px h-4 mx-1" style={{ background: C.border }} />
-          {/* Sessions toggle */}
-          {onToggleSessions && (
-            <button onClick={onToggleSessions} className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium transition-all"
-              style={sessionsOpen ? { background: C.accentBg, color: C.accent } : { color: C.muted }}
-              title="Q&A History">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
-              <span className="hidden xl:inline">Sessions</span>
-            </button>
-          )}
         </div>
       </div>
 
