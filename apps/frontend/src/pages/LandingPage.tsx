@@ -6,301 +6,107 @@ import SiteNav from '../components/shared/SiteNav';
 import SEO from '../components/shared/SEO';
 import SiteFooter from '../components/shared/SiteFooter';
 
-/* ── APPA steps data ───────────────────────────────────── */
-const APPA = [
-  { num: '01', label: 'Apply', desc: 'Discover engineering roles matched to your skills, experience, and salary goals across 1 000+ companies.', href: '/jobs', color: '#34d399' },
-  { num: '02', label: 'Prepare', desc: 'Study 389 curated topics spanning system design, DSA, behavioral, databases, and cloud architecture.', href: '/capra/prepare', color: '#818cf8' },
-  { num: '03', label: 'Practice', desc: 'Solve problems with AI explanations, run mock interviews, and build confidence before the real thing.', href: '/capra/practice', color: '#38bdf8' },
-  { num: '04', label: 'Attend', desc: 'Get real-time AI answers during your live technical interview — system design, coding, and behavioral.', href: '/lumora', color: '#fbbf24' },
-];
+/* ══════════════════════════════════════════════════════════════
+   CAMORA LANDING PAGE — Zoom-inspired design
+   Custom fonts: Clash Display (headings) + Satoshi (body)
+   Signature gradient: emerald → blue (-81deg)
+   Border radius: 10px (consistent)
+   ══════════════════════════════════════════════════════════════ */
 
-/* ── APPA process steps (for accordion) ────────────────── */
-const PROCESS_STEPS = [
-  {
-    label: 'Apply for Opportunities',
-    desc: 'Discover engineering roles matched to your skills, experience, and salary goals. One application reaches 1,000+ companies worldwide.',
-    color: '#34d399',
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-        <rect x="4" y="4" width="16" height="16" rx="2" /><path d="M9 12h6M9 8h6M9 16h3" />
-      </svg>
-    ),
+/* ── Camora Design Tokens ─────────────────────────────── */
+const T = {
+  font: {
+    display: "'Clash Display', sans-serif",
+    body: "'Satoshi', sans-serif",
+    mono: "'JetBrains Mono', monospace",
   },
-  {
-    label: 'Prepare with 389 Topics',
-    desc: 'Study system design, DSA, microservices, databases, SQL, low-level design, and behavioral topics with AI-powered explanations and architecture diagrams.',
-    color: '#818cf8',
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
-      </svg>
-    ),
+  color: {
+    blue: '#0B5CFF',
+    emerald: '#34d399',
+    pink: '#f472b6',
+    amber: '#fbbf24',
+    cyan: '#06b6d4',
+    indigo: '#818cf8',
   },
-  {
-    label: 'Practice with Mock Interviews',
-    desc: 'Solve real interview problems with multi-approach solutions, run timed mock interviews, and get instant AI feedback on your performance.',
-    color: '#38bdf8',
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-        <polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /><line x1="14.5" y1="4" x2="9.5" y2="20" />
-      </svg>
-    ),
-  },
-  {
-    label: 'Attend with Live AI',
-    desc: 'Get real-time AI answers during your interview — voice transcription, architecture diagrams, multi-approach coding solutions, and STAR-format behavioral coaching.',
-    color: '#fbbf24',
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" y1="19" x2="12" y2="22" />
-      </svg>
-    ),
-  },
-];
-
-/* ── APPA Icons (custom SVGs) ──────────────────────────── */
-const AppaIcons = {
-  apply: (color: string) => (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-      <rect x="4" y="4" width="16" height="16" rx="2" /><path d="M9 12h6M9 8h6M9 16h3" /><path d="M16 2v4M8 2v4" />
-    </svg>
-  ),
-  prepare: (color: string) => (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-      <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
-    </svg>
-  ),
-  practice: (color: string) => (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /><line x1="14.5" y1="4" x2="9.5" y2="20" />
-    </svg>
-  ),
-  attend: (color: string) => (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" y1="19" x2="12" y2="22" /><path d="M8 22h8" />
-    </svg>
-  ),
-  lumora: (color: string) => (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="3" /><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
-    </svg>
-  ),
-  capra: (color: string) => (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-      <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" /><path d="M8 7h6M8 11h8M8 15h4" />
-    </svg>
-  ),
+  gradient: 'linear-gradient(-81deg, #34d399 0%, #0B5CFF 100%)',
+  radius: '10px',
 };
 
-/* ── Logo Mark — now uses shared CamoraLogo from import ── */
-
-/* ── Scroll-triggered fade-in wrapper ──────────────────── */
-function FadeIn({ children, className = '', delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 40 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-60px' }}
-      transition={{ duration: 0.7, delay, ease: [0.21, 0.47, 0.32, 0.98] }}
-      className={className}
-    >
-      {children}
-    </motion.div>
-  );
-}
-
-/* ── Process Accordion (MetAntz-inspired) ──────────────── */
-function ProcessAccordion() {
-  const [active, setActive] = useState(0);
-
-  useEffect(() => {
-    const timer = setInterval(() => setActive(p => (p + 1) % PROCESS_STEPS.length), 5000);
-    return () => clearInterval(timer);
-  }, []);
-
-  return (
-    <div className="space-y-3 mt-10">
-      {PROCESS_STEPS.map((step, i) => {
-        const isActive = active === i;
-        return (
-          <motion.div
-            key={step.label}
-            onClick={() => setActive(i)}
-            className="cursor-pointer rounded-2xl border overflow-hidden"
-            animate={{
-              borderColor: isActive ? `${step.color}50` : 'var(--border)',
-              backgroundColor: isActive ? `${step.color}08` : 'transparent',
-            }}
-            transition={{ duration: 0.3 }}
-          >
-            <div className="flex items-center justify-between px-6 py-5">
-              <div className="flex items-center gap-4">
-                <motion.div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center"
-                  animate={{ backgroundColor: isActive ? `${step.color}20` : 'var(--bg-elevated)', color: isActive ? step.color : 'var(--text-muted)' }}
-                  transition={{ duration: 0.3 }}
-                >
-                  {step.icon}
-                </motion.div>
-                <span className="text-base font-semibold transition-colors duration-300" style={{ color: isActive ? 'var(--text-primary)' : 'var(--text-muted)' }}>
-                  {step.label}
-                </span>
-              </div>
-              <motion.div animate={{ rotate: isActive ? 45 : 0 }} transition={{ duration: 0.2 }}>
-                <svg className="w-5 h-5" style={{ color: isActive ? step.color : 'var(--text-muted)' }}
-                     fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                </svg>
-              </motion.div>
-            </div>
-            <AnimatePresence initial={false}>
-              {isActive && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.3, ease: 'easeInOut' }}
-                >
-                  <div className="px-6 pb-6 pl-20">
-                    <p style={{ color: 'var(--text-secondary)' }} className="leading-relaxed">{step.desc}</p>
-                    <div className="mt-4 h-[3px] rounded-full overflow-hidden" style={{ background: 'var(--bg-elevated)' }}>
-                      <motion.div
-                        className="h-full rounded-full"
-                        style={{ background: step.color }}
-                        initial={{ width: '0%' }}
-                        animate={{ width: '100%' }}
-                        transition={{ duration: 5, ease: 'linear' }}
-                        key={`progress-${active}`}
-                      />
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.div>
-        );
-      })}
-    </div>
-  );
-}
-
-/* ── Prep Showcase (animated donut + topic cards) ──────── */
-function PrepShowcase() {
-  const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true, margin: '-80px' });
-
-  const TOPIC_CATEGORIES = [
-    { name: 'System Design', count: 235, color: '#06b6d4' },
-    { name: 'Behavioral', count: 53, color: '#f472b6' },
-    { name: 'Low Level Design', count: 46, color: '#a78bfa' },
-    { name: 'DSA & Algorithms', count: 23, color: '#34d399' },
-    { name: 'Databases & SQL', count: 20, color: '#f97316' },
-    { name: 'Microservices', count: 12, color: '#818cf8' },
-  ];
-  const TOTAL = 389;
-  const RADIUS = 72;
-  const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
-
-  const donutSegments = (() => {
-    let accumulated = 0;
-    return TOPIC_CATEGORIES.map((cat) => {
-      const fraction = cat.count / TOTAL;
-      const dash = fraction * CIRCUMFERENCE;
-      const gap = CIRCUMFERENCE - dash;
-      const offset = -(accumulated * CIRCUMFERENCE) + CIRCUMFERENCE * 0.25;
-      accumulated += fraction;
-      return { ...cat, dash, gap, offset };
-    });
-  })();
-
-  return (
-    <div ref={ref}>
-      {/* Donut chart + Legend */}
-      <div className="flex flex-col md:flex-row items-center justify-center gap-10 md:gap-16 mb-10"
-        style={{ opacity: inView ? 1 : 0, transform: inView ? 'translateY(0)' : 'translateY(20px)',
-          transition: 'opacity 0.7s ease, transform 0.7s ease', transitionDelay: '200ms' }}>
-        <div className="relative flex-shrink-0" style={{ width: 220, height: 220 }}>
-          <svg viewBox="0 0 200 200" width="220" height="220" className="w-[180px] h-[180px] md:w-[220px] md:h-[220px]">
-            <circle cx="100" cy="100" r={RADIUS} fill="none" stroke="var(--border)" strokeWidth="18" />
-            {donutSegments.map((seg, i) => (
-              <circle key={seg.name} cx="100" cy="100" r={RADIUS} fill="none" stroke={seg.color} strokeWidth="18"
-                strokeDasharray={`${inView ? seg.dash : 0} ${inView ? seg.gap : CIRCUMFERENCE}`}
-                strokeDashoffset={seg.offset} strokeLinecap="butt"
-                style={{ transition: `stroke-dasharray 1.2s ease ${i * 100 + 300}ms` }} />
-            ))}
-            <text x="100" y="93" textAnchor="middle" fill="var(--text-primary)" fontSize="28" fontWeight="bold" fontFamily="inherit">389</text>
-            <text x="100" y="116" textAnchor="middle" fill="var(--text-muted)" fontSize="12" fontWeight="500" fontFamily="inherit">Total Topics</text>
-          </svg>
-        </div>
-        <div className="flex flex-wrap gap-x-6 gap-y-3">
-          {TOPIC_CATEGORIES.map((cat, i) => (
-            <div key={cat.name} className="flex items-center gap-2.5"
-              style={{ opacity: inView ? 1 : 0, transform: inView ? 'translateX(0)' : 'translateX(12px)',
-                transition: 'opacity 0.5s ease, transform 0.5s ease', transitionDelay: `${i * 80 + 500}ms` }}>
-              <span className="flex-shrink-0 w-3 h-3 rounded-full" style={{ background: cat.color }} />
-              <span className="text-sm font-medium whitespace-nowrap" style={{ color: 'var(--text-secondary)' }}>{cat.name}</span>
-              <span className="text-sm font-code font-semibold" style={{ color: 'var(--text-muted)' }}>{cat.count}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-    </div>
-  );
-}
-
-/* ── What Sets Camora Apart — feature groups ───────────── */
-const FEATURE_GROUPS = [
+/* ── APPA Steps ───────────────────────────────────────── */
+const APPA_STEPS = [
   {
-    groupTitle: 'Live Interview AI', accent: '#34d399',
-    features: [
-      { title: 'Real-Time Voice Transcription', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" y1="19" x2="12" y2="22" /></svg> },
-      { title: '3-Approach Coding Solutions', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /><line x1="14.5" y1="4" x2="9.5" y2="20" /></svg> },
-      { title: 'Auto-Generated Architecture Diagrams', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" /></svg> },
-      { title: 'STAR Format Behavioral Coaching', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg> },
-      { title: 'Emergency Blank Screen (Cmd+B)', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" /><line x1="2" y1="3" x2="22" y2="17" /></svg> },
-      { title: 'Speaker Voice Filtering', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="1" y1="1" x2="23" y2="23" /></svg> },
+    key: 'apply', label: 'Apply', color: T.color.emerald, href: '/jobs',
+    headline: 'Discover roles matched to your skills',
+    desc: 'Browse 1,000+ engineering roles. AI-powered matching by skills, experience, and salary goals. Auto-generate tailored resumes and cover letters.',
+    features: ['AI Job Matching', 'Auto Resume & Cover Letter', 'Salary Insights', '1,000+ Companies'],
+    icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" /><path d="M9 12h6M9 8h6M9 16h3" /><path d="M16 2v4M8 2v4" /></svg>,
+  },
+  {
+    key: 'prepare', label: 'Prepare', color: T.color.indigo, href: '/capra/prepare',
+    headline: 'Study 389 curated interview topics',
+    desc: 'System design, DSA, behavioral, databases, microservices, and low-level design. AI-powered explanations with architecture diagrams.',
+    features: ['389 Study Topics', 'Architecture Diagrams', 'AI Explanations', 'Role-Based Paths'],
+    icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></svg>,
+  },
+  {
+    key: 'practice', label: 'Practice', color: T.color.cyan, href: '/capra/practice',
+    headline: 'Solve problems with instant AI feedback',
+    desc: 'Real interview problems with multi-approach solutions. Timed mock interviews. Run code in 50+ languages with auto-fix and debugging.',
+    features: ['Mock Interviews', '50+ Languages', 'Multi-Approach Solutions', 'Auto-Fix & Debug'],
+    icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /><line x1="14.5" y1="4" x2="9.5" y2="20" /></svg>,
+  },
+  {
+    key: 'attend', label: 'Attend', color: T.color.amber, href: '/lumora',
+    headline: 'Real-time AI during your live interview',
+    desc: 'Voice transcription, instant AI answers, architecture diagrams, coding solutions, and STAR behavioral coaching — all in real-time.',
+    features: ['Voice Transcription', 'Live AI Answers', 'Architecture Diagrams', 'Stealth Mode'],
+    icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" y1="19" x2="12" y2="22" /><path d="M8 22h8" /></svg>,
+  },
+];
+
+/* ── Platform Features ────────────────────────────────── */
+const PLATFORM_FEATURES = [
+  {
+    title: 'Works with every interview platform',
+    items: [
+      { name: 'Zoom, Google Meet, MS Teams', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}><path d="M15.6 11.6L22 7v10l-6.4-4.5v-1z" /><rect x="2" y="7" width="14" height="10" rx="2" /></svg> },
+      { name: 'LeetCode, HackerRank, CoderPad', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /></svg> },
+      { name: 'CodeSignal, Codility, Karat', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" /><path d="m9 12 2 2 4-4" /></svg> },
     ],
   },
   {
-    groupTitle: 'Platform Compatibility', accent: '#06b6d4',
-    features: [
-      { title: 'LeetCode, HackerRank, CoderPad, CodeSignal', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /></svg> },
-      { title: 'Zoom, Google Meet, MS Teams', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M15.6 11.6L22 7v10l-6.4-4.5v-1z" /><rect x="2" y="7" width="14" height="10" rx="2" /></svg> },
-      { title: '50+ Programming Languages', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M4 6h16M4 12h16M4 18h10" /></svg> },
-      { title: 'Auto-Fix and Debug', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" /><path d="m9 12 2 2 4-4" /></svg> },
-    ],
-  },
-  {
-    groupTitle: 'Interview Preparation', accent: '#818cf8',
-    features: [
-      { title: 'Job URL AI Analysis', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m9.86-4.122a4.5 4.5 0 00-6.364-6.364L4.5 6.1" /><path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25" /></svg> },
-      { title: 'Role-Filtered Study Paths', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="6" /><circle cx="12" cy="12" r="2" /></svg> },
-      { title: '389 Study Topics', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></svg> },
-      { title: 'Company-Specific Prep', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 7V5a4 4 0 0 0-8 0v2" /></svg> },
-      { title: 'Mock Interview Simulator', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg> },
-      { title: 'AI-Powered Explanations', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg> },
-    ],
-  },
-  {
-    groupTitle: 'Tools & Playground', accent: '#f59e0b',
-    features: [
-      { title: 'Coding Playground', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M7 8l4 4-4 4" /><line x1="13" y1="16" x2="17" y2="16" /></svg> },
-      { title: 'Design Playground', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /></svg> },
-      { title: 'Resume-Personalized Answers', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /></svg> },
-      { title: 'Screenshot Problem Extraction', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg> },
+    title: 'Privacy-first design',
+    items: [
+      { name: 'Emergency Blank Screen (Cmd+B)', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}><rect x="2" y="3" width="20" height="14" rx="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" /><line x1="2" y1="3" x2="22" y2="17" /></svg> },
+      { name: 'Speaker Voice Filtering', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="1" y1="1" x2="23" y2="23" /></svg> },
+      { name: 'Desktop App with Stealth Mode', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}><rect x="2" y="3" width="20" height="14" rx="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" /></svg> },
     ],
   },
 ];
 
-/* ════════════════════════════════════════════════════════════
-   LANDING PAGE
-   ════════════════════════════════════════════════════════════ */
+/* ── Stats ─────────────────────────────────────────────── */
+const STATS = [
+  { value: '389', label: 'Study Topics', suffix: '' },
+  { value: '50', label: 'Languages', suffix: '+' },
+  { value: '1,000', label: 'Companies', suffix: '+' },
+  { value: '6', label: 'Topic Categories', suffix: '' },
+];
+
+/* ── Topic Data (real counts) ─────────────────────────── */
+const TOPICS = [
+  { name: 'System Design', count: 235, color: T.color.cyan },
+  { name: 'Behavioral', count: 53, color: T.color.pink },
+  { name: 'Low Level Design', count: 46, color: T.color.indigo },
+  { name: 'DSA & Algorithms', count: 23, color: T.color.emerald },
+  { name: 'Databases & SQL', count: 20, color: '#f97316' },
+  { name: 'Microservices', count: 12, color: T.color.blue },
+];
+
+/* ── Visitor Count Hook ───────────────────────────────── */
 function useVisitorCount() {
   const [count, setCount] = useState<number | null>(null);
   useEffect(() => {
     const API = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
-    // Get unique visitors (deduplicated by IP)
     fetch(`${API}/api/visitors/unique-count`)
       .then(r => r.json())
       .then(d => setCount(d.total))
@@ -309,98 +115,341 @@ function useVisitorCount() {
   return count;
 }
 
+/* ── Section Reveal ───────────────────────────────────── */
+function Reveal({ children, className = '', delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 28 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-60px' }}
+      transition={{ duration: 0.6, delay, ease: [0.25, 0.46, 0.45, 0.94] }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+/* ── Tabbed Product Showcase (Zoom-style) ─────────────── */
+function ProductTabs() {
+  const [active, setActive] = useState(0);
+  const step = APPA_STEPS[active];
+
+  return (
+    <div className="flex flex-col lg:flex-row gap-0 lg:gap-12">
+      {/* Tab list — vertical on desktop, horizontal scroll on mobile */}
+      <div className="flex lg:flex-col gap-1 lg:gap-2 lg:min-w-[240px] overflow-x-auto lg:overflow-visible pb-4 lg:pb-0">
+        {APPA_STEPS.map((s, i) => {
+          const isActive = active === i;
+          return (
+            <button
+              key={s.key}
+              onClick={() => setActive(i)}
+              className="flex items-center gap-3 px-4 py-3 lg:px-5 lg:py-4 text-left transition-all whitespace-nowrap flex-shrink-0"
+              style={{
+                borderRadius: T.radius,
+                background: isActive ? `${s.color}12` : 'transparent',
+                borderLeft: isActive ? `3px solid ${s.color}` : '3px solid transparent',
+                fontFamily: T.font.display,
+              }}
+            >
+              <div
+                className="w-9 h-9 flex items-center justify-center flex-shrink-0"
+                style={{
+                  borderRadius: T.radius,
+                  background: isActive ? `${s.color}20` : 'rgba(255,255,255,0.04)',
+                  color: isActive ? s.color : 'var(--text-muted)',
+                }}
+              >
+                {s.icon}
+              </div>
+              <span
+                className="text-sm lg:text-base font-semibold"
+                style={{ color: isActive ? 'var(--text-primary)' : 'var(--text-muted)' }}
+              >
+                {s.label}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Tab content */}
+      <div className="flex-1 min-w-0">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={step.key}
+            initial={{ opacity: 0, x: 12 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -12 }}
+            transition={{ duration: 0.25 }}
+          >
+            <div
+              className="p-8 lg:p-10"
+              style={{
+                borderRadius: '16px',
+                background: 'var(--bg-surface)',
+                border: '1px solid var(--border)',
+              }}
+            >
+              <div className="flex items-center gap-2 mb-4">
+                <span
+                  className="text-[11px] font-bold uppercase tracking-[0.15em] px-3 py-1"
+                  style={{
+                    borderRadius: '6px',
+                    background: `${step.color}15`,
+                    color: step.color,
+                    fontFamily: T.font.mono,
+                  }}
+                >
+                  {step.label}
+                </span>
+              </div>
+
+              <h3
+                className="text-2xl lg:text-3xl font-bold tracking-tight mb-4"
+                style={{ fontFamily: T.font.display, color: 'var(--text-primary)' }}
+              >
+                {step.headline}
+              </h3>
+
+              <p
+                className="text-base lg:text-lg leading-relaxed mb-8 max-w-xl"
+                style={{ fontFamily: T.font.body, color: 'var(--text-secondary)' }}
+              >
+                {step.desc}
+              </p>
+
+              {/* Feature pills */}
+              <div className="flex flex-wrap gap-2 mb-8">
+                {step.features.map(f => (
+                  <span
+                    key={f}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium"
+                    style={{
+                      borderRadius: T.radius,
+                      background: 'var(--bg-elevated)',
+                      border: '1px solid var(--border)',
+                      color: 'var(--text-secondary)',
+                      fontFamily: T.font.body,
+                    }}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: step.color }} />
+                    {f}
+                  </span>
+                ))}
+              </div>
+
+              <Link
+                to={step.href}
+                className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:brightness-110"
+                style={{
+                  borderRadius: T.radius,
+                  background: T.gradient,
+                  fontFamily: T.font.body,
+                }}
+              >
+                Explore {step.label}
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+              </Link>
+            </div>
+          </motion.div>
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+}
+
+/* ── Donut Chart ──────────────────────────────────────── */
+function TopicDonut() {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, margin: '-80px' });
+  const TOTAL = 389;
+  const RADIUS = 68;
+  const CIRC = 2 * Math.PI * RADIUS;
+
+  const segments = (() => {
+    let acc = 0;
+    return TOPICS.map(t => {
+      const frac = t.count / TOTAL;
+      const dash = frac * CIRC;
+      const gap = CIRC - dash;
+      const offset = -(acc * CIRC) + CIRC * 0.25;
+      acc += frac;
+      return { ...t, dash, gap, offset };
+    });
+  })();
+
+  return (
+    <div ref={ref} className="flex flex-col md:flex-row items-center justify-center gap-10 md:gap-14">
+      <div className="relative flex-shrink-0" style={{ width: 200, height: 200 }}>
+        <svg viewBox="0 0 200 200" width="200" height="200">
+          <circle cx="100" cy="100" r={RADIUS} fill="none" stroke="var(--border)" strokeWidth="16" />
+          {segments.map((s, i) => (
+            <circle key={s.name} cx="100" cy="100" r={RADIUS} fill="none" stroke={s.color} strokeWidth="16"
+              strokeDasharray={`${inView ? s.dash : 0} ${inView ? s.gap : CIRC}`}
+              strokeDashoffset={s.offset} strokeLinecap="butt"
+              style={{ transition: `stroke-dasharray 1s ease ${i * 80 + 200}ms` }} />
+          ))}
+          <text x="100" y="95" textAnchor="middle" fill="var(--text-primary)" fontSize="26" fontWeight="700" fontFamily="'Clash Display', sans-serif">389</text>
+          <text x="100" y="115" textAnchor="middle" fill="var(--text-muted)" fontSize="11" fontWeight="500" fontFamily="'Satoshi', sans-serif">Topics</text>
+        </svg>
+      </div>
+      <div className="grid grid-cols-2 gap-x-8 gap-y-3">
+        {TOPICS.map((t, i) => (
+          <div key={t.name} className="flex items-center gap-2.5"
+            style={{
+              opacity: inView ? 1 : 0, transform: inView ? 'none' : 'translateX(10px)',
+              transition: `opacity 0.4s ease ${i * 60 + 400}ms, transform 0.4s ease ${i * 60 + 400}ms`,
+            }}>
+            <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: t.color }} />
+            <span className="text-sm font-medium whitespace-nowrap" style={{ color: 'var(--text-secondary)', fontFamily: T.font.body }}>{t.name}</span>
+            <span className="text-sm font-semibold" style={{ color: 'var(--text-muted)', fontFamily: T.font.mono }}>{t.count}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════════════════════════
+   LANDING PAGE
+   ════════════════════════════════════════════════════════════ */
 export default function LandingPage() {
   const { isAuthenticated } = useAuth();
-  const compRef = useRef<HTMLDivElement>(null);
-  const compInView = useInView(compRef, { once: true, margin: '-80px' });
   const visitorCount = useVisitorCount();
 
   useEffect(() => { window.scrollTo(0, 0); }, []);
-
   useEffect(() => {
     document.title = 'Camora — Apply, Prepare, Practice & Attend';
     return () => { document.title = 'Camora'; };
   }, []);
 
   return (
-    <div className="min-h-screen overflow-hidden" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", color: 'var(--text-primary)' }}>
+    <div className="min-h-screen" style={{ fontFamily: T.font.body, color: 'var(--text-primary)' }}>
       <SEO path="/" />
 
-      {/* ── Styles ── */}
+      {/* ── Scoped Styles ── */}
       <style>{`
-        @keyframes shimmer {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
+        .cm-gradient-text {
+          background: ${T.gradient};
+          -webkit-background-clip: text;
+          background-clip: text;
+          color: transparent;
         }
-        @keyframes gradient-text {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
+        .cm-gradient-btn {
+          background: ${T.gradient};
+          transition: filter 0.2s ease;
         }
-        .shimmer-btn { position: relative; z-index: 1; overflow: visible; }
-        .shimmer-btn::before {
-          content: ''; position: absolute; inset: -2px; border-radius: inherit;
-          background: linear-gradient(90deg, #34d399, #06b6d4, #818cf8, #f59e0b, #34d399);
-          background-size: 300% 100%; animation: shimmer 4s ease-in-out infinite;
-          z-index: -2; opacity: 0; transition: opacity 0.3s ease;
+        .cm-gradient-btn:hover { filter: brightness(1.12); }
+        .cm-outline-btn {
+          border: 1px solid rgba(255,255,255,0.15);
+          color: var(--text-primary);
+          transition: border-color 0.2s ease, background 0.2s ease;
         }
-        .shimmer-btn:hover::before { opacity: 1; }
-        .shimmer-btn::after { content: ''; position: absolute; inset: 0; border-radius: inherit; background: inherit; z-index: -1; }
-        .gradient-text {
-          background: linear-gradient(135deg, #2563eb, #7c3aed, #c026d3, #2563eb);
-          background-size: 200% 200%; -webkit-background-clip: text; background-clip: text;
-          color: transparent; animation: gradient-text 6s ease-in-out infinite;
+        .cm-outline-btn:hover {
+          border-color: rgba(255,255,255,0.3);
+          background: rgba(255,255,255,0.04);
         }
-        .font-display { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
-        .font-code { font-family: 'IBM Plex Mono', monospace; }
       `}</style>
-
-      {/* ── Subtle background gradient ── */}
-      <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[140vw] h-[60vh]"
-             style={{ background: 'radial-gradient(ellipse 70% 50% at 50% 0%, rgba(99,102,241,0.08) 0%, transparent 70%)' }} />
-      </div>
 
       {/* ── NAV ── */}
       <SiteNav />
 
       {/* ── HERO ── */}
-      <section className="relative pt-24 pb-10 md:pt-32 md:pb-14 px-6" style={{ zIndex: 1 }}>
-        <div className="w-full lg:max-w-[70%] mx-auto text-center">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6" style={{ background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.2)' }}>
+      <section className="relative pt-28 pb-16 md:pt-36 md:pb-20 px-6" style={{ zIndex: 1 }}>
+        {/* Background glow */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[100vw] h-[50vh]"
+            style={{ background: 'radial-gradient(ellipse 60% 50% at 50% 0%, rgba(11,92,255,0.06) 0%, transparent 70%)' }} />
+        </div>
+
+        <div className="relative z-10 max-w-4xl mx-auto text-center">
+          {/* Badge */}
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+            <span
+              className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold tracking-[0.12em] uppercase"
+              style={{
+                borderRadius: '999px',
+                background: 'rgba(52,211,153,0.06)',
+                border: '1px solid rgba(52,211,153,0.18)',
+                color: T.color.emerald,
+                fontFamily: T.font.mono,
+              }}
+            >
               <span className="relative flex h-2 w-2">
                 <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 animate-ping opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
               </span>
-              <span className="text-xs font-semibold text-emerald-400 tracking-wide">APPA — Apply · Prepare · Practice · Attend</span>
-            </div>
-          </motion.div>
-          <motion.h1 className="font-display font-extrabold tracking-[-0.04em]"
-            initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.1 }}>
-            <span className="block text-4xl sm:text-5xl md:text-6xl leading-[1.1]">Application to <span className="gradient-text">Offer.</span></span>
-          </motion.h1>
-          <motion.div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3"
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.3 }}>
-            <Link to={isAuthenticated ? "/capra/prepare" : "/signup"} className="shimmer-btn px-6 py-3 text-base font-semibold rounded-xl text-white transition-colors" style={{ background: 'linear-gradient(135deg, #10b981, #3b82f6, #8b5cf6)' }}>
-              {isAuthenticated ? 'Go to Dashboard' : 'Get Started Free'}
-            </Link>
-            <a href="#process" className="btn-secondary px-6 py-3 text-base rounded-xl transition-colors">
-              See How It Works
-            </a>
+              Apply . Prepare . Practice . Attend
+            </span>
           </motion.div>
 
-          {/* Visitor Count */}
+          {/* Headline */}
+          <motion.h1
+            className="mt-8 font-bold tracking-[-0.03em]"
+            style={{ fontFamily: T.font.display }}
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.1 }}
+          >
+            <span className="block text-[42px] sm:text-[52px] md:text-[64px] leading-[1.08]">
+              From application to
+            </span>
+            <span className="block text-[42px] sm:text-[52px] md:text-[64px] leading-[1.08] cm-gradient-text">
+              offer letter.
+            </span>
+          </motion.h1>
+
+          {/* Subheading */}
+          <motion.p
+            className="mt-6 text-lg md:text-xl leading-relaxed max-w-2xl mx-auto"
+            style={{ color: 'var(--text-secondary)', fontFamily: T.font.body }}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            Whether you're prepping for a FAANG interview or attending one live, Camora helps you
+            prepare, practice, and perform — with AI doing the heavy lifting.
+          </motion.p>
+
+          {/* CTAs */}
+          <motion.div
+            className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+          >
+            <Link
+              to={isAuthenticated ? '/capra/prepare' : '/signup'}
+              className="cm-gradient-btn px-7 py-3.5 text-[15px] font-semibold text-white"
+              style={{ borderRadius: T.radius, fontFamily: T.font.body }}
+            >
+              {isAuthenticated ? 'Go to Dashboard' : 'Get Started Free'}
+            </Link>
+            <Link
+              to="/pricing"
+              className="cm-outline-btn px-7 py-3.5 text-[15px] font-semibold"
+              style={{ borderRadius: T.radius, fontFamily: T.font.body }}
+            >
+              View Plans
+            </Link>
+          </motion.div>
+
+          {/* Social proof */}
           {visitorCount !== null && visitorCount > 0 && (
-            <motion.div className="mt-8 flex items-center justify-center gap-2"
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6, delay: 0.5 }}>
+            <motion.div
+              className="mt-10 flex items-center justify-center gap-3"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.5 }}
+            >
               <div className="flex -space-x-1.5">
-                {['#34d399','#818cf8','#38bdf8','#fbbf24'].map((c, i) => (
+                {[T.color.emerald, T.color.indigo, T.color.cyan, T.color.amber].map((c, i) => (
                   <div key={i} className="w-6 h-6 rounded-full" style={{ background: c, border: '2px solid var(--bg-app)' }} />
                 ))}
               </div>
-              <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+              <span className="text-sm" style={{ color: 'var(--text-secondary)', fontFamily: T.font.body }}>
                 <span className="font-bold" style={{ color: 'var(--text-primary)' }}>{visitorCount.toLocaleString()}+</span> engineers visited
               </span>
             </motion.div>
@@ -408,82 +457,158 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── APPA STEP CARDS — Visual summary ── */}
-      <section className="px-6 py-10 md:py-14" style={{ zIndex: 1 }}>
-        <div className="w-full lg:max-w-[70%] mx-auto">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {APPA.map((step, i) => (
-              <FadeIn key={step.label} delay={i * 0.08}>
-                <Link to={step.href}
-                  className="group card relative rounded-2xl p-6 overflow-hidden hover:-translate-y-1 hover:shadow-lg transition-all duration-300 flex flex-col h-full"
-                >
-                  {/* Accent top bar */}
-                  <div className="absolute top-0 left-0 right-0 h-1 rounded-t-2xl" style={{ background: step.color }} />
-                  {/* Step number */}
-                  <span className="text-[40px] md:text-[48px] font-extrabold leading-none font-display opacity-10 absolute top-4 right-5" style={{ color: step.color }}>{step.num}</span>
-                  {/* Icon */}
-                  <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110"
-                       style={{ background: `${step.color}15`, color: step.color }}>
-                    {AppaIcons[step.label.toLowerCase() as keyof typeof AppaIcons]?.(step.color)}
-                  </div>
-                  <h3 className="text-lg font-bold font-display mb-2" style={{ color: 'var(--text-primary)' }}>{step.label}</h3>
-                  <p className="text-sm leading-relaxed flex-1" style={{ color: 'var(--text-secondary)' }}>{step.desc}</p>
-                  <div className="mt-4 flex items-center gap-1 text-xs font-semibold transition-colors duration-200 group-hover:gap-2" style={{ color: step.color }}>
-                    <span>Explore</span>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-200 group-hover:translate-x-0.5">
-                      <path d="M5 12h14M12 5l7 7-7 7" />
-                    </svg>
-                  </div>
-                </Link>
-              </FadeIn>
+      {/* ── STATS BAR ── */}
+      <section className="px-6 py-10" style={{ zIndex: 1 }}>
+        <div className="max-w-4xl mx-auto">
+          <div
+            className="grid grid-cols-2 md:grid-cols-4 gap-6 px-8 py-8"
+            style={{
+              borderRadius: '16px',
+              background: 'var(--bg-surface)',
+              border: '1px solid var(--border)',
+            }}
+          >
+            {STATS.map((s, i) => (
+              <Reveal key={s.label} delay={i * 0.06}>
+                <div className="text-center">
+                  <p className="text-3xl md:text-4xl font-bold" style={{ fontFamily: T.font.display, color: 'var(--text-primary)' }}>
+                    {s.value}<span className="cm-gradient-text">{s.suffix}</span>
+                  </p>
+                  <p className="text-sm mt-1" style={{ color: 'var(--text-muted)', fontFamily: T.font.body }}>{s.label}</p>
+                </div>
+              </Reveal>
             ))}
           </div>
         </div>
       </section>
 
-
-
-      {/* ── JOB URL ANALYSIS — Highlighted Feature ── */}
-      <section className="px-6 py-12 md:py-16" style={{ zIndex: 1 }}>
-        <div className="w-full lg:max-w-[70%] mx-auto">
-          <FadeIn className="text-center mb-10">
-            <span className="section-label inline-flex items-center gap-2 text-sm font-bold tracking-[0.15em] px-5 py-2 rounded-full" style={{ border: '1px solid rgba(52,211,153,0.3)', background: 'rgba(52,211,153,0.08)', color: '#34d399' }}>
-              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" /></svg>
-              NEW FEATURE
-            </span>
-            <h2 className="heading-1 font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mt-6">
-              Confused where to start preparing?
+      {/* ── APPA CARDS — Quick overview ── */}
+      <section className="px-6 py-14 md:py-20" style={{ zIndex: 1 }}>
+        <div className="max-w-5xl mx-auto">
+          <Reveal className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl lg:text-[44px] font-bold tracking-tight" style={{ fontFamily: T.font.display }}>
+              One platform, four steps to your offer.
             </h2>
-            <p className="text-body mt-4 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-              Paste any job URL. Get an AI-powered prep plan with coding, system design, and behavioral questions tailored to <em>that exact role</em>.
-            </p>
-          </FadeIn>
+          </Reveal>
 
-          <FadeIn delay={0.15}>
-            <div className="card max-w-3xl mx-auto rounded-2xl overflow-hidden" style={{ padding: 0, boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }}>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {APPA_STEPS.map((step, i) => (
+              <Reveal key={step.key} delay={i * 0.06}>
+                <Link
+                  to={step.href}
+                  className="group relative flex flex-col p-6 h-full transition-all hover:-translate-y-0.5"
+                  style={{
+                    borderRadius: '16px',
+                    background: 'var(--bg-surface)',
+                    border: '1px solid var(--border)',
+                  }}
+                >
+                  {/* Top accent line */}
+                  <div className="absolute top-0 left-4 right-4 h-[2px]" style={{ background: step.color, borderRadius: '0 0 2px 2px' }} />
+
+                  <div
+                    className="w-11 h-11 flex items-center justify-center mb-4"
+                    style={{ borderRadius: T.radius, background: `${step.color}12`, color: step.color }}
+                  >
+                    {step.icon}
+                  </div>
+
+                  <h3 className="text-lg font-bold mb-2" style={{ fontFamily: T.font.display, color: 'var(--text-primary)' }}>
+                    {step.label}
+                  </h3>
+
+                  <p className="text-sm leading-relaxed flex-1" style={{ color: 'var(--text-secondary)' }}>
+                    {step.desc.split('.')[0]}.
+                  </p>
+
+                  <div className="mt-4 flex items-center gap-1 text-xs font-semibold group-hover:gap-2 transition-all" style={{ color: step.color }}>
+                    <span>Learn more</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} className="transition-transform group-hover:translate-x-0.5"><path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                  </div>
+                </Link>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── TABBED PRODUCT SHOWCASE (Zoom-style) ── */}
+      <section className="px-6 py-14 md:py-20" id="process" style={{ zIndex: 1 }}>
+        <div className="max-w-5xl mx-auto">
+          <Reveal className="text-center mb-14">
+            <span
+              className="inline-block text-[11px] font-bold tracking-[0.18em] uppercase px-4 py-1.5 mb-5"
+              style={{
+                borderRadius: '999px',
+                background: `${T.color.blue}12`,
+                border: `1px solid ${T.color.blue}30`,
+                color: T.color.blue,
+                fontFamily: T.font.mono,
+              }}
+            >
+              How it works
+            </span>
+            <h2 className="text-3xl md:text-4xl lg:text-[44px] font-bold tracking-tight" style={{ fontFamily: T.font.display }}>
+              See what Camora can do.
+            </h2>
+          </Reveal>
+
+          <ProductTabs />
+        </div>
+      </section>
+
+      {/* ── JOB URL ANALYSIS — Feature Spotlight ── */}
+      <section className="px-6 py-14 md:py-20" style={{ zIndex: 1 }}>
+        <div className="max-w-4xl mx-auto">
+          <Reveal className="text-center mb-10">
+            <span
+              className="inline-flex items-center gap-2 text-[11px] font-bold tracking-[0.15em] uppercase px-4 py-1.5"
+              style={{
+                borderRadius: '999px',
+                background: `${T.color.emerald}08`,
+                border: `1px solid ${T.color.emerald}25`,
+                color: T.color.emerald,
+                fontFamily: T.font.mono,
+              }}
+            >
+              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" /></svg>
+              AI-Powered
+            </span>
+            <h2 className="text-3xl md:text-4xl lg:text-[44px] font-bold tracking-tight mt-5" style={{ fontFamily: T.font.display }}>
+              Paste a job URL. Get a prep plan.
+            </h2>
+            <p className="mt-4 text-lg max-w-xl mx-auto" style={{ color: 'var(--text-secondary)' }}>
+              AI analyzes the role and creates a personalized study plan with coding, system design, and behavioral focus areas.
+            </p>
+          </Reveal>
+
+          <Reveal delay={0.12}>
+            <div style={{ borderRadius: '16px', background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+              {/* URL bar */}
               <div className="px-6 py-5" style={{ borderBottom: '1px solid var(--border)' }}>
-                <div className="flex items-center gap-3 px-4 py-3 rounded-xl" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-                  <svg width="18" height="18" fill="none" stroke="var(--text-muted)" viewBox="0 0 24 24" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m9.86-4.122a4.5 4.5 0 00-6.364-6.364L4.5 6.1" /></svg>
-                  <span className="text-sm font-code truncate" style={{ color: 'var(--text-muted)' }}>https://nvidia.wd5.myworkdayjobs.com/...Senior-DevOps-Engineer</span>
-                  <span className="ml-auto px-4 py-1.5 text-xs font-bold text-white rounded-lg flex-shrink-0" style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}>Analyze</span>
+                <div className="flex items-center gap-3 px-4 py-3" style={{ borderRadius: T.radius, background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+                  <svg width="16" height="16" fill="none" stroke="var(--text-muted)" viewBox="0 0 24 24" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m9.86-4.122a4.5 4.5 0 00-6.364-6.364L4.5 6.1" /></svg>
+                  <span className="text-sm truncate" style={{ color: 'var(--text-muted)', fontFamily: T.font.mono }}>https://nvidia.wd5.myworkdayjobs.com/...Senior-DevOps-Engineer</span>
+                  <span className="ml-auto px-4 py-1.5 text-xs font-bold text-white flex-shrink-0 cm-gradient-btn" style={{ borderRadius: '8px' }}>Analyze</span>
                 </div>
               </div>
-              <div className="px-6 py-5">
-                <div className="flex items-center gap-2 mb-4">
+              {/* Results */}
+              <div className="px-6 py-6">
+                <div className="flex items-center gap-2 mb-5">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  <span className="text-xs font-bold text-emerald-400 tracking-wide uppercase font-code">AI Analysis Complete</span>
+                  <span className="text-[11px] font-bold text-emerald-400 tracking-wider uppercase" style={{ fontFamily: T.font.mono }}>Analysis Complete</span>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   {[
-                    { label: 'Coding Focus', items: ['Graph Algorithms', 'Scripting', 'Automation'], color: '#10b981' },
-                    { label: 'System Design', items: ['CI/CD Pipeline', 'Container Orchestration', 'Monitoring'], color: '#3b82f6' },
-                    { label: 'Behavioral', items: ['Leadership', 'Incident Mgmt', 'Cross-Team'], color: '#f59e0b' },
+                    { label: 'Coding Focus', items: ['Graph Algorithms', 'Scripting', 'Automation'], color: T.color.emerald },
+                    { label: 'System Design', items: ['CI/CD Pipeline', 'Container Orchestration', 'Monitoring'], color: T.color.blue },
+                    { label: 'Behavioral', items: ['Leadership', 'Incident Mgmt', 'Cross-Team'], color: T.color.amber },
                   ].map(col => (
-                    <div key={col.label} className="card-sm rounded-xl" style={{ background: `${col.color}08`, border: 'none' }}>
-                      <p className="text-[10px] font-bold uppercase tracking-wider mb-2.5" style={{ color: col.color }}>{col.label}</p>
+                    <div key={col.label} className="p-4" style={{ borderRadius: T.radius, background: `${col.color}06` }}>
+                      <p className="text-[10px] font-bold uppercase tracking-wider mb-3" style={{ color: col.color, fontFamily: T.font.mono }}>{col.label}</p>
                       <div className="flex flex-col gap-1.5">
                         {col.items.map(item => (
-                          <span key={item} className="text-xs font-medium px-2.5 py-1.5 rounded-lg" style={{ color: 'var(--text-secondary)', background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>{item}</span>
+                          <span key={item} className="text-xs font-medium px-2.5 py-1.5" style={{ borderRadius: '8px', color: 'var(--text-secondary)', background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>{item}</span>
                         ))}
                       </div>
                     </div>
@@ -491,94 +616,122 @@ export default function LandingPage() {
                 </div>
               </div>
             </div>
-          </FadeIn>
+          </Reveal>
 
-          <FadeIn delay={0.25} className="text-center mt-10">
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link to="/jobs" className="btn-primary shimmer-btn px-8 py-3.5 text-base rounded-xl">
-                Try It Now — Paste a Job URL
-              </Link>
-            </div>
-            <p className="text-small mt-4">
+          <Reveal delay={0.2} className="text-center mt-10">
+            <Link to="/jobs" className="cm-gradient-btn inline-flex items-center gap-2 px-7 py-3.5 text-[15px] font-semibold text-white" style={{ borderRadius: T.radius }}>
+              Try It Now — Paste a Job URL
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}><path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            </Link>
+            <p className="text-xs mt-4" style={{ color: 'var(--text-muted)' }}>
               Supports Workday, Greenhouse, Lever, Ashby, SmartRecruiters, LinkedIn &amp; more
             </p>
-          </FadeIn>
+          </Reveal>
         </div>
       </section>
 
-      {/* ── PREPARATION AT SCALE — Donut + Topic Cards ── */}
-      <section className="px-6 py-12 md:py-16" style={{ zIndex: 1 }}>
-        <div className="w-full lg:max-w-[70%] mx-auto">
-          <FadeIn className="text-center mb-10">
-            <span className="section-label gradient-text text-sm font-bold tracking-[0.2em]">Preparation at Scale</span>
-            <h2 className="heading-1 font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mt-4">Everything you need to prepare.</h2>
-          </FadeIn>
-          <PrepShowcase />
+      {/* ── PREPARATION AT SCALE — Donut ── */}
+      <section className="px-6 py-14 md:py-20" style={{ zIndex: 1 }}>
+        <div className="max-w-4xl mx-auto">
+          <Reveal className="text-center mb-12">
+            <span
+              className="inline-block text-[11px] font-bold tracking-[0.18em] uppercase px-4 py-1.5 mb-5"
+              style={{
+                borderRadius: '999px',
+                background: `${T.color.indigo}12`,
+                border: `1px solid ${T.color.indigo}30`,
+                color: T.color.indigo,
+                fontFamily: T.font.mono,
+              }}
+            >
+              Preparation at Scale
+            </span>
+            <h2 className="text-3xl md:text-4xl lg:text-[44px] font-bold tracking-tight" style={{ fontFamily: T.font.display }}>
+              Everything you need to prepare.
+            </h2>
+          </Reveal>
+          <TopicDonut />
         </div>
       </section>
 
-      {/* ── WHAT SETS CAMORA APART — Feature Groups ── */}
-      <section className="px-6 py-12 md:py-16" style={{ zIndex: 1 }}>
-        <div className="w-full lg:max-w-[70%] mx-auto">
-          <FadeIn className="text-center mb-20">
-            <span className="section-label inline-block text-sm font-bold tracking-[0.2em] px-4 py-1.5 rounded-full" style={{ border: '1px solid rgba(52,211,153,0.3)', background: 'rgba(52,211,153,0.08)', color: '#34d399' }}>ONLY ON CAMORA</span>
-            <h2 className="heading-1 font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mt-6">What no other interview tool can do.</h2>
-          </FadeIn>
+      {/* ── PLATFORM COMPATIBILITY ── */}
+      <section className="px-6 py-14 md:py-20" style={{ zIndex: 1 }}>
+        <div className="max-w-4xl mx-auto">
           <div className="grid md:grid-cols-2 gap-6">
-            {FEATURE_GROUPS.map((group, gi) => (
-              <FadeIn key={group.groupTitle} delay={gi * 0.1}>
-                <div className="card rounded-2xl overflow-hidden hover:-translate-y-0.5 hover:shadow-md transition-all duration-300" style={{ padding: 0 }}>
-                  <div className="px-6 py-4 flex items-center justify-between" style={{ background: `${group.accent}06`, borderBottom: '1px solid var(--border)' }}>
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: `${group.accent}15` }}>
-                        <span className="w-2.5 h-2.5 rounded-full" style={{ background: group.accent }} />
-                      </div>
-                      <h3 className="heading-2 text-base font-display">{group.groupTitle}</h3>
-                    </div>
-                    <span className="text-xs font-semibold px-3 py-1 rounded-full" style={{ color: group.accent, background: `${group.accent}12` }}>{group.features.length} features</span>
-                  </div>
-                  <div className="p-5">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-                      {group.features.map(f => (
-                        <div key={f.title} className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors group/feat" style={{ cursor: 'default' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-elevated)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                          <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-200 group-hover/feat:scale-110" style={{ background: `${group.accent}10`, color: group.accent }}>{f.icon}</div>
-                          <span className="text-sm font-medium leading-tight" style={{ color: 'var(--text-secondary)' }}>{f.title}</span>
+            {PLATFORM_FEATURES.map((group, gi) => (
+              <Reveal key={group.title} delay={gi * 0.08}>
+                <div
+                  className="p-7"
+                  style={{
+                    borderRadius: '16px',
+                    background: 'var(--bg-surface)',
+                    border: '1px solid var(--border)',
+                  }}
+                >
+                  <h3 className="text-lg font-bold mb-5" style={{ fontFamily: T.font.display, color: 'var(--text-primary)' }}>
+                    {group.title}
+                  </h3>
+                  <div className="flex flex-col gap-3">
+                    {group.items.map(item => (
+                      <div key={item.name} className="flex items-center gap-3">
+                        <div
+                          className="w-8 h-8 flex items-center justify-center flex-shrink-0"
+                          style={{ borderRadius: '8px', background: 'var(--bg-elevated)', color: 'var(--text-muted)' }}
+                        >
+                          {item.icon}
                         </div>
-                      ))}
-                    </div>
+                        <span className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>{item.name}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              </FadeIn>
+              </Reveal>
             ))}
           </div>
         </div>
       </section>
 
-
-      {/* ── CTA ── */}
-      <section className="px-6 py-28 md:py-36" style={{ zIndex: 1 }}>
-        <FadeIn className="max-w-3xl mx-auto">
-          <div className="relative rounded-3xl px-8 py-16 md:px-16 md:py-20 text-center overflow-hidden"
-               style={{
-                 background: 'linear-gradient(145deg, rgba(52,211,153,0.06) 0%, rgba(99,102,241,0.06) 50%, rgba(139,92,246,0.06) 100%)',
-                 border: '1px solid var(--border)',
-               }}>
-            {/* Subtle glow orbs */}
-            <div className="absolute top-0 right-1/4 w-48 h-48 rounded-full blur-3xl opacity-20 pointer-events-none" style={{ background: 'radial-gradient(circle, #34d399, transparent)' }} />
-            <div className="absolute bottom-0 left-1/4 w-40 h-40 rounded-full blur-3xl opacity-15 pointer-events-none" style={{ background: 'radial-gradient(circle, #818cf8, transparent)' }} />
+      {/* ── FINAL CTA ── */}
+      <section className="px-6 py-20 md:py-28" style={{ zIndex: 1 }}>
+        <Reveal className="max-w-3xl mx-auto">
+          <div
+            className="relative px-8 py-16 md:px-16 md:py-20 text-center overflow-hidden"
+            style={{
+              borderRadius: '20px',
+              background: 'var(--bg-surface)',
+              border: '1px solid var(--border)',
+            }}
+          >
+            {/* Subtle gradient glow */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[60%] h-1" style={{ background: T.gradient, borderRadius: '0 0 4px 4px' }} />
 
             <div className="relative z-10">
-              <h2 className="heading-1 font-display text-3xl md:text-4xl lg:text-[42px] font-bold tracking-tight">
-                Your next interview <span className="gradient-text">starts here.</span>
+              <h2 className="text-3xl md:text-4xl lg:text-[42px] font-bold tracking-tight" style={{ fontFamily: T.font.display }}>
+                Your next interview{' '}
+                <span className="cm-gradient-text">starts here.</span>
               </h2>
-              <p className="text-body mt-6 text-base md:text-lg" style={{ color: 'var(--text-secondary)' }}>Apply, Prepare, Practice, Attend.</p>
+              <p className="mt-5 text-base md:text-lg" style={{ color: 'var(--text-secondary)' }}>
+                Apply, Prepare, Practice, Attend.
+              </p>
               <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-                <Link to="/lumora" className="btn-primary shimmer-btn px-8 py-4 text-lg rounded-2xl">Start Free — No Credit Card</Link>
-                <Link to="/pricing" className="btn-secondary px-8 py-4 text-lg rounded-2xl">View Pricing</Link>
+                <Link
+                  to={isAuthenticated ? '/capra/prepare' : '/signup'}
+                  className="cm-gradient-btn px-8 py-4 text-base font-semibold text-white"
+                  style={{ borderRadius: T.radius }}
+                >
+                  {isAuthenticated ? 'Go to Dashboard' : 'Start Free — No Credit Card'}
+                </Link>
+                <Link
+                  to="/pricing"
+                  className="cm-outline-btn px-8 py-4 text-base font-semibold"
+                  style={{ borderRadius: T.radius }}
+                >
+                  View Pricing
+                </Link>
               </div>
             </div>
           </div>
-        </FadeIn>
+        </Reveal>
       </section>
 
       {/* ── FOOTER ── */}
