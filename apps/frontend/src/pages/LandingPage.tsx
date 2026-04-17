@@ -9,7 +9,7 @@ import SiteFooter from '../components/shared/SiteFooter';
 /* ── APPA steps data ───────────────────────────────────── */
 const APPA = [
   { num: '01', label: 'Apply', desc: 'Discover engineering roles matched to your skills, experience, and salary goals across 1 000+ companies.', href: '/jobs', color: '#34d399' },
-  { num: '02', label: 'Prepare', desc: 'Study 300+ curated topics spanning system design, DSA, behavioral, databases, and cloud architecture.', href: '/capra/prepare', color: '#818cf8' },
+  { num: '02', label: 'Prepare', desc: 'Study 415+ curated topics spanning system design, DSA, behavioral, databases, and cloud architecture.', href: '/capra/prepare', color: '#818cf8' },
   { num: '03', label: 'Practice', desc: 'Solve problems with AI explanations, run mock interviews, and build confidence before the real thing.', href: '/capra/practice', color: '#38bdf8' },
   { num: '04', label: 'Attend', desc: 'Get real-time AI answers during your live technical interview — system design, coding, and behavioral.', href: '/lumora', color: '#fbbf24' },
 ];
@@ -213,11 +213,10 @@ function PrepShowcase() {
   const TOPIC_CATEGORIES = [
     { name: 'DSA & Algorithms', count: 57, color: '#34d399' },
     { name: 'System Design', count: 163, color: '#06b6d4' },
-    { name: 'Microservices', count: 12, color: '#818cf8' },
-    { name: 'Database Internals', count: 12, color: '#f97316' },
-    { name: 'SQL for Interviews', count: 8, color: '#fbbf24' },
-    { name: 'Low-Level Design', count: 106, color: '#a78bfa' },
+    { name: 'Low Level Design', count: 106, color: '#a78bfa' },
     { name: 'Behavioral', count: 57, color: '#f472b6' },
+    { name: 'Databases & SQL', count: 20, color: '#f97316' },
+    { name: 'Microservices', count: 12, color: '#818cf8' },
   ];
   const TOTAL = 415;
   const RADIUS = 72;
@@ -267,46 +266,6 @@ function PrepShowcase() {
         </div>
       </div>
 
-      {/* Topic Cards */}
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {[
-          { name: 'URL Shortener', category: 'System Design', difficulty: 'Medium', topics: 8, color: '#06b6d4', img: '/images/categories/system-design.svg' },
-          { name: 'Rate Limiter', category: 'System Design', difficulty: 'Medium', topics: 6, color: '#06b6d4', img: '/images/categories/system-design.svg' },
-          { name: 'Two Sum', category: 'DSA', difficulty: 'Easy', topics: 3, color: '#818cf8', img: '/images/categories/dsa.svg' },
-          { name: 'LRU Cache', category: 'DSA', difficulty: 'Hard', topics: 5, color: '#818cf8', img: '/images/categories/dsa.svg' },
-          { name: 'API Gateway', category: 'Microservices', difficulty: 'Medium', topics: 7, color: '#34d399', img: '/images/categories/microservices.svg' },
-          { name: 'SOLID Principles', category: 'Low-Level Design', difficulty: 'Medium', topics: 12, color: '#a78bfa', img: '/images/categories/lld.svg' },
-          { name: 'ACID vs BASE', category: 'Database', difficulty: 'Medium', topics: 4, color: '#fbbf24', img: '/images/categories/database.svg' },
-          { name: 'STAR Method', category: 'Behavioral', difficulty: 'Easy', topics: 8, color: '#fb923c', img: '/images/categories/behavioral.svg' },
-        ].map((item, i) => (
-          <div key={item.name}
-            className="card rounded-2xl overflow-hidden hover:-translate-y-0.5 hover:shadow-md transition-all duration-300 group"
-            style={{ opacity: inView ? 1 : 0, transform: inView ? 'translateY(0)' : 'translateY(16px)',
-              transition: 'opacity 0.6s ease, transform 0.6s ease, border-color 0.3s ease, box-shadow 0.3s ease',
-              transitionDelay: `${i * 80 + 500}ms`, padding: 0 }}>
-            <div className="h-28 flex items-center justify-center transition-colors duration-300" style={{ background: `${item.color}08` }}>
-              <img src={item.img} alt={item.category} className="h-20 w-auto transition-transform duration-300 group-hover:scale-105" />
-            </div>
-            <div className="p-5">
-              <div className="flex items-center justify-between mb-2.5">
-                <span className="px-2.5 py-1 rounded-md text-xs font-code font-semibold" style={{ color: item.color, background: `${item.color}12` }}>{item.category}</span>
-                <span className={`px-2.5 py-1 rounded-md text-xs font-code font-semibold ${
-                  item.difficulty === 'Easy' ? 'badge-easy' :
-                  item.difficulty === 'Hard' ? 'badge-hard' : 'badge-medium'}`}>
-                  {item.difficulty}
-                </span>
-              </div>
-              <h4 className="text-base font-bold mb-2" style={{ color: 'var(--text-primary)' }}>{item.name}</h4>
-              <div className="flex items-center justify-between">
-                <span className="text-sm" style={{ color: 'var(--text-muted)' }}>{item.topics} subtopics</span>
-                <div className="w-20 h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--bg-elevated)' }}>
-                  <div className="h-full rounded-full transition-all duration-1000" style={{ width: inView ? `${30 + i * 12}%` : '0%', background: item.color }} />
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
     </div>
   );
 }
@@ -512,65 +471,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── PROCESS — Accordion (MetAntz-style) ── */}
-      <section id="process" className="px-6 py-12 md:py-16" style={{ zIndex: 1 }}>
-        <div className="w-full lg:max-w-[70%] mx-auto">
-          <div className="grid lg:grid-cols-2 gap-16 lg:gap-24 items-stretch">
-            <FadeIn>
-              <span className="section-label gradient-text text-sm font-bold tracking-[0.2em]">Our Process</span>
-              <h2 className="heading-1 font-display text-4xl md:text-5xl font-bold tracking-tight mt-4 leading-[1.1]">Your path to the offer</h2>
-              <p className="text-body text-lg mt-5 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>A streamlined process designed for engineers who want to land their dream role.</p>
-              <ProcessAccordion />
-            </FadeIn>
-            <FadeIn delay={0.2} className="hidden lg:flex">
-              <div className="h-full flex flex-col">
-                <div className="relative rounded-3xl p-10 flex-1 flex flex-col justify-center overflow-hidden"
-                     style={{
-                       background: 'linear-gradient(145deg, var(--bg-surface) 0%, rgba(52,211,153,0.05) 25%, rgba(99,102,241,0.05) 50%, rgba(139,92,246,0.05) 75%, var(--bg-surface) 100%)',
-                       boxShadow: '0 8px 40px rgba(0,0,0,0.3), 0 2px 8px rgba(99,102,241,0.1)',
-                       border: '1px solid var(--border)',
-                     }}>
-                  {/* Gradient glow orbs */}
-                  <div className="absolute top-0 right-0 w-40 h-40 rounded-full blur-3xl opacity-30" style={{ background: 'radial-gradient(circle, #34d399, transparent)' }} />
-                  <div className="absolute bottom-0 left-0 w-32 h-32 rounded-full blur-3xl opacity-20" style={{ background: 'radial-gradient(circle, #818cf8, transparent)' }} />
-                  <div className="absolute top-1/2 right-1/4 w-24 h-24 rounded-full blur-2xl opacity-15" style={{ background: 'radial-gradient(circle, #38bdf8, transparent)' }} />
-
-                  <div className="relative z-10">
-                    <div className="flex items-center gap-3 mb-10">
-                      <div className="w-3 h-3 rounded-full animate-pulse" style={{ background: 'linear-gradient(135deg, #34d399, #06b6d4)', boxShadow: '0 0 8px rgba(52,211,153,0.5)' }} />
-                      <span className="text-sm font-bold tracking-wider uppercase bg-clip-text text-transparent" style={{ backgroundImage: 'linear-gradient(135deg, #34d399, #06b6d4, #818cf8)' }}>APPA Flow</span>
-                    </div>
-                    <div className="space-y-1">
-                      {PROCESS_STEPS.map((step, i) => (
-                        <div key={step.label} className="flex items-start gap-5">
-                          <div className="flex flex-col items-center">
-                            <div className="w-12 h-12 rounded-2xl flex items-center justify-center border backdrop-blur-sm transition-all duration-300 hover:scale-110"
-                                 style={{
-                                   background: `linear-gradient(135deg, ${step.color}15, ${step.color}08)`,
-                                   borderColor: `${step.color}30`,
-                                   color: step.color,
-                                   boxShadow: `0 4px 12px ${step.color}15`,
-                                 }}>
-                              {step.icon}
-                            </div>
-                            {i < PROCESS_STEPS.length - 1 && (
-                              <div className="w-[2px] h-10 my-1 rounded-full" style={{ background: `linear-gradient(to bottom, ${step.color}50, ${PROCESS_STEPS[i + 1].color}50)` }} />
-                            )}
-                          </div>
-                          <div className="pt-2.5">
-                            <span className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>{step.label.split(' ')[0]}</span>
-                            <p className="text-sm mt-1 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{step.label.split(' ').slice(1).join(' ')}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </FadeIn>
-          </div>
-        </div>
-      </section>
 
       {/* ── DEMO — Videos ── */}
       <section className="px-6 pb-10 md:pb-16" style={{ zIndex: 1 }}>
@@ -718,50 +618,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── CAMORA VS COMPETITORS — Bar Chart ── */}
-      <section ref={compRef} className="px-6 py-12 md:py-16" style={{ zIndex: 1 }}>
-        <div className="w-full lg:max-w-[70%] mx-auto">
-          <FadeIn className="text-center mb-12">
-            <span className="section-label gradient-text text-sm font-bold tracking-[0.2em]">Head-to-Head</span>
-            <h2 className="heading-1 font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mt-4">See why engineers switch to Camora.</h2>
-          </FadeIn>
-          <FadeIn className="max-w-2xl mx-auto">
-            <div className="card rounded-2xl overflow-hidden" style={{ padding: 0 }}>
-              <div className="px-6 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid var(--border)', background: 'var(--bg-elevated)' }}>
-                <span className="heading-3 font-display">Feature Count by Platform</span>
-                <span className="badge-new">2024 DATA</span>
-              </div>
-              <div className="p-6 space-y-4">
-                {COMP_BARS.map((bar, i) => {
-                  const isCamora = i === 0;
-                  return (
-                    <div key={bar.name} className="flex items-center gap-4"
-                      style={{ opacity: compInView ? 1 : 0, transition: 'opacity 0.5s ease', transitionDelay: `${i * 100 + 300}ms` }}>
-                      <span className={`text-sm font-semibold w-24 text-right flex-shrink-0`} style={{ color: isCamora ? '#34d399' : 'var(--text-muted)' }}>
-                        {isCamora && <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 mr-1.5 align-middle" />}
-                        {bar.name}
-                      </span>
-                      <div className="flex-1 h-8 rounded-lg overflow-hidden" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-                        <div className={`h-full rounded-lg flex items-center justify-end pr-3 ${isCamora ? 'shadow-sm' : ''}`}
-                          style={{
-                            width: compInView ? `${(bar.count / 45) * 100}%` : '0%',
-                            background: isCamora ? 'linear-gradient(135deg, #34d399, #10b981)' : 'var(--border)',
-                            transition: `width 1s ease ${i * 100 + 400}ms`,
-                          }}>
-                          <span className="text-xs font-bold font-code whitespace-nowrap" style={{ color: isCamora ? '#fff' : 'var(--text-muted)' }}>{bar.count}{bar.suffix}</span>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-              <div className="px-6 py-3" style={{ borderTop: '1px solid var(--border)', background: 'var(--bg-elevated)' }}>
-                <p className="section-label text-center font-code tracking-wide">FEATURES COMPARISON</p>
-              </div>
-            </div>
-          </FadeIn>
-        </div>
-      </section>
 
       {/* ── CTA ── */}
       <section className="px-6 py-28 md:py-36" style={{ zIndex: 1 }}>
