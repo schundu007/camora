@@ -7,33 +7,34 @@
 /* ── Design Tokens ──────────────────────────────────────────── */
 @layer base {
   :root {
-    /* Backgrounds (Railway-derived) */
-    --bg-app: #0D0C14;
-    --bg-surface: #16141F;
-    --bg-elevated: #1E1C28;
-    --bg-overlay: rgba(0,0,0,0.6);
+    /* Backgrounds — white, matching landing page */
+    --bg-base: #FFFFFF;
+    --bg-app: #FFFFFF;
+    --bg-surface: #F7F8FA;
+    --bg-elevated: #EEF0F4;
+    --bg-overlay: rgba(0,0,0,0.4);
 
     /* Borders */
-    --border: #2A2833;
-    --border-hover: #3B3947;
+    --border: #E2E5EB;
+    --border-hover: #CBD0D9;
     --border-focus: #2D8CFF;
 
-    /* Text */
-    --text-primary: #F2F1F3;
-    --text-secondary: #A1A0AB;
-    --text-muted: #6C6B7B;
-    --text-dimmed: #545260;
+    /* Text — dark on white */
+    --text-primary: #1A1D23;
+    --text-secondary: #4A5568;
+    --text-muted: #8C95A6;
+    --text-dimmed: #C8CDD6;
 
-    /* Accent (Zoom Blue — bold, sharp, unmistakable) */
+    /* Accent (Zoom Blue) */
     --accent: #2D8CFF;
-    --accent-hover: #2D8CFF;
-    --accent-subtle: rgba(45,140,255,0.12);
-    --accent-text: #CFFF40;
+    --accent-hover: #1A7AE6;
+    --accent-subtle: rgba(45,140,255,0.08);
+    --accent-text: #2D8CFF;
 
     /* Semantic */
-    --success: #2D8CFF;
-    --warning: #FFC53D;
-    --danger: #E5484D;
+    --success: #10B981;
+    --warning: #F59E0B;
+    --danger: #EF4444;
     --info: #2D8CFF;
 
     /* Fonts — Camora custom (Clash Display + Satoshi) */
@@ -42,12 +43,12 @@
     --font-mono: 'JetBrains Mono', 'IBM Plex Mono', ui-monospace, monospace;
     --font-brand: 'Clash Display', sans-serif;
 
-    /* Shadows (dark mode) */
-    --shadow-xs: 0 1px 2px rgba(0,0,0,0.4);
-    --shadow-sm: 0 2px 4px rgba(0,0,0,0.4);
-    --shadow-md: 0 4px 8px rgba(0,0,0,0.4);
-    --shadow-lg: 0 8px 24px rgba(0,0,0,0.5);
-    --shadow-xl: 0 16px 48px rgba(0,0,0,0.6);
+    /* Shadows (light mode) */
+    --shadow-xs: 0 1px 2px rgba(0,0,0,0.06);
+    --shadow-sm: 0 2px 4px rgba(0,0,0,0.06);
+    --shadow-md: 0 4px 8px rgba(0,0,0,0.08);
+    --shadow-lg: 0 8px 24px rgba(0,0,0,0.1);
+    --shadow-xl: 0 16px 48px rgba(0,0,0,0.12);
     --card-shadow: var(--shadow-sm);
 
     /* Layout */
@@ -58,10 +59,10 @@
     --page-max: 1280px;
 
     /* Legacy compat (used by block components) */
-    --bg: var(--bg-app);
+    --bg: var(--bg-base);
     --bg2: var(--bg-surface);
-    --primary: #2D8CFF;
-    --primary-light: #2D8CFF;
+    --primary: var(--accent);
+    --primary-light: var(--accent);
     --text: var(--text-primary);
     --text-subtle: var(--text-secondary);
     --text-dim: var(--text-muted);
