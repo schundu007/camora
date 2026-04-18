@@ -628,7 +628,6 @@ export default function LandingPage() {
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
           <Reveal className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl lg:text-[44px] font-bold tracking-tight" style={{ fontFamily: F.display }}>Full payload. Zero drag.</h2>
-            <p className="mt-4 text-lg max-w-xl mx-auto" style={{ color: L.secondary }}>800+ topics. 1,850+ problems. 7 categories.</p>
           </Reveal>
           <TopicDonut />
         </div>
@@ -704,9 +703,6 @@ export default function LandingPage() {
             <h2 className="text-3xl md:text-4xl lg:text-[44px] font-bold tracking-tight mt-5" style={{ fontFamily: F.display }}>
               Your co-pilot in the cockpit.
             </h2>
-            <p className="mt-4 text-lg max-w-xl mx-auto" style={{ color: L.secondary }}>
-              Voice transcription + instant AI answers during your live interview.
-            </p>
           </Reveal>
 
           <Reveal delay={0.12}>
