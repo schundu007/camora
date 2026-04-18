@@ -164,27 +164,23 @@ export default function PricingPage() {
   };
 
   return (
-    <div className="min-h-screen" style={{ color: 'var(--text-primary)' }}>
+    <div className="min-h-screen" style={{ background: 'var(--bg-base)', color: 'var(--text-primary)' }}>
 
       <SEO title="Pricing" description="Interview prep plans starting free. Monthly, Quarterly Pro, and Desktop Lifetime options." path="/pricing" />
       <SiteNav />
 
       {/* Header */}
-      <section className="pt-20 pb-0 px-6 text-center">
-        <span className="section-label">Tickets</span>
-        <h1 className="mt-1 text-3xl md:text-4xl font-semibold tracking-tight" style={{ color: 'var(--text-primary)' }}>
+      <section className="pt-24 pb-4 px-6 text-center">
+        <span className="text-xs font-bold uppercase tracking-[0.18em]" style={{ color: 'var(--accent)' }}>Tickets</span>
+        <h1 className="mt-3 text-3xl md:text-4xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>
           Choose your boarding class.
         </h1>
+        <p className="mt-3 text-base" style={{ color: 'var(--text-secondary)' }}>Start free. Upgrade when you're ready.</p>
       </section>
 
       {/* Plans */}
       <section className="w-full lg:max-w-[70%] mx-auto px-6 py-14">
-        <div className="mb-10 text-center">
-          <span className="text-xs font-bold uppercase tracking-[0.2em]" style={{ background: 'linear-gradient(135deg, #2D8CFF, #2D8CFF, #2D8CFF)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Plans</span>
-          <h2 className="mt-3 text-3xl md:text-4xl font-extrabold tracking-tight" style={{ color: 'var(--text-primary)' }}>
-            Choose your path.
-          </h2>
-        </div>
+        {/* Plans header removed — already in page header above */}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-4 items-stretch">
           {plans.map((plan) => {
@@ -253,22 +249,23 @@ export default function PricingPage() {
       <section className="px-6 pt-4 pb-16">
         <div className="w-full lg:max-w-[70%] mx-auto">
           <div className="mb-10 text-center">
-            <span className="text-xs font-bold uppercase tracking-[0.2em]" style={{ background: 'linear-gradient(135deg, #2D8CFF, #2D8CFF, #2D8CFF)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Why Camora Wins</span>
-            <h2 className="mt-3 text-3xl md:text-4xl font-extrabold tracking-tight" style={{ color: 'var(--text-primary)' }}>
+            <span className="text-xs font-bold uppercase tracking-[0.18em]" style={{ color: 'var(--accent)' }}>Why Camora Wins</span>
+            <h2 className="mt-3 text-3xl md:text-4xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>
+              Compare the competition.
             </h2>
           </div>
 
           <div
             className="relative overflow-hidden rounded-[22px]"
             style={{
-              background: 'linear-gradient(168deg, #1a1730 0%, #0e0d18 100%)',
-              boxShadow: '0 20px 60px rgba(0,0,0,0.7), 0 0 0 1px rgba(45,140,255,0.15)',
+              background: 'var(--bg-surface)',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.3), 0 0 0 1px var(--border)',
             }}
           >
             {/* Vivid gradient border */}
             <div className="absolute -inset-[1px] rounded-[22px] pointer-events-none" style={{ background: 'linear-gradient(135deg, #2D8CFF, #2D8CFF, #2D8CFF, #2D8CFF)', backgroundSize: '300% 300%', animation: 'borderShimmer 4s ease infinite', opacity: 0.4 }} />
 
-            <div className="relative rounded-[21px] overflow-x-auto" style={{ background: 'linear-gradient(168deg, #1a1730 0%, #0e0d18 100%)' }}>
+            <div className="relative rounded-[21px] overflow-x-auto" style={{ background: 'var(--bg-surface)' }}>
               {/* Top accent bar */}
               <div className="h-[3px] w-full" style={{ background: 'linear-gradient(90deg, #10b981, #2D8CFF, #2D8CFF, #ec4899, #2D8CFF, #10b981)' }} />
 
