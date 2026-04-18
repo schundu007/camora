@@ -164,7 +164,7 @@ export default function LandingPage() {
   useEffect(() => { document.title = 'Camora — Apply, Prepare, Practice & Attend'; return () => { document.title = 'Camora'; }; }, []);
 
   return (
-    <div className="min-h-screen relative" style={{ fontFamily: F.body, color: L.text, background: L.bg }}>
+    <div className="min-h-screen relative overflow-x-hidden" style={{ fontFamily: F.body, color: L.text, background: L.bg }}>
       <SEO path="/" />
       {/* Zoom-style: clean, no decorative tracks or grid dots */}
       <style>{`

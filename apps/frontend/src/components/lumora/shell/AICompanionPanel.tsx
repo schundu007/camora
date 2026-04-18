@@ -4,11 +4,11 @@ import { streamResponse } from '@/lib/sse-client';
 import { transcriptionAPI } from '@/lib/api-client';
 import { useAudioDevices } from '@/components/lumora/audio/hooks/useAudioDevices';
 
-/* White background copilot — black text */
+/* Dark transparent copilot — white text */
 const C = {
-  base: '#FFFFFF', surface: '#F8FAFC', elevated: '#2D8CFF',
-  text: '#0F172A', muted: '#64748B', accent: '#2D8CFF',
-  accentBg: 'rgba(45,140,255,0.08)', border: '#E2E8F0',
+  base: 'rgba(15,23,41,0.85)', surface: 'rgba(255,255,255,0.04)', elevated: '#2D8CFF',
+  text: '#FFFFFF', muted: 'rgba(255,255,255,0.45)', accent: '#2D8CFF',
+  accentBg: 'rgba(45,140,255,0.12)', border: 'rgba(255,255,255,0.08)',
 };
 
 /* ── Types ── */
@@ -95,18 +95,18 @@ function RichText({ text }: { text: string }) {
 
   const renderInline = (s: string) => {
     return s
-      .replace(/\*\*(.*?)\*\*/g, '<strong style="color:#0F172A;font-weight:700;font-family:\'Clash Display\',sans-serif">$1</strong>')
-      .replace(/`([^`]+)`/g, '<code style="background:#F1F5F9;color:#0F766E;padding:1px 5px;border-radius:3px;font-size:10px;font-family:\'JetBrains Mono\',monospace;border:1px solid #E2E8F0">$1</code>')
+      .replace(/\*\*(.*?)\*\*/g, '<strong style="color:#FFFFFF;font-weight:700;font-family:\'Clash Display\',sans-serif">$1</strong>')
+      .replace(/`([^`]+)`/g, '<code style="background:rgba(255,255,255,0.08);color:#7DD3FC;padding:1px 5px;border-radius:3px;font-size:10px;font-family:\'JetBrains Mono\',monospace;border:1px solid rgba(255,255,255,0.1)">$1</code>')
       .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" style="color:#2D8CFF;text-decoration:underline">$1</a>');
   };
 
   const renderCodeBlock = (content: string, lang?: string, key?: number | string) => (
-    <div key={key} className="rounded overflow-hidden my-1.5" style={{ border: '1px solid #E2E8F0' }}>
-      <div className="flex items-center justify-between px-3 py-1" style={{ background: '#F8FAFC', borderBottom: '1px solid #E2E8F0' }}>
-        <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: '#64748B' }}>{lang || 'code'}</span>
-        <button onClick={() => navigator.clipboard.writeText(content)} className="text-[9px] px-1.5 py-0.5 rounded transition-colors hover:bg-gray-100" style={{ color: '#64748B' }}>Copy</button>
+    <div key={key} className="rounded overflow-hidden my-1.5" style={{ border: '1px solid rgba(255,255,255,0.1)' }}>
+      <div className="flex items-center justify-between px-3 py-1" style={{ background: 'rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+        <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.4)' }}>{lang || 'code'}</span>
+        <button onClick={() => navigator.clipboard.writeText(content)} className="text-[9px] px-1.5 py-0.5 rounded transition-colors hover:bg-white/10" style={{ color: 'rgba(255,255,255,0.4)' }}>Copy</button>
       </div>
-      <pre className="px-3 py-2 overflow-x-auto" style={{ background: '#0F172A', color: '#A5F3FC', fontSize: '11px', lineHeight: '1.6', fontFamily: "'JetBrains Mono', monospace" }}><code>{content}</code></pre>
+      <pre className="px-3 py-2 overflow-x-auto" style={{ background: 'rgba(0,0,0,0.3)', color: '#7DD3FC', fontSize: '11px', lineHeight: '1.6', fontFamily: "'JetBrains Mono', monospace" }}><code>{content}</code></pre>
     </div>
   );
 
@@ -132,7 +132,7 @@ function RichText({ text }: { text: string }) {
     const stepMatch = t.match(/^(Step\s+\d+)[:\s]+\s*(.*)/i);
     if (stepMatch) return (
       <div key={key} className="flex gap-2 pl-1 mt-0.5">
-        <span className="text-[9px] font-bold shrink-0 px-1.5 py-0.5 rounded" style={{ background: '#F1F5F9', color: '#475569' }}>{stepMatch[1]}</span>
+        <span className="text-[9px] font-bold shrink-0 px-1.5 py-0.5 rounded" style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.6)' }}>{stepMatch[1]}</span>
         <span style={{ fontSize: '11px', color: C.text, fontFamily: "'JetBrains Mono', monospace" }}>{stepMatch[2]}</span>
       </div>
     );
@@ -156,7 +156,7 @@ function RichText({ text }: { text: string }) {
 
     // Arrow patterns (Input: X -> Output: Y)
     if (/^(Input|Output)[:\s]/.test(t)) return (
-      <div key={key} className="mt-0.5 px-2 py-1 rounded" style={{ background: '#F1F5F9', fontFamily: "'JetBrains Mono', monospace", fontSize: '10px', color: '#0F172A', border: '1px solid #E2E8F0' }}>
+      <div key={key} className="mt-0.5 px-2 py-1 rounded" style={{ background: 'rgba(255,255,255,0.05)', fontFamily: "'JetBrains Mono', monospace", fontSize: '10px', color: 'rgba(255,255,255,0.8)', border: '1px solid rgba(255,255,255,0.08)' }}>
         {t}
       </div>
     );
@@ -259,16 +259,17 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
   const [streaming, setStreaming] = useState(false);
   const [streamText, setStreamText] = useState('');
   const [input, setInput] = useState('');
-  const [minimized, setMinimized] = useState(true); // Start minimized (just the icon)
+  const [minimized, setMinimized] = useState(true);
   const [maximized, setMaximized] = useState(false);
-  const [panelWidth, setPanelWidth] = useState(380);
-  const [panelHeight, setPanelHeight] = useState(520);
-  const [isResizing, setIsResizing] = useState(false);
+  const [panelWidth, setPanelWidth] = useState(400);
+  const [panelHeight, setPanelHeight] = useState(560);
+  const [isResizing, setIsResizing] = useState<false | 'w' | 'h' | 'wh'>(false);
   const [answerMode, setAnswerMode] = useState<AnswerMode>('short');
-  const [position, setPosition] = useState({ x: 0, y: 0 }); // offset from default
+  const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
+  const [opacity, setOpacity] = useState(85); // 0-100 transparency
   const dragRef = useRef<{ startX: number; startY: number; origX: number; origY: number } | null>(null);
-  const resizeRef = useRef<{ startX: number; startW: number } | null>(null);
+  const resizeRef = useRef<{ startX: number; startY: number; startW: number; startH: number; mode: string } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -295,14 +296,20 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
     dragRef.current = { startX: e.clientX, startY: e.clientY, origX: position.x, origY: position.y };
   };
 
-  // Resize handlers
+  // Resize handlers — edges and corner
   useEffect(() => {
     if (!isResizing) return;
     const handleMove = (e: MouseEvent) => {
       if (!resizeRef.current) return;
-      const delta = resizeRef.current.startX - e.clientX;
-      const newW = Math.min(Math.max(280, resizeRef.current.startW + delta), 700);
-      setPanelWidth(newW);
+      const r = resizeRef.current;
+      if (r.mode === 'w' || r.mode === 'wh') {
+        const dX = r.startX - e.clientX;
+        setPanelWidth(Math.min(Math.max(300, r.startW + dX), 800));
+      }
+      if (r.mode === 'h' || r.mode === 'wh') {
+        const dY = r.startY - e.clientY;
+        setPanelHeight(Math.min(Math.max(300, r.startH + dY), 900));
+      }
     };
     const handleUp = () => { setIsResizing(false); resizeRef.current = null; };
     window.addEventListener('mousemove', handleMove);
@@ -383,13 +390,22 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
         right: maximized ? 0 : `calc(24px - ${position.x}px)`,
         bottom: maximized ? 0 : `calc(24px - ${position.y}px)`,
         borderRadius: maximized ? 0 : '16px',
-        background: 'rgba(15,23,41,0.85)',
+        background: `rgba(15,23,41,${opacity / 100})`,
         backdropFilter: 'blur(20px)',
         border: maximized ? 'none' : '1px solid rgba(255,255,255,0.1)',
         boxShadow: '0 8px 40px rgba(0,0,0,0.5)',
         transition: isDragging ? 'none' : 'all 0.2s ease',
       }}
     >
+      {/* Resize handles — left edge, top edge, top-left corner */}
+      {!maximized && (
+        <>
+          <div className="absolute left-0 top-0 bottom-0 w-2 cursor-ew-resize z-10" onMouseDown={(e) => { setIsResizing('w'); resizeRef.current = { startX: e.clientX, startY: e.clientY, startW: panelWidth, startH: panelHeight, mode: 'w' }; }} />
+          <div className="absolute left-0 top-0 right-0 h-2 cursor-ns-resize z-10" onMouseDown={(e) => { setIsResizing('h'); resizeRef.current = { startX: e.clientX, startY: e.clientY, startW: panelWidth, startH: panelHeight, mode: 'h' }; }} />
+          <div className="absolute left-0 top-0 w-4 h-4 cursor-nwse-resize z-20" onMouseDown={(e) => { setIsResizing('wh'); resizeRef.current = { startX: e.clientX, startY: e.clientY, startW: panelWidth, startH: panelHeight, mode: 'wh' }; }} />
+        </>
+      )}
+
       {/* Header — draggable */}
       <div
         className="flex items-center justify-between h-11 px-3 shrink-0 cursor-move select-none"
@@ -421,6 +437,15 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
             )}
           </button>
         </div>
+      </div>
+
+      {/* Transparency slider */}
+      <div className="flex items-center gap-2 px-3 py-1 shrink-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <span className="text-[8px] font-bold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.3)' }}>Opacity</span>
+        <input type="range" min="10" max="100" value={opacity} onChange={e => setOpacity(Number(e.target.value))}
+          className="flex-1 h-1 appearance-none rounded-full cursor-pointer"
+          style={{ background: `linear-gradient(to right, rgba(45,140,255,0.6) 0%, rgba(45,140,255,0.6) ${opacity}%, rgba(255,255,255,0.1) ${opacity}%, rgba(255,255,255,0.1) 100%)` }} />
+        <span className="text-[9px] font-mono w-7 text-right" style={{ color: 'rgba(255,255,255,0.3)' }}>{opacity}%</span>
       </div>
 
       {/* Answer Mode Toggle — Short / Detailed */}
