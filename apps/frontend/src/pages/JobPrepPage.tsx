@@ -253,7 +253,7 @@ const categoryColors: Record<string, { bg: string; text: string; border: string 
   'Database': { bg: '#ecfdf5', text: '#065f46', border: '#a7f3d0' },
   'Architecture': { bg: '#fce7f3', text: '#9d174d', border: '#f9a8d4' },
   'DevOps': { bg: '#f3e8ff', text: '#6b21a8', border: '#d8b4fe' },
-  'API': { bg: '#fff7ed', text: '#9a3412', border: '#fdba74' },
+  'API': { bg: '#fff7ed', text: '#9a3412', border: '#B8E06C' },
   'Data': { bg: '#f0fdf4', text: '#166534', border: '#86efac' },
 };
 
@@ -622,7 +622,7 @@ export default function JobPrepPage() {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
                 {urlAnalysis.coding_focus?.length > 0 && (
                   <div style={{ background: '#f0fdf4', borderRadius: '8px', padding: '12px' }}>
-                    <p style={{ fontSize: '11px', fontWeight: 700, color: '#F97316', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px' }}>Coding Focus</p>
+                    <p style={{ fontSize: '11px', fontWeight: 700, color: '#76B900', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px' }}>Coding Focus</p>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                       {urlAnalysis.coding_focus.map((t: string) => (
                         <span key={t} style={{ fontSize: '12px', color: '#065f46', background: '#dcfce7', padding: '2px 8px', borderRadius: '4px' }}>{t}</span>
@@ -734,7 +734,7 @@ export default function JobPrepPage() {
                   transition: 'background 0.15s',
                   fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
                 }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#F97316'; }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#76B900'; }}
                 onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '#10b981'; }}
               >
                 <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -793,7 +793,7 @@ export default function JobPrepPage() {
                 gap: '12px',
               }}>
                 <div className="flex items-center gap-3">
-                  <svg width="18" height="18" fill="none" stroke="#dc2626" viewBox="0 0 24 24" strokeWidth={2} style={{ flexShrink: 0 }}>
+                  <svg width="18" height="18" fill="none" stroke="#5E9400" viewBox="0 0 24 24" strokeWidth={2} style={{ flexShrink: 0 }}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
                   </svg>
                   <span style={{ fontSize: '13px', color: '#991b1b' }}>
@@ -805,7 +805,7 @@ export default function JobPrepPage() {
                   style={{
                     fontSize: '13px',
                     fontWeight: 600,
-                    color: '#dc2626',
+                    color: '#5E9400',
                     background: 'transparent',
                     border: '1px solid #fca5a5',
                     borderRadius: '6px',
@@ -872,7 +872,7 @@ export default function JobPrepPage() {
                             justifyContent: 'center',
                             flexShrink: 0,
                           }}>
-                            <svg width="14" height="14" fill="none" stroke="#F97316" viewBox="0 0 24 24" strokeWidth={2.5}>
+                            <svg width="14" height="14" fill="none" stroke="#76B900" viewBox="0 0 24 24" strokeWidth={2.5}>
                               <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                             </svg>
                           </div>
@@ -1005,7 +1005,7 @@ export default function JobPrepPage() {
                   textDecoration: 'none',
                   transition: 'background 0.15s',
                 }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#F97316'; }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#76B900'; }}
                 onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '#10b981'; }}
               >
                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
@@ -1073,7 +1073,7 @@ export default function JobPrepPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setShowPaywall(false)}>
           <div className="bg-[var(--bg-surface)] rounded-3xl shadow-2xl max-w-2xl w-full mx-4 p-8" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
             <div className="text-center mb-6">
-              <div className="w-14 h-14 mx-auto mb-4 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #10b981, #3b82f6, #F97316)' }}>
+              <div className="w-14 h-14 mx-auto mb-4 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #10b981, #3b82f6, #76B900)' }}>
                 <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
               </div>
               <h3 className="text-xl font-bold text-[var(--text-primary)] mb-1">Upgrade to Generate Prep Material</h3>
@@ -1189,14 +1189,14 @@ function StudyItem({ label, href, reason }: { label: string; href: string; reaso
 const S = {
   h2: { fontSize: '18px', fontWeight: 700 as const, color: '#000', margin: '0 0 12px', borderBottom: '2px solid #d1fae5', paddingBottom: '6px' },
   h3: { fontSize: '15px', fontWeight: 700 as const, color: 'var(--text-primary)', margin: '20px 0 8px', paddingLeft: '10px', borderLeft: '3px solid #6ee7b7' },
-  h4: { fontSize: '12px', fontWeight: 600 as const, color: '#F97316', textTransform: 'uppercase' as const, letterSpacing: '0.08em', margin: '14px 0 6px 20px' },
+  h4: { fontSize: '12px', fontWeight: 600 as const, color: '#76B900', textTransform: 'uppercase' as const, letterSpacing: '0.08em', margin: '14px 0 6px 20px' },
   p: { fontSize: '14px', color: '#1f2937', lineHeight: 1.8, margin: '0 0 8px 20px', whiteSpace: 'pre-wrap' as const },
   li: { fontSize: '14px', color: '#1f2937', lineHeight: 1.7, marginBottom: '4px' },
   ul: { margin: '0 0 8px', paddingLeft: '38px' },
-  callout: (color: string) => ({ background: color === 'green' ? '#f0fdf4' : color === 'blue' ? '#eff6ff' : color === 'amber' ? '#fffbeb' : color === 'red' ? '#fef2f2' : '#f5f3ff', borderLeft: `3px solid ${color === 'green' ? '#10b981' : color === 'blue' ? '#3b82f6' : color === 'amber' ? '#f59e0b' : color === 'red' ? '#ef4444' : '#F97316'}`, borderRadius: '6px', padding: '12px 16px', margin: '8px 0 12px 20px' }),
+  callout: (color: string) => ({ background: color === 'green' ? '#f0fdf4' : color === 'blue' ? '#eff6ff' : color === 'amber' ? '#fffbeb' : color === 'red' ? '#fef2f2' : '#f5f3ff', borderLeft: `3px solid ${color === 'green' ? '#10b981' : color === 'blue' ? '#3b82f6' : color === 'amber' ? '#f59e0b' : color === 'red' ? '#ef4444' : '#76B900'}`, borderRadius: '6px', padding: '12px 16px', margin: '8px 0 12px 20px' }),
   divider: { borderBottom: '1px solid var(--border)', margin: '16px 0' },
   code: { fontSize: '13px', background: '#0d1117', color: '#c9d1d9', borderRadius: '8px', padding: '14px 16px', overflow: 'auto' as const, margin: '8px 0 12px 20px', fontFamily: "'IBM Plex Mono', monospace" },
-  badge: (color: string) => ({ fontSize: '11px', fontWeight: 700 as const, color, background: color === '#dc2626' ? '#fef2f2' : color === '#d97706' ? '#fffbeb' : '#ecfdf5', padding: '2px 10px', borderRadius: '4px', textTransform: 'uppercase' as const }),
+  badge: (color: string) => ({ fontSize: '11px', fontWeight: 700 as const, color, background: color === '#5E9400' ? '#fef2f2' : color === '#d97706' ? '#fffbeb' : '#ecfdf5', padding: '2px 10px', borderRadius: '4px', textTransform: 'uppercase' as const }),
 };
 
 /* ──────────────────────────────── PrepSectionContent sub-component ──────────────────────────────── */
@@ -1278,7 +1278,7 @@ function PrepSectionContent({ sectionKey, data }: { sectionKey: string; data: an
         {Array.isArray(questions) && questions.length > 0 && questions.map((q: any, i: number) => (
           <div key={i} style={{ marginBottom: '24px' }}>
             <h3 style={S.h3}>
-              <span style={{ color: '#F97316', marginRight: '6px' }}>Q{i + 1}.</span>
+              <span style={{ color: '#76B900', marginRight: '6px' }}>Q{i + 1}.</span>
               {q.question || q.q || (typeof q === 'string' ? q : '')}
             </h3>
             {q.whyTheyAsk && <p style={{ ...S.p, fontSize: '13px', color: 'var(--text-muted)', fontStyle: 'italic' }}>Why they ask this: {q.whyTheyAsk}</p>}
@@ -1292,10 +1292,10 @@ function PrepSectionContent({ sectionKey, data }: { sectionKey: string; data: an
             {sectionKey === 'behavioral' && (q.situation || q.task || q.action || q.result) && (
               <div style={{ marginLeft: '20px', marginTop: '10px' }}>
                 <h4 style={{ ...S.h4, margin: '0 0 8px 0' }}>STAR Framework</h4>
-                {q.situation && <p style={S.p}><strong style={{ color: '#F97316' }}>Situation:</strong> {q.situation}</p>}
-                {q.task && <p style={S.p}><strong style={{ color: '#F97316' }}>Task:</strong> {q.task}</p>}
-                {q.action && <p style={S.p}><strong style={{ color: '#F97316' }}>Action:</strong> {q.action}</p>}
-                {q.result && <p style={S.p}><strong style={{ color: '#F97316' }}>Result:</strong> {q.result}</p>}
+                {q.situation && <p style={S.p}><strong style={{ color: '#76B900' }}>Situation:</strong> {q.situation}</p>}
+                {q.task && <p style={S.p}><strong style={{ color: '#76B900' }}>Task:</strong> {q.task}</p>}
+                {q.action && <p style={S.p}><strong style={{ color: '#76B900' }}>Action:</strong> {q.action}</p>}
+                {q.result && <p style={S.p}><strong style={{ color: '#76B900' }}>Result:</strong> {q.result}</p>}
               </div>
             )}
             {i < questions.length - 1 && <div style={S.divider} />}
@@ -1344,7 +1344,7 @@ function PrepSectionContent({ sectionKey, data }: { sectionKey: string; data: an
         {Array.isArray(problems) && problems.map((p: any, i: number) => (
           <div key={i} style={{ marginBottom: '28px' }}>
             <h3 style={S.h3}>
-              <span style={S.badge((p.difficulty || '').toLowerCase() === 'hard' ? '#dc2626' : (p.difficulty || '').toLowerCase() === 'medium' ? '#d97706' : '#F97316')}>{p.difficulty || 'Medium'}</span>
+              <span style={S.badge((p.difficulty || '').toLowerCase() === 'hard' ? '#5E9400' : (p.difficulty || '').toLowerCase() === 'medium' ? '#d97706' : '#76B900')}>{p.difficulty || 'Medium'}</span>
               <span style={{ marginLeft: '8px' }}>{p.title || p.name || `Problem ${i + 1}`}</span>
               {p.frequency && <span style={{ fontSize: '12px', fontWeight: 400, color: 'var(--text-muted)', marginLeft: '8px' }}>({p.frequency})</span>}
             </h3>
@@ -1372,7 +1372,7 @@ function PrepSectionContent({ sectionKey, data }: { sectionKey: string; data: an
                   <div style={{ marginLeft: '20px' }}>
                     <h4 style={{ ...S.h4, fontSize: '11px' }}>Line-by-Line Explanation</h4>
                     {a.lineByLine.map((l: any, k: number) => (
-                      <p key={k} style={{ ...S.p, fontSize: '12px', margin: '0 0 3px' }}><code style={{ color: '#F97316' }}>{l.line}</code> — {l.explanation}</p>
+                      <p key={k} style={{ ...S.p, fontSize: '12px', margin: '0 0 3px' }}><code style={{ color: '#76B900' }}>{l.line}</code> — {l.explanation}</p>
                     ))}
                   </div>
                 )}
@@ -1459,7 +1459,7 @@ function PrepSectionContent({ sectionKey, data }: { sectionKey: string; data: an
                       <tbody>{q.capacityEstimation.calculations.map((c: any, j: number) => (
                         <tr key={j} style={{ borderBottom: '1px solid #f3f4f6' }}>
                           <td style={{ padding: '6px 12px', fontWeight: 600, color: 'var(--text-primary)' }}>{c.metric}</td>
-                          <td style={{ padding: '6px 12px', fontFamily: 'monospace', color: '#F97316', fontWeight: 600 }}>{c.result}</td>
+                          <td style={{ padding: '6px 12px', fontFamily: 'monospace', color: '#76B900', fontWeight: 600 }}>{c.result}</td>
                           <td style={{ padding: '6px 12px', color: 'var(--text-muted)' }}>{c.calculation}</td>
                         </tr>
                       ))}</tbody>

@@ -35,7 +35,7 @@ export function CalibrationButton({ deviceId, disabled, variant = 'dark' }: Cali
           fontSize: '13px',
           padding: '10px 16px',
           color: '#ffffff',
-          background: isCalibrating ? '#000000' : '#F97316',
+          background: isCalibrating ? '#000000' : '#76B900',
           border: 'none',
         } : {
           fontSize: '11px',
@@ -60,7 +60,7 @@ export function CalibrationButton({ deviceId, disabled, variant = 'dark' }: Cali
         )}
       </button>
       {isLight && vadThreshold > 0 && (
-        <span className="text-xs font-medium" style={{ color: '#F97316' }}>
+        <span className="text-xs font-medium" style={{ color: '#76B900' }}>
           Current threshold: {vadThreshold.toFixed(4)}
         </span>
       )}

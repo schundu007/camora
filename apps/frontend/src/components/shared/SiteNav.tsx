@@ -5,11 +5,11 @@ import CamoraLogo from './CamoraLogo';
 import { NAV_LINKS, CHALLENGE_END } from '../../lib/constants';
 const TICKER_HEIGHT = 36;
 const TICKER_ITEMS = [
-  { text: 'The Camora Challenge', highlight: '$21,812 in prizes', color: '#F97316' },
+  { text: 'The Camora Challenge', highlight: '$21,812 in prizes', color: '#76B900' },
   { text: 'Find bugs, build features', highlight: 'join the founding team', color: '#8B5E7B' },
-  { text: '5 Founding Engineer', highlight: '+ 10 Core Engineer positions', color: '#F97316' },
+  { text: '5 Founding Engineer', highlight: '+ 10 Core Engineer positions', color: '#76B900' },
   { text: 'Bug Bounty:', highlight: 'Critical = 10 pts, Security = 8 pts', color: '#8B5E7B' },
-  { text: 'Open to all developers worldwide', highlight: 'remote-first', color: '#F97316' },
+  { text: 'Open to all developers worldwide', highlight: 'remote-first', color: '#76B900' },
 ];
 
 export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dark' }) {
@@ -117,8 +117,8 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
       {new Date() < CHALLENGE_END && (
         <Link to="/challenge" className="block overflow-hidden" style={{
           background: isLight
-            ? 'linear-gradient(90deg, rgba(249,115,22,0.06) 0%, rgba(167,139,250,0.06) 50%, rgba(249,115,22,0.06) 100%)'
-            : 'linear-gradient(90deg, #F97316, #8B5E7B, #F97316, #8B5E7B)',
+            ? 'linear-gradient(90deg, rgba(118,185,0,0.06) 0%, rgba(167,139,250,0.06) 50%, rgba(118,185,0,0.06) 100%)'
+            : 'linear-gradient(90deg, #76B900, #8B5E7B, #76B900, #8B5E7B)',
           height: TICKER_HEIGHT,
           borderTop: `1px solid ${isLight ? '#e2e8f0' : 'rgba(255,255,255,0.15)'}`,
           borderBottom: `1px solid ${isLight ? '#e2e8f0' : 'rgba(255,255,255,0.15)'}`,
