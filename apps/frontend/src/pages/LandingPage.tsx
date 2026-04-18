@@ -315,30 +315,28 @@ export default function LandingPage() {
         <div className="absolute top-0 bottom-0" style={{ left: '-18px', width: '36px', background: `linear-gradient(to bottom, transparent 3%, rgba(255,255,255,0.015) 10%, rgba(255,255,255,0.008) 50%, rgba(255,255,255,0.015) 90%, transparent 97%)`, filter: 'blur(10px)' }} />
 
         {/* ── AIRPLANE flying STRAIGHT UP along the track ── */}
-        <div className="absolute" style={{ left: '-20px', animation: 'fp-rocket 64s ease-in-out infinite' }}>
-          {/* Contrail below */}
-          <div style={{ position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', width: '4px', height: '140px', borderRadius: '2px', background: 'linear-gradient(to bottom, rgba(255,255,255,0.6), rgba(118,185,0,0.3), transparent)' }} />
-          {/* Solid white airplane — pointing straight up, large and visible */}
-          <svg width="40" height="48" viewBox="0 0 40 48" fill="none" style={{ filter: 'drop-shadow(0 0 16px rgba(118,185,0,0.7)) drop-shadow(0 0 30px rgba(255,255,255,0.15))' }}>
-            {/* Fuselage */}
-            <path d="M20 0 C17 0 15 4 15 8 L15 32 L25 32 L25 8 C25 4 23 0 20 0Z" fill="white" />
-            {/* Wings */}
-            <path d="M15 18 L0 26 L0 28 L15 24Z" fill="white" />
-            <path d="M25 18 L40 26 L40 28 L25 24Z" fill="white" />
-            {/* Tail */}
-            <path d="M15 30 L10 36 L10 37 L15 34Z" fill="white" />
-            <path d="M25 30 L30 36 L30 37 L25 34Z" fill="white" />
-            {/* Tail fin */}
-            <path d="M18 28 L20 22 L22 28Z" fill="#76B900" />
-            {/* Windows */}
-            {[10, 13, 16, 19, 22].map(y => (
-              <circle key={y} cx="20" cy={y} r="1.2" fill="#76B900" opacity="0.7" />
-            ))}
-            {/* Cockpit */}
-            <ellipse cx="20" cy="5" rx="2.5" ry="3" fill="#76B900" opacity="0.5" />
-            {/* Engine glow */}
-            <ellipse cx="20" cy="34" rx="3" ry="2" fill="#76B900" opacity="0.6" />
-          </svg>
+        <div className="absolute" style={{ left: '-28px', animation: 'fp-rocket 64s ease-in-out infinite' }}>
+          {/* Dual contrails */}
+          <div style={{ position: 'absolute', top: '100%', left: '38%', width: '3px', height: '120px', borderRadius: '2px', background: 'linear-gradient(to bottom, rgba(255,255,255,0.6), transparent)', transform: 'skewX(-2deg)' }} />
+          <div style={{ position: 'absolute', top: '100%', left: '58%', width: '3px', height: '100px', borderRadius: '2px', background: 'linear-gradient(to bottom, rgba(255,255,255,0.4), transparent)', transform: 'skewX(2deg)' }} />
+          {/* 3D perspective airplane */}
+          <div style={{ transform: 'perspective(200px) rotateX(15deg) rotateZ(-5deg)', transformOrigin: 'center bottom' }}>
+            <svg width="56" height="64" viewBox="0 0 56 64" fill="none" style={{ filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.5)) drop-shadow(0 0 20px rgba(118,185,0,0.5))' }}>
+              <defs><linearGradient id="f3d" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor="#ddd" /><stop offset="40%" stopColor="#fff" /><stop offset="100%" stopColor="#aaa" /></linearGradient></defs>
+              <path d="M28 0 C24 0 22 6 22 12 L22 44 L34 44 L34 12 C34 6 32 0 28 0Z" fill="url(#f3d)" />
+              <rect x="25" y="6" width="2" height="36" rx="1" fill="#76B900" opacity="0.4" />
+              <path d="M22 24 L2 34 L2 37 L22 32Z" fill="#e8e8e8" />
+              <path d="M34 24 L54 34 L54 37 L34 32Z" fill="#999" />
+              <ellipse cx="10" cy="33" rx="2.5" ry="4" fill="#888" />
+              <ellipse cx="46" cy="33" rx="2.5" ry="4" fill="#777" />
+              <path d="M22 40 L14 48 L14 50 L22 46Z" fill="#ddd" />
+              <path d="M34 40 L42 48 L42 50 L34 46Z" fill="#aaa" />
+              <path d="M26 38 L28 28 L30 38Z" fill="#76B900" />
+              <path d="M27 38 L28 30 L28 38Z" fill="#9AE62C" opacity="0.4" />
+              <ellipse cx="28" cy="7" rx="3" ry="4" fill="#222" stroke="rgba(255,255,255,0.4)" strokeWidth="0.5" />
+              {[14, 18, 22, 26, 30, 34].map(y => <rect key={y} x="25" y={y} width="6" height="1.8" rx="0.9" fill="#333" opacity="0.5" />)}
+            </svg>
+          </div>
         </div>
 
         {/* Waypoints rendered inside each section via <TrackWaypoint /> */}
