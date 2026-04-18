@@ -462,12 +462,12 @@ export default function LandingPage() {
       {/* ── 1. HERO — Forest road background ── */}
       <section className="relative pt-28 pb-14 md:pt-36 md:pb-20 px-6 overflow-hidden">
         <TrackWaypoint label="LAUNCH" />
-        {/* Hero background — airplane in flight */}
+        {/* Hero background — cartoon airplane illustration */}
         <div className="absolute inset-0 z-0">
-          <img src="/hero-forest.jpg" alt="" className="w-full h-full object-cover object-top" />
-          {/* Dark overlay with green tint to match Camora brand */}
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(9,9,15,0.5) 0%, rgba(9,9,15,0.7) 40%, rgba(9,9,15,0.9) 75%, #09090F 100%)' }} />
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(118,185,0,0.05) 0%, transparent 50%)' }} />
+          <img src="/hero-forest.jpg" alt="" className="w-full h-full object-cover object-center" style={{ opacity: 0.15 }} />
+          {/* Dark base + green tint */}
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(9,9,15,0.6) 0%, rgba(9,9,15,0.75) 50%, #09090F 100%)' }} />
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(118,185,0,0.06) 0%, transparent 40%)' }} />
         </div>
         {/* Radial glow */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] pointer-events-none z-[1]" style={{ background: 'radial-gradient(ellipse at center, rgba(118,185,0,0.08) 0%, transparent 70%)' }} />
