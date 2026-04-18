@@ -488,7 +488,7 @@ export default function LandingPage() {
 
           <motion.p className="mt-6 text-lg md:text-xl leading-relaxed max-w-2xl mx-auto" style={{ color: L.secondary }}
             initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }}>
-            The only platform that combines job discovery, interview prep, mock practice, and live AI assistance — all in one place.
+            Job discovery. Interview prep. Mock practice. Live AI assistance.
           </motion.p>
 
           <motion.div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3"
@@ -558,7 +558,6 @@ export default function LandingPage() {
             <h2 className="text-3xl md:text-4xl lg:text-[44px] font-bold tracking-tight" style={{ fontFamily: F.display }}>
               Your flight plan to the offer.
             </h2>
-            <p className="mt-4 text-lg" style={{ color: L.secondary }}>Four stages. One destination. Cleared for takeoff.</p>
           </Reveal>
 
           {/* Timeline sections */}
@@ -629,7 +628,7 @@ export default function LandingPage() {
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
           <Reveal className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl lg:text-[44px] font-bold tracking-tight" style={{ fontFamily: F.display }}>Full payload. Zero drag.</h2>
-            <p className="mt-4 text-lg max-w-xl mx-auto" style={{ color: L.secondary }}>800+ topics and 1,850+ problems across 7 categories.</p>
+            <p className="mt-4 text-lg max-w-xl mx-auto" style={{ color: L.secondary }}>800+ topics. 1,850+ problems. 7 categories.</p>
           </Reveal>
           <TopicDonut />
         </div>
@@ -644,7 +643,7 @@ export default function LandingPage() {
               Craft your next move.
             </h2>
             <p className="mt-4 text-lg max-w-xl mx-auto" style={{ color: L.secondary }}>
-              Prepare your onboarding — AI analyzes the role and creates a personalized study plan tailored to that exact position.
+              Paste any job URL. Get a tailored prep plan.
             </p>
           </Reveal>
 
@@ -706,7 +705,7 @@ export default function LandingPage() {
               Your co-pilot in the cockpit.
             </h2>
             <p className="mt-4 text-lg max-w-xl mx-auto" style={{ color: L.secondary }}>
-              Camora sits in the cockpit with you — listens, transcribes, and generates answers in real-time.
+              Voice transcription + instant AI answers during your live interview.
             </p>
           </Reveal>
 
