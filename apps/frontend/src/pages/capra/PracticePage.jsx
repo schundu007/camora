@@ -595,8 +595,13 @@ export default function PracticePage() {
           {/* ── SETUP PHASE ── */}
           {phase === 'setup' && (
             <>
+              <div style={{ marginBottom: 24 }}>
+                <h1 className="practice-display" style={{ fontSize: 32, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>Practice</h1>
+                <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginTop: 6 }}>Mock interviews with AI scoring. Build speed and confidence.</p>
+              </div>
+
               {/* Readiness — compact inline */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16, padding: '12px 20px', background: 'var(--bg-surface)', border: 'none', borderRadius: 12, boxShadow: '0 4px 24px rgba(45,140,255,0.12)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16, padding: '12px 20px', background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 12, boxShadow: 'none' }}>
                 {/* Readiness score */}
                 <div style={{ position: 'relative', width: 50, height: 50, shrink: 0 }}>
                   <svg width={50} height={50} style={{ transform: 'rotate(-90deg)' }}>
@@ -615,7 +620,7 @@ export default function PracticePage() {
                 ].map(s => (
                   <div key={s.label} style={{ textAlign: 'center' }}>
                     <div className="practice-mono" style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)' }}>{s.value}</div>
-                    <div style={{ fontSize: 9, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>{s.label}</div>
+                    <div style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>{s.label}</div>
                   </div>
                 ))}
                 <div style={{ width: 1, height: 30, background: 'var(--border)' }} />
@@ -638,7 +643,7 @@ export default function PracticePage() {
               </div>
 
               {/* Challenge Configuration */}
-              <div style={{ background: 'var(--bg-surface)', border: 'none', borderRadius: 16, overflow: 'hidden', boxShadow: '0 4px 24px rgba(45,140,255,0.12)', marginBottom: 24 }}>
+              <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 16, overflow: 'hidden', boxShadow: 'none', marginBottom: 24 }}>
                 <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border)' }}>
                   <h2 className="practice-display" style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>Start a Challenge</h2>
                 </div>
@@ -742,7 +747,7 @@ export default function PracticePage() {
                       const hDC = diffColor(h.difficulty || 'medium');
                       const companyObj = COMPANIES.find(c => c.id === h.company);
                       return (
-                        <div key={i} style={{ background: 'var(--bg-surface)', border: 'none', borderRadius: 12, overflow: 'hidden', boxShadow: '0 4px 24px rgba(45,140,255,0.12)' }}>
+                        <div key={i} style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden', boxShadow: 'none' }}>
                           <button onClick={() => setExpandedHistory(expandedHistory === i ? null : i)} style={{ width: '100%', padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 12, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
                             <Icon name={catIcon(h.category || 'coding')} size={18} style={{ color: 'var(--text-muted)' }} />
                             <div style={{ flex: 1 }}>
@@ -811,7 +816,7 @@ export default function PracticePage() {
               </div>
 
               {/* Question card */}
-              <div style={{ background: 'var(--bg-surface)', border: 'none', borderRadius: 16, padding: 24, marginBottom: 16, boxShadow: '0 4px 24px rgba(45,140,255,0.12)' }}>
+              <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 24, marginBottom: 16, boxShadow: 'none' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
                   <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', padding: '2px 8px', borderRadius: 99, background: diffColor(questions[currentIdx].difficulty).bg, color: diffColor(questions[currentIdx].difficulty).text }}>{questions[currentIdx].difficulty}</span>
                   <span style={{ fontSize: 10, fontWeight: 500, padding: '2px 8px', borderRadius: 99, background: 'var(--bg-elevated)', color: 'var(--text-muted)' }}>{catLabel(category)}</span>
@@ -1094,7 +1099,7 @@ export default function PracticePage() {
 
               {/* Inline Evaluation */}
               {inlineEval && (
-                <div style={{ background: 'var(--bg-surface)', border: 'none', borderRadius: 16, padding: 24, marginBottom: 16, boxShadow: '0 4px 24px rgba(45,140,255,0.12)' }}>
+                <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 24, marginBottom: 16, boxShadow: 'none' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16 }}>
                     <ScoreRing value={inlineEval.score} size={80} strokeW={7} animated />
                     <div style={{ flex: 1 }}>
@@ -1234,7 +1239,7 @@ export default function PracticePage() {
                     const val = resultDimensions[k] || 0;
                     const dimColor = val >= 70 ? '#10b981' : val >= 50 ? '#f59e0b' : '#ef4444';
                     return (
-                      <div key={k} style={{ background: 'var(--bg-surface)', border: 'none', borderRadius: 14, padding: '16px 18px', boxShadow: '0 4px 24px rgba(45,140,255,0.12)' }}>
+                      <div key={k} style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 14, padding: '16px 18px', boxShadow: 'none' }}>
                         <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>{DIMENSION_LABELS[i]}</div>
                         <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
                           <span style={{ fontSize: 22, fontWeight: 800, color: dimColor }}>{val}</span>
@@ -1267,7 +1272,7 @@ export default function PracticePage() {
               )}
 
               {/* ── Question Breakdown ── */}
-              <div style={{ background: 'var(--bg-surface)', border: 'none', borderRadius: 16, overflow: 'hidden', boxShadow: '0 4px 24px rgba(45,140,255,0.12)' }}>
+              <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 16, overflow: 'hidden', boxShadow: 'none' }}>
                 <div style={{ padding: '18px 24px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <h3 className="practice-display" style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>Question Breakdown</h3>
                   <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500 }}>{passed} of {total} passed</span>
