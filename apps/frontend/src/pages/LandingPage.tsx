@@ -656,7 +656,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── 5b. PREPARATION AT SCALE — Donut ── */}
-      <section className="px-6 py-14 md:py-20" style={{ background: L.surface, borderTop: '1px solid rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+      <section className="px-6 py-14 md:py-20" style={{ background: L.surface, border: '1px solid rgba(255,255,255,0.06)', borderRadius: '20px', margin: '0 3%' }}>
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
           <Reveal className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl lg:text-[44px] font-bold tracking-tight" style={{ fontFamily: F.display }}>Full payload. Zero drag.</h2>
@@ -724,7 +724,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── 7. JOB URL ANALYSIS ── */}
-      <section className="px-6 py-14 md:py-20" style={{ background: L.surface, borderTop: '1px solid rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+      <section className="px-6 py-14 md:py-20" style={{ background: L.surface, border: '1px solid rgba(255,255,255,0.06)', borderRadius: '20px', margin: '0 3%' }}>
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
           <Reveal className="text-center mb-10">
             <h2 className="text-3xl md:text-4xl lg:text-[44px] font-bold tracking-tight" style={{ fontFamily: F.display }}>
@@ -780,7 +780,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── 9. UNIQUE FEATURES GRID ── */}
-      <section className="px-6 py-14 md:py-20" style={{ background: L.surface, borderTop: '1px solid rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+      <section className="px-6 py-14 md:py-20" style={{ background: L.surface, border: '1px solid rgba(255,255,255,0.06)', borderRadius: '20px', margin: '0 3%' }}>
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
           <Reveal className="text-center mb-14">
             <span className="inline-block text-[11px] font-bold tracking-[0.18em] uppercase px-4 py-1.5 mb-5"
