@@ -520,18 +520,30 @@ function ScaleMathList({ content }: { content: string }) {
   });
 
   return (
-    <div className="space-y-1.5">
-      <div className="grid grid-cols-3 gap-1.5">
-        {metrics.map((m, i) => (
-          <div key={i} className="rounded border border-emerald-500/15 bg-emerald-600/[0.04] px-2 py-1.5">
-            <span className="font-mono text-[10px] font-bold text-indigo-light">{m.label}: </span>
-            <span className="font-mono text-[11px] text-text-subtle">{m.value}</span>
-          </div>
-        ))}
-      </div>
-      {other.map((line, i) => (
-        <div key={`o-${i}`} className="font-mono text-[11px] text-text-subtle px-1">{line}</div>
-      ))}
+    <div>
+      <table className="w-full text-left font-mono" style={{ borderCollapse: 'collapse' }}>
+        <thead>
+          <tr style={{ borderBottom: '1px solid rgba(45,140,255,0.15)' }}>
+            <th className="text-[9px] font-bold uppercase tracking-wider py-1.5 pr-4" style={{ color: 'var(--text-muted)' }}>Metric</th>
+            <th className="text-[9px] font-bold uppercase tracking-wider py-1.5" style={{ color: 'var(--text-muted)' }}>Estimate</th>
+          </tr>
+        </thead>
+        <tbody>
+          {metrics.map((m, i) => (
+            <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+              <td className="text-[11px] font-bold py-1.5 pr-4" style={{ color: 'var(--text-primary)' }}>{m.label}</td>
+              <td className="text-[11px] py-1.5" style={{ color: 'var(--text-secondary)' }}>{m.value}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {other.length > 0 && (
+        <div className="mt-2 space-y-0.5">
+          {other.map((line, i) => (
+            <div key={`o-${i}`} className="font-mono text-[10px] px-1" style={{ color: 'var(--text-muted)' }}>{line}</div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
