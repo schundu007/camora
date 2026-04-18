@@ -1,9 +1,9 @@
 import { Icon } from '../../shared/Icons.jsx';
 
-export default function FormattedContent({ content, color = 'emerald' }) {
+export default function FormattedContent({ content, color = 'blue' }) {
   if (!content) return null;
 
-  // Use Ascend brand emerald colors
+  // Use Ascend brand Zoom Blue colors
   const colors = {
     heading: 'text-[var(--accent)]',
     bullet: 'text-[var(--accent)]',

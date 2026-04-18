@@ -897,8 +897,8 @@ export default function DocsPage({ onBack }) {
                                       </span>
                                     )}
                                     {completedTopics[topic.id] && (
-                                      <span className="w-5 h-5 rounded-full bg-emerald-500/10 flex items-center justify-center">
-                                        <Icon name="check" size={10} className="text-emerald-500" />
+                                      <span className="w-5 h-5 rounded-full bg-[var(--success)]/10 flex items-center justify-center">
+                                        <Icon name="check" size={10} className="text-[var(--success)]" />
                                       </span>
                                     )}
                                     <Icon name="chevronRight" size={14} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-all" />
@@ -1029,14 +1029,14 @@ export default function DocsPage({ onBack }) {
                         placeholder="Search topics..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-9 pr-4 py-2 rounded-lg text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] border border-[var(--border)] bg-[var(--bg-elevated)] focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all landing-body"
+                        className="w-full pl-9 pr-4 py-2 rounded-lg text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] border border-[var(--border)] bg-[var(--bg-elevated)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20 focus:border-[var(--accent)] transition-all landing-body"
                       />
                     </div>
                     <div className="flex items-center gap-3">
                       <select
                         value={sortOrder}
                         onChange={(e) => setSortOrder(e.target.value)}
-                        className="px-4 py-2 rounded-lg text-sm text-[var(--text-muted)] border border-[var(--border)] bg-[var(--bg-elevated)] focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 cursor-pointer landing-body"
+                        className="px-4 py-2 rounded-lg text-sm text-[var(--text-muted)] border border-[var(--border)] bg-[var(--bg-elevated)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20 focus:border-[var(--accent)] cursor-pointer landing-body"
                       >
                         <option value="a-z">A - Z</option>
                         <option value="z-a">Z - A</option>
@@ -1072,9 +1072,9 @@ export default function DocsPage({ onBack }) {
                                 <span className="landing-mono text-[10px] text-[var(--text-muted)] uppercase tracking-widest font-semibold">{category.name}</span>
                                 <span className="landing-mono text-[10px] text-[var(--text-muted)]">{completedCount}/{catTopics.length}</span>
                                 <div className="flex-1 h-1.5 bg-[var(--bg-elevated)] rounded-full overflow-hidden max-w-[120px]">
-                                  <div className="h-full bg-emerald-500/100 rounded-full transition-all duration-500" style={{ width: `${progressPct}%` }} />
+                                  <div className="h-full bg-[var(--accent)] rounded-full transition-all duration-500" style={{ width: `${progressPct}%` }} />
                                 </div>
-                                {progressPct === 100 && <span className="text-[10px] text-emerald-600 font-semibold">Done</span>}
+                                {progressPct === 100 && <span className="text-[10px] text-[var(--accent)] font-semibold">Done</span>}
                               </div>
                             );
                           })()}
@@ -1084,7 +1084,7 @@ export default function DocsPage({ onBack }) {
                           >
                             <div className="flex items-center gap-2.5">
                               <div className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0" style={{ background: completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : `${topic.color}12` }}>
-                                {completedTopics[topic.id] ? <Icon name="check" size={10} className="text-emerald-600" /> : <Icon name={topic.icon} size={10} style={{ color: topic.color }} />}
+                                {completedTopics[topic.id] ? <Icon name="check" size={10} className="text-[var(--success)]" /> : <Icon name={topic.icon} size={10} style={{ color: topic.color }} />}
                               </div>
                               <span className={`text-sm landing-body font-medium group-hover:text-[var(--accent-hover)] transition-colors ${completedTopics[topic.id] ? 'text-[var(--text-muted)] line-through' : 'text-[var(--text-primary)]'}`}>{topic.title}</span>
                             </div>
@@ -1095,7 +1095,7 @@ export default function DocsPage({ onBack }) {
                                 const hard = topic.commonProblems.filter(p => p.difficulty === 'Hard').length;
                                 return (
                                   <div className="flex items-center gap-1">
-                                    {easy > 0 && <span className="text-[9px] landing-mono px-1 py-0.5 rounded bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">{easy}E</span>}
+                                    {easy > 0 && <span className="text-[9px] landing-mono px-1 py-0.5 rounded bg-green-500/10 text-green-600 border border-green-500/20">{easy}E</span>}
                                     {med > 0 && <span className="text-[9px] landing-mono px-1 py-0.5 rounded bg-amber-500/10 text-amber-600 border border-amber-500/20">{med}M</span>}
                                     {hard > 0 && <span className="text-[9px] landing-mono px-1 py-0.5 rounded bg-red-500/10 text-red-600 border border-red-500/20">{hard}H</span>}
                                   </div>
@@ -1127,10 +1127,10 @@ export default function DocsPage({ onBack }) {
                     <div className="grid md:grid-cols-2 gap-4">
                       {/* Time Complexity Card */}
                       <div className="rounded-lg overflow-hidden border-0 bg-[var(--bg-surface)] transition-colors">
-                        <div className="px-4 py-3 border-b border-[var(--border)] bg-emerald-500/100/10">
+                        <div className="px-4 py-3 border-b border-[var(--border)] bg-[var(--accent)]/10">
                           <h3 className="text-sm text-[var(--text-primary)] font-semibold landing-display flex items-center gap-2">
-                            <div className="w-6 h-6 rounded flex items-center justify-center bg-emerald-500/15">
-                              <Icon name="clock" size={12} className="text-emerald-600" />
+                            <div className="w-6 h-6 rounded flex items-center justify-center bg-[var(--accent)]/15">
+                              <Icon name="clock" size={12} className="text-[var(--accent)]" />
                             </div>
                             Time Complexity Cheat Sheet
                           </h3>
@@ -1139,15 +1139,15 @@ export default function DocsPage({ onBack }) {
                           <table className="w-full text-sm">
                             <tbody>
                               {[
-                                { complexity: 'O(1)', desc: 'Constant', rating: 'Best', cls: 'text-emerald-600 bg-emerald-500/10 border border-emerald-500/20' },
-                                { complexity: 'O(log n)', desc: 'Logarithmic', rating: 'Great', cls: 'text-emerald-600 bg-emerald-500/10 border border-emerald-500/20' },
+                                { complexity: 'O(1)', desc: 'Constant', rating: 'Best', cls: 'text-green-600 bg-green-500/10 border border-green-500/20' },
+                                { complexity: 'O(log n)', desc: 'Logarithmic', rating: 'Great', cls: 'text-green-600 bg-green-500/10 border border-green-500/20' },
                                 { complexity: 'O(n)', desc: 'Linear', rating: 'Good', cls: 'text-[var(--text-muted)] bg-[var(--bg-elevated)] border border-[var(--border)]' },
                                 { complexity: 'O(n log n)', desc: 'Linearithmic', rating: 'Fair', cls: 'text-[var(--text-muted)] bg-[var(--bg-elevated)] border border-[var(--border)]' },
                                 { complexity: 'O(n²)', desc: 'Quadratic', rating: 'Slow', cls: 'bg-[var(--bg-elevated)] text-[var(--text-secondary)] border-[var(--border)]' },
                                 { complexity: 'O(2ⁿ)', desc: 'Exponential', rating: 'Avoid', cls: 'text-red-600 bg-red-500/10 border border-red-500/20' },
                               ].map((item, i) => (
                                 <tr key={i} className="border-b border-[var(--border)] last:border-0">
-                                  <td className="py-2 landing-mono text-xs text-emerald-400">{item.complexity}</td>
+                                  <td className="py-2 landing-mono text-xs text-[var(--accent)]">{item.complexity}</td>
                                   <td className="py-2 text-[var(--text-primary)] landing-body">{item.desc}</td>
                                   <td className="py-2 text-right">
                                     <span className={`text-[10px] landing-mono px-1.5 py-0.5 rounded border font-medium ${item.cls}`}>
@@ -1162,10 +1162,10 @@ export default function DocsPage({ onBack }) {
                       </div>
                       {/* Data Structure Selection Card */}
                       <div className="rounded-lg overflow-hidden border-0 bg-[var(--bg-surface)] transition-colors">
-                        <div className="px-4 py-3 border-b border-[var(--border)] bg-emerald-500/100/10">
+                        <div className="px-4 py-3 border-b border-[var(--border)] bg-[var(--accent)]/10">
                           <h3 className="text-sm text-[var(--text-primary)] font-semibold landing-display flex items-center gap-2">
-                            <div className="w-6 h-6 rounded flex items-center justify-center bg-emerald-500/15">
-                              <Icon name="database" size={12} className="text-emerald-600" />
+                            <div className="w-6 h-6 rounded flex items-center justify-center bg-[var(--accent)]/15">
+                              <Icon name="database" size={12} className="text-[var(--accent)]" />
                             </div>
                             When to Use What
                           </h3>
@@ -1184,7 +1184,7 @@ export default function DocsPage({ onBack }) {
                                 <tr key={i} className="border-b border-[var(--border)] last:border-0">
                                   <td className="py-2 text-[var(--text-muted)] landing-body">{item.need}</td>
                                   <td className="py-2 text-right">
-                                    <span className="landing-mono text-xs text-emerald-400">
+                                    <span className="landing-mono text-xs text-[var(--accent)]">
                                       {item.solution}
                                     </span>
                                   </td>
@@ -1227,7 +1227,7 @@ export default function DocsPage({ onBack }) {
                                 <>
                                   <span className="text-[10px] landing-mono text-[var(--text-muted)]">{done}/{categoryTopics.length}</span>
                                   <div className="h-1.5 bg-[var(--bg-elevated)] rounded-full overflow-hidden max-w-[100px] flex-shrink-0">
-                                    <div className="h-full bg-emerald-500/100 rounded-full transition-all duration-500" style={{ width: `${pct}%` }} />
+                                    <div className="h-full bg-[var(--accent)] rounded-full transition-all duration-500" style={{ width: `${pct}%` }} />
                                   </div>
                                 </>
                               );
@@ -1243,7 +1243,7 @@ export default function DocsPage({ onBack }) {
                               >
                                 <div className="flex items-center gap-2.5">
                                   <div className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0" style={{ background: completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : `${topic.color}12` }}>
-                                    {completedTopics[topic.id] ? <Icon name="check" size={11} className="text-emerald-600" /> : <Icon name={topic.icon} size={11} style={{ color: topic.color }} />}
+                                    {completedTopics[topic.id] ? <Icon name="check" size={11} className="text-[var(--success)]" /> : <Icon name={topic.icon} size={11} style={{ color: topic.color }} />}
                                   </div>
                                   <div className="flex items-center gap-1.5 flex-shrink-0">
                                     <span className={`text-sm landing-body font-medium group-hover:text-[var(--accent-hover)] transition-colors ${completedTopics[topic.id] ? 'text-[var(--text-muted)] line-through' : 'text-[var(--text-primary)]'}`}>{topic.title}</span>
@@ -1285,7 +1285,7 @@ export default function DocsPage({ onBack }) {
                       const categoryDesigns = filteredDesigns.filter(d => systemDesignProblemCategoryMap[d.id] === category.id);
                       if (categoryDesigns.length === 0) return null;
                       const difficultyStyles = {
-                        'Easy': 'text-emerald-600 bg-emerald-500/10 border border-emerald-500/20',
+                        'Easy': 'text-green-600 bg-green-500/10 border border-green-500/20',
                         'Medium': 'text-[var(--text-muted)] bg-[var(--bg-elevated)] border border-[var(--border)]',
                         'Hard': 'text-red-600 bg-red-500/10 border border-red-500/20',
                       };
@@ -1322,7 +1322,7 @@ export default function DocsPage({ onBack }) {
                                     )}
                                     <div>
                                       <span className="text-sm landing-body font-medium text-[var(--text-primary)] group-hover:text-[var(--accent-hover)] transition-colors">{design.title}</span>
-                                      {design.isNew && <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 ml-2 font-bold">NEW</span>}
+                                      {design.isNew && <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/20 ml-2 font-bold">NEW</span>}
                                       <span className="text-[var(--text-muted)] text-xs ml-2 hidden md:inline landing-body">{design.subtitle}</span>
                                     </div>
                                   </div>
@@ -1375,7 +1375,7 @@ export default function DocsPage({ onBack }) {
                           </div>
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)] overflow-hidden">
                             {categoryProblems.map((problem) => {
-                              const diffStyle = { Easy: 'text-emerald-600 bg-emerald-500/10 border border-emerald-500/20', Medium: 'text-[var(--text-muted)] bg-[var(--bg-elevated)] border border-[var(--border)]', Hard: 'text-red-600 bg-red-500/10 border border-red-500/20' }[problem.difficulty] || 'text-[var(--text-muted)] bg-[var(--bg-elevated)] border border-[var(--border)]';
+                              const diffStyle = { Easy: 'text-green-600 bg-green-500/10 border border-green-500/20', Medium: 'text-[var(--text-muted)] bg-[var(--bg-elevated)] border border-[var(--border)]', Hard: 'text-red-600 bg-red-500/10 border border-red-500/20' }[problem.difficulty] || 'text-[var(--text-muted)] bg-[var(--bg-elevated)] border border-[var(--border)]';
                               return (
                                 <div
                                   key={problem.id}
@@ -1392,7 +1392,7 @@ export default function DocsPage({ onBack }) {
                                     )}
                                     <div>
                                       <span className="text-[var(--text-primary)] text-sm landing-body font-medium group-hover:text-[var(--accent-hover)] transition-colors">{problem.title}</span>
-                                      {problem.isNew && <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 ml-2 font-bold">NEW</span>}
+                                      {problem.isNew && <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/20 ml-2 font-bold">NEW</span>}
                                       <span className="text-[var(--text-muted)] text-xs ml-2 hidden md:inline landing-body">{problem.subtitle}</span>
                                     </div>
                                   </div>
@@ -1666,9 +1666,9 @@ export default function DocsPage({ onBack }) {
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5">
                       {[
-                        { time: '5 min', step: 'Requirements', desc: 'Functional & non-functional requirements', num: '01', accent: 'emerald', color: '#a7f3d0', hoverColor: '#6ee7b7' },
+                        { time: '5 min', step: 'Requirements', desc: 'Functional & non-functional requirements', num: '01', accent: 'blue', color: '#93c5fd', hoverColor: '#60a5fa' },
                         { time: '5 min', step: 'Estimations', desc: 'QPS, storage, bandwidth calculations', num: '02', accent: 'cyan', color: '#a5f3fc', hoverColor: '#67e8f9' },
-                        { time: '20 min', step: 'High-Level', desc: 'Components, data flow, API design', num: '03', accent: 'emerald', color: '#a7f3d0', hoverColor: '#6ee7b7' },
+                        { time: '20 min', step: 'High-Level', desc: 'Components, data flow, API design', num: '03', accent: 'blue', color: '#93c5fd', hoverColor: '#60a5fa' },
                         { time: '15 min', step: 'Deep Dive', desc: 'Database schema, scaling, trade-offs', num: '04', accent: 'cyan', color: '#a5f3fc', hoverColor: '#67e8f9' },
                       ].map((phase, i) => (
                         <div key={i} className="group p-3 rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)] hover:bg-[var(--bg-elevated)] hover:shadow-sm transition-all">
@@ -1716,7 +1716,7 @@ export default function DocsPage({ onBack }) {
                               >
                                 <div className="flex items-center gap-2.5">
                                   <div className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0" style={{ background: completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : `${topic.color}12` }}>
-                                    {completedTopics[topic.id] ? <Icon name="check" size={11} className="text-emerald-600" /> : <Icon name={topic.icon} size={11} style={{ color: topic.color }} />}
+                                    {completedTopics[topic.id] ? <Icon name="check" size={11} className="text-[var(--success)]" /> : <Icon name={topic.icon} size={11} style={{ color: topic.color }} />}
                                   </div>
                                   <div className="flex items-center gap-1.5 flex-shrink-0">
                                     <span className={`text-sm landing-body font-medium group-hover:text-[var(--accent-hover)] transition-colors ${completedTopics[topic.id] ? 'text-[var(--text-muted)] line-through' : 'text-[var(--text-primary)]'}`}>{topic.title}</span>
@@ -1763,7 +1763,7 @@ export default function DocsPage({ onBack }) {
                           </div>
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)] overflow-hidden">
                             {categoryProblems.map((problem) => {
-                              const diffStyle = { Easy: 'text-emerald-600 bg-emerald-500/10 border border-emerald-500/20', Medium: 'text-[var(--text-muted)] bg-[var(--bg-elevated)] border border-[var(--border)]', Hard: 'text-red-600 bg-red-500/10 border border-red-500/20' }[problem.difficulty] || 'text-[var(--text-muted)] bg-[var(--bg-elevated)] border border-[var(--border)]';
+                              const diffStyle = { Easy: 'text-green-600 bg-green-500/10 border border-green-500/20', Medium: 'text-[var(--text-muted)] bg-[var(--bg-elevated)] border border-[var(--border)]', Hard: 'text-red-600 bg-red-500/10 border border-red-500/20' }[problem.difficulty] || 'text-[var(--text-muted)] bg-[var(--bg-elevated)] border border-[var(--border)]';
                               return (
                                 <div
                                   key={problem.id}
@@ -1820,7 +1820,7 @@ export default function DocsPage({ onBack }) {
                               <h2 className="landing-display font-bold text-lg tracking-tight text-[var(--text-primary)]">Interview Readiness</h2>
                             </div>
                             <div className="text-right">
-                              <span className="landing-mono text-2xl font-black text-emerald-600">{readinessPercent}%</span>
+                              <span className="landing-mono text-2xl font-black text-[var(--accent)]">{readinessPercent}%</span>
                               <span className="block text-[10px] landing-mono text-[var(--text-muted)] mt-0.5">{readinessLabel}</span>
                             </div>
                           </div>
@@ -1859,7 +1859,7 @@ export default function DocsPage({ onBack }) {
                   <div className="rounded-lg overflow-hidden mb-6 border border-[var(--border)] bg-[var(--bg-surface)] shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
                     <div className="px-5 py-3">
                       <div className="flex items-center gap-2 mb-2">
-                        <Icon name="star" size={14} className="text-emerald-600" />
+                        <Icon name="star" size={14} className="text-[var(--accent)]" />
                         <h2 className="landing-display font-bold text-base tracking-tight text-[var(--text-primary)]">The STAR Method</h2>
                         <span className="text-xs text-[var(--text-muted)] landing-body ml-1">— structure every behavioral answer</span>
                       </div>
@@ -1886,9 +1886,9 @@ export default function DocsPage({ onBack }) {
                         ))}
                       </div>
 
-                      <div className="mt-2 px-3 py-1.5 rounded-md bg-emerald-500/100/10 border border-emerald-500/20 flex items-center gap-2">
-                        <Icon name="lightbulb" size={11} className="text-emerald-500 flex-shrink-0" />
-                        <p className="text-[11px] text-[var(--text-muted)] landing-body"><span className="font-semibold text-emerald-400 landing-mono">Tip:</span> Spend 60% on <strong>Action</strong>, always quantify <strong>Result</strong>.</p>
+                      <div className="mt-2 px-3 py-1.5 rounded-md bg-[var(--accent)]/10 border border-[var(--accent)]/20 flex items-center gap-2">
+                        <Icon name="lightbulb" size={11} className="text-[var(--accent)] flex-shrink-0" />
+                        <p className="text-[11px] text-[var(--text-muted)] landing-body"><span className="font-semibold text-[var(--accent)] landing-mono">Tip:</span> Spend 60% on <strong>Action</strong>, always quantify <strong>Result</strong>.</p>
                       </div>
                     </div>
                   </div>
@@ -1938,7 +1938,7 @@ export default function DocsPage({ onBack }) {
                               >
                                 <div className="flex items-center gap-2.5">
                                   <div className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0" style={{ background: completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : `${topic.color}12` }}>
-                                    {completedTopics[topic.id] ? <Icon name="check" size={11} className="text-emerald-600" /> : <Icon name={topic.icon} size={11} style={{ color: topic.color }} />}
+                                    {completedTopics[topic.id] ? <Icon name="check" size={11} className="text-[var(--success)]" /> : <Icon name={topic.icon} size={11} style={{ color: topic.color }} />}
                                   </div>
                                   <div className="flex items-center gap-1.5 flex-shrink-0">
                                     <span className={`text-sm landing-body font-medium group-hover:text-[var(--accent-hover)] transition-colors ${completedTopics[topic.id] ? 'text-[var(--text-muted)] line-through' : 'text-[var(--text-primary)]'}`}>{topic.title}</span>
@@ -1975,14 +1975,14 @@ export default function DocsPage({ onBack }) {
                         <div
                           key={company.id}
                           onClick={() => setSelectedTopic(company.id)}
-                          className={`group rounded-lg bg-[var(--bg-surface)] shadow-[0_1px_3px_rgba(0,0,0,0.04)] transition-all cursor-pointer p-4 ${completedTopics[company.id] ? 'border-2 border-emerald-500/30' : 'border border-[var(--border)] hover:border-[var(--border-hover)]'}`}
+                          className={`group rounded-lg bg-[var(--bg-surface)] shadow-[0_1px_3px_rgba(0,0,0,0.04)] transition-all cursor-pointer p-4 ${completedTopics[company.id] ? 'border-2 border-[var(--success)]/30' : 'border border-[var(--border)] hover:border-[var(--border-hover)]'}`}
                         >
                           <div className="flex items-start justify-between mb-3">
                             <div className="flex items-center gap-3">
                               <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 relative" style={{ background: `${company.color}15` }}>
                                 <Icon name={company.icon} size={16} style={{ color: company.color }} />
                                 {completedTopics[company.id] && (
-                                  <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-emerald-500/100 flex items-center justify-center">
+                                  <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[var(--success)] flex items-center justify-center">
                                     <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
                                   </div>
                                 )}
@@ -2077,7 +2077,7 @@ export default function DocsPage({ onBack }) {
                               >
                                 <div className="flex items-center gap-2.5">
                                   <div className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0" style={{ background: completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : `${topic.color}12` }}>
-                                    {completedTopics[topic.id] ? <Icon name="check" size={11} className="text-emerald-600" /> : <Icon name={topic.icon} size={11} style={{ color: topic.color }} />}
+                                    {completedTopics[topic.id] ? <Icon name="check" size={11} className="text-[var(--success)]" /> : <Icon name={topic.icon} size={11} style={{ color: topic.color }} />}
                                   </div>
                                   <div className="flex items-center gap-1.5 flex-shrink-0">
                                     <span className={`text-sm landing-body font-medium group-hover:text-[var(--accent-hover)] transition-colors ${completedTopics[topic.id] ? 'text-[var(--text-muted)] line-through' : 'text-[var(--text-primary)]'}`}>{topic.title}</span>
@@ -2127,7 +2127,7 @@ export default function DocsPage({ onBack }) {
                               >
                                 <div className="flex items-center gap-2.5">
                                   <div className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0" style={{ background: completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : `${topic.color}12` }}>
-                                    {completedTopics[topic.id] ? <Icon name="check" size={11} className="text-emerald-600" /> : <Icon name={topic.icon} size={11} style={{ color: topic.color }} />}
+                                    {completedTopics[topic.id] ? <Icon name="check" size={11} className="text-[var(--success)]" /> : <Icon name={topic.icon} size={11} style={{ color: topic.color }} />}
                                   </div>
                                   <div className="flex items-center gap-1.5 flex-shrink-0">
                                     <span className={`text-sm landing-body font-medium group-hover:text-[var(--accent-hover)] transition-colors ${completedTopics[topic.id] ? 'text-[var(--text-muted)] line-through' : 'text-[var(--text-primary)]'}`}>{topic.title}</span>
@@ -2181,7 +2181,7 @@ export default function DocsPage({ onBack }) {
                               >
                                 <div className="flex items-center gap-2.5">
                                   <div className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0" style={{ background: completedTopics[topic.id] ? 'rgba(16,185,129,0.15)' : `${topic.color}12` }}>
-                                    {completedTopics[topic.id] ? <Icon name="check" size={11} className="text-emerald-600" /> : <Icon name={topic.icon} size={11} style={{ color: topic.color }} />}
+                                    {completedTopics[topic.id] ? <Icon name="check" size={11} className="text-[var(--success)]" /> : <Icon name={topic.icon} size={11} style={{ color: topic.color }} />}
                                   </div>
                                   <div className="flex items-center gap-1.5 flex-shrink-0">
                                     <span className={`text-sm landing-body font-medium group-hover:text-[var(--accent-hover)] transition-colors ${completedTopics[topic.id] ? 'text-[var(--text-muted)] line-through' : 'text-[var(--text-primary)]'}`}>{topic.title}</span>
@@ -2241,13 +2241,13 @@ export default function DocsPage({ onBack }) {
                                       <div className="flex items-center gap-2 mb-1">
                                         <span className="w-2 h-2 rounded-full shrink-0" style={{ background: topic.color }} />
                                         <span className="landing-display font-semibold text-sm text-[var(--text-primary)] truncate">{topic.title}</span>
-                                        {isCompleted && <Icon name="check" size={12} className="text-emerald-500 shrink-0" />}
+                                        {isCompleted && <Icon name="check" size={12} className="text-[var(--success)] shrink-0" />}
                                         {isLocked && <Icon name="lock" size={12} className="text-[var(--text-muted)] shrink-0" />}
                                       </div>
                                       <p className="text-xs text-[var(--text-muted)] line-clamp-2 mb-2">{topic.description}</p>
                                       <div className="flex items-center gap-2 flex-wrap">
                                         <span className={`text-[10px] landing-mono px-1.5 py-0.5 rounded font-semibold ${
-                                          topic.difficulty === 'beginner' ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20' :
+                                          topic.difficulty === 'beginner' ? 'bg-green-500/10 text-green-600 border border-green-500/20' :
                                           topic.difficulty === 'intermediate' ? 'bg-[var(--bg-elevated)] text-[var(--text-muted)] border border-[var(--border)]' :
                                           'bg-red-500/10 text-red-600 border border-red-500/20'
                                         }`}>{topic.difficulty}</span>
@@ -2310,7 +2310,7 @@ export default function DocsPage({ onBack }) {
                                       <div className="flex items-center gap-2 mb-1">
                                         <span className="w-2 h-2 rounded-full shrink-0" style={{ background: topic.color }} />
                                         <span className="landing-display font-semibold text-sm text-[var(--text-primary)] truncate">{topic.title}</span>
-                                        {isCompleted && <Icon name="check" size={12} className="text-emerald-500 shrink-0" />}
+                                        {isCompleted && <Icon name="check" size={12} className="text-[var(--success)] shrink-0" />}
                                         {isLocked && <Icon name="lock" size={12} className="text-[var(--text-muted)] shrink-0" />}
                                       </div>
                                       <p className="text-xs text-[var(--text-muted)] line-clamp-2 mb-2">{topic.description}</p>
@@ -2376,7 +2376,7 @@ export default function DocsPage({ onBack }) {
                                       <div className="flex items-center gap-2 mb-1">
                                         <span className="w-2 h-2 rounded-full shrink-0" style={{ background: topic.color }} />
                                         <span className="landing-display font-semibold text-sm text-[var(--text-primary)] truncate">{topic.title}</span>
-                                        {isCompleted && <Icon name="check" size={12} className="text-emerald-500 shrink-0" />}
+                                        {isCompleted && <Icon name="check" size={12} className="text-[var(--success)] shrink-0" />}
                                         {isLocked && <Icon name="lock" size={12} className="text-[var(--text-muted)] shrink-0" />}
                                       </div>
                                       <p className="text-xs text-[var(--text-muted)] line-clamp-2 mb-2">{topic.description}</p>
@@ -2385,7 +2385,7 @@ export default function DocsPage({ onBack }) {
                                           {topic.articles?.length || topic.questions} articles
                                         </span>
                                         {topic.blogUrl && (
-                                          <a href={topic.blogUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} className="text-[10px] landing-mono text-emerald-600 hover:underline">
+                                          <a href={topic.blogUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} className="text-[10px] landing-mono text-[var(--accent)] hover:underline">
                                             blog
                                           </a>
                                         )}

@@ -673,7 +673,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
             <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-xs font-mono font-bold transition-colors ${
               timerUrgent ? 'bg-red-500/15 border-red-500/30 text-red-300' :
               timerSeconds === 0 ? 'bg-white/10 border-white/20 text-white/70' :
-              'bg-emerald-600/15 border-emerald-500/30 text-emerald-300'
+              'bg-[rgba(45,140,255,0.15)] border-[rgba(45,140,255,0.3)] text-[#60A5FA]'
             }`}>
               <div className="relative w-4 h-4">
                 <svg className="w-4 h-4 -rotate-90" viewBox="0 0 20 20">
@@ -702,9 +702,9 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
           )}
 
           {isLoading && (
-            <div className="flex items-center gap-1.5 px-2 py-0.5 bg-indigo-50 border border-indigo-200 rounded-lg">
-              <div className="w-1.5 h-1.5 bg-emerald-600 rounded-full animate-pulse" />
-              <span className="text-emerald-600 text-[10px] md:text-xs font-medium">Generating...</span>
+            <div className="flex items-center gap-1.5 px-2 py-0.5 bg-[rgba(45,140,255,0.06)] border border-[rgba(45,140,255,0.2)] rounded-lg">
+              <div className="w-1.5 h-1.5 bg-[var(--accent)] rounded-full animate-pulse" />
+              <span className="text-[var(--accent)] text-[10px] md:text-xs font-medium">Generating...</span>
             </div>
           )}
 
@@ -732,14 +732,14 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
             <button
               onClick={() => setProblemTab('description')}
               className={`px-3 py-1 text-xs font-semibold rounded-md transition-all ${
-                problemTab === 'description' ? 'bg-emerald-600 text-white shadow-sm' : ''
+                problemTab === 'description' ? 'bg-[var(--accent)] text-white shadow-sm' : ''
               }`}
               style={problemTab !== 'description' ? { color: t.tabText } : undefined}
             >Description</button>
             <button
               onClick={() => setProblemTab('solution')}
               className={`px-3 py-1 text-xs font-semibold rounded-md transition-all flex items-center gap-1.5 ${
-                problemTab === 'solution' ? 'bg-emerald-600 text-white shadow-sm' : ''
+                problemTab === 'solution' ? 'bg-[var(--accent)] text-white shadow-sm' : ''
               }`}
               style={problemTab !== 'solution' ? { color: t.tabText } : undefined}
             >
@@ -797,7 +797,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                           onDrop={handleDrop}
                           onDragOver={(e) => e.preventDefault()}
                           placeholder="Paste your coding problem here...&#10;&#10;Example: Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target."
-                          className="w-full h-[180px] md:h-[220px] rounded-lg p-3 text-xs md:text-sm leading-relaxed placeholder:text-gray-400 resize-none focus:border-emerald-400 focus:ring-1 focus:ring-indigo-400/20 focus:outline-none transition-all"
+                          className="w-full h-[180px] md:h-[220px] rounded-lg p-3 text-xs md:text-sm leading-relaxed placeholder:text-gray-400 resize-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 focus:outline-none transition-all"
                           style={{ background: t.inputBg, borderWidth: 1, borderStyle: 'solid', borderColor: t.inputBorder, color: t.inputText }}
                         />
                       )}
@@ -806,10 +806,10 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                         <div className="flex gap-2">
                           <input type="url" id="problem-url" name="problem-url" value={problemUrl} onChange={(e) => setProblemUrl(e.target.value)}
                             placeholder="https://leetcode.com/problems/two-sum/"
-                            className="flex-1 rounded-lg px-3 py-2 text-xs md:text-sm placeholder:text-gray-400 focus:border-emerald-400 focus:ring-1 focus:ring-indigo-400/20 focus:outline-none transition-all"
+                            className="flex-1 rounded-lg px-3 py-2 text-xs md:text-sm placeholder:text-gray-400 focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 focus:outline-none transition-all"
                             style={{ background: t.inputBg, borderWidth: 1, borderStyle: 'solid', borderColor: t.inputBorder, color: t.inputText }} />
                           <button onClick={handleFetchFromUrl} disabled={isProcessing || !problemUrl.trim()}
-                            className="px-4 py-2 bg-emerald-600 text-white text-xs font-semibold rounded-lg hover:bg-emerald-700 disabled:opacity-50 transition-colors">
+                            className="px-4 py-2 bg-[var(--accent)] text-white text-xs font-semibold rounded-lg hover:bg-[var(--accent-hover)] disabled:opacity-50 transition-colors">
                             {isProcessing ? 'Loading...' : 'Fetch'}
                           </button>
                         </div>
@@ -818,7 +818,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                       {inputMode === 'image' && (
                         <div className="space-y-2">
                           <div onClick={() => fileInputRef.current?.click()} onDrop={handleDrop} onDragOver={(e) => e.preventDefault()}
-                            className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:border-emerald-400/50 transition-all"
+                            className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:border-[var(--accent)]/50 transition-all"
                             style={{ borderColor: t.inputBorder }}>
                             <input ref={fileInputRef} type="file" id="problem-image" name="problem-image" accept="image/*" onChange={handleImageSelect} className="hidden" />
                             {imagePreview ? (
@@ -836,7 +836,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                           </div>
                           {imageFile && (
                             <button onClick={handleExtractFromImage} disabled={isProcessing}
-                              className="w-full py-2 text-xs font-medium rounded-lg border border-indigo-200 hover:bg-indigo-50 disabled:opacity-50 transition-all"
+                              className="w-full py-2 text-xs font-medium rounded-lg border border-[var(--border)] hover:bg-[rgba(45,140,255,0.04)] disabled:opacity-50 transition-all"
                               style={{ background: t.sectionBg, color: t.text }}>
                               {isProcessing ? 'Extracting...' : 'Extract Text'}
                             </button>
@@ -871,15 +871,15 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                   <div className="space-y-3">
                     <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'rgba(45,140,255,0.06)', border: '1px solid #BFDBFE' }}>
                       <div className="relative w-4 h-4 shrink-0">
-                        <div className="absolute inset-0 border-2 border-transparent border-t-indigo-400 rounded-full animate-spin" />
+                        <div className="absolute inset-0 border-2 border-transparent border-t-[var(--accent)] rounded-full animate-spin" />
                       </div>
-                      <span className="text-xs font-semibold text-emerald-600">Generating solution...</span>
+                      <span className="text-xs font-semibold text-[var(--accent)]">Generating solution...</span>
                     </div>
                     {/* Live streaming preview */}
                     {streamingSolution && (
                       <div className="rounded-xl p-4 overflow-auto max-h-[60vh] text-xs leading-relaxed font-mono whitespace-pre-wrap" style={{ background: '#f8fafc', border: '1px solid #e2e8f0', color: '#334155' }}>
                         {streamingSolution}
-                        <span className="inline-block w-1.5 h-4 bg-indigo-400 animate-pulse ml-0.5" />
+                        <span className="inline-block w-1.5 h-4 bg-[var(--accent)] animate-pulse ml-0.5" />
                       </div>
                     )}
                   </div>
@@ -893,7 +893,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                     {sd.solutions?.length > 1 && (
                       <div className="flex items-center gap-0.5 p-0.5 rounded-lg" style={{ background: t.sectionBg }}>
                         {sd.solutions.map((sol: any, i: number) => {
-                          const solColors = ['indigo', 'blue', 'violet', 'amber', 'cyan'];
+                          const solColors = ['blue', 'blue', 'blue', 'blue', 'blue'];
                           const c = solColors[i % solColors.length];
                           return (
                             <button key={i}
@@ -1116,8 +1116,8 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
 
         {/* ── Horizontal Resize Handle (desktop only) ── */}
         <div onMouseDown={() => setIsResizingH(true)}
-          className="hidden md:flex w-1.5 bg-[var(--bg-elevated)] hover:bg-indigo-200 cursor-col-resize transition-colors items-center justify-center group shrink-0">
-          <div className="w-0.5 h-8 bg-[var(--border)] group-hover:bg-emerald-600 rounded-full transition-colors" />
+          className="hidden md:flex w-1.5 bg-[var(--bg-elevated)] hover:bg-[rgba(45,140,255,0.1)] cursor-col-resize transition-colors items-center justify-center group shrink-0">
+          <div className="w-0.5 h-8 bg-[var(--border)] group-hover:bg-[var(--accent)] rounded-full transition-colors" />
         </div>
 
         {/* ── RIGHT PANEL: Code Editor + Output ── */}
@@ -1180,9 +1180,9 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
           {/* ── Vertical Resize Handle ── */}
           {!isOutputCollapsed && (
             <div onMouseDown={() => setIsResizingV(true)}
-              className="h-1.5 hover:bg-indigo-200 cursor-row-resize transition-colors flex justify-center items-center group"
+              className="h-1.5 hover:bg-[rgba(45,140,255,0.1)] cursor-row-resize transition-colors flex justify-center items-center group"
               style={{ background: t.sectionBg }}>
-              <div className="w-8 h-0.5 group-hover:bg-emerald-600 rounded-full transition-colors" style={{ background: t.textDim }} />
+              <div className="w-8 h-0.5 group-hover:bg-[var(--accent)] rounded-full transition-colors" style={{ background: t.textDim }} />
             </div>
           )}
 
@@ -1193,12 +1193,12 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
               <div className="flex items-center gap-1">
                 <button onClick={() => { setOutputTab('testcases'); setIsOutputCollapsed(false); }}
                   className={`px-2.5 py-1 text-[10px] md:text-xs font-semibold rounded-md transition-colors ${
-                    outputTab === 'testcases' && !isOutputCollapsed ? 'bg-emerald-600 text-white' : ''
+                    outputTab === 'testcases' && !isOutputCollapsed ? 'bg-[var(--accent)] text-white' : ''
                   }`}
                   style={!(outputTab === 'testcases' && !isOutputCollapsed) ? { color: t.tabText } : undefined}>Test Cases</button>
                 <button onClick={() => { setOutputTab('output'); setIsOutputCollapsed(false); }}
                   className={`px-2.5 py-1 text-[10px] md:text-xs font-semibold rounded-md transition-colors flex items-center gap-1.5 ${
-                    outputTab === 'output' && !isOutputCollapsed ? 'bg-emerald-600 text-white' : ''
+                    outputTab === 'output' && !isOutputCollapsed ? 'bg-[var(--accent)] text-white' : ''
                   }`}
                   style={!(outputTab === 'output' && !isOutputCollapsed) ? { color: t.tabText } : undefined}>
                   Output
@@ -1239,14 +1239,14 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                             <label className="block text-[9px] font-medium mb-0.5 uppercase" style={{ color: t.textDim }}>Input</label>
                             <textarea value={tc.input} onChange={(e) => updateTestCase(i, 'input', e.target.value)}
                               placeholder="nums = [2,7], target = 9"
-                              className="w-full h-10 rounded-md p-1.5 text-xs placeholder:text-gray-300 resize-none focus:border-emerald-400 focus:outline-none font-mono"
+                              className="w-full h-10 rounded-md p-1.5 text-xs placeholder:text-gray-300 resize-none focus:border-[var(--accent)] focus:outline-none font-mono"
                               style={{ background: t.inputBg, borderWidth: 1, borderStyle: 'solid', borderColor: t.inputBorder, color: t.inputText }} />
                           </div>
                           <div>
                             <label className="block text-[9px] font-medium mb-0.5 uppercase" style={{ color: t.textDim }}>Expected</label>
                             <textarea value={tc.expected} onChange={(e) => updateTestCase(i, 'expected', e.target.value)}
                               placeholder="[0, 1]"
-                              className="w-full h-10 rounded-md p-1.5 text-xs placeholder:text-gray-300 resize-none focus:border-emerald-400 focus:outline-none font-mono"
+                              className="w-full h-10 rounded-md p-1.5 text-xs placeholder:text-gray-300 resize-none focus:border-[var(--accent)] focus:outline-none font-mono"
                               style={{ background: t.inputBg, borderWidth: 1, borderStyle: 'solid', borderColor: t.inputBorder, color: t.inputText }} />
                           </div>
                         </div>
@@ -1254,7 +1254,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                     ))}
                     {testCases.length < MAX_TEST_CASES && (
                       <button onClick={addTestCase}
-                        className="w-full py-1.5 border border-dashed text-[10px] font-semibold rounded-lg hover:border-indigo-300 hover:text-indigo-500 transition-colors"
+                        className="w-full py-1.5 border border-dashed text-[10px] font-semibold rounded-lg hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors"
                         style={{ borderColor: t.inputBorder, color: t.textDim }}>
                         + Add Test Case ({testCases.length}/{MAX_TEST_CASES})
                       </button>
@@ -1275,7 +1275,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                             }>
                             <div className="flex items-center gap-1.5 mb-1.5">
                               {r.passed ? (
-                                <div className="w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center">
+                                <div className="w-4 h-4 rounded-full bg-[var(--success)] flex items-center justify-center">
                                   <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
                                   </svg>
@@ -1364,20 +1364,17 @@ function LegacySolutionCards({ blocks, collapsedCards, onToggle, onTestCaseClick
   blocks.forEach(b => { byType[b.type] = b; });
 
   const cards = [
-    { type: 'APPROACH', title: 'Approach', color: 'indigo' },
-    { type: 'COMPLEXITY', title: 'Complexity', color: 'cyan' },
-    { type: 'WALKTHROUGH', title: 'Walkthrough', color: 'indigo' },
-    { type: 'EDGECASES', title: 'Edge Cases', color: 'rose' },
-    { type: 'TESTCASES', title: 'Test Cases', color: 'amber' },
-    { type: 'FOLLOWUP', title: 'Follow-up Q&A', color: 'violet' },
+    { type: 'APPROACH', title: 'Approach', color: 'accent' },
+    { type: 'COMPLEXITY', title: 'Complexity', color: 'accent' },
+    { type: 'WALKTHROUGH', title: 'Walkthrough', color: 'accent' },
+    { type: 'EDGECASES', title: 'Edge Cases', color: 'warning' },
+    { type: 'TESTCASES', title: 'Test Cases', color: 'accent' },
+    { type: 'FOLLOWUP', title: 'Follow-up Q&A', color: 'accent' },
   ];
 
   const colorMap: Record<string, { header: string; border: string; bg: string; text: string }> = {
-    indigo: { header: 'bg-indigo-50/50', border: 'border-indigo-100', bg: 'bg-white', text: 'text-indigo-700' },
-    cyan: { header: 'bg-cyan-50/50', border: 'border-cyan-100', bg: 'bg-white', text: 'text-cyan-700' },
-    rose: { header: 'bg-rose-50/50', border: 'border-rose-100', bg: 'bg-white', text: 'text-rose-700' },
-    amber: { header: 'bg-amber-50/50', border: 'border-amber-100', bg: 'bg-white', text: 'text-amber-700' },
-    violet: { header: 'bg-violet-50/50', border: 'border-violet-100', bg: 'bg-white', text: 'text-violet-700' },
+    accent: { header: 'bg-[rgba(45,140,255,0.04)]', border: 'border-[rgba(45,140,255,0.15)]', bg: 'bg-white', text: 'text-[var(--accent)]' },
+    warning: { header: 'bg-[rgba(245,158,11,0.04)]', border: 'border-[rgba(245,158,11,0.15)]', bg: 'bg-white', text: 'text-[var(--warning)]' },
   };
 
   return (
@@ -1406,7 +1403,7 @@ function LegacySolutionCards({ blocks, collapsedCards, onToggle, onTestCaseClick
                       if (arrowMatch) {
                         return (
                           <button key={i} onClick={() => onTestCaseClick(arrowMatch[1].trim(), arrowMatch[2].trim())}
-                            className="w-full text-left px-2 py-1 bg-amber-50 border border-amber-100 rounded-md hover:border-indigo-300 text-[10px] text-gray-600 font-mono hover:text-emerald-600 transition-colors">
+                            className="w-full text-left px-2 py-1 bg-[rgba(45,140,255,0.04)] border border-[rgba(45,140,255,0.1)] rounded-md hover:border-[var(--accent)] text-[10px] text-gray-600 font-mono hover:text-[var(--accent)] transition-colors">
                             {line}
                           </button>
                         );

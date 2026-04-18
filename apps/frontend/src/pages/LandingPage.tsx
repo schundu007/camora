@@ -21,7 +21,7 @@ const L = {
   border: '#E2E5EB', text: '#1A1D23', secondary: '#4A5568',
   muted: '#8C95A6', dimmed: '#C8CDD6',
   gradient: 'linear-gradient(135deg, #2D8CFF 0%, #0B5CFF 100%)',
-  primary: '#2D8CFF', emerald: '#2D8CFF', radius: '12px',
+  primary: '#2D8CFF', accent: '#2D8CFF', radius: '12px',
   glow: '0 0 60px rgba(45,140,255,0.08)',
   glowStrong: '0 0 80px rgba(45,140,255,0.15)',
 };
@@ -417,8 +417,8 @@ export default function LandingPage() {
               </div>
               <div className="px-6 py-5">
                 <div className="flex items-center gap-2 mb-4">
-                  <span className="w-2 h-2 rounded-full" style={{ background: L.emerald }} />
-                  <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: L.emerald, fontFamily: F.mono }}>AI Response</span>
+                  <span className="w-2 h-2 rounded-full" style={{ background: L.accent }} />
+                  <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: L.accent, fontFamily: F.mono }}>AI Response</span>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   {[

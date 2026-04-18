@@ -259,7 +259,7 @@ export default function PrepPlanPage() {
                   {/* Day header */}
                   <div className={`px-5 py-3 border-b border-[var(--border)] flex items-center justify-between ${allDone ? 'bg-[var(--accent)]/10' : 'bg-[var(--bg-elevated)]'}`}>
                     <div className="flex items-center gap-2">
-                      <span className={`text-sm font-bold ${allDone ? 'text-emerald-700' : 'text-[var(--text-primary)]'}`}>
+                      <span className={`text-sm font-bold ${allDone ? 'text-[var(--success)]' : 'text-[var(--text-primary)]'}`}>
                         Day {day.day}
                       </span>
                       <span className="text-sm text-[var(--text-secondary)]">&mdash; {day.focus}</span>
@@ -283,7 +283,7 @@ export default function PrepPlanPage() {
                             className={`flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
                               task.completed
                                 ? 'bg-[var(--accent)] border-[var(--accent)]'
-                                : 'border-[var(--border)] hover:border-emerald-400'
+                                : 'border-[var(--border)] hover:border-[var(--accent)]'
                             } ${togglingTask === task.id ? 'opacity-50' : ''}`}
                             aria-label={task.completed ? `Mark "${task.title}" incomplete` : `Mark "${task.title}" complete`}
                           >

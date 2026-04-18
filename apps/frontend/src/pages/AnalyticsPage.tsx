@@ -217,7 +217,7 @@ export default function AnalyticsPage() {
   if (isAdmin === null) {
     return (
       <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -272,7 +272,7 @@ export default function AnalyticsPage() {
 
             {loading ? (
               <div className="flex justify-center py-20">
-                <div className="w-8 h-8 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
+                <div className="w-8 h-8 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
               </div>
             ) : stats ? (
               <>
@@ -300,7 +300,7 @@ export default function AnalyticsPage() {
                     <tbody>
                       {stats.by_path.map(row => (
                         <tr key={row.path} className="border-b border-gray-800/50 hover:bg-gray-800/30">
-                          <td className="px-5 py-3 font-mono text-sm text-emerald-300">{row.path}</td>
+                          <td className="px-5 py-3 font-mono text-sm text-[var(--accent)]">{row.path}</td>
                           <td className="px-5 py-3 text-right">{parseInt(row.views).toLocaleString()}</td>
                           <td className="px-5 py-3 text-right font-semibold">{parseInt(row.unique_visitors).toLocaleString()}</td>
                         </tr>
@@ -362,13 +362,13 @@ export default function AnalyticsPage() {
                 {[
                   { label: 'Total Users', value: totalUsers, color: 'text-white', filter: '' },
                   { label: 'Paid', value: paidUsers, color: 'text-[var(--accent)]', filter: 'paid' },
-                  { label: 'Trial', value: trialUsers, color: 'text-blue-400', filter: 'trial' },
-                  { label: 'Challenger', value: challengerUsers, color: 'text-purple-400', filter: 'challenger' },
+                  { label: 'Trial', value: trialUsers, color: 'text-[var(--accent)]', filter: 'trial' },
+                  { label: 'Challenger', value: challengerUsers, color: 'text-[var(--accent)]', filter: 'challenger' },
                   { label: 'Free', value: freeUsers, color: 'text-gray-400', filter: 'free' },
                 ].map(c => (
                   <button key={c.label} onClick={() => setPlanFilter(planFilter === c.filter ? '' : c.filter)}
                     className={`bg-gray-900 border rounded-xl p-4 text-left transition-all ${
-                      planFilter === c.filter ? 'border-[var(--accent)] ring-1 ring-emerald-500/30' : 'border-gray-800 hover:border-gray-700'
+                      planFilter === c.filter ? 'border-[var(--accent)] ring-1 ring-[var(--accent)]/30' : 'border-gray-800 hover:border-gray-700'
                     }`}>
                     <p className="text-gray-400 text-xs">{c.label}</p>
                     <p className={`text-2xl font-bold mt-1 ${c.color}`}>{c.value}</p>
@@ -400,7 +400,7 @@ export default function AnalyticsPage() {
 
             {usersLoading && !usersLoaded ? (
               <div className="flex justify-center py-20">
-                <div className="w-8 h-8 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
+                <div className="w-8 h-8 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
               </div>
             ) : usersError ? (
               <p className="text-red-400">{usersError}</p>
@@ -447,14 +447,14 @@ export default function AnalyticsPage() {
                                 <div className="flex flex-col gap-1">
                                   <span className={`px-2 py-0.5 rounded-full text-xs font-medium w-fit ${
                                     cat === 'paid' ? 'bg-[var(--accent)]/20 text-[var(--accent)]'
-                                      : cat === 'challenger' ? 'bg-purple-500/20 text-purple-400'
-                                      : cat === 'trial' ? 'bg-blue-500/20 text-blue-400'
+                                      : cat === 'challenger' ? 'bg-[var(--accent)]/20 text-[var(--accent)]'
+                                      : cat === 'trial' ? 'bg-[var(--accent)]/10 text-[var(--accent)]'
                                       : 'bg-gray-700 text-gray-400'
                                   }`}>
                                     {cat === 'paid' ? u.sub_plan : cat}
                                   </span>
                                   {cat === 'trial' && (
-                                    <span className="text-[10px] text-blue-400">
+                                    <span className="text-[10px] text-[var(--accent)]">
                                       ends {new Date(u.trial_ends_at!).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                                     </span>
                                   )}
@@ -481,7 +481,7 @@ export default function AnalyticsPage() {
                                   key={d}
                                   onClick={() => grantTrial(u.id, d)}
                                   disabled={granting === u.id}
-                                  className="px-2 py-1 rounded text-[11px] font-medium bg-blue-600/20 text-blue-400 hover:bg-blue-600/40 transition-all disabled:opacity-50"
+                                  className="px-2 py-1 rounded text-[11px] font-medium bg-[var(--accent)]/20 text-[var(--accent)] hover:bg-[var(--accent)]/40 transition-all disabled:opacity-50"
                                 >
                                   {granting === u.id ? '...' : `${d}d`}
                                 </button>
@@ -511,7 +511,7 @@ export default function AnalyticsPage() {
             </div>
             {emailsLoading && !emailsLoaded ? (
               <div className="flex justify-center py-20">
-                <div className="w-8 h-8 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
+                <div className="w-8 h-8 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
               </div>
             ) : emailsError ? (
               <p className="text-red-400">{emailsError}</p>
@@ -535,11 +535,11 @@ export default function AnalyticsPage() {
                           <td className="px-4 py-3 text-white font-medium">{e.subject}</td>
                           <td className="px-4 py-3">
                             <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                              e.last_event === 'delivered' ? 'bg-[var(--accent)]/20 text-[var(--accent)]'
-                                : e.last_event === 'opened' ? 'bg-blue-500/20 text-blue-400'
-                                : e.last_event === 'clicked' ? 'bg-purple-500/20 text-purple-400'
-                                : e.last_event === 'bounced' ? 'bg-red-500/20 text-red-400'
-                                : e.last_event === 'complained' ? 'bg-orange-500/20 text-orange-400'
+                              e.last_event === 'delivered' ? 'bg-[var(--success)]/20 text-[var(--success)]'
+                                : e.last_event === 'opened' ? 'bg-[var(--accent)]/20 text-[var(--accent)]'
+                                : e.last_event === 'clicked' ? 'bg-[var(--accent)]/20 text-[var(--accent)]'
+                                : e.last_event === 'bounced' ? 'bg-[var(--danger)]/20 text-[var(--danger)]'
+                                : e.last_event === 'complained' ? 'bg-[var(--warning)]/20 text-[var(--warning)]'
                                 : 'bg-gray-700 text-gray-400'
                             }`}>
                               {e.last_event || 'sent'}

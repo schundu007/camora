@@ -198,7 +198,7 @@ export default function TopicComments({ topicId }: TopicCommentsProps) {
             onChange={e => setContent(e.target.value)}
             placeholder="Share your thoughts..."
             rows={3}
-            className="w-full rounded-lg px-3 py-2.5 text-sm landing-body resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500/40 transition-shadow"
+            className="w-full rounded-lg px-3 py-2.5 text-sm landing-body resize-none focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/40 transition-shadow"
             style={{
               background: 'var(--bg-elevated)',
               border: '1px solid var(--border)',

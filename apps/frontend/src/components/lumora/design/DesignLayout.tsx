@@ -239,27 +239,27 @@ const SectionIcon = ({ type }: { type: string }) => {
   return icons[type] || null;
 };
 
-/** Scalability tier colors for visual variety */
+/** Scalability tier colors — unified accent palette */
 const tierColors = [
-  { bg: 'bg-indigo-50', border: 'border-indigo-200', text: 'text-indigo-700', dot: 'bg-emerald-600' },
-  { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-700', dot: 'bg-blue-500' },
-  { bg: 'bg-violet-50', border: 'border-violet-200', text: 'text-violet-700', dot: 'bg-violet-500' },
-  { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700', dot: 'bg-amber-500' },
-  { bg: 'bg-cyan-50', border: 'border-cyan-200', text: 'text-cyan-700', dot: 'bg-cyan-500' },
-  { bg: 'bg-rose-50', border: 'border-rose-200', text: 'text-rose-700', dot: 'bg-rose-500' },
-  { bg: 'bg-indigo-50', border: 'border-indigo-200', text: 'text-indigo-700', dot: 'bg-emerald-600' },
-  { bg: 'bg-violet-50', border: 'border-violet-200', text: 'text-violet-700', dot: 'bg-violet-500' },
+  { bg: 'bg-[rgba(45,140,255,0.04)]', border: 'border-[rgba(45,140,255,0.15)]', text: 'text-[var(--accent)]', dot: 'bg-[var(--accent)]' },
+  { bg: 'bg-[rgba(45,140,255,0.04)]', border: 'border-[rgba(45,140,255,0.15)]', text: 'text-[var(--accent)]', dot: 'bg-[var(--accent)]' },
+  { bg: 'bg-[rgba(45,140,255,0.04)]', border: 'border-[rgba(45,140,255,0.15)]', text: 'text-[var(--accent)]', dot: 'bg-[var(--accent)]' },
+  { bg: 'bg-[rgba(45,140,255,0.04)]', border: 'border-[rgba(45,140,255,0.15)]', text: 'text-[var(--accent)]', dot: 'bg-[var(--accent)]' },
+  { bg: 'bg-[rgba(45,140,255,0.04)]', border: 'border-[rgba(45,140,255,0.15)]', text: 'text-[var(--accent)]', dot: 'bg-[var(--accent)]' },
+  { bg: 'bg-[rgba(45,140,255,0.04)]', border: 'border-[rgba(45,140,255,0.15)]', text: 'text-[var(--accent)]', dot: 'bg-[var(--accent)]' },
+  { bg: 'bg-[rgba(45,140,255,0.04)]', border: 'border-[rgba(45,140,255,0.15)]', text: 'text-[var(--accent)]', dot: 'bg-[var(--accent)]' },
+  { bg: 'bg-[rgba(45,140,255,0.04)]', border: 'border-[rgba(45,140,255,0.15)]', text: 'text-[var(--accent)]', dot: 'bg-[var(--accent)]' },
 ];
 
-/** Architecture layer accent colors */
+/** Architecture layer accent colors — unified Zoom Blue */
 const layerAccents = [
-  { accent: '#0B5CFF', bg: 'rgba(79,70,229,0.04)', border: 'rgba(79,70,229,0.15)' },
-  { accent: '#2563eb', bg: 'rgba(37,99,235,0.04)', border: 'rgba(37,99,235,0.15)' },
-  { accent: '#7c3aed', bg: 'rgba(124,58,237,0.04)', border: 'rgba(124,58,237,0.15)' },
-  { accent: '#d97706', bg: 'rgba(217,119,6,0.04)', border: 'rgba(217,119,6,0.15)' },
-  { accent: '#0891b2', bg: 'rgba(8,145,178,0.04)', border: 'rgba(8,145,178,0.15)' },
-  { accent: '#0B5CFF', bg: 'rgba(220,38,38,0.04)', border: 'rgba(220,38,38,0.15)' },
-  { accent: '#0B5CFF', bg: 'rgba(79,70,229,0.04)', border: 'rgba(79,70,229,0.15)' },
+  { accent: '#2D8CFF', bg: 'rgba(45,140,255,0.04)', border: 'rgba(45,140,255,0.15)' },
+  { accent: '#2D8CFF', bg: 'rgba(45,140,255,0.04)', border: 'rgba(45,140,255,0.15)' },
+  { accent: '#2D8CFF', bg: 'rgba(45,140,255,0.04)', border: 'rgba(45,140,255,0.15)' },
+  { accent: '#2D8CFF', bg: 'rgba(45,140,255,0.04)', border: 'rgba(45,140,255,0.15)' },
+  { accent: '#2D8CFF', bg: 'rgba(45,140,255,0.04)', border: 'rgba(45,140,255,0.15)' },
+  { accent: '#2D8CFF', bg: 'rgba(45,140,255,0.04)', border: 'rgba(45,140,255,0.15)' },
+  { accent: '#2D8CFF', bg: 'rgba(45,140,255,0.04)', border: 'rgba(45,140,255,0.15)' },
   { accent: '#2D8CFF', bg: 'rgba(45,140,255,0.04)', border: 'rgba(45,140,255,0.15)' },
 ];
 
@@ -632,7 +632,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
             <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-xs font-mono font-bold transition-colors ${
               timerUrgent ? 'bg-red-50 border-red-200 text-red-600' :
               timerSeconds === 0 ? 'bg-white/10 border-white/20 text-white/70' :
-              'bg-indigo-50 border-indigo-200 text-indigo-700'
+              'bg-[rgba(45,140,255,0.06)] border-[rgba(45,140,255,0.2)] text-[var(--accent)]'
             } ${timerUrgent ? 'timer-urgent' : ''}`}>
               <div className="relative w-4 h-4">
                 <svg className="w-4 h-4 -rotate-90" viewBox="0 0 20 20">
@@ -661,9 +661,9 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
           )}
 
           {isLoading && (
-            <div className="flex items-center gap-1.5 px-2 py-0.5 bg-indigo-50 border border-indigo-200 rounded-lg">
-              <div className="w-1.5 h-1.5 bg-emerald-600 rounded-full animate-pulse" />
-              <span className="text-emerald-600 text-[10px] md:text-xs font-medium">Generating...</span>
+            <div className="flex items-center gap-1.5 px-2 py-0.5 bg-[rgba(45,140,255,0.06)] border border-[rgba(45,140,255,0.2)] rounded-lg">
+              <div className="w-1.5 h-1.5 bg-[var(--accent)] rounded-full animate-pulse" />
+              <span className="text-[var(--accent)] text-[10px] md:text-xs font-medium">Generating...</span>
             </div>
           )}
 
@@ -726,7 +726,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                 value={problemText}
                 onChange={(e) => setProblemText(e.target.value)}
                 placeholder="Describe your system design problem...&#10;&#10;Example: Design a URL shortener like bit.ly that handles 100M links/month"
-                className="w-full h-[80px] rounded-lg p-3 text-xs md:text-sm leading-relaxed resize-none focus:ring-1 focus:ring-indigo-400/30 focus:outline-none transition-all font-mono"
+                className="w-full h-[80px] rounded-lg p-3 text-xs md:text-sm leading-relaxed resize-none focus:ring-1 focus:ring-[var(--accent)]/30 focus:outline-none transition-all font-mono"
                 style={{ background: '#ffffff', border: '1px solid #e2e8f0', color: '#0f172a' }}
               />
             )}
@@ -737,7 +737,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                   value={urlInput}
                   onChange={(e) => setUrlInput(e.target.value)}
                   placeholder="https://leetcode.com/problems/..."
-                  className="flex-1 rounded-lg px-3 py-2 text-xs md:text-sm focus:ring-1 focus:ring-indigo-400/30 focus:outline-none transition-all font-mono"
+                  className="flex-1 rounded-lg px-3 py-2 text-xs md:text-sm focus:ring-1 focus:ring-[var(--accent)]/30 focus:outline-none transition-all font-mono"
                   style={{ background: '#ffffff', border: '1px solid #e2e8f0', color: '#0f172a' }}
                 />
                 <button
@@ -756,7 +756,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                       setErrorMsg(`Failed to fetch URL: ${err.message}`);
                     }
                   }}
-                  className="px-4 py-2 bg-emerald-600 text-white text-xs font-semibold rounded-lg hover:bg-emerald-700 disabled:opacity-50 transition-colors"
+                  className="px-4 py-2 bg-[var(--accent)] text-white text-xs font-semibold rounded-lg hover:bg-[var(--accent-hover)] disabled:opacity-50 transition-colors"
                 >
                   Fetch
                 </button>
@@ -823,10 +823,10 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
           {question && sd && (
             <div className="border-t border-[var(--border)] p-3 flex-1 overflow-auto min-h-0 hidden md:block">
               <div className="flex items-center gap-2 mb-2">
-                <svg className="w-3.5 h-3.5 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-3.5 h-3.5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
                 </svg>
-                <h4 className="text-[10px] font-mono font-bold text-cyan-700 uppercase tracking-wider">Architecture</h4>
+                <h4 className="text-[10px] font-mono font-bold text-[var(--accent)] uppercase tracking-wider">Architecture</h4>
               </div>
               <ArchitectureDiagram question={question} className="diagram-left-panel" />
             </div>
@@ -835,10 +835,10 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
 
         {/* Resizable divider - hidden on mobile, matching coding page */}
         <div
-          className="hidden md:flex w-1.5 bg-[var(--bg-elevated)] hover:bg-indigo-200 cursor-col-resize transition-colors items-center justify-center group shrink-0"
+          className="hidden md:flex w-1.5 bg-[var(--bg-elevated)] hover:bg-[rgba(45,140,255,0.1)] cursor-col-resize transition-colors items-center justify-center group shrink-0"
           onMouseDown={handleDividerMouseDown}
         >
-          <div className="w-0.5 h-8 bg-[var(--border)] group-hover:bg-emerald-600 rounded-full transition-colors" />
+          <div className="w-0.5 h-8 bg-[var(--border)] group-hover:bg-[var(--accent)] rounded-full transition-colors" />
         </div>
 
         {/* Right: Design Result — light panel when standalone, themed when embedded */}
@@ -990,11 +990,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                       {sd.techJustifications.map((tier, i) => (
                           <div key={i} className="rounded-lg p-2 text-center" style={{ border: `1px solid ${t.cardBorder}`, background: t.sectionBg }}>
-                            <div className={`text-xs font-bold text-white bg-gradient-to-r ${
-                              ['from-emerald-500 to-violet-500', 'from-blue-500 to-emerald-500', 'from-violet-500 to-emerald-500',
-                               'from-amber-500 to-orange-500', 'from-cyan-500 to-blue-500', 'from-rose-500 to-pink-500',
-                               'from-emerald-500 to-blue-500', 'from-violet-500 to-emerald-500'][i % 8]
-                            } rounded px-2 py-1 mb-1`}>{tier.tech}</div>
+                            <div className="text-xs font-bold text-white bg-[var(--accent)] rounded px-2 py-1 mb-1">{tier.tech}</div>
                             {tier.details.length > 0 && (
                               <div className="text-xs leading-relaxed text-left mt-1" style={{ color: t.textMuted }}>
                                 {tier.details.map((d, j) => <div key={j} title={d}>- {d}</div>)}
@@ -1089,7 +1085,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
       {/* Enterprise Status Bar — matching coding page */}
       <div className="hidden sm:flex items-center justify-between h-7 px-3 bg-[var(--bg-elevated)] border-t border-[var(--border)] shrink-0">
         <div className="flex items-center gap-2">
-          <span className={`w-2 h-2 rounded-full ${isLoading ? 'bg-emerald-500 animate-pulse' : 'bg-emerald-400'}`} />
+          <span className={`w-2 h-2 rounded-full ${isLoading ? 'bg-[var(--accent)] animate-pulse' : 'bg-[var(--accent)]'}`} />
           <span className="text-[10px] font-mono text-[var(--text-muted)]">
             {isLoading ? 'Generating...' : 'Ready'}
           </span>

@@ -343,7 +343,7 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
 
   if (!isSupported) {
     return (
-      <div className="text-xs text-rose-light">
+      <div className="text-xs text-[var(--danger)]">
         Audio recording not supported in this browser
       </div>
     );
@@ -380,7 +380,7 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
       {/* Audio level bars */}
       <div className="flex items-center gap-0.5 shrink-0">
         {[0, 1, 2, 3, 4].map((i) => (
-          <div key={i} className={`w-0.5 rounded-full transition-all duration-75 ${audioLevel > i * 0.02 ? 'bg-indigo-400' : 'bg-[var(--bg-surface)]/10'}`}
+          <div key={i} className={`w-0.5 rounded-full transition-all duration-75 ${audioLevel > i * 0.02 ? 'bg-[var(--accent)]' : 'bg-[var(--bg-surface)]/10'}`}
             style={{ height: `${6 + i * 2}px` }} />
         ))}
       </div>

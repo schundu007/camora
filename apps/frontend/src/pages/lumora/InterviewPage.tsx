@@ -132,7 +132,7 @@ export function InterviewPage() {
                         <button onClick={() => setIsExpanded(false)} className="text-xs text-slate-500 hover:text-slate-600 transition-colors px-2 py-1">Collapse</button>
                         <button onClick={handleInputSubmit} disabled={!inputValue.trim() || isStreaming}
                           className="px-4 py-1.5 rounded-lg text-xs font-bold text-white disabled:opacity-30 transition-all"
-                          style={{ background: inputValue.trim() ? 'linear-gradient(135deg, #2D8CFF, #2D8CFF)' : '#e2e8f0' }}>
+                          style={{ background: inputValue.trim() ? 'linear-gradient(135deg, var(--accent), var(--accent))' : '#e2e8f0' }}>
                           Send
                         </button>
                       </div>
@@ -142,7 +142,7 @@ export function InterviewPage() {
                   <div className="flex items-center gap-2 rounded-2xl px-3 sm:px-4 h-12 sm:h-12 transition-all focus-within:shadow-[0_0_0_2px_rgba(45,140,255,0.3)]"
                     style={{ background: '#f8fafc', border: '1px solid #e2e8f0', boxShadow: '0 -2px 12px rgba(0,0,0,0.06)' }}>
                     {isStreaming && (
-                      <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" style={{ boxShadow: '0 0 8px rgba(45,140,255,0.4)' }} />
+                      <div className="w-2 h-2 rounded-full bg-[var(--accent)] animate-pulse shrink-0" style={{ boxShadow: '0 0 8px rgba(45,140,255,0.4)' }} />
                     )}
                     <input
                       ref={inputRef}
@@ -165,7 +165,7 @@ export function InterviewPage() {
                     {inputValue.trim() && !isStreaming && (
                       <button onClick={handleInputSubmit}
                         className="p-1.5 rounded-lg transition-all shrink-0"
-                        style={{ background: 'linear-gradient(135deg, #2D8CFF, #2D8CFF)', boxShadow: '0 2px 8px rgba(45,140,255,0.3)' }}>
+                        style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent))', boxShadow: '0 2px 8px rgba(45,140,255,0.3)' }}>
                         <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M12 5l7 7-7 7" />
                         </svg>
@@ -180,7 +180,7 @@ export function InterviewPage() {
             </div>
             <div className="flex items-center justify-between h-6 px-3 lumora-status-bar">
               <div className="flex items-center gap-2">
-                <span className={`w-1.5 h-1.5 rounded-full ${isStreaming ? 'bg-emerald-500 animate-pulse' : 'bg-emerald-500'}`} style={!isStreaming ? { boxShadow: '0 0 4px rgba(16,185,129,0.4)' } : {}} />
+                <span className={`w-1.5 h-1.5 rounded-full ${isStreaming ? 'bg-[var(--accent)] animate-pulse' : 'bg-[var(--accent)]'}`} style={!isStreaming ? { boxShadow: '0 0 4px rgba(45,140,255,0.4)' } : {}} />
                 <span className="text-[10px] font-code text-slate-500">{isStreaming ? 'Generating...' : 'Ready'}</span>
                 {history.length > 0 && (
                   <span className="text-[10px] font-code text-slate-500 border-l border-slate-200 pl-2">{history.length} Q&A</span>

@@ -103,7 +103,7 @@ export function UsageLimitModal({ isOpen, onClose, type, used, limit, plan }: Us
           </div>
           <div className="w-full h-3 bg-[var(--bg-elevated)] rounded-full overflow-hidden">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-red-500 to-rose-500 transition-all duration-500"
+              className="h-full rounded-full bg-gradient-to-r from-[var(--danger)] to-[var(--danger)] transition-all duration-500"
               style={{ width: `${pct}%` }}
             />
           </div>
@@ -123,22 +123,22 @@ export function UsageLimitModal({ isOpen, onClose, type, used, limit, plan }: Us
         {/* Two-column options */}
         <div className="px-6 pb-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Upgrade card */}
-          <div className="rounded-xl border-2 border-emerald-200 bg-emerald-50/50 p-4 flex flex-col">
+          <div className="rounded-xl border-2 border-[rgba(45,140,255,0.3)] bg-[rgba(45,140,255,0.05)] p-4 flex flex-col">
             <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-lg bg-[var(--accent)] flex items-center justify-center">
                 <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                 </svg>
               </div>
-              <span className="text-sm font-bold text-emerald-800">Upgrade your plan</span>
+              <span className="text-sm font-bold text-[var(--accent)]">Upgrade your plan</span>
             </div>
-            <p className="text-xs text-emerald-700 mb-2 font-semibold">
+            <p className="text-xs text-[var(--accent)] mb-2 font-semibold">
               {upgrade.name} plan includes:
             </p>
-            <ul className="text-xs text-emerald-600 space-y-1 mb-4 flex-1">
+            <ul className="text-xs text-[var(--text-secondary)] space-y-1 mb-4 flex-1">
               {upgrade.benefits.map((b) => (
                 <li key={b} className="flex items-start gap-1.5">
-                  <svg className="w-3.5 h-3.5 text-emerald-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-3.5 h-3.5 text-[var(--accent)] mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                   {b}
@@ -148,7 +148,7 @@ export function UsageLimitModal({ isOpen, onClose, type, used, limit, plan }: Us
             <Link
               to="/pricing"
               onClick={onClose}
-              className="block w-full text-center px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold rounded-lg transition-colors shadow-sm"
+              className="block w-full text-center px-4 py-2.5 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-sm font-bold rounded-lg transition-colors shadow-sm"
             >
               View Plans
             </Link>

@@ -19,7 +19,7 @@ export default function ReferralLandingPage() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-[var(--bg-surface)]">
-      <div className="w-12 h-12 border-4 border-emerald-200 border-t-emerald-500 rounded-full animate-spin" />
+      <div className="w-12 h-12 border-4 border-[rgba(45,140,255,0.2)] border-t-[var(--accent)] rounded-full animate-spin" />
       <p className="text-sm text-[var(--text-muted)]">Setting up your referral...</p>
     </div>
   );

@@ -41,7 +41,7 @@ type OutputTab = 'output' | 'expected';
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 const DIFFICULTY_COLORS: Record<string, { bg: string; text: string; border: string }> = {
-  Easy: { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
+  Easy: { bg: 'bg-[rgba(45,140,255,0.08)]', text: 'text-[var(--accent)]', border: 'border-[rgba(45,140,255,0.3)]' },
   Medium: { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
   Hard: { bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-200' },
 };
@@ -393,7 +393,7 @@ export function SQLPlayground({ onClose }: SQLPlaygroundProps) {
             }}
               className="px-3 py-1.5 text-xs font-bold rounded-lg transition-all whitespace-nowrap flex items-center gap-1.5"
               style={selectedCategory === cat.id
-                ? { background: '#2D8CFF', color: '#fff' }
+                ? { background: 'var(--accent)', color: '#fff' }
                 : { color: 'var(--text-secondary)' }
               }>
               {cat.label}
@@ -413,7 +413,7 @@ export function SQLPlayground({ onClose }: SQLPlaygroundProps) {
               : { color: 'var(--text-muted)' }
             }>
             {solved.has(p.id) ? (
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5"><circle cx="12" cy="12" r="10" /><path d="M9 12l2 2 4-4" /></svg>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--success)" strokeWidth="2.5"><circle cx="12" cy="12" r="10" /><path d="M9 12l2 2 4-4" /></svg>
             ) : (
               <span className="w-3 h-3 rounded-full border-2" style={{ borderColor: 'var(--border)' }} />
             )}
@@ -458,7 +458,7 @@ export function SQLPlayground({ onClose }: SQLPlaygroundProps) {
                 </svg>
               </button>
               {solved.has(problem.id) && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-[rgba(45,140,255,0.08)] text-[var(--accent)] border border-[rgba(45,140,255,0.3)]">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
@@ -576,7 +576,7 @@ export function SQLPlayground({ onClose }: SQLPlaygroundProps) {
               <button
                 onClick={runQuery}
                 disabled={!dbReady}
-                className="px-3 py-1 rounded text-[11px] font-bold text-white bg-teal-600 hover:bg-teal-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
+                className="px-3 py-1 rounded text-[11px] font-bold text-white bg-[var(--accent)] hover:bg-[var(--accent-hover)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
               >
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="none">
                   <polygon points="5 3 19 12 5 21 5 3" />
@@ -647,7 +647,7 @@ export function SQLPlayground({ onClose }: SQLPlaygroundProps) {
             {submitResult && (
               <div className="ml-auto flex items-center gap-1.5">
                 {submitResult === 'correct' ? (
-                  <span className="flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  <span className="flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold bg-[rgba(45,140,255,0.08)] text-[var(--accent)] border border-[rgba(45,140,255,0.3)]">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="12" cy="12" r="10" />
                       <path d="M9 12l2 2 4-4" />
@@ -674,7 +674,7 @@ export function SQLPlayground({ onClose }: SQLPlaygroundProps) {
               <>
                 {!dbReady && (
                   <div className="flex items-center gap-2 text-sm text-slate-400 py-8 justify-center">
-                    <div className="w-4 h-4 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
+                    <div className="w-4 h-4 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
                     Loading SQL engine...
                   </div>
                 )}

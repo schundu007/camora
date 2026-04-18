@@ -49,10 +49,10 @@ export function LumoraTopBar({ activeTab, onTranscription }: LumoraTopBarProps) 
         {/* Status */}
         <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.2)' }}>
           <div className={`w-2 h-2 rounded-full ${
-            status.state === 'ready' ? 'bg-emerald-400' :
+            status.state === 'ready' ? 'bg-[var(--accent)]' :
             status.state === 'error' ? 'bg-red-400' :
             status.state === 'warn' ? 'bg-amber-400' :
-            (status.state === 'listen' || status.state === 'write') ? 'bg-emerald-400 animate-pulse' :
+            (status.state === 'listen' || status.state === 'write') ? 'bg-[var(--accent)] animate-pulse' :
             ''
           }`} />
           <span className="text-xs font-bold" style={{ fontFamily: "'Satoshi', sans-serif", color: C.muted }}>{status.message}</span>

@@ -447,8 +447,8 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
           </h4>
           <div className="flex items-center gap-1.5 flex-wrap">
             <div className="flex rounded border border-[var(--border)] overflow-hidden">
-              <button onClick={() => handleGenerateDiagram('overview', diagramDirection)} className={`px-2 py-1 text-[10px] font-semibold transition-colors ${diagramDetailLevel === 'overview' ? 'bg-emerald-600 text-white' : 'bg-[var(--bg-surface)] text-[var(--text-muted)] hover:bg-[var(--bg-elevated)]'}`}>Overview</button>
-              <button onClick={() => handleGenerateDiagram('detailed', diagramDirection)} className={`px-2 py-1 text-[10px] font-semibold transition-colors ${diagramDetailLevel === 'detailed' ? 'bg-emerald-600 text-white' : 'bg-[var(--bg-surface)] text-[var(--text-muted)] hover:bg-[var(--bg-elevated)]'}`}>Detailed</button>
+              <button onClick={() => handleGenerateDiagram('overview', diagramDirection)} className={`px-2 py-1 text-[10px] font-semibold transition-colors ${diagramDetailLevel === 'overview' ? 'bg-[var(--accent)] text-white' : 'bg-[var(--bg-surface)] text-[var(--text-muted)] hover:bg-[var(--bg-elevated)]'}`}>Overview</button>
+              <button onClick={() => handleGenerateDiagram('detailed', diagramDirection)} className={`px-2 py-1 text-[10px] font-semibold transition-colors ${diagramDetailLevel === 'detailed' ? 'bg-[var(--accent)] text-white' : 'bg-[var(--bg-surface)] text-[var(--text-muted)] hover:bg-[var(--bg-elevated)]'}`}>Detailed</button>
             </div>
             <div className="flex rounded border border-[var(--border)] overflow-hidden">
               <button onClick={() => handleGenerateDiagram(diagramDetailLevel, 'LR')} className={`px-2 py-1 text-[10px] font-semibold transition-colors ${diagramDirection === 'LR' ? 'bg-blue-500 text-white' : 'bg-[var(--bg-surface)] text-[var(--text-muted)] hover:bg-[var(--bg-elevated)]'}`} title="Left to Right">L→R</button>
@@ -508,7 +508,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
                   </div>
                   <p className="text-sm font-semibold text-[var(--text-primary)] mb-1">Free diagrams used up</p>
                   <p className="text-xs text-[var(--text-muted)] mb-4 text-center max-w-xs">Upgrade to Premium for unlimited architecture diagram generation.</p>
-                  <Link to="/pricing" className="px-4 py-2 bg-emerald-600 text-white text-xs font-bold rounded-lg hover:bg-emerald-700 transition-colors">View Plans</Link>
+                  <Link to="/pricing" className="px-4 py-2 bg-[var(--accent)] text-white text-xs font-bold rounded-lg hover:bg-[var(--accent-hover)] transition-colors">View Plans</Link>
                 </>
               ) : (
                 <>

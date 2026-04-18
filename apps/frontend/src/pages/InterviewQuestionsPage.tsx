@@ -6,15 +6,15 @@ import SiteFooter from '@/components/shared/SiteFooter';
 import { COMPANY_SEO_DATA, COMPANY_SLUGS } from '@/data/capra/companies/companyData';
 
 const TYPE_COLORS: Record<string, { bg: string; text: string; label: string }> = {
-  coding: { bg: 'bg-blue-50', text: 'text-blue-700', label: 'Coding' },
-  'system-design': { bg: 'bg-purple-50', text: 'text-purple-700', label: 'System Design' },
-  behavioral: { bg: 'bg-amber-50', text: 'text-amber-700', label: 'Behavioral' },
+  coding: { bg: 'bg-[var(--cat-primary-bg)]', text: 'text-[var(--cat-primary)]', label: 'Coding' },
+  'system-design': { bg: 'bg-[var(--cat-primary-bg)]', text: 'text-[var(--cat-primary)]', label: 'System Design' },
+  behavioral: { bg: 'bg-[var(--cat-primary-bg)]', text: 'text-[var(--cat-primary)]', label: 'Behavioral' },
 };
 
 const DIFF_COLORS: Record<string, { bg: string; text: string }> = {
-  Easy: { bg: 'bg-emerald-50', text: 'text-emerald-700' },
-  Medium: { bg: 'bg-yellow-50', text: 'text-yellow-700' },
-  Hard: { bg: 'bg-red-50', text: 'text-red-700' },
+  Easy: { bg: 'bg-[var(--easy-bg)]', text: 'text-[var(--easy)]' },
+  Medium: { bg: 'bg-[var(--medium-bg)]', text: 'text-[var(--medium)]' },
+  Hard: { bg: 'bg-[var(--hard-bg)]', text: 'text-[var(--hard)]' },
 };
 
 function getRelatedCompanies(currentSlug: string, count = 4): string[] {
@@ -55,7 +55,7 @@ export default function InterviewQuestionsPage() {
         <div className="pt-20 text-center">
           <h1 className="text-2xl font-bold text-[var(--text-primary)]">Company not found</h1>
           <p className="mt-2 text-[var(--text-muted)]">We don't have interview data for this company yet.</p>
-          <Link to="/" className="mt-4 inline-block text-emerald-600 hover:text-emerald-700 font-medium">
+          <Link to="/" className="mt-4 inline-block text-[var(--accent)] hover:text-[var(--accent-hover)] font-medium">
             Go home
           </Link>
         </div>
@@ -70,7 +70,7 @@ export default function InterviewQuestionsPage() {
       <SiteNav />
 
       {/* ── Hero ─────────────────────────────────────────── */}
-      <section className="pt-24 pb-12 px-4" style={{ background: 'linear-gradient(135deg, rgba(178,235,242,0.3) 0%, rgba(179,198,231,0.3) 50%, rgba(197,179,227,0.3) 100%)' }}>
+      <section className="pt-24 pb-12 px-4" style={{ background: 'linear-gradient(135deg, rgba(45,140,255,0.06) 0%, rgba(45,140,255,0.03) 100%)' }}>
         <div className="max-w-3xl mx-auto text-center">
           <img src={company.logo} alt={`${company.name} logo`} className="w-16 h-16 rounded-xl object-contain mx-auto" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
           <h1 className="mt-4 text-3xl sm:text-4xl font-extrabold text-[var(--text-primary)] tracking-tight">
@@ -106,7 +106,7 @@ export default function InterviewQuestionsPage() {
           <ol className="space-y-3">
             {company.interviewProcess.map((step, i) => (
               <li key={i} className="flex items-start gap-3">
-                <span className="flex-shrink-0 w-7 h-7 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold flex items-center justify-center">
+                <span className="flex-shrink-0 w-7 h-7 rounded-full bg-[rgba(45,140,255,0.08)] text-[var(--accent)] text-xs font-bold flex items-center justify-center">
                   {i + 1}
                 </span>
                 <span className="text-[var(--text-secondary)] pt-0.5">{step}</span>
@@ -133,7 +133,7 @@ export default function InterviewQuestionsPage() {
                     <div className="absolute inset-0 backdrop-blur-sm bg-[var(--bg-surface)]/60 rounded-xl z-10 flex items-center justify-center">
                       <Link
                         to="/signup"
-                        className="px-5 py-2.5 bg-emerald-600 text-white text-sm font-semibold rounded-lg hover:bg-emerald-700 transition-colors shadow-sm"
+                        className="px-5 py-2.5 bg-[var(--accent)] text-white text-sm font-semibold rounded-lg hover:bg-[var(--accent-hover)] transition-colors shadow-sm"
                       >
                         Sign up to see all questions
                       </Link>
@@ -160,7 +160,7 @@ export default function InterviewQuestionsPage() {
           <div className="grid gap-3 sm:grid-cols-3">
             {company.tips.map((tip, i) => (
               <div key={i} className="bg-[var(--bg-surface)] border-0 rounded-xl p-5">
-                <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 text-sm font-bold mb-3">
+                <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[rgba(45,140,255,0.08)] text-[var(--accent)] text-sm font-bold mb-3">
                   {i + 1}
                 </span>
                 <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{tip}</p>
@@ -179,7 +179,7 @@ export default function InterviewQuestionsPage() {
           </p>
           <Link
             to="/signup"
-            className="mt-5 inline-flex items-center px-6 py-3 bg-emerald-600 text-white font-semibold rounded-lg hover:bg-emerald-700 transition-colors shadow-sm"
+            className="mt-5 inline-flex items-center px-6 py-3 bg-[var(--accent)] text-white font-semibold rounded-lg hover:bg-[var(--accent-hover)] transition-colors shadow-sm"
           >
             Get started free
           </Link>

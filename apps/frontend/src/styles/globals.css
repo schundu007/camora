@@ -37,6 +37,25 @@
     --danger: #EF4444;
     --info: #2D8CFF;
 
+    /* Difficulty (unified across all pages) */
+    --easy: #10B981;
+    --easy-bg: rgba(16,185,129,0.08);
+    --easy-border: rgba(16,185,129,0.2);
+    --medium: #F59E0B;
+    --medium-bg: rgba(245,158,11,0.08);
+    --medium-border: rgba(245,158,11,0.2);
+    --hard: #EF4444;
+    --hard-bg: rgba(239,68,68,0.08);
+    --hard-border: rgba(239,68,68,0.2);
+
+    /* Category (minimal — blue shades only) */
+    --cat-primary: #2D8CFF;
+    --cat-primary-bg: rgba(45,140,255,0.08);
+    --cat-secondary: #6366F1;
+    --cat-secondary-bg: rgba(99,102,241,0.08);
+    --cat-tertiary: #06B6D4;
+    --cat-tertiary-bg: rgba(6,182,212,0.08);
+
     /* Fonts — Camora custom (Clash Display + Satoshi) */
     --font-sans: 'Satoshi', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     --font-display: 'Clash Display', 'Satoshi', sans-serif;
@@ -111,7 +130,7 @@
     @apply antialiased scroll-smooth;
     overflow-x: hidden;
     width: 100%;
-    color-scheme: dark;
+    color-scheme: light;
     -webkit-tap-highlight-color: transparent;
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;

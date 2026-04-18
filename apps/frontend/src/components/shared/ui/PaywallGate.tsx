@@ -39,7 +39,7 @@ export function PaywallGate({ children, requiredPlan = 'any_paid', feature = 'th
   if (loading) {
     return (
       <div className="h-screen flex items-center justify-center">
-        <div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-6 h-6 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -56,7 +56,7 @@ export function PaywallGate({ children, requiredPlan = 'any_paid', feature = 'th
   return (
     <div className="flex-1 flex items-center justify-center p-8">
       <div className="max-w-md text-center">
-        <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center">
+        <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-[var(--accent)] flex items-center justify-center">
           <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
           </svg>
@@ -68,7 +68,7 @@ export function PaywallGate({ children, requiredPlan = 'any_paid', feature = 'th
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link
             to="/pricing"
-            className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold text-sm rounded-xl hover:from-emerald-600 hover:to-teal-600 shadow-lg shadow-emerald-500/25 transition-all"
+            className="px-6 py-3 bg-[var(--accent)] text-white font-bold text-sm rounded-xl hover:bg-[var(--accent-hover)] shadow-lg shadow-[rgba(45,140,255,0.25)] transition-all"
           >
             View Plans
           </Link>

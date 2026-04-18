@@ -105,7 +105,7 @@ export default function ShellSidebar() {
                   onClick={closeSidebar}
                   className={`px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-all ${
                     location.pathname.startsWith(link.href)
-                      ? 'bg-emerald-50 text-emerald-700'
+                      ? 'bg-[rgba(45,140,255,0.08)] text-[var(--accent)]'
                       : 'bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)]'
                   }`}
                 >
@@ -130,7 +130,7 @@ export default function ShellSidebar() {
                 isCollapsed ? 'justify-center p-2.5' : 'gap-3 px-3 py-2.5'
               } ${
                 isActive
-                  ? `text-emerald-700 font-semibold bg-emerald-50 ${isCollapsed ? '' : 'border-l-2 border-[var(--accent)]'}`
+                  ? `text-[var(--accent)] font-semibold bg-[rgba(45,140,255,0.08)] ${isCollapsed ? '' : 'border-l-2 border-[var(--accent)]'}`
                   : `text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] font-medium ${isCollapsed ? '' : 'border-l-2 border-transparent'}`
               }`}
             >
@@ -156,7 +156,7 @@ export default function ShellSidebar() {
                 isCollapsed ? 'justify-center p-2.5' : 'gap-3 px-3 py-2.5'
               } ${
                 isActive
-                  ? `text-emerald-700 font-semibold bg-emerald-50 ${isCollapsed ? '' : 'border-l-2 border-[var(--accent)]'}`
+                  ? `text-[var(--accent)] font-semibold bg-[rgba(45,140,255,0.08)] ${isCollapsed ? '' : 'border-l-2 border-[var(--accent)]'}`
                   : `text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] font-medium ${isCollapsed ? '' : 'border-l-2 border-transparent'}`
               }`}
             >
@@ -235,7 +235,7 @@ export default function ShellSidebar() {
           to="/pricing"
           onClick={() => { if (isMobile) closeSidebar(); }}
           title={isCollapsed ? 'Upgrade' : undefined}
-          className={`w-full flex items-center rounded-lg text-[var(--accent)] hover:bg-emerald-50 transition-all font-medium ${
+          className={`w-full flex items-center rounded-lg text-[var(--accent)] hover:bg-[rgba(45,140,255,0.08)] transition-all font-medium ${
             isCollapsed ? 'justify-center p-2.5' : 'gap-3 px-3 py-2 text-[13px]'
           }`}
         >

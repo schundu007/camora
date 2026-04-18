@@ -158,9 +158,9 @@ function getDailyCategory(challenge) {
 }
 
 function scoreColor(s) {
-  if (s >= 70) return '#2D8CFF';
-  if (s >= 40) return '#d97706';
-  return '#0B5CFF';
+  if (s >= 70) return 'var(--accent)';
+  if (s >= 40) return 'var(--warning)';
+  return 'var(--danger)';
 }
 
 function scoreBg(s) {
@@ -170,9 +170,9 @@ function scoreBg(s) {
 }
 
 function diffColor(d) {
-  if (d === 'easy') return { bg: 'rgba(5,150,105,0.12)', text: '#2D8CFF' };
-  if (d === 'medium') return { bg: 'rgba(217,119,6,0.12)', text: '#d97706' };
-  return { bg: 'rgba(220,38,38,0.12)', text: '#0B5CFF' };
+  if (d === 'easy') return { bg: 'rgba(5,150,105,0.12)', text: 'var(--accent)' };
+  if (d === 'medium') return { bg: 'rgba(217,119,6,0.12)', text: 'var(--warning)' };
+  return { bg: 'rgba(220,38,38,0.12)', text: 'var(--danger)' };
 }
 
 function catLabel(cat) {
@@ -221,10 +221,10 @@ function RadarChart({ values, labels, size = 200 }) {
         return <line key={i} x1={cx} y1={cy} x2={x} y2={y} stroke="var(--border)" strokeWidth={1} />;
       })}
       {/* Data shape */}
-      <path d={dataPath} fill="rgba(45,140,255,0.15)" stroke="#2D8CFF" strokeWidth={2} />
+      <path d={dataPath} fill="rgba(45,140,255,0.15)" stroke="var(--accent)" strokeWidth={2} />
       {/* Data dots */}
       {dataPoints.map((p, i) => (
-        <circle key={i} cx={p[0]} cy={p[1]} r={4} fill="#2D8CFF" stroke="#fff" strokeWidth={2} />
+        <circle key={i} cx={p[0]} cy={p[1]} r={4} fill="var(--accent)" stroke="#fff" strokeWidth={2} />
       ))}
       {/* Labels */}
       {labels.map((label, i) => {
@@ -266,7 +266,7 @@ function ScoreRing({ value, size = 140, strokeW = 10, animated = false }) {
 
 /* ══════════════════════════════ Sparkline ══════════════════════════════ */
 
-function Sparkline({ data, width = 100, height = 28, color = '#2D8CFF' }) {
+function Sparkline({ data, width = 100, height = 28, color = 'var(--accent)' }) {
   if (!data || data.length < 2) return null;
   const max = Math.max(...data, 1);
   const min = Math.min(...data, 0);
@@ -606,7 +606,7 @@ export default function PracticePage() {
                 <div style={{ position: 'relative', width: 50, height: 50, shrink: 0 }}>
                   <svg width={50} height={50} style={{ transform: 'rotate(-90deg)' }}>
                     <circle cx={25} cy={25} r={20} fill="none" stroke="var(--bg-elevated)" strokeWidth={5} />
-                    <circle cx={25} cy={25} r={20} fill="none" stroke={readiness >= 70 ? '#10b981' : readiness >= 40 ? '#f59e0b' : '#ef4444'} strokeWidth={5} strokeDasharray={126} strokeDashoffset={126 - (readiness / 100) * 126} strokeLinecap="round" />
+                    <circle cx={25} cy={25} r={20} fill="none" stroke={readiness >= 70 ? 'var(--success)' : readiness >= 40 ? 'var(--warning)' : 'var(--danger)'} strokeWidth={5} strokeDasharray={126} strokeDashoffset={126 - (readiness / 100) * 126} strokeLinecap="round" />
                   </svg>
                   <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <span className="practice-display" style={{ fontSize: 14, fontWeight: 800, color: 'var(--text-primary)' }}>{readiness}</span>
@@ -627,12 +627,12 @@ export default function PracticePage() {
                 {/* Category bars inline */}
                 {CATEGORIES.map(cat => {
                   const s = getCategoryScore(stats, cat);
-                  const colors = { coding: '#2D8CFF', 'system-design': '#06b6d4', behavioral: '#f59e0b' };
+                  const colors = { coding: 'var(--accent)', 'system-design': 'var(--info)', behavioral: 'var(--warning)' };
                   return (
                     <div key={cat} style={{ flex: 1, minWidth: 80 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, marginBottom: 3 }}>
                         <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>{catLabel(cat)}</span>
-                        <span className="practice-mono" style={{ fontWeight: 700, color: s >= 70 ? '#10b981' : '#94a3b8' }}>{s}%</span>
+                        <span className="practice-mono" style={{ fontWeight: 700, color: s >= 70 ? 'var(--success)' : '#94a3b8' }}>{s}%</span>
                       </div>
                       <div style={{ height: 4, borderRadius: 99, background: 'var(--bg-elevated)', overflow: 'hidden' }}>
                         <div style={{ height: '100%', borderRadius: 99, background: colors[cat], width: `${Math.max(s, 2)}%`, opacity: s > 0 ? 1 : 0.2 }} />
@@ -654,12 +654,12 @@ export default function PracticePage() {
                     <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10, display: 'block' }}>Mode</label>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10 }}>
                       {MODES.map(m => (
-                        <button key={m.id} onClick={() => setMode(m.id)} style={{ padding: '16px 18px', borderRadius: 14, border: mode === m.id ? '2px solid #2D8CFF' : '1px solid var(--border)', background: mode === m.id ? 'var(--accent-subtle)' : 'var(--bg-surface)', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>
+                        <button key={m.id} onClick={() => setMode(m.id)} style={{ padding: '16px 18px', borderRadius: 14, border: mode === m.id ? '2px solid var(--accent)' : '1px solid var(--border)', background: mode === m.id ? 'var(--accent-subtle)' : 'var(--bg-surface)', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                            <div style={{ width: 28, height: 28, borderRadius: 8, background: mode === m.id ? '#2D8CFF' : 'var(--bg-elevated)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <div style={{ width: 28, height: 28, borderRadius: 8, background: mode === m.id ? 'var(--accent)' : 'var(--bg-elevated)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                               <Icon name={m.icon} size={14} style={{ color: mode === m.id ? '#fff' : '#94a3b8' }} />
                             </div>
-                            <span style={{ fontSize: 14, fontWeight: 700, color: mode === m.id ? '#0B5CFF' : 'var(--text-primary)' }}>{m.label}</span>
+                            <span style={{ fontSize: 14, fontWeight: 700, color: mode === m.id ? 'var(--accent)' : 'var(--text-primary)' }}>{m.label}</span>
                           </div>
                           <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '0 0 6px', lineHeight: 1.5 }}>{m.desc}</p>
                           <span className="practice-mono" style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>{formatTime(m.time)} / {m.questions}q</span>
@@ -674,7 +674,7 @@ export default function PracticePage() {
                       <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10, display: 'block' }}>Category</label>
                       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                         {CATEGORIES.map(c => (
-                          <button key={c} onClick={() => setCategory(c)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 18px', borderRadius: 10, border: category === c ? '2px solid #2D8CFF' : '1px solid var(--border)', background: category === c ? 'var(--accent-subtle)' : 'var(--bg-surface)', color: category === c ? '#0B5CFF' : 'var(--text-secondary)', fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s' }}>
+                          <button key={c} onClick={() => setCategory(c)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 18px', borderRadius: 10, border: category === c ? '2px solid var(--accent)' : '1px solid var(--border)', background: category === c ? 'var(--accent-subtle)' : 'var(--bg-surface)', color: category === c ? 'var(--accent)' : 'var(--text-secondary)', fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s' }}>
                             <Icon name={catIcon(c)} size={14} />
                             {catLabel(c)}
                           </button>
@@ -710,7 +710,7 @@ export default function PracticePage() {
 
                 {/* CTA Footer */}
                 <div style={{ padding: '16px 24px', background: 'var(--bg-elevated)', borderTop: '1px solid var(--border)', textAlign: 'center' }}>
-                  <button onClick={() => startChallenge()} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '13px 36px', background: 'linear-gradient(135deg, #2D8CFF, #2D8CFF)', color: '#fff', fontSize: 15, fontWeight: 700, borderRadius: 12, border: '1px solid var(--border)', cursor: 'pointer', boxShadow: 'none', transition: 'transform 0.15s, box-shadow 0.15s' }}>
+                  <button onClick={() => startChallenge()} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '13px 36px', background: 'linear-gradient(135deg, var(--accent), var(--accent))', color: '#fff', fontSize: 15, fontWeight: 700, borderRadius: 12, border: '1px solid var(--border)', cursor: 'pointer', boxShadow: 'none', transition: 'transform 0.15s, box-shadow 0.15s' }}>
                     <Icon name="play" size={16} style={{ color: '#fff' }} />
                     Start Challenge
                   </button>
@@ -736,7 +736,7 @@ export default function PracticePage() {
                             setStats(getStats());
                           }
                         }}
-                        style={{ padding: '5px 12px', fontSize: 11, fontWeight: 600, color: '#ef4444', background: 'rgba(220,38,38,0.1)', border: '1px solid rgba(220,38,38,0.25)', borderRadius: 8, cursor: 'pointer', transition: 'all 0.15s' }}
+                        style={{ padding: '5px 12px', fontSize: 11, fontWeight: 600, color: 'var(--danger)', background: 'rgba(220,38,38,0.1)', border: '1px solid rgba(220,38,38,0.25)', borderRadius: 8, cursor: 'pointer', transition: 'all 0.15s' }}
                       >
                         Reset History
                       </button>
@@ -799,7 +799,7 @@ export default function PracticePage() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     {questions.map((_, qi) => (
-                      <div key={qi} style={{ width: qi === currentIdx ? 18 : 8, height: 8, borderRadius: 99, background: qi < currentIdx ? '#2D8CFF' : qi === currentIdx ? '#2D8CFF' : 'var(--border)', transition: 'all 0.3s' }} />
+                      <div key={qi} style={{ width: qi === currentIdx ? 18 : 8, height: 8, borderRadius: 99, background: qi < currentIdx ? 'var(--accent)' : qi === currentIdx ? 'var(--accent)' : 'var(--border)', transition: 'all 0.3s' }} />
                     ))}
                   </div>
                   <InterviewTimer
@@ -827,7 +827,7 @@ export default function PracticePage() {
                     ) : null;
                   })}
                   {questions[currentIdx].topics?.slice(0, 2).map(t => (
-                    <span key={t} style={{ fontSize: 10, fontWeight: 500, padding: '2px 6px', borderRadius: 99, background: 'rgba(124,58,237,0.12)', color: '#2D8CFF' }}>{t}</span>
+                    <span key={t} style={{ fontSize: 10, fontWeight: 500, padding: '2px 6px', borderRadius: 99, background: 'rgba(124,58,237,0.12)', color: 'var(--accent)' }}>{t}</span>
                   ))}
                 </div>
                 <h2 className="practice-display" style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 6px' }}>
@@ -859,12 +859,12 @@ export default function PracticePage() {
               {category === 'system-design' && !inlineEval && (() => {
                 const SD_SECTIONS = [
                   { label: 'Functional Req.', icon: 'clipboard', color: '#3b82f6', placeholder: 'List core functional requirements...' },
-                  { label: 'Non-Functional Req.', icon: 'shield', color: '#2D8CFF', placeholder: 'Latency, availability, consistency, scale...' },
-                  { label: 'Components', icon: 'layers', color: '#10b981', placeholder: 'Key services, databases, caches...' },
+                  { label: 'Non-Functional Req.', icon: 'shield', color: 'var(--accent)', placeholder: 'Latency, availability, consistency, scale...' },
+                  { label: 'Components', icon: 'layers', color: 'var(--success)', placeholder: 'Key services, databases, caches...' },
                   { label: 'Data Flow', icon: 'gitBranch', color: '#06b6d4', placeholder: 'Request path, data pipeline...' },
                   { label: 'Layered Design', icon: 'server', color: '#f59e0b', placeholder: 'API layer, business logic, storage...' },
                   { label: 'Scalability', icon: 'trendingUp', color: '#ec4899', placeholder: 'Sharding, replication, CDN, load balancing...' },
-                  { label: 'Trade-offs', icon: 'scale', color: '#ef4444', placeholder: 'CAP, consistency vs availability...' },
+                  { label: 'Trade-offs', icon: 'scale', color: 'var(--danger)', placeholder: 'CAP, consistency vs availability...' },
                 ];
                 const parts = (answers[currentIdx] || '').split('---SECTION---');
 
@@ -1002,7 +1002,7 @@ export default function PracticePage() {
                   <div style={{ marginBottom: 8 }}>
                     {/* Auto-generate button */}
                     <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
-                      <button onClick={autoGenerate} disabled={sdGenerating} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', fontSize: 12, fontWeight: 600, color: sdGenerating ? 'var(--text-muted)' : '#2D8CFF', background: sdGenerating ? 'var(--bg-elevated)' : 'rgba(139,92,246,0.1)', border: `1px solid ${sdGenerating ? 'var(--border)' : 'rgba(139,92,246,0.25)'}`, borderRadius: 8, cursor: sdGenerating ? 'wait' : 'pointer' }}>
+                      <button onClick={autoGenerate} disabled={sdGenerating} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', fontSize: 12, fontWeight: 600, color: sdGenerating ? 'var(--text-muted)' : 'var(--accent)', background: sdGenerating ? 'var(--bg-elevated)' : 'rgba(139,92,246,0.1)', border: `1px solid ${sdGenerating ? 'var(--border)' : 'rgba(139,92,246,0.25)'}`, borderRadius: 8, cursor: sdGenerating ? 'wait' : 'pointer' }}>
                         {sdGenerating ? (
                           <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ animation: 'spin 1s linear infinite' }}><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Generating...</>
                         ) : (
@@ -1069,7 +1069,7 @@ export default function PracticePage() {
                   {['Situation', 'Task', 'Action', 'Result'].map((section, si) => {
                     const parts = (answers[currentIdx] || '').split('---STAR---');
                     const val = parts[si] || '';
-                    const colors = { Situation: '#3b82f6', Task: '#2D8CFF', Action: '#10b981', Result: '#f59e0b' };
+                    const colors = { Situation: '#3b82f6', Task: 'var(--accent)', Action: 'var(--success)', Result: 'var(--warning)' };
                     return (
                       <div key={section}>
                         <label style={{ fontSize: 11, fontWeight: 600, color: colors[section], marginBottom: 4, display: 'flex', alignItems: 'center', gap: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
@@ -1127,8 +1127,8 @@ export default function PracticePage() {
                   {/* Model answer expandable */}
                   {inlineEval.modelAnswer && (
                     <div style={{ marginTop: 12 }}>
-                      <button onClick={() => setShowModelAnswer(showModelAnswer ? null : currentIdx)} style={{ fontSize: 12, fontWeight: 600, color: '#0B5CFF', background: 'none', border: '1px solid var(--border)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <Icon name={showModelAnswer === currentIdx ? 'chevronUp' : 'chevronDown'} size={14} style={{ color: '#0B5CFF' }} />
+                      <button onClick={() => setShowModelAnswer(showModelAnswer ? null : currentIdx)} style={{ fontSize: 12, fontWeight: 600, color: 'var(--accent)', background: 'none', border: '1px solid var(--border)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <Icon name={showModelAnswer === currentIdx ? 'chevronUp' : 'chevronDown'} size={14} style={{ color: 'var(--accent)' }} />
                         {showModelAnswer === currentIdx ? 'Hide' : 'Show'} Model Answer
                       </button>
                       {showModelAnswer === currentIdx && (
@@ -1141,7 +1141,7 @@ export default function PracticePage() {
 
                   {/* Next button */}
                   <div style={{ marginTop: 16 }}>
-                    <button onClick={moveToNext} style={{ padding: '10px 24px', background: 'linear-gradient(135deg, #2D8CFF, #2D8CFF)', color: '#fff', fontSize: 14, fontWeight: 600, borderRadius: 10, border: '1px solid var(--border)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <button onClick={moveToNext} style={{ padding: '10px 24px', background: 'linear-gradient(135deg, var(--accent), var(--accent))', color: '#fff', fontSize: 14, fontWeight: 600, borderRadius: 10, border: '1px solid var(--border)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
                       {currentIdx < questions.length - 1 ? (
                         <>Next Question <Icon name="arrowRight" size={14} style={{ color: '#fff' }} /></>
                       ) : (
@@ -1155,7 +1155,7 @@ export default function PracticePage() {
               {/* Controls (only when not showing inline eval) */}
               {!inlineEval && (
                 <div style={{ display: 'flex', gap: 10, marginTop: 12, flexWrap: 'wrap' }}>
-                  <button onClick={submitAnswer} disabled={evaluating} style={{ padding: '10px 24px', background: 'linear-gradient(135deg, #2D8CFF, #2D8CFF)', color: '#fff', fontSize: 14, fontWeight: 600, borderRadius: 10, border: '1px solid var(--border)', cursor: evaluating ? 'wait' : 'pointer', opacity: evaluating ? 0.7 : 1, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <button onClick={submitAnswer} disabled={evaluating} style={{ padding: '10px 24px', background: 'linear-gradient(135deg, var(--accent), var(--accent))', color: '#fff', fontSize: 14, fontWeight: 600, borderRadius: 10, border: '1px solid var(--border)', cursor: evaluating ? 'wait' : 'pointer', opacity: evaluating ? 0.7 : 1, display: 'flex', alignItems: 'center', gap: 6 }}>
                     {evaluating ? (
                       <><Icon name="loader" size={14} style={{ color: '#fff', animation: 'spin 1s linear infinite' }} /> Evaluating...</>
                     ) : 'Submit Answer'}
@@ -1163,7 +1163,7 @@ export default function PracticePage() {
                   <button onClick={skipQuestion} disabled={evaluating} style={{ padding: '10px 20px', background: 'var(--bg-elevated)', color: 'var(--text-secondary)', fontSize: 13, fontWeight: 500, borderRadius: 10, border: '1px solid var(--border)', cursor: 'pointer' }}>
                     Skip
                   </button>
-                  <button onClick={() => endChallenge()} disabled={evaluating} style={{ padding: '10px 20px', background: 'rgba(220,38,38,0.1)', color: '#ef4444', fontSize: 13, fontWeight: 500, borderRadius: 10, border: '1px solid rgba(220,38,38,0.25)', cursor: evaluating ? 'not-allowed' : 'pointer', marginLeft: 'auto', opacity: evaluating ? 0.5 : 1 }}>
+                  <button onClick={() => endChallenge()} disabled={evaluating} style={{ padding: '10px 20px', background: 'rgba(220,38,38,0.1)', color: 'var(--danger)', fontSize: 13, fontWeight: 500, borderRadius: 10, border: '1px solid rgba(220,38,38,0.25)', cursor: evaluating ? 'not-allowed' : 'pointer', marginLeft: 'auto', opacity: evaluating ? 0.5 : 1 }}>
                     End Session
                   </button>
                 </div>
@@ -1176,7 +1176,7 @@ export default function PracticePage() {
             const passed = scores.filter(s => s >= 60).length;
             const total = scores.length;
             const grade = finalAvgScore >= 90 ? 'A+' : finalAvgScore >= 80 ? 'A' : finalAvgScore >= 70 ? 'B' : finalAvgScore >= 60 ? 'C' : finalAvgScore >= 40 ? 'D' : 'F';
-            const gradeColor = finalAvgScore >= 70 ? '#10b981' : finalAvgScore >= 50 ? '#f59e0b' : '#ef4444';
+            const gradeColor = finalAvgScore >= 70 ? 'var(--success)' : finalAvgScore >= 50 ? 'var(--warning)' : 'var(--danger)';
             return (
             <div>
               {/* ── Hero Result Card ── */}
@@ -1223,7 +1223,7 @@ export default function PracticePage() {
                   <button onClick={() => { setPhase('setup'); setStats(getStats()); setInlineEval(null); }} style={{ padding: '11px 22px', background: 'rgba(255,255,255,0.06)', color: '#e2e8f0', fontSize: 13, fontWeight: 600, borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', backdropFilter: 'blur(8px)', transition: 'all 0.2s' }}>
                     Back to Dashboard
                   </button>
-                  <button onClick={startChallenge} style={{ padding: '11px 22px', background: 'linear-gradient(135deg, #2D8CFF, #2D8CFF)', color: '#fff', fontSize: 13, fontWeight: 600, borderRadius: 10, border: '1px solid var(--border)', cursor: 'pointer', boxShadow: 'none', transition: 'all 0.2s' }}>
+                  <button onClick={startChallenge} style={{ padding: '11px 22px', background: 'linear-gradient(135deg, var(--accent), var(--accent))', color: '#fff', fontSize: 13, fontWeight: 600, borderRadius: 10, border: '1px solid var(--border)', cursor: 'pointer', boxShadow: 'none', transition: 'all 0.2s' }}>
                     Try Again
                   </button>
                   <button onClick={() => { setDifficulty('medium'); setPhase('setup'); setStats(getStats()); }} style={{ padding: '11px 22px', background: 'rgba(139,92,246,0.15)', color: '#c4b5fd', fontSize: 13, fontWeight: 600, borderRadius: 10, border: '1px solid rgba(139,92,246,0.2)', cursor: 'pointer', transition: 'all 0.2s' }}>
@@ -1237,7 +1237,7 @@ export default function PracticePage() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12, marginBottom: 20 }}>
                   {DIMENSION_KEYS.map((k, i) => {
                     const val = resultDimensions[k] || 0;
-                    const dimColor = val >= 70 ? '#10b981' : val >= 50 ? '#f59e0b' : '#ef4444';
+                    const dimColor = val >= 70 ? 'var(--success)' : val >= 50 ? 'var(--warning)' : 'var(--danger)';
                     return (
                       <div key={k} style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 14, padding: '16px 18px', boxShadow: 'none' }}>
                         <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>{DIMENSION_LABELS[i]}</div>
@@ -1287,7 +1287,7 @@ export default function PracticePage() {
                     <div key={i} style={{ borderBottom: i < questions.length - 1 ? '1px solid var(--border)' : 'none' }}>
                       <button onClick={() => setExpandedHistory(isExpanded ? null : `result-${i}`)} style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 24px', background: isExpanded ? 'var(--bg-elevated)' : 'transparent', border: '1px solid var(--border)', cursor: 'pointer', textAlign: 'left', transition: 'background 0.15s' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                          <div style={{ width: 26, height: 26, borderRadius: 8, background: pass ? 'rgba(5,150,105,0.12)' : 'rgba(220,38,38,0.12)', color: pass ? '#2D8CFF' : '#0B5CFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, flexShrink: 0 }}>{i + 1}</div>
+                          <div style={{ width: 26, height: 26, borderRadius: 8, background: pass ? 'rgba(5,150,105,0.12)' : 'rgba(220,38,38,0.12)', color: pass ? 'var(--accent)' : 'var(--danger)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, flexShrink: 0 }}>{i + 1}</div>
                           <div>
                             <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>{q.q}</span>
                             {q.difficulty && <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', marginLeft: 8, textTransform: 'capitalize' }}>{q.difficulty}</span>}
@@ -1314,8 +1314,8 @@ export default function PracticePage() {
                           {Object.keys(dims).length > 0 && <DimensionBars dimensions={dims} compact />}
                           {ma.modelAnswer && (
                             <div style={{ marginTop: 12 }}>
-                              <button onClick={() => setShowModelAnswer(showModelAnswer === `r-${i}` ? null : `r-${i}`)} style={{ fontSize: 12, fontWeight: 600, color: '#0B5CFF', background: 'none', border: '1px solid var(--border)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
-                                <Icon name={showModelAnswer === `r-${i}` ? 'chevronUp' : 'chevronDown'} size={12} style={{ color: '#0B5CFF' }} />
+                              <button onClick={() => setShowModelAnswer(showModelAnswer === `r-${i}` ? null : `r-${i}`)} style={{ fontSize: 12, fontWeight: 600, color: 'var(--accent)', background: 'none', border: '1px solid var(--border)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+                                <Icon name={showModelAnswer === `r-${i}` ? 'chevronUp' : 'chevronDown'} size={12} style={{ color: 'var(--accent)' }} />
                                 {showModelAnswer === `r-${i}` ? 'Hide' : 'Show'} Model Answer
                               </button>
                               {showModelAnswer === `r-${i}` && (
@@ -1343,7 +1343,7 @@ export default function PracticePage() {
         .practice-root { -webkit-font-smoothing: antialiased; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
         .practice-display { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
         .practice-mono { font-family: 'IBM Plex Mono', monospace; }
-        textarea:focus { border-color: #2D8CFF !important; box-shadow: 0 0 0 3px rgba(45,140,255,0.1); }
+        textarea:focus { border-color: var(--accent) !important; box-shadow: 0 0 0 3px rgba(45,140,255,0.1); }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
       `}</style>
     </div>

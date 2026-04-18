@@ -677,7 +677,7 @@ export default function TopicDetail({
               </div>
               <div className="p-3">
                 <div className="text-[var(--text-secondary)] text-sm landing-body leading-relaxed">
-                  <FormattedContent content={topicDetails.introduction} color="emerald" />
+                  <FormattedContent content={topicDetails.introduction} color="blue" />
                 </div>
               </div>
             </div>
@@ -720,7 +720,7 @@ export default function TopicDetail({
                       </div>
                       {i === 0 && qa.answer && (
                         <div className="mt-2 ml-7 text-sm text-[var(--text-secondary)] leading-relaxed">
-                          <FormattedContent content={qa.answer} color="emerald" />
+                          <FormattedContent content={qa.answer} color="blue" />
                         </div>
                       )}
                     </div>
@@ -767,7 +767,7 @@ export default function TopicDetail({
               onChange={(e) => setAiQuestion(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleAskAI()}
               placeholder={`Ask anything about ${topicDetails.title}...`}
-              className="flex-1 px-3 py-2.5 rounded-lg text-sm text-[var(--text-primary)] placeholder-gray-500 focus:outline-none border border-[var(--border)] bg-[var(--bg-surface)] focus:ring-2 focus:ring-emerald-500/20 focus:border-[var(--accent)]/50 landing-body"
+              className="flex-1 px-3 py-2.5 rounded-lg text-sm text-[var(--text-primary)] placeholder-gray-500 focus:outline-none border border-[var(--border)] bg-[var(--bg-surface)] focus:ring-2 focus:ring-[var(--accent)]/20 focus:border-[var(--accent)]/50 landing-body"
             />
             <button
               onClick={() => handleAskAI()}
@@ -1137,7 +1137,7 @@ export default function TopicDetail({
               </div>
               <div className="p-4">
                 <div className="text-[15px] leading-relaxed text-[var(--text-secondary)] landing-body">
-                  <FormattedContent content={topicDetails.introduction} color="emerald" />
+                  <FormattedContent content={topicDetails.introduction} color="blue" />
                 </div>
                 {/* Key Insight callout */}
                 {(() => {
@@ -1162,9 +1162,9 @@ export default function TopicDetail({
           {topicDetails.visualizations && topicDetails.visualizations.length > 0 && (
             <div className="rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)]">
               <div className="px-4 py-2.5 border-b border-[var(--border)] flex items-center gap-2">
-                <Icon name="image" size={14} className="text-indigo-500" />
+                <Icon name="image" size={14} className="text-[var(--accent)]" />
                 <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">Visual Explanation</h3>
-                <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-indigo-200 text-indigo-500 bg-indigo-50">{topicDetails.visualizations.length}</span>
+                <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[rgba(45,140,255,0.2)] text-[var(--accent)] bg-[rgba(45,140,255,0.08)]">{topicDetails.visualizations.length}</span>
               </div>
               <div className={`p-4 grid gap-4 ${topicDetails.visualizations.length > 1 ? 'md:grid-cols-2' : ''}`}>
                 {topicDetails.visualizations.map((viz, vi) => (
@@ -1387,7 +1387,7 @@ export default function TopicDetail({
                   {topicDetails.theoryQuestions.map((q, i) => {
                     const questionKey = `${selectedTopic}-${i}`;
                     const isExpanded = expandedTheoryQuestions[questionKey];
-                    const borderColor = q.difficulty === 'Easy' ? 'border-l-emerald-400' : q.difficulty === 'Medium' ? 'border-l-amber-400' : q.difficulty === 'Hard' ? 'border-l-red-400' : 'border-l-blue-400';
+                    const borderColor = q.difficulty === 'Easy' ? 'border-l-green-400' : q.difficulty === 'Medium' ? 'border-l-amber-400' : q.difficulty === 'Hard' ? 'border-l-red-400' : 'border-l-blue-400';
                     return (
                       <div key={i} className={`rounded-lg overflow-hidden bg-[var(--bg-surface)] border border-[var(--border)] hover:border-[var(--border-hover,var(--border))] transition-all ${isExpanded ? `border-l-[3px] ${borderColor}` : ''}`}>
                         <button
@@ -1575,14 +1575,14 @@ export default function TopicDetail({
               {(topicDetails.introduction || (topicDetails.concepts && !topicDetails.introduction)) && (
                 <div className={`grid gap-2 ${topicDetails.introduction && topicDetails.concepts ? '' : 'grid-cols-1'}`}>
                   {topicDetails.introduction && (
-                    <div id="overview" className="rounded-2xl overflow-hidden scroll-mt-24 border border-[var(--border)]" style={{ background: 'linear-gradient(180deg, rgba(16,185,129,0.08) 0%, var(--bg-surface) 100%)' }}>
+                    <div id="overview" className="rounded-2xl overflow-hidden scroll-mt-24 border border-[var(--border)]" style={{ background: 'linear-gradient(180deg, rgba(45,140,255,0.08) 0%, var(--bg-surface) 100%)' }}>
                       <div className="px-4 py-2 border-b border-[var(--border)] bg-[var(--accent)]/10/60 flex items-center gap-2">
                         <Icon name="book" size={14} className="text-[var(--accent)]" />
-                        <h2 className="text-sm font-bold text-emerald-900 landing-display">Introduction</h2>
+                        <h2 className="text-sm font-bold text-[var(--text-primary)] landing-display">Introduction</h2>
                       </div>
                       <div className="p-5">
                         <div className="text-[var(--text-secondary)] text-[15px] leading-relaxed landing-body">
-                          <FormattedContent content={topicDetails.introduction} color="emerald" />
+                          <FormattedContent content={topicDetails.introduction} color="blue" />
                         </div>
                         {/* Key challenge callout */}
                         {topicDetails.introduction && (
@@ -1762,9 +1762,9 @@ export default function TopicDetail({
                             <svg className={`w-4 h-4 text-[var(--text-muted)] transition-transform flex-shrink-0 ${isOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
                           </button>
                           {isOpen && (
-                            <div className="px-4 pb-4 pt-1 border-t border-[var(--border)]" style={{ borderLeft: '3px solid #10b981' }}>
+                            <div className="px-4 pb-4 pt-1 border-t border-[var(--border)]" style={{ borderLeft: '3px solid #2D8CFF' }}>
                               <div className="pl-9 text-[var(--text-secondary)] text-sm leading-relaxed landing-body">
-                                <FormattedContent content={q.answer} color="emerald" />
+                                <FormattedContent content={q.answer} color="blue" />
                               </div>
                             </div>
                           )}
@@ -2180,18 +2180,18 @@ export default function TopicDetail({
               {/* Architecture Layers */}
               {topicDetails.architectureLayers && (
                 <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)]">
-                  <div className="px-3 py-2 border-b border-[var(--border)] flex items-center gap-2 bg-teal-50">
-                    <Icon name="layers" size={16} className="text-teal-700" />
-                    <h3 className="text-sm font-bold text-teal-900 landing-display">Architecture Layers</h3>
+                  <div className="px-3 py-2 border-b border-[var(--border)] flex items-center gap-2 bg-[rgba(45,140,255,0.08)]">
+                    <Icon name="layers" size={16} className="text-[var(--accent)]" />
+                    <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">Architecture Layers</h3>
                   </div>
                   <div className="p-3 space-y-1.5">
                     {topicDetails.architectureLayers.map((layer, i) => (
                       <div key={i} className="flex items-start gap-3 p-2.5 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)]">
-                        <span className="w-6 h-6 rounded-md bg-teal-100 text-teal-700 flex items-center justify-center text-xs font-bold flex-shrink-0">{i + 1}</span>
+                        <span className="w-6 h-6 rounded-md bg-[rgba(45,140,255,0.08)] text-[var(--accent)] flex items-center justify-center text-xs font-bold flex-shrink-0">{i + 1}</span>
                         <div>
-                          <span className="text-sm font-bold text-teal-800 landing-display">{layer.name}</span>
+                          <span className="text-sm font-bold text-[var(--text-primary)] landing-display">{layer.name}</span>
                           <div className="text-[var(--text-secondary)] text-xs landing-body leading-relaxed mt-0.5">
-                            <FormattedContent content={layer.description} color="teal" />
+                            <FormattedContent content={layer.description} color="blue" />
                           </div>
                         </div>
                       </div>
@@ -2203,16 +2203,16 @@ export default function TopicDetail({
               {/* Deep Dive Topics */}
               {topicDetails.deepDiveTopics && (
                 <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)]">
-                  <div className="px-3 py-2 border-b border-[var(--border)] flex items-center gap-2 bg-sky-50">
-                    <Icon name="search" size={16} className="text-sky-700" />
-                    <h3 className="text-sm font-bold text-sky-900 landing-display">Deep Dive Topics</h3>
+                  <div className="px-3 py-2 border-b border-[var(--border)] flex items-center gap-2 bg-[rgba(45,140,255,0.08)]">
+                    <Icon name="search" size={16} className="text-[var(--accent)]" />
+                    <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">Deep Dive Topics</h3>
                   </div>
                   <div className="p-3 grid grid-cols-1  gap-2">
                     {topicDetails.deepDiveTopics.map((item, i) => (
-                      <div key={i} className="p-3 rounded-lg bg-sky-50/30 border border-sky-100">
-                        <h4 className="text-sm font-bold text-sky-800 mb-1 landing-display">{item.topic}</h4>
+                      <div key={i} className="p-3 rounded-lg bg-[rgba(45,140,255,0.04)] border border-[rgba(45,140,255,0.2)]">
+                        <h4 className="text-sm font-bold text-[var(--text-primary)] mb-1 landing-display">{item.topic}</h4>
                         <div className="text-[var(--text-secondary)] text-xs landing-body leading-relaxed">
-                          <FormattedContent content={item.detail} color="sky" />
+                          <FormattedContent content={item.detail} color="blue" />
                         </div>
                       </div>
                     ))}
@@ -2364,19 +2364,19 @@ export default function TopicDetail({
               {/* Interview Follow-up Questions */}
               {topicDetails.interviewFollowups && (
                 <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)]">
-                  <div className="px-3 py-2 border-b border-[var(--border)] flex items-center gap-2 bg-orange-50">
-                    <Icon name="helpCircle" size={16} className="text-orange-700" />
-                    <h3 className="text-sm font-bold text-orange-900 landing-display">Common Follow-up Questions</h3>
+                  <div className="px-3 py-2 border-b border-[var(--border)] flex items-center gap-2 bg-[rgba(245,158,11,0.08)]">
+                    <Icon name="helpCircle" size={16} className="text-[var(--warning)]" />
+                    <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">Common Follow-up Questions</h3>
                   </div>
                   <div className="p-3 grid grid-cols-1 gap-2">
                     {topicDetails.interviewFollowups.map((item, i) => (
                       <div key={i} className="rounded-lg border border-[var(--border)] overflow-hidden">
-                        <div className="flex items-start gap-2 px-3 py-2 bg-orange-50/30 border-b border-orange-100">
-                          <span className="text-xs font-bold text-orange-700 landing-mono flex-shrink-0">Q{i + 1}</span>
+                        <div className="flex items-start gap-2 px-3 py-2 bg-[rgba(245,158,11,0.04)] border-b border-[rgba(245,158,11,0.2)]">
+                          <span className="text-xs font-bold text-[var(--warning)] landing-mono flex-shrink-0">Q{i + 1}</span>
                           <span className="text-sm font-semibold text-[var(--text-primary)] landing-display">{item.question}</span>
                         </div>
                         <div className="px-3 py-2 pl-7 text-[var(--text-secondary)] text-xs landing-body leading-relaxed">
-                          <FormattedContent content={item.answer} color="orange" />
+                          <FormattedContent content={item.answer} color="blue" />
                         </div>
                       </div>
                     ))}
@@ -2389,7 +2389,7 @@ export default function TopicDetail({
                 <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)]">
                   <div className="px-3 py-2 border-b border-[var(--border)] flex items-center gap-2 bg-[var(--accent)]/10">
                     <Icon name="code" size={16} className="text-[var(--accent)]" />
-                    <h3 className="text-sm font-bold text-emerald-900 landing-display">Implementation Code</h3>
+                    <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">Implementation Code</h3>
                   </div>
                   <div className="p-3 grid grid-cols-1 gap-2">
                     {Object.entries(topicDetails.codeExamples).map(([lang, code], i) => (
@@ -2614,10 +2614,10 @@ export default function TopicDetail({
               {topicDetails.introduction && (() => {
                 const quoteMatch = topicDetails.introduction.match(/^"([^"]+)"\s*(.*)/s);
                 return (
-                  <div id="overview" className="scroll-mt-24 rounded-2xl border border-[var(--border)] overflow-hidden" style={{ background: 'linear-gradient(180deg, rgba(16,185,129,0.06) 0%, var(--bg-surface) 100%)' }}>
+                  <div id="overview" className="scroll-mt-24 rounded-2xl border border-[var(--border)] overflow-hidden" style={{ background: 'linear-gradient(180deg, rgba(45,140,255,0.06) 0%, var(--bg-surface) 100%)' }}>
                     <div className="px-4 py-2 border-b border-[var(--border)] bg-[var(--accent)]/10/60 flex items-center gap-2">
                       <Icon name="book" size={14} className="text-[var(--accent)]" />
-                      <h2 className="text-sm font-bold text-emerald-900 landing-display">Overview</h2>
+                      <h2 className="text-sm font-bold text-[var(--text-primary)] landing-display">Overview</h2>
                     </div>
                     <div className="p-5">
                       {quoteMatch ? (
@@ -2762,7 +2762,7 @@ export default function TopicDetail({
                                 if (sm) {
                                   const kw = sm[1].charAt(0).toUpperCase() + sm[1].slice(1).toLowerCase();
                                   const sc = starColors[kw] || topicDetails.color;
-                                  const starBgs = { Situation: 'rgba(59,130,246,0.08)', Task: 'rgba(139,92,246,0.08)', Action: 'rgba(16,185,129,0.08)', Result: 'rgba(245,158,11,0.08)' };
+                                  const starBgs = { Situation: 'rgba(59,130,246,0.08)', Task: 'rgba(139,92,246,0.08)', Action: 'rgba(45,140,255,0.08)', Result: 'rgba(245,158,11,0.08)' };
                                   const starBorders = { Situation: 'rgba(59,130,246,0.2)', Task: 'rgba(139,92,246,0.2)', Action: 'rgba(16,185,129,0.2)', Result: 'rgba(245,158,11,0.2)' };
                                   const headerRest = (sm[2] || '').replace(/^["\u201C\s\u2014\u2013-]+|["\u201D\s]+$/g, '').trim();
                                   return <div key={bi} className="rounded-xl overflow-hidden" style={{ background: starBgs[kw] || `${sc}08`, border: `1px solid ${starBorders[kw] || `${sc}20`}`, borderLeftWidth: '4px', borderLeftColor: sc }}>
@@ -2818,7 +2818,7 @@ export default function TopicDetail({
           {/* STAR Framework Example — structured cards with colored labels */}
           {topicDetails.starExample && (
             <div id="star-example" className="rounded-2xl overflow-hidden scroll-mt-24 border border-[var(--border)] bg-[var(--bg-surface)]">
-              <div className="px-4 py-2 border-b border-[var(--border)] flex items-center gap-2" style={{ background: 'linear-gradient(135deg, rgba(59,130,246,0.08) 0%, rgba(16,185,129,0.08) 50%, rgba(239,68,68,0.06) 100%)' }}>
+              <div className="px-4 py-2 border-b border-[var(--border)] flex items-center gap-2" style={{ background: 'linear-gradient(135deg, rgba(59,130,246,0.08) 0%, rgba(45,140,255,0.08) 50%, rgba(239,68,68,0.06) 100%)' }}>
                 <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #3b82f6, #10b981)' }}>
                   <Icon name="target" size={12} className="text-white" />
                 </div>
@@ -2834,7 +2834,7 @@ export default function TopicDetail({
                       const config = {
                         situation: { color: '#3b82f6', bg: 'rgba(59,130,246,0.08)', border: 'rgba(59,130,246,0.2)', label: 'Situation', icon: 'S' },
                         task: { color: '#60A5FA', bg: 'rgba(139,92,246,0.08)', border: 'rgba(139,92,246,0.2)', label: 'Task', icon: 'T' },
-                        action: { color: '#10b981', bg: 'rgba(16,185,129,0.08)', border: 'rgba(16,185,129,0.2)', label: 'Action', icon: 'A' },
+                        action: { color: '#10b981', bg: 'rgba(45,140,255,0.08)', border: 'rgba(16,185,129,0.2)', label: 'Action', icon: 'A' },
                         result: { color: '#f59e0b', bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.2)', label: 'Result', icon: 'R' },
                       };
                       const c = config[key.toLowerCase()] || { color: '#a855f7', bg: 'rgba(168,85,247,0.08)', border: 'rgba(168,85,247,0.2)', label: key, icon: key.charAt(0).toUpperCase() };
@@ -2871,7 +2871,7 @@ export default function TopicDetail({
                 <div className="w-6 h-6 rounded-lg flex items-center justify-center bg-[var(--accent)]/15">
                   <Icon name="messageSquare" size={12} className="text-[var(--accent)]" />
                 </div>
-                <h3 className="text-sm font-bold text-emerald-900 landing-display">Example Response</h3>
+                <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">Example Response</h3>
                 <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--accent)]/15 text-[var(--accent)] landing-mono">Ready to use</span>
               </div>
               <div className="p-5">
@@ -2935,7 +2935,7 @@ export default function TopicDetail({
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <h3 className="text-sm font-bold text-emerald-900 landing-display">Tips for Success</h3>
+                <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">Tips for Success</h3>
                 <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--accent)]/15 text-[var(--accent)] landing-mono">{topicDetails.tips.length} tips</span>
               </div>
               <div className="p-2.5 space-y-1.5">
@@ -2965,7 +2965,7 @@ export default function TopicDetail({
           {prevTopic ? (
             <button
               onClick={() => setSelectedTopic(prevTopic.id)}
-              className="flex-1 flex items-center gap-3 px-4 py-3 rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] hover:border-emerald-300 hover:bg-[var(--accent)]/10/30 transition-all group text-left"
+              className="flex-1 flex items-center gap-3 px-4 py-3 rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] hover:border-[var(--accent)]/40 hover:bg-[var(--accent)]/10/30 transition-all group text-left"
             >
               <Icon name="chevronLeft" size={16} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] transition-colors flex-shrink-0" />
               <div className="min-w-0">
@@ -2984,7 +2984,7 @@ export default function TopicDetail({
           {nextTopic ? (
             <button
               onClick={() => setSelectedTopic(nextTopic.id)}
-              className="flex-1 flex items-center justify-end gap-3 px-4 py-3 rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] hover:border-emerald-300 hover:bg-[var(--accent)]/10/30 transition-all group text-right"
+              className="flex-1 flex items-center justify-end gap-3 px-4 py-3 rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] hover:border-[var(--accent)]/40 hover:bg-[var(--accent)]/10/30 transition-all group text-right"
             >
               <div className="min-w-0">
                 <span className="text-[10px] uppercase tracking-wider text-[var(--text-muted)] landing-mono block">Next</span>

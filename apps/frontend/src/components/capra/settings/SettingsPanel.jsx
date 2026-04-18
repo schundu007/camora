@@ -72,8 +72,8 @@ export default function SettingsPanel({ onClose, provider, model, onProviderChan
         {/* Header */}
         <div className="flex items-center justify-between px-8 py-5 border-b border-[var(--border)]">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center">
-              <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-9 h-9 rounded-xl bg-[rgba(45,140,255,0.08)] flex items-center justify-center">
+              <svg className="w-5 h-5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
@@ -101,7 +101,7 @@ export default function SettingsPanel({ onClose, provider, model, onProviderChan
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-t-lg transition-all border-b-2 -mb-px ${
                 activeTab === tab.id
-                  ? 'text-emerald-700 border-emerald-500 bg-emerald-50/50'
+                  ? 'text-[var(--accent)] border-[var(--accent)] bg-[rgba(45,140,255,0.08)]'
                   : 'text-[var(--text-muted)] border-transparent hover:text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)]'
               }`}
             >
@@ -127,7 +127,7 @@ export default function SettingsPanel({ onClose, provider, model, onProviderChan
                       onClick={() => handleProviderSwitch(p.id)}
                       className={`flex-1 py-3.5 px-4 rounded-xl text-sm font-semibold transition-all border-2 ${
                         provider === p.id
-                          ? 'bg-emerald-50 border-emerald-500 text-emerald-700'
+                          ? 'bg-[rgba(45,140,255,0.08)] border-[var(--accent)] text-[var(--accent)]'
                           : 'bg-[var(--bg-surface)] border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border)] hover:bg-[var(--bg-elevated)]'
                       }`}
                     >
@@ -148,12 +148,12 @@ export default function SettingsPanel({ onClose, provider, model, onProviderChan
                       onClick={() => onModelChange && onModelChange(m.id)}
                       className={`flex items-center justify-between px-4 py-3.5 rounded-xl text-left transition-all border-2 ${
                         m.id === model
-                          ? 'bg-emerald-50 border-emerald-500'
+                          ? 'bg-[rgba(45,140,255,0.08)] border-[var(--accent)]'
                           : 'bg-[var(--bg-surface)] border-[var(--border)] hover:border-[var(--border)] hover:bg-[var(--bg-elevated)]'
                       }`}
                     >
                       <div>
-                        <div className={`text-sm font-semibold ${m.id === model ? 'text-emerald-700' : 'text-[var(--text-primary)]'}`}>{m.name}</div>
+                        <div className={`text-sm font-semibold ${m.id === model ? 'text-[var(--accent)]' : 'text-[var(--text-primary)]'}`}>{m.name}</div>
                         <div className={`text-xs mt-0.5 ${m.id === model ? 'text-[var(--accent)]' : 'text-[var(--text-muted)]'}`}>{m.description}</div>
                       </div>
                       {m.id === model && (
@@ -192,7 +192,7 @@ export default function SettingsPanel({ onClose, provider, model, onProviderChan
                       onClick={() => onEditorSettingsChange({ theme: theme.id })}
                       className={`flex-1 py-3.5 px-4 rounded-xl text-sm font-semibold transition-all border-2 ${
                         editorSettings.theme === theme.id
-                          ? 'bg-emerald-50 border-emerald-500 text-emerald-700'
+                          ? 'bg-[rgba(45,140,255,0.08)] border-[var(--accent)] text-[var(--accent)]'
                           : 'bg-[var(--bg-surface)] border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border)] hover:bg-[var(--bg-elevated)]'
                       }`}
                     >

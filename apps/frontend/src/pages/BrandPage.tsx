@@ -5,7 +5,7 @@ import SiteNav from '../components/shared/SiteNav';
 
 /* ── APPA Colors ─────────────────────────────────────────── */
 const C = {
-  emerald: '#60A5FA',
+  accent: '#60A5FA',
   indigo: '#2D8CFF',
   cyan: '#38bdf8',
   amber: '#fbbf24',
@@ -24,14 +24,14 @@ function LogoJourney({ size = 48 }: { size?: number }) {
   const h = s - p * 2;
   const cx = [0.1, 0.37, 0.63, 0.9].map(r => p + w * r);
   const cy = [0.65, 0.3, 0.7, 0.35].map(r => p + h * r);
-  const colors = [C.emerald, C.indigo, C.cyan, C.amber];
+  const colors = [C.accent, C.indigo, C.cyan, C.amber];
   const dotR = s * 0.065;
 
   return (
     <svg width={s} height={s} viewBox={`0 0 ${s} ${s}`} fill="none" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <linearGradient id="jpath" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor={C.emerald} />
+          <stop offset="0%" stopColor={C.accent} />
           <stop offset="33%" stopColor={C.indigo} />
           <stop offset="66%" stopColor={C.cyan} />
           <stop offset="100%" stopColor={C.amber} />
@@ -56,7 +56,7 @@ function LogoJourney({ size = 48 }: { size?: number }) {
 function LogoAscent({ size = 48 }: { size?: number }) {
   const s = size;
   const m = s / 2;
-  const colors = [C.amber, C.cyan, C.indigo, C.emerald]; // bottom to top
+  const colors = [C.amber, C.cyan, C.indigo, C.accent]; // bottom to top
   const layers = 4;
 
   return (
@@ -89,7 +89,7 @@ function LogoHexagon({ size = 48 }: { size?: number }) {
   const m = s / 2;
   const r = s * 0.42;
   const ri = s * 0.26; // inner radius for "C" cutout
-  const colors = [C.emerald, C.indigo, C.cyan, C.amber];
+  const colors = [C.accent, C.indigo, C.cyan, C.amber];
 
   // Hex points
   const hex = (radius: number, angleOffset = -90) =>
@@ -125,7 +125,7 @@ function LogoHexagon({ size = 48 }: { size?: number }) {
       {/* Inner "C" shape */}
       <path
         d={`M${m + ri * 0.4},${m - ri * 0.8} A${ri},${ri} 0 1,0 ${m + ri * 0.4},${m + ri * 0.8}`}
-        stroke={C.emerald}
+        stroke={C.accent}
         strokeWidth={s * 0.045}
         strokeLinecap="round"
         fill="none"
@@ -139,14 +139,14 @@ function LogoSignal({ size = 48 }: { size?: number }) {
   const s = size;
   const cx = s * 0.28;
   const cy = s * 0.72;
-  const colors = [C.emerald, C.indigo, C.cyan, C.amber];
+  const colors = [C.accent, C.indigo, C.cyan, C.amber];
   const arcs = [0.22, 0.36, 0.50, 0.64];
 
   return (
     <svg width={s} height={s} viewBox={`0 0 ${s} ${s}`} fill="none" xmlns="http://www.w3.org/2000/svg">
       {/* Origin dot */}
-      <circle cx={cx} cy={cy} r={s * 0.05} fill={C.emerald} />
-      <circle cx={cx} cy={cy} r={s * 0.09} fill={C.emerald} opacity={0.15} />
+      <circle cx={cx} cy={cy} r={s * 0.05} fill={C.accent} />
+      <circle cx={cx} cy={cy} r={s * 0.09} fill={C.accent} opacity={0.15} />
       {/* Arcs */}
       {arcs.map((r, i) => {
         const radius = s * r;
@@ -185,10 +185,10 @@ function Wordmark1({ dark = true }: { dark?: boolean }) {
     <div>
       <div className={`${textColor} tracking-[-0.04em] leading-none`}
            style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 32, fontWeight: 800 }}>
-        <span style={{ color: C.emerald }}>C</span>
-        <span style={{ color: dark ? C.emerald : '#2D8CFF' }}>a</span>
+        <span style={{ color: C.accent }}>C</span>
+        <span style={{ color: dark ? C.accent : '#2D8CFF' }}>a</span>
         mor
-        <span style={{ color: dark ? C.emerald : '#2D8CFF' }}>a</span>
+        <span style={{ color: dark ? C.accent : '#2D8CFF' }}>a</span>
       </div>
       <div className={`${subColor} mt-1.5`}
            style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, fontWeight: 500, letterSpacing: '0.2em', textTransform: 'uppercase' }}>
@@ -207,7 +207,7 @@ function Wordmark2({ dark = true }: { dark?: boolean }) {
            style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 32, fontWeight: 700, letterSpacing: '0.15em', color: textColor, textTransform: 'uppercase' as const }}>
         CAMORA
         {/* Strikethrough line */}
-        <div className="absolute left-0 right-0" style={{ top: '52%', height: 1.5, background: `linear-gradient(90deg, ${C.emerald}, ${C.indigo}, ${C.cyan}, ${C.amber})` }} />
+        <div className="absolute left-0 right-0" style={{ top: '52%', height: 1.5, background: `linear-gradient(90deg, ${C.accent}, ${C.indigo}, ${C.cyan}, ${C.amber})` }} />
       </div>
       <div className={`${subColor} mt-2`}
            style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, fontWeight: 400, letterSpacing: '0.08em' }}>
@@ -223,7 +223,7 @@ function Wordmark3({ dark = true }: { dark?: boolean }) {
   return (
     <div>
       <div className="leading-none" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 32, fontWeight: 600, color: textColor, letterSpacing: '-0.02em' }}>
-        <span style={{ fontSize: 38, color: C.emerald, fontWeight: 700 }}>c</span>amora
+        <span style={{ fontSize: 38, color: C.accent, fontWeight: 700 }}>c</span>amora
       </div>
       <div className={`${subColor} mt-1.5`}
            style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, fontWeight: 600, letterSpacing: '0.15em' }}>
@@ -247,7 +247,7 @@ const LOGOS = [
 const WORDMARKS = [
   { name: 'Weighted', desc: 'Extrabold with colored "a" letters referencing A-P-P-A pattern.', Component: Wordmark1 },
   { name: 'Strikethrough', desc: 'All-caps with APPA gradient line through the center.', Component: Wordmark2 },
-  { name: 'Lowercase', desc: 'Minimal lowercase with oversized emerald "c" and A·P·P·A subtitle.', Component: Wordmark3 },
+  { name: 'Lowercase', desc: 'Minimal lowercase with oversized blue "c" and A·P·P·A subtitle.', Component: Wordmark3 },
 ];
 
 export default function BrandPage() {
@@ -264,7 +264,7 @@ export default function BrandPage() {
       <div className="relative max-w-6xl mx-auto px-6 lg:px-8 py-16 md:py-24">
         {/* Header */}
         <div className="mb-20">
-          <div style={{ fontFamily: "'IBM Plex Mono', monospace" }} className="text-sm text-emerald-400 font-semibold tracking-wider uppercase mb-4">
+          <div style={{ fontFamily: "'IBM Plex Mono', monospace" }} className="text-sm text-[var(--accent)] font-semibold tracking-wider uppercase mb-4">
             Brand Identity
           </div>
           <h1 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
@@ -277,7 +277,7 @@ export default function BrandPage() {
           </p>
           <div className="flex items-center gap-4 mt-6">
             {[
-              { label: 'Apply', color: C.emerald },
+              { label: 'Apply', color: C.accent },
               { label: 'Prepare', color: C.indigo },
               { label: 'Practice', color: C.cyan },
               { label: 'Attend', color: C.amber },
@@ -303,7 +303,7 @@ export default function BrandPage() {
                 onClick={() => setSelectedLogo(i)}
                 className={`group text-left rounded-2xl border transition-all duration-300 overflow-hidden ${
                   selectedLogo === i
-                    ? 'border-emerald-500/40 ring-2 ring-emerald-500/20'
+                    ? 'border-[var(--accent)]/40 ring-2 ring-[var(--accent)]/20'
                     : 'border-white/[0.08] hover:border-white/[0.15]'
                 }`}
                 style={{ background: 'rgba(255,255,255,0.02)' }}
@@ -354,7 +354,7 @@ export default function BrandPage() {
                 onClick={() => setSelectedWordmark(i)}
                 className={`group text-left rounded-2xl border transition-all duration-300 overflow-hidden ${
                   selectedWordmark === i
-                    ? 'border-emerald-500/40 ring-2 ring-emerald-500/20'
+                    ? 'border-[var(--accent)]/40 ring-2 ring-[var(--accent)]/20'
                     : 'border-white/[0.08] hover:border-white/[0.15]'
                 }`}
                 style={{ background: 'rgba(255,255,255,0.02)' }}
@@ -430,7 +430,7 @@ export default function BrandPage() {
                   {['Apply', 'Prepare', 'Practice', 'Attend', 'Pricing'].map((l) => (
                     <span key={l} className="text-sm text-gray-400 font-medium">{l}</span>
                   ))}
-                  <span className="px-4 py-2 bg-emerald-500 text-white text-sm font-semibold rounded-lg">Launch App</span>
+                  <span className="px-4 py-2 bg-[var(--accent)] text-white text-sm font-semibold rounded-lg">Launch App</span>
                 </div>
               </div>
             </div>

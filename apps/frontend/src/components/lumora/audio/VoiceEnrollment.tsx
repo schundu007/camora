@@ -316,7 +316,7 @@ function VoiceIcon({ filled = false }: { filled?: boolean }) {
 
 function RecordingIcon() {
   return (
-    <svg className="w-3.5 h-3.5 animate-pulse text-rose-light" fill="currentColor" viewBox="0 0 24 24">
+    <svg className="w-3.5 h-3.5 animate-pulse text-[var(--danger)]" fill="currentColor" viewBox="0 0 24 24">
       <circle cx="12" cy="12" r="8" />
     </svg>
   );

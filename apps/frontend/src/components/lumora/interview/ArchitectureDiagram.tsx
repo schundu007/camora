@@ -141,7 +141,7 @@ export function ArchitectureDiagram({ question, className = '' }: ArchitectureDi
             {(['LR', 'TB'] as const).map(d => (
               <button key={d} onClick={() => setDirection(d)}
                 className={`px-1.5 py-0.5 text-xs font-mono transition-colors ${d !== 'LR' ? 'border-l border-[var(--border)]' : ''} ${
-                  direction === d ? 'bg-emerald-500 text-white' : 'text-[var(--text-muted)] hover:text-emerald-600'
+                  direction === d ? 'bg-[var(--accent)] text-white' : 'text-[var(--text-muted)] hover:text-[var(--accent)]'
                 }`}>{d}</button>
             ))}
           </div>
@@ -149,7 +149,7 @@ export function ArchitectureDiagram({ question, className = '' }: ArchitectureDi
             {(['overview', 'detailed'] as const).map(d => (
               <button key={d} onClick={() => setDetailLevel(d)}
                 className={`px-2 py-0.5 text-xs font-mono capitalize transition-colors ${d !== 'overview' ? 'border-l border-[var(--border)]' : ''} ${
-                  detailLevel === d ? 'bg-emerald-500 text-white' : 'text-[var(--text-muted)] hover:text-emerald-600'
+                  detailLevel === d ? 'bg-[var(--accent)] text-white' : 'text-[var(--text-muted)] hover:text-[var(--accent)]'
                 }`}>{d}</button>
             ))}
           </div>
@@ -168,8 +168,8 @@ export function ArchitectureDiagram({ question, className = '' }: ArchitectureDi
       {loading && (
         <div className="flex items-center justify-center p-8 border border-[var(--border)] rounded-lg bg-[var(--bg-surface)]">
           <div className="flex items-center gap-3">
-            <div className="w-5 h-5 border-2 border-emerald-200 border-t-emerald-500 rounded-full animate-spin" />
-            <span className="text-sm text-gray-400 font-mono">Looking up cached diagram...</span>
+            <div className="w-5 h-5 border-2 border-blue-200 border-t-[var(--accent)] rounded-full animate-spin" />
+            <span className="text-sm text-[var(--text-muted)] font-mono">Looking up cached diagram...</span>
           </div>
         </div>
       )}
@@ -179,7 +179,7 @@ export function ArchitectureDiagram({ question, className = '' }: ArchitectureDi
         <div className="flex flex-col items-center justify-center p-6 rounded-lg text-center" style={{ border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.02)' }}>
           <button onClick={handleGenerate}
             className="px-5 py-2.5 text-sm font-bold text-white rounded-lg transition-all hover:opacity-90"
-            style={{ background: 'linear-gradient(135deg, #10b981, #2D8CFF)', boxShadow: '0 2px 12px rgba(16,185,129,0.3)' }}>
+            style={{ background: 'var(--accent)', boxShadow: '0 2px 12px rgba(45,140,255,0.3)' }}>
             Generate Architecture Diagram
           </button>
         </div>
@@ -187,10 +187,10 @@ export function ArchitectureDiagram({ question, className = '' }: ArchitectureDi
 
       {/* Generating */}
       {generating && (
-        <div className="flex items-center justify-center p-8 border border-emerald-200 rounded-lg bg-emerald-50">
+        <div className="flex items-center justify-center p-8 border border-blue-200 rounded-lg bg-blue-50">
           <div className="flex items-center gap-3">
-            <div className="w-5 h-5 border-2 border-emerald-300 border-t-emerald-600 rounded-full animate-spin" />
-            <span className="text-sm text-emerald-700 font-mono">Generating {cloudProvider === 'auto' ? '' : cloudProvider.toUpperCase()} diagram...</span>
+            <div className="w-5 h-5 border-2 border-blue-300 border-t-[var(--accent)] rounded-full animate-spin" />
+            <span className="text-sm text-blue-700 font-mono">Generating {cloudProvider === 'auto' ? '' : cloudProvider.toUpperCase()} diagram...</span>
           </div>
         </div>
       )}
@@ -210,7 +210,7 @@ export function ArchitectureDiagram({ question, className = '' }: ArchitectureDi
       {imageUrl && !loading && !generating && (
         <div ref={containerRef}
           className="rounded-lg select-none flex items-center justify-center"
-          style={{ cursor: isDragging ? 'grabbing' : 'grab', overflow: 'hidden', minHeight: '300px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.12)' }}
+          style={{ cursor: isDragging ? 'grabbing' : 'grab', overflow: 'hidden', minHeight: '600px', background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
           onWheel={handleWheel} onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}>
           <img src={imageUrl} alt={`Architecture: ${question.slice(0, 50)}`} draggable={false}
             style={{

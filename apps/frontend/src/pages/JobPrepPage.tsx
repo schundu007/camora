@@ -149,7 +149,7 @@ function buildStudyPath(job: any): StudyRound[] {
     rounds.push({
       title: 'Coding Round',
       icon: '\u{1F4BB}',
-      color: '#10b981',
+      color: 'var(--success)',
       estimate: `estimated ${Math.min(codingItems.length, 3)} problems`,
       items: codingItems.slice(0, 5),
     });
@@ -231,7 +231,7 @@ function buildStudyPath(job: any): StudyRound[] {
   rounds.push({
     title: 'Behavioral Round',
     icon: '\u2B50',
-    color: '#f59e0b',
+    color: 'var(--warning)',
     estimate: '4-6 questions',
     items: behavioralItems.slice(0, 5),
   });
@@ -444,7 +444,7 @@ export default function JobPrepPage() {
         <SiteNav />
         <div className="flex items-center justify-center">
           <div className="w-full lg:max-w-[70%] mx-auto px-4 sm:px-6 py-16 text-center">
-            <div style={{ width: '48px', height: '48px', border: '4px solid #d1fae5', borderTopColor: '#10b981', borderRadius: '50%', margin: '0 auto 16px' }} className="animate-spin" />
+            <div style={{ width: '48px', height: '48px', border: '4px solid rgba(45,140,255,0.15)', borderTopColor: 'var(--accent)', borderRadius: '50%', margin: '0 auto 16px' }} className="animate-spin" />
             <p style={{ fontSize: '14px', color: 'var(--text-muted)' }}>Loading preparation plan...</p>
           </div>
         </div>
@@ -465,7 +465,7 @@ export default function JobPrepPage() {
             </svg>
             <h2 className="heading-2" style={{ marginBottom: '8px' }}>Job not found</h2>
             <p className="text-body" style={{ marginBottom: '24px' }}>This job listing may have been removed or the link is incorrect.</p>
-            <Link to="/jobs" style={{ fontSize: '14px', fontWeight: 600, color: '#10b981', textDecoration: 'none' }}>Back to Jobs</Link>
+            <Link to="/jobs" style={{ fontSize: '14px', fontWeight: 600, color: 'var(--accent)', textDecoration: 'none' }}>Back to Jobs</Link>
           </div>
         </div>
         <SiteFooter />
@@ -480,12 +480,12 @@ export default function JobPrepPage() {
         <SiteNav />
         <div>
           <div className="w-full lg:max-w-[70%] mx-auto px-4 sm:px-6 py-16 text-center">
-            <svg width="48" height="48" fill="none" stroke="#ef4444" viewBox="0 0 24 24" strokeWidth={1.5} style={{ margin: '0 auto 16px' }}>
+            <svg width="48" height="48" fill="none" stroke="var(--danger)" viewBox="0 0 24 24" strokeWidth={1.5} style={{ margin: '0 auto 16px' }}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
             </svg>
             <h2 className="heading-2" style={{ marginBottom: '8px' }}>Something went wrong</h2>
             <p className="text-body" style={{ marginBottom: '24px' }}>{error}</p>
-            <Link to="/jobs" style={{ fontSize: '14px', fontWeight: 600, color: '#10b981', textDecoration: 'none' }}>Back to Jobs</Link>
+            <Link to="/jobs" style={{ fontSize: '14px', fontWeight: 600, color: 'var(--accent)', textDecoration: 'none' }}>Back to Jobs</Link>
           </div>
         </div>
         <SiteFooter />
@@ -607,8 +607,8 @@ export default function JobPrepPage() {
           {urlAnalysis && (
             <section style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '24px', marginBottom: '24px' }}>
               <div className="flex items-center gap-2 mb-3">
-                <div style={{ width: '28px', height: '28px', background: '#10b98118', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <svg width="14" height="14" fill="none" stroke="#10b981" viewBox="0 0 24 24" strokeWidth={2}>
+                <div style={{ width: '28px', height: '28px', background: 'rgba(45,140,255,0.09)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <svg width="14" height="14" fill="none" stroke="var(--accent)" viewBox="0 0 24 24" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
                   </svg>
                 </div>
@@ -622,7 +622,7 @@ export default function JobPrepPage() {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
                 {urlAnalysis.coding_focus?.length > 0 && (
                   <div style={{ background: '#f0fdf4', borderRadius: '8px', padding: '12px' }}>
-                    <p style={{ fontSize: '11px', fontWeight: 700, color: '#2D8CFF', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px' }}>Coding Focus</p>
+                    <p style={{ fontSize: '11px', fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px' }}>Coding Focus</p>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                       {urlAnalysis.coding_focus.map((t: string) => (
                         <span key={t} style={{ fontSize: '12px', color: '#065f46', background: '#dcfce7', padding: '2px 8px', borderRadius: '4px' }}>{t}</span>
@@ -707,7 +707,7 @@ export default function JobPrepPage() {
                 JD based Interview Preparation
               </h2>
               {Object.keys(generatedSections).length > 0 && !generating && (
-                <span style={{ fontSize: '12px', color: '#10b981', fontWeight: 600 }}>
+                <span style={{ fontSize: '12px', color: 'var(--accent)', fontWeight: 600 }}>
                   {Object.keys(generatedSections).length} / {PREP_SECTIONS.length} sections
                 </span>
               )}
@@ -726,7 +726,7 @@ export default function JobPrepPage() {
                   fontSize: '15px',
                   fontWeight: 700,
                   color: '#ffffff',
-                  background: '#10b981',
+                  background: 'var(--accent)',
                   border: '1px solid var(--border)',
                   borderRadius: '10px',
                   padding: '14px 24px',
@@ -734,8 +734,8 @@ export default function JobPrepPage() {
                   transition: 'background 0.15s',
                   fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
                 }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#2D8CFF'; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '#10b981'; }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--accent-hover)'; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--accent)'; }}
               >
                 <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
@@ -872,7 +872,7 @@ export default function JobPrepPage() {
                             justifyContent: 'center',
                             flexShrink: 0,
                           }}>
-                            <svg width="14" height="14" fill="none" stroke="#2D8CFF" viewBox="0 0 24 24" strokeWidth={2.5}>
+                            <svg width="14" height="14" fill="none" stroke="var(--accent)" viewBox="0 0 24 24" strokeWidth={2.5}>
                               <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                             </svg>
                           </div>
@@ -882,7 +882,7 @@ export default function JobPrepPage() {
                               width: '24px',
                               height: '24px',
                               border: '2.5px solid #d1fae5',
-                              borderTopColor: '#10b981',
+                              borderTopColor: 'var(--accent)',
                               borderRadius: '50%',
                               flexShrink: 0,
                             }}
@@ -998,15 +998,15 @@ export default function JobPrepPage() {
                   fontSize: '14px',
                   fontWeight: 600,
                   color: '#ffffff',
-                  background: '#10b981',
+                  background: 'var(--accent)',
                   border: '1px solid var(--border)',
                   borderRadius: '8px',
                   padding: '10px 20px',
                   textDecoration: 'none',
                   transition: 'background 0.15s',
                 }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#2D8CFF'; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '#10b981'; }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--accent-hover)'; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--accent)'; }}
               >
                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
@@ -1073,7 +1073,7 @@ export default function JobPrepPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setShowPaywall(false)}>
           <div className="bg-[var(--bg-surface)] rounded-3xl shadow-2xl max-w-2xl w-full mx-4 p-8" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
             <div className="text-center mb-6">
-              <div className="w-14 h-14 mx-auto mb-4 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #10b981, #3b82f6, #2D8CFF)' }}>
+              <div className="w-14 h-14 mx-auto mb-4 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, var(--success), #3b82f6, var(--accent))' }}>
                 <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
               </div>
               <h3 className="text-xl font-bold text-[var(--text-primary)] mb-1">Upgrade to Generate Prep Material</h3>
@@ -1086,13 +1086,13 @@ export default function JobPrepPage() {
                 { name: 'Annual', price: '$19', period: '/mo', features: ['Everything in Pro', 'Save 61% vs monthly', 'Locked-in pricing', 'Priority support'], best: true, priceId: prices?.annual?.priceId || '' },
               ].map(plan => (
                 <div key={plan.name} className="rounded-2xl p-4 flex flex-col" style={{
-                  border: plan.popular ? '2px solid #10b981' : plan.best ? '2px solid #f59e0b' : '1.5px solid var(--border)',
+                  border: plan.popular ? '2px solid var(--accent)' : plan.best ? '2px solid var(--warning)' : '1.5px solid var(--border)',
                   background: 'var(--bg-surface)',
                 }}>
                   <div className="flex items-center justify-between">
                     <h4 className="text-sm font-bold text-[var(--text-primary)]">{plan.name}</h4>
-                    {plan.popular && <span className="px-2 py-0.5 rounded-full text-[8px] font-bold text-white uppercase" style={{ background: 'linear-gradient(135deg, #10b981, #06b6d4)' }}>Popular</span>}
-                    {plan.best && <span className="px-2 py-0.5 rounded-full text-[8px] font-bold text-white uppercase" style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}>Best Value</span>}
+                    {plan.popular && <span className="px-2 py-0.5 rounded-full text-[8px] font-bold text-white uppercase" style={{ background: 'linear-gradient(135deg, var(--accent), #06b6d4)' }}>Popular</span>}
+                    {plan.best && <span className="px-2 py-0.5 rounded-full text-[8px] font-bold text-white uppercase" style={{ background: 'linear-gradient(135deg, var(--warning), #d97706)' }}>Best Value</span>}
                   </div>
                   <div className="mt-1 flex items-baseline gap-0.5">
                     <span className="text-2xl font-bold text-[var(--text-primary)]">{plan.price}</span>
@@ -1123,7 +1123,7 @@ export default function JobPrepPage() {
                       } catch { navigate('/pricing'); }
                     }}
                     className={`mt-3 w-full py-2 rounded-lg text-xs font-semibold cursor-pointer transition-all ${plan.popular ? 'text-white' : plan.best ? 'text-white' : 'text-[var(--text-secondary)] border border-gray-300 hover:border-gray-400'}`}
-                    style={plan.popular ? { background: 'linear-gradient(135deg, #10b981, #06b6d4)' } : plan.best ? { background: 'linear-gradient(135deg, #f59e0b, #d97706)' } : {}}
+                    style={plan.popular ? { background: 'linear-gradient(135deg, var(--accent), #06b6d4)' } : plan.best ? { background: 'linear-gradient(135deg, var(--warning), #d97706)' } : {}}
                   >
                     Get {plan.name}
                   </button>
@@ -1160,8 +1160,8 @@ function StudyItem({ label, href, reason }: { label: string; href: string; reaso
           padding: '6px 0',
           transition: 'color 0.15s',
         }}
-        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = '#10b981'; }}
-        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = '#374151'; }}
+        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--accent)'; }}
+        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)'; }}
       >
         {/* Checkbox icon */}
         <svg width="16" height="16" fill="none" stroke="#d1d5db" viewBox="0 0 24 24" strokeWidth={2} style={{ flexShrink: 0, marginTop: '2px' }}>
@@ -1189,11 +1189,11 @@ function StudyItem({ label, href, reason }: { label: string; href: string; reaso
 const S = {
   h2: { fontSize: '18px', fontWeight: 700 as const, color: '#000', margin: '0 0 12px', borderBottom: '2px solid #d1fae5', paddingBottom: '6px' },
   h3: { fontSize: '15px', fontWeight: 700 as const, color: 'var(--text-primary)', margin: '20px 0 8px', paddingLeft: '10px', borderLeft: '3px solid #6ee7b7' },
-  h4: { fontSize: '12px', fontWeight: 600 as const, color: '#2D8CFF', textTransform: 'uppercase' as const, letterSpacing: '0.08em', margin: '14px 0 6px 20px' },
+  h4: { fontSize: '12px', fontWeight: 600 as const, color: 'var(--accent)', textTransform: 'uppercase' as const, letterSpacing: '0.08em', margin: '14px 0 6px 20px' },
   p: { fontSize: '14px', color: '#1f2937', lineHeight: 1.8, margin: '0 0 8px 20px', whiteSpace: 'pre-wrap' as const },
   li: { fontSize: '14px', color: '#1f2937', lineHeight: 1.7, marginBottom: '4px' },
   ul: { margin: '0 0 8px', paddingLeft: '38px' },
-  callout: (color: string) => ({ background: color === 'green' ? '#f0fdf4' : color === 'blue' ? '#eff6ff' : color === 'amber' ? '#fffbeb' : color === 'red' ? '#fef2f2' : '#f5f3ff', borderLeft: `3px solid ${color === 'green' ? '#10b981' : color === 'blue' ? '#3b82f6' : color === 'amber' ? '#f59e0b' : color === 'red' ? '#ef4444' : '#2D8CFF'}`, borderRadius: '6px', padding: '12px 16px', margin: '8px 0 12px 20px' }),
+  callout: (color: string) => ({ background: color === 'green' ? '#f0fdf4' : color === 'blue' ? '#eff6ff' : color === 'amber' ? '#fffbeb' : color === 'red' ? '#fef2f2' : '#f5f3ff', borderLeft: `3px solid ${color === 'green' ? 'var(--success)' : color === 'blue' ? '#3b82f6' : color === 'amber' ? 'var(--warning)' : color === 'red' ? 'var(--danger)' : 'var(--accent)'}`, borderRadius: '6px', padding: '12px 16px', margin: '8px 0 12px 20px' }),
   divider: { borderBottom: '1px solid var(--border)', margin: '16px 0' },
   code: { fontSize: '13px', background: '#0d1117', color: '#c9d1d9', borderRadius: '8px', padding: '14px 16px', overflow: 'auto' as const, margin: '8px 0 12px 20px', fontFamily: "'IBM Plex Mono', monospace" },
   badge: (color: string) => ({ fontSize: '11px', fontWeight: 700 as const, color, background: color === '#0B5CFF' ? '#fef2f2' : color === '#d97706' ? '#fffbeb' : '#ecfdf5', padding: '2px 10px', borderRadius: '4px', textTransform: 'uppercase' as const }),
@@ -1278,7 +1278,7 @@ function PrepSectionContent({ sectionKey, data }: { sectionKey: string; data: an
         {Array.isArray(questions) && questions.length > 0 && questions.map((q: any, i: number) => (
           <div key={i} style={{ marginBottom: '24px' }}>
             <h3 style={S.h3}>
-              <span style={{ color: '#2D8CFF', marginRight: '6px' }}>Q{i + 1}.</span>
+              <span style={{ color: 'var(--accent)', marginRight: '6px' }}>Q{i + 1}.</span>
               {q.question || q.q || (typeof q === 'string' ? q : '')}
             </h3>
             {q.whyTheyAsk && <p style={{ ...S.p, fontSize: '13px', color: 'var(--text-muted)', fontStyle: 'italic' }}>Why they ask this: {q.whyTheyAsk}</p>}
@@ -1292,10 +1292,10 @@ function PrepSectionContent({ sectionKey, data }: { sectionKey: string; data: an
             {sectionKey === 'behavioral' && (q.situation || q.task || q.action || q.result) && (
               <div style={{ marginLeft: '20px', marginTop: '10px' }}>
                 <h4 style={{ ...S.h4, margin: '0 0 8px 0' }}>STAR Framework</h4>
-                {q.situation && <p style={S.p}><strong style={{ color: '#2D8CFF' }}>Situation:</strong> {q.situation}</p>}
-                {q.task && <p style={S.p}><strong style={{ color: '#2D8CFF' }}>Task:</strong> {q.task}</p>}
-                {q.action && <p style={S.p}><strong style={{ color: '#2D8CFF' }}>Action:</strong> {q.action}</p>}
-                {q.result && <p style={S.p}><strong style={{ color: '#2D8CFF' }}>Result:</strong> {q.result}</p>}
+                {q.situation && <p style={S.p}><strong style={{ color: 'var(--accent)' }}>Situation:</strong> {q.situation}</p>}
+                {q.task && <p style={S.p}><strong style={{ color: 'var(--accent)' }}>Task:</strong> {q.task}</p>}
+                {q.action && <p style={S.p}><strong style={{ color: 'var(--accent)' }}>Action:</strong> {q.action}</p>}
+                {q.result && <p style={S.p}><strong style={{ color: 'var(--accent)' }}>Result:</strong> {q.result}</p>}
               </div>
             )}
             {i < questions.length - 1 && <div style={S.divider} />}
@@ -1344,7 +1344,7 @@ function PrepSectionContent({ sectionKey, data }: { sectionKey: string; data: an
         {Array.isArray(problems) && problems.map((p: any, i: number) => (
           <div key={i} style={{ marginBottom: '28px' }}>
             <h3 style={S.h3}>
-              <span style={S.badge((p.difficulty || '').toLowerCase() === 'hard' ? '#0B5CFF' : (p.difficulty || '').toLowerCase() === 'medium' ? '#d97706' : '#2D8CFF')}>{p.difficulty || 'Medium'}</span>
+              <span style={S.badge((p.difficulty || '').toLowerCase() === 'hard' ? '#0B5CFF' : (p.difficulty || '').toLowerCase() === 'medium' ? '#d97706' : 'var(--accent)')}>{p.difficulty || 'Medium'}</span>
               <span style={{ marginLeft: '8px' }}>{p.title || p.name || `Problem ${i + 1}`}</span>
               {p.frequency && <span style={{ fontSize: '12px', fontWeight: 400, color: 'var(--text-muted)', marginLeft: '8px' }}>({p.frequency})</span>}
             </h3>
@@ -1372,7 +1372,7 @@ function PrepSectionContent({ sectionKey, data }: { sectionKey: string; data: an
                   <div style={{ marginLeft: '20px' }}>
                     <h4 style={{ ...S.h4, fontSize: '11px' }}>Line-by-Line Explanation</h4>
                     {a.lineByLine.map((l: any, k: number) => (
-                      <p key={k} style={{ ...S.p, fontSize: '12px', margin: '0 0 3px' }}><code style={{ color: '#2D8CFF' }}>{l.line}</code> — {l.explanation}</p>
+                      <p key={k} style={{ ...S.p, fontSize: '12px', margin: '0 0 3px' }}><code style={{ color: 'var(--accent)' }}>{l.line}</code> — {l.explanation}</p>
                     ))}
                   </div>
                 )}
@@ -1459,7 +1459,7 @@ function PrepSectionContent({ sectionKey, data }: { sectionKey: string; data: an
                       <tbody>{q.capacityEstimation.calculations.map((c: any, j: number) => (
                         <tr key={j} style={{ borderBottom: '1px solid #f3f4f6' }}>
                           <td style={{ padding: '6px 12px', fontWeight: 600, color: 'var(--text-primary)' }}>{c.metric}</td>
-                          <td style={{ padding: '6px 12px', fontFamily: 'monospace', color: '#2D8CFF', fontWeight: 600 }}>{c.result}</td>
+                          <td style={{ padding: '6px 12px', fontFamily: 'monospace', color: 'var(--accent)', fontWeight: 600 }}>{c.result}</td>
                           <td style={{ padding: '6px 12px', color: 'var(--text-muted)' }}>{c.calculation}</td>
                         </tr>
                       ))}</tbody>
