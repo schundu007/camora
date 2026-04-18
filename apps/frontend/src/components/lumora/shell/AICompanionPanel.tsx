@@ -259,14 +259,41 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
   const [streaming, setStreaming] = useState(false);
   const [streamText, setStreamText] = useState('');
   const [input, setInput] = useState('');
-  const [minimized, setMinimized] = useState(false);
-  const [panelWidth, setPanelWidth] = useState(360);
+  const [minimized, setMinimized] = useState(true); // Start minimized (just the icon)
+  const [maximized, setMaximized] = useState(false);
+  const [panelWidth, setPanelWidth] = useState(380);
+  const [panelHeight, setPanelHeight] = useState(520);
   const [isResizing, setIsResizing] = useState(false);
   const [answerMode, setAnswerMode] = useState<AnswerMode>('short');
+  const [position, setPosition] = useState({ x: 0, y: 0 }); // offset from default
+  const [isDragging, setIsDragging] = useState(false);
+  const dragRef = useRef<{ startX: number; startY: number; origX: number; origY: number } | null>(null);
   const resizeRef = useRef<{ startX: number; startW: number } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+
+  // Drag handlers for floating window
+  useEffect(() => {
+    if (!isDragging) return;
+    const handleMove = (e: MouseEvent) => {
+      if (!dragRef.current) return;
+      setPosition({
+        x: dragRef.current.origX + (e.clientX - dragRef.current.startX),
+        y: dragRef.current.origY + (e.clientY - dragRef.current.startY),
+      });
+    };
+    const handleUp = () => { setIsDragging(false); dragRef.current = null; };
+    window.addEventListener('mousemove', handleMove);
+    window.addEventListener('mouseup', handleUp);
+    return () => { window.removeEventListener('mousemove', handleMove); window.removeEventListener('mouseup', handleUp); };
+  }, [isDragging]);
+
+  const startDrag = (e: React.MouseEvent) => {
+    if (maximized) return;
+    setIsDragging(true);
+    dragRef.current = { startX: e.clientX, startY: e.clientY, origX: position.x, origY: position.y };
+  };
 
   // Resize handlers
   useEffect(() => {
@@ -274,7 +301,7 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
     const handleMove = (e: MouseEvent) => {
       if (!resizeRef.current) return;
       const delta = resizeRef.current.startX - e.clientX;
-      const newW = Math.min(Math.max(200, resizeRef.current.startW + delta), 700);
+      const newW = Math.min(Math.max(280, resizeRef.current.startW + delta), 700);
       setPanelWidth(newW);
     };
     const handleUp = () => { setIsResizing(false); resizeRef.current = null; };
@@ -328,54 +355,77 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
     if (input.trim()) { ask(input); setInput(''); }
   }, [input, ask]);
 
-  return (
-    <div className="hidden lg:flex shrink-0 h-full transition-all duration-200" style={{ width: minimized ? 48 : panelWidth }}>
-      {/* Resize handle */}
-      {!minimized && (
-        <div
-          className="w-[5px] h-full cursor-col-resize flex items-center justify-center group shrink-0 hover:bg-blue-400/20 transition-colors"
-          style={{ background: isResizing ? 'rgba(45,140,255,0.2)' : '#E2E8F0' }}
-          onMouseDown={(e) => { setIsResizing(true); resizeRef.current = { startX: e.clientX, startW: panelWidth }; }}
-        >
-          <div className="w-[3px] h-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: '#2D8CFF' }} />
-        </div>
-      )}
-
-      <div className="flex-1 flex flex-col min-w-0" style={{ background: '#FFFFFF', borderLeft: '1px solid #E2E8F0' }}>
-      {/* Header */}
-      <div className="flex items-center justify-between h-14 px-3 shrink-0" style={{ borderBottom: '1px solid #E2E8F0' }}>
-        {minimized ? (
-          <button onClick={() => setMinimized(false)} className="w-full flex items-center justify-center p-1.5 rounded-lg transition-colors hover:bg-gray-100" style={{ color: C.accent }} title="Expand Camo">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
-          </button>
-        ) : (
-          <>
-            <div className="flex items-center gap-1">
-              <button onClick={() => { if (messages.length > 0 && confirm('Clear chat history?')) setMessages([]); }}
-                className="p-1.5 rounded-lg transition-colors hover:bg-gray-100" style={{ color: C.muted }} title="Clear history">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" /></svg>
-              </button>
-              <button onClick={() => setMessages([])}
-                className="p-1.5 rounded-lg transition-colors hover:bg-gray-100" style={{ color: C.muted }} title="New chat">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
-              </button>
-            </div>
-            <span className="text-xs font-bold tracking-tight" style={{ fontFamily: "'Clash Display', sans-serif", color: C.text }}>Camo</span>
-            <div className="flex items-center gap-1">
-              <span className="text-[9px] px-1.5 py-0.5 rounded" style={{ color: C.muted }}>{messages.filter(m => m.role === 'user').length}</span>
-              <button onClick={() => setMinimized(true)}
-                className="p-1.5 rounded-lg transition-colors hover:bg-gray-100" style={{ color: C.muted }} title="Minimize">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 12h16" /></svg>
-              </button>
-            </div>
-          </>
+  // Minimized = floating icon button
+  if (minimized) {
+    return (
+      <button
+        onClick={() => setMinimized(false)}
+        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full flex items-center justify-center shadow-xl transition-all hover:scale-110"
+        style={{ background: '#2D8CFF', boxShadow: '0 4px 24px rgba(45,140,255,0.4)' }}
+        title="Open Camo"
+      >
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+        </svg>
+        {messages.length > 0 && (
+          <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center">{messages.filter(m => m.role === 'user').length}</span>
         )}
+      </button>
+    );
+  }
+
+  return (
+    <div
+      className="fixed z-50 flex flex-col"
+      style={{
+        width: maximized ? '100vw' : panelWidth,
+        height: maximized ? '100vh' : panelHeight,
+        right: maximized ? 0 : `calc(24px - ${position.x}px)`,
+        bottom: maximized ? 0 : `calc(24px - ${position.y}px)`,
+        borderRadius: maximized ? 0 : '16px',
+        background: 'rgba(15,23,41,0.85)',
+        backdropFilter: 'blur(20px)',
+        border: maximized ? 'none' : '1px solid rgba(255,255,255,0.1)',
+        boxShadow: '0 8px 40px rgba(0,0,0,0.5)',
+        transition: isDragging ? 'none' : 'all 0.2s ease',
+      }}
+    >
+      {/* Header — draggable */}
+      <div
+        className="flex items-center justify-between h-11 px-3 shrink-0 cursor-move select-none"
+        style={{ borderBottom: '1px solid rgba(255,255,255,0.08)', borderRadius: maximized ? 0 : '16px 16px 0 0' }}
+        onMouseDown={startDrag}
+      >
+        <div className="flex items-center gap-1">
+          <button onClick={() => { if (messages.length > 0 && confirm('Clear chat history?')) setMessages([]); }}
+            className="p-1 rounded-md transition-colors hover:bg-white/10" style={{ color: 'rgba(255,255,255,0.5)' }} title="Clear history">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" /></svg>
+          </button>
+          <button onClick={() => setMessages([])}
+            className="p-1 rounded-md transition-colors hover:bg-white/10" style={{ color: 'rgba(255,255,255,0.5)' }} title="New chat">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
+          </button>
+        </div>
+        <span className="text-xs font-bold tracking-tight" style={{ fontFamily: "'Clash Display', sans-serif", color: '#FFFFFF' }}>Camo</span>
+        <div className="flex items-center gap-0.5">
+          <button onClick={() => setMinimized(true)}
+            className="p-1 rounded-md transition-colors hover:bg-white/10" style={{ color: 'rgba(255,255,255,0.5)' }} title="Minimize">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 12h16" /></svg>
+          </button>
+          <button onClick={() => { setMaximized(!maximized); setPosition({ x: 0, y: 0 }); }}
+            className="p-1 rounded-md transition-colors hover:bg-white/10" style={{ color: 'rgba(255,255,255,0.5)' }} title={maximized ? 'Restore' : 'Maximize'}>
+            {maximized ? (
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="5" y="5" width="14" height="14" rx="1" /><path d="M9 3h10a2 2 0 012 2v10" /></svg>
+            ) : (
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" /></svg>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Answer Mode Toggle — Short / Detailed */}
-      {!minimized && (
-        <div className="flex items-center px-3 py-2 shrink-0" style={{ borderBottom: '1px solid #E2E8F0' }}>
-          <div className="flex items-center w-full rounded-lg p-0.5" style={{ background: '#F1F5F9' }}>
+      <div className="flex items-center px-3 py-1.5 shrink-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          <div className="flex items-center w-full rounded-lg p-0.5" style={{ background: 'rgba(255,255,255,0.06)' }}>
             {(['short', 'detailed'] as AnswerMode[]).map(mode => (
               <button
                 key={mode}
@@ -395,14 +445,8 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
               </button>
             ))}
           </div>
-        </div>
-      )}
+      </div>
 
-      {minimized ? (
-        <div className="flex-1 flex items-center justify-center">
-          <span className="text-[10px] font-bold tracking-widest uppercase" style={{ color: C.muted, writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>Camo</span>
-        </div>
-      ) : (<>
       {/* Chat */}
       <div ref={scrollRef} className="flex-1 overflow-auto px-3 py-3">
         {messages.length === 0 && !streaming ? (
@@ -416,9 +460,9 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
             <div className="grid grid-cols-2 gap-1.5 w-full">
               {['Design a URL shortener', 'Explain TCP vs UDP', 'Tell me about a conflict', 'Detect cycle in linked list'].map(s => (
                 <button key={s} onClick={() => ask(s)} className="text-left px-2.5 py-2 rounded-lg transition-all"
-                  style={{ border: `1px solid ${C.border}`, fontSize: '10px', fontFamily: "'Satoshi', sans-serif", color: C.muted, lineHeight: '1.4' }}
-                  onMouseEnter={e => { e.currentTarget.style.color = '#0F172A'; e.currentTarget.style.background = '#F1F5F9'; }}
-                  onMouseLeave={e => { e.currentTarget.style.color = '#64748B'; e.currentTarget.style.background = 'transparent'; }}>
+                  style={{ border: '1px solid rgba(255,255,255,0.08)', fontSize: '10px', fontFamily: "'Satoshi', sans-serif", color: 'rgba(255,255,255,0.4)', lineHeight: '1.4' }}
+                  onMouseEnter={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.9)'; e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.4)'; e.currentTarget.style.background = 'transparent'; }}>
                   {s}
                 </button>
               ))}
@@ -463,20 +507,18 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
         {/* Prominent centered mic button */}
         <MicButtonLarge onResult={(text) => ask(text)} disabled={streaming} />
         {/* Text input row */}
-        <div className="flex items-center gap-1.5 px-2 h-9 rounded-xl w-full" style={{ background: '#F8FAFC', border: '1px solid #E2E8F0' }}>
+        <div className="flex items-center gap-1.5 px-2 h-9 rounded-xl w-full" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}>
           <input ref={inputRef} type="text" value={input} onChange={e => setInput(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter' && input.trim()) handleSubmit(); }}
             placeholder={answerMode === 'short' ? 'Type a question...' : 'Type a question...'}
             className="flex-1 bg-transparent focus:outline-none min-w-0 placeholder:opacity-40"
-            style={{ fontFamily: "'Satoshi', sans-serif", color: C.text, fontSize: '10px' }} disabled={streaming} />
+            style={{ fontFamily: "'Satoshi', sans-serif", color: '#FFFFFF', fontSize: '10px' }} disabled={streaming} />
           {input.trim() && !streaming && (
             <button onClick={handleSubmit} className="w-6 h-6 rounded-full flex items-center justify-center shrink-0" style={{ background: '#2D8CFF' }}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
             </button>
           )}
         </div>
-      </div>
-      </>)}
       </div>
     </div>
   );
