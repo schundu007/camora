@@ -300,32 +300,30 @@ export default function LandingPage() {
         {/* Glow aura */}
         <div className="absolute top-0 bottom-0" style={{ left: '-18px', width: '36px', background: `linear-gradient(to bottom, transparent 3%, rgba(255,255,255,0.015) 10%, rgba(255,255,255,0.008) 50%, rgba(255,255,255,0.015) 90%, transparent 97%)`, filter: 'blur(10px)' }} />
 
-        {/* ── AIRPLANE flying UP with contrail ── */}
-        <div className="absolute" style={{ left: '-26px', animation: 'fp-rocket 64s ease-in-out infinite' }}>
+        {/* ── AIRPLANE flying UP along the track ── */}
+        <div className="absolute" style={{ left: '-48px', animation: 'fp-rocket 64s ease-in-out infinite' }}>
           {/* Contrail below the ascending plane */}
-          <div style={{ position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', width: '3px', height: '100px', borderRadius: '2px', background: 'linear-gradient(to bottom, rgba(255,255,255,0.5), rgba(118,185,0,0.2), transparent)' }} />
-          {/* Real airplane image — flying up */}
-          <img src="/airplane.png" alt="" width="56" height="56" style={{ filter: 'drop-shadow(0 0 16px rgba(118,185,0,0.6)) drop-shadow(0 -4px 10px rgba(255,255,255,0.2))' }} />
+          <div style={{ position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', width: '4px', height: '120px', borderRadius: '2px', background: 'linear-gradient(to bottom, rgba(255,255,255,0.5), rgba(118,185,0,0.2), transparent)' }} />
+          {/* Real airplane image — large and visible */}
+          <img src="/airplane.png" alt="" width="100" height="100" style={{ filter: 'drop-shadow(0 0 20px rgba(118,185,0,0.7)) drop-shadow(0 -6px 14px rgba(255,255,255,0.25))' }} />
         </div>
 
-        {/* ── Airport nodes — each section is a destination ── */}
+        {/* ── Section waypoints — labels match page content ── */}
         {[
-          { pos: 8,  code: 'SFO' },
-          { pos: 22, code: 'LAX' },
-          { pos: 36, code: 'ORD' },
-          { pos: 50, code: 'JFK' },
-          { pos: 64, code: 'LHR' },
-          { pos: 78, code: 'NRT' },
-          { pos: 92, code: 'SIN' },
-        ].map((airport, i) => (
-          <div key={i} className="absolute" style={{ top: `${airport.pos}%`, left: '-14px' }}>
-            {/* Airport marker */}
+          { pos: 8,  code: 'LAUNCH' },
+          { pos: 22, code: 'TRUST' },
+          { pos: 36, code: 'APPA' },
+          { pos: 50, code: 'LIVE AI' },
+          { pos: 64, code: 'JOBS' },
+          { pos: 78, code: 'EDGE' },
+          { pos: 92, code: 'GO' },
+        ].map((node, i) => (
+          <div key={i} className="absolute" style={{ top: `${node.pos}%`, left: '-14px' }}>
             <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: L.bg, border: '2.5px solid rgba(255,255,255,0.25)', boxShadow: '0 0 14px rgba(255,255,255,0.08), inset 0 0 6px rgba(118,185,0,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: 'rgba(118,185,0,0.5)' }} />
             </div>
-            {/* Airport code label */}
             <div style={{ position: 'absolute', left: '36px', top: '50%', transform: 'translateY(-50%)', whiteSpace: 'nowrap' }}>
-              <span style={{ fontSize: '9px', fontFamily: F.mono, fontWeight: 700, color: 'rgba(255,255,255,0.2)', letterSpacing: '0.15em' }}>{airport.code}</span>
+              <span style={{ fontSize: '9px', fontFamily: F.mono, fontWeight: 700, color: 'rgba(255,255,255,0.2)', letterSpacing: '0.15em' }}>{node.code}</span>
             </div>
           </div>
         ))}
