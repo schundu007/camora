@@ -174,8 +174,6 @@ function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
   const accent = '#2D8CFF';
 
   const ACTIONS = [
-    { icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a3 3 0 00-3 3v7a3 3 0 006 0V5a3 3 0 00-3-3z" /><path d="M19 10v2a7 7 0 01-14 0v-2" /><line x1="12" y1="19" x2="12" y2="22" /></svg>,
-      label: 'Start Session', onClick: () => onAskQuestion?.('I\'m starting an interview session. Help me warm up with a quick practice question.') },
     { icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6" /></svg>,
       label: 'Coding', onClick: () => onSwitchToCoding?.() },
     { icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18M9 21V9" /></svg>,

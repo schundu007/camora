@@ -7,14 +7,14 @@ import type { LumoraTab } from './LumoraIconRail';
 
 /* ── Color tokens (standardized) ── */
 const C = {
-  base: '#000000',
-  surface: '#111111',
+  base: '#0B1120',
+  surface: '#0F1729',
   elevated: '#2D8CFF',
   text: '#ffffff',
   muted: 'rgba(255,255,255,0.75)',
   accent: '#2D8CFF',
   accentBg: 'rgba(45,140,255,0.15)',
-  border: '#333333',
+  border: 'rgba(255,255,255,0.08)',
 };
 
 interface LumoraTopBarProps {
