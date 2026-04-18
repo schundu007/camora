@@ -17,8 +17,8 @@ const F = {
 };
 
 const L = {
-  bg: '#FFFFFF', surface: '#F8FAFC', elevated: '#F1F5F9',
-  border: '#E2E8F0', text: '#0F172A', secondary: '#475569',
+  bg: '#FFFFFF', surface: '#2D8CFF', elevated: '#1A7AEF',
+  border: 'rgba(45,140,255,0.2)', text: '#0F172A', secondary: '#475569',
   muted: '#94A3B8', dimmed: '#CBD5E1',
   gradient: 'linear-gradient(135deg, #2D8CFF 0%, #0B5CFF 100%)',
   primary: '#2D8CFF', emerald: '#2D8CFF', radius: '12px',
@@ -172,9 +172,11 @@ export default function LandingPage() {
         .cm-gradient-btn { background: ${L.gradient}; transition: filter 0.2s ease, box-shadow 0.2s ease; }
         .cm-gradient-btn:hover { filter: brightness(1.15); box-shadow: 0 0 30px rgba(45,140,255,0.2); }
         .cm-outline-btn { border: 1px solid ${L.border}; color: ${L.text}; transition: border-color 0.2s, background 0.2s; }
-        .cm-outline-btn:hover { border-color: ${L.muted}; background: ${L.surface}; }
-        .cm-glass { background: ${L.surface}; border: 1px solid ${L.border}; border-radius: 16px; }
-        .cm-glass:hover { background: ${L.elevated}; border-color: ${L.muted}; }
+        .cm-outline-btn:hover { border-color: #2D8CFF; background: rgba(45,140,255,0.05); color: #2D8CFF; }
+        .cm-glass { background: ${L.surface}; color: #FFFFFF; border: none; border-radius: 16px; }
+        .cm-glass:hover { background: ${L.elevated}; }
+        .cm-glass p, .cm-glass span { color: rgba(255,255,255,0.85); }
+        .cm-glass h3 { color: #FFFFFF; }
         @keyframes scroll-logos { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
       `}</style>
 
@@ -194,8 +196,8 @@ export default function LandingPage() {
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto text-center relative z-10">
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <span className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold tracking-[0.12em] uppercase"
-              style={{ borderRadius: '999px', background: L.surface, border: `1px solid ${L.border}`, color: L.secondary, fontFamily: F.mono }}>
-              <span className="w-2 h-2 rounded-full" style={{ background: L.emerald }} />
+              style={{ borderRadius: '999px', background: '#F1F5F9', border: '1px solid #E2E8F0', color: L.secondary, fontFamily: F.mono }}>
+              <span className="w-2 h-2 rounded-full" style={{ background: L.primary }} />
               Apply . Prepare . Practice . Attend
             </span>
           </motion.div>
@@ -242,9 +244,9 @@ export default function LandingPage() {
           <div className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${L.border}`, background: L.surface }}>
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6">
               {COMPANIES.map((c) => (
-                <div key={c} className="flex items-center justify-center py-6 px-4 transition-all hover:bg-white/[0.03]" style={{ borderRight: `1px solid ${L.border}`, borderBottom: `1px solid ${L.border}` }}>
+                <div key={c} className="flex items-center justify-center py-6 px-4 transition-all hover:bg-white/10" style={{ borderRight: '1px solid rgba(255,255,255,0.15)', borderBottom: '1px solid rgba(255,255,255,0.15)' }}>
                   <img src={`https://img.logo.dev/${c}.com?token=${LOGO_TOKEN}&size=80&format=png`}
-                    alt={c} className="h-6 object-contain opacity-50 hover:opacity-100 transition-opacity" loading="lazy"
+                    alt={c} className="h-6 object-contain brightness-0 invert opacity-60 hover:opacity-100 transition-opacity" loading="lazy"
                     onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                 </div>
               ))}
@@ -285,7 +287,7 @@ export default function LandingPage() {
                 <Reveal key={step.key} delay={i * 0.08}>
                   <div className="flex gap-6 md:gap-10 items-start">
                     <div className="hidden md:flex flex-col items-center flex-shrink-0 relative z-10">
-                      <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold" style={{ background: L.surface, border: `2px solid ${L.primary}`, color: L.primary }}>{i + 1}</div>
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white" style={{ background: L.primary }}>{i + 1}</div>
                     </div>
                     <div className="flex-1 flex flex-col lg:flex-row gap-6">
                       <div className="lg:w-[45%]">
@@ -392,7 +394,7 @@ export default function LandingPage() {
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
           <Reveal className="text-center mb-10">
             <span className="inline-flex items-center gap-2 text-[11px] font-bold tracking-[0.15em] uppercase px-4 py-1.5"
-              style={{ borderRadius: '999px', background: L.surface, border: `1px solid ${L.border}`, color: L.secondary, fontFamily: F.mono }}>
+              style={{ borderRadius: '999px', background: L.primary, border: 'none', color: '#FFFFFF', fontFamily: F.mono }}>
               <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /></svg>
               Cockpit AI
             </span>
@@ -444,7 +446,7 @@ export default function LandingPage() {
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
           <Reveal className="text-center mb-10">
             <span className="inline-block text-[11px] font-bold tracking-[0.18em] uppercase px-4 py-1.5 mb-5"
-              style={{ borderRadius: '999px', background: 'rgba(45,140,255,0.06)', border: '1px solid rgba(45,140,255,0.15)', color: L.emerald, fontFamily: F.mono }}>Club Members Only</span>
+              style={{ borderRadius: '999px', background: L.primary, border: 'none', color: '#FFFFFF', fontFamily: F.mono }}>Club Members Only</span>
             <h2 className="text-3xl md:text-4xl lg:text-[44px] font-bold tracking-tight" style={{ fontFamily: F.display }}>First-class features. No turbulence.</h2>
           </Reveal>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
