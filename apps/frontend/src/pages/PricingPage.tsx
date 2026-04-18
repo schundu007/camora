@@ -190,11 +190,11 @@ export default function PricingPage() {
             const isStarter = plan.name === 'Starter';
 
             const accent = isPro
-              ? { from: '#2D8CFF', via: '#2D8CFF', to: '#2D8CFF', glow: 'rgba(45,140,255,0.4)', checkColor: '#60A5FA' }
+              ? { from: 'var(--accent)', via: 'var(--accent)', to: 'var(--accent)', glow: 'rgba(45,140,255,0.4)', checkColor: '#60A5FA' }
               : isAnnual
-              ? { from: '#f59e0b', via: '#fbbf24', to: '#fde68a', glow: 'rgba(245,158,11,0.3)', checkColor: '#fbbf24' }
+              ? { from: 'var(--warning)', via: '#fbbf24', to: '#fde68a', glow: 'rgba(245,158,11,0.3)', checkColor: '#fbbf24' }
               : isStarter
-              ? { from: '#2D8CFF', via: '#2D8CFF', to: '#60A5FA', glow: 'rgba(45,140,255,0.15)', checkColor: '#2D8CFF' }
+              ? { from: 'var(--accent)', via: 'var(--accent)', to: '#60A5FA', glow: 'rgba(45,140,255,0.15)', checkColor: 'var(--accent)' }
               : { from: '#475569', via: '#64748b', to: '#94a3b8', glow: 'rgba(100,116,139,0.1)', checkColor: '#4ade80' };
 
             return (
@@ -202,14 +202,14 @@ export default function PricingPage() {
                 style={{
                   zIndex: isPro ? 2 : 1,
                   background: '#FFFFFF',
-                  border: isPro ? '2px solid #2D8CFF' : '1px solid var(--border)',
+                  border: isPro ? '2px solid var(--accent)' : '1px solid var(--border)',
                   boxShadow: isPro ? '0 8px 32px rgba(45,140,255,0.15)' : 'var(--shadow-md)',
                 }}>
                 <div className="relative p-7 pb-0 flex flex-col flex-1">
                   <div className="flex items-center justify-between mb-5">
-                    <h3 className="text-[13px] font-bold uppercase tracking-[0.12em]" style={{ color: isPro ? '#2D8CFF' : 'var(--text-muted)' }}>{plan.name}</h3>
-                    {isPro && <span className="px-3 py-1 rounded-full text-[9px] font-extrabold uppercase tracking-[0.12em]" style={{ background: '#2D8CFF', color: '#fff' }}>Most Popular</span>}
-                    {isAnnual && <span className="px-3 py-1 rounded-full text-[9px] font-extrabold uppercase tracking-[0.12em]" style={{ background: '#F59E0B', color: '#fff' }}>Best Value</span>}
+                    <h3 className="text-[13px] font-bold uppercase tracking-[0.12em]" style={{ color: isPro ? 'var(--accent)' : 'var(--text-muted)' }}>{plan.name}</h3>
+                    {isPro && <span className="px-3 py-1 rounded-full text-[9px] font-extrabold uppercase tracking-[0.12em]" style={{ background: 'var(--accent)', color: '#fff' }}>Most Popular</span>}
+                    {isAnnual && <span className="px-3 py-1 rounded-full text-[9px] font-extrabold uppercase tracking-[0.12em]" style={{ background: 'var(--warning)', color: '#fff' }}>Best Value</span>}
                   </div>
                   <div className="flex items-baseline gap-1">
                     <span className="font-extrabold leading-none tracking-tight" style={{ fontSize: '44px', color: 'var(--text-primary)' }}>{plan.price}</span>
@@ -220,7 +220,7 @@ export default function PricingPage() {
                   <ul className="space-y-3 flex-1 mb-7">
                     {plan.features.map((f, i) => (
                       <li key={i} className="flex items-start gap-2.5 text-[13px] leading-snug">
-                        <svg className="w-4 h-4 mt-0.5 shrink-0" viewBox="0 0 16 16" fill="none" stroke="#2D8CFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M13 4L6 11L3 8" /></svg>
+                        <svg className="w-4 h-4 mt-0.5 shrink-0" viewBox="0 0 16 16" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M13 4L6 11L3 8" /></svg>
                         <span style={{ color: 'var(--text-secondary)' }}>{f}</span>
                       </li>
                     ))}
@@ -230,7 +230,7 @@ export default function PricingPage() {
                   <button onClick={() => handleCheckout(plan)} disabled={loading === plan.name}
                     className="pricing-cta w-full py-3.5 text-sm font-bold rounded-xl cursor-pointer transition-all duration-200 disabled:opacity-50 flex items-center justify-center gap-2"
                     style={isPro
-                      ? { background: '#2D8CFF', color: '#fff', boxShadow: '0 4px 12px rgba(45,140,255,0.3)' }
+                      ? { background: 'var(--accent)', color: '#fff', boxShadow: '0 4px 12px rgba(45,140,255,0.3)' }
                       : { background: 'var(--bg-surface)', color: 'var(--text-primary)', border: '1px solid var(--border)' }
                     }>
                     {loading === plan.name ? (
@@ -253,84 +253,69 @@ export default function PricingPage() {
       </section>
 
       {/* Competitor comparison */}
-      <section className="px-4 pt-4 pb-16">
-        <div className="w-full mx-auto">
-          <div className="mb-10 text-center">
-            <span className="text-xs font-bold uppercase tracking-[0.18em]" style={{ color: 'var(--accent)' }}>Why Camora Wins</span>
-            <h2 className="mt-3 text-3xl md:text-4xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>
-              Compare the competition.
-            </h2>
-          </div>
-
-          <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
-              <div className="overflow-x-auto">
-                <table className="w-full text-[12px]" style={{ borderCollapse: 'collapse' }}>
-                  <thead>
-                    <tr style={{ background: 'var(--bg-surface)' }}>
-                      <th className="text-left py-2.5 px-3 text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)', borderBottom: '2px solid var(--border)' }}>Feature</th>
-                      {[
-                        { name: 'Camora', price: 'FREE', unit: '', highlight: true },
-                        { name: 'Final Round', price: '$100', unit: '/mo' },
-                        { name: 'LockedIn', price: '$55-120', unit: '/mo' },
-                        { name: 'Solver', price: '$39', unit: '/mo' },
-                        { name: 'Sensei', price: '$24-89', unit: '/mo' },
-                        { name: 'TechPrep', price: '$39', unit: '/mo' },
-                        { name: 'AlgoMaster', price: '$29', unit: '/mo' },
-                        { name: 'DesignGurus', price: '$98-197', unit: '/yr' },
-                        { name: 'AIApply', price: '$29-200', unit: '/mo' },
-                        { name: 'OfferGoose', price: '$89-200', unit: '/mo' },
-                        { name: 'Parakeet', price: '$100-200', unit: '/mo' },
-                      ].map((col) => (
-                        <th key={col.name} className="py-2.5 px-1.5 text-center whitespace-nowrap"
-                          style={{ borderBottom: '2px solid var(--border)', ...(col.highlight ? { background: '#2D8CFF', borderBottom: '2px solid #2D8CFF' } : {}) }}>
-                          <div className="font-bold" style={{ color: col.highlight ? '#fff' : 'var(--text-muted)', fontSize: '11px' }}>{col.name}</div>
-                          <div className="font-bold" style={{ color: col.highlight ? 'rgba(255,255,255,0.8)' : 'var(--text-dimmed)', fontSize: '10px' }}>
-                            {col.price}<span className="text-[8px]">{col.unit}</span>
-                          </div>
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {COMPARISON.map((row, i) => {
-                      const isLast = i === COMPARISON.length - 1;
-                      const bd = isLast ? 'none' : '1px solid var(--border)';
-                      const Cell = ({ val, highlight }: { val: boolean | string; highlight?: boolean }) => {
-                        if (val === true) return highlight
-                          ? <span className="inline-flex items-center justify-center w-5 h-5 rounded-full" style={{ background: '#2D8CFF' }}><svg className="w-3 h-3" viewBox="0 0 12 12" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10 3L4.5 8.5L2 6" /></svg></span>
-                          : <svg className="w-3.5 h-3.5 mx-auto" viewBox="0 0 12 12" fill="none" stroke="var(--text-dimmed)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10 3L4.5 8.5L2 6" /></svg>;
-                        if (val === false) return <span style={{ color: 'var(--text-dimmed)' }}>—</span>;
-                        return <span className="text-[8px] font-bold px-1.5 py-0.5 rounded" style={{ background: 'rgba(245,158,11,0.1)', color: '#B45309' }}>{val}</span>;
-                      };
+      <section style={{ padding: '16px 16px 64px' }}>
+        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+          <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.18em', color: 'var(--accent)' }}>Why Camora Wins</span>
+          <h2 style={{ marginTop: 12, fontSize: 32, fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--text-primary)' }}>Compare the competition.</h2>
+        </div>
+        <div style={{ border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden', background: '#fff' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+            <colgroup>
+              <col style={{ width: '18%' }} />
+              {Array(11).fill(0).map((_, i) => <col key={i} style={{ width: `${82/11}%` }} />)}
+            </colgroup>
+            <thead>
+              <tr style={{ background: 'var(--bg-surface)' }}>
+                <th style={{ textAlign: 'left', padding: '10px 12px', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', borderBottom: '2px solid var(--border)' }}>Feature</th>
+                {[
+                  { n: 'Camora', p: 'FREE', u: '', hl: true },
+                  { n: 'Final Round', p: '$100', u: '/mo' },
+                  { n: 'LockedIn', p: '$55-120', u: '/mo' },
+                  { n: 'Solver', p: '$39', u: '/mo' },
+                  { n: 'Sensei', p: '$24-89', u: '/mo' },
+                  { n: 'TechPrep', p: '$39', u: '/mo' },
+                  { n: 'AlgoMaster', p: '$29', u: '/mo' },
+                  { n: 'DesignGurus', p: '$98-197', u: '/yr' },
+                  { n: 'AIApply', p: '$29-200', u: '/mo' },
+                  { n: 'OfferGoose', p: '$89-200', u: '/mo' },
+                  { n: 'Parakeet', p: '$100-200', u: '/mo' },
+                ].map(c => (
+                  <th key={c.n} style={{ padding: '10px 2px', textAlign: 'center', borderBottom: c.hl ? '2px solid var(--accent)' : '2px solid var(--border)', background: c.hl ? 'var(--accent)' : undefined }}>
+                    <div style={{ fontWeight: 700, fontSize: 11, color: c.hl ? '#fff' : 'var(--text-muted)' }}>{c.n}</div>
+                    <div style={{ fontWeight: 700, fontSize: 10, color: c.hl ? 'rgba(255,255,255,0.8)' : 'var(--text-dimmed)' }}>{c.p}<span style={{ fontSize: 8 }}>{c.u}</span></div>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {COMPARISON.map((row, i) => {
+                const bd = i < COMPARISON.length - 1 ? '1px solid var(--border)' : 'none';
+                const keys = ['camora','finalround','lockedin','solver','sensei','techprep','algomaster','designgurus','aiapply','offergoose','parakeet'] as const;
+                return (
+                  <tr key={i} style={{ background: i % 2 === 0 ? 'var(--bg-surface)' : '#fff' }}>
+                    <td style={{ padding: '8px 12px', fontSize: 12, color: row.unique ? 'var(--accent)' : 'var(--text-primary)', fontWeight: row.unique ? 600 : 400, borderBottom: bd }}>{row.feature}</td>
+                    {keys.map((k, j) => {
+                      const val = (row as any)[k];
+                      const isCamora = j === 0;
                       return (
-                        <tr key={i} className="hover:bg-[var(--bg-surface)] transition-colors">
-                          <td className="py-2 px-4 text-[12px]" style={{ color: row.unique ? '#2D8CFF' : 'var(--text-primary)', fontWeight: row.unique ? 600 : 400, borderBottom: bd }}>{row.feature}</td>
-                          <td className="py-2 px-1.5 text-center" style={{ background: 'rgba(45,140,255,0.04)', borderBottom: bd }}><Cell val={row.camora} highlight /></td>
-                          {[row.finalround, row.lockedin].map((v, j) => <td key={j} className="py-2 px-1.5 text-center" style={{ borderBottom: bd }}><Cell val={v} /></td>)}
-                          <td className="py-2 px-1.5 text-center" style={{ borderBottom: bd }}><Cell val={row.solver} /></td>
-                          <td className="py-2 px-1.5 text-center" style={{ borderBottom: bd }}><Cell val={row.sensei} /></td>
-                          <td className="py-2 px-1.5 text-center" style={{ borderBottom: bd }}><Cell val={row.techprep} /></td>
-                          <td className="py-2 px-1.5 text-center" style={{ borderBottom: bd }}><Cell val={row.algomaster} /></td>
-                          <td className="py-2 px-1.5 text-center" style={{ borderBottom: bd }}><Cell val={row.designgurus} /></td>
-                          <td className="py-2 px-1.5 text-center" style={{ borderBottom: bd }}><Cell val={row.aiapply} /></td>
-                          <td className="py-2 px-1.5 text-center" style={{ borderBottom: bd }}><Cell val={row.offergoose} /></td>
-                          <td className="py-2 px-1.5 text-center" style={{ borderBottom: bd }}><Cell val={row.parakeet} /></td>
-                        </tr>
+                        <td key={k} style={{ padding: '8px 2px', textAlign: 'center', borderBottom: bd, background: isCamora ? 'rgba(45,140,255,0.04)' : undefined }}>
+                          {val === true ? (
+                            isCamora
+                              ? <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 20, height: 20, borderRadius: '50%', background: 'var(--accent)' }}><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10 3L4.5 8.5L2 6" /></svg></span>
+                              : <svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="var(--text-dimmed)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', margin: '0 auto' }}><path d="M10 3L4.5 8.5L2 6" /></svg>
+                          ) : val === false ? (
+                            <span style={{ color: 'var(--text-dimmed)' }}>—</span>
+                          ) : (
+                            <span style={{ fontSize: 8, fontWeight: 700, padding: '2px 5px', borderRadius: 4, background: 'rgba(245,158,11,0.1)', color: '#B45309' }}>{val}</span>
+                          )}
+                        </td>
                       );
                     })}
-                  </tbody>
-                </table>
-              </div>
-
-            <style>{`
-              .comparison-row:hover {
-                background: rgba(45,140,255,0.08) !important;
-              }
-              .comparison-row:hover td:first-child {
-                color: #fff !important;
-              }
-            `}</style>
-          </div>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       </section>
 
@@ -341,7 +326,7 @@ export default function PricingPage() {
           {/* Desktop App */}
           <div className="rounded-xl p-4 flex items-center justify-between gap-4" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'linear-gradient(135deg, rgba(45,140,255,0.15), rgba(139,92,246,0.15))', color: '#2D8CFF' }}>
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'linear-gradient(135deg, rgba(45,140,255,0.15), rgba(139,92,246,0.15))', color: 'var(--accent)' }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
                   <rect x="2" y="3" width="20" height="14" rx="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" />
                 </svg>
@@ -351,7 +336,7 @@ export default function PricingPage() {
                 <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>Stealth mode, screen-share safe</p>
               </div>
             </div>
-            <a href="https://github.com/schundu007/camora/releases/latest" target="_blank" rel="noopener noreferrer" className="shrink-0 px-4 py-1.5 text-white text-[11px] font-semibold rounded-lg" style={{ background: 'linear-gradient(135deg, #2D8CFF, #2D8CFF)' }}>
+            <a href="https://github.com/schundu007/camora/releases/latest" target="_blank" rel="noopener noreferrer" className="shrink-0 px-4 py-1.5 text-white text-[11px] font-semibold rounded-lg" style={{ background: 'var(--accent)' }}>
               Download
             </a>
           </div>
