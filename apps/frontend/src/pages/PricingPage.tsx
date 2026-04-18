@@ -254,7 +254,7 @@ export default function PricingPage() {
 
       {/* Competitor comparison */}
       <section className="px-6 pt-4 pb-16">
-        <div className="w-full lg:max-w-[90%] mx-auto">
+        <div className="w-full max-w-[1400px] mx-auto">
           <div className="mb-10 text-center">
             <span className="text-xs font-bold uppercase tracking-[0.18em]" style={{ color: 'var(--accent)' }}>Why Camora Wins</span>
             <h2 className="mt-3 text-3xl md:text-4xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>
@@ -264,10 +264,10 @@ export default function PricingPage() {
 
           <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
               <div className="overflow-x-auto">
-                <table className="w-full text-[12px]" style={{ borderCollapse: 'collapse' }}>
+                <table className="w-full text-[12px]" style={{ borderCollapse: 'collapse', tableLayout: 'fixed' }}>
                   <thead>
                     <tr style={{ background: 'var(--bg-surface)' }}>
-                      <th className="text-left py-2.5 px-4 text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)', borderBottom: '2px solid var(--border)', minWidth: '180px' }}>Feature</th>
+                      <th className="text-left py-2.5 px-4 text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)', borderBottom: '2px solid var(--border)', width: '22%' }}>Feature</th>
                       {[
                         { name: 'Camora', price: 'FREE', unit: '', highlight: true },
                         { name: 'Final Round', price: '$100', unit: '/mo' },
@@ -367,7 +367,7 @@ export default function PricingPage() {
               ].map((pack) => (
                 <div key={pack.packId} className="rounded-xl p-3 flex flex-col items-center text-center" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
                   <span className="text-[11px] font-semibold" style={{ color: 'var(--text-primary)' }}>{pack.name}</span>
-                  <span className="text-base font-bold text-emerald-400 mt-0.5">{pack.price}</span>
+                  <span className="text-base font-bold text-[var(--accent)] mt-0.5">{pack.price}</span>
                   <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>{pack.desc}</span>
                   <button
                     onClick={async () => {
