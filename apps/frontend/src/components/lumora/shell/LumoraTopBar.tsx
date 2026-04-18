@@ -32,7 +32,7 @@ export function LumoraTopBar({ activeTab, onTranscription }: LumoraTopBarProps) 
       <div className="min-w-[20px]" />
 
       {/* Center: core audio controls (compact) */}
-      <div data-tour="audio" className="flex-1 flex items-center justify-center">
+      <div data-tour="audio" className="flex-1 flex items-center justify-center overflow-x-auto">
         <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}>
           {/* Live recording controls */}
           <AudioCapture onTranscription={onTranscription} />

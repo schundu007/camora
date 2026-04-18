@@ -726,7 +726,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                 value={problemText}
                 onChange={(e) => setProblemText(e.target.value)}
                 placeholder="Describe your system design problem...&#10;&#10;Example: Design a URL shortener like bit.ly that handles 100M links/month"
-                className="w-full h-[100px] rounded-lg p-3 text-xs md:text-sm leading-relaxed resize-none focus:ring-1 focus:ring-indigo-400/30 focus:outline-none transition-all font-mono"
+                className="w-full h-[80px] rounded-lg p-3 text-xs md:text-sm leading-relaxed resize-none focus:ring-1 focus:ring-indigo-400/30 focus:outline-none transition-all font-mono"
                 style={{ background: '#ffffff', border: '1px solid #e2e8f0', color: '#0f172a' }}
               />
             )}
