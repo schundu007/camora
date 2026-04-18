@@ -149,9 +149,9 @@ const INTEGRATIONS = [
 
 /* ── Pricing Preview ──────────────────────────────────── */
 const PLANS = [
-  { name: 'Free', price: '$0', period: '', features: ['3 Live Sessions', '300+ Topics', 'Basic Practice'], cta: 'Start Free' },
-  { name: 'Pro', price: '$49', period: '/mo', features: ['Unlimited Sessions', 'Job Discovery', 'Desktop App', 'All Features'], cta: 'Go Pro', popular: true },
-  { name: 'Annual', price: '$19', period: '/mo', features: ['Everything in Pro', '61% Savings', 'Priority Support', 'Billed $228/yr'], cta: 'Best Value' },
+  { name: 'Economy', price: '$0', period: '', features: ['3 Live Sessions', '300+ Topics', 'Basic Practice'], cta: 'Start Free' },
+  { name: 'Frequent Flier', price: '$49', period: '/mo', features: ['Unlimited Sessions', 'Job Discovery', 'Desktop App', 'All Features'], cta: 'Upgrade', popular: true },
+  { name: 'Club Member', price: '$19', period: '/mo', features: ['Everything in Frequent Flier', '61% Savings', 'Priority Support', 'Billed $228/yr'], cta: 'Best Value' },
 ];
 
 /* ── Hooks ────────────────────────────────────────────── */
