@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Icon } from '../../shared/Icons.jsx';
 import { CompanyLogo, getCompanyLogoSrc } from '../../shared/CompanyLogo.tsx';
@@ -294,11 +294,27 @@ function DataModelSection({ schema }) {
  */
 function StaticCloudDiagram({ topicId, provider, staticSrc, diagramData, generatingDiagram, diagramError, onGenerate }) {
   const [imgError, setImgError] = useState(false);
+  const [scale, setScale] = useState(1);
+  const [translate, setTranslate] = useState({ x: 0, y: 0 });
+  const [dragging, setDragging] = useState(false);
+  const dragStart = useRef({ x: 0, y: 0 });
+  const transStart = useRef({ x: 0, y: 0 });
+  const containerRef = useRef(null);
+  const imgRef = useRef(null);
+
+  const resetView = useCallback(() => { setScale(1); setTranslate({ x: 0, y: 0 }); }, []);
+  const fitToWidth = useCallback(() => {
+    if (!containerRef.current || !imgRef.current) return;
+    const cw = containerRef.current.clientWidth;
+    const iw = imgRef.current.naturalWidth;
+    if (iw > 0) { setScale(Math.max(1, cw / iw * 1.8)); setTranslate({ x: 0, y: 0 }); }
+  }, []);
 
   // Reset error state when topic or provider changes
   useEffect(() => {
     setImgError(false);
-  }, [topicId, provider]);
+    resetView();
+  }, [topicId, provider, resetView]);
 
   // If static image failed to load, fall back to API-generated diagram
   if (imgError) {
@@ -315,22 +331,30 @@ function StaticCloudDiagram({ topicId, provider, staticSrc, diagramData, generat
 
   return (
     <div>
-      <div className="rounded-lg overflow-hidden bg-[var(--bg-surface)]">
-        <img
-          src={staticSrc}
-          alt={`${topicId} ${provider.toUpperCase()} architecture diagram`}
-          style={{ width: '100%', height: 'auto', display: 'block' }}
+      {/* Zoom controls */}
+      <div className="flex items-center justify-end gap-1 mb-2">
+        <button onClick={() => setScale(s => Math.min(s + 0.3, 5))} className="px-2 py-1 text-xs font-mono border border-[var(--border)] rounded hover:bg-[var(--bg-elevated)] text-[var(--text-muted)]">+</button>
+        <span className="text-[10px] font-mono text-[var(--text-muted)] min-w-[3.5ch] text-center">{Math.round(scale * 100)}%</span>
+        <button onClick={() => setScale(s => Math.max(s - 0.3, 0.3))} className="px-2 py-1 text-xs font-mono border border-[var(--border)] rounded hover:bg-[var(--bg-elevated)] text-[var(--text-muted)]">−</button>
+        <button onClick={fitToWidth} className="px-2 py-1 text-xs font-mono border border-[var(--border)] rounded hover:bg-[var(--bg-elevated)] text-[var(--text-muted)] ml-1">Fit</button>
+        <button onClick={resetView} className="px-2 py-1 text-xs font-mono border border-[var(--border)] rounded hover:bg-[var(--bg-elevated)] text-[var(--text-muted)]">1:1</button>
+      </div>
+      <div ref={containerRef}
+        className="rounded-lg select-none flex items-center justify-center"
+        style={{ cursor: dragging ? 'grabbing' : 'grab', overflow: 'hidden', minHeight: '500px', background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
+        onWheel={e => { e.preventDefault(); setScale(s => Math.min(Math.max(0.3, s + (e.deltaY > 0 ? -0.15 : 0.15)), 5)); }}
+        onMouseDown={e => { if (e.button !== 0) return; setDragging(true); dragStart.current = { x: e.clientX, y: e.clientY }; transStart.current = { ...translate }; }}
+        onMouseMove={e => { if (!dragging) return; setTranslate({ x: transStart.current.x + (e.clientX - dragStart.current.x), y: transStart.current.y + (e.clientY - dragStart.current.y) }); }}
+        onMouseUp={() => setDragging(false)} onMouseLeave={() => setDragging(false)}>
+        <img ref={imgRef} src={staticSrc} alt={`${topicId} ${provider.toUpperCase()} architecture diagram`} draggable={false}
+          onLoad={fitToWidth}
           onError={() => setImgError(true)}
-        />
+          style={{ transform: `translate(${translate.x}px, ${translate.y}px) scale(${scale})`, transformOrigin: 'center center', maxWidth: 'none', height: 'auto' }} />
       </div>
       <div className="mt-2 flex items-center justify-between text-sm text-[var(--text-muted)] landing-mono">
         <span>{provider.toUpperCase()} Architecture</span>
         <div className="flex items-center gap-3">
-          <button
-            onClick={onGenerate}
-            className="text-xs text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors"
-            title="Generate a fresh diagram using AI"
-          >
+          <button onClick={onGenerate} className="text-xs text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors" title="Generate a fresh diagram using AI">
             Regenerate →
           </button>
           <a href={staticSrc} target="_blank" rel="noopener noreferrer" className="text-[var(--accent)] hover:text-[var(--accent)]">

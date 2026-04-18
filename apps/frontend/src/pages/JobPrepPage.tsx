@@ -311,7 +311,7 @@ export default function JobPrepPage() {
         },
         body: JSON.stringify({
           jobDescription: job.job_description || job.ai_summary || job.description || '',
-          resume: 'User resume placeholder', // TODO: get from user profile
+          resume: '', // TODO: get from user profile
           sections: ['pitch', 'hr', 'hiring-manager', 'coding', 'system-design', 'behavioral', 'techstack'],
           provider: 'claude',
         }),

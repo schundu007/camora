@@ -808,7 +808,7 @@ export default function DownloadPage() {
                     'Microphone access for transcription',
                   ].map(item => (
                     <li key={item} className="flex items-start gap-2.5 text-sm" style={{ color: '#A1A0AB' }}>
-                      <span className="mt-0.5 flex-shrink-0" style={{ color: '#10b981' }}><CheckIcon /></span>
+                      <span className="mt-0.5 flex-shrink-0" style={{ color: 'var(--success)' }}><CheckIcon /></span>
                       {item}
                     </li>
                   ))}
@@ -839,7 +839,7 @@ export default function DownloadPage() {
                     'Microphone access for transcription',
                   ].map(item => (
                     <li key={item} className="flex items-start gap-2.5 text-sm" style={{ color: '#A1A0AB' }}>
-                      <span className="mt-0.5 flex-shrink-0" style={{ color: '#10b981' }}><CheckIcon /></span>
+                      <span className="mt-0.5 flex-shrink-0" style={{ color: 'var(--success)' }}><CheckIcon /></span>
                       {item}
                     </li>
                   ))}

@@ -108,7 +108,7 @@ export default function PricingPage() {
 
   const [backendPrices, setBackendPrices] = useState<any>(null);
   useEffect(() => {
-    fetch(`${API_URL}/api/v1/billing/prices`).then(r => r.json()).then(setBackendPrices).catch(() => {});
+    fetch(`${API_URL}/api/v1/billing/prices`).then(r => r.json()).then(setBackendPrices).catch(err => console.error('Failed to load plans:', err));
   }, []);
 
   const plans = PLANS.map(p => ({
@@ -148,7 +148,7 @@ export default function PricingPage() {
           navigate('/lumora');
           return;
         }
-        alert(err.error || 'Checkout unavailable. Please try again.');
+        console.error('Checkout failed:', err.error || 'Unknown error');
         setLoading('');
         return;
       }
@@ -185,9 +185,9 @@ export default function PricingPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-4 items-stretch">
           {plans.map((plan) => {
             const isPro = plan.popular;
-            const isAnnual = plan.name === 'Annual';
-            const isFree = plan.name === 'Free';
-            const isStarter = plan.name === 'Starter';
+            const isAnnual = plan.name === 'Club Member';
+            const isFree = plan.name === 'Day Pass';
+            const isStarter = plan.name === 'Economy';
 
             const accent = isPro
               ? { from: 'var(--accent)', via: 'var(--accent)', to: 'var(--accent)', glow: 'rgba(45,140,255,0.4)', checkColor: '#60A5FA' }
