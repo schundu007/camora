@@ -1574,7 +1574,7 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
               onClick={startRecording}
               className="w-full flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-bold transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
               style={{
-                background: 'linear-gradient(135deg, #ef4444 0%, #5E9400 100%)',
+                background: 'linear-gradient(135deg, #ef4444 0%, #0B5CFF 100%)',
                 color: '#ffffff',
                 boxShadow: '0 4px 12px rgba(239, 68, 68, 0.4), inset 0 1px 0 rgba(255,255,255,0.2)',
               }}
@@ -1604,7 +1604,7 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
                     className="h-full transition-all duration-75 rounded-full"
                     style={{
                       width: `${Math.min(audioLevel * 100 * 3, 100)}%`,
-                      background: isSpeaking ? 'linear-gradient(90deg, #10b981, #76B900)' : '#64748b'
+                      background: isSpeaking ? 'linear-gradient(90deg, #10b981, #2D8CFF)' : '#64748b'
                     }}
                   />
                 </div>

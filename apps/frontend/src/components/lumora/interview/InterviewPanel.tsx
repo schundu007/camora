@@ -183,12 +183,18 @@ function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
   ];
 
   const PROMPTS = [
-    'Design a URL shortener like bit.ly that handles 100M links/month',
-    'Explain the difference between TCP and UDP with real-world examples',
-    'Walk me through how you would handle a conflict with a teammate',
-    'Implement a function to detect a cycle in a linked list',
-    'What happens when you type google.com in a browser?',
-    'Tell me about a time you had to make a decision with incomplete data',
+    // System Design
+    'Design a rate limiter for an API gateway',
+    'Design a notification system like WhatsApp',
+    'Design a URL shortener like bit.ly',
+    // Coding
+    'Implement LRU cache from scratch',
+    'Find the longest substring without repeating characters',
+    'Reverse a linked list iteratively and recursively',
+    // Behavioral
+    'Tell me about a time you disagreed with your manager',
+    'Walk me through how you handle a conflict with a teammate',
+    'Describe a time you failed and what you learned',
   ];
 
   return (
@@ -232,9 +238,9 @@ function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
           {PROMPTS.map((prompt) => (
             <button key={prompt} onClick={() => onAskQuestion?.(prompt)}
               className="text-left px-4 py-3.5 rounded-xl text-[13px] leading-snug transition-all"
-              style={{ fontFamily: "'Satoshi', sans-serif", border: '1px solid #E2E8F0', color: '#64748B', borderRadius: '10px' }}
-              onMouseEnter={e => { e.currentTarget.style.color = '#0F172A'; e.currentTarget.style.background = '#F1F5F9'; }}
-              onMouseLeave={e => { e.currentTarget.style.color = '#64748B'; e.currentTarget.style.background = 'transparent'; }}>
+              style={{ fontFamily: "'Satoshi', sans-serif", border: '1px solid rgba(45,140,255,0.25)', color: '#475569', borderRadius: '10px' }}
+              onMouseEnter={e => { e.currentTarget.style.color = '#0F172A'; e.currentTarget.style.borderColor = 'rgba(45,140,255,0.5)'; e.currentTarget.style.background = 'rgba(45,140,255,0.04)'; }}
+              onMouseLeave={e => { e.currentTarget.style.color = '#475569'; e.currentTarget.style.borderColor = 'rgba(45,140,255,0.25)'; e.currentTarget.style.background = 'transparent'; }}>
               {prompt}
             </button>
           ))}

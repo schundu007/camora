@@ -271,7 +271,7 @@ export function VoiceEnrollment({ disabled, variant = 'dark' }: VoiceEnrollmentP
         } : {
           fontSize: '11px',
           padding: '4px 8px',
-          color: voiceFilterEnabled ? '#91C733' : 'rgba(255,255,255,0.6)',
+          color: voiceFilterEnabled ? '#60A5FA' : 'rgba(255,255,255,0.6)',
           background: voiceFilterEnabled ? 'rgba(45,140,255,0.08)' : 'transparent',
           border: '1px solid rgba(255,255,255,0.08)',
         }}

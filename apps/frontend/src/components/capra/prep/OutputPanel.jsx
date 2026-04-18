@@ -601,7 +601,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                         {/* Common Mistakes */}
                         {safeArray(q.commonMistakes).length > 0 && (
                           <div className="mt-2">
-                            <p className="font-semibold text-xs" style={{ color: '#5E9400' }}>Common Mistakes:</p>
+                            <p className="font-semibold text-xs" style={{ color: '#0B5CFF' }}>Common Mistakes:</p>
                             {safeArray(q.commonMistakes).filter(m => m != null).map((m, j) => (
                               <p key={j} className="text-xs ml-2" style={{ color: colors.textMuted }}>• {String(m)}</p>
                             ))}
@@ -682,12 +682,12 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                                   📊 {q.architecture.diagramDescription}
                                 </p>
                                 {failedDiagrams[i] && (
-                                  <p className="text-xs mt-1" style={{ color: '#5E9400' }}>(Diagram expired - regenerate section to create new diagram)</p>
+                                  <p className="text-xs mt-1" style={{ color: '#0B5CFF' }}>(Diagram expired - regenerate section to create new diagram)</p>
                                 )}
                               </div>
                             ) : failedDiagrams[i] ? (
                               <div className="p-3 rounded" style={{ background: '#FEF2F2', border: '1px solid #FECACA' }}>
-                                <p className="text-xs" style={{ color: '#5E9400' }}>Diagram expired - regenerate this section to create a new diagram</p>
+                                <p className="text-xs" style={{ color: '#0B5CFF' }}>Diagram expired - regenerate this section to create a new diagram</p>
                               </div>
                             ) : null}
                           </div>
@@ -713,7 +713,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                         {/* Trade-offs */}
                         {safeArray(q.tradeOffs).length > 0 && (
                           <div className="mt-3">
-                            <p className="font-semibold text-xs uppercase tracking-wide mb-2" style={{ color: '#5E9400' }}>Trade-offs</p>
+                            <p className="font-semibold text-xs uppercase tracking-wide mb-2" style={{ color: '#0B5CFF' }}>Trade-offs</p>
                             {safeArray(q.tradeOffs).filter(t => t && typeof t === 'object').map((t, j) => (
                               <div key={j} className="text-xs mb-2 pl-2" style={{ borderLeft: '2px solid #FECACA' }}>
                                 <p><b>Decision:</b> {t?.decision || ''}</p>
@@ -786,7 +786,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                                     <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
                                     Result
                                   </div>
-                                  <p className="text-sm leading-relaxed" style={{ color: '#76B900' }}>{safeStr(q.result).trim()}</p>
+                                  <p className="text-sm leading-relaxed" style={{ color: '#2D8CFF' }}>{safeStr(q.result).trim()}</p>
                                 </div>
                               )}
                             </div>
@@ -890,7 +890,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                                 )}
                                 {safeArray(q?.commonMistakes).length > 0 && (
                                   <div className="mt-2">
-                                    <p className="text-xs font-semibold" style={{ color: '#5E9400' }}>Avoid:</p>
+                                    <p className="text-xs font-semibold" style={{ color: '#0B5CFF' }}>Avoid:</p>
                                     {safeArray(q.commonMistakes).filter(m => m != null).map((m, k) => <p key={k} className="text-xs ml-2" style={{ color: colors.textMuted }}>• {String(m)}</p>)}
                                   </div>
                                 )}

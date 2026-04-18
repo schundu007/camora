@@ -34,7 +34,7 @@ function timeAgo(date: string): string {
 
 function Avatar({ name, image, size = 28 }: { name: string | null; image: string | null; size?: number }) {
   const initial = (name || '?')[0].toUpperCase();
-  const colors = ['#76B900', '#91C733', '#a855f7', '#ec4899', '#f43f5e', '#ef4444', '#76B900', '#eab308', '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6'];
+  const colors = ['#2D8CFF', '#60A5FA', '#a855f7', '#ec4899', '#f43f5e', '#ef4444', '#2D8CFF', '#eab308', '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6'];
   const colorIndex = (name || '').split('').reduce((acc, c) => acc + c.charCodeAt(0), 0) % colors.length;
 
   if (image) {

@@ -508,7 +508,7 @@ export default function ResumeOptimizer() {
               border: '1px solid #fecaca',
               borderRadius: '8px',
               fontSize: '13px',
-              color: '#5E9400',
+              color: '#0B5CFF',
               fontWeight: 500,
             }}
           >
@@ -529,7 +529,7 @@ export default function ResumeOptimizer() {
               borderRadius: '10px',
               background: loading
                 ? 'var(--bg-elevated)'
-                : 'linear-gradient(135deg, var(--accent) 0%, #5E9400 100%)',
+                : 'linear-gradient(135deg, var(--accent) 0%, #0B5CFF 100%)',
               color: '#ffffff',
               fontSize: '14px',
               fontWeight: 600,
@@ -552,7 +552,7 @@ export default function ResumeOptimizer() {
               borderRadius: '10px',
               background: loading
                 ? 'var(--bg-elevated)'
-                : 'linear-gradient(135deg, #76B900 0%, #5E9400 100%)',
+                : 'linear-gradient(135deg, #2D8CFF 0%, #0B5CFF 100%)',
               color: '#ffffff',
               fontSize: '14px',
               fontWeight: 600,

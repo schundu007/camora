@@ -187,7 +187,7 @@ export default function LandingPage() {
         <div className="absolute inset-0 z-0">
           <img src="/hero-forest.jpg" alt="" className="w-full h-full object-cover object-center" style={{ opacity: 0.15 }} />
           <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.75) 50%, #FFFFFF 100%)' }} />
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(118,185,0,0.04) 0%, transparent 40%)' }} />
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(45,140,255,0.04) 0%, transparent 40%)' }} />
         </div>
         {/* Radial glow */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] pointer-events-none z-[1]" style={{ background: 'radial-gradient(ellipse at center, rgba(45,140,255,0.08) 0%, transparent 70%)' }} />
@@ -473,7 +473,7 @@ export default function LandingPage() {
         <Reveal className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
           <div className="relative px-8 py-12 md:px-14 md:py-16 text-center overflow-hidden" style={{ borderRadius: '20px', background: L.surface, border: '1px solid rgba(0,0,0,0.05)', boxShadow: L.glowStrong }}>
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[50%] h-[2px]" style={{ background: L.gradient }} />
-            <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at center top, rgba(118,185,0,0.04) 0%, transparent 60%)' }} />
+            <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at center top, rgba(45,140,255,0.04) 0%, transparent 60%)' }} />
             <div className="relative z-10">
               <h2 className="text-3xl md:text-4xl lg:text-[42px] font-bold tracking-tight" style={{ fontFamily: F.display }}>
                 Ready for <span className="cm-gradient-text">liftoff?</span>

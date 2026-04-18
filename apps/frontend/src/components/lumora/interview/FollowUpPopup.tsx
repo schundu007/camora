@@ -270,7 +270,7 @@ export function FollowUpPopup() {
           <div className="flex items-center gap-2">
             {/* LIVE badge */}
             <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold tracking-wider"
-              style={{ background: 'rgba(16,185,129,0.12)', color: '#91C733' }}>
+              style={{ background: 'rgba(16,185,129,0.12)', color: '#60A5FA' }}>
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
               LIVE
             </span>

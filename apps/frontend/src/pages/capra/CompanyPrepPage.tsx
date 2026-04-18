@@ -273,10 +273,10 @@ const COMPANIES: Record<string, CompanyData> = {
 /* ──────────────────────────────── Helpers ────────────────────────────── */
 
 const DIFFICULTY_COLORS: Record<string, { bg: string; text: string; border: string }> = {
-  Easy: { bg: '#ecfdf5', text: '#76B900', border: '#a7f3d0' },
+  Easy: { bg: '#ecfdf5', text: '#2D8CFF', border: '#a7f3d0' },
   Medium: { bg: '#fffbeb', text: '#d97706', border: '#fde68a' },
-  Hard: { bg: '#fef2f2', text: '#5E9400', border: '#fecaca' },
-  'Medium-Hard': { bg: '#fff7ed', text: '#ea580c', border: '#D4F0A0' },
+  Hard: { bg: '#fef2f2', text: '#0B5CFF', border: '#fecaca' },
+  'Medium-Hard': { bg: '#fff7ed', text: '#ea580c', border: '#BFDBFE' },
 };
 
 function getDifficultyStyle(difficulty: string) {
