@@ -1101,7 +1101,7 @@ export default function JobPrepPage() {
                   <ul className="mt-3 space-y-1.5 flex-1">
                     {plan.features.map((f: string) => (
                       <li key={f} className="flex items-start gap-1.5 text-xs text-[var(--text-secondary)]">
-                        <span className="text-emerald-500 mt-0.5 flex-shrink-0">✓</span>{f}
+                        <span className="text-[var(--accent)] mt-0.5 flex-shrink-0">✓</span>{f}
                       </li>
                     ))}
                   </ul>

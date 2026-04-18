@@ -903,7 +903,7 @@ function Header({ ascendMode, onModeChange, showSidebar, onToggleSidebar, isLoad
               </svg>
             </div>
             <span className="text-sm font-bold text-[var(--text-primary)]">Capra</span>
-            {isLoading && <div className="w-3.5 h-3.5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />}
+            {isLoading && <div className="w-3.5 h-3.5 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />}
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -961,7 +961,7 @@ function Header({ ascendMode, onModeChange, showSidebar, onToggleSidebar, isLoad
             to={tab.href}
             className={`px-3 py-1.5 text-sm font-medium transition-colors ${
               tab.label === activeAppaTab
-                ? 'text-[var(--accent)] border-b-2 border-emerald-500'
+                ? 'text-[var(--accent)] border-b-2 border-[var(--accent)]'
                 : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
             }`}
           >

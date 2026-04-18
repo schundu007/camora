@@ -163,7 +163,7 @@ export function EvolutionTimeline({ steps }) {
                 <ul className="mt-1 space-y-0.5">
                   {current.pros.map((p, i) => (
                     <li key={i} className="flex items-start gap-1 text-[11px] text-[var(--text-secondary)] landing-body">
-                      <span className="text-emerald-500 mt-px flex-shrink-0">+</span>
+                      <span className="text-[var(--accent)] mt-px flex-shrink-0">+</span>
                       <span>{p}</span>
                     </li>
                   ))}
@@ -382,7 +382,7 @@ export function FlowchartCard({ flowchart }) {
             {flowchart.steps.map((s, i) => (
               <div key={i} className="flex items-center gap-1">
                 <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)]">
-                  <span className="w-5 h-5 rounded-full bg-emerald-500 text-white text-[9px] font-bold flex items-center justify-center landing-mono flex-shrink-0">{s.step}</span>
+                  <span className="w-5 h-5 rounded-full bg-[var(--accent)] text-white text-[9px] font-bold flex items-center justify-center landing-mono flex-shrink-0">{s.step}</span>
                   <div>
                     <div className="text-[11px] font-semibold text-[var(--text-primary)] landing-display leading-tight">{s.label}</div>
                     <div className="text-[9px] text-[var(--text-muted)] landing-mono leading-tight">{s.detail}</div>

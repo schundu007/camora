@@ -53,7 +53,7 @@ function TestCase({ testCase, index, isActive, onClick, result }) {
       onClick={onClick}
       className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border ${
         isActive
-          ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+          ? 'bg-[var(--accent)]/15 text-[var(--accent)] border-[var(--accent)]/30'
           : statusColor
       }`}
     >
@@ -111,7 +111,7 @@ function ExampleBlock({ example, index }) {
       <div className="p-4 space-y-3">
         <div>
           <span className="text-xs text-[var(--text-muted)] font-medium uppercase tracking-wide">Input</span>
-          <pre className="mt-1.5 bg-[#0d1117] rounded-lg p-3 text-emerald-400 font-mono text-sm overflow-x-auto">
+          <pre className="mt-1.5 bg-[#0d1117] rounded-lg p-3 text-[var(--accent)] font-mono text-sm overflow-x-auto">
             {example.input}
           </pre>
         </div>
@@ -148,7 +148,7 @@ function HintCard({ hint, index }) {
         <Icon
           name={revealed ? 'eye' : 'eyeOff'}
           size={18}
-          className={revealed ? 'text-emerald-400' : 'text-[var(--text-muted)]'}
+          className={revealed ? 'text-[var(--accent)]' : 'text-[var(--text-muted)]'}
         />
       </button>
       {revealed && (
@@ -378,7 +378,7 @@ export default function ProblemPage({ slug, onBack }) {
                   onClick={() => setActiveTab('description')}
                   className={`px-4 py-2 rounded-t-lg text-sm font-medium transition-colors ${
                     activeTab === 'description'
-                      ? 'bg-[var(--bg-surface)] text-emerald-400'
+                      ? 'bg-[var(--bg-surface)] text-[var(--accent)]'
                       : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-gray-800/50'
                   }`}
                 >
@@ -388,7 +388,7 @@ export default function ProblemPage({ slug, onBack }) {
                   onClick={() => setActiveTab('solution')}
                   className={`px-4 py-2 rounded-t-lg text-sm font-medium transition-colors ${
                     activeTab === 'solution'
-                      ? 'bg-[var(--bg-surface)] text-emerald-400'
+                      ? 'bg-[var(--bg-surface)] text-[var(--accent)]'
                       : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-gray-800/50'
                   }`}
                 >
@@ -398,7 +398,7 @@ export default function ProblemPage({ slug, onBack }) {
                   onClick={() => setActiveTab('hints')}
                   className={`px-4 py-2 rounded-t-lg text-sm font-medium transition-colors ${
                     activeTab === 'hints'
-                      ? 'bg-[var(--bg-surface)] text-emerald-400'
+                      ? 'bg-[var(--bg-surface)] text-[var(--accent)]'
                       : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-gray-800/50'
                   }`}
                 >
@@ -416,7 +416,7 @@ export default function ProblemPage({ slug, onBack }) {
                         <p key={i} className="text-gray-300 text-sm leading-relaxed mb-3">
                           {paragraph.split('`').map((part, j) =>
                             j % 2 === 1 ? (
-                              <code key={j} className="px-1.5 py-0.5 bg-gray-800 rounded text-emerald-400 font-mono text-sm">
+                              <code key={j} className="px-1.5 py-0.5 bg-gray-800 rounded text-[var(--accent)] font-mono text-sm">
                                 {part}
                               </code>
                             ) : (
@@ -461,7 +461,7 @@ export default function ProblemPage({ slug, onBack }) {
                         <ul className="space-y-1.5">
                           {problem.constraints.map((constraint, i) => (
                             <li key={i} className="flex items-start gap-2 text-gray-300 text-sm">
-                              <span className="text-emerald-400 mt-0.5">•</span>
+                              <span className="text-[var(--accent)] mt-0.5">•</span>
                               <code className="font-mono text-sm">{constraint}</code>
                             </li>
                           ))}
@@ -490,7 +490,7 @@ export default function ProblemPage({ slug, onBack }) {
                           onClick={() => setSelectedLanguage(key)}
                           className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                             selectedLanguage === key
-                              ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                              ? 'bg-[var(--accent)]/15 text-[var(--accent)] border border-[var(--accent)]/30'
                               : 'bg-gray-800/50 text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-gray-800 border border-transparent'
                           }`}
                         >
@@ -507,7 +507,7 @@ export default function ProblemPage({ slug, onBack }) {
                           {problem.approach.split('\n').map((line, i) => {
                             if (line.startsWith('**')) {
                               return (
-                                <h4 key={i} className="text-sm font-semibold text-emerald-400 mt-3 mb-2">
+                                <h4 key={i} className="text-sm font-semibold text-[var(--accent)] mt-3 mb-2">
                                   {line.replace(/\*\*/g, '')}
                                 </h4>
                               );
@@ -529,10 +529,10 @@ export default function ProblemPage({ slug, onBack }) {
                           <h3 className="text-base font-semibold text-[var(--text-primary)]">{LANGUAGE_CONFIG[selectedLanguage].name} Solution</h3>
                           <div className="flex gap-3 text-xs">
                             <span className="text-[var(--text-muted)]">
-                              Time: <span className="text-emerald-400 font-mono">{solution.timeComplexity}</span>
+                              Time: <span className="text-[var(--accent)] font-mono">{solution.timeComplexity}</span>
                             </span>
                             <span className="text-[var(--text-muted)]">
-                              Space: <span className="text-emerald-400 font-mono">{solution.spaceComplexity}</span>
+                              Space: <span className="text-[var(--accent)] font-mono">{solution.spaceComplexity}</span>
                             </span>
                           </div>
                         </div>
@@ -568,7 +568,7 @@ export default function ProblemPage({ slug, onBack }) {
                           onClick={() => setSelectedLanguage(key)}
                           className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
                             selectedLanguage === key
-                              ? 'bg-emerald-500/20 text-emerald-400'
+                              ? 'bg-[var(--accent)]/20 text-[var(--accent)]'
                               : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
                           }`}
                         >
@@ -642,7 +642,7 @@ export default function ProblemPage({ slug, onBack }) {
                       <button
                         onClick={runAllTests}
                         disabled={isRunning}
-                        className="px-4 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-[var(--text-primary)] rounded text-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50"
+                        className="px-4 py-1.5 bg-[var(--accent)] hover:opacity-90 text-[var(--text-primary)] rounded text-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50"
                       >
                         Submit
                       </button>
@@ -674,7 +674,7 @@ export default function ProblemPage({ slug, onBack }) {
                               <div className="space-y-3">
                                 <div>
                                   <span className="text-xs text-[var(--text-muted)] font-medium uppercase tracking-wide">Input</span>
-                                  <pre className="mt-1.5 bg-[#0d1117] rounded-lg p-3 text-emerald-400 font-mono text-sm overflow-x-auto">
+                                  <pre className="mt-1.5 bg-[#0d1117] rounded-lg p-3 text-[var(--accent)] font-mono text-sm overflow-x-auto">
                                     {problem.examples[activeTestCase].input}
                                   </pre>
                                 </div>
@@ -719,7 +719,7 @@ export default function ProblemPage({ slug, onBack }) {
                                 {output.input && (
                                   <div>
                                     <span className="text-xs text-[var(--text-muted)] font-medium uppercase tracking-wide">Input</span>
-                                    <pre className="mt-1.5 bg-[#0d1117] rounded-lg p-3 text-emerald-400 font-mono text-sm overflow-x-auto">
+                                    <pre className="mt-1.5 bg-[#0d1117] rounded-lg p-3 text-[var(--accent)] font-mono text-sm overflow-x-auto">
                                       {output.input}
                                     </pre>
                                   </div>
