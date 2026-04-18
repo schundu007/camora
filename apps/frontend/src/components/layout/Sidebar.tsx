@@ -153,13 +153,13 @@ const sections: NavSection[] = [
       { label: 'Overview', path: '/capra/prepare', icon: icons.home },
       { label: 'DSA', path: '/capra/prepare/coding', icon: icons.cpu },
       { label: 'System Design', path: '/capra/prepare/system-design', icon: icons.layers },
+      { label: 'Behavioral', path: '/capra/prepare/behavioral', icon: icons.users },
+      { label: 'Low Level Design', path: '/capra/prepare/low-level-design', icon: icons.code },
       { label: 'Microservices', path: '/capra/prepare/microservices', icon: icons.grid },
       { label: 'Databases', path: '/capra/prepare/databases', icon: icons.database },
-      { label: 'Low Level Design', path: '/capra/prepare/low-level-design', icon: icons.code },
       { label: 'Projects', path: '/capra/prepare/projects', icon: icons.folder },
       { label: 'Roadmaps', path: '/capra/prepare/roadmaps', icon: icons.map },
       { label: 'Eng Blogs', path: '/capra/prepare/eng-blogs', icon: icons.book },
-      { label: 'Behavioral', path: '/capra/prepare/behavioral', icon: icons.users },
     ],
   },
   {
@@ -171,10 +171,20 @@ const sections: NavSection[] = [
     ],
   },
   {
-    title: 'Tools',
+    title: 'Apply',
+    items: [
+      { label: 'Jobs', path: '/jobs', icon: icons.briefcase },
+    ],
+  },
+  {
+    title: 'Attend',
     items: [
       { label: 'Live Interview', path: '/lumora', icon: icons.mic },
-      { label: 'Jobs', path: '/jobs', icon: icons.briefcase },
+    ],
+  },
+  {
+    title: 'Tools',
+    items: [
       { label: 'Code Solver', path: '/capra', icon: icons.layout },
       { label: 'Design Solver', path: '/capra/design', icon: icons.layers },
     ],
