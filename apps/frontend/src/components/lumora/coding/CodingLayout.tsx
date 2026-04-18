@@ -116,7 +116,7 @@ interface CodingLayoutProps {
 function useTheme(_dark: boolean) {
   return {
     cardBg: '#ffffff', cardBorder: '#e5e7eb',
-    headerBg: 'rgba(45,140,255,0.05)', headerBorder: '#D4F0A0',
+    headerBg: 'rgba(45,140,255,0.05)', headerBorder: '#BFDBFE',
     headerText: '#2D8CFF', badgeBg: '#2D8CFF10', badgeText: '#2D8CFF',
     text: '#111827', textMuted: '#6b7280', textDim: '#9ca3af',
     codeBg: '#f9fafb', codeText: '#1f2937',
@@ -869,7 +869,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                 {/* Streaming state */}
                 {(isStreaming || (isLoading && !sd && !parsedBlocks?.length)) && !sd && (
                   <div className="space-y-3">
-                    <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'rgba(45,140,255,0.06)', border: '1px solid #D4F0A0' }}>
+                    <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'rgba(45,140,255,0.06)', border: '1px solid #BFDBFE' }}>
                       <div className="relative w-4 h-4 shrink-0">
                         <div className="absolute inset-0 border-2 border-transparent border-t-indigo-400 rounded-full animate-spin" />
                       </div>

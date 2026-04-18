@@ -273,7 +273,7 @@ function formatTime(seconds: number): string {
 function useTheme(_dark: boolean) {
   return {
     cardBg: '#ffffff', cardBorder: '#e5e7eb',
-    headerBg: 'rgba(45,140,255,0.05)', headerBorder: '#D4F0A0',
+    headerBg: 'rgba(45,140,255,0.05)', headerBorder: '#BFDBFE',
     headerText: '#2D8CFF', badgeBg: '#2D8CFF10', badgeText: '#2D8CFF',
     text: '#111827', textMuted: '#6b7280', textDim: '#9ca3af',
     codeBg: '#f9fafb', codeText: '#1f2937',

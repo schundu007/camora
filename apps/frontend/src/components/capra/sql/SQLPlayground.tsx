@@ -393,7 +393,7 @@ export function SQLPlayground({ onClose }: SQLPlaygroundProps) {
             }}
               className="px-3 py-1.5 text-xs font-bold rounded-lg transition-all whitespace-nowrap flex items-center gap-1.5"
               style={selectedCategory === cat.id
-                ? { background: '#76B900', color: '#fff' }
+                ? { background: '#2D8CFF', color: '#fff' }
                 : { color: 'var(--text-secondary)' }
               }>
               {cat.label}

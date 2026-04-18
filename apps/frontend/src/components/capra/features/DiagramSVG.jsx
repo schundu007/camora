@@ -4,7 +4,7 @@ import React from 'react';
 const COLORS = {
   primary: '#10b981',
   secondary: '#3b82f6',
-  accent: '#76B900',
+  accent: '#2D8CFF',
   warning: '#f59e0b',
   error: '#ef4444',
   cyan: '#06b6d4',

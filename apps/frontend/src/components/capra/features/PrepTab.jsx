@@ -6,14 +6,14 @@ const isElectron = false; // Electron removed in unified frontend
 // Platform categories - using initials instead of generic icons
 const CODING_PLATFORMS = {
   hackerrank: { name: 'HackerRank', color: '#1ba94c', url: 'hackerrank.com' },
-  leetcode: { name: 'LeetCode', color: '#76B900', url: 'leetcode.com' },
-  coderpad: { name: 'CoderPad', color: '#76B900', url: 'coderpad.io' },
+  leetcode: { name: 'LeetCode', color: '#2D8CFF', url: 'leetcode.com' },
+  coderpad: { name: 'CoderPad', color: '#2D8CFF', url: 'coderpad.io' },
   codesignal: { name: 'CodeSignal', color: '#3b82f6', url: 'codesignal.com' },
 };
 
 const PREP_PLATFORMS = {
-  techprep: { name: 'TechPrep', color: '#91C733', url: 'techprep.app' },
-  algomaster: { name: 'AlgoMaster', color: '#76B900', url: 'algomaster.io' },
+  techprep: { name: 'TechPrep', color: '#60A5FA', url: 'techprep.app' },
+  algomaster: { name: 'AlgoMaster', color: '#2D8CFF', url: 'algomaster.io' },
   neetcode: { name: 'NeetCode', color: '#f43f5e', url: 'neetcode.io' },
   designgurus: { name: 'DesignGurus', color: '#0ea5e9', url: 'designgurus.io' },
   educative: { name: 'Educative', color: '#22c55e', url: 'educative.io' },
@@ -366,10 +366,10 @@ export default function PrepTab({ isOpen, onClose }) {
                     }}
                   >
                     {fetchedContent.error ? (
-                      <p style={{ color: '#5E9400' }}>{fetchedContent.error}</p>
+                      <p style={{ color: '#0B5CFF' }}>{fetchedContent.error}</p>
                     ) : (
                       <>
-                        <div className="font-medium mb-1" style={{ color: '#76B900' }}>{fetchedContent.title}</div>
+                        <div className="font-medium mb-1" style={{ color: '#2D8CFF' }}>{fetchedContent.title}</div>
                         <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
                           Problem extracted! Close this and use the URL tab in Problem Input to solve it.
                         </p>

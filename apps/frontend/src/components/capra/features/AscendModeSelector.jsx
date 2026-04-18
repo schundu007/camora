@@ -152,9 +152,9 @@ export default function AscendModeSelector({
           onClick={() => onAutoGenerateEraserChange(!autoGenerateEraser)}
           className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold transition-all"
           style={{
-            background: autoGenerateEraser ? '#76B900' : 'transparent',
-            color: autoGenerateEraser ? '#ffffff' : '#76B900',
-            border: '1px solid #76B900',
+            background: autoGenerateEraser ? '#2D8CFF' : 'transparent',
+            color: autoGenerateEraser ? '#ffffff' : '#2D8CFF',
+            border: '1px solid #2D8CFF',
           }}
           title={autoGenerateEraser ? 'Pro diagram will auto-generate (uses Eraser API credits)' : 'Pro diagram disabled - click Generate manually'}
         >

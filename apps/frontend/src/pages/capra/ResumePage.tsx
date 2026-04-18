@@ -21,7 +21,7 @@ export default function ResumePage() {
             fontWeight: 700,
             letterSpacing: '0.06em',
             textTransform: 'uppercase' as const,
-            color: '#76B900',
+            color: '#2D8CFF',
             background: 'rgba(139,92,246,0.1)',
             border: '1px solid rgba(139,92,246,0.2)',
             marginBottom: '16px',
@@ -44,7 +44,7 @@ export default function ResumePage() {
         >
           Resume Optimizer
           {company && (
-            <span style={{ color: '#76B900' }}> for {company}</span>
+            <span style={{ color: '#2D8CFF' }}> for {company}</span>
           )}
         </h1>
         <p style={{ fontSize: '15px', color: 'var(--text-muted)', maxWidth: '520px', margin: '0 auto', lineHeight: 1.6 }}>
