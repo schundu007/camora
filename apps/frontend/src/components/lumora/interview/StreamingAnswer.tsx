@@ -148,7 +148,7 @@ function StreamingCodingView({ blocks }: { blocks: Record<string, ParsedBlock> }
             <div className="flex gap-1">
               <div className="w-2 h-2 rounded-full bg-red-400/40" />
               <div className="w-2 h-2 rounded-full bg-amber-400/40" />
-              <div className="w-2 h-2 rounded-full bg-emerald-400/40" />
+              <div className="w-2 h-2 rounded-full bg-[var(--accent)]/40" />
             </div>
             <span className="font-mono text-base text-[var(--accent)] tracking-wider uppercase font-bold">
               {lang}

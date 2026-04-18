@@ -101,7 +101,7 @@ function Block({ block, delay }: { block: ParsedBlock; delay: number }) {
         <div className="rounded-xl overflow-hidden animate-fade-up group" style={{...style, background: '#F8FAFC', border: '1px solid #E2E8F0'}}>
           <div className="flex items-center justify-between px-4 py-2 border-b border-slate-200">
             <div className="flex items-center gap-2">
-              <div className="flex gap-1"><div className="w-2 h-2 rounded-full bg-red-400/40" /><div className="w-2 h-2 rounded-full bg-amber-400/40" /><div className="w-2 h-2 rounded-full bg-emerald-400/40" /></div>
+              <div className="flex gap-1"><div className="w-2 h-2 rounded-full bg-red-400/40" /><div className="w-2 h-2 rounded-full bg-amber-400/40" /><div className="w-2 h-2 rounded-full bg-[var(--accent)]/40" /></div>
               <span className="font-mono text-[10px] font-bold text-[#60A5FA]/80 uppercase tracking-widest">{lang}</span>
             </div>
             <button className="text-[10px] font-mono text-slate-400 hover:text-slate-600 px-2 py-0.5 border border-slate-200 rounded hover:border-slate-300 transition-all opacity-0 group-hover:opacity-100"
@@ -183,7 +183,7 @@ function CodingView({ blocks }: { blocks: ParsedBlock[] }) {
             <div className="flex gap-1">
               <div className="w-2 h-2 rounded-full bg-red-400/40" />
               <div className="w-2 h-2 rounded-full bg-amber-400/40" />
-              <div className="w-2 h-2 rounded-full bg-emerald-400/40" />
+              <div className="w-2 h-2 rounded-full bg-[var(--accent)]/40" />
             </div>
             <span className="font-mono text-xs text-[var(--accent)] tracking-wider uppercase font-bold">
               {lang}
