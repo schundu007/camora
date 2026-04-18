@@ -17,9 +17,9 @@ const F = {
 };
 
 const L = {
-  bg: '#0B1120', surface: '#0F1729', elevated: '#162033',
-  border: 'rgba(255,255,255,0.08)', text: '#FFFFFF', secondary: 'rgba(255,255,255,0.65)',
-  muted: 'rgba(255,255,255,0.35)', dimmed: 'rgba(255,255,255,0.15)',
+  bg: '#FFFFFF', surface: '#F8FAFC', elevated: '#F1F5F9',
+  border: '#E2E8F0', text: '#0F172A', secondary: '#475569',
+  muted: '#94A3B8', dimmed: '#CBD5E1',
   gradient: 'linear-gradient(135deg, #2D8CFF 0%, #0B5CFF 100%)',
   primary: '#2D8CFF', emerald: '#2D8CFF', radius: '12px',
   glow: '0 0 60px rgba(45,140,255,0.08)',
@@ -178,7 +178,7 @@ export default function LandingPage() {
         @keyframes scroll-logos { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
       `}</style>
 
-      <SiteNav variant="dark" />
+      <SiteNav variant="light" />
 
       {/* ── 1. HERO — Forest road background ── */}
       <section className="relative pt-24 pb-10 md:pt-32 md:pb-14 px-6 overflow-hidden">
@@ -186,8 +186,8 @@ export default function LandingPage() {
         {/* Hero background — dark with subtle image overlay */}
         <div className="absolute inset-0 z-0">
           <img src="/hero-forest.jpg" alt="" className="w-full h-full object-cover object-center" style={{ opacity: 0.15 }} />
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(11,17,32,0.6) 0%, rgba(11,17,32,0.8) 50%, #0B1120 100%)' }} />
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(45,140,255,0.06) 0%, transparent 40%)' }} />
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.75) 50%, #FFFFFF 100%)' }} />
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(118,185,0,0.04) 0%, transparent 40%)' }} />
         </div>
         {/* Radial glow */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] pointer-events-none z-[1]" style={{ background: 'radial-gradient(ellipse at center, rgba(45,140,255,0.08) 0%, transparent 70%)' }} />
@@ -314,7 +314,7 @@ export default function LandingPage() {
                         <div className="flex flex-wrap gap-2">
                           {step.features.map(f => (
                             <span key={f} className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium"
-                              style={{ borderRadius: '8px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', color: L.secondary }}>
+                              style={{ borderRadius: '8px', background: 'rgba(0,0,0,0.02)', border: '1px solid rgba(0,0,0,0.05)', color: L.secondary }}>
                               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={L.primary} strokeWidth={3}><path d="m5 12 5 5L20 7" strokeLinecap="round" strokeLinejoin="round" /></svg>
                               {f}
                             </span>
@@ -345,8 +345,8 @@ export default function LandingPage() {
 
           <Reveal delay={0.12}>
             <div className="cm-glass" style={{ borderRadius: '16px', boxShadow: L.glow }}>
-              <div className="px-6 py-5" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                <div className="flex items-center gap-3 px-4 py-3" style={{ borderRadius: L.radius, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <div className="px-6 py-5" style={{ borderBottom: '1px solid rgba(0,0,0,0.04)' }}>
+                <div className="flex items-center gap-3 px-4 py-3" style={{ borderRadius: L.radius, background: 'rgba(0,0,0,0.02)', border: '1px solid rgba(0,0,0,0.06)' }}>
                   <svg width="16" height="16" fill="none" stroke={L.muted} viewBox="0 0 24 24" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m9.86-4.122a4.5 4.5 0 00-6.364-6.364L4.5 6.1" /></svg>
                   <span className="text-sm truncate" style={{ color: L.muted, fontFamily: F.mono }}>https://nvidia.wd5.myworkdayjobs.com/...Senior-DevOps-Engineer</span>
                   <span className="ml-auto px-4 py-1.5 text-xs font-bold text-white flex-shrink-0 cm-gradient-btn" style={{ borderRadius: '8px' }}>Analyze</span>
@@ -363,11 +363,11 @@ export default function LandingPage() {
                     { label: 'System Design', items: ['CI/CD Pipeline', 'Container Orchestration', 'Monitoring'] },
                     { label: 'Behavioral', items: ['Leadership', 'Incident Mgmt', 'Cross-Team'] },
                   ].map(col => (
-                    <div key={col.label} className="p-4" style={{ borderRadius: L.radius, background: 'rgba(255,255,255,0.02)' }}>
+                    <div key={col.label} className="p-4" style={{ borderRadius: L.radius, background: 'rgba(0,0,0,0.02)' }}>
                       <p className="text-[10px] font-bold uppercase tracking-wider mb-3" style={{ color: L.muted, fontFamily: F.mono }}>{col.label}</p>
                       <div className="flex flex-col gap-1.5">
                         {col.items.map(item => (
-                          <span key={item} className="text-xs font-medium px-2.5 py-1.5" style={{ borderRadius: '8px', color: L.secondary, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>{item}</span>
+                          <span key={item} className="text-xs font-medium px-2.5 py-1.5" style={{ borderRadius: '8px', color: L.secondary, background: 'rgba(0,0,0,0.02)', border: '1px solid rgba(0,0,0,0.04)' }}>{item}</span>
                         ))}
                       </div>
                     </div>
@@ -403,7 +403,7 @@ export default function LandingPage() {
 
           <Reveal delay={0.12}>
             <div className="cm-glass" style={{ borderRadius: '16px', boxShadow: L.glow }}>
-              <div className="px-6 py-5" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+              <div className="px-6 py-5" style={{ borderBottom: '1px solid rgba(0,0,0,0.04)' }}>
                 <div className="flex items-center gap-2 mb-3">
                   <span className="w-2 h-2 rounded-full bg-red-400 animate-pulse" />
                   <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: '#ef4444', fontFamily: F.mono }}>Transcribing</span>
@@ -423,11 +423,11 @@ export default function LandingPage() {
                     { label: 'Components', items: ['API Gateway', 'Rate Limiter Service', 'Config Store'] },
                     { label: 'Trade-offs', items: ['Consistency vs Availability', 'Memory vs Accuracy', 'Latency vs Precision'] },
                   ].map(col => (
-                    <div key={col.label} className="p-4" style={{ borderRadius: L.radius, background: 'rgba(255,255,255,0.02)' }}>
+                    <div key={col.label} className="p-4" style={{ borderRadius: L.radius, background: 'rgba(0,0,0,0.02)' }}>
                       <p className="text-[10px] font-bold uppercase tracking-wider mb-3" style={{ color: L.muted, fontFamily: F.mono }}>{col.label}</p>
                       <div className="flex flex-col gap-1.5">
                         {col.items.map(item => (
-                          <span key={item} className="text-xs font-medium px-2.5 py-1.5" style={{ borderRadius: '8px', color: L.secondary, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>{item}</span>
+                          <span key={item} className="text-xs font-medium px-2.5 py-1.5" style={{ borderRadius: '8px', color: L.secondary, background: 'rgba(0,0,0,0.02)', border: '1px solid rgba(0,0,0,0.04)' }}>{item}</span>
                         ))}
                       </div>
                     </div>
@@ -452,7 +452,7 @@ export default function LandingPage() {
               <Reveal key={f.title} delay={i * 0.04}>
                 <div className="p-6 h-full cm-glass" style={{ borderRadius: '16px' }}>
                   <div className="flex items-center justify-between mb-4">
-                    <div className="w-10 h-10 flex items-center justify-center" style={{ borderRadius: L.radius, background: 'rgba(255,255,255,0.04)', color: L.secondary }}>{f.icon}</div>
+                    <div className="w-10 h-10 flex items-center justify-center" style={{ borderRadius: L.radius, background: 'rgba(0,0,0,0.03)', color: L.secondary }}>{f.icon}</div>
                     <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1" style={{ borderRadius: '6px', background: 'rgba(45,140,255,0.06)', color: L.primary, fontFamily: F.mono }}>{f.tag}</span>
                   </div>
                   <h3 className="text-base font-bold mb-2" style={{ fontFamily: F.display }}>{f.title}</h3>
@@ -468,9 +468,9 @@ export default function LandingPage() {
       {/* ── 12. FINAL CTA ── */}
       <section className="relative px-6 py-14 md:py-20">
         <Reveal className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
-          <div className="relative px-8 py-12 md:px-14 md:py-16 text-center overflow-hidden" style={{ borderRadius: '20px', background: L.surface, border: '1px solid rgba(255,255,255,0.07)', boxShadow: L.glowStrong }}>
+          <div className="relative px-8 py-12 md:px-14 md:py-16 text-center overflow-hidden" style={{ borderRadius: '20px', background: L.surface, border: '1px solid rgba(0,0,0,0.05)', boxShadow: L.glowStrong }}>
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[50%] h-[2px]" style={{ background: L.gradient }} />
-            <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at center top, rgba(45,140,255,0.04) 0%, transparent 60%)' }} />
+            <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at center top, rgba(118,185,0,0.04) 0%, transparent 60%)' }} />
             <div className="relative z-10">
               <h2 className="text-3xl md:text-4xl lg:text-[42px] font-bold tracking-tight" style={{ fontFamily: F.display }}>
                 Ready for <span className="cm-gradient-text">liftoff?</span>
@@ -487,7 +487,7 @@ export default function LandingPage() {
         </Reveal>
       </section>
 
-      <SiteFooter variant="dark" />
+      <SiteFooter variant="light" />
     </div>
   );
 }
