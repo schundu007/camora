@@ -89,7 +89,7 @@ export function LumoraIconRail({ activeTab, sessionsOpen, onToggleSessions }: Lu
   ];
 
   return (
-    <nav className="hidden md:flex flex-col items-center w-[80px] shrink-0 py-3 gap-1" style={{ background: '#000000', borderRight: '1px solid #333' }}>
+    <nav className="hidden md:flex flex-col items-center w-[80px] shrink-0 py-3 gap-1" style={{ background: '#0B1120', borderRight: '1px solid rgba(255,255,255,0.08)' }}>
       <Link to="/" className="flex items-center justify-center w-full h-12 mb-3" title="Camora">
         <CamoraLogo size={32} />
       </Link>

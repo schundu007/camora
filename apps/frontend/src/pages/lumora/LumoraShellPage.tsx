@@ -143,8 +143,10 @@ export function LumoraShellPage() {
 
       {/* Center main area */}
       <div className="flex-1 flex flex-col min-h-0 min-w-0 pb-16 md:pb-0">
-        {/* Top bar with audio controls */}
-        <LumoraTopBar activeTab={activeTab} onTranscription={handleTranscription} />
+        {/* Top bar with audio controls — hidden on home idle screen */}
+        {!(activeTab === 'interview' && !question && !isStreaming && parsedBlocks.length === 0 && history.length === 0) && (
+          <LumoraTopBar activeTab={activeTab} onTranscription={handleTranscription} />
+        )}
 
         {/* Tab content — display toggling preserves state */}
         <div className="flex-1 min-h-0 overflow-hidden relative">
@@ -220,7 +222,7 @@ export function LumoraShellPage() {
 
       {/* Mobile bottom navigation — visible only on small screens */}
       <div className="flex md:hidden fixed bottom-0 left-0 right-0 h-16 z-40 items-center justify-around"
-        style={{ background: '#000000', borderTop: '1px solid #333' }}>
+        style={{ background: '#0B1120', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
         {[
           { id: 'interview', label: 'Home', path: '/lumora', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg> },
           { id: 'coding', label: 'Code', path: '/lumora/coding', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6" /></svg> },
