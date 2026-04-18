@@ -39,7 +39,7 @@ function UserAvatarMenu() {
           <img src={user.image} alt="" className="w-10 h-10 rounded-full object-cover" referrerPolicy="no-referrer" />
         ) : (
           <div className="w-10 h-10 rounded-full flex items-center justify-center text-[11px] font-bold"
-            style={{ background: C.accent, color: '#fff' }}>{initials}</div>
+            style={{ background: 'rgba(255,255,255,0.25)', color: '#fff', border: '2px solid rgba(255,255,255,0.5)' }}>{initials}</div>
         )}
       </button>
       {showMenu && (

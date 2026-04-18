@@ -195,10 +195,10 @@ function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
     <div className="flex-1 flex flex-col items-center justify-center px-6 select-none overflow-auto">
       {/* Large clock */}
       <div className="text-center mb-10">
-        <h1 className="text-6xl md:text-7xl font-bold tracking-tight tabular-nums" style={{ fontFamily: "'Clash Display', sans-serif", fontWeight: 700, letterSpacing: '-0.03em', color: '#FFFFFF' }}>
+        <h1 className="text-6xl md:text-7xl font-bold tracking-tight tabular-nums" style={{ fontFamily: "'Clash Display', sans-serif", fontWeight: 700, letterSpacing: '-0.03em', color: '#0F172A' }}>
           {timeStr}
         </h1>
-        <p className="text-sm mt-2 font-medium" style={{ fontFamily: "'Satoshi', sans-serif", color: 'rgba(255,255,255,0.4)' }}>{dateStr}</p>
+        <p className="text-sm mt-2 font-medium" style={{ fontFamily: "'Satoshi', sans-serif", color: '#64748b' }}>{dateStr}</p>
       </div>
 
       {/* Action buttons — all use single accent color */}
@@ -209,24 +209,24 @@ function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
               style={{ background: accent }}>
               {action.icon}
             </div>
-            <span className="text-[11px] font-medium transition-colors" style={{ fontFamily: "'Satoshi', sans-serif", color: 'rgba(255,255,255,0.4)' }}>{action.label}</span>
+            <span className="text-[11px] font-medium transition-colors" style={{ fontFamily: "'Satoshi', sans-serif", color: '#64748b' }}>{action.label}</span>
           </button>
         ))}
       </div>
 
       {/* Divider */}
-      <div className="w-full max-w-2xl h-px mb-8" style={{ background: 'rgba(255,255,255,0.08)' }} />
+      <div className="w-full max-w-2xl h-px mb-8" style={{ background: '#E2E8F0' }} />
 
       {/* Quick-start prompts */}
       <div className="w-full max-w-2xl">
-        <p className="text-xs font-medium mb-3 text-center" style={{ fontFamily: "'Satoshi', sans-serif", color: 'rgba(255,255,255,0.4)' }}>Try asking</p>
+        <p className="text-xs font-medium mb-3 text-center" style={{ fontFamily: "'Satoshi', sans-serif", color: '#94A3B8' }}>Try asking</p>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
           {PROMPTS.map((prompt) => (
             <button key={prompt} onClick={() => onAskQuestion?.(prompt)}
               className="text-left px-4 py-3.5 rounded-xl text-[13px] leading-snug transition-all"
-              style={{ fontFamily: "'Satoshi', sans-serif", border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.4)', borderRadius: '10px' }}
-              onMouseEnter={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.9)'; e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}
-              onMouseLeave={e => { e.currentTarget.style.color = '#64748b'; e.currentTarget.style.background = 'transparent'; }}>
+              style={{ fontFamily: "'Satoshi', sans-serif", border: '1px solid #E2E8F0', color: '#64748B', borderRadius: '10px' }}
+              onMouseEnter={e => { e.currentTarget.style.color = '#0F172A'; e.currentTarget.style.background = '#F1F5F9'; }}
+              onMouseLeave={e => { e.currentTarget.style.color = '#64748B'; e.currentTarget.style.background = 'transparent'; }}>
               {prompt}
             </button>
           ))}
@@ -234,10 +234,10 @@ function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
       </div>
 
       {/* Keyboard hints */}
-      <div className="mt-8 flex items-center justify-center gap-4 text-[10px]" style={{ fontFamily: 'var(--font-code)', color: 'rgba(255,255,255,0.3)' }}>
-        <span><kbd className="px-1.5 py-0.5 rounded" style={{ border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.05)' }}>⌘K</kbd> focus</span>
-        <span><kbd className="px-1.5 py-0.5 rounded" style={{ border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.05)' }}>⌘M</kbd> mic</span>
-        <span><kbd className="px-1.5 py-0.5 rounded" style={{ border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.05)' }}>⌘S</kbd> search</span>
+      <div className="mt-8 flex items-center justify-center gap-4 text-[10px]" style={{ fontFamily: 'var(--font-code)', color: '#94A3B8' }}>
+        <span><kbd className="px-1.5 py-0.5 rounded" style={{ border: '1px solid #E2E8F0', background: '#F8FAFC' }}>⌘K</kbd> focus</span>
+        <span><kbd className="px-1.5 py-0.5 rounded" style={{ border: '1px solid #E2E8F0', background: '#F8FAFC' }}>⌘M</kbd> mic</span>
+        <span><kbd className="px-1.5 py-0.5 rounded" style={{ border: '1px solid #E2E8F0', background: '#F8FAFC' }}>⌘S</kbd> search</span>
       </div>
 
     </div>
