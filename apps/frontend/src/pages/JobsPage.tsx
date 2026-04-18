@@ -73,7 +73,7 @@ function getCompanyLogoPath(companyName: string): string | null {
 
 /** Generate a deterministic color from company name for the initial fallback */
 function getCompanyColor(name: string): string {
-  const colors = ['#2D8CFF', '#2D8CFF', '#3b82f6', '#06b6d4', '#ec4899', '#2D8CFF', '#10b981', '#ef4444', '#f59e0b', '#a855f7'];
+  const colors = ['var(--accent)', 'var(--accent)', '#3b82f6', '#06b6d4', '#ec4899', 'var(--accent)', 'var(--success)', 'var(--danger)', 'var(--warning)', '#a855f7'];
   let hash = 0;
   for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
   return colors[Math.abs(hash) % colors.length];
@@ -121,23 +121,23 @@ const CATEGORIES = [
 
 const CATEGORY_COLORS: Record<string, string> = {
   devops: '#06b6d4',
-  backend: '#10b981',
-  frontend: '#2D8CFF',
+  backend: 'var(--success)',
+  frontend: 'var(--accent)',
   fullstack: '#3b82f6',
-  data: '#f59e0b',
+  data: 'var(--warning)',
   ml: '#ec4899',
-  security: '#ef4444',
-  mobile: '#2D8CFF',
+  security: 'var(--danger)',
+  mobile: 'var(--accent)',
   ios: '#a855f7',
   android: '#22c55e',
   qa: '#84cc16',
   sre: '#e11d48',
   platform: '#14b8a6',
-  cloud: '#2D8CFF',
+  cloud: 'var(--accent)',
   network: '#0ea5e9',
-  blockchain: '#f59e0b',
+  blockchain: 'var(--warning)',
   game_dev: '#f43f5e',
-  tech_lead: '#2D8CFF',
+  tech_lead: 'var(--accent)',
   staff: '#7c3aed',
   principal: '#6d28d9',
   em: '#0891b2',
@@ -1019,10 +1019,10 @@ export default function JobsPage() {
 
             {/* Active filter pills */}
             {[
-              { val: locationFilter, set: setLocationFilter, label: locationFilter, color: '#2D8CFF' },
-              { val: sourceFilter, set: setSourceFilter, label: sourceFilter, color: '#10b981' },
-              { val: workTypeFilter, set: setWorkTypeFilter, label: WORK_TYPES.find(w => w.value === workTypeFilter)?.label, color: '#f59e0b' },
-              { val: departmentFilter, set: setDepartmentFilter, label: departmentFilter, color: '#2D8CFF' },
+              { val: locationFilter, set: setLocationFilter, label: locationFilter, color: 'var(--accent)' },
+              { val: sourceFilter, set: setSourceFilter, label: sourceFilter, color: 'var(--success)' },
+              { val: workTypeFilter, set: setWorkTypeFilter, label: WORK_TYPES.find(w => w.value === workTypeFilter)?.label, color: 'var(--warning)' },
+              { val: departmentFilter, set: setDepartmentFilter, label: departmentFilter, color: 'var(--accent)' },
               { val: companyFilter, set: setCompanyFilter, label: companyFilter, color: '#3b82f6' },
               { val: experienceFilter, set: setExperienceFilter, label: EXPERIENCE_LEVELS.find(e => e.value === experienceFilter)?.label, color: '#ec4899' },
               { val: postedWithinFilter, set: setPostedWithinFilter, label: POSTED_WITHIN.find(p => p.value === postedWithinFilter)?.label, color: '#06b6d4' },
@@ -1202,7 +1202,7 @@ export default function JobsPage() {
               border: '1px solid var(--border)',
               borderRadius: '16px',
             }}>
-              <svg width="48" height="48" fill="none" stroke="#ef4444" viewBox="0 0 24 24" strokeWidth={1.5} style={{ margin: '0 auto 16px' }}>
+              <svg width="48" height="48" fill="none" stroke="var(--danger)" viewBox="0 0 24 24" strokeWidth={1.5} style={{ margin: '0 auto 16px' }}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
               </svg>
               <p className="heading-2" style={{ marginBottom: '8px' }}>
@@ -1334,13 +1334,13 @@ export default function JobsPage() {
                             {job.location.length > 35 ? job.location.slice(0, 35) + '...' : job.location}
                           </span>
                         )}
-                        <span style={{ fontSize: '10px', fontWeight: 600, color: workType === 'Remote' ? '#2D8CFF' : workType === 'Hybrid' ? '#d97706' : 'var(--text-muted)', background: workType === 'Remote' ? 'rgba(5,150,105,0.1)' : workType === 'Hybrid' ? 'rgba(217,119,6,0.1)' : 'var(--bg-elevated)', padding: '2px 7px', borderRadius: '9999px' }}>{workType}</span>
+                        <span style={{ fontSize: '10px', fontWeight: 600, color: workType === 'Remote' ? 'var(--accent)' : workType === 'Hybrid' ? '#d97706' : 'var(--text-muted)', background: workType === 'Remote' ? 'rgba(45,140,255,0.1)' : workType === 'Hybrid' ? 'rgba(217,119,6,0.1)' : 'var(--bg-elevated)', padding: '2px 7px', borderRadius: '9999px' }}>{workType}</span>
                       </div>
 
                       {/* Salary + Posted date row */}
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '8px' }}>
                         {salary ? (
-                          <span style={{ fontSize: '13px', fontWeight: 700, color: '#10b981' }}>{salary}</span>
+                          <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--accent)' }}>{salary}</span>
                         ) : (
                           <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Salary not listed</span>
                         )}
@@ -1386,7 +1386,7 @@ export default function JobsPage() {
                         Apply
                         <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" /></svg>
                       </a>
-                      <Link to={`/capra/resume?company=${encodeURIComponent(job.company_name)}&role=${encodeURIComponent(job.title)}&url=${encodeURIComponent(job.job_url)}`} className="jobs-action-link-resume" style={{ fontSize: '12px', fontWeight: 600, color: '#2D8CFF', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <Link to={`/capra/resume?company=${encodeURIComponent(job.company_name)}&role=${encodeURIComponent(job.title)}&url=${encodeURIComponent(job.job_url)}`} className="jobs-action-link-resume" style={{ fontSize: '12px', fontWeight: 600, color: 'var(--accent)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
                         Resume
                         <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
                       </Link>
@@ -1535,7 +1535,7 @@ export default function JobsPage() {
           color: var(--text-primary) !important;
         }
         .jobs-action-link-resume:hover {
-          color: #2D8CFF !important;
+          color: var(--accent-hover) !important;
         }
 
         /* Footer link hover */

@@ -79,8 +79,8 @@ function StreamingQAView({ blocks }: { blocks: Record<string, ParsedBlock> }) {
       </div>
 
       {/* Answer Card */}
-      <div className="rounded-md border border-indigo/15 bg-indigo/[0.02] p-3">
-        <div className="font-display text-base font-bold tracking-[0.1em] uppercase mb-2 pb-1 border-b border-border text-indigo-light">
+      <div className="rounded-md border border-[var(--accent)]/15 bg-[var(--accent)]/[0.02] p-3">
+        <div className="font-display text-base font-bold tracking-[0.1em] uppercase mb-2 pb-1 border-b border-border text-[var(--accent)]">
           KEY POINTS
         </div>
         {blocks.ANSWER ? (
@@ -91,8 +91,8 @@ function StreamingQAView({ blocks }: { blocks: Record<string, ParsedBlock> }) {
       </div>
 
       {/* Follow-up Card */}
-      <div className="rounded-md border border-amber/15 bg-amber/[0.02] p-3">
-        <div className="font-display text-base font-bold tracking-[0.1em] uppercase mb-2 pb-1 border-b border-border text-amber-light">
+      <div className="rounded-md border border-[var(--warning)]/15 bg-[var(--warning)]/[0.02] p-3">
+        <div className="font-display text-base font-bold tracking-[0.1em] uppercase mb-2 pb-1 border-b border-border text-[var(--warning)]">
           FOLLOW-UP Q&A
         </div>
         {blocks.FOLLOWUP ? (
@@ -120,7 +120,7 @@ function StreamingAnswerList({ content, isComplete }: { content: string; isCompl
 
         return (
           <div key={i} className="text-base text-text-muted leading-relaxed">
-            {label && <span className="font-semibold text-indigo-light mr-1">{label}:</span>}
+            {label && <span className="font-semibold text-[var(--accent)] mr-1">{label}:</span>}
             {text}
           </div>
         );
@@ -137,27 +137,27 @@ function StreamingCodingView({ blocks }: { blocks: Record<string, ParsedBlock> }
     <div className="flex flex-col gap-2">
       {/* Problem & Approach Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        <StreamingCodingCard title="PROBLEM" titleColor="text-indigo-light" block={blocks.PROBLEM} />
-        <StreamingCodingCard title="APPROACH" titleColor="text-violet-light" block={blocks.APPROACH} />
+        <StreamingCodingCard title="PROBLEM" titleColor="text-[var(--accent)]" block={blocks.PROBLEM} />
+        <StreamingCodingCard title="APPROACH" titleColor="text-[var(--text-secondary)]" block={blocks.APPROACH} />
       </div>
 
       {/* Code Block - Full Width */}
-      <div className="rounded-md border border-indigo/20 bg-[var(--bg-elevated)] overflow-hidden">
+      <div className="rounded-md border border-[var(--accent)]/20 bg-[var(--bg-elevated)] overflow-hidden">
         <div className="flex items-center justify-between px-3 py-2 border-b border-gray-300 bg-[var(--bg-elevated)]">
           <div className="flex items-center gap-2">
             <div className="flex gap-1">
-              <div className="w-2 h-2 rounded-full bg-rose/40" />
-              <div className="w-2 h-2 rounded-full bg-amber/40" />
-              <div className="w-2 h-2 rounded-full bg-indigo/40" />
+              <div className="w-2 h-2 rounded-full bg-red-400/40" />
+              <div className="w-2 h-2 rounded-full bg-amber-400/40" />
+              <div className="w-2 h-2 rounded-full bg-emerald-400/40" />
             </div>
-            <span className="font-mono text-base text-indigo-light tracking-wider uppercase font-bold">
+            <span className="font-mono text-base text-[var(--accent)] tracking-wider uppercase font-bold">
               {lang}
             </span>
           </div>
         </div>
         {blocks.CODE ? (
           <pre className="p-4 overflow-x-auto">
-            <code className={`language-${lang} text-base leading-relaxed text-indigo-light`}>
+            <code className={`language-${lang} text-base leading-relaxed text-[var(--accent)]`}>
               {blocks.CODE.content}
               {!blocks.CODE.isComplete && <Cursor />}
             </code>
@@ -167,29 +167,29 @@ function StreamingCodingView({ blocks }: { blocks: Record<string, ParsedBlock> }
 
       {/* Complexity & Walkthrough Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        <div className="rounded-md border border-cyan/15 bg-cyan/[0.02] p-3">
-          <div className="font-display text-base font-bold tracking-[0.1em] uppercase mb-2 pb-1 border-b border-border text-cyan-light">
+        <div className="rounded-md border border-[var(--accent)]/15 bg-[var(--accent)]/[0.02] p-3">
+          <div className="font-display text-base font-bold tracking-[0.1em] uppercase mb-2 pb-1 border-b border-border text-[var(--accent)]">
             COMPLEXITY
           </div>
           {blocks.COMPLEXITY ? (
             <StreamingComplexityList content={blocks.COMPLEXITY.content} isComplete={blocks.COMPLEXITY.isComplete} />
           ) : <ShimmerBlock lines={2} />}
         </div>
-        <StreamingCodingCard title="WALKTHROUGH" titleColor="text-violet-light" block={blocks.WALKTHROUGH} />
+        <StreamingCodingCard title="WALKTHROUGH" titleColor="text-[var(--text-secondary)]" block={blocks.WALKTHROUGH} />
       </div>
 
       {/* Edge Cases & Test Cases Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        <div className="rounded-md border border-amber/15 bg-amber/[0.02] p-3">
-          <div className="font-display text-base font-bold tracking-[0.1em] uppercase mb-2 pb-1 border-b border-border text-amber-light">
+        <div className="rounded-md border border-[var(--warning)]/15 bg-[var(--warning)]/[0.02] p-3">
+          <div className="font-display text-base font-bold tracking-[0.1em] uppercase mb-2 pb-1 border-b border-border text-[var(--warning)]">
             EDGE CASES
           </div>
           {blocks.EDGECASES ? (
             <EdgeCasesList content={blocks.EDGECASES.content} isComplete={blocks.EDGECASES.isComplete} />
           ) : <ShimmerBlock lines={3} />}
         </div>
-        <div className="rounded-md border border-indigo/15 bg-indigo/[0.02] p-3">
-          <div className="font-display text-base font-bold tracking-[0.1em] uppercase mb-2 pb-1 border-b border-border text-indigo-light">
+        <div className="rounded-md border border-[var(--accent)]/15 bg-[var(--accent)]/[0.02] p-3">
+          <div className="font-display text-base font-bold tracking-[0.1em] uppercase mb-2 pb-1 border-b border-border text-[var(--accent)]">
             TEST CASES
           </div>
           {blocks.TESTCASES ? (
@@ -201,7 +201,7 @@ function StreamingCodingView({ blocks }: { blocks: Record<string, ParsedBlock> }
       {/* Follow-up */}
       {blocks.FOLLOWUP && (
         <div className="rounded-lg border border-border bg-bg2 p-4">
-          <div className="font-display text-base font-bold tracking-[0.1em] uppercase mb-2 pb-1 border-b border-border text-rose-light">
+          <div className="font-display text-base font-bold tracking-[0.1em] uppercase mb-2 pb-1 border-b border-border text-[var(--danger)]">
             FOLLOW-UP Q&A
           </div>
           <StreamingFollowupList content={blocks.FOLLOWUP.content} isComplete={blocks.FOLLOWUP.isComplete} />
@@ -252,7 +252,7 @@ function StreamingComplexityList({ content, isComplete }: { content: string; isC
 
           return (
             <div key={i} className="flex items-center gap-3 p-2 rounded bg-[var(--bg-elevated)]">
-              <span className={`font-mono text-base font-bold px-2 py-0.5 rounded ${isTime ? 'bg-cyan/10 text-cyan-light' : isSpace ? 'bg-violet/10 text-violet-light' : 'bg-[var(--bg-elevated)] text-text-dim'}`}>
+              <span className={`font-mono text-base font-bold px-2 py-0.5 rounded ${isTime ? 'bg-[var(--accent)]/10 text-[var(--accent)]' : isSpace ? 'bg-[var(--accent)]/10 text-[var(--text-secondary)]' : 'bg-[var(--bg-elevated)] text-text-dim'}`}>
                 {label}
               </span>
               <span className="font-mono text-base text-text">{value}</span>
@@ -279,12 +279,12 @@ function StreamingTestCasesList({ content, isComplete }: { content: string; isCo
           return (
             <div key={i} className="flex flex-col gap-1 p-2 rounded bg-[var(--bg-elevated)] border border-[var(--border)]">
               <div className="flex items-center gap-2">
-                <span className="font-mono text-base font-bold text-indigo-light bg-indigo/10 px-2 py-0.5 rounded">IN</span>
+                <span className="font-mono text-base font-bold text-[var(--accent)] bg-[var(--accent)]/10 px-2 py-0.5 rounded">IN</span>
                 <code className="font-mono text-base text-text-muted">{arrowMatch[1]}</code>
               </div>
               <div className="flex items-center gap-2">
-                <span className="font-mono text-base font-bold text-cyan-light bg-cyan/10 px-2 py-0.5 rounded">OUT</span>
-                <code className="font-mono text-base text-cyan-light">{arrowMatch[2]}</code>
+                <span className="font-mono text-base font-bold text-[var(--accent)] bg-[var(--accent)]/10 px-2 py-0.5 rounded">OUT</span>
+                <code className="font-mono text-base text-[var(--accent)]">{arrowMatch[2]}</code>
               </div>
             </div>
           );
@@ -300,8 +300,8 @@ function StreamingDesignView({ blocks }: { blocks: Record<string, ParsedBlock> }
   return (
     <div className="flex flex-col gap-2">
       {/* Approach Headline */}
-      <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-indigo/20 bg-gradient-to-r from-indigo/7 to-violet/4 shrink-0">
-        <span className="font-mono text-base font-bold text-indigo-light bg-indigo/12 px-2 py-0.5 rounded tracking-wider shrink-0">
+      <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-[var(--accent)]/20 bg-[rgba(45,140,255,0.04)] shrink-0">
+        <span className="font-mono text-base font-bold text-[var(--accent)] bg-[var(--accent)]/12 px-2 py-0.5 rounded tracking-wider shrink-0">
           Approach
         </span>
         {blocks.HEADLINE ? (
@@ -318,13 +318,13 @@ function StreamingDesignView({ blocks }: { blocks: Record<string, ParsedBlock> }
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-2">
         {/* LEFT: Architecture diagram */}
         <div className="lg:col-span-2 lg:sticky lg:top-0 lg:self-start">
-          <div className="border border-cyan/15 bg-cyan/[0.02] overflow-hidden min-w-0 flex flex-col h-full">
-            <div className="font-mono text-[10px] font-bold tracking-widest uppercase px-4 pt-4 pb-2 border-b border-border text-cyan-light shrink-0">
+          <div className="border border-[var(--accent)]/15 bg-[var(--accent)]/[0.02] overflow-hidden min-w-0 flex flex-col h-full">
+            <div className="font-mono text-[10px] font-bold tracking-widest uppercase px-4 pt-4 pb-2 border-b border-border text-[var(--accent)] shrink-0">
               ARCHITECTURE
             </div>
             <div className="p-4 overflow-y-auto overflow-x-auto flex-1 flex flex-col items-center justify-center">
               <div className="text-center py-6">
-                <svg className="w-10 h-10 text-cyan-300/30 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-10 h-10 text-[var(--accent)]/30 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                 </svg>
                 <p className="text-xs text-gray-400 font-mono">Diagram generates after answer completes</p>
@@ -337,25 +337,25 @@ function StreamingDesignView({ blocks }: { blocks: Record<string, ParsedBlock> }
         <div className="lg:col-span-3 flex flex-col gap-2">
           {/* FUNCTIONAL | NON-FUNCTIONAL */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <StreamingGridCard title="FUNCTIONAL" titleColor="text-indigo-light" block={blocks.REQUIREMENTS} type="functional" />
-            <StreamingGridCard title="NON-FUNCTIONAL" titleColor="text-violet-light" block={blocks.REQUIREMENTS} type="nonfunctional" />
+            <StreamingGridCard title="FUNCTIONAL" titleColor="text-[var(--accent)]" block={blocks.REQUIREMENTS} type="functional" />
+            <StreamingGridCard title="NON-FUNCTIONAL" titleColor="text-[var(--text-secondary)]" block={blocks.REQUIREMENTS} type="nonfunctional" />
           </div>
 
           {/* SCALE MATH */}
-          <StreamingGridCard title="SCALE MATH" titleColor="text-indigo-light" block={blocks.SCALEMATH} type="scalemath" />
+          <StreamingGridCard title="SCALE MATH" titleColor="text-[var(--accent)]" block={blocks.SCALEMATH} type="scalemath" />
 
           {/* TRADE-OFFS | EDGE CASES */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <StreamingGridCard title="TRADE-OFFS" titleColor="text-rose-light" block={blocks.TRADEOFFS} type="tradeoffs" />
-            <StreamingGridCard title="EDGE CASES" titleColor="text-amber-light" block={blocks.EDGECASES} type="edgecases" />
+            <StreamingGridCard title="TRADE-OFFS" titleColor="text-[var(--danger)]" block={blocks.TRADEOFFS} type="tradeoffs" />
+            <StreamingGridCard title="EDGE CASES" titleColor="text-[var(--warning)]" block={blocks.EDGECASES} type="edgecases" />
           </div>
 
           {/* LAYER DESIGN */}
-          <StreamingGridCard title="LAYER DESIGN" titleColor="text-violet-light" block={blocks.DEEPDESIGN} type="deepdesign" />
+          <StreamingGridCard title="LAYER DESIGN" titleColor="text-[var(--text-secondary)]" block={blocks.DEEPDESIGN} type="deepdesign" />
 
           {/* FOLLOW-UP Q&A */}
-          <div className="border border-amber/15 bg-amber/[0.02] overflow-hidden min-w-0">
-            <div className="font-mono text-[10px] font-bold tracking-widest uppercase px-4 pt-4 pb-2 border-b border-border text-amber-light shrink-0">
+          <div className="border border-[var(--warning)]/15 bg-[var(--warning)]/[0.02] overflow-hidden min-w-0">
+            <div className="font-mono text-[10px] font-bold tracking-widest uppercase px-4 pt-4 pb-2 border-b border-border text-[var(--warning)] shrink-0">
               FOLLOW-UP Q&A
             </div>
             <div className="p-4 overflow-y-auto max-h-[420px]">
@@ -433,7 +433,7 @@ function RequirementsList({ content, reqType, isComplete }: { content: string; r
     <ul className="space-y-1">
       {items.map((item, i) => (
         <li key={i} className="flex items-start gap-2 text-base text-text-muted leading-snug">
-          <span className={`w-1.5 h-1.5 rounded-full shrink-0 mt-1.5 ${reqType === 'functional' ? 'bg-indigo' : 'bg-violet'}`} />
+          <span className={`w-1.5 h-1.5 rounded-full shrink-0 mt-1.5 ${reqType === 'functional' ? 'bg-[var(--accent)]' : 'bg-[var(--text-muted)]'}`} />
           {item}
         </li>
       ))}
@@ -462,11 +462,11 @@ function ScaleMathList({ content, isComplete }: { content: string; isComplete: b
     <div className="space-y-3">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         {metrics.map((m, i) => (
-          <div key={i} className="rounded-lg border border-emerald-500/15 bg-emerald-600/[0.04] p-3">
+          <div key={i} className="rounded-lg border border-[rgba(45,140,255,0.15)] bg-[rgba(45,140,255,0.04)] p-3">
             <div className="font-mono text-[10px] font-bold text-text-dim uppercase tracking-wider mb-1.5">
               {m.label}
             </div>
-            <div className="font-mono text-sm font-semibold text-indigo-light leading-snug break-words">
+            <div className="font-mono text-sm font-semibold text-[var(--accent)] leading-snug break-words">
               {m.value}
             </div>
           </div>
@@ -494,7 +494,7 @@ function DeepDesignList({ content, isComplete }: { content: string; isComplete: 
           itemNum = parseInt(match[1]);
           return (
             <div key={i} className="flex items-start gap-2 py-0.5">
-              <span className="font-mono text-base font-bold text-violet-light w-4 text-right shrink-0">{match[1]}</span>
+              <span className="font-mono text-base font-bold text-[var(--text-secondary)] w-4 text-right shrink-0">{match[1]}</span>
               <span className="text-base text-text-muted leading-snug">{match[2]}</span>
             </div>
           );
@@ -504,7 +504,7 @@ function DeepDesignList({ content, isComplete }: { content: string; isComplete: 
         if (subLine && itemNum > 0) {
           return (
             <div key={i} className="flex items-start gap-2 py-0.5 pl-5">
-              <span className="w-1.5 h-1.5 rounded-full bg-violet/40 shrink-0 mt-1.5" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]/40 shrink-0 mt-1.5" />
               <span className="text-base text-text-muted leading-snug">{subLine}</span>
             </div>
           );
@@ -513,7 +513,7 @@ function DeepDesignList({ content, isComplete }: { content: string; isComplete: 
         itemNum++;
         return (
           <div key={i} className="flex items-start gap-2 py-0.5">
-            <span className="font-mono text-base font-bold text-violet-light w-4 text-right shrink-0">{itemNum}</span>
+            <span className="font-mono text-base font-bold text-[var(--text-secondary)] w-4 text-right shrink-0">{itemNum}</span>
             <span className="text-base text-text-muted leading-snug">{line}</span>
           </div>
         );
@@ -535,7 +535,7 @@ function EdgeCasesList({ content, isComplete }: { content: string; isComplete: b
         if (colonIdx > 0 && colonIdx < 40) {
           return (
             <div key={i} className="flex items-start gap-2">
-              <span className="font-mono text-base font-semibold text-amber-light bg-amber/10 px-2 py-0.5 rounded shrink-0">
+              <span className="font-mono text-base font-semibold text-[var(--warning)] bg-[var(--warning)]/10 px-2 py-0.5 rounded shrink-0">
                 {line.slice(0, colonIdx)}
               </span>
               <span className="text-base text-text-muted leading-snug">{line.slice(colonIdx + 1).trim()}</span>
@@ -603,7 +603,7 @@ function TradeoffsList({ content, isComplete }: { content: string; isComplete: b
         return (
           <div key={i} className="py-1 border-b border-[var(--border)] last:border-b-0">
             <div className="flex items-baseline gap-2 flex-wrap">
-              <span className="font-mono text-base font-semibold text-cyan-light">{pick}</span>
+              <span className="font-mono text-base font-semibold text-[var(--accent)]">{pick}</span>
               {alt && (
                 <>
                   <span className="font-mono text-base text-text-dim">vs</span>
@@ -655,7 +655,7 @@ function StreamingFollowupList({ content, isComplete }: { content: string; isCom
       {pairs.map((pair, i) => (
         <div key={i} className="py-1.5 border-b border-[var(--border)] last:border-b-0">
           <div className="flex items-start gap-2 text-base">
-            <span className="font-mono font-bold text-amber-light bg-amber/10 px-2 py-0.5 rounded shrink-0">Q{i + 1}</span>
+            <span className="font-mono font-bold text-[var(--warning)] bg-[var(--warning)]/10 px-2 py-0.5 rounded shrink-0">Q{i + 1}</span>
             <span className="text-text-muted leading-snug">{pair.question}</span>
           </div>
           <div className="flex items-start gap-2 text-base mt-1.5 pl-8">
@@ -666,7 +666,7 @@ function StreamingFollowupList({ content, isComplete }: { content: string; isCom
       {currentQ && (
         <div className="py-1.5">
           <div className="flex items-start gap-2 text-base">
-            <span className="font-mono font-bold text-amber-light bg-amber/10 px-2 py-0.5 rounded shrink-0">Q{pairs.length + 1}</span>
+            <span className="font-mono font-bold text-[var(--warning)] bg-[var(--warning)]/10 px-2 py-0.5 rounded shrink-0">Q{pairs.length + 1}</span>
             <span className="text-text-muted leading-snug">{currentQ}<Cursor /></span>
           </div>
         </div>
@@ -691,6 +691,6 @@ function ShimmerBlock({ lines }: { lines: number }) {
 }
 
 function Cursor() {
-  return <span className="inline-block w-1.5 h-3 bg-indigo-light/60 ml-0.5 animate-pulse" />;
+  return <span className="inline-block w-1.5 h-3 bg-[var(--accent)]/60 ml-0.5 animate-pulse" />;
 }
 

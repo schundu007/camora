@@ -8,7 +8,7 @@ export function ComparisonCard({ comparison }) {
   return (
     <div className="rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)]">
       <div className="px-3 py-2 border-b border-[var(--border)] bg-[var(--bg-elevated)] flex items-center gap-2">
-        <Icon name="columns" size={14} className="text-emerald-700" />
+        <Icon name="columns" size={14} className="text-[var(--accent)]" />
         <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">{title}</h3>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-[#e3e8ee]">
@@ -91,7 +91,7 @@ export function EvolutionTimeline({ steps }) {
   return (
     <div className="rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)]">
       <div className="px-3 py-2 border-b border-[var(--border)] bg-[var(--bg-elevated)] flex items-center gap-2">
-        <Icon name="trendingUp" size={14} className="text-emerald-700" />
+        <Icon name="trendingUp" size={14} className="text-[var(--accent)]" />
         <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">Architecture Evolution</h3>
         <span className="text-[10px] landing-mono text-[var(--text-muted)] ml-auto">{steps.length} stages</span>
       </div>
@@ -159,7 +159,7 @@ export function EvolutionTimeline({ steps }) {
             {/* Pros / Cons */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <div>
-                <span className="text-[10px] landing-mono font-bold text-emerald-600 uppercase tracking-wider">Pros</span>
+                <span className="text-[10px] landing-mono font-bold text-[var(--success)] uppercase tracking-wider">Pros</span>
                 <ul className="mt-1 space-y-0.5">
                   {current.pros.map((p, i) => (
                     <li key={i} className="flex items-start gap-1 text-[11px] text-[var(--text-secondary)] landing-body">
@@ -218,7 +218,7 @@ export function PatternCard({ pattern }) {
           <h4 className="text-sm font-bold text-[var(--text-primary)] landing-display mb-0.5">{pattern.name}</h4>
           <p className="text-xs text-[var(--text-muted)] landing-body mb-1.5">{pattern.description}</p>
           <div className="flex flex-wrap gap-1">
-            <span className="text-[9px] landing-mono px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+            <span className="text-[9px] landing-mono px-1.5 py-0.5 rounded bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/20">
               Use when: {pattern.useWhen}
             </span>
           </div>
@@ -237,7 +237,7 @@ export function PatternCardGrid({ patterns, title = 'Design Patterns' }) {
   return (
     <div className="rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)]">
       <div className="px-3 py-2 border-b border-[var(--border)] bg-[var(--bg-elevated)] flex items-center gap-2">
-        <Icon name="puzzle" size={14} className="text-emerald-700" />
+        <Icon name="puzzle" size={14} className="text-[var(--accent)]" />
         <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">{title}</h3>
         <span className="text-[10px] landing-mono text-[var(--text-muted)] ml-auto">{patterns.length} patterns</span>
       </div>
@@ -289,7 +289,7 @@ export function StaticDiagram({ diagram }) {
   return (
     <div className="rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)]">
       <div className="px-3 py-2 border-b border-[var(--border)] bg-[var(--bg-elevated)] flex items-center gap-2">
-        <Icon name="layers" size={14} className="text-emerald-700" />
+        <Icon name="layers" size={14} className="text-[var(--accent)]" />
         <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">{diagram.title}</h3>
         {/* Cloud Provider Tabs */}
         {isCloudDiagram && (
@@ -348,7 +348,7 @@ export function StaticDiagramGrid({ diagrams, title = 'Architecture Diagrams' })
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-2">
-        <Icon name="layers" size={14} className="text-emerald-700" />
+        <Icon name="layers" size={14} className="text-[var(--accent)]" />
         <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">{title}</h3>
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
@@ -369,7 +369,7 @@ export function FlowchartCard({ flowchart }) {
   return (
     <div className="rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)]">
       <div className="px-3 py-2 border-b border-[var(--border)] bg-[var(--bg-elevated)] flex items-center gap-2">
-        <Icon name="gitBranch" size={14} className="text-emerald-700" />
+        <Icon name="gitBranch" size={14} className="text-[var(--accent)]" />
         <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">{flowchart.title}</h3>
       </div>
       {flowchart.description && (
@@ -426,7 +426,7 @@ export function ChartCard({ chart }) {
   return (
     <div className="rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--bg-surface)]">
       <div className="px-3 py-2 border-b border-[var(--border)] bg-[var(--bg-elevated)] flex items-center gap-2">
-        <Icon name="barChart" size={14} className="text-emerald-700" />
+        <Icon name="barChart" size={14} className="text-[var(--accent)]" />
         <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">{chart.title}</h3>
       </div>
       <div className="p-3">

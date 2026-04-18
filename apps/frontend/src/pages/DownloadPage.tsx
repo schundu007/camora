@@ -408,7 +408,7 @@ export default function DownloadPage() {
           <FadeInSection delay={0.3}>
             <div className="mt-10 flex flex-col items-center gap-3">
               {subscriptionLoading ? (
-                <div className="w-6 h-6 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
+                <div className="w-6 h-6 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
               ) : isPaid ? (
                 <>
                   <a

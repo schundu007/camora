@@ -109,7 +109,7 @@ export default function PublicProfilePage() {
       <div className="min-h-screen bg-[var(--bg-app)]">
         <SiteNav />
         <div className="flex items-center justify-center min-h-screen">
-          <div className="w-12 h-12 border-4 border-emerald-200 border-t-emerald-500 rounded-full animate-spin" />
+          <div className="w-12 h-12 border-4 border-[rgba(45,140,255,0.2)] border-t-[var(--accent)] rounded-full animate-spin" />
         </div>
       </div>
     );
@@ -153,7 +153,7 @@ export default function PublicProfilePage() {
               referrerPolicy="no-referrer"
             />
           ) : (
-            <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center text-2xl font-bold text-emerald-700 border-2 border-emerald-200">
+            <div className="w-20 h-20 rounded-full bg-[rgba(45,140,255,0.08)] flex items-center justify-center text-2xl font-bold text-[var(--accent)] border-2 border-[rgba(45,140,255,0.2)]">
               {profile.name[0]?.toUpperCase() || '?'}
             </div>
           )}
@@ -162,7 +162,7 @@ export default function PublicProfilePage() {
             <h1 className="text-2xl font-bold text-[var(--text-primary)] tracking-tight">{profile.name}</h1>
             <p className="text-sm text-gray-400 mt-0.5">@{profile.username}</p>
             <div className="flex items-center gap-3 mt-3 justify-center sm:justify-start">
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-full">
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-[rgba(45,140,255,0.08)] text-[var(--accent)] text-xs font-bold rounded-full">
                 <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.957a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.37 2.448a1 1 0 00-.364 1.118l1.287 3.957c.3.921-.755 1.688-1.54 1.118l-3.37-2.448a1 1 0 00-1.176 0l-3.37 2.448c-.784.57-1.838-.197-1.539-1.118l1.287-3.957a1 1 0 00-.364-1.118L2.063 9.384c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69l1.286-3.957z" />
                 </svg>
@@ -208,7 +208,7 @@ export default function PublicProfilePage() {
               {profile.badges.map((badge) => (
                 <div
                   key={badge.key}
-                  className="flex items-center gap-1.5 px-3 py-2 bg-[var(--bg-app)] border border-emerald-200 rounded-lg"
+                  className="flex items-center gap-1.5 px-3 py-2 bg-[var(--bg-app)] border border-[var(--border)] rounded-lg"
                 >
                   <span className="text-lg">{badge.icon}</span>
                   <span className="text-sm font-medium text-[var(--text-primary)]">{badge.title}</span>
@@ -275,7 +275,7 @@ export default function PublicProfilePage() {
 
         {/* CTA */}
         <div className="border-t border-[var(--border)] pt-10 text-center">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-medium rounded-full mb-4">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[rgba(45,140,255,0.08)] text-[var(--accent)] text-xs font-medium rounded-full mb-4">
             <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
               <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.957a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.37 2.448a1 1 0 00-.364 1.118l1.287 3.957c.3.921-.755 1.688-1.54 1.118l-3.37-2.448a1 1 0 00-1.176 0l-3.37 2.448c-.784.57-1.838-.197-1.539-1.118l1.287-3.957a1 1 0 00-.364-1.118L2.063 9.384c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69l1.286-3.957z" />
             </svg>

@@ -420,7 +420,7 @@ const CodeDisplay = forwardRef(function CodeDisplay({ code: initialCode, languag
               {approach.name || `Approach ${i + 1}`}
               {approach.complexity?.time && (
                 <span className={`ml-1.5 text-[10px] px-1.5 py-0.5 rounded ${
-                  activeApproach === i ? 'bg-emerald-600/20 text-[var(--accent)]' : 'bg-[var(--bg-elevated)] text-[var(--text-muted)]'
+                  activeApproach === i ? 'bg-[var(--accent)]/20 text-[var(--accent)]' : 'bg-[var(--bg-elevated)] text-[var(--text-muted)]'
                 }`}>
                   {approach.complexity.time}
                 </span>
@@ -438,19 +438,19 @@ const CodeDisplay = forwardRef(function CodeDisplay({ code: initialCode, languag
             disabled={running || !canRun}
             className={`flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold rounded-lg transition-all ${running ? 'running' : ''}`}
             style={{
-              background: running ? '#334155' : '#10b981',
+              background: running ? '#334155' : 'var(--accent)',
               color: 'white',
-              boxShadow: running ? 'none' : '0 2px 6px rgba(16, 185, 129, 0.25)',
+              boxShadow: running ? 'none' : '0 2px 6px rgba(45, 140, 255, 0.25)',
               cursor: running || !canRun ? 'not-allowed' : 'pointer',
             }}
             onMouseEnter={(e) => {
               if (!running && canRun) {
-                e.currentTarget.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.35)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(45, 140, 255, 0.35)';
                 e.currentTarget.style.transform = 'translateY(-1px)';
               }
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.boxShadow = running ? 'none' : '0 2px 6px rgba(16, 185, 129, 0.25)';
+              e.currentTarget.style.boxShadow = running ? 'none' : '0 2px 6px rgba(45, 140, 255, 0.25)';
               e.currentTarget.style.transform = 'translateY(0)';
             }}
           >
@@ -481,8 +481,8 @@ const CodeDisplay = forwardRef(function CodeDisplay({ code: initialCode, languag
             onClick={handleCopy}
             className="px-3 py-1 text-xs font-medium rounded-md transition-all hover:bg-[var(--bg-elevated)]"
             style={{
-              color: copied ? '#10b981' : '#94a3b8',
-              background: copied ? 'rgba(16, 185, 129, 0.1)' : 'transparent'
+              color: copied ? 'var(--accent)' : '#94a3b8',
+              background: copied ? 'rgba(45, 140, 255, 0.1)' : 'transparent'
             }}
           >
             {copied ? (
@@ -553,7 +553,7 @@ const CodeDisplay = forwardRef(function CodeDisplay({ code: initialCode, languag
               disabled={fixing}
               className="px-3 py-1 text-xs font-semibold rounded-md transition-all border border-brand-400 text-brand-400 hover:bg-brand-400/10"
               style={{
-                background: fixing ? 'rgba(16, 185, 129, 0.1)' : 'transparent',
+                background: fixing ? 'rgba(45, 140, 255, 0.1)' : 'transparent',
               }}
             >
               {fixing ? (

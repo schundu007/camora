@@ -980,7 +980,7 @@ function Header({ ascendMode, onModeChange, showSidebar, onToggleSidebar, isLoad
           {user?.image ? (
             <img src={user.image} alt="" className="w-6 h-6 rounded-full" referrerPolicy="no-referrer" />
           ) : (
-            <div className="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center text-[10px] font-bold text-emerald-700">{user?.name?.[0] || '?'}</div>
+            <div className="w-6 h-6 rounded-full bg-[rgba(45,140,255,0.08)] flex items-center justify-center text-[10px] font-bold text-[var(--accent)]">{user?.name?.[0] || '?'}</div>
           )}
           <span className="text-sm text-[var(--text-primary)] font-medium">{user?.name?.split(' ')[0] || 'Dashboard'}</span>
         </Link>
@@ -1154,14 +1154,14 @@ function CodingLayout({
         <div className="flex flex-col items-center justify-center h-full">
           <div className="flex gap-1.5 mb-3">
             <span className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: '0ms' }} />
-            <span className="w-2.5 h-2.5 rounded-full bg-violet-500 animate-bounce" style={{ animationDelay: '150ms' }} />
+            <span className="w-2.5 h-2.5 rounded-full bg-[var(--accent)] animate-bounce" style={{ animationDelay: '150ms' }} />
             <span className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: '300ms' }} />
           </div>
           <span className="landing-body text-sm font-medium text-[var(--text-secondary)]">Generating system design...</span>
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center h-full">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-50 to-violet-50 border border-blue-100 flex items-center justify-center mb-4">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-100 flex items-center justify-center mb-4">
             <svg className="w-7 h-7 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
           </div>
           <span className="landing-body text-sm font-medium text-[var(--text-muted)]">Enter a system design question</span>

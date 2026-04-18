@@ -120,14 +120,14 @@ export default function SharedDiagram({
               {(['LR', 'TB'] as const).map(d => (
                 <button key={d} onClick={() => setDirection(d)}
                   className={`px-2.5 py-1.5 min-h-[36px] text-xs font-mono ${d !== 'LR' ? 'border-l border-gray-200' : ''} ${
-                    direction === d ? 'bg-emerald-500 text-white' : 'text-gray-500'}`}>{d}</button>
+                    direction === d ? 'bg-[var(--accent)] text-white' : 'text-gray-500'}`}>{d}</button>
               ))}
             </div>
             <div className="flex border border-gray-200 rounded overflow-hidden">
               {(['overview', 'detailed'] as const).map(d => (
                 <button key={d} onClick={() => setDetail(d)}
                   className={`px-2.5 py-1.5 min-h-[36px] text-xs font-mono capitalize ${d !== 'overview' ? 'border-l border-gray-200' : ''} ${
-                    detail === d ? 'bg-emerald-500 text-white' : 'text-gray-500'}`}>{d}</button>
+                    detail === d ? 'bg-[var(--accent)] text-white' : 'text-gray-500'}`}>{d}</button>
               ))}
             </div>
           </div>
@@ -144,7 +144,7 @@ export default function SharedDiagram({
 
       {loading && (
         <div className="flex items-center justify-center p-6 rounded-lg" style={{ border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
-          <div className="w-5 h-5 border-2 border-emerald-200 border-t-emerald-500 rounded-full animate-spin" />
+          <div className="w-5 h-5 border-2 border-blue-200 border-t-[var(--accent)] rounded-full animate-spin" />
         </div>
       )}
 
@@ -152,29 +152,29 @@ export default function SharedDiagram({
         <div className="flex items-center justify-center p-6 rounded-lg" style={{ border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
           <button onClick={handleGenerate}
             className="px-5 py-2.5 text-sm font-bold text-white rounded-lg"
-            style={{ background: 'linear-gradient(135deg, #10b981, #2D8CFF)', boxShadow: '0 2px 12px rgba(16,185,129,0.3)' }}>
+            style={{ background: 'var(--accent)', boxShadow: '0 2px 12px rgba(45,140,255,0.3)' }}>
             Generate Diagram
           </button>
         </div>
       )}
 
       {generating && (
-        <div className="flex items-center justify-center gap-3 p-6 rounded-lg bg-emerald-50 border border-emerald-200">
-          <div className="w-5 h-5 border-2 border-emerald-300 border-t-emerald-600 rounded-full animate-spin" />
-          <span className="text-sm text-emerald-700 font-mono">Generating...</span>
+        <div className="flex items-center justify-center gap-3 p-6 rounded-lg bg-[rgba(45,140,255,0.08)] border border-[rgba(45,140,255,0.3)]">
+          <div className="w-5 h-5 border-2 border-blue-300 border-t-[var(--accent)] rounded-full animate-spin" />
+          <span className="text-sm text-blue-700 font-mono">Generating...</span>
         </div>
       )}
 
       {error && (
-        <div className="p-4 rounded-lg bg-amber-50 border border-amber-200">
-          <p className="text-sm text-amber-700">{error}</p>
-          <button onClick={handleGenerate} className="mt-2 px-3 py-1 text-xs bg-amber-100 text-amber-700 rounded">Retry</button>
+        <div className="p-4 rounded-lg bg-[var(--danger)]/5 border border-[var(--danger)]/20">
+          <p className="text-sm text-[var(--danger)]">{error}</p>
+          <button onClick={handleGenerate} className="mt-2 px-3 py-1 text-xs bg-[var(--danger)]/10 text-[var(--danger)] rounded">Retry</button>
         </div>
       )}
 
       {imageUrl && !loading && !generating && (
         <div className="rounded-lg select-none flex items-center justify-center"
-          style={{ cursor: dragging ? 'grabbing' : 'grab', overflow: 'hidden', minHeight: 250, border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}
+          style={{ cursor: dragging ? 'grabbing' : 'grab', overflow: 'hidden', minHeight: 600, border: '1px solid var(--border)', background: 'var(--bg-surface)' }}
           onWheel={e => { e.preventDefault(); setScale(s => Math.min(Math.max(0.3, s + (e.deltaY > 0 ? -0.1 : 0.1)), 4)); }}
           onMouseDown={e => { if (e.button !== 0) return; setDragging(true); dragStart.current = { x: e.clientX, y: e.clientY }; transStart.current = { ...translate }; }}
           onMouseMove={e => { if (!dragging) return; setTranslate({ x: transStart.current.x + (e.clientX - dragStart.current.x), y: transStart.current.y + (e.clientY - dragStart.current.y) }); }}

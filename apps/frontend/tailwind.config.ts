@@ -12,23 +12,30 @@ export default {
         logo: ['Clash Display', 'system-ui', 'sans-serif'],
       },
       colors: {
-        primary: {
-          DEFAULT: '#76B900',
-          light: '#91C733',
-          dark: '#5E9400',
+        accent: {
+          DEFAULT: '#2D8CFF',
+          hover: '#1A7AE6',
+          subtle: 'rgba(45,140,255,0.08)',
+          muted: 'rgba(45,140,255,0.15)',
         },
-        brand: {
-          DEFAULT: '#76B900',
-          50: '#F7FDE8',
-          100: '#ECFACC',
-          200: '#D5F58A',
-          300: '#CFFF40',
-          400: '#91C733',
-          500: '#76B900',
-          600: '#5E9400',
-          700: '#4A7500',
-          800: '#375800',
-          900: '#264000',
+        success: {
+          DEFAULT: '#10B981',
+          subtle: 'rgba(16,185,129,0.08)',
+          muted: 'rgba(16,185,129,0.15)',
+        },
+        warning: {
+          DEFAULT: '#F59E0B',
+          subtle: 'rgba(245,158,11,0.08)',
+          muted: 'rgba(245,158,11,0.15)',
+        },
+        danger: {
+          DEFAULT: '#EF4444',
+          subtle: 'rgba(239,68,68,0.08)',
+          muted: 'rgba(239,68,68,0.15)',
+        },
+        surface: {
+          DEFAULT: '#F7F8FA',
+          elevated: '#EEF0F4',
         },
       },
     },

@@ -40,12 +40,12 @@ const INITIAL_STATE: PrepData = {
 };
 
 const SIDEBAR_SECTIONS = [
-  { id: 'input', label: 'Input Materials', color: '#10b981' },
+  { id: 'input', label: 'Input Materials', color: '#2D8CFF' },
   { id: 'jd-view', label: 'Job Description', color: '#2D8CFF' },
   { id: 'pitch', label: 'Elevator Pitch', color: '#ec4899' },
   { id: 'hr', label: 'HR Questions', color: '#f59e0b' },
   { id: 'hiring-manager', label: 'Hiring Manager', color: '#06b6d4' },
-  { id: 'coding', label: 'Coding', color: '#10b981' },
+  { id: 'coding', label: 'Coding', color: '#2D8CFF' },
   { id: 'system-design', label: 'System Design', color: '#2D8CFF' },
   { id: 'behavioral', label: 'Behavioral', color: '#2D8CFF' },
   { id: 'techstack', label: 'Tech Stack', color: '#2D8CFF' },
@@ -160,9 +160,9 @@ function PrepContentRenderer({ content }: { content: string }) {
       )}
 
       {/* Key Points */}
-      {data.keyPoints && (<div><div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: '#10b981' }}>Key Points</div>
+      {data.keyPoints && (<div><div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: '#2D8CFF' }}>Key Points</div>
         <ul className="space-y-1">{(Array.isArray(data.keyPoints) ? data.keyPoints : [data.keyPoints]).map((p: string, i: number) => (
-          <li key={i} className="flex items-start gap-2 text-sm" style={{ color: '#475569' }}><span style={{ color: '#10b981' }}>•</span>{p}</li>
+          <li key={i} className="flex items-start gap-2 text-sm" style={{ color: '#475569' }}><span style={{ color: '#2D8CFF' }}>•</span>{p}</li>
         ))}</ul></div>)}
 
       {/* Tips */}
@@ -657,7 +657,7 @@ export function LumoraDocsPanel({ onClose }: { onClose?: () => void }) {
             {/* Materials */}
             <div className="mb-6">
               <div className="flex items-center gap-2 mb-3">
-                <div className="w-2 h-2 rounded-full" style={{ background: '#10b981' }} />
+                <div className="w-2 h-2 rounded-full" style={{ background: '#2D8CFF' }} />
                 <span className="text-xs font-bold uppercase tracking-wider" style={{ color: '#475569' }}>Materials</span>
               </div>
               <div className="grid grid-cols-2 gap-3">

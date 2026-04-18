@@ -106,5 +106,5 @@ export function MermaidDiagram({ content, className = '' }: MermaidDiagramProps)
     })();
   }, [content, theme, contentKey]);
 
-  return <div ref={containerRef} className={`overflow-auto p-2 min-h-[80px] ${className}`} />;
+  return <div ref={containerRef} className={`overflow-auto p-2 min-h-[300px] ${className}`} />;
 }

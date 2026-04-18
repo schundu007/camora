@@ -213,10 +213,10 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
         {/* Status — monospace, right-aligned with glow dot */}
         <div className="hidden lg:flex items-center gap-2 px-3 h-full shrink-0" style={{ borderLeft: '1px solid rgba(255,255,255,0.15)' }}>
           <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-            status.state === 'ready' ? 'bg-emerald-400' :
+            status.state === 'ready' ? 'bg-[var(--accent)]' :
             status.state === 'error' ? 'bg-red-400' :
             status.state === 'warn' ? 'bg-amber-400' :
-            status.state === 'listen' || status.state === 'write' ? 'bg-emerald-400 animate-pulse' :
+            status.state === 'listen' || status.state === 'write' ? 'bg-[var(--accent)] animate-pulse' :
             'bg-white/20'
           }`} style={status.state === 'ready' ? { boxShadow: '0 0 6px rgba(45,140,255,0.5)' } : {}} />
           <span className="text-[10px] font-mono font-medium tracking-wide truncate max-w-[90px]" style={{ color: 'rgba(255,255,255,0.7)' }}>
@@ -241,7 +241,7 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
         </div>
       </div>
 
-      {/* Row 2: Input bar with subtle emerald accent — hidden when showInputBar=false (composer moved to page bottom) */}
+      {/* Row 2: Input bar — hidden when showInputBar=false (composer moved to page bottom) */}
       {showInputBar && <div data-tour="input" className="flex items-center h-[36px]" style={{ borderTop: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.04)' }}>
         <div className="flex-1 flex items-center justify-center px-3 min-w-0">
           <input
@@ -291,7 +291,7 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
               onKeyDown={handleTextareaKeyDown}
               placeholder="Paste a coding problem or system design prompt... (Cmd+Enter to send)"
               rows={4}
-              className="font-code flex-1 bg-gray-900/80 border border-gray-700/50 rounded-lg px-3 py-2 text-sm text-white placeholder:text-gray-500 resize-y outline-none focus:ring-1 focus:ring-emerald-500/50 focus:border-emerald-500/50 min-h-[80px] max-h-[300px]"
+              className="font-code flex-1 bg-gray-900/80 border border-gray-700/50 rounded-lg px-3 py-2 text-sm text-white placeholder:text-gray-500 resize-y outline-none focus:ring-1 focus:ring-[var(--accent)]/50 focus:border-[var(--accent)]/50 min-h-[80px] max-h-[300px]"
             />
             <div className="flex flex-col gap-1.5 shrink-0">
               <button

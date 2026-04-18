@@ -109,7 +109,7 @@ function FaqItem({ q, a }: { q: string; a: string }) {
     <div className="ch-glass-card" style={{ borderColor: open ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.06)' }}>
       <button onClick={() => setOpen(!open)} className="w-full flex items-center justify-between px-5 py-4 text-left" aria-expanded={open}>
         <span className="text-base font-semibold text-white/90">{q}</span>
-        <svg className={`w-4 h-4 text-emerald-400/60 shrink-0 transition-transform duration-300 ${open ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+        <svg className={`w-4 h-4 text-[var(--accent)]/60 shrink-0 transition-transform duration-300 ${open ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
       </button>
       {open && <div className="px-5 pb-4 text-base text-white/50 leading-relaxed">{a}</div>}
     </div>
@@ -282,7 +282,7 @@ export default function ChallengePage() {
             {challengeEnded ? (
               <p className="text-base font-semibold text-white/40">Challenge ended. Winners announced October 22.</p>
             ) : challengeActive ? (
-              <p className="text-base font-bold text-emerald-400">Challenge is LIVE. Submit findings now.</p>
+              <p className="text-base font-bold text-[var(--accent)]">Challenge is LIVE. Submit findings now.</p>
             ) : (
               <>
                 <span className="text-base font-bold text-white/30 uppercase tracking-[0.15em] mr-3">Starts in</span>
@@ -322,8 +322,8 @@ export default function ChallengePage() {
         <div className="w-full lg:max-w-[70%] mx-auto px-4 sm:px-6">
           {!isAuthenticated ? (
             <div className="ch-glass-card text-center py-12 px-6">
-              <div className="ch-glow-icon mx-auto mb-4" style={{ '--glow': '#10b981' } as any}>
-                <svg className="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0" /></svg>
+              <div className="ch-glow-icon mx-auto mb-4" style={{ '--glow': 'var(--success)' } as any}>
+                <svg className="w-6 h-6 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0" /></svg>
               </div>
               <h3 className="text-xl font-bold text-white mb-2">Ready to participate?</h3>
               <p className="text-base text-white/40 mb-6">Create a free account to take the qualification quiz.</p>
@@ -333,20 +333,20 @@ export default function ChallengePage() {
             <div className="ch-glass-card p-6">
               <div className="flex items-center justify-between flex-wrap gap-4 mb-5">
                 <div className="flex items-center gap-3">
-                  <div className="ch-glow-icon" style={{ '--glow': '#10b981' } as any}>
-                    <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  <div className="ch-glow-icon" style={{ '--glow': 'var(--success)' } as any}>
+                    <svg className="w-5 h-5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                   </div>
                   <div>
-                    <span className="text-base font-bold text-emerald-400">Qualified Challenger</span>
+                    <span className="text-base font-bold text-[var(--accent)]">Qualified Challenger</span>
                     <span className="text-base text-white/30 ml-2">Score: {challengeStatus.quizScore}%</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-base text-white/30">Credits:</span>
                   <div className="w-32 h-2 rounded-full bg-white/5 overflow-hidden">
-                    <div className="h-full rounded-full transition-all" style={{ width: `${(challengeStatus.creditsRemaining / 100) * 100}%`, background: challengeStatus.creditsRemaining > 50 ? '#10b981' : challengeStatus.creditsRemaining > 20 ? '#f59e0b' : '#ef4444', boxShadow: `0 0 8px ${challengeStatus.creditsRemaining > 50 ? '#10b981' : challengeStatus.creditsRemaining > 20 ? '#f59e0b' : '#ef4444'}` }} />
+                    <div className="h-full rounded-full transition-all" style={{ width: `${(challengeStatus.creditsRemaining / 100) * 100}%`, background: challengeStatus.creditsRemaining > 50 ? 'var(--success)' : challengeStatus.creditsRemaining > 20 ? 'var(--warning)' : 'var(--danger)', boxShadow: `0 0 8px ${challengeStatus.creditsRemaining > 50 ? 'var(--success)' : challengeStatus.creditsRemaining > 20 ? 'var(--warning)' : 'var(--danger)'}` }} />
                   </div>
-                  <span className="text-base font-bold" style={{ color: challengeStatus.creditsRemaining > 50 ? '#10b981' : challengeStatus.creditsRemaining > 20 ? '#f59e0b' : '#ef4444' }}>{challengeStatus.creditsRemaining}/100</span>
+                  <span className="text-base font-bold" style={{ color: challengeStatus.creditsRemaining > 50 ? 'var(--success)' : challengeStatus.creditsRemaining > 20 ? 'var(--warning)' : 'var(--danger)' }}>{challengeStatus.creditsRemaining}/100</span>
                 </div>
               </div>
               <div className="border-t border-white/5 pt-5">
@@ -369,7 +369,7 @@ export default function ChallengePage() {
                   <button onClick={handleSubmitFinding} disabled={submitStatus === 'submitting'} className="ch-cta-primary" style={{ padding: '12px 28px', fontSize: 16 }}>
                     {submitStatus === 'submitting' ? 'Submitting...' : 'Submit Finding'}
                   </button>
-                  {submitStatus === 'success' && <span className="text-base text-emerald-400 font-medium">Submitted!</span>}
+                  {submitStatus === 'success' && <span className="text-base text-[var(--success)] font-medium">Submitted!</span>}
                   {submitStatus === 'error' && <span className="text-base text-red-400 font-medium">Failed. Try again.</span>}
                 </div>
               </div>
@@ -379,15 +379,15 @@ export default function ChallengePage() {
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-2">
                   {quizQuestions.map((_, i) => (
-                    <div key={i} className="transition-all duration-300" style={{ width: i === quizIdx ? 24 : 8, height: 8, borderRadius: 99, background: i < quizIdx ? '#10b981' : i === quizIdx ? '#10b981' : 'rgba(255,255,255,0.08)', boxShadow: i <= quizIdx ? '0 0 6px #10b981' : 'none' }} />
+                    <div key={i} className="transition-all duration-300" style={{ width: i === quizIdx ? 24 : 8, height: 8, borderRadius: 99, background: i < quizIdx ? 'var(--success)' : i === quizIdx ? 'var(--success)' : 'rgba(255,255,255,0.08)', boxShadow: i <= quizIdx ? '0 0 6px var(--success)' : 'none' }} />
                   ))}
                 </div>
-                <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 22, fontWeight: 700, color: quizTimeLeft > 300 ? '#10b981' : quizTimeLeft > 120 ? '#f59e0b' : '#ef4444', textShadow: `0 0 12px ${quizTimeLeft > 300 ? '#10b981' : quizTimeLeft > 120 ? '#f59e0b' : '#ef4444'}` }}>
+                <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 22, fontWeight: 700, color: quizTimeLeft > 300 ? 'var(--success)' : quizTimeLeft > 120 ? 'var(--warning)' : 'var(--danger)', textShadow: `0 0 12px ${quizTimeLeft > 300 ? 'var(--success)' : quizTimeLeft > 120 ? 'var(--warning)' : 'var(--danger)'}` }}>
                   {Math.floor(quizTimeLeft / 60)}:{(quizTimeLeft % 60).toString().padStart(2, '0')}
                 </span>
               </div>
               <div className="p-5 rounded-xl mb-5" style={{ background: 'rgba(16,185,129,0.05)', border: '1px solid rgba(16,185,129,0.15)' }}>
-                <span className="text-base font-bold text-emerald-400 uppercase tracking-wider">Question {quizIdx + 1} of {quizQuestions.length}</span>
+                <span className="text-base font-bold text-[var(--accent)] uppercase tracking-wider">Question {quizIdx + 1} of {quizQuestions.length}</span>
                 <h3 className="text-lg font-bold text-white mt-1">{quizQuestions[quizIdx]?.q}</h3>
                 <p className="text-base text-white/40 mt-1">{quizQuestions[quizIdx]?.desc}</p>
               </div>
@@ -407,8 +407,8 @@ export default function ChallengePage() {
             </div>
           ) : quizPhase === 'passed' ? (
             <div className="ch-glass-card text-center py-12">
-              <div className="ch-glow-icon mx-auto mb-4" style={{ '--glow': '#10b981', width: 56, height: 56 } as any}>
-                <svg className="w-7 h-7 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              <div className="ch-glow-icon mx-auto mb-4" style={{ '--glow': 'var(--success)', width: 56, height: 56 } as any}>
+                <svg className="w-7 h-7 text-[var(--success)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
               </div>
               <h3 className="text-xl font-bold text-white mb-2">You're Qualified!</h3>
               <p className="text-base text-white/40 mb-6">100 credits granted. Start submitting.</p>
@@ -416,7 +416,7 @@ export default function ChallengePage() {
             </div>
           ) : quizPhase === 'failed' ? (
             <div className="ch-glass-card text-center py-12">
-              <div className="ch-glow-icon mx-auto mb-4" style={{ '--glow': '#ef4444', width: 56, height: 56 } as any}>
+              <div className="ch-glow-icon mx-auto mb-4" style={{ '--glow': 'var(--danger)', width: 56, height: 56 } as any}>
                 <svg className="w-7 h-7 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
               </div>
               <h3 className="text-xl font-bold text-white mb-2">Not Quite Yet</h3>
@@ -425,13 +425,13 @@ export default function ChallengePage() {
             </div>
           ) : quizPhase === 'evaluating' ? (
             <div className="ch-glass-card text-center py-12">
-              <div className="w-12 h-12 border-3 border-emerald-500/20 border-t-emerald-400 rounded-full animate-spin mx-auto mb-4" style={{ borderWidth: 3 }} />
+              <div className="w-12 h-12 border-3 border-[var(--accent)]/20 border-t-[var(--accent)] rounded-full animate-spin mx-auto mb-4" style={{ borderWidth: 3 }} />
               <p className="text-base text-white/40">Evaluating your answers...</p>
             </div>
           ) : (
             <div className="ch-glass-card text-center py-12 px-6">
-              <div className="ch-glow-icon mx-auto mb-4" style={{ '--glow': '#2D8CFF' } as any}>
-                <svg className="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342" /></svg>
+              <div className="ch-glow-icon mx-auto mb-4" style={{ '--glow': 'var(--accent)' } as any}>
+                <svg className="w-6 h-6 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342" /></svg>
               </div>
               <h3 className="text-xl font-bold text-white mb-2">Qualification Quiz</h3>
               <p className="text-base text-white/40 mb-6">5 coding questions, 10 minutes. Score 60%+ to unlock.</p>
@@ -472,7 +472,7 @@ export default function ChallengePage() {
       <section className="ch-section">
         <div className="w-full lg:max-w-[70%] mx-auto px-4 sm:px-6">
           <div className="ch-section-head">
-            <span className="ch-section-tag" style={{ color: '#2D8CFF' }}>Opportunity</span>
+            <span className="ch-section-tag" style={{ color: 'var(--accent)' }}>Opportunity</span>
             <h2 className="ch-section-title">Join the Founding Team</h2>
             <p className="ch-section-sub">Top performers get founding or core engineer offers.</p>
           </div>
@@ -480,33 +480,33 @@ export default function ChallengePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
             <div className="ch-glass-card p-6" style={{ borderColor: 'rgba(16,185,129,0.2)' }}>
               <div className="flex items-center gap-3 mb-4">
-                <div className="ch-glow-icon" style={{ '--glow': '#10b981' } as any}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>
+                <div className="ch-glow-icon" style={{ '--glow': 'var(--success)' } as any}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>
                 </div>
                 <div>
                   <h3 className="text-base font-bold text-white">Founding Engineers</h3>
-                  <span className="text-base text-emerald-400 font-bold">5 positions</span>
+                  <span className="text-base text-[var(--accent)] font-bold">5 positions</span>
                 </div>
               </div>
               <ul className="space-y-2">
                 {['Competitive salary + significant equity', 'Remote-first, async culture', 'Build core platform from day one', 'Direct product influence', 'Full AI/ML stack'].map(b => (
-                  <li key={b} className="flex items-start gap-2 text-base text-white/50"><span className="text-emerald-400 mt-px">&#10003;</span>{b}</li>
+                  <li key={b} className="flex items-start gap-2 text-base text-white/50"><span className="text-[var(--accent)] mt-px">&#10003;</span>{b}</li>
                 ))}
               </ul>
             </div>
             <div className="ch-glass-card p-6" style={{ borderColor: 'rgba(45,140,255,0.2)' }}>
               <div className="flex items-center gap-3 mb-4">
-                <div className="ch-glow-icon" style={{ '--glow': '#2D8CFF' } as any}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2D8CFF" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+                <div className="ch-glow-icon" style={{ '--glow': 'var(--accent)' } as any}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
                 </div>
                 <div>
                   <h3 className="text-base font-bold text-white">Core Engineers</h3>
-                  <span className="text-base text-emerald-400 font-bold">10 positions</span>
+                  <span className="text-base text-[var(--accent)] font-bold">10 positions</span>
                 </div>
               </div>
               <ul className="space-y-2">
                 {['Competitive salary + stock options', 'Mentorship from founding team', 'Clear growth trajectory', 'Remote-first, flexible hours', 'Growth potential'].map(b => (
-                  <li key={b} className="flex items-start gap-2 text-base text-white/50"><span className="text-emerald-400 mt-px">&#10003;</span>{b}</li>
+                  <li key={b} className="flex items-start gap-2 text-base text-white/50"><span className="text-[var(--accent)] mt-px">&#10003;</span>{b}</li>
                 ))}
               </ul>
             </div>
@@ -517,7 +517,7 @@ export default function ChallengePage() {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {BENEFITS.map((b) => (
                 <div key={b} className="flex items-center gap-2 text-base text-white/40">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" style={{ boxShadow: '0 0 4px #10b981' }} />{b}
+                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] shrink-0" style={{ boxShadow: '0 0 4px var(--accent)' }} />{b}
                 </div>
               ))}
             </div>
@@ -554,7 +554,7 @@ export default function ChallengePage() {
             {/* Scoring */}
             <div className="ch-glass-card p-5">
               <h3 className="text-base font-bold text-white mb-3 flex items-center gap-2">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2D8CFF" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M12 20V10" /><path d="M18 20V4" /><path d="M6 20v-4" /></svg>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M12 20V10" /><path d="M18 20V4" /><path d="M6 20v-4" /></svg>
                 Scoring
               </h3>
               <div className="space-y-2.5">
@@ -611,7 +611,7 @@ export default function ChallengePage() {
       <section className="ch-section">
         <div className="w-full lg:max-w-[70%] mx-auto px-4 sm:px-6">
           <div className="ch-section-head">
-            <span className="ch-section-tag" style={{ color: '#f59e0b' }}>Rankings</span>
+            <span className="ch-section-tag" style={{ color: 'var(--warning)' }}>Rankings</span>
             <h2 className="ch-section-title">Leaderboard</h2>
             <p className="ch-section-sub">{challengeActive ? 'Live standings.' : challengeEnded ? 'Final standings.' : 'Rankings appear when the challenge starts May 7, 2026.'}</p>
           </div>
@@ -645,10 +645,10 @@ export default function ChallengePage() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {[
-              { title: 'Eligibility', color: '#10b981', items: ['Open to all developers worldwide', 'No prior Camora experience', 'Free account required', 'One submission per finding'] },
-              { title: 'Submissions', color: '#2D8CFF', items: ['Clear title + severity level', 'Steps to reproduce', 'Suggested fix or plan', 'Screenshots when applicable'] },
-              { title: 'Timeline', color: '#f59e0b', items: ['Start: May 7, 2026', 'End: October 7, 2026', 'Review: October 8–21', 'Winners: October 22'] },
-              { title: 'Judging', color: '#ef4444', items: ['Founding team review', 'Code quality + docs are key', 'Original work only', 'Responsible disclosure'] },
+              { title: 'Eligibility', color: 'var(--success)', items: ['Open to all developers worldwide', 'No prior Camora experience', 'Free account required', 'One submission per finding'] },
+              { title: 'Submissions', color: 'var(--accent)', items: ['Clear title + severity level', 'Steps to reproduce', 'Suggested fix or plan', 'Screenshots when applicable'] },
+              { title: 'Timeline', color: 'var(--warning)', items: ['Start: May 7, 2026', 'End: October 7, 2026', 'Review: October 8–21', 'Winners: October 22'] },
+              { title: 'Judging', color: 'var(--danger)', items: ['Founding team review', 'Code quality + docs are key', 'Original work only', 'Responsible disclosure'] },
             ].map((r) => (
               <div key={r.title} className="ch-glass-card p-5">
                 <h3 className="text-base font-bold text-white/80 mb-3 flex items-center gap-2">
@@ -681,7 +681,7 @@ export default function ChallengePage() {
         <section className="ch-section">
           <div className="w-full lg:max-w-[50%] mx-auto px-4 sm:px-6">
             <div className="ch-section-head">
-              <span className="ch-section-tag" style={{ color: '#60A5FA' }}>Spread the Word</span>
+              <span className="ch-section-tag" style={{ color: 'var(--accent)' }}>Spread the Word</span>
               <h2 className="ch-section-title">Refer Friends, Earn Credits</h2>
               <p className="ch-section-sub">Share the challenge and earn credits when friends join.</p>
             </div>
@@ -1028,16 +1028,16 @@ export default function ChallengePage() {
         .ch-referral-wrapper .text-base.text-gray-700 { color: rgba(255,255,255,0.6) !important; }
         .ch-referral-wrapper .bg-gray-50,
         .ch-referral-wrapper .bg-gray-100 { background: rgba(255,255,255,0.04) !important; }
-        .ch-referral-wrapper .bg-emerald-50 { background: rgba(16,185,129,0.1) !important; }
+        .ch-referral-wrapper .bg-emerald-50 { background: rgba(45,140,255,0.08) !important; }
         .ch-referral-wrapper .border-gray-200,
         .ch-referral-wrapper .border-gray-100 { border-color: rgba(255,255,255,0.08) !important; }
         .ch-referral-wrapper .text-emerald-600 { color: #60A5FA !important; }
         .ch-referral-wrapper .font-mono { color: rgba(255,255,255,0.5) !important; }
         .ch-referral-wrapper button.bg-emerald-500 {
-          box-shadow: 0 0 16px rgba(16,185,129,0.3);
+          box-shadow: 0 0 16px rgba(45,140,255,0.3);
         }
         .ch-referral-wrapper .text-2xl.font-bold { color: #fff !important; }
-        .ch-referral-wrapper .bg-emerald-100 { background: rgba(16,185,129,0.15) !important; }
+        .ch-referral-wrapper .bg-emerald-100 { background: rgba(45,140,255,0.1) !important; }
         .ch-referral-wrapper .text-emerald-700 { color: #60A5FA !important; }
         .ch-referral-wrapper .bg-amber-100 { background: rgba(245,158,11,0.15) !important; }
         .ch-referral-wrapper .text-amber-700 { color: #fbbf24 !important; }

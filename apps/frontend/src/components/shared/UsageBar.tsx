@@ -4,13 +4,13 @@ import { useUsage } from '@/hooks/useUsage';
 function getBarColor(pct: number): string {
   if (pct > 80) return 'bg-red-500';
   if (pct > 60) return 'bg-amber-500';
-  return 'bg-emerald-500';
+  return 'bg-[var(--accent)]';
 }
 
 function getTextColor(pct: number): string {
   if (pct > 80) return 'text-red-400';
   if (pct > 60) return 'text-amber-400';
-  return 'text-emerald-400';
+  return 'text-[var(--accent)]';
 }
 
 interface BucketRowProps {

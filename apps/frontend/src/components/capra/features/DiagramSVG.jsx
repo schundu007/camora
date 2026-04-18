@@ -2,11 +2,11 @@ import React from 'react';
 
 // Color theme
 const COLORS = {
-  primary: '#10b981',
-  secondary: '#3b82f6',
+  primary: '#2D8CFF',
+  secondary: '#6366F1',
   accent: '#2D8CFF',
-  warning: '#f59e0b',
-  error: '#ef4444',
+  warning: '#F59E0B',
+  error: '#EF4444',
   cyan: '#06b6d4',
   gray: '#64748b',
   text: '#1e293b',
@@ -104,7 +104,7 @@ const Label = ({ x, y, text, color = COLORS.textLight, fontSize = 9 }) => (
 // Diagram templates
 const diagrams = {
   singleServer: (
-    <svg viewBox="0 0 420 180" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 420 180" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <Box x={30} y={60} width={90} height={50} label="Users" color={COLORS.secondary} />
       <Arrow x1={130} y1={85} x2={180} y2={85} />
       <Box x={190} y={30} width={180} height={110} label="" color={COLORS.primary} />
@@ -115,7 +115,7 @@ const diagrams = {
   ),
 
   loadBalancer: (
-    <svg viewBox="0 0 420 200" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 420 200" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <Box x={20} y={75} width={80} height={45} label="Users" color={COLORS.secondary} />
       <Arrow x1={110} y1={97} x2={145} y2={97} />
       <Diamond x={155} y={72} size={50} label="LB" color={COLORS.warning} />
@@ -129,7 +129,7 @@ const diagrams = {
   ),
 
   singleDatabase: (
-    <svg viewBox="0 0 400 160" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 400 160" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <Box x={30} y={50} width={100} height={50} label="App Server" color={COLORS.primary} />
       <Arrow x1={140} y1={75} x2={190} y2={75} />
       <Box x={200} y={35} width={150} height={80} label="" color={COLORS.secondary} />
@@ -140,7 +140,7 @@ const diagrams = {
   ),
 
   shardedDatabase: (
-    <svg viewBox="0 0 420 180" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 420 180" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <Box x={20} y={65} width={80} height={45} label="App" color={COLORS.primary} />
       <Arrow x1={110} y1={87} x2={145} y2={87} />
       <Box x={155} y={55} width={95} height={60} label="Shard Router" color={COLORS.warning} fontSize={10} />
@@ -154,7 +154,7 @@ const diagrams = {
   ),
 
   simpleCache: (
-    <svg viewBox="0 0 320 160" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 320 160" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <Box x={20} y={55} width={80} height={45} label="App" color={COLORS.primary} />
       <Arrow x1={110} y1={65} x2={160} y2={45} />
       <Arrow x1={110} y1={90} x2={160} y2={115} />
@@ -166,7 +166,7 @@ const diagrams = {
   ),
 
   multiTierCache: (
-    <svg viewBox="0 0 460 140" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 460 140" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <Box x={20} y={45} width={70} height={45} label="Client" color={COLORS.secondary} />
       <Arrow x1={100} y1={67} x2={135} y2={67} />
       <Box x={145} y={35} width={70} height={65} label="L1 Local" color={COLORS.error} fontSize={10} />
@@ -178,7 +178,7 @@ const diagrams = {
   ),
 
   simpleQueue: (
-    <svg viewBox="0 0 460 140" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 460 140" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <Box x={20} y={45} width={90} height={45} label="Producer" color={COLORS.secondary} />
       <Arrow x1={120} y1={67} x2={165} y2={67} />
       <Box x={175} y={35} width={110} height={65} label="Message Queue" color={COLORS.accent} fontSize={10} />
@@ -188,7 +188,7 @@ const diagrams = {
   ),
 
   distributedQueue: (
-    <svg viewBox="0 0 420 180" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 420 180" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <Box x={15} y={25} width={70} height={30} label="Prod 1" color={COLORS.secondary} fontSize={10} />
       <Box x={15} y={65} width={70} height={30} label="Prod 2" color={COLORS.secondary} fontSize={10} />
       <Box x={15} y={105} width={70} height={30} label="Prod 3" color={COLORS.secondary} fontSize={10} />
@@ -206,7 +206,7 @@ const diagrams = {
   ),
 
   apiGateway: (
-    <svg viewBox="0 0 400 180" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 400 180" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <Box x={15} y={65} width={70} height={45} label="Client" color={COLORS.secondary} />
       <Arrow x1={95} y1={87} x2={130} y2={87} />
       <Box x={140} y={45} width={90} height={85} label="API Gateway" color={COLORS.warning} fontSize={11} />
@@ -220,7 +220,7 @@ const diagrams = {
   ),
 
   simpleMicroservices: (
-    <svg viewBox="0 0 380 180" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 380 180" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <Box x={15} y={65} width={70} height={45} label="Client" color={COLORS.secondary} />
       <Arrow x1={95} y1={87} x2={125} y2={87} />
       <Box x={135} y={25} width={70} height={35} label="Svc A" color={COLORS.primary} fontSize={10} />
@@ -236,7 +236,7 @@ const diagrams = {
   ),
 
   urlShortener: (
-    <svg viewBox="0 0 360 160" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 360 160" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <Box x={15} y={55} width={70} height={45} label="Client" color={COLORS.secondary} />
       <Arrow x1={95} y1={77} x2={130} y2={77} />
       <Box x={140} y={45} width={85} height={65} label="API Server" color={COLORS.primary} fontSize={11} />
@@ -248,7 +248,7 @@ const diagrams = {
   ),
 
   fanoutOnWrite: (
-    <svg viewBox="0 0 360 160" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 360 160" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <Box x={15} y={55} width={70} height={45} label="User Post" color={COLORS.secondary} fontSize={10} />
       <Arrow x1={95} y1={77} x2={130} y2={77} />
       <Box x={140} y={40} width={90} height={75} label="Fan-out Svc" color={COLORS.primary} fontSize={10} />
@@ -262,7 +262,7 @@ const diagrams = {
   ),
 
   rideSharing: (
-    <svg viewBox="0 0 460 160" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 460 160" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <Box x={15} y={30} width={60} height={35} label="Rider" color={COLORS.secondary} fontSize={10} />
       <Box x={15} y={90} width={60} height={35} label="Driver" color={COLORS.warning} fontSize={10} />
       <Arrow x1={85} y1={47} x2={125} y2={67} />
@@ -276,7 +276,7 @@ const diagrams = {
   ),
 
   simpleChat: (
-    <svg viewBox="0 0 420 160" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 420 160" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <Box x={20} y={25} width={75} height={40} label="Client 1" color={COLORS.secondary} fontSize={10} />
       <Box x={20} y={90} width={75} height={40} label="Client 2" color={COLORS.secondary} fontSize={10} />
       <Arrow x1={105} y1={45} x2={155} y2={70} />
@@ -288,7 +288,7 @@ const diagrams = {
   ),
 
   distributedChat: (
-    <svg viewBox="0 0 460 180" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 460 180" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <Box x={15} y={65} width={65} height={45} label="Clients" color={COLORS.secondary} fontSize={10} />
       <Arrow x1={90} y1={87} x2={125} y2={87} />
       <Box x={135} y={25} width={65} height={35} label="WS 1" color={COLORS.primary} fontSize={10} />
@@ -304,7 +304,7 @@ const diagrams = {
   ),
 
   videoStreaming: (
-    <svg viewBox="0 0 520 200" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 520 200" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={260} y={18} textAnchor="middle" fill={COLORS.primary} fontSize="13" fontWeight="600">YouTube/Video Streaming</text>
       {/* Upload Pipeline */}
       <rect x={10} y={30} width={500} height={70} fill={`${COLORS.warning}10`} stroke={COLORS.warning} strokeWidth="1" rx="4" />
@@ -336,7 +336,7 @@ const diagrams = {
   ),
 
   notificationSystem: (
-    <svg viewBox="0 0 360 180" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 360 180" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <Box x={15} y={65} width={70} height={45} label="Trigger" color={COLORS.secondary} />
       <Arrow x1={95} y1={87} x2={130} y2={87} />
       <Box x={140} y={45} width={95} height={85} label="Notification Svc" color={COLORS.primary} fontSize={10} />
@@ -350,7 +350,7 @@ const diagrams = {
   ),
 
   rateLimiter: (
-    <svg viewBox="0 0 360 160" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 360 160" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <Box x={15} y={55} width={70} height={45} label="Request" color={COLORS.secondary} />
       <Arrow x1={95} y1={77} x2={130} y2={77} />
       <Box x={140} y={45} width={90} height={65} label="Rate Limiter" color={COLORS.error} fontSize={10} />
@@ -362,7 +362,7 @@ const diagrams = {
   ),
 
   searchEngine: (
-    <svg viewBox="0 0 520 200" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 520 200" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={260} y={18} textAnchor="middle" fill={COLORS.primary} fontSize="13" fontWeight="600">Search Engine (Google-scale)</text>
       {/* Query Path */}
       <rect x={10} y={30} width={500} height={75} fill={`${COLORS.primary}10`} stroke={COLORS.primary} strokeWidth="1" rx="4" />
@@ -394,7 +394,7 @@ const diagrams = {
   ),
 
   ecommerce: (
-    <svg viewBox="0 0 520 220" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 520 220" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={260} y={18} textAnchor="middle" fill={COLORS.primary} fontSize="13" fontWeight="600">Amazon E-commerce Architecture</text>
       {/* Frontend */}
       <rect x={10} y={30} width={500} height={55} fill={`${COLORS.cyan}10`} stroke={COLORS.cyan} strokeWidth="1" rx="4" />
@@ -430,7 +430,7 @@ const diagrams = {
   ),
 
   keyValueStore: (
-    <svg viewBox="0 0 360 180" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 360 180" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <Box x={15} y={65} width={65} height={45} label="Client" color={COLORS.secondary} />
       <Arrow x1={90} y1={87} x2={125} y2={87} />
       <Box x={135} y={50} width={90} height={75} label="Coordinator" color={COLORS.warning} fontSize={10} />
@@ -445,7 +445,7 @@ const diagrams = {
 
   // Concurrency patterns
   producerConsumer: (
-    <svg viewBox="0 0 420 160" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 420 160" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <Box x={15} y={25} width={80} height={35} label="Producer 1" color={COLORS.secondary} fontSize={10} />
       <Box x={15} y={70} width={80} height={35} label="Producer 2" color={COLORS.secondary} fontSize={10} />
       <Arrow x1={105} y1={42} x2={145} y2={65} />
@@ -459,7 +459,7 @@ const diagrams = {
   ),
 
   concurrencyFundamentals: (
-    <svg viewBox="0 0 420 180" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 420 180" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={210} y={25} textAnchor="middle" fill={COLORS.primary} fontSize="14" fontWeight="600">Process vs Thread</text>
       <rect x={30} y={45} width={160} height={110} fill={`${COLORS.secondary}15`} stroke={COLORS.secondary} strokeWidth="2" rx="4" />
       <text x={110} y={65} textAnchor="middle" fill={COLORS.secondary} fontSize="12" fontWeight="600">PROCESS</text>
@@ -477,7 +477,7 @@ const diagrams = {
 
   // LLD patterns
   lruCache: (
-    <svg viewBox="0 0 420 210" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 420 210" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={210} y={25} textAnchor="middle" fill={COLORS.primary} fontSize="14" fontWeight="600">LRU Cache</text>
       <rect x={30} y={45} width={360} height={55} fill={`${COLORS.secondary}15`} stroke={COLORS.secondary} strokeWidth="2" rx="4" />
       <text x={210} y={65} textAnchor="middle" fill={COLORS.secondary} fontSize="11" fontWeight="500">HashMap&lt;Key, Node*&gt;</text>
@@ -500,7 +500,7 @@ const diagrams = {
   ),
 
   parkingLot: (
-    <svg viewBox="0 0 440 180" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 440 180" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={220} y={25} textAnchor="middle" fill={COLORS.primary} fontSize="14" fontWeight="600">Parking Lot System</text>
       <Box x={30} y={55} width={95} height={50} label="Entry/Exit" color={COLORS.secondary} />
       <Arrow x1={135} y1={80} x2={175} y2={80} />
@@ -516,7 +516,7 @@ const diagrams = {
   ),
 
   elevatorSystem: (
-    <svg viewBox="0 0 440 200" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 440 200" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={220} y={25} textAnchor="middle" fill={COLORS.primary} fontSize="14" fontWeight="600">Elevator System</text>
       <rect x={30} y={45} width={80} height={130} fill={`${COLORS.gray}15`} stroke={COLORS.gray} strokeWidth="2" rx="4" />
       <text x={70} y={62} textAnchor="middle" fill={COLORS.text} fontSize="10">Building</text>
@@ -537,7 +537,7 @@ const diagrams = {
   ),
 
   threadPool: (
-    <svg viewBox="0 0 360 180" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 360 180" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <Box x={15} y={65} width={70} height={45} label="Tasks" color={COLORS.secondary} />
       <Arrow x1={95} y1={87} x2={130} y2={87} />
       <Box x={140} y={50} width={90} height={75} label="Task Queue" color={COLORS.accent} />
@@ -552,7 +552,7 @@ const diagrams = {
 
   // Additional System Design Templates
   restApi: (
-    <svg viewBox="0 0 420 160" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 420 160" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <Box x={20} y={55} width={70} height={45} label="Client" color={COLORS.secondary} />
       <Arrow x1={100} y1={77} x2={140} y2={77} />
       <Box x={150} y={40} width={100} height={75} label="REST API" color={COLORS.primary} />
@@ -567,7 +567,7 @@ const diagrams = {
   ),
 
   globalLoadBalancer: (
-    <svg viewBox="0 0 440 180" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 440 180" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <Box x={20} y={65} width={70} height={45} label="Users" color={COLORS.secondary} />
       <Arrow x1={100} y1={87} x2={140} y2={87} />
       <Box x={150} y={55} width={80} height={65} label="GeoDNS" color={COLORS.warning} fontSize={10} />
@@ -584,7 +584,7 @@ const diagrams = {
   ),
 
   rateLimiterAdvanced: (
-    <svg viewBox="0 0 460 160" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 460 160" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <Box x={15} y={55} width={60} height={45} label="Client" color={COLORS.secondary} fontSize={10} />
       <Arrow x1={85} y1={77} x2={115} y2={77} />
       <Box x={125} y={45} width={70} height={65} label="CDN Edge" color={COLORS.cyan} fontSize={10} />
@@ -598,7 +598,7 @@ const diagrams = {
   ),
 
   serviceMesh: (
-    <svg viewBox="0 0 420 180" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 420 180" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={210} y={20} textAnchor="middle" fill={COLORS.primary} fontSize="12" fontWeight="600">Service Mesh (Istio)</text>
       <Box x={20} y={45} width={80} height={50} label="Gateway" color={COLORS.warning} fontSize={10} />
       <Arrow x1={110} y1={70} x2={140} y2={70} />
@@ -613,7 +613,7 @@ const diagrams = {
   ),
 
   sessionAuth: (
-    <svg viewBox="0 0 420 160" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 420 160" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <Box x={20} y={55} width={70} height={45} label="Client" color={COLORS.secondary} />
       <Arrow x1={100} y1={77} x2={140} y2={77} />
       <Box x={150} y={45} width={90} height={65} label="Auth Service" color={COLORS.primary} fontSize={10} />
@@ -627,7 +627,7 @@ const diagrams = {
   ),
 
   jwtAuth: (
-    <svg viewBox="0 0 440 160" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 440 160" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <Box x={15} y={55} width={65} height={45} label="Client" color={COLORS.secondary} fontSize={10} />
       <Arrow x1={90} y1={77} x2={125} y2={77} />
       <Box x={135} y={45} width={80} height={65} label="Auth Svc" color={COLORS.warning} fontSize={10} />
@@ -641,7 +641,7 @@ const diagrams = {
   ),
 
   observability: (
-    <svg viewBox="0 0 460 180" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 460 180" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <Box x={20} y={25} width={70} height={35} label="Service 1" color={COLORS.primary} fontSize={10} />
       <Box x={20} y={70} width={70} height={35} label="Service 2" color={COLORS.primary} fontSize={10} />
       <Box x={20} y={115} width={70} height={35} label="Service 3" color={COLORS.primary} fontSize={10} />
@@ -660,7 +660,7 @@ const diagrams = {
   ),
 
   urlShortenerAdvanced: (
-    <svg viewBox="0 0 420 160" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 420 160" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <Box x={15} y={55} width={65} height={45} label="Client" color={COLORS.secondary} fontSize={10} />
       <Arrow x1={90} y1={77} x2={125} y2={77} />
       <Box x={135} y={45} width={75} height={65} label="Web Svc" color={COLORS.primary} fontSize={10} />
@@ -674,7 +674,7 @@ const diagrams = {
   ),
 
   hybridFanout: (
-    <svg viewBox="0 0 420 180" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 420 180" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <Box x={15} y={65} width={65} height={45} label="Tweet" color={COLORS.secondary} fontSize={10} />
       <Arrow x1={90} y1={87} x2={125} y2={87} />
       <Diamond x={135} y={62} size={50} label="Check" color={COLORS.warning} />
@@ -691,7 +691,7 @@ const diagrams = {
   ),
 
   cellBasedArch: (
-    <svg viewBox="0 0 420 180" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 420 180" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <Box x={15} y={30} width={60} height={35} label="Rider" color={COLORS.secondary} fontSize={10} />
       <Box x={15} y={110} width={60} height={35} label="Driver" color={COLORS.warning} fontSize={10} />
       <Arrow x1={85} y1={47} x2={115} y2={70} />
@@ -708,7 +708,7 @@ const diagrams = {
   ),
 
   instagram: (
-    <svg viewBox="0 0 520 220" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 520 220" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={260} y={18} textAnchor="middle" fill={COLORS.primary} fontSize="13" fontWeight="600">Instagram Architecture</text>
       {/* Upload Pipeline */}
       <rect x={10} y={30} width={500} height={70} fill={`${COLORS.secondary}10`} stroke={COLORS.secondary} strokeWidth="1" rx="4" />
@@ -743,7 +743,7 @@ const diagrams = {
   ),
 
   netflix: (
-    <svg viewBox="0 0 520 200" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 520 200" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={260} y={18} textAnchor="middle" fill={COLORS.primary} fontSize="13" fontWeight="600">Netflix Architecture</text>
       {/* Content Ingestion */}
       <rect x={10} y={30} width={240} height={75} fill={`${COLORS.warning}10`} stroke={COLORS.warning} strokeWidth="1" rx="4" />
@@ -775,7 +775,7 @@ const diagrams = {
   ),
 
   whatsapp: (
-    <svg viewBox="0 0 520 200" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 520 200" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={260} y={18} textAnchor="middle" fill={COLORS.primary} fontSize="13" fontWeight="600">WhatsApp Architecture (Erlang/BEAM)</text>
       {/* Connection Layer */}
       <rect x={10} y={30} width={500} height={70} fill={`${COLORS.primary}10`} stroke={COLORS.primary} strokeWidth="1" rx="4" />
@@ -803,7 +803,7 @@ const diagrams = {
   ),
 
   dropbox: (
-    <svg viewBox="0 0 520 200" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 520 200" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={260} y={18} textAnchor="middle" fill={COLORS.primary} fontSize="13" fontWeight="600">Dropbox Architecture (Block-level Sync)</text>
       {/* Sync Client */}
       <rect x={10} y={30} width={150} height={160} fill={`${COLORS.secondary}10`} stroke={COLORS.secondary} strokeWidth="1" rx="4" />
@@ -832,7 +832,7 @@ const diagrams = {
   ),
 
   googleDocs: (
-    <svg viewBox="0 0 520 200" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 520 200" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={260} y={18} textAnchor="middle" fill={COLORS.primary} fontSize="13" fontWeight="600">Google Docs (Operational Transform)</text>
       {/* Client Layer */}
       <rect x={10} y={30} width={150} height={160} fill={`${COLORS.secondary}10`} stroke={COLORS.secondary} strokeWidth="1" rx="4" />
@@ -861,7 +861,7 @@ const diagrams = {
   ),
 
   typeahead: (
-    <svg viewBox="0 0 420 160" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 420 160" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <Box x={15} y={55} width={70} height={45} label="Search Box" color={COLORS.secondary} fontSize={10} />
       <Arrow x1={95} y1={77} x2={135} y2={77} />
       <Box x={145} y={45} width={90} height={65} label="Typeahead Svc" color={COLORS.primary} fontSize={10} />
@@ -874,7 +874,7 @@ const diagrams = {
   ),
 
   webCrawler: (
-    <svg viewBox="0 0 480 160" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 480 160" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <Box x={10} y={55} width={70} height={45} label="URL Frontier" color={COLORS.secondary} fontSize={10} />
       <Arrow x1={90} y1={77} x2={120} y2={77} />
       <Box x={130} y={45} width={75} height={65} label="Crawlers" color={COLORS.primary} fontSize={10} />
@@ -889,7 +889,7 @@ const diagrams = {
   ),
 
   pastebin: (
-    <svg viewBox="0 0 380 160" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 380 160" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <Box x={15} y={55} width={65} height={45} label="Client" color={COLORS.secondary} fontSize={10} />
       <Arrow x1={90} y1={77} x2={125} y2={77} />
       <Box x={135} y={45} width={85} height={65} label="API Server" color={COLORS.primary} fontSize={10} />
@@ -901,7 +901,7 @@ const diagrams = {
   ),
 
   ticketBooking: (
-    <svg viewBox="0 0 420 180" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 420 180" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={210} y={20} textAnchor="middle" fill={COLORS.primary} fontSize="12" fontWeight="600">Ticket Booking System</text>
       <Box x={20} y={55} width={70} height={45} label="User" color={COLORS.secondary} />
       <Arrow x1={100} y1={77} x2={140} y2={77} />
@@ -916,7 +916,7 @@ const diagrams = {
   ),
 
   librarySystem: (
-    <svg viewBox="0 0 420 180" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 420 180" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={210} y={20} textAnchor="middle" fill={COLORS.primary} fontSize="12" fontWeight="600">Library Management</text>
       <Box x={20} y={60} width={70} height={45} label="Member" color={COLORS.secondary} />
       <Arrow x1={100} y1={82} x2={140} y2={82} />
@@ -931,7 +931,7 @@ const diagrams = {
   ),
 
   atmSystem: (
-    <svg viewBox="0 0 420 180" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 420 180" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={210} y={20} textAnchor="middle" fill={COLORS.primary} fontSize="12" fontWeight="600">ATM System</text>
       <Box x={20} y={60} width={70} height={50} label="ATM" color={COLORS.secondary} />
       <Arrow x1={100} y1={85} x2={140} y2={85} />
@@ -946,7 +946,7 @@ const diagrams = {
   ),
 
   vendingMachine: (
-    <svg viewBox="0 0 380 180" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 380 180" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={190} y={20} textAnchor="middle" fill={COLORS.primary} fontSize="12" fontWeight="600">Vending Machine</text>
       <Box x={20} y={60} width={70} height={45} label="User" color={COLORS.secondary} />
       <Arrow x1={100} y1={82} x2={140} y2={82} />
@@ -960,7 +960,7 @@ const diagrams = {
   ),
 
   snakeLadder: (
-    <svg viewBox="0 0 380 180" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 380 180" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={190} y={20} textAnchor="middle" fill={COLORS.primary} fontSize="12" fontWeight="600">Snake & Ladder</text>
       <rect x={30} y={45} width={130} height={110} fill={`${COLORS.accent}15`} stroke={COLORS.accent} strokeWidth="2" rx="4" />
       <text x={95} y={65} textAnchor="middle" fill={COLORS.accent} fontSize="11" fontWeight="500">10x10 Board</text>
@@ -975,7 +975,7 @@ const diagrams = {
   ),
 
   ticTacToe: (
-    <svg viewBox="0 0 380 180" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 380 180" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={190} y={20} textAnchor="middle" fill={COLORS.primary} fontSize="12" fontWeight="600">Tic Tac Toe</text>
       <rect x={30} y={45} width={100} height={110} fill={`${COLORS.accent}15`} stroke={COLORS.accent} strokeWidth="2" rx="4" />
       <text x={80} y={65} textAnchor="middle" fill={COLORS.accent} fontSize="11" fontWeight="500">3x3 Board</text>
@@ -992,7 +992,7 @@ const diagrams = {
   ),
 
   chess: (
-    <svg viewBox="0 0 420 180" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 420 180" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={210} y={20} textAnchor="middle" fill={COLORS.primary} fontSize="12" fontWeight="600">Chess Game</text>
       <rect x={20} y={45} width={100} height={110} fill={`${COLORS.gray}15`} stroke={COLORS.gray} strokeWidth="2" rx="4" />
       <text x={70} y={65} textAnchor="middle" fill={COLORS.text} fontSize="11" fontWeight="500">8x8 Board</text>
@@ -1009,7 +1009,7 @@ const diagrams = {
   ),
 
   hotelBooking: (
-    <svg viewBox="0 0 420 180" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 420 180" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={210} y={20} textAnchor="middle" fill={COLORS.primary} fontSize="12" fontWeight="600">Hotel Booking</text>
       <Box x={20} y={60} width={70} height={45} label="Guest" color={COLORS.secondary} />
       <Arrow x1={100} y1={82} x2={140} y2={82} />
@@ -1024,7 +1024,7 @@ const diagrams = {
   ),
 
   carRental: (
-    <svg viewBox="0 0 420 180" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 420 180" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={210} y={20} textAnchor="middle" fill={COLORS.primary} fontSize="12" fontWeight="600">Car Rental System</text>
       <Box x={20} y={60} width={70} height={45} label="Customer" color={COLORS.secondary} />
       <Arrow x1={100} y1={82} x2={140} y2={82} />
@@ -1039,7 +1039,7 @@ const diagrams = {
   ),
 
   airlineBooking: (
-    <svg viewBox="0 0 460 180" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 460 180" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={230} y={20} textAnchor="middle" fill={COLORS.primary} fontSize="12" fontWeight="600">Airline Booking</text>
       <Box x={15} y={60} width={70} height={45} label="Traveler" color={COLORS.secondary} fontSize={10} />
       <Arrow x1={95} y1={82} x2={130} y2={82} />
@@ -1054,7 +1054,7 @@ const diagrams = {
   ),
 
   stockExchange: (
-    <svg viewBox="0 0 460 180" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 460 180" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={230} y={20} textAnchor="middle" fill={COLORS.primary} fontSize="12" fontWeight="600">Stock Exchange</text>
       <Box x={15} y={55} width={65} height={40} label="Buyers" color={COLORS.primary} fontSize={10} />
       <Box x={15} y={100} width={65} height={40} label="Sellers" color={COLORS.error} fontSize={10} />
@@ -1070,7 +1070,7 @@ const diagrams = {
   ),
 
   cricketScoreboard: (
-    <svg viewBox="0 0 420 180" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 420 180" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={210} y={20} textAnchor="middle" fill={COLORS.primary} fontSize="12" fontWeight="600">Cricket Scoreboard</text>
       <Box x={20} y={55} width={80} height={50} label="Match Input" color={COLORS.secondary} fontSize={10} />
       <Arrow x1={110} y1={80} x2={150} y2={80} />
@@ -1084,7 +1084,7 @@ const diagrams = {
   ),
 
   logAggregator: (
-    <svg viewBox="0 0 460 160" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 460 160" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <Box x={15} y={25} width={65} height={30} label="App 1" color={COLORS.primary} fontSize={10} />
       <Box x={15} y={65} width={65} height={30} label="App 2" color={COLORS.primary} fontSize={10} />
       <Box x={15} y={105} width={65} height={30} label="App 3" color={COLORS.primary} fontSize={10} />
@@ -1100,7 +1100,7 @@ const diagrams = {
   ),
 
   taskScheduler: (
-    <svg viewBox="0 0 420 160" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 420 160" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <Box x={20} y={55} width={75} height={45} label="Task Queue" color={COLORS.secondary} />
       <Arrow x1={105} y1={77} x2={145} y2={77} />
       <Box x={155} y={45} width={100} height={65} label="Scheduler" color={COLORS.primary} fontSize={10} />
@@ -1113,7 +1113,7 @@ const diagrams = {
   ),
 
   socialGraph: (
-    <svg viewBox="0 0 420 180" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 420 180" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={210} y={20} textAnchor="middle" fill={COLORS.primary} fontSize="12" fontWeight="600">Social Graph</text>
       <Box x={20} y={65} width={70} height={45} label="User" color={COLORS.secondary} />
       <Arrow x1={100} y1={87} x2={140} y2={87} />
@@ -1127,7 +1127,7 @@ const diagrams = {
   ),
 
   contentModeration: (
-    <svg viewBox="0 0 460 160" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 460 160" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <Box x={15} y={55} width={70} height={45} label="Content" color={COLORS.secondary} />
       <Arrow x1={95} y1={77} x2={135} y2={77} />
       <Box x={145} y={45} width={80} height={65} label="ML Filter" color={COLORS.warning} fontSize={10} />
@@ -1141,7 +1141,7 @@ const diagrams = {
   ),
 
   paymentGateway: (
-    <svg viewBox="0 0 460 160" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 460 160" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <Box x={15} y={55} width={65} height={45} label="Merchant" color={COLORS.secondary} fontSize={10} />
       <Arrow x1={90} y1={77} x2={130} y2={77} />
       <Box x={140} y={45} width={90} height={65} label="Payment GW" color={COLORS.warning} fontSize={10} />
@@ -1157,7 +1157,7 @@ const diagrams = {
 
   // Distributed Rate Limiter
   distributedRateLimiter: (
-    <svg viewBox="0 0 520 200" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 520 200" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={260} y={18} textAnchor="middle" fill={COLORS.primary} fontSize="13" fontWeight="600">Distributed Rate Limiter</text>
       <rect x={10} y={30} width={500} height={75} fill={`${COLORS.error}10`} stroke={COLORS.error} strokeWidth="1" rx="4" />
       <text x={20} y={45} fill={COLORS.error} fontSize="10" fontWeight="500">RATE LIMITING LAYER</text>
@@ -1185,7 +1185,7 @@ const diagrams = {
 
   // Yelp Location-Based Service
   yelp: (
-    <svg viewBox="0 0 520 200" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 520 200" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={260} y={18} textAnchor="middle" fill={COLORS.primary} fontSize="13" fontWeight="600">Yelp Location-Based Service</text>
       <rect x={10} y={30} width={500} height={75} fill={`${COLORS.secondary}10`} stroke={COLORS.secondary} strokeWidth="1" rx="4" />
       <text x={20} y={45} fill={COLORS.secondary} fontSize="10" fontWeight="500">LOCATION SEARCH</text>
@@ -1211,7 +1211,7 @@ const diagrams = {
 
   // Tinder Dating App
   tinder: (
-    <svg viewBox="0 0 520 200" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 520 200" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={260} y={18} textAnchor="middle" fill={COLORS.primary} fontSize="13" fontWeight="600">Tinder Dating App</text>
       <rect x={10} y={30} width={240} height={160} fill={`${COLORS.error}10`} stroke={COLORS.error} strokeWidth="1" rx="4" />
       <text x={20} y={45} fill={COLORS.error} fontSize="10" fontWeight="500">MATCHING ENGINE</text>
@@ -1239,7 +1239,7 @@ const diagrams = {
 
   // Spotify Music Streaming
   spotify: (
-    <svg viewBox="0 0 520 200" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 520 200" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={260} y={18} textAnchor="middle" fill={COLORS.primary} fontSize="13" fontWeight="600">Spotify Music Streaming</text>
       <rect x={10} y={30} width={500} height={75} fill={`${COLORS.primary}10`} stroke={COLORS.primary} strokeWidth="1" rx="4" />
       <text x={20} y={45} fill={COLORS.primary} fontSize="10" fontWeight="500">AUDIO STREAMING</text>
@@ -1265,7 +1265,7 @@ const diagrams = {
 
   // Airbnb
   airbnb: (
-    <svg viewBox="0 0 520 200" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 520 200" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={260} y={18} textAnchor="middle" fill={COLORS.primary} fontSize="13" fontWeight="600">Airbnb Architecture</text>
       <rect x={10} y={30} width={500} height={75} fill={`${COLORS.error}10`} stroke={COLORS.error} strokeWidth="1" rx="4" />
       <text x={20} y={45} fill={COLORS.error} fontSize="10" fontWeight="500">SEARCH & BOOKING</text>
@@ -1290,7 +1290,7 @@ const diagrams = {
 
   // DoorDash Food Delivery
   doordash: (
-    <svg viewBox="0 0 520 200" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 520 200" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={260} y={18} textAnchor="middle" fill={COLORS.primary} fontSize="13" fontWeight="600">DoorDash Food Delivery</text>
       <rect x={10} y={30} width={500} height={75} fill={`${COLORS.error}10`} stroke={COLORS.error} strokeWidth="1" rx="4" />
       <text x={20} y={45} fill={COLORS.error} fontSize="10" fontWeight="500">ORDER FLOW</text>
@@ -1316,7 +1316,7 @@ const diagrams = {
 
   // Twitter Trending Topics
   twitterTrending: (
-    <svg viewBox="0 0 520 200" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 520 200" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={260} y={18} textAnchor="middle" fill={COLORS.primary} fontSize="13" fontWeight="600">Twitter Trending Topics</text>
       <rect x={10} y={30} width={500} height={75} fill={`${COLORS.cyan}10`} stroke={COLORS.cyan} strokeWidth="1" rx="4" />
       <text x={20} y={45} fill={COLORS.cyan} fontSize="10" fontWeight="500">INGESTION PIPELINE</text>
@@ -1341,7 +1341,7 @@ const diagrams = {
 
   // Facebook News Feed
   facebookFeed: (
-    <svg viewBox="0 0 520 200" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 520 200" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={260} y={18} textAnchor="middle" fill={COLORS.primary} fontSize="13" fontWeight="600">Facebook News Feed</text>
       <rect x={10} y={30} width={500} height={75} fill={`${COLORS.secondary}10`} stroke={COLORS.secondary} strokeWidth="1" rx="4" />
       <text x={20} y={45} fill={COLORS.secondary} fontSize="10" fontWeight="500">FEED AGGREGATION</text>
@@ -1367,7 +1367,7 @@ const diagrams = {
 
   // Distributed ID Generator
   distributedId: (
-    <svg viewBox="0 0 520 200" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 520 200" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={260} y={18} textAnchor="middle" fill={COLORS.primary} fontSize="13" fontWeight="600">Distributed ID Generator (Snowflake)</text>
       <rect x={10} y={30} width={500} height={75} fill={`${COLORS.warning}10`} stroke={COLORS.warning} strokeWidth="1" rx="4" />
       <text x={20} y={45} fill={COLORS.warning} fontSize="10" fontWeight="500">SNOWFLAKE ID STRUCTURE (64 bits)</text>
@@ -1394,7 +1394,7 @@ const diagrams = {
 
   // Google News Aggregator
   googleNews: (
-    <svg viewBox="0 0 520 200" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 520 200" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={260} y={18} textAnchor="middle" fill={COLORS.primary} fontSize="13" fontWeight="600">Google News Aggregator</text>
       <rect x={10} y={30} width={500} height={75} fill={`${COLORS.warning}10`} stroke={COLORS.warning} strokeWidth="1" rx="4" />
       <text x={20} y={45} fill={COLORS.warning} fontSize="10" fontWeight="500">CONTENT INGESTION</text>
@@ -1418,7 +1418,7 @@ const diagrams = {
 
   // Gaming Leaderboard
   leaderboard: (
-    <svg viewBox="0 0 520 200" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 520 200" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={260} y={18} textAnchor="middle" fill={COLORS.primary} fontSize="13" fontWeight="600">Gaming Leaderboard</text>
       <rect x={10} y={30} width={500} height={75} fill={`${COLORS.error}10`} stroke={COLORS.error} strokeWidth="1" rx="4" />
       <text x={20} y={45} fill={COLORS.error} fontSize="10" fontWeight="500">SCORE INGESTION</text>
@@ -1445,7 +1445,7 @@ const diagrams = {
 
   // Google Maps
   googleMaps: (
-    <svg viewBox="0 0 520 200" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 520 200" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={260} y={18} textAnchor="middle" fill={COLORS.primary} fontSize="13" fontWeight="600">Google Maps Architecture</text>
       <rect x={10} y={30} width={500} height={75} fill={`${COLORS.primary}10`} stroke={COLORS.primary} strokeWidth="1" rx="4" />
       <text x={20} y={45} fill={COLORS.primary} fontSize="10" fontWeight="500">TILE SERVING & ROUTING</text>
@@ -1472,7 +1472,7 @@ const diagrams = {
 
   // Zoom Video Conferencing
   zoom: (
-    <svg viewBox="0 0 520 200" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 520 200" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={260} y={18} textAnchor="middle" fill={COLORS.primary} fontSize="13" fontWeight="600">Zoom Video Conferencing</text>
       <rect x={10} y={30} width={500} height={75} fill={`${COLORS.cyan}10`} stroke={COLORS.cyan} strokeWidth="1" rx="4" />
       <text x={20} y={45} fill={COLORS.cyan} fontSize="10" fontWeight="500">MEDIA PLANE</text>
@@ -1498,7 +1498,7 @@ const diagrams = {
 
   // LinkedIn
   linkedin: (
-    <svg viewBox="0 0 520 200" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 520 200" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={260} y={18} textAnchor="middle" fill={COLORS.primary} fontSize="13" fontWeight="600">LinkedIn Architecture</text>
       <rect x={10} y={30} width={500} height={75} fill={`${COLORS.secondary}10`} stroke={COLORS.secondary} strokeWidth="1" rx="4" />
       <text x={20} y={45} fill={COLORS.secondary} fontSize="10" fontWeight="500">PROFESSIONAL NETWORK</text>
@@ -1527,7 +1527,7 @@ const diagrams = {
 
   // Monitoring & Observability Advanced
   observabilityAdvanced: (
-    <svg viewBox="0 0 580 280" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 580 280" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={290} y={18} textAnchor="middle" fill={COLORS.primary} fontSize="13" fontWeight="600">Enterprise Observability Platform</text>
       {/* Services Layer */}
       <rect x={10} y={30} width={560} height={60} fill={`${COLORS.secondary}10`} stroke={COLORS.secondary} strokeWidth="1" rx="4" />
@@ -1566,7 +1566,7 @@ const diagrams = {
 
   // YouTube Advanced
   youtubeAdvanced: (
-    <svg viewBox="0 0 580 280" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 580 280" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={290} y={18} textAnchor="middle" fill={COLORS.primary} fontSize="13" fontWeight="600">YouTube Production Architecture</text>
       {/* Upload & Transcode */}
       <rect x={10} y={30} width={560} height={70} fill={`${COLORS.warning}10`} stroke={COLORS.warning} strokeWidth="1" rx="4" />
@@ -1609,7 +1609,7 @@ const diagrams = {
 
   // WhatsApp Advanced
   whatsappAdvanced: (
-    <svg viewBox="0 0 580 280" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 580 280" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={290} y={18} textAnchor="middle" fill={COLORS.primary} fontSize="13" fontWeight="600">WhatsApp Distributed Architecture</text>
       {/* Connection Layer */}
       <rect x={10} y={30} width={560} height={70} fill={`${COLORS.primary}10`} stroke={COLORS.primary} strokeWidth="1" rx="4" />
@@ -1652,7 +1652,7 @@ const diagrams = {
 
   // Instagram Advanced
   instagramAdvanced: (
-    <svg viewBox="0 0 580 280" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 580 280" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={290} y={18} textAnchor="middle" fill={COLORS.primary} fontSize="13" fontWeight="600">Instagram Production Architecture</text>
       {/* Upload Pipeline */}
       <rect x={10} y={30} width={560} height={60} fill={`${COLORS.secondary}10`} stroke={COLORS.secondary} strokeWidth="1" rx="4" />
@@ -1700,7 +1700,7 @@ const diagrams = {
 
   // Dropbox Advanced
   dropboxAdvanced: (
-    <svg viewBox="0 0 580 280" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 580 280" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={290} y={18} textAnchor="middle" fill={COLORS.primary} fontSize="13" fontWeight="600">Dropbox Block-Level Sync Architecture</text>
       {/* Sync Client */}
       <rect x={10} y={30} width={180} height={120} fill={`${COLORS.secondary}10`} stroke={COLORS.secondary} strokeWidth="1" rx="4" />
@@ -1744,7 +1744,7 @@ const diagrams = {
 
   // Netflix Advanced
   netflixAdvanced: (
-    <svg viewBox="0 0 580 280" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 580 280" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={290} y={18} textAnchor="middle" fill={COLORS.primary} fontSize="13" fontWeight="600">Netflix Production Architecture</text>
       {/* Content Pipeline */}
       <rect x={10} y={30} width={280} height={80} fill={`${COLORS.warning}10`} stroke={COLORS.warning} strokeWidth="1" rx="4" />
@@ -1790,7 +1790,7 @@ const diagrams = {
 
   // E-commerce Advanced
   ecommerceAdvanced: (
-    <svg viewBox="0 0 580 280" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 580 280" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={290} y={18} textAnchor="middle" fill={COLORS.primary} fontSize="13" fontWeight="600">Amazon E-commerce Architecture</text>
       {/* Frontend */}
       <rect x={10} y={30} width={560} height={50} fill={`${COLORS.cyan}10`} stroke={COLORS.cyan} strokeWidth="1" rx="4" />
@@ -1838,7 +1838,7 @@ const diagrams = {
 
   // Google Docs Advanced
   googleDocsAdvanced: (
-    <svg viewBox="0 0 580 280" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 580 280" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={290} y={18} textAnchor="middle" fill={COLORS.primary} fontSize="13" fontWeight="600">Google Docs Real-time Collaboration</text>
       {/* Client Layer */}
       <rect x={10} y={30} width={180} height={120} fill={`${COLORS.secondary}10`} stroke={COLORS.secondary} strokeWidth="1" rx="4" />
@@ -1878,7 +1878,7 @@ const diagrams = {
 
   // Payment Advanced (Stripe)
   paymentAdvanced: (
-    <svg viewBox="0 0 580 280" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 580 280" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={290} y={18} textAnchor="middle" fill={COLORS.primary} fontSize="13" fontWeight="600">Payment System (Stripe Architecture)</text>
       {/* API Layer */}
       <rect x={10} y={30} width={560} height={60} fill={`${COLORS.primary}10`} stroke={COLORS.primary} strokeWidth="1" rx="4" />
@@ -1920,7 +1920,7 @@ const diagrams = {
 
   // Search Engine Advanced
   searchEngineAdvanced: (
-    <svg viewBox="0 0 580 280" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 580 280" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={290} y={18} textAnchor="middle" fill={COLORS.primary} fontSize="13" fontWeight="600">Google Search Architecture</text>
       {/* Query Processing */}
       <rect x={10} y={30} width={560} height={70} fill={`${COLORS.primary}10`} stroke={COLORS.primary} strokeWidth="1" rx="4" />
@@ -1966,7 +1966,7 @@ const diagrams = {
 
   // Notification Advanced
   notificationAdvanced: (
-    <svg viewBox="0 0 580 260" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 580 260" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={290} y={18} textAnchor="middle" fill={COLORS.primary} fontSize="13" fontWeight="600">Notification System Architecture</text>
       {/* Ingestion */}
       <rect x={10} y={30} width={560} height={60} fill={`${COLORS.secondary}10`} stroke={COLORS.secondary} strokeWidth="1" rx="4" />
@@ -2006,7 +2006,7 @@ const diagrams = {
 
   // Rate Limiter Distributed Advanced
   rateLimiterDistributed: (
-    <svg viewBox="0 0 580 260" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 580 260" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={290} y={18} textAnchor="middle" fill={COLORS.primary} fontSize="13" fontWeight="600">Distributed Rate Limiter</text>
       {/* Multi-tier */}
       <rect x={10} y={30} width={560} height={70} fill={`${COLORS.error}10`} stroke={COLORS.error} strokeWidth="1" rx="4" />
@@ -2047,7 +2047,7 @@ const diagrams = {
 
   // Ticketmaster Advanced
   ticketmasterAdvanced: (
-    <svg viewBox="0 0 580 260" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 580 260" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={290} y={18} textAnchor="middle" fill={COLORS.primary} fontSize="13" fontWeight="600">Ticketmaster Architecture</text>
       {/* Queue System */}
       <rect x={10} y={30} width={560} height={70} fill={`${COLORS.secondary}10`} stroke={COLORS.secondary} strokeWidth="1" rx="4" />
@@ -2088,7 +2088,7 @@ const diagrams = {
 
   // Typeahead Advanced
   typeaheadAdvanced: (
-    <svg viewBox="0 0 580 240" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 580 240" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={290} y={18} textAnchor="middle" fill={COLORS.primary} fontSize="13" fontWeight="600">Typeahead / Autocomplete System</text>
       {/* Query Path */}
       <rect x={10} y={30} width={560} height={70} fill={`${COLORS.primary}10`} stroke={COLORS.primary} strokeWidth="1" rx="4" />
@@ -2129,7 +2129,7 @@ const diagrams = {
 
   // Yelp Advanced
   yelpAdvanced: (
-    <svg viewBox="0 0 580 260" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 580 260" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={290} y={18} textAnchor="middle" fill={COLORS.primary} fontSize="13" fontWeight="600">Yelp Location-Based Service</text>
       <rect x={10} y={30} width={560} height={70} fill={`${COLORS.primary}10`} stroke={COLORS.primary} strokeWidth="1" rx="4" />
       <text x={20} y={45} fill={COLORS.primary} fontSize="10" fontWeight="500">GEOSPATIAL SEARCH</text>
@@ -2164,7 +2164,7 @@ const diagrams = {
 
   // Tinder Advanced
   tinderAdvanced: (
-    <svg viewBox="0 0 580 260" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 580 260" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={290} y={18} textAnchor="middle" fill={COLORS.primary} fontSize="13" fontWeight="600">Tinder Matching System</text>
       <rect x={10} y={30} width={280} height={110} fill={`${COLORS.error}10`} stroke={COLORS.error} strokeWidth="1" rx="4" />
       <text x={20} y={45} fill={COLORS.error} fontSize="10" fontWeight="500">GEO MATCHING ENGINE</text>
@@ -2197,7 +2197,7 @@ const diagrams = {
 
   // Spotify Advanced
   spotifyAdvanced: (
-    <svg viewBox="0 0 580 260" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 580 260" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={290} y={18} textAnchor="middle" fill={COLORS.primary} fontSize="13" fontWeight="600">Spotify Music Streaming</text>
       <rect x={10} y={30} width={560} height={70} fill={`${COLORS.primary}10`} stroke={COLORS.primary} strokeWidth="1" rx="4" />
       <text x={20} y={45} fill={COLORS.primary} fontSize="10" fontWeight="500">AUDIO DELIVERY</text>
@@ -2231,7 +2231,7 @@ const diagrams = {
 
   // Airbnb Advanced
   airbnbAdvanced: (
-    <svg viewBox="0 0 580 260" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 580 260" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={290} y={18} textAnchor="middle" fill={COLORS.primary} fontSize="13" fontWeight="600">Airbnb Booking Platform</text>
       <rect x={10} y={30} width={560} height={70} fill={`${COLORS.error}10`} stroke={COLORS.error} strokeWidth="1" rx="4" />
       <text x={20} y={45} fill={COLORS.error} fontSize="10" fontWeight="500">SEARCH & BOOKING</text>
@@ -2265,7 +2265,7 @@ const diagrams = {
 
   // DoorDash Advanced
   doordashAdvanced: (
-    <svg viewBox="0 0 580 260" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 580 260" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={290} y={18} textAnchor="middle" fill={COLORS.primary} fontSize="13" fontWeight="600">DoorDash Food Delivery</text>
       <rect x={10} y={30} width={560} height={70} fill={`${COLORS.error}10`} stroke={COLORS.error} strokeWidth="1" rx="4" />
       <text x={20} y={45} fill={COLORS.error} fontSize="10" fontWeight="500">ORDER FLOW</text>
@@ -2301,7 +2301,7 @@ const diagrams = {
 
   // Twitter Trends Advanced
   twitterTrendsAdvanced: (
-    <svg viewBox="0 0 580 260" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 580 260" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={290} y={18} textAnchor="middle" fill={COLORS.primary} fontSize="13" fontWeight="600">Twitter Trending Topics</text>
       <rect x={10} y={30} width={560} height={70} fill={`${COLORS.cyan}10`} stroke={COLORS.cyan} strokeWidth="1" rx="4" />
       <text x={20} y={45} fill={COLORS.cyan} fontSize="10" fontWeight="500">INGESTION PIPELINE</text>
@@ -2336,7 +2336,7 @@ const diagrams = {
 
   // Pastebin Advanced
   pastebinAdvanced: (
-    <svg viewBox="0 0 520 220" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 520 220" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={260} y={18} textAnchor="middle" fill={COLORS.primary} fontSize="13" fontWeight="600">Pastebin Architecture</text>
       <rect x={10} y={30} width={500} height={80} fill={`${COLORS.primary}10`} stroke={COLORS.primary} strokeWidth="1" rx="4" />
       <text x={20} y={45} fill={COLORS.primary} fontSize="10" fontWeight="500">WRITE PATH</text>
@@ -2363,7 +2363,7 @@ const diagrams = {
 
   // Web Crawler Advanced
   webCrawlerAdvanced: (
-    <svg viewBox="0 0 580 260" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 580 260" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={290} y={18} textAnchor="middle" fill={COLORS.primary} fontSize="13" fontWeight="600">Web Crawler System</text>
       <rect x={10} y={30} width={560} height={70} fill={`${COLORS.primary}10`} stroke={COLORS.primary} strokeWidth="1" rx="4" />
       <text x={20} y={45} fill={COLORS.primary} fontSize="10" fontWeight="500">CRAWL PATH</text>
@@ -2398,7 +2398,7 @@ const diagrams = {
 
   // Facebook News Feed Advanced
   facebookFeedAdvanced: (
-    <svg viewBox="0 0 580 260" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 580 260" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={290} y={18} textAnchor="middle" fill={COLORS.primary} fontSize="13" fontWeight="600">Facebook News Feed</text>
       <rect x={10} y={30} width={560} height={70} fill={`${COLORS.secondary}10`} stroke={COLORS.secondary} strokeWidth="1" rx="4" />
       <text x={20} y={45} fill={COLORS.secondary} fontSize="10" fontWeight="500">FEED AGGREGATION</text>
@@ -2435,7 +2435,7 @@ const diagrams = {
 
   // Key-Value Store Advanced
   keyValueAdvanced: (
-    <svg viewBox="0 0 580 240" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 580 240" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={290} y={18} textAnchor="middle" fill={COLORS.primary} fontSize="13" fontWeight="600">Distributed Key-Value Store</text>
       <rect x={10} y={30} width={560} height={80} fill={`${COLORS.primary}10`} stroke={COLORS.primary} strokeWidth="1" rx="4" />
       <text x={20} y={45} fill={COLORS.primary} fontSize="10" fontWeight="500">REQUEST PATH</text>
@@ -2470,7 +2470,7 @@ const diagrams = {
 
   // Distributed ID Advanced
   distributedIdAdvanced: (
-    <svg viewBox="0 0 580 240" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 580 240" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={290} y={18} textAnchor="middle" fill={COLORS.primary} fontSize="13" fontWeight="600">Distributed ID Generator (Snowflake)</text>
       <rect x={10} y={30} width={560} height={70} fill={`${COLORS.warning}10`} stroke={COLORS.warning} strokeWidth="1" rx="4" />
       <text x={20} y={45} fill={COLORS.warning} fontSize="10" fontWeight="500">SNOWFLAKE ID (64 bits)</text>
@@ -2498,7 +2498,7 @@ const diagrams = {
 
   // Google News Advanced
   googleNewsAdvanced: (
-    <svg viewBox="0 0 580 260" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 580 260" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={290} y={18} textAnchor="middle" fill={COLORS.primary} fontSize="13" fontWeight="600">News Aggregator System</text>
       <rect x={10} y={30} width={560} height={70} fill={`${COLORS.warning}10`} stroke={COLORS.warning} strokeWidth="1" rx="4" />
       <text x={20} y={45} fill={COLORS.warning} fontSize="10" fontWeight="500">CONTENT INGESTION</text>
@@ -2532,7 +2532,7 @@ const diagrams = {
 
   // Leaderboard Advanced
   leaderboardAdvanced: (
-    <svg viewBox="0 0 580 240" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 580 240" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={290} y={18} textAnchor="middle" fill={COLORS.primary} fontSize="13" fontWeight="600">Gaming Leaderboard System</text>
       <rect x={10} y={30} width={560} height={70} fill={`${COLORS.error}10`} stroke={COLORS.error} strokeWidth="1" rx="4" />
       <text x={20} y={45} fill={COLORS.error} fontSize="10" fontWeight="500">SCORE INGESTION</text>
@@ -2566,7 +2566,7 @@ const diagrams = {
 
   // Hotel Booking Advanced
   hotelBookingAdvanced: (
-    <svg viewBox="0 0 580 240" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 580 240" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={290} y={18} textAnchor="middle" fill={COLORS.primary} fontSize="13" fontWeight="600">Hotel Booking System</text>
       <rect x={10} y={30} width={560} height={80} fill={`${COLORS.primary}10`} stroke={COLORS.primary} strokeWidth="1" rx="4" />
       <text x={20} y={45} fill={COLORS.primary} fontSize="10" fontWeight="500">SEARCH & BOOKING</text>
@@ -2599,7 +2599,7 @@ const diagrams = {
 
   // Google Maps Advanced
   googleMapsAdvanced: (
-    <svg viewBox="0 0 580 260" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 580 260" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={290} y={18} textAnchor="middle" fill={COLORS.primary} fontSize="13" fontWeight="600">Google Maps Architecture</text>
       <rect x={10} y={30} width={560} height={70} fill={`${COLORS.primary}10`} stroke={COLORS.primary} strokeWidth="1" rx="4" />
       <text x={20} y={45} fill={COLORS.primary} fontSize="10" fontWeight="500">TILE SERVING & ROUTING</text>
@@ -2636,7 +2636,7 @@ const diagrams = {
 
   // Zoom Advanced
   zoomAdvanced: (
-    <svg viewBox="0 0 580 260" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 580 260" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={290} y={18} textAnchor="middle" fill={COLORS.primary} fontSize="13" fontWeight="600">Zoom Video Conferencing</text>
       <rect x={10} y={30} width={560} height={70} fill={`${COLORS.cyan}10`} stroke={COLORS.cyan} strokeWidth="1" rx="4" />
       <text x={20} y={45} fill={COLORS.cyan} fontSize="10" fontWeight="500">MEDIA PLANE</text>
@@ -2673,7 +2673,7 @@ const diagrams = {
 
   // LinkedIn Advanced
   linkedinAdvanced: (
-    <svg viewBox="0 0 580 260" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }}>
+    <svg viewBox="0 0 580 260" style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block' }}>
       <text x={290} y={18} textAnchor="middle" fill={COLORS.primary} fontSize="13" fontWeight="600">LinkedIn Architecture</text>
       <rect x={10} y={30} width={560} height={70} fill={`${COLORS.secondary}10`} stroke={COLORS.secondary} strokeWidth="1" rx="4" />
       <text x={20} y={45} fill={COLORS.secondary} fontSize="10" fontWeight="500">PROFESSIONAL NETWORK</text>

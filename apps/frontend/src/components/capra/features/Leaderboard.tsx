@@ -15,7 +15,7 @@ interface LeaderboardEntry {
 const RANK_STYLES: Record<number, { bg: string; text: string; icon: string }> = {
   1: { bg: 'bg-amber-500/10', text: 'text-amber-400', icon: '🥇' },
   2: { bg: 'bg-[var(--bg-elevated)]', text: 'text-[var(--text-muted)]', icon: '🥈' },
-  3: { bg: 'bg-orange-500/10', text: 'text-orange-400', icon: '🥉' },
+  3: { bg: 'bg-[var(--warning)]/10', text: 'text-[var(--warning)]', icon: '🥉' },
 };
 
 export default function Leaderboard() {

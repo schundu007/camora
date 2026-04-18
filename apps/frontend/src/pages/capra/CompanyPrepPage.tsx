@@ -273,7 +273,7 @@ const COMPANIES: Record<string, CompanyData> = {
 /* ──────────────────────────────── Helpers ────────────────────────────── */
 
 const DIFFICULTY_COLORS: Record<string, { bg: string; text: string; border: string }> = {
-  Easy: { bg: '#ecfdf5', text: '#2D8CFF', border: '#a7f3d0' },
+  Easy: { bg: '#ecfdf5', text: 'var(--accent)', border: '#a7f3d0' },
   Medium: { bg: '#fffbeb', text: '#d97706', border: '#fde68a' },
   Hard: { bg: '#fef2f2', text: '#0B5CFF', border: '#fecaca' },
   'Medium-Hard': { bg: '#fff7ed', text: '#ea580c', border: '#BFDBFE' },
@@ -374,7 +374,7 @@ export default function CompanyPrepPage() {
       {
         title: 'Coding Interview Questions',
         icon: 'code' as const,
-        color: '#10b981',
+        color: 'var(--success)',
         description: 'Practice data structures, algorithms, and problem-solving patterns commonly asked in technical interviews.',
         link: '/capra/prepare?page=coding',
         linkLabel: 'Study DSA Topics',
@@ -396,7 +396,7 @@ export default function CompanyPrepPage() {
       {
         title: 'Behavioral Interview Questions',
         icon: 'behavioral' as const,
-        color: '#f59e0b',
+        color: 'var(--warning)',
         description: 'Prepare compelling STAR-format stories for leadership, teamwork, and problem-solving questions.',
         link: '/capra/prepare?page=behavioral',
         linkLabel: 'Study Behavioral',
@@ -407,7 +407,7 @@ export default function CompanyPrepPage() {
     ];
 
     return (
-      <div style={{ background: '#f7f8f9', minHeight: '100vh' }}>
+      <div style={{ background: 'var(--bg-surface)', minHeight: '100vh' }}>
         <SiteNav />
 
         <div>
@@ -502,7 +502,7 @@ export default function CompanyPrepPage() {
                 <Link
                   to="/jobs"
                   className="practice-body"
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '10px 20px', background: '#10b981', color: '#fff', fontSize: 14, fontWeight: 600, borderRadius: 8, textDecoration: 'none' }}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '10px 20px', background: 'var(--accent)', color: '#fff', fontSize: 14, fontWeight: 600, borderRadius: 8, textDecoration: 'none' }}
                 >
                   Browse Jobs
                 </Link>
@@ -532,7 +532,7 @@ export default function CompanyPrepPage() {
   const diffStyle = getDifficultyStyle(companyData.stats.difficulty);
 
   return (
-    <div className="company-prep-root" style={{ background: '#f7f8f9', minHeight: '100vh' }}>
+    <div className="company-prep-root" style={{ background: 'var(--bg-surface)', minHeight: '100vh' }}>
 
       <SiteNav />
 
@@ -758,7 +758,7 @@ export default function CompanyPrepPage() {
                           style={{
                             fontSize: 12,
                             fontWeight: 600,
-                            color: '#10b981',
+                            color: 'var(--accent)',
                             textDecoration: 'none',
                             whiteSpace: 'nowrap',
                             flexShrink: 0,
@@ -801,14 +801,14 @@ export default function CompanyPrepPage() {
                 alignItems: 'center',
                 gap: 8,
                 padding: '12px 28px',
-                background: '#10b981',
+                background: 'var(--accent)',
                 color: '#ffffff',
                 fontSize: 15,
                 fontWeight: 700,
                 borderRadius: 10,
                 textDecoration: 'none',
                 transition: 'filter 0.15s, transform 0.15s',
-                boxShadow: '0 4px 14px rgba(16,185,129,0.25)',
+                boxShadow: '0 4px 14px rgba(45,140,255,0.25)',
               }}
             >
               Start Practicing
@@ -861,7 +861,7 @@ export default function CompanyPrepPage() {
 
         /* Footer link hover */
         .footer-link:hover {
-          color: #10b981 !important;
+          color: var(--accent) !important;
         }
 
         /* Question row hover */
@@ -885,7 +885,7 @@ export default function CompanyPrepPage() {
           outline: none;
         }
         button:focus-visible {
-          outline: 2px solid #10b981;
+          outline: 2px solid var(--accent);
           outline-offset: 2px;
         }
 

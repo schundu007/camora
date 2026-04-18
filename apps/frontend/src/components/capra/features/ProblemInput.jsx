@@ -269,7 +269,7 @@ export default function ProblemInput({ onSubmit, onFetchUrl, onScreenshot, onCle
               value={problemText}
               onChange={(e) => setProblemText(e.target.value)}
               placeholder={ascendMode === 'system-design' ? 'Describe your system design problem...' : 'Paste coding problem...'}
-              className="landing-body w-full px-4 py-3 resize-none rounded-xl text-sm bg-[var(--bg-surface)] border border-[var(--border)] text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-[var(--accent)]/40 transition-all shadow-sm"
+              className="landing-body w-full px-4 py-3 resize-none rounded-xl text-sm bg-[var(--bg-surface)] border border-[var(--border)] text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[rgba(45,140,255,0.2)] focus:border-[var(--accent)]/40 transition-all shadow-sm"
               style={{
                 minHeight: '60px',
                 maxHeight: window.matchMedia?.('(max-width: 1024px)')?.matches ? '40vh' : (expanded !== false ? '600px' : '400px'),
@@ -287,7 +287,7 @@ export default function ProblemInput({ onSubmit, onFetchUrl, onScreenshot, onCle
               <button
                 type="submit"
                 disabled={isLoading || !problemText.trim()}
-                className="landing-body px-6 py-2.5 text-sm font-bold text-white rounded-xl bg-[var(--accent)] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-emerald-500/25 disabled:hover:translate-y-0 disabled:hover:shadow-none touch:min-h-[44px]"
+                className="landing-body px-6 py-2.5 text-sm font-bold text-white rounded-xl bg-[var(--accent)] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[rgba(45,140,255,0.25)] disabled:hover:translate-y-0 disabled:hover:shadow-none touch:min-h-[44px]"
               >
                 {isLoading ? (
                   <span className="flex items-center gap-2">
