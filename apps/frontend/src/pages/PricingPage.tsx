@@ -198,7 +198,7 @@ export default function PricingPage() {
               : { from: '#475569', via: '#64748b', to: '#94a3b8', glow: 'rgba(100,116,139,0.1)', checkColor: '#4ade80' };
 
             return (
-              <div key={plan.name} className={`pricing-card group relative flex flex-col rounded-2xl overflow-hidden ${isPro ? 'lg:-mt-4 lg:mb-[-16px]' : ''}`}
+              <div key={plan.name} className="pricing-card group relative flex flex-col rounded-2xl overflow-hidden h-full"
                 style={{
                   zIndex: isPro ? 2 : 1,
                   background: '#FFFFFF',
@@ -252,7 +252,62 @@ export default function PricingPage() {
         `}</style>
       </section>
 
-      {/* Comparison table removed — see /pricing for plan details */}
+      {/* Competitor comparison — CSS Grid */}
+      <section className="px-4 pt-4 pb-16">
+        <div className="text-center mb-8">
+          <span className="text-xs font-bold uppercase tracking-[0.18em]" style={{ color: 'var(--accent)' }}>Why Camora Wins</span>
+          <h2 className="mt-3 text-2xl md:text-3xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>Compare the competition.</h2>
+        </div>
+        {(() => {
+          const competitors = [
+            { n: 'Camora', p: 'FREE' }, { n: 'Final Round', p: '$100/mo' }, { n: 'LockedIn', p: '$55-120/mo' },
+            { n: 'Solver', p: '$39/mo' }, { n: 'Sensei', p: '$24-89/mo' }, { n: 'TechPrep', p: '$39/mo' },
+            { n: 'AlgoMaster', p: '$29/mo' }, { n: 'DesignGurus', p: '$98-197/yr' }, { n: 'AIApply', p: '$29-200/mo' },
+            { n: 'OfferGoose', p: '$89-200/mo' }, { n: 'Parakeet', p: '$100-200/mo' },
+          ];
+          const cols = competitors.length + 1; // +1 for feature column
+          const keys = ['camora','finalround','lockedin','solver','sensei','techprep','algomaster','designgurus','aiapply','offergoose','parakeet'];
+          return (
+            <div className="rounded-xl" style={{ border: '1px solid var(--border)', background: '#fff', overflow: 'hidden' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: `minmax(200px, 2fr) repeat(${competitors.length}, 1fr)` }}>
+                {/* Header row */}
+                <div style={{ padding: '10px 12px', background: 'var(--bg-surface)', borderBottom: '2px solid var(--border)', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', display: 'flex', alignItems: 'center' }}>Feature</div>
+                {competitors.map((c, i) => (
+                  <div key={c.n} style={{ padding: '8px 4px', textAlign: 'center', background: i === 0 ? 'var(--accent)' : 'var(--bg-surface)', borderBottom: i === 0 ? '2px solid var(--accent)' : '2px solid var(--border)' }}>
+                    <div style={{ fontWeight: 700, fontSize: 11, color: i === 0 ? '#fff' : 'var(--text-muted)' }}>{c.n}</div>
+                    <div style={{ fontWeight: 600, fontSize: 10, color: i === 0 ? 'rgba(255,255,255,0.8)' : 'var(--text-dimmed)' }}>{c.p}</div>
+                  </div>
+                ))}
+                {/* Data rows */}
+                {COMPARISON.map((row, ri) => {
+                  const isLast = ri === COMPARISON.length - 1;
+                  const bg = ri % 2 === 0 ? 'var(--bg-surface)' : '#fff';
+                  return [
+                    <div key={`f-${ri}`} style={{ padding: '7px 12px', fontSize: 12, color: row.unique ? 'var(--accent)' : 'var(--text-primary)', fontWeight: row.unique ? 600 : 400, borderBottom: isLast ? 'none' : '1px solid var(--border)', background: bg, display: 'flex', alignItems: 'center' }}>{row.feature}</div>,
+                    ...keys.map((k, ci) => {
+                      const val = (row as any)[k];
+                      const isCamora = ci === 0;
+                      return (
+                        <div key={`${ri}-${k}`} style={{ padding: '7px 2px', textAlign: 'center', borderBottom: isLast ? 'none' : '1px solid var(--border)', background: isCamora ? 'rgba(45,140,255,0.04)' : bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          {val === true ? (
+                            isCamora
+                              ? <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 20, height: 20, borderRadius: '50%', background: 'var(--accent)' }}><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10 3L4.5 8.5L2 6" /></svg></span>
+                              : <svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="var(--text-dimmed)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10 3L4.5 8.5L2 6" /></svg>
+                          ) : val === false ? (
+                            <span style={{ color: 'var(--text-dimmed)' }}>—</span>
+                          ) : (
+                            <span style={{ fontSize: 8, fontWeight: 700, padding: '2px 5px', borderRadius: 4, background: 'rgba(245,158,11,0.1)', color: '#B45309' }}>{val}</span>
+                          )}
+                        </div>
+                      );
+                    }),
+                  ];
+                })}
+              </div>
+            </div>
+          );
+        })()}
+      </section>
 
 
       {/* Desktop App + Top-Up Packs — compact row */}
