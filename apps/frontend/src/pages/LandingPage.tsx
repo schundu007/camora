@@ -292,25 +292,11 @@ function TopicDonut() {
   );
 }
 
-/* ── Track Waypoint — placed inside each section, auto-centers vertically ── */
-function TrackWaypoint({ label }: { label: string }) {
-  return (
-    <div className="absolute top-1/2 -translate-y-1/2 z-[4] pointer-events-none hidden lg:block" style={{ left: 'calc(15% + 4px)' }}>
-      <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#0B1120', border: '2.5px solid rgba(45,140,255,0.3)', boxShadow: '0 0 14px rgba(45,140,255,0.15), inset 0 0 6px rgba(45,140,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: 'rgba(45,140,255,0.5)' }} />
-      </div>
-      <div style={{ position: 'absolute', left: '36px', top: '50%', transform: 'translateY(-50%)', whiteSpace: 'nowrap' }}>
-        <span style={{ fontSize: '11px', fontFamily: "'JetBrains Mono', monospace", fontWeight: 800, color: 'rgba(45,140,255,0.5)', letterSpacing: '0.15em', textShadow: '0 0 8px rgba(45,140,255,0.3)' }}>{label}</span>
-      </div>
-    </div>
-  );
-}
 
 /* ════════════════════════════════════════════════════════════ */
 export default function LandingPage() {
   const { isAuthenticated } = useAuth();
   const visitorCount = useVisitorCount();
-  const scrollProgress = useScrollProgress();
 
   useEffect(() => { window.scrollTo(0, 0); }, []);
   useEffect(() => { document.title = 'Camora — Apply, Prepare, Practice & Attend'; return () => { document.title = 'Camora'; }; }, []);
@@ -318,59 +304,7 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen relative" style={{ fontFamily: F.body, color: L.text, background: L.bg }}>
       <SEO path="/" />
-      {/* ═══ RUNWAY TRACK — thick takeoff road at 25% with airplane + airport nodes ═══ */}
-      <div className="absolute top-0 z-[3] pointer-events-none hidden lg:block" style={{ left: 'calc(15% + 18px)', bottom: '120px' }}>
-        {/* Tarmac — wide dark runway strip */}
-        <div className="absolute top-0 bottom-0" style={{ left: '-10px', width: '20px', borderRadius: '10px', background: `linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.05) 5%, rgba(255,255,255,0.03) 50%, rgba(255,255,255,0.05) 95%, transparent 100%)` }} />
-        {/* White dashed center line — real runway marking */}
-        <div className="absolute left-0 top-0 bottom-0" style={{ width: '2px', background: `repeating-linear-gradient(to bottom, rgba(45,140,255,0.4) 0px, rgba(45,140,255,0.4) 20px, transparent 20px, transparent 36px)` }} />
-        {/* Edge markings — solid white */}
-        <div className="absolute top-0 bottom-0" style={{ left: '-10px', width: '1px', background: `linear-gradient(to bottom, transparent 3%, rgba(255,255,255,0.15) 8%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.15) 92%, transparent 97%)` }} />
-        <div className="absolute top-0 bottom-0" style={{ left: '9px', width: '1px', background: `linear-gradient(to bottom, transparent 3%, rgba(255,255,255,0.15) 8%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.15) 92%, transparent 97%)` }} />
-        {/* Glow aura */}
-        <div className="absolute top-0 bottom-0" style={{ left: '-18px', width: '36px', background: `linear-gradient(to bottom, transparent 3%, rgba(255,255,255,0.015) 10%, rgba(255,255,255,0.008) 50%, rgba(255,255,255,0.015) 90%, transparent 97%)`, filter: 'blur(10px)' }} />
-
-        {/* ── 3D AIRPLANE — flies UP as user scrolls DOWN ── */}
-        <div className="fixed hidden lg:block" style={{
-          left: 'calc(15% + 18px)',
-          top: `calc(${85 - scrollProgress * 70}vh)`,
-          marginLeft: '-28px',
-          zIndex: 4,
-          pointerEvents: 'none',
-          transition: 'top 0.1s linear',
-        }}>
-          {/* Contrail below (plane flies up, exhaust trails down) */}
-          <div style={{ position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', width: '3px', height: '140px', borderRadius: '2px', background: 'linear-gradient(to bottom, rgba(255,255,255,0.5), rgba(45,140,255,0.15), transparent)' }} />
-          {/* 3D airplane — straight, no tilt */}
-          <svg width="56" height="64" viewBox="0 0 56 64" fill="none" style={{ filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.5)) drop-shadow(0 0 20px rgba(45,140,255,0.5))' }}>
-            <defs><linearGradient id="f3d" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor="#ddd" /><stop offset="40%" stopColor="#fff" /><stop offset="100%" stopColor="#aaa" /></linearGradient></defs>
-            {/* Fuselage */}
-            <path d="M28 0 C24 0 22 6 22 12 L22 44 L34 44 L34 12 C34 6 32 0 28 0Z" fill="url(#f3d)" />
-            {/* Green stripe */}
-            <rect x="25" y="6" width="2" height="36" rx="1" fill="#2D8CFF" opacity="0.4" />
-            {/* Wings */}
-            <path d="M22 24 L2 34 L2 37 L22 32Z" fill="#e8e8e8" />
-            <path d="M34 24 L54 34 L54 37 L34 32Z" fill="#999" />
-            {/* Engines */}
-            <ellipse cx="10" cy="33" rx="2.5" ry="4" fill="#888" />
-            <ellipse cx="46" cy="33" rx="2.5" ry="4" fill="#777" />
-            {/* Tail */}
-            <path d="M22 40 L14 48 L14 50 L22 46Z" fill="#ddd" />
-            <path d="M34 40 L42 48 L42 50 L34 46Z" fill="#aaa" />
-            {/* Tail fin */}
-            <path d="M26 38 L28 28 L30 38Z" fill="#2D8CFF" />
-            <path d="M27 38 L28 30 L28 38Z" fill="#2D8CFF" opacity="0.4" />
-            {/* Cockpit */}
-            <ellipse cx="28" cy="7" rx="3" ry="4" fill="#222" stroke="rgba(255,255,255,0.4)" strokeWidth="0.5" />
-            {/* Windows */}
-            {[14, 18, 22, 26, 30, 34].map(y => <rect key={y} x="25" y={y} width="6" height="1.8" rx="0.9" fill="#333" opacity="0.5" />)}
-          </svg>
-        </div>
-
-        {/* Waypoints rendered inside each section via <TrackWaypoint /> */}
-      </div>
-      {/* Grid dot pattern */}
-      <div className="fixed inset-0 pointer-events-none z-[1] opacity-[0.04]" style={{ backgroundImage: 'radial-gradient(circle, rgba(0,0,0,0.15) 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
+      {/* Zoom-style: clean, no decorative tracks or grid dots */}
       <style>{`
         .cm-gradient-text { background: ${L.gradient}; -webkit-background-clip: text; background-clip: text; color: transparent; }
         .cm-gradient-btn { background: ${L.gradient}; transition: filter 0.2s ease, box-shadow 0.2s ease; }
@@ -461,7 +395,7 @@ export default function LandingPage() {
 
       {/* ── 1. HERO — Forest road background ── */}
       <section className="relative pt-28 pb-14 md:pt-36 md:pb-20 px-6 overflow-hidden">
-        <TrackWaypoint label="LAUNCH" />
+
         {/* Hero background — dark with subtle image overlay */}
         <div className="absolute inset-0 z-0">
           <img src="/hero-forest.jpg" alt="" className="w-full h-full object-cover object-center" style={{ opacity: 0.15 }} />
@@ -517,7 +451,6 @@ export default function LandingPage() {
 
       {/* ── 2. COMPANY LOGOS — "Prepare for interviews at" ── */}
       <section className="relative px-6 py-8 overflow-hidden">
-        <TrackWaypoint label="BRANDS" />
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
           <div className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${L.border}`, background: L.surface }}>
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6">
@@ -535,7 +468,6 @@ export default function LandingPage() {
 
       {/* ── 3. STATS BAR ── */}
       <section className="relative px-6 py-10">
-        <TrackWaypoint label="STATS" />
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 px-8 py-8 cm-glass" style={{ borderRadius: '16px', boxShadow: L.glow }}>
             {STATS.map((s, i) => (
@@ -552,7 +484,6 @@ export default function LandingPage() {
 
       {/* ── 4. APPA — Flight Path Timeline ── */}
       <section className="px-6 py-14 md:py-20 relative">
-        <TrackWaypoint label="APPA" />
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
           <Reveal className="text-center mb-14">
             <h2 className="text-3xl md:text-4xl lg:text-[44px] font-bold tracking-tight" style={{ fontFamily: F.display }}>
@@ -623,8 +554,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── 5b. PREPARATION AT SCALE — Donut ── */}
-      <section className="relative px-6 py-14 md:py-20" style={{ background: L.surface, border: '1px solid rgba(255,255,255,0.06)', borderRadius: '20px', margin: '0 3%' }}>
-        <TrackWaypoint label="TOPICS" />
+      <section className="relative px-6 py-14 md:py-20" style={{ background: L.surface }}>
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
           <Reveal className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl lg:text-[44px] font-bold tracking-tight" style={{ fontFamily: F.display }}>Full payload. Zero drag.</h2>
@@ -634,8 +564,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── 6. JOB URL ANALYSIS ── */}
-      <section className="relative px-6 py-14 md:py-20" style={{ background: L.surface, border: '1px solid rgba(255,255,255,0.06)', borderRadius: '20px', margin: '0 3%' }}>
-        <TrackWaypoint label="JOBS" />
+      <section className="relative px-6 py-14 md:py-20" style={{ background: L.surface }}>
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
           <Reveal className="text-center mb-10">
             <h2 className="text-3xl md:text-4xl lg:text-[44px] font-bold tracking-tight" style={{ fontFamily: F.display }}>
@@ -691,8 +620,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── 7. LIVE AI DEMO — Simulated Q&A ── */}
-      <section className="relative px-6 py-14 md:py-20" style={{ background: L.surface, border: `1px solid ${L.border}`, borderRadius: '20px', margin: '0 3%' }}>
-        <TrackWaypoint label="LIVE AI" />
+      <section className="relative px-6 py-14 md:py-20" style={{ background: L.surface }}>
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
           <Reveal className="text-center mb-10">
             <span className="inline-flex items-center gap-2 text-[11px] font-bold tracking-[0.15em] uppercase px-4 py-1.5"
@@ -744,8 +672,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── 9. UNIQUE FEATURES GRID ── */}
-      <section className="relative px-6 py-14 md:py-20" style={{ background: L.surface, border: '1px solid rgba(255,255,255,0.06)', borderRadius: '20px', margin: '0 3%' }}>
-        <TrackWaypoint label="FEATURES" />
+      <section className="relative px-6 py-14 md:py-20" style={{ background: L.surface }}>
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
           <Reveal className="text-center mb-14">
             <span className="inline-block text-[11px] font-bold tracking-[0.18em] uppercase px-4 py-1.5 mb-5"
@@ -770,8 +697,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── 10. INTEGRATIONS BAR ── */}
-      <section className="relative px-6 py-14 md:py-16" style={{ background: L.surface, border: `1px solid ${L.border}`, borderRadius: '20px', margin: '0 3%' }}>
-        <TrackWaypoint label="CONNECT" />
+      <section className="relative px-6 py-14 md:py-16" style={{ background: L.surface }}>
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto text-center">
           <Reveal>
             <p className="text-xs font-bold uppercase tracking-[0.2em] mb-6" style={{ color: L.muted }}>Compatible with all flight platforms</p>
@@ -786,7 +712,6 @@ export default function LandingPage() {
 
       {/* ── 12. FINAL CTA ── */}
       <section className="relative px-6 py-20 md:py-28">
-        <TrackWaypoint label="START" />
         <Reveal className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
           <div className="relative px-8 py-16 md:px-16 md:py-20 text-center overflow-hidden" style={{ borderRadius: '20px', background: L.surface, border: '1px solid rgba(255,255,255,0.07)', boxShadow: L.glowStrong }}>
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[50%] h-[2px]" style={{ background: L.gradient }} />
