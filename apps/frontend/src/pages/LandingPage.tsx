@@ -286,8 +286,12 @@ export default function LandingPage() {
   useEffect(() => { document.title = 'Camora — Apply, Prepare, Practice & Attend'; return () => { document.title = 'Camora'; }; }, []);
 
   return (
-    <div className="min-h-screen" style={{ fontFamily: F.body, color: L.text, background: L.bg }}>
+    <div className="min-h-screen relative" style={{ fontFamily: F.body, color: L.text, background: L.bg }}>
       <SEO path="/" />
+      {/* Railway-style vertical timeline line */}
+      <div className="fixed left-[40px] md:left-[80px] top-0 bottom-0 w-px z-[2] pointer-events-none hidden lg:block" style={{ background: 'linear-gradient(to bottom, transparent 0%, rgba(118,185,0,0.15) 15%, rgba(118,185,0,0.08) 50%, rgba(118,185,0,0.15) 85%, transparent 100%)' }} />
+      {/* Grid dot pattern */}
+      <div className="fixed inset-0 pointer-events-none z-[1] opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.5) 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
       <style>{`
         .cm-gradient-text { background: ${L.gradient}; -webkit-background-clip: text; background-clip: text; color: transparent; }
         .cm-gradient-btn { background: ${L.gradient}; transition: filter 0.2s ease, box-shadow 0.2s ease; }
@@ -301,10 +305,15 @@ export default function LandingPage() {
 
       <SiteNav variant="dark" />
 
-      {/* ── 1. HERO ── */}
+      {/* ── 1. HERO — Forest road background ── */}
       <section className="relative pt-28 pb-14 md:pt-36 md:pb-20 px-6 overflow-hidden">
-        {/* Radial glow behind hero */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] pointer-events-none" style={{ background: 'radial-gradient(ellipse at center, rgba(118,185,0,0.06) 0%, transparent 70%)' }} />
+        {/* Forest background image */}
+        <div className="absolute inset-0 z-0">
+          <img src="/hero-forest.jpg" alt="" className="w-full h-full object-cover" />
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(9,9,15,0.65) 0%, rgba(9,9,15,0.8) 50%, rgba(9,9,15,0.95) 85%, #09090F 100%)' }} />
+        </div>
+        {/* Radial glow */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] pointer-events-none z-[1]" style={{ background: 'radial-gradient(ellipse at center, rgba(118,185,0,0.08) 0%, transparent 70%)' }} />
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto text-center relative z-10">
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <span className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold tracking-[0.12em] uppercase"
