@@ -391,33 +391,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── 4. APPA CARDS ── */}
-      <section className="px-6 py-14 md:py-20">
-        <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
-          <Reveal className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl lg:text-[44px] font-bold tracking-tight" style={{ fontFamily: F.display }}>
-              One platform, four steps to your offer.
-            </h2>
-          </Reveal>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {APPA.map((step, i) => (
-              <Reveal key={step.key} delay={i * 0.06}>
-                <Link to={step.href} className="group relative flex flex-col p-6 h-full transition-all hover:-translate-y-0.5 cm-glass"
-                  style={{ borderRadius: '16px' }}>
-                  <div className="w-11 h-11 flex items-center justify-center mb-4" style={{ borderRadius: L.radius, background: 'rgba(255,255,255,0.04)', color: L.secondary }}>{step.icon}</div>
-                  <h3 className="text-lg font-bold mb-2" style={{ fontFamily: F.display }}>{step.label}</h3>
-                  <p className="text-sm leading-relaxed flex-1" style={{ color: L.secondary }}>{step.desc.split('.')[0]}.</p>
-                  <div className="mt-4 flex items-center gap-1 text-xs font-semibold group-hover:gap-2 transition-all" style={{ color: L.primary }}>
-                    <span>Learn more</span>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} className="transition-transform group-hover:translate-x-0.5"><path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                  </div>
-                </Link>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* ── 5. TABBED PRODUCT SHOWCASE ── */}
       <section className="px-6 py-14 md:py-20" id="process" style={{ background: L.surface, borderTop: '1px solid rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
