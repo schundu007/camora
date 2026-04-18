@@ -456,18 +456,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── 5. TABBED PRODUCT SHOWCASE ── */}
-      <section className="px-6 py-14 md:py-20" id="process" style={{ background: L.surface, borderTop: '1px solid rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-        <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
-          <Reveal className="text-center mb-14">
-            <span className="inline-block text-[11px] font-bold tracking-[0.18em] uppercase px-4 py-1.5 mb-5"
-              style={{ borderRadius: '999px', background: `${L.primary}0A`, border: `1px solid ${L.primary}20`, color: L.primary, fontFamily: F.mono }}>Mission Control</span>
-            <h2 className="text-3xl md:text-4xl lg:text-[44px] font-bold tracking-tight" style={{ fontFamily: F.display }}>See Camora in flight.</h2>
-          </Reveal>
-          <ProductTabs />
-        </div>
-      </section>
-
       {/* ── 6. LIVE AI DEMO — Simulated Q&A ── */}
       <section className="px-6 py-14 md:py-20">
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
