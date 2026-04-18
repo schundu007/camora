@@ -43,9 +43,9 @@ function SimpleCodeEditor({ code, onChange, language, readOnly = false }) {
  */
 function TestCase({ testCase, index, isActive, onClick, result }) {
   const statusColor = result?.passed
-    ? 'bg-green-500/20 text-green-400 border-green-500/30'
+    ? 'bg-[var(--success)]/20 text-[var(--success)] border-[var(--success)]/30'
     : result?.error
-    ? 'bg-red-500/20 text-red-400 border-red-500/30'
+    ? 'bg-[var(--danger)]/20 text-[var(--danger)] border-[var(--danger)]/30'
     : 'bg-gray-800/50 text-[var(--text-muted)] border-[var(--border)]';
 
   return (
@@ -62,7 +62,7 @@ function TestCase({ testCase, index, isActive, onClick, result }) {
         <Icon
           name={result.passed ? 'check' : 'x'}
           size={14}
-          className={`ml-2 inline ${result.passed ? 'text-green-400' : 'text-red-400'}`}
+          className={`ml-2 inline ${result.passed ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}
         />
       )}
     </button>
@@ -702,17 +702,17 @@ export default function ProblemPage({ slug, onBack }) {
                         {output ? (
                           <>
                             {output.summary ? (
-                              <div className={`p-4 rounded-lg ${output.success ? 'bg-green-500/10 border border-green-500/30' : 'bg-red-500/10 border border-red-500/30'}`}>
+                              <div className={`p-4 rounded-lg ${output.success ? 'bg-[var(--success)]/10 border border-[var(--success)]/30' : 'bg-[var(--danger)]/10 border border-[var(--danger)]/30'}`}>
                                 <div className="flex items-center gap-2">
-                                  <Icon name={output.success ? 'check' : 'x'} size={20} className={output.success ? 'text-green-400' : 'text-red-400'} />
-                                  <span className={`text-lg font-semibold ${output.success ? 'text-green-400' : 'text-red-400'}`}>
+                                  <Icon name={output.success ? 'check' : 'x'} size={20} className={output.success ? 'text-[var(--success)]' : 'text-[var(--danger)]'} />
+                                  <span className={`text-lg font-semibold ${output.success ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
                                     {output.output}
                                   </span>
                                 </div>
                               </div>
                             ) : (
                               <>
-                                <div className={`flex items-center gap-2 ${output.success ? 'text-green-400' : 'text-red-400'}`}>
+                                <div className={`flex items-center gap-2 ${output.success ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
                                   <Icon name={output.success ? 'check' : 'x'} size={16} />
                                   <span className="font-medium">{output.success ? 'Accepted' : 'Error'}</span>
                                 </div>

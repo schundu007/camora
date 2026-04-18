@@ -168,7 +168,7 @@ export function ArchitectureDiagram({ question, className = '' }: ArchitectureDi
       {loading && (
         <div className="flex items-center justify-center p-8 border border-[var(--border)] rounded-lg bg-[var(--bg-surface)]">
           <div className="flex items-center gap-3">
-            <div className="w-5 h-5 border-2 border-blue-200 border-t-[var(--accent)] rounded-full animate-spin" />
+            <div className="w-5 h-5 border-2 border-[rgba(45,140,255,0.3)] border-t-[var(--accent)] rounded-full animate-spin" />
             <span className="text-sm text-[var(--text-muted)] font-mono">Looking up cached diagram...</span>
           </div>
         </div>
@@ -187,10 +187,10 @@ export function ArchitectureDiagram({ question, className = '' }: ArchitectureDi
 
       {/* Generating */}
       {generating && (
-        <div className="flex items-center justify-center p-8 border border-blue-200 rounded-lg bg-blue-50">
+        <div className="flex items-center justify-center p-8 border border-[rgba(45,140,255,0.2)] rounded-lg bg-[rgba(45,140,255,0.08)]">
           <div className="flex items-center gap-3">
-            <div className="w-5 h-5 border-2 border-blue-300 border-t-[var(--accent)] rounded-full animate-spin" />
-            <span className="text-sm text-blue-700 font-mono">Generating {cloudProvider === 'auto' ? '' : cloudProvider.toUpperCase()} diagram...</span>
+            <div className="w-5 h-5 border-2 border-[rgba(45,140,255,0.3)] border-t-[var(--accent)] rounded-full animate-spin" />
+            <span className="text-sm text-[var(--accent)] font-mono">Generating {cloudProvider === 'auto' ? '' : cloudProvider.toUpperCase()} diagram...</span>
           </div>
         </div>
       )}
@@ -216,10 +216,7 @@ export function ArchitectureDiagram({ question, className = '' }: ArchitectureDi
             style={{
               transform: `translate(${translate.x}px, ${translate.y}px) scale(${scale})`,
               transformOrigin: 'center center',
-              maxWidth: '100%',
-              maxHeight: '100%',
-              objectFit: 'contain',
-              width: 'auto',
+              maxWidth: 'none',
               height: 'auto',
             }} />
         </div>

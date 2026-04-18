@@ -157,7 +157,7 @@ function SchemaTable({ table }: { table: SqlProblem['tables'][0] }) {
     <div className="mb-4">
       <div className="flex items-center gap-2 mb-1.5">
         <span
-          className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wide bg-blue-50 text-blue-700 border border-blue-200"
+          className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wide bg-[rgba(45,140,255,0.08)] text-[var(--accent)] border border-[rgba(45,140,255,0.2)]"
           style={{ fontFamily: "'JetBrains Mono', monospace" }}
         >
           {table.name}
@@ -540,7 +540,7 @@ export function SQLPlayground({ onClose }: SQLPlaygroundProps) {
             {showSolution && (
               <div className="mt-2">
                 <pre
-                  className="text-xs text-blue-800 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 overflow-x-auto whitespace-pre-wrap"
+                  className="text-xs text-[var(--accent)] bg-[rgba(45,140,255,0.08)] border border-[rgba(45,140,255,0.2)] rounded-lg px-3 py-2 overflow-x-auto whitespace-pre-wrap"
                   style={{ fontFamily: "'JetBrains Mono', monospace" }}
                 >
                   {problem.solution}
@@ -586,7 +586,7 @@ export function SQLPlayground({ onClose }: SQLPlaygroundProps) {
               <button
                 onClick={submitQuery}
                 disabled={!dbReady}
-                className="px-3 py-1 rounded text-[11px] font-bold text-white bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="px-3 py-1 rounded text-[11px] font-bold text-white bg-[var(--accent)] hover:bg-[var(--accent-hover)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 Submit
               </button>

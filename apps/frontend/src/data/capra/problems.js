@@ -5,7 +5,7 @@
 
 // Difficulty colors
 export const DIFFICULTY_COLORS = {
-  Easy: { bg: 'bg-green-500/15', text: 'text-green-400', border: 'border-green-500/30' },
+  Easy: { bg: 'bg-[var(--success)]/15', text: 'text-[var(--success)]', border: 'border-[var(--success)]/30' },
   Medium: { bg: 'bg-yellow-500/15', text: 'text-yellow-400', border: 'border-yellow-500/30' },
   Hard: { bg: 'bg-red-500/15', text: 'text-red-400', border: 'border-red-500/30' },
 };

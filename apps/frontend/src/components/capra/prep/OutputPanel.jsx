@@ -434,7 +434,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                   <div className="space-y-3">
                     {safeArray(displayContent.pitchSections).filter(section => section && typeof section === 'object').map((section, i) => (
                       <div key={i} className="flex gap-3">
-                        <span className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold" style={{ background: '#10b981', color: 'white', boxShadow: '0 2px 4px rgba(16,185,129,0.3)' }}>{i + 1}</span>
+                        <span className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold" style={{ background: 'var(--accent)', color: 'white', boxShadow: '0 2px 4px rgba(45,140,255,0.3)' }}>{i + 1}</span>
                         <div className="flex-1 pt-0.5">
                           {safeArray(section?.bullets).length > 0 && (
                             <p className="text-sm leading-relaxed" style={{ color: colors.text }}>

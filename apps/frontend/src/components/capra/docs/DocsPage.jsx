@@ -1095,7 +1095,7 @@ export default function DocsPage({ onBack }) {
                                 const hard = topic.commonProblems.filter(p => p.difficulty === 'Hard').length;
                                 return (
                                   <div className="flex items-center gap-1">
-                                    {easy > 0 && <span className="text-[9px] landing-mono px-1 py-0.5 rounded bg-green-500/10 text-green-600 border border-green-500/20">{easy}E</span>}
+                                    {easy > 0 && <span className="text-[9px] landing-mono px-1 py-0.5 rounded bg-[var(--success)]/10 text-[var(--success)] border border-[var(--success)]/20">{easy}E</span>}
                                     {med > 0 && <span className="text-[9px] landing-mono px-1 py-0.5 rounded bg-amber-500/10 text-amber-600 border border-amber-500/20">{med}M</span>}
                                     {hard > 0 && <span className="text-[9px] landing-mono px-1 py-0.5 rounded bg-red-500/10 text-red-600 border border-red-500/20">{hard}H</span>}
                                   </div>
@@ -1139,8 +1139,8 @@ export default function DocsPage({ onBack }) {
                           <table className="w-full text-sm">
                             <tbody>
                               {[
-                                { complexity: 'O(1)', desc: 'Constant', rating: 'Best', cls: 'text-green-600 bg-green-500/10 border border-green-500/20' },
-                                { complexity: 'O(log n)', desc: 'Logarithmic', rating: 'Great', cls: 'text-green-600 bg-green-500/10 border border-green-500/20' },
+                                { complexity: 'O(1)', desc: 'Constant', rating: 'Best', cls: 'text-[var(--success)] bg-[var(--success)]/10 border border-[var(--success)]/20' },
+                                { complexity: 'O(log n)', desc: 'Logarithmic', rating: 'Great', cls: 'text-[var(--success)] bg-[var(--success)]/10 border border-[var(--success)]/20' },
                                 { complexity: 'O(n)', desc: 'Linear', rating: 'Good', cls: 'text-[var(--text-muted)] bg-[var(--bg-elevated)] border border-[var(--border)]' },
                                 { complexity: 'O(n log n)', desc: 'Linearithmic', rating: 'Fair', cls: 'text-[var(--text-muted)] bg-[var(--bg-elevated)] border border-[var(--border)]' },
                                 { complexity: 'O(n²)', desc: 'Quadratic', rating: 'Slow', cls: 'bg-[var(--bg-elevated)] text-[var(--text-secondary)] border-[var(--border)]' },
@@ -1285,7 +1285,7 @@ export default function DocsPage({ onBack }) {
                       const categoryDesigns = filteredDesigns.filter(d => systemDesignProblemCategoryMap[d.id] === category.id);
                       if (categoryDesigns.length === 0) return null;
                       const difficultyStyles = {
-                        'Easy': 'text-green-600 bg-green-500/10 border border-green-500/20',
+                        'Easy': 'text-[var(--success)] bg-[var(--success)]/10 border border-[var(--success)]/20',
                         'Medium': 'text-[var(--text-muted)] bg-[var(--bg-elevated)] border border-[var(--border)]',
                         'Hard': 'text-red-600 bg-red-500/10 border border-red-500/20',
                       };
@@ -1375,7 +1375,7 @@ export default function DocsPage({ onBack }) {
                           </div>
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)] overflow-hidden">
                             {categoryProblems.map((problem) => {
-                              const diffStyle = { Easy: 'text-green-600 bg-green-500/10 border border-green-500/20', Medium: 'text-[var(--text-muted)] bg-[var(--bg-elevated)] border border-[var(--border)]', Hard: 'text-red-600 bg-red-500/10 border border-red-500/20' }[problem.difficulty] || 'text-[var(--text-muted)] bg-[var(--bg-elevated)] border border-[var(--border)]';
+                              const diffStyle = { Easy: 'text-[var(--success)] bg-[var(--success)]/10 border border-[var(--success)]/20', Medium: 'text-[var(--text-muted)] bg-[var(--bg-elevated)] border border-[var(--border)]', Hard: 'text-red-600 bg-red-500/10 border border-red-500/20' }[problem.difficulty] || 'text-[var(--text-muted)] bg-[var(--bg-elevated)] border border-[var(--border)]';
                               return (
                                 <div
                                   key={problem.id}
@@ -1763,7 +1763,7 @@ export default function DocsPage({ onBack }) {
                           </div>
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)] overflow-hidden">
                             {categoryProblems.map((problem) => {
-                              const diffStyle = { Easy: 'text-green-600 bg-green-500/10 border border-green-500/20', Medium: 'text-[var(--text-muted)] bg-[var(--bg-elevated)] border border-[var(--border)]', Hard: 'text-red-600 bg-red-500/10 border border-red-500/20' }[problem.difficulty] || 'text-[var(--text-muted)] bg-[var(--bg-elevated)] border border-[var(--border)]';
+                              const diffStyle = { Easy: 'text-[var(--success)] bg-[var(--success)]/10 border border-[var(--success)]/20', Medium: 'text-[var(--text-muted)] bg-[var(--bg-elevated)] border border-[var(--border)]', Hard: 'text-red-600 bg-red-500/10 border border-red-500/20' }[problem.difficulty] || 'text-[var(--text-muted)] bg-[var(--bg-elevated)] border border-[var(--border)]';
                               return (
                                 <div
                                   key={problem.id}
@@ -2247,7 +2247,7 @@ export default function DocsPage({ onBack }) {
                                       <p className="text-xs text-[var(--text-muted)] line-clamp-2 mb-2">{topic.description}</p>
                                       <div className="flex items-center gap-2 flex-wrap">
                                         <span className={`text-[10px] landing-mono px-1.5 py-0.5 rounded font-semibold ${
-                                          topic.difficulty === 'beginner' ? 'bg-green-500/10 text-green-600 border border-green-500/20' :
+                                          topic.difficulty === 'beginner' ? 'bg-[var(--success)]/10 text-[var(--success)] border border-[var(--success)]/20' :
                                           topic.difficulty === 'intermediate' ? 'bg-[var(--bg-elevated)] text-[var(--text-muted)] border border-[var(--border)]' :
                                           'bg-red-500/10 text-red-600 border border-red-500/20'
                                         }`}>{topic.difficulty}</span>

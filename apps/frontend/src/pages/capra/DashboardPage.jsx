@@ -713,7 +713,7 @@ export default function DashboardPage() {
     return (
       <div className="h-screen flex items-center justify-center bg-[var(--bg-surface)] landing-root">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ background: '#10b981' }}>
+          <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ background: 'var(--accent)' }}>
             <svg className="w-6 h-6 text-[var(--text-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
             </svg>
@@ -897,7 +897,7 @@ function Header({ ascendMode, onModeChange, showSidebar, onToggleSidebar, isLoad
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg>
           </button>
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: '#10b981' }}>
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'var(--accent)' }}>
               <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
               </svg>
@@ -915,7 +915,7 @@ function Header({ ascendMode, onModeChange, showSidebar, onToggleSidebar, isLoad
 
   // ---- Desktop Header — with APPA nav tabs ----
   const modeConfig = {
-    coding: { label: 'Coding', color: '#10b981' },
+    coding: { label: 'Coding', color: 'var(--accent)' },
     'system-design': { label: 'System Design', color: '#3b82f6' },
     behavioral: { label: 'Interview Prep', color: '#f59e0b' },
   };
@@ -1123,7 +1123,7 @@ function CodingLayout({
       <div className="flex-shrink-0">
         <div className="flex items-center justify-between px-4 sm:px-5 py-3 border-b border-[var(--border)] gap-2 min-h-[48px] flex-wrap" style={{ background: 'var(--bg-surface)' }}>
           <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-            <div className="w-1.5 h-5 rounded-full flex-shrink-0" style={{ background: ascendMode === 'system-design' ? '#3b82f6' : '#10b981' }} />
+            <div className="w-1.5 h-5 rounded-full flex-shrink-0" style={{ background: ascendMode === 'system-design' ? '#3b82f6' : 'var(--accent)' }} />
             <h2 className="landing-display text-sm font-bold truncate text-[var(--text-primary)]">{ascendMode === 'system-design' ? 'System Design' : 'Problem'}</h2>
             {ascendMode === 'system-design' && (
               <button onClick={onSavedDesignsClick} aria-label="View saved designs" className={`flex-shrink-0 flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg transition-all duration-200 ${savedDesignsCount > 0 ? 'bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--accent)]' : 'bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border)] hover:border-[var(--border-hover)]'}`}>
@@ -1153,16 +1153,16 @@ function CodingLayout({
       ) : isLoading && loadingType === 'solve' ? (
         <div className="flex flex-col items-center justify-center h-full">
           <div className="flex gap-1.5 mb-3">
-            <span className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: '0ms' }} />
+            <span className="w-2.5 h-2.5 rounded-full bg-[var(--accent)] animate-bounce" style={{ animationDelay: '0ms' }} />
             <span className="w-2.5 h-2.5 rounded-full bg-[var(--accent)] animate-bounce" style={{ animationDelay: '150ms' }} />
-            <span className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: '300ms' }} />
+            <span className="w-2.5 h-2.5 rounded-full bg-[var(--accent)] animate-bounce" style={{ animationDelay: '300ms' }} />
           </div>
           <span className="landing-body text-sm font-medium text-[var(--text-secondary)]">Generating system design...</span>
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center h-full">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-100 flex items-center justify-center mb-4">
-            <svg className="w-7 h-7 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+          <div className="w-16 h-16 rounded-2xl bg-[rgba(45,140,255,0.08)] border border-[rgba(45,140,255,0.15)] flex items-center justify-center mb-4">
+            <svg className="w-7 h-7 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
           </div>
           <span className="landing-body text-sm font-medium text-[var(--text-muted)]">Enter a system design question</span>
           <span className="landing-body text-xs text-gray-300 mt-1">e.g. "Design a URL shortener like bit.ly"</span>
@@ -1239,7 +1239,7 @@ function CodingLayout({
               <div className="flex-shrink-0 border-b border-[var(--border)]">
                 <div className="flex items-center justify-between px-3 py-2 bg-[var(--bg-elevated)]">
                   <div className="flex items-center gap-2">
-                    <div className="w-1 h-4 rounded-full" style={{ background: '#10b981' }} />
+                    <div className="w-1 h-4 rounded-full" style={{ background: 'var(--accent)' }} />
                     <h2 className="text-sm font-semibold text-[var(--text-primary)]">System Design</h2>
                     <button onClick={onSavedDesignsClick} aria-label="View saved designs" className={`flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-lg transition-all duration-200 ${savedDesignsCount > 0 ? 'bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--accent)]' : 'bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border)] hover:border-[var(--border-hover)]'}`}>
                       <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" /></svg>

@@ -4,7 +4,7 @@ import SiteNav from '../components/shared/SiteNav';
 
 export default function NotFoundPage() {
   return (
-    <div className="min-h-screen bg-[#09090b] text-gray-100">
+    <div className="min-h-screen text-gray-100" style={{ background: 'var(--bg-base)' }}>
       <SiteNav />
 
       {/* Content */}

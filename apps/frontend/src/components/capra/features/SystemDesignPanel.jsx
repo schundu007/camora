@@ -471,7 +471,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
         </div>
         {/* Diagram with Pan+Zoom */}
         <div
-          className="flex-1 min-h-0 overflow-hidden cursor-grab active:cursor-grabbing relative"
+          className="flex-1 overflow-hidden cursor-grab active:cursor-grabbing relative" style={{ minHeight: '500px' }}
           onWheel={(e) => { if (diagramData) { e.preventDefault(); setDiagramScale(s => Math.min(4, Math.max(0.3, s + (e.deltaY > 0 ? -0.1 : 0.1)))); } }}
           onMouseDown={(e) => { if (diagramData) { setIsDragging(true); setDragStart({ x: e.clientX - diagramTranslate.x, y: e.clientY - diagramTranslate.y }); } }}
           onMouseMove={(e) => { if (isDragging) { setDiagramTranslate({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y }); } }}
@@ -727,7 +727,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
                       <div className="flex items-center gap-2 mb-1">
                         <span className={`px-1.5 py-0.5 text-xs font-bold rounded ${
                           api.method === 'GET' ? 'bg-blue-100 text-blue-700' :
-                          api.method === 'POST' ? 'bg-green-100 text-green-700' :
+                          api.method === 'POST' ? 'bg-[var(--success)]/10 text-[var(--success)]' :
                           api.method === 'PUT' ? 'bg-yellow-100 text-yellow-700' :
                           api.method === 'DELETE' ? 'bg-red-100 text-red-700' :
                           'bg-[var(--bg-elevated)] text-[var(--text-secondary)]'
