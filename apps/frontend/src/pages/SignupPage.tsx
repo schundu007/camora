@@ -54,7 +54,7 @@ export default function SignupPage() {
             <div className="space-y-2">
               {['3 live interview sessions', 'Browse all 415+ prep topics', 'Mock interview practice'].map(item => (
                 <div key={item} className="flex items-center gap-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
-                  <svg className="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                  <svg className="w-4 h-4 text-[var(--accent)] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
                   {item}
@@ -67,7 +67,7 @@ export default function SignupPage() {
           <div className="mt-6 pt-4 text-center" style={{ borderTop: '1px solid var(--border)' }}>
             <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
               Already have an account?{' '}
-              <Link to="/login" className="text-emerald-400 hover:text-emerald-300 font-semibold">Sign in</Link>
+              <Link to="/login" className="text-[var(--accent)] hover:opacity-80 font-semibold">Sign in</Link>
             </p>
           </div>
         </div>

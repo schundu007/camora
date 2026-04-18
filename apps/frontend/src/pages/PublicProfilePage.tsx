@@ -127,7 +127,7 @@ export default function PublicProfilePage() {
           </p>
           <Link
             to="/"
-            className="mt-8 inline-flex items-center gap-2 px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium rounded-lg transition-colors"
+            className="mt-8 inline-flex items-center gap-2 px-6 py-2.5 bg-[var(--accent)] hover:opacity-90 text-white text-sm font-medium rounded-lg transition-colors"
           >
             Go to Camora
           </Link>
@@ -288,7 +288,7 @@ export default function PublicProfilePage() {
           <div className="flex flex-col sm:flex-row gap-3 justify-center mt-6">
             <Link
               to="/signup"
-              className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium rounded-lg transition-colors"
+              className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-[var(--accent)] hover:opacity-90 text-white text-sm font-medium rounded-lg transition-colors"
             >
               Get Started Free
             </Link>
