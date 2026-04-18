@@ -136,7 +136,7 @@ export function LumoraSettings({ isOpen, onClose }: LumoraSettingsProps) {
                 {voiceMode === 'filter-candidate' ? (
                   <div>
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="text-xs font-bold uppercase tracking-wider" style={{ color: '#76B900' }}>Step 1</span>
+                      <span className="text-xs font-bold uppercase tracking-wider" style={{ color: '#F97316' }}>Step 1</span>
                       <span className="text-xs" style={{ color: '#64748b' }}>Enroll your voice (5-second sample)</span>
                     </div>
                     <VoiceEnrollment disabled={false} variant="light" />
@@ -147,7 +147,7 @@ export function LumoraSettings({ isOpen, onClose }: LumoraSettingsProps) {
                 ) : (
                   <div>
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="text-xs font-bold uppercase tracking-wider" style={{ color: '#76B900' }}>Step 1</span>
+                      <span className="text-xs font-bold uppercase tracking-wider" style={{ color: '#F97316' }}>Step 1</span>
                       <span className="text-xs" style={{ color: '#64748b' }}>Enroll your voice (5-second sample)</span>
                     </div>
                     <VoiceEnrollment disabled={false} variant="light" />
@@ -193,10 +193,10 @@ function SettingCard({ icon, title, description, children }: {
 }) {
   return (
     <div className="p-4 rounded-xl transition-all hover:shadow-sm" style={{ background: '#ffffff', border: '1px solid #e2e8f0' }}>
-      <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3" style={{ background: '#f1f5f9', color: '#76B900' }}>
+      <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3" style={{ background: '#f1f5f9', color: '#F97316' }}>
         {icon}
       </div>
-      <h4 className="text-sm font-bold mb-1" style={{ color: '#76B900', fontFamily: "'Satoshi', sans-serif" }}>{title}</h4>
+      <h4 className="text-sm font-bold mb-1" style={{ color: '#F97316', fontFamily: "'Satoshi', sans-serif" }}>{title}</h4>
       <p className="text-xs leading-relaxed" style={{ color: '#64748b' }}>{description}</p>
       {children}
     </div>
@@ -212,27 +212,27 @@ function VoiceModeCard({ active, onClick, icon, title, description, badge, disab
       onClick={disabled ? undefined : onClick}
       className="p-5 rounded-xl text-left transition-all relative"
       style={{
-        background: active ? '#76B90008' : '#ffffff',
-        border: active ? '2px solid #76B900' : '1.5px solid #e2e8f0',
-        boxShadow: active ? '0 4px 20px rgba(118,185,0,0.1)' : 'none',
+        background: active ? '#F9731608' : '#ffffff',
+        border: active ? '2px solid #F97316' : '1.5px solid #e2e8f0',
+        boxShadow: active ? '0 4px 20px rgba(249,115,22,0.1)' : 'none',
         opacity: disabled ? 0.5 : 1,
         cursor: disabled ? 'not-allowed' : 'pointer',
       }}
     >
       {badge && (
         <span className="absolute top-3 right-3 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
-          style={{ background: disabled ? '#00000010' : '#76B90015', color: disabled ? '#000000' : '#76B900' }}>
+          style={{ background: disabled ? '#00000010' : '#F9731615', color: disabled ? '#000000' : '#F97316' }}>
           {badge}
         </span>
       )}
       {/* Radio indicator */}
       <div className="flex items-start gap-3">
         <div className="mt-0.5 w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0"
-          style={{ borderColor: active ? '#76B900' : '#cbd5e1' }}>
-          {active && <div className="w-2 h-2 rounded-full" style={{ background: '#76B900' }} />}
+          style={{ borderColor: active ? '#F97316' : '#cbd5e1' }}>
+          {active && <div className="w-2 h-2 rounded-full" style={{ background: '#F97316' }} />}
         </div>
         <div>
-          <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3" style={{ background: active ? '#76B90015' : '#f1f5f9', color: active ? '#76B900' : '#94a3b8' }}>
+          <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3" style={{ background: active ? '#F9731615' : '#f1f5f9', color: active ? '#F97316' : '#94a3b8' }}>
             {icon}
           </div>
           <h4 className="text-sm font-bold mb-1" style={{ color: '#0f172a', fontFamily: "'Satoshi', sans-serif" }}>{title}</h4>

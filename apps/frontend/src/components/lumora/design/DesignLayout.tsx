@@ -260,7 +260,7 @@ const layerAccents = [
   { accent: '#0891b2', bg: 'rgba(8,145,178,0.04)', border: 'rgba(8,145,178,0.15)' },
   { accent: '#dc2626', bg: 'rgba(220,38,38,0.04)', border: 'rgba(220,38,38,0.15)' },
   { accent: '#5E9400', bg: 'rgba(79,70,229,0.04)', border: 'rgba(79,70,229,0.15)' },
-  { accent: '#0d9488', bg: 'rgba(13,148,136,0.04)', border: 'rgba(13,148,136,0.15)' },
+  { accent: '#F97316', bg: 'rgba(249,115,22,0.04)', border: 'rgba(249,115,22,0.15)' },
 ];
 
 /** Format seconds as MM:SS */
@@ -273,14 +273,14 @@ function formatTime(seconds: number): string {
 function useTheme(_dark: boolean) {
   return {
     cardBg: '#ffffff', cardBorder: '#e5e7eb',
-    headerBg: 'rgba(11,92,255,0.05)', headerBorder: '#e0e7ff',
-    headerText: '#76B900', badgeBg: '#76B90010', badgeText: '#76B900',
+    headerBg: 'rgba(249,115,22,0.05)', headerBorder: '#e0e7ff',
+    headerText: '#F97316', badgeBg: '#F9731610', badgeText: '#F97316',
     text: '#111827', textMuted: '#6b7280', textDim: '#9ca3af',
     codeBg: '#f9fafb', codeText: '#1f2937',
     inputBg: '#ffffff', inputBorder: '#e5e7eb', inputText: '#111827',
     sectionBg: '#f9fafb', surfaceBg: '#ffffff',
-    tabActive: '#76B900', tabActiveBg: '#ffffff', tabText: '#6b7280',
-    dotColor: '#76B900',
+    tabActive: '#F97316', tabActiveBg: '#ffffff', tabText: '#6b7280',
+    dotColor: '#F97316',
   };
 }
 
@@ -601,7 +601,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
           </button>
           <div className="h-4 w-px bg-white/10" />
           <div className="flex items-center gap-1.5">
-            <div className="w-5 h-5 md:w-6 md:h-6 rounded flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #76B900, #91C733)' }}>
+            <div className="w-5 h-5 md:w-6 md:h-6 rounded flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #F97316, #91C733)' }}>
               <span className="text-white text-[10px] md:text-xs font-extrabold">L</span>
             </div>
             <span className="text-white font-extrabold text-xs md:text-sm" style={{ fontFamily: "'Source Sans 3', sans-serif" }}>System Design</span>
@@ -702,7 +702,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                   className={`px-2.5 py-1 text-[10px] md:text-xs font-bold rounded-md transition-all ${
                     inputTab === tab ? 'text-white' : 'text-slate-500 hover:text-slate-700'
                   }`}
-                  style={inputTab === tab ? { background: '#76B900', color: '#ffffff', boxShadow: '0 1px 4px rgba(0,0,0,0.1)' } : {}}
+                  style={inputTab === tab ? { background: '#F97316', color: '#ffffff', boxShadow: '0 1px 4px rgba(0,0,0,0.1)' } : {}}
                 >
                   {tab === 'text' ? 'Text' : tab === 'url' ? 'URL' : 'Image'}
                 </button>
@@ -809,7 +809,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
             <button
               onClick={handleSubmit}
               disabled={!problemText.trim() || isLoading}
-              className="w-full py-2.5 text-white text-sm font-bold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2" style={{ background: 'linear-gradient(135deg, #76B900, #76B900)', borderRadius: '10px' }}
+              className="w-full py-2.5 text-white text-sm font-bold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2" style={{ background: 'linear-gradient(135deg, #F97316, #F97316)', borderRadius: '10px' }}
             >
               {isLoading ? (
                 <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Generating...</>
@@ -891,7 +891,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
               {result?.pitch && result.pitch !== sd.overview && (
                 <section className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${t.cardBorder}`, background: t.cardBg, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
                   <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: t.headerBg }}>
-                    <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, ${t.dotColor}, #76B900)` }} />
+                    <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, ${t.dotColor}, #F97316)` }} />
                     <h2 className="text-sm font-bold" style={{ color: t.headerText }}>Explanation</h2>
                   </div>
                   <div className="px-4 py-3">

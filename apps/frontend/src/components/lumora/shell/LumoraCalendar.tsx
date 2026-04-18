@@ -7,8 +7,8 @@ import { useAuth } from '@/contexts/AuthContext';
 
 const C = {
   base: '#ffffff', surface: '#f8fafc', elevated: '#f1f5f9',
-  text: '#0f172a', muted: '#64748b', accent: '#76B900',
-  accentBg: 'rgba(11,92,255,0.08)', border: '#e2e8f0',
+  text: '#0f172a', muted: '#64748b', accent: '#F97316',
+  accentBg: 'rgba(249,115,22,0.08)', border: '#e2e8f0',
 };
 
 export function LumoraCalendar({ onClose }: { onClose: () => void }) {
@@ -18,7 +18,7 @@ export function LumoraCalendar({ onClose }: { onClose: () => void }) {
   // Google Calendar embed URL — uses the authenticated user's email
   const email = user?.email || '';
   const calendarSrc = email
-    ? `https://calendar.google.com/calendar/embed?src=${encodeURIComponent(email)}&mode=${view === 'week' ? 'WEEK' : 'MONTH'}&showTitle=0&showNav=1&showPrint=0&showTabs=0&showCalendars=0&bgcolor=%23ffffff&color=%230B5CFF`
+    ? `https://calendar.google.com/calendar/embed?src=${encodeURIComponent(email)}&mode=${view === 'week' ? 'WEEK' : 'MONTH'}&showTitle=0&showNav=1&showPrint=0&showTabs=0&showCalendars=0&bgcolor=%23ffffff&color=%23F97316`
     : '';
 
   return (
@@ -75,7 +75,7 @@ export function LumoraCalendar({ onClose }: { onClose: () => void }) {
             Sign in to view your interview schedule
           </p>
           <a href="https://calendar.google.com" target="_blank" rel="noopener noreferrer"
-            className="px-4 py-2 rounded-xl text-xs font-bold transition-all" style={{ background: '#76B900', color: '#fff' }}>
+            className="px-4 py-2 rounded-xl text-xs font-bold transition-all" style={{ background: '#F97316', color: '#fff' }}>
             Open Google Calendar
           </a>
         </div>

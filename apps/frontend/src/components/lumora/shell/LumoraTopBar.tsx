@@ -9,11 +9,11 @@ import type { LumoraTab } from './LumoraIconRail';
 const C = {
   base: '#000000',
   surface: '#111111',
-  elevated: '#76B900',
+  elevated: '#F97316',
   text: '#ffffff',
   muted: 'rgba(255,255,255,0.5)',
-  accent: '#76B900',
-  accentBg: 'rgba(118,185,0,0.15)',
+  accent: '#F97316',
+  accentBg: 'rgba(249,115,22,0.15)',
   border: '#333333',
 };
 
