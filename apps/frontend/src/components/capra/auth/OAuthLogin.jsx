@@ -25,7 +25,7 @@ export default function OAuthLogin() {
   useEffect(() => { setMounted(true); window.scrollTo(0, 0); }, []);
 
   return (
-    <div className="min-h-screen text-[var(--text-primary)] overflow-hidden landing-root" style={{ background: 'linear-gradient(180deg, #fdf2f8 0%, #ede9fe 50%, #FED7AA 100%)', paddingBottom: '52px' }}>
+    <div className="min-h-screen text-[var(--text-primary)] overflow-hidden landing-root" style={{ background: 'linear-gradient(180deg, #fdf2f8 0%, #ede9fe 50%, #D4F0A0 100%)', paddingBottom: '52px' }}>
       <SiteNav />
 
       {/* Hero */}
@@ -78,9 +78,9 @@ export default function OAuthLogin() {
         <div className="max-w-5xl mx-auto">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 pt-6 px-2">
             {[
-              { label: 'Apply', href: '/jobs', icon: 'briefcase', desc: 'Find your role', bg: '#ecfdf5', bgEnd: '#d1fae5', border: '#6ee7b7', borderEnd: '#FB923C', badge: '#F97316', iconColor: '#F97316', glowColor: '16,185,129', slideFrom: 'left' },
+              { label: 'Apply', href: '/jobs', icon: 'briefcase', desc: 'Find your role', bg: '#ecfdf5', bgEnd: '#d1fae5', border: '#6ee7b7', borderEnd: '#91C733', badge: '#76B900', iconColor: '#76B900', glowColor: '16,185,129', slideFrom: 'left' },
               { label: 'Prepare', href: '/capra/prepare', icon: 'book', desc: 'Study & review', bg: '#ecfeff', bgEnd: '#cffafe', border: '#67e8f9', borderEnd: '#22d3ee', badge: '#0891b2', iconColor: '#0891b2', glowColor: '8,145,178', slideFrom: 'bottom' },
-              { label: 'Practice', href: '/capra/practice', icon: 'code', desc: 'Solve problems', bg: '#f5f3ff', bgEnd: '#ede9fe', border: '#c4b5fd', borderEnd: '#F97316', badge: '#7c3aed', iconColor: '#7c3aed', glowColor: '124,58,237', slideFrom: 'bottom' },
+              { label: 'Practice', href: '/capra/practice', icon: 'code', desc: 'Solve problems', bg: '#f5f3ff', bgEnd: '#ede9fe', border: '#c4b5fd', borderEnd: '#76B900', badge: '#7c3aed', iconColor: '#7c3aed', glowColor: '124,58,237', slideFrom: 'bottom' },
               { label: 'Attend', href: '/lumora', icon: 'microphone', desc: 'Ace the interview', bg: '#fffbeb', bgEnd: '#fef3c7', border: '#fcd34d', borderEnd: '#fbbf24', badge: '#d97706', iconColor: '#d97706', glowColor: '217,119,6', slideFrom: 'right' },
             ].map((item, i) => (
               <Link key={item.label} to={item.href} className={`journey-card journey-card-${i} group relative flex flex-col items-center gap-3 p-6 rounded-2xl text-center`} style={{ '--card-bg': item.bg, '--card-bg-end': item.bgEnd, '--card-border': item.border, '--card-border-end': item.borderEnd, '--card-glow': item.glowColor, animationDelay: `${i * 0.2}s` }}>

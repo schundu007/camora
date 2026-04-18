@@ -70,7 +70,7 @@ const LANGUAGES = [
 const CATEGORIES = [
   { id: 'all', label: 'All', color: '#10b981' },
   { id: 'frontend', label: 'Frontend', color: '#3b82f6' },
-  { id: 'backend', label: 'Backend', color: '#F97316' },
+  { id: 'backend', label: 'Backend', color: '#76B900' },
   { id: 'mobile', label: 'Mobile', color: '#ec4899' },
   { id: 'sql', label: 'SQL', color: '#f59e0b' },
   { id: 'devops', label: 'DevOps', color: '#06b6d4' },
@@ -138,7 +138,7 @@ export default function LanguageSelectorModal({ isOpen, onClose, selectedLanguag
         {/* Gradient Header Bar */}
         <div
           className="h-1.5"
-          style={{ background: 'linear-gradient(90deg, #10b981 0%, #3b82f6 50%, #F97316 100%)' }}
+          style={{ background: 'linear-gradient(90deg, #10b981 0%, #3b82f6 50%, #76B900 100%)' }}
         />
 
         {/* Header */}

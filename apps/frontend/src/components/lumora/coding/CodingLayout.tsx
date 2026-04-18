@@ -79,13 +79,13 @@ function formatTime(seconds: number): string {
 /** Color-code complexity notation from best (green) to worst (red) */
 function getComplexityColor(notation: string): string {
   const n = notation.toLowerCase().replace(/\s+/g, '');
-  if (/o\(1\)/.test(n)) return '#F97316';           // O(1) - best
+  if (/o\(1\)/.test(n)) return '#76B900';           // O(1) - best
   if (/o\(log/.test(n) && !/o\(n/.test(n)) return '#0891b2'; // O(log n) - great
   if (/o\(n\)$/.test(n)) return '#2563eb';           // O(n) - good
   if (/o\(n\s*log\s*n\)|o\(nlogn\)/.test(notation.toLowerCase())) return '#7c3aed'; // O(n log n)
   if (/o\(n[\^²]2?\)/.test(n)) return '#d97706';     // O(n²) - fair
   if (/o\(n[\^]3\)|o\(n³\)/.test(n)) return '#ea580c'; // O(n³) - poor
-  if (/o\(2[\^]n\)|o\(n!\)|o\(n\^n\)/.test(n)) return '#dc2626'; // exponential - bad
+  if (/o\(2[\^]n\)|o\(n!\)|o\(n\^n\)/.test(n)) return '#5E9400'; // exponential - bad
   return '#6b7280';
 }
 
@@ -116,16 +116,16 @@ interface CodingLayoutProps {
 function useTheme(_dark: boolean) {
   return {
     cardBg: '#ffffff', cardBorder: '#e5e7eb',
-    headerBg: 'rgba(249,115,22,0.05)', headerBorder: '#FED7AA',
-    headerText: '#F97316', badgeBg: '#F9731610', badgeText: '#F97316',
+    headerBg: 'rgba(118,185,0,0.05)', headerBorder: '#D4F0A0',
+    headerText: '#76B900', badgeBg: '#76B90010', badgeText: '#76B900',
     text: '#111827', textMuted: '#6b7280', textDim: '#9ca3af',
     codeBg: '#f9fafb', codeText: '#1f2937',
     inputBg: '#ffffff', inputBorder: '#e5e7eb', inputText: '#111827',
     sectionBg: '#f9fafb', surfaceBg: '#ffffff',
-    tabActive: '#F97316', tabActiveBg: '#ffffff', tabText: '#6b7280',
-    dotColor: '#F97316',
+    tabActive: '#76B900', tabActiveBg: '#ffffff', tabText: '#6b7280',
+    dotColor: '#76B900',
     passedBg: '#f0fdf4', passedBorder: '#bbf7d0', passedText: '#16a34a',
-    failedBg: '#fef2f2', failedBorder: '#fecaca', failedText: '#dc2626',
+    failedBg: '#fef2f2', failedBorder: '#fecaca', failedText: '#5E9400',
   };
 }
 
@@ -853,7 +853,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
 
                 {/* Generate Button */}
                 <button onClick={handleGenerateSolution} disabled={isLoading || !problemText.trim()}
-                  className="w-full py-2.5 text-white text-sm font-bold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2" style={{ background: 'linear-gradient(135deg, #F97316, #F97316)', borderRadius: '10px' }}>
+                  className="w-full py-2.5 text-white text-sm font-bold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2" style={{ background: 'linear-gradient(135deg, #76B900, #76B900)', borderRadius: '10px' }}>
                   {isLoading ? (
                     <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Generating...</>
                   ) : (
@@ -869,7 +869,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                 {/* Streaming state */}
                 {(isStreaming || (isLoading && !sd && !parsedBlocks?.length)) && !sd && (
                   <div className="space-y-3">
-                    <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'rgba(249,115,22,0.06)', border: '1px solid #FED7AA' }}>
+                    <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'rgba(118,185,0,0.06)', border: '1px solid #D4F0A0' }}>
                       <div className="relative w-4 h-4 shrink-0">
                         <div className="absolute inset-0 border-2 border-transparent border-t-indigo-400 rounded-full animate-spin" />
                       </div>
@@ -1130,7 +1130,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                 {LANGUAGES.map(l => <option key={l.id} value={l.id}>{l.label}</option>)}
               </select>
               <button onClick={handleRun} disabled={isRunning}
-                className="flex items-center gap-1.5 px-3 py-1 text-white text-xs font-bold rounded-md disabled:opacity-50 transition-colors shadow-sm" style={{ background: '#F97316' }}
+                className="flex items-center gap-1.5 px-3 py-1 text-white text-xs font-bold rounded-md disabled:opacity-50 transition-colors shadow-sm" style={{ background: '#76B900' }}
                 title="Run (Ctrl+Enter)">
                 {isRunning ? (
                   <><div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />Running...</>
@@ -1153,7 +1153,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
               </button>
-              <button onClick={handleCopyCode} className="p-1.5 rounded-md transition-colors" style={copyFeedback ? { color: '#F97316', background: t.badgeBg } : { color: t.textDim }} title="Copy code">
+              <button onClick={handleCopyCode} className="p-1.5 rounded-md transition-colors" style={copyFeedback ? { color: '#76B900', background: t.badgeBg } : { color: t.textDim }} title="Copy code">
                 {copyFeedback ? (
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
                 ) : (

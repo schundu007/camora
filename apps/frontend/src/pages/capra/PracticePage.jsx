@@ -158,9 +158,9 @@ function getDailyCategory(challenge) {
 }
 
 function scoreColor(s) {
-  if (s >= 70) return '#F97316';
+  if (s >= 70) return '#76B900';
   if (s >= 40) return '#d97706';
-  return '#dc2626';
+  return '#5E9400';
 }
 
 function scoreBg(s) {
@@ -170,9 +170,9 @@ function scoreBg(s) {
 }
 
 function diffColor(d) {
-  if (d === 'easy') return { bg: 'rgba(5,150,105,0.12)', text: '#F97316' };
+  if (d === 'easy') return { bg: 'rgba(5,150,105,0.12)', text: '#76B900' };
   if (d === 'medium') return { bg: 'rgba(217,119,6,0.12)', text: '#d97706' };
-  return { bg: 'rgba(220,38,38,0.12)', text: '#dc2626' };
+  return { bg: 'rgba(220,38,38,0.12)', text: '#5E9400' };
 }
 
 function catLabel(cat) {
@@ -221,10 +221,10 @@ function RadarChart({ values, labels, size = 200 }) {
         return <line key={i} x1={cx} y1={cy} x2={x} y2={y} stroke="var(--border)" strokeWidth={1} />;
       })}
       {/* Data shape */}
-      <path d={dataPath} fill="rgba(249,115,22,0.15)" stroke="#F97316" strokeWidth={2} />
+      <path d={dataPath} fill="rgba(118,185,0,0.15)" stroke="#76B900" strokeWidth={2} />
       {/* Data dots */}
       {dataPoints.map((p, i) => (
-        <circle key={i} cx={p[0]} cy={p[1]} r={4} fill="#F97316" stroke="#fff" strokeWidth={2} />
+        <circle key={i} cx={p[0]} cy={p[1]} r={4} fill="#76B900" stroke="#fff" strokeWidth={2} />
       ))}
       {/* Labels */}
       {labels.map((label, i) => {
@@ -266,7 +266,7 @@ function ScoreRing({ value, size = 140, strokeW = 10, animated = false }) {
 
 /* ══════════════════════════════ Sparkline ══════════════════════════════ */
 
-function Sparkline({ data, width = 100, height = 28, color = '#F97316' }) {
+function Sparkline({ data, width = 100, height = 28, color = '#76B900' }) {
   if (!data || data.length < 2) return null;
   const max = Math.max(...data, 1);
   const min = Math.min(...data, 0);
@@ -596,7 +596,7 @@ export default function PracticePage() {
           {phase === 'setup' && (
             <>
               {/* Readiness — compact inline */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16, padding: '12px 20px', background: 'var(--bg-surface)', border: 'none', borderRadius: 12, boxShadow: '0 4px 24px rgba(249,115,22,0.12)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16, padding: '12px 20px', background: 'var(--bg-surface)', border: 'none', borderRadius: 12, boxShadow: '0 4px 24px rgba(118,185,0,0.12)' }}>
                 {/* Readiness score */}
                 <div style={{ position: 'relative', width: 50, height: 50, shrink: 0 }}>
                   <svg width={50} height={50} style={{ transform: 'rotate(-90deg)' }}>
@@ -622,7 +622,7 @@ export default function PracticePage() {
                 {/* Category bars inline */}
                 {CATEGORIES.map(cat => {
                   const s = getCategoryScore(stats, cat);
-                  const colors = { coding: '#F97316', 'system-design': '#06b6d4', behavioral: '#f59e0b' };
+                  const colors = { coding: '#76B900', 'system-design': '#06b6d4', behavioral: '#f59e0b' };
                   return (
                     <div key={cat} style={{ flex: 1, minWidth: 80 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, marginBottom: 3 }}>
@@ -638,7 +638,7 @@ export default function PracticePage() {
               </div>
 
               {/* Challenge Configuration */}
-              <div style={{ background: 'var(--bg-surface)', border: 'none', borderRadius: 16, overflow: 'hidden', boxShadow: '0 4px 24px rgba(249,115,22,0.12)', marginBottom: 24 }}>
+              <div style={{ background: 'var(--bg-surface)', border: 'none', borderRadius: 16, overflow: 'hidden', boxShadow: '0 4px 24px rgba(118,185,0,0.12)', marginBottom: 24 }}>
                 <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border)' }}>
                   <h2 className="practice-display" style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>Start a Challenge</h2>
                 </div>
@@ -649,9 +649,9 @@ export default function PracticePage() {
                     <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10, display: 'block' }}>Mode</label>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10 }}>
                       {MODES.map(m => (
-                        <button key={m.id} onClick={() => setMode(m.id)} style={{ padding: '16px 18px', borderRadius: 14, border: mode === m.id ? '2px solid #F97316' : '1px solid var(--border)', background: mode === m.id ? 'var(--accent-subtle)' : 'var(--bg-surface)', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>
+                        <button key={m.id} onClick={() => setMode(m.id)} style={{ padding: '16px 18px', borderRadius: 14, border: mode === m.id ? '2px solid #76B900' : '1px solid var(--border)', background: mode === m.id ? 'var(--accent-subtle)' : 'var(--bg-surface)', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                            <div style={{ width: 28, height: 28, borderRadius: 8, background: mode === m.id ? '#F97316' : 'var(--bg-elevated)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <div style={{ width: 28, height: 28, borderRadius: 8, background: mode === m.id ? '#76B900' : 'var(--bg-elevated)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                               <Icon name={m.icon} size={14} style={{ color: mode === m.id ? '#fff' : '#94a3b8' }} />
                             </div>
                             <span style={{ fontSize: 14, fontWeight: 700, color: mode === m.id ? '#5E9400' : 'var(--text-primary)' }}>{m.label}</span>
@@ -669,7 +669,7 @@ export default function PracticePage() {
                       <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10, display: 'block' }}>Category</label>
                       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                         {CATEGORIES.map(c => (
-                          <button key={c} onClick={() => setCategory(c)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 18px', borderRadius: 10, border: category === c ? '2px solid #F97316' : '1px solid var(--border)', background: category === c ? 'var(--accent-subtle)' : 'var(--bg-surface)', color: category === c ? '#5E9400' : 'var(--text-secondary)', fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s' }}>
+                          <button key={c} onClick={() => setCategory(c)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 18px', borderRadius: 10, border: category === c ? '2px solid #76B900' : '1px solid var(--border)', background: category === c ? 'var(--accent-subtle)' : 'var(--bg-surface)', color: category === c ? '#5E9400' : 'var(--text-secondary)', fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s' }}>
                             <Icon name={catIcon(c)} size={14} />
                             {catLabel(c)}
                           </button>
@@ -705,7 +705,7 @@ export default function PracticePage() {
 
                 {/* CTA Footer */}
                 <div style={{ padding: '16px 24px', background: 'var(--bg-elevated)', borderTop: '1px solid var(--border)', textAlign: 'center' }}>
-                  <button onClick={() => startChallenge()} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '13px 36px', background: 'linear-gradient(135deg, #F97316, #F97316)', color: '#fff', fontSize: 15, fontWeight: 700, borderRadius: 12, border: 'none', cursor: 'pointer', boxShadow: '0 4px 14px rgba(249,115,22,0.3)', transition: 'transform 0.15s, box-shadow 0.15s' }}>
+                  <button onClick={() => startChallenge()} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '13px 36px', background: 'linear-gradient(135deg, #76B900, #76B900)', color: '#fff', fontSize: 15, fontWeight: 700, borderRadius: 12, border: 'none', cursor: 'pointer', boxShadow: '0 4px 14px rgba(118,185,0,0.3)', transition: 'transform 0.15s, box-shadow 0.15s' }}>
                     <Icon name="play" size={16} style={{ color: '#fff' }} />
                     Start Challenge
                   </button>
@@ -742,7 +742,7 @@ export default function PracticePage() {
                       const hDC = diffColor(h.difficulty || 'medium');
                       const companyObj = COMPANIES.find(c => c.id === h.company);
                       return (
-                        <div key={i} style={{ background: 'var(--bg-surface)', border: 'none', borderRadius: 12, overflow: 'hidden', boxShadow: '0 4px 24px rgba(249,115,22,0.12)' }}>
+                        <div key={i} style={{ background: 'var(--bg-surface)', border: 'none', borderRadius: 12, overflow: 'hidden', boxShadow: '0 4px 24px rgba(118,185,0,0.12)' }}>
                           <button onClick={() => setExpandedHistory(expandedHistory === i ? null : i)} style={{ width: '100%', padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 12, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
                             <Icon name={catIcon(h.category || 'coding')} size={18} style={{ color: 'var(--text-muted)' }} />
                             <div style={{ flex: 1 }}>
@@ -794,7 +794,7 @@ export default function PracticePage() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     {questions.map((_, qi) => (
-                      <div key={qi} style={{ width: qi === currentIdx ? 18 : 8, height: 8, borderRadius: 99, background: qi < currentIdx ? '#F97316' : qi === currentIdx ? '#F97316' : 'var(--border)', transition: 'all 0.3s' }} />
+                      <div key={qi} style={{ width: qi === currentIdx ? 18 : 8, height: 8, borderRadius: 99, background: qi < currentIdx ? '#76B900' : qi === currentIdx ? '#76B900' : 'var(--border)', transition: 'all 0.3s' }} />
                     ))}
                   </div>
                   <InterviewTimer
@@ -811,7 +811,7 @@ export default function PracticePage() {
               </div>
 
               {/* Question card */}
-              <div style={{ background: 'var(--bg-surface)', border: 'none', borderRadius: 16, padding: 24, marginBottom: 16, boxShadow: '0 4px 24px rgba(249,115,22,0.12)' }}>
+              <div style={{ background: 'var(--bg-surface)', border: 'none', borderRadius: 16, padding: 24, marginBottom: 16, boxShadow: '0 4px 24px rgba(118,185,0,0.12)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
                   <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', padding: '2px 8px', borderRadius: 99, background: diffColor(questions[currentIdx].difficulty).bg, color: diffColor(questions[currentIdx].difficulty).text }}>{questions[currentIdx].difficulty}</span>
                   <span style={{ fontSize: 10, fontWeight: 500, padding: '2px 8px', borderRadius: 99, background: 'var(--bg-elevated)', color: 'var(--text-muted)' }}>{catLabel(category)}</span>
@@ -822,7 +822,7 @@ export default function PracticePage() {
                     ) : null;
                   })}
                   {questions[currentIdx].topics?.slice(0, 2).map(t => (
-                    <span key={t} style={{ fontSize: 10, fontWeight: 500, padding: '2px 6px', borderRadius: 99, background: 'rgba(124,58,237,0.12)', color: '#F97316' }}>{t}</span>
+                    <span key={t} style={{ fontSize: 10, fontWeight: 500, padding: '2px 6px', borderRadius: 99, background: 'rgba(124,58,237,0.12)', color: '#76B900' }}>{t}</span>
                   ))}
                 </div>
                 <h2 className="practice-display" style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 6px' }}>
@@ -854,7 +854,7 @@ export default function PracticePage() {
               {category === 'system-design' && !inlineEval && (() => {
                 const SD_SECTIONS = [
                   { label: 'Functional Req.', icon: 'clipboard', color: '#3b82f6', placeholder: 'List core functional requirements...' },
-                  { label: 'Non-Functional Req.', icon: 'shield', color: '#F97316', placeholder: 'Latency, availability, consistency, scale...' },
+                  { label: 'Non-Functional Req.', icon: 'shield', color: '#76B900', placeholder: 'Latency, availability, consistency, scale...' },
                   { label: 'Components', icon: 'layers', color: '#10b981', placeholder: 'Key services, databases, caches...' },
                   { label: 'Data Flow', icon: 'gitBranch', color: '#06b6d4', placeholder: 'Request path, data pipeline...' },
                   { label: 'Layered Design', icon: 'server', color: '#f59e0b', placeholder: 'API layer, business logic, storage...' },
@@ -997,7 +997,7 @@ export default function PracticePage() {
                   <div style={{ marginBottom: 8 }}>
                     {/* Auto-generate button */}
                     <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
-                      <button onClick={autoGenerate} disabled={sdGenerating} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', fontSize: 12, fontWeight: 600, color: sdGenerating ? 'var(--text-muted)' : '#F97316', background: sdGenerating ? 'var(--bg-elevated)' : 'rgba(139,92,246,0.1)', border: `1px solid ${sdGenerating ? 'var(--border)' : 'rgba(139,92,246,0.25)'}`, borderRadius: 8, cursor: sdGenerating ? 'wait' : 'pointer' }}>
+                      <button onClick={autoGenerate} disabled={sdGenerating} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', fontSize: 12, fontWeight: 600, color: sdGenerating ? 'var(--text-muted)' : '#76B900', background: sdGenerating ? 'var(--bg-elevated)' : 'rgba(139,92,246,0.1)', border: `1px solid ${sdGenerating ? 'var(--border)' : 'rgba(139,92,246,0.25)'}`, borderRadius: 8, cursor: sdGenerating ? 'wait' : 'pointer' }}>
                         {sdGenerating ? (
                           <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ animation: 'spin 1s linear infinite' }}><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Generating...</>
                         ) : (
@@ -1064,7 +1064,7 @@ export default function PracticePage() {
                   {['Situation', 'Task', 'Action', 'Result'].map((section, si) => {
                     const parts = (answers[currentIdx] || '').split('---STAR---');
                     const val = parts[si] || '';
-                    const colors = { Situation: '#3b82f6', Task: '#F97316', Action: '#10b981', Result: '#f59e0b' };
+                    const colors = { Situation: '#3b82f6', Task: '#76B900', Action: '#10b981', Result: '#f59e0b' };
                     return (
                       <div key={section}>
                         <label style={{ fontSize: 11, fontWeight: 600, color: colors[section], marginBottom: 4, display: 'flex', alignItems: 'center', gap: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
@@ -1094,7 +1094,7 @@ export default function PracticePage() {
 
               {/* Inline Evaluation */}
               {inlineEval && (
-                <div style={{ background: 'var(--bg-surface)', border: 'none', borderRadius: 16, padding: 24, marginBottom: 16, boxShadow: '0 4px 24px rgba(249,115,22,0.12)' }}>
+                <div style={{ background: 'var(--bg-surface)', border: 'none', borderRadius: 16, padding: 24, marginBottom: 16, boxShadow: '0 4px 24px rgba(118,185,0,0.12)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16 }}>
                     <ScoreRing value={inlineEval.score} size={80} strokeW={7} animated />
                     <div style={{ flex: 1 }}>
@@ -1136,7 +1136,7 @@ export default function PracticePage() {
 
                   {/* Next button */}
                   <div style={{ marginTop: 16 }}>
-                    <button onClick={moveToNext} style={{ padding: '10px 24px', background: 'linear-gradient(135deg, #F97316, #F97316)', color: '#fff', fontSize: 14, fontWeight: 600, borderRadius: 10, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <button onClick={moveToNext} style={{ padding: '10px 24px', background: 'linear-gradient(135deg, #76B900, #76B900)', color: '#fff', fontSize: 14, fontWeight: 600, borderRadius: 10, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
                       {currentIdx < questions.length - 1 ? (
                         <>Next Question <Icon name="arrowRight" size={14} style={{ color: '#fff' }} /></>
                       ) : (
@@ -1150,7 +1150,7 @@ export default function PracticePage() {
               {/* Controls (only when not showing inline eval) */}
               {!inlineEval && (
                 <div style={{ display: 'flex', gap: 10, marginTop: 12, flexWrap: 'wrap' }}>
-                  <button onClick={submitAnswer} disabled={evaluating} style={{ padding: '10px 24px', background: 'linear-gradient(135deg, #F97316, #F97316)', color: '#fff', fontSize: 14, fontWeight: 600, borderRadius: 10, border: 'none', cursor: evaluating ? 'wait' : 'pointer', opacity: evaluating ? 0.7 : 1, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <button onClick={submitAnswer} disabled={evaluating} style={{ padding: '10px 24px', background: 'linear-gradient(135deg, #76B900, #76B900)', color: '#fff', fontSize: 14, fontWeight: 600, borderRadius: 10, border: 'none', cursor: evaluating ? 'wait' : 'pointer', opacity: evaluating ? 0.7 : 1, display: 'flex', alignItems: 'center', gap: 6 }}>
                     {evaluating ? (
                       <><Icon name="loader" size={14} style={{ color: '#fff', animation: 'spin 1s linear infinite' }} /> Evaluating...</>
                     ) : 'Submit Answer'}
@@ -1218,7 +1218,7 @@ export default function PracticePage() {
                   <button onClick={() => { setPhase('setup'); setStats(getStats()); setInlineEval(null); }} style={{ padding: '11px 22px', background: 'rgba(255,255,255,0.06)', color: '#e2e8f0', fontSize: 13, fontWeight: 600, borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', backdropFilter: 'blur(8px)', transition: 'all 0.2s' }}>
                     Back to Dashboard
                   </button>
-                  <button onClick={startChallenge} style={{ padding: '11px 22px', background: 'linear-gradient(135deg, #F97316, #F97316)', color: '#fff', fontSize: 13, fontWeight: 600, borderRadius: 10, border: 'none', cursor: 'pointer', boxShadow: '0 4px 14px rgba(249,115,22,0.3)', transition: 'all 0.2s' }}>
+                  <button onClick={startChallenge} style={{ padding: '11px 22px', background: 'linear-gradient(135deg, #76B900, #76B900)', color: '#fff', fontSize: 13, fontWeight: 600, borderRadius: 10, border: 'none', cursor: 'pointer', boxShadow: '0 4px 14px rgba(118,185,0,0.3)', transition: 'all 0.2s' }}>
                     Try Again
                   </button>
                   <button onClick={() => { setDifficulty('medium'); setPhase('setup'); setStats(getStats()); }} style={{ padding: '11px 22px', background: 'rgba(139,92,246,0.15)', color: '#c4b5fd', fontSize: 13, fontWeight: 600, borderRadius: 10, border: '1px solid rgba(139,92,246,0.2)', cursor: 'pointer', transition: 'all 0.2s' }}>
@@ -1234,7 +1234,7 @@ export default function PracticePage() {
                     const val = resultDimensions[k] || 0;
                     const dimColor = val >= 70 ? '#10b981' : val >= 50 ? '#f59e0b' : '#ef4444';
                     return (
-                      <div key={k} style={{ background: 'var(--bg-surface)', border: 'none', borderRadius: 14, padding: '16px 18px', boxShadow: '0 4px 24px rgba(249,115,22,0.12)' }}>
+                      <div key={k} style={{ background: 'var(--bg-surface)', border: 'none', borderRadius: 14, padding: '16px 18px', boxShadow: '0 4px 24px rgba(118,185,0,0.12)' }}>
                         <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>{DIMENSION_LABELS[i]}</div>
                         <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
                           <span style={{ fontSize: 22, fontWeight: 800, color: dimColor }}>{val}</span>
@@ -1267,7 +1267,7 @@ export default function PracticePage() {
               )}
 
               {/* ── Question Breakdown ── */}
-              <div style={{ background: 'var(--bg-surface)', border: 'none', borderRadius: 16, overflow: 'hidden', boxShadow: '0 4px 24px rgba(249,115,22,0.12)' }}>
+              <div style={{ background: 'var(--bg-surface)', border: 'none', borderRadius: 16, overflow: 'hidden', boxShadow: '0 4px 24px rgba(118,185,0,0.12)' }}>
                 <div style={{ padding: '18px 24px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <h3 className="practice-display" style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>Question Breakdown</h3>
                   <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500 }}>{passed} of {total} passed</span>
@@ -1282,7 +1282,7 @@ export default function PracticePage() {
                     <div key={i} style={{ borderBottom: i < questions.length - 1 ? '1px solid var(--border)' : 'none' }}>
                       <button onClick={() => setExpandedHistory(isExpanded ? null : `result-${i}`)} style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 24px', background: isExpanded ? 'var(--bg-elevated)' : 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left', transition: 'background 0.15s' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                          <div style={{ width: 26, height: 26, borderRadius: 8, background: pass ? 'rgba(5,150,105,0.12)' : 'rgba(220,38,38,0.12)', color: pass ? '#F97316' : '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, flexShrink: 0 }}>{i + 1}</div>
+                          <div style={{ width: 26, height: 26, borderRadius: 8, background: pass ? 'rgba(5,150,105,0.12)' : 'rgba(220,38,38,0.12)', color: pass ? '#76B900' : '#5E9400', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, flexShrink: 0 }}>{i + 1}</div>
                           <div>
                             <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>{q.q}</span>
                             {q.difficulty && <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', marginLeft: 8, textTransform: 'capitalize' }}>{q.difficulty}</span>}
@@ -1314,7 +1314,7 @@ export default function PracticePage() {
                                 {showModelAnswer === `r-${i}` ? 'Hide' : 'Show'} Model Answer
                               </button>
                               {showModelAnswer === `r-${i}` && (
-                                <div style={{ marginTop: 8, padding: 14, background: 'var(--accent-subtle)', borderRadius: 10, border: '1px solid rgba(249,115,22,0.25)', fontSize: 12, color: 'var(--accent-hover)', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
+                                <div style={{ marginTop: 8, padding: 14, background: 'var(--accent-subtle)', borderRadius: 10, border: '1px solid rgba(118,185,0,0.25)', fontSize: 12, color: 'var(--accent-hover)', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
                                   {ma.modelAnswer}
                                 </div>
                               )}
@@ -1338,7 +1338,7 @@ export default function PracticePage() {
         .practice-root { -webkit-font-smoothing: antialiased; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
         .practice-display { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
         .practice-mono { font-family: 'IBM Plex Mono', monospace; }
-        textarea:focus { border-color: #F97316 !important; box-shadow: 0 0 0 3px rgba(249,115,22,0.1); }
+        textarea:focus { border-color: #76B900 !important; box-shadow: 0 0 0 3px rgba(118,185,0,0.1); }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
       `}</style>
     </div>
