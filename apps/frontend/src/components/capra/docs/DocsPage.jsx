@@ -935,11 +935,11 @@ export default function DocsPage({ onBack }) {
                     </h1>
                     <p className="text-base md:text-lg text-[var(--text-muted)] max-w-2xl leading-relaxed landing-body">
                       {activePage === 'coding' && 'Master the fundamental data structures and algorithms needed to ace technical interviews at top tech companies.'}
-                      {activePage === 'system-design' && 'Master distributed systems, scalability patterns, and architecture trade-offs. From fundamentals to real-world designs at top companies.'}
+                      {activePage === 'system-design' && ''}
                       {activePage === 'low-level' && 'OOP principles, SOLID design, UML diagrams, and all 23 Gang of Four design patterns. Build clean, extensible object-oriented systems.'}
                       {activePage === 'behavioral' && 'Prepare compelling stories and answers for behavioral interviews using proven frameworks like STAR.'}
                       {activePage === 'microservices' && 'Service communication, resilience patterns, data management, and deployment strategies for distributed microservices architectures.'}
-                      {activePage === 'databases' && 'Storage engines, indexing, transactions, replication, sharding, and consensus algorithms. Deep dive into how databases really work.'}
+                      {activePage === 'databases' && ''}
                       {activePage === 'sql' && 'From fundamentals to window functions. Master SQL queries, joins, subqueries, and complex interview problems.'}
                       {activePage === 'projects' && 'Portfolio projects, take-home assignments, and full-stack builds. Get AI-generated step-by-step tutorials for each project.'}
                       {activePage === 'roadmaps' && 'Structured learning paths from beginner to advanced. Each roadmap shows the optimal order to learn topics with visual flow diagrams.'}
@@ -2135,10 +2135,6 @@ export default function DocsPage({ onBack }) {
               {activePage === 'databases' && !sqlPlaygroundOpen && (
                 <>
                   <div className="mb-6">
-                    <div className="mb-4">
-                      <span className="landing-mono text-xs text-[var(--text-muted)] tracking-widest uppercase">Deep Dive</span>
-                      <h2 className="landing-display font-bold text-xl mt-1 tracking-tight text-[var(--text-primary)]">Databases & SQL</h2>
-                    </div>
                     <div className="space-y-3">
                     {databaseCategories.map((category) => {
                       const categoryTopics = filteredTopics.filter(t => databaseCategoryMap[t.id] === category.id);
