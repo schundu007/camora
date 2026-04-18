@@ -7,13 +7,13 @@ const isElectron = false; // Electron removed in unified frontend
 const CODING_PLATFORMS = {
   hackerrank: { name: 'HackerRank', color: '#1ba94c', url: 'hackerrank.com' },
   leetcode: { name: 'LeetCode', color: '#f97316', url: 'leetcode.com' },
-  coderpad: { name: 'CoderPad', color: '#76B900', url: 'coderpad.io' },
+  coderpad: { name: 'CoderPad', color: '#F97316', url: 'coderpad.io' },
   codesignal: { name: 'CodeSignal', color: '#3b82f6', url: 'codesignal.com' },
 };
 
 const PREP_PLATFORMS = {
-  techprep: { name: 'TechPrep', color: '#91C733', url: 'techprep.app' },
-  algomaster: { name: 'AlgoMaster', color: '#76B900', url: 'algomaster.io' },
+  techprep: { name: 'TechPrep', color: '#FB923C', url: 'techprep.app' },
+  algomaster: { name: 'AlgoMaster', color: '#F97316', url: 'algomaster.io' },
   neetcode: { name: 'NeetCode', color: '#f43f5e', url: 'neetcode.io' },
   designgurus: { name: 'DesignGurus', color: '#0ea5e9', url: 'designgurus.io' },
   educative: { name: 'Educative', color: '#22c55e', url: 'educative.io' },
@@ -369,7 +369,7 @@ export default function PrepTab({ isOpen, onClose }) {
                       <p style={{ color: '#dc2626' }}>{fetchedContent.error}</p>
                     ) : (
                       <>
-                        <div className="font-medium mb-1" style={{ color: '#76B900' }}>{fetchedContent.title}</div>
+                        <div className="font-medium mb-1" style={{ color: '#F97316' }}>{fetchedContent.title}</div>
                         <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
                           Problem extracted! Close this and use the URL tab in Problem Input to solve it.
                         </p>

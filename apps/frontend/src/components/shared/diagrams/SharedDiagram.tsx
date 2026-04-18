@@ -152,7 +152,7 @@ export default function SharedDiagram({
         <div className="flex items-center justify-center p-6 rounded-lg" style={{ border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
           <button onClick={handleGenerate}
             className="px-5 py-2.5 text-sm font-bold text-white rounded-lg"
-            style={{ background: 'linear-gradient(135deg, #10b981, #76B900)', boxShadow: '0 2px 12px rgba(16,185,129,0.3)' }}>
+            style={{ background: 'linear-gradient(135deg, #10b981, #F97316)', boxShadow: '0 2px 12px rgba(16,185,129,0.3)' }}>
             Generate Diagram
           </button>
         </div>

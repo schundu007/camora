@@ -380,7 +380,7 @@ function PricingCards({ navigate, getAuthHeaders }) {
         const priceId = prices?.[plan.key]?.priceId || '';
         return (
           <div key={plan.name} className="rounded-2xl p-5 flex flex-col" style={{
-            border: plan.popular ? '2px solid #10b981' : plan.best ? '2px solid #f59e0b' : plan.addon ? '2px solid #91C733' : '1.5px solid var(--border)',
+            border: plan.popular ? '2px solid #10b981' : plan.best ? '2px solid #f59e0b' : plan.addon ? '2px solid #FB923C' : '1.5px solid var(--border)',
             background: 'var(--bg-surface)',
             boxShadow: plan.popular ? '0 8px 32px rgba(16,185,129,0.15)' : plan.best ? '0 8px 32px rgba(245,158,11,0.15)' : plan.addon ? '0 8px 32px rgba(139,92,246,0.15)' : '0 4px 16px rgba(0,0,0,0.1)',
           }}>
@@ -388,7 +388,7 @@ function PricingCards({ navigate, getAuthHeaders }) {
               <h4 className="text-sm font-bold text-[var(--text-primary)]">{plan.name}</h4>
               {plan.popular && <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold text-white uppercase tracking-wider" style={{ background: 'linear-gradient(135deg, #10b981, #06b6d4)' }}>Popular</span>}
               {plan.best && <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold text-white uppercase tracking-wider" style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}>Best Value</span>}
-              {plan.addon && <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold text-white uppercase tracking-wider" style={{ background: 'linear-gradient(135deg, #91C733, #76B900)' }}>Add-on</span>}
+              {plan.addon && <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold text-white uppercase tracking-wider" style={{ background: 'linear-gradient(135deg, #FB923C, #F97316)' }}>Add-on</span>}
             </div>
             <div className="flex items-baseline gap-1">
               <span className="text-2xl font-extrabold text-[var(--text-primary)]">{plan.price}</span>
@@ -403,7 +403,7 @@ function PricingCards({ navigate, getAuthHeaders }) {
             <button
               onClick={() => handleCheckout(priceId)}
               className={`mt-3 w-full py-2.5 rounded-xl text-xs font-bold cursor-pointer transition-all hover:opacity-90 ${plan.popular || plan.best || plan.addon ? 'text-white' : 'text-[var(--text-secondary)] border border-[var(--border)] hover:border-gray-400'}`}
-              style={plan.popular ? { background: 'linear-gradient(135deg, #10b981, #06b6d4)' } : plan.best ? { background: 'linear-gradient(135deg, #f59e0b, #d97706)' } : plan.addon ? { background: 'linear-gradient(135deg, #91C733, #76B900)' } : {}}
+              style={plan.popular ? { background: 'linear-gradient(135deg, #10b981, #06b6d4)' } : plan.best ? { background: 'linear-gradient(135deg, #f59e0b, #d97706)' } : plan.addon ? { background: 'linear-gradient(135deg, #FB923C, #F97316)' } : {}}
             >
               {plan.addon ? 'Add Desktop App' : `Get ${plan.name}`}
             </button>
@@ -740,7 +740,7 @@ export default function TopicDetail({
             <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'linear-gradient(180deg, transparent 0%, var(--bg-app) 40%)' }}>
               <div className="max-w-2xl w-full px-4">
                 <div className="text-center mb-5">
-                  <div className="w-12 h-12 mx-auto mb-3 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #10b981, #3b82f6, #91C733)' }}>
+                  <div className="w-12 h-12 mx-auto mb-3 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #10b981, #3b82f6, #FB923C)' }}>
                     <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                   </div>
                   <h3 className="text-lg font-bold text-[var(--text-primary)] mb-1 landing-display">Upgrade to unlock all topics</h3>
@@ -1008,9 +1008,9 @@ export default function TopicDetail({
       {!isLocked && activePage === 'projects' && (
         <div className="space-y-3">
           {/* Header: Difficulty + Tech Stack + Time */}
-          <div id="overview" className="rounded-xl overflow-hidden scroll-mt-24 border border-[var(--border)]" style={{ background: `linear-gradient(180deg, ${topicDetails.color || '#91C733'}12 0%, var(--bg-surface) 100%)` }}>
+          <div id="overview" className="rounded-xl overflow-hidden scroll-mt-24 border border-[var(--border)]" style={{ background: `linear-gradient(180deg, ${topicDetails.color || '#FB923C'}12 0%, var(--bg-surface) 100%)` }}>
             <div className="px-4 py-2.5 border-b border-[var(--border)] bg-[var(--bg-surface)]/80 flex items-center gap-2">
-              <Icon name="code" size={14} style={{ color: topicDetails.color || '#91C733' }} />
+              <Icon name="code" size={14} style={{ color: topicDetails.color || '#FB923C' }} />
               <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">Project Overview</h3>
             </div>
             <div className="p-4">
@@ -1115,7 +1115,7 @@ export default function TopicDetail({
             <button
               onClick={() => handleAskAI(`Generate a complete step-by-step tutorial for building: ${topicDetails.title}\n\nTech stack: ${(topicDetails.techStack || []).join(', ')}\nDifficulty: ${topicDetails.difficulty}\nDescription: ${topicDetails.description}\n\nProvide:\n1. Project setup and file structure\n2. Each implementation step with complete code snippets\n3. Key architectural decisions and why\n4. Testing guidance\n5. Deployment instructions\n\nMake it practical and implementation-focused.`)}
               className="inline-flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-bold text-white transition-all hover:opacity-90"
-              style={{ background: 'linear-gradient(135deg, #10b981, #76B900)', boxShadow: '0 2px 8px rgba(16,185,129,0.25)' }}
+              style={{ background: 'linear-gradient(135deg, #10b981, #F97316)', boxShadow: '0 2px 8px rgba(16,185,129,0.25)' }}
             >
               <Icon name="zap" size={14} />
               Generate Tutorial
@@ -2099,7 +2099,7 @@ export default function TopicDetail({
 
               {/* Discussion Points — Full-width expandable cards */}
               {topicDetails.discussionPoints && (() => {
-                const TOPIC_COLORS = ['#10b981', '#76B900', '#f59e0b', '#3b82f6', '#ef4444', '#91C733', '#14b8a6', '#ec4899'];
+                const TOPIC_COLORS = ['#10b981', '#F97316', '#f59e0b', '#3b82f6', '#ef4444', '#FB923C', '#14b8a6', '#ec4899'];
                 return (
                 <div className="rounded-2xl overflow-hidden bg-[var(--bg-surface)] border border-[var(--border)]">
                   <div className="px-4 py-2 border-b border-[var(--border)] flex items-center gap-2 bg-[var(--bg-elevated)]/50">
@@ -2325,7 +2325,7 @@ export default function TopicDetail({
                   </div>
                   <div className="p-2.5 space-y-0">
                     {topicDetails.layeredDesign.map((layer, i) => {
-                      const LAYER_COLORS = ['#10b981', '#3b82f6', '#91C733', '#f59e0b', '#ef4444', '#06b6d4', '#ec4899', '#76B900'];
+                      const LAYER_COLORS = ['#10b981', '#3b82f6', '#FB923C', '#f59e0b', '#ef4444', '#06b6d4', '#ec4899', '#F97316'];
                       const lc = LAYER_COLORS[i % LAYER_COLORS.length];
                       return (
                         <div key={i} className="relative">
@@ -2823,17 +2823,17 @@ export default function TopicDetail({
                   <Icon name="target" size={12} className="text-white" />
                 </div>
                 <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">STAR Framework Example</h3>
-                <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full landing-mono" style={{ background: 'linear-gradient(135deg, #3b82f620, #10b98120)', color: '#76B900' }}>4 steps</span>
+                <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full landing-mono" style={{ background: 'linear-gradient(135deg, #3b82f620, #10b98120)', color: '#F97316' }}>4 steps</span>
               </div>
               <div className="p-4">
                 <div className="relative">
                   {/* Vertical connector line */}
-                  <div className="absolute left-5 top-0 bottom-0 w-0.5 rounded-full" style={{ zIndex: 0, background: 'linear-gradient(to bottom, #3b82f6, #91C733, #10b981, #f59e0b)' }} />
+                  <div className="absolute left-5 top-0 bottom-0 w-0.5 rounded-full" style={{ zIndex: 0, background: 'linear-gradient(to bottom, #3b82f6, #FB923C, #10b981, #f59e0b)' }} />
                   <div className="relative space-y-0" style={{ zIndex: 1 }}>
                     {Object.entries(topicDetails.starExample).map(([key, value], idx, arr) => {
                       const config = {
                         situation: { color: '#3b82f6', bg: 'rgba(59,130,246,0.08)', border: 'rgba(59,130,246,0.2)', label: 'Situation', icon: 'S' },
-                        task: { color: '#91C733', bg: 'rgba(139,92,246,0.08)', border: 'rgba(139,92,246,0.2)', label: 'Task', icon: 'T' },
+                        task: { color: '#FB923C', bg: 'rgba(139,92,246,0.08)', border: 'rgba(139,92,246,0.2)', label: 'Task', icon: 'T' },
                         action: { color: '#10b981', bg: 'rgba(16,185,129,0.08)', border: 'rgba(16,185,129,0.2)', label: 'Action', icon: 'A' },
                         result: { color: '#f59e0b', bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.2)', label: 'Result', icon: 'R' },
                       };
