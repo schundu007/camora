@@ -327,15 +327,17 @@ export default function LandingPage() {
           </svg>
         </div>
 
-        {/* ── Section waypoints — labels match page content ── */}
+        {/* ── Section waypoints — one per section, centered vertically ── */}
         {[
-          { pos: 8,  code: 'LAUNCH' },
-          { pos: 22, code: 'TRUST' },
-          { pos: 36, code: 'APPA' },
-          { pos: 50, code: 'LIVE AI' },
-          { pos: 64, code: 'JOBS' },
-          { pos: 78, code: 'EDGE' },
-          { pos: 92, code: 'GO' },
+          { pos: 5,  code: 'LAUNCH' },    /* 1. Hero */
+          { pos: 14, code: 'TRUST' },     /* 2. Company Logos */
+          { pos: 20, code: 'STATS' },     /* 3. Stats Bar */
+          { pos: 32, code: 'APPA' },      /* 4. APPA Timeline */
+          { pos: 46, code: 'LIVE AI' },   /* 6. Live AI Demo */
+          { pos: 57, code: 'JOBS' },      /* 7. Job URL Analysis */
+          { pos: 68, code: 'EDGE' },      /* 9. Unique Features */
+          { pos: 79, code: 'CONNECT' },   /* 10. Integrations */
+          { pos: 90, code: 'GO' },        /* 12. Final CTA */
         ].map((node, i) => (
           <div key={i} className="absolute" style={{ top: `${node.pos}%`, left: '-14px' }}>
             <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: L.bg, border: '2.5px solid rgba(255,255,255,0.25)', boxShadow: '0 0 14px rgba(255,255,255,0.08), inset 0 0 6px rgba(118,185,0,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
