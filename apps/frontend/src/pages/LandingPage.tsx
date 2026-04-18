@@ -17,9 +17,9 @@ const F = {
 };
 
 const L = {
-  bg: '#09090F', surface: '#111118', elevated: '#19192A',
-  border: 'rgba(255,255,255,0.07)', text: '#FFFFFF', secondary: 'rgba(255,255,255,0.65)',
-  muted: 'rgba(255,255,255,0.35)', dimmed: 'rgba(255,255,255,0.15)',
+  bg: '#FFFFFF', surface: '#F8FAFC', elevated: '#F1F5F9',
+  border: '#E2E8F0', text: '#0F172A', secondary: '#475569',
+  muted: '#94A3B8', dimmed: '#CBD5E1',
   gradient: 'linear-gradient(135deg, #76B900 0%, #5E9400 100%)',
   primary: '#76B900', emerald: '#76B900', radius: '12px',
   glow: '0 0 60px rgba(118,185,0,0.06)',
@@ -296,7 +296,7 @@ function TopicDonut() {
 function TrackWaypoint({ label }: { label: string }) {
   return (
     <div className="absolute top-1/2 -translate-y-1/2 z-[4] pointer-events-none hidden lg:block" style={{ left: 'calc(15% + 4px)' }}>
-      <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#09090F', border: '2.5px solid rgba(255,255,255,0.25)', boxShadow: '0 0 14px rgba(255,255,255,0.08), inset 0 0 6px rgba(118,185,0,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#FFFFFF', border: '2.5px solid rgba(255,255,255,0.25)', boxShadow: '0 0 14px rgba(255,255,255,0.08), inset 0 0 6px rgba(118,185,0,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: 'rgba(118,185,0,0.5)' }} />
       </div>
       <div style={{ position: 'absolute', left: '36px', top: '50%', transform: 'translateY(-50%)', whiteSpace: 'nowrap' }}>
@@ -323,7 +323,7 @@ export default function LandingPage() {
         {/* Tarmac — wide dark runway strip */}
         <div className="absolute top-0 bottom-0" style={{ left: '-10px', width: '20px', borderRadius: '10px', background: `linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.05) 5%, rgba(255,255,255,0.03) 50%, rgba(255,255,255,0.05) 95%, transparent 100%)` }} />
         {/* White dashed center line — real runway marking */}
-        <div className="absolute left-0 top-0 bottom-0" style={{ width: '2px', background: `repeating-linear-gradient(to bottom, rgba(255,255,255,0.5) 0px, rgba(255,255,255,0.5) 20px, transparent 20px, transparent 36px)` }} />
+        <div className="absolute left-0 top-0 bottom-0" style={{ width: '2px', background: `repeating-linear-gradient(to bottom, rgba(118,185,0,0.4) 0px, rgba(118,185,0,0.4) 20px, transparent 20px, transparent 36px)` }} />
         {/* Edge markings — solid white */}
         <div className="absolute top-0 bottom-0" style={{ left: '-10px', width: '1px', background: `linear-gradient(to bottom, transparent 3%, rgba(255,255,255,0.15) 8%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.15) 92%, transparent 97%)` }} />
         <div className="absolute top-0 bottom-0" style={{ left: '9px', width: '1px', background: `linear-gradient(to bottom, transparent 3%, rgba(255,255,255,0.15) 8%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.15) 92%, transparent 97%)` }} />
@@ -375,10 +375,10 @@ export default function LandingPage() {
         .cm-gradient-text { background: ${L.gradient}; -webkit-background-clip: text; background-clip: text; color: transparent; }
         .cm-gradient-btn { background: ${L.gradient}; transition: filter 0.2s ease, box-shadow 0.2s ease; }
         .cm-gradient-btn:hover { filter: brightness(1.15); box-shadow: 0 0 30px rgba(118,185,0,0.2); }
-        .cm-outline-btn { border: 1px solid rgba(255,255,255,0.12); color: ${L.text}; transition: border-color 0.2s, background 0.2s; backdrop-filter: blur(8px); }
-        .cm-outline-btn:hover { border-color: rgba(255,255,255,0.25); background: rgba(255,255,255,0.05); }
-        .cm-glass { background: ${L.surface}; border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; }
-        .cm-glass:hover { background: ${L.elevated}; border-color: rgba(255,255,255,0.12); }
+        .cm-outline-btn { border: 1px solid ${L.border}; color: ${L.text}; transition: border-color 0.2s, background 0.2s; }
+        .cm-outline-btn:hover { border-color: ${L.muted}; background: ${L.surface}; }
+        .cm-glass { background: ${L.surface}; border: 1px solid ${L.border}; border-radius: 16px; }
+        .cm-glass:hover { background: ${L.elevated}; border-color: ${L.muted}; }
         @keyframes scroll-logos { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
         /* Rocket ascends from bottom to top */
         /* Exhaust flame flicker */
@@ -457,17 +457,17 @@ export default function LandingPage() {
         }
       `}</style>
 
-      <SiteNav variant="dark" />
+      <SiteNav variant="light" />
 
       {/* ── 1. HERO — Forest road background ── */}
       <section className="relative pt-28 pb-14 md:pt-36 md:pb-20 px-6 overflow-hidden">
         <TrackWaypoint label="LAUNCH" />
-        {/* Hero background — cartoon airplane illustration */}
+        {/* Hero background — cartoon airplane illustration on white */}
         <div className="absolute inset-0 z-0">
-          <img src="/hero-forest.jpg" alt="" className="w-full h-full object-cover object-center" style={{ opacity: 0.15 }} />
-          {/* Dark base + green tint */}
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(9,9,15,0.6) 0%, rgba(9,9,15,0.75) 50%, #09090F 100%)' }} />
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(118,185,0,0.06) 0%, transparent 40%)' }} />
+          <img src="/hero-forest.jpg" alt="" className="w-full h-full object-cover object-center" style={{ opacity: 0.3 }} />
+          {/* Light fade to white */}
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.7) 50%, #FFFFFF 100%)' }} />
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(118,185,0,0.04) 0%, transparent 40%)' }} />
         </div>
         {/* Radial glow */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] pointer-events-none z-[1]" style={{ background: 'radial-gradient(ellipse at center, rgba(118,185,0,0.08) 0%, transparent 70%)' }} />
@@ -494,10 +494,10 @@ export default function LandingPage() {
           <motion.div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3"
             initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.3 }}>
             <Link to={isAuthenticated ? '/capra/prepare' : '/signup'} className="cm-gradient-btn px-7 py-3.5 text-[15px] font-semibold text-white" style={{ borderRadius: L.radius }}>
-              {isAuthenticated ? 'Go to Dashboard' : 'Get Started Free'}
+              {isAuthenticated ? 'Enter Cockpit' : 'Get Your Boarding Pass'}
             </Link>
             <Link to="/download" className="cm-outline-btn px-7 py-3.5 text-[15px] font-semibold" style={{ borderRadius: L.radius }}>
-              Download Desktop App
+              Download Cockpit App
             </Link>
           </motion.div>
 
@@ -509,7 +509,7 @@ export default function LandingPage() {
                 ))}
               </div>
               <span className="text-sm" style={{ color: L.secondary }}>
-                <span className="font-bold" style={{ color: L.text }}>{visitorCount.toLocaleString()}+</span> engineers visited
+                <span className="font-bold" style={{ color: L.text }}>{visitorCount.toLocaleString()}+</span> passengers aboard
               </span>
             </motion.div>
           )}
@@ -520,7 +520,7 @@ export default function LandingPage() {
       <section className="relative px-6 py-8 overflow-hidden">
         <TrackWaypoint label="BRANDS" />
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
-          <p className="text-center text-xs font-bold uppercase tracking-[0.2em] mb-6" style={{ color: L.muted }}>Prepare for interviews at</p>
+          <p className="text-center text-xs font-bold uppercase tracking-[0.2em] mb-6" style={{ color: L.muted }}>Cleared for landing at</p>
           <div className="relative overflow-hidden rounded-2xl py-5" style={{ border: `1px solid ${L.border}`, background: L.surface, maskImage: 'linear-gradient(90deg, transparent 2%, black 10%, black 90%, transparent 98%)' }}>
             <div className="flex items-center gap-12 px-4" style={{ animation: 'scroll-logos 30s linear infinite', width: 'max-content' }}>
               {[...COMPANIES, ...COMPANIES].map((c, i) => (
@@ -590,12 +590,12 @@ export default function LandingPage() {
                             {i === 2 && <><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /></>}
                             {i === 3 && <><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" /><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" /><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0" /><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" /></>}
                           </svg>
-                          Stage {i + 1} — {step.label}
+                          Gate {i + 1} — {step.label}
                         </span>
                         <h3 className="text-xl lg:text-2xl font-bold tracking-tight mb-3" style={{ fontFamily: F.display }}>{step.headline}</h3>
                         <p className="text-sm leading-relaxed mb-5" style={{ color: L.secondary }}>{step.desc}</p>
                         <Link to={step.href} className="inline-flex items-center gap-2 text-sm font-semibold transition-all hover:gap-3" style={{ color: L.primary }}>
-                          Launch {step.label}
+                          Board {step.label}
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}><path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" /></svg>
                         </Link>
                       </div>
@@ -700,13 +700,13 @@ export default function LandingPage() {
             <span className="inline-flex items-center gap-2 text-[11px] font-bold tracking-[0.15em] uppercase px-4 py-1.5"
               style={{ borderRadius: '999px', background: L.surface, border: `1px solid ${L.border}`, color: L.secondary, fontFamily: F.mono }}>
               <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /></svg>
-              Live Interview AI
+              Cockpit AI
             </span>
             <h2 className="text-3xl md:text-4xl lg:text-[44px] font-bold tracking-tight mt-5" style={{ fontFamily: F.display }}>
-              Your co-pilot for every interview.
+              Your co-pilot in the cockpit.
             </h2>
             <p className="mt-4 text-lg max-w-xl mx-auto" style={{ color: L.secondary }}>
-              Camora listens, transcribes, and generates answers in real-time.
+              Camora sits in the cockpit with you — listens, transcribes, and generates answers in real-time.
             </p>
           </Reveal>
 
@@ -754,7 +754,7 @@ export default function LandingPage() {
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
           <Reveal className="text-center mb-14">
             <span className="inline-block text-[11px] font-bold tracking-[0.18em] uppercase px-4 py-1.5 mb-5"
-              style={{ borderRadius: '999px', background: 'rgba(118,185,0,0.06)', border: '1px solid rgba(118,185,0,0.15)', color: L.emerald, fontFamily: F.mono }}>Only on Camora</span>
+              style={{ borderRadius: '999px', background: 'rgba(118,185,0,0.06)', border: '1px solid rgba(118,185,0,0.15)', color: L.emerald, fontFamily: F.mono }}>First Class Only</span>
             <h2 className="text-3xl md:text-4xl lg:text-[44px] font-bold tracking-tight" style={{ fontFamily: F.display }}>First-class features. No turbulence.</h2>
           </Reveal>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -803,16 +803,16 @@ export default function LandingPage() {
               <p className="mt-5 text-base md:text-lg" style={{ color: L.secondary }}>Apply. Prepare. Practice. Attend. Your mission control for interviews.</p>
               <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Link to={isAuthenticated ? '/capra/prepare' : '/signup'} className="cm-gradient-btn px-8 py-4 text-base font-semibold text-white" style={{ borderRadius: L.radius }}>
-                  {isAuthenticated ? 'Go to Dashboard' : 'Start Free — No Credit Card'}
+                  {isAuthenticated ? 'Enter Cockpit' : 'Board Free — No Credit Card'}
                 </Link>
-                <Link to="/pricing" className="cm-outline-btn px-8 py-4 text-base font-semibold" style={{ borderRadius: L.radius }}>View Pricing</Link>
+                <Link to="/pricing" className="cm-outline-btn px-8 py-4 text-base font-semibold" style={{ borderRadius: L.radius }}>View Tickets</Link>
               </div>
             </div>
           </div>
         </Reveal>
       </section>
 
-      <SiteFooter variant="dark" />
+      <SiteFooter variant="light" />
     </div>
   );
 }
