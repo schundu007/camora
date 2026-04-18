@@ -254,7 +254,7 @@ export default function PricingPage() {
 
       {/* Competitor comparison */}
       <section className="px-6 pt-4 pb-16">
-        <div className="w-full lg:max-w-[70%] mx-auto">
+        <div className="w-full lg:max-w-[90%] mx-auto">
           <div className="mb-10 text-center">
             <span className="text-xs font-bold uppercase tracking-[0.18em]" style={{ color: 'var(--accent)' }}>Why Camora Wins</span>
             <h2 className="mt-3 text-3xl md:text-4xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>
@@ -272,16 +272,16 @@ export default function PricingPage() {
                         { name: 'Camora', price: 'FREE', unit: '', highlight: true },
                         { name: 'Final Round', price: '$100', unit: '/mo' },
                         { name: 'LockedIn', price: '$55-120', unit: '/mo' },
-                        { name: 'Solver', price: '$39', unit: '/mo', hide: 'md' },
-                        { name: 'Sensei', price: '$24-89', unit: '/mo', hide: 'md' },
-                        { name: 'TechPrep', price: '$39', unit: '/mo', hide: 'lg' },
-                        { name: 'AlgoMaster', price: '$29', unit: '/mo', hide: 'lg' },
-                        { name: 'DesignGurus', price: '$98-197', unit: '/yr', hide: 'lg' },
-                        { name: 'AIApply', price: '$29-200', unit: '/mo', hide: 'xl' },
-                        { name: 'OfferGoose', price: '$89-200', unit: '/mo', hide: 'xl' },
-                        { name: 'Parakeet', price: '$100-200', unit: '/mo', hide: 'xl' },
+                        { name: 'Solver', price: '$39', unit: '/mo' },
+                        { name: 'Sensei', price: '$24-89', unit: '/mo' },
+                        { name: 'TechPrep', price: '$39', unit: '/mo' },
+                        { name: 'AlgoMaster', price: '$29', unit: '/mo' },
+                        { name: 'DesignGurus', price: '$98-197', unit: '/yr' },
+                        { name: 'AIApply', price: '$29-200', unit: '/mo' },
+                        { name: 'OfferGoose', price: '$89-200', unit: '/mo' },
+                        { name: 'Parakeet', price: '$100-200', unit: '/mo' },
                       ].map((col) => (
-                        <th key={col.name} className={`py-2.5 px-1.5 text-center whitespace-nowrap ${col.hide ? `hidden ${col.hide}:table-cell` : ''}`}
+                        <th key={col.name} className="py-2.5 px-1.5 text-center whitespace-nowrap"
                           style={{ borderBottom: '2px solid var(--border)', ...(col.highlight ? { background: '#2D8CFF', borderBottom: '2px solid #2D8CFF' } : {}) }}>
                           <div className="font-bold" style={{ color: col.highlight ? '#fff' : 'var(--text-muted)', fontSize: '11px' }}>{col.name}</div>
                           <div className="font-bold" style={{ color: col.highlight ? 'rgba(255,255,255,0.8)' : 'var(--text-dimmed)', fontSize: '10px' }}>
@@ -307,14 +307,14 @@ export default function PricingPage() {
                           <td className="py-2 px-4 text-[12px]" style={{ color: row.unique ? '#2D8CFF' : 'var(--text-primary)', fontWeight: row.unique ? 600 : 400, borderBottom: bd }}>{row.feature}</td>
                           <td className="py-2 px-1.5 text-center" style={{ background: 'rgba(45,140,255,0.04)', borderBottom: bd }}><Cell val={row.camora} highlight /></td>
                           {[row.finalround, row.lockedin].map((v, j) => <td key={j} className="py-2 px-1.5 text-center" style={{ borderBottom: bd }}><Cell val={v} /></td>)}
-                          <td className="py-2 px-1.5 text-center hidden md:table-cell" style={{ borderBottom: bd }}><Cell val={row.solver} /></td>
-                          <td className="py-2 px-1.5 text-center hidden md:table-cell" style={{ borderBottom: bd }}><Cell val={row.sensei} /></td>
-                          <td className="py-2 px-1.5 text-center hidden lg:table-cell" style={{ borderBottom: bd }}><Cell val={row.techprep} /></td>
-                          <td className="py-2 px-1.5 text-center hidden lg:table-cell" style={{ borderBottom: bd }}><Cell val={row.algomaster} /></td>
-                          <td className="py-2 px-1.5 text-center hidden lg:table-cell" style={{ borderBottom: bd }}><Cell val={row.designgurus} /></td>
-                          <td className="py-2 px-1.5 text-center hidden xl:table-cell" style={{ borderBottom: bd }}><Cell val={row.aiapply} /></td>
-                          <td className="py-2 px-1.5 text-center hidden xl:table-cell" style={{ borderBottom: bd }}><Cell val={row.offergoose} /></td>
-                          <td className="py-2 px-1.5 text-center hidden xl:table-cell" style={{ borderBottom: bd }}><Cell val={row.parakeet} /></td>
+                          <td className="py-2 px-1.5 text-center" style={{ borderBottom: bd }}><Cell val={row.solver} /></td>
+                          <td className="py-2 px-1.5 text-center" style={{ borderBottom: bd }}><Cell val={row.sensei} /></td>
+                          <td className="py-2 px-1.5 text-center" style={{ borderBottom: bd }}><Cell val={row.techprep} /></td>
+                          <td className="py-2 px-1.5 text-center" style={{ borderBottom: bd }}><Cell val={row.algomaster} /></td>
+                          <td className="py-2 px-1.5 text-center" style={{ borderBottom: bd }}><Cell val={row.designgurus} /></td>
+                          <td className="py-2 px-1.5 text-center" style={{ borderBottom: bd }}><Cell val={row.aiapply} /></td>
+                          <td className="py-2 px-1.5 text-center" style={{ borderBottom: bd }}><Cell val={row.offergoose} /></td>
+                          <td className="py-2 px-1.5 text-center" style={{ borderBottom: bd }}><Cell val={row.parakeet} /></td>
                         </tr>
                       );
                     })}
