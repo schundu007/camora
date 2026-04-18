@@ -415,8 +415,14 @@ export default function LandingPage() {
                     </div>
                     <div className="flex-1 flex flex-col lg:flex-row gap-6">
                       <div className="lg:w-[45%]">
-                        <span className="inline-block text-[11px] font-bold tracking-[0.15em] uppercase px-3 py-1 mb-4"
+                        <span className="inline-flex items-center gap-1.5 text-[11px] font-bold tracking-[0.15em] uppercase px-3 py-1 mb-4"
                           style={{ borderRadius: '6px', background: 'rgba(118,185,0,0.08)', color: L.primary, fontFamily: F.mono }}>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                            {i === 0 && <><path d="M22 2L11 13" /><path d="M22 2L15 22L11 13L2 9L22 2Z" /></>}
+                            {i === 1 && <><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></>}
+                            {i === 2 && <><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /></>}
+                            {i === 3 && <><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" /><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" /><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0" /><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" /></>}
+                          </svg>
                           Stage {i + 1} — {step.label}
                         </span>
                         <h3 className="text-xl lg:text-2xl font-bold tracking-tight mb-3" style={{ fontFamily: F.display }}>{step.headline}</h3>
@@ -455,8 +461,8 @@ export default function LandingPage() {
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
           <Reveal className="text-center mb-14">
             <span className="inline-block text-[11px] font-bold tracking-[0.18em] uppercase px-4 py-1.5 mb-5"
-              style={{ borderRadius: '999px', background: `${L.primary}0A`, border: `1px solid ${L.primary}20`, color: L.primary, fontFamily: F.mono }}>How it works</span>
-            <h2 className="text-3xl md:text-4xl lg:text-[44px] font-bold tracking-tight" style={{ fontFamily: F.display }}>See what Camora can do.</h2>
+              style={{ borderRadius: '999px', background: `${L.primary}0A`, border: `1px solid ${L.primary}20`, color: L.primary, fontFamily: F.mono }}>Mission Control</span>
+            <h2 className="text-3xl md:text-4xl lg:text-[44px] font-bold tracking-tight" style={{ fontFamily: F.display }}>See Camora in flight.</h2>
           </Reveal>
           <ProductTabs />
         </div>
@@ -472,10 +478,10 @@ export default function LandingPage() {
               Live Interview AI
             </span>
             <h2 className="text-3xl md:text-4xl lg:text-[44px] font-bold tracking-tight mt-5" style={{ fontFamily: F.display }}>
-              Your interviewer speaks. AI answers.
+              Your co-pilot for every interview.
             </h2>
             <p className="mt-4 text-lg max-w-xl mx-auto" style={{ color: L.secondary }}>
-              Camora listens to the interview question via voice transcription and generates a structured answer in seconds.
+              Like a flight engineer in your cockpit. Camora listens, transcribes, and generates answers in real-time.
             </p>
           </Reveal>
 
@@ -579,7 +585,7 @@ export default function LandingPage() {
       <section className="px-6 py-14 md:py-20">
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
           <Reveal className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl lg:text-[44px] font-bold tracking-tight" style={{ fontFamily: F.display }}>Everything you need to prepare.</h2>
+            <h2 className="text-3xl md:text-4xl lg:text-[44px] font-bold tracking-tight" style={{ fontFamily: F.display }}>Full payload. Zero drag.</h2>
             <p className="mt-4 text-lg max-w-xl mx-auto" style={{ color: L.secondary }}>800+ topics and 1,850+ problems across 7 categories.</p>
           </Reveal>
           <TopicDonut />
@@ -592,7 +598,7 @@ export default function LandingPage() {
           <Reveal className="text-center mb-14">
             <span className="inline-block text-[11px] font-bold tracking-[0.18em] uppercase px-4 py-1.5 mb-5"
               style={{ borderRadius: '999px', background: 'rgba(118,185,0,0.06)', border: '1px solid rgba(118,185,0,0.15)', color: L.emerald, fontFamily: F.mono }}>Only on Camora</span>
-            <h2 className="text-3xl md:text-4xl lg:text-[44px] font-bold tracking-tight" style={{ fontFamily: F.display }}>What no other tool can do.</h2>
+            <h2 className="text-3xl md:text-4xl lg:text-[44px] font-bold tracking-tight" style={{ fontFamily: F.display }}>First-class features. No turbulence.</h2>
           </Reveal>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {UNIQUE_FEATURES.map((f, i) => (
@@ -615,7 +621,7 @@ export default function LandingPage() {
       <section className="px-6 py-14 md:py-16">
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto text-center">
           <Reveal>
-            <p className="text-xs font-bold uppercase tracking-[0.2em] mb-6" style={{ color: L.muted }}>Works seamlessly with</p>
+            <p className="text-xs font-bold uppercase tracking-[0.2em] mb-6" style={{ color: L.muted }}>Compatible with all flight platforms</p>
             <div className="flex flex-wrap items-center justify-center gap-3">
               {INTEGRATIONS.map(name => (
                 <span key={name} className="px-4 py-2 text-sm font-medium" style={{ borderRadius: L.radius, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: L.secondary }}>{name}</span>
@@ -633,9 +639,9 @@ export default function LandingPage() {
             <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at center top, rgba(118,185,0,0.04) 0%, transparent 60%)' }} />
             <div className="relative z-10">
               <h2 className="text-3xl md:text-4xl lg:text-[42px] font-bold tracking-tight" style={{ fontFamily: F.display }}>
-                Your next interview <span className="cm-gradient-text">starts here.</span>
+                Ready for <span className="cm-gradient-text">liftoff?</span>
               </h2>
-              <p className="mt-5 text-base md:text-lg" style={{ color: L.secondary }}>Apply, Prepare, Practice, Attend.</p>
+              <p className="mt-5 text-base md:text-lg" style={{ color: L.secondary }}>Apply. Prepare. Practice. Attend. Your mission control for interviews.</p>
               <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Link to={isAuthenticated ? '/capra/prepare' : '/signup'} className="cm-gradient-btn px-8 py-4 text-base font-semibold text-white" style={{ borderRadius: L.radius }}>
                   {isAuthenticated ? 'Go to Dashboard' : 'Start Free — No Credit Card'}
