@@ -125,7 +125,7 @@ export function LumoraShellPage() {
   }
 
   return (
-    <div className="h-screen w-full flex overflow-hidden" style={{ background: '#0B1120' }}>
+    <div className="h-screen w-full flex overflow-hidden" style={{ background: '#FFFFFF' }}>
       {/* Left icon rail */}
       <LumoraIconRail
         activeTab={activeTab}
@@ -207,7 +207,7 @@ export function LumoraShellPage() {
 
           {/* Calendar tab */}
           {activeTab === 'calendar' && (
-            <div className="flex-1 flex flex-col min-h-0 absolute inset-0" style={{ background: '#0B1120' }}>
+            <div className="flex-1 flex flex-col min-h-0 absolute inset-0" style={{ background: '#FFFFFF' }}>
               <LumoraCalendar onClose={() => navigate('/lumora')} />
             </div>
           )}
@@ -222,7 +222,7 @@ export function LumoraShellPage() {
 
       {/* Mobile bottom navigation — visible only on small screens */}
       <div className="flex md:hidden fixed bottom-0 left-0 right-0 h-16 z-40 items-center justify-around"
-        style={{ background: '#0B1120', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+        style={{ background: '#2D8CFF', borderTop: '1px solid rgba(255,255,255,0.2)' }}>
         {[
           { id: 'interview', label: 'Home', path: '/lumora', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg> },
           { id: 'coding', label: 'Code', path: '/lumora/coding', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6" /></svg> },
@@ -246,7 +246,7 @@ export function LumoraShellPage() {
 
 function TabLoading({ label }: { label: string }) {
   return (
-    <div className="flex-1 flex items-center justify-center" style={{ background: '#0B1120' }}>
+    <div className="flex-1 flex items-center justify-center" style={{ background: '#FFFFFF' }}>
       <div className="flex items-center gap-3">
         <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
         <span className="text-sm text-slate-400" style={{ fontFamily: 'var(--font-sans)' }}>Loading {label}...</span>
