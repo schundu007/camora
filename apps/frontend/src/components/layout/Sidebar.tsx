@@ -207,7 +207,7 @@ function SidebarSection({
             fontWeight: 600,
             textTransform: 'uppercase',
             letterSpacing: '0.05em',
-            color: 'var(--text-muted)',
+            color: 'rgba(255,255,255,0.7)',
             background: 'none',
             border: '1px solid var(--border)',
           }}
@@ -217,7 +217,7 @@ function SidebarSection({
             className="transition-transform duration-150"
             style={{
               transform: open ? 'rotate(90deg)' : 'rotate(0deg)',
-              color: 'var(--text-dimmed)',
+              color: 'rgba(255,255,255,0.5)',
             }}
           >
             {icons.chevron}
@@ -238,7 +238,7 @@ function SidebarSection({
               alignItems: 'center',
               justifyContent: 'center',
               margin: '2px auto',
-              color: active ? 'var(--accent)' : 'var(--text-muted)',
+              color: active ? '#FFFFFF' : 'rgba(255,255,255,0.7)',
               background: active ? 'var(--accent-subtle)' : 'transparent',
               borderRadius: '8px',
               transition: 'background 0.12s, color 0.12s',
@@ -246,15 +246,15 @@ function SidebarSection({
               height: '32px',
               fontSize: '13px',
               fontWeight: 500,
-              color: active ? 'var(--text-primary)' : 'var(--text-secondary)',
+              color: active ? '#FFFFFF' : 'rgba(255,255,255,0.85)',
               background: active ? 'var(--accent-subtle)' : 'transparent',
-              borderLeft: active ? '2px solid var(--accent)' : '2px solid transparent',
+              borderLeft: active ? '2px solid #FFFFFF' : '2px solid transparent',
               borderRadius: '6px',
               transition: 'background 0.12s, color 0.12s',
             };
 
             const iconEl = (
-              <span className="flex-shrink-0" style={{ color: active ? 'var(--accent)' : 'var(--text-muted)' }}>
+              <span className="flex-shrink-0" style={{ color: active ? '#FFFFFF' : 'rgba(255,255,255,0.7)' }}>
                 {item.icon}
               </span>
             );
@@ -354,7 +354,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           style={{
             width: collapsed ? '36px' : '100%',
             height: '32px',
-            color: 'var(--text-muted)',
+            color: 'rgba(255,255,255,0.7)',
             background: 'none',
             border: '1px solid var(--border)',
             cursor: 'pointer',
@@ -369,7 +369,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           {!collapsed && <span className="ml-2">Collapse</span>}
         </button>
         {!collapsed && (
-          <span className="px-2.5 block" style={{ fontSize: '10px', color: 'var(--text-dimmed)' }}>
+          <span className="px-2.5 block" style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)' }}>
             &copy; 2026 Cariara
           </span>
         )}
@@ -388,8 +388,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           height: 'calc(100vh - var(--topbar-height, 48px))',
           position: 'sticky',
           top: 'var(--topbar-height, 48px)',
-          background: 'var(--bg-app)',
-          borderRight: '1px solid var(--border)',
+          background: '#2D8CFF',
+          borderRight: '1px solid rgba(255,255,255,0.15)',
         }}
       >
         {sidebarContent}
@@ -413,9 +413,9 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               width: '280px',
               height: '100vh',
               paddingTop: 'var(--topbar-height, 48px)',
-              background: 'var(--bg-app)',
-              borderRight: '1px solid var(--border)',
-              boxShadow: 'var(--shadow-xl)',
+              background: '#2D8CFF',
+              borderRight: '1px solid rgba(255,255,255,0.15)',
+              boxShadow: '4px 0 20px rgba(0,0,0,0.15)',
             }}
           >
             {sidebarContent}
@@ -426,8 +426,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       {/* ── Hover styles (injected once) ────────────────────── */}
       <style>{`
         .sidebar-item:hover {
-          background: var(--bg-elevated) !important;
-          color: var(--text-primary) !important;
+          background: rgba(255,255,255,0.15) !important;
+          color: #FFFFFF !important;
         }
       `}</style>
     </>

@@ -46,8 +46,9 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
         className="flex items-center justify-between px-4 shrink-0 z-40 overflow-x-auto no-scrollbar"
         style={{
           height: 'var(--topbar-height, 48px)',
-          background: 'var(--bg-surface)',
-          borderBottom: '1px solid var(--border)',
+          background: '#2D8CFF',
+          borderBottom: '1px solid rgba(255,255,255,0.15)',
+          color: '#FFFFFF',
         }}
       >
         {/* -- Left: mobile hamburger + logo ---------------------- */}
@@ -57,7 +58,7 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
             type="button"
             onClick={onToggleSidebar}
             className="md:hidden flex items-center justify-center w-10 h-10 min-h-[40px] rounded-md transition-colors"
-            style={{ color: 'var(--text-secondary)' }}
+            style={{ color: 'rgba(255,255,255,0.9)' }}
             aria-label={sidebarOpen ? 'Close sidebar' : 'Open sidebar'}
           >
             {sidebarOpen ? (
@@ -105,14 +106,14 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
               stroke="currentColor"
               strokeWidth="1.5"
               strokeLinecap="round"
-              style={{ color: 'var(--text-muted)', flexShrink: 0 }}
+              style={{ color: 'rgba(255,255,255,0.8)', flexShrink: 0 }}
             >
               <circle cx="7" cy="7" r="5.5" />
               <path d="M11 11l3.5 3.5" />
             </svg>
             <span
               className="text-xs flex-1 truncate"
-              style={{ color: 'var(--text-muted)' }}
+              style={{ color: 'rgba(255,255,255,0.8)' }}
             >
               Search topics...
             </span>
@@ -121,7 +122,7 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
               style={{
                 background: 'var(--bg-elevated)',
                 border: '1px solid var(--border)',
-                color: 'var(--text-muted)',
+                color: 'rgba(255,255,255,0.8)',
                 fontFamily: 'var(--font-sans)',
               }}
             >
@@ -137,7 +138,7 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
             type="button"
             onClick={toggleTheme}
             className="flex items-center justify-center w-10 h-10 min-h-[40px] rounded-md transition-colors"
-            style={{ color: 'var(--text-muted)' }}
+            style={{ color: 'rgba(255,255,255,0.8)' }}
             aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
             title={theme === 'dark' ? 'Light mode' : 'Dark mode'}
           >
@@ -178,7 +179,7 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
             type="button"
             onClick={() => setCmdOpen(true)}
             className="sm:hidden flex items-center justify-center w-10 h-10 min-h-[40px] rounded-md transition-colors"
-            style={{ color: 'var(--text-muted)' }}
+            style={{ color: 'rgba(255,255,255,0.8)' }}
             aria-label="Search"
           >
             <svg
@@ -198,7 +199,7 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
           {/* Avatar — links to onboarding/profile */}
           <Link
             to="/capra/onboarding"
-            className="flex items-center gap-2 no-underline rounded-md px-1.5 py-1 transition-colors hover:bg-[var(--bg-elevated)]"
+            className="flex items-center gap-2 no-underline rounded-md px-1.5 py-1 transition-colors hover:bg-white/10"
             title="Update role & resume"
           >
             {user?.image ? (
@@ -213,7 +214,7 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
                 className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-semibold"
                 style={{
                   background: 'var(--accent-subtle)',
-                  color: 'var(--accent)',
+                  color: '#FFFFFF',
                 }}
               >
                 {initials}
@@ -221,7 +222,7 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
             )}
             <span
               className="hidden md:inline text-xs font-medium truncate max-w-[120px]"
-              style={{ color: 'var(--text-secondary)' }}
+              style={{ color: 'rgba(255,255,255,0.9)' }}
             >
               {user?.name}
             </span>
@@ -232,7 +233,7 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
             type="button"
             onClick={logout}
             className="flex items-center justify-center w-10 h-10 min-h-[40px] rounded-md transition-colors"
-            style={{ color: 'var(--text-muted)' }}
+            style={{ color: 'rgba(255,255,255,0.8)' }}
             aria-label="Sign out"
             title="Sign out"
           >
