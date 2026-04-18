@@ -520,21 +520,17 @@ function ScaleMathList({ content }: { content: string }) {
   });
 
   return (
-    <div className="space-y-3">
-      <div className="grid grid-cols-2 gap-2">
+    <div className="space-y-1.5">
+      <div className="grid grid-cols-3 gap-1.5">
         {metrics.map((m, i) => (
-          <div key={i} className="rounded-lg border border-emerald-500/15 bg-emerald-600/[0.04] p-3">
-            <div className="font-mono text-[10px] font-bold text-text-dim uppercase tracking-wider mb-1.5">
-              {m.label}
-            </div>
-            <div className="font-mono text-sm font-semibold text-indigo-light leading-snug">
-              {m.value}
-            </div>
+          <div key={i} className="rounded border border-emerald-500/15 bg-emerald-600/[0.04] px-2 py-1.5">
+            <span className="font-mono text-[10px] font-bold text-indigo-light">{m.label}: </span>
+            <span className="font-mono text-[11px] text-text-subtle">{m.value}</span>
           </div>
         ))}
       </div>
       {other.map((line, i) => (
-        <div key={`o-${i}`} className="font-mono text-[13px] text-text-subtle px-1">{line}</div>
+        <div key={`o-${i}`} className="font-mono text-[11px] text-text-subtle px-1">{line}</div>
       ))}
     </div>
   );
