@@ -301,7 +301,7 @@ export default function LandingPage() {
         <div className="absolute top-0 bottom-0" style={{ left: '-18px', width: '36px', background: `linear-gradient(to bottom, transparent 3%, rgba(255,255,255,0.015) 10%, rgba(255,255,255,0.008) 50%, rgba(255,255,255,0.015) 90%, transparent 97%)`, filter: 'blur(10px)' }} />
 
         {/* ── AIRPLANE flying UP with contrail ── */}
-        <div className="absolute" style={{ left: '-26px', animation: 'fp-rocket 16s ease-in-out infinite' }}>
+        <div className="absolute" style={{ left: '-26px', animation: 'fp-rocket 64s ease-in-out infinite' }}>
           {/* Contrail below the ascending plane */}
           <div style={{ position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', width: '3px', height: '100px', borderRadius: '2px', background: 'linear-gradient(to bottom, rgba(255,255,255,0.5), rgba(118,185,0,0.2), transparent)' }} />
           {/* Real airplane image — flying up */}
