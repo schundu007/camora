@@ -199,7 +199,7 @@ router.post(
       const trimmed = rawText.trim();
       if (HALLUCINATION_PATTERNS.some(p => p.test(trimmed))) {
         console.info(`[Whisper] Filtered hallucination: "${trimmed}"`);
-        return res.json({ text: '', latency_ms: latencyMs, skipped: true, reason: 'hallucination_filtered', filtered: trimmed });
+        return res.json({ text: '', latency_ms: latencyMs, skipped: true, reason: 'hallucination_filtered' });
       }
 
       console.info(

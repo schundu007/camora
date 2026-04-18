@@ -211,22 +211,18 @@ function MicButtonLarge({ onResult, disabled }: { onResult: (text: string) => vo
       mr.onstop = async () => {
         stream.getTracks().forEach(t => t.stop());
         const blob = new Blob(chunks.current, { type: 'audio/webm' });
-        console.log(`[Camo] stop: ${blob.size} bytes, ${chunks.current.length} chunks`);
         if (blob.size === 0) return;
         setBusy(true);
         try {
           const r = await transcriptionAPI.transcribe(token!, blob, 'audio.webm', false);
-          console.log(`[Camo] response:`, r);
           if (r.text?.trim()) onResult(r.text.trim());
-        } catch (err) { console.error('[Camo] error:', err); }
+        } catch {}
         setBusy(false);
       };
       mr.start(500);
       mrRef.current = mr;
       setRec(true);
-      const track = stream.getAudioTracks()[0];
-      console.log(`[Camo] started — device: "${track?.label}", id: ${selectedDeviceId || 'default'}, settings:`, track?.getSettings());
-    } catch (err) { console.error('[Camo] mic error:', err); }
+    } catch {}
   }, [token, onResult, selectedDeviceId]);
   const stop = useCallback(() => { mrRef.current?.state === 'recording' && mrRef.current.stop(); setRec(false); }, []);
 
@@ -548,7 +544,7 @@ export function AICompanionToggle({ onClick, hasActivity }: { onClick: () => voi
   return (
     <button onClick={onClick} className="fixed bottom-6 right-6 z-30 w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105" style={{ background: '#2D8CFF' }} title="Camo">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
-      {hasActivity && <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2" style={{ borderColor: C.base }} />}
+      {hasActivity && <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-[var(--accent)] border-2" style={{ borderColor: C.base }} />}
     </button>
   );
 }

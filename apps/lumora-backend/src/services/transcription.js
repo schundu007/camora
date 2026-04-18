@@ -63,17 +63,15 @@ export async function transcribe(audioBuffer, filename = 'audio.webm') {
   try {
     // Write audio to a temp file
     await fs.promises.writeFile(inputPath, audioBuffer);
-    console.log(`[Transcribe] Input: ${audioBuffer.length} bytes, ext=${ext}`);
 
     // Try WAV conversion first, fall back to sending original if ffmpeg fails
     let audioFile = inputPath;
     try {
       await convertToWav(inputPath, wavPath);
       const wavSize = (await fs.promises.stat(wavPath)).size;
-      console.log(`[Transcribe] WAV converted: ${wavSize} bytes`);
       if (wavSize > 1000) audioFile = wavPath;
-    } catch (ffmpegErr) {
-      console.warn(`[Transcribe] ffmpeg failed, sending original: ${ffmpegErr.message}`);
+    } catch {
+      // ffmpeg failed — send original format
     }
 
     // Send to OpenAI Whisper
@@ -93,7 +91,6 @@ export async function transcribe(audioBuffer, filename = 'audio.webm') {
     } else {
       text = String(response).trim();
     }
-    console.log(`[Transcribe] Result: "${text.slice(0, 100)}" (${text.length} chars)`);
     return text;
   } finally {
     // Clean up temp files
