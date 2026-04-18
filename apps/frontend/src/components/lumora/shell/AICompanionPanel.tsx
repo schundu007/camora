@@ -8,7 +8,7 @@ import { useAudioDevices } from '@/components/lumora/audio/hooks/useAudioDevices
 const C = {
   base: 'rgba(255,255,255,0.4)', surface: 'rgba(0,0,0,0.03)', elevated: '#2D8CFF',
   text: '#0F172A', muted: '#64748B', accent: '#2D8CFF',
-  accentBg: 'rgba(45,140,255,0.08)', border: 'rgba(0,0,0,0.08)',
+  accentBg: 'rgba(45,140,255,0.08)', border: 'rgba(0,0,0,0.15)',
 };
 
 /* ── Types ── */

@@ -131,7 +131,7 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
   };
 
   return (
-    <header className="z-50 shrink-0" style={{ background: 'linear-gradient(135deg, #2D8CFF 0%, #2D8CFF 100%)', borderBottom: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 1px 8px rgba(0,0,0,0.15)', fontFamily: "'Satoshi', sans-serif" }}>
+    <header className="z-50 shrink-0" style={{ background: 'linear-gradient(135deg, #2D8CFF 0%, #2D8CFF 100%)', borderBottom: '1px solid rgba(255,255,255,0.2)', boxShadow: '0 1px 8px rgba(0,0,0,0.15)', fontFamily: "'Satoshi', sans-serif" }}>
       {/* Row 1: Nav + Audio + Controls — horizontally scrollable */}
       <div className="flex items-center h-[42px] overflow-x-auto no-scrollbar">
         {/* Sidebar toggle */}
@@ -155,13 +155,13 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
         )}
 
         {/* Logo — brand identity, Comfortaa font */}
-        <Link to="/" className="flex items-center gap-2 px-4 h-full shrink-0" style={{ borderRight: '1px solid rgba(255,255,255,0.04)' }}>
+        <Link to="/" className="flex items-center gap-2 px-4 h-full shrink-0" style={{ borderRight: '1px solid rgba(255,255,255,0.15)' }}>
           <CamoraLogo size={24} />
         </Link>
 
         {/* Navigation — pill tabs with icon+label, Jakarta Sans bold */}
-        <div data-tour="tabs" className="flex items-center h-full shrink-0 px-1" style={{ borderRight: '1px solid rgba(255,255,255,0.04)' }}>
-          <Link to="/capra/prepare" className="flex items-center gap-1 px-2 py-1 mx-0.5 rounded-md text-[11px] transition-all" style={{ color: 'rgba(255,255,255,0.4)', fontFamily: "'Satoshi', sans-serif", fontWeight: 700 }} title="Prepare">
+        <div data-tour="tabs" className="flex items-center h-full shrink-0 px-1" style={{ borderRight: '1px solid rgba(255,255,255,0.15)' }}>
+          <Link to="/capra/prepare" className="flex items-center gap-1 px-2 py-1 mx-0.5 rounded-md text-[11px] transition-all" style={{ color: 'rgba(255,255,255,0.75)', fontFamily: "'Satoshi', sans-serif", fontWeight: 700 }} title="Prepare">
             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
             <span className="hidden xl:inline">Prepare</span>
           </Link>
@@ -170,7 +170,7 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
               className="flex items-center gap-1.5 px-2.5 py-1 mx-0.5 rounded-md text-[11px] font-bold transition-all"
               style={currentTab === tab.id
                 ? { background: 'rgba(45,140,255,0.15)', color: '#91C733', fontFamily: "'Satoshi', sans-serif", boxShadow: 'inset 0 0 0 1px rgba(45,140,255,0.25)' }
-                : { color: 'rgba(255,255,255,0.45)', fontFamily: "'Satoshi', sans-serif" }}>
+                : { color: 'rgba(255,255,255,0.75)', fontFamily: "'Satoshi', sans-serif" }}>
               <span className="hidden md:inline">{TAB_ICONS[tab.id]}</span>
               <span>{tab.label}</span>
             </button>
@@ -178,14 +178,14 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
         </div>
 
         {/* Mic Selector — between tabs and platform */}
-        <div className="flex items-center px-1.5 h-full shrink-0" style={{ borderRight: '1px solid rgba(255,255,255,0.04)' }}>
+        <div className="flex items-center px-1.5 h-full shrink-0" style={{ borderRight: '1px solid rgba(255,255,255,0.15)' }}>
           <MicrophoneSelector disabled={false} />
         </div>
 
         {/* Platform — monospace badge style */}
-        <div data-tour="platform" className="hidden lg:flex items-center px-2 h-full shrink-0" style={{ borderRight: '1px solid rgba(255,255,255,0.04)' }}>
+        <div data-tour="platform" className="hidden lg:flex items-center px-2 h-full shrink-0" style={{ borderRight: '1px solid rgba(255,255,255,0.15)' }}>
           <select id="platform-select" name="platform" className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-1 rounded-md cursor-pointer focus:outline-none"
-            style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.65)', border: '1px solid rgba(255,255,255,0.08)' }} defaultValue="general">
+            style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.8)', border: '1px solid rgba(255,255,255,0.2)' }} defaultValue="general">
             <option value="general">General</option>
             <option value="zoom">Zoom</option>
             <option value="meet">Meet</option>
@@ -197,12 +197,12 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
         </div>
 
         {/* Interviewer — between General and Audio */}
-        <div className="flex items-center px-1.5 h-full shrink-0" style={{ borderRight: '1px solid rgba(255,255,255,0.04)' }}>
+        <div className="flex items-center px-1.5 h-full shrink-0" style={{ borderRight: '1px solid rgba(255,255,255,0.15)' }}>
           <SystemAudioButton onTranscription={onTranscription} disabled={false} />
         </div>
 
         {/* Audio Controls — grouped with subtle frosted bg */}
-        <div data-tour="audio" className="flex items-center gap-1.5 px-2 h-full shrink-0" style={{ background: 'rgba(255,255,255,0.02)', borderRight: '1px solid rgba(255,255,255,0.04)' }}>
+        <div data-tour="audio" className="flex items-center gap-1.5 px-2 h-full shrink-0" style={{ background: 'rgba(255,255,255,0.02)', borderRight: '1px solid rgba(255,255,255,0.15)' }}>
           <AudioCapture onTranscription={onTranscription} />
           <DocumentUpload />
         </div>
@@ -211,7 +211,7 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
         <div className="flex-1 min-w-0" />
 
         {/* Status — monospace, right-aligned with glow dot */}
-        <div className="hidden lg:flex items-center gap-2 px-3 h-full shrink-0" style={{ borderLeft: '1px solid rgba(255,255,255,0.04)' }}>
+        <div className="hidden lg:flex items-center gap-2 px-3 h-full shrink-0" style={{ borderLeft: '1px solid rgba(255,255,255,0.15)' }}>
           <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${
             status.state === 'ready' ? 'bg-emerald-400' :
             status.state === 'error' ? 'bg-red-400' :
@@ -219,30 +219,30 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
             status.state === 'listen' || status.state === 'write' ? 'bg-emerald-400 animate-pulse' :
             'bg-white/20'
           }`} style={status.state === 'ready' ? { boxShadow: '0 0 6px rgba(45,140,255,0.5)' } : {}} />
-          <span className="text-[10px] font-mono font-medium tracking-wide truncate max-w-[90px]" style={{ color: 'rgba(255,255,255,0.35)' }}>
+          <span className="text-[10px] font-mono font-medium tracking-wide truncate max-w-[90px]" style={{ color: 'rgba(255,255,255,0.7)' }}>
             {status.message}
           </span>
         </div>
 
         {/* Actions — icon-only, subtle */}
-        <div className="flex items-center gap-0.5 px-1.5 h-full shrink-0" style={{ borderLeft: '1px solid rgba(255,255,255,0.04)' }}>
+        <div className="flex items-center gap-0.5 px-1.5 h-full shrink-0" style={{ borderLeft: '1px solid rgba(255,255,255,0.15)' }}>
           <button onClick={() => setUseSearch(!useSearch)} className="p-1.5 rounded-md transition-all"
-            style={useSearch ? { background: 'rgba(45,140,255,0.15)', color: '#91C733' } : { color: 'rgba(255,255,255,0.3)' }} title="Search (⌘S)">
+            style={useSearch ? { background: 'rgba(45,140,255,0.15)', color: '#91C733' } : { color: 'rgba(255,255,255,0.7)' }} title="Search (⌘S)">
             <SearchIcon />
           </button>
-          <button className="p-1.5 rounded-md transition-all" style={{ color: 'rgba(255,255,255,0.3)' }} onClick={() => clearHistory()} title="Reset (⌘⌫)">
+          <button className="p-1.5 rounded-md transition-all" style={{ color: 'rgba(255,255,255,0.7)' }} onClick={() => clearHistory()} title="Reset (⌘⌫)">
             <ResetIcon />
           </button>
         </div>
 
         {/* User — avatar pill */}
-        <div className="flex items-center px-2 h-full shrink-0" style={{ borderLeft: '1px solid rgba(255,255,255,0.04)' }}>
+        <div className="flex items-center px-2 h-full shrink-0" style={{ borderLeft: '1px solid rgba(255,255,255,0.15)' }}>
           <UserBadge />
         </div>
       </div>
 
       {/* Row 2: Input bar with subtle emerald accent — hidden when showInputBar=false (composer moved to page bottom) */}
-      {showInputBar && <div data-tour="input" className="flex items-center h-[36px]" style={{ borderTop: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.04)' }}>
+      {showInputBar && <div data-tour="input" className="flex items-center h-[36px]" style={{ borderTop: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.04)' }}>
         <div className="flex-1 flex items-center justify-center px-3 min-w-0">
           <input
             ref={inputRef}
@@ -256,7 +256,7 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
           <button
             onClick={toggleExpand}
             className="p-1.5 rounded-lg transition-all duration-200 ml-1 shrink-0"
-            style={isExpanded ? { color: '#91C733', background: 'rgba(45,140,255,0.15)' } : { color: 'rgba(255,255,255,0.5)' }}
+            style={isExpanded ? { color: '#91C733', background: 'rgba(45,140,255,0.15)' } : { color: 'rgba(255,255,255,0.75)' }}
             onMouseEnter={(e) => { if (!isExpanded) { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = 'rgba(255,255,255,0.12)'; }}}
             onMouseLeave={(e) => { if (!isExpanded) { e.currentTarget.style.color = 'rgba(255,255,255,0.25)'; e.currentTarget.style.background = 'transparent'; }}}
             title={isExpanded ? 'Collapse textarea' : 'Expand for multi-line input'}

@@ -44,10 +44,10 @@ function Block({ block, delay }: { block: ParsedBlock; delay: number }) {
   switch (block.type) {
     case 'HEADLINE':
       return (
-        <div className="relative rounded-xl overflow-hidden animate-fade-up" style={{...style, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(8px)'}}>
+        <div className="relative rounded-xl overflow-hidden animate-fade-up" style={{...style, background: '#F8FAFC', border: '1px solid #E2E8F0', backdropFilter: 'blur(8px)'}}>
           <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: 'linear-gradient(90deg, #2D8CFF, #2D8CFF, #91C733)' }} />
           <div className="p-5">
-            <p className="text-[15px] text-white/90 leading-relaxed font-medium" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>{cleanText(block.content)}</p>
+            <p className="text-[15px] text-slate-800 leading-relaxed font-medium" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>{cleanText(block.content)}</p>
           </div>
         </div>
       );
@@ -58,11 +58,11 @@ function Block({ block, delay }: { block: ParsedBlock; delay: number }) {
         .map(l => cleanText(l).replace(/^[•\-*]\s*/, ''))
         .filter(Boolean);
       return (
-        <div className="rounded-xl overflow-hidden animate-fade-up" style={{...style, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)'}}>
-          <div className="flex items-center gap-2 px-4 py-2.5 border-b border-white/6">
+        <div className="rounded-xl overflow-hidden animate-fade-up" style={{...style, background: '#F8FAFC', border: '1px solid #E2E8F0'}}>
+          <div className="flex items-center gap-2 px-4 py-2.5 border-b border-slate-200">
             <svg className="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-            <h4 className="text-[10px] font-mono font-bold text-white/50 uppercase tracking-widest">Key Points</h4>
-            <span className="ml-auto text-[10px] font-mono text-white/30 border border-white/10 rounded-full px-2 py-0.5">{lines.length}</span>
+            <h4 className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest">Key Points</h4>
+            <span className="ml-auto text-[10px] font-mono text-slate-400 border border-slate-200 rounded-full px-2 py-0.5">{lines.length}</span>
           </div>
           <div className="p-4 space-y-2.5">
             {lines.map((line, i) => {
@@ -73,8 +73,8 @@ function Block({ block, delay }: { block: ParsedBlock; delay: number }) {
               return (
                 <div key={i} className="flex items-start gap-3">
                   <span className="flex items-center justify-center w-5 h-5 rounded-md bg-emerald-600/15 text-emerald-300 text-[10px] font-bold shrink-0 mt-0.5 font-mono">{i + 1}</span>
-                  <div className="text-[13px] text-white/70 leading-relaxed">
-                    {label && <span className="font-semibold text-white/90">{label}: </span>}
+                  <div className="text-[13px] text-slate-600 leading-relaxed">
+                    {label && <span className="font-semibold text-slate-800">{label}: </span>}
                     {text}
                   </div>
                 </div>
@@ -86,10 +86,10 @@ function Block({ block, delay }: { block: ParsedBlock; delay: number }) {
 
     case 'DIAGRAM':
       return (
-        <div className="rounded-xl overflow-hidden animate-fade-up" style={{...style, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)'}}>
-          <div className="flex items-center gap-2 px-4 py-2.5 border-b border-white/6">
+        <div className="rounded-xl overflow-hidden animate-fade-up" style={{...style, background: '#F8FAFC', border: '1px solid #E2E8F0'}}>
+          <div className="flex items-center gap-2 px-4 py-2.5 border-b border-slate-200">
             <svg className="w-3.5 h-3.5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6z" /></svg>
-            <h4 className="text-[10px] font-mono font-bold text-white/50 uppercase tracking-widest">Flow</h4>
+            <h4 className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest">Flow</h4>
           </div>
           <MermaidDiagram content={block.content} />
         </div>
@@ -98,36 +98,36 @@ function Block({ block, delay }: { block: ParsedBlock; delay: number }) {
     case 'CODE':
       const lang = block.lang || 'bash';
       return (
-        <div className="rounded-xl overflow-hidden animate-fade-up group" style={{...style, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)'}}>
-          <div className="flex items-center justify-between px-4 py-2 border-b border-white/6">
+        <div className="rounded-xl overflow-hidden animate-fade-up group" style={{...style, background: '#F8FAFC', border: '1px solid #E2E8F0'}}>
+          <div className="flex items-center justify-between px-4 py-2 border-b border-slate-200">
             <div className="flex items-center gap-2">
               <div className="flex gap-1"><div className="w-2 h-2 rounded-full bg-red-400/40" /><div className="w-2 h-2 rounded-full bg-amber-400/40" /><div className="w-2 h-2 rounded-full bg-emerald-400/40" /></div>
               <span className="font-mono text-[10px] font-bold text-emerald-400/80 uppercase tracking-widest">{lang}</span>
             </div>
-            <button className="text-[10px] font-mono text-white/30 hover:text-white/70 px-2 py-0.5 border border-white/10 rounded hover:border-white/25 transition-all opacity-0 group-hover:opacity-100"
+            <button className="text-[10px] font-mono text-slate-400 hover:text-slate-600 px-2 py-0.5 border border-slate-200 rounded hover:border-slate-300 transition-all opacity-0 group-hover:opacity-100"
               onClick={() => navigator.clipboard.writeText(block.content)}>Copy</button>
           </div>
-          <pre className="p-4 overflow-x-auto" style={{ background: 'rgba(0,0,0,0.2)' }}><code ref={codeRef} className={`language-${lang} text-[13px] leading-relaxed`}>{block.content}</code></pre>
+          <pre className="p-4 overflow-x-auto" style={{ background: '#0F172A' }}><code ref={codeRef} className={`language-${lang} text-[13px] leading-relaxed`}>{block.content}</code></pre>
         </div>
       );
 
     case 'FOLLOWUP':
       const pairs = parseFollowups(block.content);
       return (
-        <div className="rounded-xl overflow-hidden animate-fade-up" style={{...style, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)'}}>
-          <div className="flex items-center gap-2 px-4 py-2.5 border-b border-white/6">
+        <div className="rounded-xl overflow-hidden animate-fade-up" style={{...style, background: '#F8FAFC', border: '1px solid #E2E8F0'}}>
+          <div className="flex items-center gap-2 px-4 py-2.5 border-b border-slate-200">
             <svg className="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-            <h4 className="text-[10px] font-mono font-bold text-white/50 uppercase tracking-widest">Follow-up Q&A</h4>
-            <span className="ml-auto text-[10px] font-mono text-white/30 border border-white/10 rounded-full px-2 py-0.5">{pairs.length}</span>
+            <h4 className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest">Follow-up Q&A</h4>
+            <span className="ml-auto text-[10px] font-mono text-slate-400 border border-slate-200 rounded-full px-2 py-0.5">{pairs.length}</span>
           </div>
-          <div className="divide-y divide-white/5">
+          <div className="divide-y divide-slate-200">
             {pairs.map((pair, i) => (
               <div key={i} className="px-4 py-3">
                 <div className="flex items-start gap-2 mb-2">
                   <span className="flex items-center justify-center w-5 h-5 rounded-md bg-amber-500/15 text-amber-300 text-[10px] font-bold shrink-0 font-mono">Q{i+1}</span>
-                  <span className="text-[13px] font-semibold text-white/85 leading-relaxed">{pair.question}</span>
+                  <span className="text-[13px] font-semibold text-slate-800 leading-relaxed">{pair.question}</span>
                 </div>
-                <div className="ml-7 text-[13px] text-white/60 leading-relaxed rounded-lg p-3" style={{ background: 'rgba(255,255,255,0.02)' }}>{pair.answer}</div>
+                <div className="ml-7 text-[13px] text-slate-500 leading-relaxed rounded-lg p-3" style={{ background: '#F1F5F9' }}>{pair.answer}</div>
               </div>
             ))}
           </div>
@@ -136,8 +136,8 @@ function Block({ block, delay }: { block: ParsedBlock; delay: number }) {
 
     default:
       return (
-        <div className="rounded-xl p-4 animate-fade-up" style={{...style, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)'}}>
-          <p className="text-[13px] text-white/70 leading-relaxed">{cleanText(block.content)}</p>
+        <div className="rounded-xl p-4 animate-fade-up" style={{...style, background: '#F8FAFC', border: '1px solid #E2E8F0'}}>
+          <p className="text-[13px] text-slate-600 leading-relaxed">{cleanText(block.content)}</p>
         </div>
       );
   }
@@ -178,7 +178,7 @@ function CodingView({ blocks }: { blocks: ParsedBlock[] }) {
 
       {/* Code Block - Full Width */}
       <div className="rounded-md border border-indigo/20 bg-[#0d1117] overflow-hidden">
-        <div className="flex items-center justify-between px-3 py-2 border-b border-white/10 bg-[var(--bg-surface)]/[0.02]">
+        <div className="flex items-center justify-between px-3 py-2 border-b border-slate-200 bg-[var(--bg-surface)]/[0.02]">
           <div className="flex items-center gap-2">
             <div className="flex gap-1">
               <div className="w-2 h-2 rounded-full bg-rose/40" />
@@ -307,7 +307,7 @@ function TestCasesList({ content }: { content: string }) {
         const arrowMatch = line.match(/Input:\s*(.+?)\s*[-→>]+\s*Output:\s*(.+)/i);
         if (arrowMatch) {
           return (
-            <div key={i} className="flex flex-col gap-1 p-2 rounded bg-[var(--bg-surface)]/[0.02] border border-white/5">
+            <div key={i} className="flex flex-col gap-1 p-2 rounded bg-[var(--bg-surface)]/[0.02] border border-slate-200">
               <div className="flex items-center gap-2">
                 <span className="font-mono text-xs font-bold text-indigo-light bg-indigo/10 px-2 py-0.5 rounded">IN</span>
                 <code className="font-mono text-[12px] text-text-muted">{arrowMatch[1]}</code>
@@ -433,7 +433,7 @@ function GridCard({
           {title}
         </span>
         {collapsible && (
-          <svg className={`w-3.5 h-3.5 transition-transform duration-200 ${collapsed ? '' : 'rotate-180'}`} style={{ color: 'rgba(255,255,255,0.25)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+          <svg className={`w-3.5 h-3.5 transition-transform duration-200 ${collapsed ? '' : 'rotate-180'}`} style={{ color: '#94A3B8' }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
           </svg>
         )}
@@ -533,7 +533,7 @@ function ScaleMathList({ content }: { content: string }) {
       </thead>
       <tbody>
         {items.map((m, i) => (
-          <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+          <tr key={i} style={{ borderBottom: '1px solid #E2E8F0' }}>
             <td className="text-[11px] font-bold py-1.5 pr-3 whitespace-nowrap" style={{ color: 'var(--text-primary)' }}>{m.label}</td>
             <td className="text-[11px] py-1.5" style={{ color: 'var(--text-secondary)' }}>{m.value}</td>
           </tr>
@@ -687,13 +687,13 @@ function TradeoffsList({ content }: { content: string }) {
         if (!pick) return <div key={i} className="text-[13px] text-text-muted leading-snug">{line}</div>;
 
         return (
-          <div key={i} className="pb-2.5 border-b border-white/[0.05] last:border-b-0 last:pb-0">
+          <div key={i} className="pb-2.5 border-b border-slate-200 last:border-b-0 last:pb-0">
             <div className="flex items-baseline gap-2 flex-wrap">
               <span className="font-mono text-sm font-bold text-cyan-light">{pick}</span>
               {alt && (
                 <>
                   <span className="font-mono text-xs text-text-dim">vs</span>
-                  <span className="font-mono text-sm text-text-subtle line-through decoration-white/20">{alt}</span>
+                  <span className="font-mono text-sm text-text-subtle line-through decoration-slate-300">{alt}</span>
                 </>
               )}
             </div>

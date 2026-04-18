@@ -55,20 +55,20 @@ export function SessionSidebar({ isOpen, onClose, onSelectEntry }: SessionSideba
         }`}
         style={{
           background: 'linear-gradient(180deg, #2D8CFF 0%, #000000 100%)',
-          borderRight: isOpen ? '1px solid rgba(255,255,255,0.06)' : 'none',
+          borderRight: isOpen ? '1px solid rgba(255,255,255,0.2)' : 'none',
           boxShadow: isOpen ? '2px 0 12px rgba(0,0,0,0.2)' : 'none',
         }}
       >
         {isOpen && (
           <div className="flex flex-col h-full w-full overflow-hidden">
             {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-white/8 shrink-0">
-              <span className="text-xs font-mono font-bold text-white/60 uppercase tracking-widest">History</span>
+            <div className="flex items-center justify-between px-4 py-3 border-b border-white/20 shrink-0">
+              <span className="text-xs font-mono font-bold text-white/80 uppercase tracking-widest">History</span>
               <div className="flex items-center gap-1">
                 {history.length > 0 && (
                   <button
                     onClick={() => { if (confirm('Clear all history?')) clearHistory(); }}
-                    className="text-[10px] font-mono text-white/50 hover:text-red-400 px-2 py-1 rounded transition-colors"
+                    className="text-[10px] font-mono text-white/70 hover:text-red-400 px-2 py-1 rounded transition-colors"
                     title="Clear all"
                   >
                     Clear
@@ -76,7 +76,7 @@ export function SessionSidebar({ isOpen, onClose, onSelectEntry }: SessionSideba
                 )}
                 <button
                   onClick={onClose}
-                  className="p-1 rounded-lg text-white/30 hover:text-white/60 hover:bg-[var(--bg-surface)]/5 transition-colors lg:hidden"
+                  className="p-1 rounded-lg text-white/60 hover:text-white/80 hover:bg-[var(--bg-surface)]/5 transition-colors lg:hidden"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -89,19 +89,19 @@ export function SessionSidebar({ isOpen, onClose, onSelectEntry }: SessionSideba
             <div className="flex-1 overflow-y-auto overflow-x-hidden py-2">
               {groups.length === 0 ? (
                 <div className="px-4 py-8 text-center">
-                  <div className="w-10 h-10 mx-auto mb-3 rounded-xl flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.08)' }}>
-                    <svg className="w-5 h-5 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="w-10 h-10 mx-auto mb-3 rounded-xl flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.15)' }}>
+                    <svg className="w-5 h-5 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                     </svg>
                   </div>
-                  <p className="text-xs text-white/50 font-mono">No questions yet</p>
-                  <p className="text-[10px] text-white/30 mt-1">Ask a question to start</p>
+                  <p className="text-xs text-white/70 font-mono">No questions yet</p>
+                  <p className="text-[10px] text-white/60 mt-1">Ask a question to start</p>
                 </div>
               ) : (
                 groups.map(group => (
                   <div key={group.label} className="mb-3">
                     <div className="px-4 py-1.5">
-                      <span className="text-[10px] font-mono font-bold text-white/50 uppercase tracking-widest">{group.label}</span>
+                      <span className="text-[10px] font-mono font-bold text-white/70 uppercase tracking-widest">{group.label}</span>
                     </div>
                     {group.items.map(item => (
                       <div
@@ -112,7 +112,7 @@ export function SessionSidebar({ isOpen, onClose, onSelectEntry }: SessionSideba
                       >
                         <button
                           onClick={() => { onSelectEntry(item.index); if (window.innerWidth < 1024) onClose(); }}
-                          className="w-full text-left px-4 py-2 text-[13px] text-white/60 hover:text-white/90 hover:bg-white/8 transition-all truncate block"
+                          className="w-full text-left px-4 py-2 text-[13px] text-white/80 hover:text-white/90 hover:bg-white/15 transition-all truncate block"
                         >
                           {item.question}
                         </button>
@@ -120,7 +120,7 @@ export function SessionSidebar({ isOpen, onClose, onSelectEntry }: SessionSideba
                         {hoveredIdx === item.index && (
                           <button
                             onClick={(e) => { e.stopPropagation(); removeHistoryEntry(item.index); }}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded text-white/40 hover:text-red-400 hover:bg-red-400/10 transition-colors"
+                            className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded text-white/70 hover:text-red-400 hover:bg-red-400/10 transition-colors"
                             title="Remove"
                           >
                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -137,8 +137,8 @@ export function SessionSidebar({ isOpen, onClose, onSelectEntry }: SessionSideba
 
             {/* Footer — Q&A count */}
             {history.length > 0 && (
-              <div className="px-4 py-2.5 border-t border-white/8 shrink-0">
-                <span className="text-[10px] font-mono text-white/45">{history.length} question{history.length !== 1 ? 's' : ''}</span>
+              <div className="px-4 py-2.5 border-t border-white/20 shrink-0">
+                <span className="text-[10px] font-mono text-white/70">{history.length} question{history.length !== 1 ? 's' : ''}</span>
               </div>
             )}
           </div>

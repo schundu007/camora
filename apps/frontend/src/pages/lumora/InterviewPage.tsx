@@ -121,15 +121,15 @@ export function InterviewPage() {
                       onChange={(e) => setInputValue(e.target.value)}
                       onKeyDown={(e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleInputSubmit(); }}
                       placeholder="Paste a coding problem, system design question, or multi-line prompt..."
-                      className="w-full bg-transparent text-slate-900 text-sm placeholder:text-slate-400 px-4 py-3 resize-none focus:outline-none font-code"
+                      className="w-full bg-transparent text-slate-900 text-sm placeholder:text-slate-500 px-4 py-3 resize-none focus:outline-none font-code"
                       rows={4}
                       style={{ minHeight: 80, maxHeight: 240 }}
                       autoFocus
                     />
                     <div className="flex items-center justify-between px-3 py-2 border-t border-slate-200">
-                      <span className="text-[10px] font-code text-slate-400">{inputValue.length > 0 ? `${inputValue.length} chars` : 'Cmd+Enter to send'}</span>
+                      <span className="text-[10px] font-code text-slate-500">{inputValue.length > 0 ? `${inputValue.length} chars` : 'Cmd+Enter to send'}</span>
                       <div className="flex items-center gap-2">
-                        <button onClick={() => setIsExpanded(false)} className="text-xs text-slate-400 hover:text-slate-600 transition-colors px-2 py-1">Collapse</button>
+                        <button onClick={() => setIsExpanded(false)} className="text-xs text-slate-500 hover:text-slate-600 transition-colors px-2 py-1">Collapse</button>
                         <button onClick={handleInputSubmit} disabled={!inputValue.trim() || isStreaming}
                           className="px-4 py-1.5 rounded-lg text-xs font-bold text-white disabled:opacity-30 transition-all"
                           style={{ background: inputValue.trim() ? 'linear-gradient(135deg, #2D8CFF, #2D8CFF)' : '#e2e8f0' }}>
@@ -152,11 +152,11 @@ export function InterviewPage() {
                       onChange={(e) => setInputValue(e.target.value)}
                       onKeyDown={(e) => { if (e.key === 'Enter') handleInputSubmit(); }}
                       placeholder={isStreaming ? 'AI is generating...' : showEmptyState ? 'Ask an interview question...' : 'Ask a follow-up question...'}
-                      className="flex-1 bg-transparent text-slate-900 text-sm placeholder:text-slate-400 focus:outline-none min-w-0"
+                      className="flex-1 bg-transparent text-slate-900 text-sm placeholder:text-slate-500 focus:outline-none min-w-0"
                       disabled={isStreaming}
                     />
                     <button onClick={() => { setIsExpanded(true); setTimeout(() => textareaRef.current?.focus(), 50); }}
-                      className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors shrink-0"
+                      className="p-1.5 rounded-lg text-slate-500 hover:text-slate-600 hover:bg-slate-100 transition-colors shrink-0"
                       title="Expand for multi-line input">
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
@@ -172,7 +172,7 @@ export function InterviewPage() {
                       </button>
                     )}
                     {!inputValue && !isStreaming && (
-                      <kbd className="hidden sm:inline text-[10px] font-code text-slate-400 border border-slate-200 rounded px-1.5 py-0.5 shrink-0">Cmd+K</kbd>
+                      <kbd className="hidden sm:inline text-[10px] font-code text-slate-500 border border-slate-200 rounded px-1.5 py-0.5 shrink-0">Cmd+K</kbd>
                     )}
                   </div>
                 )}
@@ -181,12 +181,12 @@ export function InterviewPage() {
             <div className="flex items-center justify-between h-6 px-3 lumora-status-bar">
               <div className="flex items-center gap-2">
                 <span className={`w-1.5 h-1.5 rounded-full ${isStreaming ? 'bg-emerald-500 animate-pulse' : 'bg-emerald-500'}`} style={!isStreaming ? { boxShadow: '0 0 4px rgba(16,185,129,0.4)' } : {}} />
-                <span className="text-[10px] font-code text-slate-400">{isStreaming ? 'Generating...' : 'Ready'}</span>
+                <span className="text-[10px] font-code text-slate-500">{isStreaming ? 'Generating...' : 'Ready'}</span>
                 {history.length > 0 && (
-                  <span className="text-[10px] font-code text-slate-400 border-l border-slate-200 pl-2">{history.length} Q&A</span>
+                  <span className="text-[10px] font-code text-slate-500 border-l border-slate-200 pl-2">{history.length} Q&A</span>
                 )}
               </div>
-              <div className="flex items-center gap-3 text-[10px] font-code text-slate-400">
+              <div className="flex items-center gap-3 text-[10px] font-code text-slate-500">
                 <span><kbd className="px-1 py-0.5 rounded border border-slate-200 text-slate-500 bg-slate-50">⌘M</kbd> mic</span>
                 <span><kbd className="px-1 py-0.5 rounded border border-slate-200 text-slate-500 bg-slate-50">⌘K</kbd> focus</span>
                 <span><kbd className="px-1 py-0.5 rounded border border-slate-200 text-slate-500 bg-slate-50">⌘B</kbd> blank</span>

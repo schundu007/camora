@@ -26,9 +26,9 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
   const navBg = isLight
     ? 'rgba(255,255,255,0.92)'
     : 'rgba(11,17,32,0.92)';
-  const borderClass = isLight ? 'border-b border-black/[0.06]' : 'border-b border-white/[0.06]';
+  const borderClass = isLight ? 'border-b border-black/[0.1]' : 'border-b border-white/[0.12]';
   const textColor = isLight ? '#0F172A' : '#FFFFFF';
-  const textMuted = isLight ? 'rgba(15,23,42,0.6)' : 'rgba(255,255,255,0.8)';
+  const textMuted = isLight ? 'rgba(15,23,42,0.7)' : 'rgba(255,255,255,0.85)';
   const hoverBg = isLight ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.08)';
   const activeBg = isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.10)';
 
@@ -89,7 +89,7 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
 
       {/* Mobile menu */}
       {open && (
-        <div className="md:hidden px-6 py-3 space-y-1" style={{ background: isLight ? 'rgba(255,255,255,0.97)' : 'rgba(15,23,42,0.97)', backdropFilter: 'blur(12px)', zIndex: 50, borderTop: `1px solid ${isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)'}` }} role="menu">
+        <div className="md:hidden px-6 py-3 space-y-1" style={{ background: isLight ? 'rgba(255,255,255,0.97)' : 'rgba(15,23,42,0.97)', backdropFilter: 'blur(12px)', zIndex: 50, borderTop: `1px solid ${isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.12)'}` }} role="menu">
           {NAV_LINKS.map((link) => (
             <Link
               key={link.label}
@@ -101,7 +101,7 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
               {link.label}
             </Link>
           ))}
-          <div className="pt-2" style={{ borderTop: `1px solid ${isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)'}` }}>
+          <div className="pt-2" style={{ borderTop: `1px solid ${isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.12)'}` }}>
             {isAuthenticated ? (
               <>
                 <Link to="/capra/prepare" onClick={() => setOpen(false)} className="block py-2 text-sm font-bold" style={{ color: textColor }}>Dashboard</Link>
