@@ -413,14 +413,14 @@ const CodeDisplay = forwardRef(function CodeDisplay({ code: initialCode, languag
               onClick={() => onApproachChange?.(i)}
               className={`px-3 py-1.5 text-xs font-medium transition-all border-b-2 whitespace-nowrap ${
                 activeApproach === i
-                  ? 'border-emerald-500 text-emerald-400 bg-[var(--bg-surface)]'
+                  ? 'border-[var(--accent)] text-[var(--accent)] bg-[var(--bg-surface)]'
                   : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)]'
               }`}
             >
               {approach.name || `Approach ${i + 1}`}
               {approach.complexity?.time && (
                 <span className={`ml-1.5 text-[10px] px-1.5 py-0.5 rounded ${
-                  activeApproach === i ? 'bg-emerald-600/20 text-emerald-400' : 'bg-[var(--bg-elevated)] text-[var(--text-muted)]'
+                  activeApproach === i ? 'bg-emerald-600/20 text-[var(--accent)]' : 'bg-[var(--bg-elevated)] text-[var(--text-muted)]'
                 }`}>
                   {approach.complexity.time}
                 </span>

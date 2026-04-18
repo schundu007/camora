@@ -34,7 +34,7 @@ export default function MobileBottomNav({
             key={id}
             onClick={() => handleTap(id)}
             className={`flex flex-col items-center justify-center gap-0.5 flex-1 min-h-[52px] pt-2 pb-1 text-xs font-medium transition-colors duration-150
-              ${isActive ? 'text-emerald-600' : 'text-[var(--text-muted)] active:text-[var(--text-secondary)]'}`}
+              ${isActive ? 'text-[var(--accent)]' : 'text-[var(--text-muted)] active:text-[var(--text-secondary)]'}`}
           >
             <Icon active={isActive} />
             <span>{label}</span>

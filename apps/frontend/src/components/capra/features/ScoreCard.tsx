@@ -12,7 +12,7 @@ interface ScoreCardProps {
 }
 
 function scoreColor(score: number): string {
-  if (score >= 70) return 'text-emerald-500';
+  if (score >= 70) return 'text-[var(--accent)]';
   if (score >= 40) return 'text-amber-500';
   return 'text-red-500';
 }

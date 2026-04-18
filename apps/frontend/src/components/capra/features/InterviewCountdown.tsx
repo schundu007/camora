@@ -77,7 +77,7 @@ export default function InterviewCountdown() {
               <p className="text-sm font-semibold text-[var(--text-primary)]">Interview Countdown</p>
               <p className="text-[13px] text-[var(--text-muted)] mt-0.5">Track your prep progress</p>
             </div>
-            <span className="text-emerald-600 text-sm font-medium group-hover:translate-x-0.5 transition-transform">
+            <span className="text-[var(--accent)] text-sm font-medium group-hover:translate-x-0.5 transition-transform">
               Set your interview date &rarr;
             </span>
           </div>

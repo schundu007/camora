@@ -60,11 +60,11 @@ export default function OnboardingModal({ isOpen, onComplete, onOpenPricing }) {
               className="text-center p-4 rounded-lg transition-all hover:scale-105 bg-emerald-50 border border-emerald-200"
             >
               <div className="w-12 h-12 rounded-lg mx-auto mb-3 flex items-center justify-center bg-emerald-100">
-                <svg className="w-6 h-6 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
                 </svg>
               </div>
-              <div className="text-sm font-semibold text-emerald-500 landing-body">Coding</div>
+              <div className="text-sm font-semibold text-[var(--accent)] landing-body">Coding</div>
             </div>
             <div
               className="text-center p-4 rounded-lg transition-all hover:scale-105 bg-cyan-50 border border-cyan-200"
@@ -80,11 +80,11 @@ export default function OnboardingModal({ isOpen, onComplete, onOpenPricing }) {
               className="text-center p-4 rounded-lg transition-all hover:scale-105 bg-emerald-50 border border-emerald-200"
             >
               <div className="w-12 h-12 rounded-lg mx-auto mb-3 flex items-center justify-center bg-emerald-100">
-                <svg className="w-6 h-6 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
               </div>
-              <div className="text-sm font-semibold text-emerald-500 landing-body">Behavioral</div>
+              <div className="text-sm font-semibold text-[var(--accent)] landing-body">Behavioral</div>
             </div>
           </div>
         </div>
@@ -131,7 +131,7 @@ export default function OnboardingModal({ isOpen, onComplete, onOpenPricing }) {
       subtitle: 'Targeted preparation for specific companies',
       icon: (
         <div className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 bg-emerald-100">
-          <svg className="w-10 h-10 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-10 h-10 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
           </svg>
         </div>
@@ -153,7 +153,7 @@ export default function OnboardingModal({ isOpen, onComplete, onOpenPricing }) {
                 className="flex items-center gap-3 p-3 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)]"
               >
                 <div className="w-6 h-6 rounded-full flex items-center justify-center bg-emerald-100">
-                  <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
@@ -169,7 +169,7 @@ export default function OnboardingModal({ isOpen, onComplete, onOpenPricing }) {
       subtitle: 'Simple and transparent pricing',
       icon: (
         <div className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 bg-emerald-100">
-          <svg className="w-10 h-10 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-10 h-10 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         </div>
@@ -184,13 +184,13 @@ export default function OnboardingModal({ isOpen, onComplete, onOpenPricing }) {
               className="p-4 rounded-lg text-center relative overflow-hidden bg-emerald-50 border border-emerald-200"
             >
               <div className="text-2xl font-bold text-[var(--text-primary)] landing-display">$29</div>
-              <div className="text-sm font-medium text-emerald-500 landing-body">Interview Ready</div>
+              <div className="text-sm font-medium text-[var(--accent)] landing-body">Interview Ready</div>
               <div className="text-xs mt-2 text-[var(--text-muted)] landing-body">/month</div>
             </div>
             <div
               className="p-4 rounded-lg text-center relative overflow-hidden bg-cyan-50 border border-cyan-200"
             >
-              <div className="absolute top-1 right-1 px-1.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500 text-white landing-mono">POPULAR</div>
+              <div className="absolute top-1 right-1 px-1.5 py-0.5 rounded-full text-xs font-bold bg-[var(--accent)] text-white landing-mono">POPULAR</div>
               <div className="text-2xl font-bold text-[var(--text-primary)] landing-display">$49</div>
               <div className="text-sm font-medium text-cyan-500 landing-body">Pro</div>
               <div className="text-xs mt-2 text-[var(--text-muted)] landing-body">/month</div>
@@ -229,7 +229,7 @@ export default function OnboardingModal({ isOpen, onComplete, onOpenPricing }) {
                 onOpenPricing?.();
                 onComplete();
               }}
-              className="bg-emerald-500 text-white font-semibold text-sm rounded hover:bg-emerald-600 landing-body w-full py-4 text-base"
+              className="bg-[var(--accent)] text-white font-semibold text-sm rounded hover:opacity-90 landing-body w-full py-4 text-base"
             >
               Get Credits & Start
             </button>
@@ -304,7 +304,7 @@ export default function OnboardingModal({ isOpen, onComplete, onOpenPricing }) {
           {/* Header */}
           <div className="text-center mb-6">
             <h2 className="text-2xl font-bold mb-2 landing-display">
-              <span className="text-emerald-500">{currentStepData.title}</span>
+              <span className="text-[var(--accent)]">{currentStepData.title}</span>
             </h2>
             <p className="text-[var(--text-muted)] landing-body">{currentStepData.subtitle}</p>
           </div>
@@ -335,7 +335,7 @@ export default function OnboardingModal({ isOpen, onComplete, onOpenPricing }) {
                 )}
                 <button
                   onClick={handleNext}
-                  className="bg-emerald-500 text-white font-semibold text-sm rounded hover:bg-emerald-600 landing-body px-6 py-2.5"
+                  className="bg-[var(--accent)] text-white font-semibold text-sm rounded hover:opacity-90 landing-body px-6 py-2.5"
                 >
                   Next
                 </button>
