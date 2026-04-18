@@ -52,7 +52,7 @@ export function LumoraSettings({ isOpen, onClose }: LumoraSettingsProps) {
           <div className="px-4 sm:px-6 md:px-8 py-4 sm:py-6 space-y-6 sm:space-y-8">
             {/* ── Audio Settings ── */}
             <section>
-              <h3 className="text-sm font-bold uppercase tracking-wider mb-4" style={{ fontFamily: "'Satoshi', sans-serif", color: '#94a3b8' }}>
+              <h3 className="text-sm font-bold uppercase tracking-wider mb-4" style={{ fontFamily: "'Satoshi', sans-serif", color: '#64748b' }}>
                 Audio Settings
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -100,7 +100,7 @@ export function LumoraSettings({ isOpen, onClose }: LumoraSettingsProps) {
 
             {/* ── Voice Recognition ── */}
             <section>
-              <h3 className="text-sm font-bold uppercase tracking-wider mb-2" style={{ fontFamily: "'Satoshi', sans-serif", color: '#94a3b8' }}>
+              <h3 className="text-sm font-bold uppercase tracking-wider mb-2" style={{ fontFamily: "'Satoshi', sans-serif", color: '#64748b' }}>
                 Voice Recognition
               </h3>
               <p className="text-xs mb-4" style={{ color: '#64748b' }}>
@@ -161,7 +161,7 @@ export function LumoraSettings({ isOpen, onClose }: LumoraSettingsProps) {
 
             {/* ── Keyboard Shortcuts ── */}
             <section>
-              <h3 className="text-sm font-bold uppercase tracking-wider mb-4" style={{ fontFamily: "'Satoshi', sans-serif", color: '#94a3b8' }}>
+              <h3 className="text-sm font-bold uppercase tracking-wider mb-4" style={{ fontFamily: "'Satoshi', sans-serif", color: '#64748b' }}>
                 Keyboard Shortcuts
               </h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">

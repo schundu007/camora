@@ -17,10 +17,10 @@ const C = {
   surface: '#1A7AEF',
   elevated: '#0B5CFF',
   text: '#ffffff',
-  muted: 'rgba(255,255,255,0.75)',
+  muted: 'rgba(255,255,255,0.9)',
   accent: '#2D8CFF',
   accentBg: 'rgba(45,140,255,0.15)',
-  border: 'rgba(255,255,255,0.08)',
+  border: 'rgba(255,255,255,0.2)',
 };
 
 function UserAvatarMenu() {
@@ -89,7 +89,7 @@ export function LumoraIconRail({ activeTab, sessionsOpen, onToggleSessions }: Lu
   ];
 
   return (
-    <nav className="hidden md:flex flex-col items-center w-[80px] shrink-0 py-3 gap-1" style={{ background: '#2D8CFF', borderRight: '1px solid rgba(255,255,255,0.08)' }}>
+    <nav className="hidden md:flex flex-col items-center w-[80px] shrink-0 py-3 gap-1" style={{ background: '#2D8CFF', borderRight: '1px solid rgba(255,255,255,0.2)' }}>
       <Link to="/" className="flex items-center justify-center w-full h-12 mb-3" title="Camora">
         <CamoraLogo size={32} />
       </Link>
@@ -101,11 +101,11 @@ export function LumoraIconRail({ activeTab, sessionsOpen, onToggleSessions }: Lu
           <>
             {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full" style={{ background: '#FFFFFF' }} />}
             <span>{item.icon}</span>
-            <span className="text-[10px] font-bold mt-0.5" style={{ fontFamily: "'Satoshi', sans-serif" }}>{item.label}</span>
+            <span className="text-[11px] font-bold mt-0.5" style={{ fontFamily: "'Satoshi', sans-serif" }}>{item.label}</span>
           </>
         );
         const cls = "flex flex-col items-center justify-center w-[66px] h-[56px] rounded-xl transition-all group relative";
-        const sty = isActive ? { background: 'rgba(255,255,255,0.2)', color: '#FFFFFF' } : { color: 'rgba(255,255,255,0.7)' };
+        const sty = isActive ? { background: 'rgba(255,255,255,0.2)', color: '#FFFFFF' } : { color: 'rgba(255,255,255,0.85)' };
 
         return isButton ? (
           <button key={item.id} onClick={item.onClick} className={cls} style={sty} title={item.label}>{content}</button>
@@ -117,17 +117,17 @@ export function LumoraIconRail({ activeTab, sessionsOpen, onToggleSessions }: Lu
       <div className="relative">
         <button onClick={() => setShowMore(!showMore)}
           className="flex flex-col items-center justify-center w-[58px] h-[52px] rounded-xl transition-all group"
-          style={showMore ? { background: 'rgba(255,255,255,0.2)', color: '#FFFFFF' } : { color: 'rgba(255,255,255,0.7)' }}>
+          style={showMore ? { background: 'rgba(255,255,255,0.2)', color: '#FFFFFF' } : { color: 'rgba(255,255,255,0.85)' }}>
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="1" /><circle cx="19" cy="12" r="1" /><circle cx="5" cy="12" r="1" /></svg>
           <span className="text-[9px] font-semibold mt-0.5" style={{ fontFamily: 'var(--font-sans)' }}>More</span>
         </button>
         {showMore && (
           <>
             <div className="fixed inset-0 z-40" onClick={() => setShowMore(false)} />
-            <div className="absolute left-full top-0 ml-2 w-[200px] rounded-xl shadow-2xl z-50 p-3 grid grid-cols-3 gap-1" style={{ background: '#1A7AEF', border: `1px solid ${C.border}`, boxShadow: '0 8px 32px rgba(0,0,0,0.6)' }}>
+            <div className="absolute left-full top-0 ml-2 w-[200px] rounded-xl shadow-2xl z-50 p-3 grid grid-cols-3 gap-1" style={{ background: '#1A7AEF', border: '1px solid rgba(255,255,255,0.2)', boxShadow: '0 8px 32px rgba(0,0,0,0.6)' }}>
               {moreItems.map(mi => {
                 const cls = "flex flex-col items-center gap-1.5 p-2.5 rounded-lg transition-colors";
-                const sty = mi.label === 'Sessions' && sessionsOpen ? { color: '#FFFFFF', background: 'rgba(255,255,255,0.15)' } : { color: 'rgba(255,255,255,0.7)' };
+                const sty = mi.label === 'Sessions' && sessionsOpen ? { color: '#FFFFFF', background: 'rgba(255,255,255,0.15)' } : { color: 'rgba(255,255,255,0.85)' };
                 const hover = {
                   onMouseEnter: (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.color = C.text; e.currentTarget.style.background = C.surface; },
                   onMouseLeave: (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.color = sty.color; e.currentTarget.style.background = sty.background || 'transparent'; },
