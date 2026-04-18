@@ -29,7 +29,7 @@ function AudioWaveform({ active }: { active: boolean }) {
             style={{
               height: active ? `${activeH}px` : `${baseH}px`,
               background: active
-                ? `rgba(118,185,0,${0.4 + barOpacities[i] * 0.6})`
+                ? `rgba(249,115,22,${0.4 + barOpacities[i] * 0.6})`
                 : 'rgba(255,255,255,0.1)',
               transitionDelay: `${i * 15}ms`,
             }}
@@ -51,8 +51,8 @@ function SayThisCard({ text }: { text: string | null }) {
     <div
       className="mx-3 mb-3 rounded-xl p-3 relative"
       style={{
-        background: 'linear-gradient(135deg, rgba(118,185,0,0.15), rgba(139,92,246,0.10))',
-        border: '1px solid rgba(118,185,0,0.25)',
+        background: 'linear-gradient(135deg, rgba(249,115,22,0.15), rgba(139,92,246,0.10))',
+        border: '1px solid rgba(249,115,22,0.25)',
       }}
     >
       <div className="flex items-center justify-between mb-1.5">
@@ -100,7 +100,7 @@ function MinimizedPill({ onExpand }: { onExpand: () => void }) {
       style={{
         background: 'rgba(15,15,25,0.9)',
         backdropFilter: 'blur(16px)',
-        border: '1px solid rgba(118,185,0,0.3)',
+        border: '1px solid rgba(249,115,22,0.3)',
         boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
       }}
     >
@@ -234,9 +234,9 @@ export function FollowUpPopup() {
           maxHeight: isMobile ? '60vh' : '85vh',
           background: 'rgba(15, 15, 25, 0.95)',
           backdropFilter: 'blur(24px)',
-          border: '1px solid rgba(118,185,0,0.2)',
+          border: '1px solid rgba(249,115,22,0.2)',
           borderRadius: 16,
-          boxShadow: '0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(118,185,0,0.1), 0 0 60px rgba(118,185,0,0.06)',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(249,115,22,0.1), 0 0 60px rgba(249,115,22,0.06)',
         }}
       >
         {/* ── Resize handles (top, left, top-left corner) ── */}
@@ -270,7 +270,7 @@ export function FollowUpPopup() {
           <div className="flex items-center gap-2">
             {/* LIVE badge */}
             <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold tracking-wider"
-              style={{ background: 'rgba(16,185,129,0.12)', color: '#34d399' }}>
+              style={{ background: 'rgba(16,185,129,0.12)', color: '#FB923C' }}>
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
               LIVE
             </span>

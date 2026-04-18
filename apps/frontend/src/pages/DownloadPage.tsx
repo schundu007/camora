@@ -327,7 +327,7 @@ export default function DownloadPage() {
           pointerEvents: 'none',
           zIndex: 0,
           background: [
-            'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(118,185,0,0.08) 0%, transparent 60%)',
+            'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(249,115,22,0.08) 0%, transparent 60%)',
             'radial-gradient(ellipse 60% 40% at 20% 50%, rgba(16,185,129,0.04) 0%, transparent 60%)',
             'radial-gradient(ellipse 50% 40% at 80% 70%, rgba(139,92,246,0.04) 0%, transparent 60%)',
           ].join(', '),
@@ -369,11 +369,11 @@ export default function DownloadPage() {
                   width: 80,
                   height: 80,
                   borderRadius: 20,
-                  background: 'linear-gradient(135deg, #76B900 0%, #91C733 50%, #10b981 100%)',
+                  background: 'linear-gradient(135deg, #F97316 0%, #91C733 50%, #10b981 100%)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  boxShadow: '0 8px 32px rgba(118,185,0,0.3), 0 0 0 1px rgba(255,255,255,0.1)',
+                  boxShadow: '0 8px 32px rgba(249,115,22,0.3), 0 0 0 1px rgba(255,255,255,0.1)',
                 }}
               >
                 <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
@@ -415,16 +415,16 @@ export default function DownloadPage() {
                     href={primary.url}
                     className="group inline-flex items-center gap-3 px-8 py-4 rounded-2xl text-base font-bold transition-all duration-200"
                     style={{
-                      background: 'linear-gradient(135deg, #76B900 0%, #91C733 100%)',
+                      background: 'linear-gradient(135deg, #F97316 0%, #91C733 100%)',
                       color: '#ffffff',
-                      boxShadow: '0 4px 24px rgba(118,185,0,0.35), 0 0 0 1px rgba(255,255,255,0.1) inset',
+                      boxShadow: '0 4px 24px rgba(249,115,22,0.35), 0 0 0 1px rgba(255,255,255,0.1) inset',
                     }}
                     onMouseEnter={e => {
-                      (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 40px rgba(118,185,0,0.5), 0 0 0 1px rgba(255,255,255,0.15) inset';
+                      (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 40px rgba(249,115,22,0.5), 0 0 0 1px rgba(255,255,255,0.15) inset';
                       (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)';
                     }}
                     onMouseLeave={e => {
-                      (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 24px rgba(118,185,0,0.35), 0 0 0 1px rgba(255,255,255,0.1) inset';
+                      (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 24px rgba(249,115,22,0.35), 0 0 0 1px rgba(255,255,255,0.1) inset';
                       (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
                     }}
                   >
@@ -443,9 +443,9 @@ export default function DownloadPage() {
                       disabled={addonLoading}
                       className="group inline-flex items-center gap-3 px-6 py-3.5 rounded-2xl text-sm font-bold transition-all duration-200 disabled:opacity-60"
                       style={{
-                        background: 'linear-gradient(135deg, #76B900 0%, #91C733 100%)',
+                        background: 'linear-gradient(135deg, #F97316 0%, #91C733 100%)',
                         color: '#ffffff',
-                        boxShadow: '0 4px 24px rgba(118,185,0,0.35)',
+                        boxShadow: '0 4px 24px rgba(249,115,22,0.35)',
                       }}
                     >
                       {addonLoading ? (
@@ -483,7 +483,7 @@ export default function DownloadPage() {
                     to="/login?redirect=/download"
                     className="group inline-flex items-center gap-3 px-8 py-4 rounded-2xl text-base font-bold transition-all duration-200 no-underline"
                     style={{
-                      background: 'linear-gradient(135deg, #10b981 0%, #76B900 100%)',
+                      background: 'linear-gradient(135deg, #10b981 0%, #F97316 100%)',
                       color: '#ffffff',
                       boxShadow: '0 4px 24px rgba(16,185,129,0.35), 0 0 0 1px rgba(255,255,255,0.1) inset',
                     }}
@@ -510,7 +510,7 @@ export default function DownloadPage() {
                     disabled={proLoading}
                     className="group inline-flex items-center gap-3 px-8 py-4 rounded-2xl text-base font-bold transition-all duration-200 disabled:opacity-60"
                     style={{
-                      background: 'linear-gradient(135deg, #10b981 0%, #76B900 100%)',
+                      background: 'linear-gradient(135deg, #10b981 0%, #F97316 100%)',
                       color: '#ffffff',
                       border: 'none',
                       cursor: proLoading ? 'wait' : 'pointer',
@@ -561,13 +561,13 @@ export default function DownloadPage() {
                     className="relative rounded-2xl p-6 flex flex-col items-center text-center transition-all duration-200"
                     style={{
                       background: isRecommended
-                        ? 'rgba(118,185,0,0.08)'
+                        ? 'rgba(249,115,22,0.08)'
                         : 'rgba(255,255,255,0.03)',
                       border: isRecommended
-                        ? '1px solid rgba(118,185,0,0.3)'
+                        ? '1px solid rgba(249,115,22,0.3)'
                         : '1px solid rgba(255,255,255,0.08)',
                       boxShadow: isRecommended
-                        ? '0 4px 24px rgba(118,185,0,0.12)'
+                        ? '0 4px 24px rgba(249,115,22,0.12)'
                         : 'none',
                     }}
                     onMouseEnter={e => {
@@ -588,9 +588,9 @@ export default function DownloadPage() {
                       <div
                         className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-xs font-bold"
                         style={{
-                          background: 'linear-gradient(135deg, #76B900, #91C733)',
+                          background: 'linear-gradient(135deg, #F97316, #91C733)',
                           color: '#fff',
-                          boxShadow: '0 2px 12px rgba(118,185,0,0.4)',
+                          boxShadow: '0 2px 12px rgba(249,115,22,0.4)',
                         }}
                       >
                         Recommended
@@ -623,7 +623,7 @@ export default function DownloadPage() {
                         className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200"
                         style={{
                           background: isRecommended
-                            ? 'linear-gradient(135deg, #76B900, #91C733)'
+                            ? 'linear-gradient(135deg, #F97316, #91C733)'
                             : 'rgba(255,255,255,0.06)',
                           color: isRecommended ? '#fff' : 'rgba(255,255,255,0.7)',
                           border: isRecommended
@@ -650,7 +650,7 @@ export default function DownloadPage() {
                       <div className="flex items-center gap-2">
                         <button onClick={handleMonthlyAddon} disabled={addonLoading}
                           className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition-all disabled:opacity-60"
-                          style={{ background: 'linear-gradient(135deg, #76B900, #91C733)', color: '#fff' }}>
+                          style={{ background: 'linear-gradient(135deg, #F97316, #91C733)', color: '#fff' }}>
                           <DownloadIcon size={12} />$29/mo
                         </button>
                         <button onClick={handleAnnualAddon} disabled={annualLoading}
@@ -753,7 +753,7 @@ export default function DownloadPage() {
                   <div
                     className="w-10 h-10 rounded-xl flex items-center justify-center mb-4"
                     style={{
-                      background: 'rgba(118,185,0,0.1)',
+                      background: 'rgba(249,115,22,0.1)',
                       color: '#91C733',
                     }}
                   >

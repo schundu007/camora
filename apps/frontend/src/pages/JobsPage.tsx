@@ -73,7 +73,7 @@ function getCompanyLogoPath(companyName: string): string | null {
 
 /** Generate a deterministic color from company name for the initial fallback */
 function getCompanyColor(name: string): string {
-  const colors = ['#76B900', '#91C733', '#3b82f6', '#06b6d4', '#ec4899', '#f97316', '#10b981', '#ef4444', '#f59e0b', '#a855f7'];
+  const colors = ['#F97316', '#91C733', '#3b82f6', '#06b6d4', '#ec4899', '#f97316', '#10b981', '#ef4444', '#f59e0b', '#a855f7'];
   let hash = 0;
   for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
   return colors[Math.abs(hash) % colors.length];
@@ -133,7 +133,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   qa: '#84cc16',
   sre: '#e11d48',
   platform: '#14b8a6',
-  cloud: '#76B900',
+  cloud: '#F97316',
   network: '#0ea5e9',
   blockchain: '#f59e0b',
   game_dev: '#f43f5e',
@@ -1001,7 +1001,7 @@ export default function JobsPage() {
                 fontSize: '13px',
                 fontWeight: 600,
                 color: activeFilterCount > 0 ? 'var(--accent)' : 'var(--text-secondary)',
-                background: activeFilterCount > 0 ? 'rgba(118,185,0,0.1)' : 'var(--bg-elevated)',
+                background: activeFilterCount > 0 ? 'rgba(249,115,22,0.1)' : 'var(--bg-elevated)',
                 border: `1px solid ${activeFilterCount > 0 ? 'var(--accent)' : 'var(--border)'}`,
                 borderRadius: '8px',
                 cursor: 'pointer',
@@ -1019,7 +1019,7 @@ export default function JobsPage() {
 
             {/* Active filter pills */}
             {[
-              { val: locationFilter, set: setLocationFilter, label: locationFilter, color: '#76B900' },
+              { val: locationFilter, set: setLocationFilter, label: locationFilter, color: '#F97316' },
               { val: sourceFilter, set: setSourceFilter, label: sourceFilter, color: '#10b981' },
               { val: workTypeFilter, set: setWorkTypeFilter, label: WORK_TYPES.find(w => w.value === workTypeFilter)?.label, color: '#f59e0b' },
               { val: departmentFilter, set: setDepartmentFilter, label: departmentFilter, color: '#91C733' },
@@ -1273,8 +1273,8 @@ export default function JobsPage() {
                       display: 'flex',
                       flexDirection: 'column',
                       cursor: 'default',
-                      boxShadow: '0 4px 24px rgba(118,185,0,0.12)',
-                      '--glow-hover': '0 20px 60px rgba(118,185,0,0.22)',
+                      boxShadow: '0 4px 24px rgba(249,115,22,0.12)',
+                      '--glow-hover': '0 20px 60px rgba(249,115,22,0.22)',
                     } as React.CSSProperties}
                   >
                     {/* Compact colored strip + title row */}
@@ -1334,7 +1334,7 @@ export default function JobsPage() {
                             {job.location.length > 35 ? job.location.slice(0, 35) + '...' : job.location}
                           </span>
                         )}
-                        <span style={{ fontSize: '10px', fontWeight: 600, color: workType === 'Remote' ? '#76B900' : workType === 'Hybrid' ? '#d97706' : 'var(--text-muted)', background: workType === 'Remote' ? 'rgba(5,150,105,0.1)' : workType === 'Hybrid' ? 'rgba(217,119,6,0.1)' : 'var(--bg-elevated)', padding: '2px 7px', borderRadius: '9999px' }}>{workType}</span>
+                        <span style={{ fontSize: '10px', fontWeight: 600, color: workType === 'Remote' ? '#F97316' : workType === 'Hybrid' ? '#d97706' : 'var(--text-muted)', background: workType === 'Remote' ? 'rgba(5,150,105,0.1)' : workType === 'Hybrid' ? 'rgba(217,119,6,0.1)' : 'var(--bg-elevated)', padding: '2px 7px', borderRadius: '9999px' }}>{workType}</span>
                       </div>
 
                       {/* Salary + Posted date row */}
@@ -1369,7 +1369,7 @@ export default function JobsPage() {
                       {job.ai_tech_stack && job.ai_tech_stack.length > 0 && (
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '8px' }}>
                           {(Array.isArray(job.ai_tech_stack) ? job.ai_tech_stack : []).slice(0, 5).map((tech) => (
-                            <span key={tech} style={{ fontSize: '10px', fontWeight: 600, color: 'var(--accent)', background: 'rgba(118,185,0,0.08)', padding: '2px 7px', borderRadius: '4px', border: '1px solid rgba(118,185,0,0.15)' }}>
+                            <span key={tech} style={{ fontSize: '10px', fontWeight: 600, color: 'var(--accent)', background: 'rgba(249,115,22,0.08)', padding: '2px 7px', borderRadius: '4px', border: '1px solid rgba(249,115,22,0.15)' }}>
                               {tech}
                             </span>
                           ))}

@@ -135,7 +135,7 @@ const CATEGORIES: Category[] = [
   },
   {
     name: 'Graphs',
-    color: '#76B900',
+    color: '#F97316',
     problems: [
       { id: 42, title: 'Number of Islands', difficulty: 'Medium', leetcode: 'https://leetcode.com/problems/number-of-islands/' },
       { id: 43, title: 'Clone Graph', difficulty: 'Medium', leetcode: 'https://leetcode.com/problems/clone-graph/' },
@@ -269,7 +269,7 @@ const PLACEHOLDER_CODE: Record<Language, string> = {
 };
 
 const DIFFICULTY_COLORS: Record<string, { bg: string; text: string; border: string }> = {
-  Easy: { bg: 'rgba(5,150,105,0.12)', text: '#76B900', border: 'rgba(5,150,105,0.3)' },
+  Easy: { bg: 'rgba(5,150,105,0.12)', text: '#F97316', border: 'rgba(5,150,105,0.3)' },
   Medium: { bg: 'rgba(217,119,6,0.12)', text: '#d97706', border: 'rgba(217,119,6,0.3)' },
   Hard: { bg: 'rgba(220,38,38,0.12)', text: '#dc2626', border: 'rgba(220,38,38,0.3)' },
 };
@@ -489,7 +489,7 @@ export default function Blind75Page() {
                 <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px', marginTop: '12px' }}>
                   {[
                     { label: '75 Problems', color: '#10b981', bg: 'rgba(16,185,129,0.12)', border: 'rgba(16,185,129,0.3)' },
-                    { label: `${techInterviewTopics.length} Algorithms`, color: '#76B900', bg: 'rgba(118,185,0,0.12)', border: 'rgba(118,185,0,0.3)' },
+                    { label: `${techInterviewTopics.length} Algorithms`, color: '#F97316', bg: 'rgba(249,115,22,0.12)', border: 'rgba(249,115,22,0.3)' },
                     { label: `${totalBehavioralQuestions} Behavioral`, color: '#7c3aed', bg: 'rgba(124,58,237,0.12)', border: 'rgba(124,58,237,0.3)' },
                     { label: 'Cheatsheet', color: '#d97706', bg: 'rgba(217,119,6,0.12)', border: 'rgba(217,119,6,0.3)' },
                   ].map((stat) => (
@@ -518,7 +518,7 @@ export default function Blind75Page() {
                     style={{
                       height: '100%',
                       width: `${progressPercent}%`,
-                      background: 'linear-gradient(90deg, #10b981, #34d399)',
+                      background: 'linear-gradient(90deg, #10b981, #FB923C)',
                       borderRadius: '4px',
                       transition: 'width 0.4s ease',
                     }}
@@ -936,7 +936,7 @@ export default function Blind75Page() {
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                                               <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>{approach.name}</span>
                                               <div style={{ display: 'flex', gap: '8px' }}>
-                                                <span style={{ fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: '4px', background: 'rgba(118,185,0,0.12)', color: '#91C733' }}>Time: {approach.complexity.time}</span>
+                                                <span style={{ fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: '4px', background: 'rgba(249,115,22,0.12)', color: '#91C733' }}>Time: {approach.complexity.time}</span>
                                                 <span style={{ fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: '4px', background: 'rgba(236,72,153,0.12)', color: '#ec4899' }}>Space: {approach.complexity.space}</span>
                                               </div>
                                             </div>
@@ -1038,7 +1038,7 @@ export default function Blind75Page() {
                                     borderRadius: '8px',
                                     border: '1px solid var(--border)',
                                     background: isSolving ? 'var(--bg-elevated)' : 'var(--bg-surface)',
-                                    color: isSolving ? 'var(--text-muted)' : '#76B900',
+                                    color: isSolving ? 'var(--text-muted)' : '#F97316',
                                     cursor: isSolving ? 'not-allowed' : 'pointer',
                                     display: 'flex',
                                     alignItems: 'center',
@@ -1188,7 +1188,7 @@ export default function Blind75Page() {
                       padding: '3px 10px',
                       borderRadius: '20px',
                       background: 'rgba(5,150,105,0.08)',
-                      color: '#76B900',
+                      color: '#F97316',
                       border: '1px solid rgba(16,185,129,0.3)',
                       whiteSpace: 'nowrap',
                     }}>
@@ -1199,9 +1199,9 @@ export default function Blind75Page() {
                       fontWeight: 600,
                       padding: '3px 10px',
                       borderRadius: '20px',
-                      background: 'rgba(118,185,0,0.08)',
+                      background: 'rgba(249,115,22,0.08)',
                       color: '#2563eb',
-                      border: '1px solid rgba(118,185,0,0.3)',
+                      border: '1px solid rgba(249,115,22,0.3)',
                       whiteSpace: 'nowrap',
                     }}>
                       {questionCount} questions
@@ -1247,7 +1247,7 @@ export default function Blind75Page() {
                                     <td style={{ padding: '6px 12px', borderBottom: '1px solid var(--border)', color: 'var(--text-secondary)', fontWeight: 500 }}>
                                       {key.replace(/([A-Z])/g, ' $1').replace(/^./, (s: string) => s.toUpperCase())}
                                     </td>
-                                    <td style={{ padding: '6px 12px', borderBottom: '1px solid var(--border)', color: '#76B900', fontFamily: "'JetBrains Mono', monospace", fontWeight: 600 }}>
+                                    <td style={{ padding: '6px 12px', borderBottom: '1px solid var(--border)', color: '#F97316', fontFamily: "'JetBrains Mono', monospace", fontWeight: 600 }}>
                                       {String(value)}
                                     </td>
                                   </tr>
@@ -1425,7 +1425,7 @@ export default function Blind75Page() {
               <span style={{ fontSize: '13px', fontWeight: 600, color: '#10b981' }}>{practicedInSection}/{totalInSection} practiced ({progressPct}%)</span>
             </div>
             <div style={{ height: '8px', borderRadius: '4px', background: 'var(--bg-elevated)', overflow: 'hidden' }}>
-              <div style={{ height: '100%', borderRadius: '4px', background: 'linear-gradient(90deg, #10b981, #76B900)', width: `${progressPct}%`, transition: 'width 0.3s ease' }} />
+              <div style={{ height: '100%', borderRadius: '4px', background: 'linear-gradient(90deg, #10b981, #F97316)', width: `${progressPct}%`, transition: 'width 0.3s ease' }} />
             </div>
           </div>
 
@@ -1456,7 +1456,7 @@ export default function Blind75Page() {
                     {/* Green numbered badge */}
                     <span style={{
                       width: '32px', height: '32px', borderRadius: '8px',
-                      background: isPracticed ? '#76B900' : '#10b981', color: 'var(--bg-surface)',
+                      background: isPracticed ? '#F97316' : '#10b981', color: 'var(--bg-surface)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontSize: '13px', fontWeight: 700, flexShrink: 0,
                     }}>
@@ -1510,7 +1510,7 @@ export default function Blind75Page() {
                       {/* What Interviewers Look For */}
                       <div style={{ marginTop: '20px', marginBottom: '24px' }}>
                         <h4 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#76B900" strokeWidth={2}>
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F97316" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
                           </svg>
                           What Interviewers Look For
@@ -1526,7 +1526,7 @@ export default function Blind75Page() {
                       <div style={{ marginBottom: '24px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
                           <span style={{
-                            fontSize: '11px', fontWeight: 700, color: 'var(--bg-surface)', background: '#76B900',
+                            fontSize: '11px', fontWeight: 700, color: 'var(--bg-surface)', background: '#F97316',
                             padding: '3px 10px', borderRadius: '6px', letterSpacing: '0.5px',
                           }}>STAR</span>
                           <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>Example Answer</span>
@@ -1540,7 +1540,7 @@ export default function Blind75Page() {
                               display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 700,
                             }}>S</span>
                           </div>
-                          <div style={{ flex: 1, background: 'rgba(118,185,0,0.08)', borderLeft: '3px solid #3b82f6', borderRadius: '0 8px 8px 0', padding: '12px 16px' }}>
+                          <div style={{ flex: 1, background: 'rgba(249,115,22,0.08)', borderLeft: '3px solid #3b82f6', borderRadius: '0 8px 8px 0', padding: '12px 16px' }}>
                             <div style={{ fontSize: '12px', fontWeight: 700, color: '#91C733', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Situation</div>
                             <div style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.6 }}>{item.star.situation}</div>
                           </div>
@@ -1605,7 +1605,7 @@ export default function Blind75Page() {
                           {item.tips.map((tip: string, ti: number) => (
                             <div key={ti} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
                               <span style={{
-                                width: '22px', height: '22px', borderRadius: '6px', background: 'rgba(16,185,129,0.15)', color: '#76B900',
+                                width: '22px', height: '22px', borderRadius: '6px', background: 'rgba(16,185,129,0.15)', color: '#F97316',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                                 fontSize: '11px', fontWeight: 700, flexShrink: 0, marginTop: '1px',
                               }}>{ti + 1}</span>
@@ -1653,11 +1653,11 @@ export default function Blind75Page() {
                 alignItems: 'center',
                 gap: '10px',
               }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#76B900" strokeWidth={2}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F97316" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#10b981', margin: 0 }}>Before the Interview</h3>
-                <span style={{ fontSize: '12px', color: '#76B900', fontWeight: 500, marginLeft: 'auto' }}>
+                <span style={{ fontSize: '12px', color: '#F97316', fontWeight: 500, marginLeft: 'auto' }}>
                   {interviewCheatsheet.before.length} items
                 </span>
               </div>
@@ -1696,8 +1696,8 @@ export default function Blind75Page() {
             }}>
               <div style={{
                 padding: '16px 20px',
-                background: 'rgba(118,185,0,0.08)',
-                borderBottom: '1px solid rgba(118,185,0,0.3)',
+                background: 'rgba(249,115,22,0.08)',
+                borderBottom: '1px solid rgba(249,115,22,0.3)',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '10px',
@@ -1724,7 +1724,7 @@ export default function Blind75Page() {
                   >
                     <div style={{
                       width: '20px', height: '20px', borderRadius: '6px',
-                      border: '2px solid rgba(118,185,0,0.3)', background: 'rgba(118,185,0,0.08)', flexShrink: 0, marginTop: '1px',
+                      border: '2px solid rgba(249,115,22,0.3)', background: 'rgba(249,115,22,0.08)', flexShrink: 0, marginTop: '1px',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}>
                       <span style={{ fontSize: '10px', color: '#2563eb', fontWeight: 700 }}>{i + 1}</span>
