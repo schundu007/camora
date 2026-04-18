@@ -462,12 +462,11 @@ export default function LandingPage() {
       {/* ── 1. HERO — Forest road background ── */}
       <section className="relative pt-28 pb-14 md:pt-36 md:pb-20 px-6 overflow-hidden">
         <TrackWaypoint label="LAUNCH" />
-        {/* Hero background — cartoon airplane illustration on white */}
+        {/* Hero background — dark with subtle image overlay */}
         <div className="absolute inset-0 z-0">
-          <img src="/hero-forest.jpg" alt="" className="w-full h-full object-cover object-center" style={{ opacity: 0.3 }} />
-          {/* Light fade to white */}
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.7) 50%, #FFFFFF 100%)' }} />
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(118,185,0,0.04) 0%, transparent 40%)' }} />
+          <img src="/hero-forest.jpg" alt="" className="w-full h-full object-cover object-center" style={{ opacity: 0.15 }} />
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(9,9,15,0.6) 0%, rgba(9,9,15,0.8) 50%, #09090F 100%)' }} />
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(118,185,0,0.06) 0%, transparent 40%)' }} />
         </div>
         {/* Radial glow */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] pointer-events-none z-[1]" style={{ background: 'radial-gradient(ellipse at center, rgba(118,185,0,0.08) 0%, transparent 70%)' }} />
@@ -749,7 +748,7 @@ export default function LandingPage() {
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
           <Reveal className="text-center mb-14">
             <span className="inline-block text-[11px] font-bold tracking-[0.18em] uppercase px-4 py-1.5 mb-5"
-              style={{ borderRadius: '999px', background: 'rgba(118,185,0,0.06)', border: '1px solid rgba(118,185,0,0.15)', color: L.emerald, fontFamily: F.mono }}>First Class Only</span>
+              style={{ borderRadius: '999px', background: 'rgba(118,185,0,0.06)', border: '1px solid rgba(118,185,0,0.15)', color: L.emerald, fontFamily: F.mono }}>Club Members Only</span>
             <h2 className="text-3xl md:text-4xl lg:text-[44px] font-bold tracking-tight" style={{ fontFamily: F.display }}>First-class features. No turbulence.</h2>
           </Reveal>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
