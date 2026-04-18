@@ -17,9 +17,9 @@ const F = {
 };
 
 const L = {
-  bg: '#FFFFFF', surface: '#F8FAFC', elevated: '#F1F5F9',
-  border: '#E2E8F0', text: '#0F172A', secondary: '#475569',
-  muted: '#94A3B8', dimmed: '#CBD5E1',
+  bg: '#09090F', surface: '#111118', elevated: '#19192A',
+  border: 'rgba(255,255,255,0.07)', text: '#FFFFFF', secondary: 'rgba(255,255,255,0.65)',
+  muted: 'rgba(255,255,255,0.35)', dimmed: 'rgba(255,255,255,0.15)',
   gradient: 'linear-gradient(135deg, #76B900 0%, #5E9400 100%)',
   primary: '#76B900', emerald: '#76B900', radius: '12px',
   glow: '0 0 60px rgba(118,185,0,0.06)',
@@ -296,7 +296,7 @@ function TopicDonut() {
 function TrackWaypoint({ label }: { label: string }) {
   return (
     <div className="absolute top-1/2 -translate-y-1/2 z-[4] pointer-events-none hidden lg:block" style={{ left: 'calc(15% + 4px)' }}>
-      <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#FFFFFF', border: '2.5px solid rgba(118,185,0,0.3)', boxShadow: '0 0 14px rgba(118,185,0,0.1), inset 0 0 6px rgba(118,185,0,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#09090F', border: '2.5px solid rgba(118,185,0,0.3)', boxShadow: '0 0 14px rgba(118,185,0,0.15), inset 0 0 6px rgba(118,185,0,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: 'rgba(118,185,0,0.5)' }} />
       </div>
       <div style={{ position: 'absolute', left: '36px', top: '50%', transform: 'translateY(-50%)', whiteSpace: 'nowrap' }}>
@@ -457,7 +457,7 @@ export default function LandingPage() {
         }
       `}</style>
 
-      <SiteNav variant="light" />
+      <SiteNav variant="dark" />
 
       {/* ── 1. HERO — Forest road background ── */}
       <section className="relative pt-28 pb-14 md:pt-36 md:pb-20 px-6 overflow-hidden">
@@ -807,7 +807,7 @@ export default function LandingPage() {
         </Reveal>
       </section>
 
-      <SiteFooter variant="light" />
+      <SiteFooter variant="dark" />
     </div>
   );
 }
