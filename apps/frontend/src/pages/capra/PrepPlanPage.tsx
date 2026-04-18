@@ -238,7 +238,7 @@ export default function PrepPlanPage() {
                 </div>
                 <div className="h-2.5 bg-[var(--bg-elevated)] rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-emerald-500 rounded-full transition-all duration-500"
+                    className="h-full bg-[var(--accent)] rounded-full transition-all duration-500"
                     style={{ width: `${completion_pct}%` }}
                   />
                 </div>
@@ -257,7 +257,7 @@ export default function PrepPlanPage() {
               return (
                 <div key={day.day} className="bg-[var(--bg-surface)] border-0 rounded-2xl overflow-hidden">
                   {/* Day header */}
-                  <div className={`px-5 py-3 border-b border-[var(--border)] flex items-center justify-between ${allDone ? 'bg-emerald-500/10' : 'bg-[var(--bg-elevated)]'}`}>
+                  <div className={`px-5 py-3 border-b border-[var(--border)] flex items-center justify-between ${allDone ? 'bg-[var(--accent)]/10' : 'bg-[var(--bg-elevated)]'}`}>
                     <div className="flex items-center gap-2">
                       <span className={`text-sm font-bold ${allDone ? 'text-emerald-700' : 'text-[var(--text-primary)]'}`}>
                         Day {day.day}
@@ -282,7 +282,7 @@ export default function PrepPlanPage() {
                             disabled={togglingTask === task.id}
                             className={`flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
                               task.completed
-                                ? 'bg-emerald-500 border-emerald-500'
+                                ? 'bg-[var(--accent)] border-[var(--accent)]'
                                 : 'border-[var(--border)] hover:border-emerald-400'
                             } ${togglingTask === task.id ? 'opacity-50' : ''}`}
                             aria-label={task.completed ? `Mark "${task.title}" incomplete` : `Mark "${task.title}" complete`}

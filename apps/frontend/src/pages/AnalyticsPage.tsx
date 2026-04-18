@@ -244,7 +244,7 @@ export default function AnalyticsPage() {
               key={t}
               onClick={() => setTab(t)}
               className={`px-5 py-2 rounded-md text-sm font-medium capitalize transition-all ${
-                tab === t ? 'bg-emerald-500 text-white' : 'text-gray-400 hover:text-white'
+                tab === t ? 'bg-[var(--accent)] text-white' : 'text-gray-400 hover:text-white'
               }`}
             >
               {t === 'users' ? `Users (${totalUsers})` : t === 'emails' ? `Emails (${emails.length})` : t}
@@ -261,7 +261,7 @@ export default function AnalyticsPage() {
                   key={d}
                   onClick={() => setDays(d)}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                    days === d ? 'bg-emerald-500 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                    days === d ? 'bg-[var(--accent)] text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
                   }`}
                 >
                   {d === '' ? 'All time' : `Last ${d} days`}
@@ -283,7 +283,7 @@ export default function AnalyticsPage() {
                   </div>
                   <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
                     <p className="text-gray-400 text-sm">Unique Visitors</p>
-                    <p className="text-4xl font-bold mt-1 text-emerald-400">{stats.unique_visitors.toLocaleString()}</p>
+                    <p className="text-4xl font-bold mt-1 text-[var(--accent)]">{stats.unique_visitors.toLocaleString()}</p>
                   </div>
                 </div>
 
@@ -334,7 +334,7 @@ export default function AnalyticsPage() {
                             <td className="px-5 py-3 text-right font-semibold">{parseInt(row.unique_visitors).toLocaleString()}</td>
                             <td className="px-5 py-3">
                               <div className="w-full bg-gray-800 rounded-full h-2">
-                                <div className="bg-emerald-500 h-2 rounded-full transition-all" style={{ width: `${pct}%` }} />
+                                <div className="bg-[var(--accent)] h-2 rounded-full transition-all" style={{ width: `${pct}%` }} />
                               </div>
                             </td>
                           </tr>
@@ -361,14 +361,14 @@ export default function AnalyticsPage() {
               <div className="grid grid-cols-5 gap-3 mb-6">
                 {[
                   { label: 'Total Users', value: totalUsers, color: 'text-white', filter: '' },
-                  { label: 'Paid', value: paidUsers, color: 'text-emerald-400', filter: 'paid' },
+                  { label: 'Paid', value: paidUsers, color: 'text-[var(--accent)]', filter: 'paid' },
                   { label: 'Trial', value: trialUsers, color: 'text-blue-400', filter: 'trial' },
                   { label: 'Challenger', value: challengerUsers, color: 'text-purple-400', filter: 'challenger' },
                   { label: 'Free', value: freeUsers, color: 'text-gray-400', filter: 'free' },
                 ].map(c => (
                   <button key={c.label} onClick={() => setPlanFilter(planFilter === c.filter ? '' : c.filter)}
                     className={`bg-gray-900 border rounded-xl p-4 text-left transition-all ${
-                      planFilter === c.filter ? 'border-emerald-500 ring-1 ring-emerald-500/30' : 'border-gray-800 hover:border-gray-700'
+                      planFilter === c.filter ? 'border-[var(--accent)] ring-1 ring-emerald-500/30' : 'border-gray-800 hover:border-gray-700'
                     }`}>
                     <p className="text-gray-400 text-xs">{c.label}</p>
                     <p className={`text-2xl font-bold mt-1 ${c.color}`}>{c.value}</p>
@@ -388,7 +388,7 @@ export default function AnalyticsPage() {
                   placeholder="Search by name, email, location, company..."
                   value={search}
                   onChange={e => setSearch(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2 bg-gray-900 border border-gray-800 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500"
+                  className="w-full pl-9 pr-4 py-2 bg-gray-900 border border-gray-800 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[var(--accent)]"
                 />
               </div>
               <RefreshBtn onClick={() => { setUsersLoaded(false); fetchUsers(); }} loading={usersLoading} />
@@ -446,7 +446,7 @@ export default function AnalyticsPage() {
                               return (
                                 <div className="flex flex-col gap-1">
                                   <span className={`px-2 py-0.5 rounded-full text-xs font-medium w-fit ${
-                                    cat === 'paid' ? 'bg-emerald-500/20 text-emerald-400'
+                                    cat === 'paid' ? 'bg-[var(--accent)]/20 text-[var(--accent)]'
                                       : cat === 'challenger' ? 'bg-purple-500/20 text-purple-400'
                                       : cat === 'trial' ? 'bg-blue-500/20 text-blue-400'
                                       : 'bg-gray-700 text-gray-400'
@@ -535,7 +535,7 @@ export default function AnalyticsPage() {
                           <td className="px-4 py-3 text-white font-medium">{e.subject}</td>
                           <td className="px-4 py-3">
                             <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                              e.last_event === 'delivered' ? 'bg-emerald-500/20 text-emerald-400'
+                              e.last_event === 'delivered' ? 'bg-[var(--accent)]/20 text-[var(--accent)]'
                                 : e.last_event === 'opened' ? 'bg-blue-500/20 text-blue-400'
                                 : e.last_event === 'clicked' ? 'bg-purple-500/20 text-purple-400'
                                 : e.last_event === 'bounced' ? 'bg-red-500/20 text-red-400'

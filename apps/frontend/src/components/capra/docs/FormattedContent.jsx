@@ -5,9 +5,9 @@ export default function FormattedContent({ content, color = 'emerald' }) {
 
   // Use Ascend brand emerald colors
   const colors = {
-    heading: 'text-emerald-400',
-    bullet: 'text-emerald-400',
-    highlight: 'bg-emerald-500/10 text-[var(--accent)] border-emerald-500/20',
+    heading: 'text-[var(--accent)]',
+    bullet: 'text-[var(--accent)]',
+    highlight: 'bg-[var(--accent)]/10 text-[var(--accent)] border-[var(--accent)]/20',
   };
 
   // Check if line looks like ASCII diagram (box drawing, arrows, pipes)
@@ -189,7 +189,7 @@ export default function FormattedContent({ content, color = 'emerald' }) {
             <ul key={`list-${elements.length}`} className="grid grid-cols-1 gap-1 my-1 ml-2">
               {currentList.map((item, i) => (
                 <li key={i} className="flex items-start gap-3">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-2 flex-shrink-0" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] mt-2 flex-shrink-0" />
                   <span className="text-[var(--text-secondary)] text-sm leading-relaxed landing-body">{formatInlineText(item)}</span>
                 </li>
               ))}
