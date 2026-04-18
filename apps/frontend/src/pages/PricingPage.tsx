@@ -252,68 +252,7 @@ export default function PricingPage() {
         `}</style>
       </section>
 
-      {/* Competitor comparison */}
-      <section style={{ padding: '16px 16px 64px' }}>
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.18em', color: 'var(--accent)' }}>Why Camora Wins</span>
-          <h2 style={{ marginTop: 12, fontSize: 32, fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--text-primary)' }}>Compare the competition.</h2>
-        </div>
-        <div style={{ border: '1px solid var(--border)', borderRadius: 12, background: '#fff' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
-            <thead>
-              <tr style={{ background: 'var(--bg-surface)' }}>
-                <th style={{ textAlign: 'left', padding: '10px 12px', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', borderBottom: '2px solid var(--border)', width: '20%', minWidth: 180 }}>Feature</th>
-                {[
-                  { n: 'Camora', p: 'FREE', u: '', hl: true },
-                  { n: 'Final Round', p: '$100', u: '/mo' },
-                  { n: 'LockedIn', p: '$55-120', u: '/mo' },
-                  { n: 'Solver', p: '$39', u: '/mo' },
-                  { n: 'Sensei', p: '$24-89', u: '/mo' },
-                  { n: 'TechPrep', p: '$39', u: '/mo' },
-                  { n: 'AlgoMaster', p: '$29', u: '/mo' },
-                  { n: 'DesignGurus', p: '$98-197', u: '/yr' },
-                  { n: 'AIApply', p: '$29-200', u: '/mo' },
-                  { n: 'OfferGoose', p: '$89-200', u: '/mo' },
-                  { n: 'Parakeet', p: '$100-200', u: '/mo' },
-                ].map(c => (
-                  <th key={c.n} style={{ padding: '10px 2px', textAlign: 'center', borderBottom: c.hl ? '2px solid var(--accent)' : '2px solid var(--border)', background: c.hl ? 'var(--accent)' : undefined }}>
-                    <div style={{ fontWeight: 700, fontSize: 11, color: c.hl ? '#fff' : 'var(--text-muted)' }}>{c.n}</div>
-                    <div style={{ fontWeight: 700, fontSize: 10, color: c.hl ? 'rgba(255,255,255,0.8)' : 'var(--text-dimmed)' }}>{c.p}<span style={{ fontSize: 8 }}>{c.u}</span></div>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {COMPARISON.map((row, i) => {
-                const bd = i < COMPARISON.length - 1 ? '1px solid var(--border)' : 'none';
-                const keys = ['camora','finalround','lockedin','solver','sensei','techprep','algomaster','designgurus','aiapply','offergoose','parakeet'] as const;
-                return (
-                  <tr key={i} style={{ background: i % 2 === 0 ? 'var(--bg-surface)' : '#fff' }}>
-                    <td style={{ padding: '8px 12px', fontSize: 12, color: row.unique ? 'var(--accent)' : 'var(--text-primary)', fontWeight: row.unique ? 600 : 400, borderBottom: bd }}>{row.feature}</td>
-                    {keys.map((k, j) => {
-                      const val = (row as any)[k];
-                      const isCamora = j === 0;
-                      return (
-                        <td key={k} style={{ padding: '8px 2px', textAlign: 'center', borderBottom: bd, background: isCamora ? 'rgba(45,140,255,0.04)' : undefined }}>
-                          {val === true ? (
-                            isCamora
-                              ? <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 20, height: 20, borderRadius: '50%', background: 'var(--accent)' }}><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10 3L4.5 8.5L2 6" /></svg></span>
-                              : <svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="var(--text-dimmed)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', margin: '0 auto' }}><path d="M10 3L4.5 8.5L2 6" /></svg>
-                          ) : val === false ? (
-                            <span style={{ color: 'var(--text-dimmed)' }}>—</span>
-                          ) : (
-                            <span style={{ fontSize: 8, fontWeight: 700, padding: '2px 5px', borderRadius: 4, background: 'rgba(245,158,11,0.1)', color: '#B45309' }}>{val}</span>
-                          )}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </section>
+      {/* Comparison table removed — see /pricing for plan details */}
 
 
       {/* Desktop App + Top-Up Packs — compact row */}
