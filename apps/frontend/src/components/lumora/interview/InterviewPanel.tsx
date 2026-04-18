@@ -94,14 +94,14 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
                 onClick={() => onViewAnswer ? onViewAnswer(idx) : setExpandedIdx(expandedIdx === idx ? null : idx)}
                 className="w-full flex items-center gap-2 px-3 py-2.5 rounded-lg text-left transition-all duration-200 group"
                 style={{ background: 'transparent', border: '1px solid transparent' }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = '#F8FAFC'; e.currentTarget.style.borderColor = '#E2E8F0'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'transparent'; }}
               >
                 <span className="flex items-center justify-center w-6 h-6 rounded text-[10px] font-bold shrink-0"
                   style={{ background: '#2D8CFF10', color: '#2D8CFF', fontFamily: 'var(--font-code)' }}>
                   {idx + 1}
                 </span>
-                <span className="text-[13px] font-medium leading-snug flex-1 truncate" style={{ fontFamily: 'var(--font-sans)', color: 'rgba(255,255,255,0.9)' }}>
+                <span className="text-[13px] font-medium leading-snug flex-1 truncate" style={{ fontFamily: 'var(--font-sans)', color: '#0F172A' }}>
                   {entry.question}
                 </span>
                 <svg className="w-3.5 h-3.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: '#2D8CFF' }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
@@ -120,7 +120,7 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
                 </span>
                 <div className="absolute inset-0 border-2 border-transparent rounded animate-spin" style={{ borderTopColor: '#2563eb' }} />
               </div>
-              <span className="text-[13px] font-medium leading-snug flex-1 truncate" style={{ fontFamily: 'var(--font-sans)', color: 'rgba(255,255,255,0.9)' }}>
+              <span className="text-[13px] font-medium leading-snug flex-1 truncate" style={{ fontFamily: 'var(--font-sans)', color: '#0F172A' }}>
                 {question}
               </span>
               <span className="text-[9px] shrink-0 animate-pulse font-medium" style={{ fontFamily: 'var(--font-code)', color: '#2D8CFF' }}>generating...</span>
@@ -129,8 +129,8 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
 
           {/* Cross-sell */}
           {history.length > 0 && history.length % 3 === 0 && (
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
-              <span className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>Want deeper prep?</span>
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: '#F8FAFC', border: '1px solid #E2E8F0' }}>
+              <span className="text-xs" style={{ color: '#64748B' }}>Want deeper prep?</span>
               <Link to="/capra/prepare" className="text-xs font-bold hover:opacity-90 transition-all" style={{ color: '#2D8CFF' }}>
                 Explore 300+ topics →
               </Link>
@@ -212,6 +212,14 @@ function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
             <span className="text-[11px] font-medium transition-colors" style={{ fontFamily: "'Satoshi', sans-serif", color: '#64748b' }}>{action.label}</span>
           </button>
         ))}
+      </div>
+
+      {/* Camo hint for non-technical rounds */}
+      <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl mb-8" style={{ background: '#F0F9FF', border: '1px solid #BAE6FD' }}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2D8CFF" strokeWidth="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
+        <span className="text-xs" style={{ color: '#0369A1' }}>
+          For <strong>HR, Hiring Manager & Behavioral</strong> rounds — use the <strong>Camo</strong> copilot (bottom-right ★ icon)
+        </span>
       </div>
 
       {/* Divider */}
