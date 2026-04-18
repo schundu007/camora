@@ -253,8 +253,8 @@ export default function PricingPage() {
       </section>
 
       {/* Competitor comparison */}
-      <section className="px-6 pt-4 pb-16">
-        <div className="w-full max-w-[1400px] mx-auto">
+      <section className="px-4 pt-4 pb-16">
+        <div className="w-full mx-auto">
           <div className="mb-10 text-center">
             <span className="text-xs font-bold uppercase tracking-[0.18em]" style={{ color: 'var(--accent)' }}>Why Camora Wins</span>
             <h2 className="mt-3 text-3xl md:text-4xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>
@@ -264,10 +264,10 @@ export default function PricingPage() {
 
           <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
               <div className="overflow-x-auto">
-                <table className="w-full text-[12px]" style={{ borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+                <table className="w-full text-[12px]" style={{ borderCollapse: 'collapse' }}>
                   <thead>
                     <tr style={{ background: 'var(--bg-surface)' }}>
-                      <th className="text-left py-2.5 px-4 text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)', borderBottom: '2px solid var(--border)', width: '22%' }}>Feature</th>
+                      <th className="text-left py-2.5 px-3 text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)', borderBottom: '2px solid var(--border)' }}>Feature</th>
                       {[
                         { name: 'Camora', price: 'FREE', unit: '', highlight: true },
                         { name: 'Final Round', price: '$100', unit: '/mo' },
