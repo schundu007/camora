@@ -262,13 +262,12 @@ export default function PricingPage() {
             </h2>
           </div>
 
-          <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid var(--border)', background: '#FFFFFF' }}>
+          <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
               <div className="overflow-x-auto">
-              <div className="p-5 sm:p-6">
-                <table className="w-full text-[13px]" style={{ borderCollapse: 'collapse' }}>
+                <table className="w-full text-[12px]" style={{ borderCollapse: 'collapse' }}>
                   <thead>
-                    <tr>
-                      <th className="text-left py-3 px-4 text-[11px] font-bold uppercase tracking-wider min-w-[150px]" style={{ color: 'var(--text-muted)', borderBottom: '1px solid var(--border)' }}>Feature</th>
+                    <tr style={{ background: 'var(--bg-surface)' }}>
+                      <th className="text-left py-2.5 px-4 text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)', borderBottom: '2px solid var(--border)', minWidth: '180px' }}>Feature</th>
                       {[
                         { name: 'Camora', price: 'FREE', unit: '', highlight: true },
                         { name: 'Final Round', price: '$100', unit: '/mo' },
@@ -277,16 +276,16 @@ export default function PricingPage() {
                         { name: 'Sensei', price: '$24-89', unit: '/mo', hide: 'md' },
                         { name: 'TechPrep', price: '$39', unit: '/mo', hide: 'lg' },
                         { name: 'AlgoMaster', price: '$29', unit: '/mo', hide: 'lg' },
-                        { name: 'DesignGurus', price: '$98-197', unit: '/course', hide: 'lg' },
+                        { name: 'DesignGurus', price: '$98-197', unit: '/yr', hide: 'lg' },
                         { name: 'AIApply', price: '$29-200', unit: '/mo', hide: 'xl' },
                         { name: 'OfferGoose', price: '$89-200', unit: '/mo', hide: 'xl' },
                         { name: 'Parakeet', price: '$100-200', unit: '/mo', hide: 'xl' },
                       ].map((col) => (
-                        <th key={col.name} className={`py-3 px-2 text-center whitespace-nowrap ${col.hide ? `hidden ${col.hide}:table-cell` : ''}`}
-                          style={{ borderBottom: '1px solid var(--border)', ...(col.highlight ? { background: 'rgba(45,140,255,0.06)' } : {}) }}>
-                          <div className="font-bold" style={{ color: col.highlight ? '#2D8CFF' : 'var(--text-muted)', fontSize: col.highlight ? '14px' : '11px' }}>{col.name}</div>
-                          <div className="mt-1 font-bold" style={{ color: col.highlight ? '#2D8CFF' : 'var(--text-dimmed)', fontSize: col.highlight ? '16px' : '12px' }}>
-                            {col.price}<span className="text-[9px] font-medium">{col.unit}</span>
+                        <th key={col.name} className={`py-2.5 px-1.5 text-center whitespace-nowrap ${col.hide ? `hidden ${col.hide}:table-cell` : ''}`}
+                          style={{ borderBottom: '2px solid var(--border)', ...(col.highlight ? { background: '#2D8CFF', borderBottom: '2px solid #2D8CFF' } : {}) }}>
+                          <div className="font-bold" style={{ color: col.highlight ? '#fff' : 'var(--text-muted)', fontSize: '11px' }}>{col.name}</div>
+                          <div className="font-bold" style={{ color: col.highlight ? 'rgba(255,255,255,0.8)' : 'var(--text-dimmed)', fontSize: '10px' }}>
+                            {col.price}<span className="text-[8px]">{col.unit}</span>
                           </div>
                         </th>
                       ))}
@@ -295,47 +294,33 @@ export default function PricingPage() {
                   <tbody>
                     {COMPARISON.map((row, i) => {
                       const isLast = i === COMPARISON.length - 1;
-                      const isEven = i % 2 === 0;
-                      const CellIcon = ({ val }: { val: boolean | string }) => {
-                        if (val === true) return (
-                          <svg className="w-4 h-4 mx-auto" viewBox="0 0 12 12" fill="none" stroke="var(--text-muted)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M10 3L4.5 8.5L2 6" />
-                          </svg>
-                        );
-                        if (val === false) return <span style={{ color: 'var(--text-dimmed)', fontSize: '14px' }}>—</span>;
-                        return <span className="text-[9px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(245,158,11,0.1)', color: '#D97706', border: '1px solid rgba(245,158,11,0.2)' }}>{val}</span>;
+                      const bd = isLast ? 'none' : '1px solid var(--border)';
+                      const Cell = ({ val, highlight }: { val: boolean | string; highlight?: boolean }) => {
+                        if (val === true) return highlight
+                          ? <span className="inline-flex items-center justify-center w-5 h-5 rounded-full" style={{ background: '#2D8CFF' }}><svg className="w-3 h-3" viewBox="0 0 12 12" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10 3L4.5 8.5L2 6" /></svg></span>
+                          : <svg className="w-3.5 h-3.5 mx-auto" viewBox="0 0 12 12" fill="none" stroke="var(--text-dimmed)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10 3L4.5 8.5L2 6" /></svg>;
+                        if (val === false) return <span style={{ color: 'var(--text-dimmed)' }}>—</span>;
+                        return <span className="text-[8px] font-bold px-1.5 py-0.5 rounded" style={{ background: 'rgba(245,158,11,0.1)', color: '#B45309' }}>{val}</span>;
                       };
                       return (
-                        <tr key={i} style={{ background: isEven ? 'var(--bg-surface)' : 'transparent' }}>
-                          <td className="py-3 px-4 text-[13px]" style={{ color: row.unique ? '#2D8CFF' : 'var(--text-primary)', fontWeight: row.unique ? 700 : 400, borderBottom: isLast ? 'none' : '1px solid var(--border)' }}>
-                            {row.feature}
-                          </td>
-                          {/* Camora column */}
-                          <td className="py-3 px-3 text-center" style={{ background: 'rgba(45,140,255,0.04)', borderBottom: isLast ? 'none' : '1px solid var(--border)' }}>
-                            {row.camora === true
-                              ? <svg className="w-5 h-5 mx-auto" viewBox="0 0 12 12" fill="none" stroke="#2D8CFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 3L4.5 8.5L2 6" /></svg>
-                              : <CellIcon val={row.camora} />
-                            }
-                          </td>
-                          {/* Competitor columns */}
-                          {[row.finalround, row.lockedin].map((val, j) => (
-                            <td key={j} className="py-3 px-3 text-center" style={{ borderBottom: isLast ? 'none' : '1px solid var(--border)' }}><CellIcon val={val} /></td>
-                          ))}
-                          <td className="py-3 px-3 text-center hidden md:table-cell" style={{ borderBottom: isLast ? 'none' : '1px solid var(--border)' }}><CellIcon val={row.solver} /></td>
-                          <td className="py-3 px-3 text-center hidden md:table-cell" style={{ borderBottom: isLast ? 'none' : '1px solid var(--border)' }}><CellIcon val={row.sensei} /></td>
-                          <td className="py-3.5 px-3 text-center hidden lg:table-cell" style={{ borderBottom: isLast ? 'none' : '1px solid var(--border)' }}><CellIcon val={row.techprep} /></td>
-                          <td className="py-3.5 px-3 text-center hidden lg:table-cell" style={{ borderBottom: isLast ? 'none' : '1px solid var(--border)' }}><CellIcon val={row.algomaster} /></td>
-                          <td className="py-3.5 px-3 text-center hidden lg:table-cell" style={{ borderBottom: isLast ? 'none' : '1px solid var(--border)' }}><CellIcon val={row.designgurus} /></td>
-                          <td className="py-3.5 px-3 text-center hidden xl:table-cell" style={{ borderBottom: isLast ? 'none' : '1px solid var(--border)' }}><CellIcon val={row.aiapply} /></td>
-                          <td className="py-3.5 px-3 text-center hidden xl:table-cell" style={{ borderBottom: isLast ? 'none' : '1px solid var(--border)' }}><CellIcon val={row.offergoose} /></td>
-                          <td className="py-3.5 px-3 text-center hidden xl:table-cell" style={{ borderBottom: isLast ? 'none' : '1px solid var(--border)' }}><CellIcon val={row.parakeet} /></td>
+                        <tr key={i} className="hover:bg-[var(--bg-surface)] transition-colors">
+                          <td className="py-2 px-4 text-[12px]" style={{ color: row.unique ? '#2D8CFF' : 'var(--text-primary)', fontWeight: row.unique ? 600 : 400, borderBottom: bd }}>{row.feature}</td>
+                          <td className="py-2 px-1.5 text-center" style={{ background: 'rgba(45,140,255,0.04)', borderBottom: bd }}><Cell val={row.camora} highlight /></td>
+                          {[row.finalround, row.lockedin].map((v, j) => <td key={j} className="py-2 px-1.5 text-center" style={{ borderBottom: bd }}><Cell val={v} /></td>)}
+                          <td className="py-2 px-1.5 text-center hidden md:table-cell" style={{ borderBottom: bd }}><Cell val={row.solver} /></td>
+                          <td className="py-2 px-1.5 text-center hidden md:table-cell" style={{ borderBottom: bd }}><Cell val={row.sensei} /></td>
+                          <td className="py-2 px-1.5 text-center hidden lg:table-cell" style={{ borderBottom: bd }}><Cell val={row.techprep} /></td>
+                          <td className="py-2 px-1.5 text-center hidden lg:table-cell" style={{ borderBottom: bd }}><Cell val={row.algomaster} /></td>
+                          <td className="py-2 px-1.5 text-center hidden lg:table-cell" style={{ borderBottom: bd }}><Cell val={row.designgurus} /></td>
+                          <td className="py-2 px-1.5 text-center hidden xl:table-cell" style={{ borderBottom: bd }}><Cell val={row.aiapply} /></td>
+                          <td className="py-2 px-1.5 text-center hidden xl:table-cell" style={{ borderBottom: bd }}><Cell val={row.offergoose} /></td>
+                          <td className="py-2 px-1.5 text-center hidden xl:table-cell" style={{ borderBottom: bd }}><Cell val={row.parakeet} /></td>
                         </tr>
                       );
                     })}
                   </tbody>
                 </table>
               </div>
-            </div>
 
             <style>{`
               .comparison-row:hover {
