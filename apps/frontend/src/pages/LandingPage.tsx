@@ -17,9 +17,9 @@ const F = {
 };
 
 const L = {
-  bg: '#FFFFFF', surface: '#0F172A', elevated: '#1E293B',
-  border: '#334155', text: '#0F172A', secondary: '#475569',
-  muted: '#94A3B8', dimmed: '#CBD5E1',
+  bg: '#FFFFFF', surface: '#F7F8FA', elevated: '#EEF0F4',
+  border: '#E2E5EB', text: '#1A1D23', secondary: '#4A5568',
+  muted: '#8C95A6', dimmed: '#C8CDD6',
   gradient: 'linear-gradient(135deg, #2D8CFF 0%, #0B5CFF 100%)',
   primary: '#2D8CFF', emerald: '#2D8CFF', radius: '12px',
   glow: '0 0 60px rgba(45,140,255,0.08)',
@@ -171,15 +171,10 @@ export default function LandingPage() {
         .cm-gradient-text { background: ${L.gradient}; -webkit-background-clip: text; background-clip: text; color: transparent; }
         .cm-gradient-btn { background: ${L.gradient}; transition: filter 0.2s ease, box-shadow 0.2s ease; }
         .cm-gradient-btn:hover { filter: brightness(1.15); box-shadow: 0 0 30px rgba(45,140,255,0.2); }
-        .cm-outline-btn { border: 1.5px solid #CBD5E1; color: ${L.text}; transition: border-color 0.2s, background 0.2s; }
-        .cm-outline-btn:hover { border-color: #2D8CFF; background: rgba(45,140,255,0.06); color: #2D8CFF; }
-        .cm-glass { background: ${L.elevated}; color: #FFFFFF; border: 1px solid ${L.border}; border-radius: 16px; }
-        .cm-glass:hover { border-color: #2D8CFF; box-shadow: 0 4px 16px rgba(45,140,255,0.12); }
-        .cm-glass h3, .cm-glass p, .cm-glass span { color: rgba(255,255,255,0.85); }
-        .cm-glass h3 { color: #FFFFFF; }
-        .cm-dark { color: #FFFFFF; }
-        .cm-dark h2, .cm-dark h3, .cm-dark p, .cm-dark span, .cm-dark a { color: rgba(255,255,255,0.9); }
-        .cm-dark h2 { color: #FFFFFF; }
+        .cm-outline-btn { border: 1.5px solid ${L.border}; color: ${L.text}; transition: border-color 0.2s, background 0.2s; }
+        .cm-outline-btn:hover { border-color: #2D8CFF; background: rgba(45,140,255,0.04); color: #2D8CFF; }
+        .cm-glass { background: #FFFFFF; border: 1px solid ${L.border}; border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+        .cm-glass:hover { border-color: #2D8CFF; box-shadow: 0 4px 12px rgba(45,140,255,0.08); }
         @keyframes scroll-logos { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
       `}</style>
 
@@ -250,9 +245,9 @@ export default function LandingPage() {
           <div className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${L.border}`, background: L.surface }}>
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6">
               {COMPANIES.map((c) => (
-                <div key={c} className="flex items-center justify-center py-6 px-4 transition-all hover:bg-white/5" style={{ borderRight: `1px solid ${L.border}`, borderBottom: `1px solid ${L.border}` }}>
+                <div key={c} className="flex items-center justify-center py-6 px-4 transition-all hover:bg-black/[0.02]" style={{ borderRight: `1px solid ${L.border}`, borderBottom: `1px solid ${L.border}` }}>
                   <img src={`https://img.logo.dev/${c}.com?token=${LOGO_TOKEN}&size=80&format=png`}
-                    alt={c} className="h-8 object-contain brightness-0 invert opacity-50 hover:opacity-100 transition-all" loading="lazy"
+                    alt={c} className="h-8 object-contain" loading="lazy"
                     onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                 </div>
               ))}
@@ -340,7 +335,7 @@ export default function LandingPage() {
 
 
       {/* ── 6. JOB URL ANALYSIS ── */}
-      <section className="relative px-6 py-10 md:py-14 cm-dark" style={{ background: L.surface }}>
+      <section className="relative px-6 py-10 md:py-14" style={{ background: L.surface }}>
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
           <Reveal className="text-center mb-10">
             <h2 className="text-3xl md:text-4xl lg:text-[44px] font-bold tracking-tight" style={{ fontFamily: F.display }}>
@@ -396,7 +391,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── 7. LIVE AI DEMO — Simulated Q&A ── */}
-      <section className="relative px-6 py-10 md:py-14 cm-dark" style={{ background: L.surface }}>
+      <section className="relative px-6 py-10 md:py-14" style={{ background: L.surface }}>
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
           <Reveal className="text-center mb-10">
             <span className="inline-flex items-center gap-2 text-[11px] font-bold tracking-[0.15em] uppercase px-4 py-1.5"
@@ -448,7 +443,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── 9. UNIQUE FEATURES GRID ── */}
-      <section className="relative px-6 py-10 md:py-14 cm-dark" style={{ background: L.surface }}>
+      <section className="relative px-6 py-10 md:py-14" style={{ background: L.surface }}>
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
           <Reveal className="text-center mb-10">
             <span className="inline-block text-[11px] font-bold tracking-[0.18em] uppercase px-4 py-1.5 mb-5"
@@ -476,7 +471,7 @@ export default function LandingPage() {
       {/* ── 12. FINAL CTA ── */}
       <section className="relative px-6 py-14 md:py-20">
         <Reveal className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
-          <div className="relative px-8 py-12 md:px-14 md:py-16 text-center overflow-hidden cm-dark" style={{ borderRadius: '20px', background: L.surface, border: 'none', boxShadow: L.glowStrong }}>
+          <div className="relative px-8 py-12 md:px-14 md:py-16 text-center overflow-hidden" style={{ borderRadius: '20px', background: L.surface, border: '1px solid rgba(0,0,0,0.05)', boxShadow: L.glowStrong }}>
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[50%] h-[2px]" style={{ background: L.gradient }} />
             <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at center top, rgba(118,185,0,0.04) 0%, transparent 60%)' }} />
             <div className="relative z-10">
