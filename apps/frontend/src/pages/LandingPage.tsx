@@ -288,54 +288,39 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen relative" style={{ fontFamily: F.body, color: L.text, background: L.bg }}>
       <SEO path="/" />
-      {/* ═══ FLIGHT PATH — thick line with airplane + contrail passing through cards ═══ */}
+      {/* ═══ RUNWAY — white/black takeoff track with airplane flying UP ═══ */}
       <div className="absolute left-[10%] xl:left-[12%] top-0 bottom-0 z-[3] pointer-events-none hidden lg:block">
-        {/* Runway — wide tarmac strip */}
-        <div className="absolute top-0 bottom-0" style={{ left: '-6px', width: '18px', borderRadius: '9px', background: `linear-gradient(to bottom, transparent 0%, rgba(118,185,0,0.06) 6%, rgba(118,185,0,0.04) 50%, rgba(118,185,0,0.06) 94%, transparent 100%)` }} />
-        {/* Center line — dashed runway marking */}
-        <div className="absolute left-[2px] top-0 bottom-0" style={{ width: '2px', background: `repeating-linear-gradient(to bottom, rgba(118,185,0,0.3) 0px, rgba(118,185,0,0.3) 20px, transparent 20px, transparent 36px)` }} />
-        {/* Edge lines — runway borders */}
-        <div className="absolute top-0 bottom-0" style={{ left: '-6px', width: '1px', background: `linear-gradient(to bottom, transparent 5%, rgba(118,185,0,0.1) 10%, rgba(118,185,0,0.06) 50%, rgba(118,185,0,0.1) 90%, transparent 95%)` }} />
-        <div className="absolute top-0 bottom-0" style={{ left: '11px', width: '1px', background: `linear-gradient(to bottom, transparent 5%, rgba(118,185,0,0.1) 10%, rgba(118,185,0,0.06) 50%, rgba(118,185,0,0.1) 90%, transparent 95%)` }} />
-        {/* Wide glow aura */}
-        <div className="absolute top-0 bottom-0" style={{ left: '-15px', width: '36px', background: `linear-gradient(to bottom, transparent 5%, rgba(118,185,0,0.02) 15%, rgba(118,185,0,0.01) 50%, rgba(118,185,0,0.02) 85%, transparent 95%)`, filter: 'blur(12px)' }} />
+        {/* Tarmac — dark asphalt strip */}
+        <div className="absolute top-0 bottom-0" style={{ left: '-8px', width: '22px', borderRadius: '11px', background: `linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.04) 6%, rgba(255,255,255,0.03) 50%, rgba(255,255,255,0.04) 94%, transparent 100%)` }} />
+        {/* White dashed center line — real runway marking */}
+        <div className="absolute left-[2px] top-0 bottom-0" style={{ width: '2px', background: `repeating-linear-gradient(to bottom, rgba(255,255,255,0.4) 0px, rgba(255,255,255,0.4) 24px, transparent 24px, transparent 40px)` }} />
+        {/* Edge markings — solid white runway borders */}
+        <div className="absolute top-0 bottom-0" style={{ left: '-8px', width: '1px', background: `linear-gradient(to bottom, transparent 5%, rgba(255,255,255,0.12) 10%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.12) 90%, transparent 95%)` }} />
+        <div className="absolute top-0 bottom-0" style={{ left: '13px', width: '1px', background: `linear-gradient(to bottom, transparent 5%, rgba(255,255,255,0.12) 10%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.12) 90%, transparent 95%)` }} />
 
-        {/* Animated airplane descending along the flight path */}
-        <div className="absolute" style={{ left: '-9px', animation: 'plane-fly 14s linear infinite' }}>
-          {/* Contrail behind airplane */}
-          <div style={{ position: 'absolute', bottom: '100%', left: '50%', transform: 'translateX(-50%)', width: '4px', height: '60px', borderRadius: '2px', background: 'linear-gradient(to top, rgba(118,185,0,0.6), rgba(118,185,0,0.1), transparent)' }} />
-          {/* Airplane SVG — rotated pointing down */}
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style={{ filter: 'drop-shadow(0 0 10px rgba(118,185,0,0.6)) drop-shadow(0 2px 4px rgba(0,0,0,0.5))', transform: 'rotate(180deg)' }}>
-            <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z" fill="#76B900" />
-          </svg>
+        {/* Airplane flying UP with contrail — uses real image */}
+        <div className="absolute" style={{ left: '-17px', animation: 'plane-ascend 16s ease-in-out infinite' }}>
+          {/* Contrail / exhaust trail BELOW the plane (since it flies up) */}
+          <div style={{ position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', width: '3px', height: '80px', borderRadius: '2px', background: 'linear-gradient(to bottom, rgba(255,255,255,0.5), rgba(118,185,0,0.2), transparent)' }} />
+          {/* Real airplane image — pointing UP */}
+          <img src="/airplane.png" alt="" width="40" height="40" style={{ filter: 'drop-shadow(0 0 12px rgba(118,185,0,0.5)) drop-shadow(0 -2px 6px rgba(255,255,255,0.3))' }} />
         </div>
 
-        {/* Section stop nodes — gates where the plane pauses */}
-        {[
-          { pos: 10, label: 'Gate A' },
-          { pos: 26, label: 'Gate B' },
-          { pos: 42, label: 'Gate C' },
-          { pos: 56, label: 'Gate D' },
-          { pos: 70, label: 'Gate E' },
-          { pos: 82, label: 'Gate F' },
-          { pos: 94, label: 'Gate G' },
-        ].map((node, i) => (
-          <div key={i} className="absolute" style={{ top: `${node.pos}%`, left: '-7px' }}>
-            {/* Outer ring */}
-            <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: L.bg, border: '2.5px solid rgba(118,185,0,0.3)', boxShadow: `0 0 16px rgba(118,185,0,0.15), inset 0 0 6px rgba(118,185,0,0.1)` }}>
-              {/* Inner dot */}
-              <div style={{ position: 'absolute', inset: '5px', borderRadius: '50%', background: 'rgba(118,185,0,0.5)' }} />
+        {/* Stop nodes — white circles at section boundaries */}
+        {[92, 78, 64, 50, 38, 24, 10].map((pos, i) => (
+          <div key={i} className="absolute" style={{ top: `${pos}%`, left: '-7px' }}>
+            <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: L.bg, border: '2px solid rgba(255,255,255,0.25)', boxShadow: '0 0 10px rgba(255,255,255,0.08)' }}>
+              <div style={{ position: 'absolute', inset: '5px', borderRadius: '50%', background: 'rgba(255,255,255,0.3)' }} />
             </div>
           </div>
         ))}
 
-        {/* Capsule segments between stops — fuselage-inspired */}
-        {[18, 34, 49, 63, 76, 88].map((pos, i) => (
+        {/* Fuselage capsules between stops */}
+        {[86, 71, 57, 44, 31, 17].map((pos, i) => (
           <div key={i} className="absolute" style={{ top: `${pos}%`, left: '-5px' }}>
-            <div style={{ width: '16px', height: '56px', borderRadius: '8px', background: L.bg, border: '1.5px solid rgba(118,185,0,0.12)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '3px', padding: '8px 0' }}>
-              {/* Window dots — like airplane windows */}
+            <div style={{ width: '16px', height: '50px', borderRadius: '8px', background: L.bg, border: '1.5px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '3px', padding: '6px 0' }}>
               {[0,1,2,3,4].map(j => (
-                <div key={j} style={{ width: '5px', height: '5px', borderRadius: '50%', background: `rgba(118,185,0,${0.1 + j * 0.04})`, border: '0.5px solid rgba(118,185,0,0.15)' }} />
+                <div key={j} style={{ width: '4px', height: '4px', borderRadius: '50%', background: `rgba(255,255,255,${0.08 + j * 0.03})` }} />
               ))}
             </div>
           </div>
@@ -352,19 +337,19 @@ export default function LandingPage() {
         .cm-glass { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); backdrop-filter: blur(12px); }
         .cm-glass:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.12); }
         @keyframes scroll-logos { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-        @keyframes plane-fly {
-          0% { top: -60px; opacity: 0; }
+        @keyframes plane-ascend {
+          0% { top: calc(100% + 40px); opacity: 0; }
           3% { opacity: 1; }
-          /* Pause at each gate */
-          10% { top: 10%; } 12% { top: 10%; }
-          24% { top: 26%; } 27% { top: 26%; }
-          38% { top: 42%; } 41% { top: 42%; }
-          52% { top: 56%; } 55% { top: 56%; }
-          66% { top: 70%; } 69% { top: 70%; }
-          78% { top: 82%; } 81% { top: 82%; }
-          92% { top: 94%; }
+          /* Ascend with pauses at each gate */
+          10% { top: 92%; } 13% { top: 92%; }
+          22% { top: 78%; } 25% { top: 78%; }
+          34% { top: 64%; } 37% { top: 64%; }
+          46% { top: 50%; } 49% { top: 50%; }
+          58% { top: 38%; } 61% { top: 38%; }
+          70% { top: 24%; } 73% { top: 24%; }
+          84% { top: 10%; } 87% { top: 10%; }
           96% { opacity: 1; }
-          100% { top: calc(100% + 60px); opacity: 0; }
+          100% { top: -60px; opacity: 0; }
         }
       `}</style>
 
