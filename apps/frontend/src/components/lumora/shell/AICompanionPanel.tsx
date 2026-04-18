@@ -2,7 +2,6 @@ import { useRef, useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { streamResponse } from '@/lib/sse-client';
 import { transcriptionAPI } from '@/lib/api-client';
-import { useAudioDevices } from '@/components/lumora/audio/hooks/useAudioDevices';
 
 /* White background copilot — black text */
 const C = {
@@ -187,7 +186,6 @@ function RichText({ text }: { text: string }) {
 /* ── Mic Button (centered, prominent) ── */
 function MicButtonLarge({ onResult, disabled }: { onResult: (text: string) => void; disabled: boolean }) {
   const { token } = useAuth();
-  const { selectedDeviceId } = useAudioDevices();
   const [rec, setRec] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -198,34 +196,21 @@ function MicButtonLarge({ onResult, disabled }: { onResult: (text: string) => vo
     if (!token) { setError('Not authenticated'); return; }
     setError('');
     try {
-      const audioConstraints: MediaTrackConstraints = {
-        echoCancellation: true,
-        noiseSuppression: true,
-        autoGainControl: true,
-      };
-      if (selectedDeviceId) {
-        audioConstraints.deviceId = { exact: selectedDeviceId };
-      }
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: audioConstraints });
-      // Use codecs=opus for better compatibility with Whisper
-      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-        ? 'audio/webm;codecs=opus' : 'audio/webm';
-      const mr = new MediaRecorder(stream, { mimeType });
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mr = new MediaRecorder(stream, { mimeType: 'audio/webm' });
       chunks.current = [];
       mr.ondataavailable = e => { if (e.data.size > 0) chunks.current.push(e.data); };
       mr.onstop = async () => {
         stream.getTracks().forEach(t => t.stop());
-        const blob = new Blob(chunks.current, { type: mimeType });
-        if (blob.size < 500) { setError('Recording too short — speak longer'); return; }
+        const blob = new Blob(chunks.current, { type: 'audio/webm' });
+        if (blob.size < 1000) { setError('Recording too short'); return; }
         setBusy(true);
         try {
           const r = await transcriptionAPI.transcribe(token, blob, 'audio.webm', false);
-          if (r.skipped && r.reason === 'hallucination_filtered') {
-            setError('No clear speech — try again');
-          } else if (r.text?.trim()) {
+          if (r.text?.trim()) {
             onResult(r.text.trim());
           } else {
-            setError('No speech detected — speak louder or longer');
+            setError('No speech detected');
           }
         } catch (err: any) {
           setError(err.message || 'Transcription failed');
@@ -233,12 +218,12 @@ function MicButtonLarge({ onResult, disabled }: { onResult: (text: string) => vo
         setBusy(false);
       };
       mrRef.current = mr;
-      mr.start(500); // Collect data every 500ms for reliable chunk capture
+      mr.start();
       setRec(true);
     } catch (err: any) {
       setError(err.name === 'NotAllowedError' ? 'Microphone access denied' : (err.message || 'Mic error'));
     }
-  }, [token, onResult, selectedDeviceId]);
+  }, [token, onResult]);
   const stop = useCallback(() => { mrRef.current?.state === 'recording' && mrRef.current.stop(); setRec(false); }, []);
 
   return (
