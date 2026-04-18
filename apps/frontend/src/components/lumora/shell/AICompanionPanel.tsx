@@ -200,13 +200,19 @@ function MicButtonLarge({ onResult, disabled }: { onResult: (text: string) => vo
       mr.onstop = async () => {
         stream.getTracks().forEach(t => t.stop());
         const blob = new Blob(chunks.current, { type: 'audio/webm' });
-        if (blob.size < 1000) return;
+        console.log('[Camo] blob size:', blob.size, 'chunks:', chunks.current.length);
+        if (blob.size < 1000) { console.warn('[Camo] blob too small, skipping'); return; }
         setBusy(true);
-        try { const r = await transcriptionAPI.transcribe(token!, blob, 'audio.webm', false); if (r.text?.trim()) onResult(r.text.trim()); } catch {}
+        try {
+          const r = await transcriptionAPI.transcribe(token!, blob, 'audio.webm', false);
+          console.log('[Camo] transcription response:', JSON.stringify(r).slice(0, 300));
+          if (r.text?.trim()) onResult(r.text.trim());
+          else console.warn('[Camo] empty text in response');
+        } catch (err) { console.error('[Camo] transcription error:', err); }
         setBusy(false);
       };
       mrRef.current = mr; mr.start(); setRec(true);
-    } catch {}
+    } catch (err) { console.error('[Camo] mic error:', err); }
   }, [token, onResult]);
   const stop = useCallback(() => { mrRef.current?.state === 'recording' && mrRef.current.stop(); setRec(false); }, []);
 
