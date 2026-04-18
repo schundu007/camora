@@ -70,9 +70,10 @@ function LoginPage() {
       <div className="flex items-center justify-center py-12 px-4" style={{ minHeight: 'calc(100vh - 82px)' }}>
         <div className="w-full max-w-sm rounded-2xl p-8" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', boxShadow: '0 4px 24px rgba(0,0,0,0.3)' }}>
 
-          {/* Header */}
-          <h1 className="text-xl font-bold tracking-tight" style={{ fontFamily: "'Clash Display', sans-serif", color: 'var(--text-primary)' }}>Sign in to <span style={{ background: 'linear-gradient(135deg, #76B900, #2d8a1e)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Camora</span></h1>
-          <p className="mt-1 text-sm" style={{ color: 'var(--text-secondary)' }}>Apply. Prepare. Practice. Attend.</p>
+          {/* Header — Camora logo centered */}
+          <div className="flex justify-center mb-2">
+            <img src="/camora-logo.png" alt="Camora" style={{ width: 48, height: 48, objectFit: 'contain' }} />
+          </div>
 
           {/* Social login buttons */}
           <div className="mt-6 space-y-3">
