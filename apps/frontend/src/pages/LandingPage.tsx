@@ -325,8 +325,8 @@ export default function LandingPage() {
 
           <motion.h1 className="mt-8 font-bold tracking-[-0.03em]" style={{ fontFamily: F.display }}
             initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.1 }}>
-            <span className="block text-[42px] sm:text-[52px] md:text-[64px] leading-[1.08]">From application to</span>
-            <span className="block text-[42px] sm:text-[52px] md:text-[64px] leading-[1.08] cm-gradient-text">offer letter.</span>
+            <span className="block text-[42px] sm:text-[52px] md:text-[64px] leading-[1.08]">Launch your career</span>
+            <span className="block text-[42px] sm:text-[52px] md:text-[64px] leading-[1.08] cm-gradient-text">into orbit.</span>
           </motion.h1>
 
           <motion.p className="mt-6 text-lg md:text-xl leading-relaxed max-w-2xl mx-auto" style={{ color: L.secondary }}
@@ -387,6 +387,65 @@ export default function LandingPage() {
                 </div>
               </Reveal>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── 4. APPA — Flight Path Timeline ── */}
+      <section className="px-6 py-14 md:py-20 relative">
+        <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
+          <Reveal className="text-center mb-14">
+            <h2 className="text-3xl md:text-4xl lg:text-[44px] font-bold tracking-tight" style={{ fontFamily: F.display }}>
+              Your flight plan to the offer.
+            </h2>
+            <p className="mt-4 text-lg" style={{ color: L.secondary }}>Four stages. One destination. Cleared for takeoff.</p>
+          </Reveal>
+
+          {/* Timeline sections */}
+          <div className="relative">
+            <div className="absolute left-6 md:left-8 top-0 bottom-0 w-px hidden md:block" style={{ background: `linear-gradient(to bottom, transparent, ${L.primary}30, ${L.primary}30, transparent)` }} />
+            <div className="space-y-10 md:space-y-14">
+              {APPA.map((step, i) => (
+                <Reveal key={step.key} delay={i * 0.08}>
+                  <div className="flex gap-6 md:gap-10 items-start">
+                    <div className="hidden md:flex flex-col items-center flex-shrink-0 relative z-10">
+                      <div className="w-4 h-4 rounded-full border-2 flex items-center justify-center" style={{ borderColor: L.primary, background: L.bg }}>
+                        <div className="w-2 h-2 rounded-full" style={{ background: L.primary }} />
+                      </div>
+                    </div>
+                    <div className="flex-1 flex flex-col lg:flex-row gap-6">
+                      <div className="lg:w-[45%]">
+                        <span className="inline-block text-[11px] font-bold tracking-[0.15em] uppercase px-3 py-1 mb-4"
+                          style={{ borderRadius: '6px', background: 'rgba(118,185,0,0.08)', color: L.primary, fontFamily: F.mono }}>
+                          Stage {i + 1} — {step.label}
+                        </span>
+                        <h3 className="text-xl lg:text-2xl font-bold tracking-tight mb-3" style={{ fontFamily: F.display }}>{step.headline}</h3>
+                        <p className="text-sm leading-relaxed mb-5" style={{ color: L.secondary }}>{step.desc}</p>
+                        <Link to={step.href} className="inline-flex items-center gap-2 text-sm font-semibold transition-all hover:gap-3" style={{ color: L.primary }}>
+                          Launch {step.label}
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}><path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                        </Link>
+                      </div>
+                      <div className="lg:w-[55%] p-6 cm-glass" style={{ borderRadius: '16px' }}>
+                        <div className="flex items-center gap-2 mb-4">
+                          <div className="w-9 h-9 flex items-center justify-center" style={{ borderRadius: L.radius, background: 'rgba(118,185,0,0.1)', color: L.primary }}>{step.icon}</div>
+                          <span className="text-sm font-bold" style={{ fontFamily: F.display }}>{step.label}</span>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {step.features.map(f => (
+                            <span key={f} className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium"
+                              style={{ borderRadius: '8px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', color: L.secondary }}>
+                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={L.primary} strokeWidth={3}><path d="m5 12 5 5L20 7" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                              {f}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Reveal>
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -563,49 +622,6 @@ export default function LandingPage() {
               ))}
             </div>
           </Reveal>
-        </div>
-      </section>
-
-      {/* ── 11. PRICING PREVIEW ── */}
-      <section className="px-6 py-14 md:py-20" style={{ background: L.surface, borderTop: '1px solid rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-        <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
-          <Reveal className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl lg:text-[44px] font-bold tracking-tight" style={{ fontFamily: F.display }}>Simple, transparent pricing.</h2>
-            <p className="mt-4 text-lg" style={{ color: L.secondary }}>Start free. Upgrade when you're ready.</p>
-          </Reveal>
-          <div className="grid md:grid-cols-3 gap-4">
-            {PLANS.map((plan, i) => (
-              <Reveal key={plan.name} delay={i * 0.06}>
-                <div className="relative p-7 h-full flex flex-col" style={{
-                  borderRadius: '16px', background: 'rgba(255,255,255,0.02)', backdropFilter: 'blur(12px)',
-                  border: plan.popular ? `2px solid ${L.primary}` : '1px solid rgba(255,255,255,0.07)',
-                  boxShadow: plan.popular ? L.glowStrong : 'none',
-                }}>
-                  {plan.popular && (
-                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 text-[10px] font-bold uppercase tracking-wider px-3 py-1 text-white cm-gradient-btn"
-                      style={{ borderRadius: '999px' }}>Most Popular</span>
-                  )}
-                  <h3 className="text-lg font-bold" style={{ fontFamily: F.display }}>{plan.name}</h3>
-                  <div className="mt-3 mb-5">
-                    <span className="text-4xl font-bold" style={{ fontFamily: F.display }}>{plan.price}</span>
-                    {plan.period && <span className="text-sm" style={{ color: L.muted }}>{plan.period}</span>}
-                  </div>
-                  <div className="flex flex-col gap-2.5 mb-6 flex-1">
-                    {plan.features.map(f => (
-                      <div key={f} className="flex items-center gap-2">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={L.emerald} strokeWidth={2.5}><path d="m5 12 5 5L20 7" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                        <span className="text-sm" style={{ color: L.secondary }}>{f}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <Link to="/pricing" className={plan.popular ? 'cm-gradient-btn text-white' : 'cm-outline-btn'}
-                    style={{ borderRadius: L.radius, display: 'block', textAlign: 'center', padding: '10px 0', fontWeight: 600, fontSize: '14px' }}>
-                    {plan.cta}
-                  </Link>
-                </div>
-              </Reveal>
-            ))}
-          </div>
         </div>
       </section>
 
