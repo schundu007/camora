@@ -7,9 +7,9 @@ import type { LumoraTab } from './LumoraIconRail';
 
 /* ── Color tokens (standardized) ── */
 const C = {
-  base: '#0B1120',
-  surface: '#0F1729',
-  elevated: '#2D8CFF',
+  base: '#2D8CFF',
+  surface: '#1A7AEF',
+  elevated: '#0B5CFF',
   text: '#ffffff',
   muted: 'rgba(255,255,255,0.75)',
   accent: '#2D8CFF',
@@ -27,7 +27,7 @@ export function LumoraTopBar({ activeTab, onTranscription }: LumoraTopBarProps) 
   const [showSettings, setShowSettings] = useState(false);
 
   return (
-    <header className="flex items-center h-14 px-3 sm:px-4 md:px-6 shrink-0 z-30" style={{ background: '#0B1120', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+    <header className="flex items-center h-14 px-3 sm:px-4 md:px-6 shrink-0 z-30" style={{ background: '#2D8CFF', borderBottom: '1px solid rgba(255,255,255,0.15)' }}>
       {/* Left: spacer (tab label removed — sidebar shows active tab) */}
       <div className="min-w-[20px]" />
 

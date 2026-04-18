@@ -13,9 +13,9 @@ interface LumoraIconRailProps {
 
 /* ── Color tokens (standardized) ── */
 const C = {
-  base: '#0B1120',
-  surface: '#0F1729',
-  elevated: '#2D8CFF',
+  base: '#2D8CFF',
+  surface: '#1A7AEF',
+  elevated: '#0B5CFF',
   text: '#ffffff',
   muted: 'rgba(255,255,255,0.75)',
   accent: '#2D8CFF',
@@ -46,7 +46,7 @@ function UserAvatarMenu() {
         <>
           <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
           <div className="absolute left-full bottom-0 ml-2 w-52 rounded-xl z-50 overflow-hidden"
-            style={{ background: '#111827', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 12px 40px rgba(0,0,0,0.5)' }}>
+            style={{ background: '#0B5CFF', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 12px 40px rgba(0,0,0,0.5)' }}>
             <div className="px-4 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
               <p className="text-sm font-semibold truncate" style={{ color: '#f8fafc', fontFamily: "'Satoshi', sans-serif" }}>{user.name || 'User'}</p>
               <p className="text-xs truncate mt-0.5" style={{ color: 'rgba(255,255,255,0.45)' }}>{user.email}</p>
@@ -89,7 +89,7 @@ export function LumoraIconRail({ activeTab, sessionsOpen, onToggleSessions }: Lu
   ];
 
   return (
-    <nav className="hidden md:flex flex-col items-center w-[80px] shrink-0 py-3 gap-1" style={{ background: '#0B1120', borderRight: '1px solid rgba(255,255,255,0.08)' }}>
+    <nav className="hidden md:flex flex-col items-center w-[80px] shrink-0 py-3 gap-1" style={{ background: '#2D8CFF', borderRight: '1px solid rgba(255,255,255,0.08)' }}>
       <Link to="/" className="flex items-center justify-center w-full h-12 mb-3" title="Camora">
         <CamoraLogo size={32} />
       </Link>
@@ -124,7 +124,7 @@ export function LumoraIconRail({ activeTab, sessionsOpen, onToggleSessions }: Lu
         {showMore && (
           <>
             <div className="fixed inset-0 z-40" onClick={() => setShowMore(false)} />
-            <div className="absolute left-full top-0 ml-2 w-[200px] rounded-xl shadow-2xl z-50 p-3 grid grid-cols-3 gap-1" style={{ background: '#0F1729', border: `1px solid ${C.border}`, boxShadow: '0 8px 32px rgba(0,0,0,0.6)' }}>
+            <div className="absolute left-full top-0 ml-2 w-[200px] rounded-xl shadow-2xl z-50 p-3 grid grid-cols-3 gap-1" style={{ background: '#1A7AEF', border: `1px solid ${C.border}`, boxShadow: '0 8px 32px rgba(0,0,0,0.6)' }}>
               {moreItems.map(mi => {
                 const cls = "flex flex-col items-center gap-1.5 p-2.5 rounded-lg transition-colors";
                 const sty = mi.label === 'Sessions' && sessionsOpen ? { color: C.accent, background: C.accentBg } : { color: C.muted };
