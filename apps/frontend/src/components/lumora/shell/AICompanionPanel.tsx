@@ -224,7 +224,8 @@ function MicButtonLarge({ onResult, disabled }: { onResult: (text: string) => vo
       mr.start(500);
       mrRef.current = mr;
       setRec(true);
-      console.log('[Camo] started, device:', selectedDeviceId || 'default');
+      const track = stream.getAudioTracks()[0];
+      console.log(`[Camo] started — device: "${track?.label}", id: ${selectedDeviceId || 'default'}, settings:`, track?.getSettings());
     } catch (err) { console.error('[Camo] mic error:', err); }
   }, [token, onResult, selectedDeviceId]);
   const stop = useCallback(() => { mrRef.current?.state === 'recording' && mrRef.current.stop(); setRec(false); }, []);
