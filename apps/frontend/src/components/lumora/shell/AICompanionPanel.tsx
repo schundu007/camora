@@ -2,6 +2,7 @@ import { useRef, useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { streamResponse } from '@/lib/sse-client';
 import { transcriptionAPI } from '@/lib/api-client';
+import { useAudioDevices } from '@/components/lumora/audio/hooks/useAudioDevices';
 
 /* White background copilot — black text */
 const C = {
@@ -186,6 +187,7 @@ function RichText({ text }: { text: string }) {
 /* ── Mic Button (centered, prominent) ── */
 function MicButtonLarge({ onResult, disabled }: { onResult: (text: string) => void; disabled: boolean }) {
   const { token } = useAuth();
+  const { selectedDeviceId } = useAudioDevices();
   const [rec, setRec] = useState(false);
   const [busy, setBusy] = useState(false);
   const mrRef = useRef<MediaRecorder | null>(null);
@@ -193,31 +195,38 @@ function MicButtonLarge({ onResult, disabled }: { onResult: (text: string) => vo
 
   const start = useCallback(async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // Use exact same audio config as the working main AudioCapture
+      const audioConstraints: MediaTrackConstraints = {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true,
+      };
+      if (selectedDeviceId) {
+        audioConstraints.deviceId = { exact: selectedDeviceId };
+      }
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: audioConstraints });
       chunks.current = [];
-      const mimeType = 'audio/webm';
-      const mr = new MediaRecorder(stream, { mimeType });
+      const mr = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' });
       mr.ondataavailable = e => { if (e.data.size > 0) chunks.current.push(e.data); };
       mr.onstop = async () => {
         stream.getTracks().forEach(t => t.stop());
         const blob = new Blob(chunks.current, { type: 'audio/webm' });
-        console.log(`[Camo] stop: ${blob.size} bytes, ${chunks.current.length} chunks, mime=${mimeType}`);
-        if (blob.size === 0) { console.warn('[Camo] empty blob'); return; }
+        console.log(`[Camo] stop: ${blob.size} bytes, ${chunks.current.length} chunks`);
+        if (blob.size === 0) return;
         setBusy(true);
         try {
           const r = await transcriptionAPI.transcribe(token!, blob, 'audio.webm', false);
-          console.log(`[Camo] API response:`, r);
+          console.log(`[Camo] response:`, r);
           if (r.text?.trim()) onResult(r.text.trim());
-          else console.warn('[Camo] empty text:', r);
-        } catch (err) { console.error('[Camo] API error:', err); }
+        } catch (err) { console.error('[Camo] error:', err); }
         setBusy(false);
       };
-      mr.start();
+      mr.start(500);
       mrRef.current = mr;
       setRec(true);
-      console.log('[Camo] recording started, mime:', mimeType);
-    } catch (err) { console.error('[Camo] mic access error:', err); }
-  }, [token, onResult]);
+      console.log('[Camo] started, device:', selectedDeviceId || 'default');
+    } catch (err) { console.error('[Camo] mic error:', err); }
+  }, [token, onResult, selectedDeviceId]);
   const stop = useCallback(() => { mrRef.current?.state === 'recording' && mrRef.current.stop(); setRec(false); }, []);
 
   if (busy) return (
