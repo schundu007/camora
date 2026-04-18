@@ -51,7 +51,7 @@ export default function AscendModeSelector({
           style={{
             background: '#10b981',
             color: 'white',
-            border: 'none',
+            border: '1px solid var(--border)',
           }}
         >
           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

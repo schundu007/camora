@@ -714,7 +714,7 @@ export default function JobsPage() {
                     fontSize: '15px',
                     color: 'var(--text-primary)',
                     background: 'transparent',
-                    border: 'none',
+                    border: '1px solid var(--border)',
                     outline: 'none',
                     padding: '12px 0',
                   }}
@@ -729,7 +729,7 @@ export default function JobsPage() {
                     height: '44px',
                     background: 'var(--accent)',
                     borderRadius: '9999px',
-                    border: 'none',
+                    border: '1px solid var(--border)',
                     cursor: 'pointer',
                     flexShrink: 0,
                     transition: 'background 0.15s',
@@ -800,7 +800,7 @@ export default function JobsPage() {
                   </h3>
                   <button
                     onClick={() => { setShowUrlInput(false); setAnalyzeError(null); setShowTextFallback(false); }}
-                    style={{ fontSize: '13px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 8px' }}
+                    style={{ fontSize: '13px', color: 'var(--text-muted)', background: 'none', border: '1px solid var(--border)', cursor: 'pointer', padding: '4px 8px' }}
                   >
                     Close
                   </button>
@@ -844,7 +844,7 @@ export default function JobsPage() {
                       fontWeight: 600,
                       color: '#ffffff',
                       background: analyzing ? 'var(--accent-hover)' : (!jobUrl.trim() ? 'var(--text-muted)' : 'var(--accent)'),
-                      border: 'none',
+                      border: '1px solid var(--border)',
                       borderRadius: '8px',
                       cursor: analyzing || !jobUrl.trim() ? 'not-allowed' : 'pointer',
                       transition: 'background 0.15s',
@@ -913,7 +913,7 @@ export default function JobsPage() {
                         fontWeight: 600,
                         color: '#ffffff',
                         background: analyzing ? 'var(--accent-hover)' : (jdText.trim().length < 50 ? 'var(--text-muted)' : 'var(--accent)'),
-                        border: 'none',
+                        border: '1px solid var(--border)',
                         borderRadius: '8px',
                         cursor: analyzing || jdText.trim().length < 50 ? 'not-allowed' : 'pointer',
                       }}
@@ -971,7 +971,7 @@ export default function JobsPage() {
                       fontWeight: isActive ? 700 : 500,
                       color: isActive ? 'var(--text-primary)' : 'var(--text-muted)',
                       background: 'none',
-                      border: 'none',
+                      border: '1px solid var(--border)',
                       borderBottom: isActive ? `3px solid ${pillColor}` : '3px solid transparent',
                       padding: '10px 16px',
                       cursor: 'pointer',
@@ -1031,11 +1031,11 @@ export default function JobsPage() {
             ].filter(f => f.val).map((f, i) => (
               <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '5px 10px', fontSize: '12px', fontWeight: 600, color: f.color, background: `${f.color}15`, borderRadius: '6px', border: `1px solid ${f.color}30` }}>
                 {f.label}
-                <button onClick={() => f.set('')} style={{ background: 'none', border: 'none', color: f.color, cursor: 'pointer', padding: '0 2px', fontSize: '14px', lineHeight: 1 }}>&times;</button>
+                <button onClick={() => f.set('')} style={{ background: 'none', border: '1px solid var(--border)', color: f.color, cursor: 'pointer', padding: '0 2px', fontSize: '14px', lineHeight: 1 }}>&times;</button>
               </span>
             ))}
             {activeFilterCount > 0 && (
-              <button onClick={clearAllFilters} style={{ fontSize: '12px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: '6px 8px' }}>
+              <button onClick={clearAllFilters} style={{ fontSize: '12px', color: 'var(--text-muted)', background: 'none', border: '1px solid var(--border)', cursor: 'pointer', padding: '6px 8px' }}>
                 Clear all
               </button>
             )}
@@ -1152,7 +1152,7 @@ export default function JobsPage() {
                   {total} job{total !== 1 ? 's' : ''} found
                 </span>
                 {activeFilterCount > 0 && (
-                  <button onClick={clearAllFilters} style={{ fontSize: '13px', fontWeight: 600, color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 8px' }}>
+                  <button onClick={clearAllFilters} style={{ fontSize: '13px', fontWeight: 600, color: 'var(--accent)', background: 'none', border: '1px solid var(--border)', cursor: 'pointer', padding: '4px 8px' }}>
                     Clear all filters
                   </button>
                 )}
@@ -1218,7 +1218,7 @@ export default function JobsPage() {
                   fontWeight: 600,
                   color: '#ffffff',
                   background: 'var(--accent)',
-                  border: 'none',
+                  border: '1px solid var(--border)',
                   borderRadius: '9999px',
                   padding: '12px 32px',
                   cursor: 'pointer',
@@ -1268,12 +1268,12 @@ export default function JobsPage() {
                     className="jobs-card card-glow"
                     style={{
                       background: 'var(--bg-surface)',
-                      border: 'none',
+                      border: '1px solid var(--border)',
                       borderRadius: '16px',
                       display: 'flex',
                       flexDirection: 'column',
                       cursor: 'default',
-                      boxShadow: '0 4px 24px rgba(45,140,255,0.12)',
+                      boxShadow: 'none',
                       '--glow-hover': '0 20px 60px rgba(45,140,255,0.22)',
                     } as React.CSSProperties}
                   >
@@ -1413,7 +1413,7 @@ export default function JobsPage() {
                   fontWeight: 600,
                   color: '#fff',
                   background: 'var(--accent)',
-                  border: 'none',
+                  border: '1px solid var(--border)',
                   borderRadius: '10px',
                   cursor: loadingMore ? 'wait' : 'pointer',
                   opacity: loadingMore ? 0.7 : 1,

@@ -220,7 +220,7 @@ export function VoiceEnrollment({ disabled, variant = 'dark' }: VoiceEnrollmentP
             fontSize: '13px',
             color: isRecording ? '#ffffff' : '#000000',
             background: isRecording ? '#FF0000' : '#2D8CFF',
-            border: 'none',
+            border: '1px solid var(--border)',
           } : {
             fontSize: '11px',
             color: isRecording ? '#fff' : 'rgba(255,255,255,0.6)',
@@ -267,7 +267,7 @@ export function VoiceEnrollment({ disabled, variant = 'dark' }: VoiceEnrollmentP
           padding: '10px 16px',
           color: '#ffffff',
           background: voiceFilterEnabled ? '#2D8CFF' : '#000000',
-          border: 'none',
+          border: '1px solid var(--border)',
         } : {
           fontSize: '11px',
           padding: '4px 8px',

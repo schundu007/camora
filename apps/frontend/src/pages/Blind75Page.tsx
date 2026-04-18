@@ -676,7 +676,7 @@ export default function Blind75Page() {
                             fontWeight: 600,
                             color: 'var(--text-muted)',
                             background: 'none',
-                            border: 'none',
+                            border: '1px solid var(--border)',
                             cursor: 'pointer',
                             padding: '4px 0',
                             transition: 'color 0.15s',
@@ -821,7 +821,7 @@ export default function Blind75Page() {
                                     fontWeight: 600,
                                     padding: '5px 14px',
                                     borderRadius: '8px',
-                                    border: 'none',
+                                    border: '1px solid var(--border)',
                                     background: '#ef4444',
                                     color: 'var(--bg-surface)',
                                     cursor: 'pointer',
@@ -907,10 +907,10 @@ export default function Blind75Page() {
                             >
                               {/* View mode tabs */}
                               <div style={{ display: 'flex', borderBottom: '1px solid var(--border)', background: 'var(--bg-elevated)' }}>
-                                <button onClick={() => setViewMode('practice')} style={{ flex: 1, padding: '8px', fontSize: '13px', fontWeight: 600, border: 'none', background: viewMode === 'practice' ? 'var(--bg-surface)' : 'transparent', color: viewMode === 'practice' ? cat.color : 'var(--text-muted)', borderBottom: viewMode === 'practice' ? `2px solid ${cat.color}` : '2px solid transparent', cursor: 'pointer' }}>
+                                <button onClick={() => setViewMode('practice')} style={{ flex: 1, padding: '8px', fontSize: '13px', fontWeight: 600, border: '1px solid var(--border)', background: viewMode === 'practice' ? 'var(--bg-surface)' : 'transparent', color: viewMode === 'practice' ? cat.color : 'var(--text-muted)', borderBottom: viewMode === 'practice' ? `2px solid ${cat.color}` : '2px solid transparent', cursor: 'pointer' }}>
                                   Practice
                                 </button>
-                                <button onClick={() => setViewMode('solution')} style={{ flex: 1, padding: '8px', fontSize: '13px', fontWeight: 600, border: 'none', background: viewMode === 'solution' ? 'var(--bg-surface)' : 'transparent', color: viewMode === 'solution' ? '#2D8CFF' : 'var(--text-muted)', borderBottom: viewMode === 'solution' ? '2px solid #2D8CFF' : '2px solid transparent', cursor: 'pointer' }}>
+                                <button onClick={() => setViewMode('solution')} style={{ flex: 1, padding: '8px', fontSize: '13px', fontWeight: 600, border: '1px solid var(--border)', background: viewMode === 'solution' ? 'var(--bg-surface)' : 'transparent', color: viewMode === 'solution' ? '#2D8CFF' : 'var(--text-muted)', borderBottom: viewMode === 'solution' ? '2px solid #2D8CFF' : '2px solid transparent', cursor: 'pointer' }}>
                                   Solution
                                 </button>
                               </div>
@@ -924,7 +924,7 @@ export default function Blind75Page() {
                                     if (!sol) return (
                                       <div style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
                                         <p style={{ fontSize: '14px', marginBottom: '12px' }}>Pre-written solution coming soon.</p>
-                                        <button onClick={() => { setViewMode('practice'); getAISolution(problem.title); }} style={{ padding: '8px 20px', background: '#2D8CFF', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>
+                                        <button onClick={() => { setViewMode('practice'); getAISolution(problem.title); }} style={{ padding: '8px 20px', background: '#2D8CFF', color: '#fff', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>
                                           Generate AI Solution
                                         </button>
                                       </div>
@@ -1012,7 +1012,7 @@ export default function Blind75Page() {
                                     fontWeight: 700,
                                     padding: '6px 16px',
                                     borderRadius: '8px',
-                                    border: 'none',
+                                    border: '1px solid var(--border)',
                                     background: isRunning ? '#9ca3af' : '#10b981',
                                     color: 'var(--bg-surface)',
                                     cursor: isRunning ? 'not-allowed' : 'pointer',
@@ -1068,7 +1068,7 @@ export default function Blind75Page() {
                                     lineHeight: 1.6,
                                     background: '#0d1117',
                                     color: '#e6edf3',
-                                    border: 'none',
+                                    border: '1px solid var(--border)',
                                     outline: 'none',
                                     resize: 'vertical',
                                     boxSizing: 'border-box',
@@ -1125,7 +1125,7 @@ export default function Blind75Page() {
                     fontWeight: 600,
                     color: '#10b981',
                     background: 'none',
-                    border: 'none',
+                    border: '1px solid var(--border)',
                     cursor: 'pointer',
                   }}
                 >
@@ -1168,7 +1168,7 @@ export default function Blind75Page() {
                       gap: '12px',
                       padding: '16px 20px',
                       background: 'transparent',
-                      border: 'none',
+                      border: '1px solid var(--border)',
                       cursor: 'pointer',
                       textAlign: 'left',
                     }}

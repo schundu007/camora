@@ -373,7 +373,7 @@ export default function DownloadPage() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  boxShadow: '0 8px 32px rgba(45,140,255,0.3), 0 0 0 1px rgba(255,255,255,0.1)',
+                  boxShadow: '0 0 0 1px rgba(255,255,255,0.1)',
                 }}
               >
                 <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
@@ -417,10 +417,10 @@ export default function DownloadPage() {
                     style={{
                       background: 'linear-gradient(135deg, #2D8CFF 0%, #2D8CFF 100%)',
                       color: '#ffffff',
-                      boxShadow: '0 4px 24px rgba(45,140,255,0.35), 0 0 0 1px rgba(255,255,255,0.1) inset',
+                      boxShadow: '0 0 0 1px rgba(255,255,255,0.1) inset',
                     }}
                     onMouseEnter={e => {
-                      (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 40px rgba(45,140,255,0.5), 0 0 0 1px rgba(255,255,255,0.15) inset';
+                      (e.currentTarget as HTMLElement).style.boxShadow = '0 0 0 1px rgba(255,255,255,0.15) inset';
                       (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)';
                     }}
                     onMouseLeave={e => {
@@ -445,7 +445,7 @@ export default function DownloadPage() {
                       style={{
                         background: 'linear-gradient(135deg, #2D8CFF 0%, #2D8CFF 100%)',
                         color: '#ffffff',
-                        boxShadow: '0 4px 24px rgba(45,140,255,0.35)',
+                        boxShadow: 'none',
                       }}
                     >
                       {addonLoading ? (
@@ -512,7 +512,7 @@ export default function DownloadPage() {
                     style={{
                       background: 'linear-gradient(135deg, #10b981 0%, #2D8CFF 100%)',
                       color: '#ffffff',
-                      border: 'none',
+                      border: '1px solid var(--border)',
                       cursor: proLoading ? 'wait' : 'pointer',
                       boxShadow: '0 4px 24px rgba(16,185,129,0.35), 0 0 0 1px rgba(255,255,255,0.1) inset',
                     }}
@@ -566,9 +566,7 @@ export default function DownloadPage() {
                       border: isRecommended
                         ? '1px solid rgba(45,140,255,0.3)'
                         : '1px solid rgba(255,255,255,0.08)',
-                      boxShadow: isRecommended
-                        ? '0 4px 24px rgba(45,140,255,0.12)'
-                        : 'none',
+                      boxShadow: 'none',
                     }}
                     onMouseEnter={e => {
                       if (!isRecommended) {
@@ -590,7 +588,7 @@ export default function DownloadPage() {
                         style={{
                           background: 'linear-gradient(135deg, #2D8CFF, #2D8CFF)',
                           color: '#fff',
-                          boxShadow: '0 2px 12px rgba(45,140,255,0.4)',
+                          boxShadow: 'none',
                         }}
                       >
                         Recommended

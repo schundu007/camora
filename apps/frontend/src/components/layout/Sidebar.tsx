@@ -209,7 +209,7 @@ function SidebarSection({
             letterSpacing: '0.05em',
             color: 'var(--text-muted)',
             background: 'none',
-            border: 'none',
+            border: '1px solid var(--border)',
           }}
         >
           <span>{section.title}</span>
@@ -356,7 +356,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             height: '32px',
             color: 'var(--text-muted)',
             background: 'none',
-            border: 'none',
+            border: '1px solid var(--border)',
             cursor: 'pointer',
             fontSize: '13px',
             fontWeight: 500,

@@ -54,7 +54,7 @@ export default function InterviewCountdown() {
 
   if (loading) {
     return (
-      <div className="bg-[var(--bg-surface)] border-0 rounded-2xl p-5 shadow-[0_4px_24px_rgba(45,140,255,0.12)]">
+      <div className="bg-[var(--bg-surface)] border-0 rounded-2xl p-5">
         <div className="animate-pulse space-y-3">
           <div className="h-4 bg-[var(--bg-elevated)] rounded w-32" />
           <div className="h-12 bg-[var(--bg-elevated)] rounded w-20" />
@@ -70,7 +70,7 @@ export default function InterviewCountdown() {
       <>
         <button
           onClick={() => setShowSetup(true)}
-          className="w-full bg-[var(--bg-surface)] border-0 rounded-2xl p-5 text-left shadow-[0_4px_24px_rgba(45,140,255,0.12)] hover:shadow-[0_20px_60px_rgba(45,140,255,0.28)] transition-all group"
+          className="w-full bg-[var(--bg-surface)] border-0 rounded-2xl p-5 text-left transition-all group"
         >
           <div className="flex items-center justify-between">
             <div>
@@ -99,7 +99,7 @@ export default function InterviewCountdown() {
   const strokeDashoffset = circumference - (completion_pct / 100) * circumference;
 
   return (
-    <div className="bg-[var(--bg-surface)] border-0 rounded-2xl p-5 shadow-[0_4px_24px_rgba(45,140,255,0.12)]">
+    <div className="bg-[var(--bg-surface)] border-0 rounded-2xl p-5">
       <div className="flex items-center gap-4">
         {/* Progress ring */}
         <div className="relative flex-shrink-0">

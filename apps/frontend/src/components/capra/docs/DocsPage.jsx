@@ -877,7 +877,7 @@ export default function DocsPage({ onBack }) {
                         return (
                           <div className="mb-8">
                             <h2 className="section-label mb-3">Continue Where You Left Off</h2>
-                            <div className="rounded-2xl overflow-hidden bg-[var(--bg-surface)]" style={{ boxShadow: '0 4px 24px rgba(45,140,255,0.12)' }}>
+                            <div className="rounded-2xl overflow-hidden bg-[var(--bg-surface)]" style={{ boxShadow: 'none' }}>
                               {recentItems.map((topic) => (
                                 <a
                                   key={topic.id}
@@ -951,12 +951,12 @@ export default function DocsPage({ onBack }) {
                         <div className="flex items-center gap-1 mt-5 p-1 rounded-xl w-fit" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
                           <button onClick={() => setSqlPlaygroundOpen(false)}
                             className="px-5 py-2.5 text-sm font-bold rounded-lg transition-all"
-                            style={!sqlPlaygroundOpen ? { background: '#2D8CFF', color: '#fff', boxShadow: '0 2px 8px rgba(45,140,255,0.3)' } : { color: 'var(--text-secondary)' }}>
+                            style={!sqlPlaygroundOpen ? { background: '#2D8CFF', color: '#fff', boxShadow: 'none' } : { color: 'var(--text-secondary)' }}>
                             Topics
                           </button>
                           <button onClick={() => setSqlPlaygroundOpen(true)}
                             className="px-5 py-2.5 text-sm font-bold rounded-lg transition-all"
-                            style={sqlPlaygroundOpen ? { background: '#2D8CFF', color: '#fff', boxShadow: '0 2px 8px rgba(45,140,255,0.3)' } : { color: 'var(--text-secondary)' }}>
+                            style={sqlPlaygroundOpen ? { background: '#2D8CFF', color: '#fff', boxShadow: 'none' } : { color: 'var(--text-secondary)' }}>
                             SQL Playground
                           </button>
                         </div>
@@ -1156,7 +1156,7 @@ export default function DocsPage({ onBack }) {
                     </div>
                     <div className="grid md:grid-cols-2 gap-4">
                       {/* Time Complexity Card */}
-                      <div className="rounded-lg overflow-hidden border-0 bg-[var(--bg-surface)] shadow-[0_4px_24px_rgba(45,140,255,0.12)] hover:shadow-[0_20px_60px_rgba(45,140,255,0.25)] transition-colors">
+                      <div className="rounded-lg overflow-hidden border-0 bg-[var(--bg-surface)] transition-colors">
                         <div className="px-4 py-3 border-b border-[var(--border)] bg-emerald-500/100/10">
                           <h3 className="text-sm text-[var(--text-primary)] font-semibold landing-display flex items-center gap-2">
                             <div className="w-6 h-6 rounded flex items-center justify-center bg-emerald-500/15">
@@ -1191,7 +1191,7 @@ export default function DocsPage({ onBack }) {
                         </div>
                       </div>
                       {/* Data Structure Selection Card */}
-                      <div className="rounded-lg overflow-hidden border-0 bg-[var(--bg-surface)] shadow-[0_4px_24px_rgba(45,140,255,0.12)] hover:shadow-[0_20px_60px_rgba(45,140,255,0.25)] transition-colors">
+                      <div className="rounded-lg overflow-hidden border-0 bg-[var(--bg-surface)] transition-colors">
                         <div className="px-4 py-3 border-b border-[var(--border)] bg-emerald-500/100/10">
                           <h3 className="text-sm text-[var(--text-primary)] font-semibold landing-display flex items-center gap-2">
                             <div className="w-6 h-6 rounded flex items-center justify-center bg-emerald-500/15">
@@ -1243,7 +1243,7 @@ export default function DocsPage({ onBack }) {
                       const categoryTopics = filteredTopics.filter(t => systemDesignCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
                       return (
-                        <div key={category.id} className="rounded-2xl overflow-hidden border-0 shadow-[0_4px_24px_rgba(45,140,255,0.12)]">
+                        <div key={category.id} className="rounded-2xl overflow-hidden border-0">
                           {/* Category Header with Progress */}
                           <div className="px-4 py-2.5 flex items-center gap-2.5 bg-[var(--bg-elevated)] border-b border-[var(--border)]">
                             <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: `${category.color}12` }}>
@@ -1320,7 +1320,7 @@ export default function DocsPage({ onBack }) {
                         'Hard': 'text-red-600 bg-red-500/10 border border-red-500/20',
                       };
                       return (
-                        <div key={category.id} className="rounded-2xl overflow-hidden border-0 shadow-[0_4px_24px_rgba(45,140,255,0.12)]">
+                        <div key={category.id} className="rounded-2xl overflow-hidden border-0">
                           {/* Category Header */}
                           <div className="px-4 py-2.5 flex items-center gap-2.5 bg-[var(--bg-elevated)] border-b border-[var(--border)]">
                             <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: `${category.color}12` }}>
@@ -1395,7 +1395,7 @@ export default function DocsPage({ onBack }) {
                       if (categoryProblems.length === 0) return null;
                       // diffStyle is computed inline per-problem below
                       return (
-                        <div key={category.id} className="rounded-2xl overflow-hidden border-0 shadow-[0_4px_24px_rgba(45,140,255,0.12)]">
+                        <div key={category.id} className="rounded-2xl overflow-hidden border-0">
                           <div className="px-4 py-2.5 flex items-center gap-2.5 bg-[var(--bg-elevated)] border-b border-[var(--border)]">
                             <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: `${category.color}12` }}>
                               <Icon name={category.icon} size={14} style={{ color: category.color }} />
@@ -1457,7 +1457,7 @@ export default function DocsPage({ onBack }) {
                       const categoryTopics = systemDesignPatterns.filter(t => systemDesignPatternCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
                       return (
-                        <div key={category.id} className="rounded-2xl overflow-hidden border-0 shadow-[0_4px_24px_rgba(45,140,255,0.12)]">
+                        <div key={category.id} className="rounded-2xl overflow-hidden border-0">
                           <div className="px-4 py-2.5 flex items-center gap-2.5 bg-[var(--bg-elevated)] border-b border-[var(--border)]">
                             <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: `${category.color}12` }}>
                               <Icon name={category.icon} size={14} style={{ color: category.color }} />
@@ -1508,7 +1508,7 @@ export default function DocsPage({ onBack }) {
                       const categoryTopics = microservicesPatterns.filter(t => microservicesCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
                       return (
-                        <div key={category.id} className="rounded-2xl overflow-hidden border-0 shadow-[0_4px_24px_rgba(45,140,255,0.12)]">
+                        <div key={category.id} className="rounded-2xl overflow-hidden border-0">
                           <div className="px-4 py-2.5 flex items-center gap-2.5 bg-[var(--bg-elevated)] border-b border-[var(--border)]">
                             <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: `${category.color}12` }}>
                               <Icon name={category.icon} size={14} style={{ color: category.color }} />
@@ -1559,7 +1559,7 @@ export default function DocsPage({ onBack }) {
                       const categoryTopics = systemDesignTradeoffs.filter(t => tradeoffCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
                       return (
-                        <div key={category.id} className="rounded-2xl overflow-hidden border-0 shadow-[0_4px_24px_rgba(45,140,255,0.12)]">
+                        <div key={category.id} className="rounded-2xl overflow-hidden border-0">
                           <div className="px-4 py-2.5 flex items-center gap-2.5 bg-[var(--bg-elevated)] border-b border-[var(--border)]">
                             <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: `${category.color}12` }}>
                               <Icon name={category.icon} size={14} style={{ color: category.color }} />
@@ -1610,7 +1610,7 @@ export default function DocsPage({ onBack }) {
                       const categoryTopics = scalableSystemsTopics.filter(t => scalableSystemsCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
                       return (
-                        <div key={category.id} className="rounded-2xl overflow-hidden border-0 shadow-[0_4px_24px_rgba(45,140,255,0.12)]">
+                        <div key={category.id} className="rounded-2xl overflow-hidden border-0">
                           <div className="px-4 py-2.5 flex items-center gap-2.5 bg-[var(--bg-elevated)] border-b border-[var(--border)]">
                             <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: `${category.color}12` }}>
                               <Icon name={category.icon} size={14} style={{ color: category.color }} />
@@ -1656,7 +1656,7 @@ export default function DocsPage({ onBack }) {
                       <h2 className="landing-display font-bold text-xl mt-1 tracking-tight text-[var(--text-primary)]">Concurrency & Multithreading</h2>
                       <p className="text-sm text-[var(--text-muted)] landing-body mt-1">Thread-safe programming, synchronization, and classic problems</p>
                     </div>
-                    <div className="rounded-2xl overflow-hidden border-0 shadow-[0_4px_24px_rgba(45,140,255,0.12)]">
+                    <div className="rounded-2xl overflow-hidden border-0">
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--bg-surface)] overflow-hidden">
                         {concurrencyTopics.map((topic) => (
                           <div
@@ -1686,7 +1686,7 @@ export default function DocsPage({ onBack }) {
                   <div className="h-px bg-[var(--border)] mb-6" />
 
                   {/* Interview Framework */}
-                  <div className="rounded-2xl border-0 bg-[var(--bg-surface)] p-5 shadow-[0_4px_24px_rgba(45,140,255,0.12)]">
+                  <div className="rounded-2xl border-0 bg-[var(--bg-surface)] p-5">
                     <div className="mb-4">
                       <span className="landing-mono text-xs text-[var(--accent)] tracking-widest uppercase">Framework</span>
                       <h3 className="landing-display font-bold text-lg mt-1 tracking-tight text-[var(--text-primary)] flex items-center gap-2">
@@ -1729,7 +1729,7 @@ export default function DocsPage({ onBack }) {
                       const categoryTopics = filteredTopics.filter(t => lldCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
                       return (
-                        <div key={category.id} className="rounded-2xl overflow-hidden border-0 shadow-[0_4px_24px_rgba(45,140,255,0.12)]">
+                        <div key={category.id} className="rounded-2xl overflow-hidden border-0">
                           <div className="px-4 py-2.5 flex items-center gap-2.5 bg-[var(--bg-elevated)] border-b border-[var(--border)]">
                             <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: `${category.color}12` }}>
                               <Icon name={category.icon} size={14} style={{ color: category.color }} />
@@ -1783,7 +1783,7 @@ export default function DocsPage({ onBack }) {
                       const categoryProblems = lldProblems.filter(p => lldProblemCategoryMap[p.id] === category.id);
                       if (categoryProblems.length === 0) return null;
                       return (
-                        <div key={category.id} className="rounded-2xl overflow-hidden border-0 shadow-[0_4px_24px_rgba(45,140,255,0.12)]">
+                        <div key={category.id} className="rounded-2xl overflow-hidden border-0">
                           <div className="px-4 py-2.5 flex items-center gap-2.5 bg-[var(--bg-elevated)] border-b border-[var(--border)]">
                             <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: `${category.color}12` }}>
                               <Icon name={category.icon} size={14} style={{ color: category.color }} />
@@ -1939,7 +1939,7 @@ export default function DocsPage({ onBack }) {
                       const catCompleted = categoryTopics.filter(t => completedTopics[t.id]).length;
                       const catPercent = Math.round((catCompleted / categoryTopics.length) * 100);
                       return (
-                        <div key={category.id} className="rounded-2xl overflow-hidden border-0 shadow-[0_4px_24px_rgba(45,140,255,0.12)]">
+                        <div key={category.id} className="rounded-2xl overflow-hidden border-0">
                           {/* Category Header with Progress */}
                           <div className="px-4 py-2.5 flex items-center gap-2.5 bg-[var(--bg-elevated)] border-b border-[var(--border)]">
                             <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: `${category.color}12` }}>
@@ -2090,7 +2090,7 @@ export default function DocsPage({ onBack }) {
                       const categoryTopics = filteredTopics.filter(t => microservicesCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
                       return (
-                        <div key={category.id} className="rounded-2xl overflow-hidden border-0 shadow-[0_4px_24px_rgba(45,140,255,0.12)]">
+                        <div key={category.id} className="rounded-2xl overflow-hidden border-0">
                           <div className="px-4 py-2.5 flex items-center gap-2.5 bg-[var(--bg-elevated)] border-b border-[var(--border)]">
                             <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: `${category.color}12` }}>
                               <Icon name={category.icon} size={14} style={{ color: category.color }} />
@@ -2144,7 +2144,7 @@ export default function DocsPage({ onBack }) {
                       const categoryTopics = filteredTopics.filter(t => databaseCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
                       return (
-                        <div key={category.id} className="rounded-2xl overflow-hidden border-0 shadow-[0_4px_24px_rgba(45,140,255,0.12)]">
+                        <div key={category.id} className="rounded-2xl overflow-hidden border-0">
                           <div className="px-4 py-2.5 flex items-center gap-2.5 bg-[var(--bg-elevated)] border-b border-[var(--border)]">
                             <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: `${category.color}12` }}>
                               <Icon name={category.icon} size={14} style={{ color: category.color }} />
@@ -2198,7 +2198,7 @@ export default function DocsPage({ onBack }) {
                       const categoryTopics = filteredTopics.filter(t => sqlCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
                       return (
-                        <div key={category.id} className="rounded-2xl overflow-hidden border-0 shadow-[0_4px_24px_rgba(45,140,255,0.12)]">
+                        <div key={category.id} className="rounded-2xl overflow-hidden border-0">
                           <div className="px-4 py-2.5 flex items-center gap-2.5 bg-[var(--bg-elevated)] border-b border-[var(--border)]">
                             <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: `${category.color}12` }}>
                               <Icon name={category.icon} size={14} style={{ color: category.color }} />
