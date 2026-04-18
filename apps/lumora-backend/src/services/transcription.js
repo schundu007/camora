@@ -63,22 +63,37 @@ export async function transcribe(audioBuffer, filename = 'audio.webm') {
   try {
     // Write audio to a temp file
     await fs.promises.writeFile(inputPath, audioBuffer);
+    console.log(`[Transcribe] Input: ${audioBuffer.length} bytes, ext=${ext}`);
 
-    // Always convert to WAV via ffmpeg — avoids codec/header issues with
-    // browser-recorded webm that OpenAI sometimes rejects
-    await convertToWav(inputPath, wavPath);
+    // Try WAV conversion first, fall back to sending original if ffmpeg fails
+    let audioFile = inputPath;
+    try {
+      await convertToWav(inputPath, wavPath);
+      const wavSize = (await fs.promises.stat(wavPath)).size;
+      console.log(`[Transcribe] WAV converted: ${wavSize} bytes`);
+      if (wavSize > 1000) audioFile = wavPath;
+    } catch (ffmpegErr) {
+      console.warn(`[Transcribe] ffmpeg failed, sending original: ${ffmpegErr.message}`);
+    }
 
     // Send to OpenAI Whisper
     const response = await openai.audio.transcriptions.create({
       model: 'whisper-1',
-      file: fs.createReadStream(wavPath),
+      file: fs.createReadStream(audioFile),
       language: 'en',
       prompt: TECHNICAL_PROMPT,
-      response_format: 'text',
     });
 
-    // The response is a plain string when response_format is 'text'
-    const text = typeof response === 'string' ? response.trim() : String(response).trim();
+    // Handle both string response (response_format: text) and object response
+    let text = '';
+    if (typeof response === 'string') {
+      text = response.trim();
+    } else if (response?.text) {
+      text = response.text.trim();
+    } else {
+      text = String(response).trim();
+    }
+    console.log(`[Transcribe] Result: "${text.slice(0, 100)}" (${text.length} chars)`);
     return text;
   } finally {
     // Clean up temp files
