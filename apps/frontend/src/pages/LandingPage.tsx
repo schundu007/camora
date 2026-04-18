@@ -300,12 +300,31 @@ export default function LandingPage() {
         {/* Glow aura */}
         <div className="absolute top-0 bottom-0" style={{ left: '-18px', width: '36px', background: `linear-gradient(to bottom, transparent 3%, rgba(255,255,255,0.015) 10%, rgba(255,255,255,0.008) 50%, rgba(255,255,255,0.015) 90%, transparent 97%)`, filter: 'blur(10px)' }} />
 
-        {/* ── AIRPLANE flying UP along the track ── */}
-        <div className="absolute" style={{ left: '-48px', animation: 'fp-rocket 64s ease-in-out infinite' }}>
-          {/* Contrail below the ascending plane */}
-          <div style={{ position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', width: '4px', height: '120px', borderRadius: '2px', background: 'linear-gradient(to bottom, rgba(255,255,255,0.5), rgba(118,185,0,0.2), transparent)' }} />
-          {/* Real airplane image — large and visible */}
-          <img src="/airplane.png" alt="" width="100" height="100" style={{ filter: 'drop-shadow(0 0 20px rgba(118,185,0,0.7)) drop-shadow(0 -6px 14px rgba(255,255,255,0.25))' }} />
+        {/* ── AIRPLANE flying STRAIGHT UP along the track ── */}
+        <div className="absolute" style={{ left: '-20px', animation: 'fp-rocket 64s ease-in-out infinite' }}>
+          {/* Contrail below */}
+          <div style={{ position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', width: '4px', height: '140px', borderRadius: '2px', background: 'linear-gradient(to bottom, rgba(255,255,255,0.6), rgba(118,185,0,0.3), transparent)' }} />
+          {/* Solid white airplane — pointing straight up, large and visible */}
+          <svg width="40" height="48" viewBox="0 0 40 48" fill="none" style={{ filter: 'drop-shadow(0 0 16px rgba(118,185,0,0.7)) drop-shadow(0 0 30px rgba(255,255,255,0.15))' }}>
+            {/* Fuselage */}
+            <path d="M20 0 C17 0 15 4 15 8 L15 32 L25 32 L25 8 C25 4 23 0 20 0Z" fill="white" />
+            {/* Wings */}
+            <path d="M15 18 L0 26 L0 28 L15 24Z" fill="white" />
+            <path d="M25 18 L40 26 L40 28 L25 24Z" fill="white" />
+            {/* Tail */}
+            <path d="M15 30 L10 36 L10 37 L15 34Z" fill="white" />
+            <path d="M25 30 L30 36 L30 37 L25 34Z" fill="white" />
+            {/* Tail fin */}
+            <path d="M18 28 L20 22 L22 28Z" fill="#76B900" />
+            {/* Windows */}
+            {[10, 13, 16, 19, 22].map(y => (
+              <circle key={y} cx="20" cy={y} r="1.2" fill="#76B900" opacity="0.7" />
+            ))}
+            {/* Cockpit */}
+            <ellipse cx="20" cy="5" rx="2.5" ry="3" fill="#76B900" opacity="0.5" />
+            {/* Engine glow */}
+            <ellipse cx="20" cy="34" rx="3" ry="2" fill="#76B900" opacity="0.6" />
+          </svg>
         </div>
 
         {/* ── Section waypoints — labels match page content ── */}
