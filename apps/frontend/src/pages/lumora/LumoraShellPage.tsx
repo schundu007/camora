@@ -125,7 +125,7 @@ export function LumoraShellPage() {
   }
 
   return (
-    <div className="h-screen w-full flex overflow-hidden" style={{ background: '#ffffff' }}>
+    <div className="h-screen w-full flex overflow-hidden" style={{ background: '#0B1120' }}>
       {/* Left icon rail */}
       <LumoraIconRail
         activeTab={activeTab}
@@ -205,7 +205,7 @@ export function LumoraShellPage() {
 
           {/* Calendar tab */}
           {activeTab === 'calendar' && (
-            <div className="flex-1 flex flex-col min-h-0 absolute inset-0" style={{ background: '#ffffff' }}>
+            <div className="flex-1 flex flex-col min-h-0 absolute inset-0" style={{ background: '#0B1120' }}>
               <LumoraCalendar onClose={() => navigate('/lumora')} />
             </div>
           )}
@@ -244,7 +244,7 @@ export function LumoraShellPage() {
 
 function TabLoading({ label }: { label: string }) {
   return (
-    <div className="flex-1 flex items-center justify-center" style={{ background: '#ffffff' }}>
+    <div className="flex-1 flex items-center justify-center" style={{ background: '#0B1120' }}>
       <div className="flex items-center gap-3">
         <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
         <span className="text-sm text-slate-400" style={{ fontFamily: 'var(--font-sans)' }}>Loading {label}...</span>
