@@ -27,7 +27,7 @@ export function LumoraTopBar({ activeTab, onTranscription }: LumoraTopBarProps) 
   const [showSettings, setShowSettings] = useState(false);
 
   return (
-    <header className="flex items-center h-16 px-3 sm:px-4 md:px-6 shrink-0 z-30" style={{ background: '#000000', borderBottom: '1px solid #333' }}>
+    <header className="flex items-center h-14 px-3 sm:px-4 md:px-6 shrink-0 z-30" style={{ background: '#0B1120', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
       {/* Left: spacer (tab label removed — sidebar shows active tab) */}
       <div className="min-w-[20px]" />
 
