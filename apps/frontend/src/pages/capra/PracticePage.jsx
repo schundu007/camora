@@ -710,7 +710,7 @@ export default function PracticePage() {
 
                 {/* CTA Footer */}
                 <div style={{ padding: '16px 24px', background: 'var(--bg-elevated)', borderTop: '1px solid var(--border)', textAlign: 'center' }}>
-                  <button onClick={() => startChallenge()} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '13px 36px', background: 'linear-gradient(135deg, #2D8CFF, #2D8CFF)', color: '#fff', fontSize: 15, fontWeight: 700, borderRadius: 12, border: 'none', cursor: 'pointer', boxShadow: '0 4px 14px rgba(45,140,255,0.3)', transition: 'transform 0.15s, box-shadow 0.15s' }}>
+                  <button onClick={() => startChallenge()} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '13px 36px', background: 'linear-gradient(135deg, #2D8CFF, #2D8CFF)', color: '#fff', fontSize: 15, fontWeight: 700, borderRadius: 12, border: '1px solid var(--border)', cursor: 'pointer', boxShadow: 'none', transition: 'transform 0.15s, box-shadow 0.15s' }}>
                     <Icon name="play" size={16} style={{ color: '#fff' }} />
                     Start Challenge
                   </button>
@@ -748,7 +748,7 @@ export default function PracticePage() {
                       const companyObj = COMPANIES.find(c => c.id === h.company);
                       return (
                         <div key={i} style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden', boxShadow: 'none' }}>
-                          <button onClick={() => setExpandedHistory(expandedHistory === i ? null : i)} style={{ width: '100%', padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 12, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
+                          <button onClick={() => setExpandedHistory(expandedHistory === i ? null : i)} style={{ width: '100%', padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 12, background: 'none', border: '1px solid var(--border)', cursor: 'pointer', textAlign: 'left' }}>
                             <Icon name={catIcon(h.category || 'coding')} size={18} style={{ color: 'var(--text-muted)' }} />
                             <div style={{ flex: 1 }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
@@ -1127,7 +1127,7 @@ export default function PracticePage() {
                   {/* Model answer expandable */}
                   {inlineEval.modelAnswer && (
                     <div style={{ marginTop: 12 }}>
-                      <button onClick={() => setShowModelAnswer(showModelAnswer ? null : currentIdx)} style={{ fontSize: 12, fontWeight: 600, color: '#0B5CFF', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <button onClick={() => setShowModelAnswer(showModelAnswer ? null : currentIdx)} style={{ fontSize: 12, fontWeight: 600, color: '#0B5CFF', background: 'none', border: '1px solid var(--border)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
                         <Icon name={showModelAnswer === currentIdx ? 'chevronUp' : 'chevronDown'} size={14} style={{ color: '#0B5CFF' }} />
                         {showModelAnswer === currentIdx ? 'Hide' : 'Show'} Model Answer
                       </button>
@@ -1141,7 +1141,7 @@ export default function PracticePage() {
 
                   {/* Next button */}
                   <div style={{ marginTop: 16 }}>
-                    <button onClick={moveToNext} style={{ padding: '10px 24px', background: 'linear-gradient(135deg, #2D8CFF, #2D8CFF)', color: '#fff', fontSize: 14, fontWeight: 600, borderRadius: 10, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <button onClick={moveToNext} style={{ padding: '10px 24px', background: 'linear-gradient(135deg, #2D8CFF, #2D8CFF)', color: '#fff', fontSize: 14, fontWeight: 600, borderRadius: 10, border: '1px solid var(--border)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
                       {currentIdx < questions.length - 1 ? (
                         <>Next Question <Icon name="arrowRight" size={14} style={{ color: '#fff' }} /></>
                       ) : (
@@ -1155,7 +1155,7 @@ export default function PracticePage() {
               {/* Controls (only when not showing inline eval) */}
               {!inlineEval && (
                 <div style={{ display: 'flex', gap: 10, marginTop: 12, flexWrap: 'wrap' }}>
-                  <button onClick={submitAnswer} disabled={evaluating} style={{ padding: '10px 24px', background: 'linear-gradient(135deg, #2D8CFF, #2D8CFF)', color: '#fff', fontSize: 14, fontWeight: 600, borderRadius: 10, border: 'none', cursor: evaluating ? 'wait' : 'pointer', opacity: evaluating ? 0.7 : 1, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <button onClick={submitAnswer} disabled={evaluating} style={{ padding: '10px 24px', background: 'linear-gradient(135deg, #2D8CFF, #2D8CFF)', color: '#fff', fontSize: 14, fontWeight: 600, borderRadius: 10, border: '1px solid var(--border)', cursor: evaluating ? 'wait' : 'pointer', opacity: evaluating ? 0.7 : 1, display: 'flex', alignItems: 'center', gap: 6 }}>
                     {evaluating ? (
                       <><Icon name="loader" size={14} style={{ color: '#fff', animation: 'spin 1s linear infinite' }} /> Evaluating...</>
                     ) : 'Submit Answer'}
@@ -1223,7 +1223,7 @@ export default function PracticePage() {
                   <button onClick={() => { setPhase('setup'); setStats(getStats()); setInlineEval(null); }} style={{ padding: '11px 22px', background: 'rgba(255,255,255,0.06)', color: '#e2e8f0', fontSize: 13, fontWeight: 600, borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', backdropFilter: 'blur(8px)', transition: 'all 0.2s' }}>
                     Back to Dashboard
                   </button>
-                  <button onClick={startChallenge} style={{ padding: '11px 22px', background: 'linear-gradient(135deg, #2D8CFF, #2D8CFF)', color: '#fff', fontSize: 13, fontWeight: 600, borderRadius: 10, border: 'none', cursor: 'pointer', boxShadow: '0 4px 14px rgba(45,140,255,0.3)', transition: 'all 0.2s' }}>
+                  <button onClick={startChallenge} style={{ padding: '11px 22px', background: 'linear-gradient(135deg, #2D8CFF, #2D8CFF)', color: '#fff', fontSize: 13, fontWeight: 600, borderRadius: 10, border: '1px solid var(--border)', cursor: 'pointer', boxShadow: 'none', transition: 'all 0.2s' }}>
                     Try Again
                   </button>
                   <button onClick={() => { setDifficulty('medium'); setPhase('setup'); setStats(getStats()); }} style={{ padding: '11px 22px', background: 'rgba(139,92,246,0.15)', color: '#c4b5fd', fontSize: 13, fontWeight: 600, borderRadius: 10, border: '1px solid rgba(139,92,246,0.2)', cursor: 'pointer', transition: 'all 0.2s' }}>
@@ -1285,7 +1285,7 @@ export default function PracticePage() {
                   const pass = sc >= 60;
                   return (
                     <div key={i} style={{ borderBottom: i < questions.length - 1 ? '1px solid var(--border)' : 'none' }}>
-                      <button onClick={() => setExpandedHistory(isExpanded ? null : `result-${i}`)} style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 24px', background: isExpanded ? 'var(--bg-elevated)' : 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left', transition: 'background 0.15s' }}>
+                      <button onClick={() => setExpandedHistory(isExpanded ? null : `result-${i}`)} style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 24px', background: isExpanded ? 'var(--bg-elevated)' : 'transparent', border: '1px solid var(--border)', cursor: 'pointer', textAlign: 'left', transition: 'background 0.15s' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                           <div style={{ width: 26, height: 26, borderRadius: 8, background: pass ? 'rgba(5,150,105,0.12)' : 'rgba(220,38,38,0.12)', color: pass ? '#2D8CFF' : '#0B5CFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, flexShrink: 0 }}>{i + 1}</div>
                           <div>
@@ -1314,7 +1314,7 @@ export default function PracticePage() {
                           {Object.keys(dims).length > 0 && <DimensionBars dimensions={dims} compact />}
                           {ma.modelAnswer && (
                             <div style={{ marginTop: 12 }}>
-                              <button onClick={() => setShowModelAnswer(showModelAnswer === `r-${i}` ? null : `r-${i}`)} style={{ fontSize: 12, fontWeight: 600, color: '#0B5CFF', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+                              <button onClick={() => setShowModelAnswer(showModelAnswer === `r-${i}` ? null : `r-${i}`)} style={{ fontSize: 12, fontWeight: 600, color: '#0B5CFF', background: 'none', border: '1px solid var(--border)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
                                 <Icon name={showModelAnswer === `r-${i}` ? 'chevronUp' : 'chevronDown'} size={12} style={{ color: '#0B5CFF' }} />
                                 {showModelAnswer === `r-${i}` ? 'Hide' : 'Show'} Model Answer
                               </button>

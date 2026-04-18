@@ -214,7 +214,7 @@ function VoiceModeCard({ active, onClick, icon, title, description, badge, disab
       style={{
         background: active ? '#2D8CFF08' : '#ffffff',
         border: active ? '2px solid #2D8CFF' : '1.5px solid #e2e8f0',
-        boxShadow: active ? '0 4px 20px rgba(45,140,255,0.1)' : 'none',
+        boxShadow: 'none',
         opacity: disabled ? 0.5 : 1,
         cursor: disabled ? 'not-allowed' : 'pointer',
       }}

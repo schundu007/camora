@@ -395,7 +395,7 @@ export default function LandingPage() {
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
           <Reveal className="text-center mb-10">
             <span className="inline-flex items-center gap-2 text-[11px] font-bold tracking-[0.15em] uppercase px-4 py-1.5"
-              style={{ borderRadius: '999px', background: L.primary, border: 'none', color: '#FFFFFF', fontFamily: F.mono }}>
+              style={{ borderRadius: '999px', background: L.primary, border: '1px solid var(--border)', color: '#FFFFFF', fontFamily: F.mono }}>
               <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /></svg>
               Cockpit AI
             </span>
@@ -447,7 +447,7 @@ export default function LandingPage() {
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
           <Reveal className="text-center mb-10">
             <span className="inline-block text-[11px] font-bold tracking-[0.18em] uppercase px-4 py-1.5 mb-5"
-              style={{ borderRadius: '999px', background: L.primary, border: 'none', color: '#FFFFFF', fontFamily: F.mono }}>Club Members Only</span>
+              style={{ borderRadius: '999px', background: L.primary, border: '1px solid var(--border)', color: '#FFFFFF', fontFamily: F.mono }}>Club Members Only</span>
             <h2 className="text-3xl md:text-4xl lg:text-[44px] font-bold tracking-tight" style={{ fontFamily: F.display }}>First-class features. No turbulence.</h2>
           </Reveal>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">

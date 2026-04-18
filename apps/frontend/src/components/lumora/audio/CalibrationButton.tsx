@@ -36,7 +36,7 @@ export function CalibrationButton({ deviceId, disabled, variant = 'dark' }: Cali
           padding: '10px 16px',
           color: '#ffffff',
           background: isCalibrating ? '#000000' : '#2D8CFF',
-          border: 'none',
+          border: '1px solid var(--border)',
         } : {
           fontSize: '11px',
           padding: '4px 8px',

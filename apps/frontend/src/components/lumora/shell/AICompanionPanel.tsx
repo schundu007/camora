@@ -367,7 +367,7 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
       <button
         onClick={() => setMinimized(false)}
         className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full flex items-center justify-center shadow-xl transition-all hover:scale-110"
-        style={{ background: '#2D8CFF', boxShadow: '0 4px 24px rgba(45,140,255,0.4)' }}
+        style={{ background: '#2D8CFF', boxShadow: 'none' }}
         title="Open Camo"
       >
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5">

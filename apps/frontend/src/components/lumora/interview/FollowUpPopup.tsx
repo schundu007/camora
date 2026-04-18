@@ -236,7 +236,7 @@ export function FollowUpPopup() {
           backdropFilter: 'blur(24px)',
           border: '1px solid rgba(45,140,255,0.2)',
           borderRadius: 16,
-          boxShadow: '0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(45,140,255,0.1), 0 0 60px rgba(45,140,255,0.06)',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
         }}
       >
         {/* ── Resize handles (top, left, top-left corner) ── */}

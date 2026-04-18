@@ -525,7 +525,7 @@ export default function ResumeOptimizer() {
             style={{
               flex: 1,
               padding: '12px 20px',
-              border: 'none',
+              border: '1px solid var(--border)',
               borderRadius: '10px',
               background: loading
                 ? 'var(--bg-elevated)'
@@ -548,7 +548,7 @@ export default function ResumeOptimizer() {
             style={{
               flex: 1,
               padding: '12px 20px',
-              border: 'none',
+              border: '1px solid var(--border)',
               borderRadius: '10px',
               background: loading
                 ? 'var(--bg-elevated)'
@@ -612,7 +612,7 @@ export default function ResumeOptimizer() {
                 onClick={() => setActiveTab(tab.key)}
                 style={{
                   padding: '7px 14px',
-                  border: 'none',
+                  border: '1px solid var(--border)',
                   borderRadius: '8px',
                   fontSize: '13px',
                   fontWeight: activeTab === tab.key ? 600 : 500,

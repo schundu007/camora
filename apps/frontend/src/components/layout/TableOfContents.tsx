@@ -144,7 +144,7 @@ export default function TableOfContents({ items }: TOCProps) {
         style={{
           color: 'var(--text-secondary)',
           background: 'var(--accent-subtle)',
-          border: 'none',
+          border: '1px solid var(--border)',
         }}
         onMouseEnter={(e) => {
           e.currentTarget.style.color = 'var(--text-primary)';
