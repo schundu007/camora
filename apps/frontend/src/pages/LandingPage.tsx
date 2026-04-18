@@ -295,31 +295,12 @@ export default function LandingPage() {
         {/* Ambient contrail glow */}
         <div className="absolute left-[10px] top-0 bottom-0" style={{ width: '20px', background: 'linear-gradient(to bottom, transparent, rgba(118,185,0,0.015) 15%, rgba(118,185,0,0.01) 50%, rgba(118,185,0,0.015) 85%, transparent)', filter: 'blur(8px)' }} />
 
-        {/* ── ROCKET ascending with exhaust ── */}
-        <div className="absolute" style={{ left: '6px', animation: 'fp-rocket 12s ease-in-out infinite' }}>
-          {/* Exhaust trail */}
-          <div style={{ position: 'absolute', top: '34px', left: '50%', transform: 'translateX(-50%)', width: '4px', height: '50px', borderRadius: '2px', background: 'linear-gradient(to bottom, rgba(245,158,11,0.6), rgba(118,185,0,0.15), transparent)', animation: 'fp-exhaust 0.4s ease-in-out infinite alternate' }} />
-          {/* Smoke puffs */}
-          {[0,1,2].map(i => (
-            <div key={i} style={{ position: 'absolute', top: `${60 + i * 18}px`, left: '50%', transform: 'translateX(-50%)', width: `${4 + i * 2}px`, height: `${4 + i * 2}px`, borderRadius: '50%', background: `rgba(255,255,255,${0.08 - i * 0.02})`, animation: `fp-smoke ${1 + i * 0.3}s ease-out infinite`, animationDelay: `${i * 0.2}s` }} />
-          ))}
-          {/* Rocket SVG */}
-          <svg width="28" height="36" viewBox="0 0 28 36" fill="none" style={{ filter: 'drop-shadow(0 0 10px rgba(118,185,0,0.5))' }}>
-            <path d="M14 0 C14 0 9 9 9 13L19 13C19 9 14 0 14 0Z" fill="#76B900" />
-            <path d="M14 0 C14 0 11.5 5 10.5 9L14 7Z" fill="rgba(255,255,255,0.2)" />
-            <rect x="9" y="13" width="10" height="14" fill="#5E9400" />
-            <rect x="9" y="13" width="4" height="14" fill="#76B900" opacity="0.5" />
-            <circle cx="14" cy="18" r="2.8" fill="#0a0a0f" stroke="rgba(255,255,255,0.3)" strokeWidth="0.6" />
-            <circle cx="13.2" cy="17.2" r="0.9" fill="rgba(118,185,0,0.35)" />
-            <rect x="9" y="24" width="10" height="1.2" fill="rgba(255,255,255,0.06)" />
-            <path d="M9 23 L3 31 L5 31 L9 27Z" fill="#4A7A00" />
-            <path d="M9 23 L4.5 30 L5 31 L9 27Z" fill="#76B900" opacity="0.35" />
-            <path d="M19 23 L25 31 L23 31 L19 27Z" fill="#4A7A00" />
-            <path d="M19 23 L23.5 30 L23 31 L19 27Z" fill="#76B900" opacity="0.35" />
-            <path d="M10.5 27 L10 29.5 L18 29.5 L17.5 27Z" fill="#333" />
-            <rect x="11.5" y="29.5" width="5" height="2.5" rx="0.6" fill="#444" />
-            <rect x="12" y="30.5" width="4" height="1.2" rx="0.4" fill="rgba(245,158,11,0.5)" className="fp-nozzle-glow" />
-          </svg>
+        {/* ── AIRPLANE ascending with contrail ── */}
+        <div className="absolute" style={{ left: '-16px', animation: 'fp-rocket 16s ease-in-out infinite' }}>
+          {/* Contrail below the plane */}
+          <div style={{ position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', width: '3px', height: '80px', borderRadius: '2px', background: 'linear-gradient(to bottom, rgba(255,255,255,0.4), rgba(118,185,0,0.15), transparent)' }} />
+          {/* Real airplane image */}
+          <img src="/airplane.png" alt="" width="56" height="56" style={{ filter: 'drop-shadow(0 0 14px rgba(118,185,0,0.5)) drop-shadow(0 -4px 8px rgba(255,255,255,0.15))' }} />
         </div>
 
         {/* ── Waypoint icons — each a unique aviation symbol ── */}
@@ -422,11 +403,18 @@ export default function LandingPage() {
         @keyframes scroll-logos { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
         /* Rocket ascends from bottom to top */
         @keyframes fp-rocket {
-          0% { top: calc(100% + 40px); opacity: 0; }
-          4% { opacity: 1; }
-          90% { opacity: 1; }
-          96% { opacity: 0; }
-          100% { top: -50px; opacity: 0; }
+          0% { top: calc(100% + 50px); opacity: 0; }
+          2% { opacity: 1; }
+          /* Ascending — pause at each section gate */
+          9% { top: 92%; } 12% { top: 92%; }
+          20% { top: 78%; } 23% { top: 78%; }
+          32% { top: 62%; } 35% { top: 62%; }
+          44% { top: 48%; } 47% { top: 48%; }
+          56% { top: 35%; } 59% { top: 35%; }
+          68% { top: 22%; } 71% { top: 22%; }
+          82% { top: 8%; }  85% { top: 8%; }
+          95% { opacity: 1; }
+          100% { top: -70px; opacity: 0; }
         }
         /* Exhaust flame flicker */
         @keyframes fp-exhaust {
