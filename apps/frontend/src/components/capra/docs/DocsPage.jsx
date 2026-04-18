@@ -547,7 +547,7 @@ export default function DocsPage({ onBack }) {
     const cats = [
       { id: 'coding', href: 'coding', title: 'DSA & Algorithms', icon: 'cpu', color: '#F97316', grad: 'linear-gradient(135deg, #F97316, #FB923C)', topics: codingTopics },
       { id: 'system-design', href: 'system-design', title: 'System Design', icon: 'systemDesign', color: '#3b82f6', grad: 'linear-gradient(135deg, #3b82f6, #60a5fa)', topics: [...systemDesignTopics, ...systemDesigns, ...concurrencyTopics, ...systemDesignPatterns, ...microservicesPatterns, ...systemDesignTradeoffs, ...scalableSystemsTopics] },
-      { id: 'microservices', href: 'microservices', title: 'Microservices', icon: 'grid', color: '#FB923C', grad: 'linear-gradient(135deg, #FB923C, #a78bfa)', topics: microservicesPatterns },
+      { id: 'microservices', href: 'microservices', title: 'Microservices', icon: 'grid', color: '#FB923C', grad: 'linear-gradient(135deg, #FB923C, #F97316)', topics: microservicesPatterns },
       { id: 'databases', href: 'databases', title: 'Databases & SQL', icon: 'database', color: '#f59e0b', grad: 'linear-gradient(135deg, #f59e0b, #fbbf24)', topics: [...databaseTopics, ...sqlTopics] },
       { id: 'low-level', href: 'low-level-design', title: 'Low Level Design', icon: 'layers', color: '#ec4899', grad: 'linear-gradient(135deg, #ec4899, #f472b6)', topics: [...lldTopics, ...lldProblems] },
       { id: 'projects', href: 'projects', title: 'Projects', icon: 'code', color: '#10b981', grad: 'linear-gradient(135deg, #10b981, #FB923C)', topics: projectTopics },

@@ -180,7 +180,7 @@ export default function PricingPage() {
       {/* Plans */}
       <section className="w-full lg:max-w-[70%] mx-auto px-6 py-14">
         <div className="mb-10 text-center">
-          <span className="text-xs font-bold uppercase tracking-[0.2em]" style={{ background: 'linear-gradient(135deg, #F97316, #91C733, #a78bfa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Plans</span>
+          <span className="text-xs font-bold uppercase tracking-[0.2em]" style={{ background: 'linear-gradient(135deg, #F97316, #F97316, #F97316)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Plans</span>
           <h2 className="mt-3 text-3xl md:text-4xl font-extrabold tracking-tight" style={{ color: 'var(--text-primary)' }}>
             Choose your path.
           </h2>
@@ -194,11 +194,11 @@ export default function PricingPage() {
             const isStarter = plan.name === 'Starter';
 
             const accent = isPro
-              ? { from: '#F97316', via: '#91C733', to: '#a78bfa', glow: 'rgba(249,115,22,0.4)', checkColor: '#a5b4fc' }
+              ? { from: '#F97316', via: '#F97316', to: '#F97316', glow: 'rgba(249,115,22,0.4)', checkColor: '#FB923C' }
               : isAnnual
               ? { from: '#f59e0b', via: '#fbbf24', to: '#fde68a', glow: 'rgba(245,158,11,0.3)', checkColor: '#fbbf24' }
               : isStarter
-              ? { from: '#F97316', via: '#91C733', to: '#a5b4fc', glow: 'rgba(249,115,22,0.15)', checkColor: '#91C733' }
+              ? { from: '#F97316', via: '#F97316', to: '#FB923C', glow: 'rgba(249,115,22,0.15)', checkColor: '#F97316' }
               : { from: '#475569', via: '#64748b', to: '#94a3b8', glow: 'rgba(100,116,139,0.1)', checkColor: '#4ade80' };
 
             return (
@@ -210,12 +210,12 @@ export default function PricingPage() {
 
                   <div className="relative p-7 pb-0 flex flex-col flex-1">
                     <div className="flex items-center justify-between mb-6">
-                      <h3 className="text-[13px] font-bold uppercase tracking-[0.12em]" style={{ color: isPro ? '#c7d2fe' : isAnnual ? '#fde68a' : isStarter ? '#a5b4fc' : 'rgba(255,255,255,0.5)' }}>{plan.name}</h3>
-                      {isPro && <span className="px-3 py-1 rounded-full text-[9px] font-extrabold uppercase tracking-[0.12em]" style={{ background: 'linear-gradient(135deg, #F97316, #91C733)', color: '#fff', boxShadow: '0 2px 12px rgba(249,115,22,0.5), 0 0 20px rgba(249,115,22,0.2)' }}>Most Popular</span>}
+                      <h3 className="text-[13px] font-bold uppercase tracking-[0.12em]" style={{ color: isPro ? '#FDBA74' : isAnnual ? '#fde68a' : isStarter ? '#FB923C' : 'rgba(255,255,255,0.5)' }}>{plan.name}</h3>
+                      {isPro && <span className="px-3 py-1 rounded-full text-[9px] font-extrabold uppercase tracking-[0.12em]" style={{ background: 'linear-gradient(135deg, #F97316, #F97316)', color: '#fff', boxShadow: '0 2px 12px rgba(249,115,22,0.5), 0 0 20px rgba(249,115,22,0.2)' }}>Most Popular</span>}
                       {isAnnual && <span className="px-3 py-1 rounded-full text-[9px] font-extrabold uppercase tracking-[0.12em]" style={{ background: 'linear-gradient(135deg, #fbbf24, #f59e0b)', color: '#451a03', boxShadow: '0 2px 12px rgba(245,158,11,0.45), 0 0 20px rgba(245,158,11,0.15)' }}>Best Value</span>}
                     </div>
                     <div className="flex items-baseline gap-1.5">
-                      <span className="font-extrabold leading-none tracking-tight" style={{ fontSize: isPro ? '52px' : '46px', ...(isPro ? { background: 'linear-gradient(145deg, #e0e7ff, #c7d2fe, #a5b4fc)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', filter: 'drop-shadow(0 0 20px rgba(249,115,22,0.3))' } : isAnnual ? { background: 'linear-gradient(145deg, #fef3c7, #fde68a, #fbbf24)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', filter: 'drop-shadow(0 0 16px rgba(245,158,11,0.25))' } : isStarter ? { background: 'linear-gradient(145deg, rgba(255,255,255,0.95), rgba(255,255,255,0.7))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' } : { color: 'rgba(255,255,255,0.85)' }) }}>{plan.price}</span>
+                      <span className="font-extrabold leading-none tracking-tight" style={{ fontSize: isPro ? '52px' : '46px', ...(isPro ? { background: 'linear-gradient(145deg, #FED7AA, #FDBA74, #FB923C)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', filter: 'drop-shadow(0 0 20px rgba(249,115,22,0.3))' } : isAnnual ? { background: 'linear-gradient(145deg, #fef3c7, #fde68a, #fbbf24)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', filter: 'drop-shadow(0 0 16px rgba(245,158,11,0.25))' } : isStarter ? { background: 'linear-gradient(145deg, rgba(255,255,255,0.95), rgba(255,255,255,0.7))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' } : { color: 'rgba(255,255,255,0.85)' }) }}>{plan.price}</span>
                       {plan.period && <span className="text-base font-medium" style={{ color: 'rgba(255,255,255,0.3)' }}>{plan.period}</span>}
                     </div>
                     <p className="mt-2.5 text-[13px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.4)' }}>{plan.description}</p>
@@ -232,7 +232,7 @@ export default function PricingPage() {
                     </ul>
                   </div>
                   <div className="p-7 pt-0">
-                    <button onClick={() => handleCheckout(plan)} disabled={loading === plan.name} className="pricing-cta w-full py-4 text-sm font-bold rounded-[14px] cursor-pointer transition-all duration-300 disabled:opacity-50 flex items-center justify-center gap-2" style={isPro ? { background: 'linear-gradient(135deg, #F97316, #7c3aed, #91C733)', color: '#fff', boxShadow: '0 6px 24px rgba(249,115,22,0.45), 0 0 40px rgba(249,115,22,0.15), inset 0 1px 0 rgba(255,255,255,0.15)' } : isAnnual ? { background: 'linear-gradient(135deg, #fbbf24, #f59e0b, #d97706)', color: '#451a03', boxShadow: '0 6px 24px rgba(245,158,11,0.4), 0 0 40px rgba(245,158,11,0.1), inset 0 1px 0 rgba(255,255,255,0.25)' } : isStarter ? { background: 'linear-gradient(135deg, rgba(249,115,22,0.18), rgba(139,92,246,0.12))', color: '#c7d2fe', border: '1px solid rgba(249,115,22,0.35)', boxShadow: '0 2px 12px rgba(249,115,22,0.1)' } : { background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                    <button onClick={() => handleCheckout(plan)} disabled={loading === plan.name} className="pricing-cta w-full py-4 text-sm font-bold rounded-[14px] cursor-pointer transition-all duration-300 disabled:opacity-50 flex items-center justify-center gap-2" style={isPro ? { background: 'linear-gradient(135deg, #F97316, #7c3aed, #F97316)', color: '#fff', boxShadow: '0 6px 24px rgba(249,115,22,0.45), 0 0 40px rgba(249,115,22,0.15), inset 0 1px 0 rgba(255,255,255,0.15)' } : isAnnual ? { background: 'linear-gradient(135deg, #fbbf24, #f59e0b, #d97706)', color: '#451a03', boxShadow: '0 6px 24px rgba(245,158,11,0.4), 0 0 40px rgba(245,158,11,0.1), inset 0 1px 0 rgba(255,255,255,0.25)' } : isStarter ? { background: 'linear-gradient(135deg, rgba(249,115,22,0.18), rgba(139,92,246,0.12))', color: '#FDBA74', border: '1px solid rgba(249,115,22,0.35)', boxShadow: '0 2px 12px rgba(249,115,22,0.1)' } : { background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.1)' }}>
                       {loading === plan.name ? (<span className="flex items-center justify-center gap-2"><svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>Processing...</span>) : (<>{plan.cta}<svg className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-0.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 8h10M9 4l4 4-4 4" /></svg></>)}
                     </button>
                   </div>
@@ -253,7 +253,7 @@ export default function PricingPage() {
       <section className="px-6 pt-4 pb-16">
         <div className="w-full lg:max-w-[70%] mx-auto">
           <div className="mb-10 text-center">
-            <span className="text-xs font-bold uppercase tracking-[0.2em]" style={{ background: 'linear-gradient(135deg, #F97316, #91C733, #a78bfa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Why Camora Wins</span>
+            <span className="text-xs font-bold uppercase tracking-[0.2em]" style={{ background: 'linear-gradient(135deg, #F97316, #F97316, #F97316)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Why Camora Wins</span>
             <h2 className="mt-3 text-3xl md:text-4xl font-extrabold tracking-tight" style={{ color: 'var(--text-primary)' }}>
             </h2>
           </div>
@@ -266,11 +266,11 @@ export default function PricingPage() {
             }}
           >
             {/* Vivid gradient border */}
-            <div className="absolute -inset-[1px] rounded-[22px] pointer-events-none" style={{ background: 'linear-gradient(135deg, #F97316, #91C733, #a78bfa, #F97316)', backgroundSize: '300% 300%', animation: 'borderShimmer 4s ease infinite', opacity: 0.4 }} />
+            <div className="absolute -inset-[1px] rounded-[22px] pointer-events-none" style={{ background: 'linear-gradient(135deg, #F97316, #F97316, #F97316, #F97316)', backgroundSize: '300% 300%', animation: 'borderShimmer 4s ease infinite', opacity: 0.4 }} />
 
             <div className="relative rounded-[21px] overflow-x-auto" style={{ background: 'linear-gradient(168deg, #1a1730 0%, #0e0d18 100%)' }}>
               {/* Top accent bar */}
-              <div className="h-[3px] w-full" style={{ background: 'linear-gradient(90deg, #10b981, #F97316, #91C733, #ec4899, #F97316, #10b981)' }} />
+              <div className="h-[3px] w-full" style={{ background: 'linear-gradient(90deg, #10b981, #F97316, #F97316, #ec4899, #F97316, #10b981)' }} />
 
               {/* Ambient glow */}
               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-40 pointer-events-none" style={{ background: 'radial-gradient(ellipse, rgba(249,115,22,0.15) 0%, transparent 70%)', filter: 'blur(30px)' }} />
@@ -309,7 +309,7 @@ export default function PricingPage() {
                           <div
                             className="font-extrabold"
                             style={col.highlight
-                              ? { background: 'linear-gradient(135deg, #e0e7ff, #fff)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontSize: '15px', letterSpacing: '0.02em' }
+                              ? { background: 'linear-gradient(135deg, #FED7AA, #fff)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontSize: '15px', letterSpacing: '0.02em' }
                               : { color: 'rgba(255,255,255,0.45)', fontSize: '11px', fontWeight: 700, letterSpacing: '0.04em' }
                             }
                           >
@@ -318,7 +318,7 @@ export default function PricingPage() {
                           <div
                             className="mt-1.5 font-black"
                             style={col.highlight
-                              ? { background: 'linear-gradient(135deg, #a5b4fc, #91C733)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontSize: '20px', filter: 'drop-shadow(0 0 12px rgba(249,115,22,0.5))' }
+                              ? { background: 'linear-gradient(135deg, #FB923C, #F97316)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontSize: '20px', filter: 'drop-shadow(0 0 12px rgba(249,115,22,0.5))' }
                               : { color: 'rgba(255,255,255,0.25)', fontSize: '13px' }
                             }
                           >
@@ -348,12 +348,12 @@ export default function PricingPage() {
                           className="comparison-row transition-all duration-150"
                           style={{ background: isEven ? 'rgba(255,255,255,0.025)' : 'transparent' }}
                         >
-                          <td className="py-4 px-4 text-[13px]" style={{ color: row.unique ? '#c7d2fe' : 'rgba(255,255,255,0.75)', fontWeight: row.unique ? 700 : 500, borderBottom: isLast ? 'none' : '1px solid rgba(255,255,255,0.06)' }}>
+                          <td className="py-4 px-4 text-[13px]" style={{ color: row.unique ? '#FDBA74' : 'rgba(255,255,255,0.75)', fontWeight: row.unique ? 700 : 500, borderBottom: isLast ? 'none' : '1px solid rgba(255,255,255,0.06)' }}>
                             <span className="flex items-center gap-2.5">
                               {row.unique && (
                                 <span className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'linear-gradient(135deg, rgba(249,115,22,0.3), rgba(139,92,246,0.25))', boxShadow: '0 0 8px rgba(249,115,22,0.3)' }}>
                                   <svg className="w-[10px] h-[10px]" viewBox="0 0 12 12" fill="none">
-                                    <path d="M6 1l1.545 3.13L11 4.635 8.5 7.07l.59 3.44L6 8.885 2.91 10.51l.59-3.44L1 4.635l3.455-.505L6 1z" fill="#a5b4fc" />
+                                    <path d="M6 1l1.545 3.13L11 4.635 8.5 7.07l.59 3.44L6 8.885 2.91 10.51l.59-3.44L1 4.635l3.455-.505L6 1z" fill="#FB923C" />
                                   </svg>
                                 </span>
                               )}
@@ -372,7 +372,7 @@ export default function PricingPage() {
                           >
                             {row.camora === true
                               ? (
-                                <span className="inline-flex items-center justify-center w-8 h-8 rounded-full" style={{ background: 'linear-gradient(135deg, #F97316, #91C733)', boxShadow: '0 0 16px rgba(249,115,22,0.5), 0 4px 12px rgba(249,115,22,0.3)' }}>
+                                <span className="inline-flex items-center justify-center w-8 h-8 rounded-full" style={{ background: 'linear-gradient(135deg, #F97316, #F97316)', boxShadow: '0 0 16px rgba(249,115,22,0.5), 0 4px 12px rgba(249,115,22,0.3)' }}>
                                   <svg className="w-4 h-4" viewBox="0 0 12 12" fill="none" style={{ color: '#fff' }}>
                                     <path d="M10 3L4.5 8.5L2 6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
                                   </svg>
@@ -420,7 +420,7 @@ export default function PricingPage() {
           {/* Desktop App */}
           <div className="rounded-xl p-4 flex items-center justify-between gap-4" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'linear-gradient(135deg, rgba(249,115,22,0.15), rgba(139,92,246,0.15))', color: '#91C733' }}>
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'linear-gradient(135deg, rgba(249,115,22,0.15), rgba(139,92,246,0.15))', color: '#F97316' }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
                   <rect x="2" y="3" width="20" height="14" rx="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" />
                 </svg>
@@ -430,7 +430,7 @@ export default function PricingPage() {
                 <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>Stealth mode, screen-share safe</p>
               </div>
             </div>
-            <a href="https://github.com/schundu007/camora/releases/latest" target="_blank" rel="noopener noreferrer" className="shrink-0 px-4 py-1.5 text-white text-[11px] font-semibold rounded-lg" style={{ background: 'linear-gradient(135deg, #F97316, #91C733)' }}>
+            <a href="https://github.com/schundu007/camora/releases/latest" target="_blank" rel="noopener noreferrer" className="shrink-0 px-4 py-1.5 text-white text-[11px] font-semibold rounded-lg" style={{ background: 'linear-gradient(135deg, #F97316, #F97316)' }}>
               Download
             </a>
           </div>

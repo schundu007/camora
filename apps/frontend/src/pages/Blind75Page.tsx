@@ -57,7 +57,7 @@ const CATEGORIES: Category[] = [
   },
   {
     name: 'Sliding Window',
-    color: '#91C733',
+    color: '#F97316',
     problems: [
       { id: 12, title: 'Best Time to Buy and Sell Stock', difficulty: 'Easy', leetcode: 'https://leetcode.com/problems/best-time-to-buy-and-sell-stock/' },
       { id: 13, title: 'Longest Substring Without Repeating Characters', difficulty: 'Medium', leetcode: 'https://leetcode.com/problems/longest-substring-without-repeating-characters/' },
@@ -856,9 +856,9 @@ export default function Blind75Page() {
                                   fontWeight: 600,
                                   padding: '5px 14px',
                                   borderRadius: '8px',
-                                  border: `1px solid ${isOpen && viewMode === 'solution' ? '#91C733' : '#91C73330'}`,
-                                  background: isOpen && viewMode === 'solution' ? '#91C733' : '#91C73308',
-                                  color: isOpen && viewMode === 'solution' ? '#ffffff' : '#91C733',
+                                  border: `1px solid ${isOpen && viewMode === 'solution' ? '#F97316' : '#F9731630'}`,
+                                  background: isOpen && viewMode === 'solution' ? '#F97316' : '#F9731608',
+                                  color: isOpen && viewMode === 'solution' ? '#ffffff' : '#F97316',
                                   cursor: 'pointer',
                                   transition: 'all 0.15s',
                                 }}
@@ -898,7 +898,7 @@ export default function Blind75Page() {
                           {isOpen && (
                             <div
                               style={{
-                                border: `1px solid ${viewMode === 'solution' ? '#91C733' : cat.color}`,
+                                border: `1px solid ${viewMode === 'solution' ? '#F97316' : cat.color}`,
                                 borderTop: 'none',
                                 borderRadius: '0 0 12px 12px',
                                 background: 'var(--bg-surface)',
@@ -910,7 +910,7 @@ export default function Blind75Page() {
                                 <button onClick={() => setViewMode('practice')} style={{ flex: 1, padding: '8px', fontSize: '13px', fontWeight: 600, border: 'none', background: viewMode === 'practice' ? 'var(--bg-surface)' : 'transparent', color: viewMode === 'practice' ? cat.color : 'var(--text-muted)', borderBottom: viewMode === 'practice' ? `2px solid ${cat.color}` : '2px solid transparent', cursor: 'pointer' }}>
                                   Practice
                                 </button>
-                                <button onClick={() => setViewMode('solution')} style={{ flex: 1, padding: '8px', fontSize: '13px', fontWeight: 600, border: 'none', background: viewMode === 'solution' ? 'var(--bg-surface)' : 'transparent', color: viewMode === 'solution' ? '#91C733' : 'var(--text-muted)', borderBottom: viewMode === 'solution' ? '2px solid #91C733' : '2px solid transparent', cursor: 'pointer' }}>
+                                <button onClick={() => setViewMode('solution')} style={{ flex: 1, padding: '8px', fontSize: '13px', fontWeight: 600, border: 'none', background: viewMode === 'solution' ? 'var(--bg-surface)' : 'transparent', color: viewMode === 'solution' ? '#F97316' : 'var(--text-muted)', borderBottom: viewMode === 'solution' ? '2px solid #F97316' : '2px solid transparent', cursor: 'pointer' }}>
                                   Solution
                                 </button>
                               </div>
@@ -924,7 +924,7 @@ export default function Blind75Page() {
                                     if (!sol) return (
                                       <div style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
                                         <p style={{ fontSize: '14px', marginBottom: '12px' }}>Pre-written solution coming soon.</p>
-                                        <button onClick={() => { setViewMode('practice'); getAISolution(problem.title); }} style={{ padding: '8px 20px', background: '#91C733', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>
+                                        <button onClick={() => { setViewMode('practice'); getAISolution(problem.title); }} style={{ padding: '8px 20px', background: '#F97316', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>
                                           Generate AI Solution
                                         </button>
                                       </div>
@@ -936,7 +936,7 @@ export default function Blind75Page() {
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                                               <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>{approach.name}</span>
                                               <div style={{ display: 'flex', gap: '8px' }}>
-                                                <span style={{ fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: '4px', background: 'rgba(249,115,22,0.12)', color: '#91C733' }}>Time: {approach.complexity.time}</span>
+                                                <span style={{ fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: '4px', background: 'rgba(249,115,22,0.12)', color: '#F97316' }}>Time: {approach.complexity.time}</span>
                                                 <span style={{ fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: '4px', background: 'rgba(236,72,153,0.12)', color: '#ec4899' }}>Space: {approach.complexity.space}</span>
                                               </div>
                                             </div>
@@ -1541,7 +1541,7 @@ export default function Blind75Page() {
                             }}>S</span>
                           </div>
                           <div style={{ flex: 1, background: 'rgba(249,115,22,0.08)', borderLeft: '3px solid #3b82f6', borderRadius: '0 8px 8px 0', padding: '12px 16px' }}>
-                            <div style={{ fontSize: '12px', fontWeight: 700, color: '#91C733', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Situation</div>
+                            <div style={{ fontSize: '12px', fontWeight: 700, color: '#F97316', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Situation</div>
                             <div style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.6 }}>{item.star.situation}</div>
                           </div>
                         </div>
@@ -1702,11 +1702,11 @@ export default function Blind75Page() {
                 alignItems: 'center',
                 gap: '10px',
               }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#91C733" strokeWidth={2}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F97316" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" />
                 </svg>
-                <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#91C733', margin: 0 }}>During the Interview</h3>
-                <span style={{ fontSize: '12px', color: '#91C733', fontWeight: 500, marginLeft: 'auto' }}>
+                <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#F97316', margin: 0 }}>During the Interview</h3>
+                <span style={{ fontSize: '12px', color: '#F97316', fontWeight: 500, marginLeft: 'auto' }}>
                   {interviewCheatsheet.during.length} items
                 </span>
               </div>
@@ -1754,7 +1754,7 @@ export default function Blind75Page() {
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
                 </svg>
-                <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#a78bfa', margin: 0 }}>After the Interview</h3>
+                <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#F97316', margin: 0 }}>After the Interview</h3>
                 <span style={{ fontSize: '12px', color: '#7c3aed', fontWeight: 500, marginLeft: 'auto' }}>
                   {interviewCheatsheet.after.length} items
                 </span>

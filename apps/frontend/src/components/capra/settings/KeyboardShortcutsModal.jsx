@@ -48,7 +48,7 @@ export default function KeyboardShortcutsModal({ onClose }) {
         <div className="px-4 py-4 space-y-4 overflow-y-auto" style={{ maxHeight: 'calc(80vh - 52px)' }}>
           {shortcuts.map((section) => (
             <div key={section.category}>
-              <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: '#91C733' }}>
+              <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: '#F97316' }}>
                 {section.category}
               </p>
               <div className="space-y-1.5">
@@ -86,7 +86,7 @@ export default function KeyboardShortcutsModal({ onClose }) {
 
           {/* Tip */}
           <div className="mt-4 p-3 rounded-lg" style={{ background: 'rgba(139, 92, 246, 0.1)', border: '1px solid rgba(139, 92, 246, 0.2)' }}>
-            <p className="text-xs" style={{ color: '#a78bfa' }}>
+            <p className="text-xs" style={{ color: '#F97316' }}>
               <strong>Tip:</strong> On Mac, use <kbd className="px-1 py-0.5 text-xs font-mono rounded" style={{ background: '#3d3d3d', color: '#ffffff' }}>Cmd</kbd> instead of <kbd className="px-1 py-0.5 text-xs font-mono rounded" style={{ background: '#3d3d3d', color: '#ffffff' }}>Ctrl</kbd>
             </p>
           </div>

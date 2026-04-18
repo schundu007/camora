@@ -26,7 +26,7 @@
 
     /* Accent (NVIDIA Green — bold, sharp, unmistakable) */
     --accent: #F97316;
-    --accent-hover: #91C733;
+    --accent-hover: #F97316;
     --accent-subtle: rgba(249,115,22,0.12);
     --accent-text: #CFFF40;
 
@@ -61,7 +61,7 @@
     --bg: var(--bg-app);
     --bg2: var(--bg-surface);
     --primary: #F97316;
-    --primary-light: #91C733;
+    --primary-light: #F97316;
     --text: var(--text-primary);
     --text-subtle: var(--text-secondary);
     --text-dim: var(--text-muted);
@@ -322,7 +322,7 @@
   }
   .block-headline-text {
     @apply text-sm font-bold leading-snug tracking-tight;
-    background: linear-gradient(135deg, #f4f4f5 30%, #91C733 100%);
+    background: linear-gradient(135deg, #f4f4f5 30%, #F97316 100%);
     -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
   }
 

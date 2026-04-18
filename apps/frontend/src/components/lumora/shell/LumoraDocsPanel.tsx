@@ -48,7 +48,7 @@ const SIDEBAR_SECTIONS = [
   { id: 'coding', label: 'Coding', color: '#10b981' },
   { id: 'system-design', label: 'System Design', color: '#F97316' },
   { id: 'behavioral', label: 'Behavioral', color: '#f97316' },
-  { id: 'techstack', label: 'Tech Stack', color: '#91C733' },
+  { id: 'techstack', label: 'Tech Stack', color: '#F97316' },
 ];
 
 /** Store prep content as JSON string for rich rendering */
@@ -137,7 +137,7 @@ function PrepContentRenderer({ content }: { content: string }) {
       {/* Tech Stack */}
       {data.techStack && Array.isArray(data.techStack) && (
         <div>
-          <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: '#91C733' }}>Tech Stack ({data.techStack.length})</div>
+          <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: '#F97316' }}>Tech Stack ({data.techStack.length})</div>
           <div className="overflow-x-auto rounded-lg" style={{ border: '1px solid #e2e8f0' }}>
             <table className="w-full text-xs">
               <thead><tr style={{ background: '#f1f5f9' }}>
@@ -148,7 +148,7 @@ function PrepContentRenderer({ content }: { content: string }) {
               </tr></thead>
               <tbody>{data.techStack.map((t: any, i: number) => (
                 <tr key={i} style={{ borderTop: '1px solid #e2e8f0' }}>
-                  <td className="px-3 py-2 font-semibold" style={{ color: '#91C733' }}>{t.technology || t.name}</td>
+                  <td className="px-3 py-2 font-semibold" style={{ color: '#F97316' }}>{t.technology || t.name}</td>
                   <td className="px-3 py-2" style={{ color: '#94a3b8' }}>{t.category}</td>
                   <td className="px-3 py-2" style={{ color: '#475569' }}>{t.experience}</td>
                   <td className="px-3 py-2" style={{ color: '#475569' }}>{t.relevance}</td>

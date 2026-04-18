@@ -45,7 +45,7 @@ function Block({ block, delay }: { block: ParsedBlock; delay: number }) {
     case 'HEADLINE':
       return (
         <div className="relative rounded-xl overflow-hidden animate-fade-up" style={{...style, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(8px)'}}>
-          <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: 'linear-gradient(90deg, #F97316, #91C733, #a5b4fc)' }} />
+          <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: 'linear-gradient(90deg, #F97316, #F97316, #FB923C)' }} />
           <div className="p-5">
             <p className="text-[15px] text-white/90 leading-relaxed font-medium" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>{cleanText(block.content)}</p>
           </div>

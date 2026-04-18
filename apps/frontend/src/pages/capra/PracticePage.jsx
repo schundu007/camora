@@ -622,7 +622,7 @@ export default function PracticePage() {
                 {/* Category bars inline */}
                 {CATEGORIES.map(cat => {
                   const s = getCategoryScore(stats, cat);
-                  const colors = { coding: '#91C733', 'system-design': '#06b6d4', behavioral: '#f59e0b' };
+                  const colors = { coding: '#F97316', 'system-design': '#06b6d4', behavioral: '#f59e0b' };
                   return (
                     <div key={cat} style={{ flex: 1, minWidth: 80 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, marginBottom: 3 }}>
@@ -705,7 +705,7 @@ export default function PracticePage() {
 
                 {/* CTA Footer */}
                 <div style={{ padding: '16px 24px', background: 'var(--bg-elevated)', borderTop: '1px solid var(--border)', textAlign: 'center' }}>
-                  <button onClick={() => startChallenge()} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '13px 36px', background: 'linear-gradient(135deg, #F97316, #91C733)', color: '#fff', fontSize: 15, fontWeight: 700, borderRadius: 12, border: 'none', cursor: 'pointer', boxShadow: '0 4px 14px rgba(249,115,22,0.3)', transition: 'transform 0.15s, box-shadow 0.15s' }}>
+                  <button onClick={() => startChallenge()} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '13px 36px', background: 'linear-gradient(135deg, #F97316, #F97316)', color: '#fff', fontSize: 15, fontWeight: 700, borderRadius: 12, border: 'none', cursor: 'pointer', boxShadow: '0 4px 14px rgba(249,115,22,0.3)', transition: 'transform 0.15s, box-shadow 0.15s' }}>
                     <Icon name="play" size={16} style={{ color: '#fff' }} />
                     Start Challenge
                   </button>
@@ -822,7 +822,7 @@ export default function PracticePage() {
                     ) : null;
                   })}
                   {questions[currentIdx].topics?.slice(0, 2).map(t => (
-                    <span key={t} style={{ fontSize: 10, fontWeight: 500, padding: '2px 6px', borderRadius: 99, background: 'rgba(124,58,237,0.12)', color: '#a78bfa' }}>{t}</span>
+                    <span key={t} style={{ fontSize: 10, fontWeight: 500, padding: '2px 6px', borderRadius: 99, background: 'rgba(124,58,237,0.12)', color: '#F97316' }}>{t}</span>
                   ))}
                 </div>
                 <h2 className="practice-display" style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 6px' }}>
@@ -854,7 +854,7 @@ export default function PracticePage() {
               {category === 'system-design' && !inlineEval && (() => {
                 const SD_SECTIONS = [
                   { label: 'Functional Req.', icon: 'clipboard', color: '#3b82f6', placeholder: 'List core functional requirements...' },
-                  { label: 'Non-Functional Req.', icon: 'shield', color: '#91C733', placeholder: 'Latency, availability, consistency, scale...' },
+                  { label: 'Non-Functional Req.', icon: 'shield', color: '#F97316', placeholder: 'Latency, availability, consistency, scale...' },
                   { label: 'Components', icon: 'layers', color: '#10b981', placeholder: 'Key services, databases, caches...' },
                   { label: 'Data Flow', icon: 'gitBranch', color: '#06b6d4', placeholder: 'Request path, data pipeline...' },
                   { label: 'Layered Design', icon: 'server', color: '#f59e0b', placeholder: 'API layer, business logic, storage...' },
@@ -997,7 +997,7 @@ export default function PracticePage() {
                   <div style={{ marginBottom: 8 }}>
                     {/* Auto-generate button */}
                     <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
-                      <button onClick={autoGenerate} disabled={sdGenerating} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', fontSize: 12, fontWeight: 600, color: sdGenerating ? 'var(--text-muted)' : '#91C733', background: sdGenerating ? 'var(--bg-elevated)' : 'rgba(139,92,246,0.1)', border: `1px solid ${sdGenerating ? 'var(--border)' : 'rgba(139,92,246,0.25)'}`, borderRadius: 8, cursor: sdGenerating ? 'wait' : 'pointer' }}>
+                      <button onClick={autoGenerate} disabled={sdGenerating} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', fontSize: 12, fontWeight: 600, color: sdGenerating ? 'var(--text-muted)' : '#F97316', background: sdGenerating ? 'var(--bg-elevated)' : 'rgba(139,92,246,0.1)', border: `1px solid ${sdGenerating ? 'var(--border)' : 'rgba(139,92,246,0.25)'}`, borderRadius: 8, cursor: sdGenerating ? 'wait' : 'pointer' }}>
                         {sdGenerating ? (
                           <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ animation: 'spin 1s linear infinite' }}><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Generating...</>
                         ) : (
@@ -1064,7 +1064,7 @@ export default function PracticePage() {
                   {['Situation', 'Task', 'Action', 'Result'].map((section, si) => {
                     const parts = (answers[currentIdx] || '').split('---STAR---');
                     const val = parts[si] || '';
-                    const colors = { Situation: '#3b82f6', Task: '#91C733', Action: '#10b981', Result: '#f59e0b' };
+                    const colors = { Situation: '#3b82f6', Task: '#F97316', Action: '#10b981', Result: '#f59e0b' };
                     return (
                       <div key={section}>
                         <label style={{ fontSize: 11, fontWeight: 600, color: colors[section], marginBottom: 4, display: 'flex', alignItems: 'center', gap: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
@@ -1136,7 +1136,7 @@ export default function PracticePage() {
 
                   {/* Next button */}
                   <div style={{ marginTop: 16 }}>
-                    <button onClick={moveToNext} style={{ padding: '10px 24px', background: 'linear-gradient(135deg, #F97316, #91C733)', color: '#fff', fontSize: 14, fontWeight: 600, borderRadius: 10, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <button onClick={moveToNext} style={{ padding: '10px 24px', background: 'linear-gradient(135deg, #F97316, #F97316)', color: '#fff', fontSize: 14, fontWeight: 600, borderRadius: 10, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
                       {currentIdx < questions.length - 1 ? (
                         <>Next Question <Icon name="arrowRight" size={14} style={{ color: '#fff' }} /></>
                       ) : (
@@ -1150,7 +1150,7 @@ export default function PracticePage() {
               {/* Controls (only when not showing inline eval) */}
               {!inlineEval && (
                 <div style={{ display: 'flex', gap: 10, marginTop: 12, flexWrap: 'wrap' }}>
-                  <button onClick={submitAnswer} disabled={evaluating} style={{ padding: '10px 24px', background: 'linear-gradient(135deg, #F97316, #91C733)', color: '#fff', fontSize: 14, fontWeight: 600, borderRadius: 10, border: 'none', cursor: evaluating ? 'wait' : 'pointer', opacity: evaluating ? 0.7 : 1, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <button onClick={submitAnswer} disabled={evaluating} style={{ padding: '10px 24px', background: 'linear-gradient(135deg, #F97316, #F97316)', color: '#fff', fontSize: 14, fontWeight: 600, borderRadius: 10, border: 'none', cursor: evaluating ? 'wait' : 'pointer', opacity: evaluating ? 0.7 : 1, display: 'flex', alignItems: 'center', gap: 6 }}>
                     {evaluating ? (
                       <><Icon name="loader" size={14} style={{ color: '#fff', animation: 'spin 1s linear infinite' }} /> Evaluating...</>
                     ) : 'Submit Answer'}
@@ -1218,7 +1218,7 @@ export default function PracticePage() {
                   <button onClick={() => { setPhase('setup'); setStats(getStats()); setInlineEval(null); }} style={{ padding: '11px 22px', background: 'rgba(255,255,255,0.06)', color: '#e2e8f0', fontSize: 13, fontWeight: 600, borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', backdropFilter: 'blur(8px)', transition: 'all 0.2s' }}>
                     Back to Dashboard
                   </button>
-                  <button onClick={startChallenge} style={{ padding: '11px 22px', background: 'linear-gradient(135deg, #F97316, #91C733)', color: '#fff', fontSize: 13, fontWeight: 600, borderRadius: 10, border: 'none', cursor: 'pointer', boxShadow: '0 4px 14px rgba(249,115,22,0.3)', transition: 'all 0.2s' }}>
+                  <button onClick={startChallenge} style={{ padding: '11px 22px', background: 'linear-gradient(135deg, #F97316, #F97316)', color: '#fff', fontSize: 13, fontWeight: 600, borderRadius: 10, border: 'none', cursor: 'pointer', boxShadow: '0 4px 14px rgba(249,115,22,0.3)', transition: 'all 0.2s' }}>
                     Try Again
                   </button>
                   <button onClick={() => { setDifficulty('medium'); setPhase('setup'); setStats(getStats()); }} style={{ padding: '11px 22px', background: 'rgba(139,92,246,0.15)', color: '#c4b5fd', fontSize: 13, fontWeight: 600, borderRadius: 10, border: '1px solid rgba(139,92,246,0.2)', cursor: 'pointer', transition: 'all 0.2s' }}>
