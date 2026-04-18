@@ -41,7 +41,7 @@ export default function SetupWizard({ onComplete }) {
       <div className="w-full max-w-2xl mx-4">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="w-20 h-20 rounded-xl bg-emerald-500 flex items-center justify-center mb-6 mx-auto">
+          <div className="w-20 h-20 rounded-xl bg-[var(--accent)] flex items-center justify-center mb-6 mx-auto">
             <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
             </svg>
