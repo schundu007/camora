@@ -9,10 +9,10 @@ const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.
 
 const PLANS = [
   {
-    name: 'Free',
+    name: 'Day Pass',
     price: '$0',
     period: '',
-    description: 'Try Camora with no commitment',
+    description: 'Board with no ticket — explore the cockpit',
     features: [
       '3 live interview sessions',
       'Browse all 300+ prep topics',
@@ -20,16 +20,16 @@ const PLANS = [
       'Voice transcription',
       'No credit card required',
     ],
-    cta: 'Start Free',
+    cta: 'Get Day Pass',
     ctaHref: '/lumora',
     popular: false,
     priceId: null,
   },
   {
-    name: 'Starter',
+    name: 'Economy',
     price: '$29',
     period: '/mo',
-    description: 'For active interview preparation',
+    description: 'Your boarding pass to interview prep',
     features: [
       'Unlimited prep and practice',
       '10 live interview sessions/mo',
@@ -39,18 +39,18 @@ const PLANS = [
       'Code solutions with complexity',
       'All programming languages',
     ],
-    cta: 'Get Starter',
+    cta: 'Board Economy',
     ctaHref: '/lumora',
     popular: false,
     priceId: '__MONTHLY__',
   },
   {
-    name: 'Pro',
+    name: 'Business',
     price: '$49',
     period: '/mo',
-    description: 'The full interview pipeline',
+    description: 'First-class ticket — full cockpit access',
     features: [
-      'Everything in Starter',
+      'Everything in Economy',
       'Unlimited live sessions',
       'Job discovery and matching',
       'Auto resume and cover letter',
@@ -61,24 +61,24 @@ const PLANS = [
       'Desktop app included',
       'Mobile app (iOS & Android)',
     ],
-    cta: 'Get Pro',
+    cta: 'Board Business',
     ctaHref: '/lumora',
     popular: true,
     priceId: '__QUARTERLY_PRO__',
   },
   {
-    name: 'Annual',
+    name: 'First Class',
     price: '$19',
     period: '/mo',
-    description: 'Best value — billed $228/year',
+    description: 'Annual pass — billed $228/year',
     features: [
-      'Everything in Pro',
+      'Everything in Business',
       'Save 61% vs monthly',
       'Locked-in pricing',
       'Priority support',
       'Desktop app add-on: +$29/mo',
     ],
-    cta: 'Get Annual',
+    cta: 'Board First Class',
     ctaHref: '/lumora',
     popular: false,
     priceId: '__ANNUAL__',
@@ -120,7 +120,7 @@ export default function PricingPage() {
   }));
 
   useEffect(() => {
-    document.title = 'Pricing | Camora';
+    document.title = 'Tickets | Camora';
     return () => { document.title = 'Camora'; };
   }, []);
 
@@ -171,9 +171,9 @@ export default function PricingPage() {
 
       {/* Header */}
       <section className="pt-20 pb-0 px-6 text-center">
-        <span className="section-label">Pricing</span>
+        <span className="section-label">Tickets</span>
         <h1 className="mt-1 text-3xl md:text-4xl font-semibold tracking-tight" style={{ color: 'var(--text-primary)' }}>
-          The APPA platform. All-in-one.
+          Choose your boarding class.
         </h1>
       </section>
 
