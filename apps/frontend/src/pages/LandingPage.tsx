@@ -333,14 +333,14 @@ export default function LandingPage() {
         {/* ── 3D AIRPLANE — follows scroll position ── */}
         <div className="fixed hidden lg:block" style={{
           left: 'calc(15% + 18px)',
-          top: `calc(${scrollProgress * 100}vh - 32px)`,
+          top: `calc(${(1 - scrollProgress) * 100}vh - 32px)`,
           marginLeft: '-28px',
           zIndex: 4,
           pointerEvents: 'none',
           transition: 'top 0.15s ease-out',
         }}>
-          {/* Contrail above (plane moves down with scroll, trail goes up) */}
-          <div style={{ position: 'absolute', bottom: '100%', left: '50%', transform: 'translateX(-50%)', width: '3px', height: '120px', borderRadius: '2px', background: 'linear-gradient(to top, rgba(255,255,255,0.5), rgba(118,185,0,0.15), transparent)' }} />
+          {/* Contrail below (plane flies up, trail goes down) */}
+          <div style={{ position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', width: '3px', height: '120px', borderRadius: '2px', background: 'linear-gradient(to bottom, rgba(255,255,255,0.5), rgba(118,185,0,0.15), transparent)' }} />
           {/* 3D airplane — straight, no tilt */}
           <svg width="56" height="64" viewBox="0 0 56 64" fill="none" style={{ filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.5)) drop-shadow(0 0 20px rgba(118,185,0,0.5))' }}>
             <defs><linearGradient id="f3d" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor="#ddd" /><stop offset="40%" stopColor="#fff" /><stop offset="100%" stopColor="#aaa" /></linearGradient></defs>
