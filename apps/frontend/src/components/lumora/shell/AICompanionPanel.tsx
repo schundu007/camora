@@ -186,79 +186,49 @@ function RichText({ text }: { text: string }) {
 /* ── Mic Button (centered, prominent) ── */
 function MicButtonLarge({ onResult, disabled }: { onResult: (text: string) => void; disabled: boolean }) {
   const { token } = useAuth();
-  const { selectedDeviceId } = useAudioDevices();
   const [rec, setRec] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
   const mrRef = useRef<MediaRecorder | null>(null);
   const chunks = useRef<Blob[]>([]);
 
   const start = useCallback(async () => {
-    if (!token) { setError('Not authenticated'); return; }
-    setError('');
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: selectedDeviceId ? { deviceId: { ideal: selectedDeviceId } } : true,
-      });
-      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : 'audio/webm';
-      const mr = new MediaRecorder(stream, { mimeType });
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mr = new MediaRecorder(stream, { mimeType: 'audio/webm' });
       chunks.current = [];
       mr.ondataavailable = e => { if (e.data.size > 0) chunks.current.push(e.data); };
       mr.onstop = async () => {
         stream.getTracks().forEach(t => t.stop());
         const blob = new Blob(chunks.current, { type: 'audio/webm' });
-        console.log(`[Camo Mic] Blob: ${blob.size} bytes, ${chunks.current.length} chunks`);
-        if (blob.size < 500) { setError('Recording too short — hold the button longer'); return; }
+        if (blob.size < 1000) return;
         setBusy(true);
-        try {
-          const r = await transcriptionAPI.transcribe(token, blob, 'audio.webm', false);
-          console.log('[Camo Mic] Transcription result:', JSON.stringify(r).slice(0, 200));
-          if (r.skipped) {
-            setError(r.reason === 'hallucination_filtered' ? 'No clear speech — try again' : 'Voice filtered');
-          } else if (r.text?.trim()) {
-            setError('');
-            onResult(r.text.trim());
-          } else {
-            setError('No speech detected — speak clearly for 3+ seconds');
-          }
-        } catch (err: any) {
-          console.error('[Camo Mic] Error:', err);
-          setError(err.message || 'Transcription failed');
-        }
+        try { const r = await transcriptionAPI.transcribe(token!, blob, 'audio.webm', false); if (r.text?.trim()) onResult(r.text.trim()); } catch {}
         setBusy(false);
       };
-      mrRef.current = mr;
-      mr.start(250); // Collect chunks every 250ms — critical for reliable blobs
-      setRec(true);
-    } catch (err: any) {
-      setError(err.name === 'NotAllowedError' ? 'Microphone access denied' : (err.message || 'Mic error'));
-    }
-  }, [token, onResult, selectedDeviceId]);
+      mrRef.current = mr; mr.start(); setRec(true);
+    } catch {}
+  }, [token, onResult]);
   const stop = useCallback(() => { mrRef.current?.state === 'recording' && mrRef.current.stop(); setRec(false); }, []);
 
-  return (
-    <div className="flex flex-col items-center gap-1">
-      {busy ? (
-        <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ background: C.accentBg }}>
-          <div className="w-5 h-5 border-2 rounded-full animate-spin" style={{ borderColor: C.muted, borderTopColor: C.accent }} />
-        </div>
-      ) : (
-        <button onClick={rec ? stop : start} disabled={disabled}
-          className="w-14 h-14 rounded-full flex items-center justify-center transition-all disabled:opacity-40 shadow-md hover:shadow-lg hover:scale-105"
-          style={rec
-            ? { background: '#ef4444', boxShadow: '0 0 0 4px rgba(239,68,68,0.2)' }
-            : { background: C.elevated, boxShadow: '0 0 0 4px rgba(249,115,22,0.15)' }
-          }
-          title={rec ? 'Stop recording' : 'Voice input'}
-        >
-          {rec
-            ? <svg width="22" height="22" viewBox="0 0 24 24" fill="white"><rect x="6" y="6" width="12" height="12" rx="2" /></svg>
-            : <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M12 2a3 3 0 00-3 3v7a3 3 0 006 0V5a3 3 0 00-3-3z" /><path d="M19 10v2a7 7 0 01-14 0v-2" /><line x1="12" y1="19" x2="12" y2="22" /></svg>
-          }
-        </button>
-      )}
-      {error && <span className="text-[9px] text-center" style={{ color: '#FF0000' }}>{error}</span>}
+  if (busy) return (
+    <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ background: C.accentBg }}>
+      <div className="w-5 h-5 border-2 rounded-full animate-spin" style={{ borderColor: C.muted, borderTopColor: C.accent }} />
     </div>
+  );
+  return (
+    <button onClick={rec ? stop : start} disabled={disabled}
+      className="w-14 h-14 rounded-full flex items-center justify-center transition-all disabled:opacity-40 shadow-md hover:shadow-lg hover:scale-105"
+      style={rec
+        ? { background: '#ef4444', boxShadow: '0 0 0 4px rgba(239,68,68,0.2)' }
+        : { background: C.elevated, boxShadow: `0 0 0 4px ${C.accentBg}` }
+      }
+      title={rec ? 'Stop recording' : 'Voice input'}
+    >
+      {rec
+        ? <svg width="22" height="22" viewBox="0 0 24 24" fill="white"><rect x="6" y="6" width="12" height="12" rx="2" /></svg>
+        : <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M12 2a3 3 0 00-3 3v7a3 3 0 006 0V5a3 3 0 00-3-3z" /><path d="M19 10v2a7 7 0 01-14 0v-2" /><line x1="12" y1="19" x2="12" y2="22" /></svg>
+      }
+    </button>
   );
 }
 
