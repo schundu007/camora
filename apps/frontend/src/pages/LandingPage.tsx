@@ -17,9 +17,9 @@ const F = {
 };
 
 const L = {
-  bg: '#FFFFFF', surface: '#2D8CFF', elevated: '#1A7AEF',
-  border: 'rgba(45,140,255,0.2)', text: '#0F172A', secondary: '#475569',
-  muted: '#94A3B8', dimmed: '#CBD5E1',
+  bg: '#FFFFFF', surface: '#F7F8FA', elevated: '#EEF0F4',
+  border: '#E2E5EB', text: '#1A1D23', secondary: '#4A5568',
+  muted: '#8C95A6', dimmed: '#C8CDD6',
   gradient: 'linear-gradient(135deg, #2D8CFF 0%, #0B5CFF 100%)',
   primary: '#2D8CFF', emerald: '#2D8CFF', radius: '12px',
   glow: '0 0 60px rgba(45,140,255,0.08)',
@@ -171,12 +171,10 @@ export default function LandingPage() {
         .cm-gradient-text { background: ${L.gradient}; -webkit-background-clip: text; background-clip: text; color: transparent; }
         .cm-gradient-btn { background: ${L.gradient}; transition: filter 0.2s ease, box-shadow 0.2s ease; }
         .cm-gradient-btn:hover { filter: brightness(1.15); box-shadow: 0 0 30px rgba(45,140,255,0.2); }
-        .cm-outline-btn { border: 1px solid ${L.border}; color: ${L.text}; transition: border-color 0.2s, background 0.2s; }
-        .cm-outline-btn:hover { border-color: #2D8CFF; background: rgba(45,140,255,0.05); color: #2D8CFF; }
-        .cm-glass { background: ${L.surface}; color: #FFFFFF; border: none; border-radius: 16px; }
-        .cm-glass:hover { background: ${L.elevated}; }
-        .cm-glass p, .cm-glass span { color: rgba(255,255,255,0.85); }
-        .cm-glass h3 { color: #FFFFFF; }
+        .cm-outline-btn { border: 1.5px solid ${L.border}; color: ${L.text}; transition: border-color 0.2s, background 0.2s; }
+        .cm-outline-btn:hover { border-color: #2D8CFF; background: rgba(45,140,255,0.04); color: #2D8CFF; }
+        .cm-glass { background: #FFFFFF; border: 1px solid ${L.border}; border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+        .cm-glass:hover { border-color: #2D8CFF; box-shadow: 0 4px 12px rgba(45,140,255,0.08); }
         @keyframes scroll-logos { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
       `}</style>
 
@@ -244,9 +242,9 @@ export default function LandingPage() {
           <div className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${L.border}`, background: L.surface }}>
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6">
               {COMPANIES.map((c) => (
-                <div key={c} className="flex items-center justify-center py-6 px-4 transition-all hover:bg-white/10" style={{ borderRight: '1px solid rgba(255,255,255,0.15)', borderBottom: '1px solid rgba(255,255,255,0.15)' }}>
+                <div key={c} className="flex items-center justify-center py-6 px-4 transition-all hover:bg-black/[0.02]" style={{ borderRight: `1px solid ${L.border}`, borderBottom: `1px solid ${L.border}` }}>
                   <img src={`https://img.logo.dev/${c}.com?token=${LOGO_TOKEN}&size=80&format=png`}
-                    alt={c} className="h-6 object-contain brightness-0 invert opacity-60 hover:opacity-100 transition-opacity" loading="lazy"
+                    alt={c} className="h-6 object-contain grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all" loading="lazy"
                     onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                 </div>
               ))}
