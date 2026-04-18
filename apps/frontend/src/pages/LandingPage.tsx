@@ -277,6 +277,20 @@ function TopicDonut() {
   );
 }
 
+/* ── Track Waypoint — placed inside each section, auto-centers vertically ── */
+function TrackWaypoint({ label }: { label: string }) {
+  return (
+    <div className="absolute top-1/2 -translate-y-1/2 z-[4] pointer-events-none hidden lg:block" style={{ left: 'calc(15% + 4px)' }}>
+      <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#09090F', border: '2.5px solid rgba(255,255,255,0.25)', boxShadow: '0 0 14px rgba(255,255,255,0.08), inset 0 0 6px rgba(118,185,0,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: 'rgba(118,185,0,0.5)' }} />
+      </div>
+      <div style={{ position: 'absolute', left: '36px', top: '50%', transform: 'translateY(-50%)', whiteSpace: 'nowrap' }}>
+        <span style={{ fontSize: '11px', fontFamily: "'JetBrains Mono', monospace", fontWeight: 800, color: 'rgba(118,185,0,0.5)', letterSpacing: '0.15em', textShadow: '0 0 8px rgba(118,185,0,0.3)' }}>{label}</span>
+      </div>
+    </div>
+  );
+}
+
 /* ════════════════════════════════════════════════════════════ */
 export default function LandingPage() {
   const { isAuthenticated } = useAuth();
@@ -327,28 +341,7 @@ export default function LandingPage() {
           </svg>
         </div>
 
-        {/* ── Section waypoints — one per section, centered vertically ── */}
-        {[
-          { pos: 4,  code: 'HERO' },
-          { pos: 12, code: 'BRANDS' },
-          { pos: 16, code: 'STATS' },
-          { pos: 26, code: 'APPA' },
-          { pos: 38, code: 'TOPICS' },
-          { pos: 48, code: 'JOBS' },
-          { pos: 58, code: 'LIVE AI' },
-          { pos: 68, code: 'FEATURES' },
-          { pos: 78, code: 'INTEGR' },
-          { pos: 88, code: 'START' },
-        ].map((node, i) => (
-          <div key={i} className="absolute" style={{ top: `${node.pos}%`, left: '-14px' }}>
-            <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: L.bg, border: '2.5px solid rgba(255,255,255,0.25)', boxShadow: '0 0 14px rgba(255,255,255,0.08), inset 0 0 6px rgba(118,185,0,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: 'rgba(118,185,0,0.5)' }} />
-            </div>
-            <div style={{ position: 'absolute', left: '36px', top: '50%', transform: 'translateY(-50%)', whiteSpace: 'nowrap' }}>
-              <span style={{ fontSize: '11px', fontFamily: F.mono, fontWeight: 800, color: 'rgba(118,185,0,0.5)', letterSpacing: '0.15em', textShadow: '0 0 8px rgba(118,185,0,0.3)' }}>{node.code}</span>
-            </div>
-          </div>
-        ))}
+        {/* Waypoints rendered inside each section via <TrackWaypoint /> */}
       </div>
       {/* Grid dot pattern */}
       <div className="fixed inset-0 pointer-events-none z-[1] opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.5) 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
@@ -458,6 +451,7 @@ export default function LandingPage() {
 
       {/* ── 1. HERO — Forest road background ── */}
       <section className="relative pt-28 pb-14 md:pt-36 md:pb-20 px-6 overflow-hidden">
+        <TrackWaypoint label="LAUNCH" />
         {/* Forest background image */}
         <div className="absolute inset-0 z-0">
           <img src="/hero-forest.jpg" alt="" className="w-full h-full object-cover" />
@@ -511,7 +505,8 @@ export default function LandingPage() {
       </section>
 
       {/* ── 2. COMPANY LOGOS — "Prepare for interviews at" ── */}
-      <section className="px-6 py-8 overflow-hidden">
+      <section className="relative px-6 py-8 overflow-hidden">
+        <TrackWaypoint label="BRANDS" />
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
           <p className="text-center text-xs font-bold uppercase tracking-[0.2em] mb-6" style={{ color: L.muted }}>Prepare for interviews at</p>
           <div className="relative overflow-hidden rounded-2xl py-5" style={{ border: `1px solid ${L.border}`, background: L.surface, maskImage: 'linear-gradient(90deg, transparent 2%, black 10%, black 90%, transparent 98%)' }}>
@@ -527,7 +522,8 @@ export default function LandingPage() {
       </section>
 
       {/* ── 3. STATS BAR ── */}
-      <section className="px-6 py-10">
+      <section className="relative px-6 py-10">
+        <TrackWaypoint label="STATS" />
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 px-8 py-8 cm-glass" style={{ borderRadius: '16px', boxShadow: L.glow }}>
             {STATS.map((s, i) => (
@@ -544,6 +540,7 @@ export default function LandingPage() {
 
       {/* ── 4. APPA — Flight Path Timeline ── */}
       <section className="px-6 py-14 md:py-20 relative">
+        <TrackWaypoint label="APPA" />
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
           <Reveal className="text-center mb-14">
             <h2 className="text-3xl md:text-4xl lg:text-[44px] font-bold tracking-tight" style={{ fontFamily: F.display }}>
@@ -615,7 +612,8 @@ export default function LandingPage() {
       </section>
 
       {/* ── 5b. PREPARATION AT SCALE — Donut ── */}
-      <section className="px-6 py-14 md:py-20" style={{ background: L.surface, border: '1px solid rgba(255,255,255,0.06)', borderRadius: '20px', margin: '0 3%' }}>
+      <section className="relative px-6 py-14 md:py-20" style={{ background: L.surface, border: '1px solid rgba(255,255,255,0.06)', borderRadius: '20px', margin: '0 3%' }}>
+        <TrackWaypoint label="TOPICS" />
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
           <Reveal className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl lg:text-[44px] font-bold tracking-tight" style={{ fontFamily: F.display }}>Full payload. Zero drag.</h2>
@@ -626,7 +624,8 @@ export default function LandingPage() {
       </section>
 
       {/* ── 6. JOB URL ANALYSIS ── */}
-      <section className="px-6 py-14 md:py-20" style={{ background: L.surface, border: '1px solid rgba(255,255,255,0.06)', borderRadius: '20px', margin: '0 3%' }}>
+      <section className="relative px-6 py-14 md:py-20" style={{ background: L.surface, border: '1px solid rgba(255,255,255,0.06)', borderRadius: '20px', margin: '0 3%' }}>
+        <TrackWaypoint label="JOBS" />
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
           <Reveal className="text-center mb-10">
             <h2 className="text-3xl md:text-4xl lg:text-[44px] font-bold tracking-tight" style={{ fontFamily: F.display }}>
@@ -682,7 +681,8 @@ export default function LandingPage() {
       </section>
 
       {/* ── 7. LIVE AI DEMO — Simulated Q&A ── */}
-      <section className="px-6 py-14 md:py-20">
+      <section className="relative px-6 py-14 md:py-20">
+        <TrackWaypoint label="LIVE AI" />
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
           <Reveal className="text-center mb-10">
             <span className="inline-flex items-center gap-2 text-[11px] font-bold tracking-[0.15em] uppercase px-4 py-1.5"
@@ -737,7 +737,8 @@ export default function LandingPage() {
       </section>
 
       {/* ── 9. UNIQUE FEATURES GRID ── */}
-      <section className="px-6 py-14 md:py-20" style={{ background: L.surface, border: '1px solid rgba(255,255,255,0.06)', borderRadius: '20px', margin: '0 3%' }}>
+      <section className="relative px-6 py-14 md:py-20" style={{ background: L.surface, border: '1px solid rgba(255,255,255,0.06)', borderRadius: '20px', margin: '0 3%' }}>
+        <TrackWaypoint label="FEATURES" />
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
           <Reveal className="text-center mb-14">
             <span className="inline-block text-[11px] font-bold tracking-[0.18em] uppercase px-4 py-1.5 mb-5"
@@ -762,7 +763,8 @@ export default function LandingPage() {
       </section>
 
       {/* ── 10. INTEGRATIONS BAR ── */}
-      <section className="px-6 py-14 md:py-16">
+      <section className="relative px-6 py-14 md:py-16">
+        <TrackWaypoint label="CONNECT" />
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto text-center">
           <Reveal>
             <p className="text-xs font-bold uppercase tracking-[0.2em] mb-6" style={{ color: L.muted }}>Compatible with all flight platforms</p>
@@ -776,7 +778,8 @@ export default function LandingPage() {
       </section>
 
       {/* ── 12. FINAL CTA ── */}
-      <section className="px-6 py-20 md:py-28">
+      <section className="relative px-6 py-20 md:py-28">
+        <TrackWaypoint label="START" />
         <Reveal className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
           <div className="relative px-8 py-16 md:px-16 md:py-20 text-center overflow-hidden" style={{ borderRadius: '20px', background: L.surface, border: '1px solid rgba(255,255,255,0.07)', boxShadow: L.glowStrong }}>
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[50%] h-[2px]" style={{ background: L.gradient }} />
