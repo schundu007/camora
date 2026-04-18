@@ -296,7 +296,7 @@ function TopicDonut() {
 function TrackWaypoint({ label }: { label: string }) {
   return (
     <div className="absolute top-1/2 -translate-y-1/2 z-[4] pointer-events-none hidden lg:block" style={{ left: 'calc(15% + 4px)' }}>
-      <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#FFFFFF', border: '2.5px solid rgba(255,255,255,0.25)', boxShadow: '0 0 14px rgba(255,255,255,0.08), inset 0 0 6px rgba(118,185,0,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#FFFFFF', border: '2.5px solid rgba(118,185,0,0.3)', boxShadow: '0 0 14px rgba(118,185,0,0.1), inset 0 0 6px rgba(118,185,0,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: 'rgba(118,185,0,0.5)' }} />
       </div>
       <div style={{ position: 'absolute', left: '36px', top: '50%', transform: 'translateY(-50%)', whiteSpace: 'nowrap' }}>
@@ -370,7 +370,7 @@ export default function LandingPage() {
         {/* Waypoints rendered inside each section via <TrackWaypoint /> */}
       </div>
       {/* Grid dot pattern */}
-      <div className="fixed inset-0 pointer-events-none z-[1] opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.5) 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
+      <div className="fixed inset-0 pointer-events-none z-[1] opacity-[0.04]" style={{ backgroundImage: 'radial-gradient(circle, rgba(0,0,0,0.15) 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
       <style>{`
         .cm-gradient-text { background: ${L.gradient}; -webkit-background-clip: text; background-clip: text; color: transparent; }
         .cm-gradient-btn { background: ${L.gradient}; transition: filter 0.2s ease, box-shadow 0.2s ease; }
