@@ -912,39 +912,9 @@ export default function DocsPage({ onBack }) {
                     </>
                   )}
 
-                  {/* Page Hero (non-overview pages) */}
+                  {/* Page Hero (non-overview pages) — compact single row */}
                   {activePage !== 'overview' && (
-                  <div className="mb-6">
-                    <div className="inline-flex items-center gap-2 px-4 py-1.5 border border-[var(--border)] bg-[var(--accent-subtle)] rounded-full mb-4">
-                      <span className="w-2 h-2 bg-[var(--accent)] rounded-full animate-pulse" />
-                      <span className="text-xs landing-mono text-[var(--accent-hover)] tracking-wide">
-                        {activePage === 'coding' ? 'Algorithms' : activePage === 'system-design' ? 'Architecture' : activePage === 'low-level' ? 'OOP & Patterns' : activePage === 'microservices' ? 'Microservices' : activePage === 'databases' ? 'Databases & SQL' : activePage === 'sql' ? 'Databases & SQL' : activePage === 'projects' ? 'Hands-On' : activePage === 'roadmaps' ? 'Learning Paths' : activePage === 'eng-blogs' ? 'Real-World' : 'Soft Skills'}
-                      </span>
-                    </div>
-                    <h1 className="landing-display font-extrabold text-3xl md:text-4xl lg:text-5xl tracking-tight text-[var(--text-primary)] mb-2">
-                      {activePage === 'coding' && <>Data Structures &{' '}<span className="bg-gradient-to-r from-emerald-400 to-emerald-400 bg-clip-text text-transparent">Algorithms</span></>}
-                      {activePage === 'system-design' && <>Design Systems That{' '}<span className="bg-gradient-to-r from-emerald-400 to-emerald-400 bg-clip-text text-transparent">Scale</span></>}
-                      {activePage === 'low-level' && <>Master Object-Oriented{' '}<span className="bg-gradient-to-r from-emerald-400 to-emerald-400 bg-clip-text text-transparent">Design</span></>}
-                      {activePage === 'behavioral' && <>Tell Your{' '}<span className="bg-gradient-to-r from-emerald-400 to-emerald-400 bg-clip-text text-transparent">Best Story</span></>}
-                      {activePage === 'microservices' && <>Microservices{' '}<span className="bg-gradient-to-r from-emerald-500 to-emerald-500 bg-clip-text text-transparent">Patterns</span></>}
-                      {activePage === 'databases' && <>Databases{' '}<span className="bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">{'&'} SQL</span></>}
-                      {activePage === 'sql' && <>Databases{' '}<span className="bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent">{'&'} SQL</span></>}
-                      {activePage === 'projects' && <>Build Real{' '}<span className="bg-gradient-to-r from-emerald-500 to-pink-500 bg-clip-text text-transparent">Projects</span></>}
-                      {activePage === 'roadmaps' && <>Follow the{' '}<span className="bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">Roadmap</span></>}
-                      {activePage === 'eng-blogs' && <>Engineering{' '}<span className="bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent">Blogs</span></>}
-                    </h1>
-                    <p className="text-base md:text-lg text-[var(--text-muted)] max-w-2xl leading-relaxed landing-body">
-                      {activePage === 'coding' && 'Master the fundamental data structures and algorithms needed to ace technical interviews at top tech companies.'}
-                      {activePage === 'system-design' && ''}
-                      {activePage === 'low-level' && 'OOP principles, SOLID design, UML diagrams, and all 23 Gang of Four design patterns. Build clean, extensible object-oriented systems.'}
-                      {activePage === 'behavioral' && 'Prepare compelling stories and answers for behavioral interviews using proven frameworks like STAR.'}
-                      {activePage === 'microservices' && 'Service communication, resilience patterns, data management, and deployment strategies for distributed microservices architectures.'}
-                      {activePage === 'databases' && ''}
-                      {activePage === 'sql' && 'From fundamentals to window functions. Master SQL queries, joins, subqueries, and complex interview problems.'}
-                      {activePage === 'projects' && 'Portfolio projects, take-home assignments, and full-stack builds. Get AI-generated step-by-step tutorials for each project.'}
-                      {activePage === 'roadmaps' && 'Structured learning paths from beginner to advanced. Each roadmap shows the optimal order to learn topics with visual flow diagrams.'}
-                      {activePage === 'eng-blogs' && 'Curated engineering articles from 35 top tech companies. Learn how real systems are built at scale — from search and recommendations to distributed infrastructure.'}
-                    </p>
+                  <div className="mb-4">
 
                       {/* SQL Playground toggle */}
                       {activePage === 'databases' && (
