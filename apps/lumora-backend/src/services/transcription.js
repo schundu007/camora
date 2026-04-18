@@ -64,21 +64,14 @@ export async function transcribe(audioBuffer, filename = 'audio.webm') {
     // Write audio to a temp file
     await fs.promises.writeFile(inputPath, audioBuffer);
 
-    // Try sending directly to Whisper first (WebM, MP3 supported natively)
-    // Only fall back to ffmpeg conversion for unsupported formats
-    let audioFile;
-    const directFormats = ['.webm', '.mp3', '.mp4', '.m4a', '.wav', '.ogg'];
-    if (directFormats.includes(ext.toLowerCase())) {
-      audioFile = inputPath;
-    } else {
-      await convertToWav(inputPath, wavPath);
-      audioFile = wavPath;
-    }
+    // Always convert to WAV via ffmpeg — avoids codec/header issues with
+    // browser-recorded webm that OpenAI sometimes rejects
+    await convertToWav(inputPath, wavPath);
 
     // Send to OpenAI Whisper
     const response = await openai.audio.transcriptions.create({
       model: 'whisper-1',
-      file: fs.createReadStream(audioFile),
+      file: fs.createReadStream(wavPath),
       language: 'en',
       prompt: TECHNICAL_PROMPT,
       response_format: 'text',
