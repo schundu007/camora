@@ -288,41 +288,124 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen relative" style={{ fontFamily: F.body, color: L.text, background: L.bg }}>
       <SEO path="/" />
-      {/* ═══ RUNWAY — white/black takeoff track with airplane flying UP ═══ */}
-      <div className="absolute left-[10%] xl:left-[12%] top-0 bottom-0 z-[3] pointer-events-none hidden lg:block">
-        {/* Tarmac — dark asphalt strip */}
-        <div className="absolute top-0 bottom-0" style={{ left: '-8px', width: '22px', borderRadius: '11px', background: `linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.04) 6%, rgba(255,255,255,0.03) 50%, rgba(255,255,255,0.04) 94%, transparent 100%)` }} />
-        {/* White dashed center line — real runway marking */}
-        <div className="absolute left-[2px] top-0 bottom-0" style={{ width: '2px', background: `repeating-linear-gradient(to bottom, rgba(255,255,255,0.4) 0px, rgba(255,255,255,0.4) 24px, transparent 24px, transparent 40px)` }} />
-        {/* Edge markings — solid white runway borders */}
-        <div className="absolute top-0 bottom-0" style={{ left: '-8px', width: '1px', background: `linear-gradient(to bottom, transparent 5%, rgba(255,255,255,0.12) 10%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.12) 90%, transparent 95%)` }} />
-        <div className="absolute top-0 bottom-0" style={{ left: '13px', width: '1px', background: `linear-gradient(to bottom, transparent 5%, rgba(255,255,255,0.12) 10%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.12) 90%, transparent 95%)` }} />
+      {/* ═══ FLIGHT PATH — Aviation track with rocket, airplane, missile, satellite icons ═══ */}
+      <div className="absolute left-[48px] top-0 bottom-0 z-[3] pointer-events-none hidden lg:block" style={{ width: '40px' }}>
+        {/* Dashed flight route line */}
+        <div className="absolute left-[19px] top-0 bottom-0" style={{ width: '2px', background: 'repeating-linear-gradient(to bottom, rgba(118,185,0,0.18) 0px, rgba(118,185,0,0.18) 12px, transparent 12px, transparent 24px)' }} />
+        {/* Ambient contrail glow */}
+        <div className="absolute left-[10px] top-0 bottom-0" style={{ width: '20px', background: 'linear-gradient(to bottom, transparent, rgba(118,185,0,0.015) 15%, rgba(118,185,0,0.01) 50%, rgba(118,185,0,0.015) 85%, transparent)', filter: 'blur(8px)' }} />
 
-        {/* Airplane flying UP with contrail — uses real image */}
-        <div className="absolute" style={{ left: '-17px', animation: 'plane-ascend 16s ease-in-out infinite' }}>
-          {/* Contrail / exhaust trail BELOW the plane (since it flies up) */}
-          <div style={{ position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', width: '3px', height: '80px', borderRadius: '2px', background: 'linear-gradient(to bottom, rgba(255,255,255,0.5), rgba(118,185,0,0.2), transparent)' }} />
-          {/* Real airplane image — pointing UP */}
-          <img src="/airplane.png" alt="" width="40" height="40" style={{ filter: 'drop-shadow(0 0 12px rgba(118,185,0,0.5)) drop-shadow(0 -2px 6px rgba(255,255,255,0.3))' }} />
+        {/* ── ROCKET ascending with exhaust ── */}
+        <div className="absolute" style={{ left: '6px', animation: 'fp-rocket 12s ease-in-out infinite' }}>
+          {/* Exhaust trail */}
+          <div style={{ position: 'absolute', top: '34px', left: '50%', transform: 'translateX(-50%)', width: '4px', height: '50px', borderRadius: '2px', background: 'linear-gradient(to bottom, rgba(245,158,11,0.6), rgba(118,185,0,0.15), transparent)', animation: 'fp-exhaust 0.4s ease-in-out infinite alternate' }} />
+          {/* Smoke puffs */}
+          {[0,1,2].map(i => (
+            <div key={i} style={{ position: 'absolute', top: `${60 + i * 18}px`, left: '50%', transform: 'translateX(-50%)', width: `${4 + i * 2}px`, height: `${4 + i * 2}px`, borderRadius: '50%', background: `rgba(255,255,255,${0.08 - i * 0.02})`, animation: `fp-smoke ${1 + i * 0.3}s ease-out infinite`, animationDelay: `${i * 0.2}s` }} />
+          ))}
+          {/* Rocket SVG */}
+          <svg width="28" height="36" viewBox="0 0 28 36" fill="none" style={{ filter: 'drop-shadow(0 0 10px rgba(118,185,0,0.5))' }}>
+            <path d="M14 0 C14 0 9 9 9 13L19 13C19 9 14 0 14 0Z" fill="#76B900" />
+            <path d="M14 0 C14 0 11.5 5 10.5 9L14 7Z" fill="rgba(255,255,255,0.2)" />
+            <rect x="9" y="13" width="10" height="14" fill="#5E9400" />
+            <rect x="9" y="13" width="4" height="14" fill="#76B900" opacity="0.5" />
+            <circle cx="14" cy="18" r="2.8" fill="#0a0a0f" stroke="rgba(255,255,255,0.3)" strokeWidth="0.6" />
+            <circle cx="13.2" cy="17.2" r="0.9" fill="rgba(118,185,0,0.35)" />
+            <rect x="9" y="24" width="10" height="1.2" fill="rgba(255,255,255,0.06)" />
+            <path d="M9 23 L3 31 L5 31 L9 27Z" fill="#4A7A00" />
+            <path d="M9 23 L4.5 30 L5 31 L9 27Z" fill="#76B900" opacity="0.35" />
+            <path d="M19 23 L25 31 L23 31 L19 27Z" fill="#4A7A00" />
+            <path d="M19 23 L23.5 30 L23 31 L19 27Z" fill="#76B900" opacity="0.35" />
+            <path d="M10.5 27 L10 29.5 L18 29.5 L17.5 27Z" fill="#333" />
+            <rect x="11.5" y="29.5" width="5" height="2.5" rx="0.6" fill="#444" />
+            <rect x="12" y="30.5" width="4" height="1.2" rx="0.4" fill="rgba(245,158,11,0.5)" className="fp-nozzle-glow" />
+          </svg>
         </div>
 
-        {/* Stop nodes — white circles at section boundaries */}
-        {[92, 78, 64, 50, 38, 24, 10].map((pos, i) => (
-          <div key={i} className="absolute" style={{ top: `${pos}%`, left: '-7px' }}>
-            <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: L.bg, border: '2px solid rgba(255,255,255,0.25)', boxShadow: '0 0 10px rgba(255,255,255,0.08)' }}>
-              <div style={{ position: 'absolute', inset: '5px', borderRadius: '50%', background: 'rgba(255,255,255,0.3)' }} />
-            </div>
-          </div>
-        ))}
+        {/* ── Waypoint icons — each a unique aviation symbol ── */}
+        {[
+          { pos: 6, type: 'launchpad' },
+          { pos: 20, type: 'missile' },
+          { pos: 35, type: 'airplane' },
+          { pos: 50, type: 'radar' },
+          { pos: 65, type: 'jet' },
+          { pos: 80, type: 'satellite' },
+          { pos: 94, type: 'target' },
+        ].map((n, i) => (
+          <div key={i} className="absolute" style={{ top: `${n.pos}%`, left: '0', width: '40px', display: 'flex', justifyContent: 'center' }}>
+            {/* Radar ping ring */}
+            <div className="fp-ping" style={{ animationDelay: `${i * 0.7}s` }} />
 
-        {/* Fuselage capsules between stops */}
-        {[86, 71, 57, 44, 31, 17].map((pos, i) => (
-          <div key={i} className="absolute" style={{ top: `${pos}%`, left: '-5px' }}>
-            <div style={{ width: '16px', height: '50px', borderRadius: '8px', background: L.bg, border: '1.5px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '3px', padding: '6px 0' }}>
-              {[0,1,2,3,4].map(j => (
-                <div key={j} style={{ width: '4px', height: '4px', borderRadius: '50%', background: `rgba(255,255,255,${0.08 + j * 0.03})` }} />
-              ))}
-            </div>
+            {n.type === 'launchpad' ? (
+              <svg width="20" height="22" viewBox="0 0 20 22" fill="none" style={{ filter: 'drop-shadow(0 0 4px rgba(118,185,0,0.3))' }}>
+                <rect x="3" y="19" width="14" height="2" rx="1" fill="rgba(118,185,0,0.35)" />
+                <rect x="6" y="17" width="8" height="2" rx="0.5" fill="rgba(118,185,0,0.25)" />
+                <path d="M10 2 L8 8 L8 17 L12 17 L12 8Z" fill="rgba(118,185,0,0.6)" />
+                <path d="M10 2 L9 5 L8 8 L10 6Z" fill="rgba(255,255,255,0.15)" />
+                <circle cx="10" cy="11" r="1.3" fill="#0a0a0f" stroke="rgba(255,255,255,0.2)" strokeWidth="0.4" />
+                <path d="M8 14 L5 18 L8 16Z" fill="rgba(118,185,0,0.4)" />
+                <path d="M12 14 L15 18 L12 16Z" fill="rgba(118,185,0,0.4)" />
+              </svg>
+            ) : n.type === 'missile' ? (
+              <svg width="16" height="22" viewBox="0 0 16 24" fill="none" style={{ filter: 'drop-shadow(0 0 4px rgba(118,185,0,0.3))' }}>
+                <path d="M8 0 L6 7 L6 18 L10 18 L10 7Z" fill="rgba(118,185,0,0.55)" />
+                <path d="M8 0 L7 4 L6 7 L8 5Z" fill="rgba(255,255,255,0.15)" />
+                <rect x="6.5" y="9" width="3" height="0.8" rx="0.3" fill="rgba(255,255,255,0.08)" />
+                <rect x="6.5" y="12" width="3" height="0.8" rx="0.3" fill="rgba(255,255,255,0.06)" />
+                <path d="M6 15 L3 21 L6 18Z" fill="rgba(118,185,0,0.35)" />
+                <path d="M10 15 L13 21 L10 18Z" fill="rgba(118,185,0,0.35)" />
+                <rect x="7" y="18" width="2" height="3" rx="0.5" fill="#444" />
+              </svg>
+            ) : n.type === 'airplane' ? (
+              <svg width="22" height="24" viewBox="0 0 24 26" fill="none" style={{ filter: 'drop-shadow(0 0 6px rgba(118,185,0,0.4))' }}>
+                <path d="M12 0 C12 0 12 2 12 2 L12 24" stroke="rgba(118,185,0,0.5)" strokeWidth="3" strokeLinecap="round" />
+                <path d="M12 10 L1 14.5 L1 16 L12 13Z" fill="#76B900" opacity="0.6" />
+                <path d="M12 10 L23 14.5 L23 16 L12 13Z" fill="#5E9400" opacity="0.6" />
+                <ellipse cx="5" cy="14" rx="1.2" ry="2" fill="rgba(118,185,0,0.3)" />
+                <ellipse cx="19" cy="14" rx="1.2" ry="2" fill="rgba(118,185,0,0.3)" />
+                <path d="M12 20 L7 23 L7 24 L12 22Z" fill="rgba(118,185,0,0.45)" />
+                <path d="M12 20 L17 23 L17 24 L12 22Z" fill="rgba(118,185,0,0.35)" />
+                <ellipse cx="12" cy="4" rx="1.5" ry="2" fill="#0a0a0f" stroke="rgba(255,255,255,0.2)" strokeWidth="0.4" />
+              </svg>
+            ) : n.type === 'radar' ? (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ filter: 'drop-shadow(0 0 4px rgba(118,185,0,0.25))' }}>
+                <circle cx="12" cy="12" r="9" stroke="rgba(118,185,0,0.15)" strokeWidth="0.7" fill="none" />
+                <circle cx="12" cy="12" r="6" stroke="rgba(118,185,0,0.12)" strokeWidth="0.5" fill="none" />
+                <circle cx="12" cy="12" r="3" stroke="rgba(118,185,0,0.1)" strokeWidth="0.4" fill="none" />
+                <circle cx="12" cy="12" r="1.5" fill="rgba(118,185,0,0.4)" />
+                <line x1="12" y1="12" x2="19" y2="5" stroke="rgba(118,185,0,0.35)" strokeWidth="0.8" className="fp-sweep" />
+                <circle cx="16" cy="8" r="1.2" fill="#76B900" opacity="0.5" className="fp-blip" />
+              </svg>
+            ) : n.type === 'jet' ? (
+              <svg width="18" height="22" viewBox="0 0 18 24" fill="none" style={{ filter: 'drop-shadow(0 0 4px rgba(118,185,0,0.3))' }}>
+                <path d="M9 0 L7 8 L3 14 L3 15.5 L7 12 L7 20 L5 22 L5 23.5 L9 21.5 L13 23.5 L13 22 L11 20 L11 12 L15 15.5 L15 14 L11 8Z" fill="rgba(118,185,0,0.55)" />
+                <path d="M9 0 L8 4 L7 8 L9 5.5Z" fill="rgba(255,255,255,0.15)" />
+                <circle cx="9" cy="5.5" r="1" fill="#0a0a0f" stroke="rgba(255,255,255,0.2)" strokeWidth="0.4" />
+                <ellipse cx="9" cy="22" rx="1.5" ry="0.8" fill="rgba(245,158,11,0.3)" className="fp-afterburner" />
+              </svg>
+            ) : n.type === 'satellite' ? (
+              <svg width="22" height="20" viewBox="0 0 26 22" fill="none" style={{ filter: 'drop-shadow(0 0 4px rgba(118,185,0,0.25))' }}>
+                <rect x="10" y="8" width="6" height="6" rx="1" fill="rgba(118,185,0,0.45)" stroke="rgba(255,255,255,0.12)" strokeWidth="0.5" />
+                <rect x="1" y="9.5" width="8" height="3" rx="0.5" fill="rgba(118,185,0,0.25)" stroke="rgba(118,185,0,0.3)" strokeWidth="0.4" />
+                <rect x="17" y="9.5" width="8" height="3" rx="0.5" fill="rgba(118,185,0,0.25)" stroke="rgba(118,185,0,0.3)" strokeWidth="0.4" />
+                {[3,5,7].map(x => <line key={x} x1={x} y1="9.5" x2={x} y2="12.5" stroke="rgba(255,255,255,0.06)" strokeWidth="0.3" />)}
+                {[19,21,23].map(x => <line key={x} x1={x} y1="9.5" x2={x} y2="12.5" stroke="rgba(255,255,255,0.06)" strokeWidth="0.3" />)}
+                <line x1="13" y1="8" x2="13" y2="4" stroke="rgba(118,185,0,0.35)" strokeWidth="0.6" />
+                <circle cx="13" cy="3.5" r="1" fill="none" stroke="rgba(118,185,0,0.25)" strokeWidth="0.5" />
+                <path d="M15 5 Q17.5 3 15 1" stroke="rgba(118,185,0,0.15)" strokeWidth="0.4" fill="none" />
+                <path d="M16 6 Q19 3.5 16 0.5" stroke="rgba(118,185,0,0.1)" strokeWidth="0.3" fill="none" />
+              </svg>
+            ) : (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ filter: 'drop-shadow(0 0 4px rgba(118,185,0,0.25))' }}>
+                <circle cx="12" cy="12" r="8" stroke="rgba(118,185,0,0.2)" strokeWidth="0.8" fill="none" />
+                <circle cx="12" cy="12" r="5" stroke="rgba(118,185,0,0.15)" strokeWidth="0.6" fill="none" />
+                <circle cx="12" cy="12" r="2" fill="#76B900" opacity="0.45" />
+                <line x1="12" y1="2" x2="12" y2="7" stroke="rgba(118,185,0,0.18)" strokeWidth="0.6" />
+                <line x1="12" y1="17" x2="12" y2="22" stroke="rgba(118,185,0,0.18)" strokeWidth="0.6" />
+                <line x1="2" y1="12" x2="7" y2="12" stroke="rgba(118,185,0,0.18)" strokeWidth="0.6" />
+                <line x1="17" y1="12" x2="22" y2="12" stroke="rgba(118,185,0,0.18)" strokeWidth="0.6" />
+              </svg>
+            )}
           </div>
         ))}
       </div>
@@ -337,19 +420,46 @@ export default function LandingPage() {
         .cm-glass { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); backdrop-filter: blur(12px); }
         .cm-glass:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.12); }
         @keyframes scroll-logos { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-        @keyframes plane-ascend {
+        /* Rocket ascends from bottom to top */
+        @keyframes fp-rocket {
           0% { top: calc(100% + 40px); opacity: 0; }
-          3% { opacity: 1; }
-          /* Ascend with pauses at each gate */
-          10% { top: 92%; } 13% { top: 92%; }
-          22% { top: 78%; } 25% { top: 78%; }
-          34% { top: 64%; } 37% { top: 64%; }
-          46% { top: 50%; } 49% { top: 50%; }
-          58% { top: 38%; } 61% { top: 38%; }
-          70% { top: 24%; } 73% { top: 24%; }
-          84% { top: 10%; } 87% { top: 10%; }
-          96% { opacity: 1; }
-          100% { top: -60px; opacity: 0; }
+          4% { opacity: 1; }
+          90% { opacity: 1; }
+          96% { opacity: 0; }
+          100% { top: -50px; opacity: 0; }
+        }
+        /* Exhaust flame flicker */
+        @keyframes fp-exhaust {
+          0% { height: 40px; opacity: 0.4; }
+          100% { height: 55px; opacity: 0.7; }
+        }
+        /* Smoke puffs drift and fade */
+        @keyframes fp-smoke {
+          0% { transform: translateX(-50%) scale(1); opacity: 0.1; }
+          50% { transform: translateX(-50%) scale(1.8); opacity: 0.06; }
+          100% { transform: translateX(-50%) scale(2.5); opacity: 0; }
+        }
+        /* Radar sweep rotation */
+        .fp-sweep { transform-origin: 12px 12px; animation: fp-sweep-rotate 3s linear infinite; }
+        @keyframes fp-sweep-rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        /* Radar blip pulse */
+        .fp-blip { animation: fp-blip-pulse 2s ease-in-out infinite; }
+        @keyframes fp-blip-pulse { 0%, 100% { opacity: 0.2; r: 0.8; } 50% { opacity: 0.7; r: 1.4; } }
+        /* Afterburner glow */
+        .fp-afterburner { animation: fp-afterburner-pulse 0.5s ease-in-out infinite alternate; }
+        @keyframes fp-afterburner-pulse { 0% { opacity: 0.2; } 100% { opacity: 0.5; } }
+        /* Nozzle glow */
+        .fp-nozzle-glow { animation: fp-nozzle 0.35s ease-in-out infinite alternate; }
+        @keyframes fp-nozzle { 0% { opacity: 0.3; } 100% { opacity: 0.7; } }
+        /* Waypoint radar ping — expanding ring */
+        .fp-ping {
+          position: absolute; width: 24px; height: 24px; border-radius: 50%;
+          border: 1px solid rgba(118,185,0,0.15);
+          animation: fp-ping-expand 3s ease-out infinite;
+        }
+        @keyframes fp-ping-expand {
+          0% { transform: scale(0.5); opacity: 0.4; }
+          100% { transform: scale(2); opacity: 0; }
         }
       `}</style>
 
