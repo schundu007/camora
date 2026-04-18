@@ -195,14 +195,14 @@ function MicButtonLarge({ onResult, disabled }: { onResult: (text: string) => vo
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       chunks.current = [];
-      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : 'audio/webm';
+      const mimeType = 'audio/webm';
       const mr = new MediaRecorder(stream, { mimeType });
       mr.ondataavailable = e => { if (e.data.size > 0) chunks.current.push(e.data); };
       mr.onstop = async () => {
         stream.getTracks().forEach(t => t.stop());
         const blob = new Blob(chunks.current, { type: 'audio/webm' });
         console.log(`[Camo] stop: ${blob.size} bytes, ${chunks.current.length} chunks, mime=${mimeType}`);
-        if (blob.size < 500) { console.warn('[Camo] too small'); return; }
+        if (blob.size === 0) { console.warn('[Camo] empty blob'); return; }
         setBusy(true);
         try {
           const r = await transcriptionAPI.transcribe(token!, blob, 'audio.webm', false);
@@ -212,7 +212,7 @@ function MicButtonLarge({ onResult, disabled }: { onResult: (text: string) => vo
         } catch (err) { console.error('[Camo] API error:', err); }
         setBusy(false);
       };
-      mr.start(500);
+      mr.start();
       mrRef.current = mr;
       setRec(true);
       console.log('[Camo] recording started, mime:', mimeType);
