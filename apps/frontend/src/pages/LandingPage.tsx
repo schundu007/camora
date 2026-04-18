@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { motion, AnimatePresence, useInView } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import SiteNav from '../components/shared/SiteNav';
 import SEO from '../components/shared/SEO';
@@ -66,15 +66,6 @@ const STATS = [
   { value: '50+', label: 'Languages' },
 ];
 
-/* ── Topic Data ───────────────────────────────────────── */
-const TOPICS = [
-  { name: 'System Design', count: 420, problems: 318, color: '#2D8CFF' },
-  { name: 'Low-Level Design', count: 112, problems: 268, color: '#3B82F6' },
-  { name: 'DSA & Algorithms', count: 65, problems: 854, color: '#FFFFFF' },
-  { name: 'Behavioral', count: 64, problems: 230, color: '#F59E0B' },
-  { name: 'Database & SQL', count: 31, problems: 197, color: '#EC4899' },
-  { name: 'Microservices', count: 27, problems: 0, color: '#2D8CFF' },
-];
 
 /* ── Company logos (logo.dev) ───────────────────── */
 const LOGO_TOKEN = 'pk_VzK1OM-OQSCUuysDpOCzKw';
@@ -141,35 +132,9 @@ const UNIQUE_FEATURES = [
   },
 ];
 
-/* ── Platform Integrations ────────────────────────────── */
-const INTEGRATIONS = [
-  'Zoom', 'Google Meet', 'MS Teams', 'LeetCode', 'HackerRank',
-  'CoderPad', 'CodeSignal', 'Codility', 'Karat',
-];
 
-/* ── Pricing Preview ──────────────────────────────────── */
-const PLANS = [
-  { name: 'Economy', price: '$0', period: '', features: ['3 Live Sessions', '300+ Topics', 'Basic Practice'], cta: 'Start Free' },
-  { name: 'Frequent Flier', price: '$49', period: '/mo', features: ['Unlimited Sessions', 'Job Discovery', 'Desktop App', 'All Features'], cta: 'Upgrade', popular: true },
-  { name: 'Club Member', price: '$19', period: '/mo', features: ['Everything in Frequent Flier', '61% Savings', 'Priority Support', 'Billed $228/yr'], cta: 'Best Value' },
-];
 
 /* ── Hooks ────────────────────────────────────────────── */
-function useScrollProgress() {
-  const [progress, setProgress] = useState(0);
-  useEffect(() => {
-    const handler = () => {
-      const scrollTop = window.scrollY;
-      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-      setProgress(docHeight > 0 ? Math.min(scrollTop / docHeight, 1) : 0);
-    };
-    window.addEventListener('scroll', handler, { passive: true });
-    handler();
-    return () => window.removeEventListener('scroll', handler);
-  }, []);
-  return progress;
-}
-
 function useVisitorCount() {
   const [count, setCount] = useState<number | null>(null);
   useEffect(() => {
@@ -186,109 +151,6 @@ function Reveal({ children, className = '', delay = 0 }: { children: React.React
       viewport={{ once: true, margin: '-60px' }}
       transition={{ duration: 0.6, delay, ease: [0.25, 0.46, 0.45, 0.94] }}
       className={className}>{children}</motion.div>
-  );
-}
-
-/* ── Product Tabs ─────────────────────────────────────── */
-function ProductTabs() {
-  const [active, setActive] = useState(0);
-  const step = APPA[active];
-
-  useEffect(() => {
-    const t = setInterval(() => setActive(p => (p + 1) % APPA.length), 6000);
-    return () => clearInterval(t);
-  }, []);
-
-  return (
-    <div className="flex flex-col lg:flex-row gap-0 lg:gap-10">
-      <div className="flex lg:flex-col gap-1 lg:gap-1 lg:min-w-[220px] overflow-x-auto lg:overflow-visible pb-4 lg:pb-0">
-        {APPA.map((s, i) => {
-          const isActive = active === i;
-          return (
-            <button key={s.key} onClick={() => setActive(i)}
-              className="flex items-center gap-3 px-4 py-3 lg:px-5 lg:py-4 text-left transition-all whitespace-nowrap flex-shrink-0 relative"
-              style={{ borderRadius: L.radius, background: isActive ? 'rgba(255,255,255,0.04)' : 'transparent', border: isActive ? '1px solid rgba(255,255,255,0.08)' : '1px solid transparent', fontFamily: F.display }}>
-              {isActive && <div className="absolute left-0 top-2 bottom-2 w-[3px] rounded-full" style={{ background: L.gradient }} />}
-              <div className="w-9 h-9 flex items-center justify-center flex-shrink-0"
-                style={{ borderRadius: L.radius, background: isActive ? 'rgba(45,140,255,0.1)' : 'rgba(255,255,255,0.04)', color: isActive ? L.primary : L.muted }}>
-                {s.icon}
-              </div>
-              <span className="text-sm lg:text-base font-semibold" style={{ color: isActive ? L.text : L.muted }}>{s.label}</span>
-            </button>
-          );
-        })}
-      </div>
-      <div className="flex-1 min-w-0">
-        <AnimatePresence mode="wait">
-          <motion.div key={step.key} initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} transition={{ duration: 0.25 }}>
-            <div className="p-8 lg:p-10 cm-glass" style={{ borderRadius: '16px', boxShadow: L.glow }}>
-              <h3 className="text-2xl lg:text-3xl font-bold tracking-tight mb-4" style={{ fontFamily: F.display, color: L.text }}>{step.headline}</h3>
-              <p className="text-base lg:text-lg leading-relaxed mb-8 max-w-xl" style={{ fontFamily: F.body, color: L.secondary }}>{step.desc}</p>
-              <div className="flex flex-wrap gap-2 mb-8">
-                {step.features.map(f => (
-                  <span key={f} className="inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium"
-                    style={{ borderRadius: L.radius, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: L.secondary, fontFamily: F.body }}>{f}</span>
-                ))}
-              </div>
-              <div className="flex items-center gap-4">
-                <Link to={step.href} className="cm-gradient-btn inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white" style={{ borderRadius: L.radius }}>
-                  Explore {step.label}
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}><path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                </Link>
-                {/* Progress bar for auto-rotate */}
-                <div className="hidden lg:block flex-1 h-[3px] rounded-full overflow-hidden" style={{ background: L.elevated }}>
-                  <motion.div className="h-full rounded-full" style={{ background: L.gradient }}
-                    initial={{ width: '0%' }} animate={{ width: '100%' }}
-                    transition={{ duration: 6, ease: 'linear' }} key={`prog-${active}`} />
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        </AnimatePresence>
-      </div>
-    </div>
-  );
-}
-
-/* ── Donut Chart ──────────────────────────────────────── */
-function TopicDonut() {
-  const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true, margin: '-80px' });
-  const TOTAL = 808;
-  const R = 68, CIRC = 2 * Math.PI * R;
-  const segs = (() => {
-    let a = 0;
-    return TOPICS.map(t => { const f = t.count / TOTAL, d = f * CIRC; const o = -(a * CIRC) + CIRC * 0.25; a += f; return { ...t, d, g: CIRC - d, o }; });
-  })();
-
-  return (
-    <div ref={ref} className="flex flex-col md:flex-row items-center justify-center gap-10 md:gap-14">
-      <div className="relative flex-shrink-0" style={{ width: 200, height: 200 }}>
-        <svg viewBox="0 0 200 200" width="200" height="200">
-          <circle cx="100" cy="100" r={R} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="16" />
-          {segs.map((s, i) => (
-            <circle key={s.name} cx="100" cy="100" r={R} fill="none" stroke={s.color} strokeWidth="16"
-              strokeDasharray={`${inView ? s.d : 0} ${inView ? s.g : CIRC}`} strokeDashoffset={s.o}
-              style={{ transition: `stroke-dasharray 1s ease ${i * 80 + 200}ms` }} />
-          ))}
-          <text x="100" y="88" textAnchor="middle" fill={L.text} fontSize="26" fontWeight="700" fontFamily={F.display}>800+</text>
-          <text x="100" y="106" textAnchor="middle" fill={L.muted} fontSize="10" fontWeight="500" fontFamily={F.body}>Topics</text>
-          <text x="100" y="122" textAnchor="middle" fill={L.primary} fontSize="14" fontWeight="700" fontFamily={F.display}>1,850+</text>
-          <text x="100" y="135" textAnchor="middle" fill={L.muted} fontSize="9" fontWeight="500" fontFamily={F.body}>Problems</text>
-        </svg>
-      </div>
-      <div className="grid grid-cols-2 gap-x-8 gap-y-3">
-        {TOPICS.map((t, i) => (
-          <div key={t.name} className="flex items-center gap-2.5"
-            style={{ opacity: inView ? 1 : 0, transform: inView ? 'none' : 'translateX(10px)', transition: `opacity 0.4s ease ${i * 60 + 400}ms, transform 0.4s ease ${i * 60 + 400}ms` }}>
-            <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: t.color }} />
-            <span className="text-sm font-medium whitespace-nowrap" style={{ color: L.secondary }}>{t.name}</span>
-            <span className="text-sm font-semibold" style={{ color: L.muted, fontFamily: F.mono }}>{t.count}</span>
-            {t.problems > 0 && <span className="text-xs" style={{ color: L.dimmed, fontFamily: F.mono }}>({t.problems})</span>}
-          </div>
-        ))}
-      </div>
-    </div>
   );
 }
 
@@ -314,87 +176,12 @@ export default function LandingPage() {
         .cm-glass { background: ${L.surface}; border: 1px solid ${L.border}; border-radius: 16px; }
         .cm-glass:hover { background: ${L.elevated}; border-color: ${L.muted}; }
         @keyframes scroll-logos { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-        /* Rocket ascends from bottom to top */
-        /* Exhaust flame flicker */
-        /* ── APPA animated icon styles ── */
-        .appa-icon-ring {
-          position: relative;
-          width: 56px; height: 56px;
-          border-radius: 50%;
-          display: flex; align-items: center; justify-content: center;
-          background: radial-gradient(circle, rgba(45,140,255,0.12) 0%, rgba(45,140,255,0.03) 70%, transparent 100%);
-          border: 2px solid #2D8CFF;
-          box-shadow: 0 0 20px rgba(45,140,255,0.2), 0 0 40px rgba(45,140,255,0.06), inset 0 0 12px rgba(45,140,255,0.08);
-          animation: appa-ring-pulse 3s ease-in-out infinite;
-        }
-        .appa-icon-emoji {
-          font-size: 24px;
-          line-height: 1;
-          filter: drop-shadow(0 0 4px rgba(45,140,255,0.4));
-          animation: appa-emoji-float 4s ease-in-out infinite;
-        }
-        .appa-orbit {
-          position: absolute; inset: -6px;
-          border-radius: 50%;
-          animation: appa-orbit-spin 3s linear infinite;
-        }
-        .appa-orbit-dot {
-          position: absolute; top: -2px; left: 50%; transform: translateX(-50%);
-          width: 5px; height: 5px; border-radius: 50%;
-          background: #2D8CFF;
-          box-shadow: 0 0 6px #2D8CFF, 0 0 12px rgba(45,140,255,0.4);
-        }
-        @keyframes appa-ring-pulse {
-          0%, 100% { box-shadow: 0 0 20px rgba(45,140,255,0.2), 0 0 40px rgba(45,140,255,0.06), inset 0 0 12px rgba(45,140,255,0.08); }
-          50% { box-shadow: 0 0 28px rgba(45,140,255,0.3), 0 0 50px rgba(45,140,255,0.1), inset 0 0 16px rgba(45,140,255,0.12); }
-        }
-        @keyframes appa-emoji-float {
-          0%, 100% { transform: translateY(0) scale(1); }
-          50% { transform: translateY(-2px) scale(1.08); }
-        }
-        @keyframes appa-orbit-spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-
-        @keyframes fp-exhaust {
-          0% { height: 40px; opacity: 0.4; }
-          100% { height: 55px; opacity: 0.7; }
-        }
-        /* Smoke puffs drift and fade */
-        @keyframes fp-smoke {
-          0% { transform: translateX(-50%) scale(1); opacity: 0.1; }
-          50% { transform: translateX(-50%) scale(1.8); opacity: 0.06; }
-          100% { transform: translateX(-50%) scale(2.5); opacity: 0; }
-        }
-        /* Radar sweep rotation */
-        .fp-sweep { transform-origin: 12px 12px; animation: fp-sweep-rotate 3s linear infinite; }
-        @keyframes fp-sweep-rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        /* Radar blip pulse */
-        .fp-blip { animation: fp-blip-pulse 2s ease-in-out infinite; }
-        @keyframes fp-blip-pulse { 0%, 100% { opacity: 0.2; r: 0.8; } 50% { opacity: 0.7; r: 1.4; } }
-        /* Afterburner glow */
-        .fp-afterburner { animation: fp-afterburner-pulse 0.5s ease-in-out infinite alternate; }
-        @keyframes fp-afterburner-pulse { 0% { opacity: 0.2; } 100% { opacity: 0.5; } }
-        /* Nozzle glow */
-        .fp-nozzle-glow { animation: fp-nozzle 0.35s ease-in-out infinite alternate; }
-        @keyframes fp-nozzle { 0% { opacity: 0.3; } 100% { opacity: 0.7; } }
-        /* Waypoint radar ping — expanding ring */
-        .fp-ping {
-          position: absolute; width: 24px; height: 24px; border-radius: 50%;
-          border: 1px solid rgba(45,140,255,0.15);
-          animation: fp-ping-expand 3s ease-out infinite;
-        }
-        @keyframes fp-ping-expand {
-          0% { transform: scale(0.5); opacity: 0.4; }
-          100% { transform: scale(2); opacity: 0; }
-        }
       `}</style>
 
       <SiteNav variant="dark" />
 
       {/* ── 1. HERO — Forest road background ── */}
-      <section className="relative pt-28 pb-14 md:pt-36 md:pb-20 px-6 overflow-hidden">
+      <section className="relative pt-24 pb-10 md:pt-32 md:pb-14 px-6 overflow-hidden">
 
         {/* Hero background — dark with subtle image overlay */}
         <div className="absolute inset-0 z-0">
@@ -424,7 +211,7 @@ export default function LandingPage() {
             Job discovery. Interview prep. Mock practice. Live AI assistance.
           </motion.p>
 
-          <motion.div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3"
+          <motion.div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3"
             initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.3 }}>
             <Link to={isAuthenticated ? '/capra/prepare' : '/signup'} className="cm-gradient-btn px-7 py-3.5 text-[15px] font-semibold text-white" style={{ borderRadius: L.radius }}>
               {isAuthenticated ? 'Enter Cockpit' : 'Get Your Boarding Pass'}
@@ -435,7 +222,7 @@ export default function LandingPage() {
           </motion.div>
 
           {visitorCount !== null && visitorCount > 0 && (
-            <motion.div className="mt-10 flex items-center justify-center gap-3" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6, delay: 0.5 }}>
+            <motion.div className="mt-6 flex items-center justify-center gap-3" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6, delay: 0.5 }}>
               <div className="flex -space-x-1.5">
                 {[L.primary, 'rgba(255,255,255,0.3)', 'rgba(255,255,255,0.2)', 'rgba(255,255,255,0.1)'].map((c, i) => (
                   <div key={i} className="w-6 h-6 rounded-full" style={{ background: c, border: `2px solid ${L.bg}` }} />
@@ -483,9 +270,9 @@ export default function LandingPage() {
       </section>
 
       {/* ── 4. APPA — Flight Path Timeline ── */}
-      <section className="px-6 py-14 md:py-20 relative">
+      <section className="px-6 py-10 md:py-14 relative">
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
-          <Reveal className="text-center mb-14">
+          <Reveal className="text-center mb-10">
             <h2 className="text-3xl md:text-4xl lg:text-[44px] font-bold tracking-tight" style={{ fontFamily: F.display }}>
               Your flight plan to the offer.
             </h2>
@@ -493,22 +280,12 @@ export default function LandingPage() {
 
           {/* Timeline sections */}
           <div className="relative">
-            <div className="absolute left-6 md:left-8 top-0 bottom-0 w-px hidden md:block" style={{ background: `linear-gradient(to bottom, transparent, ${L.primary}30, ${L.primary}30, transparent)` }} />
-            <div className="space-y-10 md:space-y-14">
+            <div className="space-y-8 md:space-y-10">
               {APPA.map((step, i) => (
                 <Reveal key={step.key} delay={i * 0.08}>
                   <div className="flex gap-6 md:gap-10 items-start">
                     <div className="hidden md:flex flex-col items-center flex-shrink-0 relative z-10">
-                      {/* Animated aviation icon per stage */}
-                      <div className="appa-icon-ring" style={{ animationDelay: `${i * 0.3}s` }}>
-                        <span className="appa-icon-emoji">
-                          {i === 0 ? '✈️' : i === 1 ? '🧭' : i === 2 ? '🎯' : '🚀'}
-                        </span>
-                        {/* Orbiting particle */}
-                        <div className="appa-orbit" style={{ animationDuration: `${3 + i}s`, animationDelay: `${i * 0.5}s` }}>
-                          <div className="appa-orbit-dot" />
-                        </div>
-                      </div>
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold" style={{ background: L.surface, border: `2px solid ${L.primary}`, color: L.primary }}>{i + 1}</div>
                     </div>
                     <div className="flex-1 flex flex-col lg:flex-row gap-6">
                       <div className="lg:w-[45%]">
@@ -520,7 +297,7 @@ export default function LandingPage() {
                             {i === 2 && <><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /></>}
                             {i === 3 && <><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" /><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" /><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0" /><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" /></>}
                           </svg>
-                          Gate {i + 1} — {step.label}
+                          {step.label}
                         </span>
                         <h3 className="text-xl lg:text-2xl font-bold tracking-tight mb-3" style={{ fontFamily: F.display }}>{step.headline}</h3>
                         <p className="text-sm leading-relaxed mb-5" style={{ color: L.secondary }}>{step.desc}</p>
@@ -553,18 +330,9 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── 5b. PREPARATION AT SCALE — Donut ── */}
-      <section className="relative px-6 py-14 md:py-20" style={{ background: L.surface }}>
-        <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
-          <Reveal className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl lg:text-[44px] font-bold tracking-tight" style={{ fontFamily: F.display }}>Full payload. Zero drag.</h2>
-          </Reveal>
-          <TopicDonut />
-        </div>
-      </section>
 
       {/* ── 6. JOB URL ANALYSIS ── */}
-      <section className="relative px-6 py-14 md:py-20" style={{ background: L.surface }}>
+      <section className="relative px-6 py-10 md:py-14" style={{ background: L.surface }}>
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
           <Reveal className="text-center mb-10">
             <h2 className="text-3xl md:text-4xl lg:text-[44px] font-bold tracking-tight" style={{ fontFamily: F.display }}>
@@ -620,7 +388,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── 7. LIVE AI DEMO — Simulated Q&A ── */}
-      <section className="relative px-6 py-14 md:py-20" style={{ background: L.surface }}>
+      <section className="relative px-6 py-10 md:py-14" style={{ background: L.surface }}>
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
           <Reveal className="text-center mb-10">
             <span className="inline-flex items-center gap-2 text-[11px] font-bold tracking-[0.15em] uppercase px-4 py-1.5"
@@ -672,9 +440,9 @@ export default function LandingPage() {
       </section>
 
       {/* ── 9. UNIQUE FEATURES GRID ── */}
-      <section className="relative px-6 py-14 md:py-20" style={{ background: L.surface }}>
+      <section className="relative px-6 py-10 md:py-14" style={{ background: L.surface }}>
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
-          <Reveal className="text-center mb-14">
+          <Reveal className="text-center mb-10">
             <span className="inline-block text-[11px] font-bold tracking-[0.18em] uppercase px-4 py-1.5 mb-5"
               style={{ borderRadius: '999px', background: 'rgba(45,140,255,0.06)', border: '1px solid rgba(45,140,255,0.15)', color: L.emerald, fontFamily: F.mono }}>Club Members Only</span>
             <h2 className="text-3xl md:text-4xl lg:text-[44px] font-bold tracking-tight" style={{ fontFamily: F.display }}>First-class features. No turbulence.</h2>
@@ -696,24 +464,11 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── 10. INTEGRATIONS BAR ── */}
-      <section className="relative px-6 py-14 md:py-16" style={{ background: L.surface }}>
-        <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto text-center">
-          <Reveal>
-            <p className="text-xs font-bold uppercase tracking-[0.2em] mb-6" style={{ color: L.muted }}>Compatible with all flight platforms</p>
-            <div className="flex flex-wrap items-center justify-center gap-3">
-              {INTEGRATIONS.map(name => (
-                <span key={name} className="px-4 py-2 text-sm font-medium" style={{ borderRadius: L.radius, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: L.secondary }}>{name}</span>
-              ))}
-            </div>
-          </Reveal>
-        </div>
-      </section>
 
       {/* ── 12. FINAL CTA ── */}
-      <section className="relative px-6 py-20 md:py-28">
+      <section className="relative px-6 py-14 md:py-20">
         <Reveal className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
-          <div className="relative px-8 py-16 md:px-16 md:py-20 text-center overflow-hidden" style={{ borderRadius: '20px', background: L.surface, border: '1px solid rgba(255,255,255,0.07)', boxShadow: L.glowStrong }}>
+          <div className="relative px-8 py-12 md:px-14 md:py-16 text-center overflow-hidden" style={{ borderRadius: '20px', background: L.surface, border: '1px solid rgba(255,255,255,0.07)', boxShadow: L.glowStrong }}>
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[50%] h-[2px]" style={{ background: L.gradient }} />
             <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at center top, rgba(45,140,255,0.04) 0%, transparent 60%)' }} />
             <div className="relative z-10">
