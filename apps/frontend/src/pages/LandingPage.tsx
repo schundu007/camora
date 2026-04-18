@@ -288,77 +288,30 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen relative" style={{ fontFamily: F.body, color: L.text, background: L.bg }}>
       <SEO path="/" />
-      {/* ═══ FLIGHT PATH — Aviation-themed vertical track ═══ */}
-      <div className="fixed left-[48px] top-0 bottom-0 z-[2] pointer-events-none hidden lg:block" style={{ width: '24px' }}>
-        {/* Flight path — dashed line like an aviation route */}
-        <div className="absolute left-[11px] top-0 bottom-0" style={{ width: '2px', background: 'repeating-linear-gradient(to bottom, rgba(118,185,0,0.15) 0px, rgba(118,185,0,0.15) 8px, transparent 8px, transparent 16px)' }} />
-        {/* Contrail glow behind path */}
-        <div className="absolute left-[6px] top-0 bottom-0" style={{ width: '12px', background: 'linear-gradient(to bottom, transparent 0%, rgba(118,185,0,0.03) 15%, rgba(118,185,0,0.02) 50%, rgba(118,185,0,0.03) 85%, transparent 100%)', filter: 'blur(6px)' }} />
+      {/* ═══ VERTICAL LINE — Railway-style, thick, passes through content ═══ */}
+      <div className="absolute left-[10%] xl:left-[12%] top-0 bottom-0 z-[1] pointer-events-none hidden lg:block">
+        {/* Main thick track — 6px solid */}
+        <div className="absolute left-0 top-0 bottom-0" style={{ width: '6px', borderRadius: '3px', background: `linear-gradient(to bottom, transparent 0%, rgba(118,185,0,0.12) 8%, rgba(118,185,0,0.08) 50%, rgba(118,185,0,0.12) 92%, transparent 100%)` }} />
+        {/* Bright center core — 2px */}
+        <div className="absolute top-0 bottom-0" style={{ left: '2px', width: '2px', background: `linear-gradient(to bottom, transparent 5%, rgba(118,185,0,0.25) 10%, rgba(118,185,0,0.15) 50%, rgba(118,185,0,0.25) 90%, transparent 95%)` }} />
 
-        {/* Rocket — traveling upward with exhaust trail */}
-        <div className="absolute left-1/2 -translate-x-1/2" style={{ animation: 'rocket-ascend 10s ease-in-out infinite' }}>
-          {/* Exhaust flame */}
-          <div style={{ position: 'absolute', top: '20px', left: '50%', transform: 'translateX(-50%)', width: '6px', height: '24px', borderRadius: '0 0 3px 3px', background: 'linear-gradient(to bottom, #76B900, #f59e0b, transparent)', opacity: 0.7, animation: 'flame-flicker 0.3s ease-in-out infinite alternate' }} />
-          {/* Rocket body */}
-          <svg width="18" height="22" viewBox="0 0 18 22" fill="none" style={{ filter: 'drop-shadow(0 0 6px rgba(118,185,0,0.4))' }}>
-            {/* Nose cone */}
-            <path d="M9 0 L12 7 L6 7 Z" fill="#76B900" />
-            {/* Body */}
-            <rect x="6" y="7" width="6" height="10" rx="1" fill="rgba(118,185,0,0.8)" />
-            {/* Window */}
-            <circle cx="9" cy="11" r="1.5" fill="#09090F" stroke="rgba(255,255,255,0.3)" strokeWidth="0.5" />
-            {/* Fins */}
-            <path d="M6 14 L3 19 L6 17 Z" fill="rgba(118,185,0,0.6)" />
-            <path d="M12 14 L15 19 L12 17 Z" fill="rgba(118,185,0,0.6)" />
-            {/* Nozzle */}
-            <rect x="7" y="17" width="4" height="2" rx="0.5" fill="rgba(255,255,255,0.15)" />
-          </svg>
-        </div>
-
-        {/* Waypoint nodes — aviation-style markers */}
-        {[
-          { pos: 8,  icon: 'takeoff' },
-          { pos: 22, icon: 'waypoint' },
-          { pos: 36, icon: 'waypoint' },
-          { pos: 50, icon: 'airplane' },
-          { pos: 64, icon: 'waypoint' },
-          { pos: 78, icon: 'waypoint' },
-          { pos: 92, icon: 'landing' },
-        ].map((node, i) => (
-          <div key={i} className="absolute left-1/2 -translate-x-1/2" style={{ top: `${node.pos}%`, animation: `waypoint-glow 4s ease-in-out ${i * 0.5}s infinite` }}>
-            {node.icon === 'takeoff' ? (
-              /* Takeoff — rotated airplane climbing */
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ transform: 'rotate(-45deg)', filter: 'drop-shadow(0 0 4px rgba(118,185,0,0.3))' }}>
-                <path d="M22 2L2 10l7 2 2 7 3-5 5 3-1-11z" fill="rgba(118,185,0,0.5)" stroke="#76B900" strokeWidth="0.5" />
-              </svg>
-            ) : node.icon === 'airplane' ? (
-              /* Mid-flight airplane — cruising */
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ filter: 'drop-shadow(0 0 6px rgba(118,185,0,0.4))' }}>
-                <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z" fill="#76B900" opacity="0.7" />
-              </svg>
-            ) : node.icon === 'landing' ? (
-              /* Landing — descending airplane */
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ transform: 'rotate(45deg)', filter: 'drop-shadow(0 0 4px rgba(118,185,0,0.3))' }}>
-                <path d="M22 2L2 10l7 2 2 7 3-5 5 3-1-11z" fill="rgba(118,185,0,0.5)" stroke="#76B900" strokeWidth="0.5" />
-              </svg>
-            ) : (
-              /* Waypoint — navigation diamond */
-              <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                <rect x="5" y="0" width="5" height="5" rx="0.5" transform="rotate(45 5 5)" fill="#09090F" stroke="rgba(118,185,0,0.35)" strokeWidth="1" />
-                <circle cx="5" cy="5" r="1.5" fill="rgba(118,185,0,0.4)" />
-              </svg>
-            )}
+        {/* Circle nodes at section boundaries */}
+        {[12, 28, 42, 56, 68, 80, 92].map((pos, i) => (
+          <div key={i} className="absolute" style={{ top: `${pos}%`, left: '-5px' }}>
+            <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: L.bg, border: '2px solid rgba(118,185,0,0.25)', boxShadow: '0 0 12px rgba(118,185,0,0.1)' }}>
+              <div style={{ position: 'absolute', inset: '4px', borderRadius: '50%', background: 'rgba(118,185,0,0.3)' }} />
+            </div>
           </div>
         ))}
 
-        {/* Altitude labels — tiny monospace markers */}
-        {[
-          { pos: 8, label: 'FL010' },
-          { pos: 50, label: 'FL350' },
-          { pos: 92, label: 'FL000' },
-        ].map((alt, i) => (
-          <div key={i} className="absolute" style={{ top: `${alt.pos}%`, left: '28px', transform: 'translateY(-50%)' }}>
-            <span style={{ fontSize: '7px', fontFamily: F.mono, color: 'rgba(118,185,0,0.2)', letterSpacing: '0.1em', fontWeight: 700 }}>{alt.label}</span>
+        {/* Capsule decorations between nodes — Railway signature */}
+        {[20, 48, 74].map((pos, i) => (
+          <div key={i} className="absolute" style={{ top: `${pos}%`, left: '-4px' }}>
+            <div style={{ width: '14px', height: '50px', borderRadius: '7px', background: L.bg, border: '1.5px solid rgba(118,185,0,0.15)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '4px', padding: '6px 0' }}>
+              {[0,1,2,3].map(j => (
+                <div key={j} style={{ width: '4px', height: '4px', borderRadius: '50%', background: `rgba(118,185,0,${0.15 + j * 0.05})` }} />
+              ))}
+            </div>
           </div>
         ))}
       </div>
@@ -373,21 +326,6 @@ export default function LandingPage() {
         .cm-glass { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); backdrop-filter: blur(12px); }
         .cm-glass:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.12); }
         @keyframes scroll-logos { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-        @keyframes rocket-ascend {
-          0% { top: calc(100% + 30px); opacity: 0; }
-          5% { opacity: 1; }
-          85% { opacity: 1; }
-          95% { opacity: 0; }
-          100% { top: -40px; opacity: 0; }
-        }
-        @keyframes flame-flicker {
-          0% { height: 20px; opacity: 0.5; }
-          100% { height: 28px; opacity: 0.8; }
-        }
-        @keyframes waypoint-glow {
-          0%, 100% { opacity: 0.6; filter: drop-shadow(0 0 2px rgba(118,185,0,0.1)); }
-          50% { opacity: 1; filter: drop-shadow(0 0 6px rgba(118,185,0,0.3)); }
-        }
       `}</style>
 
       <SiteNav variant="dark" />
