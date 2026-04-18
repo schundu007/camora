@@ -333,8 +333,8 @@ export default function LandingPage() {
           { pos: 14, code: 'TRUST' },     /* 2. Company Logos */
           { pos: 20, code: 'STATS' },     /* 3. Stats Bar */
           { pos: 32, code: 'APPA' },      /* 4. APPA Timeline */
-          { pos: 46, code: 'LIVE AI' },   /* 6. Live AI Demo */
-          { pos: 57, code: 'JOBS' },      /* 7. Job URL Analysis */
+          { pos: 46, code: 'JOBS' },      /* 6. Job URL Analysis */
+          { pos: 57, code: 'LIVE AI' },   /* 7. Live AI Demo */
           { pos: 68, code: 'EDGE' },      /* 9. Unique Features */
           { pos: 79, code: 'CONNECT' },   /* 10. Integrations */
           { pos: 90, code: 'GO' },        /* 12. Final CTA */
@@ -624,64 +624,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── 6. LIVE AI DEMO — Simulated Q&A ── */}
-      <section className="px-6 py-14 md:py-20">
-        <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
-          <Reveal className="text-center mb-10">
-            <span className="inline-flex items-center gap-2 text-[11px] font-bold tracking-[0.15em] uppercase px-4 py-1.5"
-              style={{ borderRadius: '999px', background: L.surface, border: `1px solid ${L.border}`, color: L.secondary, fontFamily: F.mono }}>
-              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /></svg>
-              Live Interview AI
-            </span>
-            <h2 className="text-3xl md:text-4xl lg:text-[44px] font-bold tracking-tight mt-5" style={{ fontFamily: F.display }}>
-              Your co-pilot for every interview.
-            </h2>
-            <p className="mt-4 text-lg max-w-xl mx-auto" style={{ color: L.secondary }}>
-              Like a flight engineer in your cockpit. Camora listens, transcribes, and generates answers in real-time.
-            </p>
-          </Reveal>
-
-          <Reveal delay={0.12}>
-            <div className="cm-glass" style={{ borderRadius: '16px', boxShadow: L.glow }}>
-              {/* Simulated transcript */}
-              <div className="px-6 py-5" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="w-2 h-2 rounded-full bg-red-400 animate-pulse" />
-                  <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: '#ef4444', fontFamily: F.mono }}>Transcribing</span>
-                </div>
-                <p className="text-base leading-relaxed" style={{ color: L.text, fontFamily: F.body }}>
-                  "Design a distributed rate limiter that can handle millions of requests per second across multiple data centers..."
-                </p>
-              </div>
-              {/* AI response preview */}
-              <div className="px-6 py-5">
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="w-2 h-2 rounded-full" style={{ background: L.emerald }} />
-                  <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: L.emerald, fontFamily: F.mono }}>AI Response</span>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  {[
-                    { label: 'Architecture', items: ['Token Bucket Algorithm', 'Redis Cluster', 'Sliding Window Counter'] },
-                    { label: 'Components', items: ['API Gateway', 'Rate Limiter Service', 'Config Store'] },
-                    { label: 'Trade-offs', items: ['Consistency vs Availability', 'Memory vs Accuracy', 'Latency vs Precision'] },
-                  ].map(col => (
-                    <div key={col.label} className="p-4" style={{ borderRadius: L.radius, background: 'rgba(255,255,255,0.02)' }}>
-                      <p className="text-[10px] font-bold uppercase tracking-wider mb-3" style={{ color: L.muted, fontFamily: F.mono }}>{col.label}</p>
-                      <div className="flex flex-col gap-1.5">
-                        {col.items.map(item => (
-                          <span key={item} className="text-xs font-medium px-2.5 py-1.5" style={{ borderRadius: '8px', color: L.secondary, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>{item}</span>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* ── 7. JOB URL ANALYSIS ── */}
+      {/* ── 6. JOB URL ANALYSIS ── */}
       <section className="px-6 py-14 md:py-20" style={{ background: L.surface, border: '1px solid rgba(255,255,255,0.06)', borderRadius: '20px', margin: '0 3%' }}>
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
           <Reveal className="text-center mb-10">
@@ -733,6 +676,61 @@ export default function LandingPage() {
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}><path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" /></svg>
             </Link>
             <p className="text-xs mt-4" style={{ color: L.muted }}>Supports Workday, Greenhouse, Lever, Ashby, SmartRecruiters, LinkedIn &amp; more</p>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* ── 7. LIVE AI DEMO — Simulated Q&A ── */}
+      <section className="px-6 py-14 md:py-20">
+        <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
+          <Reveal className="text-center mb-10">
+            <span className="inline-flex items-center gap-2 text-[11px] font-bold tracking-[0.15em] uppercase px-4 py-1.5"
+              style={{ borderRadius: '999px', background: L.surface, border: `1px solid ${L.border}`, color: L.secondary, fontFamily: F.mono }}>
+              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /></svg>
+              Live Interview AI
+            </span>
+            <h2 className="text-3xl md:text-4xl lg:text-[44px] font-bold tracking-tight mt-5" style={{ fontFamily: F.display }}>
+              Your co-pilot for every interview.
+            </h2>
+            <p className="mt-4 text-lg max-w-xl mx-auto" style={{ color: L.secondary }}>
+              Camora listens, transcribes, and generates answers in real-time.
+            </p>
+          </Reveal>
+
+          <Reveal delay={0.12}>
+            <div className="cm-glass" style={{ borderRadius: '16px', boxShadow: L.glow }}>
+              <div className="px-6 py-5" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="w-2 h-2 rounded-full bg-red-400 animate-pulse" />
+                  <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: '#ef4444', fontFamily: F.mono }}>Transcribing</span>
+                </div>
+                <p className="text-base leading-relaxed" style={{ color: L.text, fontFamily: F.body }}>
+                  "Design a distributed rate limiter that can handle millions of requests per second across multiple data centers..."
+                </p>
+              </div>
+              <div className="px-6 py-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="w-2 h-2 rounded-full" style={{ background: L.emerald }} />
+                  <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: L.emerald, fontFamily: F.mono }}>AI Response</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {[
+                    { label: 'Architecture', items: ['Token Bucket Algorithm', 'Redis Cluster', 'Sliding Window Counter'] },
+                    { label: 'Components', items: ['API Gateway', 'Rate Limiter Service', 'Config Store'] },
+                    { label: 'Trade-offs', items: ['Consistency vs Availability', 'Memory vs Accuracy', 'Latency vs Precision'] },
+                  ].map(col => (
+                    <div key={col.label} className="p-4" style={{ borderRadius: L.radius, background: 'rgba(255,255,255,0.02)' }}>
+                      <p className="text-[10px] font-bold uppercase tracking-wider mb-3" style={{ color: L.muted, fontFamily: F.mono }}>{col.label}</p>
+                      <div className="flex flex-col gap-1.5">
+                        {col.items.map(item => (
+                          <span key={item} className="text-xs font-medium px-2.5 py-1.5" style={{ borderRadius: '8px', color: L.secondary, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>{item}</span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </Reveal>
         </div>
       </section>
