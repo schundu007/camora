@@ -2,13 +2,12 @@ import { useRef, useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { streamResponse } from '@/lib/sse-client';
 import { transcriptionAPI } from '@/lib/api-client';
-import { useAudioDevices } from '@/components/lumora/audio/hooks/useAudioDevices';
 
 /* White background copilot — black text */
 const C = {
-  base: '#FFFFFF', surface: '#F8FAFC', elevated: '#76B900',
-  text: '#0F172A', muted: '#64748B', accent: '#76B900',
-  accentBg: 'rgba(118,185,0,0.08)', border: '#E2E8F0',
+  base: '#FFFFFF', surface: '#F8FAFC', elevated: '#F97316',
+  text: '#0F172A', muted: '#64748B', accent: '#F97316',
+  accentBg: 'rgba(249,115,22,0.08)', border: '#E2E8F0',
 };
 
 /* ── Types ── */
@@ -97,7 +96,7 @@ function RichText({ text }: { text: string }) {
     return s
       .replace(/\*\*(.*?)\*\*/g, '<strong style="color:#0F172A;font-weight:700;font-family:\'Clash Display\',sans-serif">$1</strong>')
       .replace(/`([^`]+)`/g, '<code style="background:#F1F5F9;color:#0F766E;padding:1px 5px;border-radius:3px;font-size:10px;font-family:\'JetBrains Mono\',monospace;border:1px solid #E2E8F0">$1</code>')
-      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" style="color:#76B900;text-decoration:underline">$1</a>');
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" style="color:#F97316;text-decoration:underline">$1</a>');
   };
 
   const renderCodeBlock = (content: string, lang?: string, key?: number | string) => (
@@ -201,28 +200,35 @@ function MicButtonLarge({ onResult, disabled }: { onResult: (text: string) => vo
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: selectedDeviceId ? { deviceId: { ideal: selectedDeviceId } } : true,
       });
-      const mr = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : 'audio/webm';
+      const mr = new MediaRecorder(stream, { mimeType });
       chunks.current = [];
       mr.ondataavailable = e => { if (e.data.size > 0) chunks.current.push(e.data); };
       mr.onstop = async () => {
         stream.getTracks().forEach(t => t.stop());
         const blob = new Blob(chunks.current, { type: 'audio/webm' });
-        if (blob.size < 1000) { setError('Recording too short'); return; }
+        console.log(`[Camo Mic] Blob: ${blob.size} bytes, ${chunks.current.length} chunks`);
+        if (blob.size < 500) { setError('Recording too short — hold the button longer'); return; }
         setBusy(true);
         try {
           const r = await transcriptionAPI.transcribe(token, blob, 'audio.webm', false);
-          if (r.text?.trim()) {
+          console.log('[Camo Mic] Transcription result:', JSON.stringify(r).slice(0, 200));
+          if (r.skipped) {
+            setError(r.reason === 'hallucination_filtered' ? 'No clear speech — try again' : 'Voice filtered');
+          } else if (r.text?.trim()) {
+            setError('');
             onResult(r.text.trim());
           } else {
-            setError('No speech detected');
+            setError('No speech detected — speak clearly for 3+ seconds');
           }
         } catch (err: any) {
+          console.error('[Camo Mic] Error:', err);
           setError(err.message || 'Transcription failed');
         }
         setBusy(false);
       };
       mrRef.current = mr;
-      mr.start();
+      mr.start(250); // Collect chunks every 250ms — critical for reliable blobs
       setRec(true);
     } catch (err: any) {
       setError(err.name === 'NotAllowedError' ? 'Microphone access denied' : (err.message || 'Mic error'));
@@ -241,7 +247,7 @@ function MicButtonLarge({ onResult, disabled }: { onResult: (text: string) => vo
           className="w-14 h-14 rounded-full flex items-center justify-center transition-all disabled:opacity-40 shadow-md hover:shadow-lg hover:scale-105"
           style={rec
             ? { background: '#ef4444', boxShadow: '0 0 0 4px rgba(239,68,68,0.2)' }
-            : { background: C.elevated, boxShadow: '0 0 0 4px rgba(118,185,0,0.15)' }
+            : { background: C.elevated, boxShadow: '0 0 0 4px rgba(249,115,22,0.15)' }
           }
           title={rec ? 'Stop recording' : 'Voice input'}
         >
@@ -338,10 +344,10 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
       {!minimized && (
         <div
           className="w-[5px] h-full cursor-col-resize flex items-center justify-center group shrink-0 hover:bg-blue-400/20 transition-colors"
-          style={{ background: isResizing ? 'rgba(118,185,0,0.2)' : '#E2E8F0' }}
+          style={{ background: isResizing ? 'rgba(249,115,22,0.2)' : '#E2E8F0' }}
           onMouseDown={(e) => { setIsResizing(true); resizeRef.current = { startX: e.clientX, startW: panelWidth }; }}
         >
-          <div className="w-[3px] h-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: '#76B900' }} />
+          <div className="w-[3px] h-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: '#F97316' }} />
         </div>
       )}
 
@@ -392,7 +398,7 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
                   letterSpacing: '0.05em',
                   textTransform: 'uppercase',
                   color: answerMode === mode ? '#FFFFFF' : '#94A3B8',
-                  background: answerMode === mode ? '#76B900' : 'transparent',
+                  background: answerMode === mode ? '#F97316' : 'transparent',
                 }}
               >
                 {mode === 'short' ? 'Short' : 'Detailed'}
@@ -474,7 +480,7 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
             className="flex-1 bg-transparent focus:outline-none min-w-0 placeholder:opacity-40"
             style={{ fontFamily: "'Satoshi', sans-serif", color: C.text, fontSize: '10px' }} disabled={streaming} />
           {input.trim() && !streaming && (
-            <button onClick={handleSubmit} className="w-6 h-6 rounded-full flex items-center justify-center shrink-0" style={{ background: '#76B900' }}>
+            <button onClick={handleSubmit} className="w-6 h-6 rounded-full flex items-center justify-center shrink-0" style={{ background: '#F97316' }}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
             </button>
           )}
@@ -488,7 +494,7 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
 
 export function AICompanionToggle({ onClick, hasActivity }: { onClick: () => void; hasActivity: boolean }) {
   return (
-    <button onClick={onClick} className="fixed bottom-6 right-6 z-30 w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105" style={{ background: '#76B900' }} title="Camo">
+    <button onClick={onClick} className="fixed bottom-6 right-6 z-30 w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105" style={{ background: '#F97316' }} title="Camo">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
       {hasActivity && <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2" style={{ borderColor: C.base }} />}
     </button>
