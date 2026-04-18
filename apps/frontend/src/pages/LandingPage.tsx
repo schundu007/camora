@@ -289,7 +289,7 @@ export default function LandingPage() {
     <div className="min-h-screen relative" style={{ fontFamily: F.body, color: L.text, background: L.bg }}>
       <SEO path="/" />
       {/* ═══ RUNWAY TRACK — thick takeoff road at 25% with airplane + airport nodes ═══ */}
-      <div className="absolute top-0 bottom-0 z-[3] pointer-events-none hidden lg:block" style={{ left: 'calc(15% + 18px)' }}>
+      <div className="absolute top-0 z-[3] pointer-events-none hidden lg:block" style={{ left: 'calc(15% + 18px)', bottom: '120px' }}>
         {/* Tarmac — wide dark runway strip */}
         <div className="absolute top-0 bottom-0" style={{ left: '-10px', width: '20px', borderRadius: '10px', background: `linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.05) 5%, rgba(255,255,255,0.03) 50%, rgba(255,255,255,0.05) 95%, transparent 100%)` }} />
         {/* White dashed center line — real runway marking */}
@@ -357,6 +357,47 @@ export default function LandingPage() {
           100% { top: -70px; opacity: 0; }
         }
         /* Exhaust flame flicker */
+        /* ── APPA animated icon styles ── */
+        .appa-icon-ring {
+          position: relative;
+          width: 56px; height: 56px;
+          border-radius: 50%;
+          display: flex; align-items: center; justify-content: center;
+          background: radial-gradient(circle, rgba(118,185,0,0.12) 0%, rgba(118,185,0,0.03) 70%, transparent 100%);
+          border: 2px solid #76B900;
+          box-shadow: 0 0 20px rgba(118,185,0,0.2), 0 0 40px rgba(118,185,0,0.06), inset 0 0 12px rgba(118,185,0,0.08);
+          animation: appa-ring-pulse 3s ease-in-out infinite;
+        }
+        .appa-icon-emoji {
+          font-size: 24px;
+          line-height: 1;
+          filter: drop-shadow(0 0 4px rgba(118,185,0,0.4));
+          animation: appa-emoji-float 4s ease-in-out infinite;
+        }
+        .appa-orbit {
+          position: absolute; inset: -6px;
+          border-radius: 50%;
+          animation: appa-orbit-spin 3s linear infinite;
+        }
+        .appa-orbit-dot {
+          position: absolute; top: -2px; left: 50%; transform: translateX(-50%);
+          width: 5px; height: 5px; border-radius: 50%;
+          background: #76B900;
+          box-shadow: 0 0 6px #76B900, 0 0 12px rgba(118,185,0,0.4);
+        }
+        @keyframes appa-ring-pulse {
+          0%, 100% { box-shadow: 0 0 20px rgba(118,185,0,0.2), 0 0 40px rgba(118,185,0,0.06), inset 0 0 12px rgba(118,185,0,0.08); }
+          50% { box-shadow: 0 0 28px rgba(118,185,0,0.3), 0 0 50px rgba(118,185,0,0.1), inset 0 0 16px rgba(118,185,0,0.12); }
+        }
+        @keyframes appa-emoji-float {
+          0%, 100% { transform: translateY(0) scale(1); }
+          50% { transform: translateY(-2px) scale(1.08); }
+        }
+        @keyframes appa-orbit-spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+
         @keyframes fp-exhaust {
           0% { height: 40px; opacity: 0.4; }
           100% { height: 55px; opacity: 0.7; }
@@ -497,50 +538,15 @@ export default function LandingPage() {
                 <Reveal key={step.key} delay={i * 0.08}>
                   <div className="flex gap-6 md:gap-10 items-start">
                     <div className="hidden md:flex flex-col items-center flex-shrink-0 relative z-10">
-                      {/* Aviation icon per stage */}
-                      <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: 'rgba(118,185,0,0.08)', border: '2px solid #76B900', boxShadow: '0 0 16px rgba(118,185,0,0.25)' }}>
-                        {i === 0 ? (
-                          /* Paper airplane */
-                          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                            <path d="M22 2L2 10l7 2.5 2.5 7.5 3.5-5 4.5 3Z" fill="#76B900" stroke="#9AE62C" strokeWidth="0.5" strokeLinejoin="round" />
-                            <path d="M22 2L9 12.5" stroke="rgba(255,255,255,0.3)" strokeWidth="0.5" />
-                          </svg>
-                        ) : i === 1 ? (
-                          /* Compass */
-                          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                            <circle cx="12" cy="12" r="9" stroke="#76B900" strokeWidth="1.2" />
-                            <circle cx="12" cy="12" r="1.8" fill="#76B900" />
-                            <polygon points="12,3 13.5,10.5 12,9 10.5,10.5" fill="#76B900" />
-                            <polygon points="12,21 10.5,13.5 12,15 13.5,13.5" fill="#5E9400" />
-                            <polygon points="3,12 10.5,10.5 9,12 10.5,13.5" fill="#5E9400" />
-                            <polygon points="21,12 13.5,13.5 15,12 13.5,10.5" fill="#5E9400" />
-                          </svg>
-                        ) : i === 2 ? (
-                          /* Crosshair */
-                          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                            <circle cx="12" cy="12" r="8" stroke="#76B900" strokeWidth="1" />
-                            <circle cx="12" cy="12" r="4" stroke="#76B900" strokeWidth="0.8" />
-                            <circle cx="12" cy="12" r="1.5" fill="#76B900" />
-                            <line x1="12" y1="1" x2="12" y2="6" stroke="#76B900" strokeWidth="1" />
-                            <line x1="12" y1="18" x2="12" y2="23" stroke="#76B900" strokeWidth="1" />
-                            <line x1="1" y1="12" x2="6" y2="12" stroke="#76B900" strokeWidth="1" />
-                            <line x1="18" y1="12" x2="23" y2="12" stroke="#76B900" strokeWidth="1" />
-                          </svg>
-                        ) : (
-                          /* Rocket */
-                          <svg width="20" height="24" viewBox="0 0 20 26" fill="none">
-                            <path d="M10 0C10 0 6 6 6 10L14 10C14 6 10 0 10 0Z" fill="#76B900" />
-                            <path d="M10 0C10 0 8 4 7 7L10 5Z" fill="#9AE62C" opacity="0.5" />
-                            <rect x="6" y="10" width="8" height="10" fill="#5E9400" />
-                            <rect x="6" y="10" width="3" height="10" fill="#76B900" opacity="0.4" />
-                            <circle cx="10" cy="14" r="2" fill="#0a0a0f" stroke="rgba(255,255,255,0.35)" strokeWidth="0.5" />
-                            <circle cx="9.5" cy="13.5" r="0.6" fill="rgba(118,185,0,0.4)" />
-                            <path d="M6 17 L2 23 L6 20Z" fill="#4A7A00" />
-                            <path d="M14 17 L18 23 L14 20Z" fill="#4A7A00" />
-                            <rect x="8" y="20" width="4" height="3" rx="0.5" fill="#333" />
-                            <rect x="8.5" y="21.5" width="3" height="1.2" rx="0.3" fill="#F59E0B" opacity="0.7" className="fp-nozzle-glow" />
-                          </svg>
-                        )}
+                      {/* Animated aviation icon per stage */}
+                      <div className="appa-icon-ring" style={{ animationDelay: `${i * 0.3}s` }}>
+                        <span className="appa-icon-emoji">
+                          {i === 0 ? '✈️' : i === 1 ? '🧭' : i === 2 ? '🎯' : '🚀'}
+                        </span>
+                        {/* Orbiting particle */}
+                        <div className="appa-orbit" style={{ animationDuration: `${3 + i}s`, animationDelay: `${i * 0.5}s` }}>
+                          <div className="appa-orbit-dot" />
+                        </div>
                       </div>
                     </div>
                     <div className="flex-1 flex flex-col lg:flex-row gap-6">
