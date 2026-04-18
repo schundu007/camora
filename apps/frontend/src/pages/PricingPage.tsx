@@ -258,8 +258,8 @@ export default function PricingPage() {
           <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.18em', color: 'var(--accent)' }}>Why Camora Wins</span>
           <h2 style={{ marginTop: 12, fontSize: 32, fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--text-primary)' }}>Compare the competition.</h2>
         </div>
-        <div style={{ border: '1px solid var(--border)', borderRadius: 12, background: '#fff', overflowX: 'auto' }}>
-          <table style={{ minWidth: '100%', width: '100%', borderCollapse: 'collapse' }}>
+        <div style={{ border: '1px solid var(--border)', borderRadius: 12, background: '#fff' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
             <thead>
               <tr style={{ background: 'var(--bg-surface)' }}>
                 <th style={{ textAlign: 'left', padding: '10px 12px', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', borderBottom: '2px solid var(--border)', width: '20%', minWidth: 180 }}>Feature</th>
