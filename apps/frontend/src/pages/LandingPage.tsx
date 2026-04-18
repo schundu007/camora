@@ -519,13 +519,14 @@ export default function LandingPage() {
       <section className="relative px-6 py-8 overflow-hidden">
         <TrackWaypoint label="BRANDS" />
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
-          <p className="text-center text-xs font-bold uppercase tracking-[0.2em] mb-6" style={{ color: L.muted }}>Cleared for landing at</p>
-          <div className="relative overflow-hidden rounded-2xl py-5" style={{ border: `1px solid ${L.border}`, background: L.surface, maskImage: 'linear-gradient(90deg, transparent 2%, black 10%, black 90%, transparent 98%)' }}>
-            <div className="flex items-center gap-12 px-4" style={{ animation: 'scroll-logos 30s linear infinite', width: 'max-content' }}>
-              {[...COMPANIES, ...COMPANIES].map((c, i) => (
-                <img key={`${c}-${i}`} src={`https://img.logo.dev/${c}.com?token=${LOGO_TOKEN}&size=80&format=png`}
-                  alt={c} className="h-7 object-contain" loading="lazy"
-                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+          <div className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${L.border}`, background: L.surface }}>
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6">
+              {COMPANIES.map((c) => (
+                <div key={c} className="flex items-center justify-center py-6 px-4 transition-all hover:bg-white/[0.03]" style={{ borderRight: `1px solid ${L.border}`, borderBottom: `1px solid ${L.border}` }}>
+                  <img src={`https://img.logo.dev/${c}.com?token=${LOGO_TOKEN}&size=80&format=png`}
+                    alt={c} className="h-6 object-contain opacity-50 hover:opacity-100 transition-opacity" loading="lazy"
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                </div>
               ))}
             </div>
           </div>
@@ -690,7 +691,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── 7. LIVE AI DEMO — Simulated Q&A ── */}
-      <section className="relative px-6 py-14 md:py-20">
+      <section className="relative px-6 py-14 md:py-20" style={{ background: L.surface, border: `1px solid ${L.border}`, borderRadius: '20px', margin: '0 3%' }}>
         <TrackWaypoint label="LIVE AI" />
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
           <Reveal className="text-center mb-10">
@@ -769,7 +770,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── 10. INTEGRATIONS BAR ── */}
-      <section className="relative px-6 py-14 md:py-16">
+      <section className="relative px-6 py-14 md:py-16" style={{ background: L.surface, border: `1px solid ${L.border}`, borderRadius: '20px', margin: '0 3%' }}>
         <TrackWaypoint label="CONNECT" />
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto text-center">
           <Reveal>
