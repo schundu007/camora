@@ -570,44 +570,47 @@ export default function LandingPage() {
                   <div className="flex gap-6 md:gap-10 items-start">
                     <div className="hidden md:flex flex-col items-center flex-shrink-0 relative z-10">
                       {/* Aviation icon per stage */}
-                      <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: L.bg, border: '2px solid rgba(118,185,0,0.3)', boxShadow: '0 0 12px rgba(118,185,0,0.15)' }}>
+                      <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: 'rgba(118,185,0,0.08)', border: '2px solid #76B900', boxShadow: '0 0 16px rgba(118,185,0,0.25)' }}>
                         {i === 0 ? (
-                          /* Paper airplane — launching application */
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ filter: 'drop-shadow(0 0 3px rgba(118,185,0,0.4))' }}>
-                            <path d="M22 2L2 10l7 2.5 2.5 7.5 3.5-5 4.5 3Z" fill="rgba(118,185,0,0.6)" stroke="#76B900" strokeWidth="0.8" strokeLinejoin="round" />
-                            <path d="M22 2L9 12.5" stroke="rgba(255,255,255,0.15)" strokeWidth="0.5" />
+                          /* Paper airplane */
+                          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                            <path d="M22 2L2 10l7 2.5 2.5 7.5 3.5-5 4.5 3Z" fill="#76B900" stroke="#9AE62C" strokeWidth="0.5" strokeLinejoin="round" />
+                            <path d="M22 2L9 12.5" stroke="rgba(255,255,255,0.3)" strokeWidth="0.5" />
                           </svg>
                         ) : i === 1 ? (
-                          /* Compass — charting your course */
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ filter: 'drop-shadow(0 0 3px rgba(118,185,0,0.4))' }}>
-                            <circle cx="12" cy="12" r="9" stroke="rgba(118,185,0,0.3)" strokeWidth="1" />
-                            <circle cx="12" cy="12" r="1.5" fill="#76B900" opacity="0.6" />
-                            <polygon points="12,3 13.5,10.5 12,9 10.5,10.5" fill="#76B900" opacity="0.7" />
-                            <polygon points="12,21 10.5,13.5 12,15 13.5,13.5" fill="rgba(118,185,0,0.35)" />
-                            <polygon points="3,12 10.5,10.5 9,12 10.5,13.5" fill="rgba(118,185,0,0.25)" />
-                            <polygon points="21,12 13.5,13.5 15,12 13.5,10.5" fill="rgba(118,185,0,0.25)" />
+                          /* Compass */
+                          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                            <circle cx="12" cy="12" r="9" stroke="#76B900" strokeWidth="1.2" />
+                            <circle cx="12" cy="12" r="1.8" fill="#76B900" />
+                            <polygon points="12,3 13.5,10.5 12,9 10.5,10.5" fill="#76B900" />
+                            <polygon points="12,21 10.5,13.5 12,15 13.5,13.5" fill="#5E9400" />
+                            <polygon points="3,12 10.5,10.5 9,12 10.5,13.5" fill="#5E9400" />
+                            <polygon points="21,12 13.5,13.5 15,12 13.5,10.5" fill="#5E9400" />
                           </svg>
                         ) : i === 2 ? (
-                          /* Crosshair — precision practice */
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ filter: 'drop-shadow(0 0 3px rgba(118,185,0,0.4))' }}>
-                            <circle cx="12" cy="12" r="7" stroke="rgba(118,185,0,0.3)" strokeWidth="0.8" />
-                            <circle cx="12" cy="12" r="3.5" stroke="rgba(118,185,0,0.2)" strokeWidth="0.6" />
-                            <circle cx="12" cy="12" r="1.2" fill="#76B900" opacity="0.6" />
-                            <line x1="12" y1="1" x2="12" y2="7" stroke="rgba(118,185,0,0.25)" strokeWidth="0.7" />
-                            <line x1="12" y1="17" x2="12" y2="23" stroke="rgba(118,185,0,0.25)" strokeWidth="0.7" />
-                            <line x1="1" y1="12" x2="7" y2="12" stroke="rgba(118,185,0,0.25)" strokeWidth="0.7" />
-                            <line x1="17" y1="12" x2="23" y2="12" stroke="rgba(118,185,0,0.25)" strokeWidth="0.7" />
+                          /* Crosshair */
+                          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                            <circle cx="12" cy="12" r="8" stroke="#76B900" strokeWidth="1" />
+                            <circle cx="12" cy="12" r="4" stroke="#76B900" strokeWidth="0.8" />
+                            <circle cx="12" cy="12" r="1.5" fill="#76B900" />
+                            <line x1="12" y1="1" x2="12" y2="6" stroke="#76B900" strokeWidth="1" />
+                            <line x1="12" y1="18" x2="12" y2="23" stroke="#76B900" strokeWidth="1" />
+                            <line x1="1" y1="12" x2="6" y2="12" stroke="#76B900" strokeWidth="1" />
+                            <line x1="18" y1="12" x2="23" y2="12" stroke="#76B900" strokeWidth="1" />
                           </svg>
                         ) : (
-                          /* Rocket — launch day */
-                          <svg width="18" height="20" viewBox="0 0 18 22" fill="none" style={{ filter: 'drop-shadow(0 0 3px rgba(118,185,0,0.4))' }}>
-                            <path d="M9 0C9 0 6 5 6 8L12 8C12 5 9 0 9 0Z" fill="#76B900" opacity="0.8" />
-                            <rect x="6" y="8" width="6" height="8" fill="rgba(118,185,0,0.6)" />
-                            <circle cx="9" cy="11" r="1.5" fill="#0a0a0f" stroke="rgba(255,255,255,0.2)" strokeWidth="0.4" />
-                            <path d="M6 14 L3 18 L6 16Z" fill="rgba(118,185,0,0.4)" />
-                            <path d="M12 14 L15 18 L12 16Z" fill="rgba(118,185,0,0.4)" />
-                            <rect x="7.5" y="16" width="3" height="2" rx="0.4" fill="#444" />
-                            <rect x="8" y="17" width="2" height="0.8" rx="0.3" fill="rgba(245,158,11,0.4)" className="fp-nozzle-glow" />
+                          /* Rocket */
+                          <svg width="20" height="24" viewBox="0 0 20 26" fill="none">
+                            <path d="M10 0C10 0 6 6 6 10L14 10C14 6 10 0 10 0Z" fill="#76B900" />
+                            <path d="M10 0C10 0 8 4 7 7L10 5Z" fill="#9AE62C" opacity="0.5" />
+                            <rect x="6" y="10" width="8" height="10" fill="#5E9400" />
+                            <rect x="6" y="10" width="3" height="10" fill="#76B900" opacity="0.4" />
+                            <circle cx="10" cy="14" r="2" fill="#0a0a0f" stroke="rgba(255,255,255,0.35)" strokeWidth="0.5" />
+                            <circle cx="9.5" cy="13.5" r="0.6" fill="rgba(118,185,0,0.4)" />
+                            <path d="M6 17 L2 23 L6 20Z" fill="#4A7A00" />
+                            <path d="M14 17 L18 23 L14 20Z" fill="#4A7A00" />
+                            <rect x="8" y="20" width="4" height="3" rx="0.5" fill="#333" />
+                            <rect x="8.5" y="21.5" width="3" height="1.2" rx="0.3" fill="#F59E0B" opacity="0.7" className="fp-nozzle-glow" />
                           </svg>
                         )}
                       </div>
