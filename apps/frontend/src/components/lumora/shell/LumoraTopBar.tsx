@@ -11,7 +11,7 @@ const C = {
   surface: '#111111',
   elevated: '#F97316',
   text: '#ffffff',
-  muted: 'rgba(255,255,255,0.5)',
+  muted: 'rgba(255,255,255,0.75)',
   accent: '#F97316',
   accentBg: 'rgba(249,115,22,0.15)',
   border: '#333333',
@@ -27,7 +27,7 @@ export function LumoraTopBar({ activeTab, onTranscription }: LumoraTopBarProps) 
   const [showSettings, setShowSettings] = useState(false);
 
   return (
-    <header className="flex items-center h-14 px-2 sm:px-3 md:px-5 shrink-0 z-30" style={{ background: '#000000', borderBottom: '1px solid #333' }}>
+    <header className="flex items-center h-16 px-3 sm:px-4 md:px-6 shrink-0 z-30" style={{ background: '#000000', borderBottom: '1px solid #333' }}>
       {/* Left: spacer (tab label removed — sidebar shows active tab) */}
       <div className="min-w-[20px]" />
 
@@ -55,7 +55,7 @@ export function LumoraTopBar({ activeTab, onTranscription }: LumoraTopBarProps) 
             (status.state === 'listen' || status.state === 'write') ? 'bg-emerald-400 animate-pulse' :
             ''
           }`} />
-          <span className="text-[10px] font-semibold" style={{ fontFamily: "'Satoshi', sans-serif", color: C.muted }}>{status.message}</span>
+          <span className="text-xs font-bold" style={{ fontFamily: "'Satoshi', sans-serif", color: C.muted }}>{status.message}</span>
         </div>
 
         {/* Settings gear */}

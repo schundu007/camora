@@ -17,7 +17,7 @@ const C = {
   surface: '#111111',
   elevated: '#F97316',
   text: '#ffffff',
-  muted: 'rgba(255,255,255,0.5)',
+  muted: 'rgba(255,255,255,0.75)',
   accent: '#F97316',
   accentBg: 'rgba(249,115,22,0.15)',
   border: '#333333',
@@ -67,15 +67,15 @@ export function LumoraIconRail({ activeTab, sessionsOpen, onToggleSessions }: Lu
 
   const navItems: { id: string; label: string; path?: string; onClick?: () => void; icon: React.ReactNode }[] = [
     { id: 'interview', label: 'Home', path: '/lumora',
-      icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg> },
+      icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg> },
     { id: 'coding', label: 'Coding', path: '/lumora/coding',
-      icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6" /></svg> },
+      icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6" /></svg> },
     { id: 'design', label: 'Design', path: '/lumora/design',
-      icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18M9 21V9" /></svg> },
+      icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18M9 21V9" /></svg> },
     { id: 'prepkit', label: 'Prep Kit', path: '/lumora/prepkit',
-      icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg> },
+      icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg> },
     { id: 'calendar', label: 'Calendar', path: '/lumora/calendar',
-      icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /><rect x="8" y="14" width="3" height="3" rx="0.5" /></svg> },
+      icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /><rect x="8" y="14" width="3" height="3" rx="0.5" /></svg> },
   ];
 
   const moreItems: { label: string; path?: string; onClick?: () => void; icon: React.ReactNode }[] = [
@@ -89,9 +89,9 @@ export function LumoraIconRail({ activeTab, sessionsOpen, onToggleSessions }: Lu
   ];
 
   return (
-    <nav className="hidden md:flex flex-col items-center w-[68px] shrink-0 py-3 gap-0.5" style={{ background: '#000000', borderRight: '1px solid #333' }}>
-      <Link to="/" className="flex items-center justify-center w-full h-10 mb-3" title="Camora">
-        <CamoraLogo size={26} />
+    <nav className="hidden md:flex flex-col items-center w-[80px] shrink-0 py-3 gap-1" style={{ background: '#000000', borderRight: '1px solid #333' }}>
+      <Link to="/" className="flex items-center justify-center w-full h-12 mb-3" title="Camora">
+        <CamoraLogo size={32} />
       </Link>
 
       {navItems.map((item) => {
@@ -101,10 +101,10 @@ export function LumoraIconRail({ activeTab, sessionsOpen, onToggleSessions }: Lu
           <>
             {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full" style={{ background: C.accent }} />}
             <span>{item.icon}</span>
-            <span className="text-[9px] font-semibold mt-0.5" style={{ fontFamily: 'var(--font-sans)' }}>{item.label}</span>
+            <span className="text-[10px] font-bold mt-0.5" style={{ fontFamily: "'Satoshi', sans-serif" }}>{item.label}</span>
           </>
         );
-        const cls = "flex flex-col items-center justify-center w-[58px] h-[52px] rounded-xl transition-all group relative";
+        const cls = "flex flex-col items-center justify-center w-[66px] h-[56px] rounded-xl transition-all group relative";
         const sty = isActive ? { background: C.accentBg, color: C.accent } : { color: C.muted };
 
         return isButton ? (
@@ -118,7 +118,7 @@ export function LumoraIconRail({ activeTab, sessionsOpen, onToggleSessions }: Lu
         <button onClick={() => setShowMore(!showMore)}
           className="flex flex-col items-center justify-center w-[58px] h-[52px] rounded-xl transition-all group"
           style={showMore ? { background: C.accentBg, color: C.accent } : { color: C.muted }}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="1" /><circle cx="19" cy="12" r="1" /><circle cx="5" cy="12" r="1" /></svg>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="1" /><circle cx="19" cy="12" r="1" /><circle cx="5" cy="12" r="1" /></svg>
           <span className="text-[9px] font-semibold mt-0.5" style={{ fontFamily: 'var(--font-sans)' }}>More</span>
         </button>
         {showMore && (
