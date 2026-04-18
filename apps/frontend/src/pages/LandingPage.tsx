@@ -344,7 +344,7 @@ export default function LandingPage() {
               <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: 'rgba(118,185,0,0.5)' }} />
             </div>
             <div style={{ position: 'absolute', left: '36px', top: '50%', transform: 'translateY(-50%)', whiteSpace: 'nowrap' }}>
-              <span style={{ fontSize: '9px', fontFamily: F.mono, fontWeight: 700, color: 'rgba(255,255,255,0.2)', letterSpacing: '0.15em' }}>{node.code}</span>
+              <span style={{ fontSize: '11px', fontFamily: F.mono, fontWeight: 800, color: 'rgba(118,185,0,0.5)', letterSpacing: '0.15em', textShadow: '0 0 8px rgba(118,185,0,0.3)' }}>{node.code}</span>
             </div>
           </div>
         ))}
@@ -362,17 +362,19 @@ export default function LandingPage() {
         @keyframes scroll-logos { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
         /* Rocket ascends from bottom to top */
         @keyframes fp-rocket {
-          0% { top: calc(100% + 50px); opacity: 0; }
-          2% { opacity: 1; }
-          /* Ascending — pause at each section gate */
-          9% { top: 92%; } 12% { top: 92%; }
-          20% { top: 78%; } 23% { top: 78%; }
-          32% { top: 62%; } 35% { top: 62%; }
-          44% { top: 48%; } 47% { top: 48%; }
-          56% { top: 35%; } 59% { top: 35%; }
-          68% { top: 22%; } 71% { top: 22%; }
-          82% { top: 8%; }  85% { top: 8%; }
-          95% { opacity: 1; }
+          0% { top: calc(100% + 60px); opacity: 0; }
+          1% { opacity: 1; }
+          /* Stops at each airport — matches waypoint positions exactly */
+          6% { top: 90%; }  9% { top: 90%; }
+          16% { top: 79%; } 19% { top: 79%; }
+          26% { top: 68%; } 29% { top: 68%; }
+          36% { top: 57%; } 39% { top: 57%; }
+          46% { top: 46%; } 49% { top: 46%; }
+          56% { top: 32%; } 59% { top: 32%; }
+          66% { top: 20%; } 69% { top: 20%; }
+          76% { top: 14%; } 79% { top: 14%; }
+          88% { top: 5%; }  91% { top: 5%; }
+          97% { opacity: 1; }
           100% { top: -70px; opacity: 0; }
         }
         /* Exhaust flame flicker */
