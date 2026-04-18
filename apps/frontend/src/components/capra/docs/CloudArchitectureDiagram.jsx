@@ -55,12 +55,12 @@ export default function CloudArchitectureDiagram({ imageUrl, loading = false, er
   }
 
   return (
-    <div className="rounded-lg overflow-hidden flex items-center justify-center" style={{ background: '#0D0C14' }}>
+    <div className="rounded-lg overflow-hidden flex items-center justify-center" style={{ background: '#0D0C14', maxHeight: '420px' }}>
       <img
         src={imageUrl}
         alt="System Architecture Diagram"
-        className="w-full h-auto object-contain"
-        style={{ maxHeight: '100%', width: '100%' }}
+        className="w-full object-contain"
+        style={{ maxHeight: '420px', width: '100%' }}
         onError={() => setImageError(true)}
       />
     </div>
