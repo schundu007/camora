@@ -641,10 +641,10 @@ export default function LandingPage() {
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
           <Reveal className="text-center mb-10">
             <h2 className="text-3xl md:text-4xl lg:text-[44px] font-bold tracking-tight" style={{ fontFamily: F.display }}>
-              Paste a job URL. Get a prep plan.
+              Craft your next move.
             </h2>
             <p className="mt-4 text-lg max-w-xl mx-auto" style={{ color: L.secondary }}>
-              AI analyzes the role and creates a personalized study plan tailored to that exact position.
+              Prepare your onboarding — AI analyzes the role and creates a personalized study plan tailored to that exact position.
             </p>
           </Reveal>
 
