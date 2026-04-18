@@ -148,6 +148,12 @@ const icons = {
 
 const sections: NavSection[] = [
   {
+    title: 'Apply',
+    items: [
+      { label: 'Jobs', path: '/jobs', icon: icons.briefcase },
+    ],
+  },
+  {
     title: 'Prepare',
     items: [
       { label: 'Overview', path: '/capra/prepare', icon: icons.home },
@@ -168,12 +174,6 @@ const sections: NavSection[] = [
       { label: 'Practice', path: '/capra/practice', icon: icons.play },
       { label: 'Blind 75', path: '/handbook', icon: icons.star },
       { label: 'Achievements', path: '/capra/achievements', icon: icons.trophy },
-    ],
-  },
-  {
-    title: 'Apply',
-    items: [
-      { label: 'Jobs', path: '/jobs', icon: icons.briefcase },
     ],
   },
   {
