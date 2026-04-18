@@ -142,7 +142,7 @@ export function LumoraShellPage() {
 
 
       {/* Center main area */}
-      <div className="flex-1 flex flex-col min-h-0 min-w-0 pb-14 md:pb-0">
+      <div className="flex-1 flex flex-col min-h-0 min-w-0 pb-16 md:pb-0">
         {/* Top bar with audio controls */}
         <LumoraTopBar activeTab={activeTab} onTranscription={handleTranscription} />
 
@@ -219,7 +219,7 @@ export function LumoraShellPage() {
       />
 
       {/* Mobile bottom navigation — visible only on small screens */}
-      <div className="flex md:hidden fixed bottom-0 left-0 right-0 h-14 z-40 items-center justify-around"
+      <div className="flex md:hidden fixed bottom-0 left-0 right-0 h-16 z-40 items-center justify-around"
         style={{ background: '#000000', borderTop: '1px solid #333' }}>
         {[
           { id: 'interview', label: 'Home', path: '/lumora', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg> },
@@ -230,10 +230,10 @@ export function LumoraShellPage() {
         ].map(tab => {
           const isActive = activeTab === tab.id;
           return (
-            <Link key={tab.id} to={tab.path} className="flex flex-col items-center justify-center gap-0.5 flex-1 py-1"
-              style={{ color: isActive ? '#2D8CFF' : 'rgba(255,255,255,0.4)' }}>
+            <Link key={tab.id} to={tab.path} className="flex flex-col items-center justify-center gap-1 flex-1 py-1"
+              style={{ color: isActive ? '#76B900' : 'rgba(255,255,255,0.4)' }}>
               {tab.icon}
-              <span className="text-[9px] font-semibold">{tab.label}</span>
+              <span className="text-[11px] font-bold">{tab.label}</span>
             </Link>
           );
         })}

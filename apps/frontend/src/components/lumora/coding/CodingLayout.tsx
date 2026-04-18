@@ -726,7 +726,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
 
         {/* ── LEFT PANEL: Problem / Solution ── */}
-        <div className={`w-full md:w-auto flex flex-col md:border-r border-b md:border-b-0 coding-left-panel max-h-[40vh] md:max-h-none overflow-auto ${embedded ? 'border-[var(--border)]' : 'lumora-light-panel'}`} style={{ ['--left-w' as any]: `${leftPanelWidth}%`, background: t.surfaceBg, borderColor: t.cardBorder }}>
+        <div className={`w-full md:w-auto flex flex-col md:border-r border-b md:border-b-0 coding-left-panel max-h-[35vh] md:max-h-none overflow-auto ${embedded ? 'border-[var(--border)]' : 'lumora-light-panel'}`} style={{ ['--left-w' as any]: `${leftPanelWidth}%`, background: t.surfaceBg, borderColor: t.cardBorder }}>
           {/* Tabs */}
           <div className="flex items-center gap-1 px-3 py-1.5 border-b" style={{ background: t.sectionBg, borderColor: t.cardBorder }}>
             <button
