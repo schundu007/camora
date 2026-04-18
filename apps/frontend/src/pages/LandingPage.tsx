@@ -155,6 +155,21 @@ const PLANS = [
 ];
 
 /* ── Hooks ────────────────────────────────────────────── */
+function useScrollProgress() {
+  const [progress, setProgress] = useState(0);
+  useEffect(() => {
+    const handler = () => {
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      setProgress(docHeight > 0 ? Math.min(scrollTop / docHeight, 1) : 0);
+    };
+    window.addEventListener('scroll', handler, { passive: true });
+    handler();
+    return () => window.removeEventListener('scroll', handler);
+  }, []);
+  return progress;
+}
+
 function useVisitorCount() {
   const [count, setCount] = useState<number | null>(null);
   useEffect(() => {
@@ -295,6 +310,7 @@ function TrackWaypoint({ label }: { label: string }) {
 export default function LandingPage() {
   const { isAuthenticated } = useAuth();
   const visitorCount = useVisitorCount();
+  const scrollProgress = useScrollProgress();
 
   useEffect(() => { window.scrollTo(0, 0); }, []);
   useEffect(() => { document.title = 'Camora — Apply, Prepare, Practice & Attend'; return () => { document.title = 'Camora'; }; }, []);
@@ -314,29 +330,41 @@ export default function LandingPage() {
         {/* Glow aura */}
         <div className="absolute top-0 bottom-0" style={{ left: '-18px', width: '36px', background: `linear-gradient(to bottom, transparent 3%, rgba(255,255,255,0.015) 10%, rgba(255,255,255,0.008) 50%, rgba(255,255,255,0.015) 90%, transparent 97%)`, filter: 'blur(10px)' }} />
 
-        {/* ── AIRPLANE flying STRAIGHT UP along the track ── */}
-        <div className="absolute" style={{ left: '-28px', animation: 'fp-rocket 64s ease-in-out infinite' }}>
-          {/* Dual contrails */}
-          <div style={{ position: 'absolute', top: '100%', left: '38%', width: '3px', height: '120px', borderRadius: '2px', background: 'linear-gradient(to bottom, rgba(255,255,255,0.6), transparent)', transform: 'skewX(-2deg)' }} />
-          <div style={{ position: 'absolute', top: '100%', left: '58%', width: '3px', height: '100px', borderRadius: '2px', background: 'linear-gradient(to bottom, rgba(255,255,255,0.4), transparent)', transform: 'skewX(2deg)' }} />
-          {/* 3D perspective airplane */}
-          <div style={{ transform: 'perspective(200px) rotateX(15deg) rotateZ(-5deg)', transformOrigin: 'center bottom' }}>
-            <svg width="56" height="64" viewBox="0 0 56 64" fill="none" style={{ filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.5)) drop-shadow(0 0 20px rgba(118,185,0,0.5))' }}>
-              <defs><linearGradient id="f3d" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor="#ddd" /><stop offset="40%" stopColor="#fff" /><stop offset="100%" stopColor="#aaa" /></linearGradient></defs>
-              <path d="M28 0 C24 0 22 6 22 12 L22 44 L34 44 L34 12 C34 6 32 0 28 0Z" fill="url(#f3d)" />
-              <rect x="25" y="6" width="2" height="36" rx="1" fill="#76B900" opacity="0.4" />
-              <path d="M22 24 L2 34 L2 37 L22 32Z" fill="#e8e8e8" />
-              <path d="M34 24 L54 34 L54 37 L34 32Z" fill="#999" />
-              <ellipse cx="10" cy="33" rx="2.5" ry="4" fill="#888" />
-              <ellipse cx="46" cy="33" rx="2.5" ry="4" fill="#777" />
-              <path d="M22 40 L14 48 L14 50 L22 46Z" fill="#ddd" />
-              <path d="M34 40 L42 48 L42 50 L34 46Z" fill="#aaa" />
-              <path d="M26 38 L28 28 L30 38Z" fill="#76B900" />
-              <path d="M27 38 L28 30 L28 38Z" fill="#9AE62C" opacity="0.4" />
-              <ellipse cx="28" cy="7" rx="3" ry="4" fill="#222" stroke="rgba(255,255,255,0.4)" strokeWidth="0.5" />
-              {[14, 18, 22, 26, 30, 34].map(y => <rect key={y} x="25" y={y} width="6" height="1.8" rx="0.9" fill="#333" opacity="0.5" />)}
-            </svg>
-          </div>
+        {/* ── 3D AIRPLANE — follows scroll position ── */}
+        <div className="fixed hidden lg:block" style={{
+          left: 'calc(15% + 18px)',
+          top: `calc(${scrollProgress * 100}vh - 32px)`,
+          marginLeft: '-28px',
+          zIndex: 4,
+          pointerEvents: 'none',
+          transition: 'top 0.15s ease-out',
+        }}>
+          {/* Contrail above (plane moves down with scroll, trail goes up) */}
+          <div style={{ position: 'absolute', bottom: '100%', left: '50%', transform: 'translateX(-50%)', width: '3px', height: '120px', borderRadius: '2px', background: 'linear-gradient(to top, rgba(255,255,255,0.5), rgba(118,185,0,0.15), transparent)' }} />
+          {/* 3D airplane — straight, no tilt */}
+          <svg width="56" height="64" viewBox="0 0 56 64" fill="none" style={{ filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.5)) drop-shadow(0 0 20px rgba(118,185,0,0.5))' }}>
+            <defs><linearGradient id="f3d" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor="#ddd" /><stop offset="40%" stopColor="#fff" /><stop offset="100%" stopColor="#aaa" /></linearGradient></defs>
+            {/* Fuselage */}
+            <path d="M28 0 C24 0 22 6 22 12 L22 44 L34 44 L34 12 C34 6 32 0 28 0Z" fill="url(#f3d)" />
+            {/* Green stripe */}
+            <rect x="25" y="6" width="2" height="36" rx="1" fill="#76B900" opacity="0.4" />
+            {/* Wings */}
+            <path d="M22 24 L2 34 L2 37 L22 32Z" fill="#e8e8e8" />
+            <path d="M34 24 L54 34 L54 37 L34 32Z" fill="#999" />
+            {/* Engines */}
+            <ellipse cx="10" cy="33" rx="2.5" ry="4" fill="#888" />
+            <ellipse cx="46" cy="33" rx="2.5" ry="4" fill="#777" />
+            {/* Tail */}
+            <path d="M22 40 L14 48 L14 50 L22 46Z" fill="#ddd" />
+            <path d="M34 40 L42 48 L42 50 L34 46Z" fill="#aaa" />
+            {/* Tail fin */}
+            <path d="M26 38 L28 28 L30 38Z" fill="#76B900" />
+            <path d="M27 38 L28 30 L28 38Z" fill="#9AE62C" opacity="0.4" />
+            {/* Cockpit */}
+            <ellipse cx="28" cy="7" rx="3" ry="4" fill="#222" stroke="rgba(255,255,255,0.4)" strokeWidth="0.5" />
+            {/* Windows */}
+            {[14, 18, 22, 26, 30, 34].map(y => <rect key={y} x="25" y={y} width="6" height="1.8" rx="0.9" fill="#333" opacity="0.5" />)}
+          </svg>
         </div>
 
         {/* Waypoints rendered inside each section via <TrackWaypoint /> */}
@@ -353,22 +381,6 @@ export default function LandingPage() {
         .cm-glass:hover { background: ${L.elevated}; border-color: rgba(255,255,255,0.12); }
         @keyframes scroll-logos { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
         /* Rocket ascends from bottom to top */
-        @keyframes fp-rocket {
-          0% { top: calc(100% + 60px); opacity: 0; }
-          1% { opacity: 1; }
-          /* Stops at each airport — matches waypoint positions exactly */
-          6% { top: 90%; }  9% { top: 90%; }
-          16% { top: 79%; } 19% { top: 79%; }
-          26% { top: 68%; } 29% { top: 68%; }
-          36% { top: 57%; } 39% { top: 57%; }
-          46% { top: 46%; } 49% { top: 46%; }
-          56% { top: 32%; } 59% { top: 32%; }
-          66% { top: 20%; } 69% { top: 20%; }
-          76% { top: 14%; } 79% { top: 14%; }
-          88% { top: 5%; }  91% { top: 5%; }
-          97% { opacity: 1; }
-          100% { top: -70px; opacity: 0; }
-        }
         /* Exhaust flame flicker */
         /* ── APPA animated icon styles ── */
         .appa-icon-ring {
