@@ -288,8 +288,21 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen relative" style={{ fontFamily: F.body, color: L.text, background: L.bg }}>
       <SEO path="/" />
-      {/* Railway-style vertical timeline line */}
-      <div className="fixed left-[40px] md:left-[80px] top-0 bottom-0 w-px z-[2] pointer-events-none hidden lg:block" style={{ background: 'linear-gradient(to bottom, transparent 0%, rgba(118,185,0,0.15) 15%, rgba(118,185,0,0.08) 50%, rgba(118,185,0,0.15) 85%, transparent 100%)' }} />
+      {/* Railway-style vertical track */}
+      <div className="fixed left-[48px] top-0 bottom-0 z-[2] pointer-events-none hidden lg:block" style={{ width: '3px' }}>
+        {/* Main rail — subtle gradient */}
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, transparent 0%, rgba(118,185,0,0.12) 10%, rgba(118,185,0,0.06) 50%, rgba(118,185,0,0.12) 90%, transparent 100%)' }} />
+        {/* Glow behind rail */}
+        <div className="absolute inset-0" style={{ width: '12px', left: '-4.5px', background: 'linear-gradient(to bottom, transparent 0%, rgba(118,185,0,0.04) 10%, rgba(118,185,0,0.02) 50%, rgba(118,185,0,0.04) 90%, transparent 100%)', filter: 'blur(4px)' }} />
+        {/* Traveling pulse */}
+        <div className="absolute left-1/2 -translate-x-1/2" style={{ width: '3px', height: '80px', borderRadius: '4px', background: 'linear-gradient(to bottom, transparent, rgba(118,185,0,0.4), transparent)', animation: 'rail-pulse 6s ease-in-out infinite' }} />
+        {/* Section nodes */}
+        {[12, 25, 38, 50, 62, 74, 86].map((pos, i) => (
+          <div key={i} className="absolute left-1/2 -translate-x-1/2" style={{ top: `${pos}%` }}>
+            <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#09090F', border: '1.5px solid rgba(118,185,0,0.3)', boxShadow: '0 0 8px rgba(118,185,0,0.15)' }} />
+          </div>
+        ))}
+      </div>
       {/* Grid dot pattern */}
       <div className="fixed inset-0 pointer-events-none z-[1] opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.5) 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
       <style>{`
@@ -301,6 +314,7 @@ export default function LandingPage() {
         .cm-glass { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); backdrop-filter: blur(12px); }
         .cm-glass:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.12); }
         @keyframes scroll-logos { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+        @keyframes rail-pulse { 0% { top: -80px; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: calc(100% + 80px); opacity: 0; } }
       `}</style>
 
       <SiteNav variant="dark" />
