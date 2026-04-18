@@ -233,7 +233,7 @@ export function LumoraShellPage() {
           const isActive = activeTab === tab.id;
           return (
             <Link key={tab.id} to={tab.path} className="flex flex-col items-center justify-center gap-1 flex-1 py-1"
-              style={{ color: isActive ? '#76B900' : 'rgba(255,255,255,0.4)' }}>
+              style={{ color: isActive ? '#FFFFFF' : 'rgba(255,255,255,0.5)' }}>
               {tab.icon}
               <span className="text-[11px] font-bold">{tab.label}</span>
             </Link>
