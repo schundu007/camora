@@ -224,7 +224,7 @@ export default function LandingPage() {
           {visitorCount !== null && visitorCount > 0 && (
             <motion.div className="mt-6 flex items-center justify-center gap-3" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6, delay: 0.5 }}>
               <div className="flex -space-x-1.5">
-                {[L.primary, 'rgba(255,255,255,0.3)', 'rgba(255,255,255,0.2)', 'rgba(255,255,255,0.1)'].map((c, i) => (
+                {[L.primary, '#F97316', '#8B5CF6', '#10B981'].map((c, i) => (
                   <div key={i} className="w-6 h-6 rounded-full" style={{ background: c, border: `2px solid ${L.bg}` }} />
                 ))}
               </div>
