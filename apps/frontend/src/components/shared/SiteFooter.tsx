@@ -6,7 +6,7 @@ export default function SiteFooter({ variant = 'dark' }: { variant?: 'light' | '
   const isLight = variant === 'light';
   const bg = isLight
     ? '#FFFFFF'
-    : 'linear-gradient(135deg, rgba(15,23,42,0.95) 0%, rgba(30,27,75,0.93) 50%, rgba(15,23,42,0.95) 100%)';
+    : '#09090F';
   const textColor = isLight ? '#0F172A' : '#FFFFFF';
   const textMuted = isLight ? 'rgba(15,23,42,0.5)' : 'rgba(255,255,255,0.8)';
   const borderColor = isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)';

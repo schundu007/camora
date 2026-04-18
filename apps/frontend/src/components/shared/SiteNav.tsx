@@ -5,11 +5,11 @@ import CamoraLogo from './CamoraLogo';
 import { NAV_LINKS, CHALLENGE_END } from '../../lib/constants';
 const TICKER_HEIGHT = 36;
 const TICKER_ITEMS = [
-  { text: 'The Camora Challenge', highlight: '$21,812 in prizes', color: '#10b981' },
-  { text: 'Find bugs, build features', highlight: 'join the founding team', color: '#76B900' },
-  { text: '5 Founding Engineer', highlight: '+ 10 Core Engineer positions', color: '#76B900' },
-  { text: 'Bug Bounty:', highlight: 'Critical = 10 pts, Security = 8 pts', color: '#f59e0b' },
-  { text: 'Open to all developers worldwide', highlight: 'remote-first', color: '#ec4899' },
+  { text: 'The Camora Challenge', highlight: '$21,812 in prizes', color: '#F97316' },
+  { text: 'Find bugs, build features', highlight: 'join the founding team', color: '#A78BFA' },
+  { text: '5 Founding Engineer', highlight: '+ 10 Core Engineer positions', color: '#F97316' },
+  { text: 'Bug Bounty:', highlight: 'Critical = 10 pts, Security = 8 pts', color: '#A78BFA' },
+  { text: 'Open to all developers worldwide', highlight: 'remote-first', color: '#F97316' },
 ];
 
 export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dark' }) {
@@ -25,7 +25,7 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
   const isLight = variant === 'light';
   const navBg = isLight
     ? 'rgba(255,255,255,0.92)'
-    : 'linear-gradient(135deg, rgba(15,23,42,0.92) 0%, rgba(30,27,75,0.90) 40%, rgba(20,20,60,0.92) 70%, rgba(15,23,42,0.92) 100%)';
+    : 'rgba(9,9,15,0.92)';
   const borderClass = isLight ? 'border-b border-black/[0.06]' : 'border-b border-white/[0.06]';
   const textColor = isLight ? '#0F172A' : '#FFFFFF';
   const textMuted = isLight ? 'rgba(15,23,42,0.6)' : 'rgba(255,255,255,0.8)';
@@ -117,8 +117,8 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
       {new Date() < CHALLENGE_END && (
         <Link to="/challenge" className="block overflow-hidden" style={{
           background: isLight
-            ? 'linear-gradient(90deg, rgba(16,185,129,0.06) 0%, rgba(118,185,0,0.06) 25%, rgba(14,165,233,0.06) 50%, rgba(245,158,11,0.06) 75%, rgba(16,185,129,0.06) 100%)'
-            : 'linear-gradient(90deg, #10b981, #76B900, #0ea5e9, #f59e0b)',
+            ? 'linear-gradient(90deg, rgba(249,115,22,0.06) 0%, rgba(167,139,250,0.06) 50%, rgba(249,115,22,0.06) 100%)'
+            : 'linear-gradient(90deg, #F97316, #A78BFA, #F97316, #A78BFA)',
           height: TICKER_HEIGHT,
           borderTop: `1px solid ${isLight ? '#e2e8f0' : 'rgba(255,255,255,0.15)'}`,
           borderBottom: `1px solid ${isLight ? '#e2e8f0' : 'rgba(255,255,255,0.15)'}`,
