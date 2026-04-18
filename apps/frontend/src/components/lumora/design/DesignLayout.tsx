@@ -253,14 +253,14 @@ const tierColors = [
 
 /** Architecture layer accent colors */
 const layerAccents = [
-  { accent: '#5E9400', bg: 'rgba(79,70,229,0.04)', border: 'rgba(79,70,229,0.15)' },
+  { accent: '#0B5CFF', bg: 'rgba(79,70,229,0.04)', border: 'rgba(79,70,229,0.15)' },
   { accent: '#2563eb', bg: 'rgba(37,99,235,0.04)', border: 'rgba(37,99,235,0.15)' },
   { accent: '#7c3aed', bg: 'rgba(124,58,237,0.04)', border: 'rgba(124,58,237,0.15)' },
   { accent: '#d97706', bg: 'rgba(217,119,6,0.04)', border: 'rgba(217,119,6,0.15)' },
   { accent: '#0891b2', bg: 'rgba(8,145,178,0.04)', border: 'rgba(8,145,178,0.15)' },
-  { accent: '#5E9400', bg: 'rgba(220,38,38,0.04)', border: 'rgba(220,38,38,0.15)' },
-  { accent: '#5E9400', bg: 'rgba(79,70,229,0.04)', border: 'rgba(79,70,229,0.15)' },
-  { accent: '#76B900', bg: 'rgba(118,185,0,0.04)', border: 'rgba(118,185,0,0.15)' },
+  { accent: '#0B5CFF', bg: 'rgba(220,38,38,0.04)', border: 'rgba(220,38,38,0.15)' },
+  { accent: '#0B5CFF', bg: 'rgba(79,70,229,0.04)', border: 'rgba(79,70,229,0.15)' },
+  { accent: '#2D8CFF', bg: 'rgba(45,140,255,0.04)', border: 'rgba(45,140,255,0.15)' },
 ];
 
 /** Format seconds as MM:SS */
@@ -273,14 +273,14 @@ function formatTime(seconds: number): string {
 function useTheme(_dark: boolean) {
   return {
     cardBg: '#ffffff', cardBorder: '#e5e7eb',
-    headerBg: 'rgba(118,185,0,0.05)', headerBorder: '#D4F0A0',
-    headerText: '#76B900', badgeBg: '#76B90010', badgeText: '#76B900',
+    headerBg: 'rgba(45,140,255,0.05)', headerBorder: '#D4F0A0',
+    headerText: '#2D8CFF', badgeBg: '#2D8CFF10', badgeText: '#2D8CFF',
     text: '#111827', textMuted: '#6b7280', textDim: '#9ca3af',
     codeBg: '#f9fafb', codeText: '#1f2937',
     inputBg: '#ffffff', inputBorder: '#e5e7eb', inputText: '#111827',
     sectionBg: '#f9fafb', surfaceBg: '#ffffff',
-    tabActive: '#76B900', tabActiveBg: '#ffffff', tabText: '#6b7280',
-    dotColor: '#76B900',
+    tabActive: '#2D8CFF', tabActiveBg: '#ffffff', tabText: '#6b7280',
+    dotColor: '#2D8CFF',
   };
 }
 
@@ -601,7 +601,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
           </button>
           <div className="h-4 w-px bg-white/10" />
           <div className="flex items-center gap-1.5">
-            <div className="w-5 h-5 md:w-6 md:h-6 rounded flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #76B900, #76B900)' }}>
+            <div className="w-5 h-5 md:w-6 md:h-6 rounded flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #2D8CFF, #2D8CFF)' }}>
               <span className="text-white text-[10px] md:text-xs font-extrabold">L</span>
             </div>
             <span className="text-white font-extrabold text-xs md:text-sm" style={{ fontFamily: "'Source Sans 3', sans-serif" }}>System Design</span>
@@ -702,7 +702,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                   className={`px-2.5 py-1 text-[10px] md:text-xs font-bold rounded-md transition-all ${
                     inputTab === tab ? 'text-white' : 'text-slate-500 hover:text-slate-700'
                   }`}
-                  style={inputTab === tab ? { background: '#76B900', color: '#ffffff', boxShadow: '0 1px 4px rgba(0,0,0,0.1)' } : {}}
+                  style={inputTab === tab ? { background: '#2D8CFF', color: '#ffffff', boxShadow: '0 1px 4px rgba(0,0,0,0.1)' } : {}}
                 >
                   {tab === 'text' ? 'Text' : tab === 'url' ? 'URL' : 'Image'}
                 </button>
@@ -809,7 +809,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
             <button
               onClick={handleSubmit}
               disabled={!problemText.trim() || isLoading}
-              className="w-full py-2.5 text-white text-sm font-bold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2" style={{ background: 'linear-gradient(135deg, #76B900, #76B900)', borderRadius: '10px' }}
+              className="w-full py-2.5 text-white text-sm font-bold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2" style={{ background: 'linear-gradient(135deg, #2D8CFF, #2D8CFF)', borderRadius: '10px' }}
             >
               {isLoading ? (
                 <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Generating...</>
@@ -878,7 +878,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
               {sd.overview && (
                 <section className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${t.cardBorder}`, background: t.cardBg, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
                   <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: t.headerBg }}>
-                    <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, ${t.dotColor}, #76B900)` }} />
+                    <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, ${t.dotColor}, #2D8CFF)` }} />
                     <h2 className="text-sm font-bold" style={{ color: t.headerText }}>Overview</h2>
                   </div>
                   <div className="px-4 py-3">
@@ -891,7 +891,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
               {result?.pitch && result.pitch !== sd.overview && (
                 <section className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${t.cardBorder}`, background: t.cardBg, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
                   <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: t.headerBg }}>
-                    <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, ${t.dotColor}, #76B900)` }} />
+                    <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, ${t.dotColor}, #2D8CFF)` }} />
                     <h2 className="text-sm font-bold" style={{ color: t.headerText }}>Explanation</h2>
                   </div>
                   <div className="px-4 py-3">
@@ -905,7 +905,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                 {sd.requirements?.functional && sd.requirements.functional.length > 0 && (
                   <section className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${t.cardBorder}`, background: t.cardBg, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
                     <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: t.headerBg }}>
-                      <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, ${t.dotColor}, #76B900)` }} />
+                      <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, ${t.dotColor}, #2D8CFF)` }} />
                       <h2 className="text-sm font-bold" style={{ color: t.headerText }}>Functional</h2>
                       <span className="ml-auto text-[10px] font-mono rounded-full px-2 py-0.5" style={{ color: t.badgeText, background: t.badgeBg, border: `1px solid ${t.headerBorder}` }}>{sd.requirements.functional.length}</span>
                     </div>
@@ -944,7 +944,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
               {sd.scaleEstimates && Object.entries(sd.scaleEstimates).filter(([, v]) => v && v.trim()).length > 0 && (
                 <section className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${t.cardBorder}`, background: t.cardBg, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
                   <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: t.headerBg }}>
-                    <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, #76B900, ${t.dotColor})` }} />
+                    <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, #2D8CFF, ${t.dotColor})` }} />
                     <h2 className="text-sm font-bold" style={{ color: t.headerText }}>Scale Estimates</h2>
                   </div>
                   <div className="px-4 py-3">
@@ -968,7 +968,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
               {sd.techJustifications && sd.techJustifications.length > 0 && (
                 <section className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${t.cardBorder}`, background: t.cardBg, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
                   <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: t.headerBg }}>
-                    <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, #76B900, ${t.dotColor})` }} />
+                    <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, #2D8CFF, ${t.dotColor})` }} />
                     <h2 className="text-sm font-bold" style={{ color: t.headerText }}>Scalability Tiers</h2>
                   </div>
                   <div className="px-4 py-3">

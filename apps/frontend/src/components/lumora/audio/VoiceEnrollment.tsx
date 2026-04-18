@@ -219,7 +219,7 @@ export function VoiceEnrollment({ disabled, variant = 'dark' }: VoiceEnrollmentP
           style={isLight ? {
             fontSize: '13px',
             color: isRecording ? '#ffffff' : '#000000',
-            background: isRecording ? '#FF0000' : '#76B900',
+            background: isRecording ? '#FF0000' : '#2D8CFF',
             border: 'none',
           } : {
             fontSize: '11px',
@@ -266,13 +266,13 @@ export function VoiceEnrollment({ disabled, variant = 'dark' }: VoiceEnrollmentP
           fontSize: '13px',
           padding: '10px 16px',
           color: '#ffffff',
-          background: voiceFilterEnabled ? '#76B900' : '#000000',
+          background: voiceFilterEnabled ? '#2D8CFF' : '#000000',
           border: 'none',
         } : {
           fontSize: '11px',
           padding: '4px 8px',
           color: voiceFilterEnabled ? '#91C733' : 'rgba(255,255,255,0.6)',
-          background: voiceFilterEnabled ? 'rgba(118,185,0,0.08)' : 'transparent',
+          background: voiceFilterEnabled ? 'rgba(45,140,255,0.08)' : 'transparent',
           border: '1px solid rgba(255,255,255,0.08)',
         }}
         title={voiceFilterEnabled ? 'Voice filter active - only interviewer is transcribed' : 'Voice filter disabled'}

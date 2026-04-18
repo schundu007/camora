@@ -179,7 +179,7 @@ export function ArchitectureDiagram({ question, className = '' }: ArchitectureDi
         <div className="flex flex-col items-center justify-center p-6 rounded-lg text-center" style={{ border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.02)' }}>
           <button onClick={handleGenerate}
             className="px-5 py-2.5 text-sm font-bold text-white rounded-lg transition-all hover:opacity-90"
-            style={{ background: 'linear-gradient(135deg, #10b981, #76B900)', boxShadow: '0 2px 12px rgba(16,185,129,0.3)' }}>
+            style={{ background: 'linear-gradient(135deg, #10b981, #2D8CFF)', boxShadow: '0 2px 12px rgba(16,185,129,0.3)' }}>
             Generate Architecture Diagram
           </button>
         </div>

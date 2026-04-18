@@ -98,13 +98,13 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
                 onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'transparent'; }}
               >
                 <span className="flex items-center justify-center w-6 h-6 rounded text-[10px] font-bold shrink-0"
-                  style={{ background: '#76B90010', color: '#76B900', fontFamily: 'var(--font-code)' }}>
+                  style={{ background: '#2D8CFF10', color: '#2D8CFF', fontFamily: 'var(--font-code)' }}>
                   {idx + 1}
                 </span>
                 <span className="text-[13px] font-medium leading-snug flex-1 truncate" style={{ fontFamily: 'var(--font-sans)', color: 'rgba(255,255,255,0.9)' }}>
                   {entry.question}
                 </span>
-                <svg className="w-3.5 h-3.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: '#76B900' }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                <svg className="w-3.5 h-3.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: '#2D8CFF' }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                 </svg>
               </button>
@@ -113,9 +113,9 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
 
           {/* Current streaming question */}
           {isStreaming && question && (
-            <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg shrink-0" style={{ background: '#76B90008', border: '1px solid #76B90020' }}>
+            <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg shrink-0" style={{ background: '#2D8CFF08', border: '1px solid #2D8CFF20' }}>
               <div className="relative flex items-center justify-center w-6 h-6 shrink-0">
-                <span className="flex items-center justify-center w-6 h-6 rounded text-[10px] font-bold" style={{ background: '#76B90015', color: '#76B900', fontFamily: 'var(--font-code)' }}>
+                <span className="flex items-center justify-center w-6 h-6 rounded text-[10px] font-bold" style={{ background: '#2D8CFF15', color: '#2D8CFF', fontFamily: 'var(--font-code)' }}>
                   {history.length + 1}
                 </span>
                 <div className="absolute inset-0 border-2 border-transparent rounded animate-spin" style={{ borderTopColor: '#2563eb' }} />
@@ -123,7 +123,7 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
               <span className="text-[13px] font-medium leading-snug flex-1 truncate" style={{ fontFamily: 'var(--font-sans)', color: 'rgba(255,255,255,0.9)' }}>
                 {question}
               </span>
-              <span className="text-[9px] shrink-0 animate-pulse font-medium" style={{ fontFamily: 'var(--font-code)', color: '#76B900' }}>generating...</span>
+              <span className="text-[9px] shrink-0 animate-pulse font-medium" style={{ fontFamily: 'var(--font-code)', color: '#2D8CFF' }}>generating...</span>
             </div>
           )}
 
@@ -131,7 +131,7 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
           {history.length > 0 && history.length % 3 === 0 && (
             <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
               <span className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>Want deeper prep?</span>
-              <Link to="/capra/prepare" className="text-xs font-bold hover:opacity-90 transition-all" style={{ color: '#76B900' }}>
+              <Link to="/capra/prepare" className="text-xs font-bold hover:opacity-90 transition-all" style={{ color: '#2D8CFF' }}>
                 Explore 300+ topics →
               </Link>
             </div>
@@ -171,7 +171,7 @@ function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
   const timeStr = time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
   const dateStr = time.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' });
 
-  const accent = '#76B900';
+  const accent = '#2D8CFF';
 
   const ACTIONS = [
     { icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a3 3 0 00-3 3v7a3 3 0 006 0V5a3 3 0 00-3-3z" /><path d="M19 10v2a7 7 0 01-14 0v-2" /><line x1="12" y1="19" x2="12" y2="22" /></svg>,

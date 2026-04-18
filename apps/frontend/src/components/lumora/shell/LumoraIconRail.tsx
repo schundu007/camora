@@ -15,11 +15,11 @@ interface LumoraIconRailProps {
 const C = {
   base: '#000000',
   surface: '#111111',
-  elevated: '#76B900',
+  elevated: '#2D8CFF',
   text: '#ffffff',
   muted: 'rgba(255,255,255,0.75)',
-  accent: '#76B900',
-  accentBg: 'rgba(118,185,0,0.15)',
+  accent: '#2D8CFF',
+  accentBg: 'rgba(45,140,255,0.15)',
   border: '#333333',
 };
 
