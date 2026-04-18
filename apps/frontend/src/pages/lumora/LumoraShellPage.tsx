@@ -30,7 +30,9 @@ export function LumoraShellPage() {
   // copilotViewIdx removed — copilot now manages its own state
   const [focusedEntry, setFocusedEntry] = useState<number | null>(null);
   const { handleSubmit, handleCodingSubmit } = useStreamingInterview();
-  const { isStreaming, history, question, parsedBlocks, useSearch, setUseSearch, clearHistory } = useInterviewStore();
+  const { isStreaming, history, question, parsedBlocks, useSearch, setUseSearch, clearHistory, vadThreshold } = useInterviewStore();
+  const [settingsDismissed, setSettingsDismissed] = useState(false);
+  const showSettingsHint = !settingsDismissed && vadThreshold <= 0.015 && (activeTab === 'coding' || activeTab === 'design');
 
   // Track which tabs have been activated (for lazy mounting)
   const [mountedTabs, setMountedTabs] = useState<Set<LumoraTab>>(new Set(['interview']));
@@ -146,6 +148,19 @@ export function LumoraShellPage() {
         {/* Top bar with audio controls — only visible on coding and design tabs */}
         {(activeTab === 'coding' || activeTab === 'design') && (
           <LumoraTopBar activeTab={activeTab} onTranscription={handleTranscription} />
+        )}
+
+        {/* Settings hint for uncalibrated users */}
+        {showSettingsHint && (
+          <div className="flex items-center justify-between px-4 py-2 shrink-0" style={{ background: 'rgba(45,140,255,0.08)', borderBottom: '1px solid rgba(45,140,255,0.15)' }}>
+            <div className="flex items-center gap-2">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2"><circle cx="12" cy="12" r="10" /><path d="M12 8v4M12 16h.01" /></svg>
+              <span className="text-xs" style={{ color: 'var(--text-primary)' }}>
+                <strong>Tip:</strong> Open Settings (⚙) to select your microphone and calibrate for best voice detection.
+              </span>
+            </div>
+            <button onClick={() => setSettingsDismissed(true)} className="text-xs font-bold px-2 py-1 rounded hover:opacity-80" style={{ color: 'var(--accent)' }}>Dismiss</button>
+          </div>
         )}
 
         {/* Tab content — display toggling preserves state */}
