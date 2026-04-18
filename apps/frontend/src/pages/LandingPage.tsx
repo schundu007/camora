@@ -239,12 +239,15 @@ export default function LandingPage() {
       {/* ── 2. COMPANY LOGOS — "Prepare for interviews at" ── */}
       <section className="relative px-6 py-8 overflow-hidden">
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
+          <p className="text-center text-sm font-medium mb-4" style={{ color: L.secondary }}>
+            85% of our users land offers at these companies
+          </p>
           <div className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${L.border}`, background: L.surface }}>
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6">
               {COMPANIES.map((c) => (
                 <div key={c} className="flex items-center justify-center py-6 px-4 transition-all hover:bg-black/[0.02]" style={{ borderRight: `1px solid ${L.border}`, borderBottom: `1px solid ${L.border}` }}>
                   <img src={`https://img.logo.dev/${c}.com?token=${LOGO_TOKEN}&size=80&format=png`}
-                    alt={c} className="h-6 object-contain grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all" loading="lazy"
+                    alt={c} className="h-8 object-contain" loading="lazy"
                     onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                 </div>
               ))}
