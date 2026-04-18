@@ -122,35 +122,35 @@ function RichText({ text }: { text: string }) {
     // ALL-CAPS labels (TIME:, SPACE:, APPROACH:, etc.)
     const labelMatch = t.match(/^(SITUATION|TASK|ACTION|RESULT|LEARNING|SUMMARY|TIP|NOTE|WARNING|TIME|SPACE|APPROACH|COMPLEXITY|EXAMPLE|INPUT|OUTPUT|Q\d+|A\d+)[:\s]+\s*(.*)/i);
     if (labelMatch) return (
-      <div key={key} className="flex gap-2 mt-1.5">
-        <span className="text-[8px] font-bold shrink-0 px-1.5 py-0.5 rounded mt-0.5" style={{ background: C.accentBg, color: C.accent }}>{labelMatch[1].toUpperCase()}</span>
-        <span style={{ fontSize: '11px', lineHeight: '1.5', color: C.text }} dangerouslySetInnerHTML={{ __html: renderInline(labelMatch[2]) }} />
+      <div key={key} className="mt-1.5">
+        <span style={{ fontSize: '10px', fontWeight: 700, color: '#0F172A', fontFamily: "'Clash Display', sans-serif" }}>{labelMatch[1].toUpperCase()}: </span>
+        <span style={{ fontSize: '11px', lineHeight: '1.5', color: '#0F172A' }} dangerouslySetInnerHTML={{ __html: renderInline(labelMatch[2]) }} />
       </div>
     );
 
     // Step N: pattern
     const stepMatch = t.match(/^(Step\s+\d+)[:\s]+\s*(.*)/i);
     if (stepMatch) return (
-      <div key={key} className="flex gap-2 pl-1 mt-0.5">
-        <span className="text-[9px] font-bold shrink-0 px-1.5 py-0.5 rounded" style={{ background: 'rgba(0,0,0,0.06)', color: '#475569' }}>{stepMatch[1]}</span>
-        <span style={{ fontSize: '11px', color: C.text, fontFamily: "'JetBrains Mono', monospace" }}>{stepMatch[2]}</span>
+      <div key={key} className="mt-0.5">
+        <span style={{ fontSize: '10px', fontWeight: 700, color: '#0F172A' }}>{stepMatch[1]}: </span>
+        <span style={{ fontSize: '11px', color: '#0F172A' }}>{stepMatch[2]}</span>
       </div>
     );
 
     // Numbered list
     const numMatch = t.match(/^(\d+)\.\s+(.*)/);
     if (numMatch) return (
-      <div key={key} className="flex gap-2 pl-1 mt-0.5">
-        <span className="text-[8px] font-bold shrink-0 mt-0.5 w-4 h-4 rounded flex items-center justify-center" style={{ background: C.accentBg, color: C.accent }}>{numMatch[1]}</span>
-        <span style={{ fontSize: '11px', lineHeight: '1.5', color: C.text }} dangerouslySetInnerHTML={{ __html: renderInline(numMatch[2]) }} />
+      <div key={key} className="flex gap-1.5 pl-1 mt-0.5">
+        <span style={{ fontSize: '11px', fontWeight: 700, color: '#0F172A' }}>{numMatch[1]}.</span>
+        <span style={{ fontSize: '11px', lineHeight: '1.5', color: '#0F172A' }} dangerouslySetInnerHTML={{ __html: renderInline(numMatch[2]) }} />
       </div>
     );
 
     // Bullets
     if (t.startsWith('- ') || t.startsWith('• ') || t.startsWith('* ')) return (
-      <div key={key} className="flex gap-2 pl-2 mt-0.5">
-        <span className="shrink-0 mt-2 w-1 h-1 rounded-full" style={{ background: C.accent }} />
-        <span style={{ fontSize: '11px', lineHeight: '1.5', color: C.text }} dangerouslySetInnerHTML={{ __html: renderInline(t.slice(2)) }} />
+      <div key={key} className="flex gap-1.5 pl-2 mt-0.5">
+        <span className="shrink-0 mt-2 w-1 h-1 rounded-full" style={{ background: '#0F172A' }} />
+        <span style={{ fontSize: '11px', lineHeight: '1.5', color: '#0F172A' }} dangerouslySetInnerHTML={{ __html: renderInline(t.slice(2)) }} />
       </div>
     );
 
@@ -267,7 +267,6 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
   const [answerMode, setAnswerMode] = useState<AnswerMode>('short');
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
-  const [opacity, setOpacity] = useState(40); // 0-100 glass transparency (lower = more see-through)
   const dragRef = useRef<{ startX: number; startY: number; origX: number; origY: number } | null>(null);
   const resizeRef = useRef<{ startX: number; startY: number; startW: number; startH: number; mode: string } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -385,12 +384,14 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
     <div
       className="fixed z-50 flex flex-col"
       style={{
-        width: maximized ? '100vw' : panelWidth,
+        width: maximized ? 'calc(100vw - 80px)' : panelWidth,
         height: maximized ? '100vh' : panelHeight,
         right: maximized ? 0 : `calc(24px - ${position.x}px)`,
         bottom: maximized ? 0 : `calc(24px - ${position.y}px)`,
+        left: maximized ? '80px' : undefined,
+        top: maximized ? 0 : undefined,
         borderRadius: maximized ? 0 : '16px',
-        background: `rgba(255,255,255,${opacity / 100})`,
+        background: 'rgba(255,255,255,0.92)',
         backdropFilter: 'blur(24px)',
         WebkitBackdropFilter: 'blur(24px)',
         border: maximized ? 'none' : '1px solid rgba(0,0,0,0.1)',
@@ -440,14 +441,7 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
         </div>
       </div>
 
-      {/* Transparency slider */}
-      <div className="flex items-center gap-2 px-3 py-1 shrink-0" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
-        <span className="text-[8px] font-bold uppercase tracking-wider" style={{ color: '#94A3B8' }}>Opacity</span>
-        <input type="range" min="10" max="100" value={opacity} onChange={e => setOpacity(Number(e.target.value))}
-          className="flex-1 h-1 appearance-none rounded-full cursor-pointer"
-          style={{ background: `linear-gradient(to right, rgba(45,140,255,0.6) 0%, rgba(45,140,255,0.6) ${opacity}%, rgba(0,0,0,0.08) ${opacity}%, rgba(0,0,0,0.08) 100%)` }} />
-        <span className="text-[9px] font-mono w-7 text-right" style={{ color: '#94A3B8' }}>{opacity}%</span>
-      </div>
+
 
       {/* Answer Mode Toggle — Short / Detailed */}
       <div className="flex items-center px-3 py-1.5 shrink-0" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
