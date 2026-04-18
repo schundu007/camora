@@ -947,19 +947,34 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                     <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, #2D8CFF, ${t.dotColor})` }} />
                     <h2 className="text-sm font-bold" style={{ color: t.headerText }}>Scale Estimates</h2>
                   </div>
-                  <div className="px-4 py-3">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                      {Object.entries(sd.scaleEstimates).filter(([, v]) => v && v.trim()).map(([key, val]) => {
-                        const highlight = parseMetricHighlight(val);
-                        return (
-                          <div key={key} className="rounded-lg px-3 py-3" style={{ background: t.sectionBg, border: `1px solid ${t.cardBorder}` }}>
-                            <div className="font-bold font-mono text-sm" style={{ color: t.headerText }}>{highlight ? highlight.number : val}</div>
-                            <div className="text-sm font-medium mt-1" style={{ color: t.text }}>{key}</div>
-                            {highlight?.rest && <div className="text-xs mt-1" style={{ color: t.textMuted }}>{highlight.rest}</div>}
-                          </div>
-                        );
-                      })}
-                    </div>
+                  <div className="px-4 py-2">
+                    {(() => {
+                      const items = Object.entries(sd.scaleEstimates).filter(([, v]) => v && v.trim());
+                      const half = Math.ceil(items.length / 2);
+                      const cols = [items.slice(0, half), items.slice(half)].filter(c => c.length > 0);
+                      return (
+                        <div className="grid grid-cols-2 gap-4">
+                          {cols.map((col, ci) => (
+                            <table key={ci} className="w-full text-left font-mono" style={{ borderCollapse: 'collapse' }}>
+                              <thead>
+                                <tr style={{ borderBottom: `1px solid ${t.cardBorder}` }}>
+                                  <th className="text-[9px] font-bold uppercase tracking-wider py-1.5 pr-3" style={{ color: t.textMuted }}>Metric</th>
+                                  <th className="text-[9px] font-bold uppercase tracking-wider py-1.5" style={{ color: t.textMuted }}>Estimate</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {col.map(([key, val]) => (
+                                  <tr key={key} style={{ borderBottom: `1px solid rgba(255,255,255,0.04)` }}>
+                                    <td className="text-[11px] font-bold py-1.5 pr-3 whitespace-nowrap" style={{ color: t.text }}>{key}</td>
+                                    <td className="text-[11px] py-1.5" style={{ color: t.textMuted }}>{val}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          ))}
+                        </div>
+                      );
+                    })()}
                   </div>
                 </section>
               )}
