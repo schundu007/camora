@@ -6,9 +6,9 @@ import { useAudioDevices } from '@/components/lumora/audio/hooks/useAudioDevices
 
 /* White background copilot — black text */
 const C = {
-  base: '#FFFFFF', surface: '#F8FAFC', elevated: '#76B900',
-  text: '#0F172A', muted: '#64748B', accent: '#76B900',
-  accentBg: 'rgba(118,185,0,0.08)', border: '#E2E8F0',
+  base: '#FFFFFF', surface: '#F8FAFC', elevated: '#2D8CFF',
+  text: '#0F172A', muted: '#64748B', accent: '#2D8CFF',
+  accentBg: 'rgba(45,140,255,0.08)', border: '#E2E8F0',
 };
 
 /* ── Types ── */
@@ -97,7 +97,7 @@ function RichText({ text }: { text: string }) {
     return s
       .replace(/\*\*(.*?)\*\*/g, '<strong style="color:#0F172A;font-weight:700;font-family:\'Clash Display\',sans-serif">$1</strong>')
       .replace(/`([^`]+)`/g, '<code style="background:#F1F5F9;color:#0F766E;padding:1px 5px;border-radius:3px;font-size:10px;font-family:\'JetBrains Mono\',monospace;border:1px solid #E2E8F0">$1</code>')
-      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" style="color:#76B900;text-decoration:underline">$1</a>');
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" style="color:#2D8CFF;text-decoration:underline">$1</a>');
   };
 
   const renderCodeBlock = (content: string, lang?: string, key?: number | string) => (
@@ -334,10 +334,10 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
       {!minimized && (
         <div
           className="w-[5px] h-full cursor-col-resize flex items-center justify-center group shrink-0 hover:bg-blue-400/20 transition-colors"
-          style={{ background: isResizing ? 'rgba(118,185,0,0.2)' : '#E2E8F0' }}
+          style={{ background: isResizing ? 'rgba(45,140,255,0.2)' : '#E2E8F0' }}
           onMouseDown={(e) => { setIsResizing(true); resizeRef.current = { startX: e.clientX, startW: panelWidth }; }}
         >
-          <div className="w-[3px] h-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: '#76B900' }} />
+          <div className="w-[3px] h-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: '#2D8CFF' }} />
         </div>
       )}
 
@@ -388,7 +388,7 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
                   letterSpacing: '0.05em',
                   textTransform: 'uppercase',
                   color: answerMode === mode ? '#FFFFFF' : '#94A3B8',
-                  background: answerMode === mode ? '#76B900' : 'transparent',
+                  background: answerMode === mode ? '#2D8CFF' : 'transparent',
                 }}
               >
                 {mode === 'short' ? 'Short' : 'Detailed'}
@@ -470,7 +470,7 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
             className="flex-1 bg-transparent focus:outline-none min-w-0 placeholder:opacity-40"
             style={{ fontFamily: "'Satoshi', sans-serif", color: C.text, fontSize: '10px' }} disabled={streaming} />
           {input.trim() && !streaming && (
-            <button onClick={handleSubmit} className="w-6 h-6 rounded-full flex items-center justify-center shrink-0" style={{ background: '#76B900' }}>
+            <button onClick={handleSubmit} className="w-6 h-6 rounded-full flex items-center justify-center shrink-0" style={{ background: '#2D8CFF' }}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
             </button>
           )}
@@ -484,7 +484,7 @@ export function AICompanionPanel({ isOpen, onClose }: AICompanionPanelProps) {
 
 export function AICompanionToggle({ onClick, hasActivity }: { onClick: () => void; hasActivity: boolean }) {
   return (
-    <button onClick={onClick} className="fixed bottom-6 right-6 z-30 w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105" style={{ background: '#76B900' }} title="Camo">
+    <button onClick={onClick} className="fixed bottom-6 right-6 z-30 w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105" style={{ background: '#2D8CFF' }} title="Camo">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
       {hasActivity && <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2" style={{ borderColor: C.base }} />}
     </button>
