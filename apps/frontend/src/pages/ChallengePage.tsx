@@ -36,7 +36,7 @@ const PRIZES = [
 
 const CATEGORIES = [
   { title: 'Bug Hunting', color: '#ef4444', glow: 'rgba(239,68,68,0.3)', logo: '/logos/sentry.png', examples: ['Runtime crashes', 'Auth bypass', 'Race conditions'] },
-  { title: 'UX / Design', color: '#91C733', glow: 'rgba(139,92,246,0.3)', logo: '/logos/figma.png', examples: ['Broken mobile layouts', 'Missing ARIA', 'Inconsistent UI'] },
+  { title: 'UX / Design', color: '#F97316', glow: 'rgba(139,92,246,0.3)', logo: '/logos/figma.png', examples: ['Broken mobile layouts', 'Missing ARIA', 'Inconsistent UI'] },
   { title: 'Performance', color: '#f59e0b', glow: 'rgba(245,158,11,0.3)', logo: '/logos/react.png', examples: ['N+1 queries', 'Re-renders', 'Large assets'] },
   { title: 'Infrastructure', color: '#06b6d4', glow: 'rgba(6,182,212,0.3)', logo: '/logos/docker.png', examples: ['Health checks', 'Env misconfigs', 'Docker'] },
   { title: 'New Features', color: '#10b981', glow: 'rgba(16,185,129,0.3)', logo: '/logos/typescript.png', examples: ['Spaced repetition', 'Recording', 'Collaboration'] },
@@ -67,7 +67,7 @@ const STEPS = [
 const SCORING = [
   { category: 'Critical Bugs', points: '10 pts', color: '#ef4444' },
   { category: 'Security Issues', points: '8 pts', color: '#f97316' },
-  { category: 'UX / Design', points: '5 pts', color: '#91C733' },
+  { category: 'UX / Design', points: '5 pts', color: '#F97316' },
   { category: 'Performance', points: '5 pts', color: '#f59e0b' },
   { category: 'Infrastructure', points: '5 pts', color: '#06b6d4' },
   { category: 'Features', points: '3-10 pts', color: '#10b981' },
@@ -472,7 +472,7 @@ export default function ChallengePage() {
       <section className="ch-section">
         <div className="w-full lg:max-w-[70%] mx-auto px-4 sm:px-6">
           <div className="ch-section-head">
-            <span className="ch-section-tag" style={{ color: '#91C733' }}>Opportunity</span>
+            <span className="ch-section-tag" style={{ color: '#F97316' }}>Opportunity</span>
             <h2 className="ch-section-title">Join the Founding Team</h2>
             <p className="ch-section-sub">Top performers get founding or core engineer offers.</p>
           </div>
@@ -554,7 +554,7 @@ export default function ChallengePage() {
             {/* Scoring */}
             <div className="ch-glass-card p-5">
               <h3 className="text-base font-bold text-white mb-3 flex items-center gap-2">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#91C733" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M12 20V10" /><path d="M18 20V4" /><path d="M6 20v-4" /></svg>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F97316" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M12 20V10" /><path d="M18 20V4" /><path d="M6 20v-4" /></svg>
                 Scoring
               </h3>
               <div className="space-y-2.5">
@@ -793,7 +793,7 @@ export default function ChallengePage() {
           white-space: nowrap;
         }
         .ch-hero-gradient-text {
-          background: linear-gradient(135deg, #FB923C, #91C733, #38bdf8, #fbbf24);
+          background: linear-gradient(135deg, #FB923C, #F97316, #38bdf8, #fbbf24);
           background-size: 300% 300%;
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;

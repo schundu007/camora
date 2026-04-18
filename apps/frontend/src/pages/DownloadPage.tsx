@@ -369,7 +369,7 @@ export default function DownloadPage() {
                   width: 80,
                   height: 80,
                   borderRadius: 20,
-                  background: 'linear-gradient(135deg, #F97316 0%, #91C733 50%, #10b981 100%)',
+                  background: 'linear-gradient(135deg, #F97316 0%, #F97316 50%, #10b981 100%)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -415,7 +415,7 @@ export default function DownloadPage() {
                     href={primary.url}
                     className="group inline-flex items-center gap-3 px-8 py-4 rounded-2xl text-base font-bold transition-all duration-200"
                     style={{
-                      background: 'linear-gradient(135deg, #F97316 0%, #91C733 100%)',
+                      background: 'linear-gradient(135deg, #F97316 0%, #F97316 100%)',
                       color: '#ffffff',
                       boxShadow: '0 4px 24px rgba(249,115,22,0.35), 0 0 0 1px rgba(255,255,255,0.1) inset',
                     }}
@@ -443,7 +443,7 @@ export default function DownloadPage() {
                       disabled={addonLoading}
                       className="group inline-flex items-center gap-3 px-6 py-3.5 rounded-2xl text-sm font-bold transition-all duration-200 disabled:opacity-60"
                       style={{
-                        background: 'linear-gradient(135deg, #F97316 0%, #91C733 100%)',
+                        background: 'linear-gradient(135deg, #F97316 0%, #F97316 100%)',
                         color: '#ffffff',
                         boxShadow: '0 4px 24px rgba(249,115,22,0.35)',
                       }}
@@ -588,7 +588,7 @@ export default function DownloadPage() {
                       <div
                         className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-xs font-bold"
                         style={{
-                          background: 'linear-gradient(135deg, #F97316, #91C733)',
+                          background: 'linear-gradient(135deg, #F97316, #F97316)',
                           color: '#fff',
                           boxShadow: '0 2px 12px rgba(249,115,22,0.4)',
                         }}
@@ -598,7 +598,7 @@ export default function DownloadPage() {
                     )}
 
                     {/* OS icon */}
-                    <div className="mt-2 mb-4" style={{ color: isRecommended ? '#91C733' : 'rgba(255,255,255,0.5)' }}>
+                    <div className="mt-2 mb-4" style={{ color: isRecommended ? '#F97316' : 'rgba(255,255,255,0.5)' }}>
                       {p.icon === 'apple' ? <AppleLogo size={36} /> : <WindowsLogo size={36} />}
                     </div>
 
@@ -623,7 +623,7 @@ export default function DownloadPage() {
                         className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200"
                         style={{
                           background: isRecommended
-                            ? 'linear-gradient(135deg, #F97316, #91C733)'
+                            ? 'linear-gradient(135deg, #F97316, #F97316)'
                             : 'rgba(255,255,255,0.06)',
                           color: isRecommended ? '#fff' : 'rgba(255,255,255,0.7)',
                           border: isRecommended
@@ -650,7 +650,7 @@ export default function DownloadPage() {
                       <div className="flex items-center gap-2">
                         <button onClick={handleMonthlyAddon} disabled={addonLoading}
                           className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition-all disabled:opacity-60"
-                          style={{ background: 'linear-gradient(135deg, #F97316, #91C733)', color: '#fff' }}>
+                          style={{ background: 'linear-gradient(135deg, #F97316, #F97316)', color: '#fff' }}>
                           <DownloadIcon size={12} />$29/mo
                         </button>
                         <button onClick={handleAnnualAddon} disabled={annualLoading}
@@ -754,7 +754,7 @@ export default function DownloadPage() {
                     className="w-10 h-10 rounded-xl flex items-center justify-center mb-4"
                     style={{
                       background: 'rgba(249,115,22,0.1)',
-                      color: '#91C733',
+                      color: '#F97316',
                     }}
                   >
                     {f.icon}

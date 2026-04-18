@@ -273,7 +273,7 @@ function formatTime(seconds: number): string {
 function useTheme(_dark: boolean) {
   return {
     cardBg: '#ffffff', cardBorder: '#e5e7eb',
-    headerBg: 'rgba(249,115,22,0.05)', headerBorder: '#e0e7ff',
+    headerBg: 'rgba(249,115,22,0.05)', headerBorder: '#FED7AA',
     headerText: '#F97316', badgeBg: '#F9731610', badgeText: '#F97316',
     text: '#111827', textMuted: '#6b7280', textDim: '#9ca3af',
     codeBg: '#f9fafb', codeText: '#1f2937',
@@ -601,7 +601,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
           </button>
           <div className="h-4 w-px bg-white/10" />
           <div className="flex items-center gap-1.5">
-            <div className="w-5 h-5 md:w-6 md:h-6 rounded flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #F97316, #91C733)' }}>
+            <div className="w-5 h-5 md:w-6 md:h-6 rounded flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #F97316, #F97316)' }}>
               <span className="text-white text-[10px] md:text-xs font-extrabold">L</span>
             </div>
             <span className="text-white font-extrabold text-xs md:text-sm" style={{ fontFamily: "'Source Sans 3', sans-serif" }}>System Design</span>
@@ -878,7 +878,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
               {sd.overview && (
                 <section className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${t.cardBorder}`, background: t.cardBg, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
                   <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: t.headerBg }}>
-                    <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, ${t.dotColor}, #91C733)` }} />
+                    <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, ${t.dotColor}, #F97316)` }} />
                     <h2 className="text-sm font-bold" style={{ color: t.headerText }}>Overview</h2>
                   </div>
                   <div className="px-4 py-3">
@@ -905,7 +905,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                 {sd.requirements?.functional && sd.requirements.functional.length > 0 && (
                   <section className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${t.cardBorder}`, background: t.cardBg, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
                     <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: t.headerBg }}>
-                      <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, ${t.dotColor}, #91C733)` }} />
+                      <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, ${t.dotColor}, #F97316)` }} />
                       <h2 className="text-sm font-bold" style={{ color: t.headerText }}>Functional</h2>
                       <span className="ml-auto text-[10px] font-mono rounded-full px-2 py-0.5" style={{ color: t.badgeText, background: t.badgeBg, border: `1px solid ${t.headerBorder}` }}>{sd.requirements.functional.length}</span>
                     </div>
@@ -944,7 +944,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
               {sd.scaleEstimates && Object.entries(sd.scaleEstimates).filter(([, v]) => v && v.trim()).length > 0 && (
                 <section className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${t.cardBorder}`, background: t.cardBg, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
                   <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: t.headerBg }}>
-                    <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, #91C733, ${t.dotColor})` }} />
+                    <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, #F97316, ${t.dotColor})` }} />
                     <h2 className="text-sm font-bold" style={{ color: t.headerText }}>Scale Estimates</h2>
                   </div>
                   <div className="px-4 py-3">
@@ -968,7 +968,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
               {sd.techJustifications && sd.techJustifications.length > 0 && (
                 <section className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${t.cardBorder}`, background: t.cardBg, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
                   <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: t.headerBg }}>
-                    <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, #91C733, ${t.dotColor})` }} />
+                    <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, #F97316, ${t.dotColor})` }} />
                     <h2 className="text-sm font-bold" style={{ color: t.headerText }}>Scalability Tiers</h2>
                   </div>
                   <div className="px-4 py-3">
