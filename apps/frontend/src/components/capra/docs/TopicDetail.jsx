@@ -315,12 +315,11 @@ function StaticCloudDiagram({ topicId, provider, staticSrc, diagramData, generat
 
   return (
     <div>
-      <div className="rounded-lg overflow-hidden flex items-center justify-center bg-[var(--bg-surface)]">
+      <div className="rounded-lg overflow-hidden bg-[var(--bg-surface)]">
         <img
           src={staticSrc}
           alt={`${topicId} ${provider.toUpperCase()} architecture diagram`}
-          className="w-full object-contain"
-          style={{ maxHeight: '600px', width: '100%' }}
+          style={{ width: '100%', height: 'auto', display: 'block' }}
           onError={() => setImgError(true)}
         />
       </div>
