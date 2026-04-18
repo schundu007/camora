@@ -253,7 +253,7 @@ export default function PricingPage() {
       </section>
 
       {/* Competitor comparison — CSS Grid */}
-      <section className="px-4 pt-4 pb-16">
+      <section className="w-full lg:max-w-[70%] mx-auto px-6 pt-4 pb-16">
         <div className="text-center mb-8">
           <span className="text-xs font-bold uppercase tracking-[0.18em]" style={{ color: 'var(--accent)' }}>Why Camora Wins</span>
           <h2 className="mt-3 text-2xl md:text-3xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>Compare the competition.</h2>
