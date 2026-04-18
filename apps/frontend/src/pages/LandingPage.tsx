@@ -20,10 +20,10 @@ const L = {
   bg: '#09090F', surface: '#111118', elevated: '#19192A',
   border: 'rgba(255,255,255,0.07)', text: '#FFFFFF', secondary: 'rgba(255,255,255,0.65)',
   muted: 'rgba(255,255,255,0.35)', dimmed: 'rgba(255,255,255,0.15)',
-  gradient: 'linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%)',
-  primary: '#8B5CF6', emerald: '#8B5CF6', radius: '12px',
-  glow: '0 0 60px rgba(139,92,246,0.08)',
-  glowStrong: '0 0 80px rgba(139,92,246,0.15)',
+  gradient: 'linear-gradient(135deg, #A78BFA 0%, #A78BFA 100%)',
+  primary: '#A78BFA', emerald: '#A78BFA', radius: '12px',
+  glow: '0 0 60px rgba(167,139,250,0.08)',
+  glowStrong: '0 0 80px rgba(167,139,250,0.15)',
 };
 
 /* ── APPA Steps ───────────────────────────────────────── */
@@ -68,12 +68,12 @@ const STATS = [
 
 /* ── Topic Data ───────────────────────────────────────── */
 const TOPICS = [
-  { name: 'System Design', count: 420, problems: 318, color: '#8B5CF6' },
+  { name: 'System Design', count: 420, problems: 318, color: '#A78BFA' },
   { name: 'Low-Level Design', count: 112, problems: 268, color: '#3B82F6' },
   { name: 'DSA & Algorithms', count: 65, problems: 854, color: '#FFFFFF' },
   { name: 'Behavioral', count: 64, problems: 230, color: '#F59E0B' },
   { name: 'Database & SQL', count: 31, problems: 197, color: '#EC4899' },
-  { name: 'Microservices', count: 27, problems: 0, color: '#8B5CF6' },
+  { name: 'Microservices', count: 27, problems: 0, color: '#A78BFA' },
 ];
 
 /* ── Company logos (logo.dev) ───────────────────── */
@@ -210,7 +210,7 @@ function ProductTabs() {
               style={{ borderRadius: L.radius, background: isActive ? 'rgba(255,255,255,0.04)' : 'transparent', border: isActive ? '1px solid rgba(255,255,255,0.08)' : '1px solid transparent', fontFamily: F.display }}>
               {isActive && <div className="absolute left-0 top-2 bottom-2 w-[3px] rounded-full" style={{ background: L.gradient }} />}
               <div className="w-9 h-9 flex items-center justify-center flex-shrink-0"
-                style={{ borderRadius: L.radius, background: isActive ? 'rgba(139,92,246,0.1)' : 'rgba(255,255,255,0.04)', color: isActive ? L.primary : L.muted }}>
+                style={{ borderRadius: L.radius, background: isActive ? 'rgba(167,139,250,0.1)' : 'rgba(255,255,255,0.04)', color: isActive ? L.primary : L.muted }}>
                 {s.icon}
               </div>
               <span className="text-sm lg:text-base font-semibold" style={{ color: isActive ? L.text : L.muted }}>{s.label}</span>
@@ -296,11 +296,11 @@ function TopicDonut() {
 function TrackWaypoint({ label }: { label: string }) {
   return (
     <div className="absolute top-1/2 -translate-y-1/2 z-[4] pointer-events-none hidden lg:block" style={{ left: 'calc(15% + 4px)' }}>
-      <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#09090F', border: '2.5px solid rgba(139,92,246,0.3)', boxShadow: '0 0 14px rgba(139,92,246,0.15), inset 0 0 6px rgba(139,92,246,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: 'rgba(139,92,246,0.5)' }} />
+      <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#09090F', border: '2.5px solid rgba(167,139,250,0.3)', boxShadow: '0 0 14px rgba(167,139,250,0.15), inset 0 0 6px rgba(167,139,250,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: 'rgba(167,139,250,0.5)' }} />
       </div>
       <div style={{ position: 'absolute', left: '36px', top: '50%', transform: 'translateY(-50%)', whiteSpace: 'nowrap' }}>
-        <span style={{ fontSize: '11px', fontFamily: "'JetBrains Mono', monospace", fontWeight: 800, color: 'rgba(139,92,246,0.5)', letterSpacing: '0.15em', textShadow: '0 0 8px rgba(139,92,246,0.3)' }}>{label}</span>
+        <span style={{ fontSize: '11px', fontFamily: "'JetBrains Mono', monospace", fontWeight: 800, color: 'rgba(167,139,250,0.5)', letterSpacing: '0.15em', textShadow: '0 0 8px rgba(167,139,250,0.3)' }}>{label}</span>
       </div>
     </div>
   );
@@ -323,7 +323,7 @@ export default function LandingPage() {
         {/* Tarmac — wide dark runway strip */}
         <div className="absolute top-0 bottom-0" style={{ left: '-10px', width: '20px', borderRadius: '10px', background: `linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.05) 5%, rgba(255,255,255,0.03) 50%, rgba(255,255,255,0.05) 95%, transparent 100%)` }} />
         {/* White dashed center line — real runway marking */}
-        <div className="absolute left-0 top-0 bottom-0" style={{ width: '2px', background: `repeating-linear-gradient(to bottom, rgba(139,92,246,0.4) 0px, rgba(139,92,246,0.4) 20px, transparent 20px, transparent 36px)` }} />
+        <div className="absolute left-0 top-0 bottom-0" style={{ width: '2px', background: `repeating-linear-gradient(to bottom, rgba(167,139,250,0.4) 0px, rgba(167,139,250,0.4) 20px, transparent 20px, transparent 36px)` }} />
         {/* Edge markings — solid white */}
         <div className="absolute top-0 bottom-0" style={{ left: '-10px', width: '1px', background: `linear-gradient(to bottom, transparent 3%, rgba(255,255,255,0.15) 8%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.15) 92%, transparent 97%)` }} />
         <div className="absolute top-0 bottom-0" style={{ left: '9px', width: '1px', background: `linear-gradient(to bottom, transparent 3%, rgba(255,255,255,0.15) 8%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.15) 92%, transparent 97%)` }} />
@@ -340,14 +340,14 @@ export default function LandingPage() {
           transition: 'top 0.1s linear',
         }}>
           {/* Contrail below (plane flies up, exhaust trails down) */}
-          <div style={{ position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', width: '3px', height: '140px', borderRadius: '2px', background: 'linear-gradient(to bottom, rgba(255,255,255,0.5), rgba(139,92,246,0.15), transparent)' }} />
+          <div style={{ position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', width: '3px', height: '140px', borderRadius: '2px', background: 'linear-gradient(to bottom, rgba(255,255,255,0.5), rgba(167,139,250,0.15), transparent)' }} />
           {/* 3D airplane — straight, no tilt */}
-          <svg width="56" height="64" viewBox="0 0 56 64" fill="none" style={{ filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.5)) drop-shadow(0 0 20px rgba(139,92,246,0.5))' }}>
+          <svg width="56" height="64" viewBox="0 0 56 64" fill="none" style={{ filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.5)) drop-shadow(0 0 20px rgba(167,139,250,0.5))' }}>
             <defs><linearGradient id="f3d" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor="#ddd" /><stop offset="40%" stopColor="#fff" /><stop offset="100%" stopColor="#aaa" /></linearGradient></defs>
             {/* Fuselage */}
             <path d="M28 0 C24 0 22 6 22 12 L22 44 L34 44 L34 12 C34 6 32 0 28 0Z" fill="url(#f3d)" />
             {/* Green stripe */}
-            <rect x="25" y="6" width="2" height="36" rx="1" fill="#8B5CF6" opacity="0.4" />
+            <rect x="25" y="6" width="2" height="36" rx="1" fill="#A78BFA" opacity="0.4" />
             {/* Wings */}
             <path d="M22 24 L2 34 L2 37 L22 32Z" fill="#e8e8e8" />
             <path d="M34 24 L54 34 L54 37 L34 32Z" fill="#999" />
@@ -358,7 +358,7 @@ export default function LandingPage() {
             <path d="M22 40 L14 48 L14 50 L22 46Z" fill="#ddd" />
             <path d="M34 40 L42 48 L42 50 L34 46Z" fill="#aaa" />
             {/* Tail fin */}
-            <path d="M26 38 L28 28 L30 38Z" fill="#8B5CF6" />
+            <path d="M26 38 L28 28 L30 38Z" fill="#A78BFA" />
             <path d="M27 38 L28 30 L28 38Z" fill="#A78BFA" opacity="0.4" />
             {/* Cockpit */}
             <ellipse cx="28" cy="7" rx="3" ry="4" fill="#222" stroke="rgba(255,255,255,0.4)" strokeWidth="0.5" />
@@ -374,7 +374,7 @@ export default function LandingPage() {
       <style>{`
         .cm-gradient-text { background: ${L.gradient}; -webkit-background-clip: text; background-clip: text; color: transparent; }
         .cm-gradient-btn { background: ${L.gradient}; transition: filter 0.2s ease, box-shadow 0.2s ease; }
-        .cm-gradient-btn:hover { filter: brightness(1.15); box-shadow: 0 0 30px rgba(139,92,246,0.2); }
+        .cm-gradient-btn:hover { filter: brightness(1.15); box-shadow: 0 0 30px rgba(167,139,250,0.2); }
         .cm-outline-btn { border: 1px solid ${L.border}; color: ${L.text}; transition: border-color 0.2s, background 0.2s; }
         .cm-outline-btn:hover { border-color: ${L.muted}; background: ${L.surface}; }
         .cm-glass { background: ${L.surface}; border: 1px solid ${L.border}; border-radius: 16px; }
@@ -388,15 +388,15 @@ export default function LandingPage() {
           width: 56px; height: 56px;
           border-radius: 50%;
           display: flex; align-items: center; justify-content: center;
-          background: radial-gradient(circle, rgba(139,92,246,0.12) 0%, rgba(139,92,246,0.03) 70%, transparent 100%);
-          border: 2px solid #8B5CF6;
-          box-shadow: 0 0 20px rgba(139,92,246,0.2), 0 0 40px rgba(139,92,246,0.06), inset 0 0 12px rgba(139,92,246,0.08);
+          background: radial-gradient(circle, rgba(167,139,250,0.12) 0%, rgba(167,139,250,0.03) 70%, transparent 100%);
+          border: 2px solid #A78BFA;
+          box-shadow: 0 0 20px rgba(167,139,250,0.2), 0 0 40px rgba(167,139,250,0.06), inset 0 0 12px rgba(167,139,250,0.08);
           animation: appa-ring-pulse 3s ease-in-out infinite;
         }
         .appa-icon-emoji {
           font-size: 24px;
           line-height: 1;
-          filter: drop-shadow(0 0 4px rgba(139,92,246,0.4));
+          filter: drop-shadow(0 0 4px rgba(167,139,250,0.4));
           animation: appa-emoji-float 4s ease-in-out infinite;
         }
         .appa-orbit {
@@ -407,12 +407,12 @@ export default function LandingPage() {
         .appa-orbit-dot {
           position: absolute; top: -2px; left: 50%; transform: translateX(-50%);
           width: 5px; height: 5px; border-radius: 50%;
-          background: #8B5CF6;
-          box-shadow: 0 0 6px #8B5CF6, 0 0 12px rgba(139,92,246,0.4);
+          background: #A78BFA;
+          box-shadow: 0 0 6px #A78BFA, 0 0 12px rgba(167,139,250,0.4);
         }
         @keyframes appa-ring-pulse {
-          0%, 100% { box-shadow: 0 0 20px rgba(139,92,246,0.2), 0 0 40px rgba(139,92,246,0.06), inset 0 0 12px rgba(139,92,246,0.08); }
-          50% { box-shadow: 0 0 28px rgba(139,92,246,0.3), 0 0 50px rgba(139,92,246,0.1), inset 0 0 16px rgba(139,92,246,0.12); }
+          0%, 100% { box-shadow: 0 0 20px rgba(167,139,250,0.2), 0 0 40px rgba(167,139,250,0.06), inset 0 0 12px rgba(167,139,250,0.08); }
+          50% { box-shadow: 0 0 28px rgba(167,139,250,0.3), 0 0 50px rgba(167,139,250,0.1), inset 0 0 16px rgba(167,139,250,0.12); }
         }
         @keyframes appa-emoji-float {
           0%, 100% { transform: translateY(0) scale(1); }
@@ -448,7 +448,7 @@ export default function LandingPage() {
         /* Waypoint radar ping — expanding ring */
         .fp-ping {
           position: absolute; width: 24px; height: 24px; border-radius: 50%;
-          border: 1px solid rgba(139,92,246,0.15);
+          border: 1px solid rgba(167,139,250,0.15);
           animation: fp-ping-expand 3s ease-out infinite;
         }
         @keyframes fp-ping-expand {
@@ -466,10 +466,10 @@ export default function LandingPage() {
         <div className="absolute inset-0 z-0">
           <img src="/hero-forest.jpg" alt="" className="w-full h-full object-cover object-center" style={{ opacity: 0.15 }} />
           <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(9,9,15,0.6) 0%, rgba(9,9,15,0.8) 50%, #09090F 100%)' }} />
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.06) 0%, transparent 40%)' }} />
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(167,139,250,0.06) 0%, transparent 40%)' }} />
         </div>
         {/* Radial glow */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] pointer-events-none z-[1]" style={{ background: 'radial-gradient(ellipse at center, rgba(139,92,246,0.08) 0%, transparent 70%)' }} />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] pointer-events-none z-[1]" style={{ background: 'radial-gradient(ellipse at center, rgba(167,139,250,0.08) 0%, transparent 70%)' }} />
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto text-center relative z-10">
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <span className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold tracking-[0.12em] uppercase"
@@ -581,7 +581,7 @@ export default function LandingPage() {
                     <div className="flex-1 flex flex-col lg:flex-row gap-6">
                       <div className="lg:w-[45%]">
                         <span className="inline-flex items-center gap-1.5 text-[11px] font-bold tracking-[0.15em] uppercase px-3 py-1 mb-4"
-                          style={{ borderRadius: '6px', background: 'rgba(139,92,246,0.08)', color: L.primary, fontFamily: F.mono }}>
+                          style={{ borderRadius: '6px', background: 'rgba(167,139,250,0.08)', color: L.primary, fontFamily: F.mono }}>
                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                             {i === 0 && <><path d="M22 2L11 13" /><path d="M22 2L15 22L11 13L2 9L22 2Z" /></>}
                             {i === 1 && <><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></>}
@@ -599,7 +599,7 @@ export default function LandingPage() {
                       </div>
                       <div className="lg:w-[55%] p-6 cm-glass" style={{ borderRadius: '16px' }}>
                         <div className="flex items-center gap-2 mb-4">
-                          <div className="w-9 h-9 flex items-center justify-center" style={{ borderRadius: L.radius, background: 'rgba(139,92,246,0.1)', color: L.primary }}>{step.icon}</div>
+                          <div className="w-9 h-9 flex items-center justify-center" style={{ borderRadius: L.radius, background: 'rgba(167,139,250,0.1)', color: L.primary }}>{step.icon}</div>
                           <span className="text-sm font-bold" style={{ fontFamily: F.display }}>{step.label}</span>
                         </div>
                         <div className="flex flex-wrap gap-2">
@@ -748,7 +748,7 @@ export default function LandingPage() {
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
           <Reveal className="text-center mb-14">
             <span className="inline-block text-[11px] font-bold tracking-[0.18em] uppercase px-4 py-1.5 mb-5"
-              style={{ borderRadius: '999px', background: 'rgba(139,92,246,0.06)', border: '1px solid rgba(139,92,246,0.15)', color: L.emerald, fontFamily: F.mono }}>Club Members Only</span>
+              style={{ borderRadius: '999px', background: 'rgba(167,139,250,0.06)', border: '1px solid rgba(167,139,250,0.15)', color: L.emerald, fontFamily: F.mono }}>Club Members Only</span>
             <h2 className="text-3xl md:text-4xl lg:text-[44px] font-bold tracking-tight" style={{ fontFamily: F.display }}>First-class features. No turbulence.</h2>
           </Reveal>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -757,7 +757,7 @@ export default function LandingPage() {
                 <div className="p-6 h-full cm-glass" style={{ borderRadius: '16px' }}>
                   <div className="flex items-center justify-between mb-4">
                     <div className="w-10 h-10 flex items-center justify-center" style={{ borderRadius: L.radius, background: 'rgba(255,255,255,0.04)', color: L.secondary }}>{f.icon}</div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1" style={{ borderRadius: '6px', background: 'rgba(139,92,246,0.06)', color: L.primary, fontFamily: F.mono }}>{f.tag}</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1" style={{ borderRadius: '6px', background: 'rgba(167,139,250,0.06)', color: L.primary, fontFamily: F.mono }}>{f.tag}</span>
                   </div>
                   <h3 className="text-base font-bold mb-2" style={{ fontFamily: F.display }}>{f.title}</h3>
                   <p className="text-sm leading-relaxed" style={{ color: L.secondary }}>{f.desc}</p>
@@ -789,7 +789,7 @@ export default function LandingPage() {
         <Reveal className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
           <div className="relative px-8 py-16 md:px-16 md:py-20 text-center overflow-hidden" style={{ borderRadius: '20px', background: L.surface, border: '1px solid rgba(255,255,255,0.07)', boxShadow: L.glowStrong }}>
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[50%] h-[2px]" style={{ background: L.gradient }} />
-            <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at center top, rgba(139,92,246,0.04) 0%, transparent 60%)' }} />
+            <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at center top, rgba(167,139,250,0.04) 0%, transparent 60%)' }} />
             <div className="relative z-10">
               <h2 className="text-3xl md:text-4xl lg:text-[42px] font-bold tracking-tight" style={{ fontFamily: F.display }}>
                 Ready for <span className="cm-gradient-text">liftoff?</span>
