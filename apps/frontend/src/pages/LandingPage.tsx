@@ -543,6 +543,17 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ── 5b. PREPARATION AT SCALE — Donut ── */}
+      <section className="px-6 py-14 md:py-20" style={{ background: L.surface, borderTop: '1px solid rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+        <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
+          <Reveal className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl lg:text-[44px] font-bold tracking-tight" style={{ fontFamily: F.display }}>Full payload. Zero drag.</h2>
+            <p className="mt-4 text-lg max-w-xl mx-auto" style={{ color: L.secondary }}>800+ topics and 1,850+ problems across 7 categories.</p>
+          </Reveal>
+          <TopicDonut />
+        </div>
+      </section>
+
       {/* ── 6. LIVE AI DEMO — Simulated Q&A ── */}
       <section className="px-6 py-14 md:py-20">
         <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
@@ -653,17 +664,6 @@ export default function LandingPage() {
             </Link>
             <p className="text-xs mt-4" style={{ color: L.muted }}>Supports Workday, Greenhouse, Lever, Ashby, SmartRecruiters, LinkedIn &amp; more</p>
           </Reveal>
-        </div>
-      </section>
-
-      {/* ── 8. PREPARATION AT SCALE — Donut ── */}
-      <section className="px-6 py-14 md:py-20">
-        <div className="w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] max-w-7xl mx-auto">
-          <Reveal className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl lg:text-[44px] font-bold tracking-tight" style={{ fontFamily: F.display }}>Full payload. Zero drag.</h2>
-            <p className="mt-4 text-lg max-w-xl mx-auto" style={{ color: L.secondary }}>800+ topics and 1,850+ problems across 7 categories.</p>
-          </Reveal>
-          <TopicDonut />
         </div>
       </section>
 
