@@ -39,7 +39,7 @@ const CATEGORIES = [
   { title: 'UX / Design', color: '#2D8CFF', glow: 'rgba(139,92,246,0.3)', logo: '/logos/figma.png', examples: ['Broken mobile layouts', 'Missing ARIA', 'Inconsistent UI'] },
   { title: 'Performance', color: '#f59e0b', glow: 'rgba(245,158,11,0.3)', logo: '/logos/react.png', examples: ['N+1 queries', 'Re-renders', 'Large assets'] },
   { title: 'Infrastructure', color: '#06b6d4', glow: 'rgba(6,182,212,0.3)', logo: '/logos/docker.png', examples: ['Health checks', 'Env misconfigs', 'Docker'] },
-  { title: 'New Features', color: '#10b981', glow: 'rgba(16,185,129,0.3)', logo: '/logos/typescript.png', examples: ['Spaced repetition', 'Recording', 'Collaboration'] },
+  { title: 'New Features', color: 'var(--accent)', glow: 'rgba(16,185,129,0.3)', logo: '/logos/typescript.png', examples: ['Spaced repetition', 'Recording', 'Collaboration'] },
 ];
 
 const TECH_STACK = [
@@ -56,8 +56,8 @@ const TECH_STACK = [
 ];
 
 const STEPS = [
-  { num: '01', title: 'Sign up free', desc: 'Create your Camora account.', color: '#10b981' },
-  { num: '02', title: 'Get GitHub access', desc: 'Full monorepo access starting May 7.', color: '#10b981' },
+  { num: '01', title: 'Sign up free', desc: 'Create your Camora account.', color: 'var(--accent)' },
+  { num: '02', title: 'Get GitHub access', desc: 'Full monorepo access starting May 7.', color: 'var(--accent)' },
   { num: '03', title: 'Find & build', desc: 'Hunt bugs, fix issues, build features.', color: '#2D8CFF' },
   { num: '04', title: 'Submit findings', desc: 'Detailed docs with your work.', color: '#2D8CFF' },
   { num: '05', title: 'Team review', desc: 'Top submissions reviewed by founders.', color: '#f59e0b' },
@@ -70,7 +70,7 @@ const SCORING = [
   { category: 'UX / Design', points: '5 pts', color: '#2D8CFF' },
   { category: 'Performance', points: '5 pts', color: '#f59e0b' },
   { category: 'Infrastructure', points: '5 pts', color: '#06b6d4' },
-  { category: 'Features', points: '3-10 pts', color: '#10b981' },
+  { category: 'Features', points: '3-10 pts', color: 'var(--accent)' },
 ];
 
 const FAQS = [
@@ -768,20 +768,20 @@ export default function ChallengePage() {
           display: inline-flex; align-items: center; gap: 8px;
           padding: 8px 20px; border-radius: 999px;
           font-size: 16px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
-          color: #10b981;
+          color: var(--accent);
           background: rgba(16,185,129,0.08);
           border: 1px solid rgba(16,185,129,0.15);
           margin-bottom: 24px;
         }
         .ch-badge-dot {
           width: 6px; height: 6px; border-radius: 50%;
-          background: #10b981;
-          box-shadow: 0 0 8px #10b981;
+          background: var(--accent);
+          box-shadow: 0 0 8px var(--accent);
           animation: pulse-glow 2s ease-in-out infinite;
         }
         @keyframes pulse-glow {
-          0%, 100% { opacity: 1; box-shadow: 0 0 8px #10b981; }
-          50% { opacity: 0.5; box-shadow: 0 0 16px #10b981, 0 0 32px #10b98150; }
+          0%, 100% { opacity: 1; box-shadow: 0 0 8px var(--accent); }
+          50% { opacity: 0.5; box-shadow: 0 0 16px var(--accent), 0 0 32px var(--accent)50; }
         }
 
         .ch-hero-title {
@@ -838,7 +838,7 @@ export default function ChallengePage() {
         .ch-prize-amount {
           font-family: 'Space Mono', monospace;
           font-size: 42px; font-weight: 700;
-          background: linear-gradient(135deg, #fbbf24, #f59e0b, #10b981);
+          background: linear-gradient(135deg, #fbbf24, #f59e0b, var(--accent));
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           text-shadow: none;
@@ -850,7 +850,7 @@ export default function ChallengePage() {
           display: inline-flex; align-items: center; justify-content: center;
           padding: 14px 32px; border-radius: 12px;
           font-size: 16px; font-weight: 700; color: #fff;
-          background: linear-gradient(135deg, #10b981, #2D8CFF);
+          background: linear-gradient(135deg, var(--accent), #2D8CFF);
           border: none; cursor: pointer;
           box-shadow: 0 0 24px rgba(16,185,129,0.25), 0 4px 12px rgba(0,0,0,0.3);
           transition: all 0.2s;
@@ -879,7 +879,7 @@ export default function ChallengePage() {
         /* ── Sections ── */
         .ch-section { padding: 56px 0; position: relative; }
         .ch-section-head { text-align: center; margin-bottom: 40px; }
-        .ch-section-tag { font-size: 16px; font-weight: 700; color: #10b981; text-transform: uppercase; letter-spacing: 0.15em; }
+        .ch-section-tag { font-size: 16px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.15em; }
         .ch-section-title { font-size: clamp(1.5rem, 3.5vw, 2.25rem); font-weight: 800; color: #fff; letter-spacing: -0.02em; margin-top: 6px; }
         .ch-section-sub { font-size: 16px; color: rgba(255,255,255,0.4); margin-top: 8px; line-height: 1.6; }
 
@@ -918,9 +918,9 @@ export default function ChallengePage() {
           width: 44px; height: 44px;
           border-radius: 12px;
           display: flex; align-items: center; justify-content: center;
-          background: color-mix(in srgb, var(--glow, #10b981) 8%, transparent);
-          border: 1px solid color-mix(in srgb, var(--glow, #10b981) 20%, transparent);
-          box-shadow: 0 0 12px color-mix(in srgb, var(--glow, #10b981) 15%, transparent);
+          background: color-mix(in srgb, var(--glow, var(--accent)) 8%, transparent);
+          border: 1px solid color-mix(in srgb, var(--glow, var(--accent)) 20%, transparent);
+          box-shadow: 0 0 12px color-mix(in srgb, var(--glow, var(--accent)) 15%, transparent);
         }
 
         /* ── Prize cards ── */
@@ -988,8 +988,8 @@ export default function ChallengePage() {
           display: flex; align-items: center; justify-content: center;
           font-family: 'Space Mono', monospace;
           font-size: 16px; font-weight: 700; color: #0a0a0f;
-          background: var(--node-color, #10b981);
-          box-shadow: 0 0 16px color-mix(in srgb, var(--node-color, #10b981) 40%, transparent);
+          background: var(--node-color, var(--accent));
+          box-shadow: 0 0 16px color-mix(in srgb, var(--node-color, var(--accent)) 40%, transparent);
           position: relative; z-index: 2;
         }
         .ch-timeline-line {
@@ -1033,7 +1033,7 @@ export default function ChallengePage() {
         .ch-referral-wrapper .border-gray-100 { border-color: rgba(255,255,255,0.08) !important; }
         .ch-referral-wrapper .text-emerald-600 { color: #60A5FA !important; }
         .ch-referral-wrapper .font-mono { color: rgba(255,255,255,0.5) !important; }
-        .ch-referral-wrapper button.bg-emerald-500 {
+        .ch-referral-wrapper button.bg-[var(--accent)] {
           box-shadow: 0 0 16px rgba(45,140,255,0.3);
         }
         .ch-referral-wrapper .text-2xl.font-bold { color: #fff !important; }
