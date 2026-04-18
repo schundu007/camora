@@ -140,7 +140,7 @@ class ErrorBoundary extends Component {
           <p className="text-red-500 mb-2">Failed to render content</p>
           <button
             onClick={() => this.setState({ hasError: false, error: null })}
-            className="px-3 py-1 bg-emerald-500 text-white rounded text-sm landing-body"
+            className="px-3 py-1 bg-[var(--accent)] text-white rounded text-sm landing-body"
           >
             Try Again
           </button>

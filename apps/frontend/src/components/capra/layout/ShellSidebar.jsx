@@ -66,16 +66,16 @@ export default function ShellSidebar() {
       {/* Logo */}
       <div className={`border-b border-[var(--border)] flex items-center ${isCollapsed ? 'justify-center px-2 py-4' : 'justify-between px-5 py-4'}`}>
         {isCollapsed ? (
-          <Link to="/" className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center hover:scale-105 transition-transform">
+          <Link to="/" className="w-8 h-8 bg-[var(--accent)] rounded-lg flex items-center justify-center hover:scale-105 transition-transform">
             <Icon name="ascend" size={16} className="text-white" />
           </Link>
         ) : (
           <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-            <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 bg-[var(--accent)] rounded-lg flex items-center justify-center">
               <Icon name="ascend" size={16} className="text-white" />
             </div>
             <div>
-              <span className="block text-[9px] font-mono uppercase tracking-[0.2em] text-emerald-600 -mt-0.5">Apply · Prepare · Practice · Attend</span>
+              <span className="block text-[9px] font-mono uppercase tracking-[0.2em] text-[var(--accent)] -mt-0.5">Apply · Prepare · Practice · Attend</span>
             </div>
           </Link>
         )}
@@ -130,11 +130,11 @@ export default function ShellSidebar() {
                 isCollapsed ? 'justify-center p-2.5' : 'gap-3 px-3 py-2.5'
               } ${
                 isActive
-                  ? `text-emerald-700 font-semibold bg-emerald-50 ${isCollapsed ? '' : 'border-l-2 border-emerald-500'}`
+                  ? `text-emerald-700 font-semibold bg-emerald-50 ${isCollapsed ? '' : 'border-l-2 border-[var(--accent)]'}`
                   : `text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] font-medium ${isCollapsed ? '' : 'border-l-2 border-transparent'}`
               }`}
             >
-              <Icon name={item.icon} size={isCollapsed ? 18 : 16} className={isActive ? 'text-emerald-500' : 'text-[var(--text-muted)]'} />
+              <Icon name={item.icon} size={isCollapsed ? 18 : 16} className={isActive ? 'text-[var(--accent)]' : 'text-[var(--text-muted)]'} />
               {!isCollapsed && <span className="flex-1 text-left text-[13px]">{item.label}</span>}
             </button>
           );
@@ -156,11 +156,11 @@ export default function ShellSidebar() {
                 isCollapsed ? 'justify-center p-2.5' : 'gap-3 px-3 py-2.5'
               } ${
                 isActive
-                  ? `text-emerald-700 font-semibold bg-emerald-50 ${isCollapsed ? '' : 'border-l-2 border-emerald-500'}`
+                  ? `text-emerald-700 font-semibold bg-emerald-50 ${isCollapsed ? '' : 'border-l-2 border-[var(--accent)]'}`
                   : `text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] font-medium ${isCollapsed ? '' : 'border-l-2 border-transparent'}`
               }`}
             >
-              <Icon name={item.icon} size={isCollapsed ? 18 : 16} className={isActive ? 'text-emerald-500' : 'text-[var(--text-muted)]'} />
+              <Icon name={item.icon} size={isCollapsed ? 18 : 16} className={isActive ? 'text-[var(--accent)]' : 'text-[var(--text-muted)]'} />
               {!isCollapsed && <span className="flex-1 text-left text-[13px]">{item.label}</span>}
             </button>
           );
@@ -172,7 +172,7 @@ export default function ShellSidebar() {
         <div className="mx-3 mb-2 p-3 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)]">
           <div className="flex items-center justify-between mb-1.5">
             <span className="text-[10px] font-semibold text-[var(--text-muted)] tracking-widest uppercase">Progress</span>
-            <span className="text-[11px] font-bold text-emerald-600">{(() => {
+            <span className="text-[11px] font-bold text-[var(--accent)]">{(() => {
               try {
                 const stored = localStorage.getItem('camora_completed_topics');
                 const completed = stored ? Object.keys(JSON.parse(stored)).length : 0;
@@ -182,7 +182,7 @@ export default function ShellSidebar() {
           </div>
           <div className="w-full h-1.5 bg-[var(--bg-elevated)] rounded-full overflow-hidden">
             <div
-              className="h-full bg-emerald-500 rounded-full transition-all duration-500"
+              className="h-full bg-[var(--accent)] rounded-full transition-all duration-500"
               style={{ width: `${(() => {
                 try {
                   const stored = localStorage.getItem('camora_completed_topics');
@@ -204,7 +204,7 @@ export default function ShellSidebar() {
             {user.avatar ? (
               <img src={user.avatar} alt="" className="w-7 h-7 rounded-full flex-shrink-0" referrerPolicy="no-referrer" />
             ) : (
-              <div className="w-7 h-7 rounded-full bg-emerald-500 flex items-center justify-center text-white text-[11px] font-bold flex-shrink-0">
+              <div className="w-7 h-7 rounded-full bg-[var(--accent)] flex items-center justify-center text-white text-[11px] font-bold flex-shrink-0">
                 {(user.name || user.email || '?')[0].toUpperCase()}
               </div>
             )}
@@ -235,11 +235,11 @@ export default function ShellSidebar() {
           to="/pricing"
           onClick={() => { if (isMobile) closeSidebar(); }}
           title={isCollapsed ? 'Upgrade' : undefined}
-          className={`w-full flex items-center rounded-lg text-emerald-600 hover:bg-emerald-50 transition-all font-medium ${
+          className={`w-full flex items-center rounded-lg text-[var(--accent)] hover:bg-emerald-50 transition-all font-medium ${
             isCollapsed ? 'justify-center p-2.5' : 'gap-3 px-3 py-2 text-[13px]'
           }`}
         >
-          <Icon name="zap" size={isCollapsed ? 18 : 15} className="text-emerald-500" />
+          <Icon name="zap" size={isCollapsed ? 18 : 15} className="text-[var(--accent)]" />
           {!isCollapsed && <span>Upgrade</span>}
         </Link>
 

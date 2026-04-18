@@ -31,7 +31,7 @@ export default function OAuthLogin() {
       {/* Hero */}
       <section className="flex flex-col items-center justify-center text-center px-6 pt-12 pb-12 md:pt-16 md:pb-16">
         <div className={`inline-flex items-center gap-2 px-4 py-1.5 border border-emerald-200 bg-emerald-50 rounded-full mb-5 transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-          <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+          <span className="w-2 h-2 bg-[var(--accent)] rounded-full animate-pulse" />
           <span className="text-xs landing-mono text-emerald-700 tracking-wide">AI-Powered Interview Prep</span>
         </div>
 
@@ -47,7 +47,7 @@ export default function OAuthLogin() {
         <div className={`mt-7 flex flex-col sm:flex-row items-center gap-3 transition-all duration-700 delay-300 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
           {user ? (
             <>
-              <Link to="/capra/prepare" className="px-8 py-3 bg-emerald-500 text-white font-semibold text-sm rounded-lg hover:bg-emerald-600 transition-colors shadow-sm landing-body flex items-center gap-2">
+              <Link to="/capra/prepare" className="px-8 py-3 bg-[var(--accent)] text-white font-semibold text-sm rounded-lg hover:opacity-90 transition-colors shadow-sm landing-body flex items-center gap-2">
                 Go to Dashboard
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
               </Link>
@@ -57,7 +57,7 @@ export default function OAuthLogin() {
             </>
           ) : (
             <>
-              <Link to="/login" className="px-8 py-3 bg-emerald-500 text-white font-semibold text-sm rounded-lg hover:bg-emerald-600 transition-colors shadow-sm landing-body flex items-center gap-2">
+              <Link to="/login" className="px-8 py-3 bg-[var(--accent)] text-white font-semibold text-sm rounded-lg hover:opacity-90 transition-colors shadow-sm landing-body flex items-center gap-2">
                 Start Free
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
               </Link>
@@ -102,7 +102,7 @@ export default function OAuthLogin() {
       <section id="features" className="px-6 md:px-12 py-10 md:py-12 bg-[var(--bg-elevated)]/50">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-6">
-            <span className="landing-mono text-xs text-emerald-600 tracking-widest uppercase">Capabilities</span>
+            <span className="landing-mono text-xs text-[var(--accent)] tracking-widest uppercase">Capabilities</span>
             <h2 className="landing-display font-bold text-2xl md:text-3xl mt-2 tracking-tight text-[var(--text-primary)]">
               Everything You Need. <span className="text-[var(--text-muted)]">Nothing You Don't.</span>
             </h2>
@@ -153,7 +153,7 @@ export default function OAuthLogin() {
       <section className="px-6 md:px-12 py-10 md:py-12">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-6">
-            <span className="landing-mono text-xs text-emerald-600 tracking-widest uppercase">Workflow</span>
+            <span className="landing-mono text-xs text-[var(--accent)] tracking-widest uppercase">Workflow</span>
             <h2 className="landing-display font-bold text-2xl md:text-3xl mt-2 tracking-tight text-[var(--text-primary)]">
               Three Steps. <span className="text-[var(--text-muted)]">Zero Friction.</span>
             </h2>
@@ -186,7 +186,7 @@ export default function OAuthLogin() {
         <p className="mt-2 text-sm text-[var(--text-muted)] max-w-lg mx-auto landing-body">
           Stop memorizing. Start understanding. Practice with AI that thinks like a senior engineer.
         </p>
-        <Link to="/capra/practice" className="inline-block mt-4 px-8 py-3 bg-emerald-500 text-white font-semibold text-sm rounded-lg hover:bg-emerald-600 transition-colors shadow-sm landing-body">
+        <Link to="/capra/practice" className="inline-block mt-4 px-8 py-3 bg-[var(--accent)] text-white font-semibold text-sm rounded-lg hover:opacity-90 transition-colors shadow-sm landing-body">
           Start Practicing
         </Link>
       </section>
@@ -207,9 +207,9 @@ export default function OAuthLogin() {
               { label: 'Support', href: 'mailto:support@cariara.com' },
             ].map((link) => (
               link.href.startsWith('mailto:') ? (
-                <a key={link.label} href={link.href} className="text-xs text-[var(--text-muted)] hover:text-emerald-400 transition-colors landing-body font-medium">{link.label}</a>
+                <a key={link.label} href={link.href} className="text-xs text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors landing-body font-medium">{link.label}</a>
               ) : (
-                <Link key={link.label} to={link.href} className="text-xs text-[var(--text-muted)] hover:text-emerald-400 transition-colors landing-body font-medium">{link.label}</Link>
+                <Link key={link.label} to={link.href} className="text-xs text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors landing-body font-medium">{link.label}</Link>
               )
             ))}
           </div>

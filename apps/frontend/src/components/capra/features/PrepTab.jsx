@@ -281,7 +281,7 @@ export default function PrepTab({ isOpen, onClose }) {
                   return (
                     <div
                       key={key}
-                      className={`p-3 rounded-lg transition-all border ${isAuthenticated ? 'border-emerald-500 bg-emerald-500/10' : 'border-[var(--border)] bg-[var(--bg-surface)]'}`}
+                      className={`p-3 rounded-lg transition-all border ${isAuthenticated ? 'border-[var(--accent)] bg-[var(--accent)]/10' : 'border-[var(--border)] bg-[var(--bg-surface)]'}`}
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
