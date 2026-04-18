@@ -482,8 +482,8 @@ export default function LandingPage() {
 
           <motion.h1 className="mt-8 font-bold tracking-[-0.03em]" style={{ fontFamily: F.display }}
             initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.1 }}>
-            <span className="block text-[42px] sm:text-[52px] md:text-[64px] leading-[1.08]">Launch your career</span>
-            <span className="block text-[42px] sm:text-[52px] md:text-[64px] leading-[1.08] cm-gradient-text">into orbit.</span>
+            <span className="block text-[42px] sm:text-[52px] md:text-[64px] leading-[1.08]">Your career,</span>
+            <span className="block text-[42px] sm:text-[52px] md:text-[64px] leading-[1.08] cm-gradient-text">Cleared for takeoff.</span>
           </motion.h1>
 
           <motion.p className="mt-6 text-lg md:text-xl leading-relaxed max-w-2xl mx-auto" style={{ color: L.secondary }}
