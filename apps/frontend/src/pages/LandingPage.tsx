@@ -288,105 +288,45 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen relative" style={{ fontFamily: F.body, color: L.text, background: L.bg }}>
       <SEO path="/" />
-      {/* ═══ FLIGHT PATH — Aviation track with rocket, airplane, missile, satellite icons ═══ */}
-      <div className="absolute left-[48px] top-0 bottom-0 z-[3] pointer-events-none hidden lg:block" style={{ width: '40px' }}>
-        {/* Dashed flight route line */}
-        <div className="absolute left-[19px] top-0 bottom-0" style={{ width: '2px', background: 'repeating-linear-gradient(to bottom, rgba(118,185,0,0.18) 0px, rgba(118,185,0,0.18) 12px, transparent 12px, transparent 24px)' }} />
-        {/* Ambient contrail glow */}
-        <div className="absolute left-[10px] top-0 bottom-0" style={{ width: '20px', background: 'linear-gradient(to bottom, transparent, rgba(118,185,0,0.015) 15%, rgba(118,185,0,0.01) 50%, rgba(118,185,0,0.015) 85%, transparent)', filter: 'blur(8px)' }} />
+      {/* ═══ RUNWAY TRACK — thick takeoff road at 25% with airplane + airport nodes ═══ */}
+      <div className="absolute top-0 bottom-0 z-[3] pointer-events-none hidden lg:block" style={{ left: 'calc(15% + 18px)' }}>
+        {/* Tarmac — wide dark runway strip */}
+        <div className="absolute top-0 bottom-0" style={{ left: '-10px', width: '20px', borderRadius: '10px', background: `linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.05) 5%, rgba(255,255,255,0.03) 50%, rgba(255,255,255,0.05) 95%, transparent 100%)` }} />
+        {/* White dashed center line — real runway marking */}
+        <div className="absolute left-0 top-0 bottom-0" style={{ width: '2px', background: `repeating-linear-gradient(to bottom, rgba(255,255,255,0.5) 0px, rgba(255,255,255,0.5) 20px, transparent 20px, transparent 36px)` }} />
+        {/* Edge markings — solid white */}
+        <div className="absolute top-0 bottom-0" style={{ left: '-10px', width: '1px', background: `linear-gradient(to bottom, transparent 3%, rgba(255,255,255,0.15) 8%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.15) 92%, transparent 97%)` }} />
+        <div className="absolute top-0 bottom-0" style={{ left: '9px', width: '1px', background: `linear-gradient(to bottom, transparent 3%, rgba(255,255,255,0.15) 8%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.15) 92%, transparent 97%)` }} />
+        {/* Glow aura */}
+        <div className="absolute top-0 bottom-0" style={{ left: '-18px', width: '36px', background: `linear-gradient(to bottom, transparent 3%, rgba(255,255,255,0.015) 10%, rgba(255,255,255,0.008) 50%, rgba(255,255,255,0.015) 90%, transparent 97%)`, filter: 'blur(10px)' }} />
 
-        {/* ── AIRPLANE ascending with contrail ── */}
-        <div className="absolute" style={{ left: '-16px', animation: 'fp-rocket 16s ease-in-out infinite' }}>
-          {/* Contrail below the plane */}
-          <div style={{ position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', width: '3px', height: '80px', borderRadius: '2px', background: 'linear-gradient(to bottom, rgba(255,255,255,0.4), rgba(118,185,0,0.15), transparent)' }} />
-          {/* Real airplane image */}
-          <img src="/airplane.png" alt="" width="56" height="56" style={{ filter: 'drop-shadow(0 0 14px rgba(118,185,0,0.5)) drop-shadow(0 -4px 8px rgba(255,255,255,0.15))' }} />
+        {/* ── AIRPLANE flying UP with contrail ── */}
+        <div className="absolute" style={{ left: '-26px', animation: 'fp-rocket 16s ease-in-out infinite' }}>
+          {/* Contrail below the ascending plane */}
+          <div style={{ position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', width: '3px', height: '100px', borderRadius: '2px', background: 'linear-gradient(to bottom, rgba(255,255,255,0.5), rgba(118,185,0,0.2), transparent)' }} />
+          {/* Real airplane image — flying up */}
+          <img src="/airplane.png" alt="" width="56" height="56" style={{ filter: 'drop-shadow(0 0 16px rgba(118,185,0,0.6)) drop-shadow(0 -4px 10px rgba(255,255,255,0.2))' }} />
         </div>
 
-        {/* ── Waypoint icons — each a unique aviation symbol ── */}
+        {/* ── Airport nodes — each section is a destination ── */}
         {[
-          { pos: 6, type: 'launchpad' },
-          { pos: 20, type: 'missile' },
-          { pos: 35, type: 'airplane' },
-          { pos: 50, type: 'radar' },
-          { pos: 65, type: 'jet' },
-          { pos: 80, type: 'satellite' },
-          { pos: 94, type: 'target' },
-        ].map((n, i) => (
-          <div key={i} className="absolute" style={{ top: `${n.pos}%`, left: '0', width: '40px', display: 'flex', justifyContent: 'center' }}>
-            {/* Radar ping ring */}
-            <div className="fp-ping" style={{ animationDelay: `${i * 0.7}s` }} />
-
-            {n.type === 'launchpad' ? (
-              <svg width="20" height="22" viewBox="0 0 20 22" fill="none" style={{ filter: 'drop-shadow(0 0 4px rgba(118,185,0,0.3))' }}>
-                <rect x="3" y="19" width="14" height="2" rx="1" fill="rgba(118,185,0,0.35)" />
-                <rect x="6" y="17" width="8" height="2" rx="0.5" fill="rgba(118,185,0,0.25)" />
-                <path d="M10 2 L8 8 L8 17 L12 17 L12 8Z" fill="rgba(118,185,0,0.6)" />
-                <path d="M10 2 L9 5 L8 8 L10 6Z" fill="rgba(255,255,255,0.15)" />
-                <circle cx="10" cy="11" r="1.3" fill="#0a0a0f" stroke="rgba(255,255,255,0.2)" strokeWidth="0.4" />
-                <path d="M8 14 L5 18 L8 16Z" fill="rgba(118,185,0,0.4)" />
-                <path d="M12 14 L15 18 L12 16Z" fill="rgba(118,185,0,0.4)" />
-              </svg>
-            ) : n.type === 'missile' ? (
-              <svg width="16" height="22" viewBox="0 0 16 24" fill="none" style={{ filter: 'drop-shadow(0 0 4px rgba(118,185,0,0.3))' }}>
-                <path d="M8 0 L6 7 L6 18 L10 18 L10 7Z" fill="rgba(118,185,0,0.55)" />
-                <path d="M8 0 L7 4 L6 7 L8 5Z" fill="rgba(255,255,255,0.15)" />
-                <rect x="6.5" y="9" width="3" height="0.8" rx="0.3" fill="rgba(255,255,255,0.08)" />
-                <rect x="6.5" y="12" width="3" height="0.8" rx="0.3" fill="rgba(255,255,255,0.06)" />
-                <path d="M6 15 L3 21 L6 18Z" fill="rgba(118,185,0,0.35)" />
-                <path d="M10 15 L13 21 L10 18Z" fill="rgba(118,185,0,0.35)" />
-                <rect x="7" y="18" width="2" height="3" rx="0.5" fill="#444" />
-              </svg>
-            ) : n.type === 'airplane' ? (
-              <svg width="22" height="24" viewBox="0 0 24 26" fill="none" style={{ filter: 'drop-shadow(0 0 6px rgba(118,185,0,0.4))' }}>
-                <path d="M12 0 C12 0 12 2 12 2 L12 24" stroke="rgba(118,185,0,0.5)" strokeWidth="3" strokeLinecap="round" />
-                <path d="M12 10 L1 14.5 L1 16 L12 13Z" fill="#76B900" opacity="0.6" />
-                <path d="M12 10 L23 14.5 L23 16 L12 13Z" fill="#5E9400" opacity="0.6" />
-                <ellipse cx="5" cy="14" rx="1.2" ry="2" fill="rgba(118,185,0,0.3)" />
-                <ellipse cx="19" cy="14" rx="1.2" ry="2" fill="rgba(118,185,0,0.3)" />
-                <path d="M12 20 L7 23 L7 24 L12 22Z" fill="rgba(118,185,0,0.45)" />
-                <path d="M12 20 L17 23 L17 24 L12 22Z" fill="rgba(118,185,0,0.35)" />
-                <ellipse cx="12" cy="4" rx="1.5" ry="2" fill="#0a0a0f" stroke="rgba(255,255,255,0.2)" strokeWidth="0.4" />
-              </svg>
-            ) : n.type === 'radar' ? (
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ filter: 'drop-shadow(0 0 4px rgba(118,185,0,0.25))' }}>
-                <circle cx="12" cy="12" r="9" stroke="rgba(118,185,0,0.15)" strokeWidth="0.7" fill="none" />
-                <circle cx="12" cy="12" r="6" stroke="rgba(118,185,0,0.12)" strokeWidth="0.5" fill="none" />
-                <circle cx="12" cy="12" r="3" stroke="rgba(118,185,0,0.1)" strokeWidth="0.4" fill="none" />
-                <circle cx="12" cy="12" r="1.5" fill="rgba(118,185,0,0.4)" />
-                <line x1="12" y1="12" x2="19" y2="5" stroke="rgba(118,185,0,0.35)" strokeWidth="0.8" className="fp-sweep" />
-                <circle cx="16" cy="8" r="1.2" fill="#76B900" opacity="0.5" className="fp-blip" />
-              </svg>
-            ) : n.type === 'jet' ? (
-              <svg width="18" height="22" viewBox="0 0 18 24" fill="none" style={{ filter: 'drop-shadow(0 0 4px rgba(118,185,0,0.3))' }}>
-                <path d="M9 0 L7 8 L3 14 L3 15.5 L7 12 L7 20 L5 22 L5 23.5 L9 21.5 L13 23.5 L13 22 L11 20 L11 12 L15 15.5 L15 14 L11 8Z" fill="rgba(118,185,0,0.55)" />
-                <path d="M9 0 L8 4 L7 8 L9 5.5Z" fill="rgba(255,255,255,0.15)" />
-                <circle cx="9" cy="5.5" r="1" fill="#0a0a0f" stroke="rgba(255,255,255,0.2)" strokeWidth="0.4" />
-                <ellipse cx="9" cy="22" rx="1.5" ry="0.8" fill="rgba(245,158,11,0.3)" className="fp-afterburner" />
-              </svg>
-            ) : n.type === 'satellite' ? (
-              <svg width="22" height="20" viewBox="0 0 26 22" fill="none" style={{ filter: 'drop-shadow(0 0 4px rgba(118,185,0,0.25))' }}>
-                <rect x="10" y="8" width="6" height="6" rx="1" fill="rgba(118,185,0,0.45)" stroke="rgba(255,255,255,0.12)" strokeWidth="0.5" />
-                <rect x="1" y="9.5" width="8" height="3" rx="0.5" fill="rgba(118,185,0,0.25)" stroke="rgba(118,185,0,0.3)" strokeWidth="0.4" />
-                <rect x="17" y="9.5" width="8" height="3" rx="0.5" fill="rgba(118,185,0,0.25)" stroke="rgba(118,185,0,0.3)" strokeWidth="0.4" />
-                {[3,5,7].map(x => <line key={x} x1={x} y1="9.5" x2={x} y2="12.5" stroke="rgba(255,255,255,0.06)" strokeWidth="0.3" />)}
-                {[19,21,23].map(x => <line key={x} x1={x} y1="9.5" x2={x} y2="12.5" stroke="rgba(255,255,255,0.06)" strokeWidth="0.3" />)}
-                <line x1="13" y1="8" x2="13" y2="4" stroke="rgba(118,185,0,0.35)" strokeWidth="0.6" />
-                <circle cx="13" cy="3.5" r="1" fill="none" stroke="rgba(118,185,0,0.25)" strokeWidth="0.5" />
-                <path d="M15 5 Q17.5 3 15 1" stroke="rgba(118,185,0,0.15)" strokeWidth="0.4" fill="none" />
-                <path d="M16 6 Q19 3.5 16 0.5" stroke="rgba(118,185,0,0.1)" strokeWidth="0.3" fill="none" />
-              </svg>
-            ) : (
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ filter: 'drop-shadow(0 0 4px rgba(118,185,0,0.25))' }}>
-                <circle cx="12" cy="12" r="8" stroke="rgba(118,185,0,0.2)" strokeWidth="0.8" fill="none" />
-                <circle cx="12" cy="12" r="5" stroke="rgba(118,185,0,0.15)" strokeWidth="0.6" fill="none" />
-                <circle cx="12" cy="12" r="2" fill="#76B900" opacity="0.45" />
-                <line x1="12" y1="2" x2="12" y2="7" stroke="rgba(118,185,0,0.18)" strokeWidth="0.6" />
-                <line x1="12" y1="17" x2="12" y2="22" stroke="rgba(118,185,0,0.18)" strokeWidth="0.6" />
-                <line x1="2" y1="12" x2="7" y2="12" stroke="rgba(118,185,0,0.18)" strokeWidth="0.6" />
-                <line x1="17" y1="12" x2="22" y2="12" stroke="rgba(118,185,0,0.18)" strokeWidth="0.6" />
-              </svg>
-            )}
+          { pos: 8,  code: 'SFO' },
+          { pos: 22, code: 'LAX' },
+          { pos: 36, code: 'ORD' },
+          { pos: 50, code: 'JFK' },
+          { pos: 64, code: 'LHR' },
+          { pos: 78, code: 'NRT' },
+          { pos: 92, code: 'SIN' },
+        ].map((airport, i) => (
+          <div key={i} className="absolute" style={{ top: `${airport.pos}%`, left: '-14px' }}>
+            {/* Airport marker */}
+            <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: L.bg, border: '2.5px solid rgba(255,255,255,0.25)', boxShadow: '0 0 14px rgba(255,255,255,0.08), inset 0 0 6px rgba(118,185,0,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: 'rgba(118,185,0,0.5)' }} />
+            </div>
+            {/* Airport code label */}
+            <div style={{ position: 'absolute', left: '36px', top: '50%', transform: 'translateY(-50%)', whiteSpace: 'nowrap' }}>
+              <span style={{ fontSize: '9px', fontFamily: F.mono, fontWeight: 700, color: 'rgba(255,255,255,0.2)', letterSpacing: '0.15em' }}>{airport.code}</span>
+            </div>
           </div>
         ))}
       </div>
