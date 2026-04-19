@@ -5214,7 +5214,8 @@ Every trie interview problem fundamentally comes down to: tree traversal with ch
         'Each node has children map and end-of-word flag',
         'More space efficient than storing all prefixes in hash set',
         'Use for problems involving multiple prefix queries',
-        'Can store additional data at nodes (count, word itself)'
+        'Can store additional data at nodes (count, word itself)',
+        'For Word Search II: build trie from dictionary, DFS from each grid cell'
       ],
 
       interviewTips: [
@@ -5496,7 +5497,9 @@ Bit manipulation appears in: finding duplicates/missing numbers, efficient math 
         { question: 'Explain how the bitwise NOT operator (~) works and provide an example.', difficulty: 'Easy', answer: 'NOT: flips all bits (0→1, 1→0). Example: ~5 = ~00000101 = 11111010 = -6 (two\'s complement). Uses: create inverse mask, toggle all bits. Note: ~n = -(n+1) in two\'s complement. Often combined with AND to clear bits: n & ~(1<<i) clears bit i.' },
         { question: 'Explain how the bitwise XOR operator (^) works and provide an example.', difficulty: 'Easy', answer: 'XOR: returns 1 if bits differ. Example: 5 ^ 3 = 101 ^ 011 = 110 = 6. Properties: a^a=0, a^0=a, commutative, associative. Uses: find single number among pairs, swap without temp (a^=b; b^=a; a^=b), toggle bits, simple encryption. Powerful for "appears once" problems.' },
         { question: 'What does the bitwise left shift operator (<<) do, and provide an example.', difficulty: 'Easy', answer: 'Left shift: moves bits left, fills right with zeros. Example: 5 << 2 = 101 << 2 = 10100 = 20. Equivalent to multiply by 2^n. Uses: create mask (1<<i), multiply power of 2 (faster than *), building bit patterns. Overflow: bits shifted out are lost.' },
-        { question: 'What does the bitwise right shift operator (>>) do, and provide an example.', difficulty: 'Easy', answer: 'Right shift: moves bits right. Example: 20 >> 2 = 10100 >> 2 = 101 = 5. Equivalent to divide by 2^n (floor). Arithmetic shift: preserves sign (fills with sign bit). Logical shift: fills with zeros. Uses: extract bits ((n>>i)&1), divide by power of 2, iterate through bits.' }
+        { question: 'What does the bitwise right shift operator (>>) do, and provide an example.', difficulty: 'Easy', answer: 'Right shift: moves bits right. Example: 20 >> 2 = 10100 >> 2 = 101 = 5. Equivalent to divide by 2^n (floor). Arithmetic shift: preserves sign (fills with sign bit). Logical shift: fills with zeros. Uses: extract bits ((n>>i)&1), divide by power of 2, iterate through bits.' },
+        { question: 'How do you use bitmasks for subset generation?', difficulty: 'Medium', answer: 'For an array of n elements, each integer from 0 to 2^n-1 represents a unique subset. Bit i being 1 means element i is included. Iterate from 0 to 2^n-1, for each mask check which bits are set: if mask & (1<<i) then include element i. Generates all 2^n subsets in O(2^n * n) time. Used in: bitmask DP, subset enumeration, Travelling Salesman (bitmask DP). Also for state compression where each bit represents a boolean choice.' },
+        { question: 'How does Brian Kernighan algorithm count set bits?', difficulty: 'Medium', answer: 'n & (n-1) removes the lowest set bit. Repeat until n becomes 0, counting iterations. Example: n=12 (1100): 12&11=8 (1000), 8&7=0 (0000), count=2. Time O(k) where k is number of set bits, not O(32). Works because n-1 flips the lowest set bit and all bits below it, so AND clears exactly the lowest set bit. Much faster than checking all 32 bits when the number has few set bits.' }
       ],
 
       commonMistakes: [
@@ -5514,7 +5517,8 @@ Bit manipulation appears in: finding duplicates/missing numbers, efficient math 
         'Check bit: (n >> i) & 1',
         'Set bit: n | (1 << i)',
         'Clear bit: n & ~(1 << i)',
-        'n & (n-1) removes lowest set bit'
+        'n & (n-1) removes lowest set bit',
+        'Bitmask subset enumeration: iterate 0 to 2^n-1 for all subsets'
       ],
 
       interviewTips: [
@@ -5787,6 +5791,19 @@ The key insight for math problems: look for patterns, use modular arithmetic to 
         { name: 'Number of Digit One', difficulty: 'Hard' }
       ],
 
+      theoryQuestions: [
+        { question: 'How does the Euclidean algorithm compute GCD?', difficulty: 'Easy', answer: 'gcd(a, b) = gcd(b, a % b), repeat until b = 0. Result is a. Example: gcd(48, 18) -> gcd(18, 12) -> gcd(12, 6) -> gcd(6, 0) = 6. Time O(log min(a,b)). LCM formula: lcm(a,b) = a * b / gcd(a,b). Avoid overflow: a // gcd(a,b) * b. Python: math.gcd built-in. Extends to arrays via reduce.' },
+        { question: 'What is modular arithmetic and why is it important?', difficulty: 'Easy', answer: 'Modular arithmetic computes remainders. Key properties: (a+b)%m = ((a%m)+(b%m))%m, (a*b)%m = ((a%m)*(b%m))%m. Prevents integer overflow in large calculations. Used in: hashing, cryptography, competitive programming (MOD = 10^9+7). Division requires modular inverse: a/b mod m = a * b^(m-2) mod m (when m is prime, by Fermat). Always apply mod after each operation, not just at the end.' },
+        { question: 'How does fast exponentiation work?', difficulty: 'Easy', answer: 'Binary exponentiation: x^n in O(log n) by squaring. If n is even: x^n = (x^(n/2))^2. If odd: x^n = x * x^(n-1). Iteratively: for each bit of n from right to left, if bit is 1 multiply result by current base, then square base. Example: 2^10 = 2^(1010 in binary) = 2^8 * 2^2 = 256 * 4 = 1024. Works with modular arithmetic for large numbers.' },
+        { question: 'How does the Sieve of Eratosthenes work?', difficulty: 'Easy', answer: 'Find all primes up to n: (1) Create boolean array is_prime[0..n], all true. (2) Mark 0,1 as false. (3) For each i from 2 to sqrt(n): if is_prime[i], mark all multiples starting from i^2 as false. (4) Remaining true entries are prime. Time O(n log log n), space O(n). Optimization: start marking from i^2 since smaller multiples already marked by smaller primes.' },
+        { question: 'How do you detect if a point is inside a polygon?', difficulty: 'Medium', answer: 'Ray casting: draw horizontal ray from point, count intersections with polygon edges. Odd count = inside, even = outside. For convex polygons: check if point is on the same side of all edges using cross product. For simple problems: rectangle containment uses x1 <= x <= x2 AND y1 <= y <= y2. Cross product sign determines orientation (clockwise/counterclockwise).' },
+        { question: 'What is reservoir sampling?', difficulty: 'Medium', answer: 'Select k random items from a stream of unknown length n with equal probability. Algorithm: keep first k items. For each subsequent item i (i > k): generate random j in [0, i). If j < k, replace reservoir[j] with item i. Each item has exactly k/n probability of being selected. O(n) time, O(k) space. Used when data is too large for memory or is a stream. Proves correct by induction on stream length.' },
+        { question: 'How do you check if rectangles overlap?', difficulty: 'Medium', answer: 'Two rectangles do NOT overlap if one is entirely left, right, above, or below the other. Given rect1 = [x1,y1,x2,y2] and rect2 = [x3,y3,x4,y4]: they overlap if x1 < x4 AND x3 < x2 AND y1 < y4 AND y3 < y2. Overlap area: max(0, min(x2,x4) - max(x1,x3)) * max(0, min(y2,y4) - max(y1,y3)). Same logic as 1D interval overlap but in 2 dimensions.' },
+        { question: 'What is the Fisher-Yates shuffle algorithm?', difficulty: 'Medium', answer: 'Generate a uniformly random permutation in O(n) time, O(1) extra space. For i from n-1 down to 1: pick random j in [0, i], swap arr[i] and arr[j]. Each permutation has exactly 1/n! probability. Key: random range shrinks each iteration. Common mistake: using random j in [0, n) at each step (biased distribution). Used in: card games, random sampling, A/B testing.' },
+        { question: 'What is the cross product and how is it used in geometry?', difficulty: 'Hard', answer: 'Cross product of vectors AB and AC: (B.x-A.x)*(C.y-A.y) - (B.y-A.y)*(C.x-A.x). Positive = counterclockwise, negative = clockwise, zero = collinear. Used for: determining point orientation, convex hull (Graham scan), line segment intersection, polygon area (Shoelace formula). Area of triangle = |cross product| / 2. Foundation of computational geometry algorithms.' },
+        { question: 'How does the convex hull algorithm work?', difficulty: 'Hard', answer: 'Graham scan: find lowest-y point as anchor, sort remaining by polar angle, process points maintaining a stack of convex hull vertices. For each point: while last two points on stack make a clockwise turn with new point, pop. Push new point. O(n log n) due to sorting. Alternative: Jarvis march (gift wrapping) is O(nh) where h = hull vertices. Applications: smallest enclosing region, farthest pair of points, collision detection.' }
+      ],
+
       commonMistakes: [
         'Integer overflow when squaring or multiplying',
         'Not handling negative exponents in power function',
@@ -5801,7 +5818,8 @@ The key insight for math problems: look for patterns, use modular arithmetic to 
         'Use Euclidean algorithm for GCD: O(log min(a,b))',
         'Fast exponentiation: Square and multiply for O(log n)',
         'Be careful with integer overflow in multiplication',
-        'For geometry, use cross product for orientation'
+        'For geometry, use cross product for orientation',
+        'Modular arithmetic prevents overflow: apply mod after each operation'
       ],
 
       interviewTips: [
@@ -6091,6 +6109,19 @@ The key insight: matrices are just indexed by (row, col) pairs. Master the index
         { name: 'Best Meeting Point', difficulty: 'Hard' }
       ],
 
+      theoryQuestions: [
+        { question: 'How do you rotate a matrix 90 degrees clockwise in-place?', difficulty: 'Easy', answer: 'Two-step approach: (1) Transpose the matrix (swap matrix[i][j] with matrix[j][i]). (2) Reverse each row. For counterclockwise: reverse each row first, then transpose. For 180 degrees: reverse each row, then reverse each column. Direct formula: (i,j) maps to (j, n-1-i) for 90 CW. O(n^2) time, O(1) space.' },
+        { question: 'How does spiral matrix traversal work?', difficulty: 'Easy', answer: 'Use 4 boundary pointers: top, bottom, left, right. Process in order: right along top row (increment top), down along right column (decrement right), left along bottom row (decrement bottom), up along left column (increment left). Continue until boundaries cross. Check top <= bottom and left <= right before each direction change to handle rectangular matrices. O(m*n) time.' },
+        { question: 'How do you search in a sorted matrix?', difficulty: 'Easy', answer: 'Two cases: (1) Fully sorted (each row starts after previous row ends): treat as 1D array, binary search with index mapping row=mid/n, col=mid%n. O(log(m*n)). (2) Row-wise and column-wise sorted: staircase search from top-right corner. If value > target go left, if < target go down. O(m+n). The staircase approach works because each step eliminates either a row or column.' },
+        { question: 'How do you handle in-place matrix modifications?', difficulty: 'Medium', answer: 'Challenge: modifying a cell can affect future iterations. Solutions: (1) Use first row/column as markers (Set Matrix Zeroes). (2) Encode both old and new state in same cell using bit tricks (Game of Life: use 2 bits per cell). (3) Process in specific order so modified cells are not read again. (4) Make a copy (O(m*n) space but simple). Key: separate the "read" and "write" phases.' },
+        { question: 'What are the common matrix traversal patterns?', difficulty: 'Medium', answer: 'Row-major: iterate row by row (standard). Column-major: iterate column by column. Diagonal: cells where i+j is constant (anti-diagonal) or i-j is constant (main diagonal). Spiral: boundary pointers shrinking inward. Layer-by-layer: process outer ring then inner. BFS/DFS: for connected components, shortest path in grid. Snake: alternating left-to-right and right-to-left rows. Each pattern suits different problem types.' },
+        { question: 'How do you convert between 1D and 2D indices?', difficulty: 'Medium', answer: '2D to 1D: index = row * num_cols + col. 1D to 2D: row = index / num_cols, col = index % num_cols. Useful for: treating matrix as 1D array for binary search, flattening for processing, mapping linear index to grid position. Also used in serialization, Sudoku (81 cells as 1D), and matrix stored in 1D array for cache efficiency.' },
+        { question: 'How does BFS work on a grid/matrix?', difficulty: 'Medium', answer: 'Treat each cell as a graph node with 4 (or 8) neighbors. BFS from source using queue: enqueue start, mark visited, process level by level. For each cell, check 4 directions, enqueue unvisited valid neighbors. Used for: shortest path in binary matrix, rotting oranges, number of islands. O(m*n) time and space. Key: mark visited BEFORE enqueuing to avoid duplicates.' },
+        { question: 'How do you find connected components (islands) in a grid?', difficulty: 'Medium', answer: 'Iterate through all cells. When you find an unvisited land cell, start DFS/BFS to mark all connected land cells as visited. Each DFS/BFS call discovers one island. Count the number of times you start a new DFS/BFS. O(m*n) time. Variants: max area of island, number of distinct islands, making a large island. Can also use Union-Find for island counting.' },
+        { question: 'What is the prefix sum technique for 2D range queries?', difficulty: 'Hard', answer: 'Build a prefix sum matrix where prefix[i][j] = sum of all elements in rectangle (0,0) to (i-1,j-1). Construction: prefix[i][j] = matrix[i-1][j-1] + prefix[i-1][j] + prefix[i][j-1] - prefix[i-1][j-1]. Query sum of rectangle (r1,c1) to (r2,c2): prefix[r2+1][c2+1] - prefix[r1][c2+1] - prefix[r2+1][c1] + prefix[r1][c1]. O(m*n) build, O(1) per query. Used in Range Sum Query 2D.' },
+        { question: 'How do you solve the Maximal Square/Rectangle problem?', difficulty: 'Hard', answer: 'Maximal Square: DP where dp[i][j] = side length of largest square ending at (i,j). Recurrence: dp[i][j] = min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]) + 1 if cell is 1. O(m*n) time and space. Maximal Rectangle: harder -- use histogram approach. For each row, build histogram of consecutive 1s above, then find largest rectangle in histogram (stack-based, O(n)). Total O(m*n).' }
+      ],
+
       commonMistakes: [
         'Confusing row and column indices (matrix[row][col])',
         'Off-by-one errors in boundary conditions',
@@ -6105,7 +6136,8 @@ The key insight: matrices are just indexed by (row, col) pairs. Master the index
         'For rotation: transpose then reverse rows (or columns)',
         'Spiral: Use 4 pointers for boundaries',
         'In-place modifications may need marker values',
-        'Binary search works on row-wise and column-wise sorted matrices'
+        'Binary search works on row-wise and column-wise sorted matrices',
+        'For diagonal traversal: cells on same anti-diagonal have same i+j value'
       ],
 
       interviewTips: [
@@ -6371,7 +6403,7 @@ Understanding recursion deeply unlocks: binary tree problems, divide and conquer
         'Exploring all possibilities (backtracking)'
       ],
 
-      keyPatterns: ['Base case + recursive case', 'Divide and conquer', 'Tail recursion', 'Memoization', 'Trust the recursion'],
+      keyPatterns: ['Base case + recursive case', 'Divide and conquer', 'Tail recursion', 'Memoization', 'Trust the recursion', 'Recursive backtracking'],
       timeComplexity: 'Depends on branching factor and depth',
       spaceComplexity: 'O(depth) for call stack',
 
@@ -6423,6 +6455,19 @@ Understanding recursion deeply unlocks: binary tree problems, divide and conquer
         { name: 'Strobogrammatic Number III', difficulty: 'Hard' }
       ],
 
+      theoryQuestions: [
+        { question: 'What are the two essential parts of every recursive function?', difficulty: 'Easy', answer: 'Base case(s): the simplest input that can be solved directly without further recursion. Recursive case: breaking the problem into smaller subproblems and calling the function on them. Without a base case, recursion runs forever (stack overflow). Without making progress toward the base case, same result. Both must be defined correctly for the function to terminate and produce correct results.' },
+        { question: 'What does "trust the recursion" mean?', difficulty: 'Easy', answer: 'It means assuming the recursive call returns the correct answer for the smaller subproblem, then focusing only on how to use that result to solve the current problem. Instead of tracing every recursive call mentally, define: (1) what does this function return for input of size n? (2) If it works for n-1, how do I get the answer for n? This leap of faith is the key to writing recursive solutions quickly and correctly.' },
+        { question: 'What is the difference between recursion and iteration?', difficulty: 'Easy', answer: 'Every recursive solution can be converted to iterative (and vice versa). Recursion uses the call stack implicitly; iteration uses an explicit loop. Recursion is more natural for tree/graph traversal and divide-and-conquer. Iteration avoids stack overflow risk. Recursion can be less efficient due to function call overhead. Tail recursion can be optimized to iteration by some compilers (O(1) stack space).' },
+        { question: 'How do you analyze the time complexity of a recursive function?', difficulty: 'Easy', answer: 'Draw the recursion tree. Count total nodes (each node = one function call). Time = nodes * work per node. For linear recursion (one recursive call): O(n). For binary recursion (two calls, halving): O(n) if work per level is O(n) (merge sort), O(2^n) if no reduction (naive Fibonacci). Master theorem formalizes this for T(n) = aT(n/b) + O(n^c).' },
+        { question: 'What is tail recursion and why does it matter?', difficulty: 'Medium', answer: 'Tail recursion: the recursive call is the very last operation in the function (no work after it returns). Some compilers optimize tail recursion to reuse the same stack frame, converting it to iteration automatically (O(1) stack space). Example: factorial with accumulator is tail recursive. Python does NOT optimize tail recursion, but mentioning it shows understanding. Functional languages (Haskell, Scheme) rely on tail call optimization.' },
+        { question: 'How does memoization improve recursive solutions?', difficulty: 'Medium', answer: 'Memoization stores results of previously computed subproblems in a cache (dictionary/array). When the same subproblem is encountered again, return cached result instead of recomputing. Transforms overlapping subproblem recursion from exponential to polynomial time. Example: Fibonacci from O(2^n) to O(n). Python @lru_cache decorator does this automatically. Key: only works when the same inputs produce the same outputs (pure functions).' },
+        { question: 'What is the relationship between recursion and the call stack?', difficulty: 'Medium', answer: 'Each recursive call pushes a new frame onto the call stack containing local variables, parameters, and return address. The stack grows with recursion depth. Maximum depth = O(n) for linear recursion, O(log n) for balanced divide-and-conquer. Stack overflow occurs when depth exceeds stack limit (typically 1000-10000 in Python, configurable). Converting to iteration with an explicit stack avoids this limit.' },
+        { question: 'How do you convert a recursive solution to iterative?', difficulty: 'Medium', answer: 'Two approaches: (1) Use an explicit stack to simulate the call stack. Push initial state, loop while stack is not empty, pop and process. Works for DFS, tree traversal, backtracking. (2) For tail recursion: replace with a while loop, updating parameters each iteration. (3) For DP: convert top-down recursion to bottom-up iteration by filling table in dependency order. The iterative version is often more space-efficient and avoids stack overflow.' },
+        { question: 'What is divide and conquer, and how does it use recursion?', difficulty: 'Medium', answer: 'Divide and conquer: split problem into independent subproblems, solve each recursively, combine results. Three steps: (1) Divide into smaller subproblems. (2) Conquer by solving recursively (base case for small inputs). (3) Combine subproblem results. Examples: merge sort (divide array, sort halves, merge), quick sort (partition, sort halves), binary search (check mid, recurse on half). Time often O(n log n) analyzed via Master theorem.' },
+        { question: 'How do you debug infinite recursion?', difficulty: 'Hard', answer: 'Strategies: (1) Verify base case is reachable -- print input at each call to see if it converges. (2) Check that each recursive call makes progress toward base case (input gets smaller). (3) Add a depth counter and assert it stays below a limit. (4) Trace 2-3 levels of the recursion tree on paper. Common causes: wrong base case condition, not reducing input size, missing a return statement, or the wrong recursive call. Python default recursion limit is 1000.' }
+      ],
+
       commonMistakes: [
         'Missing or incorrect base case(s)',
         'Not making progress toward base case (infinite recursion)',
@@ -6437,7 +6482,8 @@ Understanding recursion deeply unlocks: binary tree problems, divide and conquer
         'Always define base case(s) first',
         'Trust the recursion: assume recursive calls work correctly',
         'Draw recursion tree to understand complexity',
-        'Convert to iteration if stack overflow is concern'
+        'Convert to iteration if stack overflow is concern',
+        'Add memoization when you see overlapping subproblems (same inputs computed twice)'
       ],
 
       interviewTips: [
@@ -6954,6 +7000,19 @@ In interviews, you'll rarely implement sort from scratch. Instead, focus on:
         { name: 'Maximum Gap', difficulty: 'Hard' }
       ],
 
+      theoryQuestions: [
+        { question: 'What is the lower bound for comparison-based sorting?', difficulty: 'Easy', answer: 'O(n log n) is the theoretical lower bound for comparison-based sorting. Any algorithm that sorts by comparing pairs of elements needs at least log2(n!) comparisons, which is Theta(n log n) by Stirling approximation. Merge sort and heap sort achieve this bound. Non-comparison sorts (counting, radix, bucket) can beat it by exploiting structure in the data.' },
+        { question: 'What is the difference between stable and unstable sorting?', difficulty: 'Easy', answer: 'A stable sort preserves the relative order of equal elements. Example: sorting [(a,2), (b,1), (c,2)] by number -- stable sort gives [(b,1), (a,2), (c,2)], unstable might give [(b,1), (c,2), (a,2)]. Stable: merge sort, insertion sort, Tim sort. Unstable: quick sort, heap sort. Stability matters when sorting by multiple keys (sort by last name, then by first name).' },
+        { question: 'Compare merge sort and quick sort.', difficulty: 'Easy', answer: 'Merge sort: O(n log n) worst case, stable, O(n) extra space, good for linked lists. Quick sort: O(n log n) average, O(n^2) worst case, in-place O(log n) stack, unstable, better cache performance. Quick sort is faster in practice due to cache locality. Randomized pivot avoids worst case. Python uses Tim sort (hybrid merge+insertion). Java uses dual-pivot quicksort for primitives.' },
+        { question: 'When should you use counting sort instead of comparison sort?', difficulty: 'Easy', answer: 'Use counting sort when values are integers in a known, limited range [0, k] where k = O(n). Time O(n + k), space O(k). Examples: sort ages (0-150), sort exam scores (0-100), sort RGB values (0-255). Not suitable for: large ranges, floating point, strings, or when k >> n. Radix sort extends this to larger ranges by sorting digit by digit.' },
+        { question: 'How does quick select find the kth element in O(n) average?', difficulty: 'Medium', answer: 'Quick select uses quicksort partitioning but only recurses into the half containing the kth element. Partition places pivot at its final position. If pivot index = k, done. If k < pivot, recurse left. If k > pivot, recurse right. Average O(n) because each level processes n/2 of remaining. Worst case O(n^2) with bad pivots. Randomized pivot gives expected O(n). Used for: kth largest, median, top-K.' },
+        { question: 'How do custom comparators work in Python and Java?', difficulty: 'Medium', answer: 'Python: sorted(arr, key=func) transforms each element, sorts by transformed value. For complex comparisons: functools.cmp_to_key(compare_func) converts a comparison function to a key. Java: Comparator interface with compare(a,b) returning negative/zero/positive. Lambda: (a,b) -> a.val - b.val. Common pitfall: integer overflow in subtraction-based comparators. Always use Integer.compare() in Java.' },
+        { question: 'Explain the Dutch National Flag (3-way partition) algorithm.', difficulty: 'Medium', answer: 'Partitions array into three groups (values < pivot, = pivot, > pivot) in single pass. Three pointers: low (boundary of small), mid (current), high (boundary of large). If arr[mid] < pivot, swap with low, advance both. If equal, advance mid. If > pivot, swap with high, decrement high. O(n) time, O(1) space. Used for Sort Colors and any 3-way partition. Key: do not advance mid after swapping with high (new element needs checking).' },
+        { question: 'What is Tim sort and why do standard libraries use it?', difficulty: 'Medium', answer: 'Tim sort is a hybrid of merge sort and insertion sort. It finds natural "runs" (already sorted subsequences), extends short runs with insertion sort, then merges runs using merge sort. O(n log n) worst case, O(n) best case (nearly sorted data), stable, O(n) space. Used by Python, Java (for objects), and Android. Optimal for real-world data which often has existing order (partially sorted files, database results).' },
+        { question: 'How does radix sort achieve O(d * n) time?', difficulty: 'Hard', answer: 'Radix sort sorts by each digit position using a stable sort (typically counting sort). For d-digit numbers with base k: d passes of counting sort, each O(n + k). Total: O(d * (n + k)). For 32-bit integers with base 256: d=4, k=256, total O(4n) = O(n). LSD (least significant digit) radix sort processes from rightmost digit. Works for integers, strings (fixed length), and can handle negative numbers with offset. Not comparison-based, so beats O(n log n).' },
+        { question: 'What is external sorting and when is it needed?', difficulty: 'Hard', answer: 'External sorting handles data too large for memory. Classic approach: (1) Split data into chunks that fit in memory. (2) Sort each chunk internally (quicksort/mergesort). (3) Merge sorted chunks using k-way merge with min heap. Reads/writes sequential disk blocks for efficiency. O(n log n) with O(n/B * log(n/M)) I/O operations where B=block size, M=memory. Used in databases, MapReduce, and big data processing.' }
+      ],
+
       commonMistakes: [
         'Not handling empty array or single element',
         'Wrong partition logic in quicksort (off-by-one)',
@@ -6966,9 +7025,10 @@ In interviews, you'll rarely implement sort from scratch. Instead, focus on:
 
       tips: [
         'Merge sort: Stable, guaranteed O(n log n), needs O(n) space',
-        'Quick sort: In-place, O(n log n) average, O(n²) worst',
+        'Quick sort: In-place, O(n log n) average, O(n^2) worst',
         'Use counting sort for limited range integers',
-        'Custom comparators for complex sorting criteria'
+        'Custom comparators for complex sorting criteria',
+        'Quick select finds kth element in O(n) average -- better than full sort'
       ],
 
       interviewTips: [
@@ -7240,6 +7300,19 @@ Sweep line technique: Instead of treating intervals as wholes, process START and
         { name: 'Falling Squares', difficulty: 'Hard' }
       ],
 
+      theoryQuestions: [
+        { question: 'How do you check if two intervals overlap?', difficulty: 'Easy', answer: 'Two intervals [a, b] and [c, d] overlap if a < d AND c < b (or a <= d AND c <= b if touching counts as overlap). Equivalently, they do NOT overlap if b <= c or d <= a. This simple condition is the foundation of all interval problems. Always clarify with interviewer whether touching intervals count as overlapping.' },
+        { question: 'Why do we sort intervals before processing them?', difficulty: 'Easy', answer: 'Sorting transforms interval problems into linear scans. After sorting by start time, overlapping intervals are adjacent, so one pass can merge them. Without sorting, you would need O(n^2) pairwise comparisons. Sort by start for merging, by end for greedy scheduling. The O(n log n) sort cost is almost always worthwhile.' },
+        { question: 'What is the difference between sorting by start time vs end time?', difficulty: 'Easy', answer: 'Sort by start: used for merging intervals, inserting intervals, and detecting overlaps. Groups overlapping intervals together. Sort by end: used for greedy scheduling (activity selection) -- earliest ending interval leaves most room for future intervals. Choosing wrong sort order is a common source of bugs.' },
+        { question: 'Explain the sweep line technique for interval problems.', difficulty: 'Easy', answer: 'Sweep line processes events (interval starts and ends) in sorted order. Create +1 event at each start and -1 at each end. Sort events by time. Scan left to right, maintaining a running count. The maximum count gives max concurrent intervals. O(n log n) time. Used for: max overlap, Meeting Rooms II, calendar problems.' },
+        { question: 'How does the min heap approach work for Meeting Rooms II?', difficulty: 'Medium', answer: 'Sort intervals by start time. Maintain a min heap of end times (representing ongoing meetings). For each new meeting: if earliest ending meeting has ended (heap[0] <= current start), pop it (reuse room). Push current end time. Heap size = number of rooms needed. Key insight: you only need to compare with the earliest ending meeting, which the heap provides in O(log n).' },
+        { question: 'What is the interval scheduling maximization problem?', difficulty: 'Medium', answer: 'Given intervals, find maximum number of non-overlapping intervals. Greedy solution: sort by END time, greedily select intervals that do not conflict with the last selected. This works because choosing the earliest ending interval always leaves the most room for future selections. This greedy choice is provably optimal. O(n log n) time. Variant: "minimum removals to make non-overlapping" = n - max_non_overlapping.' },
+        { question: 'How do you merge overlapping intervals efficiently?', difficulty: 'Medium', answer: 'Sort by start time. Initialize result with first interval. For each subsequent interval: if it overlaps with last in result (start <= last.end), extend last interval (end = max(end, last.end)). Otherwise add as new interval. One pass after sorting: O(n log n) total. Key edge case: completely contained intervals like [1,10] and [2,5] -- the max() handles this correctly.' },
+        { question: 'How do you find gaps between intervals?', difficulty: 'Medium', answer: 'Sort intervals by start time and merge overlapping ones first. Then gaps are the spaces between consecutive merged intervals: gap = [merged[i].end, merged[i+1].start]. For Employee Free Time: merge per-employee schedules, then find gaps. For Missing Ranges: find gaps between sorted intervals within a given range [low, high].' },
+        { question: 'What is the difference array technique for range update queries?', difficulty: 'Hard', answer: 'For multiple "add value to range [l, r]" queries, use a difference array: diff[l] += val, diff[r+1] -= val. After all queries, prefix sum of diff gives final values. O(1) per query, O(n) to compute result. Used in Corporate Flight Bookings, Car Pooling, Range Addition. Essentially a sweep line for additive range operations.' },
+        { question: 'How do you solve the Skyline Problem?', difficulty: 'Hard', answer: 'The Skyline Problem asks for the outline of overlapping rectangles. Use sweep line with events: building start (+height) and end (-height). At each x-coordinate, track active heights in a max heap or sorted multiset. When max height changes, record the point. Key challenge: handling same-x events in correct order (starts before ends, taller starts first). O(n log n) time.' }
+      ],
+
       commonMistakes: [
         'Sorting by wrong attribute (start vs end)',
         'Off-by-one in overlap check (< vs <=)',
@@ -7254,7 +7327,8 @@ Sweep line technique: Instead of treating intervals as wholes, process START and
         'Sort by start time (or end time depending on problem)',
         'Check overlap: intervals overlap if a.start < b.end AND b.start < a.end',
         'For scheduling: greedy by end time minimizes conflicts',
-        'Use sweep line for complex interval operations'
+        'Use sweep line for complex interval operations',
+        'Difference array for multiple range-update queries in O(1) each'
       ],
 
       interviewTips: [
@@ -7500,12 +7574,29 @@ Common variations:
         { name: 'Binary Search', difficulty: 'Easy' },
         { name: 'Search Insert Position', difficulty: 'Easy' },
         { name: 'First Bad Version', difficulty: 'Easy' },
+        { name: 'Guess Number Higher or Lower', difficulty: 'Easy' },
         { name: 'Find First and Last Position', difficulty: 'Medium' },
         { name: 'Search in Rotated Array', difficulty: 'Medium' },
+        { name: 'Search in Rotated Sorted Array II', difficulty: 'Medium' },
         { name: 'Find Peak Element', difficulty: 'Medium' },
         { name: 'Find Minimum in Rotated Array', difficulty: 'Medium' },
         { name: 'Koko Eating Bananas', difficulty: 'Medium' },
-        { name: 'Capacity To Ship Packages', difficulty: 'Medium' }
+        { name: 'Capacity To Ship Packages', difficulty: 'Medium' },
+        { name: 'Split Array Largest Sum', difficulty: 'Hard' },
+        { name: 'Median of Two Sorted Arrays', difficulty: 'Hard' }
+      ],
+
+      theoryQuestions: [
+        { question: 'What is linear search and when is it preferred over binary search?', difficulty: 'Easy', answer: 'Linear search checks elements one by one, O(n) time, works on unsorted data. Preferred when: data is unsorted and sorting cost O(n log n) exceeds benefit, array is very small (n < 20), data is in a linked list (no random access), or you need to find all occurrences. Binary search requires sorted/monotonic data and random access.' },
+        { question: 'What is the key prerequisite for binary search?', difficulty: 'Easy', answer: 'The search space must have a monotonic property -- a condition that is false for all elements on one side and true on the other. Sorted arrays are the most common case, but binary search works on any monotonic predicate. Examples: searching sorted array, finding minimum speed (Koko), finding peak element (local monotonicity).' },
+        { question: 'How do you avoid integer overflow when computing mid?', difficulty: 'Easy', answer: 'Use mid = left + (right - left) // 2 instead of (left + right) // 2. The naive formula can overflow when left + right exceeds max integer (relevant in C/C++/Java). The safe formula subtracts first. In Python this is not needed due to arbitrary precision, but good practice for interviews.' },
+        { question: 'What are the two main binary search templates?', difficulty: 'Easy', answer: 'Template 1 (exact match): while left <= right, return mid when found, move left = mid + 1 or right = mid - 1. Template 2 (boundary): while left < right, move left = mid + 1 or right = mid. Template 2 is more versatile for leftmost/rightmost occurrence, insertion point, and search-on-answer problems.' },
+        { question: 'What is binary search on answer and when do you use it?', difficulty: 'Medium', answer: 'Search a range of possible answers rather than an array. Define a feasibility function: given candidate answer mid, can we achieve it? If feasibility is monotonic, binary search finds the optimal boundary. Examples: Koko Eating Bananas (min speed), Ship Packages (min capacity), Split Array (min max sum). Very powerful for optimization problems.' },
+        { question: 'How does binary search work on a rotated sorted array?', difficulty: 'Medium', answer: 'At each step, one half is always sorted. Compare nums[left] with nums[mid] to determine which half. If left half sorted (nums[left] <= nums[mid]), check if target is in [left, mid). If right half sorted, check if target is in (mid, right]. Always compare against the sorted half. Time remains O(log n).' },
+        { question: 'What is exponential search?', difficulty: 'Medium', answer: 'Find the range by doubling index (1, 2, 4, 8, ...) until arr[i] >= target, then binary search in [i/2, i]. Total O(log k) where k is target position. Preferred for: unknown array size, target near beginning, sequential access patterns. Combines linear scan benefits for nearby elements with binary search for distant ones.' },
+        { question: 'How do you find the leftmost and rightmost occurrence of a target?', difficulty: 'Medium', answer: 'Leftmost: when nums[mid] >= target, set right = mid (keep searching left). When nums[mid] < target, set left = mid + 1. Rightmost: when nums[mid] <= target, set left = mid (keep searching right, use ceil division for mid). Or find leftmost of target+1 and subtract 1. Both are O(log n).' },
+        { question: 'How does binary search apply to finding peak elements?', difficulty: 'Medium', answer: 'Peak: element greater than neighbors. If nums[mid] < nums[mid+1], a peak exists to the right (go right). If nums[mid] >= nums[mid+1], a peak exists at mid or to the left (go left). Works because we always move toward an "uphill" direction, guaranteed to find a peak. O(log n) on unsorted data. Edges are treated as negative infinity.' },
+        { question: 'What is the difference between bisect_left and bisect_right in Python?', difficulty: 'Hard', answer: 'bisect_left returns leftmost insertion point (before existing equal elements). bisect_right returns rightmost insertion point (after existing equal elements). For [1,3,3,5]: bisect_left(3)=1, bisect_right(3)=3. Useful for: counting occurrences (right-left), finding ranges, and implementing lower_bound/upper_bound. Both are O(log n).' }
       ],
 
       commonMistakes: [
@@ -7519,10 +7610,11 @@ Common variations:
       ],
 
       tips: [
-        'Binary search requires sorted data',
+        'Binary search requires sorted or monotonic data',
         'Watch for off-by-one errors in boundary conditions',
         'Use binary search on answer space for optimization problems',
-        'Ternary search for unimodal functions'
+        'Ternary search for unimodal functions',
+        'Python bisect_left/bisect_right give insertion points in O(log n)'
       ],
 
       interviewTips: [
@@ -7715,61 +7807,298 @@ def binary_search_left(nums, target):
       color: '#f43f5e',
       questions: 17,
       description: 'FIFO data structure for BFS, task scheduling, and buffering.',
-      keyPatterns: ['BFS', 'Level order traversal', 'Sliding window max', 'Task scheduling'],
-      timeComplexity: 'O(1) enqueue/dequeue',
-      spaceComplexity: 'O(n)',
+
+      introduction: `A Queue is a linear data structure that follows the First-In-First-Out (FIFO) principle -- the element added first is removed first, like a line at a checkout counter. Queues are fundamental to breadth-first search, level-order traversal, and any scenario where processing order matters.
+
+Queue variants each solve different problems:
+- **Standard Queue**: Simple FIFO with enqueue and dequeue
+- **Deque (Double-Ended Queue)**: Insert and remove from both ends in O(1)
+- **Priority Queue**: Elements dequeued by priority (implemented via heaps)
+- **Circular Queue**: Fixed-size queue using modular arithmetic to wrap around
+- **Monotonic Deque**: Maintains elements in sorted order for sliding window problems
+
+In interviews, queues appear in two major contexts. First, BFS and level-order traversal: exploring nodes layer by layer (shortest path, rotting oranges). Second, buffering and scheduling: task schedulers, rate limiters, and sliding window problems all rely on queue semantics.
+
+The key insight: BFS with a queue guarantees shortest path in unweighted graphs, and monotonic deques convert O(n*k) sliding window problems into O(n).`,
+
+      whenToUse: [
+        'BFS traversal of graphs or grids (shortest path in unweighted graph)',
+        'Level-order traversal of trees',
+        'Sliding window maximum/minimum (monotonic deque)',
+        'Task scheduling with cooldown constraints',
+        'Simulating real-world queues (ticket lines, print queues)',
+        'Buffering data streams (moving average, recent calls)',
+        'Multi-source BFS (rotting oranges, walls and gates)',
+        'When processing order must match insertion order'
+      ],
+
+      keyPatterns: ['BFS traversal', 'Level order traversal', 'Monotonic deque', 'Task scheduling', 'Circular queue', 'Multi-source BFS'],
+      timeComplexity: 'O(1) enqueue/dequeue; O(n) for BFS over n nodes',
+      spaceComplexity: 'O(n) for queue storage',
+
+      approach: [
+        'For BFS: initialize queue with starting node(s), process level by level',
+        'For multi-source BFS: enqueue all sources initially (e.g., all rotten oranges)',
+        'For level-order: track level size before processing to separate levels',
+        'For monotonic deque: maintain decreasing (for max) or increasing (for min) order',
+        'For circular queue: use modular arithmetic (index % capacity)',
+        'For task scheduling: use queue + cooldown tracking with heap',
+        'Always check if queue is empty before dequeue'
+      ],
+
       commonProblems: [
         // Easy
         { name: 'Implement Queue using Stacks', difficulty: 'Easy' },
         { name: 'Number of Recent Calls', difficulty: 'Easy' },
         { name: 'First Unique Character in a String', difficulty: 'Easy' },
         { name: 'Moving Average from Data Stream', difficulty: 'Easy' },
+        { name: 'Number of Students Unable to Eat Lunch', difficulty: 'Easy' },
+        { name: 'Time Needed to Buy Tickets', difficulty: 'Easy' },
         // Medium
         { name: 'Design Circular Queue', difficulty: 'Medium' },
         { name: 'Design Circular Deque', difficulty: 'Medium' },
         { name: 'Design Front Middle Back Queue', difficulty: 'Medium' },
         { name: 'Dota2 Senate', difficulty: 'Medium' },
         { name: 'Task Scheduler', difficulty: 'Medium' },
-        { name: 'Number of Students Unable to Eat Lunch', difficulty: 'Easy' },
-        { name: 'Time Needed to Buy Tickets', difficulty: 'Easy' },
         { name: 'Reveal Cards In Increasing Order', difficulty: 'Medium' },
         { name: 'Rotting Oranges', difficulty: 'Medium' },
         { name: 'Walls and Gates', difficulty: 'Medium' },
         { name: 'Open the Lock', difficulty: 'Medium' },
         { name: 'Shortest Path in Binary Matrix', difficulty: 'Medium' },
         { name: 'Jump Game III', difficulty: 'Medium' },
-        { name: 'Jump Game IV', difficulty: 'Hard' },
         { name: 'Snakes and Ladders', difficulty: 'Medium' },
         // Hard
+        { name: 'Jump Game IV', difficulty: 'Hard' },
         { name: 'Sliding Window Maximum', difficulty: 'Hard' },
         { name: 'Shortest Subarray with Sum at Least K', difficulty: 'Hard' },
         { name: 'Constrained Subsequence Sum', difficulty: 'Hard' }
       ],
-      tips: [
-        'Use deque for O(1) operations on both ends',
-        'BFS uses queue for level-by-level exploration',
-        'Monotonic deque for sliding window min/max',
-        'Priority queue (heap) when order matters beyond FIFO'
-      ],
-      codeExample: `# Sliding Window Maximum using Monotonic Deque
-from collections import deque
 
-def max_sliding_window(nums, k):
+      commonMistakes: [
+        'Using list.pop(0) in Python instead of collections.deque (O(n) vs O(1))',
+        'Forgetting to mark nodes as visited before enqueuing in BFS (causes duplicates)',
+        'Not tracking level boundaries correctly in level-order traversal',
+        'Off-by-one errors in circular queue (full vs empty condition)',
+        'Popping from wrong end of deque in monotonic deque pattern',
+        'Not handling empty queue before dequeue',
+        'Confusing BFS (queue) with DFS (stack)'
+      ],
+
+      theoryQuestions: [
+        { question: 'What is the difference between a queue and a stack?', difficulty: 'Easy', answer: 'Queue is FIFO (First-In-First-Out): first element added is first removed, like a checkout line. Stack is LIFO (Last-In-First-Out): last element added is first removed, like a stack of plates. Queue uses enqueue/dequeue; stack uses push/pop. Queue is used for BFS; stack for DFS. Both have O(1) operations.' },
+        { question: 'How would you implement a queue using two stacks?', difficulty: 'Easy', answer: 'Use stack1 for enqueue (push). For dequeue: if stack2 is empty, pop all from stack1 and push onto stack2 (reverses order), then pop from stack2. Amortized O(1) per operation because each element is moved at most twice. Key insight: reversing a stack gives queue order.' },
+        { question: 'What is a circular queue and why is it useful?', difficulty: 'Easy', answer: 'Fixed-size queue where the end wraps to the beginning using modular arithmetic: next = (index + 1) % capacity. Avoids wasted space from dequeue in array-based queues. Uses size counter to distinguish full from empty. Used in OS buffering, network packet queues, ring buffers.' },
+        { question: 'Explain why BFS uses a queue while DFS uses a stack.', difficulty: 'Easy', answer: 'BFS explores level by level: all nodes at distance d before d+1. Queue FIFO ensures nodes processed in discovery order (closest first). DFS goes as deep as possible first. Stack LIFO ensures most recently discovered node explored next (deepest first). Queue gives shortest path in unweighted graphs; stack does not.' },
+        { question: 'What is a monotonic deque and when would you use it?', difficulty: 'Medium', answer: 'A deque maintaining elements in monotonically increasing or decreasing order. When adding new element, remove all elements violating the order from the back. Front holds the extreme (max or min). Used for sliding window max/min in O(n) instead of O(n*k). Also used for optimizing DP transitions.' },
+        { question: 'How does a priority queue differ from a regular queue?', difficulty: 'Medium', answer: 'Regular queue: FIFO. Priority queue: highest/lowest priority element dequeued first regardless of insertion order. Implemented via binary heap: O(log n) enqueue/dequeue. Used in Dijkstra, Huffman coding, task scheduling, merge K sorted lists. Python: heapq module.' },
+        { question: 'Explain multi-source BFS and give an example.', difficulty: 'Medium', answer: 'Instead of starting from one source, enqueue all sources simultaneously at distance 0. BFS expands outward from all sources in parallel. Example: Rotting Oranges -- all rotten oranges are sources, BFS computes minimum time to rot all oranges. Also: Walls and Gates, 01 Matrix. Same O(V+E) complexity.' },
+        { question: 'How do you implement a deque and what are its advantages?', difficulty: 'Medium', answer: 'Deque supports O(1) insertion and removal at both ends. Implemented with doubly-linked list or circular array. Can be used as both queue and stack. Enables monotonic deque pattern for sliding window. Supports peeking at both ends. Python collections.deque uses doubly-linked list of fixed-size blocks.' },
+        { question: 'What is the time complexity of BFS?', difficulty: 'Medium', answer: 'BFS visits each node once and each edge once: O(V + E) for graphs, O(m*n) for grids. Each node enqueued and dequeued exactly once (O(1) each), so total queue operations are O(V). Space is O(V) worst case. Queue width determines memory peak.' },
+        { question: 'How would you implement a thread-safe queue?', difficulty: 'Hard', answer: 'Use mutex for mutual exclusion: lock before enqueue/dequeue, unlock after. Condition variables for blocking: wait when empty, signal on enqueue. Lock-free approach: CAS operations on head/tail pointers. Python: queue.Queue is thread-safe. Java: ConcurrentLinkedQueue. Key: avoid deadlock, ensure fairness.' }
+      ],
+
+      tips: [
+        'Use collections.deque in Python for O(1) popleft',
+        'BFS uses queue for level-by-level exploration',
+        'Monotonic deque for sliding window min/max in O(n)',
+        'Priority queue (heap) when order matters beyond FIFO',
+        'For level-order traversal, capture queue size at start of each level'
+      ],
+
+      interviewTips: [
+        'State clearly: "I will use BFS with a queue for shortest path"',
+        'For grid BFS: mark visited before enqueuing, not after dequeuing',
+        'Know the difference between deque, priority queue, and simple queue',
+        'For Sliding Window Maximum, explain why monotonic deque gives O(n)',
+        'Mention multi-source BFS for problems like Rotting Oranges',
+        'For Task Scheduler, explain greedy with max heap + cooldown queue',
+        'Know how to implement queue with two stacks'
+      ],
+
+      codeExamples: [
+        {
+          title: 'BFS Level-Order Traversal',
+          language: 'python',
+          description: 'Standard BFS pattern using queue for tree level-order traversal.',
+          code: `from collections import deque
+
+def levelOrder(root):
+    """
+    BFS: process all nodes at depth d before depth d+1.
+    Use queue size to separate levels.
+    """
+    if not root:
+        return []
+
+    result = []
+    queue = deque([root])
+
+    while queue:
+        level_size = len(queue)
+        level = []
+
+        for _ in range(level_size):
+            node = queue.popleft()
+            level.append(node.val)
+            if node.left:
+                queue.append(node.left)
+            if node.right:
+                queue.append(node.right)
+
+        result.append(level)
+
+    return result
+
+# Time: O(n), Space: O(n)
+# Example: [3,9,20,null,null,15,7] -> [[3],[9,20],[15,7]]`
+        },
+        {
+          title: 'Sliding Window Maximum - Monotonic Deque',
+          language: 'python',
+          description: 'Find maximum in every window of size k.',
+          code: `from collections import deque
+
+def maxSlidingWindow(nums, k):
+    """
+    Monotonic deque: maintain indices in decreasing value order.
+    For each new element:
+    1. Remove indices outside window from front
+    2. Remove smaller elements from back
+    3. Append current index
+    4. Front is the max for current window
+    """
     dq = deque()  # Store indices
     result = []
 
     for i, num in enumerate(nums):
-        # Remove indices outside window
         while dq and dq[0] < i - k + 1:
             dq.popleft()
-        # Remove smaller elements
         while dq and nums[dq[-1]] < num:
             dq.pop()
         dq.append(i)
+
         if i >= k - 1:
             result.append(nums[dq[0]])
 
-    return result`
+    return result
+
+# Time: O(n), Space: O(k)
+# Each element added/removed at most once`
+        },
+        {
+          title: 'Rotting Oranges - Multi-Source BFS',
+          language: 'python',
+          description: 'BFS from all rotten oranges simultaneously.',
+          code: `from collections import deque
+
+def orangesRotting(grid):
+    """
+    Multi-source BFS: all rotten oranges as initial sources.
+    Each BFS level = 1 minute of rotting.
+    """
+    rows, cols = len(grid), len(grid[0])
+    queue = deque()
+    fresh = 0
+
+    for r in range(rows):
+        for c in range(cols):
+            if grid[r][c] == 2:
+                queue.append((r, c))
+            elif grid[r][c] == 1:
+                fresh += 1
+
+    if fresh == 0:
+        return 0
+
+    minutes = 0
+    for dr, dc in [(0,1),(0,-1),(1,0),(-1,0)]:
+        pass  # Direction template
+
+    while queue and fresh > 0:
+        minutes += 1
+        for _ in range(len(queue)):
+            r, c = queue.popleft()
+            for dr, dc in [(0,1),(0,-1),(1,0),(-1,0)]:
+                nr, nc = r + dr, c + dc
+                if 0 <= nr < rows and 0 <= nc < cols and grid[nr][nc] == 1:
+                    grid[nr][nc] = 2
+                    fresh -= 1
+                    queue.append((nr, nc))
+
+    return minutes if fresh == 0 else -1
+
+# Time: O(m*n), Space: O(m*n)`
+        },
+        {
+          title: 'Implement Queue using Two Stacks',
+          language: 'python',
+          description: 'Classic interview problem with amortized O(1).',
+          code: `class MyQueue:
+    """
+    inbox: for push. outbox: for pop/peek.
+    When outbox empty, pour inbox into outbox.
+    Amortized O(1): each element transferred at most once.
+    """
+    def __init__(self):
+        self.inbox = []
+        self.outbox = []
+
+    def push(self, x: int) -> None:
+        self.inbox.append(x)
+
+    def pop(self) -> int:
+        self._transfer()
+        return self.outbox.pop()
+
+    def peek(self) -> int:
+        self._transfer()
+        return self.outbox[-1]
+
+    def empty(self) -> bool:
+        return not self.inbox and not self.outbox
+
+    def _transfer(self):
+        if not self.outbox:
+            while self.inbox:
+                self.outbox.append(self.inbox.pop())
+
+# Push: O(1), Pop: amortized O(1)`
+        },
+        {
+          title: 'Task Scheduler',
+          language: 'python',
+          description: 'Schedule tasks with cooldown using heap + queue.',
+          code: `from collections import Counter, deque
+import heapq
+
+def leastInterval(tasks, n):
+    """
+    Greedy: always schedule most frequent task first.
+    Max heap for frequencies, cooldown queue for waiting.
+    """
+    counts = Counter(tasks)
+    heap = [-cnt for cnt in counts.values()]
+    heapq.heapify(heap)
+
+    cooldown = deque()  # (available_time, neg_count)
+    time = 0
+
+    while heap or cooldown:
+        time += 1
+        if cooldown and cooldown[0][0] == time:
+            heapq.heappush(heap, cooldown.popleft()[1])
+
+        if heap:
+            neg_cnt = heapq.heappop(heap)
+            neg_cnt += 1  # Decrement (add 1 since negative)
+            if neg_cnt < 0:
+                cooldown.append((time + n + 1, neg_cnt))
+
+    return time
+
+# Time: O(tasks * n), Space: O(unique tasks)`
+        }
+      ]
     },
     {
       id: 'blind-75',
@@ -7778,28 +8107,177 @@ def max_sliding_window(nums, k):
       color: '#22c55e',
       questions: 75,
       description: 'Curated list of 75 essential LeetCode problems covering all major patterns.',
-      keyPatterns: ['Arrays', 'Binary', 'DP', 'Graph', 'Interval', 'Linked List', 'Matrix', 'String', 'Tree', 'Heap'],
+
+      introduction: `The Blind 75 is the most popular curated list of LeetCode problems for technical interview preparation, originally compiled and shared on the Blind platform by a Facebook engineer. It distills hundreds of LeetCode problems into 75 essentials that cover every major pattern tested at top tech companies.
+
+The list is organized into 10 categories: Array (9), Binary (5), Dynamic Programming (11), Graph (8), Interval (5), Linked List (6), Matrix (4), String (10), Tree (14), and Heap (3). Each problem was selected because it teaches a fundamental pattern that recurs across many other problems.
+
+Why the Blind 75 works:
+- **Pattern coverage**: Every major interview pattern is represented at least once
+- **Time efficiency**: 75 problems is achievable in 2-4 weeks of focused practice
+- **Battle-tested**: Thousands of engineers have used this list to land FAANG offers
+- **Difficulty balance**: Mix of Medium and Hard that mirrors real interview difficulty
+
+The Blind 75 is best suited for candidates who already have basic data structure knowledge and want a focused review before interviews. For those starting from scratch, consider the Ascend 100 which includes foundational Easy problems.`,
+
+      whenToUse: [
+        'Quick 2-4 week interview preparation sprint',
+        'Reviewing core patterns before an upcoming interview',
+        'When you already have basic DSA knowledge and need focused practice',
+        'As a checklist to identify gaps in your pattern knowledge',
+        'When targeting FAANG or similar top-tier companies',
+        'As a supplement after completing foundational problems'
+      ],
+
+      keyPatterns: ['Arrays & Hashing', 'Binary/Bit Manipulation', 'Dynamic Programming', 'Graph Traversal', 'Interval Merging', 'Linked List', 'Matrix Traversal', 'String Manipulation', 'Tree DFS/BFS', 'Heap/Priority Queue'],
       timeComplexity: 'Varies by problem',
       spaceComplexity: 'Varies by problem',
-      commonProblems: ['Two Sum', 'Best Time to Buy/Sell Stock', 'Contains Duplicate', 'Product of Array Except Self', 'Maximum Subarray', 'Maximum Product Subarray'],
-      tips: [
-        'Start with Array and String problems',
-        'Progress to Trees and Graphs',
-        'Focus on patterns, not memorization',
-        'Aim to solve each problem in <45 minutes'
+
+      approach: [
+        'Solve by category, not randomly -- build pattern recognition',
+        'Start with Array and String (most common in interviews)',
+        'Progress to Trees, then Graphs, then DP (increasing difficulty)',
+        'For each problem: attempt 20 min, then study the optimal solution',
+        'After each category, review all problems in that category',
+        'Do not move to next category until current one feels comfortable'
       ],
-      codeExample: `# The Blind 75 covers these categories:
-# - Array (9 problems)
-# - Binary (5 problems)
-# - Dynamic Programming (11 problems)
-# - Graph (8 problems)
-# - Interval (5 problems)
-# - Linked List (6 problems)
-# - Matrix (4 problems)
-# - String (10 problems)
-# - Tree (14 problems)
-# - Heap (3 problems)
-# Total: 75 essential problems`
+
+      commonProblems: [
+        // Array
+        { name: 'Two Sum', difficulty: 'Easy' },
+        { name: 'Best Time to Buy and Sell Stock', difficulty: 'Easy' },
+        { name: 'Contains Duplicate', difficulty: 'Easy' },
+        { name: 'Product of Array Except Self', difficulty: 'Medium' },
+        { name: 'Maximum Subarray', difficulty: 'Medium' },
+        { name: 'Maximum Product Subarray', difficulty: 'Medium' },
+        { name: 'Find Minimum in Rotated Sorted Array', difficulty: 'Medium' },
+        { name: 'Search in Rotated Sorted Array', difficulty: 'Medium' },
+        { name: 'Three Sum', difficulty: 'Medium' },
+        { name: 'Container With Most Water', difficulty: 'Medium' },
+        // String
+        { name: 'Longest Substring Without Repeating Characters', difficulty: 'Medium' },
+        { name: 'Longest Repeating Character Replacement', difficulty: 'Medium' },
+        { name: 'Minimum Window Substring', difficulty: 'Hard' },
+        { name: 'Valid Anagram', difficulty: 'Easy' },
+        { name: 'Group Anagrams', difficulty: 'Medium' },
+        { name: 'Valid Parentheses', difficulty: 'Easy' },
+        { name: 'Longest Palindromic Substring', difficulty: 'Medium' },
+        { name: 'Palindromic Substrings', difficulty: 'Medium' },
+        { name: 'Encode and Decode Strings', difficulty: 'Medium' },
+        // Tree
+        { name: 'Maximum Depth of Binary Tree', difficulty: 'Easy' },
+        { name: 'Same Tree', difficulty: 'Easy' },
+        { name: 'Invert Binary Tree', difficulty: 'Easy' },
+        { name: 'Binary Tree Level Order Traversal', difficulty: 'Medium' },
+        { name: 'Validate Binary Search Tree', difficulty: 'Medium' },
+        { name: 'Kth Smallest Element in a BST', difficulty: 'Medium' },
+        { name: 'Lowest Common Ancestor of BST', difficulty: 'Medium' },
+        { name: 'Implement Trie', difficulty: 'Medium' },
+        { name: 'Word Search II', difficulty: 'Hard' },
+        // DP
+        { name: 'Climbing Stairs', difficulty: 'Easy' },
+        { name: 'Coin Change', difficulty: 'Medium' },
+        { name: 'Longest Increasing Subsequence', difficulty: 'Medium' },
+        { name: 'Word Break', difficulty: 'Medium' },
+        { name: 'Combination Sum IV', difficulty: 'Medium' },
+        { name: 'House Robber', difficulty: 'Medium' },
+        { name: 'House Robber II', difficulty: 'Medium' },
+        { name: 'Decode Ways', difficulty: 'Medium' },
+        { name: 'Unique Paths', difficulty: 'Medium' },
+        // Graph
+        { name: 'Clone Graph', difficulty: 'Medium' },
+        { name: 'Course Schedule', difficulty: 'Medium' },
+        { name: 'Number of Islands', difficulty: 'Medium' },
+        { name: 'Pacific Atlantic Water Flow', difficulty: 'Medium' },
+        { name: 'Longest Consecutive Sequence', difficulty: 'Medium' },
+        // Linked List
+        { name: 'Reverse Linked List', difficulty: 'Easy' },
+        { name: 'Linked List Cycle', difficulty: 'Easy' },
+        { name: 'Merge Two Sorted Lists', difficulty: 'Easy' },
+        { name: 'Remove Nth Node From End of List', difficulty: 'Medium' },
+        { name: 'Reorder List', difficulty: 'Medium' },
+        // Interval
+        { name: 'Merge Intervals', difficulty: 'Medium' },
+        { name: 'Insert Interval', difficulty: 'Medium' },
+        { name: 'Non-overlapping Intervals', difficulty: 'Medium' },
+        // Matrix
+        { name: 'Set Matrix Zeroes', difficulty: 'Medium' },
+        { name: 'Spiral Matrix', difficulty: 'Medium' },
+        { name: 'Rotate Image', difficulty: 'Medium' },
+        { name: 'Word Search', difficulty: 'Medium' },
+        // Heap
+        { name: 'Top K Frequent Elements', difficulty: 'Medium' },
+        { name: 'Find Median from Data Stream', difficulty: 'Hard' },
+        { name: 'Merge K Sorted Lists', difficulty: 'Hard' }
+      ],
+
+      commonMistakes: [
+        'Solving problems randomly instead of by pattern category',
+        'Moving on too quickly without fully understanding the pattern',
+        'Not practicing under timed conditions',
+        'Skipping the easier problems in each category',
+        'Not reviewing problems after solving them (spaced repetition matters)',
+        'Focusing on quantity over quality -- deep understanding beats memorization',
+        'Not practicing explaining your approach out loud'
+      ],
+
+      theoryQuestions: [
+        { question: 'Why is the Blind 75 considered the gold standard for interview prep?', difficulty: 'Easy', answer: 'The Blind 75 covers every major pattern (arrays, trees, graphs, DP, etc.) with minimum redundancy. Each problem was selected because it teaches a unique pattern that recurs in hundreds of other problems. Thousands of engineers have validated this list by landing offers at FAANG companies. It is time-efficient (achievable in 2-4 weeks) while covering the same breadth as 300+ random LeetCode problems.' },
+        { question: 'What is the recommended order for solving the Blind 75?', difficulty: 'Easy', answer: 'Recommended order by category: (1) Array and String -- most common, builds confidence. (2) Linked List -- simple data structure, pointer manipulation. (3) Tree -- DFS/BFS, recursion. (4) Graph -- builds on tree traversal. (5) Dynamic Programming -- hardest category, needs prior patterns. (6) Interval, Matrix, Heap, Binary -- fill remaining gaps. This order respects dependencies: tree skills help with graphs, recursion helps with DP.' },
+        { question: 'How many problems should you solve per day when working through the Blind 75?', difficulty: 'Easy', answer: '3-5 problems per day for a 2-3 week timeline. Spend 20-30 minutes attempting each problem, then study the optimal solution for 15 minutes. Quality over quantity: deeply understanding 3 problems is better than rushing through 8. Schedule 1 review session per day where you re-solve 2-3 problems from previous days. Adjust pace based on difficulty: Array/String problems go faster than DP/Graph.' },
+        { question: 'What should you do if you cannot solve a Blind 75 problem in 20 minutes?', difficulty: 'Easy', answer: 'Stop and study the solution. Read the approach (not just code), understand WHY the pattern works. Draw diagrams. Then close the solution and implement from memory. If you still struggle, mark it for review in 2-3 days. Spending 2 hours on one problem has diminishing returns. The goal is pattern recognition, not solving from first principles every time. After seeing 5-6 problems using the same pattern, new ones become easier.' },
+        { question: 'How do the Blind 75 categories map to real interview frequency?', difficulty: 'Medium', answer: 'By frequency at top companies: Array/String (35% of questions), Tree/Graph (25%), Dynamic Programming (15%), Design (10%), Linked List/Stack (10%), Other (5%). Array and Tree problems dominate because they test fundamental skills. DP appears less often but carries more weight (signals strong problem-solving). System design interviews complement the Blind 75 for senior roles. Some companies (Google) lean heavily on graph problems.' },
+        { question: 'What patterns connect multiple Blind 75 categories?', difficulty: 'Medium', answer: 'Cross-cutting patterns: (1) BFS/DFS appears in Trees, Graphs, Matrix, and Backtracking. (2) Two Pointers applies to Arrays, Strings, and Linked Lists. (3) Sliding Window bridges Arrays and Strings. (4) Hash Maps are used in Arrays, Strings, and Graph problems. (5) Recursion underlies Trees, Graphs, DP, and Backtracking. Recognizing these cross-category connections is key to flexible problem-solving rather than rigid pattern matching.' },
+        { question: 'How do you know when you have mastered the Blind 75?', difficulty: 'Medium', answer: 'Mastery indicators: (1) Can identify the pattern within 2-3 minutes of reading a new problem. (2) Can solve previously-unseen Medium problems in 20-25 minutes. (3) Can explain multiple approaches and their tradeoffs. (4) Can solve any Blind 75 problem from scratch in 15 minutes. (5) Can modify solutions for follow-up variations. (6) Can teach the pattern to someone else. If you score 3+ in mock interviews consistently, you are ready for real interviews.' },
+        { question: 'What should you study after completing the Blind 75?', difficulty: 'Medium', answer: 'Next steps: (1) Ascend 100 for deeper pattern coverage. (2) Company-specific problems (check LeetCode discuss). (3) System Design if targeting senior roles. (4) Hard problems for Google/competitive companies. (5) Mock interviews (Pramp, interviewing.io). (6) Advanced topics: segment trees, advanced graph (Tarjan, bridges), bit manipulation DP. (7) Language-specific optimization. Focus on areas where your mock interview performance is weakest.' }
+      ],
+
+      tips: [
+        'Start with Array and String problems (most common in interviews)',
+        'Progress to Trees and Graphs before tackling DP',
+        'Focus on patterns, not memorization',
+        'Aim to solve each problem in under 45 minutes',
+        'Review each category as a group before moving on'
+      ],
+
+      interviewTips: [
+        'Know at least 2 approaches for common problems (brute force + optimal)',
+        'Practice explaining your thought process while coding',
+        'For each pattern, know the time/space complexity by heart',
+        'Be ready to handle follow-up variations on any Blind 75 problem',
+        'Focus on clean code: good variable names, helper functions, comments',
+        'Time yourself: 25 min for Medium, 35 min for Hard',
+        'After solving, always ask: can I do better in time? In space?'
+      ],
+
+      codeExamples: [
+        {
+          title: 'Blind 75 Category Breakdown',
+          language: 'python',
+          description: 'Overview of problem distribution and recommended study order.',
+          code: `# The Blind 75 covers these categories:
+# Category       | Count | Difficulty  | Priority
+# -----------------------------------------------
+# Array          |   9   | Easy-Medium | Week 1
+# String         |  10   | Easy-Hard   | Week 1
+# Linked List    |   6   | Easy-Medium | Week 1
+# Tree           |  14   | Easy-Hard   | Week 2
+# Graph          |   8   | Medium      | Week 2
+# DP             |  11   | Medium-Hard | Week 3
+# Interval       |   5   | Medium      | Week 3
+# Matrix         |   4   | Medium      | Week 3
+# Heap           |   3   | Medium-Hard | Week 3
+# Binary         |   5   | Easy-Medium | Week 3
+# -----------------------------------------------
+# Total: 75 essential problems
+
+# Key cross-cutting patterns:
+# - BFS/DFS: Trees, Graphs, Matrix
+# - Two Pointers: Arrays, Strings, Linked Lists
+# - Hash Maps: Arrays, Strings, Graphs
+# - Recursion: Trees, Graphs, DP, Backtracking`
+        }
+      ]
     },
     {
       id: 'ascend-100',
@@ -7808,26 +8286,165 @@ def max_sliding_window(nums, k):
       color: '#10b981',
       questions: 100,
       description: 'Our curated list of 100 must-solve problems for interview success.',
-      keyPatterns: ['All major patterns', 'Company favorites', 'Difficulty progression', 'Pattern mastery'],
+
+      introduction: `The Ascend 100 is our carefully curated list of 100 problems designed to take you from fundamentals to interview-ready in the most efficient path possible. Unlike the Blind 75 which focuses on breadth, the Ascend 100 emphasizes progressive difficulty with deeper pattern coverage.
+
+The list is structured in three tiers:
+- **Tier 1 (Easy, 35 problems)**: Build your foundation with arrays, strings, hash maps, and basic tree traversal. Every problem teaches a reusable pattern.
+- **Tier 2 (Medium, 50 problems)**: Core interview patterns including two pointers, sliding window, BFS/DFS, dynamic programming, and graph algorithms.
+- **Tier 3 (Hard, 15 problems)**: Advanced techniques for top-tier companies -- segment trees, monotonic stacks, advanced DP, and complex graph problems.
+
+What makes Ascend 100 different:
+- **Progressive difficulty**: Each problem builds on patterns from previous ones
+- **Company-weighted**: Selected based on frequency at FAANG and top-tier companies
+- **Pattern-focused**: Grouped by pattern so you build deep understanding
+- **Time-boxed**: Each problem has a target time, training you for interview pacing
+
+After completing the Ascend 100, you should recognize which pattern applies to any new problem within 2-3 minutes.`,
+
+      whenToUse: [
+        'Starting interview preparation from scratch',
+        'Building a structured 4-8 week study plan',
+        'Targeting FAANG and top-tier company interviews',
+        'When you want progressive difficulty (easy to hard)',
+        'After completing Blind 75 and wanting deeper coverage',
+        'When you need company-specific pattern practice'
+      ],
+
+      keyPatterns: ['Arrays & Hashing', 'Two Pointers', 'Sliding Window', 'Binary Search', 'Stacks & Queues', 'Trees & Graphs', 'Dynamic Programming', 'Backtracking', 'Greedy', 'Heaps'],
       timeComplexity: 'Varies by problem',
       spaceComplexity: 'Varies by problem',
-      commonProblems: ['Two Sum', 'Valid Parentheses', 'Merge Two Sorted Lists', 'Best Time to Buy/Sell Stock', 'Valid Anagram', 'Binary Search'],
+
+      approach: [
+        'Start with Tier 1 (Easy) -- do not skip even if you feel confident',
+        'Solve 3-5 problems per day for optimal retention',
+        'For each problem: read, think 15 min, code, then study optimal solution',
+        'After each pattern group, do a timed review of all problems in that group',
+        'Track your solve times -- aim to reduce by 30% on second attempt',
+        'Do a full mock interview (4 random problems, 2 hours) every weekend'
+      ],
+
+      commonProblems: [
+        // Tier 1 - Easy
+        { name: 'Two Sum', difficulty: 'Easy' },
+        { name: 'Valid Parentheses', difficulty: 'Easy' },
+        { name: 'Merge Two Sorted Lists', difficulty: 'Easy' },
+        { name: 'Best Time to Buy and Sell Stock', difficulty: 'Easy' },
+        { name: 'Valid Anagram', difficulty: 'Easy' },
+        { name: 'Binary Search', difficulty: 'Easy' },
+        { name: 'Linked List Cycle', difficulty: 'Easy' },
+        { name: 'Reverse Linked List', difficulty: 'Easy' },
+        { name: 'Maximum Depth of Binary Tree', difficulty: 'Easy' },
+        { name: 'Invert Binary Tree', difficulty: 'Easy' },
+        { name: 'Contains Duplicate', difficulty: 'Easy' },
+        { name: 'Valid Palindrome', difficulty: 'Easy' },
+        { name: 'Climbing Stairs', difficulty: 'Easy' },
+        { name: 'Same Tree', difficulty: 'Easy' },
+        // Tier 2 - Medium
+        { name: 'Product of Array Except Self', difficulty: 'Medium' },
+        { name: 'Group Anagrams', difficulty: 'Medium' },
+        { name: 'Top K Frequent Elements', difficulty: 'Medium' },
+        { name: 'Three Sum', difficulty: 'Medium' },
+        { name: 'Container With Most Water', difficulty: 'Medium' },
+        { name: 'Longest Substring Without Repeating Characters', difficulty: 'Medium' },
+        { name: 'Search in Rotated Sorted Array', difficulty: 'Medium' },
+        { name: 'Validate Binary Search Tree', difficulty: 'Medium' },
+        { name: 'Number of Islands', difficulty: 'Medium' },
+        { name: 'Course Schedule', difficulty: 'Medium' },
+        { name: 'Merge Intervals', difficulty: 'Medium' },
+        { name: 'Rotate Image', difficulty: 'Medium' },
+        { name: 'Word Search', difficulty: 'Medium' },
+        { name: 'House Robber', difficulty: 'Medium' },
+        { name: 'Coin Change', difficulty: 'Medium' },
+        { name: 'Longest Increasing Subsequence', difficulty: 'Medium' },
+        { name: 'Combination Sum', difficulty: 'Medium' },
+        { name: 'Permutations', difficulty: 'Medium' },
+        { name: 'Subsets', difficulty: 'Medium' },
+        { name: 'Task Scheduler', difficulty: 'Medium' },
+        { name: 'Implement Trie', difficulty: 'Medium' },
+        { name: 'LRU Cache', difficulty: 'Medium' },
+        // Tier 3 - Hard
+        { name: 'Trapping Rain Water', difficulty: 'Hard' },
+        { name: 'Sliding Window Maximum', difficulty: 'Hard' },
+        { name: 'Merge K Sorted Lists', difficulty: 'Hard' },
+        { name: 'Word Ladder', difficulty: 'Hard' },
+        { name: 'Alien Dictionary', difficulty: 'Hard' },
+        { name: 'Edit Distance', difficulty: 'Hard' },
+        { name: 'Binary Tree Maximum Path Sum', difficulty: 'Hard' },
+        { name: 'Serialize and Deserialize Binary Tree', difficulty: 'Hard' },
+        { name: 'Word Search II', difficulty: 'Hard' },
+        { name: 'Median of Two Sorted Arrays', difficulty: 'Hard' }
+      ],
+
+      commonMistakes: [
+        'Skipping Easy problems -- they build patterns used in harder ones',
+        'Spending too long on one problem (cap at 45 min, then study solution)',
+        'Memorizing solutions instead of understanding patterns',
+        'Not timing yourself (interviews are 20-45 minutes per problem)',
+        'Solving randomly instead of by pattern group',
+        'Not reviewing solved problems (revisit after 1 week and 1 month)',
+        'Ignoring time/space complexity analysis'
+      ],
+
+      theoryQuestions: [
+        { question: 'What are the most common patterns tested in coding interviews?', difficulty: 'Easy', answer: 'Top 10 by frequency: (1) Arrays & Hashing, (2) Two Pointers, (3) Sliding Window, (4) Binary Search, (5) Trees (DFS/BFS), (6) Graphs (BFS, DFS, topological sort), (7) Dynamic Programming, (8) Stack (monotonic, parentheses), (9) Heap (top-K), (10) Backtracking. Master these and you cover 90% of interview problems.' },
+        { question: 'How should you structure a 4-week interview prep plan?', difficulty: 'Easy', answer: 'Week 1: Arrays, Strings, Hash Maps, Two Pointers (20 problems). Week 2: Trees, Graphs, BFS/DFS (15 problems). Week 3: DP, Backtracking, Greedy (15 problems). Week 4: Review weak areas, timed mocks (4 per week). Daily: 3-4 problems + 1 hour review. Review problems you struggled with every 3 days for retention.' },
+        { question: 'How do you approach a problem you have never seen before?', difficulty: 'Easy', answer: 'Step 1: Read carefully, clarify constraints (2 min). Step 2: Work examples by hand (3 min). Step 3: Identify the pattern and data structure (2 min). Step 4: Explain approach before coding (2 min). Step 5: Code (15-20 min). Step 6: Test with examples and edge cases (3 min). Step 7: Analyze complexity. If stuck at step 3, try brute force first.' },
+        { question: 'What is the difference between Ascend 100 and Blind 75?', difficulty: 'Easy', answer: 'Blind 75: 75 problems, breadth across 10 categories, mostly Medium/Hard, good for quick review. Ascend 100: 100 problems, progressive difficulty (Easy to Hard), deeper pattern coverage, includes foundations. Ascend 100 is better for building skills from scratch. Both cover essential patterns, but Ascend 100 provides more reinforcement problems per pattern.' },
+        { question: 'How do you know which data structure to use for a problem?', difficulty: 'Medium', answer: 'Match characteristics: O(1) lookup -> hash map. Sorted order -> BST or binary search. FIFO -> queue. LIFO/matching -> stack. Min/max quickly -> heap. Prefix queries -> trie. Connectivity -> union-find. Shortest path -> BFS (unweighted) or Dijkstra (weighted). Cycle detection -> DFS coloring or union-find. After 50+ problems this becomes intuitive.' },
+        { question: 'How do you optimize a brute force solution?', difficulty: 'Medium', answer: 'Common strategies: (1) Hash map to eliminate inner loop (O(n^2) to O(n)). (2) Sort to enable two pointers or binary search. (3) Sliding window for subarray problems. (4) Memoization for overlapping subproblems. (5) Monotonic stack for next greater/smaller. (6) Precomputation (prefix sums). (7) Heap for top-K instead of full sort. Identify what brute force repeats, cache that work.' },
+        { question: 'What are the most common follow-up questions interviewers ask?', difficulty: 'Medium', answer: 'Common follow-ups: (1) "Do it in O(1) space" (two pointers, bit manipulation). (2) "Input too large for memory" (external sort, streaming). (3) "Input is a stream" (sliding window, reservoir sampling). (4) "Can you do better than O(n log n)?" (counting sort for constrained inputs). (5) "How would you test this?" (edge cases, large inputs). Prepare by thinking about constraints after each problem.' },
+        { question: 'How do you handle time pressure during an interview?', difficulty: 'Medium', answer: 'Tips: (1) Spend first 5 minutes understanding/planning. (2) If stuck 5 minutes, pivot to brute force. (3) Code incrementally. (4) Use helper functions for complex logic. (5) Talk through thinking -- silence is worse than wrong ideas. (6) Practice with timer: 25 min for Medium, 35 for Hard. (7) If low on time, explain what you would do rather than writing incomplete code.' }
+      ],
+
       tips: [
         'Solve in order for progressive difficulty',
         'Covers all patterns tested at top companies',
         'Includes problems from FAANG interviews',
-        'Practice until you can solve each in 30 minutes'
+        'Practice until you can solve each in 30 minutes',
+        'Revisit problems after 1 week and 1 month for retention'
       ],
-      codeExample: `# Ascend 100 Problem Distribution:
-# - Easy: 35 problems (fundamentals)
-# - Medium: 50 problems (core patterns)
-# - Hard: 15 problems (advanced techniques)
 
-# Focus areas:
-# - Arrays & Strings: 25%
-# - Trees & Graphs: 25%
-# - Dynamic Programming: 20%
-# - Other patterns: 30%`
+      interviewTips: [
+        'Always start by clarifying the problem and constraints',
+        'Think out loud: explain your reasoning as you work',
+        'Start with brute force then optimize -- show your thought process',
+        'Test code with given examples AND edge cases before declaring done',
+        'Know complexities cold: interviewers always ask about time and space',
+        'If stuck, try working backwards from the desired output',
+        'Practice writing clean, readable code with good variable names'
+      ],
+
+      codeExamples: [
+        {
+          title: 'Study Plan Template',
+          language: 'python',
+          description: 'Optimal approach to working through the Ascend 100.',
+          code: `# Ascend 100 Study Plan
+# =======================
+
+# Phase 1: Foundations (Week 1-2, 35 Easy problems)
+# Arrays, Strings, Hash Maps, Linked Lists, Trees
+# Target: 3-4 problems/day, 20-30 min each
+
+# Phase 2: Core Patterns (Week 3-5, 50 Medium problems)
+# Two Pointers, Sliding Window, BFS/DFS, DP, Backtracking
+# Target: 2-3 problems/day, 30-45 min each
+
+# Phase 3: Advanced (Week 6-7, 15 Hard problems)
+# Advanced DP, Graphs, Tries, Complex patterns
+# Target: 1-2 problems/day, 45-60 min each
+
+# Phase 4: Mock Interviews (Week 8)
+# 4 timed mock interviews per week
+
+# Problem-Solving Framework:
+# 1. Understand (2-3 min) - Read, clarify, examples
+# 2. Plan (3-5 min) - Pattern, data structure, approach
+# 3. Code (15-20 min) - Clean, readable, helper functions
+# 4. Verify (3-5 min) - Test, edge cases, complexity`
+        }
+      ]
     },
   ];
 
