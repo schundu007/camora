@@ -75,6 +75,21 @@ export const systemDesigns = [
       color: '#10b981',
       difficulty: 'Easy',
       description: 'Design a service that creates short aliases for long URLs and redirects users to the original URL.',
+      productMeta: {
+        name: 'TinyURL / Bitly',
+        tagline: 'URL shortening for billions of links',
+        stats: [
+          { label: 'URLs/Month', value: '500M' },
+          { label: 'Redirects/Sec', value: '20K' },
+          { label: 'Read:Write', value: '100:1' },
+          { label: 'Storage (5yr)', value: '15 TB' },
+        ],
+        scope: {
+          inScope: ['Shorten long URLs to 7-char codes', 'Redirect short URL to original', 'Custom short aliases', 'Link analytics (click count)', 'URL expiration'],
+          outOfScope: ['User accounts/auth', 'QR code generation', 'Link-in-bio pages', 'API rate limiting details'],
+        },
+        keyChallenge: 'Generating collision-free short codes at 200 writes/sec while serving 20K redirects/sec with sub-100ms latency across a global CDN.',
+      },
 
       // Comprehensive Editorial Content
       introduction: `URL shortener is one of the most frequently asked system design interview questions.
@@ -146,27 +161,216 @@ Being able to discuss the flaws of the basic approach and how the advanced appro
 
       keyQuestions: [
         {
-          question: 'How long should the short URL be?',
-          answer: `Need to know scale to answer this:
-• Example: 1,000 URLs/second
-• 1,000 × 60 × 60 × 24 × 365 = 31.5 billion URLs/year
-• 10:1 read:write ratio = ~300 billion reads/year
+          question: 'How does Base62 encoding work and why 7 characters?',
+          answer: `Base62 uses alphanumeric characters [a-z, A-Z, 0-9] = 62 possible characters per position.
 
-Using Base62 (a-z, A-Z, 0-9 = 62 characters):
-• 6 characters: 62⁶ = 56 billion unique URLs
-• 7 characters: 62⁷ = 3.5 trillion unique URLs
+**Math:**
+• 6 characters: 62⁶ = 56.8 billion unique URLs
+• 7 characters: 62⁷ = 3.52 trillion unique URLs
 
-7 characters is sufficient for many years of operation.`
+**At our scale (500M new URLs/month):**
+• 500M × 12 × 5 years = 30 billion URLs over 5 years
+• 7 characters provides 3.52 trillion / 30 billion = 117x headroom
+• 6 characters would only give 56.8B / 30B = 1.9x headroom — too tight
+
+**Encoding process:**
+1. Get a unique integer ID (from counter or KGS)
+2. Repeatedly divide by 62, map remainder to character
+3. Example: ID 125 → 125 / 62 = 2 remainder 1 → "cb"
+
+Avoid special characters (/, +, =) as they require URL percent-encoding.`
         },
         {
-          question: 'What characters can we use?',
-          answer: `Alphanumeric Base62:
-• a-z: 26 characters
-• A-Z: 26 characters
-• 0-9: 10 characters
-• Total: 62 characters
+          question: 'How do you handle hash collisions?',
+          answer: `Collisions are the #1 correctness risk in a URL shortener. Three strategies:
 
-Avoid special characters (/, +, =) as they cause URL encoding issues.`
+**1. Counter-based (no collisions by design):**
+• Auto-increment counter → Base62 encode
+• Each ID is unique, so each short code is unique
+• ZooKeeper allocates ranges of 1M IDs to each app server — zero coordination per request
+
+**2. MD5 hash + collision check:**
+• MD5(long_url) → Base62 encode → take first 7 chars
+• Check DB if code exists: if collision, append suffix and retry
+• Problem: at 30B URLs, birthday paradox makes collisions frequent (~1 in 62⁷ per pair)
+
+**3. Pre-generated Key Service (KGS):**
+• Pre-generate millions of random unique 7-char keys in a separate DB
+• App servers atomically pop keys from the pool — zero collisions
+• If a server crashes, lost keys are acceptable given 3.5 trillion total
+
+**Recommendation:** Counter with ZooKeeper for simplicity and guaranteed uniqueness.`
+        },
+        {
+          question: 'Should we use 301 or 302 redirects?',
+          answer: `This is a critical design decision with major implications:
+
+**301 Permanent Redirect:**
+• Browser caches the redirect — subsequent visits skip our server entirely
+• Pros: Reduces server load by 50-80%, better for SEO
+• Cons: Cannot track every click (cached redirects are invisible), cannot change target URL later
+
+**302 Temporary Redirect:**
+• Browser re-requests our server every time
+• Pros: Full click analytics, can change target URL anytime
+• Cons: Every click hits our server — at 20K QPS this is significant load
+
+**Recommendation:**
+• Use 302 if analytics/tracking is a core feature (like Bitly)
+• Use 301 if pure URL shortening without tracking (like TinyURL)
+• Hybrid: 301 with async analytics via JavaScript pixel or Kafka event on first visit`
+        },
+        {
+          question: 'SQL or NoSQL for the URL store?',
+          answer: `The URL shortener data model is a simple key-value lookup (short_code → long_url), which influences the DB choice:
+
+**NoSQL (Cassandra/DynamoDB):**
+• Horizontal scaling out of the box — add nodes to handle more traffic
+• High write throughput (~200 writes/sec is trivial, scales to millions)
+• No schema constraints — easy to add fields later
+• Partition by short_code for even distribution
+• Trade-off: no JOINs, limited query flexibility
+
+**SQL (PostgreSQL with sharding):**
+• ACID transactions for custom alias reservation
+• Rich querying for analytics (JOINs, aggregations)
+• Well-understood operational model
+• Trade-off: sharding adds complexity, limited single-node write throughput (~50K/s)
+
+**Recommendation:** NoSQL (DynamoDB or Cassandra) for the URL mapping table.
+Use a separate analytics data warehouse (ClickHouse/Redshift) for reporting.`
+        },
+        {
+          question: 'What caching strategy should we use?',
+          answer: `With 20K read QPS and a 100:1 read-to-write ratio, caching is essential:
+
+**Pattern:** Cache-aside (lazy loading)
+1. Check Redis cache for short_code → long_url
+2. On hit: return immediately (sub-ms latency)
+3. On miss: query DB, populate cache with TTL, return result
+
+**Sizing (80/20 rule — Pareto principle):**
+• Daily requests: 20K/s × 86,400 = 1.73 billion redirects/day
+• 20% of URLs serve 80% of traffic
+• Unique URLs accessed daily: ~1.73B / avg_hits ≈ 340M unique
+• Cache 20% hottest: 340M × 0.2 × 500 bytes = ~34 GB (fits in one Redis node)
+• More conservatively: cache top 20% of all daily URLs = ~170 GB (Redis cluster)
+
+**Eviction:** LRU (Least Recently Used) — cold URLs evict automatically
+**TTL:** 24 hours for standard URLs, no TTL for custom aliases
+**Warm-up:** Pre-load top 1000 URLs on server startup from analytics data`
+        },
+        {
+          question: 'How do you build an analytics pipeline without slowing down redirects?',
+          answer: `**Critical rule:** Never write analytics synchronously on the redirect path — it would add 5-20ms latency per redirect.
+
+**Async pipeline:**
+1. On redirect: publish a click event to Kafka (non-blocking, <1ms)
+   • Event: { short_code, timestamp, IP, User-Agent, Referer, country }
+2. Kafka consumers batch-process events every 5 seconds
+3. Aggregate data written to ClickHouse or Redshift
+4. Power dashboards: total clicks, unique visitors, geographic distribution, referrer breakdown
+
+**Real-time counters (optional):**
+• Redis INCR on key clicks:{short_code} for approximate real-time count
+• Periodically flush Redis counters to the data warehouse
+
+**Data lifecycle:**
+• Hot data (last 30 days): in ClickHouse for fast queries
+• Warm data (30 days - 1 year): compressed in Redshift
+• Cold data (1+ years): archived to S3 Parquet files`
+        },
+        {
+          question: 'How do custom aliases work and what are the edge cases?',
+          answer: `Custom aliases let users choose their own short codes (e.g., short.ly/my-brand).
+
+**Implementation:**
+1. User submits custom alias via POST /api/v1/shorten with custom_alias parameter
+2. Server validates: 3-20 chars, alphanumeric + hyphens only, no reserved words
+3. Check if alias already exists in DB (must be globally unique)
+4. If available: store mapping and return. If taken: return 409 Conflict
+
+**Edge cases:**
+• **Reserved words:** Block aliases like "api", "admin", "health", "login" — maintain a blacklist
+• **Trademark squatting:** First-come-first-served, optionally offer paid premium aliases
+• **Case sensitivity:** Treat "MyBrand" and "mybrand" as the same to avoid confusion
+• **Length limits:** Min 3 chars (avoid single-char exhaustion), max 20 chars
+• **Expiration:** Custom aliases should not expire by default (unlike auto-generated)
+
+**Storage:** Custom aliases stored in the same table as auto-generated codes — same lookup path.`
+        },
+        {
+          question: 'How does URL expiration and cleanup work?',
+          answer: `Two complementary approaches:
+
+**1. Lazy deletion (on read):**
+• When a redirect request comes in, check if expires_at < now()
+• If expired: return 404 Not Found, optionally delete from cache
+• Zero extra infrastructure — piggybacks on existing read path
+
+**2. Background cleanup job:**
+• Cron job runs during low-traffic hours (2-5 AM)
+• Queries: SELECT * FROM urls WHERE expires_at < now() LIMIT 10000
+• Deletes in batches to avoid lock contention and long transactions
+• Also cleans up cache entries: DEL short:{code}
+
+**Important design decisions:**
+• **Never recycle short codes** — reusing a code could serve stale cached redirects from browsers or CDNs
+• **Default TTL:** No expiration for standard URLs, 30 days for anonymous/free-tier users
+• **Grace period:** Keep expired URLs for 7 days in "soft deleted" state before hard delete
+• **Archive:** Move expired URL metadata to cold storage for compliance/audit trails`
+        },
+        {
+          question: 'How do you scale reads to handle 20K redirects/sec?',
+          answer: `Reads dominate at 100:1 ratio. Scaling strategy from bottom up:
+
+**Layer 1: CDN (handles 80% of traffic)**
+• Popular short URLs cached at CDN edge (CloudFront/Cloudflare)
+• 301 redirect responses cached with TTL of 1 hour
+• CDN serves redirects in <50ms from nearest edge location
+• Reduces load to origin by 80%: 20K → 4K QPS hitting our servers
+
+**Layer 2: Redis Cache (handles 90% of remaining)**
+• Cache-aside pattern for hot URLs
+• 80% cache hit rate → only 400 QPS reach the database
+• Redis cluster: 3 nodes with 170GB total for 20% hot URLs
+
+**Layer 3: Read Replicas**
+• Primary DB handles writes (200/s)
+• 3-5 read replicas handle cache misses (400/s spread across replicas)
+• Replicas can be in different AZs for resilience
+
+**Layer 4: Database Sharding (for growth)**
+• Consistent hash on short_code across N shards
+• Start with 4 shards (~4TB each for 15TB over 5 years)
+• Pre-provision for 16 shards as traffic grows
+
+**Result:** 20K QPS → CDN handles 16K, Redis handles 3.6K, DB handles 400.`
+        },
+        {
+          question: 'How do you generate unique IDs across distributed servers?',
+          answer: `Three production-proven approaches:
+
+**1. ZooKeeper Range Allocation (recommended):**
+• ZooKeeper assigns ranges of 1M sequential IDs to each app server
+• Server generates IDs independently within its range — zero per-request coordination
+• When range exhausted: request new range from ZooKeeper (~1 contact per 1M requests)
+• If server crashes and loses remaining range: acceptable loss given 3.5 trillion total IDs
+• Each ID is Base62-encoded to produce the 7-char short code
+
+**2. Snowflake IDs:**
+• 64-bit ID: 41 bits timestamp | 10 bits machine ID | 12 bits sequence
+• Each machine generates 4,096 IDs/millisecond independently
+• IDs are time-sortable (useful for analytics)
+• Base62 encode for the short code
+
+**3. Pre-generated Key Service (KGS):**
+• Dedicated service pre-generates millions of random 7-char keys
+• Keys stored in "unused" table, moved to "used" on allocation
+• App servers batch-fetch 1000 keys at a time — cached locally
+• Zero collision handling needed
+
+**Trade-off:** ZooKeeper gives sequential (predictable) codes. KGS gives random (non-guessable) codes. Choose based on security requirements.`
         }
       ],
 
@@ -2128,7 +2332,7 @@ Why Cassandra wins for messages:
       deepDiveTopics: [
         {
           topic: 'Message Ordering and Consistency Guarantees',
-          diagramSrc: '/diagrams/whatsapp/deep-dive-ordering.svg',
+          diagramSrc: '/diagrams/whatsapp/deep-dive-ordering.png',
           detail: `Ordering is the hardest correctness problem in distributed messaging.
 
 **Within a conversation:**
@@ -2144,7 +2348,7 @@ Why Cassandra wins for messages:
         },
         {
           topic: 'Presence System at 33 Million QPS',
-          diagramSrc: '/diagrams/whatsapp/deep-dive-presence.svg',
+          diagramSrc: '/diagrams/whatsapp/deep-dive-presence.png',
           detail: `Presence generates more load than messaging itself and requires careful optimization.
 
 **Architecture:**
@@ -2160,7 +2364,7 @@ Why Cassandra wins for messages:
         },
         {
           topic: 'Hot/Cold Storage Separation',
-          diagramSrc: '/diagrams/whatsapp/deep-dive-hot-cold.svg',
+          diagramSrc: '/diagrams/whatsapp/deep-dive-hot-cold.png',
           detail: `Message access patterns have extreme recency bias - 95% of reads are for the last 48 hours.
 
 **Hot tier (Cassandra SSD cluster):**
@@ -2183,7 +2387,7 @@ Why Cassandra wins for messages:
         },
         {
           topic: 'Group Messaging Fan-out Strategies',
-          diagramSrc: '/diagrams/whatsapp/deep-dive-group-fanout.svg',
+          diagramSrc: '/diagrams/whatsapp/deep-dive-group-fanout.png',
           detail: `Group messaging creates a classic fan-out problem with different tradeoffs at different scales.
 
 **Fan-out on Write (groups up to ~100 members):**
@@ -2202,7 +2406,7 @@ Why Cassandra wins for messages:
         },
         {
           topic: 'Cross-Region Message Delivery',
-          diagramSrc: '/diagrams/whatsapp/deep-dive-cross-region.svg',
+          diagramSrc: '/diagrams/whatsapp/deep-dive-cross-region.png',
           detail: `With users in 180+ countries, messages frequently cross continental boundaries.
 
 **Regional architecture:**
@@ -2222,7 +2426,7 @@ Why Cassandra wins for messages:
         },
         {
           topic: 'Resumable Media Uploads',
-          diagramSrc: '/diagrams/whatsapp/deep-dive-media-upload.svg',
+          diagramSrc: '/diagrams/whatsapp/deep-dive-media-upload.png',
           detail: `Mobile networks are unreliable - 30% of media uploads are interrupted at least once.
 
 **Chunked upload protocol:**
@@ -2715,10 +2919,49 @@ class ChatGateway {
       color: '#e4405f',
       difficulty: 'Medium',
       description: 'Design a photo-sharing social network with feeds, stories, and social features.',
+      productMeta: {
+        name: 'Instagram',
+        tagline: 'Photo and video sharing for 2 billion users',
+        stats: [
+          { label: 'MAU', value: '2B' },
+          { label: 'Photos/Day', value: '100M' },
+          { label: 'Stories/Day', value: '500M' },
+          { label: 'Storage/Day', value: '285 TB' },
+        ],
+        scope: {
+          inScope: ['Upload photos/videos', 'News feed (ranked)', 'Follow/unfollow', 'Like and comment', 'Stories (24h ephemeral)', 'Search and Explore'],
+          outOfScope: ['Reels recommendation engine', 'Instagram Shopping', 'Direct messages', 'IGTV long-form video', 'Ad bidding system'],
+        },
+        keyChallenge: 'Generating personalized feeds for 500M daily active users with a 100:1 read-to-write ratio, while processing 100M photo uploads per day through a multi-resolution pipeline and delivering them via CDN at 230 GB/s egress.',
+      },
 
-      introduction: `Instagram is a photo and video sharing social network with over 2 billion monthly active users. The system handles image uploads, processing, feed generation, stories, and social interactions at massive scale.
+      introduction: `Instagram is a photo and video sharing social network with over 2 billion monthly active users and 500 million daily active users. The system handles 100 million photo uploads per day, 500 million stories per day, and generates personalized feeds for half a billion users — making it one of the most read-heavy and media-intensive systems ever built.
 
-The key challenges include generating personalized feeds for hundreds of millions of users, processing and delivering billions of images daily, and implementing ephemeral content (Stories) that disappears after 24 hours.`,
+This is a top-tier system design interview question because it tests multiple critical skills: media processing pipelines (upload, resize, transcode, moderate), feed generation (the classic hybrid fan-out problem), CDN architecture (230 GB/s egress with 95% cache hit rate), social graph storage and traversal, ephemeral content (Stories with 24-hour TTL), and ML-powered recommendations for the Explore page.
+
+What makes Instagram fundamentally different from other social media systems? The 100:1 read-to-write ratio. For every photo uploaded, it is viewed hundreds of times across feeds, explore pages, and profile visits. This extreme read amplification drives every architectural decision — from pre-computing feeds to multi-tier CDN caching to generating multiple image resolutions at upload time rather than on-the-fly.
+
+The scale numbers are staggering: 1,200 photo upload QPS (with peaks of 3,000+ during holidays), 500K-1M feed read QPS, ~285 TB of new image data per day (including resized versions), and ~104 PB of photo storage per year before replication. The CDN serves ~230 GB/s of image egress with a 95% cache hit rate, meaning only 5% of requests reach origin storage.
+
+In this design, we will walk through capacity estimation, the photo upload and processing pipeline, hybrid fan-out feed generation, CDN multi-tier caching, Stories architecture, the social graph, and the Explore recommendation engine.`,
+
+      // ── Back-of-Envelope Estimation ──
+      estimation: {
+        title: 'Capacity Planning',
+        assumptions: '2B MAU, 500M DAU, 100M photos/day, 500M stories/day. Average photo 2MB original. Each photo resized to 4 versions (150px thumb, 320px, 640px, 1080px). 100:1 read-to-write ratio.',
+        calculations: [
+          { label: 'Photo Upload QPS', value: '~1,200/s', detail: '100M photos/day / 86,400 seconds = 1,157 uploads/sec' },
+          { label: 'Peak Upload QPS', value: '~3,000/s', detail: '1,200 x 2.5x peak factor (holidays, events) = 3,000 uploads/sec' },
+          { label: 'Feed Read QPS', value: '500K-1M/s', detail: '500M DAU x ~100 feed views/day / 86,400s = ~580K, with burst to 1M' },
+          { label: 'Read:Write Ratio', value: '100:1', detail: 'Each photo viewed ~100 times across feeds, explore, profile visits' },
+          { label: 'Storage/Day (Photos)', value: '~285 TB', detail: '100M photos x 2MB original + 3 resized versions (~850KB avg) = ~285 TB/day' },
+          { label: 'Storage/Year (Photos)', value: '~104 PB', detail: '285 TB/day x 365 days = 104 PB/year (before replication)' },
+          { label: 'Storage w/ Replication', value: '~300 PB/year', detail: '104 PB x 3x replication factor = ~312 PB/year' },
+          { label: 'CDN Egress Bandwidth', value: '~230 GB/s', detail: 'Feed reads x avg image payload (~500KB) = ~230 GB/s sustained egress' },
+          { label: 'CDN Cache Hit Rate', value: '95%', detail: '95% of image requests served from CDN edge, only 5% reach origin S3' },
+          { label: 'Stories Storage/Day', value: '~50 TB', detail: '500M stories x 100KB avg (compressed image/short video) = 50 TB/day, auto-deleted after 24h' },
+        ]
+      },
 
       functionalRequirements: [
         'Upload photos and videos with filters',

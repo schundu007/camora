@@ -23,7 +23,7 @@ PARTICIPANT_STYLE = {
     'shape': 'box',
     'style': 'filled,rounded',
     'fontname': 'Helvetica Neue',
-    'fontsize': '11',
+    'fontsize': '12',
     'penwidth': '1.5',
     'height': '0.5',
     'margin': '0.15,0.08',
@@ -32,13 +32,13 @@ PARTICIPANT_STYLE = {
 STEP_STYLE = {
     'shape': 'plaintext',
     'fontname': 'Helvetica Neue',
-    'fontsize': '9',
+    'fontsize': '10',
     'fontcolor': '#64748b',
 }
 
 EDGE_STYLE = {
     'fontname': 'Helvetica Neue',
-    'fontsize': '9',
+    'fontsize': '10',
     'penwidth': '1.8',
 }
 
