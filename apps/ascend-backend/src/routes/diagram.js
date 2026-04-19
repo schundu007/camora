@@ -205,42 +205,14 @@ router.post('/generate', async (req, res, next) => {
       console.warn('[Diagram] Python generation failed, trying Mermaid fallback:', pythonError);
     }
 
-    // 4a. Mermaid fallback — single Claude call, ~3s, no Python needed
+    // Python failed — return error (no mermaid fallback)
     if (!pythonResult) {
-      console.log('[Diagram] Attempting Mermaid fallback for:', question.slice(0, 80));
-      try {
-        const mermaidResult = await pythonDiagrams.generateMermaidFallback({
-          question,
-          cloudProvider: provider,
-          detailLevel,
-          direction,
-        });
-
-        // Cache mermaid code in DB
-        try {
-          await query(
-            `INSERT INTO ascend_diagram_cache (problem_hash, detail_level, cloud_provider, direction, image_url, mermaid_code, description)
-             VALUES ($1, $2, $3, $4, $5, $6, $7)
-             ON CONFLICT (problem_hash) DO UPDATE SET mermaid_code = $6, image_url = $5`,
-            [problemHash, detailLevel, provider, direction, '', mermaidResult.mermaid_code, (cacheKey || question).slice(0, 500)]
-          );
-          console.log('[DiagramCache] Mermaid code cached, hash:', problemHash);
-        } catch (cacheErr) {
-          console.warn('[DiagramCache] Failed to cache mermaid code:', cacheErr.message);
-        }
-
-        return res.json({
-          success: true,
-          type: 'mermaid',
-          mermaid_code: mermaidResult.mermaid_code,
-          cloud_provider: provider,
-          cached: false,
-        });
-      } catch (mermaidErr) {
-        console.error('[Diagram] Mermaid fallback also failed:', mermaidErr.message);
-        // Both methods failed — throw the original Python error
-        throw new AppError(pythonError || mermaidErr.message || 'Diagram generation failed', ErrorCode.EXTERNAL_API_ERROR);
-      }
+      console.error('[Diagram] Python generation failed:', pythonError);
+      throw new AppError(
+        pythonError || 'Python diagram generation failed on server',
+        ErrorCode.EXTERNAL_API_ERROR,
+        'Check Railway logs for Python/graphviz errors'
+      );
     }
 
     // 5. Read PNG into buffer and persist in DB (Python succeeded)

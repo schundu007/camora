@@ -105,8 +105,13 @@ export default function DocsPage({ onBack }) {
     return null;
   });
 
-  // "Show All Content" toggle — bypasses role filtering
-  const [showAllContent, setShowAllContent] = useState(false);
+  // "Show All Content" toggle — bypasses role filtering, persists across navigation
+  const [showAllContent, setShowAllContent] = useState(() => {
+    try { return sessionStorage.getItem('capra_show_all') === 'true'; } catch { return false; }
+  });
+  useEffect(() => {
+    try { sessionStorage.setItem('capra_show_all', String(showAllContent)); } catch {}
+  }, [showAllContent]);
 
   // Auto-set jobContext from user's onboarding roles when no URL role
   useEffect(() => {
@@ -405,12 +410,8 @@ export default function DocsPage({ onBack }) {
         const result = { imageUrl, cloudProvider: data.cloud_provider || provider, cached: data.cached };
         setDiagramData(result);
         setDiagramCache(prev => ({ ...prev, [cacheKey]: result }));
-      } else if (data.success && data.mermaid_code) {
-        const result = { mermaidCode: data.mermaid_code, cloudProvider: data.cloud_provider || provider, cached: data.cached };
-        setDiagramData(result);
-        setDiagramCache(prev => ({ ...prev, [cacheKey]: result }));
       } else {
-        throw new Error(data.error || 'Diagram generation failed');
+        throw new Error(data.error || 'Python diagram generation failed on server');
       }
     } catch (err) {
       console.error('Diagram generation error:', err);

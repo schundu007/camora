@@ -5,7 +5,6 @@ import { CompanyLogo, getCompanyLogoSrc } from '../../shared/CompanyLogo.tsx';
 import FormattedContent from './FormattedContent.jsx';
 import CloudArchitectureDiagram from './CloudArchitectureDiagram.jsx';
 import DiagramSVG from '../features/DiagramSVG.jsx';
-import { MermaidDiagram } from '../../lumora/interview/MermaidDiagram';
 import { getAuthHeaders } from '../../../utils/authHeaders.js';
 import { useAuth } from '../../../contexts/AuthContext';
 import { generateSlug, getProblemBySlug } from '../../../data/capra/problems.js';
@@ -331,22 +330,7 @@ function StaticCloudDiagram({ topicId, provider, staticSrc, diagramData, generat
     );
   }
 
-  // Priority 2: Mermaid fallback from API
-  if (diagramData?.mermaidCode) {
-    return (
-      <div>
-        <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-white p-4">
-          <MermaidDiagram content={diagramData.mermaidCode} />
-        </div>
-        <div className="mt-2 flex items-center justify-between text-xs text-[var(--text-muted)]" style={{ fontFamily: 'var(--font-mono)' }}>
-          <span>{provider.toUpperCase()} Architecture</span>
-          <button onClick={onGenerate} className="hover:text-[var(--accent)] transition-colors">Regenerate →</button>
-        </div>
-      </div>
-    );
-  }
-
-  // Priority 3: Error state
+  // Priority 2: Error state
   if (diagramError) {
     return (
       <div className="text-center py-8 rounded-lg bg-red-50 border border-red-200">
@@ -509,11 +493,8 @@ export default function TopicDetail({
         // Directly call generateDiagram to update the diagram state so it shows immediately
         generateDiagram(topicDetails.title || selectedTopic, diagramDetailLevel || 'overview', diagramCloudProvider || 'auto');
         setAdminRegenStatus(`${engine}: done (PNG)!`);
-      } else if (data.success && data.mermaid_code) {
-        generateDiagram(topicDetails.title || selectedTopic, diagramDetailLevel || 'overview', diagramCloudProvider || 'auto');
-        setAdminRegenStatus(`${engine}: done (mermaid fallback — Python failed on server)`);
       } else {
-        setAdminRegenStatus(`${engine}: ${data.error || 'failed — no image or mermaid returned'}`);
+        setAdminRegenStatus(`${engine}: FAILED — Python diagram generation failed on server. Check Railway logs.`);
       }
     } catch (err) {
       console.error(`[AdminRegen] ${engine} error:`, err);
@@ -650,71 +631,82 @@ export default function TopicDetail({
   // Track active TOC section on scroll — find the section currently visible in viewport
   const [activeTocId, setActiveTocId] = useState('');
   const [scrollProgress, setScrollProgress] = useState(0);
+
+  // Scroll-based TOC tracking with IntersectionObserver
   useEffect(() => {
     if (!tocSections.length) return;
-    const scrollContainer = document.getElementById('app-scroll-container') || window;
-    let ticking = false;
-    const handleScroll = () => {
-      if (ticking) return;
-      ticking = true;
-      requestAnimationFrame(() => {
-        const ids = tocSections.map(s => s.id);
-        // Find the last section whose top edge has scrolled above 30% of viewport
-        const threshold = window.innerHeight * 0.3;
-        let active = ids[0];
-        for (let i = ids.length - 1; i >= 0; i--) {
-          const el = document.getElementById(ids[i]);
-          if (el && el.getBoundingClientRect().top <= threshold) {
-            active = ids[i];
-            break;
-          }
-        }
-        setActiveTocId(active);
-        // Scroll progress
-        if (scrollContainer instanceof HTMLElement) {
-          const scrollH = scrollContainer.scrollHeight - scrollContainer.clientHeight;
-          setScrollProgress(scrollH > 0 ? Math.min(1, scrollContainer.scrollTop / scrollH) : 0);
-        } else {
-          const docH = document.documentElement.scrollHeight - window.innerHeight;
-          setScrollProgress(docH > 0 ? Math.min(1, window.scrollY / docH) : 0);
-        }
-        ticking = false;
-      });
+    const scrollContainer = document.getElementById('app-scroll-container');
+    const headingStates = {};
+
+    const callback = (entries) => {
+      entries.forEach((entry) => { headingStates[entry.target.id] = entry.isIntersecting; });
+      const allIds = tocSections.map(s => s.id);
+      const firstVisible = allIds.find(id => headingStates[id]);
+      if (firstVisible) setActiveTocId(firstVisible);
     };
-    handleScroll();
-    scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
-    return () => scrollContainer.removeEventListener('scroll', handleScroll);
+
+    const observer = new IntersectionObserver(callback, {
+      root: scrollContainer || null,
+      rootMargin: '-80px 0px -60% 0px',
+      threshold: 0,
+    });
+
+    const timeoutId = setTimeout(() => {
+      tocSections.forEach(({ id }) => {
+        const el = document.getElementById(id);
+        if (el) observer.observe(el);
+      });
+    }, 200);
+
+    // Scroll progress
+    const handleProgress = () => {
+      const el = scrollContainer || document.documentElement;
+      const scrollH = el.scrollHeight - el.clientHeight;
+      setScrollProgress(scrollH > 0 ? Math.min(1, (scrollContainer ? scrollContainer.scrollTop : window.scrollY) / scrollH) : 0);
+    };
+    (scrollContainer || window).addEventListener('scroll', handleProgress, { passive: true });
+
+    return () => {
+      clearTimeout(timeoutId);
+      observer.disconnect();
+      (scrollContainer || window).removeEventListener('scroll', handleProgress);
+    };
   }, [tocSections, selectedTopic]);
 
   return (
-    <div className="landing-root animate-fade-in flex gap-6">
+    <div className="landing-root animate-fade-in flex gap-8">
       {/* Left: Table of Contents sidebar */}
       {tocSections.length > 2 && (
-        <aside className="hidden xl:block flex-shrink-0 sticky self-start" style={{ top: '72px', width: '200px' }}>
-          <nav>
-            <h4 className="text-[11px] font-bold uppercase tracking-widest text-[var(--text-muted)] mb-3 landing-mono">On This Page</h4>
-            <div className="relative pl-3" style={{ borderLeft: '2px solid var(--border)' }}>
+        <aside className="hidden xl:block flex-shrink-0 sticky self-start" style={{ top: '80px', width: '240px' }}>
+          <nav className="rounded-xl border border-[var(--border)] bg-white shadow-sm overflow-hidden">
+            {/* Header */}
+            <div className="px-4 py-3 border-b border-[var(--border)]">
+              <h4 className="text-[11px] font-bold uppercase tracking-widest text-[var(--text-muted)] landing-mono mb-2">On This Page</h4>
+              <div className="h-1 rounded-full bg-[var(--border)] overflow-hidden">
+                <div className="h-full rounded-full bg-[var(--accent)] transition-all duration-300" style={{ width: `${scrollProgress * 100}%` }} />
+              </div>
+            </div>
+            {/* Section links */}
+            <div className="py-2 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 200px)' }}>
               {tocSections.map(({ id, label, children }) => {
                 const isActive = activeTocId === id;
                 return (
-                  <div key={id} className="relative">
-                    {/* Active indicator bar overlaying the left border */}
-                    {isActive && (
-                      <div className="absolute -left-[3px] top-0 w-[4px] rounded-full bg-[var(--accent)]" style={{ height: children?.length ? `${20 + children.length * 18}px` : '28px' }} />
-                    )}
+                  <div key={id}>
                     <a
                       href={`#${id}`}
                       onClick={(e) => { e.preventDefault(); document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}
-                      className={`block py-1 text-[12.5px] leading-snug transition-colors landing-body ${
-                        isActive ? 'text-[var(--accent)] font-semibold' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
+                      className={`flex items-center gap-2 px-4 py-2 text-[13px] leading-snug transition-all landing-body border-l-[3px] ${
+                        isActive
+                          ? 'border-[var(--accent)] text-[var(--accent)] font-semibold bg-[var(--accent)]/5'
+                          : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)]'
                       }`}
                     >
                       {label}
                     </a>
                     {children?.length > 0 && isActive && (
-                      <div className="pl-2.5 pb-1 space-y-0">
+                      <div className="pl-7 pb-1">
                         {children.map((child, ci) => (
-                          <span key={ci} className="block py-[2px] text-[11px] text-[var(--text-muted)]/70 landing-body leading-snug truncate" title={child}>{child}</span>
+                          <span key={ci} className="block py-[3px] px-2 text-[11px] text-[var(--text-muted)] landing-body leading-snug truncate" title={child}>{child}</span>
                         ))}
                       </div>
                     )}
@@ -722,21 +714,12 @@ export default function TopicDetail({
                 );
               })}
             </div>
-            {/* Progress */}
-            <div className="mt-4 pt-3 border-t border-[var(--border)]">
-              <div className="flex items-center gap-2">
-                <div className="flex-1 h-1 rounded-full bg-[var(--border)] overflow-hidden">
-                  <div className="h-full rounded-full bg-[var(--accent)] transition-all duration-200" style={{ width: `${scrollProgress * 100}%` }} />
-                </div>
-                <span className="text-[10px] font-mono text-[var(--text-muted)] min-w-[28px] text-right">{Math.round(scrollProgress * 100)}%</span>
-              </div>
-            </div>
           </nav>
         </aside>
       )}
 
       {/* Right: Topic content */}
-      <div className="flex-1 min-w-0 lg:max-w-[85%] mx-auto">
+      <div className="flex-1 min-w-0 lg:max-w-[820px] mx-auto">
       {/* Topic Header — no duplicate breadcrumb */}
       <div className="rounded-xl p-3 mb-3 border border-[var(--border)] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
         <div className="flex items-center justify-between mb-2">
@@ -760,7 +743,7 @@ export default function TopicDetail({
           )}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-2 flex-wrap">
-              <h1 className="text-lg font-bold text-[var(--text-primary)] landing-display">{topicDetails.title}</h1>
+              <h1 className="text-xl font-bold text-[var(--text-primary)] landing-display">{topicDetails.title}</h1>
               {topicDetails.isNew && <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-primary)] font-bold">NEW</span>}
               {topicDetails.difficulty && (
                 <span className={`text-[10px] landing-mono px-1.5 py-0.5 rounded border ${
