@@ -8,9 +8,11 @@ export const concurrencyTopics = [
       color: '#10b981',
       description: 'Core concepts of concurrent programming',
 
-      introduction: `Concurrency is the ability of a system to handle multiple tasks simultaneously. Understanding concurrency is essential for building efficient, scalable software systems.
+      introduction: `Concurrency is the ability of a system to deal with multiple tasks during overlapping time periods—not necessarily simultaneously. It's one of the most frequently tested topics in system design and backend engineering interviews because virtually every production system must handle concurrent requests, background jobs, and shared state safely.
 
-In interviews, you'll be expected to understand the difference between processes and threads, recognize race conditions, and know how to prevent deadlocks.`,
+Understanding concurrency means knowing the difference between processes and threads (and when to use each), recognizing race conditions before they become bugs, preventing deadlocks through design rather than debugging, and choosing the right synchronization primitive for the job. In interviews, you'll be expected to explain these concepts clearly, write thread-safe code, and reason about the correctness of concurrent systems.
+
+The distinction between concurrency and parallelism matters: concurrency is about structure (managing multiple tasks), parallelism is about execution (running tasks simultaneously on multiple cores). A single-core machine can be concurrent but not parallel. A Go program with goroutines is concurrent by design; whether it's parallel depends on GOMAXPROCS and the hardware.`,
 
       basicImplementation: {
         title: 'Process vs Thread',
@@ -26,6 +28,65 @@ In interviews, you'll be expected to understand the difference between processes
         { name: 'Deadlock', description: 'Circular wait where threads block each other forever' },
         { name: 'Starvation', description: 'Thread never gets resources despite being ready to run' },
         { name: 'Livelock', description: 'Threads keep responding to each other without making progress' }
+      ],
+
+      keyQuestions: [
+        {
+          question: 'What is the difference between concurrency and parallelism?',
+          answer: `**Concurrency** is about dealing with multiple things at once (structure). A web server handling 1000 connections on a single core is concurrent—it interleaves request processing using event loops or thread context-switching.
+
+**Parallelism** is about doing multiple things at once (execution). A map-reduce job processing data across 100 cores is parallel—computation happens simultaneously.
+
+**Analogy**: A chef making 3 dishes by switching between them is concurrent. Three chefs each making one dish simultaneously is parallel.
+
+**In Practice**:
+- Python's GIL makes CPython threads concurrent but not parallel for CPU-bound work (use multiprocessing for true parallelism)
+- Go's goroutines are concurrent by design; GOMAXPROCS controls parallelism
+- Java's threads can be both concurrent and parallel depending on the thread pool and hardware
+- Node.js is single-threaded but highly concurrent via the event loop`
+        },
+        {
+          question: 'What are the four conditions for deadlock, and how do you prevent it?',
+          answer: `**Coffman's Four Conditions** (ALL must hold for deadlock):
+
+1. **Mutual Exclusion**: At least one resource is held in a non-sharable mode
+2. **Hold and Wait**: A thread holds at least one resource while waiting for another
+3. **No Preemption**: Resources cannot be forcibly taken from a thread
+4. **Circular Wait**: A circular chain of threads, each waiting for a resource held by the next
+
+**Prevention Strategies** (break any one condition):
+
+- **Break Circular Wait**: Impose a global ordering on resources. Always acquire locks in the same order (e.g., lock A before lock B). This is the most common and practical approach.
+- **Break Hold and Wait**: Require threads to request all resources at once (all-or-nothing). Reduces concurrency but prevents deadlock.
+- **Break No Preemption**: Use tryLock() with timeout. If you can't acquire a lock within T milliseconds, release all held locks and retry.
+- **Break Mutual Exclusion**: Use lock-free data structures (CAS operations) where possible.
+
+**Detection**: Run a wait-for graph analysis periodically. If a cycle exists, abort one thread to break the deadlock (databases do this automatically with deadlock detection).`
+        },
+        {
+          question: 'When should you use processes vs threads vs async?',
+          answer: `**Threads** (shared memory):
+- Best for: I/O-bound tasks with shared state, medium concurrency
+- Examples: Web servers, database connection pools
+- Trade-offs: Lower overhead than processes, but need synchronization
+
+**Processes** (isolated memory):
+- Best for: CPU-bound tasks, isolation requirements, multi-core parallelism
+- Examples: Worker pools, data processing pipelines, sandboxed execution
+- Trade-offs: Higher memory overhead, communication via IPC (pipes, sockets, shared memory)
+
+**Async/Event Loop** (single thread, non-blocking):
+- Best for: High-concurrency I/O-bound tasks with minimal shared state
+- Examples: Web servers (Node.js, Python asyncio), API gateways, WebSocket servers
+- Trade-offs: Great scalability for I/O, but CPU-bound work blocks the event loop
+
+**Decision Framework**:
+- Need CPU parallelism? → Processes (or threads in Java/Go)
+- Need shared state with moderate concurrency? → Threads
+- Need 10K+ concurrent connections? → Async/event loop
+- Need fault isolation? → Processes
+- In Python? → Processes for CPU-bound, asyncio for I/O-bound (GIL limits threads)`
+        }
       ]
     },
     {
@@ -43,6 +104,71 @@ In interviews, you'll be expected to understand the difference between processes
         { name: 'Condition Variable', description: 'Wait for specific condition with notification', example: 'threading.Condition()' },
         { name: 'Read-Write Lock', description: 'Multiple readers OR one writer', example: 'threading.RLock()' },
         { name: 'Barrier', description: 'Wait until all threads reach a point', example: 'threading.Barrier(n)' }
+      ],
+
+      keyQuestions: [
+        {
+          question: 'What is the difference between a mutex and a semaphore?',
+          answer: `**Mutex** (binary):
+- Only ONE thread can hold it at a time
+- Has ownership: only the thread that acquired it can release it
+- Used for: protecting critical sections with shared state
+- Example: protecting a shared counter, database connection
+
+**Semaphore** (counting):
+- Up to N threads can hold it simultaneously
+- No ownership: any thread can signal (release) it
+- Used for: limiting concurrent access to a pool of resources
+- Example: connection pool of 10 connections → Semaphore(10)
+
+**Key Distinction**: A mutex is for mutual exclusion (only one thread in the critical section). A semaphore is for signaling and resource counting (control how many threads can proceed).
+
+**Common Interview Trap**: A binary semaphore (initialized to 1) looks like a mutex but lacks ownership semantics. A mutex can detect if the same thread tries to lock it twice (reentrant mutex), while a binary semaphore would deadlock.`
+        },
+        {
+          question: 'When should you use a condition variable vs polling?',
+          answer: `**Condition Variable** (event-driven):
+- Thread sleeps until notified—zero CPU usage while waiting
+- Uses: Producer-consumer, bounded buffers, event coordination
+- Pattern: \`while (!condition) { cv.wait(lock); }\`
+- Always use a while loop (not if) due to spurious wakeups
+
+**Polling / Busy-Wait** (spin):
+- Thread continuously checks a flag in a tight loop
+- Uses: Very short waits (< microseconds), lock-free algorithms
+- Pattern: \`while (!flag.load()) { /* spin */ }\`
+- Wastes CPU cycles but avoids context-switch overhead
+
+**Decision Framework**:
+- Expected wait > 1 microsecond → condition variable
+- Wait time unpredictable → condition variable
+- Ultra-low latency critical (HFT, kernel code) → spinlock
+- Multiple waiters possible → condition variable (can notify_all)
+- Simple flag with one producer/one consumer → atomic variable may suffice
+
+**In Practice**: Almost always use condition variables in application code. Spinlocks are for OS kernels and lock-free data structure internals.`
+        },
+        {
+          question: 'What is a read-write lock and when would you use one?',
+          answer: `**Read-Write Lock** allows multiple concurrent readers OR one exclusive writer. This is a significant improvement over a plain mutex for read-heavy workloads.
+
+**When to Use**:
+- Read:write ratio > 10:1 (e.g., configuration stores, caches, DNS lookup tables)
+- Reads are non-trivial (long-running queries, large data traversals)
+- Write frequency is low enough that writer starvation isn't a concern
+
+**When NOT to Use**:
+- Balanced read/write ratio → plain mutex is simpler and often faster
+- Very short critical sections → RWLock overhead may exceed mutex
+- Write-heavy workload → writers constantly starve readers or vice versa
+
+**Variants**:
+- **Readers-preference**: Readers never wait if another reader holds the lock. Risk: writer starvation
+- **Writers-preference**: New readers wait if a writer is queued. Risk: reader starvation
+- **Fair**: FIFO ordering. No starvation but lower throughput
+
+**Java Tip**: StampedLock (Java 8+) offers an optimistic read mode that doesn't actually acquire a lock—ideal for very read-heavy scenarios where writes are rare.`
+        }
       ]
     },
     {
@@ -75,6 +201,56 @@ In interviews, you'll be expected to understand the difference between processes
           name: 'Dining Philosophers',
           description: 'N philosophers share N forks, need 2 forks to eat. Avoid deadlock.',
           solution: 'Resource hierarchy, arbitrator, or Chandy-Misra solution'
+        }
+      ],
+
+      keyQuestions: [
+        {
+          question: 'Walk through the Producer-Consumer solution with a bounded buffer',
+          answer: `**Problem**: Producers add items to a fixed-size buffer; consumers remove items. Buffer must not overflow (producers block when full) or underflow (consumers block when empty).
+
+**Solution Using Two Semaphores + Mutex**:
+\`\`\`
+empty_slots = Semaphore(BUFFER_SIZE)  # tracks empty space
+filled_slots = Semaphore(0)           # tracks items in buffer
+mutex = Mutex()                        # protects buffer access
+
+Producer:
+  empty_slots.wait()    # block if buffer is full
+  mutex.lock()
+  buffer.add(item)
+  mutex.unlock()
+  filled_slots.signal() # notify consumers
+
+Consumer:
+  filled_slots.wait()   # block if buffer is empty
+  mutex.lock()
+  item = buffer.remove()
+  mutex.unlock()
+  empty_slots.signal()  # notify producers
+\`\`\`
+
+**Why Two Semaphores?**:
+- \`empty_slots\` prevents overflow: producers block when buffer is full
+- \`filled_slots\` prevents underflow: consumers block when buffer is empty
+- The mutex is BETWEEN the semaphore operations, not wrapping them (to avoid deadlock)
+
+**Real-World Examples**: Kafka (producers/consumers with bounded queues), web server request queues, logging pipelines.`
+        },
+        {
+          question: 'How do you solve the Dining Philosophers problem without deadlock?',
+          answer: `**Problem**: 5 philosophers sit around a table, each with a fork between them. Each needs 2 forks to eat. Naive solution: each picks up their left fork first → all hold one fork → deadlock.
+
+**Solution 1: Resource Ordering** (most common in interviews):
+Number forks 0-4. Always pick up the lower-numbered fork first. Philosopher 4 picks up fork 0 (not fork 4) first, breaking the circular wait.
+
+**Solution 2: Limit Diners**
+Use a semaphore initialized to 4. At most 4 philosophers can attempt to eat simultaneously. With 5 forks and at most 4 diners, at least one philosopher can always acquire both forks.
+
+**Solution 3: Chandy-Misra**
+Each fork starts "dirty." A philosopher requests forks from neighbors. If a neighbor's fork is dirty, they clean it and send it. Clean forks are kept. This allows full parallelism with no central coordinator.
+
+**Interview Tip**: Start with resource ordering (simplest, most practical). Mention the Chandy-Misra solution to show depth. Explain which Coffman condition each solution breaks.`
         }
       ]
     },
@@ -134,6 +310,49 @@ In interviews, you'll be expected to understand the difference between processes
         'ThreadPoolExecutor in Python, ExecutorService in Java'
       ],
 
+      keyQuestions: [
+        {
+          question: 'How do you size a thread pool?',
+          answer: `**CPU-Bound Tasks**: Pool size = number of CPU cores (or cores + 1). Adding more threads just adds context-switching overhead.
+
+**I/O-Bound Tasks**: Pool size = cores × (1 + wait_time/compute_time). If threads spend 90% of time waiting on I/O, you can have ~10x more threads than cores.
+
+**Mixed Workloads**: Separate CPU-bound and I/O-bound work into different pools. This prevents I/O-bound tasks from starving CPU-bound work.
+
+**Practical Rules of Thumb**:
+- Web server: 2× CPU cores for a starting point, tune based on load testing
+- Database connection pool: Match to DB's max_connections / number of app instances
+- Background job processor: Start small (4-8 threads), monitor queue depth, scale up
+
+**What Happens if the Pool is Too Large?**:
+- Excessive context switching (CPU spends time switching instead of working)
+- Memory exhaustion (each thread = ~1MB stack in Java)
+- Resource contention (too many threads competing for locks)
+
+**What Happens if Too Small?**:
+- Tasks queue up, latency increases
+- Throughput doesn't scale with available hardware
+
+**Interview Answer**: "I'd start with cores × 2 for a mixed workload, instrument with metrics (queue depth, thread utilization, latency percentiles), and tune based on actual production behavior."`
+        },
+        {
+          question: 'What are the different thread pool rejection policies?',
+          answer: `When a thread pool's queue is full and all threads are busy, a rejection policy determines what happens to new tasks:
+
+**AbortPolicy** (default in Java): Throws RejectedExecutionException. Caller must handle the error. Best for: critical tasks where silent data loss is unacceptable.
+
+**CallerRunsPolicy**: The submitting thread executes the task itself. Creates natural backpressure—if the pool is overwhelmed, the caller slows down. Best for: graceful degradation.
+
+**DiscardPolicy**: Silently drops the task. Best for: non-critical tasks like metrics/logging where occasional loss is acceptable.
+
+**DiscardOldestPolicy**: Drops the oldest task in the queue and retries the new one. Best for: time-sensitive tasks where old tasks are less valuable.
+
+**Custom Policy**: Log, enqueue to a secondary system, or apply circuit breaker logic.
+
+**In Practice**: Most production systems use CallerRunsPolicy (for backpressure) or a custom policy that logs dropped tasks and triggers alerts.`
+        }
+      ],
+
       implementation: `from concurrent.futures import ThreadPoolExecutor
 import time
 
@@ -165,6 +384,53 @@ with ThreadPoolExecutor(max_workers=4) as executor:
         { name: 'BlockingQueue', description: 'Thread-safe queue with blocking operations' },
         { name: 'CopyOnWriteArrayList', description: 'Snapshot semantics for read-heavy workloads' },
         { name: 'AtomicInteger', description: 'Lock-free atomic operations via CAS' }
+      ],
+
+      keyQuestions: [
+        {
+          question: 'How does ConcurrentHashMap achieve better performance than a synchronized HashMap?',
+          answer: `**synchronized HashMap**: Every operation locks the entire map. One thread reading blocks all other threads from reading OR writing.
+
+**ConcurrentHashMap** (Java):
+- **Java 7**: Divides the map into 16 segments, each with its own lock. Different threads can read/write to different segments concurrently.
+- **Java 8+**: Lock-free reads (volatile reads), fine-grained locking (locks individual hash buckets on writes), and uses CAS operations for simple updates. Falls back to synchronized blocks only when hash bucket becomes a tree (high collision).
+
+**Performance Comparison**:
+- 16 threads, 90% reads: ConcurrentHashMap is ~10-15x faster
+- 16 threads, 50% writes: ConcurrentHashMap is ~3-5x faster
+- Single thread: Nearly identical performance
+
+**When to Use What**:
+- Read-heavy with rare writes → ConcurrentHashMap
+- Simple key-value with atomic operations → ConcurrentHashMap
+- Need sorted order → ConcurrentSkipListMap
+- Full snapshot iteration → Collections.synchronizedMap() or CopyOnWriteMap
+
+**Go Equivalent**: sync.Map (optimized for stable keys with rare writes), or a map protected by sync.RWMutex for general use.`
+        },
+        {
+          question: 'What are lock-free data structures and when should you use them?',
+          answer: `**Lock-Free Data Structures** use atomic operations (Compare-And-Swap / CAS) instead of locks. No thread can be blocked by another thread—if one thread is suspended, others can still make progress.
+
+**CAS Operation**: \`compareAndSwap(expected, new)\` — atomically: if current value equals expected, set to new and return true; otherwise return false.
+
+**Examples**:
+- **AtomicInteger/AtomicLong**: Lock-free counters using CAS
+- **ConcurrentLinkedQueue**: Lock-free FIFO queue (Michael-Scott algorithm)
+- **LongAdder** (Java 8+): Striped counters that reduce CAS contention—better than AtomicLong for high-contention counting
+
+**When to Use**:
+- Very high contention where lock overhead dominates
+- Simple operations (counters, flags, pointers)
+- Real-time systems where blocking is unacceptable
+
+**When NOT to Use**:
+- Complex multi-step operations (locks are simpler and correct)
+- Low contention (lock overhead is negligible, lock-free adds complexity)
+- When you need to protect invariants across multiple variables
+
+**Interview Insight**: Lock-free doesn't mean faster in all cases. Under low contention, a simple mutex is often faster because CAS retry loops can cause more overhead than a quick lock/unlock.`
+        }
       ]
     },
     {
