@@ -5,6 +5,7 @@ import { CompanyLogo, getCompanyLogoSrc } from '../../shared/CompanyLogo.tsx';
 import FormattedContent from './FormattedContent.jsx';
 import CloudArchitectureDiagram from './CloudArchitectureDiagram.jsx';
 import DiagramSVG from '../features/DiagramSVG.jsx';
+import { MermaidDiagram } from '../../lumora/interview/MermaidDiagram';
 import { getAuthHeaders } from '../../../utils/authHeaders.js';
 import { useAuth } from '../../../contexts/AuthContext';
 import { generateSlug, getProblemBySlug } from '../../../data/capra/problems.js';
@@ -299,6 +300,20 @@ function StaticCloudDiagram({ topicId, provider, staticSrc, diagramData, generat
   useEffect(() => { setImgError(false); }, [topicId, provider]);
 
   if (imgError) {
+    // If we have a mermaid fallback from the API, render it
+    if (diagramData?.mermaidCode) {
+      return (
+        <div>
+          <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-white p-4">
+            <MermaidDiagram content={diagramData.mermaidCode} />
+          </div>
+          <div className="mt-2 flex items-center justify-between text-xs text-[var(--text-muted)]" style={{ fontFamily: 'var(--font-mono)' }}>
+            <span>{provider.toUpperCase()} Architecture (Mermaid)</span>
+            <button onClick={onGenerate} className="hover:text-[var(--accent)] transition-colors">Regenerate →</button>
+          </div>
+        </div>
+      );
+    }
     return (
       <CloudArchitectureDiagram
         imageUrl={diagramData?.imageUrl}
@@ -317,7 +332,7 @@ function StaticCloudDiagram({ topicId, provider, staticSrc, diagramData, generat
         <img
           src={staticSrc}
           alt={`${topicId} ${provider.toUpperCase()} architecture diagram`}
-          style={{ width: '100%', maxWidth: '700px', height: 'auto', display: 'block', margin: '0 auto' }}
+          style={{ width: '100%', height: 'auto', display: 'block', margin: '0 auto' }}
           onError={() => setImgError(true)}
         />
         {!expanded && (

@@ -67,29 +67,30 @@ from diagrams import Diagram, Cluster, Edge
 from diagrams.onprem.client import Users
 {{IMPORTS}}
 graph_attr = {
-    "fontsize": "20",
-    "fontname": "Helvetica Bold",
+    "fontsize": "22",
+    "fontname": "Sans Bold",
     "fontcolor": "#111827",
     "bgcolor": "white",
-    "pad": "0.3",
-    "dpi": "150",
-    "nodesep": "0.8",
-    "ranksep": "1.0",
+    "pad": "0.4",
+    "dpi": "200",
+    "nodesep": "0.9",
+    "ranksep": "1.1",
     "splines": "spline",
-    "size": "16,10!",
+    "size": "18,12!",
     "ratio": "compress",
 }
 
 node_attr = {
-    "fontsize": "11",
-    "fontname": "Helvetica Bold",
+    "fontsize": "14",
+    "fontname": "Sans Bold",
     "fontcolor": "#111827",
     "imagepos": "tc",
+    "labelloc": "b",
 }
 
 edge_attr = {
-    "fontsize": "10",
-    "fontname": "Helvetica",
+    "fontsize": "12",
+    "fontname": "Sans",
     "fontcolor": "#111827",
     "penwidth": "2.0",
     "arrowsize": "0.8",
@@ -111,12 +112,12 @@ with Diagram(
 # ── Cluster color presets ──────────────────────────────────────────────────
 
 CLUSTER_COLORS = {
-    "edge":    '{"bgcolor": "#dbeafe", "style": "rounded", "pencolor": "#2563eb", "penwidth": "2.5", "fontsize": "13", "fontname": "Helvetica Bold", "fontcolor": "#1e3a5f"}',
-    "app":     '{"bgcolor": "#dcfce7", "style": "rounded", "pencolor": "#16a34a", "penwidth": "2.5", "fontsize": "13", "fontname": "Helvetica Bold", "fontcolor": "#14532d"}',
-    "data":    '{"bgcolor": "#fef3c7", "style": "rounded", "pencolor": "#d97706", "penwidth": "2.5", "fontsize": "13", "fontname": "Helvetica Bold", "fontcolor": "#78350f"}',
-    "async":   '{"bgcolor": "#fce7f3", "style": "rounded", "pencolor": "#db2777", "penwidth": "2.5", "fontsize": "13", "fontname": "Helvetica Bold", "fontcolor": "#831843"}',
-    "monitor": '{"bgcolor": "#f3f4f6", "style": "rounded", "pencolor": "#6b7280", "penwidth": "2.5", "fontsize": "13", "fontname": "Helvetica Bold", "fontcolor": "#1f2937"}',
-    "sub":     '{"bgcolor": "#f0fdf4", "style": "dashed", "pencolor": "#22c55e", "penwidth": "1.5", "fontsize": "11", "fontname": "Helvetica"}',
+    "edge":    '{"bgcolor": "#dbeafe", "style": "rounded", "pencolor": "#2563eb", "penwidth": "2.5", "fontsize": "16", "fontname": "Sans Bold", "fontcolor": "#1e3a5f"}',
+    "app":     '{"bgcolor": "#dcfce7", "style": "rounded", "pencolor": "#16a34a", "penwidth": "2.5", "fontsize": "16", "fontname": "Sans Bold", "fontcolor": "#14532d"}',
+    "data":    '{"bgcolor": "#fef3c7", "style": "rounded", "pencolor": "#d97706", "penwidth": "2.5", "fontsize": "16", "fontname": "Sans Bold", "fontcolor": "#78350f"}',
+    "async":   '{"bgcolor": "#fce7f3", "style": "rounded", "pencolor": "#db2777", "penwidth": "2.5", "fontsize": "16", "fontname": "Sans Bold", "fontcolor": "#831843"}',
+    "monitor": '{"bgcolor": "#f3f4f6", "style": "rounded", "pencolor": "#6b7280", "penwidth": "2.5", "fontsize": "16", "fontname": "Sans Bold", "fontcolor": "#1f2937"}',
+    "sub":     '{"bgcolor": "#f0fdf4", "style": "dashed", "pencolor": "#22c55e", "penwidth": "1.5", "fontsize": "13", "fontname": "Sans"}',
 }
 
 # ── Edge color presets ─────────────────────────────────────────────────────

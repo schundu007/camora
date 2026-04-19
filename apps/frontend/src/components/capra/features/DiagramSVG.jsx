@@ -31,10 +31,10 @@ const Box = ({ x, y, width, height, label, color = COLORS.primary, fontSize = 11
       x={x + width / 2}
       y={y + height / 2 + 4}
       textAnchor="middle"
-      fill="#ffffff"
+      fill={COLORS.text}
       fontSize={fontSize}
       fontFamily="system-ui, -apple-system, sans-serif"
-      fontWeight="500"
+      fontWeight="600"
     >
       {label}
     </text>
@@ -53,10 +53,10 @@ const Diamond = ({ x, y, size, label, color = COLORS.warning }) => (
       x={x + size / 2}
       y={y + size / 2 + 4}
       textAnchor="middle"
-      fill="#ffffff"
+      fill={COLORS.text}
       fontSize="11"
       fontFamily="system-ui, -apple-system, sans-serif"
-      fontWeight="500"
+      fontWeight="600"
     >
       {label}
     </text>

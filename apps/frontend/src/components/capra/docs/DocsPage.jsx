@@ -405,6 +405,10 @@ export default function DocsPage({ onBack }) {
         const result = { imageUrl, cloudProvider: data.cloud_provider || provider, cached: data.cached };
         setDiagramData(result);
         setDiagramCache(prev => ({ ...prev, [cacheKey]: result }));
+      } else if (data.success && data.mermaid_code) {
+        const result = { mermaidCode: data.mermaid_code, cloudProvider: data.cloud_provider || provider, cached: data.cached };
+        setDiagramData(result);
+        setDiagramCache(prev => ({ ...prev, [cacheKey]: result }));
       } else {
         throw new Error(data.error || 'Diagram generation failed');
       }
