@@ -543,6 +543,7 @@ export default function TopicDetail({
       if (topicDetails.edgeCases) s.push({ id: 'edge-cases', label: 'Edge Cases', children: topicDetails.edgeCases.slice(0, 5).map(e => trunc(e.scenario, 30)) });
       if (topicDetails.discussionPoints) s.push({ id: 'discussion', label: 'Discussion Points', children: topicDetails.discussionPoints.slice(0, 5).map(d => trunc(d.topic, 30)) });
       if (topicDetails.interviewFollowups) s.push({ id: 'followups', label: 'Follow-up Questions', children: topicDetails.interviewFollowups.slice(0, 5).map(f => trunc(f.question, 30)) });
+      if (topicDetails.codeExamples && typeof topicDetails.codeExamples === 'object' && !Array.isArray(topicDetails.codeExamples)) s.push({ id: 'code-examples', label: 'Implementation Code' });
       if (topicDetails.keyQuestions?.length) s.push({ id: 'key-questions', label: 'Key Questions', children: topicDetails.keyQuestions.slice(0, 5).map(q => trunc(q.question, 30)) });
       if (topicDetails.tips) s.push({ id: 'tips', label: 'Interview Tips' });
     }
@@ -2295,7 +2296,7 @@ export default function TopicDetail({
 
               {/* 11. Trade-offs + Edge Cases */}
               {topicDetails.tradeoffDecisions && (
-                <div id="tradeoffs" className="rounded-lg overflow-hidden scroll-mt-24 border border-[var(--border)] bg-white">
+                <div id="tradeoff-decisions" className="rounded-lg overflow-hidden scroll-mt-24 border border-[var(--border)] bg-white">
                   <div className="px-3 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
                     <Icon name="gitBranch" size={16} className="text-white" />
                     <h3 className="text-sm font-bold text-white landing-display">Trade-off Decisions</h3>
@@ -2390,7 +2391,7 @@ export default function TopicDetail({
               {topicDetails.discussionPoints && (() => {
                 const TOPIC_COLORS = ['#10b981', '#2D8CFF', '#f59e0b', '#3b82f6', '#ef4444', '#60A5FA', '#14b8a6', '#ec4899'];
                 return (
-                <div className="rounded-2xl overflow-hidden bg-white border border-[var(--border)]">
+                <div id="discussion" className="rounded-2xl overflow-hidden scroll-mt-24 bg-white border border-[var(--border)]">
                   <div className="px-4 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
                     <Icon name="messageCircle" size={14} className="text-white" />
                     <h3 className="text-sm font-bold text-white landing-display">Discussion Points</h3>
@@ -2438,7 +2439,7 @@ export default function TopicDetail({
               })()}
 
               {topicDetails.interviewFollowups && (
-                <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-white">
+                <div id="followups" className="rounded-lg overflow-hidden scroll-mt-24 border border-[var(--border)] bg-white">
                   <div className="px-3 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
                     <Icon name="helpCircle" size={16} className="text-white" />
                     <h3 className="text-sm font-bold text-white landing-display">Common Follow-up Questions</h3>
@@ -2504,7 +2505,7 @@ export default function TopicDetail({
 
               {/* 14. Code Examples */}
               {topicDetails.codeExamples && typeof topicDetails.codeExamples === 'object' && !Array.isArray(topicDetails.codeExamples) && (
-                <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-white">
+                <div id="code-examples" className="rounded-lg overflow-hidden scroll-mt-24 border border-[var(--border)] bg-white">
                   <div className="px-3 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
                     <Icon name="code" size={16} className="text-white" />
                     <h3 className="text-sm font-bold text-white landing-display">Implementation Code</h3>
