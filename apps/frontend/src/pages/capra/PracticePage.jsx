@@ -590,7 +590,7 @@ export default function PracticePage() {
 
       {/* ═══════════ Main Content ═══════════ */}
       <div>
-        <div className="w-full lg:max-w-[75%] mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: 32, paddingBottom: 80 }}>
+        <div className="w-full lg:max-w-[85%] mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: 32, paddingBottom: 80 }}>
 
           {/* ── SETUP PHASE ── */}
           {phase === 'setup' && (
