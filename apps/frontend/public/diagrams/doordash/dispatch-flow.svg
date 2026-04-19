@@ -1,0 +1,130 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 450" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <filter id="s"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.12"/></filter>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#334155"/></marker>
+    <marker id="arrowBlue" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#2563eb"/></marker>
+    <marker id="arrowGreen" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#16a34a"/></marker>
+    <marker id="arrowOrange" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#f97316"/></marker>
+    <marker id="arrowRed" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#ef4444"/></marker>
+  </defs>
+
+  <rect width="1200" height="450" fill="#ffffff" rx="16"/>
+
+  <text x="600" y="32" text-anchor="middle" fill="#1e293b" font-size="20" font-weight="700">DoorDash Dispatch Optimization Flow</text>
+  <text x="600" y="52" text-anchor="middle" fill="#64748b" font-size="12">New order triggers geospatial driver query, scoring, batch optimization, push offer, accept/decline cycle</text>
+
+  <!-- New Order -->
+  <rect x="15" y="100" width="120" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="15" y="100" width="120" height="28" rx="10 10 0 0" fill="#ff3008"/>
+  <text x="75" y="119" text-anchor="middle" fill="white" font-size="11" font-weight="700">New Order</text>
+  <text x="75" y="147" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Order Placed</text>
+  <text x="75" y="165" text-anchor="middle" fill="#64748b" font-size="9">Restaurant confirmed</text>
+  <text x="75" y="181" text-anchor="middle" fill="#64748b" font-size="9">Prep ETA 10 min</text>
+  <text x="75" y="197" text-anchor="middle" fill="#64748b" font-size="9">Pre-dispatch trigger</text>
+
+  <!-- Geospatial Query -->
+  <rect x="185" y="85" width="140" height="150" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="185" y="85" width="140" height="28" rx="10 10 0 0" fill="#2563eb"/>
+  <text x="255" y="104" text-anchor="middle" fill="white" font-size="11" font-weight="700">Geospatial Query</text>
+  <text x="255" y="132" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Find Nearby Drivers</text>
+  <text x="255" y="150" text-anchor="middle" fill="#64748b" font-size="9">Redis GEORADIUS</text>
+  <text x="255" y="166" text-anchor="middle" fill="#64748b" font-size="9">Expanding: 2mi, 5mi, 10mi</text>
+  <text x="255" y="182" text-anchor="middle" fill="#64748b" font-size="9">Filter by vehicle type</text>
+  <text x="255" y="198" text-anchor="middle" fill="#64748b" font-size="9">Filter by status=AVAIL</text>
+  <text x="255" y="222" text-anchor="middle" fill="#94a3b8" font-size="8">20K GPS updates/s</text>
+
+  <!-- Score -->
+  <rect x="375" y="85" width="140" height="150" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="375" y="85" width="140" height="28" rx="10 10 0 0" fill="#7c3aed"/>
+  <text x="445" y="104" text-anchor="middle" fill="white" font-size="11" font-weight="700">Score Candidates</text>
+  <text x="445" y="132" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Multi-Factor Rank</text>
+  <text x="445" y="150" text-anchor="middle" fill="#64748b" font-size="9">Distance to restaurant</text>
+  <text x="445" y="166" text-anchor="middle" fill="#64748b" font-size="9">Driver rating</text>
+  <text x="445" y="182" text-anchor="middle" fill="#64748b" font-size="9">Batch compatibility</text>
+  <text x="445" y="198" text-anchor="middle" fill="#64748b" font-size="9">Heading direction</text>
+  <text x="445" y="222" text-anchor="middle" fill="#94a3b8" font-size="8">ML scoring model</text>
+
+  <!-- Batch Optimization -->
+  <rect x="565" y="90" width="130" height="140" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="565" y="90" width="130" height="28" rx="10 10 0 0" fill="#f97316"/>
+  <text x="630" y="109" text-anchor="middle" fill="white" font-size="10" font-weight="700">Batch Optimize</text>
+  <text x="630" y="136" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Group Orders</text>
+  <text x="630" y="154" text-anchor="middle" fill="#64748b" font-size="9">Same restaurant?</text>
+  <text x="630" y="170" text-anchor="middle" fill="#64748b" font-size="9">&lt;0.5mi apart?</text>
+  <text x="630" y="186" text-anchor="middle" fill="#64748b" font-size="9">Similar route?</text>
+  <text x="630" y="202" text-anchor="middle" fill="#64748b" font-size="9">Hungarian algo</text>
+  <text x="630" y="218" text-anchor="middle" fill="#94a3b8" font-size="8">Every 30s cycle</text>
+
+  <!-- Push to Driver -->
+  <rect x="745" y="95" width="130" height="130" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="745" y="95" width="130" height="28" rx="10 10 0 0" fill="#16a34a"/>
+  <text x="810" y="114" text-anchor="middle" fill="white" font-size="11" font-weight="700">Push to Driver</text>
+  <text x="810" y="142" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Offer Details</text>
+  <text x="810" y="160" text-anchor="middle" fill="#64748b" font-size="9">Order summary</text>
+  <text x="810" y="176" text-anchor="middle" fill="#64748b" font-size="9">Estimated pay</text>
+  <text x="810" y="192" text-anchor="middle" fill="#64748b" font-size="9">Route preview</text>
+  <text x="810" y="212" text-anchor="middle" fill="#94a3b8" font-size="8">15s accept window</text>
+
+  <!-- Accept -->
+  <rect x="925" y="80" width="110" height="90" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="925" y="80" width="110" height="28" rx="10 10 0 0" fill="#16a34a"/>
+  <text x="980" y="99" text-anchor="middle" fill="white" font-size="11" font-weight="700">Accept</text>
+  <text x="980" y="126" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Driver Assigned</text>
+  <text x="980" y="144" text-anchor="middle" fill="#64748b" font-size="9">Status: ASSIGNED</text>
+  <text x="980" y="160" text-anchor="middle" fill="#16a34a" font-size="14">&#x2713;</text>
+
+  <!-- Decline -->
+  <rect x="925" y="190" width="110" height="80" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="925" y="190" width="110" height="28" rx="10 10 0 0" fill="#ef4444"/>
+  <text x="980" y="209" text-anchor="middle" fill="white" font-size="11" font-weight="700">Decline</text>
+  <text x="980" y="236" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Reassign</text>
+  <text x="980" y="254" text-anchor="middle" fill="#64748b" font-size="9">Try next driver</text>
+
+  <!-- Reassign arrow back -->
+  <path d="M 980 270 Q 980 300 630 300 Q 445 300 445 238" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="5,3" fill="none" marker-end="url(#arrowRed)"/>
+  <rect x="650" y="290" width="100" height="14" rx="3" fill="#ef4444"/>
+  <text x="700" y="300" text-anchor="middle" fill="white" font-size="8" font-weight="600">Reassign to #2</text>
+
+  <!-- Arrows -->
+  <line x1="135" y1="155" x2="182" y2="155" stroke="#2563eb" stroke-width="2" marker-end="url(#arrowBlue)"/>
+  <rect x="137" y="141" width="42" height="14" rx="3" fill="#2563eb"/>
+  <text x="158" y="151" text-anchor="middle" fill="white" font-size="8" font-weight="600">&#x2460;</text>
+
+  <line x1="325" y1="155" x2="372" y2="155" stroke="#7c3aed" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="327" y="141" width="42" height="14" rx="3" fill="#7c3aed"/>
+  <text x="348" y="151" text-anchor="middle" fill="white" font-size="8" font-weight="600">&#x2461;</text>
+
+  <line x1="515" y1="155" x2="562" y2="155" stroke="#f97316" stroke-width="2" marker-end="url(#arrowOrange)"/>
+  <rect x="517" y="141" width="42" height="14" rx="3" fill="#f97316"/>
+  <text x="538" y="151" text-anchor="middle" fill="white" font-size="8" font-weight="600">&#x2462;</text>
+
+  <line x1="695" y1="155" x2="742" y2="155" stroke="#16a34a" stroke-width="2" marker-end="url(#arrowGreen)"/>
+  <rect x="697" y="141" width="42" height="14" rx="3" fill="#16a34a"/>
+  <text x="718" y="151" text-anchor="middle" fill="white" font-size="8" font-weight="600">&#x2463;</text>
+
+  <!-- Push to Accept -->
+  <line x1="875" y1="120" x2="922" y2="115" stroke="#16a34a" stroke-width="2" marker-end="url(#arrowGreen)"/>
+  <rect x="877" y="102" width="42" height="14" rx="3" fill="#16a34a"/>
+  <text x="898" y="112" text-anchor="middle" fill="white" font-size="8" font-weight="600">&#x2464;</text>
+
+  <!-- Push to Decline -->
+  <line x1="875" y1="190" x2="922" y2="215" stroke="#ef4444" stroke-width="2" marker-end="url(#arrowRed)"/>
+  <rect x="877" y="198" width="42" height="14" rx="3" fill="#ef4444"/>
+  <text x="898" y="208" text-anchor="middle" fill="white" font-size="8" font-weight="600">&#x2465;</text>
+
+  <!-- Legend -->
+  <rect x="20" y="340" width="1160" height="95" rx="10" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="50" y="362" fill="#1e293b" font-size="12" font-weight="700">Flow Steps:</text>
+  <rect x="50" y="372" width="10" height="10" rx="2" fill="#2563eb"/>
+  <text x="66" y="381" fill="#475569" font-size="9">&#x2460; New order triggers geospatial query: Redis GEORADIUS for nearby available drivers (expanding radius)</text>
+  <rect x="50" y="388" width="10" height="10" rx="2" fill="#7c3aed"/>
+  <text x="66" y="397" fill="#475569" font-size="9">&#x2461; Score each (order, driver) pair: distance, rating, heading, batch potential via ML model</text>
+  <rect x="50" y="404" width="10" height="10" rx="2" fill="#f97316"/>
+  <text x="66" y="413" fill="#475569" font-size="9">&#x2462; Batch optimize: group compatible orders (same restaurant or nearby), Hungarian algorithm</text>
+  <text x="450" y="381" fill="#475569" font-size="9">&#x2463; Push offer to top-ranked driver with order details, estimated pay, route preview</text>
+  <text x="450" y="397" fill="#475569" font-size="9">&#x2464; Driver accepts within 15s window: status ASSIGNED, begin tracking</text>
+  <text x="450" y="413" fill="#475569" font-size="9">&#x2465; If declined or timeout: automatically reassign to next-ranked driver</text>
+  <rect x="880" y="372" width="10" height="10" rx="2" fill="#ef4444"/>
+  <text x="896" y="381" fill="#475569" font-size="9">Dashed = decline/reassign loop</text>
+  <text x="880" y="397" fill="#475569" font-size="9">Dispatch cycle runs every 30 seconds per zone</text>
+</svg>

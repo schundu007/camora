@@ -1,0 +1,147 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 450" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <filter id="s"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.12"/></filter>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#334155"/></marker>
+    <marker id="arrowBlue" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#2563eb"/></marker>
+    <marker id="arrowGreen" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#16a34a"/></marker>
+    <marker id="arrowOrange" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#f97316"/></marker>
+    <marker id="arrowRed" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#ef4444"/></marker>
+  </defs>
+
+  <rect width="1200" height="450" fill="#ffffff" rx="16"/>
+
+  <text x="600" y="32" text-anchor="middle" fill="#1e293b" font-size="20" font-weight="700">DoorDash Order Lifecycle Flow</text>
+  <text x="600" y="52" text-anchor="middle" fill="#64748b" font-size="12">Browse through checkout, restaurant confirm, driver dispatch, pickup, delivery, and rating</text>
+
+  <!-- Browse -->
+  <rect x="10" y="105" width="100" height="110" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="10" y="105" width="100" height="26" rx="10 10 0 0" fill="#ff3008"/>
+  <text x="60" y="123" text-anchor="middle" fill="white" font-size="10" font-weight="700">Browse</text>
+  <text x="60" y="150" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Restaurants</text>
+  <text x="60" y="168" text-anchor="middle" fill="#64748b" font-size="9">Geo search</text>
+  <text x="60" y="184" text-anchor="middle" fill="#64748b" font-size="9">Menu view</text>
+  <text x="60" y="200" text-anchor="middle" fill="#64748b" font-size="14">&#x1F355;</text>
+
+  <!-- Add to Cart -->
+  <rect x="140" y="105" width="100" height="110" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="140" y="105" width="100" height="26" rx="10 10 0 0" fill="#f97316"/>
+  <text x="190" y="123" text-anchor="middle" fill="white" font-size="10" font-weight="700">Add to Cart</text>
+  <text x="190" y="150" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Select Items</text>
+  <text x="190" y="168" text-anchor="middle" fill="#64748b" font-size="9">Customizations</text>
+  <text x="190" y="184" text-anchor="middle" fill="#64748b" font-size="9">Special requests</text>
+  <text x="190" y="200" text-anchor="middle" fill="#64748b" font-size="14">&#x1F6D2;</text>
+
+  <!-- Checkout -->
+  <rect x="270" y="90" width="110" height="135" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="270" y="90" width="110" height="26" rx="10 10 0 0" fill="#7c3aed"/>
+  <text x="325" y="108" text-anchor="middle" fill="white" font-size="10" font-weight="700">Checkout</text>
+  <text x="325" y="134" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Payment Auth</text>
+  <text x="325" y="152" text-anchor="middle" fill="#64748b" font-size="9">Address confirm</text>
+  <text x="325" y="168" text-anchor="middle" fill="#64748b" font-size="9">Delivery fee calc</text>
+  <text x="325" y="184" text-anchor="middle" fill="#64748b" font-size="9">Tip selection</text>
+  <text x="325" y="200" text-anchor="middle" fill="#64748b" font-size="9">Card pre-auth</text>
+  <text x="325" y="214" text-anchor="middle" fill="#94a3b8" font-size="8">Status: PLACED</text>
+
+  <!-- Restaurant Confirms -->
+  <rect x="410" y="90" width="110" height="135" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="410" y="90" width="110" height="26" rx="10 10 0 0" fill="#ef4444"/>
+  <text x="465" y="108" text-anchor="middle" fill="white" font-size="10" font-weight="700">Restaurant</text>
+  <text x="465" y="134" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Confirms + Preps</text>
+  <text x="465" y="152" text-anchor="middle" fill="#64748b" font-size="9">Tablet app push</text>
+  <text x="465" y="168" text-anchor="middle" fill="#64748b" font-size="9">Accept order</text>
+  <text x="465" y="184" text-anchor="middle" fill="#64748b" font-size="9">Begin cooking</text>
+  <text x="465" y="200" text-anchor="middle" fill="#64748b" font-size="9">Prep ETA set</text>
+  <text x="465" y="214" text-anchor="middle" fill="#94a3b8" font-size="8">PREPARING</text>
+
+  <!-- Dispatch -->
+  <rect x="550" y="90" width="110" height="135" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="550" y="90" width="110" height="26" rx="10 10 0 0" fill="#2563eb"/>
+  <text x="605" y="108" text-anchor="middle" fill="white" font-size="10" font-weight="700">Dispatch</text>
+  <text x="605" y="134" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Find Driver</text>
+  <text x="605" y="152" text-anchor="middle" fill="#64748b" font-size="9">GEORADIUS nearby</text>
+  <text x="605" y="168" text-anchor="middle" fill="#64748b" font-size="9">Score + rank</text>
+  <text x="605" y="184" text-anchor="middle" fill="#64748b" font-size="9">Pre-dispatch opt</text>
+  <text x="605" y="200" text-anchor="middle" fill="#64748b" font-size="9">10 min before ready</text>
+  <text x="605" y="214" text-anchor="middle" fill="#94a3b8" font-size="8">Matching engine</text>
+
+  <!-- Driver Accepts -->
+  <rect x="690" y="105" width="100" height="110" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="690" y="105" width="100" height="26" rx="10 10 0 0" fill="#16a34a"/>
+  <text x="740" y="123" text-anchor="middle" fill="white" font-size="10" font-weight="700">Driver Accept</text>
+  <text x="740" y="150" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">15s Window</text>
+  <text x="740" y="168" text-anchor="middle" fill="#64748b" font-size="9">Push notification</text>
+  <text x="740" y="184" text-anchor="middle" fill="#64748b" font-size="9">Accept/Decline</text>
+  <text x="740" y="200" text-anchor="middle" fill="#94a3b8" font-size="8">ASSIGNED</text>
+
+  <!-- Pickup -->
+  <rect x="820" y="105" width="100" height="110" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="820" y="105" width="100" height="26" rx="10 10 0 0" fill="#f97316"/>
+  <text x="870" y="123" text-anchor="middle" fill="white" font-size="10" font-weight="700">Pickup</text>
+  <text x="870" y="150" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">At Restaurant</text>
+  <text x="870" y="168" text-anchor="middle" fill="#64748b" font-size="9">Geofence arrival</text>
+  <text x="870" y="184" text-anchor="middle" fill="#64748b" font-size="9">Item count verify</text>
+  <text x="870" y="200" text-anchor="middle" fill="#94a3b8" font-size="8">PICKED_UP</text>
+
+  <!-- Delivery -->
+  <rect x="950" y="105" width="100" height="110" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="950" y="105" width="100" height="26" rx="10 10 0 0" fill="#16a34a"/>
+  <text x="1000" y="123" text-anchor="middle" fill="white" font-size="10" font-weight="700">Delivery</text>
+  <text x="1000" y="150" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Drop-off</text>
+  <text x="1000" y="168" text-anchor="middle" fill="#64748b" font-size="9">GPS confirm</text>
+  <text x="1000" y="184" text-anchor="middle" fill="#64748b" font-size="9">Photo proof</text>
+  <text x="1000" y="200" text-anchor="middle" fill="#94a3b8" font-size="8">DELIVERED</text>
+
+  <!-- Rate -->
+  <rect x="1080" y="105" width="100" height="110" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="1080" y="105" width="100" height="26" rx="10 10 0 0" fill="#7c3aed"/>
+  <text x="1130" y="123" text-anchor="middle" fill="white" font-size="10" font-weight="700">Rate</text>
+  <text x="1130" y="150" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Payment Final</text>
+  <text x="1130" y="168" text-anchor="middle" fill="#64748b" font-size="9">Capture charge</text>
+  <text x="1130" y="184" text-anchor="middle" fill="#64748b" font-size="9">Rate driver/food</text>
+  <text x="1130" y="200" text-anchor="middle" fill="#64748b" font-size="9">Tip adjust</text>
+
+  <!-- Arrows -->
+  <line x1="110" y1="155" x2="137" y2="155" stroke="#f97316" stroke-width="2" marker-end="url(#arrowOrange)"/>
+  <text x="123" y="148" fill="#2563eb" font-size="8" font-weight="700">&#x2460;</text>
+
+  <line x1="240" y1="155" x2="267" y2="155" stroke="#7c3aed" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="253" y="148" fill="#7c3aed" font-size="8" font-weight="700">&#x2461;</text>
+
+  <line x1="380" y1="155" x2="407" y2="155" stroke="#ef4444" stroke-width="2" marker-end="url(#arrowRed)"/>
+  <text x="393" y="148" fill="#ef4444" font-size="8" font-weight="700">&#x2462;</text>
+
+  <line x1="520" y1="155" x2="547" y2="155" stroke="#2563eb" stroke-width="2" marker-end="url(#arrowBlue)"/>
+  <text x="533" y="148" fill="#2563eb" font-size="8" font-weight="700">&#x2463;</text>
+
+  <line x1="660" y1="155" x2="687" y2="155" stroke="#16a34a" stroke-width="2" marker-end="url(#arrowGreen)"/>
+  <text x="673" y="148" fill="#16a34a" font-size="8" font-weight="700">&#x2464;</text>
+
+  <line x1="790" y1="155" x2="817" y2="155" stroke="#f97316" stroke-width="2" marker-end="url(#arrowOrange)"/>
+  <text x="803" y="148" fill="#f97316" font-size="8" font-weight="700">&#x2465;</text>
+
+  <line x1="920" y1="155" x2="947" y2="155" stroke="#16a34a" stroke-width="2" marker-end="url(#arrowGreen)"/>
+  <text x="933" y="148" fill="#16a34a" font-size="8" font-weight="700">&#x2466;</text>
+
+  <line x1="1050" y1="155" x2="1077" y2="155" stroke="#7c3aed" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="1063" y="148" fill="#7c3aed" font-size="8" font-weight="700">&#x2467;</text>
+
+  <!-- Real-time tracking line -->
+  <path d="M 740 215 L 740 260 L 1000 260 L 1000 218" stroke="#2563eb" stroke-width="1.5" stroke-dasharray="5,3" fill="none" marker-end="url(#arrowBlue)"/>
+  <rect x="800" y="250" width="120" height="14" rx="3" fill="#2563eb"/>
+  <text x="860" y="260" text-anchor="middle" fill="white" font-size="8" font-weight="600">Real-time GPS tracking</text>
+
+  <!-- Decline reassign -->
+  <path d="M 740 215 Q 740 240 670 240 Q 605 240 605 228" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="5,3" fill="none" marker-end="url(#arrowRed)"/>
+  <text x="670" y="236" fill="#ef4444" font-size="7" font-weight="600">Decline: reassign</text>
+
+  <!-- Legend -->
+  <rect x="20" y="340" width="1160" height="95" rx="10" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="50" y="362" fill="#1e293b" font-size="12" font-weight="700">Flow Steps:</text>
+  <text x="50" y="381" fill="#475569" font-size="9">&#x2460; Browse restaurants (geo search) &#x2461; Add items to cart &#x2462; Checkout (payment pre-auth, address, tip)</text>
+  <text x="50" y="397" fill="#475569" font-size="9">&#x2463; Restaurant confirms on tablet, begins preparation &#x2464; Dispatch finds nearby driver (GEORADIUS + scoring)</text>
+  <text x="50" y="413" fill="#475569" font-size="9">&#x2465; Driver accepts (15s window, auto-reassign on decline) &#x2466; Pickup at restaurant (geofence) &#x2467; Deliver + capture payment + rate</text>
+  <rect x="700" y="372" width="10" height="10" rx="2" fill="#2563eb"/>
+  <text x="716" y="381" fill="#475569" font-size="9">Real-time GPS tracking from driver accept to delivery</text>
+  <rect x="700" y="388" width="10" height="10" rx="2" fill="#ef4444"/>
+  <text x="716" y="397" fill="#475569" font-size="9">Dashed = decline/reassign path or async tracking</text>
+</svg>

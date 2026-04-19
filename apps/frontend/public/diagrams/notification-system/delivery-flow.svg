@@ -1,0 +1,144 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 450" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <filter id="s"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.12"/></filter>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#334155"/></marker>
+    <marker id="arrowBlue" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#2563eb"/></marker>
+    <marker id="arrowGreen" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#16a34a"/></marker>
+    <marker id="arrowOrange" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#f97316"/></marker>
+    <marker id="arrowRed" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#ef4444"/></marker>
+  </defs>
+
+  <rect width="1200" height="450" fill="#ffffff" rx="16"/>
+
+  <text x="600" y="32" text-anchor="middle" fill="#1e293b" font-size="20" font-weight="700">Notification Delivery Flow</text>
+  <text x="600" y="52" text-anchor="middle" fill="#64748b" font-size="12">Event through priority queue, channel routing, multi-provider delivery, status tracking, and retry on failure</text>
+
+  <!-- Event Source -->
+  <rect x="15" y="100" width="100" height="110" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="15" y="100" width="100" height="28" rx="10 10 0 0" fill="#f97316"/>
+  <text x="65" y="119" text-anchor="middle" fill="white" font-size="11" font-weight="700">Event</text>
+  <text x="65" y="147" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Trigger</text>
+  <text x="65" y="165" text-anchor="middle" fill="#64748b" font-size="9">Order confirmed</text>
+  <text x="65" y="181" text-anchor="middle" fill="#64748b" font-size="9">OTP requested</text>
+  <text x="65" y="197" text-anchor="middle" fill="#64748b" font-size="9">Friend request</text>
+
+  <!-- Priority Queue -->
+  <rect x="160" y="85" width="120" height="140" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="160" y="85" width="120" height="28" rx="10 10 0 0" fill="#ef4444"/>
+  <text x="220" y="104" text-anchor="middle" fill="white" font-size="11" font-weight="700">Priority Queue</text>
+  <text x="220" y="130" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Kafka Topics</text>
+  <text x="220" y="148" text-anchor="middle" fill="#64748b" font-size="9">P0: Urgent (OTP)</text>
+  <text x="220" y="164" text-anchor="middle" fill="#64748b" font-size="9">P1: Normal</text>
+  <text x="220" y="180" text-anchor="middle" fill="#64748b" font-size="9">P2: Batch (marketing)</text>
+  <text x="220" y="210" text-anchor="middle" fill="#94a3b8" font-size="8">100+ partitions</text>
+
+  <!-- Channel Router -->
+  <rect x="325" y="90" width="120" height="130" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="325" y="90" width="120" height="28" rx="10 10 0 0" fill="#2563eb"/>
+  <text x="385" y="109" text-anchor="middle" fill="white" font-size="11" font-weight="700">Channel Router</text>
+  <text x="385" y="136" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Template Render</text>
+  <text x="385" y="154" text-anchor="middle" fill="#64748b" font-size="9">Resolve locale</text>
+  <text x="385" y="170" text-anchor="middle" fill="#64748b" font-size="9">Build payload</text>
+  <text x="385" y="186" text-anchor="middle" fill="#64748b" font-size="9">Route to channel</text>
+  <text x="385" y="206" text-anchor="middle" fill="#94a3b8" font-size="8">Worker pool</text>
+
+  <!-- Push Channel -->
+  <rect x="495" y="70" width="120" height="80" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="495" y="70" width="120" height="24" rx="10 10 0 0" fill="#16a34a"/>
+  <text x="555" y="87" text-anchor="middle" fill="white" font-size="10" font-weight="700">Push (FCM/APNs)</text>
+  <text x="555" y="112" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Mobile Push</text>
+  <text x="555" y="128" text-anchor="middle" fill="#64748b" font-size="9">6B push/day</text>
+  <text x="555" y="142" text-anchor="middle" fill="#94a3b8" font-size="8">Firebase / Apple</text>
+
+  <!-- Email Channel -->
+  <rect x="495" y="165" width="120" height="70" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="495" y="165" width="120" height="24" rx="10 10 0 0" fill="#7c3aed"/>
+  <text x="555" y="182" text-anchor="middle" fill="white" font-size="10" font-weight="700">Email (SendGrid)</text>
+  <text x="555" y="207" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">2.5B emails/day</text>
+  <text x="555" y="225" text-anchor="middle" fill="#94a3b8" font-size="8">HTML templates</text>
+
+  <!-- SMS Channel -->
+  <rect x="495" y="250" width="120" height="70" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="495" y="250" width="120" height="24" rx="10 10 0 0" fill="#f97316"/>
+  <text x="555" y="267" text-anchor="middle" fill="white" font-size="10" font-weight="700">SMS (Twilio)</text>
+  <text x="555" y="292" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">500M SMS/day</text>
+  <text x="555" y="308" text-anchor="middle" fill="#94a3b8" font-size="8">OTP / alerts</text>
+
+  <!-- Delivery Status -->
+  <rect x="670" y="100" width="120" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="670" y="100" width="120" height="28" rx="10 10 0 0" fill="#16a34a"/>
+  <text x="730" y="119" text-anchor="middle" fill="white" font-size="11" font-weight="700">Delivery Status</text>
+  <text x="730" y="147" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Track + Confirm</text>
+  <text x="730" y="165" text-anchor="middle" fill="#64748b" font-size="9">SENT status</text>
+  <text x="730" y="181" text-anchor="middle" fill="#64748b" font-size="9">Provider webhook</text>
+  <text x="730" y="197" text-anchor="middle" fill="#64748b" font-size="9">DELIVERED confirm</text>
+
+  <!-- Retry on Failure -->
+  <rect x="845" y="100" width="120" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="845" y="100" width="120" height="28" rx="10 10 0 0" fill="#ef4444"/>
+  <text x="905" y="119" text-anchor="middle" fill="white" font-size="11" font-weight="700">Retry on Failure</text>
+  <text x="905" y="147" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Exponential Backoff</text>
+  <text x="905" y="165" text-anchor="middle" fill="#64748b" font-size="9">1s, 5s, 30s, 5min</text>
+  <text x="905" y="181" text-anchor="middle" fill="#64748b" font-size="9">Circuit breaker</text>
+  <text x="905" y="197" text-anchor="middle" fill="#64748b" font-size="9">DLQ after max</text>
+
+  <!-- DLQ -->
+  <rect x="1020" y="115" width="90" height="80" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="1020" y="115" width="90" height="24" rx="10 10 0 0" fill="#ef4444"/>
+  <text x="1065" y="132" text-anchor="middle" fill="white" font-size="9" font-weight="700">Dead Letter Q</text>
+  <text x="1065" y="158" text-anchor="middle" fill="#1e293b" font-size="9" font-weight="600">Manual Review</text>
+  <text x="1065" y="174" text-anchor="middle" fill="#64748b" font-size="8">Alert on-call</text>
+  <text x="1065" y="186" text-anchor="middle" fill="#64748b" font-size="8">Pattern analysis</text>
+
+  <!-- Arrows -->
+  <line x1="115" y1="155" x2="157" y2="155" stroke="#ef4444" stroke-width="2" marker-end="url(#arrowRed)"/>
+  <rect x="117" y="141" width="38" height="14" rx="3" fill="#ef4444"/>
+  <text x="136" y="151" text-anchor="middle" fill="white" font-size="8" font-weight="600">&#x2460;</text>
+
+  <line x1="280" y1="155" x2="322" y2="155" stroke="#2563eb" stroke-width="2" marker-end="url(#arrowBlue)"/>
+  <rect x="282" y="141" width="38" height="14" rx="3" fill="#2563eb"/>
+  <text x="301" y="151" text-anchor="middle" fill="white" font-size="8" font-weight="600">&#x2461;</text>
+
+  <!-- Router to channels -->
+  <line x1="445" y1="120" x2="492" y2="110" stroke="#16a34a" stroke-width="2" marker-end="url(#arrowGreen)"/>
+  <line x1="445" y1="155" x2="492" y2="195" stroke="#7c3aed" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="445" y1="180" x2="492" y2="275" stroke="#f97316" stroke-width="2" marker-end="url(#arrowOrange)"/>
+  <rect x="450" y="108" width="38" height="14" rx="3" fill="#16a34a"/>
+  <text x="469" y="118" text-anchor="middle" fill="white" font-size="8" font-weight="600">&#x2462;</text>
+
+  <!-- Channels to Delivery -->
+  <line x1="615" y1="110" x2="667" y2="140" stroke="#16a34a" stroke-width="2" marker-end="url(#arrowGreen)"/>
+  <line x1="615" y1="200" x2="667" y2="170" stroke="#7c3aed" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="615" y1="285" x2="667" y2="200" stroke="#f97316" stroke-width="1.5" marker-end="url(#arrowOrange)"/>
+  <rect x="620" y="130" width="42" height="14" rx="3" fill="#2563eb"/>
+  <text x="641" y="140" text-anchor="middle" fill="white" font-size="8" font-weight="600">&#x2463;</text>
+
+  <!-- Delivery to Retry -->
+  <line x1="790" y1="155" x2="842" y2="155" stroke="#ef4444" stroke-width="2" stroke-dasharray="5,3" marker-end="url(#arrowRed)"/>
+  <rect x="792" y="141" width="48" height="14" rx="3" fill="#ef4444"/>
+  <text x="816" y="151" text-anchor="middle" fill="white" font-size="8" font-weight="600">&#x2464; Fail</text>
+
+  <!-- Retry loop back -->
+  <path d="M 905 220 Q 905 260 730 260 Q 555 260 555 235" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="5,3" fill="none" marker-end="url(#arrowRed)"/>
+  <text x="730" y="275" text-anchor="middle" fill="#ef4444" font-size="8" font-weight="600">&#x2465; Retry via provider</text>
+
+  <!-- Retry to DLQ -->
+  <line x1="965" y1="155" x2="1017" y2="155" stroke="#ef4444" stroke-width="1.5" marker-end="url(#arrowRed)"/>
+  <text x="991" y="147" fill="#ef4444" font-size="8">&#x2466;</text>
+
+  <!-- Legend -->
+  <rect x="20" y="340" width="1160" height="95" rx="10" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="50" y="362" fill="#1e293b" font-size="12" font-weight="700">Flow Steps:</text>
+  <rect x="50" y="372" width="10" height="10" rx="2" fill="#f97316"/>
+  <text x="66" y="381" fill="#475569" font-size="9">&#x2460; Event triggers notification (order, OTP, social) routed to priority Kafka queue</text>
+  <rect x="50" y="388" width="10" height="10" rx="2" fill="#2563eb"/>
+  <text x="66" y="397" fill="#475569" font-size="9">&#x2461; Channel router renders template (locale-aware) and routes to correct channel worker</text>
+  <rect x="50" y="404" width="10" height="10" rx="2" fill="#16a34a"/>
+  <text x="66" y="413" fill="#475569" font-size="9">&#x2462; Push (FCM/APNs), Email (SendGrid), or SMS (Twilio) based on channel + preference</text>
+  <text x="430" y="381" fill="#475569" font-size="9">&#x2463; Provider delivers, webhook confirms DELIVERED status, track open/click</text>
+  <text x="430" y="397" fill="#475569" font-size="9">&#x2464; On failure: exponential backoff retry (1s, 5s, 30s, 5min)</text>
+  <text x="430" y="413" fill="#475569" font-size="9">&#x2465; Circuit breaker may switch to secondary provider on persistent failure</text>
+  <text x="850" y="381" fill="#475569" font-size="9">&#x2466; After max retries: dead letter queue + on-call alert</text>
+  <rect x="850" y="390" width="10" height="10" rx="2" fill="#ef4444"/>
+  <text x="866" y="399" fill="#475569" font-size="9">Dashed lines = failure/retry paths</text>
+</svg>

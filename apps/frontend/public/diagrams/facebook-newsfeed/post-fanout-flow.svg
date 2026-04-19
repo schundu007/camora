@@ -1,0 +1,136 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 450" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <filter id="s"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.12"/></filter>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#334155"/></marker>
+    <marker id="arrowBlue" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#2563eb"/></marker>
+    <marker id="arrowGreen" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#16a34a"/></marker>
+    <marker id="arrowOrange" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#f97316"/></marker>
+    <marker id="arrowPurple" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#7c3aed"/></marker>
+    <marker id="arrowRed" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#ef4444"/></marker>
+  </defs>
+
+  <rect width="1200" height="450" fill="#ffffff" rx="16"/>
+
+  <text x="600" y="32" text-anchor="middle" fill="#1e293b" font-size="20" font-weight="700">Facebook Post Fan-Out Flow</text>
+  <text x="600" y="52" text-anchor="middle" fill="#64748b" font-size="12">User posts, store in DB, Kafka fan-out service checks follower count: push (&lt;5K) or skip (&gt;=5K celebrity)</text>
+
+  <!-- User Posts -->
+  <rect x="15" y="100" width="120" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="15" y="100" width="120" height="28" rx="10 10 0 0" fill="#1877f2"/>
+  <text x="75" y="119" text-anchor="middle" fill="white" font-size="11" font-weight="700">User Posts</text>
+  <text x="75" y="147" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Create Post</text>
+  <text x="75" y="165" text-anchor="middle" fill="#64748b" font-size="9">Text, photos, video</text>
+  <text x="75" y="181" text-anchor="middle" fill="#64748b" font-size="9">Privacy settings</text>
+  <text x="75" y="197" text-anchor="middle" fill="#64748b" font-size="9">1B+ posts/day</text>
+
+  <!-- Store in DB -->
+  <rect x="185" y="100" width="120" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="185" y="100" width="120" height="28" rx="10 10 0 0" fill="#7c3aed"/>
+  <text x="245" y="119" text-anchor="middle" fill="white" font-size="11" font-weight="700">Store in DB</text>
+  <text x="245" y="147" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">MySQL Shard</text>
+  <text x="245" y="165" text-anchor="middle" fill="#64748b" font-size="9">Sharded by userId</text>
+  <text x="245" y="181" text-anchor="middle" fill="#64748b" font-size="9">Snowflake ID</text>
+  <text x="245" y="197" text-anchor="middle" fill="#64748b" font-size="9">ACID write</text>
+
+  <!-- Kafka -->
+  <rect x="355" y="95" width="120" height="130" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="355" y="95" width="120" height="28" rx="10 10 0 0" fill="#f97316"/>
+  <text x="415" y="114" text-anchor="middle" fill="white" font-size="11" font-weight="700">Kafka</text>
+  <text x="415" y="142" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Event Stream</text>
+  <text x="415" y="160" text-anchor="middle" fill="#64748b" font-size="9">Topic: posts</text>
+  <text x="415" y="176" text-anchor="middle" fill="#64748b" font-size="9">100B+ events/day</text>
+  <text x="415" y="192" text-anchor="middle" fill="#64748b" font-size="9">Async processing</text>
+  <text x="415" y="212" text-anchor="middle" fill="#94a3b8" font-size="8">Guaranteed delivery</text>
+
+  <!-- Fan-out Service -->
+  <rect x="525" y="80" width="140" height="160" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="525" y="80" width="140" height="28" rx="10 10 0 0" fill="#2563eb"/>
+  <text x="595" y="99" text-anchor="middle" fill="white" font-size="11" font-weight="700">Fan-Out Service</text>
+  <text x="595" y="126" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Check Followers</text>
+  <text x="595" y="146" text-anchor="middle" fill="#64748b" font-size="9">Query TAO graph</text>
+  <text x="595" y="164" text-anchor="middle" fill="#64748b" font-size="9">Get follower count</text>
+  <text x="595" y="184" text-anchor="middle" fill="#16a34a" font-size="10" font-weight="600">&lt;5K: PUSH path</text>
+  <text x="595" y="204" text-anchor="middle" fill="#ef4444" font-size="10" font-weight="600">&gt;=5K: SKIP path</text>
+  <text x="595" y="228" text-anchor="middle" fill="#94a3b8" font-size="8">Hybrid fan-out</text>
+
+  <!-- Push to Caches (normal users) -->
+  <rect x="720" y="70" width="140" height="110" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="720" y="70" width="140" height="28" rx="10 10 0 0" fill="#16a34a"/>
+  <text x="790" y="89" text-anchor="middle" fill="white" font-size="10" font-weight="700">Push to Feed Caches</text>
+  <text x="790" y="116" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">&lt;5K Followers</text>
+  <text x="790" y="134" text-anchor="middle" fill="#64748b" font-size="9">ZADD feed:{followerId}</text>
+  <text x="790" y="150" text-anchor="middle" fill="#64748b" font-size="9">Filter inactive (7+ days)</text>
+  <text x="790" y="166" text-anchor="middle" fill="#64748b" font-size="9">Privacy filter applied</text>
+
+  <!-- Skip (celebrity) -->
+  <rect x="720" y="200" width="140" height="90" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="720" y="200" width="140" height="28" rx="10 10 0 0" fill="#ef4444"/>
+  <text x="790" y="219" text-anchor="middle" fill="white" font-size="10" font-weight="700">Skip Fan-Out</text>
+  <text x="790" y="246" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">&gt;=5K Followers</text>
+  <text x="790" y="264" text-anchor="middle" fill="#64748b" font-size="9">Store as celebrity post</text>
+  <text x="790" y="280" text-anchor="middle" fill="#64748b" font-size="9">Pulled at read time</text>
+
+  <!-- Index -->
+  <rect x="915" y="90" width="110" height="100" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="915" y="90" width="110" height="28" rx="10 10 0 0" fill="#7c3aed"/>
+  <text x="970" y="109" text-anchor="middle" fill="white" font-size="11" font-weight="700">Index</text>
+  <text x="970" y="136" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Search + Graph</text>
+  <text x="970" y="154" text-anchor="middle" fill="#64748b" font-size="9">Elasticsearch index</text>
+  <text x="970" y="170" text-anchor="middle" fill="#64748b" font-size="9">Update social graph</text>
+  <text x="970" y="182" text-anchor="middle" fill="#94a3b8" font-size="8">Async</text>
+
+  <!-- Notify -->
+  <rect x="1075" y="90" width="105" height="100" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="1075" y="90" width="105" height="28" rx="10 10 0 0" fill="#f97316"/>
+  <text x="1127" y="109" text-anchor="middle" fill="white" font-size="11" font-weight="700">Notify</text>
+  <text x="1127" y="136" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Close Friends</text>
+  <text x="1127" y="154" text-anchor="middle" fill="#64748b" font-size="9">WebSocket push</text>
+  <text x="1127" y="170" text-anchor="middle" fill="#64748b" font-size="9">closeness &gt; 0.7</text>
+  <text x="1127" y="182" text-anchor="middle" fill="#94a3b8" font-size="8">Real-time</text>
+
+  <!-- Arrows -->
+  <line x1="135" y1="155" x2="182" y2="155" stroke="#7c3aed" stroke-width="2" marker-end="url(#arrowPurple)"/>
+  <rect x="137" y="141" width="42" height="14" rx="3" fill="#7c3aed"/>
+  <text x="158" y="151" text-anchor="middle" fill="white" font-size="8" font-weight="600">&#x2460;</text>
+
+  <line x1="305" y1="155" x2="352" y2="155" stroke="#f97316" stroke-width="2" marker-end="url(#arrowOrange)"/>
+  <rect x="307" y="141" width="42" height="14" rx="3" fill="#f97316"/>
+  <text x="328" y="151" text-anchor="middle" fill="white" font-size="8" font-weight="600">&#x2461;</text>
+
+  <line x1="475" y1="155" x2="522" y2="155" stroke="#2563eb" stroke-width="2" marker-end="url(#arrowBlue)"/>
+  <rect x="477" y="141" width="42" height="14" rx="3" fill="#2563eb"/>
+  <text x="498" y="151" text-anchor="middle" fill="white" font-size="8" font-weight="600">&#x2462;</text>
+
+  <!-- Fan-out to Push -->
+  <line x1="665" y1="120" x2="717" y2="115" stroke="#16a34a" stroke-width="2" marker-end="url(#arrowGreen)"/>
+  <rect x="668" y="102" width="46" height="14" rx="3" fill="#16a34a"/>
+  <text x="691" y="112" text-anchor="middle" fill="white" font-size="8" font-weight="600">&#x2463; &lt;5K</text>
+
+  <!-- Fan-out to Skip -->
+  <line x1="665" y1="200" x2="717" y2="235" stroke="#ef4444" stroke-width="2" marker-end="url(#arrowRed)"/>
+  <rect x="668" y="218" width="46" height="14" rx="3" fill="#ef4444"/>
+  <text x="691" y="228" text-anchor="middle" fill="white" font-size="8" font-weight="600">&#x2464; &gt;=5K</text>
+
+  <!-- Push to Index -->
+  <line x1="860" y1="125" x2="912" y2="130" stroke="#7c3aed" stroke-width="2" marker-end="url(#arrowPurple)"/>
+  <rect x="862" y="115" width="48" height="14" rx="3" fill="#7c3aed"/>
+  <text x="886" y="125" text-anchor="middle" fill="white" font-size="8" font-weight="600">&#x2465; Index</text>
+
+  <!-- Index to Notify -->
+  <line x1="1025" y1="135" x2="1072" y2="135" stroke="#f97316" stroke-width="2" marker-end="url(#arrowOrange)"/>
+  <rect x="1027" y="121" width="42" height="14" rx="3" fill="#f97316"/>
+  <text x="1048" y="131" text-anchor="middle" fill="white" font-size="8" font-weight="600">&#x2466;</text>
+
+  <!-- Legend -->
+  <rect x="20" y="340" width="1160" height="95" rx="10" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="50" y="362" fill="#1e293b" font-size="12" font-weight="700">Flow Steps:</text>
+  <rect x="50" y="372" width="10" height="10" rx="2" fill="#7c3aed"/>
+  <text x="66" y="381" fill="#475569" font-size="9">&#x2460; User creates post, persisted in MySQL shard (by userId) with Snowflake ID</text>
+  <rect x="50" y="388" width="10" height="10" rx="2" fill="#f97316"/>
+  <text x="66" y="397" fill="#475569" font-size="9">&#x2461; Published to Kafka posts topic (100B+ events/day), async processing</text>
+  <rect x="50" y="404" width="10" height="10" rx="2" fill="#2563eb"/>
+  <text x="66" y="413" fill="#475569" font-size="9">&#x2462; Fan-out service queries TAO for follower count to determine push vs skip</text>
+  <text x="430" y="381" fill="#475569" font-size="9">&#x2463; &lt;5K followers: push to all follower feed caches (ZADD), filter inactive users</text>
+  <text x="430" y="397" fill="#475569" font-size="9">&#x2464; &gt;=5K followers: store as celebrity post, pulled at read time (no fan-out)</text>
+  <text x="430" y="413" fill="#475569" font-size="9">&#x2465; Index in Elasticsearch for search &#x2466; Notify close friends via WebSocket push</text>
+</svg>

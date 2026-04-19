@@ -1,0 +1,138 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 450" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <filter id="s"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.12"/></filter>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#334155"/></marker>
+    <marker id="arrowBlue" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#2563eb"/></marker>
+    <marker id="arrowGreen" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#16a34a"/></marker>
+    <marker id="arrowOrange" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#f97316"/></marker>
+    <marker id="arrowPurple" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#7c3aed"/></marker>
+  </defs>
+
+  <rect width="1200" height="450" fill="#ffffff" rx="16"/>
+
+  <text x="600" y="32" text-anchor="middle" fill="#1e293b" font-size="20" font-weight="700">Netflix Content Ingestion Pipeline</text>
+  <text x="600" y="52" text-anchor="middle" fill="#64748b" font-size="12">Studio upload through transcoding, DRM encryption, and CDN placement to Open Connect Appliances</text>
+
+  <!-- Studio Upload -->
+  <rect x="15" y="100" width="110" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="15" y="100" width="110" height="30" rx="10 10 0 0" fill="#f97316"/>
+  <text x="70" y="120" text-anchor="middle" fill="white" font-size="11" font-weight="700">Studio Upload</text>
+  <text x="70" y="148" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">8K/4K Master</text>
+  <text x="70" y="166" text-anchor="middle" fill="#64748b" font-size="9">ProRes / DNxHR</text>
+  <text x="70" y="182" text-anchor="middle" fill="#64748b" font-size="9">100+ GB per title</text>
+  <text x="70" y="208" text-anchor="middle" fill="#64748b" font-size="16">&#x1F3AC;</text>
+
+  <!-- S3 Origin -->
+  <rect x="170" y="100" width="110" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="170" y="100" width="110" height="30" rx="10 10 0 0" fill="#2563eb"/>
+  <text x="225" y="120" text-anchor="middle" fill="white" font-size="11" font-weight="700">S3 Ingest</text>
+  <text x="225" y="148" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Raw Storage</text>
+  <text x="225" y="166" text-anchor="middle" fill="#64748b" font-size="9">Master copies</text>
+  <text x="225" y="182" text-anchor="middle" fill="#64748b" font-size="9">Multi-AZ durable</text>
+  <text x="225" y="198" text-anchor="middle" fill="#94a3b8" font-size="8">AWS S3</text>
+
+  <!-- Transcode Farm -->
+  <rect x="330" y="85" width="130" height="150" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="330" y="85" width="130" height="30" rx="10 10 0 0" fill="#7c3aed"/>
+  <text x="395" y="105" text-anchor="middle" fill="white" font-size="11" font-weight="700">Transcode Farm</text>
+  <text x="395" y="132" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Per-Shot Encoding</text>
+  <text x="395" y="150" text-anchor="middle" fill="#64748b" font-size="9">H.264, H.265, VP9, AV1</text>
+  <text x="395" y="166" text-anchor="middle" fill="#64748b" font-size="9">10+ resolutions</text>
+  <text x="395" y="182" text-anchor="middle" fill="#64748b" font-size="9">VMAF quality scoring</text>
+  <text x="395" y="198" text-anchor="middle" fill="#64748b" font-size="9">Parallel workers</text>
+  <text x="395" y="222" text-anchor="middle" fill="#94a3b8" font-size="8">GPU cluster</text>
+
+  <!-- 1200 Versions -->
+  <rect x="510" y="100" width="110" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="510" y="100" width="110" height="30" rx="10 10 0 0" fill="#16a34a"/>
+  <text x="565" y="120" text-anchor="middle" fill="white" font-size="11" font-weight="700">1200+ Versions</text>
+  <text x="565" y="148" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Output</text>
+  <text x="565" y="166" text-anchor="middle" fill="#64748b" font-size="9">4 codecs x 10 res</text>
+  <text x="565" y="182" text-anchor="middle" fill="#64748b" font-size="9">x 30 bitrate levels</text>
+  <text x="565" y="198" text-anchor="middle" fill="#64748b" font-size="9">+ audio tracks</text>
+
+  <!-- DRM Encrypt -->
+  <rect x="670" y="100" width="110" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="670" y="100" width="110" height="30" rx="10 10 0 0" fill="#ef4444"/>
+  <text x="725" y="120" text-anchor="middle" fill="white" font-size="11" font-weight="700">DRM Encrypt</text>
+  <text x="725" y="148" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Content Protection</text>
+  <text x="725" y="166" text-anchor="middle" fill="#64748b" font-size="9">Widevine</text>
+  <text x="725" y="182" text-anchor="middle" fill="#64748b" font-size="9">FairPlay + PlayReady</text>
+  <text x="725" y="198" text-anchor="middle" fill="#64748b" font-size="9">AES-128 CTR</text>
+
+  <!-- S3 Origin Store -->
+  <rect x="830" y="100" width="110" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="830" y="100" width="110" height="30" rx="10 10 0 0" fill="#2563eb"/>
+  <text x="885" y="120" text-anchor="middle" fill="white" font-size="11" font-weight="700">S3 Origin</text>
+  <text x="885" y="148" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Encoded Storage</text>
+  <text x="885" y="166" text-anchor="middle" fill="#64748b" font-size="9">100+ PB total</text>
+  <text x="885" y="182" text-anchor="middle" fill="#64748b" font-size="9">All encoded versions</text>
+  <text x="885" y="198" text-anchor="middle" fill="#94a3b8" font-size="8">AWS S3</text>
+
+  <!-- Fill Algorithm -->
+  <rect x="980" y="85" width="100" height="70" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="980" y="85" width="100" height="24" rx="10 10 0 0" fill="#16a34a"/>
+  <text x="1030" y="101" text-anchor="middle" fill="white" font-size="10" font-weight="700">Fill Algorithm</text>
+  <text x="1030" y="126" text-anchor="middle" fill="#64748b" font-size="9">ML popularity</text>
+  <text x="1030" y="142" text-anchor="middle" fill="#64748b" font-size="9">predict placement</text>
+
+  <!-- OCAs -->
+  <rect x="980" y="175" width="100" height="70" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="980" y="175" width="100" height="24" rx="10 10 0 0" fill="#f97316"/>
+  <text x="1030" y="191" text-anchor="middle" fill="white" font-size="10" font-weight="700">Push to OCAs</text>
+  <text x="1030" y="216" text-anchor="middle" fill="#64748b" font-size="9">17,000+ servers</text>
+  <text x="1030" y="232" text-anchor="middle" fill="#64748b" font-size="9">6,000+ locations</text>
+
+  <!-- OCA detail -->
+  <rect x="1100" y="175" width="85" height="70" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="1100" y="175" width="85" height="24" rx="10 10 0 0" fill="#f97316"/>
+  <text x="1142" y="191" text-anchor="middle" fill="white" font-size="9" font-weight="700">ISP Edge</text>
+  <text x="1142" y="216" text-anchor="middle" fill="#64748b" font-size="9">At ISP sites</text>
+  <text x="1142" y="232" text-anchor="middle" fill="#64748b" font-size="9">95% cache hit</text>
+
+  <!-- Flow Arrows -->
+  <line x1="125" y1="155" x2="167" y2="155" stroke="#2563eb" stroke-width="2" marker-end="url(#arrowBlue)"/>
+  <rect x="127" y="141" width="38" height="14" rx="3" fill="#2563eb"/>
+  <text x="146" y="151" text-anchor="middle" fill="white" font-size="8" font-weight="600">&#x2460;</text>
+
+  <line x1="280" y1="155" x2="327" y2="155" stroke="#7c3aed" stroke-width="2" marker-end="url(#arrowPurple)"/>
+  <rect x="282" y="141" width="42" height="14" rx="3" fill="#7c3aed"/>
+  <text x="303" y="151" text-anchor="middle" fill="white" font-size="8" font-weight="600">&#x2461;</text>
+
+  <line x1="460" y1="155" x2="507" y2="155" stroke="#16a34a" stroke-width="2" marker-end="url(#arrowGreen)"/>
+  <rect x="462" y="141" width="42" height="14" rx="3" fill="#16a34a"/>
+  <text x="483" y="151" text-anchor="middle" fill="white" font-size="8" font-weight="600">&#x2462;</text>
+
+  <line x1="620" y1="155" x2="667" y2="155" stroke="#ef4444" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="622" y="141" width="42" height="14" rx="3" fill="#ef4444"/>
+  <text x="643" y="151" text-anchor="middle" fill="white" font-size="8" font-weight="600">&#x2463;</text>
+
+  <line x1="780" y1="155" x2="827" y2="155" stroke="#2563eb" stroke-width="2" marker-end="url(#arrowBlue)"/>
+  <rect x="782" y="141" width="42" height="14" rx="3" fill="#2563eb"/>
+  <text x="803" y="151" text-anchor="middle" fill="white" font-size="8" font-weight="600">&#x2464;</text>
+
+  <line x1="940" y1="120" x2="977" y2="115" stroke="#16a34a" stroke-width="2" marker-end="url(#arrowGreen)"/>
+  <rect x="942" y="100" width="32" height="14" rx="3" fill="#16a34a"/>
+  <text x="958" y="110" text-anchor="middle" fill="white" font-size="8" font-weight="600">&#x2465;</text>
+
+  <line x1="1030" y1="155" x2="1030" y2="172" stroke="#f97316" stroke-width="2" marker-end="url(#arrowOrange)"/>
+  <text x="1050" y="168" fill="#f97316" font-size="8" font-weight="600">&#x2466;</text>
+
+  <line x1="1080" y1="210" x2="1097" y2="210" stroke="#f97316" stroke-width="1.5" marker-end="url(#arrowOrange)"/>
+
+  <!-- Legend -->
+  <rect x="20" y="340" width="1160" height="95" rx="10" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="50" y="362" fill="#1e293b" font-size="12" font-weight="700">Pipeline Steps:</text>
+  <rect x="50" y="372" width="10" height="10" rx="2" fill="#f97316"/>
+  <text x="66" y="381" fill="#475569" font-size="9">&#x2460; Studio uploads 8K/4K ProRes master (~100+ GB per title)</text>
+  <rect x="50" y="388" width="10" height="10" rx="2" fill="#7c3aed"/>
+  <text x="66" y="397" fill="#475569" font-size="9">&#x2461; Ingest to S3 raw bucket, trigger transcode pipeline</text>
+  <rect x="50" y="404" width="10" height="10" rx="2" fill="#16a34a"/>
+  <text x="66" y="413" fill="#475569" font-size="9">&#x2462; Per-shot encode across 4 codecs, 10+ resolutions (GPU farm)</text>
+  <text x="400" y="381" fill="#475569" font-size="9">&#x2463; DRM encrypt all versions with Widevine, FairPlay, PlayReady</text>
+  <text x="400" y="397" fill="#475569" font-size="9">&#x2464; Store 1200+ encoded versions in S3 origin (100+ PB total)</text>
+  <text x="400" y="413" fill="#475569" font-size="9">&#x2465; ML fill algorithm predicts regional popularity for CDN placement</text>
+  <text x="800" y="381" fill="#475569" font-size="9">&#x2466; Push popular content to 17,000+ OCAs at ISP sites during off-peak</text>
+  <rect x="800" y="390" width="10" height="10" rx="2" fill="#f97316"/>
+  <text x="816" y="399" fill="#475569" font-size="9">Result: 95% of bytes served from ISP-embedded OCAs</text>
+</svg>
