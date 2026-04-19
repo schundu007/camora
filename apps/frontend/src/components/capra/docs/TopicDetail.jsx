@@ -2237,11 +2237,18 @@ export default function TopicDetail({
                   </div>
                   <div className="p-3 grid grid-cols-1  gap-2">
                     {topicDetails.deepDiveTopics.map((item, i) => (
-                      <div key={i} className="p-3 rounded-lg bg-[rgba(45,140,255,0.04)] border border-[rgba(45,140,255,0.2)]">
-                        <h4 className="text-sm font-bold text-[var(--text-primary)] mb-1 landing-display">{item.topic}</h4>
-                        <div className="text-[var(--text-secondary)] text-sm landing-body leading-relaxed">
-                          <FormattedContent content={item.detail} color="blue" />
+                      <div key={i} className="rounded-lg border border-[var(--border)] overflow-hidden">
+                        <div className="p-3 bg-[rgba(45,140,255,0.04)]">
+                          <h4 className="text-sm font-bold text-[var(--text-primary)] mb-1 landing-display">{item.topic}</h4>
+                          <div className="text-[var(--text-secondary)] text-sm landing-body leading-relaxed">
+                            <FormattedContent content={item.detail} color="blue" />
+                          </div>
                         </div>
+                        {item.diagramSrc && (
+                          <div className="border-t border-[var(--border)] p-3 bg-white">
+                            <img src={item.diagramSrc} alt={item.topic} className="w-full rounded-lg" loading="lazy" />
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
