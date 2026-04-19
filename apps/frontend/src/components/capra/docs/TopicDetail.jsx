@@ -151,7 +151,7 @@ function CapacityPlanningGrid({ estimation }) {
  * Structured data model rendering — parses SQL-like schema text into table cards.
  * Falls back to enhanced code block with line numbers and copy button.
  */
-function DataModelSection({ schema }) {
+function DataModelSection({ schema, examples }) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = useCallback(() => {
@@ -283,6 +283,23 @@ function DataModelSection({ schema }) {
             </div>
           ))}
         </div>
+        {/* JSON Examples */}
+        {examples && examples.length > 0 && (
+          <div className="border-t border-[var(--border)] p-3">
+            <h4 className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-2 landing-mono">Sample Records (JSON)</h4>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-2">
+              {examples.map((ex, i) => (
+                <div key={i} className="rounded-lg border border-[var(--border)] overflow-hidden">
+                  <div className="px-3 py-1.5 bg-[var(--bg-elevated)] border-b border-[var(--border)] flex items-center gap-1.5">
+                    <span className="text-[10px] font-bold text-[var(--accent)] landing-mono">{ex.table}</span>
+                    <span className="text-[10px] text-[var(--text-muted)] landing-body">— {ex.label}</span>
+                  </div>
+                  <pre className="p-2.5 text-[11px] leading-relaxed landing-mono text-[var(--text-secondary)] overflow-x-auto" style={{ background: '#f8fafc' }}>{ex.json}</pre>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -2212,7 +2229,7 @@ export default function TopicDetail({
 
                   {/* Data Model — structured schema presentation */}
                   {topicDetails.dataModel && (
-                    <DataModelSection schema={topicDetails.dataModel.schema} />
+                    <DataModelSection schema={topicDetails.dataModel.schema} examples={topicDetails.dataModel.examples} />
                   )}
                 </div>
               )}

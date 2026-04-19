@@ -1625,7 +1625,48 @@ offline_queue {
   queuedAt: timestamp
   expiresAt: timestamp (TTL: 30 days)
   CLUSTERING KEY (queuedAt ASC)
+}`,
+        examples: [
+          {
+            table: 'messages',
+            label: 'Sample Message Record',
+            json: `{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "conversationId": 98234,
+  "senderId": 12001,
+  "sequenceNum": 47,
+  "content": "<encrypted_blob>",
+  "contentType": "TEXT",
+  "mediaUrl": null,
+  "replyToId": null,
+  "sentAt": "2026-04-19T14:23:01Z",
+  "expiresAt": null
 }`
+          },
+          {
+            table: 'message_status',
+            label: 'Delivery Tracking',
+            json: `{
+  "messageId": "550e8400-e29b-41d4-a716-446655440000",
+  "recipientId": 12002,
+  "status": "READ",
+  "deliveredAt": "2026-04-19T14:23:01.342Z",
+  "readAt": "2026-04-19T14:23:05.891Z"
+}`
+          },
+          {
+            table: 'offline_queue',
+            label: 'Queued Message (User Offline)',
+            json: `{
+  "recipientId": 12002,
+  "messageId": "550e8400-e29b-41d4-a716-446655440000",
+  "conversationId": 98234,
+  "payload": "<full_encrypted_message_blob>",
+  "queuedAt": "2026-04-19T14:23:01Z",
+  "expiresAt": "2026-05-19T14:23:01Z"
+}`
+          }
+        ]
       },
 
       apiDesign: {
