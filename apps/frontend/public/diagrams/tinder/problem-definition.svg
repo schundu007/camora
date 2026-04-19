@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 500" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#2563eb"/><stop offset="100%" stop-color="#1e40af"/></linearGradient>
+    <filter id="shadow"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.15"/></filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="500" fill="url(#bg)" rx="16"/>
+
+  <!-- Title -->
+  <rect x="340" y="20" width="520" height="44" rx="8" fill="none" stroke="white" stroke-width="2"/>
+  <text x="600" y="50" text-anchor="middle" fill="white" font-size="22" font-weight="700">Problem Definition: Designing Tinder / Dating App</text>
+
+  <!-- Column 1: Users & Core Actions -->
+  <text x="200" y="100" text-anchor="middle" fill="white" font-size="16" font-weight="700">Users &amp; Core Actions</text>
+  <rect x="40" y="108" width="320" height="2" fill="rgba(255,255,255,0.3)" rx="1"/>
+
+  <!-- User icons -->
+  <circle cx="120" cy="170" r="28" fill="rgba(255,255,255,0.15)" stroke="white" stroke-width="2"/>
+  <text x="120" y="176" text-anchor="middle" fill="white" font-size="24">&#x1F44B;</text>
+  <text x="120" y="215" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-size="13">Swiper</text>
+
+  <text x="200" y="176" text-anchor="middle" fill="white" font-size="28">&#x21C4;</text>
+
+  <circle cx="280" cy="170" r="28" fill="rgba(255,255,255,0.15)" stroke="white" stroke-width="2"/>
+  <text x="280" y="176" text-anchor="middle" fill="white" font-size="24">&#x2764;&#xFE0F;</text>
+  <text x="280" y="215" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-size="13">Matcher</text>
+
+  <!-- Core Actions Box -->
+  <rect x="70" y="240" width="260" height="210" rx="12" fill="#f97316" filter="url(#shadow)"/>
+  <text x="200" y="270" text-anchor="middle" fill="white" font-size="15" font-weight="700">Core Actions</text>
+  <line x1="90" y1="282" x2="310" y2="282" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+  <text x="100" y="310" fill="white" font-size="13">&#x1F4F1;  Create Profile</text>
+  <text x="100" y="340" fill="white" font-size="13">&#x1F4CD;  Get Recommendations</text>
+  <text x="100" y="370" fill="white" font-size="13">&#x1F449;  Swipe Left / Right</text>
+  <text x="100" y="400" fill="white" font-size="13">&#x1F525;  Match on Mutual Like</text>
+  <text x="100" y="430" fill="white" font-size="13">&#x1F4AC;  Chat After Match</text>
+
+  <!-- Column 2: In Scope -->
+  <text x="600" y="100" text-anchor="middle" fill="white" font-size="16" font-weight="700">In Scope: Essentials</text>
+  <rect x="440" y="108" width="320" height="2" fill="rgba(255,255,255,0.3)" rx="1"/>
+
+  <rect x="440" y="125" width="320" height="330" rx="12" fill="rgba(255,255,255,0.12)" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+
+  <text x="470" y="160" fill="white" font-size="13" font-weight="600">&#x1F464;  User profiles (bio, photos, prefs)</text>
+  <text x="470" y="195" fill="white" font-size="13" font-weight="600">&#x1F4CD;  Location-based recommendations</text>
+  <text x="490" y="215" fill="rgba(255,255,255,0.7)" font-size="11">(Nearby users within radius)</text>
+  <text x="470" y="245" fill="white" font-size="13" font-weight="600">&#x1F449;  Swipe mechanism (like / pass)</text>
+  <text x="470" y="280" fill="white" font-size="13" font-weight="600">&#x1F525;  Match detection engine</text>
+  <text x="490" y="300" fill="rgba(255,255,255,0.7)" font-size="11">(Mutual like = instant match)</text>
+  <text x="470" y="330" fill="white" font-size="13" font-weight="600">&#x1F4AC;  Post-match real-time chat</text>
+  <text x="470" y="365" fill="white" font-size="13" font-weight="600">&#x1F39B;&#xFE0F;  Filters (age, distance, gender)</text>
+  <text x="470" y="400" fill="white" font-size="13" font-weight="600">&#x1F514;  Push notifications (new match)</text>
+  <text x="470" y="435" fill="white" font-size="13" font-weight="600">&#x1F6E1;&#xFE0F;  Block &amp; report users</text>
+
+  <!-- Column 3: Out of Scope -->
+  <text x="1000" y="100" text-anchor="middle" fill="white" font-size="16" font-weight="700">Out of Scope / Future</text>
+  <rect x="840" y="108" width="320" height="2" fill="rgba(255,255,255,0.3)" rx="1"/>
+
+  <rect x="840" y="125" width="320" height="260" rx="12" fill="rgba(245,158,11,0.25)" stroke="rgba(245,158,11,0.5)" stroke-width="1"/>
+
+  <text x="870" y="160" fill="rgba(255,255,255,0.85)" font-size="13">&#x274C;  Video Dating / Live Streams</text>
+  <text x="870" y="195" fill="rgba(255,255,255,0.85)" font-size="13">&#x274C;  Background Checks / Verification</text>
+  <text x="870" y="230" fill="rgba(255,255,255,0.85)" font-size="13">&#x274C;  Passport (Change Location)</text>
+  <text x="870" y="265" fill="rgba(255,255,255,0.85)" font-size="13">&#x274C;  Paid Features (Boost, Super Like)</text>
+  <text x="870" y="300" fill="rgba(255,255,255,0.85)" font-size="13">&#x274C;  AI-Powered Matchmaking</text>
+  <text x="870" y="335" fill="rgba(255,255,255,0.85)" font-size="13">&#x274C;  Social Discovery (Events, Groups)</text>
+  <text x="870" y="370" fill="rgba(255,255,255,0.85)" font-size="13">&#x274C;  Photo Verification (Face ML)</text>
+
+  <!-- Bottom bar -->
+  <rect x="440" y="465" width="320" height="28" rx="8" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+  <text x="600" y="484" text-anchor="middle" fill="white" font-size="12" font-weight="600">&#x1F3D7;&#xFE0F;  Location-Based Matching &amp; Real-Time Chat</text>
+</svg>

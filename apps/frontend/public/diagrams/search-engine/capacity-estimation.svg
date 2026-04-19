@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 450" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <linearGradient id="bgCap" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#2563eb"/><stop offset="100%" stop-color="#1e40af"/></linearGradient>
+    <filter id="sh"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.15"/></filter>
+  </defs>
+
+  <rect width="1200" height="450" fill="url(#bgCap)" rx="16"/>
+
+  <!-- Title -->
+  <rect x="360" y="16" width="480" height="40" rx="8" fill="none" stroke="white" stroke-width="2"/>
+  <text x="600" y="43" text-anchor="middle" fill="white" font-size="20" font-weight="700">Back-of-the-Envelope: Search Engine</text>
+
+  <!-- Column 1: Query Traffic -->
+  <rect x="20" y="75" width="275" height="350" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="20" y="75" width="275" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="157" y="99" text-anchor="middle" fill="white" font-size="14" font-weight="700">Query Traffic</text>
+
+  <text x="45" y="140" fill="#fbbf24" font-size="13" font-weight="700">&#x1F50D; 8.5B searches/day</text>
+  <text x="157" y="162" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">&#x2193;</text>
+
+  <text x="45" y="185" fill="white" font-size="12">Average QPS:</text>
+  <text x="45" y="205" fill="rgba(255,255,255,0.7)" font-size="10">8.5B / 86400</text>
+  <text x="45" y="228" fill="#fbbf24" font-size="16" font-weight="800">&#x2248; 100K QPS</text>
+  <text x="157" y="250" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">&#x2193;</text>
+
+  <text x="45" y="275" fill="white" font-size="11">Peak QPS (3x):</text>
+  <text x="45" y="298" fill="#f97316" font-size="16" font-weight="800">&#x2248; 300K QPS</text>
+  <text x="157" y="320" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">&#x2193;</text>
+
+  <text x="45" y="345" fill="white" font-size="11">Latency requirement:</text>
+  <text x="45" y="368" fill="#f97316" font-size="16" font-weight="800">&lt;200ms per query</text>
+
+  <text x="45" y="400" fill="white" font-size="11">Autocomplete QPS (10x queries):</text>
+  <text x="45" y="418" fill="#fbbf24" font-size="13" font-weight="700">&#x2248; 1M autocomplete/sec</text>
+
+  <!-- Column 2: Index Size -->
+  <rect x="310" y="75" width="265" height="170" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="310" y="75" width="265" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="442" y="99" text-anchor="middle" fill="white" font-size="14" font-weight="700">Index Size</text>
+
+  <text x="335" y="140" fill="#fbbf24" font-size="13" font-weight="700">&#x1F310; 100B+ web pages indexed</text>
+  <text x="335" y="165" fill="white" font-size="11">Avg page: ~100KB compressed</text>
+  <text x="442" y="188" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="14">&#x2193;</text>
+  <text x="335" y="210" fill="white" font-size="11">Raw corpus storage:</text>
+  <text x="335" y="230" fill="#f97316" font-size="15" font-weight="800">100+ Petabytes</text>
+
+  <!-- Column 3: Crawler -->
+  <rect x="310" y="260" width="265" height="165" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="310" y="260" width="265" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="442" y="284" text-anchor="middle" fill="white" font-size="14" font-weight="700">Crawler Throughput</text>
+
+  <text x="335" y="320" fill="white" font-size="11">Re-crawl cycle: ~30 days</text>
+  <text x="335" y="342" fill="white" font-size="11">100B pages / 30 days:</text>
+  <text x="335" y="362" fill="#fbbf24" font-size="14" font-weight="700">~38K pages/sec crawled</text>
+  <text x="442" y="382" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="14">&#x2193;</text>
+  <text x="335" y="405" fill="white" font-size="11">Bandwidth for crawling:</text>
+  <text x="335" y="425" fill="#f97316" font-size="14" font-weight="700">&#x2248; 30 Gb/s ingest</text>
+
+  <!-- Column 4: Infrastructure -->
+  <rect x="590" y="75" width="290" height="170" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="590" y="75" width="290" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="735" y="99" text-anchor="middle" fill="white" font-size="14" font-weight="700">Inverted Index</text>
+
+  <text x="615" y="140" fill="white" font-size="12">Terms across 100B pages:</text>
+  <text x="615" y="163" fill="#fbbf24" font-size="16" font-weight="800">Trillions of postings</text>
+  <text x="735" y="185" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="14">&#x2193;</text>
+  <text x="615" y="208" fill="white" font-size="11">Sharded across 10K+ machines</text>
+  <text x="615" y="228" fill="#f97316" font-size="14" font-weight="700">100+ PB index storage</text>
+
+  <!-- Serving -->
+  <rect x="590" y="260" width="290" height="165" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="590" y="260" width="290" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="735" y="284" text-anchor="middle" fill="white" font-size="14" font-weight="700">Serving Infrastructure</text>
+
+  <text x="615" y="320" fill="white" font-size="11">Each query fans out to 100s of shards</text>
+  <text x="615" y="342" fill="#fbbf24" font-size="13" font-weight="700">300K QPS x 100 shards</text>
+  <text x="615" y="365" fill="#f97316" font-size="14" font-weight="700">= 30M shard reads/sec</text>
+  <text x="615" y="395" fill="white" font-size="11">Replicas per shard for availability:</text>
+  <text x="615" y="415" fill="rgba(255,255,255,0.7)" font-size="10">3x replication = 300+ PB total</text>
+
+  <!-- Key Insights -->
+  <rect x="900" y="75" width="280" height="350" rx="12" fill="rgba(245,158,11,0.15)" stroke="rgba(245,158,11,0.4)" stroke-width="1"/>
+  <text x="1040" y="103" text-anchor="middle" fill="white" font-size="14" font-weight="700">&#x1F4A1; Key Insights</text>
+  <line x1="920" y1="113" x2="1160" y2="113" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+
+  <text x="920" y="140" fill="white" font-size="11" font-weight="600">Fan-out is the challenge</text>
+  <text x="920" y="158" fill="rgba(255,255,255,0.7)" font-size="10">Each query hits 100s of index</text>
+  <text x="920" y="173" fill="rgba(255,255,255,0.7)" font-size="10">shards. Scatter-gather must</text>
+  <text x="920" y="188" fill="rgba(255,255,255,0.7)" font-size="10">complete in &lt;200ms.</text>
+
+  <text x="920" y="218" fill="white" font-size="11" font-weight="600">Crawler is a separate system</text>
+  <text x="920" y="236" fill="rgba(255,255,255,0.7)" font-size="10">38K pages/sec with politeness</text>
+  <text x="920" y="251" fill="rgba(255,255,255,0.7)" font-size="10">rules, URL dedup, and robots.txt</text>
+  <text x="920" y="266" fill="rgba(255,255,255,0.7)" font-size="10">compliance.</text>
+
+  <text x="920" y="296" fill="white" font-size="11" font-weight="600">Autocomplete is 10x query load</text>
+  <text x="920" y="314" fill="rgba(255,255,255,0.7)" font-size="10">Every keystroke triggers a</text>
+  <text x="920" y="329" fill="rgba(255,255,255,0.7)" font-size="10">prefix lookup. In-memory trie</text>
+  <text x="920" y="344" fill="rgba(255,255,255,0.7)" font-size="10">with aggressive caching.</text>
+
+  <text x="920" y="374" fill="white" font-size="11" font-weight="600">Caching saves 30%+ load</text>
+  <text x="920" y="392" fill="rgba(255,255,255,0.7)" font-size="10">Popular queries repeat often.</text>
+  <text x="920" y="407" fill="rgba(255,255,255,0.7)" font-size="10">Cache top 10M results in</text>
+  <text x="920" y="422" fill="rgba(255,255,255,0.7)" font-size="10">memory for sub-10ms response.</text>
+</svg>

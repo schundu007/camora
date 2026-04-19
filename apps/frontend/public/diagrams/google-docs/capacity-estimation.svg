@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 450" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <linearGradient id="bgCap" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#2563eb"/><stop offset="100%" stop-color="#1e40af"/></linearGradient>
+    <filter id="sh"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.15"/></filter>
+  </defs>
+
+  <rect width="1200" height="450" fill="url(#bgCap)" rx="16"/>
+
+  <!-- Title -->
+  <rect x="370" y="16" width="460" height="40" rx="8" fill="none" stroke="white" stroke-width="2"/>
+  <text x="600" y="43" text-anchor="middle" fill="white" font-size="20" font-weight="700">Back-of-the-Envelope: Google Docs</text>
+
+  <!-- Column 1: Users & Traffic -->
+  <rect x="20" y="75" width="275" height="350" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="20" y="75" width="275" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="157" y="99" text-anchor="middle" fill="white" font-size="14" font-weight="700">User Base &amp; Traffic</text>
+
+  <text x="45" y="140" fill="#fbbf24" font-size="13" font-weight="700">&#x1F465; 1B+ Total Users</text>
+  <text x="157" y="162" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">&#x2193;</text>
+
+  <text x="45" y="185" fill="white" font-size="12">Business customers:</text>
+  <text x="45" y="205" fill="#fbbf24" font-size="15" font-weight="700">8M+ organizations</text>
+  <text x="157" y="227" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">&#x2193;</text>
+
+  <text x="45" y="250" fill="white" font-size="12">Estimated DAU (10% of total):</text>
+  <text x="45" y="272" fill="#fbbf24" font-size="16" font-weight="800">~100M DAU</text>
+  <text x="157" y="294" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">&#x2193;</text>
+
+  <text x="45" y="317" fill="white" font-size="11">Concurrent editors (1% of DAU):</text>
+  <text x="45" y="340" fill="#f97316" font-size="16" font-weight="800">~1M concurrent editors</text>
+
+  <text x="45" y="375" fill="white" font-size="11">Edit operations per editor:</text>
+  <text x="45" y="395" fill="#fbbf24" font-size="13" font-weight="700">~5 ops/sec typing</text>
+  <text x="45" y="415" fill="#f97316" font-size="14" font-weight="700">= 5M ops/sec peak</text>
+
+  <!-- Column 2: Latency -->
+  <rect x="310" y="75" width="265" height="170" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="310" y="75" width="265" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="442" y="99" text-anchor="middle" fill="white" font-size="14" font-weight="700">Latency Requirements</text>
+
+  <text x="335" y="140" fill="#fbbf24" font-size="13" font-weight="700">&#x26A1; &lt;200ms edit propagation</text>
+  <text x="335" y="165" fill="white" font-size="11">Keystroke to other user's screen</text>
+  <text x="335" y="185" fill="white" font-size="11">must feel instantaneous.</text>
+  <text x="335" y="215" fill="white" font-size="11">Cursor updates: &lt;100ms</text>
+  <text x="335" y="235" fill="#f97316" font-size="13" font-weight="700">WebSocket required (no polling)</text>
+
+  <!-- Column 3: Document Storage -->
+  <rect x="310" y="260" width="265" height="165" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="310" y="260" width="265" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="442" y="284" text-anchor="middle" fill="white" font-size="14" font-weight="700">Document Storage</text>
+
+  <text x="335" y="320" fill="white" font-size="11">Avg document: ~50KB text</text>
+  <text x="335" y="342" fill="white" font-size="11">Billions of docs total:</text>
+  <text x="335" y="362" fill="#fbbf24" font-size="14" font-weight="700">~500 PB document storage</text>
+  <text x="442" y="382" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="14">&#x2193;</text>
+  <text x="335" y="405" fill="white" font-size="11">Version history multiplier (50x):</text>
+  <text x="335" y="425" fill="#f97316" font-size="13" font-weight="700">Petabytes of revision data</text>
+
+  <!-- Column 4: Connections -->
+  <rect x="590" y="75" width="290" height="170" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="590" y="75" width="290" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="735" y="99" text-anchor="middle" fill="white" font-size="14" font-weight="700">WebSocket Connections</text>
+
+  <text x="615" y="140" fill="white" font-size="12">Concurrent editing sessions:</text>
+  <text x="615" y="163" fill="#fbbf24" font-size="16" font-weight="800">~1M connections</text>
+  <text x="735" y="185" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="14">&#x2193;</text>
+  <text x="615" y="208" fill="white" font-size="11">At 50K connections per server:</text>
+  <text x="615" y="228" fill="#f97316" font-size="14" font-weight="700">~20 collab servers minimum</text>
+
+  <!-- OT/CRDT -->
+  <rect x="590" y="260" width="290" height="165" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="590" y="260" width="290" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="735" y="284" text-anchor="middle" fill="white" font-size="14" font-weight="700">OT/CRDT Throughput</text>
+
+  <text x="615" y="320" fill="white" font-size="11">Each edit = transform against</text>
+  <text x="615" y="340" fill="white" font-size="11">all concurrent operations</text>
+  <text x="615" y="365" fill="#fbbf24" font-size="13" font-weight="700">5M transforms/sec peak</text>
+  <text x="615" y="392" fill="white" font-size="11">Must maintain causal ordering</text>
+  <text x="615" y="412" fill="#f97316" font-size="13" font-weight="700">Per-doc serialization needed</text>
+
+  <!-- Key Insights -->
+  <rect x="900" y="75" width="280" height="350" rx="12" fill="rgba(245,158,11,0.15)" stroke="rgba(245,158,11,0.4)" stroke-width="1"/>
+  <text x="1040" y="103" text-anchor="middle" fill="white" font-size="14" font-weight="700">&#x1F4A1; Key Insights</text>
+  <line x1="920" y1="113" x2="1160" y2="113" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+
+  <text x="920" y="140" fill="white" font-size="11" font-weight="600">Latency is the real challenge</text>
+  <text x="920" y="158" fill="rgba(255,255,255,0.7)" font-size="10">&lt;200ms end-to-end requires</text>
+  <text x="920" y="173" fill="rgba(255,255,255,0.7)" font-size="10">WebSockets + edge servers</text>
+  <text x="920" y="188" fill="rgba(255,255,255,0.7)" font-size="10">close to users.</text>
+
+  <text x="920" y="218" fill="white" font-size="11" font-weight="600">OT ordering is the bottleneck</text>
+  <text x="920" y="236" fill="rgba(255,255,255,0.7)" font-size="10">Operations must be serialized</text>
+  <text x="920" y="251" fill="rgba(255,255,255,0.7)" font-size="10">per-document. Single leader per</text>
+  <text x="920" y="266" fill="rgba(255,255,255,0.7)" font-size="10">doc avoids conflict.</text>
+
+  <text x="920" y="296" fill="white" font-size="11" font-weight="600">Version history is expensive</text>
+  <text x="920" y="314" fill="rgba(255,255,255,0.7)" font-size="10">Every keystroke is a version.</text>
+  <text x="920" y="329" fill="rgba(255,255,255,0.7)" font-size="10">Compact with operation logs,</text>
+  <text x="920" y="344" fill="rgba(255,255,255,0.7)" font-size="10">snapshot periodically.</text>
+
+  <text x="920" y="374" fill="white" font-size="11" font-weight="600">Offline sync adds complexity</text>
+  <text x="920" y="392" fill="rgba(255,255,255,0.7)" font-size="10">CRDTs excel here but OT is</text>
+  <text x="920" y="407" fill="rgba(255,255,255,0.7)" font-size="10">simpler for server-mediated</text>
+  <text x="920" y="422" fill="rgba(255,255,255,0.7)" font-size="10">collaboration.</text>
+</svg>

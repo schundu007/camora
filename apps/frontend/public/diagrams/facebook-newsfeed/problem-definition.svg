@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#2563eb"/><stop offset="100%" stop-color="#1e40af"/></linearGradient>
+    <filter id="shadow"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.15"/></filter>
+  </defs>
+
+  <rect width="1200" height="600" fill="url(#bg)" rx="16"/>
+
+  <!-- Title -->
+  <rect x="340" y="20" width="520" height="44" rx="8" fill="none" stroke="white" stroke-width="2"/>
+  <text x="600" y="50" text-anchor="middle" fill="white" font-size="22" font-weight="700">Problem Definition: Designing Facebook News Feed</text>
+
+  <!-- Column 1: Users & Core Actions -->
+  <text x="200" y="100" text-anchor="middle" fill="white" font-size="16" font-weight="700">Users &amp; Core Actions</text>
+  <rect x="40" y="108" width="320" height="2" fill="rgba(255,255,255,0.3)" rx="1"/>
+
+  <!-- User icons -->
+  <circle cx="120" cy="170" r="28" fill="rgba(255,255,255,0.15)" stroke="white" stroke-width="2"/>
+  <text x="120" y="176" text-anchor="middle" fill="white" font-size="24">👤</text>
+  <text x="120" y="215" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-size="13">Publisher</text>
+
+  <text x="200" y="176" text-anchor="middle" fill="white" font-size="28">&#x2192;</text>
+
+  <circle cx="280" cy="170" r="28" fill="rgba(255,255,255,0.15)" stroke="white" stroke-width="2"/>
+  <text x="280" y="176" text-anchor="middle" fill="white" font-size="24">📰</text>
+  <text x="280" y="215" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-size="13">Feed Reader</text>
+
+  <!-- Core Actions Box -->
+  <rect x="70" y="240" width="260" height="210" rx="12" fill="#f97316" filter="url(#shadow)"/>
+  <text x="200" y="270" text-anchor="middle" fill="white" font-size="15" font-weight="700">Core Actions</text>
+  <line x1="90" y1="282" x2="310" y2="282" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+  <text x="100" y="310" fill="white" font-size="13">📝  Create a post (text/media)</text>
+  <text x="100" y="340" fill="white" font-size="13">📰  View personalized feed</text>
+  <text x="100" y="370" fill="white" font-size="13">👍  Like / react to posts</text>
+  <text x="100" y="400" fill="white" font-size="13">💬  Comment on posts</text>
+  <text x="100" y="430" fill="white" font-size="13">👥  Follow / friend users</text>
+
+  <!-- Column 2: In Scope -->
+  <text x="600" y="100" text-anchor="middle" fill="white" font-size="16" font-weight="700">In Scope: Essentials</text>
+  <rect x="440" y="108" width="320" height="2" fill="rgba(255,255,255,0.3)" rx="1"/>
+
+  <rect x="440" y="125" width="320" height="340" rx="12" fill="rgba(255,255,255,0.12)" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+
+  <text x="470" y="160" fill="white" font-size="13" font-weight="600">📝  Post creation (text + media)</text>
+  <text x="490" y="180" fill="rgba(255,255,255,0.7)" font-size="11">(photos, videos, links)</text>
+  <text x="470" y="210" fill="white" font-size="13" font-weight="600">📰  News feed generation</text>
+  <text x="490" y="230" fill="rgba(255,255,255,0.7)" font-size="11">(ML-ranked, personalized per user)</text>
+  <text x="470" y="260" fill="white" font-size="13" font-weight="600">🔗  Social graph (follow/friend)</text>
+  <text x="490" y="280" fill="rgba(255,255,255,0.7)" font-size="11">(bidirectional + unidirectional)</text>
+  <text x="470" y="310" fill="white" font-size="13" font-weight="600">👍  Likes, reactions, comments</text>
+  <text x="470" y="340" fill="white" font-size="13" font-weight="600">📸  Media upload &amp; delivery</text>
+  <text x="490" y="360" fill="rgba(255,255,255,0.7)" font-size="11">(image resize, video transcode)</text>
+  <text x="470" y="390" fill="white" font-size="13" font-weight="600">🔔  Real-time notifications</text>
+  <text x="470" y="420" fill="white" font-size="13" font-weight="600">♾️  Infinite scroll pagination</text>
+
+  <!-- Column 3: Out of Scope -->
+  <text x="1000" y="100" text-anchor="middle" fill="white" font-size="16" font-weight="700">Out of Scope / Future</text>
+  <rect x="840" y="108" width="320" height="2" fill="rgba(255,255,255,0.3)" rx="1"/>
+
+  <rect x="840" y="125" width="320" height="310" rx="12" fill="rgba(245,158,11,0.25)" stroke="rgba(245,158,11,0.5)" stroke-width="1"/>
+
+  <text x="870" y="160" fill="rgba(255,255,255,0.85)" font-size="13">&#x274C;  Marketplace</text>
+  <text x="870" y="195" fill="rgba(255,255,255,0.85)" font-size="13">&#x274C;  Groups administration</text>
+  <text x="870" y="230" fill="rgba(255,255,255,0.85)" font-size="13">&#x274C;  Stories (ephemeral content)</text>
+  <text x="870" y="265" fill="rgba(255,255,255,0.85)" font-size="13">&#x274C;  Messenger (direct messaging)</text>
+  <text x="870" y="300" fill="rgba(255,255,255,0.85)" font-size="13">&#x274C;  AR / VR experiences</text>
+  <text x="870" y="335" fill="rgba(255,255,255,0.85)" font-size="13">&#x274C;  Ad targeting &amp; auction system</text>
+  <text x="870" y="370" fill="rgba(255,255,255,0.85)" font-size="13">&#x274C;  Content moderation / safety</text>
+  <text x="870" y="405" fill="rgba(255,255,255,0.85)" font-size="13">&#x274C;  Events &amp; pages management</text>
+
+  <!-- Bottom -->
+  <text x="600" y="530" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="12">Focus on feed generation with ML ranking and fan-out strategy first, then extend to groups and stories</text>
+
+  <rect x="440" y="480" width="320" height="36" rx="8" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+  <text x="600" y="504" text-anchor="middle" fill="white" font-size="13" font-weight="600">🏗️  Social Media Feed Infrastructure</text>
+</svg>

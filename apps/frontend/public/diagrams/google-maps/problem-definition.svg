@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#2563eb"/><stop offset="100%" stop-color="#1e40af"/></linearGradient>
+    <filter id="shadow"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.15"/></filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="600" fill="url(#bg)" rx="16"/>
+
+  <!-- Title -->
+  <rect x="340" y="20" width="520" height="44" rx="8" fill="none" stroke="white" stroke-width="2"/>
+  <text x="600" y="50" text-anchor="middle" fill="white" font-size="22" font-weight="700">Problem Definition: Designing Google Maps</text>
+
+  <!-- Column 1: Users & Core Actions -->
+  <text x="200" y="100" text-anchor="middle" fill="white" font-size="16" font-weight="700">Users &amp; Core Actions</text>
+  <rect x="40" y="108" width="320" height="2" fill="rgba(255,255,255,0.3)" rx="1"/>
+
+  <!-- User icons -->
+  <circle cx="100" cy="170" r="28" fill="rgba(255,255,255,0.15)" stroke="white" stroke-width="2"/>
+  <text x="100" y="176" text-anchor="middle" fill="white" font-size="24">&#x1F6B6;</text>
+  <text x="100" y="215" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-size="13">Navigator</text>
+
+  <text x="200" y="176" text-anchor="middle" fill="white" font-size="28">&#x21C4;</text>
+
+  <circle cx="300" cy="170" r="28" fill="rgba(255,255,255,0.15)" stroke="white" stroke-width="2"/>
+  <text x="300" y="176" text-anchor="middle" fill="white" font-size="24">&#x1F5FA;️</text>
+  <text x="300" y="215" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-size="13">Explorer</text>
+
+  <!-- Core Actions Box -->
+  <rect x="50" y="240" width="300" height="220" rx="12" fill="#f97316" filter="url(#shadow)"/>
+  <text x="200" y="270" text-anchor="middle" fill="white" font-size="15" font-weight="700">Core Actions</text>
+  <line x1="70" y1="282" x2="330" y2="282" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+  <text x="80" y="310" fill="white" font-size="13">&#x1F5FA;️  View &amp; Pan Map Tiles</text>
+  <text x="80" y="340" fill="white" font-size="13">&#x1F50D;  Search Places / POIs</text>
+  <text x="80" y="370" fill="white" font-size="13">&#x1F697;  Get Directions (A &#x2192; B)</text>
+  <text x="80" y="400" fill="white" font-size="13">&#x1F6A6;  Real-time Traffic Updates</text>
+  <text x="80" y="430" fill="white" font-size="13">&#x23F1;️  ETA Calculation</text>
+
+  <!-- Column 2: In Scope -->
+  <text x="600" y="100" text-anchor="middle" fill="white" font-size="16" font-weight="700">In Scope: Essentials</text>
+  <rect x="440" y="108" width="320" height="2" fill="rgba(255,255,255,0.3)" rx="1"/>
+
+  <rect x="440" y="125" width="320" height="340" rx="12" fill="rgba(255,255,255,0.12)" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+
+  <text x="470" y="160" fill="white" font-size="13" font-weight="600">&#x1F5FA;️  Map tile rendering</text>
+  <text x="490" y="180" fill="rgba(255,255,255,0.7)" font-size="11">(Pre-rendered tiles at 20+ zoom levels)</text>
+  <text x="470" y="210" fill="white" font-size="13" font-weight="600">&#x1F697;  Routing engine (A* / Dijkstra)</text>
+  <text x="490" y="230" fill="rgba(255,255,255,0.7)" font-size="11">(Shortest path on road graph)</text>
+  <text x="470" y="260" fill="white" font-size="13" font-weight="600">&#x1F6A6;  Real-time traffic overlay</text>
+  <text x="490" y="280" fill="rgba(255,255,255,0.7)" font-size="11">(GPS probe data aggregation)</text>
+  <text x="470" y="310" fill="white" font-size="13" font-weight="600">&#x23F1;️  ETA prediction</text>
+  <text x="490" y="330" fill="rgba(255,255,255,0.7)" font-size="11">(ML model + live traffic)</text>
+  <text x="470" y="360" fill="white" font-size="13" font-weight="600">&#x1F50D;  POI search &amp; discovery</text>
+  <text x="490" y="380" fill="rgba(255,255,255,0.7)" font-size="11">(Geospatial index + full-text)</text>
+  <text x="470" y="410" fill="white" font-size="13" font-weight="600">&#x1F4CD;  Multi-modal directions</text>
+  <text x="490" y="430" fill="rgba(255,255,255,0.7)" font-size="11">(Driving, walking, transit, cycling)</text>
+
+  <!-- Column 3: Out of Scope -->
+  <text x="1000" y="100" text-anchor="middle" fill="white" font-size="16" font-weight="700">Out of Scope / Future</text>
+  <rect x="840" y="108" width="320" height="2" fill="rgba(255,255,255,0.3)" rx="1"/>
+
+  <rect x="840" y="125" width="320" height="280" rx="12" fill="rgba(245,158,11,0.25)" stroke="rgba(245,158,11,0.5)" stroke-width="1"/>
+
+  <text x="870" y="160" fill="rgba(255,255,255,0.85)" font-size="13">&#x274C;  Street View (360 imagery)</text>
+  <text x="870" y="195" fill="rgba(255,255,255,0.85)" font-size="13">&#x274C;  Indoor maps &amp; floor plans</text>
+  <text x="870" y="230" fill="rgba(255,255,255,0.85)" font-size="13">&#x274C;  AR navigation (Live View)</text>
+  <text x="870" y="265" fill="rgba(255,255,255,0.85)" font-size="13">&#x274C;  Offline maps download</text>
+  <text x="870" y="300" fill="rgba(255,255,255,0.85)" font-size="13">&#x274C;  Satellite / terrain views</text>
+  <text x="870" y="335" fill="rgba(255,255,255,0.85)" font-size="13">&#x274C;  User-contributed reviews</text>
+  <text x="870" y="370" fill="rgba(255,255,255,0.85)" font-size="13">&#x274C;  Maps Platform API / billing</text>
+
+  <!-- Bottom -->
+  <text x="600" y="520" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="12">Focus on tile serving + routing + traffic infrastructure &#x2192; extend to immersive features later</text>
+
+  <rect x="440" y="480" width="320" height="36" rx="8" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+  <text x="600" y="504" text-anchor="middle" fill="white" font-size="13" font-weight="600">&#x1F3D7;️  Tile Serving + Routing + Traffic Engine</text>
+</svg>

@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 450" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <linearGradient id="bgCap" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#2563eb"/><stop offset="100%" stop-color="#1e40af"/></linearGradient>
+    <filter id="sh"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.15"/></filter>
+  </defs>
+
+  <rect width="1200" height="450" fill="url(#bgCap)" rx="16"/>
+
+  <!-- Title -->
+  <rect x="360" y="16" width="480" height="40" rx="8" fill="none" stroke="white" stroke-width="2"/>
+  <text x="600" y="43" text-anchor="middle" fill="white" font-size="20" font-weight="700">Back-of-the-Envelope: Payment System</text>
+
+  <!-- Column 1: Transaction Volume -->
+  <rect x="20" y="75" width="275" height="350" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="20" y="75" width="275" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="157" y="99" text-anchor="middle" fill="white" font-size="14" font-weight="700">Transaction Volume</text>
+
+  <text x="45" y="140" fill="#fbbf24" font-size="13" font-weight="700">&#x1F4B0; $1T+ annual volume</text>
+  <text x="157" y="162" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">&#x2193;</text>
+
+  <text x="45" y="185" fill="white" font-size="12">Daily transaction value:</text>
+  <text x="45" y="205" fill="#fbbf24" font-size="15" font-weight="700">~$2.7 Billion/day</text>
+  <text x="157" y="227" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">&#x2193;</text>
+
+  <text x="45" y="250" fill="white" font-size="12">Peak TPS (Visa-scale):</text>
+  <text x="45" y="272" fill="#fbbf24" font-size="16" font-weight="800">65,000 TPS</text>
+  <text x="157" y="294" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">&#x2193;</text>
+
+  <text x="45" y="317" fill="white" font-size="11">Average TPS:</text>
+  <text x="45" y="337" fill="rgba(255,255,255,0.7)" font-size="10">~4,000 TPS steady state</text>
+  <text x="45" y="362" fill="#f97316" font-size="14" font-weight="700">16x burst factor</text>
+
+  <text x="45" y="395" fill="white" font-size="11">Auth latency requirement:</text>
+  <text x="45" y="415" fill="#f97316" font-size="16" font-weight="800">&lt;1 second end-to-end</text>
+
+  <!-- Column 2: Availability -->
+  <rect x="310" y="75" width="265" height="170" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="310" y="75" width="265" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="442" y="99" text-anchor="middle" fill="white" font-size="14" font-weight="700">Availability Target</text>
+
+  <text x="335" y="140" fill="#fbbf24" font-size="15" font-weight="800">99.9999% uptime</text>
+  <text x="335" y="165" fill="white" font-size="11">= ~31 seconds downtime/year</text>
+  <text x="442" y="188" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="14">&#x2193;</text>
+
+  <rect x="325" y="200" width="235" height="28" rx="6" fill="rgba(239,68,68,0.3)" stroke="rgba(239,68,68,0.5)" stroke-width="1"/>
+  <text x="442" y="219" text-anchor="middle" fill="white" font-size="11" font-weight="600">&#x26A0;&#xFE0F; Active-active multi-region required!</text>
+
+  <!-- Column 3: Ledger & Storage -->
+  <rect x="310" y="260" width="265" height="165" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="310" y="260" width="265" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="442" y="284" text-anchor="middle" fill="white" font-size="14" font-weight="700">Ledger Storage</text>
+
+  <text x="335" y="320" fill="white" font-size="11">Each txn: ~2KB (both entries)</text>
+  <text x="335" y="342" fill="white" font-size="11">65K TPS x 2KB x 86400:</text>
+  <text x="335" y="362" fill="#fbbf24" font-size="14" font-weight="700">~11 TB/day ledger writes</text>
+  <text x="442" y="382" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="14">&#x2193;</text>
+  <text x="335" y="405" fill="white" font-size="11">7-year regulatory retention:</text>
+  <text x="335" y="425" fill="#f97316" font-size="14" font-weight="700">~28 PB total ledger</text>
+
+  <!-- Column 4: Idempotency -->
+  <rect x="590" y="75" width="290" height="170" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="590" y="75" width="290" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="735" y="99" text-anchor="middle" fill="white" font-size="14" font-weight="700">Idempotency Layer</text>
+
+  <text x="615" y="140" fill="white" font-size="12">Every request needs idempotency key</text>
+  <text x="615" y="163" fill="#fbbf24" font-size="14" font-weight="800">65K lookups/sec</text>
+  <text x="735" y="185" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="14">&#x2193;</text>
+  <text x="615" y="208" fill="white" font-size="11">24h key TTL, distributed cache:</text>
+  <text x="615" y="228" fill="#f97316" font-size="14" font-weight="700">Redis Cluster + DB fallback</text>
+
+  <!-- Fraud Detection -->
+  <rect x="590" y="260" width="290" height="165" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="590" y="260" width="290" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="735" y="284" text-anchor="middle" fill="white" font-size="14" font-weight="700">Fraud Detection</text>
+
+  <text x="615" y="320" fill="white" font-size="11">Every txn scored in real-time</text>
+  <text x="615" y="342" fill="#fbbf24" font-size="13" font-weight="700">65K ML inferences/sec</text>
+  <text x="615" y="370" fill="white" font-size="11">Must complete within auth window:</text>
+  <text x="615" y="392" fill="#f97316" font-size="14" font-weight="700">&lt;100ms fraud check budget</text>
+  <text x="615" y="415" fill="rgba(255,255,255,0.7)" font-size="10">Pre-computed feature store required</text>
+
+  <!-- Key Insights -->
+  <rect x="900" y="75" width="280" height="350" rx="12" fill="rgba(245,158,11,0.15)" stroke="rgba(245,158,11,0.4)" stroke-width="1"/>
+  <text x="1040" y="103" text-anchor="middle" fill="white" font-size="14" font-weight="700">&#x1F4A1; Key Insights</text>
+  <line x1="920" y1="113" x2="1160" y2="113" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+
+  <text x="920" y="140" fill="white" font-size="11" font-weight="600">Correctness over speed</text>
+  <text x="920" y="158" fill="rgba(255,255,255,0.7)" font-size="10">Double-entry ledger must NEVER</text>
+  <text x="920" y="173" fill="rgba(255,255,255,0.7)" font-size="10">be inconsistent. ACID transactions</text>
+  <text x="920" y="188" fill="rgba(255,255,255,0.7)" font-size="10">are non-negotiable.</text>
+
+  <text x="920" y="218" fill="white" font-size="11" font-weight="600">Idempotency is critical</text>
+  <text x="920" y="236" fill="rgba(255,255,255,0.7)" font-size="10">Network retries must never cause</text>
+  <text x="920" y="251" fill="rgba(255,255,255,0.7)" font-size="10">duplicate charges. Idempotency</text>
+  <text x="920" y="266" fill="rgba(255,255,255,0.7)" font-size="10">keys at every layer.</text>
+
+  <text x="920" y="296" fill="white" font-size="11" font-weight="600">Six nines is extremely hard</text>
+  <text x="920" y="314" fill="rgba(255,255,255,0.7)" font-size="10">31 seconds downtime per year.</text>
+  <text x="920" y="329" fill="rgba(255,255,255,0.7)" font-size="10">Active-active with automatic</text>
+  <text x="920" y="344" fill="rgba(255,255,255,0.7)" font-size="10">failover across regions.</text>
+
+  <text x="920" y="374" fill="white" font-size="11" font-weight="600">PCI-DSS shapes architecture</text>
+  <text x="920" y="392" fill="rgba(255,255,255,0.7)" font-size="10">Card data never stored raw.</text>
+  <text x="920" y="407" fill="rgba(255,255,255,0.7)" font-size="10">Tokenize at edge, encrypted</text>
+  <text x="920" y="422" fill="rgba(255,255,255,0.7)" font-size="10">vault for sensitive data.</text>
+</svg>

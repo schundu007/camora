@@ -1,0 +1,125 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 550" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <linearGradient id="bgCap" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#2563eb"/><stop offset="100%" stop-color="#1e40af"/></linearGradient>
+    <filter id="sh"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.15"/></filter>
+  </defs>
+
+  <rect width="1200" height="550" fill="url(#bgCap)" rx="16"/>
+
+  <!-- Title -->
+  <rect x="380" y="16" width="440" height="40" rx="8" fill="none" stroke="white" stroke-width="2"/>
+  <text x="600" y="43" text-anchor="middle" fill="white" font-size="20" font-weight="700">Back-of-the-Envelope Estimates</text>
+
+  <!-- Column 1: Scale -->
+  <rect x="20" y="80" width="275" height="440" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="20" y="80" width="275" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="157" y="104" text-anchor="middle" fill="white" font-size="14" font-weight="700">Crawl Scale</text>
+
+  <text x="45" y="145" fill="#fbbf24" font-size="13" font-weight="700">🌐 Indexable web pages</text>
+  <text x="157" y="170" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">↓</text>
+
+  <text x="45" y="200" fill="white" font-size="12">Estimated web pages:</text>
+  <text x="45" y="218" fill="#fbbf24" font-size="15" font-weight="700">~50 Billion pages</text>
+  <text x="157" y="240" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">↓</text>
+
+  <text x="45" y="268" fill="white" font-size="12">Crawl target (1 month cycle):</text>
+  <text x="45" y="288" fill="#fbbf24" font-size="16" font-weight="800">1 Billion pages/month</text>
+  <text x="157" y="310" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">↓</text>
+
+  <text x="45" y="338" fill="white" font-size="11">Pages per second:</text>
+  <text x="45" y="356" fill="rgba(255,255,255,0.7)" font-size="10">1B / (30 days x 86,400 sec)</text>
+  <text x="45" y="378" fill="#fbbf24" font-size="16" font-weight="800">≈ 400 pages/sec</text>
+  <text x="157" y="400" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">↓</text>
+
+  <text x="45" y="425" fill="white" font-size="11">With peak (3x) + retries:</text>
+  <text x="45" y="448" fill="#f97316" font-size="18" font-weight="800">≈ 1,500 fetches/sec</text>
+  <text x="45" y="475" fill="rgba(255,255,255,0.7)" font-size="10">Across all crawler workers</text>
+
+  <!-- Column 2: Storage -->
+  <rect x="310" y="80" width="265" height="250" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="310" y="80" width="265" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="442" y="104" text-anchor="middle" fill="white" font-size="14" font-weight="700">Storage Requirements</text>
+
+  <text x="335" y="145" fill="#fbbf24" font-size="13" font-weight="700">📄 Avg page size: 500 KB</text>
+  <text x="442" y="170" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">↓</text>
+
+  <text x="335" y="195" fill="white" font-size="12">Raw HTML per month:</text>
+  <text x="335" y="215" fill="#fbbf24" font-size="15" font-weight="700">1B x 500KB = 500 TB</text>
+  <text x="442" y="240" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">↓</text>
+
+  <text x="335" y="268" fill="white" font-size="11">With compression (5x):</text>
+  <text x="335" y="292" fill="#f97316" font-size="18" font-weight="800">≈ 100 TB/month</text>
+
+  <!-- Column 3: URL Frontier -->
+  <rect x="310" y="350" width="265" height="170" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="310" y="350" width="265" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="442" y="374" text-anchor="middle" fill="white" font-size="14" font-weight="700">URL Frontier</text>
+
+  <text x="335" y="410" fill="white" font-size="11">Discovered URLs: <tspan fill="#fbbf24" font-weight="700">~10B URLs</tspan></text>
+  <text x="442" y="430" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="14">↓</text>
+
+  <text x="335" y="450" fill="white" font-size="11">Avg URL length: 100 bytes</text>
+  <text x="335" y="472" fill="#fbbf24" font-size="15" font-weight="800">= 1 TB (URL storage)</text>
+
+  <text x="335" y="500" fill="white" font-size="11">Bloom filter for dedup (1% FP):</text>
+  <text x="335" y="520" fill="#f97316" font-size="15" font-weight="800">≈ 12 GB RAM</text>
+
+  <!-- Column 4: Bandwidth -->
+  <rect x="590" y="80" width="290" height="250" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="590" y="80" width="290" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="735" y="104" text-anchor="middle" fill="white" font-size="14" font-weight="700">Bandwidth &amp; Network</text>
+
+  <text x="615" y="148" fill="white" font-size="12">Download bandwidth:</text>
+  <text x="615" y="175" fill="#fbbf24" font-size="15" font-weight="700">1,500 pages/sec x 500KB</text>
+
+  <text x="615" y="208" fill="white" font-size="12">= Incoming bandwidth:</text>
+  <text x="615" y="235" fill="#fbbf24" font-size="20" font-weight="800">6 Gb/s</text>
+
+  <text x="615" y="268" fill="white" font-size="11">DNS lookups:</text>
+  <text x="615" y="290" fill="#f97316" font-size="15" font-weight="700">1,500 lookups/sec</text>
+
+  <text x="615" y="316" fill="rgba(255,255,255,0.6)" font-size="10">Local DNS cache essential to avoid bottleneck</text>
+
+  <!-- Column 5: Crawler Workers -->
+  <rect x="590" y="350" width="290" height="170" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="590" y="350" width="290" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="735" y="374" text-anchor="middle" fill="white" font-size="14" font-weight="700">Crawler Workers</text>
+
+  <text x="615" y="410" fill="white" font-size="11">Avg fetch time per page:</text>
+  <text x="615" y="432" fill="#fbbf24" font-size="14" font-weight="700">~2 seconds (with politeness)</text>
+
+  <text x="615" y="462" fill="white" font-size="11">Workers needed (async I/O):</text>
+  <text x="615" y="484" fill="#f97316" font-size="14" font-weight="700">~3,000 concurrent workers</text>
+
+  <text x="615" y="510" fill="rgba(255,255,255,0.6)" font-size="10">Across ~100 crawler machines</text>
+
+  <!-- Key Insights -->
+  <rect x="900" y="80" width="280" height="440" rx="12" fill="rgba(245,158,11,0.15)" stroke="rgba(245,158,11,0.4)" stroke-width="1"/>
+  <text x="1040" y="108" text-anchor="middle" fill="white" font-size="14" font-weight="700">💡 Key Insights</text>
+  <line x1="920" y1="118" x2="1160" y2="118" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+
+  <text x="920" y="145" fill="white" font-size="11" font-weight="600">Storage is the real challenge</text>
+  <text x="920" y="163" fill="rgba(255,255,255,0.7)" font-size="10">100 TB/month compressed.</text>
+  <text x="920" y="178" fill="rgba(255,255,255,0.7)" font-size="10">1.2 PB/year of crawled data.</text>
+  <text x="920" y="193" fill="rgba(255,255,255,0.7)" font-size="10">Need distributed object store.</text>
+
+  <text x="920" y="225" fill="white" font-size="11" font-weight="600">Politeness limits throughput</text>
+  <text x="920" y="243" fill="rgba(255,255,255,0.7)" font-size="10">1 request/sec per domain means</text>
+  <text x="920" y="258" fill="rgba(255,255,255,0.7)" font-size="10">you need wide domain diversity.</text>
+  <text x="920" y="273" fill="rgba(255,255,255,0.7)" font-size="10">Can't just hammer one site.</text>
+
+  <text x="920" y="305" fill="white" font-size="11" font-weight="600">Dedup saves massive storage</text>
+  <text x="920" y="323" fill="rgba(255,255,255,0.7)" font-size="10">~30% of web pages are duplicates.</text>
+  <text x="920" y="338" fill="rgba(255,255,255,0.7)" font-size="10">Content hashing (SimHash) detects</text>
+  <text x="920" y="353" fill="rgba(255,255,255,0.7)" font-size="10">near-duplicates efficiently.</text>
+
+  <text x="920" y="385" fill="white" font-size="11" font-weight="600">DNS is a hidden bottleneck</text>
+  <text x="920" y="403" fill="rgba(255,255,255,0.7)" font-size="10">1,500 DNS lookups/sec. Each</text>
+  <text x="920" y="418" fill="rgba(255,255,255,0.7)" font-size="10">takes ~50ms externally. Local</text>
+  <text x="920" y="433" fill="rgba(255,255,255,0.7)" font-size="10">DNS cache is mandatory.</text>
+
+  <text x="920" y="465" fill="white" font-size="11" font-weight="600">Bloom filter enables dedup at scale</text>
+  <text x="920" y="483" fill="rgba(255,255,255,0.7)" font-size="10">12 GB Bloom filter can track 10B</text>
+  <text x="920" y="498" fill="rgba(255,255,255,0.7)" font-size="10">URLs with 1% false positive rate.</text>
+  <text x="920" y="513" fill="rgba(255,255,255,0.7)" font-size="10">O(1) lookup for seen URLs.</text>
+</svg>

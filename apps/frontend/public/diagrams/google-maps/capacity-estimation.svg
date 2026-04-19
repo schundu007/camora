@@ -1,0 +1,126 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 550" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <linearGradient id="bgCap" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#2563eb"/><stop offset="100%" stop-color="#1e40af"/></linearGradient>
+    <filter id="sh"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.15"/></filter>
+  </defs>
+
+  <rect width="1200" height="550" fill="url(#bgCap)" rx="16"/>
+
+  <!-- Title -->
+  <rect x="380" y="16" width="440" height="40" rx="8" fill="none" stroke="white" stroke-width="2"/>
+  <text x="600" y="43" text-anchor="middle" fill="white" font-size="20" font-weight="700">Back-of-the-Envelope Estimates</text>
+
+  <!-- Column 1: Traffic -->
+  <rect x="20" y="80" width="275" height="440" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="20" y="80" width="275" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="157" y="104" text-anchor="middle" fill="white" font-size="14" font-weight="700">Traffic Estimates</text>
+
+  <text x="45" y="145" fill="#fbbf24" font-size="13" font-weight="700">&#x1F30D; 1 Billion MAU</text>
+  <text x="157" y="170" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">&#x2193;</text>
+
+  <text x="45" y="200" fill="white" font-size="12">Daily active users (&#x2248;50%):</text>
+  <text x="45" y="218" fill="#fbbf24" font-size="15" font-weight="700">500M DAU</text>
+  <text x="157" y="240" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">&#x2193;</text>
+
+  <text x="45" y="268" fill="white" font-size="12">Tile requests per session: &#x2248;50</text>
+  <text x="45" y="288" fill="white" font-size="11">Sessions/day: 500M x 3</text>
+  <text x="45" y="308" fill="#fbbf24" font-size="16" font-weight="800">75B tile req/day</text>
+  <text x="157" y="330" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">&#x2193;</text>
+
+  <text x="45" y="358" fill="white" font-size="11">Tile QPS (average):</text>
+  <text x="45" y="376" fill="rgba(255,255,255,0.7)" font-size="10">75B / 86,400</text>
+  <text x="45" y="398" fill="#fbbf24" font-size="16" font-weight="800">&#x2248; 870K tile QPS</text>
+  <text x="157" y="418" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">&#x2193;</text>
+
+  <text x="45" y="445" fill="white" font-size="11">Route calculations/day:</text>
+  <text x="45" y="468" fill="#f97316" font-size="18" font-weight="800">Millions/day</text>
+  <text x="45" y="488" fill="rgba(255,255,255,0.6)" font-size="10">(&#x2248; 5,000+ routing QPS)</text>
+
+  <!-- Column 2: Map Data -->
+  <rect x="310" y="80" width="265" height="250" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="310" y="80" width="265" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="442" y="104" text-anchor="middle" fill="white" font-size="14" font-weight="700">Map Data Scale</text>
+
+  <text x="335" y="148" fill="#fbbf24" font-size="13" font-weight="700">&#x1F5FA;️ 20+ Petabytes of map data</text>
+  <text x="442" y="170" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">&#x2193;</text>
+
+  <text x="335" y="198" fill="white" font-size="12">Pre-rendered tiles:</text>
+  <text x="335" y="218" fill="#fbbf24" font-size="15" font-weight="700">20 zoom levels</text>
+  <text x="335" y="238" fill="rgba(255,255,255,0.7)" font-size="10">Level 0: 1 tile &#x2192; Level 20: 1T tiles</text>
+  <text x="442" y="260" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">&#x2193;</text>
+
+  <text x="335" y="288" fill="white" font-size="11">Road graph: billions of nodes</text>
+  <text x="335" y="308" fill="#f97316" font-size="18" font-weight="800">Trillions of edges</text>
+
+  <rect x="325" y="318" width="235" height="22" rx="6" fill="rgba(239,68,68,0.3)" stroke="rgba(239,68,68,0.5)" stroke-width="1"/>
+  <text x="442" y="334" text-anchor="middle" fill="white" font-size="10" font-weight="600">&#x26A0;️ Graph partitioning essential!</text>
+
+  <!-- Column 2b: CDN -->
+  <rect x="310" y="350" width="265" height="170" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="310" y="350" width="265" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="442" y="374" text-anchor="middle" fill="white" font-size="14" font-weight="700">CDN &amp; Caching</text>
+
+  <text x="335" y="410" fill="white" font-size="11">Avg tile size: <tspan fill="#fbbf24" font-weight="700">&#x2248; 30KB</tspan></text>
+  <text x="335" y="432" fill="white" font-size="11">870K QPS x 30KB</text>
+  <text x="442" y="452" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="14">&#x2193;</text>
+
+  <text x="335" y="475" fill="#fbbf24" font-size="14" font-weight="700">&#x2248; 26 GB/s tile bandwidth</text>
+  <text x="335" y="500" fill="white" font-size="11">CDN cache hit rate:</text>
+  <text x="335" y="518" fill="#16a34a" font-size="14" font-weight="700">95%+ (popular tiles cached)</text>
+
+  <!-- Column 3: Routing -->
+  <rect x="590" y="80" width="290" height="250" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="590" y="80" width="290" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="735" y="104" text-anchor="middle" fill="white" font-size="14" font-weight="700">Routing Engine</text>
+
+  <text x="615" y="148" fill="white" font-size="12">Algorithm: A* with</text>
+  <text x="615" y="172" fill="#fbbf24" font-size="18" font-weight="800">Contraction</text>
+  <text x="615" y="192" fill="#fbbf24" font-size="18" font-weight="800">Hierarchies</text>
+  <text x="735" y="215" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="14">&#x2193;</text>
+
+  <text x="615" y="240" fill="white" font-size="11">Route computation time:</text>
+  <text x="615" y="265" fill="#16a34a" font-size="16" font-weight="800">&lt; 100ms per route</text>
+  <text x="615" y="290" fill="rgba(255,255,255,0.6)" font-size="10">Graph pre-processed into hierarchy layers</text>
+
+  <!-- Column 3b: Traffic Data -->
+  <rect x="590" y="350" width="290" height="170" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="590" y="350" width="290" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="735" y="374" text-anchor="middle" fill="white" font-size="14" font-weight="700">Real-Time Traffic</text>
+
+  <text x="615" y="410" fill="white" font-size="11">GPS probes from phones:</text>
+  <text x="615" y="432" fill="#fbbf24" font-size="14" font-weight="700">Billions of data points/day</text>
+  <text x="735" y="452" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="14">&#x2193;</text>
+
+  <text x="615" y="475" fill="white" font-size="11">Aggregation window: 2-5 min</text>
+  <text x="615" y="498" fill="#f97316" font-size="14" font-weight="700">MapReduce + streaming</text>
+  <text x="615" y="518" fill="rgba(255,255,255,0.6)" font-size="10">Speed data per road segment, updated live</text>
+
+  <!-- Key insight box -->
+  <rect x="900" y="80" width="280" height="440" rx="12" fill="rgba(245,158,11,0.15)" stroke="rgba(245,158,11,0.4)" stroke-width="1"/>
+  <text x="1040" y="108" text-anchor="middle" fill="white" font-size="14" font-weight="700">&#x1F4A1; Key Insights</text>
+  <line x1="920" y1="118" x2="1160" y2="118" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+
+  <text x="920" y="145" fill="white" font-size="11" font-weight="600">Tiles dominate traffic</text>
+  <text x="920" y="163" fill="rgba(255,255,255,0.7)" font-size="10">870K QPS tile requests. CDN</text>
+  <text x="920" y="178" fill="rgba(255,255,255,0.7)" font-size="10">absorbs 95% — origin sees 40K.</text>
+
+  <text x="920" y="210" fill="white" font-size="11" font-weight="600">Map data is enormous</text>
+  <text x="920" y="228" fill="rgba(255,255,255,0.7)" font-size="10">20 PB of road, POI, and imagery</text>
+  <text x="920" y="243" fill="rgba(255,255,255,0.7)" font-size="10">data. Pre-render tiles offline.</text>
+
+  <text x="920" y="275" fill="white" font-size="11" font-weight="600">Routing = graph problem</text>
+  <text x="920" y="293" fill="rgba(255,255,255,0.7)" font-size="10">Contraction Hierarchies reduce</text>
+  <text x="920" y="308" fill="rgba(255,255,255,0.7)" font-size="10">A* from seconds to milliseconds.</text>
+
+  <text x="920" y="340" fill="white" font-size="11" font-weight="600">Traffic = streaming pipeline</text>
+  <text x="920" y="358" fill="rgba(255,255,255,0.7)" font-size="10">Billions of GPS probes aggregated</text>
+  <text x="920" y="373" fill="rgba(255,255,255,0.7)" font-size="10">in 2-5 min windows per segment.</text>
+
+  <text x="920" y="405" fill="white" font-size="11" font-weight="600">ETA = ML prediction</text>
+  <text x="920" y="423" fill="rgba(255,255,255,0.7)" font-size="10">Historical patterns + live traffic</text>
+  <text x="920" y="438" fill="rgba(255,255,255,0.7)" font-size="10">+ road conditions. NN models.</text>
+
+  <text x="920" y="470" fill="white" font-size="11" font-weight="600">Multi-zoom = quadtree</text>
+  <text x="920" y="488" fill="rgba(255,255,255,0.7)" font-size="10">Tiles organized by Z/X/Y. Each</text>
+  <text x="920" y="503" fill="rgba(255,255,255,0.7)" font-size="10">zoom level 4x tiles of previous.</text>
+</svg>

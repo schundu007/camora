@@ -1,0 +1,124 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 550" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <linearGradient id="bgCap" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#2563eb"/><stop offset="100%" stop-color="#1e40af"/></linearGradient>
+    <filter id="sh"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.15"/></filter>
+  </defs>
+
+  <rect width="1200" height="550" fill="url(#bgCap)" rx="16"/>
+
+  <!-- Title -->
+  <rect x="380" y="16" width="440" height="40" rx="8" fill="none" stroke="white" stroke-width="2"/>
+  <text x="600" y="43" text-anchor="middle" fill="white" font-size="20" font-weight="700">Back-of-the-Envelope Estimates</text>
+
+  <!-- Column 1: Traffic -->
+  <rect x="20" y="80" width="275" height="440" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="20" y="80" width="275" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="157" y="104" text-anchor="middle" fill="white" font-size="14" font-weight="700">Traffic Estimates (QPS)</text>
+
+  <text x="45" y="145" fill="#fbbf24" font-size="13" font-weight="700">🔍 5 Billion searches/day</text>
+  <text x="157" y="170" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">↓</text>
+
+  <text x="45" y="200" fill="white" font-size="12">Avg keystrokes per search:</text>
+  <text x="45" y="218" fill="#fbbf24" font-size="15" font-weight="700">6 prefix queries</text>
+  <text x="157" y="240" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">↓</text>
+
+  <text x="45" y="268" fill="white" font-size="12">Total suggestion requests/day:</text>
+  <text x="45" y="288" fill="#fbbf24" font-size="16" font-weight="800">30 Billion req/day</text>
+  <text x="157" y="310" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">↓</text>
+
+  <text x="45" y="338" fill="white" font-size="11">Average QPS:</text>
+  <text x="45" y="356" fill="rgba(255,255,255,0.7)" font-size="10">30B / 86,400s</text>
+  <text x="45" y="378" fill="#fbbf24" font-size="16" font-weight="800">≈ 350,000 QPS</text>
+  <text x="157" y="400" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">↓</text>
+
+  <text x="45" y="425" fill="white" font-size="11">Peak QPS (3x avg):</text>
+  <text x="45" y="448" fill="#f97316" font-size="18" font-weight="800">≈ 1 Million QPS</text>
+  <text x="45" y="475" fill="rgba(255,255,255,0.7)" font-size="10">Each must return in &lt;50ms</text>
+
+  <!-- Column 2: Trie Data Structure -->
+  <rect x="310" y="80" width="265" height="250" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="310" y="80" width="265" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="442" y="104" text-anchor="middle" fill="white" font-size="14" font-weight="700">Trie Data Structure</text>
+
+  <text x="335" y="145" fill="#fbbf24" font-size="13" font-weight="700">📝 5 Billion unique queries</text>
+  <text x="442" y="170" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">↓</text>
+
+  <text x="335" y="195" fill="white" font-size="12">Avg query length:</text>
+  <text x="335" y="215" fill="#fbbf24" font-size="15" font-weight="700">20 characters</text>
+  <text x="442" y="240" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="18">↓</text>
+
+  <text x="335" y="268" fill="white" font-size="11">Trie nodes (with metadata):</text>
+  <text x="335" y="292" fill="#f97316" font-size="18" font-weight="800">≈ 100 Billion nodes</text>
+
+  <!-- Column 3: Storage -->
+  <rect x="310" y="350" width="265" height="170" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="310" y="350" width="265" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="442" y="374" text-anchor="middle" fill="white" font-size="14" font-weight="700">Storage Estimates</text>
+
+  <text x="335" y="410" fill="white" font-size="11">Node size (char + count + ptrs): <tspan fill="#fbbf24" font-weight="700">~100B</tspan></text>
+  <text x="442" y="430" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="14">↓</text>
+
+  <text x="335" y="450" fill="white" font-size="11">Trie size: 100B nodes x 100 bytes</text>
+  <text x="335" y="472" fill="#fbbf24" font-size="15" font-weight="800">= 10 TB (full trie)</text>
+
+  <text x="335" y="500" fill="white" font-size="11">Sharded across servers:</text>
+  <text x="335" y="520" fill="#f97316" font-size="15" font-weight="800">≈ 200 shards @ 50GB RAM</text>
+
+  <!-- Column 4: Latency Budget -->
+  <rect x="590" y="80" width="290" height="250" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="590" y="80" width="290" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="735" y="104" text-anchor="middle" fill="white" font-size="14" font-weight="700">Latency Budget (&lt;50ms)</text>
+
+  <text x="615" y="148" fill="white" font-size="12">Network round-trip:</text>
+  <text x="615" y="170" fill="#fbbf24" font-size="15" font-weight="700">~15ms</text>
+
+  <text x="615" y="200" fill="white" font-size="12">Trie traversal:</text>
+  <text x="615" y="222" fill="#fbbf24" font-size="15" font-weight="700">~5ms (in-memory)</text>
+
+  <text x="615" y="252" fill="white" font-size="12">Ranking / scoring:</text>
+  <text x="615" y="274" fill="#fbbf24" font-size="15" font-weight="700">~10ms</text>
+
+  <text x="615" y="304" fill="white" font-size="12">Serialization + overhead:</text>
+  <text x="615" y="326" fill="#f97316" font-size="15" font-weight="700">~20ms budget remaining</text>
+
+  <!-- Column 5: Update Pipeline -->
+  <rect x="590" y="350" width="290" height="170" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="590" y="350" width="290" height="36" rx="12 12 0 0" fill="rgba(255,255,255,0.15)"/>
+  <text x="735" y="374" text-anchor="middle" fill="white" font-size="14" font-weight="700">Trie Update Pipeline</text>
+
+  <text x="615" y="410" fill="white" font-size="11">New queries to process:</text>
+  <text x="615" y="432" fill="#fbbf24" font-size="14" font-weight="700">≈ 10M new queries/day</text>
+
+  <text x="615" y="462" fill="white" font-size="11">Trie rebuild frequency:</text>
+  <text x="615" y="484" fill="#f97316" font-size="14" font-weight="700">Every 15 minutes (batch)</text>
+
+  <text x="615" y="510" fill="rgba(255,255,255,0.6)" font-size="10">Trending queries updated via streaming pipeline</text>
+
+  <!-- Key Insights -->
+  <rect x="900" y="80" width="280" height="440" rx="12" fill="rgba(245,158,11,0.15)" stroke="rgba(245,158,11,0.4)" stroke-width="1"/>
+  <text x="1040" y="108" text-anchor="middle" fill="white" font-size="14" font-weight="700">💡 Key Insights</text>
+  <line x1="920" y1="118" x2="1160" y2="118" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+
+  <text x="920" y="145" fill="white" font-size="11" font-weight="600">Read-only, ultra-low latency</text>
+  <text x="920" y="163" fill="rgba(255,255,255,0.7)" font-size="10">1M QPS reads, all &lt;50ms.</text>
+  <text x="920" y="178" fill="rgba(255,255,255,0.7)" font-size="10">Must be entirely in-memory.</text>
+
+  <text x="920" y="210" fill="white" font-size="11" font-weight="600">Trie must fit in RAM</text>
+  <text x="920" y="228" fill="rgba(255,255,255,0.7)" font-size="10">10TB total, sharded across</text>
+  <text x="920" y="243" fill="rgba(255,255,255,0.7)" font-size="10">200 servers with replicas.</text>
+
+  <text x="920" y="275" fill="white" font-size="11" font-weight="600">Prefix → top-K is the hot path</text>
+  <text x="920" y="293" fill="rgba(255,255,255,0.7)" font-size="10">Pre-compute top results at</text>
+  <text x="920" y="308" fill="rgba(255,255,255,0.7)" font-size="10">each trie node to avoid</text>
+  <text x="920" y="323" fill="rgba(255,255,255,0.7)" font-size="10">expensive subtree traversal.</text>
+
+  <text x="920" y="355" fill="white" font-size="11" font-weight="600">Caching is essential</text>
+  <text x="920" y="373" fill="rgba(255,255,255,0.7)" font-size="10">Browser cache + CDN for</text>
+  <text x="920" y="388" fill="rgba(255,255,255,0.7)" font-size="10">popular prefixes reduces</text>
+  <text x="920" y="403" fill="rgba(255,255,255,0.7)" font-size="10">QPS by 80%+.</text>
+
+  <text x="920" y="435" fill="white" font-size="11" font-weight="600">Async trie updates</text>
+  <text x="920" y="453" fill="rgba(255,255,255,0.7)" font-size="10">Never update trie in the read</text>
+  <text x="920" y="468" fill="rgba(255,255,255,0.7)" font-size="10">path. Batch rebuild every 15min</text>
+  <text x="920" y="483" fill="rgba(255,255,255,0.7)" font-size="10">with blue-green swap.</text>
+</svg>
