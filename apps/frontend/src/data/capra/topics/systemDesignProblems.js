@@ -8091,6 +8091,7 @@ cart {
           id: 'checkout-flow',
           title: 'Checkout Flow (Saga Pattern)',
           description: 'End-to-end checkout from cart to order confirmation with compensation actions',
+          src: '/diagrams/amazon/checkout-flow.svg',
           steps: [
             { step: 1, label: 'Validate Cart', detail: 'Confirm items exist, recalculate prices against current catalog' },
             { step: 2, label: 'Reserve Inventory', detail: 'Atomic decrement via Redis DECR or optimistic lock in PostgreSQL' },
@@ -8106,6 +8107,7 @@ cart {
           id: 'search-product-flow',
           title: 'Search Product Flow',
           description: 'How a search query is processed from user input to ranked results',
+          src: '/diagrams/amazon/search-flow.svg',
           steps: [
             { step: 1, label: 'Parse Query', detail: 'Tokenize, detect entities: "iPhone 15 case red" -> brand + category + color' },
             { step: 2, label: 'Spell Check', detail: 'Edit distance + query log frequency: "samgsung" -> "samsung"' },
@@ -8916,6 +8918,7 @@ presence {
           id: 'edit-character-flow',
           title: 'Edit Character Flow (OT)',
           description: 'What happens when a user types a single character in a collaborative document',
+          src: '/diagrams/google-docs/edit-flow.svg',
           steps: [
             { step: 1, label: 'User Types', detail: 'Keystroke captured by editor, INSERT operation created with position and character' },
             { step: 2, label: 'Apply Locally', detail: 'Operation applied to local document immediately (optimistic UI)' },
@@ -8930,6 +8933,7 @@ presence {
           id: 'conflict-resolution-flow',
           title: 'Conflict Resolution Flow',
           description: 'How the server resolves concurrent edits from two users at overlapping positions',
+          src: '/diagrams/google-docs/conflict-resolution.svg',
           steps: [
             { step: 1, label: 'Concurrent Edits', detail: 'User A inserts at pos 5, User B deletes at pos 3-6 (both at rev 10)' },
             { step: 2, label: 'Server Receives A', detail: 'Process A first: insert at pos 5, assign rev 11' },
@@ -9774,6 +9778,7 @@ Step 2 — Merchant payout:
           id: 'payment-auth-flow',
           title: 'Payment Authorization Flow',
           description: 'End-to-end flow from customer checkout to card authorization',
+          src: '/diagrams/payment-system/payment-auth-flow.svg',
           steps: [
             { step: 1, label: 'Tokenize Card', detail: 'Stripe.js collects card data, sends directly to PCI vault, returns pm_xxx token' },
             { step: 2, label: 'Create PaymentIntent', detail: 'Merchant server calls API with token, amount, currency, idempotency key' },
@@ -9789,6 +9794,7 @@ Step 2 — Merchant payout:
           id: 'refund-flow',
           title: 'Refund Processing Flow',
           description: 'How a merchant-initiated refund flows through the system',
+          src: '/diagrams/payment-system/refund-flow.svg',
           steps: [
             { step: 1, label: 'Merchant Request', detail: 'POST /v1/refunds with paymentId, amount, reason, idempotency key' },
             { step: 2, label: 'Validate', detail: 'Check: amount <= captured amount, payment status = CAPTURED, not already fully refunded' },
@@ -10521,6 +10527,7 @@ PR(A) = (1-d)/N + d * SUM(PR(Ti)/C(Ti)) for all pages Ti linking to A
           id: 'web-crawl-pipeline',
           title: 'Web Crawl Pipeline',
           description: 'How a URL is discovered, fetched, parsed, and added to the search index',
+          src: '/diagrams/search-engine/crawl-index-flow.svg',
           steps: [
             { step: 1, label: 'URL Discovery', detail: 'New URLs extracted from crawled pages or submitted via sitemap/API' },
             { step: 2, label: 'Priority Queue', detail: 'URL Frontier assigns priority: PageRank x freshness x change_frequency' },
@@ -10535,6 +10542,7 @@ PR(A) = (1-d)/N + d * SUM(PR(Ti)/C(Ti)) for all pages Ti linking to A
           id: 'query-processing-flow',
           title: 'Query Processing Flow',
           description: 'End-to-end flow from user keystroke to search results page',
+          src: '/diagrams/search-engine/query-flow.svg',
           steps: [
             { step: 1, label: 'Receive Query', detail: 'User submits query, routed to nearest datacenter via GeoDNS' },
             { step: 2, label: 'Parse & Tokenize', detail: 'Split into terms, detect phrases, identify entities' },
@@ -13700,6 +13708,7 @@ When a channel receives messages faster than members can consume, the gateway ap
           id: 'send-message-flow',
           title: 'Send Message Flow',
           description: 'End-to-end flow from user typing a message to delivery across distributed gateways',
+          src: '/diagrams/chat-system/send-message-flow.svg',
           steps: [
             { step: 1, label: 'Client Send', detail: 'User sends message via WebSocket with client-generated nonce for deduplication' },
             { step: 2, label: 'Gateway Validation', detail: 'WebSocket Gateway validates auth token and checks channel membership permissions' },
@@ -13714,6 +13723,7 @@ When a channel receives messages faster than members can consume, the gateway ap
           id: 'presence-update-flow',
           title: 'Presence Update Flow',
           description: 'How user online/away/offline status is tracked and broadcast efficiently',
+          src: '/diagrams/chat-system/presence-flow.svg',
           steps: [
             { step: 1, label: 'Heartbeat', detail: 'Client sends heartbeat every 30 seconds over WebSocket connection' },
             { step: 2, label: 'Redis TTL Refresh', detail: 'Gateway refreshes Redis key presence:{user_id} with 90-second TTL on each heartbeat' },
@@ -14255,6 +14265,7 @@ Not all photos are equal. The "primary photo" for a business listing is selected
           id: 'nearby-search-flow',
           title: 'Nearby Business Search Flow',
           description: 'How a proximity search query is processed from user input to ranked results',
+          src: '/diagrams/yelp/nearby-search-flow.svg',
           steps: [
             { step: 1, label: 'User Query', detail: 'User enters search term, location detected via GPS or entered manually' },
             { step: 2, label: 'Geocode Location', detail: 'Convert address to lat/lng if needed, compute Geohash prefix for spatial lookup' },
@@ -14270,6 +14281,7 @@ Not all photos are equal. The "primary photo" for a business listing is selected
           id: 'write-review-flow',
           title: 'Write Review Flow',
           description: 'From review submission through fraud detection to rating update',
+          src: '/diagrams/yelp/write-review-flow.svg',
           steps: [
             { step: 1, label: 'Submit Review', detail: 'User submits rating (1-5), review text, and optional photos via POST /api/reviews' },
             { step: 2, label: 'Validation', detail: 'Check user has not already reviewed this business, validate text length and content' },
@@ -14926,6 +14938,7 @@ The first 24 hours of swipe data from other users seeing the new profile provide
           id: 'swipe-match-flow',
           title: 'Swipe & Match Detection Flow',
           description: 'How a right-swipe triggers real-time match detection using Redis',
+          src: '/diagrams/tinder/swipe-match-flow.svg',
           steps: [
             { step: 1, label: 'User Swipes Right', detail: 'Client sends POST /api/swipe with targetId and action=LIKE' },
             { step: 2, label: 'Record Like', detail: 'Server executes Redis SADD user:{swiperId}:likes {targetId}' },
@@ -14940,6 +14953,7 @@ The first 24 hours of swipe data from other users seeing the new profile provide
           id: 'recommendation-generation-flow',
           title: 'Recommendation Stack Generation',
           description: 'How personalized recommendation stacks are built for each user',
+          src: '/diagrams/tinder/recommendation-flow.svg',
           steps: [
             { step: 1, label: 'Trigger', detail: 'Triggered when user opens app and stack is empty, or location changes significantly' },
             { step: 2, label: 'S2 Cell Covering', detail: 'Compute S2 cells covering the user search radius (default 10km)' },
@@ -16386,6 +16400,7 @@ Updating 2.92B availability rows in Elasticsearch would be prohibitively expensi
           id: 'booking-flow',
           title: 'Complete Booking Flow',
           description: 'From guest clicking Reserve through payment to confirmation, with double-booking prevention',
+          src: '/diagrams/airbnb/booking-flow.svg',
           steps: [
             { step: 1, label: 'Reserve Click', detail: 'Guest clicks "Reserve" with listing, dates, and guest count. Idempotency key generated.' },
             { step: 2, label: 'Soft Hold', detail: 'Server creates HELD status on availability dates with 10-minute TTL to prevent concurrent bookings' },
@@ -16401,6 +16416,7 @@ Updating 2.92B availability rows in Elasticsearch would be prohibitively expensi
           id: 'search-flow',
           title: 'Search Pipeline Flow',
           description: 'Two-stage search combining Elasticsearch geo filtering with real-time availability checks',
+          src: '/diagrams/airbnb/search-flow.svg',
           steps: [
             { step: 1, label: 'User Query', detail: 'Guest enters location, dates, guest count, and optional filters (price, amenities)' },
             { step: 2, label: 'Geocode', detail: 'Convert location string to lat/lng coordinates via geocoding API' },
