@@ -2441,11 +2441,11 @@ Why Cassandra wins for messages:
         }
       ],
       evolutionSteps: [
-        { title: 'Single Server', description: 'One chat server, all WebSocket connections, single database. Handles ~10K users.', color: '#94a3b8' },
-        { title: 'Horizontal Scaling', description: 'Multiple chat servers behind load balancer. Redis for session mapping. Handles ~1M users.', color: '#2D8CFF' },
-        { title: 'Message Queue', description: 'Kafka for cross-server routing and guaranteed delivery. Offline message queue. Handles ~100M users.', color: '#f59e0b' },
-        { title: 'Global Distribution', description: 'Regional clusters, CDN for media, cross-region Kafka replication. Handles ~1B users.', color: '#10b981' },
-        { title: 'Optimization', description: 'Erlang gateways (2M conn/server), hot/cold storage, presence batching, sender keys for groups.', color: '#7c3aed' },
+        { step: 1, title: 'Single Server', description: 'One chat server handling all WebSocket connections with a single database.', color: '#94a3b8', icon: 'server', capacity: '~10K users', rps: '100', pros: ['Simple to build and deploy', 'Easy to debug and monitor', 'No network partitions'], cons: ['Single point of failure', 'Cannot scale beyond one machine', 'All connections on one server'] },
+        { step: 2, title: 'Horizontal Scaling', description: 'Multiple chat servers behind a load balancer with Redis for session mapping.', color: '#2D8CFF', icon: 'layers', capacity: '~1M users', rps: '10K', pros: ['Handles more connections', 'Server failures are survivable', 'Redis provides fast lookups'], cons: ['Cross-server routing needed', 'Session affinity complexity', 'Redis becomes bottleneck'] },
+        { step: 3, title: 'Message Queue', description: 'Kafka for cross-server routing and guaranteed delivery. Offline message queue for reliability.', color: '#f59e0b', icon: 'zap', capacity: '~100M users', rps: '500K', pros: ['Guaranteed message delivery', 'Decoupled services', 'Handles offline users'], cons: ['Added latency from queue', 'Kafka ops complexity', 'Message ordering challenges'] },
+        { step: 4, title: 'Global Distribution', description: 'Regional clusters with CDN for media and cross-region Kafka replication.', color: '#10b981', icon: 'globe', capacity: '~1B users', rps: '1.5M', pros: ['Low latency globally', 'Regional fault isolation', 'CDN offloads media'], cons: ['Cross-region consistency', 'Complex deployment', 'Higher infrastructure cost'] },
+        { step: 5, title: 'Optimization', description: 'Erlang gateways (2M conn/server), hot/cold storage, presence batching, sender keys.', color: '#7c3aed', icon: 'cpu', capacity: '2B+ users', rps: '1.5M+', pros: ['2M connections per server', 'Cost-efficient storage', 'Optimized encryption'], cons: ['Erlang expertise required', 'Complex migration path', 'Custom tooling needed'] },
       ],
       interviewFollowups: [
         {
