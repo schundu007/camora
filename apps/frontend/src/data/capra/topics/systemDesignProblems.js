@@ -27528,6 +27528,7 @@ Privacy: Option to view anonymously (hides viewer)
           id: 'connection-request-flow',
           title: 'Connection Request Flow',
           description: 'End-to-end flow from sending a connection request to network merge',
+          src: '/diagrams/linkedin/flow-connection-request.png',
           steps: [
             { step: 1, label: 'Send Request', detail: 'Member A clicks Connect on Member B profile with optional message' },
             { step: 2, label: 'Spam Check', detail: 'Rate limit check (100/week), message quality score' },
@@ -27543,6 +27544,7 @@ Privacy: Option to view anonymously (hides viewer)
           id: 'job-recommendation-flow',
           title: 'Job Recommendation Pipeline',
           description: 'How personalized job recommendations are generated daily',
+          src: '/diagrams/linkedin/flow-job-recommendation.png',
           steps: [
             { step: 1, label: 'Feature Extraction', detail: 'Extract member skills, experience, location, industry from profile' },
             { step: 2, label: 'Candidate Generation', detail: 'Retrieve 1000 candidate jobs matching basic criteria (location, seniority)' },

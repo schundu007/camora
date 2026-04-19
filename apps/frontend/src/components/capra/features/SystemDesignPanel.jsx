@@ -767,7 +767,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
                   Data Model
                   <span className="px-1 py-0.5 bg-brand-400/10 text-brand-400 border border-brand-400/30 rounded text-xs">{systemDesign.dataModel.length}</span>
                 </h4>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-1.5">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-1.5 items-start">
                   {systemDesign.dataModel.map((model, i) => (
                     <div key={i} className="bg-[var(--bg-elevated)] border border-[var(--border)] rounded overflow-hidden">
                       <div className="bg-[var(--bg-elevated)] px-2 py-1 border-b border-[var(--border)]">
