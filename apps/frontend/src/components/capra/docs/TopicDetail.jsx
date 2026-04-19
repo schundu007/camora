@@ -602,7 +602,7 @@ export default function TopicDetail({
       // Find the last section that has scrolled past the top threshold
       let active = ids[0];
       for (let i = 0; i < offsets.length; i++) {
-        if (offsets[i] < 120) active = ids[i];
+        if (offsets[i] < 200) active = ids[i];
       }
       setActiveTocId(active);
       // Scroll progress

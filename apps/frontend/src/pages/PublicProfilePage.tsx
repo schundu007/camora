@@ -141,7 +141,7 @@ export default function PublicProfilePage() {
     <div className="min-h-screen bg-[var(--bg-app)] flex flex-col">
       <SiteNav />
 
-      <main className="flex-1 w-full lg:max-w-[70%] mx-auto px-4 sm:px-6 pt-24 pb-16">
+      <main className="flex-1 w-full lg:max-w-[65%] mx-auto px-4 sm:px-6 pt-24 pb-16">
         {/* Profile header */}
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 mb-10">
           {/* Avatar */}

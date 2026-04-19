@@ -479,7 +479,7 @@ export default function Blind75Page() {
 
       {/* ═══════════════════════ Header Section ═══════════════════════ */}
       <div>
-        <div className="max-w-[85%] xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: 32 }}>
+        <div className="lg:max-w-[65%] mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: 32 }}>
           <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 16, padding: '24px 28px', marginBottom: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
               <div>
@@ -532,7 +532,7 @@ export default function Blind75Page() {
 
       {/* ═══════════════════════ Tab Navigation (sticky) ═══════════════════════ */}
       <div style={{ background: 'rgba(13,12,20,0.85)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderBottom: '1px solid var(--border)', position: 'sticky', top: 'var(--nav-h, 56px)', zIndex: 30 }}>
-        <div className="max-w-[85%] xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="lg:max-w-[65%] mx-auto px-4 sm:px-6 lg:px-8">
           <div style={{ display: 'flex', gap: '4px', overflowX: 'auto', scrollbarWidth: 'none', padding: '8px 0' }} className="b75-pills-scroll">
             {TABS.map((tab) => {
               const isActive = activeTab === tab.key;
@@ -569,7 +569,7 @@ export default function Blind75Page() {
         <>
           {/* Filter Bar */}
           <div style={{ background: 'rgba(13,12,20,0.7)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', borderBottom: '1px solid var(--border)' }}>
-            <div className="max-w-[85%] xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" style={{ padding: '12px 0' }}>
+            <div className="lg:max-w-[65%] mx-auto px-4 sm:px-6 lg:px-8" style={{ padding: '12px 0' }}>
               {/* Category pills */}
               <div className="b75-pills-scroll" style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '8px', scrollbarWidth: 'none' }}>
                 {['All', ...CATEGORIES.map((c) => c.name)].map((name) => {
@@ -633,7 +633,7 @@ export default function Blind75Page() {
           </div>
 
           {/* Problem List */}
-          <div className="max-w-[85%] xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: '32px', paddingBottom: '64px' }}>
+          <div className="lg:max-w-[65%] mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: '32px', paddingBottom: '64px' }}>
             {filteredCategories.map((cat) => {
               const progress = getCategoryProgress(CATEGORIES.find((c) => c.name === cat.name) || cat);
               return (
@@ -1139,7 +1139,7 @@ export default function Blind75Page() {
 
       {/* ───────────── TAB 2: Algorithm Guides ───────────── */}
       {activeTab === 'algorithms' && (
-        <div className="max-w-[85%] xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: '32px', paddingBottom: '64px' }}>
+        <div className="lg:max-w-[65%] mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: '32px', paddingBottom: '64px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {techInterviewTopics.map((topic: any) => {
               const isExpanded = expandedTopic === topic.id;
@@ -1390,7 +1390,7 @@ export default function Blind75Page() {
         };
 
         return (
-        <div className="max-w-[85%] xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: '32px', paddingBottom: '64px' }}>
+        <div className="lg:max-w-[65%] mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: '32px', paddingBottom: '64px' }}>
           {/* Sub-tabs */}
           <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', overflowX: 'auto', scrollbarWidth: 'none', flexWrap: 'wrap' }}>
             {BEHAVIORAL_SECTIONS.map((sec) => {
@@ -1635,7 +1635,7 @@ export default function Blind75Page() {
 
       {/* ───────────── TAB 4: Cheatsheet ───────────── */}
       {activeTab === 'cheatsheet' && (
-        <div className="max-w-[85%] xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: '32px', paddingBottom: '64px' }}>
+        <div className="lg:max-w-[65%] mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: '32px', paddingBottom: '64px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             {/* Before the Interview */}
             <div style={{

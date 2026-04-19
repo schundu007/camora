@@ -69,7 +69,7 @@ export default function ResumePage() {
       </div>
 
       {/* Optimizer component */}
-      <div className="w-full lg:max-w-[85%] mx-auto px-4 pb-16">
+      <div className="w-full lg:max-w-[65%] mx-auto px-4 pb-16">
         <ResumeOptimizer
           initialCompany={company}
           initialRole={role}

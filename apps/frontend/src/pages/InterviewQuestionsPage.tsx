@@ -71,7 +71,7 @@ export default function InterviewQuestionsPage() {
 
       {/* ── Hero ─────────────────────────────────────────── */}
       <section className="pt-24 pb-12 px-4" style={{ background: 'linear-gradient(135deg, rgba(45,140,255,0.06) 0%, rgba(45,140,255,0.03) 100%)' }}>
-        <div className="max-w-3xl mx-auto text-center">
+        <div className="lg:max-w-[65%] mx-auto text-center">
           <img src={company.logo} alt={`${company.name} logo`} className="w-16 h-16 rounded-xl object-contain mx-auto" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
           <h1 className="mt-4 text-3xl sm:text-4xl font-extrabold text-[var(--text-primary)] tracking-tight">
             {company.name} Interview Questions
@@ -93,7 +93,7 @@ export default function InterviewQuestionsPage() {
       </section>
 
       {/* ── Main content ─────────────────────────────────── */}
-      <main className="flex-1 max-w-3xl w-full mx-auto px-4 py-10 space-y-12">
+      <main className="flex-1 lg:max-w-[65%] w-full mx-auto px-4 py-10 space-y-12">
 
         {/* Description */}
         <section>
