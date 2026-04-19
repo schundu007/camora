@@ -499,74 +499,99 @@ export default function TopicDetail({
   const prevTopic = currentIndex > 0 ? filteredTopics[currentIndex - 1] : null;
   const nextTopic = currentIndex >= 0 && currentIndex < (filteredTopics?.length || 0) - 1 ? filteredTopics[currentIndex + 1] : null;
 
-  // Build dynamic TOC entries based on available data
-  const tocEntries = useMemo(() => {
+  // Build hierarchical TOC with parent sections and child items
+  const tocSections = useMemo(() => {
     if (!topicDetails) return [];
-    const entries = [];
-    // Common
-    if (topicDetails.introduction) entries.push({ id: 'overview', label: 'Overview' });
-    // DSA
-    if (isCodingStyle && topicDetails.keyPatterns) {
-      if (topicDetails.keyPatterns) entries.push({ id: 'key-patterns', label: 'Key Patterns' });
-      if (topicDetails.whenToUse) entries.push({ id: 'when-to-use', label: 'When to Use' });
-      if (topicDetails.visualizations) entries.push({ id: 'visual', label: 'Visual Explanation' });
-      if (topicDetails.approach) entries.push({ id: 'approach', label: 'Step-by-Step' });
-      if (topicDetails.timeComplexity || topicDetails.spaceComplexity) entries.push({ id: 'complexity', label: 'Complexity' });
-      if (topicDetails.codeExample || topicDetails.codeExamples) entries.push({ id: 'code-examples', label: 'Code Examples' });
-      if (topicDetails.commonMistakes) entries.push({ id: 'common-mistakes', label: 'Common Mistakes' });
-      if (topicDetails.commonProblems?.length) entries.push({ id: 'practice', label: 'Practice Problems' });
-      if (topicDetails.theoryQuestions?.length) entries.push({ id: 'theory', label: 'Theory Questions' });
-      if (topicDetails.tips || topicDetails.interviewTips) entries.push({ id: 'tips', label: 'Tips' });
-    }
-    // System Design
+    const s = [];
+    const trunc = (t, n = 32) => t && t.length > n ? t.slice(0, n) + '…' : t;
+
+    if (topicDetails.introduction) s.push({ id: 'overview', label: 'Overview' });
+
+    // ── System Design ──
     if (isSDStyle || activePage === 'low-level') {
-      if (topicDetails.concepts?.length) entries.push({ id: 'concepts', label: 'Key Concepts' });
-      if (topicDetails.functionalRequirements || topicDetails.requirements) entries.push({ id: 'requirements', label: 'Requirements' });
-      if (topicDetails.estimation) entries.push({ id: 'capacity', label: 'Capacity Planning' });
-      if (isSDStyle) entries.push({ id: 'architecture', label: 'Architecture Diagram' });
-      if (topicDetails.architectureLayers) entries.push({ id: 'arch-layers', label: 'Architecture Layers' });
-      if (topicDetails.apiDesign?.endpoints) entries.push({ id: 'api-design', label: 'API Design' });
-      if (topicDetails.dataModel) entries.push({ id: 'data-model', label: 'Data Model' });
-      if (topicDetails.basicImplementation || topicDetails.advancedImplementation) entries.push({ id: 'implementation', label: 'Implementation' });
-      if (topicDetails.createFlow || topicDetails.redirectFlow) entries.push({ id: 'flows', label: 'System Flows' });
-      if (topicDetails.deepDiveTopics) entries.push({ id: 'deep-dive', label: 'Deep Dives' });
-      if (topicDetails.tradeoffDecisions || topicDetails.tradeoffs) entries.push({ id: 'tradeoffs', label: 'Trade-offs' });
-      if (topicDetails.edgeCases) entries.push({ id: 'edge-cases', label: 'Edge Cases' });
-      if (topicDetails.keyQuestions?.length) entries.push({ id: 'key-questions', label: 'Key Questions' });
-      if (topicDetails.tips) entries.push({ id: 'tips', label: 'Interview Tips' });
+      if (topicDetails.concepts?.length) s.push({ id: 'concepts', label: 'Key Concepts', children: topicDetails.concepts.slice(0, 6).map(c => typeof c === 'string' ? trunc(c) : trunc(c.name)) });
+      if (topicDetails.functionalRequirements || topicDetails.requirements) {
+        const children = [];
+        if (topicDetails.functionalRequirements) children.push('Functional Requirements');
+        if (topicDetails.nonFunctionalRequirements) children.push('Non-Functional Requirements');
+        s.push({ id: 'requirements', label: 'Requirements', children });
+      }
+      if (topicDetails.estimation) s.push({ id: 'capacity', label: 'Capacity Planning' });
+      if (isSDStyle) s.push({ id: 'architecture', label: 'Architecture Diagram' });
+      if (topicDetails.architectureLayers) s.push({ id: 'arch-layers', label: 'Architecture Layers', children: topicDetails.architectureLayers.slice(0, 5).map(l => trunc(l.name)) });
+      if (topicDetails.layeredDesign) s.push({ id: 'layered-design', label: 'Layered Design', children: topicDetails.layeredDesign.slice(0, 5).map(l => trunc(l.name)) });
+      if (topicDetails.apiDesign?.endpoints) s.push({ id: 'api-design', label: 'API Design', children: topicDetails.apiDesign.endpoints.slice(0, 5).map(e => trunc(`${e.method} ${e.path}`, 28)) });
+      if (topicDetails.dataModel) s.push({ id: 'data-model', label: 'Data Model' });
+      if (topicDetails.basicImplementation || topicDetails.advancedImplementation) {
+        const children = [];
+        if (topicDetails.basicImplementation) children.push(trunc(topicDetails.basicImplementation.title || 'Basic Approach'));
+        if (topicDetails.advancedImplementation) children.push(trunc(topicDetails.advancedImplementation.title || 'Scalable Solution'));
+        if (topicDetails.algorithmApproaches) topicDetails.algorithmApproaches.slice(0, 3).forEach(a => children.push(trunc(a.name)));
+        s.push({ id: 'implementation', label: 'Implementation', children });
+      }
+      if (topicDetails.createFlow || topicDetails.redirectFlow) {
+        const children = [];
+        if (topicDetails.createFlow) children.push(trunc(topicDetails.createFlow.title));
+        if (topicDetails.redirectFlow) children.push(trunc(topicDetails.redirectFlow.title));
+        s.push({ id: 'flows', label: 'System Flows', children });
+      }
+      if (topicDetails.deepDiveTopics) s.push({ id: 'deep-dive', label: 'Potential Deep Dives', children: topicDetails.deepDiveTopics.slice(0, 6).map(d => trunc(d.topic, 30)) });
+      if (topicDetails.tradeoffDecisions || topicDetails.tradeoffs) {
+        const items = topicDetails.tradeoffDecisions || topicDetails.tradeoffs || [];
+        s.push({ id: 'tradeoffs', label: 'Trade-offs', children: items.slice(0, 5).map(t => trunc(t.choice || t.decision, 30)) });
+      }
+      if (topicDetails.edgeCases) s.push({ id: 'edge-cases', label: 'Edge Cases', children: topicDetails.edgeCases.slice(0, 5).map(e => trunc(e.scenario, 30)) });
+      if (topicDetails.discussionPoints) s.push({ id: 'discussion', label: 'Discussion Points', children: topicDetails.discussionPoints.slice(0, 5).map(d => trunc(d.topic, 30)) });
+      if (topicDetails.interviewFollowups) s.push({ id: 'followups', label: 'Follow-up Questions', children: topicDetails.interviewFollowups.slice(0, 5).map(f => trunc(f.question, 30)) });
+      if (topicDetails.keyQuestions?.length) s.push({ id: 'key-questions', label: 'Key Questions', children: topicDetails.keyQuestions.slice(0, 5).map(q => trunc(q.question, 30)) });
+      if (topicDetails.tips) s.push({ id: 'tips', label: 'Interview Tips' });
     }
-    // Behavioral
+
+    // ── DSA / Coding ──
+    if (isCodingStyle && topicDetails.keyPatterns) {
+      if (topicDetails.keyPatterns) s.push({ id: 'key-patterns', label: 'Key Patterns', children: topicDetails.keyPatterns.slice(0, 5).map(p => trunc(p)) });
+      if (topicDetails.whenToUse) s.push({ id: 'when-to-use', label: 'When to Use' });
+      if (topicDetails.visualizations) s.push({ id: 'visual', label: 'Visual Explanation' });
+      if (topicDetails.approach) s.push({ id: 'approach', label: 'Step-by-Step', children: topicDetails.approach.slice(0, 5).map((a, i) => trunc(`${i + 1}) ${a}`, 30)) });
+      if (topicDetails.timeComplexity || topicDetails.spaceComplexity) s.push({ id: 'complexity', label: 'Complexity' });
+      if (topicDetails.codeExample || topicDetails.codeExamples) s.push({ id: 'code-examples', label: 'Code Examples' });
+      if (topicDetails.commonMistakes) s.push({ id: 'common-mistakes', label: 'Common Mistakes', children: topicDetails.commonMistakes.slice(0, 4).map(m => trunc(m, 30)) });
+      if (topicDetails.commonProblems?.length) s.push({ id: 'practice', label: 'Practice Problems', children: topicDetails.commonProblems.slice(0, 5).map(p => trunc(typeof p === 'string' ? p : p.name, 30)) });
+      if (topicDetails.theoryQuestions?.length) s.push({ id: 'theory', label: 'Theory Questions', children: topicDetails.theoryQuestions.slice(0, 4).map(q => trunc(typeof q === 'string' ? q : q.question, 30)) });
+      if (topicDetails.tips || topicDetails.interviewTips) s.push({ id: 'tips', label: 'Tips' });
+    }
+
+    // ── Behavioral ──
     if (activePage === 'behavioral') {
-      if (topicDetails.principles?.length) entries.push({ id: 'principles', label: 'Key Principles' });
-      if (topicDetails.starExample) entries.push({ id: 'star-example', label: 'STAR Example' });
-      if (topicDetails.exampleResponse) entries.push({ id: 'example-response', label: 'Example Response' });
-      if (topicDetails.keyQuestions?.length) entries.push({ id: 'key-questions', label: 'Questions & Answers' });
-      if (topicDetails.sampleQuestions?.length) entries.push({ id: 'sample-questions', label: 'Practice Questions' });
-      if (topicDetails.tips) entries.push({ id: 'tips', label: 'Tips' });
+      if (topicDetails.principles?.length) s.push({ id: 'principles', label: 'Key Principles', children: topicDetails.principles.slice(0, 5).map(p => trunc(typeof p === 'string' ? p : p.name || p.title, 30)) });
+      if (topicDetails.starExample) s.push({ id: 'star-example', label: 'STAR Example', children: ['Situation', 'Task', 'Action', 'Result'] });
+      if (topicDetails.exampleResponse) s.push({ id: 'example-response', label: 'Example Response' });
+      if (topicDetails.keyQuestions?.length) s.push({ id: 'key-questions', label: 'Questions & Answers', children: topicDetails.keyQuestions.slice(0, 6).map(q => trunc(q.question, 30)) });
+      if (topicDetails.sampleQuestions?.length) s.push({ id: 'sample-questions', label: 'Practice Questions', children: topicDetails.sampleQuestions.slice(0, 5).map(q => trunc(q, 30)) });
+      if (topicDetails.tips) s.push({ id: 'tips', label: 'Tips' });
     }
-    // Eng Blogs
+
+    // ── Other types ──
     if (activePage === 'eng-blogs') {
-      if (topicDetails.articles?.length) entries.push({ id: 'articles', label: 'Articles' });
-      if (topicDetails.keyQuestions?.length) entries.push({ id: 'key-questions', label: 'Key Takeaways' });
+      if (topicDetails.articles?.length) s.push({ id: 'articles', label: 'Articles', children: topicDetails.articles.slice(0, 5).map(a => trunc(a.title, 30)) });
+      if (topicDetails.keyQuestions?.length) s.push({ id: 'key-questions', label: 'Key Takeaways' });
     }
-    // Roadmaps
     if (activePage === 'roadmaps') {
-      if (topicDetails.phases?.length) entries.push({ id: 'roadmap-phases', label: 'Roadmap' });
-      if (topicDetails.keyQuestions?.length) entries.push({ id: 'key-questions', label: 'FAQ' });
+      if (topicDetails.phases?.length) s.push({ id: 'roadmap-phases', label: 'Roadmap', children: topicDetails.phases.slice(0, 5).map(p => trunc(p.title || p.name, 30)) });
+      if (topicDetails.keyQuestions?.length) s.push({ id: 'key-questions', label: 'FAQ' });
     }
-    // Projects
     if (activePage === 'projects') {
-      if (topicDetails.learningObjectives?.length) entries.push({ id: 'learning-objectives', label: 'What You\'ll Learn' });
-      if (topicDetails.interviewRelevance?.length) entries.push({ id: 'interview-relevance', label: 'Interview Relevance' });
-      if (topicDetails.keyQuestions?.length) entries.push({ id: 'key-questions', label: 'Key Questions' });
+      if (topicDetails.learningObjectives?.length) s.push({ id: 'learning-objectives', label: 'What You\'ll Learn' });
+      if (topicDetails.interviewRelevance?.length) s.push({ id: 'interview-relevance', label: 'Interview Relevance' });
+      if (topicDetails.keyQuestions?.length) s.push({ id: 'key-questions', label: 'Key Questions' });
     }
-    return entries;
+    return s;
   }, [topicDetails, activePage, isSDStyle, isCodingStyle]);
 
   // Track active TOC section on scroll
   const [activeTocId, setActiveTocId] = useState('');
   useEffect(() => {
-    if (!tocEntries.length) return;
+    if (!tocSections.length) return;
     const observer = new IntersectionObserver(
       (entries) => {
         const visible = entries.filter(e => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
@@ -574,35 +599,48 @@ export default function TopicDetail({
       },
       { rootMargin: '-80px 0px -60% 0px', threshold: 0.1 }
     );
-    tocEntries.forEach(({ id }) => {
+    tocSections.forEach(({ id }) => {
       const el = document.getElementById(id);
       if (el) observer.observe(el);
     });
     return () => observer.disconnect();
-  }, [tocEntries, selectedTopic]);
+  }, [tocSections, selectedTopic]);
 
   return (
     <div className="landing-root animate-fade-in flex gap-6">
-      {/* Left: Table of Contents sidebar */}
-      {tocEntries.length > 2 && (
-        <aside className="hidden xl:block flex-shrink-0 sticky self-start" style={{ top: '72px', width: '180px' }}>
-          <nav className="space-y-0.5">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] px-2 mb-2 block landing-mono">On this page</span>
-            {tocEntries.map(({ id, label }) => (
-              <a
-                key={id}
-                href={`#${id}`}
-                onClick={(e) => { e.preventDefault(); document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}
-                className={`block px-2 py-1.5 text-xs rounded-md transition-all landing-body leading-snug ${
-                  activeTocId === id
-                    ? 'text-[var(--accent)] font-semibold bg-[var(--accent)]/8'
-                    : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)]'
-                }`}
-                style={activeTocId === id ? { borderLeft: '2px solid var(--accent)', paddingLeft: '6px' } : { borderLeft: '2px solid transparent', paddingLeft: '6px' }}
-              >
-                {label}
-              </a>
-            ))}
+      {/* Left: Hierarchical Table of Contents sidebar */}
+      {tocSections.length > 2 && (
+        <aside className="hidden xl:block flex-shrink-0 sticky self-start" style={{ top: '72px', width: '210px' }}>
+          <nav>
+            <h4 className="text-sm font-bold text-[var(--text-primary)] mb-3 landing-display">On This Page</h4>
+            <div className="space-y-1">
+              {tocSections.map(({ id, label, children }) => (
+                <div key={id}>
+                  <a
+                    href={`#${id}`}
+                    onClick={(e) => { e.preventDefault(); document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}
+                    className={`block py-1 text-[13px] font-semibold transition-colors landing-body ${
+                      activeTocId === id ? 'text-[var(--accent)]' : 'text-[var(--text-primary)] hover:text-[var(--accent)]'
+                    }`}
+                  >
+                    {label}
+                  </a>
+                  {children && children.length > 0 && (
+                    <div className="ml-3 border-l border-[var(--border)] pl-2 space-y-0">
+                      {children.map((child, ci) => (
+                        <span
+                          key={ci}
+                          className="block py-0.5 text-[11px] text-[var(--text-muted)] landing-body leading-snug truncate cursor-default"
+                          title={child}
+                        >
+                          {child}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           </nav>
         </aside>
       )}
