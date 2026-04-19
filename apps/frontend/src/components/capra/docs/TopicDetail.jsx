@@ -1831,37 +1831,17 @@ export default function TopicDetail({
                             ))}
                           </div>
                         </div>
-                        {/* Right: UI mockup — compact, next to stats */}
-                        <div className="w-[180px] flex-shrink-0">
-                          <div className="rounded-2xl border border-[var(--border)] overflow-hidden shadow-sm bg-[#f0f2f5]" style={{ maxWidth: '180px' }}>
-                            {/* WhatsApp header */}
-                            <div className="h-9 flex items-center px-3 gap-2" style={{ background: '#075e54' }}>
-                              <div className="w-5 h-5 rounded-full bg-white/20" />
-                              <div className="flex-1">
-                                <div className="h-2.5 w-20 rounded bg-white/70" />
-                                <div className="h-1.5 w-12 rounded bg-white/40 mt-1" />
-                              </div>
-                              <div className="flex gap-2">
-                                <div className="w-3 h-3 rounded-full bg-white/30" />
-                                <div className="w-3 h-3 rounded-full bg-white/30" />
-                              </div>
-                            </div>
-                            {/* Chat messages */}
-                            <div className="p-2 space-y-1.5" style={{ background: '#e5ddd5', minHeight: '120px' }}>
-                              <div className="flex justify-end"><div className="px-2 py-1 rounded-lg bg-[#dcf8c6] text-[8px] text-gray-700 max-w-[70%] landing-body">Hey, are you coming tonight? <span className="text-[6px] text-gray-400 ml-1">9:41 <span style={{ color: '#4fc3f7' }}>✓✓</span></span></div></div>
-                              <div className="flex justify-start"><div className="px-2 py-1 rounded-lg bg-white text-[8px] text-gray-700 max-w-[70%] landing-body">Yes! Running a bit late though <span className="text-[6px] text-gray-400 ml-1">9:42</span></div></div>
-                              <div className="flex justify-end"><div className="px-2 py-1 rounded-lg bg-[#dcf8c6] text-[8px] text-gray-700 max-w-[70%] landing-body">No worries, see you there 👋 <span className="text-[6px] text-gray-400 ml-1">9:42 <span style={{ color: '#4fc3f7' }}>✓✓</span></span></div></div>
-                              <div className="flex justify-start"><div className="px-2 py-1 rounded-lg bg-white text-[8px] text-gray-700 max-w-[70%] landing-body">Perfect! 🎉 <span className="text-[6px] text-gray-400 ml-1">9:43</span></div></div>
-                            </div>
-                            {/* Input bar */}
-                            <div className="h-7 flex items-center px-2 gap-1 bg-[#f0f2f5]">
-                              <div className="flex-1 h-4 rounded-full bg-white border border-gray-200" />
-                              <div className="w-5 h-5 rounded-full flex items-center justify-center" style={{ background: '#075e54' }}>
-                                <div className="w-0 h-0 ml-0.5" style={{ borderLeft: '5px solid white', borderTop: '3px solid transparent', borderBottom: '3px solid transparent' }} />
-                              </div>
-                            </div>
+                        {/* Right: Product screenshot (if available in productMeta) */}
+                        {topicDetails.productMeta.screenshotUrl && (
+                          <div className="w-[180px] flex-shrink-0">
+                            <img
+                              src={topicDetails.productMeta.screenshotUrl}
+                              alt={topicDetails.productMeta.name}
+                              className="rounded-2xl border border-[var(--border)] shadow-sm"
+                              style={{ maxWidth: '180px', maxHeight: '220px', objectFit: 'contain' }}
+                            />
                           </div>
-                        </div>
+                        )}
                       </div>
                       {/* Scope: In Scope / Out of Scope */}
                       {topicDetails.productMeta.scope && (
