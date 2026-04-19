@@ -1659,38 +1659,56 @@ export default function TopicDetail({
 
               {/* API Design + Data Model — side by side */}
               {(topicDetails.apiDesign?.endpoints || topicDetails.dataModel) && (
-                <div className={`grid gap-3 scroll-mt-24 ${topicDetails.apiDesign?.endpoints && topicDetails.dataModel ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
-                  {/* API Design — Stripe-style endpoint cards */}
+                <div className="space-y-3 scroll-mt-24">
+                  {/* API Design — educational endpoint cards with params + response */}
                   {topicDetails.apiDesign && topicDetails.apiDesign.endpoints && (
                     <div id="api-design" className="rounded-2xl overflow-hidden scroll-mt-24 border border-[var(--border)] bg-white">
-                      <div className="bg-[var(--accent)] border-b border-[var(--accent)] px-4 py-2 flex items-center gap-2">
+                      <div className="bg-[var(--accent)] px-4 py-2 flex items-center gap-2">
                         <Icon name="code" size={14} className="text-white" />
                         <h3 className="text-sm font-bold text-white landing-display">API Design</h3>
                         <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white/20 text-white landing-mono">{topicDetails.apiDesign.endpoints.length} endpoints</span>
                       </div>
+                      {topicDetails.apiDesign.description && (
+                        <div className="px-4 py-2 text-xs text-[var(--text-secondary)] leading-relaxed border-b border-[var(--border)]" style={{ fontFamily: 'var(--font-sans)' }}>
+                          {topicDetails.apiDesign.description}
+                        </div>
+                      )}
                       <div className="p-3">
-                        <div className="grid grid-cols-1 gap-2">
+                        <div className="grid grid-cols-1 gap-2.5">
                           {topicDetails.apiDesign.endpoints.map((endpoint, i) => (
-                            <div key={i} className="rounded-xl p-3.5 border border-[var(--border)] hover:shadow-md hover:border-[var(--border-hover,var(--border))] hover:-translate-y-0.5 transition-all">
-                              <div className="flex items-center gap-2.5 mb-2">
-                                <span className={`text-[11px] landing-mono px-2.5 py-1 rounded-full font-bold uppercase tracking-wide ${
-                                  endpoint.method === 'GET' ? 'bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/20' :
-                                  endpoint.method === 'POST' || endpoint.method === 'INSERT' ? 'bg-[var(--bg-elevated)] text-[var(--text-secondary)] border border-[var(--border)]' :
-                                  endpoint.method === 'PUT' || endpoint.method === 'UPDATE' ? 'bg-[var(--bg-elevated)] text-[var(--text-secondary)] border border-[var(--border)]' :
-                                  'bg-red-500/10 text-red-400 border border-red-500/20'
+                            <div key={i} className="rounded-xl border border-[var(--border)] overflow-hidden">
+                              {/* Method + Path header */}
+                              <div className="flex items-center gap-2.5 px-3.5 py-2.5" style={{ background: 'var(--bg-surface)' }}>
+                                <span className={`text-[10px] landing-mono px-2 py-0.5 rounded font-bold uppercase ${
+                                  endpoint.method === 'GET' ? 'bg-[var(--accent)]/10 text-[var(--accent)]' :
+                                  endpoint.method === 'POST' || endpoint.method === 'INSERT' ? 'bg-amber-50 text-amber-700' :
+                                  endpoint.method === 'PUT' || endpoint.method === 'UPDATE' || endpoint.method === 'PATCH' ? 'bg-purple-50 text-purple-700' :
+                                  'bg-red-50 text-red-600'
                                 }`}>{endpoint.method}</span>
-                                <code className="text-[var(--text-primary)] landing-mono text-sm font-medium">{endpoint.path}</code>
+                                <code className="text-[var(--text-primary)] landing-mono text-[13px] font-semibold">{endpoint.path}</code>
                               </div>
-                              {endpoint.description && (
-                                <p className="text-xs text-[var(--text-secondary)] mb-2 leading-relaxed" style={{ fontFamily: "var(--font-sans)" }}>{endpoint.description}</p>
-                              )}
-                              <div className="hidden">
+                              {/* Body — description, params, response */}
+                              <div className="px-3.5 py-2.5 space-y-2">
+                                {endpoint.description && (
+                                  <p className="text-xs text-[var(--text-secondary)] leading-relaxed" style={{ fontFamily: 'var(--font-sans)' }}>{endpoint.description}</p>
+                                )}
+                                {endpoint.params && (
+                                  <div>
+                                    <span className="text-[9px] font-bold uppercase tracking-wider text-[var(--text-muted)] landing-mono">Parameters</span>
+                                    <div className="mt-1 rounded bg-[var(--bg-elevated)] border border-[var(--border)] px-2.5 py-1.5">
+                                      <code className="text-[11px] landing-mono text-[var(--text-secondary)] whitespace-pre-wrap leading-5">{endpoint.params}</code>
+                                    </div>
+                                  </div>
+                                )}
+                                {endpoint.response && (
+                                  <div>
+                                    <span className="text-[9px] font-bold uppercase tracking-wider text-[var(--text-muted)] landing-mono">Response</span>
+                                    <div className="mt-1 rounded bg-[var(--bg-elevated)] border border-[var(--border)] px-2.5 py-1.5">
+                                      <code className="text-[11px] landing-mono text-[var(--text-secondary)] whitespace-pre-wrap leading-5">{endpoint.response}</code>
+                                    </div>
+                                  </div>
+                                )}
                               </div>
-                              {endpoint.response && (
-                                <div className="rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] px-3 py-2 overflow-x-auto">
-                                  <code className="text-xs landing-mono text-[var(--text-secondary)] whitespace-pre-wrap leading-5">{endpoint.response}</code>
-                                </div>
-                              )}
                             </div>
                           ))}
                         </div>
@@ -1698,9 +1716,20 @@ export default function TopicDetail({
                     </div>
                   )}
 
-                  {/* Data Model — structured schema presentation */}
+                  {/* Data Model — structured schema with description */}
                   {topicDetails.dataModel && (
-                    <DataModelSection schema={topicDetails.dataModel.schema} />
+                    <div className="rounded-2xl overflow-hidden border border-[var(--border)] bg-white">
+                      <div className="bg-[var(--accent)] px-4 py-2 flex items-center gap-2">
+                        <Icon name="database" size={14} className="text-white" />
+                        <h3 className="text-sm font-bold text-white landing-display">Data Model</h3>
+                      </div>
+                      {topicDetails.dataModel.description && (
+                        <div className="px-4 py-2 text-xs text-[var(--text-secondary)] leading-relaxed border-b border-[var(--border)]" style={{ fontFamily: 'var(--font-sans)' }}>
+                          {topicDetails.dataModel.description}
+                        </div>
+                      )}
+                      <DataModelSection schema={topicDetails.dataModel.schema} />
+                    </div>
                   )}
                 </div>
               )}
