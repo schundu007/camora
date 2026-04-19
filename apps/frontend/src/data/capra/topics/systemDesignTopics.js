@@ -9220,6 +9220,254 @@ Examples: HBase, CockroachDB, Google Spanner, MongoDB (with range shard key)
 - Enables: "Get all messages for user_123 between Jan and Mar" -- single-partition range scan
 
 **This hybrid is the best of both worlds for many use cases and is the recommended pattern in interviews when both point lookups and range queries are needed.**`
+        },
+        {
+          question: 'What is Jump Consistent Hash and when would you choose it over a ring-based approach?',
+          answer: `**Jump Consistent Hash** was published by Google engineers John Lamping and Eric Veach in 2014. It is a dramatically simpler alternative to ring-based consistent hashing that achieves perfect uniformity with zero memory overhead.
+
+**The algorithm in pseudocode**:
+\`\`\`
+int jumpHash(uint64 key, int numBuckets) {
+  int64 b = -1, j = 0;
+  while (j < numBuckets) {
+    b = j;
+    key = key * 2862933555777941757ULL + 1;
+    j = (b + 1) * (double(1LL << 31) / double((key >> 33) + 1));
+  }
+  return b;
+}
+\`\`\`
+
+**Properties**:
+- **O(ln n) time**: The loop runs ln(n) iterations on average for n buckets
+- **Zero memory**: No ring structure, no virtual node map -- just a function
+- **Perfect uniformity**: Provably optimal load balance (each bucket gets exactly 1/n of keys)
+- **Minimal movement**: When going from n to n+1 buckets, exactly 1/(n+1) of keys move
+
+**Ring-based vs Jump Hash comparison**:
+| Aspect              | Ring-Based          | Jump Hash            |
+|---------------------|---------------------|----------------------|
+| Memory              | O(N * vnodes)       | Zero                 |
+| Uniformity          | Depends on vnodes   | Perfect              |
+| Lookup time         | O(log(N * vnodes))  | O(ln N) average      |
+| Node removal        | Supported           | NOT supported        |
+| Node addition       | Anywhere            | Sequential only      |
+| Weighted nodes      | Via vnode count     | Not natively         |
+
+**When to use Jump Hash**:
+- **Sharded batch processing**: Buckets are numbered 0 to N-1, you only ever add buckets
+- **Stateless request routing**: Where you never remove a specific server (just scale up/down from the end)
+- **Embedded or resource-constrained environments**: Zero memory overhead is critical
+- **Deterministic partitioning**: Both producer and consumer can independently compute the same assignment
+
+**When NOT to use Jump Hash**:
+- Servers fail and must be removed individually (not just the last one)
+- You need weighted distribution for heterogeneous hardware
+- Cluster membership is dynamic with arbitrary joins and leaves
+
+**Production usage**: Google uses Jump Hash internally for sharding in systems where servers are numbered sequentially. The Go standard library ecosystem includes jump hash implementations (e.g., github.com/lithammer/go-jump-consistent-hash). It is also used in database partitioning layers where partitions are append-only.`
+        },
+        {
+          question: 'How does Rendezvous Hashing (Highest Random Weight) work, and when is it preferable?',
+          answer: `**Rendezvous Hashing** (also called Highest Random Weight or HRW hashing) was proposed by Thaler and Ravishankar in 1996. It is an alternative to ring-based consistent hashing that is simpler to understand and implement, with no ring data structure required.
+
+**Algorithm**:
+\`\`\`
+function getServer(key, servers):
+  bestServer = null
+  bestWeight = -infinity
+  for server in servers:
+    weight = hash(key + server.id)   // combine key and server into a hash
+    if weight > bestWeight:
+      bestWeight = weight
+      bestServer = server
+  return bestServer
+\`\`\`
+
+Each key picks the server that produces the highest hash value when combined with the key. When a server is removed, only keys that were assigned to that specific server are redistributed -- and they go to their next-highest-weight server. This gives the same minimal disruption property as consistent hashing.
+
+**Properties**:
+- **O(N) lookup**: Must hash against every server to find the maximum (vs O(log N) for ring)
+- **Zero memory**: No data structure beyond the server list
+- **Perfect uniformity**: With a good hash function, load is perfectly balanced
+- **Minimal disruption**: Removing a server moves only 1/N of keys
+- **Simple implementation**: 10 lines of code vs 100+ for a ring with vnodes
+
+**When O(N) lookup is acceptable**:
+- Small to medium clusters (< 100 servers): O(100) hash computations is < 1 microsecond
+- The hash computation is very fast (MurmurHash, xxHash -- nanoseconds per call)
+- Lookup happens infrequently relative to the work done per request
+
+**Real-world adoption**:
+- **GitHub Load Balancer**: Uses rendezvous hashing for routing Git operations to storage backends
+- **Apache Kafka**: Consumer partition assignment strategies include HRW-based approaches
+- **Apache Ignite**: Distributed database uses rendezvous hashing for data placement
+- **Twitter EventBus**: Pub/sub platform uses HRW for partition assignment
+- **Microsoft Azure**: Some internal services use rendezvous hashing for request routing
+
+**Rendezvous vs Ring-based vs Jump Hash**:
+| Aspect            | Ring + Vnodes   | Jump Hash    | Rendezvous (HRW) |
+|-------------------|-----------------|--------------|-------------------|
+| Lookup            | O(log N)        | O(ln N)      | O(N)              |
+| Memory            | O(N * vnodes)   | O(1)         | O(N) server list  |
+| Arbitrary removal | Yes             | No           | Yes               |
+| Uniformity        | Good with vnodes| Perfect      | Perfect           |
+| Implementation    | Complex         | Simple       | Simplest          |
+| Best for          | Large clusters  | Append-only  | Small-medium      |
+
+**Interview guidance**: Mention rendezvous hashing as the simplest correct alternative to consistent hashing. If the cluster is small (< 50 servers), the O(N) lookup cost is negligible and the simplicity advantage is significant. For large clusters (1000+ servers), ring-based is preferable because O(N) per lookup becomes measurable.`
+        },
+        {
+          question: 'How does consistent hashing handle hot keys and data skew in production, beyond bounded loads?',
+          answer: `**Hot key problem**: Even with perfect distribution of keys across nodes, some keys receive disproportionately more traffic. A single viral tweet, a popular product page, or a celebrity profile can send 1000x normal traffic to one node. Virtual nodes do NOT solve this because the hot KEY is a single point -- it always maps to one node.
+
+**Strategy 1: Key-level replication (read replicas for hot keys)**
+\`\`\`
+Detect hot keys via monitoring (request rate per key)
+When a key exceeds threshold (e.g., 10x average):
+  Replicate that specific key to K additional nodes (e.g., 5 replicas)
+  Route reads randomly among all replicas of that key
+  Route writes to primary, propagate to replicas asynchronously
+
+Twitter: Hot tweet metadata cached on ~20 cache servers instead of 1
+Instagram: Hot user profiles replicated across cache tier
+\`\`\`
+
+**Strategy 2: Key salting / splitting**
+\`\`\`
+Original key: "trending_hashtag_123"
+Split into: "trending_hashtag_123_0", "trending_hashtag_123_1", ... "_9"
+Each salted key maps to a DIFFERENT node on the hash ring
+
+Write: Pick a random salt (0-9), write to that salted key
+Read: Query ALL 10 salted keys, aggregate results
+  OR: For counters, sum across all 10 shards
+
+Effect: 1 hot key becomes 10 warm keys distributed across 10 nodes
+Downside: Reads become scatter-gather (10 queries instead of 1)
+\`\`\`
+
+**Strategy 3: Application-level caching layer**
+\`\`\`
+Client -> Local Cache (in-process, 1-5 seconds TTL)
+       -> Distributed Cache (Redis/Memcached on hash ring)
+       -> Database
+
+For hot keys, the local cache absorbs 90%+ of reads
+Only 1 in ~100 requests reaches the hash ring
+TVie reduces effective hot key traffic by 100x
+
+Netflix: EVCache local cache absorbs majority of hot key reads
+Stripe: Application-level LRU cache for frequently accessed API keys
+\`\`\`
+
+**Strategy 4: Bounded loads (Google, 2016)**
+\`\`\`
+Set per-node load ceiling: max_load = average * (1 + epsilon)
+If target node is over ceiling, walk clockwise to next under-ceiling node
+epsilon = 0.25 is a common production setting
+
+Guarantees no node exceeds 1.25x average load
+Provably moves only slightly more keys than standard consistent hashing
+\`\`\`
+
+**Strategy 5: Dynamic rebalancing with monitoring**
+\`\`\`
+Monitor partition sizes and request rates in real time
+When skew exceeds threshold:
+  Option A: Split the hot partition into sub-partitions
+  Option B: Move some key ranges from hot node to cold nodes
+  Option C: Increase vnode count for overloaded physical nodes
+
+DynamoDB: Automatically splits partitions that exceed throughput or size limits
+Cassandra: nodetool can manually rebalance token ranges
+\`\`\`
+
+**Detection is the prerequisite to all mitigation strategies**:
+- Track request rate per partition/node in real time (Prometheus, Datadog)
+- Alert when any node exceeds 2x the average request rate
+- Maintain a "hot key registry" that triggers replication or salting automatically
+- Profile key access patterns before choosing a partition key
+
+**Interview insight**: When discussing consistent hashing, always proactively mention the hot key problem and at least two mitigation strategies. This shows you understand that uniform key DISTRIBUTION does not guarantee uniform key ACCESS.`
+        },
+        {
+          question: 'How do you implement consistent hashing in a system design interview? Walk through the data structures and operations.',
+          answer: `**Core data structure**: A sorted map (balanced BST or skip list) mapping hash positions to physical nodes.
+
+**Implementation walkthrough**:
+\`\`\`
+class ConsistentHashRing {
+  ring: SortedMap<uint64, NodeId>  // hash position -> physical node
+  nodeVnodes: Map<NodeId, List<uint64>>  // node -> its vnode positions
+  hashFn: (key) -> uint64  // e.g., MurmurHash3
+
+  addNode(nodeId, vnodeCount = 150):
+    positions = []
+    for i in 0..vnodeCount:
+      pos = hashFn(nodeId + ":" + i)
+      ring.insert(pos, nodeId)
+      positions.append(pos)
+    nodeVnodes[nodeId] = positions
+
+  removeNode(nodeId):
+    for pos in nodeVnodes[nodeId]:
+      ring.delete(pos)
+    delete nodeVnodes[nodeId]
+
+  getNode(key):
+    hash = hashFn(key)
+    // Find first position >= hash (clockwise walk)
+    entry = ring.ceilingEntry(hash)
+    if entry is null:
+      entry = ring.firstEntry()  // wrap around to 0
+    return entry.value  // physical node ID
+
+  getReplicaNodes(key, replicaCount):
+    hash = hashFn(key)
+    nodes = Set()
+    iterator = ring.tailMap(hash).iterator()
+    while nodes.size() < replicaCount:
+      if !iterator.hasNext():
+        iterator = ring.entrySet().iterator()  // wrap around
+      entry = iterator.next()
+      nodes.add(entry.value)  // Set ensures distinct physical nodes
+    return nodes
+}
+\`\`\`
+
+**Key operations and their complexity**:
+| Operation    | Time Complexity   | Description                          |
+|-------------|-------------------|--------------------------------------|
+| getNode     | O(log V)          | V = total vnodes, binary search      |
+| addNode     | O(K * log V)      | K = vnodes per node, K insertions    |
+| removeNode  | O(K * log V)      | K deletions from sorted map          |
+| getReplicas | O(R * log V)      | R = replica count, R lookups         |
+
+**Memory usage**: Each vnode entry is ~20 bytes (8-byte hash + 12-byte node reference). For 100 physical nodes x 150 vnodes = 15,000 entries = ~300 KB. This easily fits in memory on every node.
+
+**Hash function choice**:
+- **MurmurHash3 (128-bit)**: Fastest, good distribution, used by Cassandra
+- **xxHash**: Even faster, excellent for hash ring operations
+- **MD5/SHA-256**: Cryptographic strength unnecessary, slower -- avoid for hash ring
+- **CRC32**: Too few bits (32), poor distribution for large rings
+
+**What to draw on the whiteboard**:
+\`\`\`
+Step 1: Draw the ring (circle with 0 at top, 2^32 at top)
+Step 2: Place 3 servers as points on the ring
+Step 3: Show how a key hashes to a position and walks clockwise
+Step 4: Add virtual nodes (show each server has multiple points)
+Step 5: Show replication (key stored on next N distinct physical nodes)
+Step 6: Demonstrate adding a node (show which keys migrate)
+\`\`\`
+
+**Common interview mistakes to avoid**:
+1. Forgetting virtual nodes -- always mention them unprompted
+2. Not distinguishing physical nodes from virtual nodes during replication
+3. Ignoring rack/AZ-aware placement for replicas
+4. Not mentioning the gossip protocol for ring state propagation
+5. Confusing consistent hashing with modular hashing when explaining the ring`
         }
       ],
 
@@ -9436,7 +9684,7 @@ Examples: HBase, CockroachDB, Google Spanner, MongoDB (with range shard key)
       title: 'Bloom Filters',
       icon: 'filter',
       color: '#8b5cf6',
-      questions: 7,
+      questions: 11,
       description: 'Space-efficient probabilistic data structure for membership testing.',
       concepts: ['Bit Array', 'Multiple Hash Functions', 'False Positive Rate', 'No False Negatives', 'Counting Bloom Filters', 'Scalable Bloom Filters', 'Cuckoo Filters', 'Applications in Databases'],
       tips: [
@@ -9822,6 +10070,404 @@ Memory usage per SSTable:
 5. Old Bloom filters discarded with old SSTables
 
 **RocksDB Ribbon Filters**: RocksDB (used by CockroachDB, MyRocks) introduced Ribbon filters as a more space-efficient alternative to Bloom filters, achieving ~30% space savings at the same FP rate. This is a newer development worth mentioning in interviews.`
+        },
+        {
+          question: 'What are Scalable Bloom Filters, and how do they handle unknown or growing datasets?',
+          answer: `**The problem**: Standard Bloom filters require knowing the expected element count (n) upfront. If you underestimate, the false positive rate degrades exponentially. If you overestimate, you waste memory.
+
+**Scalable Bloom Filter** (SBF, Almeida et al., 2007):
+A chain of Bloom filters that grows dynamically as elements are added, while maintaining an overall target false positive rate.
+
+**How it works**:
+\`\`\`
+Initial state: One Bloom filter BF_0 with capacity c and FP rate r
+  BF_0: capacity = 1000, fp_rate = 0.5%
+
+When BF_0 reaches capacity:
+  Create BF_1 with tighter FP rate: r * s  (s < 1, typically s = 0.5)
+  BF_1: capacity = 1000, fp_rate = 0.25%
+
+When BF_1 reaches capacity:
+  Create BF_2: fp_rate = 0.125%
+  ...
+
+Query(element):
+  Check BF_0: if "probably yes" -> return true
+  Check BF_1: if "probably yes" -> return true
+  ...
+  Check BF_k: if "probably yes" -> return true
+  All say "definitely no" -> return false
+
+Insert(element):
+  Insert into the LATEST (most recent) filter only
+\`\`\`
+
+**Overall false positive rate**:
+\`\`\`
+P(total) = 1 - product(1 - p_i) for all filters i
+With geometric tightening (s = 0.5):
+  P_total = r + r*0.5 + r*0.25 + ... < 2r
+  So initial r = 0.5% gives overall FP rate < 1%
+\`\`\`
+
+**Trade-offs vs standard Bloom filter**:
+| Aspect              | Standard Bloom       | Scalable Bloom          |
+|---------------------|---------------------|-------------------------|
+| Capacity            | Fixed (must predict n)| Grows dynamically       |
+| FP rate behavior    | Degrades if overfull  | Maintained as designed  |
+| Memory efficiency   | Optimal if n is known | Slight overhead (~20%)  |
+| Query time          | O(k)                 | O(k * num_filters)      |
+| Insert time         | O(k)                 | O(k) (only latest)      |
+| Complexity          | Simple               | Moderate                |
+
+**When to use Scalable Bloom Filters**:
+- Element count is unknown or unbounded (web crawler URLs, streaming data)
+- Dataset grows continuously and cannot be predicted upfront
+- Periodic rebuild is impractical (too expensive or disruptive)
+
+**Alternatives for growing datasets**:
+- **Partitioned Bloom Filters**: Pre-allocate multiple smaller filters, each covering a time window
+- **Rebuild periodically**: When filter reaches 80% capacity, build a fresh one from source data
+- **Cuckoo Filters**: Naturally handle dynamic inserts and deletions without capacity issues until ~95% load factor
+
+**Production note**: Most production systems prefer rebuilding a fresh Bloom filter periodically (e.g., during compaction in LSM-tree databases) rather than using Scalable Bloom Filters, because the rebuild is simpler and produces a more space-efficient single filter.`
+        },
+        {
+          question: 'How do you use Bloom filters to prevent cache penetration attacks, and what is the full defense pattern?',
+          answer: `**Cache penetration attack**: An attacker sends millions of requests for keys that do NOT exist in the database. Since the cache has no entry for non-existent keys, every request falls through to the database, overwhelming it.
+
+**Without Bloom filter protection**:
+\`\`\`
+Attacker: GET /user/999999999 (non-existent user)
+  Step 1: Check Redis cache -> MISS (key not cached)
+  Step 2: Query PostgreSQL -> SELECT * FROM users WHERE id = 999999999 -> No rows
+  Step 3: Return 404
+  Step 4: Key is NOT cached (nothing to cache for non-existent data)
+  Step 5: Next request repeats the entire cycle
+
+  1 million requests for non-existent users -> 1 million DB queries
+  Database overloaded -> legitimate users affected
+\`\`\`
+
+**With Bloom filter defense**:
+\`\`\`
+Startup: Build Bloom filter from ALL existing user IDs in database
+  SELECT id FROM users -> Insert each into Bloom filter
+  100M users x 10 bits/element = 125 MB Bloom filter (loaded in memory)
+
+Attacker: GET /user/999999999
+  Step 1: Check Bloom filter -> "Definitely NOT in set"
+  Step 2: Return 404 immediately (no cache check, no DB query)
+
+Legitimate: GET /user/42
+  Step 1: Check Bloom filter -> "Probably in set" (true positive)
+  Step 2: Check Redis cache -> HIT or MISS
+  Step 3: If MISS, query DB -> cache result
+\`\`\`
+
+**Full cache penetration defense architecture**:
+\`\`\`
+Request -> Rate Limiter (per-IP, 100 req/min)
+       -> Bloom Filter (in-memory, < 1 microsecond)
+           ├── "Definitely not" -> Return 404 (zero DB load)
+           └── "Probably yes" -> Redis Cache
+                 ├── HIT -> Return cached data
+                 └── MISS -> Database Query
+                       ├── Found -> Cache in Redis + Return data
+                       └── Not found -> Cache NULL with short TTL (60s)
+                                        Return 404
+\`\`\`
+
+**The NULL cache pattern** (complements Bloom filter):
+- For keys that pass the Bloom filter but are not in the DB (false positives)
+- Cache a NULL/sentinel value with a short TTL (30-60 seconds)
+- Prevents repeated DB queries for the same non-existent key
+- Without this, Bloom filter false positives still hit the DB repeatedly
+
+**Keeping the Bloom filter in sync**:
+\`\`\`
+New user registered:
+  1. INSERT INTO users (id, ...) VALUES (...)
+  2. bloom.add(new_user_id)
+
+User deleted:
+  Standard Bloom filter: CANNOT remove! Options:
+  a) Rebuild Bloom filter periodically (e.g., every hour)
+  b) Use Counting Bloom Filter (supports removal)
+  c) Accept minor false positives for deleted users (cache returns NULL)
+
+Production pattern:
+  - Rebuild Bloom filter during off-peak hours (2 AM)
+  - Between rebuilds, new inserts are added to the live filter
+  - Deletions are handled by the NULL cache pattern
+\`\`\`
+
+**Real-world deployments**:
+- **Akamai CDN**: Uses Bloom filters as a "one-hit-wonder" filter -- content is only cached after its second request, preventing cache pollution from rarely-accessed content
+- **Redis**: Redis 4.0+ has native Bloom filter support via RedisBloom module (BF.ADD, BF.EXISTS)
+- **Cloudflare**: Uses Bloom filters in their WAF to quickly reject known-bad request patterns
+
+**Interview tip**: When designing any system with a cache layer, proactively mention cache penetration and propose a Bloom filter as the first line of defense. This shows you think about adversarial access patterns, not just happy-path performance.`
+        },
+        {
+          question: 'What is the difference between a Bloom filter and a Quotient filter, and when does each excel?',
+          answer: `**Quotient Filter** (Bender et al., 2012): A compact, cache-friendly alternative to Bloom filters that supports deletion, merging, and resizing -- capabilities that standard Bloom filters lack.
+
+**How it works**:
+\`\`\`
+Hash each element to a p-bit fingerprint
+Split fingerprint into:
+  Quotient q = most significant bits -> bucket index
+  Remainder r = least significant bits -> stored value
+
+Table of 2^q buckets, each stores a remainder + 3 metadata bits:
+  is_occupied: Some element hashed to this bucket
+  is_continuation: This slot continues a run from a previous bucket
+  is_shifted: This slot has been shifted from its canonical position
+
+Insert: Compute (q, r), store r in bucket q (shift existing entries if collision)
+Lookup: Compute (q, r), scan bucket q and its run for r
+Delete: Find and remove r, shift entries back
+\`\`\`
+
+**Comparison with Bloom filter**:
+| Feature              | Bloom Filter         | Quotient Filter        |
+|---------------------|---------------------|------------------------|
+| False positives     | Yes                  | Yes                    |
+| False negatives     | Never                | Never                  |
+| Deletion            | No                   | Yes                    |
+| Merging two filters | Yes (bitwise OR)     | Yes (sorted merge)     |
+| Resizing            | No (must rebuild)    | Yes (split buckets)    |
+| Cache locality      | Poor (k random reads)| Excellent (sequential) |
+| Space (1% FP)       | ~10 bits/elem        | ~10-12 bits/elem       |
+| Throughput          | Good                 | Better (cache-friendly)|
+
+**Cache locality advantage**: Bloom filters compute k independent hash positions that are randomly scattered across the bit array, causing k cache misses. Quotient filters store all data for a given hash prefix in adjacent memory slots, typically fitting in 1-2 cache lines. This makes quotient filters 2-5x faster for lookups on modern CPUs where cache misses are expensive (~100 nanoseconds each).
+
+**When to choose Quotient filter over Bloom filter**:
+- Need deletion support without the 4x memory overhead of counting Bloom filters
+- Need to merge filters efficiently (distributed data ingestion, LSM-tree compaction)
+- Need dynamic resizing as dataset grows
+- Throughput-critical applications where cache efficiency matters
+- SSD-based storage systems where cache locality reduces I/O
+
+**When Bloom filter is still better**:
+- Simplicity is paramount (Bloom filter is 20 lines of code, quotient filter is 200+)
+- No deletion needed (standard LSM-tree SSTable filters)
+- Well-understood capacity upfront (most common case)
+- Existing tooling and libraries (Bloom filters are ubiquitous)
+
+**Ribbon Filter** (RocksDB, 2021): A newer alternative that achieves ~30% better space efficiency than Bloom filters at the same FP rate. It uses a system of linear equations solved via Gaussian elimination during construction. RocksDB adopted Ribbon filters as the default for SSTable metadata, saving significant storage across large databases.
+
+**Xor Filter** (2019): Even more space-efficient than Ribbon filters (~23% better than Bloom at 1% FP), but requires knowing all elements upfront (static construction). Ideal for read-only datasets like database SSTables.
+
+**Decision framework for interviews**:
+\`\`\`
+Need deletion?
+  Yes -> Cuckoo Filter (best balance) or Quotient Filter (if merge/resize needed)
+  No  -> Known size upfront?
+           Yes -> Bloom Filter (simplest) or Ribbon/Xor Filter (most compact)
+           No  -> Scalable Bloom Filter or Cuckoo Filter
+\`\`\``
+        },
+        {
+          question: 'How do you estimate the memory savings from using Bloom filters in a real system, and what are the operational considerations?',
+          answer: `**Memory savings calculation for a production system**:
+
+Scenario: E-commerce platform with 500 million product IDs.
+Goal: Check if a product exists before querying the database.
+
+\`\`\`
+Option A: HashSet of product IDs
+  500M product IDs x 8 bytes (int64) = 4 GB raw data
+  With Java HashMap overhead (~50 bytes/entry): 25 GB
+  With Go map overhead (~20 bytes/entry): 10 GB
+
+Option B: Bloom filter at 1% false positive rate
+  500M elements x 9.6 bits/element = 4.8 billion bits = 600 MB
+  7 hash functions (optimal k for 1% FP)
+
+Option C: Bloom filter at 0.1% false positive rate
+  500M elements x 14.4 bits/element = 900 MB
+  10 hash functions
+
+Savings: HashSet = 10-25 GB vs Bloom Filter = 600-900 MB
+Space reduction: 10-40x
+\`\`\`
+
+**Operational considerations in production**:
+
+**1. Building and refreshing the filter**:
+\`\`\`
+Initial build:
+  SELECT id FROM products;  -- 500M rows
+  Build time: 30-60 seconds (single-threaded), 5-10 seconds (parallel)
+  Can be built from a read replica to avoid impacting primary DB
+
+Refresh strategy:
+  Option A: Full rebuild every hour from read replica
+  Option B: Incremental -- add new IDs as they are created
+  Option C: Rebuild on deploy (if data changes are infrequent)
+
+Recommendation: Full rebuild every 1-6 hours + incremental adds between rebuilds
+\`\`\`
+
+**2. Deployment and distribution**:
+\`\`\`
+Single server: Load Bloom filter in application memory at startup
+Multi-server:
+  Option A: Each server builds its own filter (simplest, wastes DB load)
+  Option B: Build once, serialize to file, distribute to all servers
+  Option C: Use Redis BloomFilter module (centralized, adds network latency)
+  Option D: Build once, store in S3, load at startup (serverless-friendly)
+
+Serialization: Bloom filter is just a bit array -- serialize/deserialize is trivial
+A 600 MB filter compresses to ~200 MB with zstd (bit arrays compress well)
+\`\`\`
+
+**3. Monitoring and alerting**:
+\`\`\`
+Metrics to track:
+  - Actual false positive rate (compare bloom "yes" vs DB "not found")
+  - Filter load factor (estimated elements / designed capacity)
+  - Filter age (time since last rebuild)
+  - Memory usage trend
+
+Alerts:
+  - FP rate exceeds 2x designed rate -> filter is overfull, rebuild needed
+  - Filter age > 24 hours -> may be missing recent deletions
+  - Memory usage spike -> possible double-loading during rebuild
+\`\`\`
+
+**4. Testing the false positive rate**:
+\`\`\`
+Test procedure:
+  1. Build filter from known dataset (N elements)
+  2. Generate M random keys NOT in the dataset
+  3. Query each against the filter
+  4. Count "probably yes" responses = false positives
+  5. Measured FP rate = false_positives / M
+  6. Should match theoretical: (1 - e^(-kn/m))^k
+
+If measured FP rate is significantly higher than expected:
+  - Hash function may have poor distribution
+  - Filter may have more elements than designed capacity
+  - Check for hash function collisions in your key space
+\`\`\`
+
+**5. Hot path performance**:
+\`\`\`
+Query time breakdown:
+  k=7 hash computations: ~50 nanoseconds (MurmurHash3 is ~7ns per hash)
+  7 memory lookups: ~50-200 nanoseconds (depends on cache behavior)
+  Total: ~100-250 nanoseconds per query
+
+At 100K queries/second: Total Bloom filter CPU = 2.5% of one core
+The overhead is negligible compared to saved DB queries (~1-5ms each)
+
+Savings at 100K QPS with 80% non-existent keys:
+  Without Bloom: 80K unnecessary DB queries/second
+  With Bloom: ~800 unnecessary DB queries/second (1% false positives)
+  DB load reduction: 99%
+\`\`\`
+
+**6. Common production mistakes to avoid**:
+- Forgetting to update the filter when new elements are added to the source
+- Using the same filter for multiple data types (mix user IDs and product IDs)
+- Not testing FP rate after deployment -- theoretical and measured can diverge
+- Loading a stale filter after a crash (use versioned filter files)
+- Sharing a Bloom filter across services with different query patterns`
+        },
+        {
+          question: 'How do distributed Bloom filters work across multiple nodes, and how do you handle merging and partitioning?',
+          answer: `**Distributed Bloom filter architectures** arise when the dataset is too large for a single machine or when multiple services need to share membership information.
+
+**Architecture 1: Partitioned Bloom filters (each node owns a subset)**
+\`\`\`
+Dataset: 10 billion elements, 10 nodes
+Each node stores a Bloom filter for its 1 billion element partition
+
+Query routing:
+  hash(key) % 10 -> determines which node to query
+  Node i checks its local Bloom filter -> responds
+
+Pros: Each filter is small (1B elements x 10 bits = 1.25 GB per node)
+Cons: Requires routing layer, one network hop per query
+Use case: Distributed cache cluster, sharded database
+\`\`\`
+
+**Architecture 2: Replicated Bloom filter (every node has the full filter)**
+\`\`\`
+A single Bloom filter covering ALL elements, replicated to every node
+
+Build: Central service builds filter, distributes to all nodes
+Query: Each node checks locally (no network hop)
+Update: Periodic rebuild + distribute (not real-time)
+
+Pros: Zero-latency queries (purely local), simple architecture
+Cons: Every node needs memory for full filter, updates lag behind reality
+Use case: CDN edge nodes checking URL existence, DNS blocklists
+\`\`\`
+
+**Architecture 3: Bloom filter summaries for distributed caching (Squid, Fleek)**
+\`\`\`
+Each cache node maintains a Bloom filter of its cached content
+Nodes exchange Bloom filter summaries with neighbors periodically
+
+Query routing:
+  1. Check local cache -> HIT or MISS
+  2. If MISS, check neighbor Bloom filters: "Does node B have this key?"
+     Node B summary says "probably yes" -> ask node B directly
+     All summaries say "no" -> fetch from origin
+
+Effect: Avoids broadcasting cache queries to all nodes
+Network savings: Instead of asking 10 nodes, ask only 1-2 likely candidates
+
+Used by: Squid proxy cache, Summary Cache protocol, Fleek Network
+\`\`\`
+
+**Merging Bloom filters (bitwise OR)**:
+\`\`\`
+If two Bloom filters have the SAME size (m) and hash functions (k):
+  merged = filter_A | filter_B  (bitwise OR of bit arrays)
+
+The merged filter contains all elements from both A and B
+False positive rate of merged filter >= max(fp_A, fp_B)
+More elements = more bits set = higher FP rate
+
+Use cases:
+  - Aggregating per-node filters into a global summary
+  - Combining hourly filters into a daily filter
+  - Merging during distributed join operations
+
+Warning: Merging too many filters degrades FP rate significantly
+After merging N filters, the effective FP rate approaches:
+  p_merged = (1 - (1-p)^N) -- much worse than a single filter
+\`\`\`
+
+**Bloom filters in MapReduce/Spark joins**:
+\`\`\`
+Problem: Join a large table (1 billion rows) with a small table (1 million rows)
+Standard join: Shuffle 1 billion rows across the network -- extremely expensive
+
+Bloom filter semi-join:
+  Step 1: Build Bloom filter from small table's join keys (1M elements = 1.25 MB)
+  Step 2: Broadcast Bloom filter to all mappers processing large table
+  Step 3: Each mapper filters large table rows through Bloom filter
+           Only rows that "probably match" are sent for the join
+  Step 4: Actual join operates on a much smaller dataset (1M matches + false positives)
+
+Effect: 1B rows reduced to ~1.01M rows before shuffle (1000x network reduction)
+Spark: DataFrame.hint("bloom_filter_join") or manual broadcast filter
+
+This is one of the most impactful Bloom filter optimizations in big data processing.
+\`\`\`
+
+**Interview application**: When designing any distributed system with a "does this exist?" query pattern, propose Bloom filters at the architecture level:
+- Per-SSTable in distributed databases (Cassandra, HBase)
+- Per-cache-node in distributed caching (Summary Cache)
+- Per-partition in stream processing (Kafka consumer deduplication)
+- Pre-filter in large-scale joins (Spark, Presto/Trino)`
         }
       ],
 
@@ -11594,7 +12240,7 @@ Query "design interview" -> doc1 AND doc2 match "design", doc2 matches "intervie
       title: 'Proxies',
       icon: 'shield',
       color: '#8b5cf6',
-      questions: 5,
+      questions: 10,
       description: 'Forward and reverse proxies, Layer 4 vs Layer 7, and their role in modern architectures.',
       concepts: ['Forward Proxy', 'Reverse Proxy', 'Layer 4 Proxy', 'Layer 7 Proxy', 'SSL/TLS Termination', 'Caching Proxy', 'API Gateway as Proxy', 'Service Mesh Sidecar Proxy'],
       tips: [
@@ -11964,6 +12610,482 @@ A CDN is architecturally a network of reverse proxies deployed in 200-400+ locat
   Without: 10,000 clients = 10,000 backend connections
   With: 10,000 clients = 100 persistent connections (100x reduction)
   Critical for PostgreSQL (forks per connection). PgBouncer acts as a connection-pooling proxy. NGINX's upstream keepalive achieves similar reduction for HTTP.`
+        },
+        {
+          question: 'What is a caching proxy, and how does proxy-level caching reduce backend load in production?',
+          answer: `**A caching proxy** stores responses from backend servers and serves them directly to subsequent clients, eliminating redundant upstream requests.
+
+**How proxy caching works (NGINX example)**:
+\`\`\`
+nginx.conf:
+  proxy_cache_path /var/cache/nginx levels=1:2 keys_zone=api_cache:100m
+                   max_size=10g inactive=60m;
+
+  server {
+    location /api/products {
+      proxy_cache api_cache;
+      proxy_cache_valid 200 60s;         # Cache 200 responses for 60s
+      proxy_cache_valid 404 10s;         # Cache 404s briefly
+      proxy_cache_key "$request_method$request_uri";
+      proxy_cache_use_stale error timeout updating;  # Serve stale on error
+      add_header X-Cache-Status $upstream_cache_status;
+      proxy_pass http://backend;
+    }
+  }
+\`\`\`
+
+**Cache-Control header interaction**:
+\`\`\`
+Response from backend:
+  Cache-Control: public, max-age=300, stale-while-revalidate=600
+
+What NGINX does:
+  - Cache for 300 seconds (5 minutes)
+  - Between 300s and 900s: Serve stale, fetch fresh in background
+  - After 900s: Cache entry expired, fetch fresh synchronously
+
+X-Cache-Status header (debugging):
+  HIT:     Served from cache (no backend request)
+  MISS:    Not in cache, fetched from backend
+  EXPIRED: Was cached but TTL elapsed, refetched
+  STALE:   Serving stale content while revalidating
+  BYPASS:  Cache deliberately skipped (e.g., POST request)
+\`\`\`
+
+**Quantified impact in production**:
+\`\`\`
+API endpoint: GET /api/products (returns product catalog, changes hourly)
+Traffic: 10,000 requests/second
+Backend capacity: 500 requests/second
+
+Without caching proxy:
+  10,000 req/s -> backend -> 20x overloaded -> 502 errors
+
+With NGINX caching (60s TTL):
+  First request: MISS -> backend (1 req/s effective)
+  Next 59 seconds: 10,000 HIT -> served from NGINX cache
+  Backend sees: ~17 req/min instead of 600,000 req/min
+  Cache hit ratio: 99.99%
+\`\`\`
+
+**Caching proxy vs CDN caching**:
+| Aspect            | Caching Proxy (NGINX)    | CDN (Cloudflare)          |
+|-------------------|--------------------------|---------------------------|
+| Location          | Same data center as backend| Globally distributed edges|
+| Latency to client | Data center RTT (5-50ms) | Edge proximity (1-10ms)   |
+| Best for          | Internal API responses   | Static assets, public APIs|
+| Cost              | Free (self-hosted)       | Monthly fee or per-GB     |
+| Cache capacity    | Disk-limited (~100 GB)   | Massive (multi-PB global) |
+| Purge speed       | Instant (local)          | Seconds to minutes        |
+
+**Best practice**: Use both -- CDN for static assets and public content at the edge, caching proxy for internal API responses within the data center.
+
+**Varnish Cache** (purpose-built caching proxy):
+  - Written in C, designed purely for HTTP caching
+  - VCL (Varnish Configuration Language) for complex cache logic
+  - Stores everything in memory (no disk) -- extremely fast
+  - Used by: Wikipedia, The Guardian, Fastly's CDN is built on Varnish
+  - 100K+ requests/second per instance with sub-millisecond latency`
+        },
+        {
+          question: 'How does a service mesh sidecar proxy work, and why has Envoy become the standard?',
+          answer: `**Service mesh architecture**: Instead of each microservice implementing networking concerns (TLS, retries, circuit breaking, observability), a **sidecar proxy** runs alongside every service instance and handles all network traffic transparently.
+
+**Sidecar proxy deployment model**:
+\`\`\`
+Pod / Container Group:
+┌──────────────────────────────┐
+│  ┌──────────┐  ┌──────────┐ │
+│  │ Your     │  │ Envoy    │ │
+│  │ Service  │──│ Sidecar  │──── outbound traffic (mTLS, retries, LB)
+│  │ (Go/Java)│  │ Proxy    │ │
+│  │ :8080    │  │ :15001   │ │
+│  └──────────┘  └──────────┘ │
+│                              │
+│  Inbound traffic ────────>  │
+│  iptables redirects all     │
+│  traffic through Envoy      │
+└──────────────────────────────┘
+
+Your service sends HTTP to localhost:8080/api/orders
+iptables intercepts and redirects to Envoy (:15001)
+Envoy: applies mTLS, selects backend, retries on failure, reports metrics
+Envoy forwards to destination service's Envoy sidecar
+Destination Envoy: validates mTLS, applies rate limiting, forwards to service
+\`\`\`
+
+**What Envoy handles transparently** (no application code changes):
+1. **mTLS**: Automatic certificate provisioning, rotation, and mutual authentication
+2. **Load balancing**: Round-robin, least connections, consistent hashing per-request
+3. **Retries**: Configurable retry policies with exponential backoff and jitter
+4. **Circuit breaking**: Open circuit after N consecutive failures, half-open to test recovery
+5. **Rate limiting**: Per-service, per-route request rate limits
+6. **Distributed tracing**: Inject trace headers (Jaeger, Zipkin, OpenTelemetry)
+7. **Metrics**: Latency histograms, error rates, connection counts (Prometheus-compatible)
+8. **Traffic splitting**: Canary deployments (90% to v1, 10% to v2)
+
+**Why Envoy became the standard** (over NGINX, HAProxy for service mesh):
+\`\`\`
+1. API-driven configuration (xDS protocol):
+   NGINX/HAProxy: Reload config files (brief disruption)
+   Envoy: Dynamic updates via API, zero-downtime config changes
+   Istio control plane pushes config to Envoy via xDS -- no file reloads
+
+2. Native HTTP/2 and gRPC support:
+   gRPC requires HTTP/2 with trailers -- Envoy handles this natively
+   NGINX and HAProxy added gRPC support later, less mature
+
+3. Hot restart (zero-downtime binary upgrade):
+   Old Envoy instance drains connections while new instance takes over
+   No dropped connections during upgrade -- critical for production
+
+4. Rich observability built-in:
+   Per-route latency histograms, per-upstream health stats
+   Distributed tracing injection without application instrumentation
+   Stats export to Prometheus, StatsD, Datadog natively
+
+5. Extensibility via WebAssembly (Wasm):
+   Run custom proxy logic without recompiling Envoy
+   Filters written in Rust, C++, Go, or AssemblyScript
+   Hot-reload Wasm modules without restarting
+\`\`\`
+
+**Service mesh implementations built on Envoy**:
+- **Istio** (Google, IBM, Lyft): Most popular service mesh, Envoy as data plane
+- **AWS App Mesh**: Managed service mesh using Envoy
+- **Consul Connect** (HashiCorp): Uses Envoy as the sidecar proxy
+- **Cilium** (eBPF-based): Can use Envoy for L7 processing alongside eBPF for L3/L4
+
+**Resource overhead of sidecar proxies**:
+\`\`\`
+Per pod: ~50-100 MB RAM, ~0.1 CPU core for Envoy sidecar
+1000-pod cluster: 50-100 GB RAM, 100 CPU cores just for proxies
+This overhead is significant -- evaluate whether the benefits justify the cost
+
+Ambient Mesh (Istio): New model that moves proxy to per-node instead of per-pod
+Reduces overhead from ~100 MB/pod to ~100 MB/node (10x reduction for dense nodes)
+\`\`\`
+
+**When you need a service mesh vs when you do not**:
+- **Need**: 50+ microservices, mTLS requirement, complex traffic management, multi-team org
+- **Skip**: Monolith, < 10 services, team can handle observability in-app, cost-sensitive`
+        },
+        {
+          question: 'How do you design a multi-layer proxy architecture for a large-scale web application?',
+          answer: `**The four-layer proxy architecture** used by companies like Netflix, Shopify, and Cloudflare:
+
+\`\`\`
+Layer 1: CDN / Edge Proxy (Cloudflare, CloudFront)
+  |
+Layer 2: L4 Load Balancer (AWS NLB, Maglev)
+  |
+Layer 3: L7 API Gateway / Reverse Proxy (NGINX, Kong, Zuul)
+  |
+Layer 4: Service Mesh Sidecar (Envoy/Istio)
+  |
+Microservice
+\`\`\`
+
+**Layer 1: CDN / Edge Proxy**
+\`\`\`
+What it does:
+  - TLS termination at the edge (closest to user)
+  - Static asset caching (JS, CSS, images -> 95%+ cache hit ratio)
+  - DDoS protection (absorb volumetric attacks before they reach origin)
+  - Edge computing (auth validation, A/B test routing, geo-redirect)
+  - Brotli/gzip compression
+
+Example: Cloudflare proxy in front of all public-facing traffic
+  - 300+ global PoPs
+  - Sub-5ms static content latency
+  - Absorbs 1+ Tbps DDoS attacks
+\`\`\`
+
+**Layer 2: L4 Load Balancer**
+\`\`\`
+What it does:
+  - Distributes TCP connections across L7 proxy instances
+  - Operates at transport layer (no HTTP inspection)
+  - Extremely high throughput: millions of connections/second
+  - Health checks L7 proxy instances
+
+Example: AWS NLB in front of NGINX fleet
+  - 1M+ concurrent connections, sub-millisecond latency added
+  - Static IP addresses for DNS stability
+  - Handles TCP, UDP, TLS passthrough
+
+Google uses Maglev (custom L4 LB using consistent hashing)
+  - Distributes across 100+ backend servers per VIP
+  - Handles 10M+ packets/second per machine
+\`\`\`
+
+**Layer 3: L7 API Gateway / Reverse Proxy**
+\`\`\`
+What it does:
+  - HTTP routing by path, header, cookie
+  - Authentication and authorization (JWT validation, API key check)
+  - Rate limiting (per API key, per user, per IP)
+  - Request/response transformation (add headers, rewrite paths)
+  - Caching of API responses
+  - API versioning (/v1/*, /v2/*)
+  - Circuit breaking for unhealthy backends
+
+Example: NGINX Plus or Kong API Gateway
+  - Netflix: Zuul gateway handles 200B+ requests/day
+  - Shopify: OpenResty (NGINX + Lua) for tenant-aware routing
+
+Configuration example (Kong):
+  Route: /api/v1/users -> upstream: user-service
+         /api/v1/orders -> upstream: order-service
+  Plugins: jwt-auth, rate-limit (100/min), cors, prometheus
+\`\`\`
+
+**Layer 4: Service Mesh Sidecar**
+\`\`\`
+What it does:
+  - mTLS between all services (zero-trust)
+  - Per-request load balancing with retries
+  - Circuit breaking per upstream service
+  - Distributed tracing injection
+  - Traffic splitting for canary deploys
+
+Example: Envoy sidecar via Istio
+  - Automatic certificate rotation (24-hour certs)
+  - No application code changes required
+\`\`\`
+
+**Each layer adds specific, non-overlapping value**:
+| Concern          | CDN Edge | L4 LB  | L7 Gateway | Sidecar    |
+|------------------|----------|--------|------------|------------|
+| TLS termination  | Yes      | Pass   | Optional   | mTLS       |
+| Caching          | Static   | No     | API        | No         |
+| DDoS             | Yes      | Yes    | Rate limit | No         |
+| Auth             | Edge     | No     | JWT/API key| mTLS certs |
+| Routing          | Geo      | None   | Path/header| Service    |
+| Observability    | Edge logs| Conn   | API metrics| Traces     |
+
+**Common mistake**: Duplicating functionality across layers (e.g., rate limiting at both CDN and API gateway). Each layer should own specific concerns with clear responsibility boundaries.
+
+**Netflix architecture** (real-world example):
+\`\`\`
+User -> AWS CloudFront (CDN, static assets)
+     -> AWS ELB (L4, TCP distribution)
+     -> Netflix Zuul (L7, auth, routing, canary)
+     -> Microservice + Eureka (service discovery)
+     -> 1000+ microservices communicating via gRPC + Envoy
+\`\`\``
+        },
+        {
+          question: 'What is a transparent proxy, and how are proxies used for observability and debugging in production?',
+          answer: `**Transparent proxy**: A proxy that intercepts traffic without the client or server being explicitly aware of its existence. Unlike a forward proxy (client-configured) or reverse proxy (server-configured), a transparent proxy operates by intercepting packets at the network level.
+
+**How transparent proxying works**:
+\`\`\`
+Without transparent proxy:
+  Client -> Server (direct connection)
+
+With transparent proxy (network-level interception):
+  Client -> [Switch/Router redirects traffic] -> Transparent Proxy -> Server
+
+Interception methods:
+  1. iptables/nftables: Redirect packets matching port 80/443 to proxy
+     iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 3128
+  2. WCCP (Web Cache Communication Protocol): Cisco routers redirect to Squid
+  3. Policy-Based Routing: Route traffic through proxy based on source/dest
+  4. eBPF: Modern Linux kernel programs intercept and redirect at socket level
+\`\`\`
+
+**Transparent proxy use cases**:
+- **Corporate content filtering**: Intercept all HTTP/HTTPS traffic for compliance and security scanning without configuring every client device
+- **ISP caching**: Transparently cache popular content to reduce upstream bandwidth costs
+- **Service mesh**: Istio uses iptables rules to redirect all pod traffic through the Envoy sidecar transparently -- the application has no idea Envoy is in the path
+
+**Proxies for observability and debugging**:
+
+**1. mitmproxy (development and debugging)**:
+\`\`\`
+Interactive HTTPS proxy that intercepts and inspects all traffic
+  - View request/response headers and bodies in real time
+  - Modify requests/responses on the fly for testing
+  - Record traffic sessions for replay and analysis
+  - Script interception logic in Python
+
+Use: Debugging mobile app API calls, testing edge cases
+Not for production (breaks TLS chain of trust)
+\`\`\`
+
+**2. Envoy as an observability proxy (production)**:
+\`\`\`
+Envoy emits per-request telemetry without application instrumentation:
+
+Metrics (Prometheus-compatible):
+  envoy_http_downstream_rq_total{route="users-api"}: Request count
+  envoy_http_downstream_rq_time{quantile="0.99"}: p99 latency
+  envoy_cluster_upstream_rq_retry: Retry count
+  envoy_cluster_circuit_breakers_default_cx_open: Circuit breaker status
+
+Distributed tracing:
+  Envoy injects x-request-id, x-b3-traceid headers
+  Traces flow through all service hops without any app code
+  Export to Jaeger, Zipkin, or OpenTelemetry collector
+
+Access logs:
+  [2024-01-15T10:30:00Z] "GET /api/users/42" 200 350ms
+  upstream: user-service:8080, retry: 0, flags: -
+\`\`\`
+
+**3. TCP proxy for database monitoring (ProxySQL, PgBouncer)**:
+\`\`\`
+Application -> PgBouncer (proxy) -> PostgreSQL
+
+PgBouncer provides:
+  - Connection pooling (100 app connections -> 10 DB connections)
+  - Query-level metrics (slow queries, error rates)
+  - Read/write splitting (route reads to replicas)
+  - Graceful failover (redirect connections to new primary)
+
+ProxySQL (MySQL equivalent):
+  - Query caching at the proxy level
+  - Query rewriting (add hints, transform queries)
+  - Per-user connection limits
+  - Real-time query analytics dashboard
+\`\`\`
+
+**4. Chaos proxy for resilience testing**:
+\`\`\`
+Toxiproxy (Shopify): Proxy that injects failures for chaos engineering
+  - Add latency: Simulate slow network (200ms added per request)
+  - Drop connections: Simulate network failures
+  - Limit bandwidth: Simulate degraded network
+  - Corrupt data: Inject bit errors
+
+Setup:
+  Service A -> Toxiproxy (:25000) -> Service B (:8080)
+  toxic = toxiproxy.addToxic("latency", type="latency", attributes={"latency": 500})
+
+Used for: Verifying retry logic, testing circuit breakers, validating timeout settings
+\`\`\`
+
+**Interview insight**: When discussing proxies in system design, go beyond load balancing and SSL termination. Mention how proxies provide observability (metrics, tracing, access logs), security (mTLS, WAF), and resilience (circuit breaking, retries) as cross-cutting concerns that do not pollute application code.`
+        },
+        {
+          question: 'How do connection pooling and keep-alive settings at the proxy layer impact system performance?',
+          answer: `**Connection pooling at the proxy** is one of the highest-impact performance optimizations in any web architecture. It reduces the cost of establishing connections between the proxy and backend servers.
+
+**The problem without connection pooling**:
+\`\`\`
+Each incoming request:
+  1. Proxy opens NEW TCP connection to backend (~1ms LAN, ~50ms cross-AZ)
+  2. TLS handshake if HTTPS internally (~2-5ms additional)
+  3. Send request, receive response (~5-50ms)
+  4. Close connection
+
+Overhead per request: 3-55ms just for connection setup
+At 10,000 requests/second: 10,000 TCP connections created/destroyed per second
+Backend (PostgreSQL): Forks a process per connection -> 10K processes -> OOM crash
+\`\`\`
+
+**With connection pooling**:
+\`\`\`
+Startup: Proxy pre-creates N persistent connections to each backend
+  NGINX: upstream backend { keepalive 128; }
+  HAProxy: Uses persistent connections by default
+
+Each incoming request:
+  1. Proxy picks an EXISTING idle connection from the pool (~0ms)
+  2. Send request, receive response (~5-50ms)
+  3. Return connection to pool (not closed)
+
+Overhead per request: ~0ms for connection setup
+10,000 req/sec served over 128 persistent connections
+Backend sees 128 connections instead of 10,000
+\`\`\`
+
+**NGINX keepalive configuration for upstream connections**:
+\`\`\`
+upstream backend {
+  server 10.0.1.1:8080;
+  server 10.0.1.2:8080;
+  keepalive 128;                    # Pool size per upstream block
+  keepalive_requests 10000;         # Max requests per connection before recycling
+  keepalive_time 1h;                # Max lifetime of a pooled connection
+  keepalive_timeout 60s;            # Idle timeout before closing
+}
+
+location /api/ {
+  proxy_http_version 1.1;           # REQUIRED for keepalive (HTTP/1.0 cannot)
+  proxy_set_header Connection "";   # Remove hop-by-hop "close" header
+  proxy_pass http://backend;
+}
+\`\`\`
+
+**HTTP/2 multiplexing further improves pooling**:
+\`\`\`
+HTTP/1.1 keepalive: 1 request at a time per connection (sequential)
+  128 pooled connections = 128 concurrent requests max
+
+HTTP/2 multiplexing: 100+ concurrent streams per connection
+  10 pooled connections = 1000+ concurrent requests
+  Dramatically fewer connections needed
+
+NGINX: grpc_pass uses HTTP/2 by default for gRPC backends
+Envoy: Uses HTTP/2 connection pooling natively for all upstream traffic
+\`\`\`
+
+**Client-side keep-alive (proxy to client)**:
+\`\`\`
+NGINX:
+  keepalive_timeout 75s;            # How long to keep client connections open
+  keepalive_requests 1000;          # Max requests per client connection
+
+AWS ALB: Idle timeout = 60s (configurable up to 4000s)
+  If no data sent for 60s -> ALB closes the connection
+  For WebSockets: Set to 3600s (1 hour) or more
+
+Common bug: Proxy timeout < upstream timeout
+  If NGINX keepalive_timeout = 60s but ALB timeout = 65s:
+  NGINX closes connection, ALB sends request on closed connection -> 502 error
+  Fix: Set proxy timeout slightly HIGHER than downstream load balancer timeout
+\`\`\`
+
+**Database connection pooling through proxy (PgBouncer)**:
+\`\`\`
+Problem: PostgreSQL forks a process per connection
+  Max practical connections: ~500 (beyond this, context-switching dominates)
+  But application may need 5,000+ concurrent DB connections
+
+PgBouncer pooling modes:
+  Session pooling: Client gets a dedicated server connection for session lifetime
+  Transaction pooling: Connection returned to pool after each transaction (most efficient)
+  Statement pooling: Connection returned after each statement (most aggressive)
+
+Production config:
+  max_client_conn = 5000   # Accept up to 5,000 app connections
+  default_pool_size = 50    # Maintain 50 connections to PostgreSQL per database
+  reserve_pool_size = 10    # Emergency overflow connections
+
+Result: 5,000 application connections multiplexed over 50-60 database connections
+  PostgreSQL sees 60 connections instead of 5,000 -> healthy and fast
+\`\`\`
+
+**Performance impact measurements**:
+\`\`\`
+Benchmark: 10,000 requests/second to a backend API
+
+Without connection pooling:
+  Avg latency: 45ms (including TCP+TLS setup)
+  p99 latency: 120ms
+  Backend CPU: 30% (connection management overhead)
+
+With NGINX keepalive=128:
+  Avg latency: 8ms (connection reuse)
+  p99 latency: 25ms
+  Backend CPU: 12% (no connection management)
+
+Improvement: 5.6x avg latency, 4.8x p99 latency, 60% CPU reduction
+\`\`\`
+
+**Key takeaway for interviews**: Connection pooling at the proxy layer is often the single most impactful optimization for reducing latency and backend load. Always mention it when designing systems with reverse proxies or database connections.`
         }
       ],
 
@@ -12122,7 +13244,7 @@ A CDN is architecturally a network of reverse proxies deployed in 200-400+ locat
       title: 'DNS Deep Dive',
       icon: 'globe',
       color: '#10b981',
-      questions: 5,
+      questions: 10,
       description: 'DNS resolution, record types, DNS-based load balancing, and global traffic management.',
       concepts: ['DNS Resolution Process', 'Record Types (A, CNAME, MX, NS, TXT)', 'DNS Caching and TTL', 'DNS Load Balancing', 'GeoDNS', 'Anycast DNS', 'DNS Failover', 'DNSSEC'],
       tips: [
@@ -12504,6 +13626,466 @@ TTL Values (seconds):
   - Alert on DNSSEC validation failures
   - Verify propagation after changes (dig @resolver domain A)
   - Monitor zone transfer status between primary and secondary providers`
+        },
+        {
+          question: 'What is split-horizon DNS, and how do organizations use internal vs external DNS resolution?',
+          answer: `**Split-horizon DNS** (also called split-view or split-brain DNS) returns different DNS answers depending on the source of the query -- typically distinguishing between internal network clients and external internet clients.
+
+**How it works**:
+\`\`\`
+External query (from internet):
+  dig api.example.com -> 203.0.113.10 (public load balancer IP)
+
+Internal query (from corporate network or VPC):
+  dig api.example.com -> 10.0.1.50 (internal service IP, no internet hop)
+\`\`\`
+
+**Implementation approaches**:
+
+**1. Separate DNS servers for internal and external**:
+\`\`\`
+External: Cloudflare / Route 53 serves public records
+  api.example.com -> 203.0.113.10 (public ALB)
+
+Internal: CoreDNS / AWS Route 53 Private Hosted Zone
+  api.example.com -> 10.0.1.50 (internal NLB)
+  database.internal.example.com -> 10.0.2.30 (only resolvable internally)
+\`\`\`
+
+**2. BIND views (single server, multiple views)**:
+\`\`\`
+view "internal" {
+  match-clients { 10.0.0.0/8; 172.16.0.0/12; };
+  zone "example.com" { file "db.example.com.internal"; };
+};
+view "external" {
+  match-clients { any; };
+  zone "example.com" { file "db.example.com.external"; };
+};
+\`\`\`
+
+**Why split-horizon DNS is important for system design**:
+- **Security**: Internal services (databases, admin panels) are never resolvable from the internet
+- **Performance**: Internal traffic stays within the VPC, avoiding public internet hops
+- **Cost**: Internal traffic between services does not traverse NAT gateways or internet gateways (AWS charges per GB)
+- **Compliance**: Sensitive service endpoints are invisible to external DNS queries
+
+**AWS implementation**:
+\`\`\`
+Public Hosted Zone: example.com
+  api.example.com -> ALB (public)
+
+Private Hosted Zone: example.com (associated with VPC)
+  api.example.com -> NLB (internal)
+  cache.example.com -> ElastiCache endpoint
+  db.example.com -> RDS endpoint
+
+EC2 instances in the VPC resolve the private zone first
+External users resolve the public zone
+\`\`\`
+
+**Kubernetes DNS** (CoreDNS, a form of split-horizon):
+\`\`\`
+Inside cluster:
+  my-service.default.svc.cluster.local -> 10.96.0.15 (ClusterIP)
+
+Outside cluster:
+  my-service.default.svc.cluster.local -> NXDOMAIN (not resolvable)
+  api.example.com -> Public ingress IP
+\`\`\`
+
+**Common production patterns**:
+- Private service discovery: Internal microservices use private DNS names that are invisible externally
+- VPN-based access: Remote employees connected via VPN resolve internal split-horizon records
+- Multi-environment: dev.internal.example.com, staging.internal.example.com only resolvable from within respective VPCs`
+        },
+        {
+          question: 'How do you handle DNS during zero-downtime migrations, blue-green deployments, and domain transfers?',
+          answer: `**Blue-green deployment with DNS switching**:
+\`\`\`
+Blue (current): api.example.com -> 10.0.1.0 (Blue ALB)
+Green (new):    api.example.com -> 10.0.2.0 (Green ALB)
+
+Migration steps:
+  Day 1: Deploy new version to Green environment
+  Day 2: Run smoke tests against Green directly
+  Day 3: Lower DNS TTL to 60 seconds (was 3600s)
+  Day 4: Wait 1 hour (old 3600s TTL records expire everywhere)
+  Day 5: Switch DNS: api.example.com -> Green ALB IP
+  Day 5 + 60s: ~99% of traffic on Green
+  Day 6: Monitor for errors, ready to rollback
+  Day 7: Raise TTL back to 3600s if stable
+
+Rollback: Simply switch DNS back to Blue ALB IP
+  Rollback time: 60 seconds (current low TTL)
+\`\`\`
+
+**Weighted DNS for gradual traffic shifting**:
+\`\`\`
+Route 53 weighted routing:
+  api.example.com -> Blue ALB  (weight: 90)
+  api.example.com -> Green ALB (weight: 10)
+
+Gradual migration:
+  Hour 1:  90/10 (10% to Green)
+  Hour 2:  70/30 (30% to Green, monitor error rates)
+  Hour 3:  50/50 (50% to Green)
+  Hour 4:  10/90 (90% to Green)
+  Hour 5:  0/100 (100% on Green)
+
+This is safer than instant DNS switch because errors are caught at low traffic
+\`\`\`
+
+**Domain transfer (changing registrar or DNS provider)**:
+\`\`\`
+Critical: DNS misconfiguration during transfer = total outage
+
+Safe migration procedure:
+  Step 1: Export all DNS records from old provider
+  Step 2: Import all records to new provider
+  Step 3: Verify all records match (dig @new-ns example.com A, MX, etc.)
+  Step 4: Lower NS record TTL on old provider to 300s
+  Step 5: Wait current NS TTL (typically 24-48 hours)
+  Step 6: Update NS records at registrar to point to new provider
+  Step 7: Wait 48 hours for global NS propagation
+  Step 8: Keep old provider active for 7+ days (some resolvers cache aggressively)
+  Step 9: Decommission old provider
+
+Total migration time: 3-7 days for safety
+\`\`\`
+
+**Common DNS migration pitfalls**:
+- Forgetting to copy ALL record types (SPF/DKIM TXT records, SRV records, CAA records)
+- Not waiting for old TTL to expire before switching -- results in mixed traffic
+- Java applications caching DNS indefinitely (default JVM behavior unless explicitly configured)
+- Browser-level DNS caching (Chrome enforces minimum 60s regardless of TTL)
+- CDN CNAME records that have TTLs set by the CDN provider, not by you
+
+**ALIAS/ANAME records for apex domains during migration**:
+\`\`\`
+Problem: Cannot use CNAME at zone apex (example.com, not www.example.com)
+  example.com CNAME lb.us-east-1.elb.amazonaws.com  -- FORBIDDEN by RFC 1034
+
+Solution: ALIAS/ANAME records (provider-specific):
+  Route 53: Alias record -> ALB/CloudFront (resolved at authoritative server)
+  Cloudflare: CNAME flattening (automatically resolves CNAME and returns A record)
+
+During migration: Ensure new provider supports ALIAS if you use it on old provider
+\`\`\`
+
+**DNS-based health check failover during migration**:
+\`\`\`
+Route 53 failover routing:
+  Primary:   new-api.example.com (health check every 10s)
+  Secondary: old-api.example.com (failover target)
+
+If new environment has issues:
+  Route 53 detects health check failure (3 consecutive failures)
+  Automatically routes traffic back to old environment
+  Failover time: ~30-40 seconds (check interval x threshold + TTL)
+
+This provides a safety net during migration -- automatic rollback on failure
+\`\`\``
+        },
+        {
+          question: 'What is DNS-based service discovery, and how does it compare to service registries like Consul and Eureka?',
+          answer: `**DNS-based service discovery** uses DNS records to locate service instances dynamically, allowing clients to find backend services without hardcoded addresses.
+
+**How DNS service discovery works**:
+\`\`\`
+Traditional static configuration:
+  backend_url = "http://10.0.1.50:8080"  # Hardcoded, breaks when IP changes
+
+DNS-based discovery:
+  backend_url = "http://user-service.internal:8080"
+  DNS resolves: user-service.internal -> 10.0.1.50
+  When instance moves: DNS updated to -> 10.0.1.75
+  Application transparently connects to new IP
+\`\`\`
+
+**SRV records for port and priority discovery**:
+\`\`\`
+_http._tcp.user-service.internal.  60  IN  SRV  10 50 8080 node1.internal.
+_http._tcp.user-service.internal.  60  IN  SRV  10 50 8080 node2.internal.
+_http._tcp.user-service.internal.  60  IN  SRV  20 50 8080 node3.internal.
+
+Fields: priority weight port target
+  Priority 10: Preferred (node1, node2)
+  Priority 20: Backup (node3, used only if 10s are down)
+  Weight 50: Equal distribution among same-priority nodes
+  Port 8080: Service port (unlike A records, SRV includes port)
+\`\`\`
+
+**Kubernetes DNS (CoreDNS) -- most common DNS service discovery**:
+\`\`\`
+Service: my-service in namespace default
+  my-service.default.svc.cluster.local -> ClusterIP (10.96.0.15)
+
+Headless service (no ClusterIP):
+  my-service.default.svc.cluster.local -> returns A records for ALL pod IPs
+  Used for: StatefulSets, databases where clients need individual pod addresses
+
+Pod DNS:
+  10-0-1-5.default.pod.cluster.local -> 10.0.1.5
+
+CoreDNS handles ~100K queries/second per instance in large clusters
+\`\`\`
+
+**DNS discovery vs Service Registry comparison**:
+| Aspect              | DNS Discovery         | Consul / Eureka          |
+|---------------------|-----------------------|--------------------------|
+| Protocol            | Standard DNS (UDP/TCP)| HTTP API + gossip        |
+| TTL / Freshness     | Bounded by TTL (30-300s)| Real-time (sub-second)  |
+| Health checking     | DNS health check (Route 53)| Built-in, per-service |
+| Metadata            | Limited (SRV, TXT)    | Rich (tags, key-value)   |
+| Client library      | None needed (OS resolves)| Requires SDK/sidecar   |
+| Load balancing      | Round-robin DNS       | Client-side LB with weights|
+| Infrastructure      | DNS server (existing) | Dedicated cluster needed |
+
+**When DNS discovery is sufficient**:
+- Simple service-to-service routing within Kubernetes (CoreDNS handles it)
+- External service endpoint management (Route 53 health-checked endpoints)
+- Services with relatively stable instance counts (TTL-based updates are fine)
+
+**When you need a service registry (Consul, Eureka, etcd)**:
+- Sub-second failover required (DNS TTL too slow for critical paths)
+- Rich metadata per instance (version, region, canary tags)
+- Sophisticated load balancing (weighted, latency-based per-instance)
+- Service mesh integration (Consul Connect, Istio with control plane)
+
+**Hybrid approach (most production systems)**:
+\`\`\`
+Kubernetes: CoreDNS for internal service discovery (simple, built-in)
+  + Istio/Envoy for advanced routing (canary, circuit breaking)
+  + Route 53 for external DNS and cross-cluster discovery
+
+Netflix: Eureka for service registry (real-time, rich metadata)
+  + DNS for external client discovery
+  + Zuul for gateway routing based on Eureka metadata
+
+HashiCorp: Consul for service mesh and discovery
+  + Consul DNS interface: service.consul -> resolved via Consul catalog
+  + Supports both DNS queries and HTTP API for maximum flexibility
+\`\`\`
+
+**Key interview insight**: DNS service discovery is the simplest approach and works well for Kubernetes-native architectures. Mention it first, then explain when you would upgrade to a dedicated service registry for richer features.`
+        },
+        {
+          question: 'How do DNS amplification attacks work, and what are the best practices for securing DNS infrastructure?',
+          answer: `**DNS amplification attack**: A type of DDoS attack that exploits open DNS resolvers to flood a target with a massive volume of DNS response traffic.
+
+**How the attack works**:
+\`\`\`
+Step 1: Attacker spoofs victim's IP address as the source IP
+Step 2: Sends small DNS queries (60-byte) to open resolvers
+Step 3: Queries request large records (ANY, TXT, DNSSEC-signed)
+Step 4: Resolver sends large responses (3000-4000 bytes) to victim's IP
+
+Amplification factor: 3000 / 60 = 50x
+Attacker bandwidth: 1 Gbps -> Victim receives: 50 Gbps
+
+The largest DNS amplification attacks have exceeded 1 Tbps.
+\`\`\`
+
+**Why DNS is vulnerable to amplification**:
+- DNS uses UDP (connectionless -- no handshake to verify source IP)
+- Source IP spoofing is trivial with UDP
+- DNS responses are much larger than queries (especially with DNSSEC)
+- Millions of misconfigured open resolvers exist on the internet
+
+**Defense strategies**:
+
+**1. Response Rate Limiting (RRL) on authoritative servers**:
+\`\`\`
+BIND configuration:
+  rate-limit {
+    responses-per-second 5;
+    window 15;
+    slip 2;
+  };
+
+If the same query pattern exceeds 5 responses/second to the same /24 subnet:
+  Responses are truncated (force TCP fallback) or dropped
+  Legitimate clients retry via TCP (3-way handshake verifies source IP)
+\`\`\`
+
+**2. BCP38 / Source Address Validation (network-level)**:
+\`\`\`
+Routers should drop packets with spoofed source addresses
+BCP38 (RFC 2827): ISPs filter outbound traffic with source IPs not in their range
+Problem: Not all ISPs implement BCP38 -- spoofing is still possible globally
+\`\`\`
+
+**3. Disable open resolvers**:
+\`\`\`
+Configure DNS servers to only respond to authorized clients:
+  BIND: allow-query { 10.0.0.0/8; 172.16.0.0/12; };
+  Unbound: access-control: 10.0.0.0/8 allow
+\`\`\`
+
+**4. Anycast absorption (Cloudflare, Google DNS model)**:
+\`\`\`
+Anycast DNS servers are deployed in 300+ locations globally
+Attack traffic is distributed across all PoPs
+No single PoP receives the full attack volume
+Effective capacity: Sum of all PoP capacities (100+ Tbps for Cloudflare)
+\`\`\`
+
+**5. DNS over HTTPS (DoH) and DNS over TLS (DoT)**:
+\`\`\`
+Traditional DNS: Plaintext UDP/TCP on port 53
+  - Anyone on the network can sniff queries (privacy violation)
+  - No authentication of resolver (spoofing possible)
+
+DoT (RFC 7858): DNS wrapped in TLS on port 853
+  - Encrypted, authenticated, prevents MITM
+  - ISP can see port 853 traffic (knows you are using DNS)
+
+DoH (RFC 8484): DNS over HTTPS on port 443
+  - Encrypted, looks like normal web traffic
+  - ISP cannot distinguish DNS from regular HTTPS
+  - Firefox uses Cloudflare DoH by default
+
+DoQ (RFC 9250): DNS over QUIC
+  - Encrypted, 0-RTT reconnection, lower latency than DoT
+  - Newest standard, growing adoption
+\`\`\`
+
+**6. DNSSEC deployment considerations**:
+\`\`\`
+DNSSEC prevents cache poisoning but increases response sizes:
+  Unsigned response: ~100 bytes
+  DNSSEC-signed response: ~1000-4000 bytes
+
+This increases amplification potential but is still recommended:
+  The security benefit of authenticated responses outweighs the amplification risk
+  Combine DNSSEC with RRL to mitigate amplification
+
+Current adoption: ~30% of .com domains are DNSSEC-signed
+  Validation: ~25% of resolvers validate DNSSEC
+  Google DNS (8.8.8.8) and Cloudflare (1.1.1.1) both validate DNSSEC
+\`\`\`
+
+**Production DNS security checklist**:
+1. Never run open DNS resolvers -- restrict to authorized networks
+2. Enable Response Rate Limiting on authoritative servers
+3. Deploy DNSSEC for all critical domains
+4. Use Anycast DNS providers (Cloudflare, Route 53) for DDoS absorption
+5. Monitor query volume for anomalies (sudden 100x spike = attack)
+6. Implement multi-provider DNS for resilience against provider-targeted attacks
+7. Regularly audit DNS records for unauthorized changes (DNS hijacking)`
+        },
+        {
+          question: 'What are the latency numbers for DNS resolution, and how do you optimize DNS performance for global applications?',
+          answer: `**DNS resolution latency breakdown**:
+\`\`\`
+Cached (browser/OS):     < 1ms     (95%+ of queries in practice)
+Cached (recursive resolver): 1-5ms (resolver has it from previous query)
+Uncached (full resolution):
+  Root server query:     5-30ms   (Anycast, nearest root server)
+  TLD server query:      5-30ms   (13 root clusters, hundreds of instances)
+  Authoritative query:   5-100ms  (depends on authoritative server location)
+  Total uncached:        15-200ms (sum of all hops)
+
+Real-world averages (2025):
+  Google DNS (8.8.8.8):    ~12ms average response time globally
+  Cloudflare (1.1.1.1):    ~14ms average response time globally
+  ISP resolvers:           ~20-80ms (varies widely by ISP quality)
+\`\`\`
+
+**DNS optimization techniques for global applications**:
+
+**1. DNS prefetching in HTML** (client-side):
+\`\`\`html
+<link rel="dns-prefetch" href="//api.example.com">
+<link rel="dns-prefetch" href="//cdn.example.com">
+<link rel="dns-prefetch" href="//analytics.example.com">
+<link rel="preconnect" href="https://api.example.com">
+
+dns-prefetch: Resolves DNS in background while page loads
+preconnect: DNS + TCP + TLS handshake (full connection warmup)
+
+Impact: Eliminates 50-200ms of latency for cross-origin requests
+Cost: ~1KB of metadata per hint, negligible
+\`\`\`
+
+**2. Minimize DNS lookups per page**:
+\`\`\`
+Bad: 15 different domains on a single page
+  cdn1.example.com, cdn2.example.com, api.example.com,
+  fonts.googleapis.com, analytics.google.com, ...
+
+Each unique domain = 1 DNS resolution (50-200ms uncached)
+15 domains = up to 3 seconds of DNS overhead on first visit
+
+Good: Consolidate to 3-5 domains
+  cdn.example.com (all static assets)
+  api.example.com (all API calls)
+  example.com (HTML)
+\`\`\`
+
+**3. Choose fast Anycast DNS providers**:
+\`\`\`
+Provider            | Avg Response  | PoPs     | Highlight
+--------------------|---------------|----------|---------------------------
+Cloudflare          | ~14ms         | 300+     | Fastest free tier
+Google Cloud DNS    | ~15ms         | 200+     | Simple, reliable
+AWS Route 53        | ~20ms         | 200+     | Deep AWS integration
+NS1                 | ~18ms         | 25+      | Advanced traffic mgmt
+Dyn (Oracle)        | ~25ms         | 18+      | Enterprise focused
+
+Test from your users' locations using dig or tools like DNSPerf.com
+\`\`\`
+
+**4. Optimize TTL values per record type**:
+\`\`\`
+Record Type         | Recommended TTL | Reasoning
+--------------------|-----------------|--------------------------------
+Static A/AAAA       | 3600s (1hr)     | IP rarely changes
+CDN CNAME           | 3600s (1hr)     | CDN handles edge routing
+Failover A record   | 60s             | Fast failover required
+NS records          | 86400s (24hr)   | Changes very rarely
+MX records          | 3600s (1hr)     | Email can tolerate brief delay
+TXT (SPF/DKIM)      | 3600s (1hr)     | Changes infrequently
+
+Higher TTL = more cache hits = fewer DNS queries = faster user experience
+Lower TTL = faster failover = more DNS queries = slightly slower on cache miss
+\`\`\`
+
+**5. EDNS Client Subnet (ECS) for accurate GeoDNS**:
+\`\`\`
+Problem: GeoDNS sees the RESOLVER's IP, not the CLIENT's IP
+  User in Tokyo -> Google DNS resolver in Singapore -> GeoDNS thinks "Singapore"
+  Returns Singapore data center IP instead of Tokyo -> suboptimal routing
+
+ECS solution (RFC 7871):
+  Resolver includes client's /24 subnet in the DNS query
+  dig +subnet=203.0.113.0/24 api.example.com @8.8.8.8
+
+  GeoDNS sees the client's actual location -> returns Tokyo data center
+  Privacy balance: Only sends /24 subnet (256 addresses), not exact IP
+
+Support: Cloudflare, Route 53, Google Cloud DNS all support ECS
+Impact: 10-50ms latency improvement for users behind large public resolvers
+\`\`\`
+
+**6. Happy Eyeballs (RFC 8305) for dual-stack optimization**:
+\`\`\`
+Modern browsers/clients query BOTH A (IPv4) and AAAA (IPv6) simultaneously
+Connect to whichever responds first (usually within 50ms)
+If IPv6 fails, fall back to IPv4 without additional DNS delay
+
+This means serving both A and AAAA records is beneficial:
+  Some networks are IPv6-only (T-Mobile US) -- missing AAAA causes delay
+  Both records returned in one DNS response -- no additional query
+\`\`\`
+
+**Monitoring DNS performance in production**:
+- Use synthetic monitoring (Catchpoint, Datadog Synthetics) from global locations
+- Track p50, p95, p99 DNS resolution times per region
+- Alert on resolution failures (SERVFAIL, NXDOMAIN for known-good domains)
+- Monitor query volume per record for DDoS anomaly detection
+- Verify DNSSEC validation success rates at major resolvers`
         }
       ],
 
@@ -12651,7 +14233,7 @@ TTL Values (seconds):
       title: 'CDN Deep Dive',
       icon: 'globe',
       color: '#f59e0b',
-      questions: 5,
+      questions: 10,
       description: 'Content Delivery Networks: push vs pull, cache invalidation, and edge architecture.',
       concepts: ['Push vs Pull CDN', 'Origin Server vs Edge Server', 'Cache Invalidation', 'CDN Cache Hierarchy', 'Edge Computing', 'Multi-CDN Strategy', 'Cache Key Design', 'Stale-While-Revalidate'],
       tips: [
@@ -13047,6 +14629,564 @@ Cache Entry:
   Edge latency by region (should be < 50ms for cache hits)
   Purge frequency (should be rare -- if frequent, improve cache strategy)
   Bandwidth savings (CDN bandwidth / origin bandwidth ratio)`
+        },
+        {
+          question: 'How does edge computing at the CDN work, and what can you run at the edge in production?',
+          answer: `**Edge computing** moves application logic from the origin server to CDN edge locations, executing code in the same data centers that serve cached content. This eliminates the round trip to the origin for many operations.
+
+**Major edge compute platforms**:
+
+**Cloudflare Workers** (V8 isolates):
+\`\`\`
+Runtime: V8 JavaScript engine (same as Chrome), not containers
+Cold start: < 1ms (isolate creation, not container boot)
+Locations: 300+ cities worldwide
+Limits: 10ms CPU per request (free), 30s (paid), 128 MB memory
+Storage: Workers KV (global key-value), D1 (SQLite at edge), R2 (S3-compatible)
+
+Example: A/B test routing at the edge
+  addEventListener('fetch', event => {
+    const url = new URL(event.request.url);
+    const bucket = hashUserId(getCookie('user_id')) % 100;
+    if (bucket < 10) {
+      url.hostname = 'canary-origin.example.com';
+    }
+    return fetch(url, event.request);
+  });
+
+No origin round trip for routing decisions -- executed in ~1ms at the edge
+\`\`\`
+
+**AWS Lambda@Edge and CloudFront Functions**:
+\`\`\`
+Lambda@Edge:
+  Runtime: Node.js, Python
+  Triggers: Viewer request, viewer response, origin request, origin response
+  Cold start: 50-200ms (container-based)
+  Locations: 13 regional edge caches (NOT all 400+ PoPs)
+
+CloudFront Functions:
+  Runtime: JavaScript (ECMAScript 5.1, limited)
+  Triggers: Viewer request, viewer response only
+  Cold start: < 1ms
+  Locations: ALL 400+ PoPs
+  Limits: 10 KB code size, 2 MB memory, < 1ms execution
+  Use for: Header manipulation, URL rewrites, simple redirects
+\`\`\`
+
+**What to run at the edge (practical use cases)**:
+
+**1. Authentication token validation**:
+\`\`\`
+Validate JWT at the edge -> reject unauthorized requests before they reach origin
+Save: 100-200ms round trip to origin for auth check
+Reject: Malicious traffic never reaches your infrastructure
+\`\`\`
+
+**2. Personalization without origin**:
+\`\`\`
+Read user preferences from edge KV store
+Customize response headers or HTML at the edge
+Example: Language selection, currency conversion, feature flags
+\`\`\`
+
+**3. Bot detection and WAF**:
+\`\`\`
+Analyze request patterns, user-agent, IP reputation at the edge
+Block suspicious traffic before it consumes origin resources
+Cloudflare blocks ~160 billion cyber threats per day at the edge
+\`\`\`
+
+**4. Image optimization**:
+\`\`\`
+Resize, compress, and convert images at the edge based on client hints
+Accept: image/webp -> serve WebP (30% smaller than JPEG)
+Width: 375 -> resize to mobile viewport width
+Cloudflare Image Resizing, Imgix, and CloudFront functions handle this
+\`\`\`
+
+**5. Geolocation-based routing**:
+\`\`\`
+Route EU users to EU compliance-friendly origin
+Serve region-specific content without origin involvement
+Block access from restricted countries (sanctions compliance)
+\`\`\`
+
+**Trade-offs of edge computing**:
+\`\`\`
+Pros:
+  - 50-200ms latency reduction per request (no origin round trip)
+  - Offload compute from origin servers
+  - Better user experience for global users
+
+Cons:
+  - Limited execution time and memory (not for heavy computation)
+  - Debugging is harder (distributed across 300+ locations)
+  - Cold storage access is slow from the edge (must use edge KV/D1)
+  - State management is complex (eventual consistency across edge locations)
+\`\`\`
+
+**Interview pattern**: Mention edge computing when designing systems where latency is critical and some logic can be simplified to run at the edge -- A/B testing, auth, personalization, and request routing are the strongest use cases.`
+        },
+        {
+          question: 'What are the cost components of CDN usage, and how do you optimize CDN spend at scale?',
+          answer: `**CDN cost breakdown** (the four main components):
+
+**1. Bandwidth (data transfer out) -- typically 60-80% of CDN cost**:
+\`\`\`
+AWS CloudFront pricing (US/Europe):
+  First 10 TB/month:     $0.085/GB
+  Next 40 TB/month:      $0.080/GB
+  Next 100 TB/month:     $0.060/GB
+  Next 350 TB/month:     $0.040/GB
+  Over 500 TB/month:     Custom pricing
+
+Cloudflare:
+  Free: Unlimited bandwidth (but limited features)
+  Pro ($20/month): Unlimited bandwidth + WAF + polish
+  Business ($200/month): Unlimited + advanced features
+  Enterprise: Custom pricing, premium support
+
+Cost at scale (100 TB/month):
+  CloudFront: ~$6,000/month
+  Cloudflare Pro: $20/month (flat pricing advantage)
+\`\`\`
+
+**2. Request fees -- significant for high-request APIs**:
+\`\`\`
+CloudFront: $0.0075 per 10,000 HTTPS requests (US/Europe)
+  10M requests/month: $7.50
+  1B requests/month: $750
+
+Cloudflare: Included in plan (no per-request charge)
+Fastly: $0.009 per 10,000 requests
+\`\`\`
+
+**3. Origin shield / tiered cache fees**:
+\`\`\`
+CloudFront Origin Shield: ~$0.0060 per 10,000 requests
+Typically saves more on origin bandwidth than it costs
+ROI positive when origin requests would be expensive
+\`\`\`
+
+**4. Edge compute fees (Lambda@Edge, Workers)**:
+\`\`\`
+Lambda@Edge: $0.60 per 1M requests + $0.00005001 per 128 MB-second
+CloudFront Functions: $0.10 per 1M invocations
+Cloudflare Workers: 10M free requests/month, then $0.50 per 1M
+\`\`\`
+
+**CDN cost optimization strategies**:
+
+**Strategy 1: Maximize cache hit ratio** (most impactful):
+\`\`\`
+Every cache HIT = free serving (already paid for the first fetch)
+Going from 80% to 95% hit ratio = 4x reduction in origin bandwidth
+
+Tactics:
+  - Set long TTLs with versioned filenames for static assets
+  - Use stale-while-revalidate to prevent cache stampedes
+  - Minimize Vary header dimensions (reduce cache fragmentation)
+  - Enable origin shield (reduce duplicate origin fetches)
+\`\`\`
+
+**Strategy 2: Compress everything**:
+\`\`\`
+Enable Brotli compression (15-20% smaller than gzip for text):
+  1 MB uncompressed -> 300 KB gzip -> 250 KB Brotli
+  At 100 TB/month: Brotli saves ~5 TB/month -> ~$400-500/month savings
+
+All CDNs support Brotli: Cloudflare (auto), CloudFront (requires origin support)
+\`\`\`
+
+**Strategy 3: Serve optimal image formats**:
+\`\`\`
+JPEG average: 200 KB per image
+WebP equivalent: 140 KB (30% smaller)
+AVIF equivalent: 100 KB (50% smaller)
+
+For an image-heavy site serving 1M images/day:
+  JPEG: 200 TB/month
+  WebP: 140 TB/month (save $3,600/month on CloudFront)
+  AVIF: 100 TB/month (save $6,000/month on CloudFront)
+\`\`\`
+
+**Strategy 4: Choose the right CDN pricing model**:
+\`\`\`
+Low traffic (< 1 TB/month): Cloudflare free tier (unlimited bandwidth)
+Medium traffic (1-50 TB/month): Cloudflare Pro ($20/month flat)
+High traffic (50-500 TB/month): CloudFront with committed use discount (30-50% off)
+Very high traffic (> 500 TB): Enterprise agreement with any CDN (custom pricing)
+
+Multi-CDN cost optimization:
+  Route static assets through Cloudflare (flat pricing)
+  Route API traffic through CloudFront (AWS integration benefits)
+  Use the cheapest CDN per region (some CDNs have lower rates in specific regions)
+\`\`\`
+
+**Strategy 5: Regional pricing optimization**:
+\`\`\`
+CloudFront pricing varies significantly by region:
+  US/Europe:        $0.085/GB
+  Asia Pacific:     $0.120/GB
+  India:            $0.170/GB
+  South America:    $0.250/GB
+
+If 30% of traffic is from South America:
+  Route SA through Cloudflare (flat pricing) instead of CloudFront
+  Save ~$0.165/GB on SA traffic (CloudFront $0.250 vs Cloudflare ~$0.001 effective)
+\`\`\`
+
+**Monthly CDN cost estimate for a mid-size SaaS**:
+\`\`\`
+Traffic: 50 TB/month, 500M requests, 80% US/EU, 20% APAC
+  Bandwidth: 50 TB x ~$0.070 avg = $3,500
+  Requests: 500M x $0.75/10K = $375
+  Origin Shield: 50M origin requests x $0.006/10K = $30
+  Total: ~$3,900/month on CloudFront
+  vs ~$20/month on Cloudflare Pro (if within plan limits)
+\`\`\``
+        },
+        {
+          question: 'How do you handle dynamic content caching at the CDN, and what is the ESI (Edge Side Includes) pattern?',
+          answer: `**Dynamic content caching** at the CDN is more nuanced than static asset caching because responses may vary by user, session, location, or request parameters.
+
+**Cacheability spectrum**:
+\`\`\`
+Fully static (99%+ hit ratio):
+  /assets/app.abc123.js          -> immutable, cache forever
+  /images/logo.svg               -> cache 1 year, versioned
+
+Semi-dynamic (50-90% hit ratio):
+  /api/products?category=shoes   -> same for all users, cache 60s
+  /api/trending                  -> same for all users, cache 30s
+  /blog/article-slug             -> same for all users, cache 5 minutes
+
+Personalized (0% cache at CDN):
+  /api/me/profile                -> unique per user, never cache at CDN
+  /api/cart                      -> unique per session
+  /api/recommendations           -> user-specific
+\`\`\`
+
+**Strategy: Split pages into cacheable shell + dynamic fragments**:
+\`\`\`
+HTML page structure:
+  ┌──────────────────────────────────┐
+  │  Header (static, cached at CDN)  │
+  │  Navigation (static)             │
+  ├──────────────────────────────────┤
+  │  Product Info (semi-dynamic,     │
+  │    cached 60s at CDN)            │
+  ├──────────────────────────────────┤
+  │  Price (dynamic, fetched client- │
+  │    side via JS from API)         │
+  ├──────────────────────────────────┤
+  │  Recommendations (personalized,  │
+  │    fetched client-side)          │
+  ├──────────────────────────────────┤
+  │  Footer (static, cached at CDN)  │
+  └──────────────────────────────────┘
+
+CDN caches the page shell (90% of the HTML)
+Client-side JavaScript fetches personalized fragments from API
+Result: Fast initial page load (CDN) + personalized content (API)
+\`\`\`
+
+**Edge Side Includes (ESI) pattern**:
+\`\`\`
+ESI allows the CDN to assemble pages from multiple fragments,
+each with its own caching rules.
+
+HTML with ESI tags:
+  <html>
+    <header>Welcome, <esi:include src="/api/user-greeting" /></header>
+    <main>
+      <esi:include src="/api/product/123" />
+      <!-- cached 60s at edge -->
+    </main>
+    <footer>
+      <esi:include src="/fragments/footer" />
+      <!-- cached 24 hours at edge -->
+    </footer>
+  </html>
+
+CDN processes ESI tags at the edge:
+  1. Cache page template (long TTL)
+  2. Fetch each ESI fragment independently (each has own TTL)
+  3. Assemble final page from cached fragments
+  4. Serve complete page to user
+
+Benefits:
+  - Footer changes propagate in 24h without purging product pages
+  - Product info refreshes every 60s independently
+  - User greeting fetched per-request (not cached)
+
+Supported by: Akamai (native ESI), Varnish, Fastly, Cloudflare (via Workers)
+\`\`\`
+
+**Vary header for conditional caching**:
+\`\`\`
+Cache different versions of the same URL based on request headers:
+
+  GET /api/products
+  Vary: Accept-Encoding, Accept-Language
+
+  CDN stores separate cached versions:
+    Accept-Encoding: gzip, Accept-Language: en -> version 1
+    Accept-Encoding: br, Accept-Language: en -> version 2
+    Accept-Encoding: gzip, Accept-Language: es -> version 3
+
+  Danger: Each Vary dimension multiplies cache entries
+    2 encodings x 10 languages = 20 cached versions per URL
+    Vary: User-Agent = THOUSANDS of versions -> destroys cache hit ratio
+
+  Best practice:
+    Vary: Accept-Encoding (OK, only 2-3 variants)
+    Do NOT Vary on User-Agent -- normalize to "mobile" vs "desktop" at edge
+    Use separate URLs for language: /en/products, /es/products
+\`\`\`
+
+**Cache key design for dynamic APIs**:
+\`\`\`
+Default cache key: URL + query string + Vary headers
+Custom cache key (CloudFront, Cloudflare):
+
+  Include: URL path, specific query params (category, page)
+  Exclude: Tracking params (utm_source, fbclid, timestamp)
+
+  Without custom key: /api/products?category=shoes&utm_source=google
+    Different cache entry than /api/products?category=shoes (cache miss!)
+
+  With custom key: Strip utm_source -> both URLs share cache entry
+
+Cloudflare:
+  Cache key based on: host, path, selected query params
+  Ignore: All marketing/tracking parameters
+
+This alone can improve cache hit ratio by 10-30%
+\`\`\`
+
+**Stale content strategies for dynamic data**:
+\`\`\`
+Cache-Control: public, max-age=10, stale-while-revalidate=300, stale-if-error=600
+
+  0-10s: Serve fresh content
+  10-310s: Serve stale, revalidate in background (user sees fast response)
+  310-910s: Serve stale ONLY if origin is erroring (graceful degradation)
+  >910s: Cache expired, must fetch from origin
+
+This pattern ensures users ALWAYS get a fast response, even during origin issues.
+Critical for high-traffic product pages, news sites, and dashboard APIs.
+\`\`\``
+        },
+        {
+          question: 'How do you implement CDN failover, and what happens when a CDN provider has an outage?',
+          answer: `**CDN outages are rare but impactful**: Fastly's June 2021 outage took down Amazon, Reddit, Twitch, GitHub, and many others for approximately 1 hour. Cloudflare has had multiple incidents affecting significant portions of their network.
+
+**Single-CDN failure modes**:
+\`\`\`
+1. Global outage: Entire CDN network unreachable (rare, ~1-2 per year)
+2. Regional outage: Specific PoPs or regions affected (more common)
+3. Configuration error: Misconfigured cache rules serve wrong content
+4. Certificate issue: SSL cert expires or is misconfigured at edge
+5. Origin connectivity: CDN cannot reach your origin (CDN itself is fine)
+\`\`\`
+
+**Multi-CDN failover architecture**:
+\`\`\`
+DNS-based failover (simplest):
+  Primary:   cdn.example.com -> Cloudflare (health check every 30s)
+  Secondary: cdn.example.com -> CloudFront (failover target)
+
+  Route 53 health check monitors Cloudflare endpoint
+  If 3 consecutive failures -> Route 53 switches to CloudFront
+  Failover time: 30s x 3 checks + 60s TTL = ~150 seconds
+
+Real-time traffic steering (advanced):
+  GeoDNS / Traffic Manager (NS1, Cedexis, Constellix)
+  Measures CDN latency from 200+ global probes in real time
+  Routes each user to the fastest CDN at that moment
+  Failover time: < 30 seconds (continuous health monitoring)
+\`\`\`
+
+**Implementation considerations for multi-CDN**:
+\`\`\`
+1. Cache consistency:
+   Both CDNs must have identical cache content
+   If you purge content, purge from ALL CDNs simultaneously
+   Use API-based purge: Cloudflare API + CloudFront invalidation API
+
+2. SSL certificate management:
+   Each CDN needs valid SSL certificates for your domain
+   Use CDN-managed certs (auto-renewal) or upload your own to both
+   ACM (AWS) for CloudFront, Cloudflare manages its own
+
+3. Origin configuration:
+   Both CDNs must be configured with the same origin
+   Origin shield should be enabled on both to protect origin from double load
+   Use different origin shield regions to avoid the same failure domain
+
+4. Cache key alignment:
+   Both CDNs must use the same cache key logic
+   Otherwise, the same URL may be cached differently on each CDN
+   Test with: curl -H "Host: cdn.example.com" <cdn1-direct-ip>
+              curl -H "Host: cdn.example.com" <cdn2-direct-ip>
+\`\`\`
+
+**Origin resilience (what if YOUR origin fails?)**:
+\`\`\`
+CDN as a buffer during origin failure:
+  Cache-Control: stale-if-error=86400
+
+  If origin returns 5xx or is unreachable:
+  CDN serves stale cached content for up to 24 hours
+  Users see slightly outdated but functional content
+  Much better than showing error pages
+
+Custom error pages at the CDN:
+  Cloudflare: Always Online (serves cached Google cache if origin is down)
+  CloudFront: Custom error response -> S3 static error page
+  Fastly: VCL can serve synthetic responses on origin failure
+\`\`\`
+
+**Real-world multi-CDN deployments**:
+\`\`\`
+Apple: Uses Akamai + Cloudflare + Fastly simultaneously
+  Different CDNs serve different content types
+  Automatic failover between providers
+  Negotiation leverage: No single CDN has lock-in
+
+Major media companies: Multi-CDN for live video streaming
+  Primary: Akamai (largest network, best for video)
+  Secondary: Cloudflare or Fastly (failover)
+  Encoder sends to both CDNs simultaneously (push model)
+  Player-side CDN selection based on real-time quality metrics
+\`\`\`
+
+**When NOT to use multi-CDN**:
+- Traffic under 10 TB/month (complexity not justified)
+- Single-region deployment (one CDN is sufficient)
+- Budget-constrained (multi-CDN doubles configuration and testing effort)
+- Availability target < 99.99% (single CDN easily achieves 99.9%)
+
+**When multi-CDN is essential**:
+- Availability requirement > 99.99%
+- Global user base with strict latency SLAs
+- Live streaming (viewer experience cannot tolerate CDN outage)
+- Regulatory requirement for content availability (financial services, healthcare)`
+        },
+        {
+          question: 'How do modern CDNs handle video streaming, and what is adaptive bitrate streaming?',
+          answer: `**Video streaming is the dominant use case for CDNs** -- Netflix, YouTube, Disney+, and Twitch collectively account for over 60% of global internet traffic, virtually all delivered through CDNs.
+
+**Adaptive Bitrate Streaming (ABR)**:
+\`\`\`
+Problem: Users have different network speeds (4G, WiFi, fiber)
+  Serving 4K to a 3G user: constant buffering
+  Serving 480p to a fiber user: unnecessary quality loss
+
+Solution: Encode video at MULTIPLE quality levels, let the player choose
+
+Encoding ladder (typical):
+  Variant 1: 1080p, 8 Mbps  (high quality, fiber/WiFi)
+  Variant 2: 720p, 4 Mbps   (good quality, decent connection)
+  Variant 3: 480p, 2 Mbps   (acceptable, mobile data)
+  Variant 4: 360p, 800 Kbps (low quality, poor connection)
+  Variant 5: 240p, 400 Kbps (emergency, very slow connection)
+
+Each variant is split into 2-10 second segments:
+  segment_001_1080p.ts, segment_001_720p.ts, segment_001_480p.ts, ...
+  segment_002_1080p.ts, segment_002_720p.ts, ...
+
+Player logic:
+  1. Download manifest (m3u8 or mpd) listing all variants and segments
+  2. Start with low quality (fast start, no buffering)
+  3. Measure download speed of each segment
+  4. If speed > next quality threshold: switch UP
+  5. If speed < current quality requirement: switch DOWN
+  6. Adaptation happens per-segment (every 2-10 seconds)
+\`\`\`
+
+**Streaming protocols**:
+\`\`\`
+HLS (HTTP Live Streaming) -- Apple:
+  Manifest: .m3u8 (text playlist)
+  Segments: .ts (MPEG-TS) or .fmp4 (fragmented MP4)
+  Segment duration: 6 seconds (default)
+  Latency: 15-30 seconds (buffering multiple segments)
+  Used by: Apple devices, most web players, Netflix
+
+DASH (Dynamic Adaptive Streaming over HTTP) -- open standard:
+  Manifest: .mpd (XML)
+  Segments: .mp4 (fragmented)
+  More flexible than HLS (codec-agnostic)
+  Used by: YouTube, Netflix (alongside HLS)
+
+CMAF (Common Media Application Format):
+  Unified format compatible with BOTH HLS and DASH
+  Single set of segments served to both protocols
+  Reduces storage and encoding cost by 50%
+
+LL-HLS / LL-DASH (Low Latency variants):
+  Segment duration: 1-2 seconds (vs 6 seconds standard)
+  Latency: 2-5 seconds (vs 15-30 seconds)
+  Used for: Live sports, live events, real-time broadcasting
+\`\`\`
+
+**CDN architecture for video streaming**:
+\`\`\`
+Content preparation:
+  Source video -> Transcoding (FFmpeg/MediaConvert) -> Multiple bitrate segments
+  Segments stored in S3 or origin storage
+
+CDN delivery:
+  User requests manifest -> CDN serves from cache (or fetches from origin)
+  Player requests segments sequentially -> CDN serves each from edge cache
+  Popular content: 99%+ cache hit ratio at edge (segment requested by millions)
+
+  Live streaming twist:
+  Segments are created in real time as the event happens
+  CDN must cache segments within seconds of creation
+  Pre-positioning: Live encoder pushes to CDN before viewers request
+\`\`\`
+
+**Video-specific CDN optimizations**:
+\`\`\`
+1. Chunk transfer encoding:
+   Serve segments as they are being received from origin
+   Do not wait for full segment download before starting to serve to client
+   Reduces latency by segment_duration / 2 on average
+
+2. Byte-range requests:
+   Player can request specific byte ranges within a segment
+   CDN caches and serves partial responses (206 Partial Content)
+   Enables seeking without downloading entire file
+
+3. Origin shield for video:
+   Without: 300 edge PoPs each fetch the same live segment from origin
+   With shield: 5 regional shields fetch from origin, edges fetch from shields
+   Critical for live streaming where every segment is a cache miss initially
+
+4. Token authentication:
+   Signed URLs with expiration prevent unauthorized access to video content
+   CDN validates token at edge without contacting origin
+   Used by: Netflix, Disney+, every paid streaming service
+\`\`\`
+
+**Cost of video CDN at scale**:
+\`\`\`
+Netflix monthly estimates:
+  Content library: 15,000+ titles at 5+ quality levels
+  Storage: ~100 PB across all variants and regions
+  Bandwidth: ~20+ PB/month delivered to 260M+ subscribers
+  CDN: Open Connect (Netflix's own CDN) + AWS CloudFront
+
+For a smaller streaming service (1M subscribers):
+  Average viewing: 2 hours/day x 4 Mbps average = 3.6 GB/user/day
+  Monthly bandwidth: 1M x 3.6 GB x 30 = 108 PB
+  CDN cost at $0.04/GB (high volume): ~$4.3M/month
+  This is why Netflix built its own CDN (Open Connect)
+\`\`\``
         }
       ],
 
@@ -13198,7 +15338,7 @@ Cache Entry:
       title: 'Redundancy & Replication',
       icon: 'copy',
       color: '#ef4444',
-      questions: 5,
+      questions: 10,
       description: 'Active-passive, active-active, leader-follower, and leaderless replication strategies.',
       concepts: ['Active-Passive (Failover)', 'Active-Active', 'Leader-Follower Replication', 'Multi-Leader Replication', 'Leaderless Replication', 'Synchronous vs Asynchronous Replication', 'Conflict Resolution', 'Quorum Reads/Writes'],
       tips: [
@@ -13613,6 +15753,493 @@ Failover States:
   Need strong consistency? -> Single leader (accept write latency) or Spanner-like
   Write-heavy with regional users? -> Multi-leader with conflict resolution
   Read:write ratio > 10:1? -> Single leader + geo read replicas (simplest)`
+        },
+        {
+          question: 'How do you implement and test automated failover to ensure it actually works when needed?',
+          answer: `**The biggest risk with failover is untested failover**. Many organizations discover their failover does not work during an actual outage -- the worst possible time to find out.
+
+**Implementing automated failover (PostgreSQL + Patroni example)**:
+\`\`\`
+Architecture:
+  ┌──────────┐     ┌──────────┐     ┌──────────┐
+  │ Patroni  │     │ Patroni  │     │ Patroni  │
+  │ Node A   │     │ Node B   │     │ Node C   │
+  │ (Leader) │     │(Replica) │     │(Replica) │
+  └────┬─────┘     └────┬─────┘     └────┬─────┘
+       │                │                │
+  ┌────┴────────────────┴────────────────┴────┐
+  │              etcd Cluster (3 nodes)        │
+  │    Stores cluster state + leader lock      │
+  └────────────────────────────────────────────┘
+
+Failover sequence (Node A dies):
+  T+0s:   Node A stops sending heartbeat to etcd
+  T+10s:  etcd leader lock TTL expires (10s default)
+  T+11s:  Node B and C detect leader vacancy
+  T+12s:  Node with highest replication position starts election
+  T+13s:  Node B acquires etcd leader lock
+  T+14s:  Node B promotes itself to leader (pg_ctl promote)
+  T+15s:  Node C reconfigures to replicate from B
+  T+16s:  HAProxy/PgBouncer health check detects new leader
+  T+20s:  Applications route writes to Node B
+
+Total failover time: ~15-20 seconds
+\`\`\`
+
+**Testing failover -- the five essential tests**:
+
+**Test 1: Planned failover (switchover)**:
+\`\`\`
+patronictl switchover --leader nodeA --candidate nodeB
+Expected: Clean handoff, zero data loss, < 5 second write disruption
+Run: Weekly in staging, monthly in production
+\`\`\`
+
+**Test 2: Unplanned failure (kill process)**:
+\`\`\`
+ssh nodeA 'kill -9 $(pgrep postgres)'
+Expected: Automatic failover within 15-30 seconds
+Verify: No data loss (check last committed transaction vs new leader)
+Run: Monthly in staging, quarterly in production
+\`\`\`
+
+**Test 3: Network partition (split brain test)**:
+\`\`\`
+iptables -A INPUT -s nodeB,nodeC -j DROP  (isolate nodeA)
+Expected: nodeA loses etcd lock, stops accepting writes (fenced)
+          nodeB or nodeC elected as new leader
+Verify: Old leader did NOT accept writes after losing lock
+Run: Quarterly in staging
+\`\`\`
+
+**Test 4: Cascading failure**:
+\`\`\`
+Kill leader -> wait for failover -> immediately kill new leader
+Expected: Second failover to third node within another 15-30s
+Verify: Data integrity maintained through double failover
+Run: Quarterly in staging
+\`\`\`
+
+**Test 5: Full datacenter failure**:
+\`\`\`
+Simulate AZ failure (stop all instances in one AZ)
+Expected: Cross-AZ failover, DNS update, application reconnection
+Verify: End-to-end user traffic flows through surviving AZ
+Run: Semi-annually in production (during maintenance window)
+\`\`\`
+
+**Chaos engineering frameworks**:
+\`\`\`
+Netflix Chaos Monkey: Randomly kills instances in production
+  - Ensures every service can survive instance failures
+  - Runs continuously during business hours
+
+Gremlin: Commercial chaos engineering platform
+  - CPU/memory/disk/network attacks
+  - Process kill, time travel (clock skew)
+  - Scheduled chaos experiments with safety controls
+
+AWS Fault Injection Simulator (FIS):
+  - Managed chaos engineering for AWS resources
+  - Stop instances, inject network latency, throttle APIs
+  - Integrated with CloudWatch for monitoring during experiments
+
+Slack "Disasterpiece Theater":
+  - Quarterly failover exercises
+  - Simulate full regional failure
+  - Measure actual RTO vs target RTO
+\`\`\`
+
+**Monitoring failover health continuously**:
+\`\`\`
+Metrics to track:
+  - Replication lag on all followers (must be < 1s for fast failover)
+  - Leader lock TTL remaining in etcd/ZooKeeper
+  - Time since last successful failover test
+  - Number of in-sync replicas (must be >= min.insync for promotion)
+
+Alerts:
+  - Replication lag > 10 seconds -> risk of data loss on failover
+  - Only 1 in-sync replica remaining -> next failure = no failover possible
+  - Failover test not run in > 30 days -> schedule immediately
+\`\`\``
+        },
+        {
+          question: 'What is the difference between synchronous, semi-synchronous, and asynchronous replication, and how do you choose?',
+          answer: `**Three replication modes** with increasing availability and decreasing consistency guarantees:
+
+**Synchronous replication** (strongest consistency):
+\`\`\`
+Client -> Write to Leader -> Leader writes WAL
+       -> Leader sends WAL to Follower(s)
+       -> Follower writes WAL and ACKs
+       -> Leader confirms write to Client
+
+Timeline: Client ─write─> Leader ─replicate─> Follower ─ACK─> Leader ─confirm─> Client
+Latency: write_time + network_RTT + follower_write_time = 5-20ms (same AZ)
+         Cross-region: 100-300ms (speed of light limitation)
+\`\`\`
+
+**Properties**:
+- Zero data loss guaranteed (follower has every committed write)
+- Higher write latency (must wait for follower ACK)
+- Lower availability (if sync follower is down, writes BLOCK)
+- Used by: PostgreSQL (synchronous_commit=on), MySQL semi-sync (with loss=0)
+- Best for: Financial transactions, payment systems, critical data
+
+**Semi-synchronous replication** (practical middle ground):
+\`\`\`
+Client -> Write to Leader -> Leader writes WAL
+       -> Leader sends WAL to ALL followers
+       -> Wait for AT LEAST ONE follower ACK (not all)
+       -> Confirm write to Client
+       -> Remaining followers catch up asynchronously
+
+PostgreSQL: synchronous_commit = remote_write (one follower must write to WAL)
+MySQL: Semi-sync plugin (one replica must ACK before commit returns)
+\`\`\`
+
+**Properties**:
+- Near-zero data loss (one follower guaranteed to have the write)
+- Moderate latency (wait for fastest follower only, not all)
+- Better availability than full sync (write succeeds if ANY ONE follower is up)
+- If the sync follower dies: Falls back to async (configurable timeout)
+- Used by: Most production PostgreSQL deployments, AWS RDS Multi-AZ
+- Best for: Most applications that need durability without extreme latency
+
+**Asynchronous replication** (highest availability):
+\`\`\`
+Client -> Write to Leader -> Leader writes WAL -> Confirm to Client
+                          -> Leader sends WAL to followers (background)
+                          -> Followers apply WAL (lag = ms to seconds)
+
+Client gets confirmation BEFORE any follower has the data.
+\`\`\`
+
+**Properties**:
+- Possible data loss on leader failure (uncommitted replication window)
+- Lowest write latency (no waiting for followers)
+- Highest availability (writes never blocked by follower status)
+- Replication lag: typically 10ms-10s (depends on write volume and network)
+- Used by: Default in PostgreSQL, MySQL, MongoDB, Redis
+- Best for: Read replicas, analytics, non-critical data, cross-region replication
+
+**Decision framework**:
+| Requirement                        | Mode              | Example                    |
+|------------------------------------|-------------------|----------------------------|
+| Zero data loss, strong consistency | Synchronous       | Bank account balance       |
+| Near-zero data loss, reasonable perf| Semi-synchronous  | E-commerce orders          |
+| High throughput, tolerant of loss  | Asynchronous      | Social media posts         |
+| Cross-region DR                    | Async (distance)  | Geo read replicas          |
+| Same-AZ HA                         | Semi-sync         | Primary + standby in AZ pair|
+
+**Hybrid approaches in production**:
+\`\`\`
+PostgreSQL (recommended production setup):
+  1 synchronous standby (same AZ, 1-2ms overhead)
+  2 asynchronous replicas (different AZ, for reads + DR)
+
+  synchronous_standby_names = 'FIRST 1 (standby1, standby2)'
+  -> Waits for the FIRST of standby1 or standby2 to ACK
+  -> If standby1 is slow/down, standby2 satisfies the sync requirement
+  -> Remaining replicas catch up asynchronously
+
+AWS Aurora:
+  Writes replicated to 6 copies across 3 AZs
+  Write is acknowledged after 4 of 6 copies (quorum write)
+  Read is satisfied by any 3 of 6 copies (quorum read)
+  Effective: Semi-synchronous with quorum-based durability
+  Failover: < 30 seconds (promotes existing reader)
+\`\`\`
+
+**The "impossible triangle" of replication**:
+\`\`\`
+You can optimize for two of three:
+  1. Low latency (fast writes)
+  2. Strong consistency (no data loss)
+  3. High availability (writes never blocked)
+
+Sync:      Consistent + Available within AZ, but higher latency
+Semi-sync: Consistent + Low latency, but may block if all sync followers down
+Async:     Available + Low latency, but risk of data loss
+
+Semi-sync is the practical optimum for most systems.
+\`\`\``
+        },
+        {
+          question: 'How do you monitor replication health, detect split-brain, and handle replication lag in production?',
+          answer: `**Replication monitoring is non-negotiable** -- replication failures that go undetected lead to data loss, stale reads, or split-brain scenarios.
+
+**Key metrics to monitor**:
+\`\`\`
+1. Replication lag (most critical):
+   PostgreSQL: SELECT now() - pg_last_xact_replay_timestamp() AS lag;
+   MySQL: SHOW SLAVE STATUS -> Seconds_Behind_Master
+   Redis: INFO replication -> master_repl_offset vs slave_repl_offset
+
+   Alert thresholds:
+     Warning: lag > 5 seconds
+     Critical: lag > 30 seconds (failover will lose data)
+     Emergency: lag > 5 minutes (replica is severely behind)
+
+2. Replication connection status:
+   Is the replica connected to the leader? Is the WAL sender process alive?
+   PostgreSQL: SELECT * FROM pg_stat_replication;
+   Alert: streaming_state != 'streaming' for > 30 seconds
+
+3. WAL generation rate vs replay rate:
+   If leader generates WAL faster than replica can replay -> lag grows
+   Monitor: wal_bytes_generated/sec vs wal_bytes_replayed/sec
+   Alert: replay rate < 80% of generation rate
+
+4. Replica count and sync state:
+   How many replicas are in-sync vs lagging?
+   PostgreSQL: sync_state in (sync, async, quorum, potential)
+   Alert: in-sync replica count < min_required (e.g., < 2 for quorum)
+\`\`\`
+
+**Split-brain detection and prevention**:
+\`\`\`
+Split-brain: Two nodes both think they are the leader, accepting conflicting writes
+
+Detection methods:
+  1. Fencing tokens (epoch numbers):
+     Each leader election assigns an incrementing epoch number
+     Followers only accept writes from the highest epoch
+     Old leader's writes are rejected (stale epoch)
+
+  2. STONITH (Shoot The Other Node In The Head):
+     Before promoting new leader, KILL the old leader's process
+     Patroni: Uses SSH fence or power fence (IPMI) to stop old leader
+     AWS: Reboot old primary instance before promoting standby
+
+  3. etcd/ZooKeeper leader lock:
+     Only the node holding the distributed lock can be leader
+     Lock has TTL -- if holder dies, lock expires after timeout
+     Old leader MUST check lock validity before every write
+
+  4. Network split detection:
+     If a node cannot reach majority of cluster -> assume it is partitioned
+     Self-demote to read-only (do not accept writes)
+     PostgreSQL: pg_hba.conf can reject connections if not in leader role
+
+Monitoring for split-brain:
+  Alert: More than one node reports role='leader' in the same cluster
+  Alert: etcd leader lock acquired by different node than expected
+  Regular audit: Query all nodes for their role, verify exactly one leader
+\`\`\`
+
+**Handling replication lag in application code**:
+\`\`\`
+Problem: User writes to leader, immediately reads from replica -> stale data
+
+Strategy 1: Read-your-writes (route recent writes to leader):
+  After a write, set cookie: last_write_timestamp = now()
+  For reads within 5 seconds of a write: route to leader
+  After 5 seconds: route to any replica (lag has caught up)
+
+Strategy 2: Monotonic reads (stick to one replica per session):
+  Assign each user session to a specific replica
+  User always reads from the same replica -> no time travel
+  Implementation: session_id hash -> replica selection
+
+Strategy 3: Causal consistency (track write dependencies):
+  Each write returns a sequence number (LSN in PostgreSQL)
+  Subsequent reads include: "read_after_lsn = 12345"
+  Replica waits until it has replayed up to LSN 12345 before responding
+  PostgreSQL: SET synchronous_replication = 'remote_apply' for this behavior
+
+Strategy 4: Accept staleness with SLA:
+  Display "(updated 5 seconds ago)" in the UI
+  Users understand data may be slightly behind
+  Appropriate for: dashboards, analytics, non-critical displays
+\`\`\`
+
+**Operational runbook for replication issues**:
+\`\`\`
+Replication lag > 30 seconds:
+  1. Check if leader is under heavy write load -> throttle writes if needed
+  2. Check replica I/O (iostat) -> slow disk is common cause
+  3. Check network between leader and replica -> packet loss, bandwidth
+  4. Check for long-running queries on replica blocking replay
+  5. If lag is growing: Consider pausing non-critical reads from this replica
+
+Replication broken (replica disconnected):
+  1. Check pg_stat_replication on leader -> is WAL sender alive?
+  2. Check replica logs for errors -> authentication, disk full, WAL gap
+  3. If WAL gap: Rebuild replica from base backup (pg_basebackup)
+  4. Estimate rebuild time: data_size / network_bandwidth
+  5. Alert team if rebuild will exceed RTO threshold
+\`\`\``
+        },
+        {
+          question: 'What are the networking and consistency challenges of multi-region active-active deployments?',
+          answer: `**Multi-region active-active** means every region independently handles both reads and writes. It provides the lowest latency for global users and near-zero RTO, but introduces significant complexity.
+
+**The fundamental physics constraint**:
+\`\`\`
+Speed of light round trips (one-way latency):
+  Same AZ:          < 1ms
+  Cross-AZ (same region): 1-2ms
+  US-East to US-West: ~70ms
+  US-East to EU-West: ~80ms
+  US-East to AP-Southeast: ~200ms
+  US-East to AP-East: ~150ms
+
+Synchronous replication across regions:
+  Every write waits for cross-region ACK -> 70-200ms added to every write
+  At 1000 writes/second: Severe throughput bottleneck
+  This is why most multi-region setups use async replication
+\`\`\`
+
+**Conflict resolution strategies**:
+\`\`\`
+When two regions write the same data concurrently (async replication):
+
+1. Last-Writer-Wins (LWW) by timestamp:
+   US-East writes: user.name = "Alice" at T=100
+   EU-West writes: user.name = "Bob" at T=101
+   LWW: "Bob" wins (higher timestamp)
+   Risk: Clock skew between regions can cause wrong winner
+   Used by: DynamoDB Global Tables, Cassandra
+
+2. Version vectors / vector clocks:
+   Track causal history: [{US:3, EU:2}]
+   If versions are concurrent (no causal relationship) -> true conflict
+   If one version subsumes another -> no conflict, later version wins
+   Used by: Riak, Amazon's original Dynamo paper
+
+3. CRDTs (Conflict-free Replicated Data Types):
+   Data structures that merge automatically without coordination
+   G-Counter: Each region increments locally, merge = sum
+   OR-Set: Add/remove elements, merge = union with tombstones
+   Used by: Redis Enterprise (active-active), Figma (collaborative editing)
+
+4. Application-level merge:
+   Return both conflicting versions to the application
+   Application applies domain-specific merge logic
+   Example: Shopping cart -> union of items from both regions
+   Used by: Amazon's original shopping cart (Dynamo paper)
+\`\`\`
+
+**Data types that work well with active-active**:
+\`\`\`
+Easy (naturally mergeable):
+  - Counters: Page views, likes, metrics (use CRDTs)
+  - Append-only logs: Activity feeds, audit logs
+  - Sets: Tags, followers, bookmarks (use OR-Set CRDTs)
+  - User preferences: LWW is fine (user sets from one location)
+
+Hard (require careful handling):
+  - Account balances: Must prevent double-spend across regions
+  - Inventory counts: Must prevent overselling
+  - Unique constraints: Username uniqueness across regions
+  - Sequential IDs: Must not collide between regions
+
+Solutions for hard cases:
+  - Route all writes for that entity to a single "home" region
+  - Use distributed locks (expensive cross-region)
+  - Accept eventual consistency with reconciliation (and business process for conflicts)
+  - Assign ID ranges per region: US=1-999M, EU=1B-1.999B
+\`\`\`
+
+**Production active-active architectures**:
+\`\`\`
+Netflix (3 AWS regions):
+  Stateless services: Active-active everywhere
+  EVCache (Memcached): Replicated across regions, eventual consistency
+  Cassandra: Multi-DC with LOCAL_QUORUM (write locally, replicate async)
+  Critical data: Route to single region with sync replication
+  Region evacuation: Can drain entire region in < 10 minutes
+
+Uber (multiple regions):
+  Trip data: Active-active using Docstore (Raft-based, strong consistency)
+  Driver location: Eventually consistent (frequent updates, staleness OK)
+  Pricing: Computed locally per region using replicated reference data
+
+CockroachDB approach:
+  Every region can accept reads and writes
+  Raft consensus per range (data partition)
+  Leaseholder optimization: Place the Raft lease in the region with most traffic
+  Cross-region writes: Wait for Raft quorum (2 of 3 regions)
+  Latency: Local reads ~5ms, cross-region writes ~150ms
+\`\`\`
+
+**Cost of multi-region active-active**:
+\`\`\`
+Infrastructure: 2-3x single-region cost (full stack in each region)
+Data transfer: Cross-region replication bandwidth (AWS charges $0.02/GB cross-region)
+Operational complexity: 3-5x more complex to operate, debug, and deploy
+Engineering effort: Conflict resolution, data model constraints, testing
+
+When justified:
+  - Global user base requiring < 50ms API latency everywhere
+  - Availability target > 99.99% (single-region can achieve ~99.95%)
+  - Regulatory: Data must be processed in the region where it originates
+  - Revenue impact: Minutes of downtime cost $100K+ (justifies 3x infrastructure cost)
+\`\`\``
+        },
+        {
+          question: 'How do CRDTs enable conflict-free replication, and what are their practical limitations in active-active systems?',
+          answer: `**CRDTs (Conflict-free Replicated Data Types)** are data structures that can be replicated across nodes and updated independently, with a mathematical guarantee that all replicas converge without coordination.
+
+**Why CRDTs matter for replication**:
+\`\`\`
+Traditional approach (Last-Writer-Wins):
+  US-East: SET counter = 10 at T=100
+  EU-West: SET counter = 15 at T=101
+  LWW: counter = 15 (the T=100 increment from US is LOST)
+
+CRDT G-Counter approach:
+  US-East: local_count[US] += 5 (US: 5, EU: 0) -> total: 5
+  EU-West: local_count[EU] += 10 (US: 0, EU: 10) -> total: 10
+  Merge: {US: max(5,0), EU: max(0,10)} = {US: 5, EU: 10} -> total: 15
+  BOTH increments preserved! No data loss.
+\`\`\`
+
+**Common CRDT types with use cases**:
+\`\`\`
+G-Counter: Grow-only counter (page views, likes, metrics)
+PN-Counter: Increment + decrement counter (shopping cart quantity)
+G-Set: Add-only set (tags, follower lists)
+OR-Set: Add + remove set (shopping cart items, collaborative lists)
+LWW-Register: Simple value with timestamp (user profile fields)
+\`\`\`
+
+**Real-world deployments**:
+- **Redis Enterprise**: CRDT-based active-active geo-replication natively
+- **Riak**: Built-in CRDT support (counters, sets, maps)
+- **Figma**: Collaborative design uses CRDTs for conflict-free multi-user editing
+- **SoundCloud**: Distributed like counts across geo-distributed data centers
+
+**Practical limitations**:
+\`\`\`
+1. Cannot enforce global constraints:
+   "Max 100 items in cart" is impossible with CRDTs alone
+   Each region can add items past the limit independently
+
+2. Metadata overhead:
+   OR-Set tracks unique tags for every add/remove operation
+   Deleted items leave tombstones that grow unbounded
+   Requires periodic garbage collection (which needs coordination)
+
+3. Limited data types:
+   Not everything maps to a CRDT (complex transactions, constraints)
+   CRDTs work for: counters, sets, registers, text editing
+   NOT for: balance transfers, inventory reservations
+
+4. Semantic conflicts persist:
+   CRDTs merge DATA correctly, but MEANING may still conflict
+   Two users setting different meeting times -> data merges, but conflict remains
+\`\`\`
+
+**Decision guide**:
+\`\`\`
+Use CRDTs: Counters, sets, collaborative editing, distributed metrics
+Use LWW: Simple key-value updates, user preferences (occasional data loss OK)
+Use transactions: Financial operations, inventory, constraints
+Use single-leader: When strong consistency is non-negotiable
+\`\`\``
         }
       ],
 
@@ -13786,7 +16413,7 @@ Failover States:
       title: 'Network Essentials',
       icon: 'wifi',
       color: '#06b6d4',
-      questions: 5,
+      questions: 10,
       description: 'HTTP versions, TCP vs UDP vs QUIC, TLS, and gRPC for system design.',
       concepts: ['HTTP/1.1 vs HTTP/2 vs HTTP/3', 'TCP vs UDP', 'QUIC Protocol', 'TLS and mTLS', 'gRPC and Protocol Buffers', 'WebSocket Protocol', 'Connection Pooling', 'Head-of-Line Blocking'],
       tips: [
@@ -14182,6 +16809,566 @@ TCP vs UDP vs QUIC:
   Load balancer idle timeout: AWS ALB = 60s, NGINX = 75s default.
   If your requests are more than 60s apart, the connection drops and must be re-established.
   Set keepalive_timeout to match or exceed your LB's idle timeout.`
+        },
+        {
+          question: 'What is WebTransport, and how does it improve on WebSockets for real-time applications?',
+          answer: `**WebTransport** is a new web API that provides low-latency, bidirectional client-server messaging using HTTP/3 (QUIC) as the transport layer. It addresses several limitations of WebSockets.
+
+**WebTransport vs WebSocket comparison**:
+\`\`\`
+Feature              | WebSocket          | WebTransport
+---------------------|--------------------|-----------------------
+Transport            | TCP                | QUIC (UDP-based)
+Head-of-line blocking| Yes (TCP)          | No (per-stream)
+Connection setup     | HTTP upgrade (1 RTT)| 0-1 RTT (QUIC)
+Multiplexing         | No (single stream) | Yes (multiple streams)
+Unreliable delivery  | No (TCP guarantees)| Yes (datagrams)
+Connection migration | No                 | Yes (IP change survives)
+Protocol             | ws:// / wss://     | https:// (standard)
+Browser support      | Universal          | Chrome, Edge (growing)
+\`\`\`
+
+**Key advantages of WebTransport**:
+
+**1. Multiple independent streams**:
+\`\`\`
+WebSocket: Single ordered stream
+  Chat message stuck behind large file transfer
+
+WebTransport: Multiple concurrent streams
+  Stream 1: Chat messages (ordered, reliable)
+  Stream 2: File transfer (ordered, reliable)
+  Stream 3: Cursor positions (unordered, unreliable datagrams)
+
+  Lost packet in stream 2 does NOT block stream 1
+\`\`\`
+
+**2. Unreliable datagrams** (unique capability):
+\`\`\`
+WebSocket: Every message is delivered reliably and in order
+  If a packet is lost, TCP retransmits -> all subsequent messages wait
+  For gaming/live data: Old position data is worthless after retransmission
+
+WebTransport datagrams: Fire-and-forget delivery
+  Lost packet? Skip it, send the next one
+  Perfect for: Game state, cursor positions, live sensor data
+  Latency: Consistent, no retransmission delays
+\`\`\`
+
+**3. Connection migration** (QUIC):
+\`\`\`
+WebSocket over TCP: IP change (WiFi -> cellular) = connection drops
+  User must reconnect, re-authenticate, resync state
+
+WebTransport over QUIC: IP change = seamless continuation
+  QUIC connection identified by connection ID, not IP:port tuple
+  Critical for mobile users switching between networks
+\`\`\`
+
+**When to use WebTransport vs WebSocket**:
+\`\`\`
+Use WebSocket when:
+  - Browser support must be universal (WebTransport still growing)
+  - Simple bidirectional messaging is sufficient
+  - Existing infrastructure is WebSocket-based (Socket.IO, etc.)
+  - Reliable ordered delivery is the only requirement
+
+Use WebTransport when:
+  - Multiple independent data streams needed (game + chat + voice)
+  - Unreliable delivery acceptable for some data (positions, sensor readings)
+  - Mobile users frequently switch networks
+  - Lowest possible latency is critical (0-RTT connection setup)
+  - HTTP/3 is already deployed on your infrastructure
+\`\`\`
+
+**Current adoption (2025-2026)**:
+- Chrome and Edge support WebTransport in production
+- Firefox has experimental support
+- Safari support is in development
+- Server-side: Go (quic-go), Rust (quinn), Python (aioquic) have implementations
+- RFC 9220 defines WebSocket over HTTP/3, but browser adoption is slower than WebTransport
+
+**Interview insight**: Mention WebTransport when discussing real-time systems as the future evolution beyond WebSockets. Show awareness that while WebSockets are production-proven and universally supported, WebTransport solves fundamental TCP limitations for the next generation of real-time applications.`
+        },
+        {
+          question: 'How do you design API communication between microservices: REST vs gRPC vs GraphQL vs async messaging?',
+          answer: `**Inter-service communication is one of the most impactful architecture decisions** in microservice design. The choice affects latency, coupling, debugging, and operational complexity.
+
+**Synchronous patterns**:
+
+**REST (HTTP + JSON)**:
+\`\`\`
+GET /api/users/42 HTTP/1.1
+Accept: application/json
+
+200 OK
+{ "id": 42, "name": "Alice", "email": "alice@example.com" }
+
+Pros:
+  - Universal, human-readable, easy to debug (curl, browser)
+  - HTTP caching works natively (Cache-Control, ETag)
+  - Massive ecosystem of tools, libraries, and documentation
+  - Loose coupling (any language, any platform)
+
+Cons:
+  - Verbose payloads (JSON text, redundant field names)
+  - No built-in schema enforcement (OpenAPI is optional)
+  - Over-fetching (client gets ALL fields even if only name is needed)
+  - No streaming (without SSE/WebSocket alongside)
+
+Best for: Public APIs, browser-facing, third-party integrations
+Used by: Twitter API, GitHub API, Stripe API (all public-facing REST)
+\`\`\`
+
+**gRPC (HTTP/2 + Protobuf)**:
+\`\`\`
+service UserService {
+  rpc GetUser(GetUserRequest) returns (User);
+  rpc StreamUpdates(StreamRequest) returns (stream UserEvent);
+}
+
+Pros:
+  - 5-10x more compact than JSON (binary Protobuf)
+  - 5-10x faster serialization/deserialization
+  - Strong typing with code generation (type-safe client/server)
+  - Native streaming (unary, server, client, bidirectional)
+  - Forward/backward compatible schema evolution
+
+Cons:
+  - Not browser-native (needs grpc-web proxy)
+  - Binary format is not human-readable (harder to debug)
+  - HTTP/2 long-lived connections break naive L4 load balancing
+  - Learning curve for Protobuf schema management
+
+Best for: Internal microservice-to-microservice communication
+Used by: Google (internally), Netflix, Uber, Stripe (between services)
+\`\`\`
+
+**GraphQL**:
+\`\`\`
+query {
+  user(id: 42) {
+    name
+    orders(last: 5) { id, total, status }
+  }
+}
+
+Pros:
+  - Client specifies exactly what fields it needs (no over/under-fetching)
+  - Single endpoint for all queries (no URL proliferation)
+  - Strong typing with introspection
+  - Ideal for mobile (minimize network payload)
+
+Cons:
+  - N+1 query problem (must use DataLoader for batching)
+  - Caching is harder (POST requests, variable query shapes)
+  - Rate limiting is complex (hard to predict query cost upfront)
+  - Can expose too much of the data model to clients
+
+Best for: Client-facing API with diverse frontend needs (mobile, web, TV)
+Used by: GitHub API v4, Shopify, Facebook (inventor)
+\`\`\`
+
+**Asynchronous patterns**:
+
+**Event-driven (Kafka, RabbitMQ)**:
+\`\`\`
+Producer: order-service publishes OrderCreated event to Kafka
+Consumer: payment-service subscribes and processes payment
+Consumer: inventory-service subscribes and decrements stock
+Consumer: notification-service subscribes and sends email
+
+Pros:
+  - Decoupled: Producer does not know about consumers
+  - Resilient: Consumer failure does not affect producer
+  - Replayable: Kafka retains events for replay/reprocessing
+  - Scalable: Add consumers independently
+
+Cons:
+  - Eventual consistency (consumers process with delay)
+  - Harder to trace request flow (distributed, async)
+  - Debugging: Must correlate events across services
+  - Ordering: Only guaranteed within a partition
+
+Best for: Event sourcing, notifications, data pipelines, cross-service data flow
+\`\`\`
+
+**Decision matrix for interviews**:
+| Criterion            | REST    | gRPC    | GraphQL | Async/Kafka |
+|----------------------|---------|---------|---------|-------------|
+| Latency              | Good    | Best    | Good    | N/A (async) |
+| Coupling             | Loose   | Tight   | Moderate| Loosest     |
+| Browser support      | Native  | Proxy   | Native  | N/A         |
+| Debugging            | Easy    | Hard    | Moderate| Hard        |
+| Streaming            | SSE     | Native  | Subscr. | Native      |
+| Schema enforcement   | Optional| Strong  | Strong  | Schema Reg. |
+
+**Common production architecture**:
+\`\`\`
+External clients -> REST or GraphQL (browser-friendly)
+  -> API Gateway (Kong, Zuul)
+    -> Internal services communicate via gRPC (performance)
+    -> Cross-domain events via Kafka (decoupling)
+\`\`\``
+        },
+        {
+          question: 'How does DNS resolution affect application performance, and what are the common DNS pitfalls in microservice architectures?',
+          answer: `**DNS resolution is an invisible but significant source of latency** in microservice architectures. Every service-to-service call starts with a DNS lookup, and misconfigured DNS caching can cause cascading failures.
+
+**DNS resolution cost per service call**:
+\`\`\`
+Uncached DNS lookup: 1-50ms (depends on resolver and record TTL)
+Cached DNS lookup: < 0.1ms (in-process or OS cache)
+Service call latency: 5-50ms (typical internal API call)
+
+If DNS is uncached, it adds 2-100% overhead to every call
+In a call chain of 5 microservices: 5 x 50ms DNS = 250ms just for DNS
+
+This is why DNS caching behavior is critical in microservices.
+\`\`\`
+
+**Language-specific DNS caching pitfalls**:
+\`\`\`
+Java JVM (the most common gotcha):
+  Default: Caches DNS FOREVER if running with a SecurityManager
+  java.security: networkaddress.cache.ttl = -1 (infinite!)
+  Fix: -Dsun.net.inetaddr.ttl=30 or set in java.security
+
+  Impact of infinite caching:
+    Service B moves to new IP (scaling, failover)
+    Java Service A still connects to OLD IP -> 100% failure
+    Requires JVM restart to pick up new DNS -> defeats auto-scaling
+
+Node.js:
+  Default: dns module caches for 0 seconds (NO caching!)
+  Every HTTP request does a fresh DNS lookup
+  Fix: Use dns.setDefaultResultOrder('verbatim') and set lookup cache
+  Or: Use keepAlive connections (skip DNS on reused connections)
+
+Go:
+  Default: Uses OS resolver, respects TTL
+  Generally well-behaved, but watch for CGO dns resolver vs pure Go resolver
+  CGO resolver: Uses OS resolver (respects /etc/resolv.conf)
+  Pure Go resolver: May behave differently with search domains
+
+Python (requests library):
+  Default: No DNS caching in requests library
+  urllib3 connection pooling reuses connections (effectively caches)
+  Fix: Use connection pooling with keep-alive for all HTTP calls
+\`\`\`
+
+**DNS in Kubernetes (CoreDNS)**:
+\`\`\`
+Default lookup chain for "user-service":
+  1. user-service.default.svc.cluster.local  (full FQDN, 1 DNS query)
+  2. user-service.default.svc.cluster       (search domain, extra query)
+  3. user-service.default                   (search domain, extra query)
+  4. user-service                           (search domain, extra query)
+
+/etc/resolv.conf in a pod:
+  search default.svc.cluster.local svc.cluster.local cluster.local
+  ndots: 5
+
+Problem: If you call "user-service" (no dots), ndots=5 means the resolver
+tries ALL search domains FIRST (4 failed lookups) before the bare name
+  4 failed DNS queries x 5ms each = 20ms wasted on EVERY service call
+
+Fix: Use FQDN in service URLs: "user-service.default.svc.cluster.local."
+  (trailing dot means absolute, skip search domain expansion)
+  Or: Set ndots: 2 in pod DNS config (reduce search domain attempts)
+
+Performance impact:
+  ndots=5 (default): 4-5 DNS queries per service resolution
+  ndots=2 + FQDN: 1 DNS query per service resolution
+  Latency saved: 10-20ms per service call in a busy cluster
+\`\`\`
+
+**DNS-related failure modes in production**:
+\`\`\`
+1. DNS resolver overload:
+   10,000 pods x 100 service calls/sec = 1M DNS queries/sec
+   CoreDNS cannot keep up -> DNS timeouts -> service failures
+   Fix: Scale CoreDNS (horizontal pod autoscaler), use NodeLocal DNS Cache
+
+2. DNS caching during rolling deployment:
+   Old pod IPs cached in caller's DNS -> requests to terminated pods -> 502/503
+   Fix: Set short TTL (5-10s) for service DNS, use proper readiness probes
+
+3. External DNS resolution failure:
+   CoreDNS cannot resolve external domains (api.stripe.com) during outage
+   Fix: Configure DNS forwarding to multiple upstream resolvers (8.8.8.8 + 1.1.1.1)
+
+4. DNS amplification in service mesh:
+   Envoy sidecar does DNS lookup per request if not using EDS (endpoint discovery)
+   Fix: Use Istio's EDS which pushes endpoint IPs directly (bypasses DNS entirely)
+\`\`\`
+
+**NodeLocal DNS Cache (Kubernetes optimization)**:
+\`\`\`
+Without: Every pod sends DNS to CoreDNS pod (network hop, potential bottleneck)
+With: DNS cache daemon runs on EVERY node, pods resolve locally
+
+Benefits:
+  - DNS resolution from local cache: < 0.1ms (vs 1-5ms to CoreDNS)
+  - Reduces CoreDNS load by 80-90%
+  - Survives CoreDNS pod restart (local cache still serves)
+  - Eliminates conntrack table exhaustion (common DNS issue with UDP)
+
+Deployment: DaemonSet running on every node
+Adoption: Recommended for any cluster with > 100 pods
+\`\`\``
+        },
+        {
+          question: 'What is HTTP/3 adoption status, and how do you implement graceful protocol fallback?',
+          answer: `**HTTP/3 adoption** has grown significantly since its RFC 9114 standardization in June 2022, but adoption is uneven across the ecosystem.
+
+**Current adoption (2025-2026)**:
+\`\`\`
+Client support:
+  Chrome:  Full HTTP/3 support (since 2020, default enabled)
+  Firefox: Full HTTP/3 support (since 2021, default enabled)
+  Safari:  Full HTTP/3 support (since 2022, macOS Ventura / iOS 16)
+  Edge:    Full HTTP/3 support (Chromium-based)
+  curl:    HTTP/3 support with --http3 flag (requires quiche or ngtcp2)
+
+Server support:
+  Cloudflare: HTTP/3 enabled by default for all plans
+  AWS CloudFront: HTTP/3 enabled by default (since 2022)
+  NGINX: Experimental HTTP/3 module (nginx-quic, not yet mainline default)
+  Caddy: Full HTTP/3 support (built-in, auto-enabled)
+  LiteSpeed: Full HTTP/3 support (one of first servers to support it)
+  Apache httpd: No HTTP/3 support yet
+
+Traffic share:
+  ~30% of global web traffic uses HTTP/3 (mostly via Google and Cloudflare)
+  Google services: 50%+ of traffic over HTTP/3
+  Cloudflare: ~30% of requests served over HTTP/3
+\`\`\`
+
+**Why HTTP/3 is not yet universal**:
+\`\`\`
+1. UDP blocking: Some corporate firewalls block UDP entirely
+   HTTP/3 uses QUIC (built on UDP) -> blocked in restricted networks
+   ~2-5% of users cannot use HTTP/3 due to network restrictions
+
+2. Server ecosystem gaps:
+   NGINX (33% market share) has experimental QUIC support but not default
+   Apache httpd has NO HTTP/3 support
+   Many application servers (Gunicorn, Puma) do not support QUIC
+
+3. Middlebox interference:
+   Some NAT devices, firewalls, and load balancers drop or throttle UDP
+   TCP has decades of middlebox compatibility; QUIC is newer
+
+4. Debugging tooling:
+   Wireshark supports QUIC decryption but is more complex than HTTP/2 inspection
+   Most APM tools have limited HTTP/3-specific metrics
+\`\`\`
+
+**Graceful protocol fallback (Alt-Svc header)**:
+\`\`\`
+The standard mechanism for HTTP/3 discovery and fallback:
+
+Step 1: Client connects via HTTP/2 over TCP (universally works)
+Step 2: Server response includes Alt-Svc header:
+  Alt-Svc: h3=":443"; ma=86400
+
+  h3 = HTTP/3 available on this host
+  :443 = same port
+  ma=86400 = remember for 24 hours
+
+Step 3: Client attempts HTTP/3 connection in background
+Step 4: If HTTP/3 succeeds, subsequent requests use HTTP/3
+Step 5: If HTTP/3 fails (UDP blocked), continue with HTTP/2
+
+Fallback is automatic and transparent to the user.
+First request is always HTTP/2 (safe), subsequent may be HTTP/3 (fast).
+\`\`\`
+
+**Implementation pattern for production**:
+\`\`\`
+Edge architecture:
+  CDN (Cloudflare/CloudFront) handles HTTP/3 <-> client
+  CDN <-> origin uses HTTP/2 or HTTP/1.1 (internal network, TCP is fine)
+
+  Client ──HTTP/3──> CDN Edge ──HTTP/2──> Origin Server
+
+Benefits:
+  - No HTTP/3 implementation needed on your origin servers
+  - CDN handles protocol negotiation and fallback automatically
+  - Origin benefits from CDN connection pooling (fewer connections)
+  - QUIC's connection migration helps mobile users at the edge
+
+Self-hosted (without CDN):
+  Option A: Caddy web server (automatic HTTP/3, zero config)
+  Option B: NGINX with ngx_http_v3_module (experimental)
+  Option C: LiteSpeed Web Server (full HTTP/3 support)
+  Always serve Alt-Svc header on HTTP/2 responses for discovery
+\`\`\`
+
+**Measuring HTTP/3 benefit for your users**:
+\`\`\`
+A/B test approach:
+  Group A: HTTP/2 only (disable Alt-Svc header)
+  Group B: HTTP/2 + HTTP/3 (enable Alt-Svc header)
+  Measure: Page load time, time to first byte, connection setup time
+
+Expected results:
+  Low-loss networks (fiber, good WiFi): Minimal difference (< 5%)
+  Medium-loss networks (mobile, spotty WiFi): 10-20% faster
+  High-loss networks (3G, congested WiFi): 30-50% faster
+  Mobile users switching networks: Significant improvement (connection migration)
+
+Google's published results:
+  YouTube: 30% fewer rebuffering events with HTTP/3
+  Google Search: 2% faster page load (averaged across all users)
+  Facebook: 6% latency improvement, 20% fewer errors on poor networks
+\`\`\`
+
+**Interview recommendation**: HTTP/3 at the edge (via CDN) with HTTP/2 internally is the current best practice. Mention Alt-Svc-based graceful fallback to show you understand the practical deployment challenges beyond the protocol's theoretical benefits.`
+        },
+        {
+          question: 'What is gRPC server reflection, health checking, and how do you handle backward compatibility in Protobuf schemas?',
+          answer: `**gRPC operational patterns** that are essential for production microservice deployments:
+
+**Server Reflection** (service introspection):
+\`\`\`
+Problem: gRPC uses binary Protobuf -- you cannot just curl an endpoint
+How do you discover what methods a gRPC server exposes?
+
+Server reflection: The server exposes its Protobuf schema at runtime
+  grpcurl -plaintext localhost:50051 list
+  -> UserService
+  -> OrderService
+  -> grpc.health.v1.Health
+
+  grpcurl -plaintext localhost:50051 describe UserService
+  -> rpc GetUser(GetUserRequest) returns (User)
+  -> rpc ListUsers(ListUsersRequest) returns (stream User)
+
+  grpcurl -plaintext localhost:50051 UserService/GetUser -d '{"id": "42"}'
+  -> { "name": "Alice", "email": "alice@example.com" }
+
+Enable in code:
+  Go: reflection.Register(server)
+  Java: ProtoReflectionService.newInstance()
+
+Security: Disable in production or restrict to internal network
+  Reflection exposes your entire API surface -- potential security risk
+\`\`\`
+
+**gRPC Health Checking Protocol** (standardized):
+\`\`\`
+gRPC defines a standard health check service (grpc.health.v1.Health):
+
+  service Health {
+    rpc Check(HealthCheckRequest) returns (HealthCheckResponse);
+    rpc Watch(HealthCheckRequest) returns (stream HealthCheckResponse);
+  }
+
+  message HealthCheckResponse {
+    enum ServingStatus {
+      UNKNOWN = 0;
+      SERVING = 1;
+      NOT_SERVING = 2;
+      SERVICE_UNKNOWN = 3;
+    }
+    ServingStatus status = 1;
+  }
+
+Usage with Kubernetes:
+  livenessProbe:
+    grpc:
+      port: 50051
+    initialDelaySeconds: 10
+    periodSeconds: 10
+
+  readinessProbe:
+    grpc:
+      port: 50051
+      service: "my-service"
+    periodSeconds: 5
+
+Load balancer integration:
+  Envoy: Native gRPC health checking
+  AWS ALB: gRPC health checks supported since 2020
+  NGINX: gRPC health checks via ngx_http_grpc_module
+\`\`\`
+
+**Protobuf backward and forward compatibility rules**:
+\`\`\`
+SAFE changes (backward + forward compatible):
+  1. Add a new field with a new field number
+     message User { string name = 1; string email = 2; int32 age = 3; /* NEW */ }
+     Old clients ignore unknown field 3
+     New clients see field 3 as default (0) from old servers
+
+  2. Remove a field (mark as reserved)
+     reserved 3;  // Prevent reuse of field number 3
+     reserved "age";  // Prevent reuse of field name "age"
+
+  3. Rename a field (wire format uses field NUMBER, not name)
+     string email = 2 -> string email_address = 2  // Same wire format
+
+UNSAFE changes (BREAK compatibility):
+  1. Change a field number (changes wire format completely)
+  2. Change a field type (int32 -> string)
+  3. Reuse a reserved field number
+  4. Change between fixed-size and variable-size types (int32 -> fixed32)
+
+CONDITIONAL changes:
+  5. Change int32 <-> int64 (safe for values that fit in int32)
+  6. Change string <-> bytes (safe if content is valid UTF-8)
+\`\`\`
+
+**Schema Registry and evolution**:
+\`\`\`
+Problem: Multiple services share Protobuf schemas
+  Service A uses User v1, Service B uses User v2 -- must be compatible
+
+Confluent Schema Registry (Kafka ecosystem):
+  Stores Protobuf/Avro/JSON schemas
+  Validates compatibility before allowing schema changes
+  Compatibility modes: BACKWARD, FORWARD, FULL, NONE
+
+Buf (modern Protobuf tooling):
+  buf breaking --against .git#branch=main
+  -> Detects breaking changes in Protobuf schemas before merge
+  -> Integrates with CI/CD (block PRs with breaking changes)
+
+Best practices:
+  - Never reuse field numbers (even after deletion -- use reserved)
+  - Always add new fields with new field numbers
+  - Use buf or schema registry to enforce compatibility in CI
+  - Version your Protobuf packages: user.v1.User, user.v2.User
+  - Deprecate fields with [deprecated = true] before removal
+\`\`\`
+
+**gRPC interceptors (middleware pattern)**:
+\`\`\`
+Interceptors are the gRPC equivalent of HTTP middleware:
+
+  Unary interceptor (request-response):
+    func loggingInterceptor(ctx, req, info, handler) {
+      start = time.Now()
+      resp, err = handler(ctx, req)
+      log.Printf("method=%s duration=%s error=%v", info.FullMethod, time.Since(start), err)
+      return resp, err
+    }
+
+  Common interceptors:
+    - Authentication: Validate JWT from metadata (like HTTP headers)
+    - Logging: Log method, duration, error for every RPC
+    - Metrics: Record latency histogram, error rate (Prometheus)
+    - Tracing: Inject/extract trace context (OpenTelemetry)
+    - Rate limiting: Per-client or per-method request limits
+    - Recovery: Catch panics and return proper gRPC error codes
+
+  Chain interceptors (applied in order):
+    server = grpc.NewServer(
+      grpc.ChainUnaryInterceptor(recovery, logging, auth, metrics),
+    )
+\`\`\``
         }
       ],
 
@@ -14345,7 +17532,7 @@ TCP vs UDP vs QUIC:
       title: 'Long Polling, WebSockets & SSE',
       icon: 'radio',
       color: '#ec4899',
-      questions: 5,
+      questions: 10,
       description: 'Real-time communication patterns: long polling, WebSockets, and Server-Sent Events compared.',
       concepts: ['Short Polling', 'Long Polling', 'WebSockets', 'Server-Sent Events (SSE)', 'Socket.IO', 'Connection Scaling', 'Heartbeat Mechanisms'],
       tips: [
@@ -14844,6 +18031,583 @@ Server-Sent Events (SSE):
     - REST API as source of truth (client can always fetch missed messages)
     - On reconnect: Client fetches conversation history since last seen timestamp
     - "Catch-up" mechanism reconciles missed messages`
+        },
+        {
+          question: 'What is Socket.IO, what does it add on top of WebSockets, and when should you use it vs raw WebSockets?',
+          answer: `**Socket.IO** is a JavaScript library that provides real-time, bidirectional communication between clients and servers. It builds on top of WebSockets but adds several production-critical features.
+
+**What Socket.IO adds beyond raw WebSockets**:
+\`\`\`
+1. Automatic transport fallback:
+   Tries WebSocket first -> falls back to HTTP long polling if blocked
+   Corporate firewalls, restrictive proxies that block WS upgrade
+   Fallback is transparent to application code
+
+2. Automatic reconnection:
+   Exponential backoff with jitter (configurable)
+   Reconnects automatically when connection drops
+   Fires 'reconnect' event with attempt count
+   Raw WebSocket: You must implement this yourself
+
+3. Packet buffering:
+   Messages sent during disconnection are queued
+   Delivered automatically on reconnection
+   Raw WebSocket: Lost during disconnection
+
+4. Rooms and namespaces:
+   io.to('room-123').emit('message', data)  // Send to all in a room
+   io.of('/admin').emit('alert', data)       // Send to namespace
+
+   Raw WebSocket: Must build room/channel logic yourself
+
+5. Acknowledgments (request-reply pattern):
+   socket.emit('save-data', data, (response) => {
+     console.log('Server confirmed:', response);
+   });
+   Raw WebSocket: No built-in ACK mechanism
+
+6. Binary support:
+   Automatically handles ArrayBuffer, Blob, Buffer
+   Interleaves binary and JSON in the same connection
+
+7. Multiplexing via namespaces:
+   Multiple logical channels over a single connection
+   /chat, /notifications, /admin -- each with its own handlers
+\`\`\`
+
+**Socket.IO protocol overhead**:
+\`\`\`
+Raw WebSocket message: {"text":"hello"}
+  Wire size: 15 bytes + 2-14 byte WS frame = ~25 bytes
+
+Socket.IO message: 42["message",{"text":"hello"}]
+  42 = Engine.IO packet type (4) + Socket.IO packet type (2)
+  "message" = event name
+  Wire size: ~40 bytes (60% overhead for this small message)
+
+For large messages (1KB+), the overhead is negligible (<5%)
+For tiny messages (cursor positions, typing indicators), it is measurable
+\`\`\`
+
+**When to use Socket.IO vs raw WebSockets**:
+\`\`\`
+Use Socket.IO when:
+  - Rapid development (rooms, ACK, reconnection for free)
+  - Need fallback to long polling (restrictive networks)
+  - Node.js backend (native ecosystem, best support)
+  - Teams without deep WebSocket expertise
+  - Need rooms/channels without building from scratch
+
+Use raw WebSockets when:
+  - Maximum performance matters (minimal overhead per message)
+  - Non-JavaScript backend (Go, Rust, Elixir -- better WS libraries)
+  - Custom binary protocol (games, trading platforms)
+  - Already have reconnection/routing infrastructure
+  - Need interop with other WebSocket clients (not just Socket.IO)
+
+Use neither (use SSE instead) when:
+  - Server-to-client only (notifications, feeds, AI streaming)
+  - Auto-reconnect with Last-Event-ID is sufficient
+  - HTTP/2 compatibility matters more than bidirectional
+\`\`\`
+
+**Scaling Socket.IO across multiple servers**:
+\`\`\`
+Problem: User A on Server 1, User B on Server 2
+  io.to('room-123').emit() only reaches Server 1's local clients
+
+Solution: Socket.IO adapters (message broker for cross-server delivery)
+  - Redis adapter (most common): Uses Redis Pub/Sub
+  - Kafka adapter: For higher throughput and persistence
+  - MongoDB adapter: For persistence and replay
+  - Postgres adapter: Uses LISTEN/NOTIFY
+
+  npm install @socket.io/redis-adapter
+  io.adapter(createAdapter(pubClient, subClient));
+
+  Now: io.to('room-123').emit() publishes to Redis
+  All servers subscribed to Redis deliver to their local clients
+\`\`\`
+
+**Production deployment pattern**:
+\`\`\`
+                    ┌─── Socket.IO Server 1 (50K connections)
+CDN -> L7 LB ──────├─── Socket.IO Server 2 (50K connections)
+  (sticky sessions) ├─── Socket.IO Server 3 (50K connections)
+                    └─── Socket.IO Server 4 (50K connections)
+                              │
+                         Redis Pub/Sub
+                    (cross-server message routing)
+
+Sticky sessions required: WebSocket upgrade must go to same server
+HAProxy/NGINX: Use cookie-based or IP-hash sticky sessions
+AWS ALB: Native WebSocket support with sticky sessions
+\`\`\``
+        },
+        {
+          question: 'How do you implement real-time features with SSE for AI response streaming, and what are the best practices?',
+          answer: `**SSE for AI streaming** is the dominant pattern used by ChatGPT, Claude, and most LLM-powered applications. It delivers tokens as they are generated, providing a responsive user experience.
+
+**Server-side implementation (Node.js/Express)**:
+\`\`\`javascript
+app.get('/api/chat/stream', authenticate, async (req, res) => {
+  // Set SSE headers
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('X-Accel-Buffering', 'no');  // Disable NGINX buffering
+  res.flushHeaders();
+
+  const stream = await anthropic.messages.create({
+    model: 'claude-sonnet-4-20250514',
+    messages: [{ role: 'user', content: req.query.prompt }],
+    stream: true,
+  });
+
+  for await (const event of stream) {
+    if (event.type === 'content_block_delta') {
+      // Send each token as an SSE event
+      res.write('data: ' + JSON.stringify({
+        type: 'token',
+        text: event.delta.text
+      }) + '\\n\\n');
+    }
+  }
+
+  // Send completion event
+  res.write('data: [DONE]\\n\\n');
+  res.end();
+});
+\`\`\`
+
+**Client-side consumption (two approaches)**:
+
+**Approach 1: EventSource API (simple, auto-reconnect)**:
+\`\`\`javascript
+const source = new EventSource('/api/chat/stream?prompt=Hello');
+
+source.onmessage = (event) => {
+  if (event.data === '[DONE]') {
+    source.close();
+    return;
+  }
+  const { text } = JSON.parse(event.data);
+  appendToChat(text);
+};
+
+source.onerror = () => {
+  // Auto-reconnects with Last-Event-ID header
+};
+
+Limitation: GET requests only (cannot send POST body)
+Workaround: Pass prompt as query param or use token-based session
+\`\`\`
+
+**Approach 2: Fetch + ReadableStream (more flexible, POST support)**:
+\`\`\`javascript
+const response = await fetch('/api/chat/stream', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ prompt: 'Hello', history: [...] }),
+});
+
+const reader = response.body.getReader();
+const decoder = new TextDecoder();
+
+while (true) {
+  const { done, value } = await reader.read();
+  if (done) break;
+  const text = decoder.decode(value);
+  // Parse SSE format: "data: {...}\\n\\n"
+  for (const line of text.split('\\n\\n')) {
+    if (line.startsWith('data: ')) {
+      const data = JSON.parse(line.slice(6));
+      appendToChat(data.text);
+    }
+  }
+}
+
+This is how Camora's Lumora frontend consumes AI responses
+(Fetch + ReadableStream for SSE from both backends)
+\`\`\`
+
+**Best practices for SSE streaming**:
+\`\`\`
+1. Disable buffering at every layer:
+   NGINX: proxy_buffering off; (or X-Accel-Buffering: no header)
+   Node.js: res.flushHeaders() before first write
+   AWS ALB: No special config needed (streams by default)
+   CloudFront: Use streaming distribution or bypass CDN for streams
+
+2. Heartbeat to prevent proxy timeout:
+   Send comment line every 15-30 seconds:
+   res.write(': heartbeat\\n\\n');
+   Keeps connection alive through proxies with 60s idle timeout
+
+3. Error handling and cancellation:
+   req.on('close', () => {
+     stream.abort();  // Stop LLM generation when client disconnects
+     // Saves API cost -- do not generate tokens nobody will read
+   });
+
+4. Rate limiting for streaming endpoints:
+   Limit concurrent streams per user (e.g., max 3 simultaneous)
+   Track token count per stream for billing/quota
+   Implement timeout: max 120s per stream (prevent hung connections)
+
+5. Structured event types for rich UX:
+   event: token\\ndata: {"text": "Hello"}\\n\\n
+   event: thinking\\ndata: {"status": "Analyzing..."}\\n\\n
+   event: citation\\ndata: {"source": "doc.pdf", "page": 3}\\n\\n
+   event: done\\ndata: {"total_tokens": 450}\\n\\n
+\`\`\`
+
+**SSE vs WebSocket for AI streaming**:
+\`\`\`
+SSE is better for AI response streaming because:
+  - Unidirectional (server -> client) is all that is needed
+  - Works over standard HTTP (no upgrade, CDN-compatible)
+  - Auto-reconnect with Last-Event-ID (resume after disconnect)
+  - Simpler server implementation (just write to response)
+  - No sticky sessions needed (each stream is a new HTTP request)
+
+WebSocket would only be better if:
+  - User sends messages DURING streaming (interrupt/cancel via WS)
+  - Multiple simultaneous conversations need multiplexing
+  - Binary data streaming (images, audio alongside text)
+
+In practice: ChatGPT, Claude, and most AI apps use SSE via Fetch streams
+\`\`\``
+        },
+        {
+          question: 'How do you build a notification system using real-time protocols, and what is the architecture for millions of users?',
+          answer: `**Notification system architecture** must handle multiple delivery channels, millions of concurrent connections, and varying urgency levels.
+
+**Architecture overview**:
+\`\`\`
+Event Source                Notification Service              Delivery Channels
+┌──────────┐              ┌───────────────────┐             ┌─────────────┐
+│ Order    │──Kafka──────>│ Priority Router   │──SSE───────>│ Web Browser │
+│ Service  │              │                   │──Push──────>│ Mobile App  │
+│          │              │ Template Engine   │──Email─────>│ Email Inbox │
+│ Comment  │──Kafka──────>│                   │──SMS───────>│ Phone       │
+│ Service  │              │ User Preferences  │──Slack─────>│ Slack       │
+│          │              │                   │             └─────────────┘
+│ Payment  │──Kafka──────>│ Dedup + Rate Limit│
+│ Service  │              └───────────────────┘
+└──────────┘
+\`\`\`
+
+**Component 1: Event ingestion (Kafka)**:
+\`\`\`
+All services publish notification-worthy events to Kafka:
+  Topic: notification-events
+  Key: user_id (ensures per-user ordering)
+
+  {
+    "event_type": "order_shipped",
+    "user_id": "user-42",
+    "priority": "high",
+    "data": { "order_id": "ORD-123", "tracking": "1Z999..." },
+    "channels": ["push", "email", "in-app"],
+    "created_at": "2024-01-15T10:30:00Z"
+  }
+\`\`\`
+
+**Component 2: Priority routing and fan-out**:
+\`\`\`
+Priority levels:
+  Critical (immediate): Payment failed, security alert
+    -> Push notification + SMS + in-app (all channels simultaneously)
+  High (within seconds): Order shipped, new message
+    -> Push notification + in-app
+  Medium (within minutes): New follower, recommendation
+    -> In-app notification (batched)
+  Low (within hours): Weekly digest, promotional
+    -> Email (batched, sent at optimal time)
+
+Rate limiting per user:
+  Max 5 push notifications per hour
+  Max 1 email per topic per day
+  Aggregate low-priority into digest (batch 50 notifications into 1 email)
+\`\`\`
+
+**Component 3: In-app delivery via SSE**:
+\`\`\`
+User connects to /api/notifications/stream (SSE):
+  Browser: const source = new EventSource('/api/notifications/stream');
+
+Server maintains connection registry:
+  Redis: SET user:42:server -> "ws-server-3"
+
+When notification arrives for user-42:
+  1. Notification service publishes to Redis Pub/Sub channel: user:42
+  2. ws-server-3 is subscribed to user:42
+  3. ws-server-3 writes SSE event to user-42's connection
+
+If user is offline:
+  Store notification in database (PostgreSQL or DynamoDB)
+  When user reconnects, send unread notifications
+  Last-Event-ID header enables resumption
+\`\`\`
+
+**Component 4: Push notification delivery**:
+\`\`\`
+Mobile push (Firebase Cloud Messaging / APNs):
+  1. Mobile app registers device token with notification service
+  2. Service stores: { user_id, device_token, platform, last_active }
+  3. On notification: Send to FCM/APNs with device token
+  4. FCM/APNs delivers to device (even when app is closed)
+
+  Batching: FCM allows sending to 500 tokens per request
+  Multicast: Same message to multiple devices (user has phone + tablet)
+
+Web push (VAPID keys):
+  Service worker subscribes to push notifications
+  Server sends via Web Push Protocol to browser vendor's push server
+  Works even when browser tab is closed
+\`\`\`
+
+**Scaling to millions of concurrent connections**:
+\`\`\`
+Connection tier:
+  10 SSE servers, each handling 100K connections = 1M concurrent
+  Memory: ~5 KB per SSE connection x 100K = 500 MB per server
+
+Message routing:
+  Redis Pub/Sub: 1M+ messages/second, < 1ms latency
+  Each SSE server subscribes to channels for its connected users
+  Total Redis channels: Equal to number of online users
+
+Presence tracking:
+  Redis SET: user:42:server -> "sse-server-7"
+  When routing: Lookup user's server, publish to that server's channel
+  TTL: 5 minutes, refreshed on each heartbeat
+
+Horizontal scaling:
+  Add SSE servers behind load balancer (no sticky sessions needed for SSE)
+  Each new connection goes to any available server
+  Redis Pub/Sub handles cross-server message delivery
+\`\`\`
+
+**Deduplication and idempotency**:
+\`\`\`
+Problem: Same event may be processed multiple times (Kafka at-least-once)
+  User receives duplicate "Order shipped" notification
+
+Solution: Dedup by notification_id in Redis:
+  if (await redis.setnx('notif:' + notification_id, '1', 'EX', 3600)) {
+    // First time seeing this notification -- deliver it
+    deliverNotification(notification);
+  }
+  // Otherwise skip -- already delivered
+
+Also track per-user notification history for "mark as read" and analytics.
+\`\`\``
+        },
+        {
+          question: 'What is WebRTC, and how does it compare to WebSockets for peer-to-peer real-time communication?',
+          answer: `**WebRTC (Web Real-Time Communication)** enables direct peer-to-peer audio, video, and data transfer between browsers without going through a server.
+
+**WebRTC vs WebSocket architecture**:
+\`\`\`
+WebSocket (server-mediated):
+  Client A -> Server -> Client B
+  All data flows through your server
+  Server sees and can process all messages
+
+WebRTC (peer-to-peer after signaling):
+  Client A <-> Client B (direct)
+  Server only helps establish the connection (signaling)
+  After connection: Data flows directly between peers
+  Server does NOT see the data
+\`\`\`
+
+**WebRTC connection establishment**:
+\`\`\`
+Step 1: Signaling (via WebSocket or any channel):
+  Client A creates "offer" (SDP - Session Description Protocol)
+  Client A sends offer to Client B via signaling server (WebSocket)
+  Client B creates "answer" (SDP)
+  Client B sends answer back to Client A via signaling server
+
+Step 2: ICE Candidate exchange:
+  Both clients discover their network paths (IP:port combinations)
+  Exchange ICE candidates via signaling server
+  ICE handles NAT traversal (STUN/TURN servers)
+
+Step 3: Direct connection:
+  Peers establish direct DTLS-encrypted connection
+  Data flows peer-to-peer (server is no longer involved)
+
+  If direct connection fails (symmetric NAT):
+  Fall back to TURN relay server (data goes through server)
+  ~10-20% of connections require TURN relay
+\`\`\`
+
+**WebRTC data channels vs WebSocket**:
+| Feature             | WebSocket           | WebRTC DataChannel     |
+|---------------------|---------------------|------------------------|
+| Topology            | Client-Server       | Peer-to-Peer           |
+| Encryption          | TLS (optional)      | DTLS (mandatory)       |
+| Reliability         | TCP (reliable)      | Configurable (reliable or unreliable) |
+| Latency             | Good (~10ms)        | Best (no server hop)   |
+| NAT traversal       | Not needed          | STUN/TURN required     |
+| Server load         | All data through server| Signaling only        |
+| Scalability (1:1)   | Easy                | Easy                   |
+| Scalability (1:many)| Easy (server fans out)| Hard (mesh grows O(n^2))|
+
+**When to use WebRTC**:
+\`\`\`
+1. Video/audio calls: The primary use case (Zoom, Google Meet, Discord)
+   - Lowest latency for real-time media
+   - Built-in audio/video codecs (VP8, VP9, AV1, Opus)
+   - Adaptive bitrate based on network conditions
+
+2. P2P file sharing: Transfer files directly between browsers
+   - No server bandwidth cost (data does not touch your servers)
+   - End-to-end encrypted by default
+
+3. P2P gaming: Direct connection between players
+   - Unreliable data channels for game state (like UDP)
+   - Lowest possible latency for competitive gaming
+
+4. Screen sharing: Browser-native screen capture + WebRTC
+\`\`\`
+
+**When NOT to use WebRTC (use WebSocket instead)**:
+\`\`\`
+1. Chat applications: Text messages are tiny, server-mediated is fine
+   Server needs to store messages, apply business logic, enforce moderation
+
+2. Notifications: Server-to-client only, no peer-to-peer needed
+
+3. Broadcasting to many users: WebRTC mesh does not scale beyond ~6 peers
+   Use SFU (Selective Forwarding Unit) for group calls:
+
+   Mesh (pure P2P):      3 users = 6 connections, 6 users = 30 connections
+   SFU (server-assisted): 3 users = 3 connections, 6 users = 6 connections
+
+   SFU receives all streams, selectively forwards to each participant
+   Used by: Zoom, Twitch, Jitsi
+
+4. When server needs to see/process the data: Analytics, moderation, storage
+   WebRTC data is peer-to-peer -- server is blind to content
+\`\`\`
+
+**Production video call architecture**:
+\`\`\`
+1:1 call: Pure WebRTC (peer-to-peer)
+  Signaling via WebSocket -> ICE negotiation -> Direct media flow
+
+Small group (2-8): SFU (Selective Forwarding Unit)
+  Each participant sends their stream to SFU server
+  SFU decides which streams to forward to each participant
+  (Simulcast: Send multiple quality levels, SFU picks best for each viewer)
+
+Large group (8-1000+): SFU + MCU hybrid
+  SFU for active speakers (individual streams)
+  MCU (Multipoint Control Unit) composites passive viewers into grid
+  Twitch/YouTube Live: One-to-many via HLS/DASH (not WebRTC)
+
+Tools: mediasoup (Node.js SFU), Jitsi (open-source), LiveKit (Go SFU)
+\`\`\``
+        },
+        {
+          question: 'How do you choose between webhooks and real-time push protocols for event delivery to external systems?',
+          answer: `**Webhooks** are HTTP POST callbacks sent by a server to a pre-registered URL when an event occurs. They are the standard for server-to-server event delivery.
+
+**Webhook architecture**:
+\`\`\`
+Your system                        External system
+┌──────────┐                      ┌──────────────┐
+│ Event    │──HTTP POST───���──────>│ Webhook      │
+│ Source   │  /webhooks/events    │ Endpoint     │
+│          │  { event, data }     │ (their server)│
+└──────────┘                      └──────────────┘
+
+Your system does NOT maintain a connection to the external system.
+You send an HTTP request when an event occurs, then forget about it.
+\`\`\`
+
+**Webhooks vs real-time push comparison**:
+| Aspect              | Webhooks (HTTP POST)      | WebSocket/SSE             |
+|---------------------|---------------------------|---------------------------|
+| Direction           | Server-to-server          | Server-to-client          |
+| Connection          | Stateless (new per event) | Persistent connection     |
+| Delivery            | At-least-once (with retry)| At-most-once (no ACK)     |
+| Latency             | Seconds (HTTP overhead)   | Milliseconds              |
+| Scalability         | Excellent (stateless)     | Connection-limited        |
+| Reliability         | Retries + dead letter     | Connection may drop        |
+| Authentication      | HMAC signature per request| Token at connection setup  |
+| Firewall-friendly   | Yes (outbound HTTP)       | Depends (WS may be blocked)|
+
+**Production webhook best practices**:
+\`\`\`
+1. Signing for authenticity:
+   signature = HMAC-SHA256(payload, shared_secret)
+   Include in header: X-Webhook-Signature: sha256=abc123...
+   Receiver verifies: recompute HMAC, compare with header
+   (Stripe, GitHub, Shopify all use this pattern)
+
+2. Retry with exponential backoff:
+   Attempt 1: Immediate
+   Attempt 2: 1 minute later
+   Attempt 3: 5 minutes later
+   Attempt 4: 30 minutes later
+   Attempt 5: 2 hours later (final attempt)
+   After 5 failures: Move to dead letter queue, alert
+
+3. Idempotency:
+   Include unique event_id in every webhook payload
+   Receiver deduplicates: INSERT ... ON CONFLICT (event_id) DO NOTHING
+   Critical because retries WILL cause duplicate deliveries
+
+4. Response timeout:
+   Expect response within 5-10 seconds
+   If receiver needs longer processing: Return 200 immediately, process async
+   Stripe: Expects 2xx response within 20 seconds
+
+5. Event ordering:
+   Webhooks may arrive out of order (parallel delivery, retries)
+   Include timestamp and sequence number in payload
+   Receiver: Process events in order using sequence number
+\`\`\`
+
+**When to use webhooks vs real-time protocols**:
+\`\`\`
+Webhooks (server-to-server):
+  - Third-party integrations (Stripe payment events, GitHub push events)
+  - External system notifications (order status to partner API)
+  - Async processing triggers (CI/CD pipeline triggers)
+  - When receiver is another backend service, not a browser
+
+SSE/WebSocket (server-to-client):
+  - Browser or mobile app needs live updates
+  - Low-latency requirements (chat, live data)
+  - User-facing notifications
+  - When you control both client and server
+
+Polling (fallback):
+  - External system cannot receive webhooks (firewall restrictions)
+  - Simple integration where real-time is not needed
+  - Rate-limited APIs where you check periodically
+\`\`\`
+
+**Common webhook infrastructure at scale**:
+\`\`\`
+Webhook delivery service architecture:
+  Event Source -> Kafka topic -> Webhook Worker Pool -> External endpoints
+
+  Kafka: Buffers events during traffic spikes
+  Worker pool: Sends HTTP POST with retry logic
+  Dead letter queue: Events that fail all retries
+  Dashboard: Delivery status, retry count, failure reasons
+
+  Stripe: Delivers billions of webhook events per month
+  GitHub: Webhook infrastructure handles millions of push events daily
+  Twilio: Real-time webhook delivery for voice/SMS events
+\`\`\``
         }
       ],
 
@@ -15015,7 +18779,7 @@ Server-Sent Events (SSE):
       title: 'CAP & PACELC Deep Dive',
       icon: 'gitBranch',
       color: '#3b82f6',
-      questions: 6,
+      questions: 10,
       description: 'CAP theorem with real examples, PACELC extension, and a practical decision framework.',
       concepts: ['CAP Theorem', 'Consistency', 'Availability', 'Partition Tolerance', 'PACELC Extension', 'Linearizability', 'Eventual Consistency', 'Tunable Consistency'],
       tips: [
@@ -15494,6 +19258,420 @@ Consistency Spectrum:
 
   Best for: Counters, sets, collaborative text, shopping carts, distributed metrics
   NOT for: Complex transactions, constraints that span multiple CRDTs, strict ordering`
+        },
+        {
+          question: 'How do tunable consistency databases like Cassandra and Cosmos DB let you dial consistency per query?',
+          answer: `**Tunable consistency** means the application chooses the consistency level for each individual read or write operation, rather than the database having one fixed consistency model.
+
+**Cassandra consistency levels**:
+\`\`\`
+Write consistency levels (how many replicas must ACK a write):
+  ANY:           At least 1 node (even hinted handoff) -> Weakest, highest availability
+  ONE:           1 replica ACKs -> Fast, but data on only 1 node
+  TWO:           2 replicas ACK
+  THREE:         3 replicas ACK
+  QUORUM:        Majority of replicas ACK (e.g., 2 of 3)
+  LOCAL_QUORUM:  Majority within LOCAL datacenter
+  EACH_QUORUM:   Majority in EVERY datacenter -> Strongest multi-DC
+  ALL:           ALL replicas ACK -> Slowest, strongest, least available
+
+Read consistency levels:
+  ONE:           Read from closest replica (fastest, may be stale)
+  QUORUM:        Read from majority, return most recent
+  LOCAL_QUORUM:  Majority within local DC
+  ALL:           Read from ALL replicas, return most recent
+
+Strong consistency formula: W + R > N
+  N=3 replicas, W=QUORUM(2), R=QUORUM(2) -> 2+2=4 > 3 -> Strong consistency
+  N=3 replicas, W=ONE(1), R=ONE(1) -> 1+1=2 < 3 -> Eventual consistency
+\`\`\`
+
+**Per-query consistency selection (Cassandra CQL)**:
+\`\`\`sql
+-- Fast write, eventual consistency (activity log, metrics)
+INSERT INTO user_events (user_id, event) VALUES (?, ?)
+  USING CONSISTENCY ONE;
+
+-- Strong write, critical data (account balance)
+UPDATE accounts SET balance = ? WHERE user_id = ?
+  USING CONSISTENCY QUORUM;
+
+-- Fast read from local DC (product catalog)
+SELECT * FROM products WHERE id = ?
+  USING CONSISTENCY LOCAL_ONE;
+
+-- Strong read across DCs (inventory check before purchase)
+SELECT quantity FROM inventory WHERE product_id = ?
+  USING CONSISTENCY EACH_QUORUM;
+\`\`\`
+
+**Azure Cosmos DB -- five consistency levels** (most granular in the industry):
+\`\`\`
+Strongest ─────────────────────────────> Weakest
+Strong > Bounded Staleness > Session > Consistent Prefix > Eventual
+
+Strong:
+  Linearizable reads (always latest write)
+  Cost: Highest latency, lowest throughput, multi-region writes not supported
+  Use: Financial transactions, distributed locks
+
+Bounded Staleness:
+  Reads lag behind writes by at most K versions or T seconds
+  Example: "reads are at most 5 seconds stale"
+  Cost: Nearly as strong, supports multi-region
+  Use: Stock tickers, leaderboards (slightly stale is acceptable)
+
+Session (DEFAULT):
+  Read-your-writes consistency within a session
+  Other sessions may see stale data
+  Cost: Good balance of consistency and performance
+  Use: Most web applications (user sees their own changes)
+
+Consistent Prefix:
+  Reads never see out-of-order writes
+  If A, B, C were written in order, you see A, AB, or ABC -- never AC
+  Cost: Low latency, good for causal relationships
+  Use: Social feeds, comment threads
+
+Eventual:
+  No ordering guarantees, highest performance
+  Converges to consistent state when writes stop
+  Cost: Lowest latency, highest throughput
+  Use: Analytics, recommendations, non-critical counters
+\`\`\`
+
+**Cost implications of consistency choices**:
+\`\`\`
+DynamoDB:
+  Strongly consistent read:    1.0 RCU per 4KB
+  Eventually consistent read:  0.5 RCU per 4KB (50% cheaper, 2x throughput!)
+
+Cosmos DB:
+  Strong: Consumes 2x the RU of eventual reads
+  Session: Consumes 1x RU (default, recommended)
+
+Cassandra:
+  QUORUM write: 2 replicas must ACK -> 2x network traffic
+  ONE write: 1 replica ACK -> 1x network traffic, 2x faster
+
+Rule of thumb: Strong consistency costs 2x compared to eventual consistency
+Use strong only where business logic requires it (financial, inventory, auth)
+\`\`\``
+        },
+        {
+          question: 'What are the practical differences between linearizability, serializability, and strict serializability?',
+          answer: `These three terms are frequently confused in interviews. They describe different guarantees and apply to different contexts.
+
+**Linearizability** (single-object, real-time ordering):
+\`\`\`
+Context: Individual read/write operations on a SINGLE object (register, key-value)
+Guarantee: Every operation appears to take effect at a single instant
+           between its invocation and response. All observers see the same order.
+
+Example:
+  T=0: Client A writes x=1 (completes at T=2)
+  T=1: Client B reads x (starts during A's write)
+  T=3: Client B reads x
+
+  Linearizable: B's read at T=3 MUST return 1
+                B's read at T=1 MAY return 0 or 1 (concurrent with write)
+
+  Non-linearizable: B reads 1 at T=1, then 0 at T=3 (time travel!)
+
+Where used: ZooKeeper, etcd (distributed locks must be linearizable)
+Cost: Requires coordination on every operation -> highest latency
+\`\`\`
+
+**Serializability** (multi-object, transaction ordering):
+\`\`\`
+Context: TRANSACTIONS involving multiple objects (SQL databases)
+Guarantee: The result of executing transactions is equivalent to
+           SOME serial (one-at-a-time) execution order.
+           But NOT necessarily real-time order.
+
+Example:
+  T1: Transfer $100 from A to B (read A, write A, write B)
+  T2: Sum all accounts (read A, read B)
+
+  Serializable execution: Result looks like either T1;T2 or T2;T1
+    T1;T2: T2 sees the transfer completed
+    T2;T1: T2 sees pre-transfer balances
+    Both are valid serializable outcomes
+
+  Non-serializable: T2 reads A after debit but B before credit
+    (sees money "disappear" -- phantom state)
+
+Where used: PostgreSQL SERIALIZABLE isolation, MySQL with gap locks
+\`\`\`
+
+**Strict serializability** (strongest possible guarantee):
+\`\`\`
+Context: Transactions with real-time ordering
+Guarantee: Serializability + Linearizability
+           Transactions appear to execute in some serial order
+           AND that order respects real-time precedence
+
+If T1 completes before T2 starts, then T1 appears before T2 in serial order.
+
+Example:
+  T1 commits at T=5
+  T2 starts at T=6
+  Strict serializable: T2 MUST see T1's effects (real-time order respected)
+  Plain serializable: T2 MIGHT NOT see T1's effects (order not tied to real time)
+
+Where used: Google Spanner (TrueTime enables strict serializability globally)
+Cost: Highest -- requires both coordination and real-time clock synchronization
+\`\`\`
+
+**Comparison table**:
+| Property              | Linearizable      | Serializable       | Strict Serializable|
+|-----------------------|-------------------|--------------------|--------------------|
+| Scope                 | Single object     | Multi-object (txn) | Multi-object (txn) |
+| Real-time ordering    | Yes               | No                 | Yes                |
+| Total order           | All operations    | All transactions   | All transactions   |
+| Isolation             | N/A (no txns)     | Full               | Full               |
+| Performance cost      | High              | High               | Highest            |
+| Example system        | etcd, ZooKeeper   | PostgreSQL SERIALIZABLE | Google Spanner  |
+
+**Why this matters in interviews**:
+\`\`\`
+When the interviewer says "consistent," ask: "Which consistency model?"
+
+  "We need consistent reads" -> Probably linearizability (per-key freshness)
+  "We need consistent transactions" -> Probably serializability (ACID isolation)
+  "We need both" -> Strict serializability (Spanner, CockroachDB)
+  "We can tolerate brief staleness" -> Read-your-writes or causal consistency
+
+Most systems do not need strict serializability.
+  Session consistency (read-your-writes) covers 80% of use cases.
+  Linearizability for distributed locks and leader election.
+  Serializability for financial transactions.
+  Default to eventual for everything else.
+\`\`\``
+        },
+        {
+          question: 'How do you detect and handle network partitions in production, and what is the typical partition duration?',
+          answer: `**Network partitions in practice** are more common than many engineers expect. Understanding their frequency, duration, and detection is essential for designing resilient systems.
+
+**How common are partitions?**
+\`\`\`
+Industry data:
+  - Aphyr (Kyle Kingsbury) Jepsen testing: Found partition-related bugs in
+    nearly every distributed database tested (Cassandra, MongoDB, Redis, etc.)
+  - Google (Chandra et al., 2007): Network faults cause ~0.2% of Spanner
+    transactions to abort in a typical month
+  - AWS: AZ-level connectivity issues occur several times per year
+  - Splunk (2024): Network partitions occur in 10-20% of large-scale cloud
+    deployments annually
+
+Partition duration:
+  Transient (< 10 seconds): Most common, often caused by:
+    - BGP route convergence
+    - Switch firmware updates
+    - Brief cable disconnections
+  Short (10s - 5 minutes): Network equipment failure and failover
+  Medium (5 min - 1 hour): Configuration errors, firewall rule changes
+  Long (> 1 hour): Physical cable cuts, data center level issues, DDoS
+
+The vast majority of partitions are transient (< 30 seconds)
+But systems must handle longer partitions gracefully
+\`\`\`
+
+**Partition detection mechanisms**:
+\`\`\`
+1. Heartbeat-based detection:
+   Each node sends heartbeat every 1-5 seconds
+   If no heartbeat received for N consecutive intervals -> suspect failure
+   Multiple nodes must agree (prevent false positives from slow networks)
+
+   etcd: Election timeout 1000-2000ms, heartbeat interval 100ms
+   Cassandra: Phi Accrual Failure Detector (probabilistic, adapts to network)
+   ZooKeeper: Session timeout (default 30s), tickTime=2000ms
+
+2. Gossip protocol detection (Cassandra, Consul):
+   Nodes exchange membership and health info with random peers every second
+   If a node has not been heard from (directly or via gossip) in N seconds -> DOWN
+   Cassandra: phi_convict_threshold = 8 (higher = more tolerant of slow networks)
+
+3. Raft/Paxos leader lease:
+   Leader holds a time-bounded lease (e.g., 10 seconds)
+   If leader cannot renew lease (cannot reach majority) -> steps down
+   This is how etcd and CockroachDB detect partitions
+\`\`\`
+
+**Handling partitions at the application level**:
+\`\`\`
+1. Circuit breaker pattern:
+   If service B is unreachable (partitioned):
+     After 5 consecutive failures: Open circuit (stop calling B)
+     Return cached data or degraded response to users
+     Periodically probe B (half-open state)
+     When B responds: Close circuit, resume normal operation
+
+   Libraries: Resilience4j (Java), Hystrix (Netflix, deprecated), Polly (.NET)
+
+2. Graceful degradation:
+   If recommendation service is partitioned:
+     Show generic "popular items" instead of personalized recommendations
+   If payment service is partitioned:
+     Queue orders for processing when payment service recovers
+     Show "Order received, payment processing" to user
+
+3. Queue-based decoupling:
+   If direct service-to-service call fails:
+     Write message to local Kafka/SQS queue
+     Retry delivery when partition heals
+     Messages survive the partition in the queue
+
+   This converts a synchronous failure into an async delay
+\`\`\`
+
+**Testing partition handling (chaos engineering)**:
+\`\`\`
+Linux iptables partition simulation:
+  # Partition node from specific peers
+  iptables -A INPUT -s 10.0.1.50 -j DROP
+  iptables -A OUTPUT -d 10.0.1.50 -j DROP
+
+  # Simulate asymmetric partition (A can send to B, but B cannot respond)
+  iptables -A INPUT -s 10.0.1.50 -j DROP
+  # (leave OUTPUT open)
+
+tc (traffic control) for partial partition:
+  # 50% packet loss (simulates flaky network)
+  tc qdisc add dev eth0 root netem loss 50%
+  # 500ms latency (simulates cross-region-like delay)
+  tc qdisc add dev eth0 root netem delay 500ms
+
+AWS Fault Injection Simulator:
+  Disrupt connectivity between specific AZs
+  Inject latency on specific network paths
+  Simulate complete AZ isolation
+
+Jepsen (formal verification):
+  Tests distributed databases under partitions
+  Verifies claimed consistency guarantees actually hold
+  Found bugs in: Cassandra, MongoDB, Redis, CockroachDB, and many others
+\`\`\`
+
+**Key interview insight**: When discussing your system design, explicitly address partition handling for each component:
+- "During a partition between regions, the order service returns errors rather than risk inconsistency (CP choice)"
+- "During a partition, the product catalog continues serving stale data from the local cache (AP choice)"
+- "We use circuit breakers with fallback to cached data to isolate the impact of partitioned services"`
+        },
+        {
+          question: 'How does Google Spanner achieve strong consistency globally, and what is TrueTime?',
+          answer: `**Google Spanner** is the only production database that provides externally consistent (strict serializable) transactions at global scale. It achieves this through a hardware-assisted clock system called **TrueTime**.
+
+**The clock problem in distributed systems**:
+\`\`\`
+Why can't we just use wall-clock timestamps?
+
+  Server A (US-East) clock: 10:00:00.000
+  Server B (EU-West) clock: 10:00:00.015 (15ms ahead)
+
+  T1 commits on Server A at 10:00:00.005 (A's clock)
+  T2 commits on Server B at 10:00:00.010 (B's clock)
+
+  By wall clock: T2 appears AFTER T1 (10 > 5)
+  By real time: T2 might have started BEFORE T1 finished
+  Problem: Clock skew means we cannot determine real ordering
+
+  NTP synchronization accuracy: typically 1-100ms between servers
+  This uncertainty is TOO LARGE for strong consistency at global scale
+\`\`\`
+
+**TrueTime API**:
+\`\`\`
+TrueTime does NOT return a single timestamp.
+It returns an INTERVAL: TT.now() = [earliest, latest]
+
+  The actual current time is GUARANTEED to be within this interval
+
+Hardware:
+  Every Google data center has:
+  - Multiple GPS receivers (satellite-synchronized)
+  - Multiple atomic clocks (cesium/rubidium)
+  - TrueTime daemon combines both for bounded uncertainty
+
+Uncertainty interval: typically ~7ms (was ~4ms in 2012 paper)
+  [earliest=10:00:00.000, latest=10:00:00.007]
+  Real time is DEFINITELY between these two values
+\`\`\`
+
+**How Spanner uses TrueTime for global consistency**:
+\`\`\`
+Commit protocol:
+  1. Transaction T1 prepares to commit
+  2. T1 gets commit timestamp s = TT.now().latest (conservative upper bound)
+  3. T1 WAITS until TT.now().earliest > s (commit-wait)
+  4. Only then does T1 actually commit and become visible
+
+Why commit-wait works:
+  After waiting, we are CERTAIN that the commit timestamp s is in the past
+  Any future transaction T2 will get a timestamp s2 > s
+  Therefore T2 is guaranteed to see T1's writes
+
+Wait duration: ~7ms (the uncertainty interval)
+  This is the "cost" of global strong consistency
+  For a same-datacenter transaction: ~7ms overhead
+  For a cross-continent transaction: Already 100-200ms RTT, 7ms is negligible
+\`\`\`
+
+**Spanner architecture overview**:
+\`\`\`
+┌─────────────────────────────────────────────────┐
+│                Spanner Universe                  │
+│                                                 │
+│  Zone US-East          Zone EU-West             │
+│  ┌─────────────┐      ┌─────────────┐          │
+│  │ Spanserver 1 │      │ Spanserver 3 │          │
+│  │ Paxos Leader │<────>│ Paxos Follower│         │
+│  │ for range A  │      │ for range A   │         │
+│  └─────────────┘      └─────────────┘          │
+│  ┌─────────────┐      ┌─────────────┐          │
+│  │ Spanserver 2 │      │ Spanserver 4 │          │
+│  │ Paxos Follower│     │ Paxos Leader  │         │
+│  │ for range B  │<────>│ for range B   │         │
+│  └─────────────┘      └─────────────┘          │
+│                                                 │
+│  TrueTime Masters: GPS + Atomic Clocks          │
+└─────────────────────────────────────────────────┘
+
+Data is split into ranges (like partitions)
+Each range has a Paxos group across zones
+Each Paxos group has a leader that handles writes
+Cross-range transactions use 2PC (two-phase commit)
+\`\`\`
+
+**Spanner performance characteristics**:
+\`\`\`
+Single-region read:           ~5ms
+Single-region write:          ~10ms (includes commit-wait ~7ms)
+Cross-region read (stale):    ~5ms (bounded staleness from local replica)
+Cross-region read (strong):   ~RTT/2 (must contact Paxos leader)
+Cross-region write:           ~RTT + commit-wait (~200ms US-to-EU)
+\`\`\`
+
+**CockroachDB: Spanner for the rest of us**:
+\`\`\`
+CockroachDB implements Spanner-like strong consistency WITHOUT atomic clocks:
+  Uses Hybrid Logical Clocks (HLC) instead of TrueTime
+  HLC: max(physical_clock, last_seen_timestamp) + logical_counter
+  Clock skew bounded by: max_offset (default 500ms)
+
+Trade-off vs Spanner:
+  Spanner: 7ms uncertainty (atomic clocks) -> 7ms commit-wait
+  CockroachDB: 500ms max_offset -> may need to retry on clock skew detection
+  In practice: CockroachDB works well with NTP-synchronized clocks (~10ms skew)
+
+CockroachDB "follow the workload":
+  Place Raft leaseholder in the region with most traffic
+  Local reads from leaseholder: ~5ms
+  Cross-region writes still require Raft consensus: ~150-200ms
+\`\`\`
+
+**Interview insight**: Reference Spanner when discussing global strong consistency. Explain that its innovation is using hardware-assisted bounded clock uncertainty (TrueTime) to provide externally consistent transactions with only ~7ms overhead. CockroachDB is the open-source alternative that achieves similar results with software-only clocks at slightly higher overhead.`
         }
       ],
 
@@ -15651,7 +19829,7 @@ Consistency Spectrum:
       title: 'Distributed File Systems',
       icon: 'hardDrive',
       color: '#3b82f6',
-      questions: 5,
+      questions: 10,
       description: 'GFS, HDFS, and architecture patterns for storing massive datasets across clusters.',
       concepts: ['Google File System (GFS)', 'HDFS Architecture', 'Chunk Servers & Data Nodes', 'Master/NameNode Design', 'Replication & Fault Tolerance', 'Write-Once-Read-Many', 'Block Placement Policy', 'Rack Awareness'],
       tips: [
@@ -16059,6 +20237,517 @@ Chunk metadata (at Master/NameNode):
 
   This pattern has largely replaced HDFS for new analytical workloads.
   HDFS remains dominant for existing on-premise Hadoop deployments and workloads requiring sub-second latency to data.`
+        },
+        {
+          question: 'How does data locality work in distributed file systems, and why is the separation of storage and compute replacing it?',
+          answer: `**Data locality principle**: Move computation to where the data lives, rather than moving data to where the computation runs. This was the foundational idea behind Hadoop/MapReduce.
+
+**How data locality works in HDFS + MapReduce**:
+\`\`\`
+Traditional approach (without data locality):
+  Data on Storage Server -> Network transfer -> Compute Server -> Process
+  Network transfer: 1 GB at 1 Gbps = 8 seconds per task
+  For 1 TB dataset: 8,000 seconds of network transfer (2+ hours wasted)
+
+Data locality approach (HDFS + MapReduce):
+  Data stored on same nodes that run computation
+  Scheduler assigns map tasks to nodes that hold the data blocks
+  Data read from LOCAL DISK: 1 GB at 500 MB/s = 2 seconds (4x faster)
+
+  MapReduce scheduler priority:
+    1. Node-local: Task runs on same machine as data (best, no network)
+    2. Rack-local: Task runs on different machine in same rack (10 Gbps)
+    3. Off-rack: Task runs in different rack (1 Gbps, cross-rack bottleneck)
+
+  In a well-tuned cluster: 80-90% of tasks are node-local
+\`\`\`
+
+**Why separation of storage and compute is winning**:
+\`\`\`
+Problem with co-located storage + compute:
+  1. Scaling is coupled: Need more storage? Must buy more compute too (wasted CPU)
+     Need more compute? Must buy more storage too (wasted disks)
+  2. Elasticity is impossible: Cannot scale compute up for a 2-hour Spark job
+     and scale back down afterward (nodes hold data)
+  3. Underutilization: Compute nodes often idle while storing data 24/7
+  4. Hardware lifecycle: Storage and compute refresh at different rates
+
+Modern separation architecture:
+  ┌─────────────────────────────┐
+  │ Compute Layer (ephemeral)   │
+  │ Spark, Presto, Trino, Flink │
+  │ Scale: 10 -> 1000 -> 10     │
+  │ Cost: Pay only while running │
+  └──────────┬──────────────────┘
+             │ (25-100 Gbps network)
+  ┌──────────┴──────────────────┐
+  │ Storage Layer (persistent)   │
+  │ S3, GCS, Azure Blob, MinIO  │
+  │ Scale: Unlimited             │
+  │ Cost: $0.023/GB/month (S3)  │
+  └─────────────────────────────┘
+\`\`\`
+
+**Why this works now (but did not in 2010)**:
+\`\`\`
+2010:                          2025:
+  Network: 1-10 Gbps           Network: 25-100 Gbps per node
+  S3 latency: 50-100ms         S3 latency: ~10ms (S3 Express One Zone: ~1ms)
+  Spot pricing: Did not exist   Spot instances: 60-80% discount
+  Data formats: Raw text/CSV    Columnar: Parquet/ORC (10-50x less I/O)
+
+  Network is no longer the bottleneck for analytical workloads
+  Columnar formats reduce data read by 10-50x (read only needed columns)
+  S3 Express One Zone provides single-digit ms latency
+\`\`\`
+
+**Cost comparison (1 PB analytical workload)**:
+\`\`\`
+HDFS cluster (co-located):
+  50 nodes x $500/month (i3.2xlarge) = $25,000/month
+  Runs 24/7 even when no queries are running
+  Annual: $300,000
+
+Separated (S3 + Spot Spark):
+  Storage: 1 PB x $23/TB/month = $23,000/month
+  Compute: 50 spot instances x 8 hours/day x $150/month = $7,500/month
+  Annual: $366,000 (storage) + $90,000 (compute) = ~$366,000
+
+  BUT: If compute only runs 4 hours/day -> $45,000 compute
+  Total: ~$321,000 with more elasticity
+
+  For bursty workloads (ETL runs 2 hours/day):
+  Compute: $22,500/year -> Total: ~$298,000 with 10x more flexibility
+\`\`\`
+
+**Modern data lakehouse architecture** (best of both worlds):
+\`\`\`
+Delta Lake / Apache Iceberg / Apache Hudi:
+  Table format layer on top of object storage (S3/GCS)
+  ACID transactions on Parquet files
+  Time travel (query data as of any point in time)
+  Schema evolution, partition evolution
+  Statistics and indexing for query pruning
+
+Architecture:
+  Spark/Trino/Presto -> Delta Lake/Iceberg metadata -> S3 Parquet files
+
+  This provides most HDFS benefits (transactions, schema) with S3 economics
+  Snowflake, Databricks, and most new data platforms use this model
+\`\`\``
+        },
+        {
+          question: 'What is MinIO, SeaweedFS, and how do open-source S3-compatible object stores compare to HDFS for modern deployments?',
+          answer: `**S3-compatible object stores** provide the S3 API on your own infrastructure, giving you the benefits of object storage without vendor lock-in or cloud egress costs.
+
+**MinIO** (most popular S3-compatible object store):
+\`\`\`
+Architecture: Distributed object storage written in Go
+  - Full S3 API compatibility (drop-in replacement)
+  - Erasure coding for fault tolerance (default: EC 4+4)
+  - Multi-site replication for disaster recovery
+  - Kubernetes-native (Operator for deployment)
+
+Performance:
+  - Single node: 35+ GB/s read, 15+ GB/s write (NVMe)
+  - Cluster: Near-linear scaling with node count
+  - Designed for high-throughput (AI/ML training, analytics)
+
+Deployment models:
+  - On-premise: Replace HDFS for new data lake deployments
+  - Kubernetes: StatefulSet with persistent volumes
+  - Hybrid: On-prem MinIO + replicate to cloud S3
+
+Use cases:
+  - AI/ML training data: GPU clusters read from MinIO (S3 API)
+  - Data lakehouse: Spark/Trino query MinIO via S3a:// connector
+  - Backup target: Veeam, Commvault backup to MinIO
+  - Video storage: Media companies storing raw footage on-prem
+\`\`\`
+
+**SeaweedFS** (optimized for billions of small files):
+\`\`\`
+Architecture: Inspired by Facebook's Haystack paper
+  - Volume-based storage (groups small files into volumes)
+  - Master server: Lightweight metadata (unlike HDFS's memory-heavy NameNode)
+  - O(1) disk seek per file (direct offset lookup within volume)
+
+Key differentiator: Handles billions of small files efficiently
+  HDFS: 1 billion files x 150 bytes metadata = 150 GB NameNode RAM
+  SeaweedFS: Volume-based lookup, minimal per-file metadata
+
+Features:
+  - S3 API, HDFS API, FUSE mount, WebDAV
+  - Erasure coding, tiered storage (hot SSD, cold HDD, S3)
+  - Built-in CDN-like replication to remote data centers
+  - Cloud tiering: Automatically move cold data to S3/GCS
+
+Use cases:
+  - Image/thumbnail storage (billions of small images)
+  - Log storage with fast retrieval
+  - IoT data collection (massive number of small records)
+\`\`\`
+
+**Comparison: HDFS vs MinIO vs SeaweedFS vs S3**:
+\`\`\`
+| Feature           | HDFS           | MinIO           | SeaweedFS       | AWS S3          |
+|-------------------|----------------|-----------------|-----------------|-----------------|
+| API               | Java/CLI       | S3-compatible   | S3 + FUSE + HDFS| S3              |
+| Small files       | Poor (metadata)| Good            | Excellent       | Good            |
+| Large files       | Excellent      | Excellent       | Good            | Excellent       |
+| Erasure coding    | Yes (3.0+)     | Yes (default)   | Yes             | Built-in        |
+| Replication       | Block-level    | Bucket-level    | Volume-level    | Automatic       |
+| Scalability       | ~10K nodes     | ~1000 nodes     | ~1000 nodes     | Unlimited       |
+| Ops complexity    | High           | Medium          | Low-Medium      | None (managed)  |
+| Cost model        | Own hardware   | Own hardware    | Own hardware    | Pay-per-use     |
+| Data locality     | Yes            | No              | No              | No              |
+| Ecosystem         | Hadoop/Spark   | S3 ecosystem    | S3 ecosystem    | Everything      |
+\`\`\`
+
+**When to choose each**:
+\`\`\`
+HDFS: Existing Hadoop ecosystem, data locality critical, on-premise
+MinIO: S3-compatible on-prem, AI/ML workloads, data sovereignty requirements
+SeaweedFS: Billions of small files, image/media storage, simple operations
+AWS S3: Cloud-native, no infrastructure management, unlimited scale
+\`\`\`
+
+**Migration path (HDFS to object storage)**:
+\`\`\`
+Phase 1: New workloads write to MinIO/S3 (not HDFS)
+Phase 2: Configure Spark/Presto to read from both HDFS and MinIO/S3
+Phase 3: Migrate cold data from HDFS to object store (distcp or custom tool)
+Phase 4: Migrate remaining hot data during maintenance window
+Phase 5: Decommission HDFS cluster
+
+Tools: Apache DistCp (HDFS to S3), MinIO mc mirror, Rclone
+
+Timeline: 3-12 months for petabyte-scale migration
+Challenge: Revalidating all jobs/queries against new storage layer
+\`\`\``
+        },
+        {
+          question: 'How do you design a file storage system for a video platform like YouTube or Netflix?',
+          answer: `**Video storage at scale** requires a specialized architecture combining distributed file systems, object storage, transcoding pipelines, and CDN integration.
+
+**YouTube-scale numbers**:
+\`\`\`
+Upload volume: 500+ hours of video uploaded per minute
+Total library: 800+ million videos
+Storage: Multiple exabytes (estimated)
+Bandwidth: 1+ billion hours watched per day
+Formats: Each video stored in 10-20 quality variants (240p to 8K)
+\`\`\`
+
+**Architecture for video storage and delivery**:
+\`\`\`
+┌─────────┐    ┌──────────────┐    ┌───────────┐    ┌─────────┐
+│ Upload  │───>│ Transcoding  │───>│ Object    │───>│   CDN   │
+│ Service │    │ Pipeline     │    │ Storage   │    │  Edge   │
+└─────────┘    └──────────────┘    └───────────┘    └─────────┘
+     │                │                   │               │
+   Upload          Encode to           Store all        Serve to
+   single file     multiple            variants         viewers
+   (source)        formats/             (S3/GCS)       worldwide
+                   qualities
+\`\`\`
+
+**Step 1: Upload and ingestion**:
+\`\`\`
+Upload service:
+  - Accept large files (up to 256 GB for YouTube)
+  - Multipart upload (5 MB - 5 GB parts)
+  - Resume interrupted uploads (tus protocol)
+  - Store raw source file in object storage (S3)
+
+Storage for source files:
+  Bucket: s3://video-sources/{video_id}/source.{ext}
+  Replication: 3x across AZs (cannot lose the source)
+  Lifecycle: Move to Glacier after 90 days (rarely accessed after encoding)
+\`\`\`
+
+**Step 2: Transcoding pipeline**:
+\`\`\`
+Transcoding converts source to adaptive bitrate variants:
+
+Source: 4K, H.264, 50 Mbps
+  → 2160p (4K): H.264 + H.265 + VP9 + AV1 @ 20 Mbps
+  → 1080p: H.264 + H.265 + VP9 + AV1 @ 8 Mbps
+  → 720p: H.264 + VP9 @ 4 Mbps
+  → 480p: H.264 + VP9 @ 2 Mbps
+  → 360p: H.264 @ 1 Mbps
+  → 240p: H.264 @ 400 Kbps
+  → Audio: AAC 128 Kbps, Opus 96 Kbps
+
+Total variants: ~15-20 files per video
+Storage multiplication: Source + 15 variants = ~5-8x source size
+1 hour 4K source (25 GB) -> ~100-200 GB total stored
+
+Each variant split into 2-10 second segments for ABR streaming:
+  Segments stored individually for independent CDN caching
+  Manifest file (HLS .m3u8 or DASH .mpd) lists all segments and qualities
+\`\`\`
+
+**Step 3: Storage layout for segments**:
+\`\`\`
+Object storage layout:
+  s3://video-segments/{video_id}/
+    manifest.m3u8
+    1080p/
+      segment_001.ts  (2 seconds, ~2 MB)
+      segment_002.ts
+      ...
+    720p/
+      segment_001.ts  (2 seconds, ~1 MB)
+      ...
+    480p/
+      ...
+
+Benefits of object storage for video:
+  - Unlimited scale (S3 stores exabytes)
+  - 11 nines durability (never lose a segment)
+  - Pay per GB stored + retrieved
+  - Direct CDN integration (CloudFront pulls from S3)
+
+Optimization: Store hot videos (< 30 days old, popular) on SSD-backed storage
+  Move cold videos to S3 Glacier or Infrequent Access (80% cost reduction)
+\`\`\`
+
+**Step 4: CDN delivery with pre-positioning**:
+\`\`\`
+Popular content (Netflix model):
+  Pre-position popular titles on Open Connect Appliances
+  ISP-hosted servers with 100+ TB storage
+  95% of Netflix traffic served from ISP-local appliances
+
+Long-tail content:
+  Pull-based CDN caching (cache on first request)
+  Origin: Object storage (S3/GCS)
+  Shield: Regional cache (reduce origin load)
+  Edge: User-facing cache (lowest latency)
+
+Live content (Twitch model):
+  Low-latency ingest from streamer -> Transcoding -> CDN push
+  LL-HLS: 2-4 second glass-to-glass latency
+  Segments pushed to CDN as they are created (not pull)
+\`\`\`
+
+**Cost at YouTube scale (estimates)**:
+\`\`\`
+Storage: 1 exabyte x $0.020/GB/month = $20M/month
+Transcoding: 500 hours/min x 15 variants x $0.015/min = $5M/month
+CDN bandwidth: 1B hours/day x 4 Mbps avg x $0.02/GB = massive
+  (This is why YouTube/Netflix build their own CDNs)
+Total: Hundreds of millions per year
+
+Cost optimization:
+  - Transcode popular videos first (prioritize by predicted views)
+  - Lazy-transcode rare resolutions (only encode 4K if requested)
+  - AV1 codec: 30% smaller files than H.264 (saves bandwidth + storage)
+  - Lifecycle policies: Move old content to cheaper storage tiers
+\`\`\``
+        },
+        {
+          question: 'What is a data lake architecture, and how does it differ from a data warehouse?',
+          answer: `**Data lake** stores raw, unstructured data in its native format (files, logs, images, JSON). **Data warehouse** stores structured, processed data in a schema-optimized format for analytics.
+
+**Comparison**:
+\`\`\`
+| Aspect           | Data Lake                    | Data Warehouse              |
+|------------------|------------------------------|-----------------------------|
+| Data format      | Raw (JSON, CSV, Parquet, images)| Structured (tables, schemas)|
+| Schema           | Schema-on-read (define later)| Schema-on-write (define first)|
+| Users            | Data scientists, ML engineers| Business analysts, BI teams |
+| Processing       | Batch + streaming (Spark)    | SQL queries (fast)          |
+| Storage          | Object store (S3, HDFS)      | Columnar DB (Redshift, BQ)  |
+| Cost per TB      | ~$23/TB/month (S3)           | ~$250-1000/TB/month         |
+| Query speed      | Seconds to minutes           | Milliseconds to seconds     |
+| Data types       | Any (structured + unstructured)| Structured only            |
+\`\`\`
+
+**Data lakehouse (modern hybrid)**:
+\`\`\`
+Combines data lake economics with data warehouse features:
+
+  Object Storage (S3/GCS)
+    └── Table Format Layer (Delta Lake / Apache Iceberg)
+          ├── ACID transactions on files
+          ├── Schema enforcement and evolution
+          ├── Time travel (query historical data)
+          ├── Partition pruning and statistics
+          └── Concurrent reads and writes
+
+  Query Engines:
+    Spark, Trino/Presto, Dremio, Databricks SQL
+
+Benefits:
+  - Store raw data cheaply ($23/TB/month on S3)
+  - Query with SQL at near-warehouse speed
+  - ACID transactions prevent corrupted reads
+  - Single copy of data serves BI + ML + ETL
+\`\`\`
+
+**Storage architecture for a data lake**:
+\`\`\`
+s3://company-data-lake/
+  raw/                    # Raw ingested data (immutable)
+    events/2024/01/15/    # Partitioned by date
+      events_001.json.gz
+    logs/2024/01/15/
+      access_log_001.gz
+  processed/              # Cleaned and transformed (Parquet)
+    user_events/
+      _delta_log/         # Delta Lake transaction log
+      year=2024/month=01/
+        part-00001.parquet
+  curated/                # Business-ready aggregations
+    daily_metrics/
+      metric_date=2024-01-15/
+        summary.parquet
+
+Lifecycle:
+  Raw zone: Land data as-is from sources (schema-on-read)
+  Processed zone: Clean, deduplicate, convert to Parquet (ETL pipeline)
+  Curated zone: Aggregated, joined, business-ready tables
+\`\`\`
+
+**File format choices**:
+\`\`\`
+| Format     | Type      | Compression | Schema | Best For                   |
+|------------|-----------|-------------|--------|----------------------------|
+| CSV        | Row       | gzip        | None   | Simple export, spreadsheets|
+| JSON       | Row       | gzip        | None   | Nested data, APIs          |
+| Avro       | Row       | Snappy      | Built-in| Streaming, Kafka messages |
+| Parquet    | Columnar  | Snappy/zstd | Built-in| Analytics, SQL queries     |
+| ORC        | Columnar  | zlib/zstd   | Built-in| Hive ecosystem             |
+
+For data lakes: Parquet is the standard
+  - Columnar: Read only needed columns (SELECT name, age from 100-column table -> read 2%)
+  - Compression: 5-10x smaller than raw JSON/CSV
+  - Schema embedded: Self-describing, schema evolution supported
+  - Predicate pushdown: Skip row groups that do not match WHERE clause
+
+Example savings:
+  100 million rows, 50 columns, CSV: 100 GB
+  Same data in Parquet: 10-15 GB (with compression)
+  Query reading 3 columns: Reads ~1 GB instead of 100 GB
+\`\`\`
+
+**When distributed file systems matter for data lakes**:
+\`\`\`
+On-premise: HDFS or MinIO as the storage layer
+  Spark reads from HDFS/MinIO -> processes -> writes back
+  Data locality with HDFS: Spark tasks scheduled on data nodes
+
+Cloud: S3/GCS/Azure Blob as the storage layer
+  Spark/Trino reads from S3 -> processes -> writes back
+  No data locality, but 25-100 Gbps network compensates
+  Spot/preemptible instances for 60-80% compute cost reduction
+
+Hybrid: On-prem HDFS + cloud S3 with replication
+  Hot data on HDFS (low-latency local access)
+  Cold data on S3 (cheap long-term storage)
+  Apache Ozone or MinIO for unified S3 API on-prem
+\`\`\``
+        },
+        {
+          question: 'How does Amazon S3 achieve 11 nines of durability, and what are its consistency guarantees?',
+          answer: `**S3 durability: 99.999999999% (11 nines)** means statistically, if you store 10 million objects, you can expect to lose one object every 10,000 years.
+
+**How S3 achieves this durability**:
+\`\`\`
+1. Redundancy across multiple AZs:
+   Each object is automatically replicated across a MINIMUM of 3 AZs
+   within the same region (geographically separated data centers)
+   Each AZ has independent power, cooling, networking
+
+2. Erasure coding (not simple replication):
+   S3 uses erasure coding to split objects into data + parity fragments
+   Fragments distributed across multiple AZs and storage devices
+   Can reconstruct the original object even if multiple fragments are lost
+   More space-efficient than 3x replication while achieving higher durability
+
+3. Continuous integrity checking:
+   Every stored fragment has a checksum
+   Background processes continuously verify checksums
+   Corrupted fragments detected and automatically repaired from parity
+   No silent data corruption (bit rot)
+
+4. Drive and server failure handling:
+   AWS operates millions of storage drives
+   Drives fail daily (expected at scale) -- S3 re-replicates automatically
+   Server failure: Data reconstructed from fragments on surviving servers
+   AZ failure: Data available from fragments in other AZs
+\`\`\`
+
+**S3 consistency model (since December 2020)**:
+\`\`\`
+S3 now provides STRONG read-after-write consistency for all operations:
+
+  PUT (new object):
+    PUT key="photo.jpg" -> 200 OK
+    GET key="photo.jpg" -> Returns photo.jpg (immediately, guaranteed)
+
+  PUT (overwrite):
+    PUT key="config.json" (v2) -> 200 OK
+    GET key="config.json" -> Returns v2 (never returns v1 after PUT succeeds)
+
+  DELETE:
+    DELETE key="old.txt" -> 200 OK
+    GET key="old.txt" -> 404 Not Found (never returns deleted object)
+
+  LIST:
+    PUT key="new-file.txt" -> 200 OK
+    LIST prefix="new-" -> Includes "new-file.txt" (immediately reflected)
+
+Before December 2020: S3 had eventual consistency for overwrite PUTs and DELETEs
+  This caused bugs: Update file -> immediate read returned OLD version
+  Engineers had to build workarounds (flag files, DynamoDB for consistency)
+  Now: Strong consistency at no extra cost or latency penalty
+\`\`\`
+
+**S3 storage classes (cost optimization)**:
+\`\`\`
+| Class                  | Durability  | Availability | Cost/GB/month | Use Case           |
+|------------------------|-------------|--------------|---------------|---------------------|
+| Standard               | 11 nines    | 99.99%       | $0.023        | Frequently accessed |
+| Intelligent-Tiering    | 11 nines    | 99.9%        | $0.023 + auto | Unknown access      |
+| Standard-IA            | 11 nines    | 99.9%        | $0.0125       | Infrequent, quick   |
+| One Zone-IA            | 11 nines*   | 99.5%        | $0.010        | Reproducible data   |
+| Glacier Instant        | 11 nines    | 99.9%        | $0.004        | Archive, ms access  |
+| Glacier Flexible       | 11 nines    | 99.99%       | $0.0036       | Archive, min-hours  |
+| Glacier Deep Archive   | 11 nines    | 99.99%       | $0.00099      | Compliance, 12hr    |
+
+*One Zone-IA: 11 nines within a single AZ (lower if AZ is destroyed)
+
+Lifecycle policies automate tiering:
+  Day 0-30: Standard (hot)
+  Day 30-90: Standard-IA (warm)
+  Day 90-365: Glacier Instant Retrieval (cold)
+  Day 365+: Glacier Deep Archive (frozen)
+\`\`\`
+
+**S3 performance characteristics**:
+\`\`\`
+Throughput per prefix:
+  3,500 PUT/COPY/POST/DELETE requests per second per prefix
+  5,500 GET/HEAD requests per second per prefix
+  Scale: Distribute objects across multiple prefixes for higher throughput
+
+S3 Express One Zone (launched 2023):
+  Single-digit millisecond latency (vs ~50ms for standard S3)
+  10x faster than standard S3
+  Use: ML training, analytics, real-time data processing
+  Cost: Higher per-GB but dramatically lower latency
+
+Multipart upload:
+  Files > 5 GB MUST use multipart upload
+  Each part: 5 MB to 5 GB
+  Upload parts in parallel (saturate network bandwidth)
+  Max object size: 5 TB
+\`\`\`
+
+**Interview insight**: When discussing storage in system design, S3 (or equivalent cloud object storage) should be your default answer for any data that is not frequently queried by key. Its combination of 11-nines durability, strong consistency, virtually unlimited scale, and low cost makes it the storage foundation for most cloud architectures.`
         }
       ],
 
@@ -16208,7 +20897,7 @@ Chunk metadata (at Master/NameNode):
       title: 'Distributed Messaging',
       icon: 'radio',
       color: '#8b5cf6',
-      questions: 5,
+      questions: 10,
       description: 'Kafka deep dive, RabbitMQ vs Kafka, delivery semantics, and event streaming architectures.',
       concepts: ['Apache Kafka Architecture', 'Topics & Partitions', 'Consumer Groups', 'Delivery Semantics (At-Least-Once, At-Most-Once, Exactly-Once)', 'RabbitMQ vs Kafka', 'Event Sourcing', 'Log Compaction', 'Schema Registry'],
       tips: [
@@ -16665,6 +21354,627 @@ Message Record:
 | State management   | RocksDB + Kafka    | RocksDB + checkpoints| In-memory/disk   |
 | Exactly-once       | Native (Kafka txn) | Native (checkpoints)| Structured streaming|
 | Best for           | Kafka-only pipelines| Complex event processing| Batch + stream   |`
+        },
+        {
+          question: 'How does Kafka handle consumer lag, backpressure, and what happens when consumers cannot keep up with producers?',
+          answer: `**Consumer lag** is the difference between the latest produced offset and the consumer's current offset. It is the most important Kafka operational metric.
+
+**Measuring consumer lag**:
+\`\`\`
+Kafka stores offsets in __consumer_offsets internal topic
+
+Per-partition lag:
+  Latest offset (log end): 1,000,000
+  Consumer offset:           999,500
+  Lag: 500 messages
+
+Tools:
+  kafka-consumer-groups.sh --describe --group order-processor
+    TOPIC     PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG
+    orders    0          999500          1000000         500
+    orders    1          998000          1000000         2000
+    orders    2          999900          1000000         100
+
+  Burrow (LinkedIn): Continuous consumer lag monitoring with trend analysis
+  Datadog/Prometheus: kafka_consumergroup_lag metric
+\`\`\`
+
+**What causes consumer lag**:
+\`\`\`
+1. Processing too slow:
+   Consumer spends 100ms per message, but producer sends 1000 msg/s
+   Consumer processes 10 msg/s -> lag grows by 990 msg/s
+
+2. Insufficient consumer parallelism:
+   Topic has 12 partitions but only 2 consumers
+   Each consumer handles 6 partitions -> bottleneck
+   Fix: Scale to 12 consumers (1 per partition = max parallelism)
+
+3. External dependency bottleneck:
+   Consumer writes to database that is slow
+   Database at 100% CPU -> consumer blocked on DB writes -> lag grows
+
+4. Rebalancing storms:
+   Consumer restarts trigger rebalance -> all partitions revoked -> processing pauses
+   During rebalance: 0 messages processed but producer keeps sending
+   Fix: Use cooperative incremental rebalance + static group membership
+
+5. GC pauses (JVM consumers):
+   Long GC pause -> consumer misses heartbeat -> kicked from group -> rebalance
+   Fix: Tune JVM GC, increase session.timeout.ms (45s), max.poll.interval.ms (5min)
+\`\`\`
+
+**Handling backpressure (consumers cannot keep up)**:
+
+**Strategy 1: Scale consumers horizontally**:
+\`\`\`
+Add more consumer instances to the consumer group
+Each additional consumer takes some partitions from overloaded consumers
+
+Before: 2 consumers x 6 partitions each
+After:  6 consumers x 2 partitions each (3x throughput)
+
+Limitation: Cannot have more consumers than partitions
+If 12 partitions -> max 12 consumers (more would sit idle)
+For higher parallelism: Increase partition count (but cannot decrease later)
+\`\`\`
+
+**Strategy 2: Batch processing with larger poll batches**:
+\`\`\`
+max.poll.records = 500 (default)
+Increase to 1000-5000 for batch-friendly consumers
+
+Consumer fetches 5000 messages in one poll()
+Processes them as a batch (bulk INSERT to DB, batch API calls)
+Dramatically more efficient than one-at-a-time processing
+
+Example: Writing to PostgreSQL
+  One-at-a-time: 100 INSERTs/sec
+  Batch (1000 rows per INSERT): 100,000 rows/sec (1000x improvement)
+\`\`\`
+
+**Strategy 3: Async processing with internal buffer**:
+\`\`\`
+Consumer poll() -> Internal queue (bounded) -> Worker thread pool
+
+  Consumer thread: Polls Kafka, writes to in-memory queue
+  Worker threads: Process messages from queue in parallel
+  Commit: After workers confirm processing, commit offsets
+
+  Benefits: Decouple polling from processing
+  Risk: If worker dies before commit -> at-least-once delivery (must be idempotent)
+\`\`\`
+
+**Strategy 4: Skip and replay (for non-critical data)**:
+\`\`\`
+If lag exceeds threshold (e.g., 1 hour behind):
+  Option A: Skip to latest offset, process only new messages
+    consumer.seekToEnd(partitions);
+    Accept data loss for the skipped period
+    Suitable for: Metrics, analytics, non-critical events
+
+  Option B: Process at reduced fidelity
+    Sample 1 in 10 messages to catch up faster
+    Then switch to full processing once caught up
+\`\`\`
+
+**Monitoring and alerting**:
+\`\`\`
+Alert levels:
+  Warning: Consumer lag > 10,000 messages (consumer slightly behind)
+  Critical: Consumer lag > 100,000 messages (consumer falling behind)
+  Emergency: Consumer lag growing > 1,000 messages/minute (getting worse)
+  Trend alert: Lag increasing for > 10 minutes continuously
+
+Dashboard metrics:
+  - Consumer lag per partition (absolute count)
+  - Lag growth rate (positive = falling behind, negative = catching up)
+  - Consumer processing rate (messages/sec per consumer)
+  - Producer rate vs consumer rate (should be roughly equal)
+  - Rebalance count per hour (should be near zero)
+\`\`\``
+        },
+        {
+          question: 'What is the Kafka KRaft mode, and how does it replace ZooKeeper for metadata management?',
+          answer: `**KRaft (Kafka Raft)** is Kafka's built-in consensus mechanism that replaces Apache ZooKeeper for metadata management. ZooKeeper removal was the most significant architectural change in Kafka's history.
+
+**Why remove ZooKeeper**:
+\`\`\`
+ZooKeeper was Kafka's dependency for:
+  - Broker discovery and membership
+  - Controller election (which broker manages partition leadership)
+  - Topic and partition metadata storage
+  - ACL (access control) storage
+
+Problems with ZooKeeper dependency:
+  1. Operational complexity: Two separate distributed systems to manage
+     ZooKeeper needs its own cluster (3+ nodes), monitoring, upgrades
+  2. Scalability bottleneck: ZooKeeper limits Kafka to ~200K partitions
+     Metadata updates synchronized through ZK -> becomes bottleneck
+  3. Slow controller failover: 10-30 seconds when controller moves
+     All partition metadata must be loaded from ZK into new controller
+  4. Separate failure domain: ZK outage brings down Kafka control plane
+     ZK failure = Kafka cannot elect leaders or create topics
+\`\`\`
+
+**KRaft architecture**:
+\`\`\`
+Before (ZooKeeper mode):
+  ┌──────────┐   ┌──────────┐   ┌──────────┐
+  │ ZK Node 1│   │ ZK Node 2│   │ ZK Node 3│
+  └────┬─────┘   └────┬─────┘   └────┬─────┘
+       │              │              │
+       └──────────────┼──────────────┘
+                      │ (metadata)
+  ┌──────────┐   ┌──────────┐   ┌──────────┐
+  │ Broker 1 │   │ Broker 2 │   │ Broker 3 │
+  │(Controller)  │           │   │           │
+  └──────────┘   └──────────┘   └──────────┘
+
+After (KRaft mode):
+  ┌──────────────┐   ┌──────────────┐   ┌──────────────┐
+  │ Broker 1     │   │ Broker 2     │   │ Broker 3     │
+  │ + KRaft Ctrl │   │ + KRaft Ctrl │   │ + KRaft Ctrl │
+  │ (active ctrl)│   │ (follower)   │   │ (follower)   │
+  └──────────────┘   └──────────────┘   └──────────────┘
+
+  No ZooKeeper! Metadata managed by Raft consensus within Kafka itself.
+  Controller nodes form a Raft quorum (3 or 5 nodes)
+  One controller is elected leader via Raft
+  Metadata stored in an internal Kafka topic (__cluster_metadata)
+\`\`\`
+
+**KRaft improvements over ZooKeeper**:
+\`\`\`
+1. Partition scalability:
+   ZooKeeper: ~200K partitions per cluster (metadata in ZK becomes bottleneck)
+   KRaft: Millions of partitions per cluster (metadata in internal topic)
+   10x+ improvement in partition count limits
+
+2. Controller failover speed:
+   ZooKeeper: 10-30 seconds (load all metadata from ZK)
+   KRaft: < 1 second (metadata already replicated via Raft log)
+   10-30x improvement in failover time
+
+3. Operational simplicity:
+   Before: Manage Kafka cluster + ZooKeeper cluster (6+ total nodes minimum)
+   After: Manage only Kafka cluster (3+ nodes)
+   Removes an entire distributed system from your stack
+
+4. Simpler deployment:
+   Before: Install ZK, configure ZK ensemble, then install Kafka, configure Kafka-ZK connection
+   After: Install Kafka, configure KRaft mode, start
+\`\`\`
+
+**Migration from ZooKeeper to KRaft**:
+\`\`\`
+Kafka 3.3: KRaft marked production-ready (2022)
+Kafka 3.5: Bridge mode (brokers talk to both ZK and KRaft controllers)
+Kafka 4.0: ZooKeeper support deprecated (2024)
+Kafka 4.x: ZooKeeper support fully removed
+
+Migration steps:
+  1. Upgrade to Kafka 3.5+ (supports bridge mode)
+  2. Deploy KRaft controllers alongside existing ZK-based brokers
+  3. Migrate metadata from ZK to KRaft (kafka-metadata migration tool)
+  4. Switch brokers from ZK mode to KRaft mode (rolling restart)
+  5. Decommission ZooKeeper cluster
+
+  Total migration time: 1-4 hours for most clusters (depends on size)
+  Zero downtime: Rolling migration with bridge mode
+\`\`\`
+
+**KRaft configuration**:
+\`\`\`
+# server.properties (KRaft mode)
+process.roles=broker,controller  # Combined node (both roles)
+node.id=1
+controller.quorum.voters=1@broker1:9093,2@broker2:9093,3@broker3:9093
+listeners=PLAINTEXT://:9092,CONTROLLER://:9093
+log.dirs=/var/kafka-logs
+
+# No zookeeper.connect property needed!
+\`\`\`
+
+**Interview insight**: If discussing Kafka architecture in 2025+, mention KRaft as the current standard. ZooKeeper dependency was Kafka's biggest operational pain point, and its removal significantly simplifies deployment and improves scalability. This shows you are current with Kafka's evolution.`
+        },
+        {
+          question: 'What is event sourcing, and how does Kafka enable event-driven architectures with CQRS?',
+          answer: `**Event sourcing** stores the sequence of state-changing events rather than the current state. The current state is derived by replaying events from the beginning.
+
+**Traditional state-based vs event sourcing**:
+\`\`\`
+Traditional (store current state):
+  accounts table:
+    | user_id | balance |
+    | 42      | 750     |
+
+  What happened? No idea. We only know the current balance is 750.
+
+Event sourcing (store events):
+  events table (or Kafka topic):
+    { event: "AccountCreated", user_id: 42, initial_balance: 1000, time: T1 }
+    { event: "Withdrawal",     user_id: 42, amount: 200, time: T2 }
+    { event: "Deposit",        user_id: 42, amount: 50, time: T3 }
+    { event: "Withdrawal",     user_id: 42, amount: 100, time: T4 }
+
+  Current balance: 1000 - 200 + 50 - 100 = 750
+  Full audit trail: We know exactly what happened and when
+  Time travel: "What was the balance at T2?" -> replay events up to T2 = 800
+\`\`\`
+
+**Kafka as the event store**:
+\`\`\`
+Kafka's append-only log is a natural fit for event sourcing:
+
+Topic: user-account-events (compacted or retained indefinitely)
+Key: user_id (ensures per-user ordering within partition)
+Value: Event payload (AccountCreated, Deposit, Withdrawal, etc.)
+
+Benefits of Kafka for event sourcing:
+  - Append-only by design (events are immutable, never updated)
+  - Ordered within partition (events for one user are strictly ordered)
+  - Retention: Keep events forever (retention.ms=-1)
+  - Replay: Any consumer can seek to offset 0 and replay all events
+  - Multiple consumers: Different services consume the same events independently
+\`\`\`
+
+**CQRS (Command Query Responsibility Segregation)**:
+\`\`\`
+CQRS separates the write path (commands) from the read path (queries):
+
+Write Path (Commands):                Read Path (Queries):
+  Client -> Command Handler           Client -> Query Handler
+         -> Validate business rules          -> Read optimized view
+         -> Produce event to Kafka           -> Return data
+         -> ACK to client
+
+  Kafka topic (events) ──────> Event Processor ──> Read Database
+                                                   (materialized view)
+
+Example: E-commerce order system
+
+Write side (Kafka):
+  PlaceOrder event -> Kafka topic "orders"
+  PaymentReceived event -> Kafka topic "payments"
+
+Read side (multiple materialized views):
+  Order status view (PostgreSQL):
+    Consumer reads order + payment events -> JOIN into order_status table
+    Client queries: SELECT * FROM order_status WHERE user_id = 42
+
+  Analytics view (ClickHouse):
+    Consumer reads order events -> aggregate into daily_revenue table
+    BI tool queries: SELECT SUM(total) FROM daily_revenue WHERE date = today
+
+  Search view (Elasticsearch):
+    Consumer reads product events -> index into product search
+    User searches: Full-text search across all products
+\`\`\`
+
+**Benefits of event sourcing + CQRS**:
+\`\`\`
+1. Complete audit trail:
+   Every state change is recorded as an immutable event
+   Required for: Financial systems, healthcare, compliance (SOX, HIPAA)
+
+2. Time travel and debugging:
+   Replay events to reconstruct state at any point in time
+   Debug production issues by replaying the exact sequence of events
+
+3. Multiple read models from same events:
+   Same order events power: status page, analytics, search, recommendations
+   Each read model optimized for its specific query pattern
+
+4. Event replay for new features:
+   Deploy new analytics service -> replay all historical events
+   New service bootstraps with full history, no data migration
+
+5. Decoupled services:
+   Services communicate via events, not direct API calls
+   Order service does not know about analytics, search, or notifications
+   Add new consumers without modifying producers
+\`\`\`
+
+**Challenges and when NOT to use event sourcing**:
+\`\`\`
+1. Event schema evolution:
+   Events are immutable -- you cannot change old events
+   New event versions must be backward compatible
+   Use Schema Registry (Avro/Protobuf) for contract enforcement
+
+2. Eventual consistency:
+   Read models are eventually consistent with write model
+   User places order -> order status view updated 100ms later
+   May need read-your-writes: Route reads to write model briefly after write
+
+3. Complexity:
+   More moving parts: Event store + event processors + read databases
+   Debugging requires tracing events across multiple consumers
+   Simple CRUD does not need event sourcing
+
+4. Storage growth:
+   Events accumulate forever (append-only)
+   Snapshots help: Periodically materialize current state
+   Replay from snapshot + recent events (much faster than full replay)
+
+When to use: Financial systems, audit-heavy domains, complex domain logic
+When NOT to use: Simple CRUD apps, prototypes, small teams without event expertise
+\`\`\`
+
+**Real-world event sourcing with Kafka**:
+\`\`\`
+LinkedIn: Activity feed powered by Kafka event sourcing
+  Every user action (post, like, share) is a Kafka event
+  Multiple consumers build: feed, notifications, analytics, search index
+
+Uber: Trip lifecycle as event stream
+  TripCreated -> DriverAssigned -> PickedUp -> Completed -> Billed
+  Each event triggers downstream processing (billing, rating, analytics)
+
+Wealthsimple: Financial transactions as events
+  Every trade, deposit, withdrawal is an immutable Kafka event
+  Regulatory audit trail built directly from Kafka topic
+\`\`\``
+        },
+        {
+          question: 'How does Kafka Connect work, and what is Change Data Capture (CDC) for database synchronization?',
+          answer: `**Kafka Connect** is a framework for streaming data between Kafka and external systems (databases, search indexes, file systems, cloud services) without writing custom producer/consumer code.
+
+**Architecture**:
+\`\`\`
+┌──────────┐     ┌─────────────┐     ┌──────────────┐
+│ Source    │────>│   Kafka     │────>│ Sink         │
+│ Connector │     │   Cluster   │     │ Connector    │
+│           │     │             │     │              │
+│ (Database)│     │ topic:      │     │ (Elasticsearch)
+│           │     │ db.users    │     │              │
+└──────────┘     └─────────────┘     └──────────────┘
+
+Source connectors: Read from external system -> produce to Kafka
+Sink connectors: Consume from Kafka -> write to external system
+
+No custom code: Just JSON configuration
+\`\`\`
+
+**Common connectors**:
+\`\`\`
+Source connectors (into Kafka):
+  - Debezium (CDC): PostgreSQL, MySQL, MongoDB, SQL Server
+  - JDBC Source: Any SQL database via JDBC
+  - S3 Source: Read files from S3 into Kafka
+  - Salesforce Source: CRM events into Kafka
+
+Sink connectors (from Kafka to):
+  - Elasticsearch Sink: Index Kafka events for search
+  - S3 Sink: Archive Kafka events to S3 (Parquet, JSON)
+  - JDBC Sink: Write to any SQL database
+  - BigQuery Sink: Load events into Google BigQuery
+  - Snowflake Sink: Stream into Snowflake data warehouse
+\`\`\`
+
+**Change Data Capture (CDC)** with Debezium:
+\`\`\`
+CDC captures every INSERT, UPDATE, DELETE from a database and streams
+them as events to Kafka. The database's own transaction log (WAL) is
+the source of truth.
+
+PostgreSQL CDC with Debezium:
+  1. Debezium reads PostgreSQL's Write-Ahead Log (WAL) using logical replication
+  2. Each WAL entry becomes a Kafka event:
+
+  INSERT INTO users (id, name) VALUES (42, 'Alice');
+  ->
+  {
+    "op": "c",  // c=create, u=update, d=delete
+    "before": null,
+    "after": { "id": 42, "name": "Alice" },
+    "source": { "table": "users", "lsn": "0/1234567" },
+    "ts_ms": 1704067200000
+  }
+
+  UPDATE users SET name = 'Alice Smith' WHERE id = 42;
+  ->
+  {
+    "op": "u",
+    "before": { "id": 42, "name": "Alice" },
+    "after": { "id": 42, "name": "Alice Smith" },
+    "source": { "table": "users", "lsn": "0/1234568" }
+  }
+
+Benefits:
+  - No application code changes (reads from DB's own WAL)
+  - Near real-time (< 1 second latency from commit to Kafka)
+  - Captures ALL changes including those from direct SQL, migrations, scripts
+  - No polling (push-based from WAL, not periodic SELECT queries)
+\`\`\`
+
+**CDC use cases**:
+\`\`\`
+1. Search index synchronization:
+   PostgreSQL (source of truth) -> Debezium -> Kafka -> Elasticsearch
+   Every database change automatically reflected in search index
+   Latency: < 2 seconds from DB commit to searchable in ES
+
+2. Cache invalidation:
+   Database -> Debezium -> Kafka -> Cache invalidation consumer -> Redis
+   When a product price changes in the DB:
+     Kafka event triggers Redis cache key deletion
+     Next read populates cache with fresh data
+
+3. Data warehouse loading:
+   OLTP database -> Debezium -> Kafka -> S3 Sink (Parquet) -> Snowflake
+   Real-time ETL without impacting production database performance
+   No batch export queries that slow down the production DB
+
+4. Microservice data synchronization:
+   User Service (PostgreSQL) -> Debezium -> Kafka -> Order Service (reads user data)
+   Order Service maintains a local read replica of user data
+   No runtime dependency on User Service for reads
+
+5. Audit logging:
+   Every database change captured as an immutable event in Kafka
+   Retained indefinitely for compliance (financial, healthcare)
+   Complete audit trail with before/after values
+\`\`\`
+
+**Debezium vs JDBC Source Connector**:
+\`\`\`
+| Feature               | Debezium (CDC)           | JDBC Source (polling)     |
+|-----------------------|--------------------------|--------------------------|
+| Method                | Read database WAL (push) | Periodic SQL query (pull)|
+| Latency               | < 1 second               | Poll interval (10-60s)   |
+| Captures deletes      | Yes (from WAL)           | No (deleted rows gone)   |
+| Database load         | Minimal (reads WAL only) | Adds query load each poll|
+| Before/after values   | Yes (both states)        | Only current state       |
+| Schema changes        | Detected automatically   | May break                |
+| Complexity            | Higher (WAL config)      | Lower (just JDBC)        |
+
+Recommendation: Use Debezium CDC for production systems
+  JDBC source only for: Legacy databases without WAL access, simple prototypes
+\`\`\`
+
+**Kafka Connect deployment modes**:
+\`\`\`
+Standalone mode: Single worker process (development, testing)
+Distributed mode: Multiple worker processes (production)
+  - Connectors distributed across workers
+  - Automatic failover if a worker dies
+  - Horizontal scaling: Add workers for more throughput
+
+Kubernetes deployment:
+  Strimzi Kafka Operator includes Connect support
+  Deploy Connect workers as a StatefulSet
+  Manage connectors via Kubernetes CRDs
+\`\`\``
+        },
+        {
+          question: 'How does Apache Pulsar differ from Kafka architecturally, and when should you choose Pulsar?',
+          answer: `**Apache Pulsar** (originally developed at Yahoo!, now Apache project) takes a fundamentally different architectural approach from Kafka by separating the serving layer from the storage layer.
+
+**Architecture comparison**:
+\`\`\`
+Kafka architecture (coupled):
+  ┌──────────────────┐
+  │ Broker 1         │  Broker = serves requests + stores data
+  │ Partition 0 lead │  Scaling storage means scaling serving (coupled)
+  │ [data on disk]   │  Rebalancing moves data between brokers (slow)
+  └──────────────────┘
+
+Pulsar architecture (separated):
+  ┌────────��─────────┐     ┌──────────────────┐
+  │ Broker 1         │     │ BookKeeper 1     │
+  │ (stateless)      │────>│ (storage only)   │
+  │ serves requests  │     │ [data on disk]   │
+  └──────────────────┘     └──────────────────┘
+
+  Brokers: Handle topic ownership, client connections, and protocol
+  BookKeeper (bookies): Store the actual message data
+  Scaling storage: Add bookies (no data movement, new data goes to new bookies)
+  Scaling serving: Add brokers (instant, they are stateless)
+\`\`\`
+
+**Key architectural differences**:
+\`\`\`
+1. Storage separation:
+   Kafka: Broker IS the storage node (replication at broker level)
+   Pulsar: Broker is stateless; BookKeeper manages storage + replication
+
+   Impact: Pulsar broker failure = instant failover (no data to move)
+           Kafka broker failure = partition leader election + potential data rebalance
+
+2. Multi-tenancy (native):
+   Kafka: No native tenancy. Separate clusters for isolation.
+   Pulsar: Built-in tenants -> namespaces -> topics
+     tenant: "company-a" / namespace: "production" / topic: "orders"
+     Per-tenant quotas, authentication, and resource isolation
+
+3. Geo-replication (built-in):
+   Kafka: Requires MirrorMaker 2 (separate process, complex setup)
+   Pulsar: Native geo-replication between clusters (configure, not code)
+     pulsar-admin namespaces set-clusters ns --clusters us-east,eu-west
+
+4. Subscription models:
+   Kafka: Consumer groups only (exclusive partition assignment)
+   Pulsar: Four subscription types:
+     Exclusive: One consumer per subscription (like Kafka)
+     Shared: Messages round-robin across consumers (like a queue)
+     Failover: One active consumer, others standby
+     Key-Shared: Like Kafka key-based partitioning + shared subscription
+
+5. Tiered storage:
+   Kafka: All data on broker disks (expensive for long retention)
+   Pulsar: Hot data in BookKeeper, cold data automatically offloaded to S3
+     Infinite retention at object storage prices ($0.023/GB/month)
+\`\`\`
+
+**Performance comparison**:
+\`\`\`
+Throughput (typical benchmarks):
+  Kafka: 200+ MB/s per broker write, 500+ MB/s read
+  Pulsar: 100-200 MB/s per broker write (BookKeeper adds hop)
+
+  Kafka's sequential I/O + zero-copy gives it a throughput advantage
+  Pulsar's separation adds one network hop (broker -> bookie)
+
+Latency:
+  Kafka: p99 ~5-10ms (produce with acks=all)
+  Pulsar: p99 ~5-15ms (produce with sync replication)
+  Both are suitable for real-time use cases
+
+At extreme scale:
+  Kafka: LinkedIn processes 7+ trillion messages/day
+  Pulsar: Tencent processes trillions of messages/day
+  Both proven at massive scale
+\`\`\`
+
+**When to choose Pulsar over Kafka**:
+\`\`\`
+1. Multi-tenancy is a core requirement:
+   SaaS platform where each customer needs isolated messaging
+   Pulsar's native tenancy is significantly simpler than running N Kafka clusters
+
+2. Need both queue AND streaming semantics:
+   Same system for event streaming (ordered, replay) AND task queue (shared consumer)
+   Kafka requires workarounds for queue semantics; Pulsar supports natively
+
+3. Long-term retention at low cost:
+   Retain years of events without scaling broker storage
+   Pulsar's tiered storage offloads to S3 automatically
+
+4. Simpler operations:
+   Adding storage capacity: Add bookies (no rebalancing)
+   Adding serving capacity: Add brokers (stateless, instant)
+   No ZooKeeper migration (Pulsar is moving to its own metadata store)
+
+5. Built-in geo-replication:
+   Active-active across multiple data centers
+   Configuration-based, not a separate tool like MirrorMaker
+\`\`\`
+
+**When to choose Kafka over Pulsar**:
+\`\`\`
+1. Maximum throughput:
+   Kafka's coupled architecture means fewer network hops
+   Sequential I/O + zero-copy give Kafka a raw throughput advantage
+
+2. Ecosystem maturity:
+   Kafka Connect: 200+ connectors (Debezium, S3, ES, etc.)
+   Kafka Streams: Lightweight stream processing library
+   ksqlDB: SQL on streams
+   Schema Registry: Mature, well-integrated
+   Pulsar's connector ecosystem is growing but smaller
+
+3. Team expertise:
+   Kafka has far more community resources, tutorials, and experienced engineers
+   Hiring Kafka engineers is easier than hiring Pulsar engineers
+
+4. Existing Kafka investment:
+   Migration from Kafka to Pulsar is complex and risky
+   Unless Pulsar's specific advantages justify the migration cost
+\`\`\`
+
+**Interview recommendation**: Default to Kafka for most messaging/streaming use cases due to its ecosystem, maturity, and performance. Mention Pulsar as the alternative when multi-tenancy, queue semantics, or tiered storage are explicit requirements.`
         }
       ],
 
