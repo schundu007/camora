@@ -2406,7 +2406,7 @@ The two-tier approach is what most high-performance systems use. GitHub, Twitter
       ],
       staticDiagrams: [
         { id: 'eraser-caching', title: 'Multi-Layer Caching (Eraser)', description: 'Browser cache, CDN, Redis application cache, and database query cache with cache-aside pattern', src: '/diagrams/caching/eraser-caching-layers.png', type: 'cloud-architecture' },
-        { id: 'cache-failure-patterns', title: 'Cache Failure Patterns', description: 'Thunder Herd, Penetration, Breakdown, and Crash — common cache failures and their solutions', src: '/diagrams/caching/cache-failure-patterns.svg', type: 'architecture' }
+        { id: 'cache-failure-patterns', title: 'Cache Failure Patterns', description: 'Thunder Herd, Penetration, Breakdown, and Crash — common cache failures and their solutions', src: '/diagrams/caching/cache-failure-patterns.png', type: 'architecture' }
       ],
       comparisonTables: [
         {
@@ -5227,7 +5227,7 @@ Client-side:  Service A ──────────▶ Service B    (direct)
       ],
       staticDiagrams: [
         { id: 'eraser-lb', title: 'Load Balancing Architecture (Eraser)', description: 'DNS-based global routing, L7 ALB, auto-scaling groups, health checks, and SSL termination', src: '/diagrams/load-balancing/eraser-lb-architecture.png', type: 'cloud-architecture' },
-        { id: 'lb-algorithms', title: 'Load Balancing Algorithms', description: '6 algorithms: Round Robin, Sticky RR, Weighted RR, IP Hash, Least Connections, Least Time', src: '/diagrams/load-balancing/lb-algorithms.svg', type: 'architecture' }
+        { id: 'lb-algorithms', title: 'Load Balancing Algorithms', description: '6 algorithms: Round Robin, Sticky RR, Weighted RR, IP Hash, Least Connections, Least Time', src: '/diagrams/load-balancing/lb-algorithms.png', type: 'architecture' }
       ],
       comparisonTables: [
         {
