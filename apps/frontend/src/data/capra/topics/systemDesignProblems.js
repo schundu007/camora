@@ -4580,6 +4580,7 @@ The threshold between push and pull (10K followers) is tunable based on system l
       discussionPoints: [
         {
           topic: 'Feed Ranking Algorithm',
+          diagramSrc: '/diagrams/instagram/discuss-ranking.png',
           points: [
             'Engagement signals: likes, comments, saves, shares',
             'Relationship: Close friends weighted higher',
@@ -4590,6 +4591,7 @@ The threshold between push and pull (10K followers) is tunable based on system l
         },
         {
           topic: 'Celebrity Problem',
+          diagramSrc: '/diagrams/instagram/discuss-celebrity.png',
           points: [
             'Celebrities have millions of followers',
             'Pushing to all followers on every post is expensive',
@@ -4600,6 +4602,7 @@ The threshold between push and pull (10K followers) is tunable based on system l
         },
         {
           topic: 'Stories Architecture',
+          diagramSrc: '/diagrams/instagram/discuss-stories.png',
           points: [
             'Ephemeral content - auto-deletes after 24h',
             'Redis sorted sets for efficient range queries',
@@ -4610,6 +4613,7 @@ The threshold between push and pull (10K followers) is tunable based on system l
         },
         {
           topic: 'Image Optimization',
+          diagramSrc: '/diagrams/instagram/discuss-image-opt.png',
           points: [
             'Multiple resolutions for different devices',
             'WebP format for smaller file sizes',
@@ -4652,6 +4656,7 @@ The threshold between push and pull (10K followers) is tunable based on system l
       deepDiveTopics: [
         {
           topic: 'Image Processing Pipeline (Resize, Transcode, Moderate)',
+          diagramSrc: '/diagrams/instagram/deep-dive-image-pipeline.png',
           detail: `The image processing pipeline is the most critical background system at Instagram -- every one of the 100M daily uploads must pass through it.
 
 **Pipeline architecture:**
@@ -4673,6 +4678,7 @@ The threshold between push and pull (10K followers) is tunable based on system l
         },
         {
           topic: 'CDN Multi-Tier Caching Strategy',
+          diagramSrc: '/diagrams/instagram/deep-dive-cdn.png',
           detail: `CDN caching is the single most important optimization at Instagram -- without it, S3 would need to handle 500K-1M image requests per second.
 
 **Three-tier cache hierarchy:**
@@ -4698,6 +4704,7 @@ The threshold between push and pull (10K followers) is tunable based on system l
         },
         {
           topic: 'Hybrid Fan-out for Feed Generation',
+          diagramSrc: '/diagrams/instagram/deep-dive-fanout.png',
           detail: `The feed system is the core of Instagram experience -- getting it wrong means slow feeds or wasted compute.
 
 **The celebrity problem:**
@@ -4724,6 +4731,7 @@ The threshold between push and pull (10K followers) is tunable based on system l
         },
         {
           topic: 'Stories Ephemeral Storage Architecture',
+          diagramSrc: '/diagrams/instagram/deep-dive-stories.png',
           detail: `Stories handle 500M uploads per day with automatic 24-hour deletion -- a fundamentally different storage pattern than permanent posts.
 
 **Why Stories need separate infrastructure:**
@@ -4752,6 +4760,7 @@ The threshold between push and pull (10K followers) is tunable based on system l
         },
         {
           topic: 'Explore Page ML Recommendations',
+          diagramSrc: '/diagrams/instagram/deep-dive-explore.png',
           detail: `The Explore page drives content discovery for 200M+ daily visitors, surfacing posts from accounts users do not follow.
 
 **Two-phase recommendation pipeline:**
@@ -4832,7 +4841,7 @@ Phase 2 -- Online ranking (runs at request time, <100ms budget):
           id: 'photo-upload-pipeline',
           title: 'Photo Upload Pipeline',
           description: 'Complete flow from client upload to CDN-ready image with multiple resolutions',
-          src: '/diagrams/instagram/photo-upload-flow.svg',
+          src: '/diagrams/instagram/flow-photo-upload.png',
           steps: [
             { step: 1, label: 'Client Upload', detail: 'Client sends photo (avg 2MB) to Upload Service via pre-signed S3 URL' },
             { step: 2, label: 'Store Original', detail: 'Raw image stored in S3 Raw bucket with unique postId key' },
@@ -4848,7 +4857,7 @@ Phase 2 -- Online ranking (runs at request time, <100ms budget):
           id: 'news-feed-generation',
           title: 'News Feed Generation',
           description: 'How a personalized feed is assembled using the hybrid fan-out approach',
-          src: '/diagrams/instagram/feed-generation-flow.svg',
+          src: '/diagrams/instagram/flow-feed-generation.png',
           steps: [
             { step: 1, label: 'Feed Request', detail: 'Client requests GET /api/feed?cursor=X&limit=20' },
             { step: 2, label: 'Check Cache', detail: 'Look up pre-ranked feed in Redis (5-minute TTL)' },
@@ -4863,7 +4872,7 @@ Phase 2 -- Online ranking (runs at request time, <100ms budget):
           id: 'story-lifecycle-flow',
           title: 'Story Lifecycle (Create to Expire)',
           description: 'How a story is created, viewed, and auto-deleted after 24 hours',
-          src: '/diagrams/instagram/story-lifecycle-flow.svg',
+          src: '/diagrams/instagram/flow-story-lifecycle.png',
           steps: [
             { step: 1, label: 'Upload Media', detail: 'Same pre-signed S3 URL pipeline as regular posts' },
             { step: 2, label: 'Create Story', detail: 'Cassandra row with expiresAt = createdAt + 24 hours' },
@@ -4918,7 +4927,7 @@ Phase 2 -- Online ranking (runs at request time, <100ms budget):
       staticDiagrams: [
         { id: 'problem-def', title: 'Problem Definition', description: 'Scope boundaries — in-scope features vs out-of-scope for the Instagram design interview', src: '/diagrams/instagram/problem-definition.svg', type: 'overview' },
         { id: 'capacity-est', title: 'Back-of-Envelope Estimates', description: 'Upload QPS, feed read QPS, storage growth (600 TB/day), CDN egress, and like throughput calculations', src: '/diagrams/instagram/capacity-estimation.svg', type: 'estimation' },
-        { id: 'upload-flow', title: 'Photo Upload Pipeline', description: 'End-to-end flow: pre-signed URL, S3 upload, multi-resolution processing, moderation, and CDN distribution', src: '/diagrams/instagram/photo-upload-flow.svg', type: 'flow' },
+        { id: 'upload-flow', title: 'Photo Upload Pipeline', description: 'End-to-end flow: pre-signed URL, S3 upload, multi-resolution processing, moderation, and CDN distribution', src: '/diagrams/instagram/flow-photo-upload.png', type: 'flow' },
         { id: 'ui-mockup', title: 'Instagram Feed Interface', description: 'The product we are designing — feed with ranked posts, story tray, like/comment interactions, and explore', src: '/diagrams/instagram/instagram-ui-mockup.svg', type: 'ui' },
       ],
       // ── Charts ──
@@ -11744,10 +11753,46 @@ Search Logs → Kafka → Flink → Aggregator → Trie Updater
       color: '#611f69',
       difficulty: 'Hard',
       description: 'Design a team communication platform with channels, threads, and integrations.',
+      productMeta: {
+        name: 'Slack / Discord',
+        tagline: 'Real-time team messaging for millions of concurrent users',
+        stats: [
+          { label: 'DAU (Slack)', value: '47M' },
+          { label: 'Messages/Day', value: '1.5B' },
+          { label: 'Concurrent WS', value: '5M+' },
+          { label: 'Query P99', value: '11ms' },
+        ],
+        scope: {
+          inScope: ['Real-time messaging (channels/DMs)', 'Channel management & permissions', 'Message search', 'File sharing', 'Presence (online/away/offline)', 'Notifications (push/email)'],
+          outOfScope: ['Voice/video calls', 'Workflow automation', 'App marketplace', 'SSO/SAML enterprise auth', 'Huddles/audio rooms'],
+        },
+        keyChallenge: 'Maintaining 5M+ concurrent WebSocket connections while delivering 1.5B messages/day with sub-100ms latency and full-text search across years of history.',
+      },
 
-      introduction: `Slack and Discord are team communication platforms that have transformed workplace collaboration. Slack has 20M+ daily active users sending billions of messages daily, while Discord has 150M+ monthly users.
+      introduction: `Slack and Discord are team communication platforms that have transformed workplace collaboration. Slack serves **47 million daily active users** sending **1.5 billion messages per day**, while Discord has grown to **200 million monthly active users**.
 
-The key challenges are: real-time message delivery via WebSockets, managing presence and typing indicators, searching through message history, and supporting rich integrations with bots and third-party apps.`,
+The key challenges are: managing **5 million+ concurrent WebSocket connections** across a distributed gateway fleet, ensuring message ordering within channels, handling channel fan-out for groups with thousands of members, full-text search across years of message history, and building a presence system that scales to millions of simultaneous status updates.
+
+What makes team chat different from 1:1 messaging (WhatsApp)? Team chat has **channels** that can have thousands of members, requiring efficient fan-out. It also requires rich integrations (bots, slash commands, webhooks), threaded conversations, and compliance features like message retention policies and e-discovery.
+
+Slack's engineering team has shared key architectural decisions: migrating from MySQL to **Vitess** for horizontal sharding, using **Flannel** (their edge cache) to reduce backend load, and building a custom **Channel Server** that keeps hot channel state in memory. Discord took a different path, migrating from Cassandra to **ScyllaDB** after hitting tail latency issues at scale.`,
+
+      estimation: {
+        title: 'Capacity Planning',
+        assumptions: '47M DAU, ~32 messages/user/day (Slack average). Average message 300 bytes. 5M peak concurrent WebSocket connections. Presence heartbeat every 30 seconds.',
+        calculations: [
+          { label: 'Total Messages/Day', value: '1.5 Billion', detail: '47M DAU x ~32 messages/user/day = 1.5B messages per day' },
+          { label: 'Write QPS (Average)', value: '~17K/s', detail: '1.5B messages / 86,400 seconds = 17,361 writes/sec' },
+          { label: 'Write QPS (Peak)', value: '~50K/s', detail: '17K x 3x peak factor (Monday morning, announcements) = ~50K writes/sec' },
+          { label: 'Concurrent WS Connections', value: '5M+', detail: '~10% of 47M DAU online at any moment, plus idle connections' },
+          { label: 'Storage/Day (Messages)', value: '~450 GB', detail: '1.5B messages x 300 bytes = 450 GB/day text data' },
+          { label: 'Storage/Year (Messages)', value: '~164 TB', detail: '450 GB/day x 365 = ~164 TB/year (text + metadata)' },
+          { label: 'WS Connections/Day', value: '94M', detail: 'Users connect/disconnect ~2x/day average = 94M connection events' },
+          { label: 'Presence Heartbeat QPS', value: '~167K/s', detail: '5M concurrent connections / 30s heartbeat = 167K presence updates/sec' },
+          { label: 'Search Index Size', value: '~500 TB', detail: '3+ years of messages indexed in Elasticsearch across all workspaces' },
+          { label: 'WS Gateway Servers', value: '100+', detail: '5M connections / 50K connections per server = 100 gateway nodes' },
+        ]
+      },
 
       functionalRequirements: [
         'Workspaces/servers with multiple channels',
@@ -11764,8 +11809,8 @@ The key challenges are: real-time message delivery via WebSockets, managing pres
 
       nonFunctionalRequirements: [
         'Real-time message delivery (<100ms)',
-        'Support 500K+ concurrent WebSocket connections',
-        'Handle 1B+ messages per day',
+        'Support 5M+ concurrent WebSocket connections',
+        'Handle 1.5B+ messages per day',
         'Message search across years of history',
         '99.99% availability',
         'End-to-end encryption for DMs (optional)',
@@ -11823,12 +11868,11 @@ user_presence {
         description: 'REST API for CRUD, WebSocket for real-time',
         endpoints: [
           { method: 'POST', path: '/api/messages', params: '{ channelId, content, threadId?, attachments[] }', response: '{ message }',
-            description: 'REST fallback for sending messages when WebSocket is unavailable. The message is encrypted on the client, stored in the recipient\'s message queue (per-user partition in Cassandra), and delivered when they connect. Provides at-least-once delivery semantics — the client retries until it receives an acknowledgment. Duplicate detection uses a client-generated message ID.',
             description: 'Sends a message to a channel or thread. The message is persisted to the database, indexed in Elasticsearch for search, and broadcast to all online channel members via their WebSocket connections. Supports rich text (Markdown), file attachments (uploaded separately to S3), and thread replies. Message delivery is at-least-once with client-side deduplication using a client-generated nonce.' },
           { method: 'GET', path: '/api/channels/:id/messages', params: 'before, after, limit', response: '{ messages[], hasMore }',
             description: 'Fetches message history for a channel using cursor-based pagination (before/after a message ID). Messages are stored in a time-series partitioned table (by channel + month) for efficient range queries. Supports both backward scrolling (before) and forward loading (after) for jumping to a specific message. Includes thread reply counts and reaction summaries inline.' },
           { method: 'GET', path: '/api/search', params: 'q, channelIds[], from, to', response: '{ messages[], total }',
-            description: 'Searches across tracks, artists, albums, and playlists simultaneously. Uses Elasticsearch with different analyzers per entity type. Track search matches on title, artist name, album, and lyrics. Supports multi-language queries with language detection. Results are grouped by type and ranked by popularity, release date, and user\'s listening history.' },
+            description: 'Full-text search across all messages the user has access to. Uses Elasticsearch sharded by workspace_id for data locality. Supports filters like from:user, in:channel, before/after dates. ACL enforcement filters results by the requesting user channel membership at query time. Async indexing means results may lag 1-5 seconds behind real-time.' },
           { method: 'WS', path: '/ws/realtime', params: 'token', response: 'MESSAGE_NEW, TYPING, PRESENCE, REACTION events',
             description: 'Persistent WebSocket connection for real-time events. Multiplexes multiple event types over a single connection: MESSAGE_NEW (new messages), TYPING (typing indicators with 3-second debounce), PRESENCE (online/away/offline status), and REACTION (emoji reactions). The connection is authenticated via token and subscribes to events for all channels the user has joined. Server-side fan-out uses Redis pub/sub across WebSocket server instances.' }
         ]
@@ -11836,146 +11880,235 @@ user_presence {
 
       keyQuestions: [
         {
-          question: 'How do we handle real-time messaging?',
-          answer: `**WebSocket Architecture**:
-\`\`\`
-┌──────────┐    ┌───────────────┐    ┌────────────────┐
-│  Client  │◀──▶│   WebSocket   │◀──▶│    Message     │
-│          │    │    Gateway    │    │    Service     │
-└──────────┘    └───────────────┘    └────────────────┘
-                       │
-                       ▼
-               ┌───────────────┐
-               │  Redis Pub/Sub │
-               │  (Fan-out)     │
-               └───────────────┘
-\`\`\`
+          question: 'How do we manage WebSocket connections at scale?',
+          answer: `Slack maintains **5M+ concurrent WebSocket connections** across a fleet of 100+ stateless gateway servers.
 
-**Message Flow**:
-1. User sends message via WebSocket
-2. Gateway validates and forwards to Message Service
-3. Message Service persists to DB
-4. Publishes to Redis Pub/Sub channel (channel_id)
-5. All Gateway instances subscribed to channel receive message
-6. Gateways push to connected clients in that channel
+**Gateway Architecture:**
+Each gateway node handles ~50K connections using an event-driven model (epoll/kqueue). Gateways are stateless -- they don't store which user is on which server. Instead, a **Connection Registry** (Redis cluster) maps userId to gatewayId.
 
-**Connection Management**:
-- Heartbeat every 30 seconds
-- Reconnect with exponential backoff
-- HTTP long-polling fallback for corporate firewalls
-- Sticky sessions not required (stateless gateways)`
+**Connection Lifecycle:**
+1. Client connects to any gateway via load balancer (round-robin)
+2. Gateway authenticates JWT, registers connection in Redis: \`user:{id} -> gateway:{node}\`
+3. Gateway subscribes to Redis Pub/Sub channels for all the user's channels
+4. On disconnect: remove from registry, unsubscribe from Pub/Sub
+
+**Key Design Decisions:**
+- **No sticky sessions** -- any gateway can serve any user. This simplifies scaling and failover.
+- **Heartbeat every 30 seconds** -- detect stale connections. If 3 heartbeats missed, close connection and clean up registry.
+- **HTTP long-polling fallback** -- for corporate firewalls that block WebSockets. Uses 30-second polling interval.
+- **Connection draining** -- before restarting a gateway, send RECONNECT message to all clients. Clients reconnect to another gateway within 5 seconds using exponential backoff.`
         },
         {
-          question: 'How do we handle typing indicators and presence?',
-          answer: `**Typing Indicators**:
-- Client sends TYPING event when user starts typing
-- Gateway broadcasts to channel members
-- Auto-expire after 5 seconds (no need to persist)
-- Rate limit: 1 event per 3 seconds per user
+          question: 'How does message ordering work across distributed servers?',
+          answer: `Message ordering is critical in chat -- users in the same channel must see messages in the same sequence.
 
-**Presence System**:
-\`\`\`
-User Activity → Presence Service → Redis
-                                     ↓
-                              TTL: 60 seconds
-                                     ↓
-                              Broadcast on change
-\`\`\`
+**Approach: Per-Channel Sequence Numbers**
+Each channel has a monotonically increasing sequence counter. When a message is sent:
+1. Message Service acquires a per-channel lock (Redis INCR on \`channel:{id}:seq\`)
+2. Assigns the next sequence number
+3. Persists message with sequence number
+4. Broadcasts to channel members
 
-**Optimizations**:
-- Only broadcast presence to users who have "viewed" target user
-- Aggregate presence updates (batch every 5 seconds)
-- Don't show typing for large channels (>100 members)
-- Lazy presence: Fetch on demand, not push everything
+**Why not rely on timestamps?**
+Clock skew across servers can cause messages to appear out of order. Two messages sent 50ms apart might get timestamps that suggest the opposite order. Sequence numbers provide a total order per channel.
 
-**Status Levels**:
-- ACTIVE: Recent activity (<5 min)
-- AWAY: No activity (5-30 min)
-- OFFLINE: No activity (>30 min) or explicit`
+**Slack's Approach (Vitess):**
+Slack uses **Vitess** (MySQL sharding layer) with channels as the sharding key. All messages for a channel land on the same shard, making sequence generation a simple auto-increment within a transaction. This co-locates all channel data for efficient range queries.
+
+**Discord's Approach (ScyllaDB):**
+Discord uses **Snowflake IDs** (timestamp + worker + sequence) which are roughly time-ordered. Within a channel partition in ScyllaDB, messages are ordered by Snowflake ID. This gives approximate ordering without coordination, with server-side sorting for exact display order.`
         },
         {
-          question: 'How do we design message search?',
-          answer: `**Search Architecture**:
-\`\`\`
-Messages → Kafka → Elasticsearch Indexer
-                          ↓
-                   Elasticsearch Cluster
-                   (Sharded by workspace)
-\`\`\`
+          question: 'How did Slack migrate to Vitess for sharding?',
+          answer: `Slack's MySQL database hit limits at ~1B messages. They migrated to **Vitess**, a horizontal sharding layer for MySQL.
 
-**Index Design**:
-- Shard by workspace_id (data locality)
-- Index: message content, sender, channel, timestamp
-- ACL: Filter by user's channel membership at query time
+**Why Vitess over Cassandra/DynamoDB?**
+- Slack had years of MySQL expertise and tooling
+- Vitess provides **transparent sharding** -- application code sees a single MySQL interface
+- Supports cross-shard queries (needed for search, analytics)
+- MySQL's strong consistency model fits chat (no lost messages)
 
-**Search Features**:
-- Full-text search with highlighting
-- Filters: from:user, in:channel, before/after dates
-- Fuzzy matching for typos
-- Recent messages weighted higher
+**Sharding Strategy:**
+- **Shard key: channel_id** -- all messages for a channel on one shard
+- This means channel message queries never cross shards
+- ~256 shards initially, expandable to thousands
+- VTGate routes queries to correct shard transparently
 
-**Performance**:
-- Async indexing (1-5 second delay acceptable)
-- Pre-filter by channel access (security)
-- Result pagination with search_after
-- Cache frequent searches`
+**Migration Process:**
+1. Set up Vitess cluster alongside existing MySQL
+2. Use Vitess VReplication for live data migration
+3. Shadow-read traffic: send reads to both old and new, compare results
+4. Cut over writes to Vitess
+5. Decommission old MySQL primary
+
+**Performance Impact:**
+- P99 query latency dropped from 50ms to **11ms**
+- Write throughput increased 10x
+- Can scale horizontally by adding shards without application changes`
         },
         {
-          question: 'How do we track unread messages?',
-          answer: `**Read Position Tracking**:
-- Store last_read_message_id per user per channel
-- Count unreads: messages with id > last_read_id
+          question: 'Why did Discord migrate from Cassandra to ScyllaDB?',
+          answer: `Discord stored **trillions of messages** in Cassandra but hit severe performance issues as they scaled.
 
-**Implementation**:
-\`\`\`sql
--- In channel_members table
-last_read_at: timestamp
-last_read_message_id: snowflake
+**Problems with Cassandra:**
+- **GC pauses**: Java-based Cassandra had unpredictable garbage collection pauses (up to 10 seconds)
+- **Tail latency**: P99 read latency spiked to 200ms+ during compaction
+- **Hot partitions**: Popular channels (millions of messages) caused partition-level hotspots
+- **Compaction storms**: SSTable compaction consumed all disk I/O periodically
 
--- Unread count (at query time)
-SELECT COUNT(*) FROM messages
-WHERE channel_id = ? AND id > last_read_message_id
-\`\`\`
+**Why ScyllaDB?**
+- **C++ implementation** -- no GC pauses, predictable latency
+- **Shard-per-core architecture** -- each CPU core owns a portion of data, eliminating contention
+- **Compatible with Cassandra** -- uses same CQL protocol, minimal code changes
+- **Better compaction** -- incremental compaction avoids I/O storms
 
-**Optimizations**:
-- Cache unread counts in Redis
-- Invalidate on new message or mark-as-read
-- Batch updates when user scrolls through messages
-- Don't track exact count above threshold (show "99+")
+**Migration Results:**
+- P99 read latency dropped from 200ms to **4ms**
+- P99 write latency dropped from 40ms to **1.5ms**
+- Reduced cluster size from 177 Cassandra nodes to **72 ScyllaDB nodes**
+- Tail latency during compaction became negligible
 
-**Mark as Read**:
-- Automatic when user views channel
-- Debounce: Only update after 1 second of focus
-- Support "mark all as read" for workspace`
+**Data Model (unchanged):**
+Partition key: channel_id, Clustering key: message_id (Snowflake, time-sorted). Messages within a channel are co-located and sorted by time, enabling efficient range scans for history loading.`
         },
         {
-          question: 'How do we handle file uploads?',
-          answer: `**Upload Flow**:
-1. Client requests upload URL from API
-2. API generates pre-signed S3 URL (expires in 15 min)
-3. Client uploads directly to S3
-4. Client notifies API of completion
-5. API validates, creates message with attachment
+          question: 'How does the presence system scale to millions of users?',
+          answer: `Presence (online/away/offline status) generates massive traffic -- every user's status must be tracked and broadcast to relevant peers.
 
-**Storage**:
-- S3 for files with CDN in front
-- Thumbnails generated async (Lambda)
-- Virus scanning before making available
-- Storage limits per workspace/plan
+**The Problem:**
+With 5M concurrent users, naive broadcasting of every status change to all contacts would generate billions of events per minute.
 
-**Message with Attachment**:
-\`\`\`json
-{
-  "content": "Check out this design",
-  "attachments": [{
-    "type": "image",
-    "url": "https://cdn.slack.com/...",
-    "thumbnail_url": "...",
-    "size": 245000,
-    "name": "design.png"
-  }]
-}
-\`\`\``
+**Slack's Presence Architecture:**
+1. **Heartbeat-based detection**: Client sends heartbeat every 30 seconds. If 3 heartbeats missed, mark as offline.
+2. **Redis TTL for state**: Each user's presence stored in Redis with 90-second TTL. Heartbeat refreshes TTL.
+3. **Lazy evaluation**: Don't push presence changes. Instead, clients **pull** presence for visible users.
+4. **Subscription-based updates**: Client subscribes to presence changes only for users visible in the sidebar.
+5. **Batch broadcasting**: Aggregate presence changes over 5-second windows and broadcast as a batch.
+
+**Optimization -- "Presence Fanout Budget":**
+- For workspaces under 1K users: broadcast all changes immediately
+- For large workspaces (10K+): only broadcast to users who have the sidebar open
+- For enterprise (100K+): presence is fetched on-demand, never pushed
+
+This approach reduced presence traffic by **95%** compared to naive broadcast.`
+        },
+        {
+          question: 'How does channel fan-out work for message delivery?',
+          answer: `When a message is sent to a channel with 10K members, delivering it to all online members is a fan-out problem.
+
+**Push vs Pull Fan-out:**
+**Push (write fan-out):** On message send, push to every online member's WebSocket.
+- Pros: Instant delivery, simple client code
+- Cons: Expensive for large channels -- 10K pushes per message
+
+**Pull (read fan-out):** Store message in channel, clients poll for new messages.
+- Pros: Cheap writes, works well for channels with many lurkers
+- Cons: Higher latency, wastes bandwidth polling idle channels
+
+**Slack's Hybrid Approach:**
+- **Small channels (<1K members):** Push via Redis Pub/Sub. Each gateway subscribes to the channel topic. On new message, Redis fans out to all subscribed gateways, which push to their connected members.
+- **Large channels (1K+ members):** Write to channel store, push only to **active** members (those who have the channel open). Lurkers get unread badges via a lightweight counter update.
+- **@here/@channel mentions in large channels:** Trigger push notifications to all members regardless of active state.
+
+Each gateway maintains a local mapping of channelId to connected userIds, so the final fan-out is a local in-memory lookup.`
+        },
+        {
+          question: 'How does message search work at scale?',
+          answer: `Slack indexes **billions of messages** across millions of workspaces in Elasticsearch for full-text search.
+
+**Indexing Pipeline:**
+1. Message persisted to Vitess (primary store)
+2. Change Data Capture (CDC) event emitted to Kafka
+3. Search Indexer consumes from Kafka, writes to Elasticsearch
+4. Indexing lag: 1-5 seconds (acceptable for search)
+
+**Elasticsearch Index Design:**
+- **Shard by workspace_id**: All messages for a workspace on the same set of shards
+- **Time-based index rotation**: Monthly indices (messages-2024-01, messages-2024-02)
+- **Hot-warm-cold architecture**: Recent months on SSDs, older months on cheaper storage
+
+**Access Control:**
+Search results are filtered by the requesting user's channel membership. This is enforced at query time using a terms filter on channel_id. Users only see messages from channels they belong to.
+
+**Performance:**
+- P50 search latency: ~50ms
+- P99 search latency: ~200ms
+- Highlighting and snippet generation adds ~10ms`
+        },
+        {
+          question: 'How are notifications delivered to offline users?',
+          answer: `When a user is offline (no active WebSocket), they need push notifications for important messages.
+
+**Notification Decision Pipeline:**
+1. Message arrives at Message Service
+2. Check recipient's connection status in Redis registry
+3. If online: deliver via WebSocket (done)
+4. If offline: evaluate notification rules
+
+**Notification Rules (per channel per user):**
+- **All messages**: Push for every message (default for DMs)
+- **Mentions only**: Push only for @user, @here, @channel
+- **Nothing**: No push (muted channels)
+- **DND schedule**: Suppress during configured hours
+
+**Batching and Deduplication:**
+If a user receives 10 messages in a channel within 30 seconds, send ONE push notification ("10 new messages in #engineering") instead of 10 separate pushes. This prevents notification fatigue.
+
+**Delivery:**
+Kafka notification topic -> Notification Worker -> Check preferences -> Deduplicate -> Send via APNs (iOS) / FCM (Android). Email fallback if push not delivered within 2 minutes.`
+        },
+        {
+          question: 'How does file sharing work at scale?',
+          answer: `Slack processes millions of file uploads daily. Files must be scanned, stored, and served with proper access control.
+
+**Upload Flow (Pre-signed URL pattern):**
+1. Client requests upload URL: POST /api/files/upload-url
+2. Server generates pre-signed S3 URL (expires in 15 minutes)
+3. Client uploads directly to S3 (bypasses application servers)
+4. S3 triggers Lambda for post-processing
+5. Client notifies server of completion with file metadata
+
+**Post-Processing Pipeline:**
+- **Virus scanning**: ClamAV scan before making file available
+- **Thumbnail generation**: For images, generate 3 sizes (small/medium/large)
+- **Preview generation**: For PDFs/docs, generate preview images
+- **Metadata extraction**: File type, dimensions, duration (for audio/video)
+
+**Access Control:**
+Files inherit the access permissions of the channel where they were shared. S3 URLs are signed with short TTLs (1 hour) and regenerated on each access.
+
+**Storage Tiers:**
+- Hot (< 30 days): S3 Standard with CloudFront CDN
+- Warm (30 days - 1 year): S3 Infrequent Access
+- Cold (> 1 year): S3 Glacier (Enterprise plans only)
+- Free: 5GB per workspace, Pro: 10GB per member, Enterprise: Unlimited`
+        },
+        {
+          question: 'How is rate limiting implemented to prevent abuse?',
+          answer: `Rate limiting is essential to prevent bots, integrations, and bad actors from overwhelming the system.
+
+**Multi-Layer Rate Limiting:**
+
+**Layer 1 -- API Gateway (global):**
+- Token bucket per API key: 20 requests/second (Tier 1), 100/s (Tier 4)
+- Separate limits for read vs write endpoints
+- 429 Too Many Requests response with Retry-After header
+
+**Layer 2 -- WebSocket Gateway:**
+- Message send rate: 1 message/second per user per channel
+- Typing indicator: 1 event per 3 seconds per user
+- Connection rate: Max 10 reconnects per minute per user
+
+**Layer 3 -- Bot/Integration Rate Limits:**
+- Per-bot: 1 message/second per channel
+- Per-workspace: 30 bot messages/minute total
+- Burst allowance: 5 messages instantly, then 1/second
+
+**Implementation:**
+Rate limits use Redis with the sliding window algorithm. If the window count exceeds the limit, reject the request.
+
+**Backpressure:**
+When a channel receives messages faster than members can consume, the gateway applies backpressure: batch messages into groups of 5 and send as a single WebSocket frame. This prevents overwhelming slow clients.`
         }
       ],
 
@@ -11993,40 +12126,12 @@ WHERE channel_id = ? AND id > last_read_message_id
 
       advancedImplementation: {
         title: 'Production Chat Architecture',
-        description: 'WebSocket gateway cluster with Redis Pub/Sub for cross-server message fan-out, Cassandra for message storage.',
+        description: 'WebSocket gateway cluster with Redis Pub/Sub for cross-server message fan-out, Vitess/ScyllaDB for message storage.',
         svgTemplate: 'distributedChat',
-        architecture: `
-                              (Diagram above shows simplified architecture)
-│  ┌──────────────────────────────────────────────────────────────────────┐   │
-│  │                          SERVICE LAYER                                │   │
-│  │  ┌────────────┐  ┌────────────┐  ┌────────────┐  ┌────────────┐     │   │
-│  │  │  Message   │  │  Channel   │  │  Presence  │  │   Search   │     │   │
-│  │  │  Service   │  │  Service   │  │  Service   │  │  Service   │     │   │
-│  │  └─────┬──────┘  └─────┬──────┘  └─────┬──────┘  └─────┬──────┘     │   │
-│  └────────┼───────────────┼───────────────┼───────────────┼─────────────┘   │
-│           │               │               │               │                  │
-│  ┌────────┼───────────────┼───────────────┼───────────────┼─────────────┐   │
-│  │        ▼               ▼               ▼               ▼             │   │
-│  │  ┌──────────┐   ┌──────────┐   ┌──────────┐   ┌──────────────┐      │   │
-│  │  │ Messages │   │ Channels │   │  Redis   │   │Elasticsearch │      │   │
-│  │  │   DB     │   │   DB     │   │(Presence)│   │  (Search)    │      │   │
-│  │  │(Sharded) │   │          │   │          │   │              │      │   │
-│  │  └──────────┘   └──────────┘   └──────────┘   └──────────────┘      │   │
-│  │                                                                      │   │
-│  │  ┌──────────────────────────────────────────────────────────┐       │   │
-│  │  │                        Storage                            │       │   │
-│  │  │  ┌──────────┐    ┌──────────┐    ┌──────────┐            │       │   │
-│  │  │  │    S3    │    │   CDN    │    │  Kafka   │            │       │   │
-│  │  │  │ (Files)  │    │ (Assets) │    │ (Events) │            │       │   │
-│  │  │  └──────────┘    └──────────┘    └──────────┘            │       │   │
-│  │  └──────────────────────────────────────────────────────────┘       │   │
-│  └──────────────────────────────────────────────────────────────────────┘   │
-│                                                                              │
-└──────────────────────────────────────────────────────────────────────────────┘`,
         keyPoints: [
-          'WebSocket Gateway cluster with 100K connections per node',
+          'WebSocket Gateway cluster with 50K connections per node',
           'Redis Pub/Sub for cross-gateway message fan-out',
-          'Messages DB sharded by channel_id (co-locate channel messages)',
+          'Messages DB sharded by channel_id (Vitess or ScyllaDB)',
           'Elasticsearch for full-text message search',
           'Kafka for event sourcing and async processing',
           'Presence aggregated in Redis with TTL'
@@ -12057,13 +12162,13 @@ WHERE channel_id = ? AND id > last_read_message_id
             'Use Snowflake IDs (time-sortable) for efficient range queries',
             'Archive old messages to cold storage (S3)',
             'Separate hot (recent) and cold (old) message stores',
-            'Consider Cassandra for write-heavy workloads'
+            'Vitess (Slack) or ScyllaDB (Discord) for write-heavy workloads'
           ]
         },
         {
           topic: 'WebSocket Scaling',
           points: [
-            'Each gateway handles 100K-500K connections',
+            'Each gateway handles 50K-100K connections',
             'Stateless gateways with Redis for pub/sub',
             'Graceful shutdown: Drain connections before restart',
             'Connection limits per user (prevent abuse)',
@@ -12109,7 +12214,117 @@ WHERE channel_id = ? AND id > last_read_message_id
         { name: 'Client & Connection Layer', purpose: 'Manage WebSocket connections, local message cache, and real-time UI updates', components: ['WebSocket Client', 'Message Cache (IndexedDB)', 'Notification Manager', 'Presence Tracker'] },
         { name: 'Gateway & Routing Layer', purpose: 'Route messages to correct channels and manage user sessions', components: ['WebSocket Gateway', 'Message Router', 'Session Manager', 'Load Balancer'] },
         { name: 'Application Layer', purpose: 'Handle channel management, permissions, threading, and integrations', components: ['Channel Service', 'Thread Service', 'Permission Service', 'Bot Platform', 'File Service'] },
-        { name: 'Storage & Search Layer', purpose: 'Persist messages, files, and power full-text search', components: ['Message Store (Cassandra)', 'File Store (S3)', 'Search Index (Elasticsearch)', 'User/Channel DB (PostgreSQL)'] },
+        { name: 'Storage & Search Layer', purpose: 'Persist messages, files, and power full-text search', components: ['Message Store (Vitess/ScyllaDB)', 'File Store (S3)', 'Search Index (Elasticsearch)', 'User/Channel DB (PostgreSQL)'] },
+      ],
+      comparisonTables: [
+        {
+          id: 'mysql-vitess-vs-cassandra-vs-scylladb',
+          title: 'MySQL+Vitess vs Cassandra vs ScyllaDB for Message Storage',
+          headers: ['Aspect', 'MySQL + Vitess (Slack)', 'Cassandra', 'ScyllaDB (Discord)'],
+          rows: [
+            ['Language', 'Go sharding layer over MySQL', 'Java', 'C++ (Cassandra-compatible)'],
+            ['Consistency', 'Strong ACID per shard', 'Tunable (eventual default)', 'Tunable (eventual default)'],
+            ['Tail Latency (P99)', '11ms (post-migration)', '200ms+ (GC pauses)', '4ms (no GC)'],
+            ['Sharding', 'Transparent via VTGate', 'Built-in partitioning', 'Built-in shard-per-core'],
+            ['Query Language', 'Full SQL', 'CQL (limited)', 'CQL (limited)'],
+            ['Operational Complexity', 'Medium (MySQL + Vitess)', 'High (JVM tuning, compaction)', 'Low (self-tuning)'],
+            ['Best For', 'Teams with MySQL expertise', 'Write-heavy, eventual consistency OK', 'Low-latency, write-heavy at scale'],
+          ],
+          verdict: 'Vitess for strong consistency needs (Slack); ScyllaDB for extreme write throughput with predictable latency (Discord)'
+        },
+        {
+          id: 'push-vs-pull-fanout-chat',
+          title: 'Push vs Pull Fan-out for Channel Messages',
+          headers: ['Aspect', 'Push (Write Fan-out)', 'Pull (Read Fan-out)'],
+          rows: [
+            ['Latency', 'Instant delivery via WebSocket', 'Polling interval delay (seconds)'],
+            ['Write Cost', 'O(N) per message (N = online members)', 'O(1) per message (store once)'],
+            ['Read Cost', 'O(1) per client (message pushed)', 'O(1) per client (fetch from channel store)'],
+            ['Best For', 'Small channels (<1K members)', 'Large channels (1K+ members)'],
+            ['Complexity', 'Redis Pub/Sub + gateway routing', 'Unread counters + polling logic'],
+            ['Resource Usage', 'High for channels with many lurkers', 'Efficient -- only active users consume'],
+          ],
+          verdict: 'Hybrid: push for small channels, pull with unread counters for large channels'
+        },
+        {
+          id: 'websocket-vs-sse-chat',
+          title: 'WebSocket vs Server-Sent Events for Real-time',
+          headers: ['Aspect', 'WebSocket', 'Server-Sent Events (SSE)'],
+          rows: [
+            ['Direction', 'Bidirectional', 'Server-to-client only'],
+            ['Protocol', 'ws:// (separate from HTTP)', 'Regular HTTP/2 stream'],
+            ['Message Send', 'Send via same connection', 'Requires separate HTTP POST'],
+            ['Firewall Friendly', 'Sometimes blocked by proxies', 'Works through all HTTP proxies'],
+            ['Reconnection', 'Manual with backoff', 'Built-in auto-reconnect'],
+            ['Use Case', 'Full-duplex chat (Slack/Discord)', 'Notification streams, live feeds'],
+          ],
+          verdict: 'WebSocket for chat (bidirectional needed); SSE as fallback for restricted networks'
+        }
+      ],
+      flowcharts: [
+        {
+          id: 'send-message-flow',
+          title: 'Send Message Flow',
+          description: 'End-to-end flow from user typing a message to delivery across distributed gateways',
+          steps: [
+            { step: 1, label: 'Client Send', detail: 'User sends message via WebSocket with client-generated nonce for deduplication' },
+            { step: 2, label: 'Gateway Validation', detail: 'WebSocket Gateway validates auth token and checks channel membership permissions' },
+            { step: 3, label: 'Message Service', detail: 'Gateway forwards to Message Service which assigns sequence number via Redis INCR' },
+            { step: 4, label: 'Persist to DB', detail: 'Message stored in Vitess/ScyllaDB partitioned by channel_id with sequence number' },
+            { step: 5, label: 'Redis Pub/Sub', detail: 'Message published to Redis channel topic, received by all subscribed gateway nodes' },
+            { step: 6, label: 'Gateway Fan-out', detail: 'Each gateway pushes message to its locally connected members of that channel' },
+            { step: 7, label: 'Async Processing', detail: 'Kafka event triggers search indexing (Elasticsearch), analytics, and offline notifications' },
+          ]
+        },
+        {
+          id: 'presence-update-flow',
+          title: 'Presence Update Flow',
+          description: 'How user online/away/offline status is tracked and broadcast efficiently',
+          steps: [
+            { step: 1, label: 'Heartbeat', detail: 'Client sends heartbeat every 30 seconds over WebSocket connection' },
+            { step: 2, label: 'Redis TTL Refresh', detail: 'Gateway refreshes Redis key presence:{user_id} with 90-second TTL on each heartbeat' },
+            { step: 3, label: 'Status Change Detection', detail: 'Presence Service detects transitions (offline->active, active->away) by monitoring TTL expiry' },
+            { step: 4, label: 'Selective Broadcast', detail: 'Status change broadcast only to users who have the target user visible in their sidebar' },
+            { step: 5, label: 'Batch Aggregation', detail: 'Multiple presence changes aggregated into 5-second batches to reduce WebSocket traffic' },
+          ]
+        }
+      ],
+      visualCards: [
+        {
+          id: 'tech-stack',
+          title: 'Technology Stack',
+          icon: 'layers',
+          color: '#2D8CFF',
+          items: [
+            { label: 'Vitess (Slack) / ScyllaDB (Discord)', value: 'Message storage', bar: 95 },
+            { label: 'Redis Pub/Sub', value: 'Cross-gateway fan-out', bar: 90 },
+            { label: 'Elasticsearch', value: 'Full-text search', bar: 85 },
+            { label: 'Kafka', value: 'Event streaming', bar: 80 },
+            { label: 'S3 + CloudFront', value: 'File storage + CDN', bar: 75 },
+            { label: 'WebSocket Gateway', value: '50K conn/node', bar: 90 },
+          ]
+        },
+        {
+          id: 'scale-numbers',
+          title: 'Scale at a Glance',
+          icon: 'trendingUp',
+          color: '#10B981',
+          items: [
+            { label: '47M DAU (Slack)', value: 'Daily active users', bar: 70 },
+            { label: '1.5B msgs/day', value: '17K writes/sec avg', bar: 85 },
+            { label: '5M concurrent WS', value: 'Peak WebSocket connections', bar: 95 },
+            { label: '11ms P99 (Vitess)', value: 'Query tail latency', bar: 40 },
+            { label: '450 GB/day', value: 'Message storage growth', bar: 60 },
+            { label: '100+ gateway nodes', value: 'WebSocket server fleet', bar: 75 },
+          ]
+        }
+      ],
+      evolutionSteps: [
+        { step: 1, title: 'Single Server Chat', description: 'One WebSocket server with PostgreSQL. All connections on one machine, messages stored in a single database.', color: '#94a3b8', icon: 'server', capacity: '~10K connections', rps: '100', pros: ['Simple to build and deploy', 'No distributed systems complexity', 'Easy to debug message ordering'], cons: ['Single point of failure', 'Limited to one server memory for connections', 'No search capability'] },
+        { step: 2, title: 'Multi-Gateway + Redis', description: 'Multiple WebSocket gateways with Redis Pub/Sub for cross-server fan-out. Connection registry in Redis maps users to gateways.', color: '#2D8CFF', icon: 'layers', capacity: '~500K connections', rps: '5K', pros: ['Horizontal scaling of connections', 'Stateless gateways with easy failover', 'Redis Pub/Sub handles fan-out'], cons: ['Redis becomes bottleneck for large channels', 'No full-text search yet', 'Single-region only'] },
+        { step: 3, title: 'Sharded DB + Search', description: 'Database sharded by channel_id (Vitess or ScyllaDB). Elasticsearch added for full-text message search. Kafka for async indexing.', color: '#f59e0b', icon: 'zap', capacity: '~5M connections', rps: '50K', pros: ['Horizontal write scaling', 'Full-text search across all messages', 'Async processing pipeline'], cons: ['Operational complexity of sharded DB', 'Search indexing lag (1-5 seconds)', 'Cross-shard queries limited'] },
+        { step: 4, title: 'Global Distribution', description: 'Multi-region deployment with regional WebSocket gateways. Messages replicated across regions. CDN for file delivery.', color: '#10b981', icon: 'globe', capacity: '~20M connections', rps: '200K', pros: ['Sub-50ms latency in every region', 'Regional fault isolation', 'CDN offloads file traffic'], cons: ['Cross-region message consistency challenges', 'Higher infrastructure cost', 'Complex deployment orchestration'] },
+        { step: 5, title: 'Enterprise Scale', description: 'Compliance features (retention, e-discovery), advanced presence optimization, bot platform, and hot-warm-cold storage tiering for message archives.', color: '#7c3aed', icon: 'cpu', capacity: '50M+ connections', rps: '500K+', pros: ['Enterprise compliance and audit trails', 'Cost-efficient storage tiering', 'Rich integration ecosystem'], cons: ['Massive operational complexity', 'Multi-tenant isolation challenges', 'Regulatory requirements vary by region'] },
       ],
     },
     {
@@ -12120,10 +12335,43 @@ WHERE channel_id = ? AND id > last_read_message_id
       color: '#d32323',
       difficulty: 'Medium',
       description: 'Design a local business discovery and review platform.',
+      productMeta: {
+        name: 'Yelp',
+        tagline: 'Local business discovery with 330M+ reviews',
+        stats: [
+          { label: 'Visitors/Month', value: '178M' },
+          { label: 'Reviews', value: '330M' },
+          { label: 'Businesses', value: '7.74M' },
+          { label: 'Search Latency', value: '<200ms' },
+        ],
+        scope: {
+          inScope: ['Nearby business search', 'Geospatial indexing', 'Review system', 'Business profiles', 'Search with filters', 'Photo gallery'],
+          outOfScope: ['Food delivery', 'Reservation system', 'Advertising auction', 'Business analytics dashboard'],
+        },
+        keyChallenge: 'Serving sub-200ms proximity search results across 7.74M businesses with real-time aggregate ratings computed from 330M reviews.',
+      },
 
-      introduction: `Yelp is a local business discovery platform with 200M+ businesses and reviews. Users search for nearby restaurants, shops, and services based on location, category, and ratings.
+      introduction: `Yelp is the dominant local business discovery platform with **178 million unique monthly visitors**, **330 million cumulative reviews**, and **7.74 million claimed business listings**. Users search for nearby restaurants, shops, and services based on location, category, and ratings.
 
-The key challenges are: efficient proximity search (geospatial queries), maintaining accurate aggregate ratings, handling user-generated content (reviews, photos), and detecting fake reviews.`,
+The key challenges are: efficient **proximity search** using geospatial indexing (QuadTree vs Geohash), maintaining accurate **aggregate ratings** without recomputing from scratch on every read, handling massive volumes of **user-generated content** (reviews, photos), and detecting **fake reviews** at scale using ML models.
+
+What makes Yelp's search fundamentally different from a standard text search engine? Every query has a **geographic component** -- results must be within a certain radius of the user. This requires specialized spatial data structures (QuadTree, Geohash, or PostGIS) that can efficiently answer "find all businesses within 5km of this point" while also filtering by category, price, and rating.
+
+At Yelp's scale, the geospatial index must support ~344 searches per second with sub-200ms latency, while the review system must handle continuous ingestion and fraud detection across 330M+ reviews.`,
+
+      estimation: {
+        title: 'Capacity Planning',
+        assumptions: '178M monthly visitors, ~5.9M daily visitors. Average 2 searches per visit. 7.74M businesses, 330M reviews. Average review 500 bytes text + metadata.',
+        calculations: [
+          { label: 'Search QPS (Average)', value: '~344/s', detail: '178M visitors/month x 2 searches / 30 / 86,400 = ~137/s, peak 2.5x = ~344/s' },
+          { label: 'Business Data Size', value: '~77 GB', detail: '7.74M businesses x ~10 KB per business (profile + metadata) = 77 GB' },
+          { label: 'Review Data Size', value: '~660 GB', detail: '330M reviews x ~2 KB per review (text + metadata) = 660 GB' },
+          { label: 'Photo Storage', value: '~38 TB', detail: '330M reviews x avg 2 photos x 60 KB compressed = ~38 TB' },
+          { label: 'QuadTree Memory', value: '~1.71 GB', detail: '7.74M businesses x 220 bytes per node (lat, lng, id, pointers) = ~1.71 GB (fits in memory)' },
+          { label: 'Daily Reviews', value: '~30K', detail: '330M reviews over ~30 years = ~30K new reviews/day' },
+          { label: 'CDN Bandwidth', value: '~50 TB/month', detail: 'Photos served via CDN, ~500M photo views/month x 100KB avg = ~50 TB' },
+        ]
+      },
 
       functionalRequirements: [
         'Search businesses by location, category, keywords',
@@ -12139,7 +12387,7 @@ The key challenges are: efficient proximity search (geospatial queries), maintai
       nonFunctionalRequirements: [
         'Search results in <200ms',
         'Handle 100M+ searches per day',
-        'Support 200M+ businesses worldwide',
+        'Support 7.74M+ businesses worldwide',
         'Photos load in <2 seconds (CDN)',
         'Review submission latency <1s',
         '99.9% availability',
@@ -12192,150 +12440,260 @@ user_actions {
       apiDesign: {
         description: 'Search, business details, and review endpoints',
         endpoints: [
-          { method: 'GET', path: '/api/search', params: 'q, lat, lng, radius, category, price, rating, sortBy', response: '{ businesses[], total, facets }' },
+          { method: 'GET', path: '/api/search', params: 'q, lat, lng, radius, category, price, rating, sortBy', response: '{ businesses[], total, facets }',
+            description: 'Search for nearby businesses using geospatial indexing. Combines QuadTree/Geohash spatial lookup with Elasticsearch for full-text and filter queries. Returns businesses sorted by distance, rating, or relevance. Includes faceted counts for category, price range, and rating filters.' },
           { method: 'GET', path: '/api/businesses/:id', params: '-', response: '{ business, recentReviews[], photos[] }',
-            description: 'Returns full details for a single business including name, address, coordinates, category, hours, rating, phone, website, and photos. Business data is stored in a NoSQL document store (DynamoDB/MongoDB) for flexible schema. Read-heavy traffic is served from a Redis cache with a 1-hour TTL. Includes real-time status (open/closed) computed from the hours field.',
-            description: 'Returns full business details including hours, photos, attributes (WiFi, parking, outdoor seating), and the most recent/helpful reviews. Review data is denormalized into the business document for fast reads. Photos are served from CDN. The response includes the user\'s check-in history and whether they\'ve bookmarked this business.' },
+            description: 'Returns full business details including hours, photos, attributes (WiFi, parking, outdoor seating), and the most recent/helpful reviews. Review data is denormalized into the business document for fast reads. Photos are served from CDN. The response includes real-time open/closed status computed from the hours field.' },
           { method: 'POST', path: '/api/reviews', params: '{ businessId, rating, text, photos[] }', response: '{ reviewId }',
-            description: 'Submits a review with rating (1-5 stars), text, and optional photos. Reviews go through a moderation pipeline: spam detection (ML model trained on flagged reviews), profanity filter, and fake review detection (analyzing reviewer behavior patterns). Approved reviews update the business\'s aggregate rating asynchronously. The reviewer cannot edit their rating after 30 days.' },
+            description: 'Submits a review with rating (1-5 stars), text, and optional photos. Reviews go through a moderation pipeline: spam detection (ML model), profanity filter, and fake review detection. Approved reviews update the business aggregate rating asynchronously.' },
           { method: 'GET', path: '/api/businesses/:id/reviews', params: 'sortBy, page', response: '{ reviews[], total }',
-            description: 'Returns paginated reviews for a business with multiple sort options: most recent, highest rated, lowest rated, and Yelp sort (default — combines recency, usefulness votes, and reviewer credibility). Each review includes the reviewer\'s profile, review count, photo count, and friend connections for trust signals.' },
+            description: 'Returns paginated reviews for a business with multiple sort options: most recent, highest rated, lowest rated, and Yelp sort (combines recency, usefulness votes, and reviewer credibility).' },
           { method: 'POST', path: '/api/checkin', params: '{ businessId }', response: '{ success }',
-            description: 'Records that a user is currently at a business. Check-ins are used for recommendations (businesses you visit frequently appear in \'My Places\'), social features (friends see your check-ins), and business analytics. Check-ins within 30 minutes of the same business are deduplicated. Businesses with many check-ins get a boost in search ranking.' }
+            description: 'Records that a user is currently at a business. Check-ins are used for recommendations, social features, and business analytics. Deduplicated within 30 minutes.' }
         ]
       },
 
       keyQuestions: [
         {
-          question: 'How do we implement proximity search?',
-          answer: `**Geohash Approach**:
-- Encode lat/lng into string (e.g., "9q8yy" for San Francisco)
-- Longer prefix = more precise location
-- Query: Find all businesses with geohash prefix matching
+          question: 'QuadTree vs Geohash -- which is better for proximity search?',
+          answer: `Both are valid approaches for geospatial indexing, but they have different trade-offs.
 
-**Geohash Properties**:
-\`\`\`
-Precision  Cell Size
-4 chars    ~20km
-5 chars    ~5km
-6 chars    ~1km
-7 chars    ~150m
-\`\`\`
+**QuadTree:**
+A tree data structure that recursively divides 2D space into four quadrants. Each leaf node contains businesses in that area. Denser areas (cities) get subdivided more deeply than sparse areas (rural).
 
-**Search Query**:
-\`\`\`sql
--- Find restaurants within 5km
-SELECT * FROM businesses
-WHERE geohash LIKE '9q8yy%'  -- prefix match
-  AND category = 'restaurant'
-  AND ST_DWithin(location, user_point, 5000)  -- precise filter
-ORDER BY ST_Distance(location, user_point)
-LIMIT 20
-\`\`\`
+**How search works:** Start at root, descend into the quadrant containing the user's location, then expand to neighboring quadrants until enough results are found or the search radius is covered.
 
-**Alternative: QuadTree**
-- Recursive spatial partitioning
-- Better for non-uniform distribution
-- More complex to implement`
+**Geohash:**
+Encodes lat/lng into a string where longer prefixes mean more precision. "9q8yy" represents a ~1km cell in San Francisco. Nearby locations share common prefixes.
+
+**How search works:** Compute the user's geohash, then query for all businesses with the same prefix. Also query 8 neighboring cells to handle boundary cases.
+
+**Key Differences:**
+QuadTree adapts to density -- Manhattan gets deep trees, rural Kansas gets shallow ones. Geohash has fixed-size cells regardless of density. For Yelp's 7.74M businesses, a QuadTree fits in ~1.71GB of memory and provides O(log n) lookup. Geohash is simpler to implement with standard database indexes.
+
+**Recommendation:** QuadTree as the primary in-memory index for search servers, with Geohash stored in the database for simple prefix queries and caching.`
         },
         {
-          question: 'How do we handle aggregate ratings efficiently?',
-          answer: `**Problem**: Can't compute AVG on every read (too slow for 200M reviews)
+          question: 'How does the radius search algorithm work?',
+          answer: `The core challenge is efficiently finding all businesses within a given radius of the user's location.
 
-**Solution: Pre-compute and Update**:
-\`\`\`
-businesses.avg_rating = pre-computed average
-businesses.review_count = pre-computed count
-\`\`\`
+**Step 1: Candidate Generation (QuadTree)**
+Starting from the user's coordinates, traverse the QuadTree to find all leaf nodes that intersect with the search circle. This narrows 7.74M businesses down to a few thousand candidates in O(log n) time.
 
-**Update on New Review**:
-\`\`\`sql
--- Atomic update when review added
-UPDATE businesses SET
-  avg_rating = ((avg_rating * review_count) + new_rating) / (review_count + 1),
-  review_count = review_count + 1
-WHERE id = business_id
-\`\`\`
+**Step 2: Exact Distance Filtering (Haversine)**
+For each candidate, compute the exact distance using the Haversine formula. This accounts for the Earth's curvature, which matters at larger radii (5km+).
 
-**Consistency Considerations**:
-- Eventual consistency is OK (few seconds delay)
-- Use database transaction for review + rating update
-- For edits/deletes: Recompute from reviews (background job)
+**Step 3: Apply Filters**
+Filter candidates by category, price range, rating, and "open now" status. These filters are applied in-memory on the candidate set.
 
-**Rating Distribution**:
-- Also store rating histogram for display
-- { 5: 120, 4: 80, 3: 30, 2: 10, 1: 5 }`
+**Step 4: Ranking**
+Sort remaining results by a weighted score combining: distance (40%), rating (30%), review count (15%), and profile completeness (15%).
+
+**Edge Case -- Cell Boundaries:**
+A business 100 meters from the user might fall in a different QuadTree leaf or Geohash cell. Solution: always query adjacent cells (8 neighbors for Geohash, or overlapping QuadTree nodes).
+
+**Dynamic Radius Expansion:**
+If a search for "pizza within 1km" returns fewer than 5 results, automatically expand to 2km, then 5km. This prevents empty results in low-density areas.`
         },
         {
-          question: 'How do we detect fake reviews?',
-          answer: `**Fraud Signals**:
-- New account posting many reviews quickly
-- Review patterns (same text, suspicious timing)
-- IP/device fingerprinting
-- Geographic anomalies (review from different country)
-- Natural language analysis (generic, template-like)
+          question: 'How does Haversine distance calculation work?',
+          answer: `The Haversine formula calculates the great-circle distance between two points on a sphere (the Earth), given their latitude and longitude.
 
-**ML Fraud Detection**:
-\`\`\`
-Features:
-- Account age, review count, verification status
-- Time since last review
-- Review length, sentiment, uniqueness
-- Geographic distance to business
-- Device/IP reputation
+**Why not Euclidean distance?**
+At small scales (<1km), Euclidean approximation works fine. But at larger distances, the Earth's curvature matters. Euclidean distance between San Francisco and New York would be significantly wrong.
 
-Model: Classification → spam_probability
-If spam_probability > 0.8: Hold for manual review
-If spam_probability > 0.95: Auto-reject
-\`\`\`
+**The Formula:**
+a = sin2(dlat/2) + cos(lat1) * cos(lat2) * sin2(dlng/2)
+distance = 2 * R * arcsin(sqrt(a))
+where R = 6,371 km (Earth's radius)
 
-**Manual Review Queue**:
-- Human reviewers for borderline cases
-- Business owner can flag suspicious reviews
-- User can report reviews
+**Performance at Scale:**
+Computing Haversine for every business in the database would be too slow. The two-phase approach (QuadTree for candidates, Haversine for exact distance) ensures we only compute Haversine for a small candidate set (~1K businesses).
 
-**Incentive Alignment**:
-- Require purchase verification where possible
-- Elite reviewer program for trusted users
-- Legal action against review farms`
+**Optimization -- Bounding Box Pre-filter:**
+Before Haversine, apply a simple bounding box check: reject any business where abs(lat_diff) > radius/111km or abs(lng_diff) > radius/(111km * cos(lat)). This eliminates 90%+ of candidates with simple arithmetic before the expensive trig functions.
+
+**Accuracy:** Haversine assumes a perfect sphere. For sub-meter accuracy, use Vincenty's formula (ellipsoidal model), but Haversine is sufficient for Yelp's use case.`
         },
         {
-          question: 'How do we implement search with filters?',
-          answer: `**Elasticsearch for Complex Search**:
-\`\`\`json
-{
-  "query": {
-    "bool": {
-      "must": [
-        { "match": { "name": "pizza" } }
-      ],
-      "filter": [
-        { "geo_distance": {
-            "distance": "5km",
-            "location": { "lat": 37.7, "lon": -122.4 }
-        }},
-        { "range": { "avg_rating": { "gte": 4.0 } } },
-        { "terms": { "price_range": [1, 2] } },
-        { "term": { "open_now": true } }
-      ]
-    }
-  },
-  "sort": [
-    { "_geo_distance": { "location": {...}, "order": "asc" } }
-  ]
-}
-\`\`\`
+          question: 'How are edge cases at cell boundaries handled?',
+          answer: `Cell boundary issues are the most common pitfall in geospatial system design interviews.
 
-**Faceted Search**:
-Return aggregations for filters:
-- Categories with counts
-- Price range distribution
-- Rating distribution
-- "Open Now" count
+**The Problem:**
+A user standing at the edge of a Geohash cell might be 50 meters from a restaurant that falls in a different cell. If we only query the user's cell, we miss nearby results.
 
-**Performance**:
-- Cache common searches (city + category)
-- Pre-compute "popular near you" at regular intervals`
+**Solution 1: Query 8 Neighbors (Geohash)**
+Always query the user's cell plus all 8 surrounding cells. This creates a 3x3 grid that covers the entire search area for typical radii.
+
+**Solution 2: Overlapping QuadTree Traversal**
+When traversing the QuadTree, check if the search circle intersects with any adjacent quadrant. If the user is within the search radius of a quadrant boundary, descend into both quadrants.
+
+**Solution 3: Multi-Resolution Geohash**
+Use a shorter Geohash prefix (fewer characters = larger cell) to cast a wider net, then filter by exact distance. For example, "9q8y" covers ~5km vs "9q8yy" covering ~1km.
+
+**Handling the International Date Line:**
+Businesses near the 180th meridian (e.g., in Fiji or New Zealand) have longitude values that wrap from +180 to -180. Standard range queries fail here. Solution: normalize coordinates to [0, 360] or use a modular arithmetic approach.
+
+**Polar Regions:**
+Near the poles, longitude lines converge, making rectangular bounding boxes extremely wide. Use adaptive cell sizing or switch to an S2-based index for polar accuracy.`
+        },
+        {
+          question: 'How does dynamic radius expansion work?',
+          answer: `In low-density areas, a 1km search might return zero results. Dynamic radius expansion ensures users always see relevant results.
+
+**Algorithm:**
+1. Start with the user's requested radius (default: 5km)
+2. Execute search query with this radius
+3. If results < minimum threshold (e.g., 5 businesses):
+   - Double the radius: 5km -> 10km -> 20km
+   - Re-execute search
+   - Cap at maximum radius (50km)
+4. If results > maximum page size, use the original radius
+
+**Implementation Optimization:**
+Rather than re-querying from scratch on each expansion, use concentric ring queries:
+- Ring 1: 0-5km (initial query)
+- Ring 2: 5-10km (query only the delta)
+- Ring 3: 10-20km (query only the delta)
+Merge results from all rings until we have enough.
+
+**QuadTree Advantage:**
+The QuadTree naturally supports this pattern. Start traversal from the leaf containing the user, then expand to siblings, then parent's siblings, etc. Each level of the tree doubles the search area.
+
+**User Experience:**
+Display results grouped by distance: "Nearby (within 1km)", "A bit farther (1-5km)", "Worth the drive (5-20km)". This sets expectations when results require radius expansion.
+
+**Performance:** Even with expansion, search stays under 200ms because the QuadTree traversal is O(log n) and in-memory.`
+        },
+        {
+          question: 'How does the "open now" real-time filter work?',
+          answer: `Filtering by "open now" is one of the most requested features but is surprisingly complex to implement correctly.
+
+**The Problem:**
+Each business has operating hours stored as structured data (e.g., Mon: 9:00-17:00). But hours vary by day, may span midnight (bars: 20:00-02:00), and change for holidays. Computing "open now" for thousands of search results must be fast.
+
+**Approach 1: Compute at Query Time**
+For each business in the search results, evaluate the current day/time against the hours schedule. This is O(1) per business but adds ~10ms for 1000 results.
+
+**Approach 2: Pre-compute with Short TTL**
+Every 5 minutes, a background job computes is_open for all 7.74M businesses and stores it as a boolean flag. Search queries filter on this flag. The flag is refreshed every 5 minutes, so accuracy is within 5 minutes.
+
+**Handling Complex Schedules:**
+- **Midnight spanning**: Bar hours "20:00-02:00" stored as two intervals: 20:00-23:59 and 00:00-02:00
+- **Holiday hours**: Override table keyed by (business_id, date) checked first
+- **Temporary closures**: "Closed for renovation" flag overrides all hours
+- **Time zones**: All hours stored in the business's local timezone. Search converts user's UTC time to business's timezone before comparison.
+
+**Recommendation:** Pre-compute every 5 minutes for search filtering (fast), compute exactly at query time for the business detail page (accurate).`
+        },
+        {
+          question: 'How does review spam detection work?',
+          answer: `Fake reviews are Yelp's biggest trust challenge. Their recommendation engine filters ~25% of all reviews as potentially fake.
+
+**Fraud Signals (Features for ML Model):**
+- **Account age**: New accounts posting multiple reviews quickly
+- **Review velocity**: 5+ reviews in one day from one account
+- **Linguistic patterns**: Generic text, copy-pasted templates, excessive superlatives
+- **Geographic anomaly**: Review from a country the user has never visited
+- **Device/IP reputation**: Multiple accounts from same device or IP
+- **Social graph**: Reviewer has no friends, no profile photo, no check-ins
+
+**ML Classification Pipeline:**
+1. New review submitted
+2. Extract features (account, behavioral, linguistic, geographic)
+3. Run through gradient-boosted classifier (XGBoost)
+4. Output: spam_probability (0.0 to 1.0)
+5. If > 0.95: auto-reject. If > 0.7: hold for human review. If < 0.7: publish.
+
+**Organized Campaigns:**
+Detect coordinated fake review campaigns by looking for clusters: multiple reviews for the same business from accounts created within the same week, with similar writing styles.
+
+**Business Owner Incentives:**
+Yelp penalizes businesses caught soliciting fake reviews by adding a "Consumer Alert" banner. This deters manipulation more effectively than just removing reviews.`
+        },
+        {
+          question: 'How does hot-spot caching work for popular businesses?',
+          answer: `A tiny fraction of businesses (popular restaurants, tourist attractions) receive a disproportionate share of traffic. Caching these hot spots is critical.
+
+**Traffic Distribution (Power Law):**
+~1% of businesses (77K) receive ~50% of all page views. These are the "hot" businesses that must be cached aggressively.
+
+**Multi-Layer Cache:**
+
+**Layer 1: CDN Edge Cache**
+Business profile pages and photos cached at CloudFront/Cloudflare edge locations. TTL: 10 minutes for business data, 24 hours for photos. Handles 80% of read traffic.
+
+**Layer 2: Application Cache (Redis)**
+Business details, recent reviews, and aggregate ratings cached in Redis. TTL: 5 minutes. Cache key: business:{id}. On cache miss, fetch from database and populate cache.
+
+**Layer 3: Search Result Cache**
+Common search queries cached: "pizza near 94105", "coffee shops downtown". Cache key includes: query + geohash(4 chars) + sort + filters. TTL: 2 minutes (short due to location sensitivity).
+
+**Cache Invalidation:**
+- New review: invalidate business cache (rating changes)
+- Business update: invalidate business cache + search cache for that area
+- Use Kafka CDC events from the database to trigger invalidation
+
+**Hot Business Protection:**
+For viral businesses (e.g., restaurant featured on a TV show), pre-warm the cache and increase TTL to 30 minutes. Use a "stale-while-revalidate" pattern to serve slightly stale data while refreshing in the background.`
+        },
+        {
+          question: 'How does search ranking work?',
+          answer: `Yelp's search ranking combines multiple signals to determine which businesses appear first.
+
+**Ranking Signals (weighted):**
+
+**1. Distance (30-40% weight):**
+Closer businesses rank higher. Uses distance decay function: score = 1 / (1 + distance_km). A business 0.5km away scores 0.67, one 5km away scores 0.17.
+
+**2. Rating Quality (25-30% weight):**
+Not just average rating -- uses Bayesian average to penalize businesses with few reviews. A 5.0 rating from 2 reviews ranks lower than a 4.5 from 500 reviews.
+Bayesian: weighted_rating = (v/(v+m)) * R + (m/(v+m)) * C
+where v=review count, m=minimum reviews threshold, R=average rating, C=global mean.
+
+**3. Review Recency (10-15% weight):**
+Recent reviews weighted more heavily. A restaurant that was great 5 years ago but terrible recently should rank lower.
+
+**4. Business Completeness (10% weight):**
+Profiles with photos, hours, menu, and claimed owner status rank higher. Signals that the business is active and trustworthy.
+
+**5. User Personalization (5-10% weight):**
+Based on user's past searches, check-ins, and review history. If user frequently visits Italian restaurants, Italian results get a slight boost.
+
+**Implementation:** Elasticsearch custom scoring function combines all signals into a single relevance score. Top 20 results returned per page.`
+        },
+        {
+          question: 'How does the photo CDN and gallery work?',
+          answer: `Yelp hosts billions of user-uploaded photos. Efficient storage, processing, and delivery are critical for page load performance.
+
+**Upload Pipeline:**
+1. User uploads photo via mobile app or web
+2. Photo sent to upload service (pre-signed S3 URL)
+3. Post-processing Lambda triggered:
+   - Generate 4 sizes: thumbnail (100px), small (250px), medium (600px), large (1200px)
+   - Extract EXIF metadata (location, timestamp)
+   - Run content moderation ML (NSFW detection, inappropriate content)
+   - Compute perceptual hash for duplicate detection
+4. Store all sizes in S3 with CDN distribution
+
+**CDN Strategy:**
+- CloudFront with regional edge caches (100+ PoPs worldwide)
+- Photos are immutable -- once uploaded, URL never changes
+- Cache TTL: 30 days (photos rarely change)
+- Lazy loading: thumbnails load first, full-size on click
+
+**Photo Ranking:**
+Not all photos are equal. The "primary photo" for a business listing is selected by:
+1. Photo quality score (ML model: sharpness, lighting, composition)
+2. Number of "helpful" votes from users
+3. Recency (newer photos preferred)
+4. Diversity (show food, interior, exterior -- not 10 food shots)
+
+**Storage Optimization:**
+- WebP format for modern browsers (30% smaller than JPEG)
+- Progressive JPEG fallback for older browsers
+- Deduplication via perceptual hashing (same photo uploaded by different users)
+- Total storage: ~38 TB for 330M reviews x avg 2 photos`
         }
       ],
 
@@ -12343,23 +12701,6 @@ Return aggregations for filters:
         title: 'Basic Yelp Architecture',
         description: 'PostGIS for geospatial, single database',
         svgTemplate: 'yelp',
-        architecture: `
-┌─────────────────────────────────────────────────────────────────┐
-│                       Basic Yelp System                          │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│   ┌──────────┐        ┌──────────────┐       ┌──────────────┐   │
-│   │  Client  │───────▶│  API Server  │──────▶│  PostgreSQL  │   │
-│   │          │        │              │       │  + PostGIS   │   │
-│   └──────────┘        └──────────────┘       └──────────────┘   │
-│                              │                                   │
-│                              ▼                                   │
-│                       ┌──────────────┐                          │
-│                       │     S3       │                          │
-│                       │   (Photos)   │                          │
-│                       └──────────────┘                          │
-│                                                                  │
-└─────────────────────────────────────────────────────────────────┘`,
         problems: [
           'Single database = scaling bottleneck',
           'No full-text search',
@@ -12371,57 +12712,8 @@ Return aggregations for filters:
       advancedImplementation: {
         title: 'Production Yelp Architecture',
         svgTemplate: 'yelpAdvanced',
-        architecture: `
-┌──────────────────────────────────────────────────────────────────────────────┐
-│                        Production Yelp Architecture                           │
-├──────────────────────────────────────────────────────────────────────────────┤
-│                                                                              │
-│  ┌─────────────┐                                                             │
-│  │   Clients   │                                                             │
-│  └──────┬──────┘                                                             │
-│         │                                                                    │
-│         ▼                                                                    │
-│  ┌─────────────────────────────────────────────────────────────────────┐    │
-│  │                          CDN (CloudFront)                            │    │
-│  │               Photos, Static Assets, Cached Search Results           │    │
-│  └────────────────────────────────┬────────────────────────────────────┘    │
-│                                   │                                          │
-│                                   ▼                                          │
-│  ┌─────────────────────────────────────────────────────────────────────┐    │
-│  │                        API Gateway / Load Balancer                   │    │
-│  └────────────────────────────────┬────────────────────────────────────┘    │
-│                                   │                                          │
-│  ┌────────────────────────────────┼────────────────────────────────────┐    │
-│  │                         SERVICE LAYER                                │    │
-│  │  ┌────────────┐  ┌────────────┐  ┌────────────┐  ┌────────────┐    │    │
-│  │  │  Search    │  │  Business  │  │  Review    │  │   User     │    │    │
-│  │  │  Service   │  │  Service   │  │  Service   │  │  Service   │    │    │
-│  │  └─────┬──────┘  └─────┬──────┘  └─────┬──────┘  └────────────┘    │    │
-│  └────────┼───────────────┼───────────────┼────────────────────────────┘    │
-│           │               │               │                                  │
-│  ┌────────┼───────────────┼───────────────┼────────────────────────────┐    │
-│  │        ▼               ▼               ▼                            │    │
-│  │  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐                │    │
-│  │  │Elasticsearch │ │  PostgreSQL  │ │    Redis     │                │    │
-│  │  │(Search +Geo) │ │  (Primary)   │ │   (Cache)    │                │    │
-│  │  └──────────────┘ └──────────────┘ └──────────────┘                │    │
-│  │                                                                     │    │
-│  │  ┌──────────────────────────────────────────────────────────────┐  │    │
-│  │  │                    ASYNC PROCESSING                           │  │    │
-│  │  │  ┌──────────┐    ┌──────────┐    ┌──────────────┐            │  │    │
-│  │  │  │  Kafka   │───▶│  Fraud   │───▶│   Rating     │            │  │    │
-│  │  │  │          │    │Detection │    │  Aggregator  │            │  │    │
-│  │  │  └──────────┘    └──────────┘    └──────────────┘            │  │    │
-│  │  └──────────────────────────────────────────────────────────────┘  │    │
-│  │                                                                     │    │
-│  │  ┌──────────────┐                                                  │    │
-│  │  │      S3      │  ← Photos with CDN in front                      │    │
-│  │  └──────────────┘                                                  │    │
-│  └─────────────────────────────────────────────────────────────────────┘    │
-│                                                                              │
-└──────────────────────────────────────────────────────────────────────────────┘`,
         keyPoints: [
-          'Elasticsearch for geospatial + full-text search',
+          'QuadTree + Elasticsearch for geospatial + full-text search',
           'Redis cache for business details and popular searches',
           'CDN for photos and static content',
           'Kafka pipeline for async rating aggregation',
@@ -12468,7 +12760,7 @@ Return aggregations for filters:
       requirements: ['Search nearby businesses', 'Ratings/reviews', 'Photos', 'Business profiles', 'Reservations', 'Check-ins'],
       components: ['Business service', 'Search service', 'Review service', 'Geospatial index', 'CDN', 'Recommendation engine'],
       keyDecisions: [
-        'Geohash or QuadTree for proximity search',
+        'QuadTree + Geohash for proximity search',
         'Elasticsearch for full-text + geospatial queries',
         'Pre-compute aggregate ratings (avoid counting on read)',
         'CDN for business photos',
@@ -12489,9 +12781,107 @@ Return aggregations for filters:
       ],
       layeredDesign: [
         { name: 'Client & API Layer', purpose: 'Handle search queries, business profile views, and review submissions', components: ['Search API', 'Business Profile API', 'Review API', 'Photo Upload Service'] },
-        { name: 'Search & Discovery Layer', purpose: 'Provide geospatial and full-text search with personalized ranking', components: ['Elasticsearch Cluster', 'Geospatial Index', 'Ranking Service', 'Personalization Engine'] },
+        { name: 'Search & Discovery Layer', purpose: 'Provide geospatial and full-text search with personalized ranking', components: ['Elasticsearch Cluster', 'QuadTree Index', 'Ranking Service', 'Personalization Engine'] },
         { name: 'Business & Review Layer', purpose: 'Manage business listings, reviews, ratings, and fraud detection', components: ['Business Service', 'Review Service', 'Rating Aggregator', 'Fraud Detection ML'] },
         { name: 'Storage & Delivery Layer', purpose: 'Persist data and serve media assets globally', components: ['Business DB (PostgreSQL)', 'Review Store', 'Photo CDN', 'Cache (Redis)'] },
+      ],
+      comparisonTables: [
+        {
+          id: 'quadtree-vs-geohash',
+          title: 'QuadTree vs Geohash for Proximity Search',
+          headers: ['Aspect', 'QuadTree', 'Geohash'],
+          rows: [
+            ['Data Structure', 'Tree (recursive spatial partitioning)', 'String encoding of coordinates'],
+            ['Adaptive Resolution', 'Yes -- denser areas get deeper trees', 'No -- fixed cell size per precision level'],
+            ['Storage', 'In-memory tree (~1.71 GB for 7.74M)', 'Database column (string index)'],
+            ['Query Pattern', 'Tree traversal from root', 'String prefix match + 8 neighbors'],
+            ['Boundary Handling', 'Overlapping quadrant search', 'Must query neighboring cells explicitly'],
+            ['Distribution', 'Hard to distribute across servers', 'Easy -- shardable by prefix'],
+            ['Implementation', 'Custom data structure required', 'Simple string operations'],
+          ],
+          verdict: 'QuadTree for in-memory search servers (adaptive, fast); Geohash for database storage and caching (simple, distributable)'
+        },
+        {
+          id: 'postgis-vs-elasticsearch-geo',
+          title: 'PostGIS vs Elasticsearch for Geospatial Search',
+          headers: ['Aspect', 'PostGIS (PostgreSQL)', 'Elasticsearch Geo'],
+          rows: [
+            ['Query Types', 'Full SQL + spatial functions', 'Geo-distance, geo-bounding box, geo-polygon'],
+            ['Text Search', 'Limited (ts_vector)', 'Best-in-class full-text + analyzers'],
+            ['Horizontal Scaling', 'Difficult (read replicas only)', 'Native sharding and replication'],
+            ['Precision', 'Sub-meter accuracy', 'Good (~1m with geo_point)'],
+            ['Combined Queries', 'Requires complex JOINs', 'Single query: geo + text + filters'],
+            ['Operational Cost', 'Low (part of PostgreSQL)', 'High (separate cluster to manage)'],
+          ],
+          verdict: 'Elasticsearch for search (combines geo + text + filters); PostGIS for precise spatial operations and transactional writes'
+        }
+      ],
+      flowcharts: [
+        {
+          id: 'nearby-search-flow',
+          title: 'Nearby Business Search Flow',
+          description: 'How a proximity search query is processed from user input to ranked results',
+          steps: [
+            { step: 1, label: 'User Query', detail: 'User enters search term, location detected via GPS or entered manually' },
+            { step: 2, label: 'Geocode Location', detail: 'Convert address to lat/lng if needed, compute Geohash prefix for spatial lookup' },
+            { step: 3, label: 'QuadTree Lookup', detail: 'Traverse in-memory QuadTree to find candidate businesses within search radius' },
+            { step: 4, label: 'Expand Boundaries', detail: 'Include businesses from adjacent QuadTree nodes to handle cell boundary edge cases' },
+            { step: 5, label: 'Haversine Filter', detail: 'Compute exact great-circle distance for each candidate, filter by user max radius' },
+            { step: 6, label: 'Apply Filters', detail: 'Filter by category, price range, rating, open now status from Elasticsearch' },
+            { step: 7, label: 'Rank Results', detail: 'Score by distance (40%), rating quality (30%), recency (15%), completeness (15%)' },
+            { step: 8, label: 'Return Results', detail: 'Return top 20 results with business previews, distances, and faceted filter counts' },
+          ]
+        },
+        {
+          id: 'write-review-flow',
+          title: 'Write Review Flow',
+          description: 'From review submission through fraud detection to rating update',
+          steps: [
+            { step: 1, label: 'Submit Review', detail: 'User submits rating (1-5), review text, and optional photos via POST /api/reviews' },
+            { step: 2, label: 'Validation', detail: 'Check user has not already reviewed this business, validate text length and content' },
+            { step: 3, label: 'Fraud Detection', detail: 'ML model scores spam probability using account age, review velocity, linguistic patterns' },
+            { step: 4, label: 'Content Moderation', detail: 'Profanity filter and policy check, photos scanned for inappropriate content' },
+            { step: 5, label: 'Persist Review', detail: 'Store review in database, upload photos to S3, publish Kafka event' },
+            { step: 6, label: 'Update Rating', detail: 'Async worker recomputes business avg_rating and review_count, invalidates cache' },
+          ]
+        }
+      ],
+      visualCards: [
+        {
+          id: 'tech-stack',
+          title: 'Technology Stack',
+          icon: 'layers',
+          color: '#2D8CFF',
+          items: [
+            { label: 'QuadTree (In-Memory)', value: '1.71 GB / 7.74M biz', bar: 90 },
+            { label: 'Elasticsearch', value: 'Geo + text search', bar: 95 },
+            { label: 'PostgreSQL', value: 'Business + review data', bar: 85 },
+            { label: 'Redis', value: 'Cache + hot business data', bar: 80 },
+            { label: 'CloudFront CDN', value: '~38 TB photos', bar: 75 },
+            { label: 'Kafka + ML Pipeline', value: 'Fraud detection', bar: 70 },
+          ]
+        },
+        {
+          id: 'scale-numbers',
+          title: 'Scale at a Glance',
+          icon: 'trendingUp',
+          color: '#10B981',
+          items: [
+            { label: '178M visitors/month', value: 'Monthly unique visitors', bar: 80 },
+            { label: '344 search/sec', value: 'Peak search QPS', bar: 50 },
+            { label: '7.74M businesses', value: 'Active listings', bar: 70 },
+            { label: '330M reviews', value: 'Cumulative reviews', bar: 90 },
+            { label: '<200ms search', value: 'Search latency target', bar: 60 },
+            { label: '~38 TB photos', value: 'Total photo storage', bar: 75 },
+          ]
+        }
+      ],
+      evolutionSteps: [
+        { step: 1, title: 'Single DB + PostGIS', description: 'PostgreSQL with PostGIS extension for geospatial queries. All data in one database. Simple but limited scale.', color: '#94a3b8', icon: 'server', capacity: '~100K businesses', rps: '50', pros: ['Simple architecture', 'PostGIS handles basic geo queries', 'Easy to develop and test'], cons: ['Single database bottleneck', 'No full-text search', 'Slow for complex geo + filter queries'] },
+        { step: 2, title: 'Elasticsearch + Cache', description: 'Add Elasticsearch for combined geo + text search. Redis cache for hot business profiles. CDN for photos.', color: '#2D8CFF', icon: 'layers', capacity: '~1M businesses', rps: '500', pros: ['Fast combined geo + text search', 'Cache reduces database load', 'CDN handles photo traffic'], cons: ['Elasticsearch operational overhead', 'Cache invalidation complexity', 'Still single-region'] },
+        { step: 3, title: 'QuadTree + Fraud Detection', description: 'In-memory QuadTree for sub-50ms proximity search. ML pipeline for review fraud detection. Async rating aggregation.', color: '#f59e0b', icon: 'zap', capacity: '~10M businesses', rps: '2K', pros: ['Sub-50ms proximity search in memory', 'Automated fraud filtering', 'Decoupled write path from search'], cons: ['QuadTree rebuild on business additions', 'ML model requires training data and monitoring', 'Multiple systems to operate'] },
+        { step: 4, title: 'Regional Sharding', description: 'Elasticsearch sharded by metro area. Regional search servers with local QuadTrees. Global routing layer for traveling users.', color: '#10b981', icon: 'globe', capacity: '~50M businesses', rps: '10K', pros: ['Search latency stays low as data grows', 'Regional fault isolation', 'Efficient resource utilization per region'], cons: ['Cross-region search adds complexity', 'Data rebalancing on region changes', 'Higher infrastructure cost'] },
+        { step: 5, title: 'Personalization + ML Ranking', description: 'Personalized search ranking based on user history. Real-time "open now" computation. Advanced photo ranking and content moderation.', color: '#7c3aed', icon: 'cpu', capacity: '100M+ businesses', rps: '50K+', pros: ['Highly relevant personalized results', 'Real-time business status', 'High-quality content curation'], cons: ['Cold start for new users', 'ML model drift requires continuous monitoring', 'Privacy concerns with personalization'] },
       ],
     },
     {
@@ -12502,10 +12892,44 @@ Return aggregations for filters:
       color: '#fe3c72',
       difficulty: 'Medium',
       description: 'Design a location-based dating app with swipe matching.',
+      productMeta: {
+        name: 'Tinder',
+        tagline: 'Location-based dating with 1.6 billion swipes per day',
+        stats: [
+          { label: 'MAU', value: '75M' },
+          { label: 'Swipes/Day', value: '1.6B' },
+          { label: 'Matches (all-time)', value: '75B+' },
+          { label: 'Countries', value: '190+' },
+        ],
+        scope: {
+          inScope: ['Profile creation & photos', 'Location-based recommendations', 'Swipe (like/pass) mechanism', 'Match detection (mutual likes)', 'Post-match chat', 'Distance/age/gender filters'],
+          outOfScope: ['Video dating', 'Background checks', 'Tinder Passport (travel)', 'Super Likes/Boosts paid features', 'Safety features (ID verification)'],
+        },
+        keyChallenge: 'Processing 1.6 billion swipes per day (18.5K/sec) with real-time match detection while generating personalized recommendation stacks for 75M monthly users using geospatial indexing.',
+      },
 
-      introduction: `Tinder is a location-based dating app where users swipe right to like or left to pass on potential matches. When two users mutually like each other, they "match" and can start chatting.
+      introduction: `Tinder is the world's most popular dating app with **75 million monthly active users** and **26 million daily active users** across **190+ countries**. Users swipe right to like or left to pass on potential matches. When two users mutually like each other, they "match" and can start chatting.
 
-The key challenges include finding nearby users efficiently, generating personalized recommendations at scale, detecting matches in real-time, and supporting 2B+ swipes per day.`,
+The scale is staggering: **1.6 billion swipes per day** (18.5K swipes/sec), **75 billion+ all-time matches**, and the system must generate fresh, personalized recommendation stacks for millions of concurrent users based on location, preferences, and an attractiveness scoring system.
+
+Key challenges include: finding nearby users efficiently using **S2 geospatial cells** (Google's library, used by Tinder), generating personalized recommendations at massive scale with a scoring system that balances attractiveness tiers, detecting mutual matches in real-time using **Redis** for O(1) lookup, preventing swipe deduplication, and managing profile photos across a global CDN.
+
+What makes Tinder's architecture unique compared to other geospatial apps (Uber, Yelp)? The recommendation system must consider **mutual compatibility** -- it's not enough that User A likes User B's profile; the system should predict whether User B would also like User A. This bidirectional matching requirement drives the ELO/progressive taxation scoring system.`,
+
+      estimation: {
+        title: 'Capacity Planning',
+        assumptions: '75M MAU, 26M DAU, ~62 swipes/user/day. Average profile 5 photos at ~50KB each. 10% of swipes result in likes. Redis for like cache.',
+        calculations: [
+          { label: 'Swipes/Day', value: '1.6 Billion', detail: '26M DAU x ~62 swipes/user/day = 1.6B swipes per day' },
+          { label: 'Swipe QPS (Average)', value: '~18.5K/s', detail: '1.6B swipes / 86,400 seconds = 18,518 swipes/sec' },
+          { label: 'Recommendation QPS', value: '~30K/s', detail: '26M DAU requesting ~100 recommendations/day = ~30K recommendation fetches/sec' },
+          { label: 'Profile Storage', value: '~187 TB', detail: '75M users x 5 photos x 50KB = 18.75 TB photos + profile data' },
+          { label: 'Swipe Log Storage/Day', value: '~160 GB', detail: '1.6B swipes x ~100 bytes per swipe record = 160 GB/day' },
+          { label: 'Redis Like Cache', value: '~50 GB', detail: '26M DAU x avg 200 pending likes x 8 bytes per user ID = ~50 GB' },
+          { label: 'Match Detection Rate', value: '~26M/day', detail: '~1.6% of right-swipes result in mutual match = ~26M new matches/day' },
+          { label: 'Peak Swipe QPS', value: '~55K/s', detail: '18.5K x 3x peak factor (Sunday evening prime time) = ~55K/sec' },
+        ]
+      },
 
       functionalRequirements: [
         'Create profile with photos, bio, preferences',
@@ -12520,7 +12944,7 @@ The key challenges include finding nearby users efficiently, generating personal
 
       nonFunctionalRequirements: [
         'Sub-100ms swipe response time',
-        'Handle 2B+ swipes per day',
+        'Handle 1.6B+ swipes per day',
         'Match detection in real-time (<1 second)',
         'Recommendation generation <500ms',
         'Support 75M+ monthly active users',
@@ -12538,7 +12962,7 @@ The key challenges include finding nearby users efficiently, generating personal
   interestedIn: enum[]
   photos: varchar[]
   location: point (lat/lng)
-  geohash: varchar(12)
+  s2CellId: bigint -- S2 cell for geosharding
   ageRangeMin: int
   ageRangeMax: int
   maxDistance: int (km)
@@ -12584,121 +13008,321 @@ recommendation_queue {
             method: 'GET',
             path: '/api/recommendations',
             params: '?count=10',
-            response: '{ users: [{id, name, age, photos, distance, bio}] }'
+            response: '{ users: [{id, name, age, photos, distance, bio}] }',
+            description: 'Returns a pre-computed recommendation stack for the user. Candidates are generated using S2 geospatial cells, filtered by mutual preferences (age, gender, distance), and ranked by ELO score similarity. Served from Redis sorted set for sub-100ms latency. If the stack is depleted, triggers async regeneration.'
           },
           {
             method: 'POST',
             path: '/api/swipe',
             params: '{ targetId, action: LIKE|PASS|SUPERLIKE }',
             response: '{ match: boolean, matchId?: bigint }',
-            description: 'Records a swipe action (LIKE, PASS, or SUPERLIKE) and checks for a mutual match. Uses Redis to check if the target user has already liked the current user — if so, a match is created instantly. Match creation triggers push notifications to both users and opens a chat channel. Swipe rate is limited to prevent bot behavior. SUPERLIKE notifications are sent immediately to the target user.'
+            description: 'Records a swipe action and checks for a mutual match. Uses Redis to check if the target user has already liked the current user -- if so, a match is created instantly. Match creation triggers push notifications to both users and opens a chat channel. Swipe rate is limited to prevent bot behavior. SUPERLIKE notifications are sent immediately.'
           },
           {
             method: 'GET',
             path: '/api/matches',
             params: '?cursor=',
             response: '{ matches: [{id, user, lastMessage, matchedAt}] }',
-            description: 'Returns the user\'s match list with cursor-based pagination, sorted by most recent interaction. Each match includes the matched user\'s profile preview, last message, unread count, and match timestamp. Matches where neither user has messaged after 14 days are deprioritized. The response is served from a Redis sorted set for fast reads.'
+            description: 'Returns the user match list with cursor-based pagination, sorted by most recent interaction. Served from a Redis sorted set for fast reads.'
           },
           {
             method: 'WS',
             path: '/ws/chat/{matchId}',
             params: 'auth token',
             response: 'Bidirectional messages',
-            description: 'WebSocket connection for real-time messaging within a match. Supports text messages, GIF sharing (via Giphy API), and read receipts. Messages are stored in a per-match partition in Cassandra. If the WebSocket disconnects, messages are queued and delivered on reconnection. Users can only message after mutual matching — the server validates the match exists on every message.'
+            description: 'WebSocket connection for real-time messaging within a match. Messages stored in a per-match partition in Cassandra. Users can only message after mutual matching.'
           },
           {
             method: 'PATCH',
             path: '/api/profile',
             params: '{ photos, bio, preferences }',
             response: '{ updated: true }',
-            description: 'Updates the user\'s profile including photos (up to 9, reorderable), bio text (500 char limit), and match preferences (age range, distance, gender). Photo uploads go through a content moderation pipeline (NSFW detection via ML). Profile changes trigger re-indexing in the recommendation engine. Preference changes affect which profiles appear in future recommendation stacks.'
+            description: 'Updates user profile. Photo uploads go through NSFW detection ML. Profile changes trigger re-indexing in the recommendation engine.'
           },
           {
             method: 'POST',
             path: '/api/location',
             params: '{ lat, lng }',
-            response: '{ geohash }',
-            description: 'Updates the user\'s GPS location for distance-based matching. Location is stored in a geospatial index (Redis GEO or PostGIS) for efficient radius queries. Location updates are throttled to every 15 minutes to save battery. The \'Passport\' feature (paid) allows setting a different location for matching in other cities.'
+            response: '{ s2CellId }',
+            description: 'Updates the user GPS location for distance-based matching. Stored in a geospatial index (S2 cells). Location updates throttled to every 15 minutes to save battery.'
           }
         ]
       },
 
       keyQuestions: [
         {
-          question: 'How do we efficiently find nearby users?',
-          answer: `Geohashing approach:
+          question: 'How does S2 geosharding work for finding nearby users?',
+          answer: `Tinder uses Google's **S2 Geometry Library** for geospatial indexing, which is more sophisticated than simple Geohash.
 
-1. Convert location to geohash:
-   (37.7749, -122.4194) → "9q8yy"
-   - Precision determines cell size
-   - 6 chars ≈ 1.2km × 0.6km
+**What is S2?**
+S2 projects the Earth's surface onto a cube, then unwraps each face into a quadtree. Each cell has a unique 64-bit ID. Cells at the same level have roughly equal area (unlike Geohash, which distorts near the poles).
 
-2. Query nearby cells:
-   - User in cell "9q8yy"
-   - Query "9q8yy" + 8 neighbors
-   - Covers ~3.6km × 1.8km
+**How Tinder uses S2:**
+1. Each user's location is mapped to an S2 cell at level 12 (~3.3km cells)
+2. Users are indexed by their S2 cell ID in the database
+3. For a 10km radius search, compute the S2 cell covering (set of cells that cover a 10km circle)
+4. Query all users in those cells, then filter by exact distance
 
-3. Post-filter by distance:
-   - Calculate exact distance
-   - Filter by user's maxDistance setting
+**Why S2 over Geohash?**
+- **No polar distortion**: Geohash cells become very elongated near the poles. S2 cells maintain consistent area.
+- **Hierarchical**: Can quickly zoom in/out by changing cell level (level 10 = ~30km, level 14 = ~400m)
+- **Efficient coverings**: S2 can represent a circular search area with fewer cells than Geohash's rectangular approximation
 
-4. Index structure:
-   - B-tree on (geohash, gender, lastActive)
-   - Fast range queries
-
-Alternative: QuadTree for dynamic precision`
+**Database Sharding by S2 Cell:**
+Users are sharded by their S2 cell level 6 (~80km regions). All users in the same geographic region are on the same shard, making proximity queries shard-local.`
         },
         {
-          question: 'How does match detection work?',
-          answer: `On swipe LIKE:
+          question: 'How does the recommendation algorithm work?',
+          answer: `Tinder's recommendation system is a two-stage pipeline: candidate generation followed by ranking.
 
-1. Record swipe in database:
-   INSERT INTO swipes (swiperId, targetId, action)
+**Stage 1: Candidate Generation**
+Generate a pool of ~10K potential profiles for the user:
+1. Query users in the same S2 cell region (same geographic area)
+2. Filter by mutual preferences: age range overlap, gender match, interested_in match
+3. Exclude already-swiped users (check against swipe log)
+4. Filter by last-active time (only show users active in last 7 days)
 
-2. Check for mutual like:
-   SELECT * FROM swipes
-   WHERE swiperId = targetId
-   AND targetId = swiperId
-   AND action = 'LIKE'
+**Stage 2: Ranking (ELO-like Scoring)**
+Rank candidates by predicted mutual interest using a scoring model:
+- **ELO score similarity**: Users with similar attractiveness scores are shown to each other
+- **Distance weight**: Closer users ranked higher (exponential decay)
+- **Activity recency**: Recently active users boosted
+- **Profile completeness**: Users with more photos and bio text ranked higher
 
-3. If found, create match:
-   INSERT INTO matches (user1Id, user2Id)
+**Pre-computation:**
+Recommendations are generated as a batch job (every few hours) and stored in a Redis sorted set per user. When the user opens the app, the stack is served instantly. When depleted, a new batch is triggered.
 
-4. Notify both users:
-   - Push notification
-   - Update match count
-   - Show "Its a Match!" screen
-
-Optimization:
-- Redis set for likes: SADD user:123:likes 456
-- Check match: SISMEMBER user:456:likes 123
-- O(1) lookup instead of DB query`
+**Diversity Rules:**
+- Don't show 10 profiles of the same "type" consecutively
+- Mix high-confidence matches with exploratory profiles
+- Boost new users (cold start) by showing them to more people initially`
         },
         {
-          question: 'How do we generate recommendations?',
-          answer: `Two-stage recommendation:
+          question: 'How does real-time match detection work with Redis?',
+          answer: `Match detection must be instant -- when User A likes User B, if User B already liked User A, both should be notified within 1 second.
 
-1. Candidate Generation:
-   - Same geohash region
-   - Matches preferences (age, gender, interested_in)
-   - Not already swiped on
-   - Active in last 7 days
+**Redis-Based O(1) Match Detection:**
 
-2. Ranking (Elo-like system):
-   - Users have attractiveness score
-   - Right-swipes increase score, left decreases
-   - Show users with similar scores
-   - Weighted by: distance, activity, profile completeness
+**On LIKE swipe:**
+1. Record the like: \`SADD user:{swiperId}:likes {targetId}\`
+2. Check for reciprocal: \`SISMEMBER user:{targetId}:likes {swiperId}\`
+3. If SISMEMBER returns true -> MATCH FOUND
 
-3. Pre-computation:
-   - Generate recommendation stack async
-   - Store in Redis sorted set
-   - Refresh when depleted or location changes
+**Match Creation (atomic):**
+1. Create match record in database
+2. Send push notification to both users
+3. Remove both users from each other's recommendation queues
+4. Open chat channel for the match
 
-4. Diversity:
-   - Mix high-score and varied profiles
-   - Avoid showing same "type" repeatedly`
+**Why Redis Sets?**
+- SADD is O(1) -- constant time regardless of how many likes a user has
+- SISMEMBER is O(1) -- instant reciprocal check
+- Memory efficient: 26M DAU x avg 200 pending likes x 8 bytes = ~50 GB (fits in Redis cluster)
+
+**Durability:**
+Redis is the hot path for speed, but likes are also asynchronously persisted to Cassandra for durability. If Redis loses data, the swipe log in Cassandra can rebuild the like sets.
+
+**Race Condition Handling:**
+If both users swipe right simultaneously, both will attempt to create a match. Use Redis SETNX on \`match:{min(id1,id2)}:{max(id1,id2)}\` as a distributed lock to ensure only one match record is created.`
+        },
+        {
+          question: 'How does progressive taxation / ELO scoring work?',
+          answer: `Tinder originally used an ELO-like system (now replaced by a more nuanced ML model) to ensure users see profiles at their "level."
+
+**The Core Idea:**
+Every user has a hidden attractiveness score. The system tries to show you profiles with similar scores, creating a fair marketplace where you're likely to match.
+
+**How Scores Update:**
+- When a high-scored user swipes right on you: your score increases significantly
+- When a low-scored user swipes right on you: your score increases slightly
+- When you receive a left-swipe: your score decreases (weighted by swiper's score)
+- This is analogous to chess ELO: beating a grandmaster gives more points than beating a beginner
+
+**Progressive Taxation:**
+To prevent score stagnation and give new users a fair chance:
+- Scores decay slowly over time (inactive users lose points)
+- New users start with a "boost period" where they're shown to more people
+- Very high-scored users are occasionally shown lower-scored profiles (exploration)
+- The algorithm ensures everyone gets some right-swipes to maintain engagement
+
+**Why Not Pure Score Matching?**
+If you only showed score-800 users to other score-800 users, you'd create echo chambers. Instead, 70% of recommendations match the user's tier, and 30% are "exploratory" from adjacent tiers.
+
+**Current Approach:**
+Tinder has moved toward ML-based ranking that considers more signals: photo quality, bio text quality, response rate in chats, and behavioral patterns.`
+        },
+        {
+          question: 'How is swipe deduplication handled?',
+          answer: `With 1.6B swipes/day, ensuring a user never sees the same profile twice is critical for the experience.
+
+**The Problem:**
+When generating recommendations, we must exclude all profiles the user has already swiped on (liked or passed). At scale, a user might have swiped on 50K+ profiles over their lifetime.
+
+**Approach 1: Bloom Filter (Space-Efficient)**
+Store a Bloom filter per user containing all swiped profile IDs.
+- False positive rate: ~1% (acceptable -- user occasionally misses a profile they could see)
+- False negatives: zero (never shows a profile already swiped on)
+- Memory: ~100 KB per user for 50K swipes = ~2.5 TB for 26M DAU
+- Check time: O(k) where k = number of hash functions (typically 7)
+
+**Approach 2: Redis Sorted Set**
+Store all swiped IDs in a Redis sorted set keyed by user ID.
+- ZRANGEBYSCORE to check membership: O(log n)
+- Memory: 8 bytes per ID x 50K swipes = 400 KB per user = ~10 TB for 26M DAU
+- More memory-intensive but allows "undo last swipe" (Rewind feature)
+
+**Approach 3: Database Query (Fallback)**
+For recommendation batch generation, query the swipe log: SELECT targetId FROM swipes WHERE swiperId = X. Index on (swiperId, targetId). Used during batch generation, not real-time.
+
+**Recommendation:** Bloom filter for real-time filtering during recommendation serving, Redis sorted set for users with premium Rewind feature, database for batch regeneration.`
+        },
+        {
+          question: 'How does cross-region matching work?',
+          answer: `Tinder operates in 190+ countries with users traveling and matching across regions.
+
+**Challenge:**
+Users are sharded by S2 cell (geographic region). When a user in New York wants to match with someone in nearby New Jersey, the query must cross shard boundaries.
+
+**Architecture:**
+1. **Primary shard**: User data lives on the shard for their home S2 cell
+2. **Search radius**: When searching, compute S2 cell covering for the radius
+3. **Multi-shard fan-out**: If the covering spans multiple shards, query all relevant shards in parallel
+4. **Merge results**: Combine and rank results from all shards
+
+**Tinder Passport (Premium Feature):**
+Allows users to set their location to any city. Implementation:
+- Store "virtual location" alongside actual location
+- Index the user in the virtual location's S2 cell for discovery
+- Clear virtual location when Passport mode ends
+
+**Latency Optimization:**
+Cross-region queries are slower (~200ms vs ~50ms local). Mitigate by:
+- Pre-computing recommendation stacks that include nearby region users
+- Caching cross-region results for 1 hour
+- Prioritizing local results but supplementing with adjacent regions
+
+**Data Sovereignty:**
+Some countries require user data to stay within their borders. For these regions, shards must be in local data centers, and cross-region queries are restricted.`
+        },
+        {
+          question: 'How does the profile photo CDN work?',
+          answer: `Tinder serves billions of profile photo views daily. Photos are the most bandwidth-intensive part of the system.
+
+**Upload Pipeline:**
+1. User selects photo in app
+2. Client compresses to max 1MB and uploads to upload service
+3. Upload service runs NSFW detection ML model (reject explicit content)
+4. Generate 4 resolutions: thumbnail (100px), card (400px), full (800px), original
+5. Store all sizes in S3, create CDN distribution
+
+**CDN Architecture:**
+- CloudFront with 400+ edge locations worldwide
+- Photos are immutable (new upload = new URL)
+- Cache TTL: 7 days (photos rarely change)
+- Cache hit rate: ~95% (most users view the same popular profiles)
+
+**Smart Pre-loading:**
+The client pre-loads photos for the next 3-5 profiles in the recommendation stack. By the time the user swipes to the next profile, photos are already in the device cache. This creates the feeling of instant loading.
+
+**Bandwidth Optimization:**
+- WebP format for Android (30% smaller than JPEG)
+- HEIC format for iOS
+- Progressive loading: show blurred placeholder while full image loads
+- Adaptive quality based on network speed (lower quality on 3G)
+
+**Storage:** 75M users x 5 photos x 4 sizes x 50KB avg = ~75 TB total. Monthly bandwidth: ~500 TB from CDN.`
+        },
+        {
+          question: 'How does chat after match work?',
+          answer: `Once two users match, they can exchange messages. The chat system must handle millions of active match conversations.
+
+**Architecture:**
+Chat uses a simplified version of the Slack/WhatsApp messaging pattern:
+1. WebSocket connection for real-time message delivery
+2. Cassandra for message persistence (partitioned by match_id)
+3. Redis for online presence and typing indicators
+
+**Message Flow:**
+1. User sends message via WebSocket
+2. Server validates: match exists, user is a member, not blocked
+3. Message persisted to Cassandra partition: match:{matchId}
+4. If recipient online: push via WebSocket
+5. If recipient offline: send push notification via APNs/FCM
+
+**Key Differences from Full Chat (Slack):**
+- Only 1:1 conversations (no groups, no channels)
+- No threading, no reactions, no file sharing (just text + GIFs)
+- Simpler presence: just online/offline (no away/DND)
+- Messages ephemeral by default (not indexed, not searchable)
+
+**Scale Considerations:**
+- ~26M new matches/day, but only ~30% result in conversation
+- Average conversation: 10-20 messages
+- Most conversations die within 48 hours
+- Storage is modest: ~8M active convos x 20 msgs x 200 bytes = ~32 GB/day
+
+**Safety Features:**
+- ML-based harassment detection (flag aggressive messages)
+- Photo sharing blocked by default (prevent unsolicited images)
+- Unmatch immediately deletes chat history for both users`
+        },
+        {
+          question: 'How is abuse prevention handled?',
+          answer: `With 75M users, abuse prevention is critical for user safety and platform trust.
+
+**Fake Profile Detection:**
+- **Photo verification**: User takes a selfie matching a specific pose, ML compares to profile photos
+- **Liveness check**: Requires blinking or head movement to prove it's not a static image
+- **Reverse image search**: Check if profile photos appear on other sites (stock photos, stolen images)
+- **Behavioral signals**: Fake profiles swipe right on everyone, never message, or send identical messages to all matches
+
+**Bot Detection:**
+- Swipe rate anomaly: bots swipe faster than humans (>100 swipes/minute)
+- Session duration: bots have unnaturally long continuous sessions
+- CAPTCHA triggered after suspicious patterns
+- Device fingerprinting: detect emulators and automation tools
+
+**Report and Block System:**
+1. User reports another user with category (inappropriate photos, harassment, spam, fake profile)
+2. Report triggers immediate review queue
+3. If user accumulates 3+ reports in 24 hours: auto-shadow-ban (user can still use app but is invisible to others)
+4. Human reviewer makes final decision (permanent ban, warning, or dismiss)
+
+**Proactive Safety:**
+- ML scans all messages for harassment keywords and patterns
+- Detect "moved to another platform" messages (potential scam indicator)
+- Underage detection from face analysis (flag for review)
+- Background check integration for premium safety features`
+        },
+        {
+          question: 'How do you handle cold start for new users?',
+          answer: `New users have no swipe history, no ELO score, and no behavioral data. The system must provide great recommendations from day one.
+
+**The Cold Start Problem:**
+- No swipe history to learn preferences from
+- No ELO score to determine appropriate matches
+- No activity data to predict engagement patterns
+
+**Solution: Initial Boost Period**
+New users get a "new user boost" for the first 48 hours:
+1. **Increased visibility**: New profiles shown to 3x more users than established ones
+2. **Diverse exposure**: Show new user to a wide range of ELO tiers to quickly calibrate their score
+3. **Initial ELO**: Start at the median score (500/1000), rapidly adjust based on early swipe data
+
+**Preference Bootstrapping:**
+- Use stated preferences (age range, distance, gender) for initial filtering
+- After 50 swipes, the system has enough data to start personalizing
+- After 200 swipes, recommendation quality approaches steady-state
+
+**Photo Quality Signal:**
+Even without behavioral data, the ML model can assess profile quality:
+- Number of photos (more = better)
+- Photo quality (resolution, lighting, faces detected)
+- Bio completeness and length
+- These signals bootstrap the initial attractiveness estimate
+
+**Feedback Loop:**
+The first 24 hours of swipe data from other users seeing the new profile provides rapid ELO calibration. If 40% of viewers swipe right, the score is adjusted up significantly. This makes the cold start period short (~48 hours to stable recommendations).`
         }
       ],
 
@@ -12706,123 +13330,23 @@ Optimization:
         title: 'Basic Architecture',
         description: 'Simple swipe and match without optimization',
         svgTemplate: 'tinder',
-        architecture: `
-┌─────────────────────────────────────────────────────────────────────────┐
-│                            TINDER BASIC                                 │
-├─────────────────────────────────────────────────────────────────────────┤
-│                                                                         │
-│  ┌──────────┐      ┌──────────────┐      ┌──────────────────┐          │
-│  │  Client  │─────▶│ Load Balancer│─────▶│   App Server     │          │
-│  └──────────┘      └──────────────┘      └────────┬─────────┘          │
-│                                                    │                    │
-│  GET RECOMMENDATIONS:                     ┌────────▼─────────┐          │
-│  SELECT * FROM users                      │    PostgreSQL    │          │
-│  WHERE location nearby                    │   - Users        │          │
-│  AND gender matches                       │   - Swipes       │          │
-│  AND age in range                         │   - Matches      │          │
-│  AND NOT IN (already swiped)              └──────────────────┘          │
-│                                                                         │
-│  PROBLEMS:                                                              │
-│  - Complex query on every request                                      │
-│  - No ranking/personalization                                          │
-│  - Slow match detection                                                │
-│                                                                         │
-└─────────────────────────────────────────────────────────────────────────┘`,
         problems: [
           'Query users on every recommendation request',
           'No geospatial indexing - slow location queries',
           'Match detection requires DB lookup on every swipe',
           'No recommendation ranking/personalization',
-          'Cannot scale with 2B swipes/day'
+          'Cannot scale with 1.6B swipes/day'
         ]
       },
 
       advancedImplementation: {
         title: 'Production Architecture',
         svgTemplate: 'tinderAdvanced',
-        architecture: `
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                           TINDER PRODUCTION                                      │
-├─────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                  │
-│  RECOMMENDATION ENGINE                                                          │
-│  ┌─────────────────────────────────────────────────────────────────────┐        │
-│  │                                                                      │        │
-│  │  ┌──────────────┐   ┌───────────────┐   ┌───────────────────────┐  │        │
-│  │  │ Candidate    │──▶│   Ranker      │──▶│  Recommendation       │  │        │
-│  │  │ Generator    │   │               │   │  Queue (Redis)        │  │        │
-│  │  │              │   │  - Elo score  │   │                       │  │        │
-│  │  │ - Geohash    │   │  - Distance   │   │  ZSET per user        │  │        │
-│  │  │ - Prefs      │   │  - Activity   │   │  user:123:recs        │  │        │
-│  │  │ - NOT swiped │   │  - Profile    │   │                       │  │        │
-│  │  └──────────────┘   └───────────────┘   └───────────────────────┘  │        │
-│  │        │                                         │                  │        │
-│  │        ▼                                         ▼                  │        │
-│  │  ┌──────────────────────────────────────────────────────────────┐  │        │
-│  │  │              USER REQUEST FOR RECOMMENDATIONS                 │  │        │
-│  │  │                                                               │  │        │
-│  │  │  1. Check Redis queue: ZRANGE user:123:recs 0 9              │  │        │
-│  │  │  2. If empty: Trigger async generation                       │  │        │
-│  │  │  3. Return cached recommendations                            │  │        │
-│  │  └──────────────────────────────────────────────────────────────┘  │        │
-│  └─────────────────────────────────────────────────────────────────────┘        │
-│                                                                                  │
-│  SWIPE & MATCH                                                                  │
-│  ┌─────────────────────────────────────────────────────────────────────┐        │
-│  │                                                                      │        │
-│  │  SWIPE RIGHT (LIKE)                                                 │        │
-│  │  ┌──────────────┐   ┌───────────────┐   ┌───────────────────────┐  │        │
-│  │  │   Record     │──▶│ Check Match   │──▶│   Match Found?        │  │        │
-│  │  │   Swipe      │   │   (Redis)     │   │                       │  │        │
-│  │  │              │   │               │   │  ┌─────┐    ┌──────┐  │  │        │
-│  │  │  SADD        │   │ SISMEMBER     │   │  │ YES │    │  NO  │  │  │        │
-│  │  │  user:123:   │   │ user:456:     │   │  └──┬──┘    └──────┘  │  │        │
-│  │  │  likes 456   │   │ likes 123     │   │     │                 │  │        │
-│  │  └──────────────┘   └───────────────┘   │     ▼                 │  │        │
-│  │                                          │  Create Match        │  │        │
-│  │                                          │  Send Push           │  │        │
-│  │                                          │  notifications       │  │        │
-│  │                                          └───────────────────────┘  │        │
-│  └─────────────────────────────────────────────────────────────────────┘        │
-│                                                                                  │
-│  GEOSPATIAL INDEX                                                               │
-│  ┌─────────────────────────────────────────────────────────────────────┐        │
-│  │                                                                      │        │
-│  │  Geohash grid:  9q8yy | 9q8yz | 9q8z0                               │        │
-│  │                 ------+-------+------                                │        │
-│  │                 9q8yw | 9q8yx | 9q8yy  ← User                       │        │
-│  │                 ------+-------+------                                │        │
-│  │                 9q8yt | 9q8yu | 9q8yv                               │        │
-│  │                                                                      │        │
-│  │  Query: Get users in 9 cells around user's location                 │        │
-│  │  Index: B-tree on (geohash, gender, age)                            │        │
-│  │                                                                      │        │
-│  └─────────────────────────────────────────────────────────────────────┘        │
-│                                                                                  │
-│  CHAT SERVICE                                                                   │
-│  ┌─────────────────────────────────────────────────────────────────────┐        │
-│  │                                                                      │        │
-│  │  Match → Chat enabled → WebSocket connection                        │        │
-│  │                              │                                       │        │
-│  │                         ┌────▼────────┐                             │        │
-│  │                         │  Chat       │                             │        │
-│  │                         │  Gateway    │                             │        │
-│  │                         └────┬────────┘                             │        │
-│  │                              │                                       │        │
-│  │              ┌───────────────┼───────────────┐                      │        │
-│  │              ▼               ▼               ▼                      │        │
-│  │         ┌────────┐     ┌────────┐     ┌────────────┐               │        │
-│  │         │ Kafka  │     │ Redis  │     │ Cassandra  │               │        │
-│  │         │(events)│     │(online)│     │ (messages) │               │        │
-│  │         └────────┘     └────────┘     └────────────┘               │        │
-│  └─────────────────────────────────────────────────────────────────────┘        │
-│                                                                                  │
-└─────────────────────────────────────────────────────────────────────────────────┘`,
         keyPoints: [
           'Pre-computed recommendations: Redis sorted sets per user',
           'O(1) match detection: Redis sets for likes',
-          'Geohash indexing: Efficient spatial queries',
-          'Elo-like ranking: Users see similar attractiveness level',
+          'S2 geospatial indexing: Efficient spatial queries',
+          'ELO-like ranking: Users see similar attractiveness level',
           'Async generation: Recommendations computed in background',
           'WebSocket chat: Real-time messaging after match'
         ]
@@ -12849,11 +13373,11 @@ Optimization:
         title: 'Recommendation Generation Flow',
         steps: [
           'Triggered when queue depleted or location changes',
-          'Calculate users geohash from location',
-          'Query users in same and neighboring cells',
+          'Compute user S2 cell covering for search radius',
+          'Query users in same and neighboring S2 cells',
           'Filter by gender, age preferences',
-          'Exclude already-swiped users',
-          'Score candidates by Elo, distance, activity',
+          'Exclude already-swiped users (Bloom filter)',
+          'Score candidates by ELO, distance, activity',
           'Apply diversity rules',
           'Store top N in Redis sorted set',
           'TTL on recommendations: regenerate if stale'
@@ -12862,7 +13386,7 @@ Optimization:
 
       discussionPoints: [
         {
-          topic: 'Elo Rating System',
+          topic: 'ELO Rating System',
           points: [
             'Similar to chess Elo ratings',
             'Right-swipes increase your score',
@@ -12906,10 +13430,10 @@ Optimization:
       requirements: ['User profiles', 'Photo uploads', 'Nearby users', 'Swipe (like/pass)', 'Matching', 'Chat after match'],
       components: ['User service', 'Matching service', 'Geospatial service', 'Chat service', 'Recommendation engine', 'CDN'],
       keyDecisions: [
-        'Geohash for efficient nearby user lookup',
+        'S2 cells for efficient nearby user lookup',
         'Pre-compute recommendation stacks per user',
-        'Store swipe decisions for bidirectional match detection',
-        'Elo-like scoring for recommendation ranking',
+        'Redis sets for O(1) match detection',
+        'ELO-like scoring for recommendation ranking',
         'CDN with image resizing for photos'
       ],
       edgeCases: [
@@ -12921,16 +13445,113 @@ Optimization:
       ],
       tradeoffs: [
         { decision: 'Pre-computed recommendation stacks vs on-demand scoring', pros: 'Pre-computed gives instant swipe experience with no loading delay', cons: 'Stacks go stale if user preferences or location change frequently', recommendation: 'Pre-compute stacks every few hours and supplement with a real-time re-ranker for freshness' },
-        { decision: 'Geohash grid vs radius-based proximity search', pros: 'Geohash enables fast index lookups and easy sharding by region', cons: 'Grid boundaries cause edge effects where nearby users fall into different cells', recommendation: 'Use geohash with multi-cell overlap queries to eliminate boundary blind spots' },
+        { decision: 'S2 cells vs Geohash for proximity', pros: 'S2 provides uniform cell area globally, no polar distortion', cons: 'S2 is more complex to implement, Geohash has simpler string-based queries', recommendation: 'S2 for production (Tinder uses it), Geohash acceptable for interviews with boundary overlap' },
         { decision: 'Elo-based ranking vs pure preference matching', pros: 'Elo balances attractiveness tiers so users see realistic matches', cons: 'Can create echo chambers and reduce diversity of shown profiles', recommendation: 'Blend Elo with exploratory slots that surface profiles outside the predicted tier' },
-        { decision: 'Symmetric swipe data (store both directions) vs asymmetric', pros: 'Symmetric makes match detection a simple lookup on one key', cons: 'Doubles write volume and storage for every swipe action', recommendation: 'Store asymmetric swipes and check for reciprocal on each new swipe using a bloom filter pre-check' },
+        { decision: 'Symmetric swipe data (store both directions) vs asymmetric', pros: 'Symmetric makes match detection a simple lookup on one key', cons: 'Doubles write volume and storage for every swipe action', recommendation: 'Store asymmetric swipes and check for reciprocal on each new swipe using Redis SISMEMBER' },
       ],
       layeredDesign: [
         { name: 'Client Layer', purpose: 'Swipe UI, photo display, and local swipe queue buffering for offline resilience', components: ['Swipe Gesture Handler', 'Photo Preloader', 'Local Swipe Queue'] },
         { name: 'API Gateway Layer', purpose: 'Rate limiting, authentication, and routing swipe and match requests', components: ['Auth Middleware', 'Rate Limiter', 'WebSocket Gateway'] },
-        { name: 'Matching Engine Layer', purpose: 'Process swipes, detect mutual matches, and trigger match notifications', components: ['Swipe Processor', 'Match Detector', 'Notification Dispatcher'] },
-        { name: 'Recommendation Layer', purpose: 'Build and serve personalized candidate stacks using location and preferences', components: ['Geospatial Index', 'Scoring Engine', 'Stack Builder'] },
+        { name: 'Matching Engine Layer', purpose: 'Process swipes, detect mutual matches, and trigger match notifications', components: ['Swipe Processor', 'Match Detector (Redis)', 'Notification Dispatcher'] },
+        { name: 'Recommendation Layer', purpose: 'Build and serve personalized candidate stacks using S2 cells and scoring', components: ['S2 Geospatial Index', 'ELO Scoring Engine', 'Stack Builder'] },
         { name: 'Data Layer', purpose: 'Persist profiles, swipe history, matches, and chat messages', components: ['Profile Store (PostgreSQL)', 'Swipe Log (Cassandra)', 'Match Cache (Redis)', 'Media CDN'] },
+      ],
+      comparisonTables: [
+        {
+          id: 's2-vs-geohash-vs-h3',
+          title: 'S2 Cells vs Geohash vs H3 for Geospatial Indexing',
+          headers: ['Aspect', 'S2 Cells (Google)', 'Geohash', 'H3 (Uber)'],
+          rows: [
+            ['Cell Shape', 'Quadrilateral (projected cube)', 'Rectangle (lat/lng grid)', 'Hexagon'],
+            ['Area Uniformity', 'Excellent (equal area globally)', 'Poor (distorted at poles)', 'Good (mostly uniform)'],
+            ['Encoding', '64-bit integer', 'String (base32)', '64-bit integer'],
+            ['Neighbor Lookup', 'O(1) via bit manipulation', 'String prefix + 8 neighbors', 'O(1) via function call'],
+            ['Hierarchy', '31 levels (cm to global)', '12 levels (5000km to 0.6m)', '16 levels'],
+            ['Used By', 'Tinder, Google Maps', 'Elasticsearch, Redis GEO', 'Uber, DoorDash'],
+            ['Implementation', 'Complex (Google S2 library)', 'Simple (string operations)', 'Medium (H3 library)'],
+          ],
+          verdict: 'S2 for global apps needing uniform cells (dating, maps); H3 for ride-sharing with hexagonal grids; Geohash for simplicity'
+        },
+        {
+          id: 'redis-vs-dynamodb-likes',
+          title: 'Redis vs DynamoDB for Likes Cache',
+          headers: ['Aspect', 'Redis (In-Memory)', 'DynamoDB (Persistent)'],
+          rows: [
+            ['Latency', 'Sub-ms (O(1) SISMEMBER)', '1-5ms (single-digit ms)'],
+            ['Durability', 'Volatile (RDB/AOF backup)', 'Fully persistent'],
+            ['Cost', 'High (memory is expensive)', 'Low (pay per request)'],
+            ['Match Detection', 'O(1) via SISMEMBER', 'O(1) via GetItem'],
+            ['Memory Usage', '~50 GB for 26M DAU', 'N/A (disk-based)'],
+            ['Failure Impact', 'Likes lost (rebuild from swipe log)', 'No data loss'],
+          ],
+          verdict: 'Redis for hot path (match detection speed); DynamoDB or Cassandra as durable backing store'
+        }
+      ],
+      flowcharts: [
+        {
+          id: 'swipe-match-flow',
+          title: 'Swipe & Match Detection Flow',
+          description: 'How a right-swipe triggers real-time match detection using Redis',
+          steps: [
+            { step: 1, label: 'User Swipes Right', detail: 'Client sends POST /api/swipe with targetId and action=LIKE' },
+            { step: 2, label: 'Record Like', detail: 'Server executes Redis SADD user:{swiperId}:likes {targetId}' },
+            { step: 3, label: 'Check Reciprocal', detail: 'Server executes Redis SISMEMBER user:{targetId}:likes {swiperId}' },
+            { step: 4, label: 'Match Decision', detail: 'If SISMEMBER returns true: mutual like detected, proceed to match creation' },
+            { step: 5, label: 'Create Match', detail: 'Atomic match creation with SETNX lock on match:{min_id}:{max_id} to prevent duplicates' },
+            { step: 6, label: 'Notify Users', detail: 'Push notifications sent to both users via APNs/FCM, chat channel opened' },
+            { step: 7, label: 'Async Persist', detail: 'Swipe and match records persisted to Cassandra via Kafka for durability' },
+          ]
+        },
+        {
+          id: 'recommendation-generation-flow',
+          title: 'Recommendation Stack Generation',
+          description: 'How personalized recommendation stacks are built for each user',
+          steps: [
+            { step: 1, label: 'Trigger', detail: 'Triggered when user opens app and stack is empty, or location changes significantly' },
+            { step: 2, label: 'S2 Cell Covering', detail: 'Compute S2 cells covering the user search radius (default 10km)' },
+            { step: 3, label: 'Candidate Query', detail: 'Fetch all users in covered S2 cells from database, filtered by gender and age preferences' },
+            { step: 4, label: 'Dedup Filter', detail: 'Check Bloom filter to exclude all previously swiped profiles' },
+            { step: 5, label: 'ELO Scoring', detail: 'Rank candidates by ELO similarity, distance, activity recency, and profile completeness' },
+            { step: 6, label: 'Store Stack', detail: 'Write top 200 recommendations to Redis sorted set user:{id}:recs with TTL of 4 hours' },
+          ]
+        }
+      ],
+      visualCards: [
+        {
+          id: 'tech-stack',
+          title: 'Technology Stack',
+          icon: 'layers',
+          color: '#2D8CFF',
+          items: [
+            { label: 'S2 Geometry', value: 'Geospatial indexing', bar: 95 },
+            { label: 'Redis', value: 'Match detection + rec stacks', bar: 95 },
+            { label: 'Cassandra', value: 'Swipe log + messages', bar: 85 },
+            { label: 'PostgreSQL', value: 'User profiles + matches', bar: 80 },
+            { label: 'CloudFront CDN', value: '~75 TB profile photos', bar: 75 },
+            { label: 'Kafka', value: 'Async swipe persistence', bar: 70 },
+          ]
+        },
+        {
+          id: 'scale-numbers',
+          title: 'Scale at a Glance',
+          icon: 'trendingUp',
+          color: '#10B981',
+          items: [
+            { label: '75M MAU', value: 'Monthly active users', bar: 80 },
+            { label: '1.6B swipes/day', value: '18.5K swipes/sec', bar: 95 },
+            { label: '26M matches/day', value: 'New matches daily', bar: 70 },
+            { label: '<100ms swipe', value: 'Swipe response time', bar: 40 },
+            { label: '160 GB/day', value: 'Swipe log growth', bar: 60 },
+            { label: '190+ countries', value: 'Global coverage', bar: 85 },
+          ]
+        }
+      ],
+      evolutionSteps: [
+        { step: 1, title: 'Single Server MVP', description: 'PostgreSQL with PostGIS for location queries. Simple SQL query for recommendations. Direct database check for match detection.', color: '#94a3b8', icon: 'server', capacity: '~50K users', rps: '100', pros: ['Simple to build and iterate', 'PostGIS handles basic geo queries', 'No external dependencies'], cons: ['Complex recommendation query on every request', 'Slow match detection (DB lookup per swipe)', 'No personalization'] },
+        { step: 2, title: 'Redis + Geospatial Index', description: 'Add Redis for O(1) match detection with SADD/SISMEMBER. S2 or Geohash index for efficient proximity queries. Pre-computed recommendation stacks.', color: '#2D8CFF', icon: 'layers', capacity: '~5M users', rps: '5K', pros: ['Instant match detection via Redis', 'Sub-100ms recommendation serving', 'Geospatial queries efficient'], cons: ['Redis memory costs grow with users', 'Recommendation staleness between regenerations', 'Single-region only'] },
+        { step: 3, title: 'ML Ranking + Sharding', description: 'ELO/ML-based recommendation ranking. Database sharded by S2 cell region. Bloom filters for swipe deduplication.', color: '#f59e0b', icon: 'zap', capacity: '~30M users', rps: '20K', pros: ['Personalized recommendations', 'Horizontal scaling via geo-sharding', 'Memory-efficient dedup'], cons: ['ML model requires training pipeline', 'Cross-shard queries for border users', 'ELO score calibration complexity'] },
+        { step: 4, title: 'Global Distribution', description: 'Multi-region deployment with regional recommendation engines. CDN for photo delivery. Cross-region matching for Passport feature.', color: '#10b981', icon: 'globe', capacity: '~75M users', rps: '55K', pros: ['Low latency in every region', 'Photos served from nearest edge', 'Regional fault isolation'], cons: ['Cross-region match consistency', 'Data sovereignty requirements', 'Higher infrastructure cost'] },
+        { step: 5, title: 'Safety + Premium', description: 'ML-based abuse detection, photo verification, harassment filtering. Premium features (Boost, Passport, See Who Liked You) with separate serving paths.', color: '#7c3aed', icon: 'cpu', capacity: '100M+ users', rps: '100K+', pros: ['Automated safety at scale', 'Revenue from premium features', 'Trust and retention improvement'], cons: ['ML model false positives frustrate users', 'Premium features add complexity', 'Privacy concerns with verification data'] },
       ],
     },
     {
@@ -13347,10 +13968,44 @@ Returns decryption key (valid for 30 days)
       color: '#ff5a5f',
       difficulty: 'Hard',
       description: 'Design a property rental marketplace with search, booking, and reviews.',
+      productMeta: {
+        name: 'Airbnb',
+        tagline: 'Global accommodation marketplace with 8M+ listings',
+        stats: [
+          { label: 'Users', value: '200M+' },
+          { label: 'Listings', value: '8M+' },
+          { label: 'Nights/Year', value: '533M' },
+          { label: 'Revenue', value: '$12.2B' },
+        ],
+        scope: {
+          inScope: ['Property listing & search', 'Availability calendar', 'Booking with double-booking prevention', 'Payment (auth -> capture -> settle)', 'Reviews (dual-sided)', 'Host management'],
+          outOfScope: ['Experiences marketplace', 'Cleaning service coordination', 'Insurance/guarantees', 'Dynamic pricing ML', 'Government tax compliance'],
+        },
+        keyChallenge: 'Preventing double-bookings using optimistic locking while handling 386 search queries/sec across 8M+ listings with real-time availability calendar checks.',
+      },
 
-      introduction: `Airbnb is a global property rental marketplace with 7+ million active listings and 150+ million users. The system enables hosts to list properties and guests to search, book, and review stays.
+      introduction: `Airbnb is the world's largest accommodation marketplace with **200+ million users**, **8 million+ active listings**, and **533 million nights booked per year**, generating **$12.2 billion in revenue**. The system enables hosts to list properties and guests to search, book, and review stays.
 
-Key challenges include complex search with geo-location, date availability, and amenities; preventing double-bookings; managing trust and safety; and handling payments across multiple currencies.`,
+Key challenges include **complex search** combining geolocation, date availability, amenity filters, and pricing; **preventing double-bookings** using optimistic locking with soft-hold patterns; managing a **payment pipeline** that authorizes at booking, captures at check-in, and settles to the host after the stay; and handling **dual-sided reviews** where both guest and host rate each other.
+
+What makes Airbnb's booking system fundamentally harder than a simple e-commerce checkout? Unlike buying a product (where inventory is fungible), each listing-date combination is unique. Two guests cannot book the same property for overlapping dates. This requires **serializable isolation** on the availability calendar to prevent race conditions, while still allowing high-throughput search across millions of listings.
+
+Airbnb's search is also uniquely complex: every query combines **geospatial filtering** (properties near a location), **temporal filtering** (available for specific dates), **attribute filtering** (amenities, property type, price), and **relevance ranking** (quality score, conversion rate, host responsiveness).`,
+
+      estimation: {
+        title: 'Capacity Planning',
+        assumptions: '200M users, 8M active listings, 533M nights booked per year. Average listing has 365-day calendar. Average booking is 4.5 nights.',
+        calculations: [
+          { label: 'Search QPS (Average)', value: '~386/s', detail: '200M users x 5 searches/month / 30 / 86,400 = ~386 searches/sec' },
+          { label: 'Booking TPS', value: '~17/s', detail: '533M nights / 365 / 86,400 / 4.5 nights per booking = ~17 bookings/sec (peak 3x = ~50/s)' },
+          { label: 'Listing Data Size', value: '~400 GB', detail: '8M listings x ~50 KB per listing (photos metadata, description, amenities) = 400 GB' },
+          { label: 'Photo Storage', value: '~160 TB', detail: '8M listings x avg 20 photos x 1 MB per photo = 160 TB' },
+          { label: 'Calendar Data Size', value: '~292 GB', detail: '8M listings x 365 days x 100 bytes per day-record = 292 GB' },
+          { label: 'Booking Records/Year', value: '~118M', detail: '533M nights / 4.5 nights per booking = ~118M booking records per year' },
+          { label: 'Review Data Size', value: '~48 GB', detail: '118M bookings x 80% review rate x 2 reviews (guest+host) x 500 bytes = ~48 GB/year' },
+          { label: 'Payment Transactions', value: '~4/booking', detail: 'Auth -> capture -> host payout -> platform fee = 4 payment events per booking' },
+        ]
+      },
 
       functionalRequirements: [
         'List properties with photos, amenities, pricing',
@@ -13367,7 +14022,7 @@ Key challenges include complex search with geo-location, date availability, and 
         'Search results in <500ms',
         'Never allow double-booking',
         'Handle 100M+ searches/day',
-        'Support 7M+ active listings',
+        'Support 8M+ active listings',
         '99.9% availability',
         'Global reach with local currency support'
       ],
@@ -13401,6 +14056,7 @@ availability {
   price: decimal nullable (override)
   minNights: int
   bookingId: bigint FK nullable
+  version: int -- for optimistic locking
 }
 
 bookings {
@@ -13413,6 +14069,7 @@ bookings {
   totalPrice: decimal
   status: enum(PENDING, CONFIRMED, CANCELLED, COMPLETED)
   paymentId: varchar FK
+  idempotencyKey: varchar UNIQUE -- prevent duplicate bookings
   createdAt: timestamp
 }
 
@@ -13441,35 +14098,35 @@ reviews {
           {
             method: 'GET',
             path: '/api/listings/{id}',
-            description: 'Fetch full listing details including host profile, aggregated reviews, and availability calendar for the next 3 months. Used when a guest clicks on a search result to view the property page.',
+            description: 'Fetch full listing details including host profile, aggregated reviews, and availability calendar for the next 3 months.',
             params: '',
             response: '{ listing, host, reviews[], availability }'
           },
           {
             method: 'GET',
             path: '/api/listings/{id}/calendar',
-            description: 'Retrieve the availability calendar for a specific listing. Returns each date with its booking status (available, blocked, booked) and any custom pricing overrides set by the host.',
+            description: 'Retrieve the availability calendar for a specific listing with booking status and custom pricing per date.',
             params: '?month=',
             response: '{ dates: [{date, status, price}] }'
           },
           {
             method: 'POST',
             path: '/api/bookings',
-            description: 'Create a new booking. For Instant Book listings, dates are held for 10 minutes while payment processes. For Request to Book, the host must approve before payment is charged. Uses optimistic locking to prevent double-bookings.',
-            params: '{ listingId, checkin, checkout, guests, message }',
+            description: 'Create a new booking. Uses optimistic locking with soft-hold pattern to prevent double-bookings. Idempotency key required.',
+            params: '{ listingId, checkin, checkout, guests, message, idempotencyKey }',
             response: '{ bookingId, status, paymentIntent }'
           },
           {
             method: 'PATCH',
             path: '/api/host/listings/{id}/calendar',
-            description: 'Host endpoint to update calendar availability. Can block dates, set custom pricing per date, or change minimum stay requirements. Changes are propagated to the search index asynchronously.',
+            description: 'Host endpoint to update calendar availability, set custom pricing, or change minimum stay requirements.',
             params: '{ dates[], status, price }',
             response: '{ updated: true }'
           },
           {
             method: 'POST',
             path: '/api/reviews',
-            description: 'Submit a review after a completed stay. Both guest and host can leave reviews. Reviews are only published after both parties submit (or after 14 days), preventing retaliatory reviews.',
+            description: 'Submit a review after a completed stay. Reviews are only published after both parties submit or after 14 days.',
             params: '{ bookingId, rating, content }',
             response: '{ reviewId }'
           }
@@ -13478,73 +14135,290 @@ reviews {
 
       keyQuestions: [
         {
-          question: 'How do we handle complex search with availability?',
-          answer: `Two-stage search:
+          question: 'How does double-booking prevention work with optimistic locking?',
+          answer: `Double-booking is the most critical correctness requirement. Two guests must never book the same property for overlapping dates.
 
-1. Elasticsearch for initial filtering:
-   - Geo-distance from location
-   - Property type, amenities, price range
-   - Guest capacity
-   - Returns candidate listing IDs
+**Optimistic Locking Approach:**
+Each availability row has a version number. The booking flow:
+1. Read availability rows for the date range (SELECT ... WHERE listingId = X AND date BETWEEN checkin AND checkout-1)
+2. Verify all dates have status = AVAILABLE
+3. Attempt update with version check:
+   UPDATE availability SET status = 'BOOKED', bookingId = Y, version = version + 1
+   WHERE listingId = X AND date BETWEEN checkin AND checkout-1
+   AND status = 'AVAILABLE' AND version = expected_version
+4. If affected_rows != expected_nights: ROLLBACK (someone else booked first)
+5. If affected_rows == expected_nights: COMMIT and proceed to payment
 
-2. Availability check against database:
-   - Check calendar table for date range
-   - WHERE date BETWEEN checkin AND checkout-1
-   - AND status = 'AVAILABLE'
-   - GROUP BY listing, HAVING COUNT(*) = nights
+**Why Optimistic over Pessimistic?**
+- Pessimistic locking (SELECT FOR UPDATE) holds row locks during the entire booking flow including payment processing (10-30 seconds)
+- Optimistic locking only holds locks during the brief UPDATE, allowing higher throughput
+- At 17 bookings/sec, lock contention on popular listings is manageable with optimistic approach
 
-Optimization:
-- Cache popular date ranges
-- Pre-aggregate availability for next 30 days
-- Denormalize into Elasticsearch for simpler queries`
+**Handling Concurrent Bookings:**
+If two guests try to book overlapping dates simultaneously, only one UPDATE succeeds (the one whose version matches). The other gets a version mismatch and retries. The user sees "Sorry, these dates are no longer available."
+
+**Database Choice:** PostgreSQL with SERIALIZABLE isolation level for the availability table. Sharded by listingId so all dates for a listing are on the same shard.`
         },
         {
-          question: 'How do we prevent double-booking?',
-          answer: `Multiple layers:
+          question: 'How does the soft-hold pattern with TTL work?',
+          answer: `For Instant Book listings, dates must be temporarily held while the guest completes payment. This prevents another guest from booking the same dates during the 10-minute payment window.
 
-1. Database constraints:
-   - Unique index on (listingId, date, status=BOOKED)
-   - Transaction isolation level: SERIALIZABLE
+**Soft-Hold Flow:**
+1. Guest clicks "Reserve" -> server creates a soft-hold on the dates
+2. Availability status changes from AVAILABLE to HELD with a 10-minute TTL
+3. Guest enters payment details and confirms
+4. On payment success: HELD -> BOOKED (permanent)
+5. On payment failure or timeout: HELD -> AVAILABLE (released)
 
-2. Optimistic locking:
-   UPDATE availability
-   SET status = 'BOOKED', bookingId = X
-   WHERE listingId = Y
-   AND date BETWEEN checkin AND checkout-1
-   AND status = 'AVAILABLE'
+**Implementation:**
+The HELD status includes a hold_expires_at timestamp:
+UPDATE availability SET status = 'HELD', hold_expires_at = NOW() + '10 minutes'
+WHERE listingId = X AND date IN (...) AND status = 'AVAILABLE'
 
-   If affected rows != expected nights, rollback
+**Cleanup:**
+A background job runs every minute to release expired holds:
+UPDATE availability SET status = 'AVAILABLE', hold_expires_at = NULL
+WHERE status = 'HELD' AND hold_expires_at < NOW()
 
-3. Instant Book flow:
-   - Hold dates for 10 minutes during payment
-   - status = 'PENDING' during hold
-   - Convert to BOOKED on payment success
+**Why Not Lock the Full Payment Duration?**
+Payment processing involves external services (Stripe) and can take 5-30 seconds. Holding database locks for that long would cause contention. The soft-hold pattern decouples the lock from the payment flow.
 
-4. Request to Book flow:
-   - No hold, host manually approves
-   - Check availability again at approval time`
+**Request-to-Book (non-Instant Book):**
+No hold is created. The host reviews the request and manually approves. Availability is checked again at approval time. If dates are no longer available, the request is auto-declined.`
         },
         {
-          question: 'How do we handle payments across currencies?',
-          answer: `Escrow model:
+          question: 'How does the payment authorization flow work?',
+          answer: `Airbnb's payment flow is more complex than standard e-commerce because money flows from guest to platform to host over days.
 
-1. Guest pays in their currency
-   - Convert to USD at booking time
-   - Hold in escrow
+**Payment Timeline:**
+1. **Authorization** (at booking): Stripe authorizes the full amount on the guest's card. No money moves yet. This reserves the credit limit for 7 days.
+2. **Capture** (24 hours before check-in): Airbnb captures the authorized amount, moving money from guest's card to Airbnb's escrow account.
+3. **Host payout** (24 hours after check-in): Airbnb transfers the host's share (listing price minus service fee) to the host's bank account.
+4. **Platform fee**: Airbnb retains the guest service fee (5-15%) and host service fee (3%).
 
-2. Host payout in their currency
-   - Convert from USD to host currency
-   - Pay 24 hours after check-in
+**Why Auth + Capture Instead of Direct Charge?**
+- If the guest cancels before capture, the authorization is voided (no charge, no refund fees)
+- The host has 24 hours before check-in to cancel without the guest being charged
+- Reduces disputes and chargebacks
 
-3. Fee structure:
-   - Guest service fee: 5-15% of subtotal
-   - Host service fee: 3% of subtotal
-   - Currency conversion spread: ~3%
+**Split Payment:**
+A single booking creates multiple payment events:
+- Guest pays: $500 (authorized at booking, captured before check-in)
+- Platform keeps: $75 guest fee + $15 host fee = $90
+- Host receives: $500 - $15 = $485 (24 hours after check-in)
 
-4. Refund handling:
-   - Full refund before cutoff date
-   - Partial refund based on policy
-   - Convert at current rate (guest takes FX risk)`
+**Multi-Currency:**
+- Guest pays in their local currency (e.g., EUR)
+- Converted to USD at booking-time exchange rate (locked in)
+- Host receives payout in their local currency (e.g., JPY)
+- Second conversion at payout time (host bears FX risk between booking and payout)
+
+**Idempotency:** Every payment API call includes an idempotency key. If the client retries due to network timeout, Stripe returns the same response without charging twice.`
+        },
+        {
+          question: 'How does search relevance ranking work?',
+          answer: `Airbnb's search must balance multiple signals to show the most relevant and bookable listings.
+
+**Two-Stage Search Pipeline:**
+
+**Stage 1: Candidate Retrieval (Elasticsearch)**
+Query Elasticsearch with geo-distance filter, property type, amenities, price range, and guest capacity. Returns ~1000 candidate listing IDs in ~50ms.
+
+**Stage 2: Availability Check + Ranking (Application Layer)**
+For each candidate, check the availability calendar for the requested date range. Filter out listings with blocked/booked dates. Then rank by a weighted scoring function.
+
+**Ranking Signals:**
+1. **Quality Score (30%)**: Listing photos, description completeness, amenity count, host response rate
+2. **Booking Probability (25%)**: ML model predicting likelihood of conversion based on listing attributes and user preferences
+3. **Price Competitiveness (20%)**: How the listing's price compares to similar listings in the area
+4. **Distance (15%)**: Proximity to the searched location
+5. **Host Quality (10%)**: Superhost status, response rate, acceptance rate, review scores
+
+**Personalization:**
+- User's past booking history influences ranking (prefer similar property types)
+- Price sensitivity: show budget options to price-sensitive users
+- First-time vs returning: new users see popular/safe options, returning users see diverse options
+
+**A/B Testing:**
+Airbnb runs hundreds of concurrent search ranking experiments. Each query includes an experiment assignment that determines which ranking model to use.`
+        },
+        {
+          question: 'How does the availability calendar work at scale?',
+          answer: `The availability calendar is the most queried data in Airbnb -- every search result requires a date-range availability check.
+
+**Data Model:**
+One row per listing per date in the availability table:
+- 8M listings x 365 days = 2.92 billion rows
+- Each row: listingId, date, status (AVAILABLE/BLOCKED/BOOKED), price override, minNights, version
+- Size: ~292 GB total
+
+**Query Patterns:**
+1. **Search availability check**: "Is listing X available for dates Y-Z?"
+   SELECT COUNT(*) FROM availability WHERE listingId = X AND date BETWEEN Y AND Z AND status = 'AVAILABLE'
+   HAVING COUNT(*) = (Z - Y)  -- all dates must be available
+
+2. **Calendar view**: "Show me listing X's calendar for March"
+   SELECT date, status, price FROM availability WHERE listingId = X AND date BETWEEN '2026-03-01' AND '2026-03-31'
+
+3. **Booking update**: "Mark dates as BOOKED" (with optimistic locking)
+
+**Performance Optimization:**
+- **Partition by listingId**: All dates for a listing on the same database shard
+- **Index on (listingId, date)**: Efficient range queries
+- **Redis cache**: Cache next-30-days availability for hot listings (TTL: 5 minutes)
+- **Materialized view**: Pre-compute "available next weekend" for common search queries
+
+**Calendar Sync (iCal):**
+Hosts can sync their Airbnb calendar with other platforms (Booking.com, VRBO) via iCal export/import. A background job polls external iCal URLs every 15 minutes and updates availability accordingly.`
+        },
+        {
+          question: 'How does dynamic pricing work?',
+          answer: `Airbnb offers "Smart Pricing" that automatically adjusts listing prices based on demand signals.
+
+**Demand Signals:**
+- **Search volume**: High search-to-booking ratio for an area indicates high demand
+- **Local events**: Concerts, conferences, sports events drive spikes (data from Eventbrite, Ticketmaster APIs)
+- **Seasonality**: Historical booking patterns by month/day-of-week
+- **Competitor pricing**: Prices of similar nearby listings
+- **Booking pace**: How quickly dates are being booked (faster pace = higher demand)
+
+**Pricing Model:**
+1. **Base price**: Host's default nightly rate
+2. **Demand multiplier**: 0.8x to 3.0x based on demand signals
+3. **Occupancy adjustment**: Lower prices for dates that are approaching with low occupancy
+4. **Weekend premium**: Typically 10-20% higher on Friday/Saturday
+5. **Length-of-stay discount**: 10% off for 7+ nights, 20% off for 28+ nights
+
+**Implementation:**
+A batch ML pipeline runs daily to compute suggested prices for every listing-date combination for the next 90 days. Hosts can accept, modify, or ignore suggestions.
+
+**Gap Night Pricing:**
+If a listing is booked Mon-Wed and Fri-Sun, Thursday is a "gap night." The system automatically discounts gap nights by 20-30% to increase occupancy.
+
+**Ceiling/Floor:**
+Hosts set minimum and maximum prices. Smart Pricing never exceeds these bounds, giving hosts control while optimizing occupancy.`
+        },
+        {
+          question: 'How do split payments work (guest to platform to host)?',
+          answer: `Airbnb acts as a payment intermediary, holding funds in escrow and splitting them between the platform and the host.
+
+**Payment Entities:**
+- **Guest**: Pays the full booking amount (nightly rate x nights + cleaning fee + service fee)
+- **Platform (Airbnb)**: Retains guest service fee (5-15% of subtotal) + host service fee (3%)
+- **Host**: Receives nightly rate x nights + cleaning fee - host service fee
+
+**Flow with Stripe Connect:**
+Airbnb uses **Stripe Connect** (platform payments) to manage this three-way flow:
+1. Guest charged via Stripe PaymentIntent (destination: Airbnb's platform account)
+2. Funds held in Airbnb's escrow account
+3. On check-in + 24 hours: Stripe Transfer to host's connected account
+4. Airbnb's fees automatically retained during the transfer
+
+**Refund Scenarios:**
+- **Full refund (before cancellation deadline)**: Reverse the PaymentIntent, guest gets full refund
+- **Partial refund (after deadline)**: Refund percentage based on cancellation policy (Flexible: 100%, Moderate: 50%, Strict: 0%)
+- **Dispute resolution**: If guest and host disagree, Airbnb mediates and decides the split
+
+**Multi-Currency Example:**
+Guest in Germany pays 450 EUR. Converted to $500 USD at booking time. Host in Japan receives 72,000 JPY (converted from $485 USD after 3% host fee). Airbnb retains $90 in fees.
+
+**Payout Schedule:**
+- Standard: 24 hours after check-in via bank transfer (ACH/wire)
+- Instant payout (premium): Available immediately via debit card (1% fee)`
+        },
+        {
+          question: 'How do idempotency keys prevent duplicate bookings?',
+          answer: `Network failures can cause clients to retry booking requests. Without idempotency, a guest could be charged twice for the same booking.
+
+**The Problem:**
+1. Guest clicks "Confirm Booking"
+2. Request reaches server, booking created, payment charged
+3. Network timeout -- client never receives response
+4. Client retries the same request
+5. Without idempotency: second booking created, guest charged again
+
+**Solution: Idempotency Keys**
+Every booking request includes a unique idempotency_key (client-generated UUID):
+
+POST /api/bookings
+{ listingId: 123, checkin: "2026-05-01", checkout: "2026-05-05", idempotencyKey: "abc-123-def" }
+
+**Server-Side Implementation:**
+1. Before processing, check if idempotency_key exists in the database
+2. If found: return the cached response from the original request
+3. If not found: process the booking, store the response keyed by idempotency_key
+
+**Database Schema:**
+idempotency_keys { key: varchar UNIQUE, response: jsonb, created_at: timestamp }
+TTL: 24 hours (keys expire after a day)
+
+**Stripe Integration:**
+Stripe's API also supports idempotency keys. Airbnb passes the same key to Stripe, ensuring the payment is also idempotent. Even if Airbnb retries the Stripe call, the guest is only charged once.
+
+**Edge Case -- Partial Failure:**
+If the booking is created but the payment fails, the idempotency key stores the error response. On retry, the server sees the failed state and re-attempts payment (not booking creation).`
+        },
+        {
+          question: 'How does the review integrity system work?',
+          answer: `Airbnb's dual-sided review system is designed to prevent retaliation and encourage honest feedback.
+
+**Dual-Blind Review Process:**
+1. After checkout, both guest and host are prompted to leave reviews
+2. Reviews are submitted independently -- neither party can see the other's review
+3. Both reviews are published simultaneously after:
+   - Both parties submit, OR
+   - 14-day deadline expires (whichever comes first)
+4. This prevents retaliatory reviews (host can't see guest's bad review and respond with their own)
+
+**Review Requirements:**
+- Only possible after a completed stay (no "review bombing")
+- Rating: 1-5 stars across categories (cleanliness, accuracy, communication, location, check-in, value)
+- Text content: 50 character minimum, 10,000 character maximum
+- Photos: optional, reviewed for appropriateness
+
+**Aggregate Rating Calculation:**
+Business average uses a Bayesian approach (same as Yelp) to prevent new listings with one 5-star review from outranking established listings.
+
+**Fraud Prevention:**
+- Reviews from flagged accounts (fake bookings, suspicious patterns) are hidden
+- NLP analysis detects review manipulation (overly positive formulaic text)
+- Hosts cannot offer incentives for positive reviews (policy violation = account suspension)
+
+**Host Response:**
+Hosts can post a public response to any review (not a counter-review, just a response). This appears below the guest's review and is visible to future guests.`
+        },
+        {
+          question: 'How does Elasticsearch geo search work for listings?',
+          answer: `Airbnb's search combines geospatial filtering with attribute filtering and full-text search, all in Elasticsearch.
+
+**Index Design:**
+Each listing is indexed as an Elasticsearch document with a geo_point field for location:
+- geo_point: { lat, lng }
+- propertyType, amenities, maxGuests, bedrooms (keyword/integer fields)
+- title, description (text fields with analyzers)
+- pricePerNight (float, for range queries)
+- avgRating, reviewCount (for boosting)
+
+**Geo-Distance Query:**
+Find listings within 25km of a search location:
+- geo_distance filter: { distance: "25km", location: { lat: 37.7, lon: -122.4 } }
+- Combined with bool query for amenities, price range, guest count
+- Sorted by _score (relevance) with geo_distance used as a scoring factor
+
+**Availability Integration:**
+Elasticsearch does NOT store availability data (it changes too frequently). Instead:
+1. Elasticsearch returns candidate IDs (fast, ~50ms)
+2. Application layer checks availability in PostgreSQL for those candidates (parallel batch query, ~100ms)
+3. Filter out unavailable listings
+4. Re-rank remaining results
+
+**Why Not Store Availability in ES?**
+Updating 2.92B availability rows in Elasticsearch would be prohibitively expensive. The calendar data changes with every booking, host update, and iCal sync. Keeping ES in sync would require millions of document updates per day.
+
+**Performance:**
+- Elasticsearch query: ~50ms for geo + filters on 8M documents
+- Availability check: ~100ms for batch query on ~1000 candidates
+- Total search latency: ~200-300ms (well within 500ms target)`
         }
       ],
 
@@ -13552,27 +14426,6 @@ Optimization:
         title: 'Basic Architecture',
         description: 'Simple search and booking without availability optimization',
         svgTemplate: 'airbnb',
-        architecture: `
-┌─────────────────────────────────────────────────────────────────────────┐
-│                            AIRBNB BASIC                                 │
-├─────────────────────────────────────────────────────────────────────────┤
-│                                                                         │
-│  ┌──────────┐      ┌──────────────┐      ┌──────────────────┐          │
-│  │  Client  │─────▶│ Load Balancer│─────▶│   App Server     │          │
-│  └──────────┘      └──────────────┘      └────────┬─────────┘          │
-│                                                    │                    │
-│  SEARCH:                                  ┌────────▼─────────┐          │
-│  SELECT * FROM listings                   │    PostgreSQL    │          │
-│  WHERE location nearby                    │                  │          │
-│  AND dates available                      │  - Listings      │          │
-│  (complex JOIN)                           │  - Availability  │          │
-│                                           │  - Bookings      │          │
-│  PROBLEMS:                                │  - Reviews       │          │
-│  - Slow geo + date queries                └──────────────────┘          │
-│  - Full table scans                                                     │
-│  - Double-booking possible                                              │
-│                                                                         │
-└─────────────────────────────────────────────────────────────────────────┘`,
         problems: [
           'Slow search: JOIN between listings and availability',
           'No geo-indexing: Full table scan for location',
@@ -13584,94 +14437,9 @@ Optimization:
       advancedImplementation: {
         title: 'Production Architecture',
         svgTemplate: 'airbnbAdvanced',
-        architecture: `
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                           AIRBNB PRODUCTION                                      │
-├─────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                  │
-│  SEARCH PIPELINE                                                                │
-│  ┌─────────────────────────────────────────────────────────────────────┐        │
-│  │                                                                      │        │
-│  │  Client Query ──▶ API Gateway ──▶ Search Service                    │        │
-│  │                                        │                             │        │
-│  │                         ┌──────────────┴───────────────┐            │        │
-│  │                         ▼                              ▼            │        │
-│  │               ┌──────────────────┐           ┌──────────────┐       │        │
-│  │               │   Elasticsearch  │           │ Availability │       │        │
-│  │               │                  │           │   Service    │       │        │
-│  │               │ - Geo filtering  │           │              │       │        │
-│  │               │ - Amenities      │           │ - Date check │       │        │
-│  │               │ - Property type  │           │ - Booking    │       │        │
-│  │               │ - Price range    │           │   conflicts  │       │        │
-│  │               │                  │           │              │       │        │
-│  │               │ Returns: IDs     │           │              │       │        │
-│  │               └────────┬─────────┘           └──────┬───────┘       │        │
-│  │                        │                            │                │        │
-│  │                        └──────────┬─────────────────┘                │        │
-│  │                                   ▼                                  │        │
-│  │                          ┌──────────────┐                           │        │
-│  │                          │ Merge & Rank │                           │        │
-│  │                          │   Results    │                           │        │
-│  │                          └──────────────┘                           │        │
-│  └─────────────────────────────────────────────────────────────────────┘        │
-│                                                                                  │
-│  BOOKING & AVAILABILITY                                                         │
-│  ┌─────────────────────────────────────────────────────────────────────┐        │
-│  │                                                                      │        │
-│  │  ┌──────────────┐    ┌──────────────┐    ┌──────────────────────┐  │        │
-│  │  │   Booking    │───▶│ Availability │───▶│     PostgreSQL       │  │        │
-│  │  │   Service    │    │   Service    │    │                      │  │        │
-│  │  └──────────────┘    └──────────────┘    │  availability table  │  │        │
-│  │                                           │  - Sharded by        │  │        │
-│  │                                           │    listingId         │  │        │
-│  │                                           │  - Row-level lock    │  │        │
-│  │                                           │    per date          │  │        │
-│  │                                           └──────────────────────┘  │        │
-│  │                                                                      │        │
-│  │  BOOKING FLOW:                                                      │        │
-│  │  1. Check availability (SELECT FOR UPDATE)                         │        │
-│  │  2. Create booking record                                          │        │
-│  │  3. Update availability to BOOKED                                  │        │
-│  │  4. Process payment                                                 │        │
-│  │  5. Commit transaction                                              │        │
-│  │                                                                      │        │
-│  │  If payment fails: Rollback, dates become available again          │        │
-│  └─────────────────────────────────────────────────────────────────────┘        │
-│                                                                                  │
-│  CALENDAR MANAGEMENT                                                            │
-│  ┌─────────────────────────────────────────────────────────────────────┐        │
-│  │                                                                      │        │
-│  │  Host updates ──▶ Calendar Service ──▶ Update availability table   │        │
-│  │       │                                        │                     │        │
-│  │       │                                        ▼                     │        │
-│  │       │                               ┌──────────────┐              │        │
-│  │       │                               │ Invalidate   │              │        │
-│  │       │                               │ ES cache     │              │        │
-│  │       │                               └──────────────┘              │        │
-│  │       │                                                              │        │
-│  │       └── Price rules engine:                                       │        │
-│  │           - Weekend pricing                                         │        │
-│  │           - Seasonal pricing                                        │        │
-│  │           - Event-based pricing                                     │        │
-│  │           - Min stay requirements                                   │        │
-│  └─────────────────────────────────────────────────────────────────────┘        │
-│                                                                                  │
-│  PAYMENT ESCROW                                                                 │
-│  ┌─────────────────────────────────────────────────────────────────────┐        │
-│  │                                                                      │        │
-│  │  Guest ──▶ Stripe ──▶ Escrow Account ──▶ Host (after check-in)     │        │
-│  │              │                                    │                  │        │
-│  │              │                                    │                  │        │
-│  │         Guest fee                            Host fee               │        │
-│  │          deducted                            deducted               │        │
-│  │                                                                      │        │
-│  │  Refund flow based on cancellation policy                          │        │
-│  └─────────────────────────────────────────────────────────────────────┘        │
-│                                                                                  │
-└─────────────────────────────────────────────────────────────────────────────────┘`,
         keyPoints: [
           'Two-stage search: ES for filtering, DB for availability',
-          'Row-level locking: Prevent double-booking at DB level',
+          'Optimistic locking: Prevent double-booking at DB level',
           'Sharding by listingId: Keep all dates for a listing together',
           'Payment escrow: Hold funds until check-in',
           'Calendar service: Handle complex pricing rules',
@@ -13761,9 +14529,9 @@ Optimization:
       components: ['Listing service', 'Search service', 'Booking service', 'Calendar service', 'Payment service', 'Messaging', 'Review service'],
       keyDecisions: [
         'Search: Elasticsearch with geo filters + availability filters',
-        'Calendar: Store availability as date ranges, not individual dates',
-        'Double-booking prevention: Optimistic locking on booking',
-        'Dynamic pricing based on demand, events, seasonality',
+        'Calendar: Store availability as individual dates for precise control',
+        'Double-booking prevention: Optimistic locking with version numbers',
+        'Payment: Auth -> capture -> settle via Stripe Connect',
         'Trust & safety: Photo verification, reviews, identity verification'
       ],
       edgeCases: [
@@ -13775,16 +14543,114 @@ Optimization:
       ],
       tradeoffs: [
         { decision: 'Instant Book vs Host Approval required', pros: 'Instant Book increases conversion rates and reduces booking friction', cons: 'Hosts lose control over who stays, leading to potential bad guest experiences', recommendation: 'Default to Instant Book with host-defined auto-reject rules for guest rating thresholds' },
-        { decision: 'Elasticsearch vs dedicated geo-database for search', pros: 'Elasticsearch handles full-text plus geo queries in one system with great performance', cons: 'Complex availability and date-range filtering in Elasticsearch is hard to tune and can be slow', recommendation: 'Use Elasticsearch for geo and text search, but pre-filter availability in a relational DB before sending candidates to ES' },
-        { decision: 'Store calendar as individual dates vs date ranges', pros: 'Date ranges use far less storage and make bulk availability updates fast', cons: 'Range-based queries are more complex and splitting ranges on partial bookings requires careful logic', recommendation: 'Use date ranges with a merge/split algorithm, and materialize individual dates into a cache for fast availability checks' },
-        { decision: 'Platform-managed payments vs direct host payment', pros: 'Platform-managed enables refunds, dispute resolution, and trust', cons: 'Adds payment processing complexity, regulatory burden, and payout delays for hosts', recommendation: 'Always use platform-managed payments with configurable payout schedules to balance host cash flow and buyer protection' },
+        { decision: 'Optimistic vs Pessimistic locking for bookings', pros: 'Optimistic allows higher throughput (no locks held during payment); Pessimistic guarantees serialization', cons: 'Optimistic requires retry logic on conflict; Pessimistic holds locks for 10-30 seconds during payment', recommendation: 'Optimistic locking with soft-hold pattern: brief lock for date reservation, separate payment processing' },
+        { decision: 'Store calendar as individual dates vs date ranges', pros: 'Date ranges use far less storage and make bulk availability updates fast', cons: 'Range-based queries are more complex and splitting ranges on partial bookings requires careful logic', recommendation: 'Individual dates for precise per-date pricing and availability, with Redis cache for common date-range queries' },
+        { decision: 'Platform-managed payments vs direct host payment', pros: 'Platform-managed enables refunds, dispute resolution, and trust', cons: 'Adds payment processing complexity, regulatory burden, and payout delays for hosts', recommendation: 'Always use platform-managed payments with Stripe Connect for regulatory compliance and buyer protection' },
       ],
       layeredDesign: [
         { name: 'Client Layer', purpose: 'Search UI with map integration, booking flow, and messaging interface', components: ['Map View (Mapbox)', 'Search Filters', 'Booking Wizard', 'Messaging UI'] },
         { name: 'API Gateway Layer', purpose: 'Request routing, authentication, and rate limiting for guests and hosts', components: ['Auth Middleware', 'Rate Limiter', 'API Router', 'CDN for listing images'] },
         { name: 'Application Layer', purpose: 'Core business logic for listings, bookings, pricing, and reviews', components: ['Listing Service', 'Booking Service', 'Pricing Engine', 'Review Service', 'Messaging Service'] },
         { name: 'Search Layer', purpose: 'Geo-aware search with availability filtering and ranking', components: ['Elasticsearch Cluster', 'Availability Index', 'Ranking Service'] },
-        { name: 'Data Layer', purpose: 'Persistent storage for listings, bookings, user profiles, and financial transactions', components: ['PostgreSQL (bookings/users)', 'Elasticsearch (search)', 'Redis (availability cache)', 'S3 (photos)', 'Payment Ledger DB'] },
+        { name: 'Data Layer', purpose: 'Persistent storage for listings, bookings, user profiles, and financial transactions', components: ['PostgreSQL (bookings/calendar)', 'Elasticsearch (search)', 'Redis (availability cache)', 'S3 (photos)', 'Stripe Connect (payments)'] },
+      ],
+      comparisonTables: [
+        {
+          id: 'optimistic-vs-pessimistic-locking',
+          title: 'Optimistic vs Pessimistic Locking for Booking',
+          headers: ['Aspect', 'Optimistic Locking', 'Pessimistic Locking'],
+          rows: [
+            ['Lock Duration', 'Brief (only during UPDATE)', 'Long (held during entire booking + payment)'],
+            ['Throughput', 'High (no lock contention)', 'Lower (blocked transactions wait)'],
+            ['Conflict Handling', 'Retry on version mismatch', 'Queued automatically by DB'],
+            ['Implementation', 'Version column + retry logic', 'SELECT FOR UPDATE'],
+            ['Payment Integration', 'Soft-hold pattern with TTL', 'Lock held until payment completes'],
+            ['Best For', 'High-traffic listings (popular properties)', 'Low-traffic with guaranteed serialization'],
+          ],
+          verdict: 'Optimistic with soft-hold for Airbnb: high throughput on popular listings, brief locks decoupled from payment'
+        },
+        {
+          id: 'instant-vs-request-to-book',
+          title: 'Instant Book vs Request-to-Book',
+          headers: ['Aspect', 'Instant Book', 'Request-to-Book'],
+          rows: [
+            ['Booking Speed', 'Immediate confirmation', '24-48 hours for host approval'],
+            ['Conversion Rate', 'Higher (no friction)', 'Lower (guest may book elsewhere while waiting)'],
+            ['Host Control', 'Low (auto-accept all guests)', 'High (host reviews each request)'],
+            ['Double-Booking Risk', 'Higher (concurrent bookings possible)', 'Lower (host can check calendar manually)'],
+            ['Payment Timing', 'Auth at booking, capture before check-in', 'Auth after host approval'],
+            ['Guest Experience', 'Better (instant gratification)', 'Worse (uncertainty while waiting)'],
+          ],
+          verdict: 'Instant Book preferred for most listings (higher conversion); Request-to-Book for unique/luxury properties where host screening matters'
+        }
+      ],
+      flowcharts: [
+        {
+          id: 'booking-flow',
+          title: 'Complete Booking Flow',
+          description: 'From guest clicking Reserve through payment to confirmation, with double-booking prevention',
+          steps: [
+            { step: 1, label: 'Reserve Click', detail: 'Guest clicks "Reserve" with listing, dates, and guest count. Idempotency key generated.' },
+            { step: 2, label: 'Soft Hold', detail: 'Server creates HELD status on availability dates with 10-minute TTL to prevent concurrent bookings' },
+            { step: 3, label: 'Payment Auth', detail: 'Stripe PaymentIntent created with idempotency key. Guest card authorized but not charged.' },
+            { step: 4, label: 'Optimistic Lock', detail: 'UPDATE availability SET status=BOOKED WHERE version=expected. If conflict: rollback hold and notify guest.' },
+            { step: 5, label: 'Create Booking', detail: 'Booking record created with CONFIRMED status. Calendar updated permanently.' },
+            { step: 6, label: 'Capture Payment', detail: '24 hours before check-in: Stripe captures the authorized amount into escrow.' },
+            { step: 7, label: 'Host Payout', detail: '24 hours after check-in: platform transfers host share minus 3% service fee.' },
+            { step: 8, label: 'Review Window', detail: 'After checkout: both guest and host can leave dual-blind reviews for 14 days.' },
+          ]
+        },
+        {
+          id: 'search-flow',
+          title: 'Search Pipeline Flow',
+          description: 'Two-stage search combining Elasticsearch geo filtering with real-time availability checks',
+          steps: [
+            { step: 1, label: 'User Query', detail: 'Guest enters location, dates, guest count, and optional filters (price, amenities)' },
+            { step: 2, label: 'Geocode', detail: 'Convert location string to lat/lng coordinates via geocoding API' },
+            { step: 3, label: 'ES Candidate Retrieval', detail: 'Elasticsearch geo_distance query + filters returns ~1000 candidate listing IDs in ~50ms' },
+            { step: 4, label: 'Availability Check', detail: 'Batch query PostgreSQL availability table for all candidates and requested date range (~100ms)' },
+            { step: 5, label: 'Filter Unavailable', detail: 'Remove listings with any BLOCKED or BOOKED dates in the range' },
+            { step: 6, label: 'Rank Results', detail: 'Score by quality (30%), booking probability (25%), price (20%), distance (15%), host quality (10%)' },
+            { step: 7, label: 'Return Page', detail: 'Return top 20 results with listing previews, pricing, and map markers' },
+          ]
+        }
+      ],
+      visualCards: [
+        {
+          id: 'tech-stack',
+          title: 'Technology Stack',
+          icon: 'layers',
+          color: '#2D8CFF',
+          items: [
+            { label: 'Elasticsearch', value: 'Geo search + filters', bar: 95 },
+            { label: 'PostgreSQL', value: 'Bookings + calendar', bar: 90 },
+            { label: 'Redis', value: 'Availability cache', bar: 85 },
+            { label: 'Stripe Connect', value: 'Payments + payouts', bar: 80 },
+            { label: 'S3 + CloudFront', value: '~160 TB listing photos', bar: 75 },
+            { label: 'Kafka', value: 'Event streaming + sync', bar: 70 },
+          ]
+        },
+        {
+          id: 'scale-numbers',
+          title: 'Scale at a Glance',
+          icon: 'trendingUp',
+          color: '#10B981',
+          items: [
+            { label: '200M+ users', value: 'Global user base', bar: 80 },
+            { label: '8M+ listings', value: 'Active properties', bar: 75 },
+            { label: '386 search/sec', value: 'Search QPS', bar: 50 },
+            { label: '17 bookings/sec', value: 'Booking TPS', bar: 30 },
+            { label: '533M nights/year', value: 'Annual bookings', bar: 90 },
+            { label: '$12.2B revenue', value: 'Annual revenue', bar: 95 },
+          ]
+        }
+      ],
+      evolutionSteps: [
+        { step: 1, title: 'Monolith + PostgreSQL', description: 'Single Rails/Django app with PostgreSQL. PostGIS for basic geo queries. Simple booking with row-level locks.', color: '#94a3b8', icon: 'server', capacity: '~10K listings', rps: '50', pros: ['Simple to build and iterate', 'PostGIS handles basic geo queries', 'Strong consistency by default'], cons: ['Slow search with complex JOINs', 'Lock contention on popular listings', 'No caching layer'] },
+        { step: 2, title: 'Elasticsearch + Cache', description: 'Add Elasticsearch for geo + text search. Redis cache for listing details and availability. CDN for photos.', color: '#2D8CFF', icon: 'layers', capacity: '~500K listings', rps: '500', pros: ['Fast combined geo + text search', 'Cache reduces database load', 'Photos served from CDN'], cons: ['ES sync lag for new listings', 'Cache invalidation on booking', 'Still single-region'] },
+        { step: 3, title: 'Optimistic Locking + Microservices', description: 'Split into Booking, Calendar, Search, and Payment services. Optimistic locking with soft-hold pattern. Stripe Connect integration.', color: '#f59e0b', icon: 'zap', capacity: '~2M listings', rps: '2K', pros: ['No double-bookings', 'Services scale independently', 'Proper payment flow'], cons: ['Distributed transaction complexity', 'Service coordination overhead', 'More operational complexity'] },
+        { step: 4, title: 'Global Distribution', description: 'Multi-region Elasticsearch clusters. Calendar DB sharded by region. CDN with 160 TB of photos. Multi-currency payment support.', color: '#10b981', icon: 'globe', capacity: '~8M listings', rps: '10K', pros: ['Sub-500ms search globally', 'Regional fault isolation', 'Multi-currency support'], cons: ['Cross-region availability sync', 'Currency conversion complexity', 'Regional compliance requirements'] },
+        { step: 5, title: 'ML Ranking + Smart Pricing', description: 'ML-based search ranking with personalization. Dynamic pricing engine. Dual-blind review system. Trust and safety ML models.', color: '#7c3aed', icon: 'cpu', capacity: '20M+ listings', rps: '50K+', pros: ['Highly relevant search results', 'Optimized host revenue via pricing', 'Automated trust and safety'], cons: ['ML model training infrastructure', 'A/B testing at scale', 'Balancing host and guest interests'] },
       ],
     },
     {
