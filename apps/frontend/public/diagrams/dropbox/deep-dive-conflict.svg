@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 350" font-family="system-ui, -apple-system, sans-serif">
+  <defs><marker id="a" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#334155"/></marker></defs>
+  <rect width="800" height="350" fill="#fafbfc" rx="12"/>
+  <text x="400" y="28" text-anchor="middle" fill="#1e293b" font-size="15" font-weight="700">Conflict Resolution — Dropbox Conflict Copy Strategy</text>
+
+  <!-- Timeline -->
+  <line x1="100" y1="60" x2="700" y2="60" stroke="#e2e8f0" stroke-width="2"/>
+  <text x="100" y="52" text-anchor="middle" fill="#64748b" font-size="8">t₀</text>
+  <text x="300" y="52" text-anchor="middle" fill="#64748b" font-size="8">t₁ (offline)</text>
+  <text x="500" y="52" text-anchor="middle" fill="#64748b" font-size="8">t₂ (reconnect)</text>
+  <text x="700" y="52" text-anchor="middle" fill="#64748b" font-size="8">t₃ (resolved)</text>
+
+  <!-- Device A -->
+  <rect x="20" y="75" width="80" height="25" rx="4" fill="#2563eb"/>
+  <text x="60" y="92" text-anchor="middle" fill="white" font-size="9" font-weight="600">Device A</text>
+
+  <line x1="100" y1="87" x2="700" y2="87" stroke="#2563eb" stroke-width="2"/>
+  <circle cx="100" r="5" cy="87" fill="#2563eb"/>
+  <text x="120" y="82" fill="#2563eb" font-size="8">v1 synced</text>
+
+  <circle cx="300" r="5" cy="87" fill="#f97316"/>
+  <text x="320" y="82" fill="#f97316" font-size="8">Edit → v2a</text>
+  <text x="320" y="95" fill="#f97316" font-size="7">(offline)</text>
+
+  <circle cx="500" r="5" cy="87" fill="#ef4444"/>
+  <text x="520" y="82" fill="#ef4444" font-size="8">Sync: conflict!</text>
+
+  <!-- Device B -->
+  <rect x="20" y="115" width="80" height="25" rx="4" fill="#7c3aed"/>
+  <text x="60" y="132" text-anchor="middle" fill="white" font-size="9" font-weight="600">Device B</text>
+
+  <line x1="100" y1="127" x2="700" y2="127" stroke="#7c3aed" stroke-width="2"/>
+  <circle cx="100" r="5" cy="127" fill="#7c3aed"/>
+  <text x="120" y="122" fill="#7c3aed" font-size="8">v1 synced</text>
+
+  <circle cx="250" r="5" cy="127" fill="#f97316"/>
+  <text x="270" y="122" fill="#f97316" font-size="8">Edit → v2b</text>
+  <text x="270" y="135" fill="#f97316" font-size="7">(synced to server)</text>
+
+  <!-- Server -->
+  <rect x="20" y="155" width="80" height="25" rx="4" fill="#64748b"/>
+  <text x="60" y="172" text-anchor="middle" fill="white" font-size="9" font-weight="600">Server</text>
+
+  <line x1="100" y1="167" x2="700" y2="167" stroke="#64748b" stroke-width="1.5"/>
+  <circle cx="100" r="4" cy="167" fill="#64748b"/>
+  <text x="120" y="162" fill="#64748b" font-size="8">v1</text>
+
+  <circle cx="250" r="4" cy="167" fill="#7c3aed"/>
+  <text x="270" y="162" fill="#7c3aed" font-size="8">v2b (from Device B)</text>
+
+  <circle cx="500" r="4" cy="167" fill="#ef4444"/>
+  <text x="520" y="162" fill="#ef4444" font-size="8">v2b wins + conflict copy</text>
+
+  <!-- Conflict detection box -->
+  <rect x="20" y="200" width="370" height="130" rx="10" fill="#fff" stroke="#ef4444" stroke-width="1.5"/>
+  <rect x="20" y="200" width="370" height="28" rx="10 10 0 0" fill="#ef4444"/>
+  <text x="205" y="219" text-anchor="middle" fill="white" font-size="12" font-weight="700">⚠️ Conflict Detection</text>
+
+  <text x="40" y="248" fill="#1e293b" font-size="10">Device A reconnects, tries to sync v2a</text>
+  <text x="40" y="268" fill="#1e293b" font-size="10">Server has v2b (expected v1, got v2b)</text>
+  <text x="40" y="288" fill="#ef4444" font-size="10" font-weight="700">Device A's expected_version (1) &lt; server_version (2b)</text>
+  <text x="40" y="308" fill="#ef4444" font-size="10" font-weight="600">→ CONFLICT DETECTED</text>
+
+  <!-- Resolution box -->
+  <rect x="410" y="200" width="370" height="130" rx="10" fill="#fff" stroke="#22c55e" stroke-width="1.5"/>
+  <rect x="410" y="200" width="370" height="28" rx="10 10 0 0" fill="#22c55e"/>
+  <text x="595" y="219" text-anchor="middle" fill="white" font-size="12" font-weight="700">✓ Dropbox Resolution — Conflict Copy</text>
+
+  <text x="430" y="248" fill="#1e293b" font-size="10">Server keeps: v2b (first to sync wins)</text>
+  <text x="430" y="268" fill="#1e293b" font-size="10">Server creates: conflict copy of v2a</text>
+
+  <text x="430" y="298" fill="#22c55e" font-size="9" font-weight="600">📄 report.docx (v2b — from Device B)</text>
+  <text x="430" y="318" fill="#f97316" font-size="9" font-weight="600">📄 report (conflicted copy 2026-04-19).docx (v2a)</text>
+
+  <!-- No data loss note -->
+  <rect x="20" y="337" width="760" height="10" rx="3" fill="rgba(34,197,94,0.08)"/>
+  <text x="400" y="346" text-anchor="middle" fill="#16a34a" font-size="8" font-weight="600">✓ Zero data loss — both versions preserved • User manually merges or chooses one</text>
+</svg>
