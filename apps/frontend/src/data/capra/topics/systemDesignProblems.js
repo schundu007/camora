@@ -2163,7 +2163,7 @@ rides {
       discussionPoints: [
         {
           topic: 'ETA Calculation',
-          diagramSrc: '/diagrams/uber/discuss-eta-calculation.svg',
+          diagramSrc: '/diagrams/uber/discuss-eta-calculation.png',
           points: [
             'Historical travel times by road segment (time-of-day adjusted)',
             'Real-time traffic from active driver GPS fleet aggregation',
@@ -2175,7 +2175,7 @@ rides {
         },
         {
           topic: 'Surge Pricing',
-          diagramSrc: '/diagrams/uber/discuss-surge-pricing.svg',
+          diagramSrc: '/diagrams/uber/discuss-surge-pricing.png',
           points: [
             'Monitor supply (drivers) vs demand (requests) per S2 cell',
             'Per-cell surge multiplier cached in Redis with 60s TTL',
@@ -2187,7 +2187,7 @@ rides {
         },
         {
           topic: 'Dispatch Optimization',
-          diagramSrc: '/diagrams/uber/discuss-dispatch.svg',
+          diagramSrc: '/diagrams/uber/discuss-dispatch.png',
           points: [
             'Minimize total wait time across all pending requests',
             'Consider driver heading (already driving toward pickup is better)',
@@ -2199,7 +2199,7 @@ rides {
         },
         {
           topic: 'Safety & Compliance',
-          diagramSrc: '/diagrams/uber/discuss-safety.svg',
+          diagramSrc: '/diagrams/uber/discuss-safety.png',
           points: [
             'Trip sharing with trusted contacts via live tracking URL',
             'PIN verification to prevent wrong driver pickups',
@@ -2243,27 +2243,27 @@ rides {
       deepDiveTopics: [
         {
           topic: 'Cell-Based Geospatial Architecture',
-          diagramSrc: '/diagrams/uber/deep-dive-cell-architecture.svg',
+          diagramSrc: '/diagrams/uber/deep-dive-cell-architecture.png',
           detail: `Uber divides each city into S2 geometry cells (roughly 1 km²). Each cell is managed by a dedicated cell service that maintains an in-memory spatial index of active drivers. When a ride request arrives, the gateway identifies the cell containing the pickup location and routes the request to that cell's matching service. For boundary cases, the system queries adjacent cells to ensure drivers just across a cell boundary aren't missed. This architecture enables horizontal scaling — adding more cells as a city grows — and isolates failures to individual geographic areas rather than affecting the entire city.`,
         },
         {
           topic: 'Real-Time Location Ingestion Pipeline',
-          diagramSrc: '/diagrams/uber/deep-dive-location-pipeline.svg',
+          diagramSrc: '/diagrams/uber/deep-dive-location-pipeline.png',
           detail: `10M+ active drivers send GPS updates every 3-4 seconds, generating 3.3M writes/second at average load and 10M+ at peak. The location ingestion pipeline uses a multi-tier approach: updates first hit a load balancer that routes by driver's cell ID, then write to Redis (GEOADD) for the hot spatial index used by matching. Simultaneously, updates are published to Kafka for downstream consumers — the analytics pipeline (Spark/Flink), the ETA recalculation service, and the rider tracking WebSocket broadcaster. Only the Redis write is on the critical path; Kafka consumption is asynchronous, ensuring location updates don't slow down even if analytics is backed up.`,
         },
         {
           topic: 'Surge Pricing Engine',
-          diagramSrc: '/diagrams/uber/deep-dive-surge-pricing.svg',
+          diagramSrc: '/diagrams/uber/deep-dive-surge-pricing.png',
           detail: `The surge pricing engine runs as a continuous computation over supply/demand signals. Every 60 seconds, it computes a surge multiplier for each cell: (ride_requests_last_5min / available_drivers). A smoothing function prevents oscillation — surge ramps up quickly (30-second response) but decays slowly (5-minute cooldown) to avoid gaming. The multiplier is written to Redis and served to clients via the pricing API. Critically, the surge multiplier is locked at booking time so the rider's quoted price is guaranteed. Geographic smoothing ensures neighboring cells don't have wildly different multipliers, and regulatory caps per city are enforced as hard limits.`,
         },
         {
           topic: 'ETA Prediction with Live Traffic',
-          diagramSrc: '/diagrams/uber/deep-dive-eta-prediction.svg',
+          diagramSrc: '/diagrams/uber/deep-dive-eta-prediction.png',
           detail: `ETA prediction combines a pre-computed road graph with real-time traffic overlays. The base routing uses Contraction Hierarchies on the city's road network for sub-millisecond path computation. Real-time traffic multipliers are computed from the aggregate speed of active drivers on each road segment — if 50 drivers on a highway average 25 mph instead of the usual 60 mph, that segment's travel time is adjusted 2.4x. An ML model (gradient boosted trees) further refines the ETA using features like time of day, weather, and local events. The system maintains per-city models because traffic patterns in Mumbai differ fundamentally from those in San Francisco.`,
         },
         {
           topic: 'Matching Optimization & Batch Dispatch',
-          diagramSrc: '/diagrams/uber/deep-dive-matching.svg',
+          diagramSrc: '/diagrams/uber/deep-dive-matching.png',
           detail: `During low-demand periods, Uber uses greedy matching — each ride request is independently matched to the nearest available driver. But during peak hours, batch matching significantly improves outcomes. The system accumulates ride requests over a 2-second window, then models the problem as a bipartite graph where edges are weighted by pickup ETA. The Hungarian algorithm finds the minimum-cost perfect matching, reducing average wait times by 20-30% compared to greedy assignment. For UberPool, the system solves an online variant of the Vehicle Routing Problem, dynamically inserting new pickups/dropoffs into existing routes while respecting a 25% detour constraint for existing passengers.`,
         },
       ],
@@ -2318,6 +2318,7 @@ rides {
           id: 'uber-ride-request-flow',
           title: 'Ride Request Flow',
           description: 'End-to-end flow from rider opening the app to driver arrival',
+          src: '/diagrams/uber/flow-ride-request.png',
           steps: [
             { step: 1, label: 'Rider Opens App', detail: 'Client sends GPS location to API gateway, receives nearby driver count and surge multiplier for the pickup cell' },
             { step: 2, label: 'Enter Destination', detail: 'Client sends pickup + dropoff coordinates, server calculates ETA and upfront fare estimate using routing + surge' },
@@ -2335,6 +2336,7 @@ rides {
           id: 'uber-location-update-flow',
           title: 'Driver Location Update Pipeline',
           description: 'How 10M+ GPS updates per second flow through the system',
+          src: '/diagrams/uber/flow-location-update.png',
           steps: [
             { step: 1, label: 'GPS Capture', detail: 'Driver app captures GPS coordinates every 3-4 seconds with heading, speed, and accuracy' },
             { step: 2, label: 'Batch & Send', detail: 'Client batches 2-3 updates and sends via lightweight UDP-like protocol to reduce overhead' },
@@ -2385,28 +2387,28 @@ rides {
       algorithmApproaches: [
         {
           name: 'S2 Geometry / H3 Hexagonal Indexing',
-          diagramSrc: '/diagrams/uber/algo-s2-geometry.svg',
+          diagramSrc: '/diagrams/uber/algo-s2-geometry.png',
           description: 'S2 maps the Earth\'s sphere onto a unit cube and recursively subdivides each face into cells at 30 hierarchical levels. Level 13 cells (~1 km\u00b2) are used for driver indexing. H3 (Uber\'s choice) uses hexagonal cells which provide uniform distance from center to every edge — unlike square cells where corners are 41% farther than edge midpoints. For ride matching, the system queries the cell containing the pickup location plus all 6 adjacent hexagons, ensuring no nearby drivers are missed at cell boundaries.',
           pros: ['Uniform distances from center to edge (hexagons)', 'Hierarchical — zoom in/out by changing resolution level', 'Edge-neighbor queries are O(1) with precomputed adjacency', 'Used in production by Uber, DoorDash, and Lyft'],
           cons: ['More complex than geohash to implement', 'Hexagons don\'t tile perfectly (12 pentagons on sphere)', 'Library dependency required (H3, S2)']
         },
         {
           name: 'Hungarian Algorithm for Batch Matching',
-          diagramSrc: '/diagrams/uber/algo-hungarian.svg',
+          diagramSrc: '/diagrams/uber/algo-hungarian.png',
           description: 'During peak demand, Uber accumulates ride requests over a 2-second window and solves the assignment as a bipartite matching problem. The Hungarian algorithm finds the minimum-cost perfect matching in O(n\u00b3) time, where cost is the pickup ETA. For a window with 100 requests and 150 available drivers, it finds the globally optimal assignment that minimizes total wait time — 20-30% better than greedy nearest-driver.',
           pros: ['Globally optimal matching minimizes total wait time', '20-30% improvement over greedy nearest-driver', 'Well-understood algorithm with mature implementations'],
           cons: ['O(n\u00b3) complexity — impractical for batches > 500', 'Adds 2-second delay to all requests in batch', 'Cannot handle dynamic arrivals during computation']
         },
         {
           name: 'Contraction Hierarchies for ETA Computation',
-          diagramSrc: '/diagrams/uber/algo-contraction-hierarchies.svg',
+          diagramSrc: '/diagrams/uber/algo-contraction-hierarchies.png',
           description: 'Contraction Hierarchies pre-processes the road graph by iteratively removing low-importance nodes and adding shortcut edges. This creates a hierarchy where queries only explore upward from source and target, meeting in the middle. Pre-processing takes hours but produces a structure that answers shortest-path queries in microseconds — critical for 2,500 match requests/second at peak. Real-time traffic is overlaid by adjusting edge weights.',
           pros: ['Sub-millisecond query time after preprocessing', 'Handles millions of ETA requests per second', 'Well-suited for static road networks with dynamic weights', 'Used by Google Maps, Apple Maps, and Uber'],
           cons: ['Pre-processing takes hours for large road graphs', 'Dynamic edge weight updates are approximate', 'Memory-intensive (stores shortcut edges)']
         },
         {
           name: 'Consistent Hashing for Location Service Sharding',
-          diagramSrc: '/diagrams/uber/algo-consistent-hashing.svg',
+          diagramSrc: '/diagrams/uber/algo-consistent-hashing.png',
           description: 'With 10M+ active drivers, the location service shards writes across multiple Redis instances using consistent hashing. Each driver\'s cell ID maps to a point on a hash ring. When a Redis node is added or removed, only 1/N of keys re-map. Virtual nodes (150-200 per physical server) ensure even distribution. This enables horizontal scaling: add a Redis instance and only nearby cell IDs migrate.',
           pros: ['Minimal key redistribution when scaling (only 1/N keys move)', 'Even distribution with virtual nodes', 'No coordinator needed — clients compute shard locally'],
           cons: ['Hot spots still possible for popular cells (Times Square)', 'Virtual node management adds complexity', 'Requires client-side hash ring synchronization']
