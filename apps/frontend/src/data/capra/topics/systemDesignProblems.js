@@ -1939,7 +1939,6 @@ Why Cassandra wins for messages:
       basicImplementation: {
         title: 'Basic Implementation',
         description: 'Single chat server handling WebSocket connections and message routing. Suitable for prototyping but cannot scale beyond a single machine.',
-        svgTemplate: 'whatsapp',
         architecture: `
 ┌────────┐    ┌──────────────┐    ┌─────────────┐
 │ Client │◀══▶│  Chat Server │───▶│ Message DB  │
@@ -1964,7 +1963,6 @@ Why Cassandra wins for messages:
       advancedImplementation: {
         title: 'Distributed Chat System',
         description: 'Horizontally scalable architecture with 10,000+ chat servers, cross-server message routing via Kafka, persistent offline queues, and multi-region deployment for global low-latency messaging.',
-        svgTemplate: 'whatsappAdvanced',
         architecture: `
 ┌────────┐    ┌──────────────┐    ┌─────────────┐
 │ Client │◀══▶│   Gateway    │───▶│ Chat Server │
@@ -2000,6 +1998,7 @@ Why Cassandra wins for messages:
 
       createFlow: {
         title: 'Send Message Flow',
+        diagramSrc: '/diagrams/whatsapp/message-flow-online.svg',
         steps: [
           'Sender types message; client generates a unique messageId (UUID v4) for idempotency',
           'Client encrypts message content using the Double Ratchet session key (Signal Protocol)',
@@ -2381,6 +2380,7 @@ Why Cassandra wins for messages:
           id: 'send-message-flow',
           title: 'Send Message Flow (Both Online)',
           description: 'Complete flow when User A sends a message to User B and both are connected',
+          src: '/diagrams/whatsapp/flow-send-message.png',
           steps: [
             { step: 1, label: 'Encrypt & Send', detail: 'Client encrypts with Signal Protocol → WebSocket → Gateway 1' },
             { step: 2, label: 'Assign ID', detail: 'Gateway generates messageId + server timestamp' },
@@ -2397,6 +2397,7 @@ Why Cassandra wins for messages:
           id: 'offline-delivery-flow',
           title: 'Offline Message Delivery',
           description: 'Store-and-forward pattern when recipient is offline',
+          src: '/diagrams/whatsapp/flow-offline-delivery.png',
           steps: [
             { step: 1, label: 'Send Message', detail: 'Client → WebSocket → Gateway 1' },
             { step: 2, label: 'ACK ✓ Sent', detail: 'Gateway → Sender (single grey tick)' },
@@ -2413,6 +2414,7 @@ Why Cassandra wins for messages:
           id: 'group-message-flow',
           title: 'Group Message Fan-out',
           description: 'How a message is distributed to all group members (hybrid approach)',
+          src: '/diagrams/whatsapp/flow-group-fanout.png',
           steps: [
             { step: 1, label: 'Send to Group', detail: 'Sender → Gateway → Group Service' },
             { step: 2, label: 'Get Members', detail: 'Group Service returns member list + gateway mapping' },
