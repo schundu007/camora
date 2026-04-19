@@ -2157,29 +2157,50 @@ rides {
       discussionPoints: [
         {
           topic: 'ETA Calculation',
+          diagramSrc: '/diagrams/uber/discuss-eta-calculation.svg',
           points: [
-            'Historical travel times by road segment',
-            'Real-time traffic from driver locations',
-            'Machine learning model for predictions',
-            'Update ETA continuously during approach'
+            'Historical travel times by road segment (time-of-day adjusted)',
+            'Real-time traffic from active driver GPS fleet aggregation',
+            'Contraction Hierarchies for sub-millisecond route computation',
+            'Machine learning model (GBDT) trained on millions of historical trips',
+            'Update ETA continuously during approach (every 30 seconds)',
+            'Per-city models because traffic patterns differ fundamentally'
           ]
         },
         {
           topic: 'Surge Pricing',
+          diagramSrc: '/diagrams/uber/discuss-surge-pricing.svg',
           points: [
-            'Monitor supply (drivers) vs demand (requests)',
-            'Per-cell surge multiplier',
-            'Smooth transitions to avoid gaming',
-            'Cap surge at reasonable levels'
+            'Monitor supply (drivers) vs demand (requests) per S2 cell',
+            'Per-cell surge multiplier cached in Redis with 60s TTL',
+            'Rolling 5-minute average with fast ramp-up / slow decay',
+            'Geographic smoothing — neighboring cells influence each other',
+            'Cap surge at configurable maximum (some cities limit to 2-3x)',
+            'Lock multiplier at booking time so rider sees guaranteed price'
           ]
         },
         {
           topic: 'Dispatch Optimization',
+          diagramSrc: '/diagrams/uber/discuss-dispatch.svg',
           points: [
-            'Minimize total wait time across all requests',
-            'Consider driver heading (already driving toward pickup)',
-            'Balance driver utilization',
-            'Handle simultaneous requests'
+            'Minimize total wait time across all pending requests',
+            'Consider driver heading (already driving toward pickup is better)',
+            'Balance driver utilization and end-of-shift proximity',
+            'Greedy nearest for low demand, Hungarian algorithm for peak batching',
+            'Handle simultaneous requests with optimistic locking on driver state',
+            'UberPool: Vehicle Routing Problem with 25% detour constraint'
+          ]
+        },
+        {
+          topic: 'Safety & Compliance',
+          diagramSrc: '/diagrams/uber/discuss-safety.svg',
+          points: [
+            'Trip sharing with trusted contacts via live tracking URL',
+            'PIN verification to prevent wrong driver pickups',
+            'RideCheck: proactive safety check if trip stops unexpectedly',
+            'Unusual route detection alerts rider if driver deviates',
+            'Per-city regulatory config: surge caps, geofenced airport zones',
+            'GDPR data residency — EU user data stays in EU data centers'
           ]
         }
       ],
@@ -2353,6 +2374,96 @@ rides {
         { id: 'uber-capacity-estimation', title: 'Capacity Estimation', description: 'Back-of-envelope calculations for Uber scale', src: '/diagrams/uber/capacity-estimation.svg', type: 'estimation' },
         { id: 'uber-ride-request', title: 'Ride Request Flow', description: 'End-to-end flow from request to driver match', src: '/diagrams/uber/ride-request-flow.svg', type: 'flow' },
         { id: 'uber-location-pipeline', title: 'Location Update Pipeline', description: 'How GPS updates flow through Redis, Kafka, and analytics', src: '/diagrams/uber/location-pipeline.svg', type: 'flow' },
+      ],
+
+      algorithmApproaches: [
+        {
+          name: 'S2 Geometry / H3 Hexagonal Indexing',
+          diagramSrc: '/diagrams/uber/algo-s2-geometry.svg',
+          description: 'S2 maps the Earth\'s sphere onto a unit cube and recursively subdivides each face into cells at 30 hierarchical levels. Level 13 cells (~1 km\u00b2) are used for driver indexing. H3 (Uber\'s choice) uses hexagonal cells which provide uniform distance from center to every edge — unlike square cells where corners are 41% farther than edge midpoints. For ride matching, the system queries the cell containing the pickup location plus all 6 adjacent hexagons, ensuring no nearby drivers are missed at cell boundaries.',
+          pros: ['Uniform distances from center to edge (hexagons)', 'Hierarchical — zoom in/out by changing resolution level', 'Edge-neighbor queries are O(1) with precomputed adjacency', 'Used in production by Uber, DoorDash, and Lyft'],
+          cons: ['More complex than geohash to implement', 'Hexagons don\'t tile perfectly (12 pentagons on sphere)', 'Library dependency required (H3, S2)']
+        },
+        {
+          name: 'Hungarian Algorithm for Batch Matching',
+          diagramSrc: '/diagrams/uber/algo-hungarian.svg',
+          description: 'During peak demand, Uber accumulates ride requests over a 2-second window and solves the assignment as a bipartite matching problem. The Hungarian algorithm finds the minimum-cost perfect matching in O(n\u00b3) time, where cost is the pickup ETA. For a window with 100 requests and 150 available drivers, it finds the globally optimal assignment that minimizes total wait time — 20-30% better than greedy nearest-driver.',
+          pros: ['Globally optimal matching minimizes total wait time', '20-30% improvement over greedy nearest-driver', 'Well-understood algorithm with mature implementations'],
+          cons: ['O(n\u00b3) complexity — impractical for batches > 500', 'Adds 2-second delay to all requests in batch', 'Cannot handle dynamic arrivals during computation']
+        },
+        {
+          name: 'Contraction Hierarchies for ETA Computation',
+          diagramSrc: '/diagrams/uber/algo-contraction-hierarchies.svg',
+          description: 'Contraction Hierarchies pre-processes the road graph by iteratively removing low-importance nodes and adding shortcut edges. This creates a hierarchy where queries only explore upward from source and target, meeting in the middle. Pre-processing takes hours but produces a structure that answers shortest-path queries in microseconds — critical for 2,500 match requests/second at peak. Real-time traffic is overlaid by adjusting edge weights.',
+          pros: ['Sub-millisecond query time after preprocessing', 'Handles millions of ETA requests per second', 'Well-suited for static road networks with dynamic weights', 'Used by Google Maps, Apple Maps, and Uber'],
+          cons: ['Pre-processing takes hours for large road graphs', 'Dynamic edge weight updates are approximate', 'Memory-intensive (stores shortcut edges)']
+        },
+        {
+          name: 'Consistent Hashing for Location Service Sharding',
+          diagramSrc: '/diagrams/uber/algo-consistent-hashing.svg',
+          description: 'With 10M+ active drivers, the location service shards writes across multiple Redis instances using consistent hashing. Each driver\'s cell ID maps to a point on a hash ring. When a Redis node is added or removed, only 1/N of keys re-map. Virtual nodes (150-200 per physical server) ensure even distribution. This enables horizontal scaling: add a Redis instance and only nearby cell IDs migrate.',
+          pros: ['Minimal key redistribution when scaling (only 1/N keys move)', 'Even distribution with virtual nodes', 'No coordinator needed — clients compute shard locally'],
+          cons: ['Hot spots still possible for popular cells (Times Square)', 'Virtual node management adds complexity', 'Requires client-side hash ring synchronization']
+        },
+      ],
+
+      interviewFollowups: [
+        {
+          question: 'What happens when a location service node crashes with 100K active driver connections?',
+          answer: `When a node crashes, 100K+ drivers reconnect simultaneously to remaining nodes. Mitigation: exponential backoff with jitter (each driver waits random(0, 2^attempt * 100ms)). The load balancer detects the dead node within 10 seconds via health checks and redistributes its hash ring segments. During reconnection, drivers buffer GPS updates locally and replay them. Active rides continue using the rider's last-known driver location.`
+        },
+        {
+          question: 'How would you detect and prevent GPS spoofing by drivers?',
+          answer: `GPS spoofing detection uses multiple signals: (1) Impossible speed — if a driver moves 50km in 3 seconds, the update is rejected. (2) Teleportation — sudden location jump without intermediate points. (3) Device sensor cross-check — accelerometer should correlate with GPS movement. (4) Map matching — GPS trace should follow actual roads. (5) Behavioral patterns — ML model trained on known spoofing cases flags suspicious patterns. Confirmed spoofing leads to deactivation.`
+        },
+        {
+          question: 'How do you handle the "hot cell" problem when a concert ends and 50K people request rides?',
+          answer: `A single cell cannot handle 50K simultaneous requests. Solutions: (1) Cell splitting — dynamically subdivide the hot cell into 4-8 smaller cells. (2) Request queuing with estimated wait time shown to riders. (3) Expand matching radius to 10km+ to draw drivers from surrounding cells. (4) Pre-position drivers 15 minutes before event end using demand prediction integrated with event APIs. (5) Surge pricing naturally throttles demand, but cap at regulated maximum.`
+        },
+        {
+          question: 'How would you design Uber to work during natural disasters?',
+          answer: `Disaster mode: (1) Disable surge pricing (legally required in many jurisdictions during emergencies). (2) Simplify matching to nearest-driver-only. (3) SMS fallback for ride requests if internet is degraded. (4) Offline maps cached on driver devices. (5) Automatic shared rides to maximize evacuations per vehicle. (6) Priority lanes for emergency responders. Detect disaster conditions from anomalous patterns (100x demand spike + mass cancellations).`
+        },
+        {
+          question: 'How do you handle fare disputes when GPS drift inflates the route distance?',
+          answer: `Store raw GPS trace alongside the snap-to-road corrected route. If corrected distance > straight-line by 3x+, flag for automatic adjustment. Compare against historical trip data for the same origin-destination. Allow rider to report "incorrect route" — auto-refund the difference if GPS trace shows obvious drift. For cash rides, use estimated fare at booking as upper bound. Track dispute rates per driver; high rates trigger investigation.`
+        },
+        {
+          question: 'How would you implement a fair driver rating system?',
+          answer: `Naive averages suffer from selection bias. Solutions: (1) Bayesian average — new drivers start at city mean, regressing toward mean until 50+ ratings. (2) Recency weighting — last 100 trips matter more than historical average. (3) Contextual adjustment — a 4-star during rainstorm is better than average. (4) Two-sided feedback — require reason for ratings below 3 stars. (5) Separate trip-level factors: wait time, route, vehicle condition. (6) Grace period: don't deactivate during first 50 trips.`
+        },
+      ],
+
+      tips: [
+        'Lead with the geospatial challenge: finding nearby drivers is the core problem — discuss S2/H3 cells before anything else',
+        'Emphasize the write-heavy asymmetry: 10M+ location writes/sec vs ~500 match reads/sec',
+        'The cell-based architecture is your key insight — it enables geographic sharding and fault isolation',
+        'Always mention the batch matching optimization during peak hours — it shows depth beyond greedy approach',
+        'Discuss surge pricing as a distributed computation: how do neighboring cells coordinate smoothing?',
+        'ETA accuracy is a differentiator — mention Contraction Hierarchies and real-time traffic from driver fleet',
+        'Safety features (trip sharing, RideCheck, PIN) show you think about product requirements beyond infrastructure',
+        'The cold start problem for new cities is a great discussion point — bootstrapping supply and demand',
+        'Mention graceful degradation: when matching is down, active rides must continue unaffected',
+        'End with tradeoffs: greedy vs batch matching, WebSocket vs polling, centralized vs cell-based architecture'
+      ],
+
+      charts: [
+        {
+          id: 'uber-demand-pattern',
+          title: 'Daily Ride Demand Pattern (NYC)',
+          type: 'bar',
+          data: [
+            { label: '6-9 AM', value: 3.2, color: '#f97316' },
+            { label: '9-12 PM', value: 1.8, color: '#eab308' },
+            { label: '12-3 PM', value: 2.1, color: '#eab308' },
+            { label: '3-6 PM', value: 2.5, color: '#f97316' },
+            { label: '6-9 PM', value: 4.8, color: '#ef4444' },
+            { label: '9-12 AM', value: 3.5, color: '#f97316' },
+            { label: '12-6 AM', value: 1.2, color: '#22c55e' },
+          ],
+          unit: 'M rides',
+          description: 'Peak demand occurs 6-9 PM (4.8M rides), requiring 3x average matching capacity. Morning rush 6-9 AM creates the second peak. Late night demand drops but surge pricing is highest due to limited supply.'
+        },
       ],
     },
     {
@@ -4930,7 +5041,6 @@ Phase 2 -- Online ranking (runs at request time, <100ms budget):
         { id: 'problem-def', title: 'Problem Definition', description: 'Scope boundaries — in-scope features vs out-of-scope for the Instagram design interview', src: '/diagrams/instagram/problem-definition.svg', type: 'overview' },
         { id: 'capacity-est', title: 'Back-of-Envelope Estimates', description: 'Upload QPS, feed read QPS, storage growth (600 TB/day), CDN egress, and like throughput calculations', src: '/diagrams/instagram/capacity-estimation.svg', type: 'estimation' },
         { id: 'upload-flow', title: 'Photo Upload Pipeline', description: 'End-to-end flow: pre-signed URL, S3 upload, multi-resolution processing, moderation, and CDN distribution', src: '/diagrams/instagram/flow-photo-upload.png', type: 'flow' },
-        { id: 'ui-mockup', title: 'Instagram Feed Interface', description: 'The product we are designing — feed with ranked posts, story tray, like/comment interactions, and explore', src: '/diagrams/instagram/instagram-ui-mockup.svg', type: 'ui' },
       ],
       // ── Charts ──
       charts: [
@@ -6837,8 +6947,6 @@ Stage 2 -- Ranking (online, at request time, <200ms):
       staticDiagrams: [
         { id: 'problem-def', title: 'Problem Definition', description: 'Scope boundaries -- in-scope essentials vs out-of-scope features for the Netflix system design interview', src: '/diagrams/netflix/problem-definition.svg', type: 'overview' },
         { id: 'capacity-est', title: 'Back-of-Envelope Estimates', description: 'Traffic, bandwidth, storage, and CDN capacity calculations with step-by-step math', src: '/diagrams/netflix/capacity-estimation.svg', type: 'estimation' },
-        { id: 'playback-flow', title: 'Video Playback Flow', description: 'Complete end-to-end flow: user presses play through control plane to CDN segment delivery', src: '/diagrams/netflix/playback-flow.svg', type: 'flow' },
-        { id: 'ui-mockup', title: 'Netflix Browse Interface', description: 'The product we are designing -- browse UI with personalized rows, thumbnails, and continue watching', src: '/diagrams/netflix/netflix-ui-mockup.svg', type: 'ui' },
       ],
       // -- Charts --
       charts: [
