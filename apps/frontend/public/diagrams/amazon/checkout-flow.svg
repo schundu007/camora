@@ -1,0 +1,127 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 450" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <filter id="s"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.12"/></filter>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#334155"/></marker>
+    <marker id="arrowBlue" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#2563eb"/></marker>
+    <marker id="arrowGreen" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#16a34a"/></marker>
+    <marker id="arrowOrange" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#f97316"/></marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="450" fill="#fafbfc" rx="16"/>
+
+  <!-- Title -->
+  <text x="600" y="36" text-anchor="middle" fill="#1e293b" font-size="20" font-weight="700">Amazon Checkout Flow (Saga Pattern)</text>
+  <text x="600" y="56" text-anchor="middle" fill="#64748b" font-size="12">End-to-end order placement from cart validation through fulfillment</text>
+
+  <!-- Client -->
+  <rect x="20" y="120" width="120" height="100" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="20" y="120" width="120" height="30" rx="10 10 0 0" fill="#f97316"/>
+  <text x="80" y="140" text-anchor="middle" fill="white" font-size="11" font-weight="700">Client</text>
+  <text x="80" y="168" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Web / Mobile</text>
+  <text x="80" y="185" text-anchor="middle" fill="#64748b" font-size="9">Checkout page</text>
+  <text x="80" y="200" text-anchor="middle" fill="#64748b" font-size="9">Cart items</text>
+
+  <!-- Cart Service -->
+  <rect x="180" y="120" width="120" height="100" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="180" y="120" width="120" height="30" rx="10 10 0 0" fill="#2563eb"/>
+  <text x="240" y="140" text-anchor="middle" fill="white" font-size="11" font-weight="700">Cart Service</text>
+  <text x="240" y="168" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Validate cart</text>
+  <text x="240" y="185" text-anchor="middle" fill="#64748b" font-size="9">Price verification</text>
+  <text x="240" y="200" text-anchor="middle" fill="#64748b" font-size="9">Item availability</text>
+
+  <!-- Inventory Service -->
+  <rect x="340" y="120" width="120" height="100" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="340" y="120" width="120" height="30" rx="10 10 0 0" fill="#2563eb"/>
+  <text x="400" y="140" text-anchor="middle" fill="white" font-size="11" font-weight="700">Inventory</text>
+  <text x="400" y="168" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Reserve stock</text>
+  <text x="400" y="185" text-anchor="middle" fill="#64748b" font-size="9">Redis DECR atomic</text>
+  <text x="400" y="200" text-anchor="middle" fill="#64748b" font-size="9">10-min hold TTL</text>
+
+  <!-- Payment Gateway -->
+  <rect x="500" y="120" width="120" height="100" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="500" y="120" width="120" height="30" rx="10 10 0 0" fill="#2563eb"/>
+  <text x="560" y="140" text-anchor="middle" fill="white" font-size="11" font-weight="700">Payment</text>
+  <text x="560" y="168" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Authorize card</text>
+  <text x="560" y="185" text-anchor="middle" fill="#64748b" font-size="9">Hold, no capture</text>
+  <text x="560" y="200" text-anchor="middle" fill="#64748b" font-size="9">Idempotency key</text>
+
+  <!-- Order Service -->
+  <rect x="660" y="120" width="120" height="100" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="660" y="120" width="120" height="30" rx="10 10 0 0" fill="#2563eb"/>
+  <text x="720" y="140" text-anchor="middle" fill="white" font-size="11" font-weight="700">Order Service</text>
+  <text x="720" y="168" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Create order</text>
+  <text x="720" y="185" text-anchor="middle" fill="#64748b" font-size="9">PostgreSQL ACID</text>
+  <text x="720" y="200" text-anchor="middle" fill="#64748b" font-size="9">order + items</text>
+
+  <!-- Confirmation -->
+  <rect x="820" y="120" width="120" height="100" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="820" y="120" width="120" height="30" rx="10 10 0 0" fill="#16a34a"/>
+  <text x="880" y="140" text-anchor="middle" fill="white" font-size="11" font-weight="700">Confirmation</text>
+  <text x="880" y="168" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Order confirmed</text>
+  <text x="880" y="185" text-anchor="middle" fill="#64748b" font-size="9">Email receipt</text>
+  <text x="880" y="200" text-anchor="middle" fill="#64748b" font-size="9">Estimated delivery</text>
+
+  <!-- Fulfillment -->
+  <rect x="980" y="120" width="120" height="100" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="980" y="120" width="120" height="30" rx="10 10 0 0" fill="#f97316"/>
+  <text x="1040" y="140" text-anchor="middle" fill="white" font-size="11" font-weight="700">Fulfillment</text>
+  <text x="1040" y="168" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Pick + Pack</text>
+  <text x="1040" y="185" text-anchor="middle" fill="#64748b" font-size="9">Warehouse assign</text>
+  <text x="1040" y="200" text-anchor="middle" fill="#64748b" font-size="9">Kafka event</text>
+
+  <!-- Kafka Queue (below) -->
+  <rect x="500" y="270" width="200" height="55" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="500" y="270" width="200" height="22" rx="10 10 0 0" fill="#f97316"/>
+  <text x="600" y="286" text-anchor="middle" fill="white" font-size="10" font-weight="700">Kafka Event Bus</text>
+  <text x="600" y="308" text-anchor="middle" fill="#64748b" font-size="9">order.confirmed triggers fulfillment + analytics</text>
+
+  <!-- Arrows -->
+  <!-- 1. Client → Cart -->
+  <line x1="140" y1="160" x2="176" y2="160" stroke="#2563eb" stroke-width="2" marker-end="url(#arrowBlue)"/>
+  <rect x="141" y="142" width="32" height="15" rx="3" fill="#2563eb"/>
+  <text x="157" y="153" text-anchor="middle" fill="white" font-size="8" font-weight="600">1</text>
+
+  <!-- 2. Cart → Inventory -->
+  <line x1="300" y1="160" x2="336" y2="160" stroke="#2563eb" stroke-width="2" marker-end="url(#arrowBlue)"/>
+  <rect x="301" y="142" width="32" height="15" rx="3" fill="#2563eb"/>
+  <text x="317" y="153" text-anchor="middle" fill="white" font-size="8" font-weight="600">2</text>
+
+  <!-- 3. Inventory → Payment -->
+  <line x1="460" y1="160" x2="496" y2="160" stroke="#2563eb" stroke-width="2" marker-end="url(#arrowBlue)"/>
+  <rect x="461" y="142" width="32" height="15" rx="3" fill="#2563eb"/>
+  <text x="477" y="153" text-anchor="middle" fill="white" font-size="8" font-weight="600">3</text>
+
+  <!-- 4. Payment → Order -->
+  <line x1="620" y1="160" x2="656" y2="160" stroke="#2563eb" stroke-width="2" marker-end="url(#arrowBlue)"/>
+  <rect x="621" y="142" width="32" height="15" rx="3" fill="#2563eb"/>
+  <text x="637" y="153" text-anchor="middle" fill="white" font-size="8" font-weight="600">4</text>
+
+  <!-- 5. Order → Confirmation -->
+  <line x1="780" y1="160" x2="816" y2="160" stroke="#16a34a" stroke-width="2" marker-end="url(#arrowGreen)"/>
+  <rect x="781" y="142" width="32" height="15" rx="3" fill="#16a34a"/>
+  <text x="797" y="153" text-anchor="middle" fill="white" font-size="8" font-weight="600">5</text>
+
+  <!-- 6. Confirmation → Fulfillment -->
+  <line x1="940" y1="160" x2="976" y2="160" stroke="#f97316" stroke-width="2" marker-end="url(#arrowOrange)"/>
+  <rect x="941" y="142" width="32" height="15" rx="3" fill="#f97316"/>
+  <text x="957" y="153" text-anchor="middle" fill="white" font-size="8" font-weight="600">6</text>
+
+  <!-- 7. Order → Kafka (publish event) -->
+  <line x1="720" y1="220" x2="650" y2="268" stroke="#f97316" stroke-width="1.5" stroke-dasharray="6,3" marker-end="url(#arrowOrange)"/>
+  <text x="700" y="248" fill="#f97316" font-size="9">7 Publish</text>
+
+  <!-- Legend -->
+  <rect x="30" y="360" width="1140" height="65" rx="10" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="55" y="382" fill="#1e293b" font-size="11" font-weight="700">Flow Steps:</text>
+  <rect x="55" y="392" width="10" height="10" rx="2" fill="#2563eb"/>
+  <text x="70" y="401" fill="#475569" font-size="9">1 Checkout request from client app</text>
+  <text x="70" y="413" fill="#475569" font-size="9">2 Validate cart items, recalculate prices</text>
+  <rect x="330" y="392" width="10" height="10" rx="2" fill="#2563eb"/>
+  <text x="345" y="401" fill="#475569" font-size="9">3 Reserve inventory via atomic Redis DECR</text>
+  <text x="345" y="413" fill="#475569" font-size="9">4 Authorize payment (hold, no capture)</text>
+  <rect x="620" y="392" width="10" height="10" rx="2" fill="#16a34a"/>
+  <text x="635" y="401" fill="#475569" font-size="9">5 Create order in PostgreSQL, send confirmation</text>
+  <rect x="620" y="406" width="10" height="10" rx="2" fill="#f97316"/>
+  <text x="635" y="415" fill="#475569" font-size="9">6-7 Trigger fulfillment via Kafka event bus</text>
+</svg>
