@@ -1,0 +1,122 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <filter id="s"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.12"/></filter>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#334155"/></marker>
+  </defs>
+
+  <rect width="1200" height="400" fill="white" rx="12"/>
+
+  <text x="600" y="35" text-anchor="middle" fill="#1e293b" font-size="20" font-weight="700">Payment Gateway Transaction Flow</text>
+  <text x="600" y="55" text-anchor="middle" fill="#64748b" font-size="12">Merchant API call through tokenization, routing, authorization, settlement, and webhook</text>
+
+  <!-- 1. Merchant API -->
+  <rect x="15" y="110" width="130" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="15" y="110" width="130" height="30" rx="10 10 0 0" fill="#2563eb"/>
+  <text x="80" y="130" text-anchor="middle" fill="white" font-size="11" font-weight="700">Merchant API</text>
+  <text x="80" y="158" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Checkout SDK</text>
+  <text x="80" y="175" text-anchor="middle" fill="#64748b" font-size="9">POST /charges</text>
+  <text x="80" y="192" text-anchor="middle" fill="#64748b" font-size="9">API key + amount</text>
+  <text x="80" y="215" text-anchor="middle" fill="#94a3b8" font-size="8">Idempotency key</text>
+
+  <!-- Arrow 1→2 -->
+  <line x1="145" y1="170" x2="178" y2="170" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="147" y="150" width="30" height="16" rx="4" fill="#2563eb"/>
+  <text x="162" y="161" text-anchor="middle" fill="white" font-size="8" font-weight="600">1</text>
+
+  <!-- 2. Tokenize -->
+  <rect x="188" y="110" width="130" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="188" y="110" width="130" height="30" rx="10 10 0 0" fill="#ef4444"/>
+  <text x="253" y="130" text-anchor="middle" fill="white" font-size="11" font-weight="700">Tokenize</text>
+  <text x="253" y="158" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Vault Service</text>
+  <text x="253" y="175" text-anchor="middle" fill="#64748b" font-size="9">PCI-DSS compliant</text>
+  <text x="253" y="192" text-anchor="middle" fill="#64748b" font-size="9">Card → token</text>
+  <text x="253" y="215" text-anchor="middle" fill="#94a3b8" font-size="8">AES-256 at rest</text>
+
+  <!-- Arrow 2→3 -->
+  <line x1="318" y1="170" x2="351" y2="170" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="320" y="150" width="30" height="16" rx="4" fill="#ef4444"/>
+  <text x="335" y="161" text-anchor="middle" fill="white" font-size="8" font-weight="600">2</text>
+
+  <!-- 3. Route to Processor -->
+  <rect x="361" y="110" width="140" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="361" y="110" width="140" height="30" rx="10 10 0 0" fill="#7c3aed"/>
+  <text x="431" y="130" text-anchor="middle" fill="white" font-size="10" font-weight="700">Route to Processor</text>
+  <text x="431" y="158" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Smart Router</text>
+  <text x="431" y="175" text-anchor="middle" fill="#64748b" font-size="9">Card network detect</text>
+  <text x="431" y="192" text-anchor="middle" fill="#64748b" font-size="9">Best rate selection</text>
+  <text x="431" y="215" text-anchor="middle" fill="#94a3b8" font-size="8">Failover routing</text>
+
+  <!-- Arrow 3→4 -->
+  <line x1="501" y1="170" x2="534" y2="170" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="503" y="150" width="30" height="16" rx="4" fill="#7c3aed"/>
+  <text x="518" y="161" text-anchor="middle" fill="white" font-size="8" font-weight="600">3</text>
+
+  <!-- 4. Auth -->
+  <rect x="544" y="110" width="130" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="544" y="110" width="130" height="30" rx="10 10 0 0" fill="#f97316"/>
+  <text x="609" y="130" text-anchor="middle" fill="white" font-size="11" font-weight="700">Authorize</text>
+  <text x="609" y="158" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Issuing Bank</text>
+  <text x="609" y="175" text-anchor="middle" fill="#64748b" font-size="9">Balance check</text>
+  <text x="609" y="192" text-anchor="middle" fill="#64748b" font-size="9">Fraud screening</text>
+  <text x="609" y="215" text-anchor="middle" fill="#94a3b8" font-size="8">Auth code returned</text>
+
+  <!-- Arrow 4→5 -->
+  <line x1="674" y1="170" x2="707" y2="170" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="676" y="150" width="30" height="16" rx="4" fill="#f97316"/>
+  <text x="691" y="161" text-anchor="middle" fill="white" font-size="8" font-weight="600">4</text>
+
+  <!-- 5. Capture -->
+  <rect x="717" y="110" width="130" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="717" y="110" width="130" height="30" rx="10 10 0 0" fill="#16a34a"/>
+  <text x="782" y="130" text-anchor="middle" fill="white" font-size="11" font-weight="700">Capture</text>
+  <text x="782" y="158" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Settlement Queue</text>
+  <text x="782" y="175" text-anchor="middle" fill="#64748b" font-size="9">Debit confirmed</text>
+  <text x="782" y="192" text-anchor="middle" fill="#64748b" font-size="9">Auto or manual</text>
+  <text x="782" y="215" text-anchor="middle" fill="#94a3b8" font-size="8">7-day auth window</text>
+
+  <!-- Arrow 5→6 -->
+  <line x1="847" y1="170" x2="880" y2="170" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="849" y="150" width="30" height="16" rx="4" fill="#16a34a"/>
+  <text x="864" y="161" text-anchor="middle" fill="white" font-size="8" font-weight="600">5</text>
+
+  <!-- 6. Settle -->
+  <rect x="890" y="110" width="130" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="890" y="110" width="130" height="30" rx="10 10 0 0" fill="#ec4899"/>
+  <text x="955" y="130" text-anchor="middle" fill="white" font-size="11" font-weight="700">Settle</text>
+  <text x="955" y="158" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Batch Settlement</text>
+  <text x="955" y="175" text-anchor="middle" fill="#64748b" font-size="9">Net funds transfer</text>
+  <text x="955" y="192" text-anchor="middle" fill="#64748b" font-size="9">T+2 payout cycle</text>
+  <text x="955" y="215" text-anchor="middle" fill="#94a3b8" font-size="8">Reconciliation</text>
+
+  <!-- Arrow 6→7 -->
+  <line x1="1020" y1="170" x2="1043" y2="170" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="1022" y="150" width="30" height="16" rx="4" fill="#ec4899"/>
+  <text x="1037" y="161" text-anchor="middle" fill="white" font-size="8" font-weight="600">6</text>
+
+  <!-- 7. Webhook -->
+  <rect x="1053" y="110" width="130" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="1053" y="110" width="130" height="30" rx="10 10 0 0" fill="#0891b2"/>
+  <text x="1118" y="130" text-anchor="middle" fill="white" font-size="11" font-weight="700">Webhook</text>
+  <text x="1118" y="158" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Event Notify</text>
+  <text x="1118" y="175" text-anchor="middle" fill="#64748b" font-size="9">charge.succeeded</text>
+  <text x="1118" y="192" text-anchor="middle" fill="#64748b" font-size="9">HMAC signature</text>
+  <text x="1118" y="215" text-anchor="middle" fill="#94a3b8" font-size="8">Retry with backoff</text>
+
+  <!-- Legend -->
+  <rect x="30" y="280" width="1140" height="100" rx="10" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="60" y="305" fill="#1e293b" font-size="12" font-weight="700">Flow Steps</text>
+
+  <rect x="60" y="318" width="10" height="10" rx="2" fill="#2563eb"/>
+  <text x="76" y="328" fill="#475569" font-size="10">1. Merchant sends charge request via API with idempotency key</text>
+  <rect x="60" y="336" width="10" height="10" rx="2" fill="#ef4444"/>
+  <text x="76" y="346" fill="#475569" font-size="10">2. Card data tokenized in PCI-DSS vault, stored encrypted at rest</text>
+  <rect x="60" y="354" width="10" height="10" rx="2" fill="#7c3aed"/>
+  <text x="76" y="364" fill="#475569" font-size="10">3. Smart router selects optimal processor by card network and rate</text>
+
+  <rect x="600" y="318" width="10" height="10" rx="2" fill="#f97316"/>
+  <text x="616" y="328" fill="#475569" font-size="10">4. Issuing bank authorizes after balance check and fraud screening</text>
+  <rect x="600" y="336" width="10" height="10" rx="2" fill="#16a34a"/>
+  <text x="616" y="346" fill="#475569" font-size="10">5. Capture confirms debit, queued for settlement batch</text>
+  <rect x="600" y="354" width="10" height="10" rx="2" fill="#ec4899"/>
+  <text x="616" y="364" fill="#475569" font-size="10">6-7. Funds settle T+2, webhook fires charge.succeeded to merchant</text>
+</svg>

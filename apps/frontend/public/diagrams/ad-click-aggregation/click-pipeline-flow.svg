@@ -1,0 +1,122 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <filter id="s"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.12"/></filter>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#334155"/></marker>
+  </defs>
+
+  <rect width="1200" height="400" fill="white" rx="12"/>
+
+  <text x="600" y="35" text-anchor="middle" fill="#1e293b" font-size="20" font-weight="700">Ad Click Aggregation Pipeline Flow</text>
+  <text x="600" y="55" text-anchor="middle" fill="#64748b" font-size="12">Click event through deduplication, fraud detection, and Flink aggregation to dashboard</text>
+
+  <!-- 1. User Clicks Ad -->
+  <rect x="15" y="110" width="130" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="15" y="110" width="130" height="30" rx="10 10 0 0" fill="#f97316"/>
+  <text x="80" y="130" text-anchor="middle" fill="white" font-size="11" font-weight="700">User Clicks Ad</text>
+  <text x="80" y="158" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Ad SDK</text>
+  <text x="80" y="175" text-anchor="middle" fill="#64748b" font-size="9">Click event + context</text>
+  <text x="80" y="192" text-anchor="middle" fill="#64748b" font-size="9">Device fingerprint</text>
+  <text x="80" y="215" text-anchor="middle" fill="#94a3b8" font-size="8">Redirect URL</text>
+
+  <!-- Arrow 1→2 -->
+  <line x1="145" y1="170" x2="178" y2="170" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="147" y="150" width="30" height="16" rx="4" fill="#f97316"/>
+  <text x="162" y="161" text-anchor="middle" fill="white" font-size="8" font-weight="600">1</text>
+
+  <!-- 2. Kafka -->
+  <rect x="188" y="110" width="120" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="188" y="110" width="120" height="30" rx="10 10 0 0" fill="#2563eb"/>
+  <text x="248" y="130" text-anchor="middle" fill="white" font-size="11" font-weight="700">Kafka</text>
+  <text x="248" y="158" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Click Stream</text>
+  <text x="248" y="175" text-anchor="middle" fill="#64748b" font-size="9">Partitioned by ad_id</text>
+  <text x="248" y="192" text-anchor="middle" fill="#64748b" font-size="9">Exactly-once</text>
+  <text x="248" y="215" text-anchor="middle" fill="#94a3b8" font-size="8">High throughput</text>
+
+  <!-- Arrow 2→3 -->
+  <line x1="308" y1="170" x2="341" y2="170" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="310" y="150" width="30" height="16" rx="4" fill="#2563eb"/>
+  <text x="325" y="161" text-anchor="middle" fill="white" font-size="8" font-weight="600">2</text>
+
+  <!-- 3. Dedup (Redis) -->
+  <rect x="351" y="110" width="130" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="351" y="110" width="130" height="30" rx="10 10 0 0" fill="#ef4444"/>
+  <text x="416" y="130" text-anchor="middle" fill="white" font-size="11" font-weight="700">Dedup (Redis)</text>
+  <text x="416" y="158" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Click Dedup</text>
+  <text x="416" y="175" text-anchor="middle" fill="#64748b" font-size="9">click_id SETNX</text>
+  <text x="416" y="192" text-anchor="middle" fill="#64748b" font-size="9">TTL 24h window</text>
+  <text x="416" y="215" text-anchor="middle" fill="#94a3b8" font-size="8">Drop duplicates</text>
+
+  <!-- Arrow 3→4 -->
+  <line x1="481" y1="170" x2="514" y2="170" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="483" y="150" width="30" height="16" rx="4" fill="#ef4444"/>
+  <text x="498" y="161" text-anchor="middle" fill="white" font-size="8" font-weight="600">3</text>
+
+  <!-- 4. Fraud Check -->
+  <rect x="524" y="110" width="130" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="524" y="110" width="130" height="30" rx="10 10 0 0" fill="#7c3aed"/>
+  <text x="589" y="130" text-anchor="middle" fill="white" font-size="11" font-weight="700">Fraud Check</text>
+  <text x="589" y="158" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">ML Fraud Model</text>
+  <text x="589" y="175" text-anchor="middle" fill="#64748b" font-size="9">Bot detection</text>
+  <text x="589" y="192" text-anchor="middle" fill="#64748b" font-size="9">Click-farm patterns</text>
+  <text x="589" y="215" text-anchor="middle" fill="#94a3b8" font-size="8">Flag suspicious</text>
+
+  <!-- Arrow 4→5 -->
+  <line x1="654" y1="170" x2="687" y2="170" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="656" y="150" width="30" height="16" rx="4" fill="#7c3aed"/>
+  <text x="671" y="161" text-anchor="middle" fill="white" font-size="8" font-weight="600">4</text>
+
+  <!-- 5. Flink Aggregate -->
+  <rect x="697" y="110" width="140" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="697" y="110" width="140" height="30" rx="10 10 0 0" fill="#ec4899"/>
+  <text x="767" y="130" text-anchor="middle" fill="white" font-size="10" font-weight="700">Flink Aggregate</text>
+  <text x="767" y="158" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Stream Processor</text>
+  <text x="767" y="175" text-anchor="middle" fill="#64748b" font-size="9">Tumbling windows</text>
+  <text x="767" y="192" text-anchor="middle" fill="#64748b" font-size="9">Count per ad + min</text>
+  <text x="767" y="215" text-anchor="middle" fill="#94a3b8" font-size="8">Checkpointed state</text>
+
+  <!-- Arrow 5→6 -->
+  <line x1="837" y1="170" x2="870" y2="170" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="839" y="150" width="30" height="16" rx="4" fill="#ec4899"/>
+  <text x="854" y="161" text-anchor="middle" fill="white" font-size="8" font-weight="600">5</text>
+
+  <!-- 6. Write OLAP -->
+  <rect x="880" y="110" width="130" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="880" y="110" width="130" height="30" rx="10 10 0 0" fill="#0891b2"/>
+  <text x="945" y="130" text-anchor="middle" fill="white" font-size="11" font-weight="700">Write OLAP</text>
+  <text x="945" y="158" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">ClickHouse</text>
+  <text x="945" y="175" text-anchor="middle" fill="#64748b" font-size="9">Columnar storage</text>
+  <text x="945" y="192" text-anchor="middle" fill="#64748b" font-size="9">Pre-aggregated</text>
+  <text x="945" y="215" text-anchor="middle" fill="#94a3b8" font-size="8">Batch insert</text>
+
+  <!-- Arrow 6→7 -->
+  <line x1="1010" y1="170" x2="1043" y2="170" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="1012" y="150" width="30" height="16" rx="4" fill="#0891b2"/>
+  <text x="1027" y="161" text-anchor="middle" fill="white" font-size="8" font-weight="600">6</text>
+
+  <!-- 7. Dashboard -->
+  <rect x="1053" y="110" width="130" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="1053" y="110" width="130" height="30" rx="10 10 0 0" fill="#16a34a"/>
+  <text x="1118" y="130" text-anchor="middle" fill="white" font-size="11" font-weight="700">Dashboard</text>
+  <text x="1118" y="158" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Advertiser UI</text>
+  <text x="1118" y="175" text-anchor="middle" fill="#64748b" font-size="9">Real-time metrics</text>
+  <text x="1118" y="192" text-anchor="middle" fill="#64748b" font-size="9">CTR, spend, CPC</text>
+  <text x="1118" y="215" text-anchor="middle" fill="#94a3b8" font-size="8">Auto-refresh</text>
+
+  <!-- Legend -->
+  <rect x="30" y="280" width="1140" height="100" rx="10" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="60" y="305" fill="#1e293b" font-size="12" font-weight="700">Flow Steps</text>
+
+  <rect x="60" y="318" width="10" height="10" rx="2" fill="#f97316"/>
+  <text x="76" y="328" fill="#475569" font-size="10">1. User clicks ad, SDK captures click event with device fingerprint</text>
+  <rect x="60" y="336" width="10" height="10" rx="2" fill="#2563eb"/>
+  <text x="76" y="346" fill="#475569" font-size="10">2. Click streamed to Kafka partitioned by ad_id (exactly-once)</text>
+  <rect x="60" y="354" width="10" height="10" rx="2" fill="#ef4444"/>
+  <text x="76" y="364" fill="#475569" font-size="10">3. Redis SETNX deduplicates clicks within 24h window</text>
+
+  <rect x="600" y="318" width="10" height="10" rx="2" fill="#7c3aed"/>
+  <text x="616" y="328" fill="#475569" font-size="10">4. ML model detects bot traffic and click-farm fraud patterns</text>
+  <rect x="600" y="336" width="10" height="10" rx="2" fill="#ec4899"/>
+  <text x="616" y="346" fill="#475569" font-size="10">5. Flink aggregates clicks per ad in tumbling time windows</text>
+  <rect x="600" y="354" width="10" height="10" rx="2" fill="#0891b2"/>
+  <text x="616" y="364" fill="#475569" font-size="10">6-7. Aggregated data written to ClickHouse, served to advertiser dashboard</text>
+</svg>

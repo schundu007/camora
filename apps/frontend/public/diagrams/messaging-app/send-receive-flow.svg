@@ -1,0 +1,122 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <filter id="s"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.12"/></filter>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#334155"/></marker>
+  </defs>
+
+  <rect width="1200" height="400" fill="white" rx="12"/>
+
+  <text x="600" y="35" text-anchor="middle" fill="#1e293b" font-size="20" font-weight="700">Messaging App Send/Receive Flow</text>
+  <text x="600" y="55" text-anchor="middle" fill="#64748b" font-size="12">Encrypted message through WebSocket gateway, queue delivery, ACK, and status update</text>
+
+  <!-- 1. Encrypt -->
+  <rect x="15" y="110" width="130" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="15" y="110" width="130" height="30" rx="10 10 0 0" fill="#ef4444"/>
+  <text x="80" y="130" text-anchor="middle" fill="white" font-size="11" font-weight="700">Encrypt</text>
+  <text x="80" y="158" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Client E2EE</text>
+  <text x="80" y="175" text-anchor="middle" fill="#64748b" font-size="9">Signal Protocol</text>
+  <text x="80" y="192" text-anchor="middle" fill="#64748b" font-size="9">Double ratchet</text>
+  <text x="80" y="215" text-anchor="middle" fill="#94a3b8" font-size="8">Pre-key bundles</text>
+
+  <!-- Arrow 1→2 -->
+  <line x1="145" y1="170" x2="178" y2="170" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="147" y="150" width="30" height="16" rx="4" fill="#ef4444"/>
+  <text x="162" y="161" text-anchor="middle" fill="white" font-size="8" font-weight="600">1</text>
+
+  <!-- 2. WebSocket -->
+  <rect x="188" y="110" width="130" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="188" y="110" width="130" height="30" rx="10 10 0 0" fill="#2563eb"/>
+  <text x="253" y="130" text-anchor="middle" fill="white" font-size="11" font-weight="700">WebSocket</text>
+  <text x="253" y="158" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Persistent Conn</text>
+  <text x="253" y="175" text-anchor="middle" fill="#64748b" font-size="9">TLS 1.3 transport</text>
+  <text x="253" y="192" text-anchor="middle" fill="#64748b" font-size="9">Heartbeat keepalive</text>
+  <text x="253" y="215" text-anchor="middle" fill="#94a3b8" font-size="8">Auto-reconnect</text>
+
+  <!-- Arrow 2→3 -->
+  <line x1="318" y1="170" x2="351" y2="170" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="320" y="150" width="30" height="16" rx="4" fill="#2563eb"/>
+  <text x="335" y="161" text-anchor="middle" fill="white" font-size="8" font-weight="600">2</text>
+
+  <!-- 3. Gateway -->
+  <rect x="361" y="110" width="130" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="361" y="110" width="130" height="30" rx="10 10 0 0" fill="#7c3aed"/>
+  <text x="426" y="130" text-anchor="middle" fill="white" font-size="11" font-weight="700">Gateway</text>
+  <text x="426" y="158" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Chat Gateway</text>
+  <text x="426" y="175" text-anchor="middle" fill="#64748b" font-size="9">Session routing</text>
+  <text x="426" y="192" text-anchor="middle" fill="#64748b" font-size="9">Presence tracking</text>
+  <text x="426" y="215" text-anchor="middle" fill="#94a3b8" font-size="8">Connection registry</text>
+
+  <!-- Arrow 3→4 -->
+  <line x1="491" y1="170" x2="524" y2="170" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="493" y="150" width="30" height="16" rx="4" fill="#7c3aed"/>
+  <text x="508" y="161" text-anchor="middle" fill="white" font-size="8" font-weight="600">3</text>
+
+  <!-- 4. Queue -->
+  <rect x="534" y="110" width="130" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="534" y="110" width="130" height="30" rx="10 10 0 0" fill="#f97316"/>
+  <text x="599" y="130" text-anchor="middle" fill="white" font-size="11" font-weight="700">Queue</text>
+  <text x="599" y="158" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Message Queue</text>
+  <text x="599" y="175" text-anchor="middle" fill="#64748b" font-size="9">Per-user inbox</text>
+  <text x="599" y="192" text-anchor="middle" fill="#64748b" font-size="9">Persist if offline</text>
+  <text x="599" y="215" text-anchor="middle" fill="#94a3b8" font-size="8">Kafka / SQS</text>
+
+  <!-- Arrow 4→5 -->
+  <line x1="664" y1="170" x2="697" y2="170" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="666" y="150" width="30" height="16" rx="4" fill="#f97316"/>
+  <text x="681" y="161" text-anchor="middle" fill="white" font-size="8" font-weight="600">4</text>
+
+  <!-- 5. Deliver -->
+  <rect x="707" y="110" width="130" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="707" y="110" width="130" height="30" rx="10 10 0 0" fill="#16a34a"/>
+  <text x="772" y="130" text-anchor="middle" fill="white" font-size="11" font-weight="700">Deliver</text>
+  <text x="772" y="158" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Push to Recipient</text>
+  <text x="772" y="175" text-anchor="middle" fill="#64748b" font-size="9">WebSocket push</text>
+  <text x="772" y="192" text-anchor="middle" fill="#64748b" font-size="9">Fallback: FCM/APNs</text>
+  <text x="772" y="215" text-anchor="middle" fill="#94a3b8" font-size="8">Best-effort delivery</text>
+
+  <!-- Arrow 5→6 -->
+  <line x1="837" y1="170" x2="870" y2="170" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="839" y="150" width="30" height="16" rx="4" fill="#16a34a"/>
+  <text x="854" y="161" text-anchor="middle" fill="white" font-size="8" font-weight="600">5</text>
+
+  <!-- 6. ACK -->
+  <rect x="880" y="110" width="130" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="880" y="110" width="130" height="30" rx="10 10 0 0" fill="#ec4899"/>
+  <text x="945" y="130" text-anchor="middle" fill="white" font-size="11" font-weight="700">ACK</text>
+  <text x="945" y="158" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Delivery Receipt</text>
+  <text x="945" y="175" text-anchor="middle" fill="#64748b" font-size="9">Recipient ACKs</text>
+  <text x="945" y="192" text-anchor="middle" fill="#64748b" font-size="9">Remove from queue</text>
+  <text x="945" y="215" text-anchor="middle" fill="#94a3b8" font-size="8">At-least-once</text>
+
+  <!-- Arrow 6→7 -->
+  <line x1="1010" y1="170" x2="1043" y2="170" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="1012" y="150" width="30" height="16" rx="4" fill="#ec4899"/>
+  <text x="1027" y="161" text-anchor="middle" fill="white" font-size="8" font-weight="600">6</text>
+
+  <!-- 7. Status Update -->
+  <rect x="1053" y="110" width="130" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="1053" y="110" width="130" height="30" rx="10 10 0 0" fill="#0891b2"/>
+  <text x="1118" y="130" text-anchor="middle" fill="white" font-size="10" font-weight="700">Status Update</text>
+  <text x="1118" y="158" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Read Receipts</text>
+  <text x="1118" y="175" text-anchor="middle" fill="#64748b" font-size="9">Sent / Delivered / Read</text>
+  <text x="1118" y="192" text-anchor="middle" fill="#64748b" font-size="9">Notify sender</text>
+  <text x="1118" y="215" text-anchor="middle" fill="#94a3b8" font-size="8">Tick marks</text>
+
+  <!-- Legend -->
+  <rect x="30" y="280" width="1140" height="100" rx="10" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="60" y="305" fill="#1e293b" font-size="12" font-weight="700">Flow Steps</text>
+
+  <rect x="60" y="318" width="10" height="10" rx="2" fill="#ef4444"/>
+  <text x="76" y="328" fill="#475569" font-size="10">1. Client encrypts message with Signal Protocol (double ratchet E2EE)</text>
+  <rect x="60" y="336" width="10" height="10" rx="2" fill="#2563eb"/>
+  <text x="76" y="346" fill="#475569" font-size="10">2. Encrypted payload sent over persistent WebSocket (TLS 1.3)</text>
+  <rect x="60" y="354" width="10" height="10" rx="2" fill="#7c3aed"/>
+  <text x="76" y="364" fill="#475569" font-size="10">3. Gateway routes via session registry, tracks online presence</text>
+
+  <rect x="600" y="318" width="10" height="10" rx="2" fill="#f97316"/>
+  <text x="616" y="328" fill="#475569" font-size="10">4. Message queued in per-user inbox (persisted if offline)</text>
+  <rect x="600" y="336" width="10" height="10" rx="2" fill="#16a34a"/>
+  <text x="616" y="346" fill="#475569" font-size="10">5. Delivered via WebSocket push or fallback to FCM/APNs</text>
+  <rect x="600" y="354" width="10" height="10" rx="2" fill="#ec4899"/>
+  <text x="616" y="364" fill="#475569" font-size="10">6-7. Recipient ACKs, message dequeued, status ticks updated</text>
+</svg>

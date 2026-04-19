@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <filter id="s"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.12"/></filter>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#334155"/></marker>
+  </defs>
+
+  <rect width="1200" height="400" fill="white" rx="12"/>
+
+  <text x="600" y="35" text-anchor="middle" fill="#1e293b" font-size="20" font-weight="700">Proximity Service Nearby Search Flow</text>
+  <text x="600" y="55" text-anchor="middle" fill="#64748b" font-size="12">Lat/lng query through geohash lookup, distance filtering, and ranking to POI results</text>
+
+  <!-- 1. Lat/lng + radius -->
+  <rect x="30" y="115" width="150" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="30" y="115" width="150" height="30" rx="10 10 0 0" fill="#2563eb"/>
+  <text x="105" y="135" text-anchor="middle" fill="white" font-size="11" font-weight="700">Lat/Lng + Radius</text>
+  <text x="105" y="163" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Client Request</text>
+  <text x="105" y="180" text-anchor="middle" fill="#64748b" font-size="9">GPS coordinates</text>
+  <text x="105" y="197" text-anchor="middle" fill="#64748b" font-size="9">Radius: 1-50 km</text>
+  <text x="105" y="220" text-anchor="middle" fill="#94a3b8" font-size="8">Category filter</text>
+
+  <!-- Arrow 1→2 -->
+  <line x1="180" y1="175" x2="223" y2="175" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="186" y="155" width="36" height="16" rx="4" fill="#2563eb"/>
+  <text x="204" y="166" text-anchor="middle" fill="white" font-size="8" font-weight="600">1</text>
+
+  <!-- 2. Geohash Prefix -->
+  <rect x="233" y="115" width="150" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="233" y="115" width="150" height="30" rx="10 10 0 0" fill="#7c3aed"/>
+  <text x="308" y="135" text-anchor="middle" fill="white" font-size="10" font-weight="700">Geohash Prefix</text>
+  <text x="308" y="163" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Spatial Index</text>
+  <text x="308" y="180" text-anchor="middle" fill="#64748b" font-size="9">Encode to geohash</text>
+  <text x="308" y="197" text-anchor="middle" fill="#64748b" font-size="9">Precision from radius</text>
+  <text x="308" y="220" text-anchor="middle" fill="#94a3b8" font-size="8">e.g., "9q8yy"</text>
+
+  <!-- Arrow 2→3 -->
+  <line x1="383" y1="175" x2="426" y2="175" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="389" y="155" width="36" height="16" rx="4" fill="#7c3aed"/>
+  <text x="407" y="166" text-anchor="middle" fill="white" font-size="8" font-weight="600">2</text>
+
+  <!-- 3. Query 9 Cells -->
+  <rect x="436" y="115" width="150" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="436" y="115" width="150" height="30" rx="10 10 0 0" fill="#f97316"/>
+  <text x="511" y="135" text-anchor="middle" fill="white" font-size="11" font-weight="700">Query 9 Cells</text>
+  <text x="511" y="163" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Neighbor Lookup</text>
+  <text x="511" y="180" text-anchor="middle" fill="#64748b" font-size="9">Center + 8 neighbors</text>
+  <text x="511" y="197" text-anchor="middle" fill="#64748b" font-size="9">Avoid edge-case misses</text>
+  <text x="511" y="220" text-anchor="middle" fill="#94a3b8" font-size="8">Parallel DB queries</text>
+
+  <!-- Arrow 3→4 -->
+  <line x1="586" y1="175" x2="629" y2="175" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="592" y="155" width="36" height="16" rx="4" fill="#f97316"/>
+  <text x="610" y="166" text-anchor="middle" fill="white" font-size="8" font-weight="600">3</text>
+
+  <!-- 4. Distance Filter -->
+  <rect x="639" y="115" width="150" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="639" y="115" width="150" height="30" rx="10 10 0 0" fill="#ef4444"/>
+  <text x="714" y="135" text-anchor="middle" fill="white" font-size="10" font-weight="700">Distance Filter</text>
+  <text x="714" y="163" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Haversine Calc</text>
+  <text x="714" y="180" text-anchor="middle" fill="#64748b" font-size="9">Exact distance check</text>
+  <text x="714" y="197" text-anchor="middle" fill="#64748b" font-size="9">Discard out-of-radius</text>
+  <text x="714" y="220" text-anchor="middle" fill="#94a3b8" font-size="8">Great-circle formula</text>
+
+  <!-- Arrow 4→5 -->
+  <line x1="789" y1="175" x2="832" y2="175" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="795" y="155" width="36" height="16" rx="4" fill="#ef4444"/>
+  <text x="813" y="166" text-anchor="middle" fill="white" font-size="8" font-weight="600">4</text>
+
+  <!-- 5. Rank -->
+  <rect x="842" y="115" width="140" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="842" y="115" width="140" height="30" rx="10 10 0 0" fill="#ec4899"/>
+  <text x="912" y="135" text-anchor="middle" fill="white" font-size="11" font-weight="700">Rank</text>
+  <text x="912" y="163" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Scoring Engine</text>
+  <text x="912" y="180" text-anchor="middle" fill="#64748b" font-size="9">Distance + rating</text>
+  <text x="912" y="197" text-anchor="middle" fill="#64748b" font-size="9">Popularity weight</text>
+  <text x="912" y="220" text-anchor="middle" fill="#94a3b8" font-size="8">Weighted score</text>
+
+  <!-- Arrow 5→6 -->
+  <line x1="982" y1="175" x2="1025" y2="175" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="988" y="155" width="36" height="16" rx="4" fill="#ec4899"/>
+  <text x="1006" y="166" text-anchor="middle" fill="white" font-size="8" font-weight="600">5</text>
+
+  <!-- 6. Return POIs -->
+  <rect x="1035" y="115" width="145" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="1035" y="115" width="145" height="30" rx="10 10 0 0" fill="#16a34a"/>
+  <text x="1107" y="135" text-anchor="middle" fill="white" font-size="11" font-weight="700">Return POIs</text>
+  <text x="1107" y="163" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">API Response</text>
+  <text x="1107" y="180" text-anchor="middle" fill="#64748b" font-size="9">Top-20 results</text>
+  <text x="1107" y="197" text-anchor="middle" fill="#64748b" font-size="9">Name, dist, rating</text>
+  <text x="1107" y="220" text-anchor="middle" fill="#94a3b8" font-size="8">Paginated + cached</text>
+
+  <!-- Legend -->
+  <rect x="30" y="280" width="1140" height="100" rx="10" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="60" y="305" fill="#1e293b" font-size="12" font-weight="700">Flow Steps</text>
+
+  <rect x="60" y="318" width="10" height="10" rx="2" fill="#2563eb"/>
+  <text x="76" y="328" fill="#475569" font-size="10">1. Client sends GPS lat/lng with search radius and category filter</text>
+  <rect x="60" y="336" width="10" height="10" rx="2" fill="#7c3aed"/>
+  <text x="76" y="346" fill="#475569" font-size="10">2. Coordinates encoded to geohash prefix at radius-appropriate precision</text>
+  <rect x="60" y="354" width="10" height="10" rx="2" fill="#f97316"/>
+  <text x="76" y="364" fill="#475569" font-size="10">3. Query center cell + 8 neighbors to avoid boundary misses</text>
+
+  <rect x="600" y="318" width="10" height="10" rx="2" fill="#ef4444"/>
+  <text x="616" y="328" fill="#475569" font-size="10">4. Haversine formula computes exact distance, filters out-of-radius</text>
+  <rect x="600" y="336" width="10" height="10" rx="2" fill="#ec4899"/>
+  <text x="616" y="346" fill="#475569" font-size="10">5. Results ranked by weighted score of distance, rating, and popularity</text>
+  <rect x="600" y="354" width="10" height="10" rx="2" fill="#16a34a"/>
+  <text x="616" y="364" fill="#475569" font-size="10">6. Top-20 POIs returned with name, distance, and rating (paginated)</text>
+</svg>

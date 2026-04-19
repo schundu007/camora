@@ -1,0 +1,124 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <filter id="s"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.12"/></filter>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#334155"/></marker>
+  </defs>
+
+  <rect width="1200" height="400" fill="white" rx="12"/>
+
+  <text x="600" y="35" text-anchor="middle" fill="#1e293b" font-size="20" font-weight="700">Google Maps Route Calculation Flow</text>
+  <text x="600" y="55" text-anchor="middle" fill="#64748b" font-size="12">Origin and destination through contraction hierarchies to rendered polyline</text>
+
+  <!-- 1. Origin + Dest -->
+  <rect x="10" y="110" width="130" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="10" y="110" width="130" height="30" rx="10 10 0 0" fill="#4285F4"/>
+  <text x="75" y="130" text-anchor="middle" fill="white" font-size="11" font-weight="700">Origin + Dest</text>
+  <text x="75" y="158" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">User Input</text>
+  <text x="75" y="175" text-anchor="middle" fill="#64748b" font-size="9">Geocode addresses</text>
+  <text x="75" y="192" text-anchor="middle" fill="#64748b" font-size="9">lat/lng coordinates</text>
+  <text x="75" y="215" text-anchor="middle" fill="#94a3b8" font-size="8">Places API</text>
+
+  <!-- Arrow 1→2 -->
+  <line x1="140" y1="170" x2="172" y2="170" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="141" y="150" width="30" height="16" rx="4" fill="#4285F4"/>
+  <text x="156" y="161" text-anchor="middle" fill="white" font-size="8" font-weight="600">1</text>
+
+  <!-- 2. Routing Engine -->
+  <rect x="182" y="110" width="130" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="182" y="110" width="130" height="30" rx="10 10 0 0" fill="#2563eb"/>
+  <text x="247" y="130" text-anchor="middle" fill="white" font-size="11" font-weight="700">Routing Engine</text>
+  <text x="247" y="158" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Graph Server</text>
+  <text x="247" y="175" text-anchor="middle" fill="#64748b" font-size="9">Partition road graph</text>
+  <text x="247" y="192" text-anchor="middle" fill="#64748b" font-size="9">Identify region cells</text>
+  <text x="247" y="215" text-anchor="middle" fill="#94a3b8" font-size="8">Bidirectional search</text>
+
+  <!-- Arrow 2→3 -->
+  <line x1="312" y1="170" x2="344" y2="170" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="313" y="150" width="30" height="16" rx="4" fill="#2563eb"/>
+  <text x="328" y="161" text-anchor="middle" fill="white" font-size="8" font-weight="600">2</text>
+
+  <!-- 3. Contraction Hierarchies -->
+  <rect x="354" y="110" width="140" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="354" y="110" width="140" height="30" rx="10 10 0 0" fill="#7c3aed"/>
+  <text x="424" y="130" text-anchor="middle" fill="white" font-size="10" font-weight="700">Contraction Hier.</text>
+  <text x="424" y="158" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">CH Algorithm</text>
+  <text x="424" y="175" text-anchor="middle" fill="#64748b" font-size="9">Shortcut edges</text>
+  <text x="424" y="192" text-anchor="middle" fill="#64748b" font-size="9">Node importance</text>
+  <text x="424" y="215" text-anchor="middle" fill="#94a3b8" font-size="8">O(n log n) query</text>
+
+  <!-- Arrow 3→4 -->
+  <line x1="494" y1="170" x2="526" y2="170" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="495" y="150" width="30" height="16" rx="4" fill="#7c3aed"/>
+  <text x="510" y="161" text-anchor="middle" fill="white" font-size="8" font-weight="600">3</text>
+
+  <!-- 4. Traffic Weights -->
+  <rect x="536" y="110" width="130" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="536" y="110" width="130" height="30" rx="10 10 0 0" fill="#ef4444"/>
+  <text x="601" y="130" text-anchor="middle" fill="white" font-size="11" font-weight="700">Traffic Weights</text>
+  <text x="601" y="158" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Live Traffic</text>
+  <text x="601" y="175" text-anchor="middle" fill="#64748b" font-size="9">Real-time probes</text>
+  <text x="601" y="192" text-anchor="middle" fill="#64748b" font-size="9">Edge weight update</text>
+  <text x="601" y="215" text-anchor="middle" fill="#94a3b8" font-size="8">ML predictions</text>
+
+  <!-- Arrow 4→5 -->
+  <line x1="666" y1="170" x2="698" y2="170" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="667" y="150" width="30" height="16" rx="4" fill="#ef4444"/>
+  <text x="682" y="161" text-anchor="middle" fill="white" font-size="8" font-weight="600">4</text>
+
+  <!-- 5. ETA Compute -->
+  <rect x="708" y="110" width="130" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="708" y="110" width="130" height="30" rx="10 10 0 0" fill="#f97316"/>
+  <text x="773" y="130" text-anchor="middle" fill="white" font-size="11" font-weight="700">ETA Compute</text>
+  <text x="773" y="158" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Time Estimator</text>
+  <text x="773" y="175" text-anchor="middle" fill="#64748b" font-size="9">Sum edge weights</text>
+  <text x="773" y="192" text-anchor="middle" fill="#64748b" font-size="9">Alt routes ranked</text>
+  <text x="773" y="215" text-anchor="middle" fill="#94a3b8" font-size="8">3 route options</text>
+
+  <!-- Arrow 5→6 -->
+  <line x1="838" y1="170" x2="870" y2="170" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="839" y="150" width="30" height="16" rx="4" fill="#f97316"/>
+  <text x="854" y="161" text-anchor="middle" fill="white" font-size="8" font-weight="600">5</text>
+
+  <!-- 6. Polyline -->
+  <rect x="880" y="110" width="130" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="880" y="110" width="130" height="30" rx="10 10 0 0" fill="#ec4899"/>
+  <text x="945" y="130" text-anchor="middle" fill="white" font-size="11" font-weight="700">Polyline Encode</text>
+  <text x="945" y="158" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Path Encoder</text>
+  <text x="945" y="175" text-anchor="middle" fill="#64748b" font-size="9">Encode lat/lngs</text>
+  <text x="945" y="192" text-anchor="middle" fill="#64748b" font-size="9">Compress points</text>
+  <text x="945" y="215" text-anchor="middle" fill="#94a3b8" font-size="8">ASCII polyline</text>
+
+  <!-- Arrow 6→7 -->
+  <line x1="1010" y1="170" x2="1042" y2="170" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="1011" y="150" width="30" height="16" rx="4" fill="#ec4899"/>
+  <text x="1026" y="161" text-anchor="middle" fill="white" font-size="8" font-weight="600">6</text>
+
+  <!-- 7. Client Renders -->
+  <rect x="1052" y="110" width="130" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="1052" y="110" width="130" height="30" rx="10 10 0 0" fill="#16a34a"/>
+  <text x="1117" y="130" text-anchor="middle" fill="white" font-size="11" font-weight="700">Client Renders</text>
+  <text x="1117" y="158" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Map Canvas</text>
+  <text x="1117" y="175" text-anchor="middle" fill="#64748b" font-size="9">Decode polyline</text>
+  <text x="1117" y="192" text-anchor="middle" fill="#64748b" font-size="9">Draw on vector map</text>
+  <text x="1117" y="215" text-anchor="middle" fill="#94a3b8" font-size="8">Turn-by-turn nav</text>
+
+  <!-- Legend -->
+  <rect x="30" y="275" width="1140" height="105" rx="10" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="60" y="298" fill="#1e293b" font-size="12" font-weight="700">Flow Steps</text>
+
+  <rect x="60" y="310" width="10" height="10" rx="2" fill="#4285F4"/>
+  <text x="76" y="320" fill="#475569" font-size="10">1. User enters origin and destination, geocoded to lat/lng</text>
+  <rect x="60" y="328" width="10" height="10" rx="2" fill="#2563eb"/>
+  <text x="76" y="338" fill="#475569" font-size="10">2. Routing engine partitions road graph for bidirectional search</text>
+  <rect x="60" y="346" width="10" height="10" rx="2" fill="#7c3aed"/>
+  <text x="76" y="356" fill="#475569" font-size="10">3. CH algorithm uses shortcut edges for fast shortest-path</text>
+  <rect x="60" y="364" width="10" height="10" rx="2" fill="#ef4444"/>
+  <text x="76" y="374" fill="#475569" font-size="10">4. Live traffic data adjusts edge weights on the graph</text>
+
+  <rect x="600" y="310" width="10" height="10" rx="2" fill="#f97316"/>
+  <text x="616" y="320" fill="#475569" font-size="10">5. ETA computed by summing weighted edges, 3 routes ranked</text>
+  <rect x="600" y="328" width="10" height="10" rx="2" fill="#ec4899"/>
+  <text x="616" y="338" fill="#475569" font-size="10">6. Path encoded as compressed polyline for efficient transfer</text>
+  <rect x="600" y="346" width="10" height="10" rx="2" fill="#16a34a"/>
+  <text x="616" y="356" fill="#475569" font-size="10">7. Client decodes polyline and renders route on vector map</text>
+</svg>

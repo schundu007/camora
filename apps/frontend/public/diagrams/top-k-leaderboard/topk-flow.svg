@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <filter id="s"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.12"/></filter>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#334155"/></marker>
+  </defs>
+
+  <rect width="1200" height="400" fill="white" rx="12"/>
+
+  <text x="600" y="35" text-anchor="middle" fill="#1e293b" font-size="20" font-weight="700">Top-K Leaderboard Flow</text>
+  <text x="600" y="55" text-anchor="middle" fill="#64748b" font-size="12">Score event through Redis sorted sets, ZREVRANGE retrieval, and time window rotation</text>
+
+  <!-- 1. Score Event -->
+  <rect x="30" y="115" width="160" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="30" y="115" width="160" height="30" rx="10 10 0 0" fill="#f97316"/>
+  <text x="110" y="135" text-anchor="middle" fill="white" font-size="11" font-weight="700">Score Event</text>
+  <text x="110" y="163" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Event Producer</text>
+  <text x="110" y="180" text-anchor="middle" fill="#64748b" font-size="9">Game / quiz result</text>
+  <text x="110" y="197" text-anchor="middle" fill="#64748b" font-size="9">{userId, score, ts}</text>
+  <text x="110" y="220" text-anchor="middle" fill="#94a3b8" font-size="8">Kafka event stream</text>
+
+  <!-- Arrow 1→2 -->
+  <line x1="190" y1="175" x2="238" y2="175" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="196" y="155" width="40" height="16" rx="4" fill="#f97316"/>
+  <text x="216" y="166" text-anchor="middle" fill="white" font-size="8" font-weight="600">1</text>
+
+  <!-- 2. Redis ZADD -->
+  <rect x="248" y="115" width="170" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="248" y="115" width="170" height="30" rx="10 10 0 0" fill="#ef4444"/>
+  <text x="333" y="135" text-anchor="middle" fill="white" font-size="11" font-weight="700">Redis ZADD</text>
+  <text x="333" y="163" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Sorted Set Upsert</text>
+  <text x="333" y="180" text-anchor="middle" fill="#64748b" font-size="9">ZADD lb:daily score user</text>
+  <text x="333" y="197" text-anchor="middle" fill="#64748b" font-size="9">O(log N) per insert</text>
+  <text x="333" y="220" text-anchor="middle" fill="#94a3b8" font-size="8">Auto-sorted by score</text>
+
+  <!-- Arrow 2→3 -->
+  <line x1="418" y1="175" x2="466" y2="175" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="424" y="155" width="40" height="16" rx="4" fill="#ef4444"/>
+  <text x="444" y="166" text-anchor="middle" fill="white" font-size="8" font-weight="600">2</text>
+
+  <!-- 3. ZREVRANGE -->
+  <rect x="476" y="115" width="180" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="476" y="115" width="180" height="30" rx="10 10 0 0" fill="#7c3aed"/>
+  <text x="566" y="135" text-anchor="middle" fill="white" font-size="10" font-weight="700">ZREVRANGE(0, K-1)</text>
+  <text x="566" y="163" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Top-K Query</text>
+  <text x="566" y="180" text-anchor="middle" fill="#64748b" font-size="9">Fetch top K players</text>
+  <text x="566" y="197" text-anchor="middle" fill="#64748b" font-size="9">WITHSCORES flag</text>
+  <text x="566" y="220" text-anchor="middle" fill="#94a3b8" font-size="8">O(log N + K) query</text>
+
+  <!-- Arrow 3→4 -->
+  <line x1="656" y1="175" x2="704" y2="175" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="662" y="155" width="40" height="16" rx="4" fill="#7c3aed"/>
+  <text x="682" y="166" text-anchor="middle" fill="white" font-size="8" font-weight="600">3</text>
+
+  <!-- 4. Return Leaderboard -->
+  <rect x="714" y="115" width="170" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="714" y="115" width="170" height="30" rx="10 10 0 0" fill="#16a34a"/>
+  <text x="799" y="135" text-anchor="middle" fill="white" font-size="10" font-weight="700">Return Leaderboard</text>
+  <text x="799" y="163" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">API Response</text>
+  <text x="799" y="180" text-anchor="middle" fill="#64748b" font-size="9">[{rank, name, score}]</text>
+  <text x="799" y="197" text-anchor="middle" fill="#64748b" font-size="9">Cache at CDN 5s</text>
+  <text x="799" y="220" text-anchor="middle" fill="#94a3b8" font-size="8">WebSocket live update</text>
+
+  <!-- Arrow 4→5 -->
+  <line x1="884" y1="175" x2="932" y2="175" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="890" y="155" width="40" height="16" rx="4" fill="#16a34a"/>
+  <text x="910" y="166" text-anchor="middle" fill="white" font-size="8" font-weight="600">4</text>
+
+  <!-- 5. Time Window Rotate -->
+  <rect x="942" y="115" width="180" height="120" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2" filter="url(#s)"/>
+  <rect x="942" y="115" width="180" height="30" rx="10 10 0 0" fill="#ec4899"/>
+  <text x="1032" y="135" text-anchor="middle" fill="white" font-size="10" font-weight="700">Time Window Rotate</text>
+  <text x="1032" y="163" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="600">Cron Scheduler</text>
+  <text x="1032" y="180" text-anchor="middle" fill="#64748b" font-size="9">Daily / weekly / all-time</text>
+  <text x="1032" y="197" text-anchor="middle" fill="#64748b" font-size="9">Archive old window</text>
+  <text x="1032" y="220" text-anchor="middle" fill="#94a3b8" font-size="8">RENAME key rotation</text>
+
+  <!-- Feedback arrow from rotate back to ZADD -->
+  <path d="M 1032 235 L 1032 265 Q 1032 275 1022 275 L 343 275 Q 333 275 333 265 L 333 240" stroke="#ec4899" stroke-width="1.5" stroke-dasharray="6,3" fill="none" marker-end="url(#arrow)"/>
+  <text x="688" y="270" text-anchor="middle" fill="#ec4899" font-size="9" font-weight="600">New window: scores write to fresh sorted set key</text>
+
+  <!-- Legend -->
+  <rect x="30" y="300" width="1140" height="80" rx="10" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="60" y="323" fill="#1e293b" font-size="12" font-weight="700">Flow Steps</text>
+
+  <rect x="60" y="336" width="10" height="10" rx="2" fill="#f97316"/>
+  <text x="76" y="346" fill="#475569" font-size="10">1. Score events stream in from game/quiz results via Kafka</text>
+  <rect x="60" y="354" width="10" height="10" rx="2" fill="#ef4444"/>
+  <text x="76" y="364" fill="#475569" font-size="10">2. Redis ZADD upserts score into time-windowed sorted set</text>
+
+  <rect x="400" y="336" width="10" height="10" rx="2" fill="#7c3aed"/>
+  <text x="416" y="346" fill="#475569" font-size="10">3. ZREVRANGE(0, K-1) fetches top-K with scores</text>
+  <rect x="400" y="354" width="10" height="10" rx="2" fill="#16a34a"/>
+  <text x="416" y="364" fill="#475569" font-size="10">4. Leaderboard JSON served via API, cached 5s at CDN</text>
+
+  <rect x="780" y="336" width="10" height="10" rx="2" fill="#ec4899"/>
+  <text x="796" y="346" fill="#475569" font-size="10">5. Cron rotates time windows (daily/weekly), archives old keys</text>
+</svg>
