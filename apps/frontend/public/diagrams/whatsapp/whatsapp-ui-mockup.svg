@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 380 700" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <filter id="sh2"><feDropShadow dx="0" dy="4" stdDeviation="8" flood-opacity="0.2"/></filter>
+    <clipPath id="screen"><rect x="15" y="50" width="350" height="620" rx="20"/></clipPath>
+  </defs>
+
+  <!-- Phone frame -->
+  <rect width="380" height="700" rx="36" fill="#1a1a1a" filter="url(#sh2)"/>
+  <rect x="10" y="10" width="360" height="680" rx="30" fill="#111"/>
+
+  <!-- Screen -->
+  <g clip-path="url(#screen)">
+    <rect x="15" y="50" width="350" height="620" fill="#efeae2"/>
+
+    <!-- Status bar -->
+    <rect x="15" y="50" width="350" height="24" fill="#075e54"/>
+    <text x="190" y="66" text-anchor="middle" fill="white" font-size="10">9:41 AM</text>
+
+    <!-- WhatsApp header -->
+    <rect x="15" y="74" width="350" height="52" fill="#075e54"/>
+    <text x="65" y="96" fill="white" font-size="8">←</text>
+    <circle cx="50" cy="100" r="16" fill="#128c7e"/>
+    <text x="50" y="104" text-anchor="middle" fill="white" font-size="10" font-weight="600">JD</text>
+    <text x="75" y="96" fill="white" font-size="14" font-weight="600">John Doe</text>
+    <text x="75" y="110" fill="rgba(255,255,255,0.7)" font-size="10">online</text>
+    <text x="320" y="100" fill="white" font-size="14">📞  📹  ⋮</text>
+
+    <!-- Chat background pattern -->
+    <rect x="15" y="126" width="350" height="500" fill="#efeae2"/>
+
+    <!-- Received message -->
+    <rect x="30" y="145" width="220" height="50" rx="10" fill="white"/>
+    <polygon points="30,170 20,175 30,180" fill="white"/>
+    <text x="42" y="165" fill="#303030" font-size="12">Hey! How's the system design</text>
+    <text x="42" y="180" fill="#303030" font-size="12">interview prep going?</text>
+    <text x="232" y="190" text-anchor="end" fill="#8a8a8a" font-size="8">9:32 AM</text>
+
+    <!-- Sent message -->
+    <rect x="130" y="210" width="220" height="50" rx="10" fill="#dcf8c6"/>
+    <polygon points="350,235 360,240 350,245" fill="#dcf8c6"/>
+    <text x="142" y="230" fill="#303030" font-size="12">Going great! Just finished the</text>
+    <text x="142" y="245" fill="#303030" font-size="12">WhatsApp design problem 💪</text>
+    <text x="335" y="255" text-anchor="end" fill="#8a8a8a" font-size="8">9:33 AM</text>
+    <!-- Read ticks -->
+    <text x="340" y="255" fill="#53bdeb" font-size="9">✓✓</text>
+
+    <!-- Received message -->
+    <rect x="30" y="280" width="200" height="36" rx="10" fill="white"/>
+    <text x="42" y="302" fill="#303030" font-size="12">Nice! What topics did you cover?</text>
+    <text x="212" y="310" text-anchor="end" fill="#8a8a8a" font-size="8">9:33 AM</text>
+
+    <!-- Sent message (longer) -->
+    <rect x="90" y="335" width="260" height="100" rx="10" fill="#dcf8c6"/>
+    <text x="102" y="355" fill="#303030" font-size="12">WebSocket connections, Kafka</text>
+    <text x="102" y="372" fill="#303030" font-size="12">message routing, Cassandra for</text>
+    <text x="102" y="389" fill="#303030" font-size="12">storage, Redis for presence,</text>
+    <text x="102" y="406" fill="#303030" font-size="12">and the tick system ✓ ✓✓ 🔵</text>
+    <text x="335" y="428" text-anchor="end" fill="#8a8a8a" font-size="8">9:34 AM</text>
+    <text x="340" y="428" fill="#53bdeb" font-size="9">✓✓</text>
+
+    <!-- Typing indicator -->
+    <rect x="30" y="455" width="80" height="30" rx="10" fill="white"/>
+    <circle cx="50" cy="470" r="4" fill="#8a8a8a"><animate attributeName="opacity" values="0.3;1;0.3" dur="1.5s" repeatCount="indefinite"/></circle>
+    <circle cx="65" cy="470" r="4" fill="#8a8a8a"><animate attributeName="opacity" values="0.3;1;0.3" dur="1.5s" begin="0.3s" repeatCount="indefinite"/></circle>
+    <circle cx="80" cy="470" r="4" fill="#8a8a8a"><animate attributeName="opacity" values="0.3;1;0.3" dur="1.5s" begin="0.6s" repeatCount="indefinite"/></circle>
+
+    <!-- Input bar -->
+    <rect x="15" y="596" width="350" height="50" fill="#f0f0f0"/>
+    <rect x="25" y="605" width="280" height="34" rx="17" fill="white" stroke="#e0e0e0" stroke-width="1"/>
+    <text x="40" y="627" fill="#8a8a8a" font-size="12">😊  Type a message</text>
+    <text x="265" y="627" fill="#8a8a8a" font-size="14">📎  📷</text>
+    <circle cx="335" cy="622" r="18" fill="#128c7e"/>
+    <text x="335" y="627" text-anchor="middle" fill="white" font-size="14">🎤</text>
+  </g>
+
+  <!-- Notch -->
+  <rect x="135" y="12" width="110" height="22" rx="11" fill="#111"/>
+
+  <!-- Labels outside phone -->
+  <!-- These are annotation callouts pointing to features -->
+</svg>
