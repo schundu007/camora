@@ -499,8 +499,116 @@ export default function TopicDetail({
   const prevTopic = currentIndex > 0 ? filteredTopics[currentIndex - 1] : null;
   const nextTopic = currentIndex >= 0 && currentIndex < (filteredTopics?.length || 0) - 1 ? filteredTopics[currentIndex + 1] : null;
 
+  // Build dynamic TOC entries based on available data
+  const tocEntries = useMemo(() => {
+    if (!topicDetails) return [];
+    const entries = [];
+    // Common
+    if (topicDetails.introduction) entries.push({ id: 'overview', label: 'Overview' });
+    // DSA
+    if (isCodingStyle && topicDetails.keyPatterns) {
+      if (topicDetails.keyPatterns) entries.push({ id: 'key-patterns', label: 'Key Patterns' });
+      if (topicDetails.whenToUse) entries.push({ id: 'when-to-use', label: 'When to Use' });
+      if (topicDetails.visualizations) entries.push({ id: 'visual', label: 'Visual Explanation' });
+      if (topicDetails.approach) entries.push({ id: 'approach', label: 'Step-by-Step' });
+      if (topicDetails.timeComplexity || topicDetails.spaceComplexity) entries.push({ id: 'complexity', label: 'Complexity' });
+      if (topicDetails.codeExample || topicDetails.codeExamples) entries.push({ id: 'code-examples', label: 'Code Examples' });
+      if (topicDetails.commonMistakes) entries.push({ id: 'common-mistakes', label: 'Common Mistakes' });
+      if (topicDetails.commonProblems?.length) entries.push({ id: 'practice', label: 'Practice Problems' });
+      if (topicDetails.theoryQuestions?.length) entries.push({ id: 'theory', label: 'Theory Questions' });
+      if (topicDetails.tips || topicDetails.interviewTips) entries.push({ id: 'tips', label: 'Tips' });
+    }
+    // System Design
+    if (isSDStyle || activePage === 'low-level') {
+      if (topicDetails.concepts?.length) entries.push({ id: 'concepts', label: 'Key Concepts' });
+      if (topicDetails.functionalRequirements || topicDetails.requirements) entries.push({ id: 'requirements', label: 'Requirements' });
+      if (topicDetails.estimation) entries.push({ id: 'capacity', label: 'Capacity Planning' });
+      if (isSDStyle) entries.push({ id: 'architecture', label: 'Architecture Diagram' });
+      if (topicDetails.architectureLayers) entries.push({ id: 'arch-layers', label: 'Architecture Layers' });
+      if (topicDetails.apiDesign?.endpoints) entries.push({ id: 'api-design', label: 'API Design' });
+      if (topicDetails.dataModel) entries.push({ id: 'data-model', label: 'Data Model' });
+      if (topicDetails.basicImplementation || topicDetails.advancedImplementation) entries.push({ id: 'implementation', label: 'Implementation' });
+      if (topicDetails.createFlow || topicDetails.redirectFlow) entries.push({ id: 'flows', label: 'System Flows' });
+      if (topicDetails.deepDiveTopics) entries.push({ id: 'deep-dive', label: 'Deep Dives' });
+      if (topicDetails.tradeoffDecisions || topicDetails.tradeoffs) entries.push({ id: 'tradeoffs', label: 'Trade-offs' });
+      if (topicDetails.edgeCases) entries.push({ id: 'edge-cases', label: 'Edge Cases' });
+      if (topicDetails.keyQuestions?.length) entries.push({ id: 'key-questions', label: 'Key Questions' });
+      if (topicDetails.tips) entries.push({ id: 'tips', label: 'Interview Tips' });
+    }
+    // Behavioral
+    if (activePage === 'behavioral') {
+      if (topicDetails.principles?.length) entries.push({ id: 'principles', label: 'Key Principles' });
+      if (topicDetails.starExample) entries.push({ id: 'star-example', label: 'STAR Example' });
+      if (topicDetails.exampleResponse) entries.push({ id: 'example-response', label: 'Example Response' });
+      if (topicDetails.keyQuestions?.length) entries.push({ id: 'key-questions', label: 'Questions & Answers' });
+      if (topicDetails.sampleQuestions?.length) entries.push({ id: 'sample-questions', label: 'Practice Questions' });
+      if (topicDetails.tips) entries.push({ id: 'tips', label: 'Tips' });
+    }
+    // Eng Blogs
+    if (activePage === 'eng-blogs') {
+      if (topicDetails.articles?.length) entries.push({ id: 'articles', label: 'Articles' });
+      if (topicDetails.keyQuestions?.length) entries.push({ id: 'key-questions', label: 'Key Takeaways' });
+    }
+    // Roadmaps
+    if (activePage === 'roadmaps') {
+      if (topicDetails.phases?.length) entries.push({ id: 'roadmap-phases', label: 'Roadmap' });
+      if (topicDetails.keyQuestions?.length) entries.push({ id: 'key-questions', label: 'FAQ' });
+    }
+    // Projects
+    if (activePage === 'projects') {
+      if (topicDetails.learningObjectives?.length) entries.push({ id: 'learning-objectives', label: 'What You\'ll Learn' });
+      if (topicDetails.interviewRelevance?.length) entries.push({ id: 'interview-relevance', label: 'Interview Relevance' });
+      if (topicDetails.keyQuestions?.length) entries.push({ id: 'key-questions', label: 'Key Questions' });
+    }
+    return entries;
+  }, [topicDetails, activePage, isSDStyle, isCodingStyle]);
+
+  // Track active TOC section on scroll
+  const [activeTocId, setActiveTocId] = useState('');
+  useEffect(() => {
+    if (!tocEntries.length) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries.filter(e => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+        if (visible.length > 0) setActiveTocId(visible[0].target.id);
+      },
+      { rootMargin: '-80px 0px -60% 0px', threshold: 0.1 }
+    );
+    tocEntries.forEach(({ id }) => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+    return () => observer.disconnect();
+  }, [tocEntries, selectedTopic]);
+
   return (
-    <div className="landing-root animate-fade-in lg:max-w-[75%] mx-auto">
+    <div className="landing-root animate-fade-in flex gap-6">
+      {/* Left: Table of Contents sidebar */}
+      {tocEntries.length > 2 && (
+        <aside className="hidden xl:block flex-shrink-0 sticky self-start" style={{ top: '72px', width: '180px' }}>
+          <nav className="space-y-0.5">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] px-2 mb-2 block landing-mono">On this page</span>
+            {tocEntries.map(({ id, label }) => (
+              <a
+                key={id}
+                href={`#${id}`}
+                onClick={(e) => { e.preventDefault(); document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}
+                className={`block px-2 py-1.5 text-xs rounded-md transition-all landing-body leading-snug ${
+                  activeTocId === id
+                    ? 'text-[var(--accent)] font-semibold bg-[var(--accent)]/8'
+                    : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)]'
+                }`}
+                style={activeTocId === id ? { borderLeft: '2px solid var(--accent)', paddingLeft: '6px' } : { borderLeft: '2px solid transparent', paddingLeft: '6px' }}
+              >
+                {label}
+              </a>
+            ))}
+          </nav>
+        </aside>
+      )}
+
+      {/* Right: Topic content */}
+      <div className="flex-1 min-w-0 lg:max-w-[65%] mx-auto">
       {/* Topic Header — no duplicate breadcrumb */}
       <div className="rounded-xl p-3 mb-3 border border-[var(--border)] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
         <div className="flex items-center justify-between mb-2">
@@ -1136,7 +1244,7 @@ export default function TopicDetail({
 
           {/* 2. Key Patterns — what to recognize */}
           {topicDetails.keyPatterns && (
-            <div className="rounded-xl overflow-hidden border border-[var(--border)] bg-white shadow-sm">
+            <div id="key-patterns" className="rounded-xl overflow-hidden scroll-mt-24 border border-[var(--border)] bg-white shadow-sm">
               <div className="px-4 py-2.5 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
                 <Icon name="puzzle" size={14} className="text-white" />
                 <h3 className="text-sm font-bold text-white landing-display">Key Patterns</h3>
@@ -1177,7 +1285,7 @@ export default function TopicDetail({
 
           {/* 4. Visual Explanation — see it */}
           {topicDetails.visualizations && topicDetails.visualizations.length > 0 && (
-            <div className="rounded-xl overflow-hidden border border-[var(--border)] bg-white">
+            <div id="visual" className="rounded-xl overflow-hidden scroll-mt-24 border border-[var(--border)] bg-white">
               <div className="px-4 py-2.5 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
                 <Icon name="image" size={14} className="text-white" />
                 <h3 className="text-sm font-bold text-white landing-display">Visual Explanation</h3>
@@ -1223,7 +1331,7 @@ export default function TopicDetail({
 
           {/* 6. Time + Space Complexity — know the tradeoffs */}
           {(topicDetails.timeComplexity || topicDetails.spaceComplexity) && (
-            <div className="grid grid-cols-2 gap-3">
+            <div id="complexity" className="grid grid-cols-2 gap-3 scroll-mt-24">
               {topicDetails.timeComplexity && (
                 <div className="rounded-xl overflow-hidden bg-white border border-[var(--border)] shadow-sm flex">
                   <div className="w-1 bg-[var(--accent)] flex-shrink-0" />
@@ -1352,7 +1460,7 @@ export default function TopicDetail({
 
           {/* 8. Common Mistakes — avoid pitfalls */}
           {topicDetails.commonMistakes && (
-            <div className="rounded-xl overflow-hidden border border-[var(--border)] bg-white shadow-sm">
+            <div id="common-mistakes" className="rounded-xl overflow-hidden scroll-mt-24 border border-[var(--border)] bg-white shadow-sm">
               <div className="px-4 py-2.5 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
                 <Icon name="alertTriangle" size={14} className="text-white" />
                 <h3 className="text-sm font-bold text-white landing-display">Common Mistakes</h3>
@@ -1552,7 +1660,7 @@ export default function TopicDetail({
 
               {/* 2. Key Concepts — separate card below introduction */}
               {topicDetails.concepts && !topicDetails.concepts[0]?.name && (
-                <div className="rounded-2xl overflow-hidden border border-[var(--border)] bg-white">
+                <div id="concepts" className="rounded-2xl overflow-hidden scroll-mt-24 border border-[var(--border)] bg-white">
                   <div className="px-4 py-2 border-b border-[var(--accent)] bg-[var(--accent)] flex items-center gap-2">
                     <Icon name="puzzle" size={14} className="text-white" />
                     <h2 className="text-sm font-bold text-white landing-display">Key Concepts</h2>
@@ -1631,12 +1739,14 @@ export default function TopicDetail({
 
               {/* 4. Back-of-Envelope Estimation / Capacity Planning */}
               {topicDetails.estimation && (
-                <CapacityPlanningGrid estimation={topicDetails.estimation} />
+                <div id="capacity" className="scroll-mt-24">
+                  <CapacityPlanningGrid estimation={topicDetails.estimation} />
+                </div>
               )}
 
               {/* 5. Cloud Architecture Diagram — full width */}
               {isSDStyle && topicDetails && (
-                <div className="rounded-xl overflow-hidden border border-[var(--border)] bg-white">
+                <div id="architecture" className="rounded-xl overflow-hidden scroll-mt-24 border border-[var(--border)] bg-white">
                   <div className="bg-[var(--accent)] border-b border-[var(--accent)] px-3 py-2 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Icon name="layers" size={14} className="text-white" />
@@ -1713,7 +1823,7 @@ export default function TopicDetail({
 
               {/* 6. Architecture Layers + Layered Design */}
               {topicDetails.architectureLayers && (
-                <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-white">
+                <div id="arch-layers" className="rounded-lg overflow-hidden scroll-mt-24 border border-[var(--border)] bg-white">
                   <div className="px-3 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
                     <Icon name="layers" size={16} className="text-white" />
                     <h3 className="text-sm font-bold text-white landing-display">Architecture Layers</h3>
@@ -1829,7 +1939,7 @@ export default function TopicDetail({
 
               {/* 8. Basic + Advanced Implementation + Algorithm Approaches */}
               {(topicDetails.basicImplementation || topicDetails.advancedImplementation) && (
-                <div id="architecture" className={`grid gap-2 scroll-mt-24 ${topicDetails.basicImplementation && topicDetails.advancedImplementation ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
+                <div id="implementation" className={`grid gap-2 scroll-mt-24 ${topicDetails.basicImplementation && topicDetails.advancedImplementation ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
                   {/* Basic Implementation */}
                   {topicDetails.basicImplementation && (
                     <div className="rounded-2xl overflow-hidden border border-[var(--border)] bg-white">
@@ -1975,7 +2085,7 @@ export default function TopicDetail({
 
               {/* 9. System Flows (Create + Redirect) + Flowcharts */}
               {(topicDetails.createFlow || topicDetails.redirectFlow) && (
-                <div className="grid grid-cols-1 gap-2">
+                <div id="flows" className="grid grid-cols-1 gap-2 scroll-mt-24">
                   {/* Create Flow */}
                   {topicDetails.createFlow && (
                     <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-white">
@@ -2033,7 +2143,7 @@ export default function TopicDetail({
 
               {/* 10. Deep Dive Topics + System Components + Key Design Decisions */}
               {topicDetails.deepDiveTopics && (
-                <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-white">
+                <div id="deep-dive" className="rounded-lg overflow-hidden scroll-mt-24 border border-[var(--border)] bg-white">
                   <div className="px-3 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
                     <Icon name="search" size={16} className="text-white" />
                     <h3 className="text-sm font-bold text-white landing-display">Deep Dive Topics</h3>
@@ -2103,7 +2213,7 @@ export default function TopicDetail({
 
               {/* 11. Trade-offs + Edge Cases */}
               {topicDetails.tradeoffDecisions && (
-                <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-white">
+                <div id="tradeoffs" className="rounded-lg overflow-hidden scroll-mt-24 border border-[var(--border)] bg-white">
                   <div className="px-3 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
                     <Icon name="gitBranch" size={16} className="text-white" />
                     <h3 className="text-sm font-bold text-white landing-display">Trade-off Decisions</h3>
@@ -2126,7 +2236,7 @@ export default function TopicDetail({
               )}
 
               {topicDetails.tradeoffs && (
-                <div className="rounded-2xl overflow-hidden bg-white border border-[var(--border)]">
+                <div id="tradeoffs" className="rounded-2xl overflow-hidden scroll-mt-24 bg-white border border-[var(--border)]">
                   <div className="px-4 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
                     <Icon name="gitBranch" size={14} className="text-white" />
                     <h3 className="text-sm font-bold text-white landing-display">Tradeoffs</h3>
@@ -2166,7 +2276,7 @@ export default function TopicDetail({
               )}
 
               {topicDetails.edgeCases && (
-                <div className="rounded-2xl overflow-hidden bg-white border border-[var(--border)]">
+                <div id="edge-cases" className="rounded-2xl overflow-hidden scroll-mt-24 bg-white border border-[var(--border)]">
                   <div className="px-4 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
                     <Icon name="alertTriangle" size={14} className="text-white" />
                     <h3 className="text-sm font-bold text-white landing-display">Edge Cases</h3>
@@ -2468,7 +2578,7 @@ export default function TopicDetail({
 
               {/* Concurrency Concepts */}
               {topicDetails.concepts && Array.isArray(topicDetails.concepts) && topicDetails.concepts[0]?.name && (
-                <div className="rounded-lg overflow-hidden border border-[var(--border)] bg-white">
+                <div id="concepts" className="rounded-lg overflow-hidden scroll-mt-24 border border-[var(--border)] bg-white">
                   <div className="px-3 py-2 border-b border-[var(--accent)] flex items-center gap-2 bg-[var(--accent)]">
                     <Icon name="cpu" size={16} className="text-white" />
                     <h3 className="text-sm font-bold text-white landing-display">Core Concepts</h3>
@@ -2596,7 +2706,7 @@ export default function TopicDetail({
 
           {/* 2. Key Principles — full width, separate card */}
           {topicDetails.principles && topicDetails.principles.length > 0 && (
-            <div className="scroll-mt-24 rounded-2xl border border-[var(--border)] bg-white overflow-hidden">
+            <div id="principles" className="scroll-mt-24 rounded-2xl border border-[var(--border)] bg-white overflow-hidden">
               <div className="px-4 py-2 border-b border-[var(--accent)] bg-[var(--accent)] flex items-center gap-2">
                 <Icon name="award" size={14} className="text-white" />
                 <h2 className="text-sm font-bold text-white landing-display">Key Principles</h2>
@@ -2924,6 +3034,7 @@ export default function TopicDetail({
           ) : <div className="flex-1" />}
         </div>
       )}
+      </div>
     </div>
   );
 }
